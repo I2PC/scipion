@@ -58,6 +58,12 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
         form.addParam('keepBest', params.IntParam, default=1,
                       label='Number of best images:',
                       help='Number of the best images to keep for every class')
+        form.addParam('simplifiedMd', params.BooleanParam, default=False,
+                      label='Generate a simplified MetaData ?',
+                      help='When the number of best images to keep is higher than 1, \n'
+                           'the generated MetaData will have all the images assigned \n'
+                           'to each class, unless you select a simplified MetaData that \n'
+                           'will keep only the best class for each experimental image.')
         form.addParam('numberOfIterations', params.IntParam, default=2, #DEJAR A 10
                       label='Number of iterations:',
                       help='Maximum number of iterations')
@@ -384,9 +390,15 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                             'maxshift': self.maximumShift.get(),
                             'outputClassesFile': filename,
                             }
-        args = ('-i_ref %(imgsRef)s -i_exp %(imgsExp)s -o %(outputFile)s '
-                '--odir %(tmpDir)s --keep_best %(keepBest)d '
-                '--maxShift %(maxshift)d --classify %(outputClassesFile)s')
+        if self.simplifiedMd:
+            args = ('-i_ref %(imgsRef)s -i_exp %(imgsExp)s -o %(outputFile)s '
+                    '--odir %(tmpDir)s --keep_best %(keepBest)d '
+                    '--maxShift %(maxshift)d --classify %(outputClassesFile)s '
+                    '--simplifiedMd')
+        else:
+            args = ('-i_ref %(imgsRef)s -i_exp %(imgsExp)s -o %(outputFile)s '
+                    '--odir %(tmpDir)s --keep_best %(keepBest)d '
+                    '--maxShift %(maxshift)d --classify %(outputClassesFile)s')
         self.runJob("xmipp_cuda_correlation", args % self._params)
 
 
