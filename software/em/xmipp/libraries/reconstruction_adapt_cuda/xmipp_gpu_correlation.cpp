@@ -322,6 +322,8 @@ int check_gpu_memory(size_t Xdim, size_t Ydim, int percent){
 }
 
 
+//AJ NOTA: cambiar todo este metodo para que calcule primero los pesos y luego se quede
+//con los Nref mayores¿?¿?¿?
 void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float> &matrixCorrCpu_mirror, MultidimArray<float> &corrTotalRow,
 		MultidimArray<float> &weights, int Nref, size_t mdExpSize, size_t mdInSize){
 
@@ -555,7 +557,11 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		}
 	}
 	//END AJ new
+	/*std::cerr << "weights: " << weights << std::endl;
+	if(simplifiedMd && Nref>1)
+		std::cerr << "weightsMax: " << weightsMax << std::endl;*/
 
+	bool skip_image;
 	NexpVector = new int[mdInSize];
 	for(int i=0; i<mdInSize; i++){
 		NexpVector[i]=0;
@@ -577,6 +583,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		firstTime=false;
 		for(int j=0; j<mdExpSize; j++){
 
+			skip_image=false;
 			SFexp.getRow(rowSFexp, iterSFexp->objId);
 			rowSFexp.getValue(MDL_IMAGE, fnExpNew);
 			Iexp_aux.read(fnExpNew);
@@ -588,55 +595,48 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
-					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j)){
-						if(iterSFexp->hasNext())
-							iterSFexp->moveNext();
-						continue;
-					}
+					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j))
+						skip_image=true;
 				}
 				//END AJ new
-
 
 				matrixTransCpu[j].getSlice(i, auxtr);
 
 				double shiftX = (double)DIRECT_A2D_ELEM(auxtr,0,2);
 				double shiftY = (double)DIRECT_A2D_ELEM(auxtr,1,2);
-				if (shiftX*shiftX + shiftY*shiftY > maxShift2){
-					if(iterSFexp->hasNext())
-						iterSFexp->moveNext();
-					continue;
+				if (shiftX*shiftX + shiftY*shiftY > maxShift2)
+					skip_image=true;
+
+				if(!skip_image){
+					NexpVector[i]++;
+
+					MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
+					MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
+					MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
+
+					MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
+					MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
+					MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+
+					MAT_ELEM(E,2,0)=0.0;
+					MAT_ELEM(E,2,1)=0.0;
+					MAT_ELEM(E,2,2)=1.0;
+
+					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
+
+					Iexp_aux().resetOrigin();
+					refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i);
+					change=true;
+					normWeight+=DIRECT_A2D_ELEM(weights,j,i);
 				}
-
-				NexpVector[i]++;
-
-				MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
-				MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
-				MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
-
-				MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
-				MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
-				MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
-
-				MAT_ELEM(E,2,0)=0.0;
-				MAT_ELEM(E,2,1)=0.0;
-				MAT_ELEM(E,2,2)=1.0;
-
-				selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
-
-				Iexp_aux().resetOrigin();
-				refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i);
-				change=true;
-				normWeight+=DIRECT_A2D_ELEM(weights,j,i);
 			}
+			skip_image=false;
 			if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
 
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
-					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j)){
-						if(iterSFexp->hasNext())
-							iterSFexp->moveNext();
-						continue;
-					}
+					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j))
+						skip_image=true;
 				}
 				//END AJ new
 
@@ -644,33 +644,33 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 				double shiftX = (double)DIRECT_A2D_ELEM(auxtr,0,2);
 				double shiftY = (double)DIRECT_A2D_ELEM(auxtr,1,2);
-				if (shiftX*shiftX + shiftY*shiftY > maxShift2){
-					if(iterSFexp->hasNext())
-						iterSFexp->moveNext();
-					continue;
+				if (shiftX*shiftX + shiftY*shiftY > maxShift2)
+					skip_image=true;
+
+				if(!skip_image){
+
+					NexpVector[i]++;
+					Iexp_aux().selfReverseX();
+
+					MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
+					MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
+					MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
+
+					MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
+					MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
+					MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+
+					MAT_ELEM(E,2,0)=0.0;
+					MAT_ELEM(E,2,1)=0.0;
+					MAT_ELEM(E,2,2)=1.0;
+
+					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
+
+					Iexp_aux().resetOrigin();
+					refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i+mdInSize);
+					change=true;
+					normWeight+=DIRECT_A2D_ELEM(weights,j,i+mdInSize);
 				}
-
-				NexpVector[i]++;
-				Iexp_aux().selfReverseX();
-
-				MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
-				MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
-				MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
-
-				MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
-				MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
-				MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
-
-				MAT_ELEM(E,2,0)=0.0;
-				MAT_ELEM(E,2,1)=0.0;
-				MAT_ELEM(E,2,2)=1.0;
-
-				selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
-
-				Iexp_aux().resetOrigin();
-				refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i+mdInSize);
-				change=true;
-				normWeight+=DIRECT_A2D_ELEM(weights,j,i+mdInSize);
 			}
 			if(iterSFexp->hasNext())
 				iterSFexp->moveNext();
@@ -697,6 +697,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	Matrix2D<double> bestM(3,3);
 	MetaData SFout;
 	firstTime=true;
+	skip_image=false;
 	for(int i=0; i<mdInSize; i++){
 
 		//SF.getRow(rowSF, iterSF->objId);
@@ -730,6 +731,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	FileName fnExpIm;
 	MDRow row;
 	for(int i=0; i<mdInSize; i++){
+		skip_image=false;
 		SF.getRow(rowSF, iterSF->objId);
 		iterSFexp->init(SFexp);
 		if(NexpVector[i]==0){
@@ -739,17 +741,15 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		}
 		MetaData SFq;
 		for(int j=0; j<mdExpSize; j++){
+			skip_image=false;
 			SFexp.getRow(rowSFexp, iterSFexp->objId);
 			rowSFexp.getValue(MDL_IMAGE, fnExpIm);
 			if(DIRECT_A2D_ELEM(weights,j,i)!=0){
 
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
-					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j)){
-						if(iterSFexp->hasNext())
-							iterSFexp->moveNext();
-						continue;
-					}
+					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j))
+						skip_image=true;
 				}
 				//END AJ new
 
@@ -757,51 +757,49 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 				double sx = (double)DIRECT_A2D_ELEM(out2,0,2);
 				double sy = (double)DIRECT_A2D_ELEM(out2,1,2);
-				if (sx*sx + sy*sy > maxShift2){
-					if(iterSFexp->hasNext())
-						iterSFexp->moveNext();
-					continue;
+				if (sx*sx + sy*sy > maxShift2)
+					skip_image=true;
+
+				if(!skip_image){
+
+					row.setValue(MDL_IMAGE, fnExpIm);
+					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i));
+					row.setValue(MDL_FLIP, false);
+
+					double scale, shiftX, shiftY, psi;
+					bool flip;
+					MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
+					MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+					MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+
+					MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+					MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+					MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+
+					MAT_ELEM(bestM,2,0)=0.0;
+					MAT_ELEM(bestM,2,1)=0.0;
+					MAT_ELEM(bestM,2,2)=1.0;
+					bestM=bestM.inv();
+
+					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
+
+					row.setValue(MDL_SHIFT_X, -shiftX);
+					row.setValue(MDL_SHIFT_Y, -shiftY);
+					rowSF.getValue(MDL_ANGLE_ROT, rot);
+					row.setValue(MDL_ANGLE_ROT, rot);
+					rowSF.getValue(MDL_ANGLE_TILT, tilt);
+					row.setValue(MDL_ANGLE_TILT, tilt);
+					row.setValue(MDL_ANGLE_PSI, psi);
+					SFq.addRow(row);
 				}
-
-				row.setValue(MDL_IMAGE, fnExpIm);
-				row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i));
-				row.setValue(MDL_FLIP, false);
-
-				double scale, shiftX, shiftY, psi;
-				bool flip;
-				MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
-				MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-				MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
-
-				MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-				MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-				MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
-
-				MAT_ELEM(bestM,2,0)=0.0;
-				MAT_ELEM(bestM,2,1)=0.0;
-				MAT_ELEM(bestM,2,2)=1.0;
-				bestM=bestM.inv();
-
-				transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
-
-				row.setValue(MDL_SHIFT_X, -shiftX);
-				row.setValue(MDL_SHIFT_Y, -shiftY);
-				rowSF.getValue(MDL_ANGLE_ROT, rot);
-				row.setValue(MDL_ANGLE_ROT, rot);
-				rowSF.getValue(MDL_ANGLE_TILT, tilt);
-				row.setValue(MDL_ANGLE_TILT, tilt);
-				row.setValue(MDL_ANGLE_PSI, psi);
-				SFq.addRow(row);
 			}
+			skip_image=false;
 			if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
 
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
-					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j)){
-						if(iterSFexp->hasNext())
-							iterSFexp->moveNext();
-						continue;
-					}
+					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j))
+						skip_image=true;
 				}
 				//END AJ new
 
@@ -809,45 +807,45 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 				double sx = (double)DIRECT_A2D_ELEM(out2,0,2);
 				double sy = (double)DIRECT_A2D_ELEM(out2,1,2);
-				if (sx*sx + sy*sy > maxShift2){
-					if(iterSFexp->hasNext())
-						iterSFexp->moveNext();
-					continue;
+				if (sx*sx + sy*sy > maxShift2)
+					skip_image=true;
+
+				if(!skip_image){
+
+					row.setValue(MDL_IMAGE, fnExpIm);
+					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i+mdInSize));
+					row.setValue(MDL_FLIP, true);
+
+					double scale, shiftX, shiftY, psi;
+					bool flip;
+					MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
+					MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+					MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+
+					MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+					MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+					MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+
+					MAT_ELEM(bestM,2,0)=0.0;
+					MAT_ELEM(bestM,2,1)=0.0;
+					MAT_ELEM(bestM,2,2)=1.0;
+
+					MAT_ELEM(bestM,0,0)*=-1;
+					MAT_ELEM(bestM,1,0)*=-1;
+					bestM=bestM.inv();
+
+					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
+
+					shiftX*=-1;
+					row.setValue(MDL_SHIFT_X, -shiftX);
+					row.setValue(MDL_SHIFT_Y, -shiftX);
+					rowSF.getValue(MDL_ANGLE_ROT, rot);
+					row.setValue(MDL_ANGLE_ROT, rot);
+					rowSF.getValue(MDL_ANGLE_TILT, tilt);
+					row.setValue(MDL_ANGLE_TILT, tilt);
+					row.setValue(MDL_ANGLE_PSI, psi);
+					SFq.addRow(row);
 				}
-
-				row.setValue(MDL_IMAGE, fnExpIm);
-				row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i+mdInSize));
-				row.setValue(MDL_FLIP, true);
-
-				double scale, shiftX, shiftY, psi;
-				bool flip;
-				MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
-				MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-				MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
-
-				MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-				MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-				MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
-
-				MAT_ELEM(bestM,2,0)=0.0;
-				MAT_ELEM(bestM,2,1)=0.0;
-				MAT_ELEM(bestM,2,2)=1.0;
-
-				MAT_ELEM(bestM,0,0)*=-1;
-				MAT_ELEM(bestM,1,0)*=-1;
-				bestM=bestM.inv();
-
-				transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
-
-				shiftX*=-1;
-				row.setValue(MDL_SHIFT_X, -shiftX);
-				row.setValue(MDL_SHIFT_Y, -shiftX);
-				rowSF.getValue(MDL_ANGLE_ROT, rot);
-				row.setValue(MDL_ANGLE_ROT, rot);
-				rowSF.getValue(MDL_ANGLE_TILT, tilt);
-				row.setValue(MDL_ANGLE_TILT, tilt);
-				row.setValue(MDL_ANGLE_PSI, psi);
-				SFq.addRow(row);
 			}
 			if(iterSFexp->hasNext())
 				iterSFexp->moveNext();
