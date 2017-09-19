@@ -36,7 +36,7 @@ private:
 	bool generate_out;
 
 	int n_keep;
-	bool significance, keepN;
+	bool significance, keepN, simplifiedMd;
 	double alpha;
 	int maxShift;
 
