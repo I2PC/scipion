@@ -67,6 +67,15 @@ public:
 		memcpy(data+n*zyxdim, MULTIDIM_ARRAY(from), MULTIDIM_SIZE(from)*sizeof(T));
 	}
 
+	template<typename T1>
+	void fillWithTypeConvert(size_t destOffset, const MultidimArray<T1> &from)
+	{
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(from) {
+			data[destOffset*zyxdim + n] = (T1)from[n];
+		}
+//		memcpy(data+n*zyxdim, MULTIDIM_ARRAY(from), MULTIDIM_SIZE(from)*sizeof(T));
+	}
+
 	bool isEmpty()
 	{
 		return data==NULL;
@@ -77,6 +86,7 @@ public:
 		if (gpuArray.isEmpty())
 			gpuArray.resize(Xdim,Ydim,Zdim,Ndim);
 
+		printf("copyToGpu %d %d %d %d (%d)\n", Xdim, Ydim, Zdim, Ndim,nzyxdim*sizeof(T));
 		gpuCopyFromCPUToGPU(data, gpuArray.d_data, nzyxdim*sizeof(T));
 	}
 
@@ -95,6 +105,16 @@ public:
 			gpuCopyFromCPUToGPU(data, &gpuArray.d_data[index], nzyxdim*sizeof(T));
 			index=index+nzyxdim;
 		}
+	}
+
+	void giveOneImage(GpuMultidimArrayAtCpu<T> out, int idx){
+		if (out.isEmpty())
+			out.resize(Xdim,Ydim,Zdim,1);
+		memcpy(out.data, data[idx*zyxdim], zyxdim*sizeof(T));
+	}
+
+	void setOneImage(GpuMultidimArrayAtCpu<T> in, int idx){
+		memcpy(data[idx*zyxdim], in.data, zyxdim*sizeof(T));
 	}
 
 	void clear()

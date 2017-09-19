@@ -1,16 +1,81 @@
 
+
 #include "cuda_xmipp_utils.h"
 #include "cuda_utils.h"
 
 #include <cufft.h>
 #include <cuComplex.h>
 
-#include <thrust/extrema.h>
-#include <thrust/device_ptr.h>
+#include <time.h>
+#include <sys/time.h>
 
 #define PI 3.14159265
 
 struct ioTime *mytimes;
+
+void mycufftDestroy(void *ptr)
+{
+	cufftHandle *planPtr = (cufftHandle *)ptr;
+	cufftDestroy(*planPtr);
+}
+
+void calculateFFTPlanSize(mycufftHandle &myhandle){
+	printf("calculateFFTPlanSize  myhandle.ptr: %p\n",myhandle.ptr);
+	size_t ws2;
+	cufftHandle *planFptr=(cufftHandle *)myhandle.ptr;
+	cufftGetSize(*planFptr, &ws2);
+	printf("calculateFFTPlanSize  size %i\n", (int)ws2);
+}
+
+
+void createPlanFFT(size_t Xdim, size_t Ydim, size_t Ndim, size_t Zdim, bool forward, cufftHandle *plan){
+
+	int Xfdim=(Xdim/2)+1;
+
+	int nr1[] = {Xdim};   // --- Size of the image in real space
+	int nr2[] = {Ydim, Xdim};   // --- Size of the image in real space
+	int nr3[] = {Zdim, Ydim, Xdim};   // --- Size of the image in real space
+
+	int nf1[] = {Xfdim};   // --- Size of the Fourier transform
+	int nf2[] = {Ydim, Xfdim};   // --- Size of the Fourier transform
+	int nf3[] = {Zdim, Ydim, Xfdim};   // --- Size of the Fourier transform
+	int *nr=NULL, *nf=NULL;
+	int NRANK; // 1D, 2D or 3D FFTs
+	if (Ydim==1 && Zdim==1)
+	{
+		NRANK=1;
+		nr=nr1;
+		nf=nf1;
+	}
+	else if (Zdim==1)
+	{
+		NRANK=2;
+		nr=nr2;
+		nf=nf2;
+	}
+	else
+	{
+		NRANK=3;
+		nr=nr3;
+		nf=nf3;
+	}
+
+	int rstride = 1;				// --- Distance between two successive input/output elements
+	int fstride = 1;
+	int rdist = Xdim*Ydim*Zdim;	    // --- Distance between batches
+	int fdist = Xfdim*Ydim*Zdim;
+
+	printf("%d %d %d %d %d\n", Xdim, Xfdim, Ydim, Zdim, Ndim);
+	printf("rank %d  nr %d %d stride %d dist %d nf %d %d stride %d dist %d ndim %d\n", NRANK, nr[0], nr[1], rstride, rdist, nf[0], nf[1],  fstride, fdist, Ndim);
+
+	if(forward){
+		gpuErrchkFFT(cufftPlanMany(plan, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_R2C, Ndim));
+	}else{
+		gpuErrchkFFT(cufftPlanMany(plan, NRANK, nr, nf, fstride, fdist, nr, rstride, rdist, CUFFT_C2R, Ndim));
+	}
+
+}
+
 
 void gpuMalloc(void** d_data, size_t Nbytes)
 {
@@ -70,204 +135,187 @@ void cuda_check_gpu_memory(float* data)
 	size_t free_byte, total_byte;
 	gpuErrchk(cudaMemGetInfo( &free_byte, &total_byte ));
 
-	double free_db = (double)free_byte;
-	double total_db = (double)total_byte;
-	double used_db = total_db - free_db;
+	float free_db = (float)free_byte;
+	float total_db = (float)total_byte;
+	float used_db = total_db - free_db;
 
 	data[0]=total_db;
 	data[1]=free_db;
 	data[2]=used_db;
 }
 
-
-template<>
-template<>
-void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<double> > &fourierTransform)
+void cuda_check_gpu_properties(int* grid)
 {
+	cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, 0);
+	grid[0] = prop.maxGridSize[0];
+	grid[1] = prop.maxGridSize[1];
+	grid[2] = prop.maxGridSize[2];
+}
 
-	//printf("EN FFT\n");
+template<>
+template<>
+void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float> > &fourierTransform, mycufftHandle &myhandle)
+{
 
 	int Xfdim=(Xdim/2)+1;
 	fourierTransform.resize(Xfdim,Ydim,Zdim,Ndim);
 
-	//TODO AJ check the size of the data to avoid exceed the CUDA FFT size
-	//TODO depende de como de llena este la GPU
-	int maxPoints=51000000;
+	printf("fft after resize %d %d %d %d (%d)\n", Xfdim, Ydim, Zdim, Ndim, fourierTransform.nzyxdim*sizeof(std::complex<float>));
+
 	int positionReal=0;
 	int positionFFT=0;
-	size_t NdimNew;
-	if(Xdim*Ydim*Ndim>maxPoints){
-		NdimNew=floor(maxPoints/(Xdim*Ydim));
-	}else
-		NdimNew = Ndim;
+	size_t NdimNew, auxNdim;
+	NdimNew = Ndim;
 	size_t aux=Ndim;
 
-	int nr1[] = {Xdim};   // --- Size of the image in real space
-	int nr2[] = {Ydim, Xdim};   // --- Size of the image in real space
-	int nr3[] = {Zdim, Ydim, Xdim};   // --- Size of the image in real space
+	auxNdim=Ndim;
 
-	int nf1[] = {Xfdim};   // --- Size of the Fourier transform
-	int nf2[] = {Ydim, Xfdim};   // --- Size of the Fourier transform
-	int nf3[] = {Zdim, Ydim, Xfdim};   // --- Size of the Fourier transform
-	int *nr=NULL, *nf=NULL;
-	int NRANK; // 1D, 2D or 3D FFTs
-	if (Ydim==1 && Zdim==1)
-	{
-		NRANK=1;
-		nr=nr1;
-		nf=nf1;
-	}
-	else if (Zdim==1)
-	{
-		NRANK=2;
-		nr=nr2;
-		nf=nf2;
-	}
-	else
-	{
-		NRANK=3;
-		nr=nr3;
-		nf=nf3;
+	if(myhandle.ptr!=NULL) {
+		NdimNew = Ndim;
+		printf("myHandle not null\n");
 	}
 
-	int rstride = 1;				// --- Distance between two successive input/output elements
-	int fstride = 1;
-	int rdist = Xdim*Ydim*Zdim;	    // --- Distance between batches
-	int fdist = Xfdim*Ydim*Zdim;
+	while(aux>0){
 
-	while(aux){
+		GpuMultidimArrayAtGpu<cufftReal> auxInFFT;
+		GpuMultidimArrayAtGpu<cufftComplex> auxOutFFT;
+		if(NdimNew!=Ndim){
+			printf("NdimNew != Ndim\n");
+			auxInFFT.resize(Xdim,Ydim,Zdim,NdimNew);
+			gpuCopyFromGPUToGPU((cufftReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftReal));
+			auxOutFFT.resize(Xfdim,Ydim,Zdim,NdimNew);
+		}
 
-		//printf("NdimNew EN FFT %i\n",(int)NdimNew);
-		//printf("Number of points %i \n",(int)NdimNew*Xdim*Ydim);
-		//printf("%i %i %i %i %i %i %i \n",NRANK, *nr, rstride, rdist, *nf, fstride, fdist);
-		//printf("positionReal EN FFT %i\n",(int)positionReal);
-		//printf("positionFFT EN FFT %i\n",(int)positionFFT);
+		cufftHandle *planFptr = new cufftHandle;
+		cufftHandle *planAuxFptr = new cufftHandle;
+		if(auxNdim!=NdimNew){
+			printf("NdimNew != Ndim\n");
+			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr);
+		}else{
+			if(myhandle.ptr == NULL){
+				printf("myhandle == NULL\n");
+				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr);
+				myhandle.ptr = (void *)planFptr;
+				planFptr=(cufftHandle *)myhandle.ptr;
+			}else{
+				planFptr=(cufftHandle *)myhandle.ptr;
+			}
+		}
 
-		cufftHandle planF;
-		gpuErrchkFFT(cufftPlanMany(&planF, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_D2Z, NdimNew));
-		gpuErrchkFFT(cufftExecD2Z(planF, (cufftDoubleReal*)&d_data[positionReal], (cufftDoubleComplex*)&fourierTransform.d_data[positionFFT]));
+		if(auxNdim==NdimNew){
+			if(NdimNew!=Ndim){
+				gpuErrchkFFT(cufftExecR2C(*planFptr, auxInFFT.d_data, auxOutFFT.d_data));
+			}else{
+				gpuErrchkFFT(cufftExecR2C(*planFptr, (cufftReal*)&d_data[positionReal], (cufftComplex*)&fourierTransform.d_data[positionFFT]));
+			}
+		}else{
+			if(NdimNew!=Ndim){
+				gpuErrchkFFT(cufftExecR2C(*planAuxFptr, auxInFFT.d_data, auxOutFFT.d_data));
+			}else{
+				gpuErrchkFFT(cufftExecR2C(*planAuxFptr, (cufftReal*)&d_data[positionReal], (cufftComplex*)&fourierTransform.d_data[positionFFT]));
+			}
+		}
+
 		gpuErrchk(cudaDeviceSynchronize());
-		cufftDestroy(planF);
+
+		if(NdimNew!=Ndim){
+			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftComplex));
+			auxOutFFT.clear();
+			auxInFFT.clear();
+		}
+
+		auxNdim=NdimNew;
 
 		positionReal+=(NdimNew*Xdim*Ydim*Zdim);
 		positionFFT+=(NdimNew*Xfdim*Ydim*Zdim);
 		aux-=NdimNew;
-		if(aux*Xdim*Ydim <= maxPoints){
+		if(aux<NdimNew)
 			NdimNew=aux;
-		}
+
+		if(auxNdim!=NdimNew && NdimNew!=0)
+			cufftDestroy(*planAuxFptr);
+
 	}//AJ end while
+
 }
 
 template<>
 template<>
-void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<double> &realSpace)
+void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<float> &realSpace, mycufftHandle &myhandle)
 {
 
-	//printf("EN IFFT\n");
+	int Xfdim=(realSpace.Xdim/2)+1;
 
-	//TODO AJ check the size of the data to avoid exceed the CUDA FFT size
-	int maxPoints=51000000;
 	int positionReal=0;
 	int positionFFT=0;
-	size_t NdimNew;
-	if(realSpace.Xdim*realSpace.Ydim*realSpace.Ndim>maxPoints){
-		NdimNew=floor(maxPoints/(realSpace.Xdim*realSpace.Ydim));
-	}else
-		NdimNew = realSpace.Ndim;
+	size_t NdimNew, auxNdim;
+	NdimNew = realSpace.Ndim;
 	size_t aux=realSpace.Ndim;
 
+	auxNdim=realSpace.Ndim;
 
-	int nr1[] = {realSpace.Xdim};   // --- Size of the image in real space
-	int nr2[] = {realSpace.Ydim, realSpace.Xdim};   // --- Size of the image in real space
-	int nr3[] = {realSpace.Zdim, realSpace.Ydim, realSpace.Xdim};   // --- Size of the image in real space
+	if(myhandle.ptr!=NULL)
+		NdimNew = Ndim;
 
-	int Xfdim=(realSpace.Xdim/2)+1;
-	int nf1[] = {Xfdim};   // --- Size of the Fourier transform
-	int nf2[] = {realSpace.Ydim, Xfdim};   // --- Size of the Fourier transform
-	int nf3[] = {realSpace.Zdim, realSpace.Ydim, Xfdim};   // --- Size of the Fourier transform
-	int *nr=NULL, *nf=NULL;
-	int NRANK; // 1D, 2D or 3D FFTs
-	if (realSpace.Ydim==1 && realSpace.Zdim==1)
-	{
-		NRANK=1;
-		nr=nr1;
-		nf=nf1;
-	}
-	else if (realSpace.Zdim==1)
-	{
-		NRANK=2;
-		nr=nr2;
-		nf=nf2;
-	}
-	else
-	{
-		NRANK=3;
-		nr=nr3;
-		nf=nf3;
-	}
+	while(aux>0){
 
-    int rstride = 1;				// --- Distance between two successive input/output elements
-	int fstride = 1;
-    int rdist = realSpace.Xdim*realSpace.Ydim*realSpace.Zdim;	    // --- Distance between batches
-	int fdist = Xfdim*realSpace.Ydim*realSpace.Zdim;
+		GpuMultidimArrayAtGpu<cufftComplex> auxInFFT;
+		GpuMultidimArrayAtGpu<cufftReal> auxOutFFT;
+		if(NdimNew!=Ndim){
+			auxInFFT.resize(Xfdim,realSpace.Ydim,realSpace.Zdim,NdimNew);
+			gpuCopyFromGPUToGPU((cufftComplex*)&d_data[positionFFT], auxInFFT.d_data, Xfdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftComplex));
+			auxOutFFT.resize(realSpace.Xdim,realSpace.Ydim,realSpace.Zdim, NdimNew);
+		}
 
-	while(aux){
+		cufftHandle *planBptr = new cufftHandle;
+		cufftHandle *planAuxBptr = new cufftHandle;
+		if(auxNdim!=NdimNew){
+			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, false, planAuxBptr);
+		}else{
+			if(myhandle.ptr == NULL){
+				createPlanFFT(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr);
+				myhandle.ptr = (void *)planBptr;
+				planBptr=(cufftHandle *)myhandle.ptr;
+			}else{
+				planBptr=(cufftHandle *)myhandle.ptr;
+			}
+		}
 
-		//printf("NdimNew EN IFFT %i\n",(int)NdimNew);
-		//printf("Number of points %i \n",(int)NdimNew*realSpace.Xdim*realSpace.Ydim);
-		cufftHandle planB;
-		gpuErrchkFFT(cufftPlanMany(&planB, NRANK, nr, nf, fstride, fdist, nr, rstride, rdist, CUFFT_Z2D, NdimNew));
-		gpuErrchkFFT(cufftExecZ2D(planB, (cufftDoubleComplex *)&d_data[positionFFT], (cufftDoubleReal*)&realSpace.d_data[positionReal]));
+		if(auxNdim==NdimNew){
+			if(NdimNew!=Ndim){
+				gpuErrchkFFT(cufftExecC2R(*planBptr, auxInFFT.d_data, auxOutFFT.d_data));
+			}else{
+				gpuErrchkFFT(cufftExecC2R(*planBptr, (cufftComplex *)&d_data[positionFFT], (cufftReal*)&realSpace.d_data[positionReal]));
+			}
+		}else{
+			if(NdimNew!=Ndim){
+				gpuErrchkFFT(cufftExecC2R(*planAuxBptr, auxInFFT.d_data, auxOutFFT.d_data));
+			}else{
+				gpuErrchkFFT(cufftExecC2R(*planAuxBptr, (cufftComplex *)&d_data[positionFFT], (cufftReal*)&realSpace.d_data[positionReal]));
+			}
+		}
+
+
 		gpuErrchk(cudaDeviceSynchronize());
-		cufftDestroy(planB);
+
+		if(NdimNew!=Ndim){
+			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftReal*)&realSpace.d_data[positionReal], realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftReal));
+			auxOutFFT.clear();
+			auxInFFT.clear();
+		}
+
+		auxNdim=NdimNew;
 
 		positionReal+=(NdimNew*realSpace.Xdim*realSpace.Ydim*realSpace.Zdim);
 		positionFFT+=(NdimNew*Xfdim*realSpace.Ydim*realSpace.Zdim);
 		aux-=NdimNew;
-		if(aux*realSpace.Xdim*realSpace.Ydim <= maxPoints){
+		if(aux<NdimNew)
 			NdimNew=aux;
-		}
+
+		if(auxNdim!=NdimNew && NdimNew!=0)
+			cufftDestroy(*planAuxBptr);
 
 	}//AJ end while
-}
-
-
-template<>
-void GpuMultidimArrayAtGpu<double>::calculateMax(double *max_values, float *posX, float *posY){
-
-	int index = 0;
-
-	for(int i=0; i<Ndim; i++){
-		thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(&d_data[index]);
-		thrust::device_ptr<double> max_ptr = thrust::max_element(dev_ptr, dev_ptr + (int)yxdim);
-		unsigned int position = &max_ptr[0] - &dev_ptr[0];
-		max_values[i] = max_ptr[0];
-		//printf("max_thrust %lf   ", max_values[i]);
-
-		float posX_aux = (float)(position%Xdim);
-		float posY_aux = (float)(position/Xdim);
-		float Xdim2 = (float)(Xdim/2);
-		float Ydim2 = (float)(Ydim/2);
-
-		if(posX_aux>=Xdim2 && posY_aux>=Ydim2){
-			posX[i] = Xdim-1-posX_aux;
-			posY[i] = Ydim-1-posY_aux;
-		}else if(posX_aux<Xdim2 && posY_aux>=Ydim2){
-			posX[i] = -(posX_aux+1);
-			posY[i] = Ydim-1-posY_aux;
-		}else if(posX_aux<Xdim2 && posY_aux<Ydim2){
-			posX[i] = -(posX_aux+1);
-			posY[i] = -(posY_aux+1);
-		}else if(posX_aux>=Xdim2 && posY_aux<Ydim2){
-			posX[i] = Xdim-1-posX_aux;
-			posY[i] = -(posY_aux+1);
-		}
-		//printf("Max x-thr=%f   ", posX[i]);
-		//printf("Max y-thr=%f\n", posY[i]);
-
-		index = index+(int)yxdim;
-	}
 
 }
-
-

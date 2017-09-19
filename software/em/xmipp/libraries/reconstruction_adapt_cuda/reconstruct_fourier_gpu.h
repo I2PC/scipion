@@ -51,6 +51,8 @@
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 #include <reconstruction_cuda/cuda_gpu_reconstruct_fourier.h>
+#include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
+#include <reconstruction_cuda/cuda_xmipp_utils.h>
 #define BLOB_TABLE_SIZE 5000
 #define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with cuda_gpu_reconstruct_fourier.cpp
 
@@ -468,6 +470,8 @@ private:
      */
     int prepareTransforms(ProjectionData* buffer,
     		TraverseSpace* traverseSpaces);
+
+    ProjectionDataGPU* processImgsOnGPU(ProjectionData* buffer, int&);
 
     template<typename T>
     Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {

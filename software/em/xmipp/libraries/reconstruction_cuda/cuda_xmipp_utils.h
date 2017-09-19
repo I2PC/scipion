@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 
+void mycufftDestroy(void *ptr);
 void gpuMalloc(void** d_data, size_t Nbytes);
 void gpuFree(void* d_data);
 void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, size_t Nbytes);
@@ -13,6 +14,7 @@ void setRotationMatrix(float* d_data, float ang, int n);
 void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes);
 void gpuCopyFromGPUToCPU(void* d_data, void* data, size_t Nbytes);
 int gridFromBlock(int tasks, int Nthreads);
+
 
 struct ioTime
 {
@@ -45,7 +47,27 @@ inline double timeval_diff(struct timeval *a, struct timeval *b)
 
 extern struct ioTime *mytimes;
 
+
 void cuda_check_gpu_memory(float* data);
+void cuda_check_gpu_properties(int* maxGridSize);
+
+class mycufftHandle {
+public:
+	void *ptr;
+
+	mycufftHandle(){
+			ptr=NULL;
+	}
+
+	void clear()
+	{
+		if (ptr!=NULL)
+			mycufftDestroy(ptr);
+		ptr=NULL;
+	}
+
+
+};
 
 class XmippDim3 {
 public:
@@ -67,6 +89,7 @@ public:
 };
 
 #define CONVERT2DIM3(d) (dim3((d).x,(d).y,(d).z))
+
 
 template<typename T>
 class TransformMatrix
@@ -161,9 +184,9 @@ public:
 		gpuCopyFromGPUToCPU(d_data, matrixCpu, nzyxdim*sizeof(float));
 	}
 
-	void copyOneMatrixToCpu(float* &matrixCpu, int i)
+	void copyOneMatrixToCpu(float* &matrixCpu, int idxCpu, int idxGpu)
 	{
-		gpuCopyFromGPUToCPU(&d_data[9*i], &matrixCpu[9*i], 9*sizeof(float));
+		gpuCopyFromGPUToCPU(&d_data[9*idxGpu], &matrixCpu[9*idxCpu], 9*sizeof(float));
 	}
 
 };
@@ -198,8 +221,11 @@ public:
 
 	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
-		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim)
+
+		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim){
+
 			return;
+		}
 
 		clear();
 
@@ -221,8 +247,10 @@ public:
 
 	void clear()
 	{
-		if (d_data!=NULL)
+		if (d_data!=NULL){
 			gpuFree((void*) d_data);
+
+		}
 		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
 		d_data=NULL;
 	}
@@ -235,6 +263,11 @@ public:
 	void copyToGpu(T* data)
 	{
 		gpuCopyFromCPUToGPU((void *)data, (void *)d_data, nzyxdim*sizeof(T));
+	}
+
+	void fillImageToGpu(T* data, size_t n=0)
+	{
+		gpuCopyFromCPUToGPU((void *)data, (void *)&d_data[n*zyxdim], zyxdim*sizeof(T));
 	}
 
 	void copyGpuToGpu(GpuMultidimArrayAtGpu<T> &gpuArray)
@@ -260,16 +293,14 @@ public:
 	}
 
 	template <typename T1>
-	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform);
+	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle);
 
 	// RealSpace must already be resized
 	template <typename T1>
-	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace);
+	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle);
 
-	void calculateMax(double *max_values, float *posX, float *posY);
+	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
 
 };
-
-
 
 #endif

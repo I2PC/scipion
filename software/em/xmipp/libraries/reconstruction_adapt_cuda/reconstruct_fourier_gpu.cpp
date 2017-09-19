@@ -276,6 +276,87 @@ Array2D<std::complex<float> >* ProgRecFourierGPU::cropAndShift(MultidimArray<std
 	return result;
 }
 
+
+//void preprocess_images_reference(MetaData &SF, int numImages, Mask &mask,
+//		GpuCorrelationAux &d_correlationAux)
+//{
+//	size_t Xdim, Ydim, Zdim, Ndim;
+//	getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
+//	size_t pad_Xdim=2*Xdim-1;
+//	size_t pad_Ydim=2*Ydim-1;
+//
+//	d_correlationAux.Xdim=pad_Xdim;
+//	d_correlationAux.Ydim=pad_Ydim;
+//
+//	size_t objIndex = 0;
+//	MDRow rowIn;
+//	FileName fnImg;
+//	Image<double> Iref;
+//	size_t radius=(size_t)mask.R1;
+//
+//	GpuMultidimArrayAtCpu<double> original_image_stack(Xdim,Ydim,1,numImages);
+//
+//	MDIterator *iter = new MDIterator(SF);
+//
+//	int available_images=numImages;
+//	size_t n=0;
+//	while(available_images && iter->objId!=0){
+//
+//		objIndex = iter->objId;
+//		available_images--;
+//
+//		SF.getRow(rowIn, objIndex);
+//		rowIn.getValue(MDL_IMAGE, fnImg);
+//		std::cerr << objIndex << ". Image: " << fnImg << std::endl;
+//		Iref.read(fnImg);
+//		original_image_stack.fillImage(n,Iref());
+//
+//		if(iter->hasNext())
+//			iter->moveNext();
+//
+//		n++;
+//	}
+//	delete iter;
+//
+//	//AJ new masking and padding
+//	original_image_stack.copyToGpu(d_correlationAux.d_original_image);
+//	GpuMultidimArrayAtGpu<double> image_stack_gpu(Xdim,Ydim,1,numImages);
+//	original_image_stack.copyToGpu(image_stack_gpu);
+//	MultidimArray<int> maskArray = mask.get_binary_mask();
+//	MultidimArray<double> dMask;
+//	typeCast(maskArray, dMask);
+//	GpuMultidimArrayAtGpu<double> mask_device(Xdim, Ydim, Zdim, 1);
+//	mask_device.copyToGpu(MULTIDIM_ARRAY(dMask));
+//
+//	GpuMultidimArrayAtGpu<double> padded_image_gpu, padded_image2_gpu, padded_mask_gpu;
+//	padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, numImages);
+//	padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, numImages);
+//	padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
+//
+//	padding_masking(image_stack_gpu, mask_device, padded_image_gpu, padded_image2_gpu,
+//			padded_mask_gpu, NULL, false);
+//
+//	//TODO AJ check the size of the data to avoid exceed the CUDA FFT size
+//	padded_image_gpu.fft(d_correlationAux.d_projFFT);
+//	padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT);
+//	padded_mask_gpu.fft(d_correlationAux.d_maskFFT);
+//
+//	//Polar transform of the projected images
+//	d_correlationAux.XdimPolar=360;
+//	d_correlationAux.YdimPolar=radius;
+//	GpuMultidimArrayAtGpu<double> polar_gpu(360,radius,1,numImages);
+//	GpuMultidimArrayAtGpu<double> polar2_gpu(360,radius,1,numImages);
+//	cuda_cart2polar(d_correlationAux.d_original_image, polar_gpu, polar2_gpu, false);
+//	//FFT
+//	polar_gpu.fft(d_correlationAux.d_projPolarFFT);
+//	polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT);
+//
+//}
+
+
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
+
 void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		ProgRecFourierGPU* parent,
 		bool hasCTF, std::vector<size_t>& objId)
@@ -286,6 +367,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 	MultidimArray< std::complex<double> > localPaddedFourier;
     params.only_apply_shifts = true;
 	if (0 == threadParams->buffer1) {
+		// fixme must be initialized elsewhere, because it might be necessary to store a flag deciding if the FFT should be done on CPU or GPU
 		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
 	}
 	for (int bIndex = 0; bIndex < parent->bufferSize; bIndex++) {
@@ -296,6 +378,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		ProjectionData* data = &threadParams->buffer1[bIndex];
 		data->skip = true;
 		if (imgIndex >= threadParams->endImageIndex) {
+			std::cout << "skipping " << imgIndex << " because it is beyond the maxIndex" << std::endl;
 			continue;
 		}
 		//Read projection from selfile, read also angles and shifts if present
@@ -305,6 +388,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		tilt = proj.tilt();
 		psi = proj.psi();
 		if (parent->do_weights && proj.weight() == 0.f) {
+			std::cout << "skipping " << imgIndex << " because of 0 weight" << std::endl;
 			continue;
 		}
 		data->weight = (parent->do_weights) ? proj.weight() : 1.0;
@@ -324,12 +408,34 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		localTransformerImg.FourierTransform();
 		localTransformerImg.getFourierAlias(localPaddedFourier);
 
+		// FIXME WHY IS JUST ONE BUFFER LOADING?
+////////////////////////////
+
+		double max = 0;
+		double min = 0;
+		double sum = 0;
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(localPaddedFourier) {
+			max = std::max(max, A2D_ELEM(localPaddedFourier, i, j).real());
+			min = std::min(min, A2D_ELEM(localPaddedFourier, i, j).real());
+			sum += A2D_ELEM(localPaddedFourier, i, j).real();
+		}
+//		printf("img %d min %f max %f avg %f\n", imgIndex, min, max, sum / localPaddedFourier.yxdim);
+		Image<double> Vout;
+		Vout().initZeros(localPaddedFourier);
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(Vout.data)
+			A2D_ELEM(Vout.data,i,j) = A2D_ELEM(localPaddedFourier, i, j).real();
+		std::cout << "storing " << imgIndex << std::endl;
+		Vout.write("expectedFourier//" + SSTR(imgIndex));
+
+//////////////////////////////
+
 		// Compute the coordinate axes associated to this image
 		Euler_angles2matrix(rot, tilt, psi, localA);
 
 		data->localAInv = localA.transpose();
 		data->localA = localA.transpose().inv();
-		data->img = cropAndShift(localPaddedFourier, parent);
+//		data->img = cropAndShift(localPaddedFourier, parent);
+		data->origImg = localPaddedImg; // FIXME probably wrong
 
 
 //		if (imgIndex == 12) {
@@ -378,6 +484,11 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 #undef DEBUG22
 	}
 }
+
+
+
+
+
 
 void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 {
@@ -1122,7 +1233,7 @@ int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 //							std::cout << "UUID: " << UUID << " ";
 //						}
 			traverseSpaces[index].UUID = UUID;
-			computeTraverseSpace(buffer[i].img->getXSize(), buffer[i].img->getYSize(), i,
+			computeTraverseSpace(maxVolumeIndexX / 2, maxVolumeIndexYZ, i,
 					transf, transfInv, &traverseSpaces[index]);
 
 //			if (UUID == 1058) {
@@ -1155,6 +1266,58 @@ void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
 	}
 }
 
+
+ProjectionDataGPU* ProgRecFourierGPU::processImgsOnGPU(ProjectionData* buffer, int& realBufferSize) {
+	int imgSizeX = buffer[0].origImg.xdim;
+	int fftSizeX = (imgSizeX/2)+1;
+	int imgSizeY = buffer[0].origImg.ydim;
+	GpuMultidimArrayAtCpu<float> original_image_stack(imgSizeX,imgSizeY,1,bufferSize);
+	GpuMultidimArrayAtGpu<float> image_stack_gpu;
+	realBufferSize = 0;
+	for (int i = 0; i < bufferSize; i++) {
+		if ( ! buffer[i].skip) {
+			original_image_stack.fillWithTypeConvert(i, buffer[i].origImg);
+			realBufferSize++;
+		}
+	}
+	original_image_stack.copyToGpu(image_stack_gpu);
+
+float* tmp;
+
+	ProjectionDataGPU* result = prepareBuffer(image_stack_gpu, maxVolumeIndexX / 2, maxVolumeIndexYZ, imgSizeY, maxResolutionSqr, realBufferSize, tmp);
+
+
+	Image<double> Vout;
+	Vout().initZeros(realBufferSize,maxVolumeIndexYZ,maxVolumeIndexX / 2);
+	std::cout << "traversing " << realBufferSize * maxVolumeIndexYZ * (maxVolumeIndexX / 2) << " elements of Vout" << std::endl;
+//	for (int n = 0; n < bufferSize; n++) {
+		for (int i = 0; i < (realBufferSize * maxVolumeIndexYZ * (maxVolumeIndexX / 2)); i++) {
+			Vout.data[i] = tmp[i*2];
+		}
+//	}
+	Vout.write("fftOnGpu");
+
+	delete[] tmp;
+
+	Image<double> Vout1;
+	Vout1().initZeros(realBufferSize,imgSizeY,imgSizeX);
+	for (int i = 0; i < (realBufferSize * imgSizeY * imgSizeX); i++) {
+		Vout1.data[i] = original_image_stack.data[i];
+	}
+	Vout1.write("originalImageStack");
+
+
+//			int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr
+
+//	for (int i = 0; i < bufferSize; i++) {
+//		if ( ! buffer[i].skip) {
+//			original_image_stack.fillImage(i, buffer[i].origImg);
+//		}
+//	}
+	std::cout << "end of processImgsOnGPU" << std::endl;
+	return result;
+}
+
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
 	int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)bufferSize);
@@ -1184,15 +1347,19 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 
     	int noOfTransforms = prepareTransforms(loadThread.buffer2, traverseSpaces);
+    	int realBufferSize;
+    	ProjectionDataGPU* images = processImgsOnGPU(loadThread.buffer2, realBufferSize);
+//    	barrier_wait( &barrier ); // FIXME remove
+//    	continue; // FIXME remove
 //    	sort(traverseSpaces, noOfTransforms);
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
     			loadThread.buffer2,
 				(maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1),
-				bufferSize, traverseSpaces, noOfTransforms,
+				realBufferSize, traverseSpaces, noOfTransforms,
 				maxVolumeIndexX, maxVolumeIndexYZ,
 				useFast, blob.radius,
 				iDeltaSqrt,
-				blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
+				blobTableSqrt, BLOB_TABLE_SIZE_SQRT, images);
     	barrier_wait( &barrier );
 		if (verbose && startLoadIndex%repaint==0) {
 			progress_bar(startLoadIndex);

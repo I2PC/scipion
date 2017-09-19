@@ -7,6 +7,8 @@
 #include <data/array_2D.h>
 #include <complex>
 #include <data/matrix2d.h>
+#include "data/multidim_array.h"
+
 
 typedef float MATRIX[3][3];
 
@@ -20,6 +22,7 @@ struct ProjectionData
 	Matrix2D<double> localAInv;
 	Matrix2D<double> localA;
 	bool skip;
+	MultidimArray<double> origImg;
 public:
 	ProjectionData() {
 		img = 0;

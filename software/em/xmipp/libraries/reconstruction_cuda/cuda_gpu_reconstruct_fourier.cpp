@@ -19,6 +19,11 @@ __shared__ Point3D<float> SHARED_AABB[2];
 extern __shared__ float2 IMG[];
 #endif
 
+
+
+
+//void copyProjectionData(ProjectionData* data);
+//static ProjectionDataGPU* copyProjectionData(ProjectionData& data);
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 		true) {
@@ -29,6 +34,36 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 			exit(code);
 	}
 }
+
+void ProjectionDataGPU::clean() {
+	cudaFree(img);
+		gpuErrchk(cudaPeekAtLastError());
+	cudaFree(CTF);
+		gpuErrchk(cudaPeekAtLastError());
+	cudaFree(modulator);
+		gpuErrchk(cudaPeekAtLastError());
+	setDefault();
+}
+template<typename T, typename U>
+void ProjectionDataGPU::copy(const Array2D<T>& from, U& to) {
+		int xSize = from.getXSize();
+		int ySize = from.getYSize();
+		int N = xSize * ySize;
+		// flatten the input array
+		T* tmp = new T[N];
+		for (int y = 0; y < ySize; y++) {
+			memcpy(&tmp[y * xSize],
+					from.getRow(y),
+					sizeof(T)*xSize);
+		}
+		// Allocate device pointer.
+		cudaMalloc((void**) &(to), sizeof(T) * N);
+		// Copy content from host to device.
+		cudaMemcpy(to, tmp, sizeof(T)*N, cudaMemcpyHostToDevice);
+		gpuErrchk(cudaPeekAtLastError());
+		delete[] tmp;
+	}
+
 
 
 __device__
@@ -120,6 +155,10 @@ void releaseGPU(float*& where) {
 }
 
 
+
+
+
+
 //#include <cuda_runtime.h>
 //#include <limits>
 ////
@@ -179,87 +218,7 @@ inline void multiply(const MATRIX& a, const MATRIX& b, MATRIX& c) {
 //
 //
 //
-struct ProjectionDataGPU
-{
-	bool skip;
-	float* img;
-	float* CTF;
-	float* modulator;
-	int xSize;
-	int ySize;
-	int imgIndex;
-	float weight;
-	float localAInv[3][3];
-	float localA[3][3];
-public:
-	ProjectionDataGPU() {
-			setDefault();
-		}
-	ProjectionDataGPU(const ProjectionData& data) {
-		skip = data.skip;
-		if (skip) {
-			setDefault();
-			return;
-		}
-		copy(*data.img, img);
-		if (NULL != data.CTF) {
-			copy(*data.CTF, CTF);
-		} else {
-			CTF = NULL;
-		}
-		if (NULL != data.modulator) {
-			copy(*data.modulator, modulator);
-		} else {
-			modulator = NULL;
-		}
-		xSize = data.img->getXSize();
-		ySize = data.img->getYSize();
-		imgIndex = data.imgIndex;
-		weight = data.weight;
-		data.localAInv.convertTo(localAInv);
-		data.localA.convertTo(localA);
-	}
-	/** Remove stored data and set to skip */
-	void clean() {
-		cudaFree(img);
-		gpuErrchk(cudaPeekAtLastError());
-		cudaFree(CTF);
-		gpuErrchk(cudaPeekAtLastError());
-		cudaFree(modulator);
-		gpuErrchk(cudaPeekAtLastError());
-		setDefault();
-	}
-	void setDefault() {
-		skip = true;
-		img = NULL;
-		CTF = NULL;
-		modulator = NULL;
-		xSize = 0;
-		ySize = 0;
-		imgIndex = -1;
-		weight = 0;
-	}
-private:
-	template<typename T, typename U>
-	void copy(const Array2D<T>& from, U& to) {
-		int xSize = from.getXSize();
-		int ySize = from.getYSize();
-		int N = xSize * ySize;
-		// flatten the input array
-		T* tmp = new T[N];
-		for (int y = 0; y < ySize; y++) {
-			memcpy(&tmp[y * xSize],
-					from.getRow(y),
-					sizeof(T)*xSize);
-		}
-		// Allocate device pointer.
-		cudaMalloc((void**) &(to), sizeof(T) * N);
-		// Copy content from host to device.
-		cudaMemcpy(to, tmp, sizeof(T)*N, cudaMemcpyHostToDevice);
-		gpuErrchk(cudaPeekAtLastError());
-		delete[] tmp;
-	}
-};
+
 
 __global__ void test_init(float* test,
 		ProjectionDataGPU* buffer, int bufferSize,
@@ -913,7 +872,8 @@ void processBufferKernel(
 		ProjectionDataGPU* buffer, int bufferSize,
 		TraverseSpace* traverseSpaces, int noOfTransforms,
 		float* devBlobTableSqrt,
-		int imgCacheDim) {
+		int imgCacheDim,
+		ProjectionDataGPU* images) {
 #if SHARED_BLOB_TABLE
 	if ( ! cUseFast) {
 		int id = threadIdx.y*blockDim.x + threadIdx.x;
@@ -924,6 +884,15 @@ void processBufferKernel(
 	}
 #endif
 
+	if (threadIdx.x == threadIdx.y == blockIdx.x == blockIdx.y == 0) {
+		for (int i = 0; i < bufferSize; i++) {
+			buffer[i].img = images[i].img;
+			buffer[i].xSize = images[i].xSize;
+			buffer[i].ySize = images[i].ySize;
+			//cudaFree(images[i].img);
+		}
+	}
+	__syncthreads();
 
 
 	for (int i = 0; i < noOfTransforms; i++) {
@@ -952,6 +921,154 @@ void processBufferKernel(
 			imgCacheDim);
 		__syncthreads(); // sync threads to avoid write after read problems
 	}
+	/*if (threadIdx.x == threadIdx.y == blockIdx.x == blockIdx.y == 0) {
+			for (int i = 0; i < bufferSize; i++) {
+				//free(images[i].img);}
+		}*/
+}
+
+
+/** Index to frequency
+ *
+ * Given an index and a size of the FFT, this function returns the corresponding
+ * digital frequency (-1/2 to 1/2)
+ */
+#define FFT_IDX2DIGFREQ(idx, size, freq) \
+    freq = (size<=1)? 0:(( (((int)idx) <= (((int)(size)) >> 1)) ? ((int)(idx)) : -((int)(size)) + ((int)(idx))) / \
+           (double)(size)); // FIXME do sth with this, cannot be here
+
+
+#define A2D_ELEM(v, i, j) \
+    DIRECT_A2D_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
+__global__
+void prepareBufferKernel(std::complex<float>* d_data,
+		int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr, ProjectionDataGPU* result, int Xdim, int Ydim, int Ndim) {
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	int idy = blockIdx.y*blockDim.y + threadIdx.y;
+
+//	if (idx == idy == 0) {
+//		Image<double> Vout;
+//		Vout().initZeros(1,Ydim,Xdim);
+//		for (int y = 0; y < Ydim; y++) {
+//			for (int x = 0; x < Xdim; x++) {
+//				Vout.data[y*Xdim + x] = d_data[y*Xdim + x];
+//			}
+//		}
+//		 Vout.write("nejakaFourierka");
+//	}
+
+//	ProjectionDataGPU* result;
+//	if (idx == idy == 0) {
+//		result = malloc(sizeof(ProjectionDataGPU)*ffts.Ndim);  /// fixme this should be done on host
+//	}
+//	__syncthreads();
+	for (int n = 0; n < Ndim; n++) {
+//		int mallocSize = sizeX*sizeY*sizeof(float)*2;
+//		if (idx == idy == 0) {
+////			result[n].clean();
+////			result[n].img = (float*)malloc(mallocSize); // fixme do this on host
+//			result[n].xSize = sizeX;
+//			result[n].ySize = sizeY;
+//		}
+
+//		float<std::complex<float> >* result = new Array2D<std::complex<float> >(sizeX, sizeY);
+		// convert image (shift to center and remove high frequencies)
+//		std::complex<double> paddedFourierTmp;
+		int halfY = Ydim / 2;
+		float tempMyPadd[2];
+		if ((idy < sizeX || idy >= (Ydim - sizeX)) && (idx < sizeX)) {
+			// check the frequency
+			int srcIndex = n*Ydim*Xdim + idy*Xdim + idx;
+			float* src = (float*)&(d_data[srcIndex]);
+//					paddedFourierTmp = fftsDIRECT_A2D_ELEM(paddedFourier, i, j);
+			FFT_IDX2DIGFREQ(idx, paddedImgSize, tempMyPadd[0]);
+			FFT_IDX2DIGFREQ(idy, paddedImgSize, tempMyPadd[1]);
+			if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1] > maxResolutionSqr) {
+				continue;
+			}
+			// do the shift
+			int myPadI = (idy < halfY) ?	idy + sizeX : idy - Ydim + sizeX;
+			int destIndex = myPadI*sizeX + idx;
+//			if (2*destIndex < 0 || (2*destIndex+1)>= mallocSize ) {
+//				printf("prusvih %d (max %d) z %d %d %d %d", 2*destIndex+1, mallocSize, threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
+//			}
+			result[n].img[2*destIndex] = src[0] / (float)(Ydim*Ydim); // FIXME normalization element
+			result[n].img[2*destIndex + 1] = src[1]  / (float)(Ydim*Ydim); // FIXME normalization element
+//			printf("%d %d\n", idx, idy );
+//			if (threadIdx.x == 0 && threadIdx.y == 0 && (*src >=1 || *src<=-1)) {
+//				printf("prusvih %f z %d %d %d %d\n", src[0], threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
+//			}
+//					(*result)(j, myPadI).real() =	paddedFourierTmp.real();
+//					(*result)(j, myPadI).imag() =	paddedFourierTmp.imag();
+		}
+		__syncthreads();
+	}
+}
+
+
+ProjectionDataGPU* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
+		int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr, int bufferSize, float*& tmp){
+
+	GpuMultidimArrayAtGpu<std::complex<float> > resultingFFT;
+	mycufftHandle myhandle;
+	ffts.fft(resultingFFT, myhandle);
+
+//	gpuErrchk( cudaPeekAtLastError() );
+//		gpuErrchk( cudaDeviceSynchronize() );
+
+
+
+
+
+	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
+	for (int i = 0; i < bufferSize; i++) {
+		hostBuffer[i] = *new ProjectionDataGPU();
+		cudaMalloc((void **) &hostBuffer[i].img, sizeX*sizeY*sizeof(float)*2);
+		gpuErrchk( cudaPeekAtLastError() );
+		cudaMemset(hostBuffer[i].img, 0.f, sizeX*sizeY*sizeof(float)*2);
+		gpuErrchk( cudaPeekAtLastError() );
+		hostBuffer[i].xSize = sizeX;
+		hostBuffer[i].ySize = sizeY;
+	}
+	ProjectionDataGPU* devBuffer;
+	int size = bufferSize * sizeof(ProjectionDataGPU);
+	cudaMalloc((void **) &devBuffer, size);
+	gpuErrchk( cudaPeekAtLastError() );
+	cudaMemcpy(devBuffer, hostBuffer, size, cudaMemcpyHostToDevice);
+	gpuErrchk( cudaPeekAtLastError() );
+//	return devBuffer;
+
+
+//	int size = resultingFFT.Ndim * sizeof(ProjectionDataGPU);
+//	cudaMalloc((void **) &result, size);
+//	gpuErrchk( cudaPeekAtLastError() );
+//	for (int i = 0; i < ffts.Ndim; i++) {
+//
+//	}
+
+	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
+	dim3 dimGrid((int)ceil(paddedImgSize/dimBlock.x),(int)ceil(paddedImgSize/dimBlock.y));
+
+	printf("kernel %d %d x %d %d", dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y);
+
+	prepareBufferKernel<<<dimGrid, dimBlock>>>(resultingFFT.d_data,sizeX, sizeY, paddedImgSize, maxResolutionSqr, devBuffer, resultingFFT.Xdim, resultingFFT.Ydim, bufferSize);
+
+	int tmpSize = sizeX * sizeY * 2*sizeof(float);
+	printf("velikost fft = x=%d y=%d, velikost ciloveho obrazku %d %d (%d)\n", resultingFFT.Xdim, resultingFFT.Ydim, sizeX, sizeY, tmpSize );
+	printf("parametry x %d y %d paddedimgSize %d bufferSize %d\n", sizeX, sizeY, paddedImgSize, bufferSize );
+	tmp = new float[tmpSize * bufferSize];
+//	ProjectionDataGPU* eee = new ProjectionDataGPU[bufferSize];
+//	cudaMemcpy(eee, devBuffer, bufferSize * sizeof(ProjectionDataGPU), cudaMemcpyDeviceToHost);
+//	gpuErrchk(cudaPeekAtLastError());
+	for (int i = 0; i < bufferSize; i++) {
+		cudaMemcpy(tmp+ (sizeX*sizeY*2*i), hostBuffer[i].img, tmpSize, cudaMemcpyDeviceToHost);
+		gpuErrchk(cudaPeekAtLastError());
+	}
+
+
+	std::cout << "end of prepareBuffer" << std::endl;
+//	delete[] hostBuffer;
+	return devBuffer;
 }
 
 void processBufferGPU(float* tempVolumeGPU,
@@ -961,10 +1078,12 @@ void processBufferGPU(float* tempVolumeGPU,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt,
-		float* blobTableSqrt, int blobTableSize) {
+		float* blobTableSqrt, int blobTableSize,
+		ProjectionDataGPU* images) {
 
 	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
 	ProjectionDataGPU* devBuffer = copyProjectionData(hostBuffer, data, bufferSize);
+
 
 //	size_t currentLimit;
 //	cudaDeviceGetLimit(&currentLimit, cudaLimitPrintfFifoSize);
@@ -1024,7 +1143,8 @@ void processBufferGPU(float* tempVolumeGPU,
 			devBuffer, bufferSize,
 			devTravSpaces, noOfTransforms,
 			devBlobTableSqrt,
-			imgCacheDim);
+			imgCacheDim,
+			images);
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
 //	ProjectionDataGPU*	hostBuffer = new ProjectionDataGPU[bufferSize];
@@ -1052,6 +1172,7 @@ void processBufferGPU(float* tempVolumeGPU,
 
 	for (int i = 0 ; i < bufferSize; i++) {
 		hostBuffer[i].clean();
+
 	}
 	cudaFree(devBuffer);
 	gpuErrchk( cudaPeekAtLastError() );
@@ -1060,6 +1181,8 @@ void processBufferGPU(float* tempVolumeGPU,
 	gpuErrchk( cudaPeekAtLastError() );
 	cudaFree(devBlobTableSqrt);
 	gpuErrchk( cudaPeekAtLastError() );
+
+		gpuErrchk( cudaPeekAtLastError() );
 }
 //
 //void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights) {
