@@ -171,7 +171,7 @@ class CTFModel(EMObject):
             return self._gctf_crossCorrelation.get()
         elif hasattr(self, '_xmipp_ctfCritFitting'):
             return self._xmipp_ctfCritFitting.get()
-        else
+        else:
             return self._fitQuality.get()
 
     def setFitQuality(self, value):
