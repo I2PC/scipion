@@ -171,11 +171,11 @@ class CTFModel(EMObject):
             return self._gctf_crossCorrelation.get()
         elif hasattr(self, '_xmipp_ctfCritFitting'):
             return self._xmipp_ctfCritFitting.get()
-        else:
+        else
             return self._fitQuality.get()
 
     def setFitQuality(self, value):
-        self._fitQuality = value
+        self._fitQuality.set(value)
 
     def getDefocusU(self):
         return self._defocusU.get()
