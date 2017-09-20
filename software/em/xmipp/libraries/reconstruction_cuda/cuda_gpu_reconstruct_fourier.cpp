@@ -927,81 +927,56 @@ void processBufferKernel(
 		}*/
 }
 
-
 /** Index to frequency
  *
  * Given an index and a size of the FFT, this function returns the corresponding
  * digital frequency (-1/2 to 1/2)
  */
-#define FFT_IDX2DIGFREQ(idx, size, freq) \
-    freq = (size<=1)? 0:(( (((int)idx) <= (((int)(size)) >> 1)) ? ((int)(idx)) : -((int)(size)) + ((int)(idx))) / \
-           (double)(size)); // FIXME do sth with this, cannot be here
+// FIXME move to utils
+__device__
+float FFT_IDX2DIGFREQ(int idx, int size) {
+	if (size <= 1) return 0;
+	return ((idx <= (size / 2)) ? idx : (-size + idx)) / (float)size;
+}
 
 
-#define A2D_ELEM(v, i, j) \
-    DIRECT_A2D_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
 __global__
-void prepareBufferKernel(std::complex<float>* d_data,
-		int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr, ProjectionDataGPU* result, int Xdim, int Ydim, int Ndim) {
+void prepareBufferKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY, int iLength,
+		ProjectionDataGPU* oFouriers, int oSizeX, int oSizeY, float maxResolutionSqr) {
+	// assign pixel to thread
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
 
-//	if (idx == idy == 0) {
-//		Image<double> Vout;
-//		Vout().initZeros(1,Ydim,Xdim);
-//		for (int y = 0; y < Ydim; y++) {
-//			for (int x = 0; x < Xdim; x++) {
-//				Vout.data[y*Xdim + x] = d_data[y*Xdim + x];
-//			}
-//		}
-//		 Vout.write("nejakaFourierka");
-//	}
+	int halfY = iSizeY / 2;
+	float normFactor = iSizeY*iSizeY;
 
-//	ProjectionDataGPU* result;
-//	if (idx == idy == 0) {
-//		result = malloc(sizeof(ProjectionDataGPU)*ffts.Ndim);  /// fixme this should be done on host
-//	}
-//	__syncthreads();
-	for (int n = 0; n < Ndim; n++) {
-//		int mallocSize = sizeX*sizeY*sizeof(float)*2;
-//		if (idx == idy == 0) {
-////			result[n].clean();
-////			result[n].img = (float*)malloc(mallocSize); // fixme do this on host
-//			result[n].xSize = sizeX;
-//			result[n].ySize = sizeY;
-//		}
+	// input is an image in Fourier space (not normalized)
+	// with low frequencies in the inner corners
+	for (int n = 0; n < iLength; n++) {
+		float2 freq;
+		if ((idy < iSizeY) // for all input lines
+				&& (idx < oSizeX)) { // for all output pixels in the line
+			// process line only if it can hold sufficiently high frequency, i.e. process only
+			// first and last N lines
+			if (idy < oSizeX || idy >= (iSizeY - oSizeX)) {
+				// check the frequency
+				freq.x = FFT_IDX2DIGFREQ(idx, iSizeY);
+				freq.y = FFT_IDX2DIGFREQ(idy, iSizeY);
+				if ((freq.x * freq.x + freq.y * freq.y) > maxResolutionSqr) {
+					continue;
+				}
+				// do the shift (lower line will move up, upper down)
+				int newY = (idy < halfY) ? (idy + oSizeX) : (idy - iSizeY + oSizeX);
+				int oIndex = newY*oSizeX + idx;
 
-//		float<std::complex<float> >* result = new Array2D<std::complex<float> >(sizeX, sizeY);
-		// convert image (shift to center and remove high frequencies)
-//		std::complex<double> paddedFourierTmp;
-		int halfY = Ydim / 2;
-		float tempMyPadd[2];
-		if ((idy < sizeX || idy >= (Ydim - sizeX)) && (idx < sizeX)) {
-			// check the frequency
-			int srcIndex = n*Ydim*Xdim + idy*Xdim + idx;
-			float* src = (float*)&(d_data[srcIndex]);
-//					paddedFourierTmp = fftsDIRECT_A2D_ELEM(paddedFourier, i, j);
-			FFT_IDX2DIGFREQ(idx, paddedImgSize, tempMyPadd[0]);
-			FFT_IDX2DIGFREQ(idy, paddedImgSize, tempMyPadd[1]);
-			if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1] > maxResolutionSqr) {
-				continue;
+				int iIndex = n*iSizeY*iSizeX + idy*iSizeX + idx;
+				float* iValue = (float*)&(iFouriers[iIndex]);
+
+				// copy data and perform normalization
+				oFouriers[n].img[2*oIndex] = iValue[0] / normFactor;
+				oFouriers[n].img[2*oIndex + 1] = iValue[1] / normFactor;
 			}
-			// do the shift
-			int myPadI = (idy < halfY) ?	idy + sizeX : idy - Ydim + sizeX;
-			int destIndex = myPadI*sizeX + idx;
-//			if (2*destIndex < 0 || (2*destIndex+1)>= mallocSize ) {
-//				printf("prusvih %d (max %d) z %d %d %d %d", 2*destIndex+1, mallocSize, threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
-//			}
-			result[n].img[2*destIndex] = src[0] / (float)(Ydim*Ydim); // FIXME normalization element
-			result[n].img[2*destIndex + 1] = src[1]  / (float)(Ydim*Ydim); // FIXME normalization element
-//			printf("%d %d\n", idx, idy );
-//			if (threadIdx.x == 0 && threadIdx.y == 0 && (*src >=1 || *src<=-1)) {
-//				printf("prusvih %f z %d %d %d %d\n", src[0], threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
-//			}
-//					(*result)(j, myPadI).real() =	paddedFourierTmp.real();
-//					(*result)(j, myPadI).imag() =	paddedFourierTmp.imag();
 		}
-		__syncthreads();
 	}
 }
 
@@ -1051,7 +1026,8 @@ ProjectionDataGPU* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 
 	printf("kernel %d %d x %d %d", dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y);
 
-	prepareBufferKernel<<<dimGrid, dimBlock>>>(resultingFFT.d_data,sizeX, sizeY, paddedImgSize, maxResolutionSqr, devBuffer, resultingFFT.Xdim, resultingFFT.Ydim, bufferSize);
+	prepareBufferKernel<<<dimGrid, dimBlock>>>(resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, bufferSize,
+			devBuffer, sizeX, sizeY, maxResolutionSqr);
 
 	int tmpSize = sizeX * sizeY * 2*sizeof(float);
 	printf("velikost fft = x=%d y=%d, velikost ciloveho obrazku %d %d (%d)\n", resultingFFT.Xdim, resultingFFT.Ydim, sizeX, sizeY, tmpSize );
@@ -1065,6 +1041,9 @@ ProjectionDataGPU* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 		gpuErrchk(cudaPeekAtLastError());
 	}
 
+
+//	cudaFree(devBuffer);
+//		gpuErrchk( cudaPeekAtLastError() ); // can be done, as pointers are also stored on host
 
 	std::cout << "end of prepareBuffer" << std::endl;
 //	delete[] hostBuffer;
