@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# * MRC Laboratory Of Molecular Biology (MRC-LMB)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ from glob import glob
 from convert import readSetOfClassesVol, getImageLocation, writeSetOfVolumes
 from pyworkflow.em import ProtClassify3D
 from pyworkflow.em.data import SetOfVolumes
+from pyworkflow.em.constants import ALIGN_NONE
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from xmipp3 import getEnviron, XmippMdRow
 import pyworkflow.protocol.params as params
@@ -59,6 +60,10 @@ class XmippProtMLTomo(ProtClassify3D):
         form.addParam('inputVols', params.PointerParam, pointerClass="SetOfVolumes",
                       label='Set of volumes',
                       help="Set of input volumes")
+        form.addParam('copyAlignment', params.BooleanParam, default=True,
+                      label='Consider previous alignment?',
+                      help='If set to Yes, then alignment information from input'
+                           ' volumes will be considered.')
         form.addParam('generateRefs', params.BooleanParam, default=True,
                       label='Automatically generate references',
                       help="If set to true, 3D classes will be generated automatically. "
@@ -216,11 +221,15 @@ class XmippProtMLTomo(ProtClassify3D):
 
     def createInputMd(self, vols):
         fnVols = self._getExtraPath('input_volumes.xmd')
-        # If input vols do not have alignment, set it to 0
-        align = vols.getAlignment()
+        # If copyAlignmet is set to False pass alignType to ALIGN_NONE
+        if self.copyAlignment:
+            alignType = vols.getAlignment()
+        else:
+            alignType = ALIGN_NONE
+
         writeSetOfVolumes(vols, fnVols,
                           postprocessImageRow=self._postprocessVolumeRow,
-                          alignType=align)
+                          alignType=alignType)
         if not vols.hasAlignment():
             mdFn = xmipp.MetaData(fnVols)
             mdFn.fillConstant(xmipp.MDL_ANGLE_ROT, 0.)

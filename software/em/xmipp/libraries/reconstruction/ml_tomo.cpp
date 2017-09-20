@@ -1142,7 +1142,9 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
             }
             else
                 imgs_optpsi[imgno] = psi; // for limited psi searches
-            std::cerr << "r t p " << rot << " " << tilt << " " << psi <<std::endl;
+            #ifdef DEBUG
+                std::cerr << "r t p " << rot << " " << tilt << " " << psi <<std::endl;
+            #endif            
             MDsub.addRow(row);
             imgs_optangno[imgno] = count++;
 
