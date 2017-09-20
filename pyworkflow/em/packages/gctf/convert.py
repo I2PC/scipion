@@ -58,9 +58,16 @@ def parseGctfOutput(filename):
         f = open(filename)
         for line in f:
             if 'Final Values' in line:
-                # Take DefocusU, DefocusV, Angle and crossCorrelation as a tuple
-                # that are the first four values in the line
-                result1 = tuple(map(float, line.split()[:4]))
+                # line = DefocusU, DefocusV, Angle, crossCorrelation, Final, Values
+                # OR
+                # line = DefocusU, DefocusV, Angle, ctfPhaseShift, crossCorrelation, Final, Values
+                length = len(line.split())
+                if length == 6:
+                    result1 = tuple(map(float, line.split()[:4]))
+                    result1 += (.0,)  # ctfPhaseShift = 0
+                else:
+                    result1 = tuple(map(float, line.split()[:3]))
+                    result1 += tuple(map(float, (line.split()[4], line.split()[3])))
             if 'Resolution limit estimated by EPA' in line:
                 # Take ctfResolution as a tuple
                 # that is the last value in the line
@@ -83,12 +90,13 @@ def readCtfModel(ctfModel, filename, ctf4=False):
     result = parseGctfOutput(filename)
     if result is None:
         setWrongDefocus(ctfModel)
-        ctfFit, ctfResolution = -999, -999 
+        ctfFit, ctfResolution, ctfPhaseShift = -999, -999, -999
     else:
-        defocusU, defocusV, defocusAngle, ctfFit, ctfResolution = result
+        defocusU, defocusV, defocusAngle, ctfFit, ctfPhaseShift, ctfResolution = result
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     ctfModel.setFitQuality(ctfFit)
     ctfModel.setResolution(ctfResolution)
+    ctfModel._gctf_ctfPhaseShift = Float(ctfPhaseShift)
 
 
 def getEnviron():
