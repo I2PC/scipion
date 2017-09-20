@@ -408,27 +408,6 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		localTransformerImg.FourierTransform();
 		localTransformerImg.getFourierAlias(localPaddedFourier);
 
-		// FIXME WHY IS JUST ONE BUFFER LOADING?
-////////////////////////////
-
-		double max = 0;
-		double min = 0;
-		double sum = 0;
-		FOR_ALL_ELEMENTS_IN_ARRAY2D(localPaddedFourier) {
-			max = std::max(max, A2D_ELEM(localPaddedFourier, i, j).real());
-			min = std::min(min, A2D_ELEM(localPaddedFourier, i, j).real());
-			sum += A2D_ELEM(localPaddedFourier, i, j).real();
-		}
-//		printf("img %d min %f max %f avg %f\n", imgIndex, min, max, sum / localPaddedFourier.yxdim);
-		Image<double> Vout;
-		Vout().initZeros(localPaddedFourier);
-		FOR_ALL_ELEMENTS_IN_ARRAY2D(Vout.data)
-			A2D_ELEM(Vout.data,i,j) = A2D_ELEM(localPaddedFourier, i, j).real();
-		std::cout << "storing " << imgIndex << std::endl;
-		Vout.write("expectedFourier//" + SSTR(imgIndex));
-
-//////////////////////////////
-
 		// Compute the coordinate axes associated to this image
 		Euler_angles2matrix(rot, tilt, psi, localA);
 
@@ -1267,7 +1246,7 @@ void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
 }
 
 
-ProjectionDataGPU* ProgRecFourierGPU::processImgsOnGPU(ProjectionData* buffer, int& realBufferSize) {
+FourierReconDataWrapper* ProgRecFourierGPU::processImgsOnGPU(ProjectionData* buffer, int& realBufferSize) {
 	int imgSizeX = buffer[0].origImg.xdim;
 	int fftSizeX = (imgSizeX/2)+1;
 	int imgSizeY = buffer[0].origImg.ydim;
@@ -1284,7 +1263,7 @@ ProjectionDataGPU* ProgRecFourierGPU::processImgsOnGPU(ProjectionData* buffer, i
 
 float* tmp;
 
-	ProjectionDataGPU* result = prepareBuffer(image_stack_gpu, maxVolumeIndexX / 2, maxVolumeIndexYZ, imgSizeY, maxResolutionSqr, realBufferSize, tmp);
+FourierReconDataWrapper* result = prepareBuffer(image_stack_gpu, maxVolumeIndexX / 2, maxVolumeIndexYZ, imgSizeY, maxResolutionSqr, realBufferSize, tmp);
 
 
 	Image<double> Vout;
@@ -1348,9 +1327,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 
     	int noOfTransforms = prepareTransforms(loadThread.buffer2, traverseSpaces);
     	int realBufferSize;
-    	ProjectionDataGPU* images = processImgsOnGPU(loadThread.buffer2, realBufferSize);
-//    	barrier_wait( &barrier ); // FIXME remove
-//    	continue; // FIXME remove
+    	FourierReconDataWrapper* images = processImgsOnGPU(loadThread.buffer2, realBufferSize);
 //    	sort(traverseSpaces, noOfTransforms);
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
     			loadThread.buffer2,

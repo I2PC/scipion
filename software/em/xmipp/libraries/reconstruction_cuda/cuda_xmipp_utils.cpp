@@ -161,8 +161,6 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 	int Xfdim=(Xdim/2)+1;
 	fourierTransform.resize(Xfdim,Ydim,Zdim,Ndim);
 
-	printf("fft after resize %d %d %d %d (%d)\n", Xfdim, Ydim, Zdim, Ndim, fourierTransform.nzyxdim*sizeof(std::complex<float>));
-
 	int positionReal=0;
 	int positionFFT=0;
 	size_t NdimNew, auxNdim;
@@ -173,7 +171,6 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 
 	if(myhandle.ptr!=NULL) {
 		NdimNew = Ndim;
-		printf("myHandle not null\n");
 	}
 
 	while(aux>0){
@@ -181,26 +178,23 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 		GpuMultidimArrayAtGpu<cufftReal> auxInFFT;
 		GpuMultidimArrayAtGpu<cufftComplex> auxOutFFT;
 		if(NdimNew!=Ndim){
-			printf("NdimNew != Ndim\n");
 			auxInFFT.resize(Xdim,Ydim,Zdim,NdimNew);
 			gpuCopyFromGPUToGPU((cufftReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftReal));
 			auxOutFFT.resize(Xfdim,Ydim,Zdim,NdimNew);
 		}
 
-		cufftHandle *planFptr = new cufftHandle;
-		cufftHandle *planAuxFptr = new cufftHandle;
+		cufftHandle *planFptr = NULL;
+		cufftHandle *planAuxFptr = NULL;
 		if(auxNdim!=NdimNew){
-			printf("NdimNew != Ndim\n");
+			planAuxFptr = new cufftHandle;
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr);
 		}else{
 			if(myhandle.ptr == NULL){
-				printf("myhandle == NULL\n");
+				planFptr = new cufftHandle;
 				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr);
 				myhandle.ptr = (void *)planFptr;
-				planFptr=(cufftHandle *)myhandle.ptr;
-			}else{
-				planFptr=(cufftHandle *)myhandle.ptr;
 			}
+			planFptr=(cufftHandle *)myhandle.ptr;
 		}
 
 		if(auxNdim==NdimNew){
@@ -233,8 +227,9 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 		if(aux<NdimNew)
 			NdimNew=aux;
 
-		if(auxNdim!=NdimNew && NdimNew!=0)
-			cufftDestroy(*planAuxFptr);
+		if (NULL != planAuxFptr) {
+			cufftDestroy(*planAuxFptr); // destroy if created
+		}
 
 	}//AJ end while
 

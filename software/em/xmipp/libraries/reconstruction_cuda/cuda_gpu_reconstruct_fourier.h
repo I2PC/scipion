@@ -14,9 +14,28 @@
 #include <reconstruction_cuda/cuda_xmipp_utils.h>
 
 
+
 //static ProjectionData* projData;
 
+struct FourierReconstructionData
+{
+	FourierReconstructionData(int sizeX, int sizeY, int noOfImages);
+	void clean();
+	float* getImgOnGPU(int imgIndex);
+	float* dataOnGpu = NULL;
+	int sizeX = 0;
+	int sizeY = 0;
+	int noOfImages = 0;
 
+};
+
+struct FourierReconDataWrapper
+{
+	FourierReconDataWrapper(int sizeX, int sizeY, int noOfImages);
+	~FourierReconDataWrapper();
+	FourierReconstructionData* cpuCopy;
+	FourierReconstructionData* gpuCopy;
+};
 
 struct ProjectionDataGPU
 {
@@ -32,9 +51,14 @@ struct ProjectionDataGPU
 	float localA[3][3];
 public:
 	ProjectionDataGPU() {
+//		printf("constructor %p\n", this);
 			setDefault();
 		}
+	~ProjectionDataGPU() {
+//		printf("destructor %p, img %p\n", this, img);
+	}
 	ProjectionDataGPU(const ProjectionData& data) {
+//		printf("constructor from ProjectionData %p\n", this);
 		skip = data.skip;
 		if (skip) {
 			setDefault();
@@ -86,7 +110,7 @@ void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
 
 
 
-ProjectionDataGPU* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
+FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 		int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr, int, float*&);
 
 
@@ -100,7 +124,7 @@ void processBufferGPU(
 				bool useFast, float blobRadius,
 				float iDeltaSqrt,
 				float* blobTableSqrt, int blobTableSize,
-				ProjectionDataGPU* images);
+				FourierReconDataWrapper* images);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
 void copyBuffer(ProjectionData* data, int size);
 void allocateTempSpaces(int size);

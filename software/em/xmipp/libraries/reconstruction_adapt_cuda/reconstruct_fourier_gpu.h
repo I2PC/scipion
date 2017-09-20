@@ -471,7 +471,7 @@ private:
     int prepareTransforms(ProjectionData* buffer,
     		TraverseSpace* traverseSpaces);
 
-    ProjectionDataGPU* processImgsOnGPU(ProjectionData* buffer, int&);
+    FourierReconDataWrapper* processImgsOnGPU(ProjectionData* buffer, int&);
 
     template<typename T>
     Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
