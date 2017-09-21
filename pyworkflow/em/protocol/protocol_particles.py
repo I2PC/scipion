@@ -243,7 +243,8 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.micDict = OrderedDict()
         pwutils.makeFilePath(self._getAllDone())
 
-        pickMicIds = self._insertNewMicsSteps(self.getInputMicrographs())
+        micDict, _ = self._loadInputList()
+        pickMicIds = self._insertNewMicsSteps(micDict.values())
 
         self._insertFinalSteps(pickMicIds)
 
@@ -352,6 +353,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         streamClosed = updatedSet.isStreamClosed()
         updatedSet.close()
         self.debug("Closed db.")
+
         return newItemDict, streamClosed
 
     def _loadMics(self, micSet):
@@ -899,7 +901,6 @@ class ProtExtractParticles(ProtParticles):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if newDone:
             self._updateOutputPartSet(newDone, streamMode)
-
             self._writeDoneList(newDone)
         elif not self.finished:
             # If we are not finished and no new output have been produced
