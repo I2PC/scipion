@@ -42,7 +42,7 @@ from pyworkflow.em import Volume
 # 1) Visualize user as guide pyworkflow/em/packages/xmipp3/nma/viewer_nma.py
 
 class CCP4ProtCoot(EMProtocol):
-    """Coot is aninteractive graphical application for
+    """Coot is an interactive graphical application for
 macromolecular model building, model completion
 and validation. IMPORTANT: press "w" in coot to transfer
 the pdb file from coot  to scipion '
