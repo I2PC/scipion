@@ -43,7 +43,8 @@ class TestImportVolumes(TestImportBase):
         """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
-                'samplingRate': 2.1
+                'samplingRate': 2.1,
+                'setOriginBool': True
                 }
         
         
@@ -52,7 +53,13 @@ class TestImportVolumes(TestImportBase):
         prot1 = self.newProtocol(ProtImportVolumes, **args)
         prot1.setObjLabel('import mrc')
         self.launchProtocol(prot1)
-        
+        for volume in  prot1.outputVolumes:
+            t = volume.getOrigin()
+            x, y, z = t.getShifts()
+            self.assertEqual(32, x)
+            self.assertEqual(32, y)
+            self.assertEqual(32, z)
+
         # Id's should be taken from filename   
         args['filesPath'] = self.dsRelion.getFile('import/case2/relion_volumes.mrc') 
         args['filesPattern'] = ''
