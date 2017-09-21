@@ -57,18 +57,30 @@ class ProtImportVolumes(ProtImportImages):
         """
         form.addParam('samplingRate', params.FloatParam,
                       label=Message.LABEL_SAMP_RATE)
-        form.addParam('setOriginBool', params.BooleanParam,
-                      label="setOrigin",
-                      help="Set origin of coordinates in the 3D map center",
+        form.addParam('setDefaultOrigin', params.BooleanParam,
+                      label="setDefaultOrigin",
+                      help="Set origin of coordinates in the 3D map center (true)"
+                      " or provide it. So far only Modeling related programs"
+                      " support this feature",
                       default=True)
+        group = form.addGroup('Origin', condition='not setDefaultOrigin')
+        group.addParam('x', params.FloatParam,
+                      condition='not setDefaultOrigin',
+                      label="x-offset", help="offset along x axis")
+        group.addParam('y', params.FloatParam,
+                      condition='not setDefaultOrigin',
+                      label="y-offset", help="offset along y axis")
+        group.addParam('z', params.FloatParam,
+                      condition='not setDefaultOrigin',
+                      label="z-offset", help="offset along z axis")
 
     def _insertAllSteps(self):
         self._insertFunctionStep('importVolumesStep', self.getPattern(),
-                                 self.samplingRate.get(), self.setOriginBool.get())
+                                 self.samplingRate.get(), self.setDefaultOrigin.get())
 
     #--------------------------- STEPS functions ---------------------------------------------------
     
-    def importVolumesStep(self, pattern, samplingRate, setOriginBool = True):
+    def importVolumesStep(self, pattern, samplingRate, setDefaultOrigin = True):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -94,20 +106,23 @@ class ProtImportVolumes(ProtImportImages):
                 if dst.endswith('.mrc'):
                     dst += ':mrc'
                 vol.setLocation(dst)
-                if setOriginBool:
-                    t = Transform()
-                    x, y, z = x/2, y/2, z/2
-                    t.setShifts(x, y, z)
-                    vol.setOrigin(t)
+                t = Transform()
+                if setDefaultOrigin:
+                    t.setShifts(x/2, y/2, z/2)
+                else:
+                    t.setShifts(self.x, self.y, self.z)
+                vol.setOrigin(t)
                 volSet.append(vol)
             else:
                 for index in range(1, n+1):
                     vol.cleanObjId()
                     vol.setLocation(index, dst)
-                    if setOriginBool:
+                    if setDefaultOrigin:
                         t = Transform()
-                        x, y, z = x/2, y/2, z/2
-                        t.setShifts(x, y, z)
+                        if setDefaultOrigin:
+                            t.setShifts(x / 2, y / 2, z / 2)
+                        else:
+                            t.setShifts(self.x, self.y, self.z)
                         vol.setOrigin(t)
                     volSet.append(vol)
         print "t", t

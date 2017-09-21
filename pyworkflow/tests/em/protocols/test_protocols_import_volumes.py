@@ -37,14 +37,53 @@ class TestImportBase(BaseTest):
         
     
 class TestImportVolumes(TestImportBase):
-    
+
+    def test_default_origin(self):
+        args = {'filesPath': self.dsXmipp.getFile('volumes/'),
+                'filesPattern': 'volume_*mrc',
+                'samplingRate': 2.1,
+                'setDefaultOrigin': True
+                }
+
+        # Id's should be set increasing from 1 if ### is not in the
+        # pattern
+        prot1 = self.newProtocol(ProtImportVolumes, **args)
+        prot1.setObjLabel('import mrc')
+        self.launchProtocol(prot1)
+        for volume in prot1.outputVolumes:
+            t = volume.getOrigin()
+            x, y, z = t.getShifts()
+            self.assertEqual(32, x)
+            self.assertEqual(32, y)
+            self.assertEqual(32, z)
+
+        args = {'filesPath': self.dsXmipp.getFile('volumes/'),
+                'filesPattern': 'volume_*mrc',
+                'samplingRate': 2.1,
+                'setDefaultOrigin': False,
+                'x': 8,
+                'y': 16,
+                'z': 24
+                }
+
+        # Id's should be set increasing from 1 if ### is not in the
+        # pattern
+        prot2 = self.newProtocol(ProtImportVolumes, **args)
+        prot2.setObjLabel('import2 mrc')
+        self.launchProtocol(prot2)
+        for volume in prot2.outputVolumes:
+            t = volume.getOrigin()
+            x, y, z = t.getShifts()
+            self.assertEqual(8, x)
+            self.assertEqual(16, y)
+            self.assertEqual(24, z)
+
     def test_pattern(self):
         """ Import several Particles from a given pattern.
         """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
                 'samplingRate': 2.1,
-                'setOriginBool': True
                 }
         
         
