@@ -34,6 +34,8 @@ from pyworkflow.em.pdb_handler import fixCRYSrecordToPDBFile
 import os
 from convert import (adaptBinFileToCCP4, runCCP4Program)
 import stat
+from tempfile import mkdtemp
+
 
 class CCP4ProtRunRefmac(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
@@ -84,28 +86,21 @@ class CCP4ProtRunRefmac(EMProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('fixCRYSrecordToPDBFileStep')
+        self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('createScriptFileStep')
         self._insertFunctionStep('executeRefmacStep')
         self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
         self._insertFunctionStep('writeFinalResultsTable') #Print output results
 
-#    def convertInputStep(self):
-#        """ convert 3Dmaps to MRC '.mrc' format
-#        """
-#        for vol in self.inputVolumes:
-#            inFileName  = vol.get().getFileName()
-#            if inFileName.endswith('.mrc'):
-#                inFileName = inFileName + ":mrc"
-#            outFileName = self._getVolumeFileName(inFileName)
-#            if self.doNormalize:
-#                img = ImageHandler()._img
-#                img.read(inFileName)
-#                mean, dev, min, max = img.computeStats()
-#                img.inplaceMultiply(1./max)
-#                mean2, dev2, min2, max2 = img.computeStats()
-#                img.write(outFileName)
-#            else:
-#                adaptBinFileToCCP4(inFileName, outFileName)
+    def convertInputStep(self):
+        """ convert 3Dmaps to MRC '.mrc' format
+        """
+        # get input 3D map filename
+        inFileName  = self.inputVolume.get().getFileName()
+        # create local copy of 3Dmap
+        localInFileName = self._getVolumeFileName()
+        adaptBinFileToCCP4(inFileName, localInFileName,
+                           self.inputVolume.get().getOrigin().getShifts())
 
     # --------------------------- STEPS functions --------------------------------------------
     def createScriptFileStep(self):
@@ -193,6 +188,12 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     def _getlogFileName(self):
         return self._getExtraPath(self.refineLogFileName)
+
+    def _getVolumeFileName(self, baseFileName="tmp3DMapFile.mrc"):
+        return self._getExtraPath(baseFileName)
+
+
+
 
 
 
