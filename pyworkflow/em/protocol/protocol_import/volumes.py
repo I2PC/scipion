@@ -36,6 +36,7 @@ from pyworkflow.utils.path import copyFile
 import pyworkflow.protocol.params as params
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
+from pyworkflow.em.data import Transform
 
 from base import ProtImportFiles
 from images import ProtImportImages
@@ -55,14 +56,19 @@ class ProtImportVolumes(ProtImportImages):
         by subclasses to change what parameters to include.
         """
         form.addParam('samplingRate', params.FloatParam,
-                   label=Message.LABEL_SAMP_RATE)
-    
+                      label=Message.LABEL_SAMP_RATE)
+        form.addParam('setOriginBool', params.BooleanParam,
+                      label="setOrigin",
+                      help="Set origin of coordinates in the 3D map center",
+                      default=True)
+
     def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumesStep', self.getPattern(), self.samplingRate.get())
+        self._insertFunctionStep('importVolumesStep', self.getPattern(),
+                                 self.samplingRate.get(), self.setOriginBool.get())
 
     #--------------------------- STEPS functions ---------------------------------------------------
     
-    def importVolumesStep(self, pattern, samplingRate):
+    def importVolumesStep(self, pattern, samplingRate, setOriginBool = True):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -70,12 +76,12 @@ class ProtImportVolumes(ProtImportImages):
 
         # Create a Volume template object
         vol = Volume()
-        vol.setSamplingRate(self.samplingRate.get())
+        vol.setSamplingRate(samplingRate)
         copyOrLink = self.getCopyOrLink()
         imgh = ImageHandler()
 
         volSet = self._createSetOfVolumes()
-        volSet.setSamplingRate(self.samplingRate.get())
+        volSet.setSamplingRate(samplingRate)
 
         for fileName, fileId in self.iterFiles():
             dst = self._getExtraPath(basename(fileName))
@@ -88,13 +94,23 @@ class ProtImportVolumes(ProtImportImages):
                 if dst.endswith('.mrc'):
                     dst += ':mrc'
                 vol.setLocation(dst)
+                if setOriginBool:
+                    t = Transform()
+                    x, y, z = x/2, y/2, z/2
+                    t.setShifts(x, y, z)
+                    vol.setOrigin(t)
                 volSet.append(vol)
             else:
                 for index in range(1, n+1):
                     vol.cleanObjId()
                     vol.setLocation(index, dst)
+                    if setOriginBool:
+                        t = Transform()
+                        x, y, z = x/2, y/2, z/2
+                        t.setShifts(x, y, z)
+                        vol.setOrigin(t)
                     volSet.append(vol)
-
+        print "t", t
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
