@@ -84,7 +84,8 @@ class ProtImportFiles(ProtImport):
                            "  ~/Particles/data/day#_micrographs/\n"
                            "'#' represents one digit that will be used as micrograph ID\n\n"
                            "NOTE: wildcard characters ('*', '?', '#') "
-                           "cannot appear in the actual path.")
+                           "cannot appear in the actual path.\n\n"
+                           "File extensions accepted: .map, .mrc, .vol., .spi, .xmp")
         form.addParam('filesPattern', params.StringParam,
                       label='Pattern', 
                       condition=filesCondition,
