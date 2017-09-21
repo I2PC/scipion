@@ -60,11 +60,23 @@ def runCCP4Program(program, args="", extraEnvDict=None):
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
 
-def adaptBinFileToCCP4(inFileName, outFileName):
-    if inFileName.endswith('.mrc'):
-        pwutils.createLink(inFileName, outFileName)
-    else:
-        em.ImageHandler().convert(inFileName, outFileName)
+def adaptBinFileToCCP4(inFileName, outFileName, scipionOrigin):
+    """ Check input file format.
+        if mrc, check if header and scipion database agree (regarding origin)
+        if header and scipion object have the same origin creates a link to 
+        original file. Otherwise copy the file and fix the origin
+    """
+    if inFileName.endswith('.mrc') or inFileName.endswith('.map'):
+        ccp4header = Ccp4Header(inFileName, readHeader= True)
+        ccp4Origin = ccp4header.getOffset()
+        if ccp4Origin == scipionOrigin:
+            pwutils.createLink(inFileName, outFileName)
+            return
+    em.ImageHandler().convert(inFileName, outFileName)
+    ccp4header = Ccp4Header(outFileName, readHeader=True)
+    ccp4header.setOffset(scipionOrigin)
+    ccp4header.writeHeader()
+
 
 def getProgram(progName):
     """ Return the program binary that will be used. """
@@ -176,7 +188,7 @@ class Ccp4Header():
 
         #read header
         f = open(self._name,'rb')
-        s = f.read(52*4)#read header from woed 0 to 51
+        s = f.read(52*4)#read header from word 0 to 51
         f.close()
         a = struct.unpack(self.chain, s)
 
