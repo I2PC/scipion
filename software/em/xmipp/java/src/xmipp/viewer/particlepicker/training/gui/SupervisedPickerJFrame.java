@@ -6,11 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.text.NumberFormat;
 import java.util.HashMap;
@@ -48,11 +44,7 @@ import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
-import xmipp.viewer.particlepicker.Format;
-import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticlePickerCanvas;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.ParticlesDialog;
+import xmipp.viewer.particlepicker.*;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
@@ -251,12 +243,25 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         canvas.repaint();
         ppicker.saveConfig();
     }
-
     public void setChanged(boolean changed) {
         ppicker.setChanged(changed);
         savemi.setEnabled(changed);
         savebt.setEnabled(changed);
     }
+
+    public void setThresholdChanged(boolean changed){
+
+        if (changed){
+            this.thresholdlb.setForeground(Color.RED);
+            this.setChanged(true);
+        } else {
+            this.thresholdlb.setForeground(Color.BLACK);
+        }
+    }
+    public boolean hasThresholdChanged(){
+        return this.thresholdlb.getForeground() == Color.RED;
+    }
+
     public void setSaved(boolean saved) {
         ppicker.setSaved(saved);
         // Do not print anything: for debugging --> savedlb.setText(saved?"Saved":"");
@@ -277,7 +282,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
         micrographstb.setRowSelectionInterval(index, index);
         manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber()));
-        autolb.setText(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
+        autolb.setText(Integer.toString(ppicker.getAutomaticParticlesNumber()));
     }
 
     public ParticlePickerCanvas getCanvas() {
@@ -547,9 +552,29 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
    
 
     private void initThresholdPane() {
+
+        // Create the panel for the threshold
         thresholdpn = new JPanel();
+
+        // Add the threshold label
         thresholdlb = new JLabel("Threshold:");
         thresholdpn.add(thresholdlb);
+
+        final ParticlePicker picker = this.getParticlePicker();
+        thresholdlb.addMouseListener(new MouseAdapter()
+        {
+            public void mouseClicked(MouseEvent e)
+            {
+                // Show deleted particles
+                if (e.getClickCount() == 3) {
+                    picker.toggleShowDeleted();
+                }
+
+            }
+        });
+
+
+        // Add and configure the threshold slider
         thresholdsl = new JSlider(0, 100, 0);
         thresholdsl.setPaintTicks(false);
         thresholdsl.setMajorTickSpacing(5);
@@ -557,6 +582,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         thresholdsl.setPreferredSize(new Dimension(50, height));
         thresholdpn.add(thresholdsl);
 
+        // Add the threshold text field
         thresholdtf = new JFormattedTextField(NumberFormat.getNumberInstance());
         thresholdtf.setColumns(3);
         thresholdtf.setValue(0);
@@ -572,6 +598,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             }
         });
 
+        // Link the slider to the text field
         thresholdsl.addChangeListener(new ChangeListener() {
 
             @Override
@@ -596,7 +623,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     }
 
     private void setThresholdChanges() {
-        // setChanged(true);
+
         getMicrograph().setThreshold(getThreshold());
         updateMicrographsModel();
         canvas.repaint();
@@ -604,6 +631,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             loadParticles(false);
         }
 
+        this.setThresholdChanged(true);
     }
 
     private void initMicrographsPane() {
@@ -652,7 +680,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         // Info panel
         JPanel infopn = new JPanel();
         manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber()));
-        autolb = new JLabel(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
+        autolb = new JLabel(Integer.toString(ppicker.getAutomaticParticlesNumber()));
         infopn.add(new JLabel("Manual:"));
         infopn.add(manuallb);
         infopn.add(new JLabel("Automatic:"));
@@ -711,10 +739,13 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if (ppicker.getMode() == Mode.Supervised) {
             resetbt.setEnabled(next.getState() != MicrographState.Manual);
             double threshold = next.getThreshold();
-            if(threshold == 0)
+            if(threshold == 0 && next.getAutomaticParticlesNumber() == 0)
             {
                 threshold = current.getThreshold();
                 next.setThreshold(threshold);
+                this.setThresholdChanged(true);
+            }else{
+                this.setThresholdChanged(false);
             }
             thresholdsl.setValue((int) (threshold * 100));
             thresholdtf.setValue(threshold);

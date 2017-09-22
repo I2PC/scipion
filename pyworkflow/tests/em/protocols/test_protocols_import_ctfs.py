@@ -24,6 +24,7 @@
 import os
 from itertools import izip
 
+import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportCTF, ProtImportMicrographs
 
@@ -93,3 +94,52 @@ class TestImportCTFs(BaseTest):
 
         self.assertIsNotNone(protCTF.outputCTF,
                              "There was a problem when importing ctfs.")
+
+    def testImportFromCTffind4Conflict(self):
+        micsPath = os.path.abspath(self.proj.getTmpPath('micrographs'))
+        ctfsPath = os.path.abspath(self.proj.getTmpPath('ctfs'))
+        pwutils.makePath(micsPath)
+        pwutils.makePath(ctfsPath)
+
+        micDict = {'BPV_1386': 'mic1',
+                   'BPV_1387': 'mic10',
+                   'BPV_1388': 'mic2'}
+
+        pattern = 'micrographs/%s.mrc'
+
+        for k, v in micDict.iteritems():
+            # Create a micrograph link with a given naming convention
+            pwutils.createAbsLink(self.dsXmipp.getFile(pattern % k),
+                                  self.proj.getTmpPath(pattern % v))
+
+            pwutils.createAbsLink(self.dsGrigorieff.getFile('ctffind4/%s' % k),
+                                  self.proj.getTmpPath('ctfs/%s' % v))
+
+        protCTF = self.newProtocol(ProtImportCTF,
+                                   importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                   filesPath=ctfsPath,
+                                   filesPattern='mic*/*txt')
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.setObjLabel('import from ctffind3 - empty')
+        self.launchProtocol(protCTF)
+
+        # FIXME: After the execution of the above case, some empty sets
+        # are created, if there is no matching, there should not be any output
+
+        # Let's import now the correct names, but with the problematic matching
+        protImport2 = self.newProtocol(ProtImportMicrographs,
+                                       filesPath=micsPath,
+                                       filesPattern='mic*mrc',
+                                       samplingRate=1.237, voltage=300)
+        self.launchProtocol(protImport2)
+
+        protCTF2 = self.newProtocol(ProtImportCTF,
+                                   importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                   filesPath=ctfsPath,
+                                   filesPattern='mic*/*txt')
+        protCTF2.inputMicrographs.set(protImport2.outputMicrographs)
+        protCTF2.setObjLabel('import from ctffind3 - match')
+        self.launchProtocol(protCTF2)
+
+        # The whole set (3 items) should find its corresponding CTF
+        self.assertEqual(protCTF2.outputCTF.getSize(), 3)

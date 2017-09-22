@@ -80,24 +80,30 @@ class EmPlotter(Plotter):
     def plotHist(self, yValues, nbins, color='blue', **kwargs):
         """ Create an histogram. """
         self.hist(yValues, nbins, facecolor=color, **kwargs)
-        
-    def plotMatrix(self,_matrix,cmap='Greens'
+    
+    def plotMatrix(self, img
+                       , matrix
+                       , vminData
+                       , vmaxData
+                       , cmap='jet'
                        , xticksLablesMajor=None
                        , yticksLablesMajor=None
                        , rotationX=90.
-                       , rotationY=0.):
-        im = plt.imshow(_matrix, interpolation="none", cmap=cmap)
-        if (xticksLablesMajor is not None):       
-            plt.xticks(range(len(xticksLablesMajor)), 
+                       , rotationY=0.
+                       , **kwargs):
+        interpolation = kwargs.get('interpolation', "none")
+        plot = img.imshow(matrix, interpolation=interpolation, cmap=cmap,
+                          vmin=vminData, vmax=vmaxData)
+        if (xticksLablesMajor is not None):
+            plt.xticks(range(len(xticksLablesMajor)),
                                  xticksLablesMajor[:len(xticksLablesMajor)],
                                  rotation=rotationX)
-        if (yticksLablesMajor is not None):       
+        if (yticksLablesMajor is not None):
             plt.yticks(range(len(yticksLablesMajor)),
                                  yticksLablesMajor[:len(yticksLablesMajor)],
                                  rotation=rotationY)
-        cax = plt.colorbar(im)
-        #im.cmap.set_over('g')#outbound values
-
+        return plot
+    
     def plotData(self, xValues, yValues, color='blue', **kwargs):
         """ Shortcut function to plot some values.
         Params:
@@ -111,9 +117,9 @@ class EmPlotter(Plotter):
         self.plot(xValues, yValues, color, **kwargs)
         
         
-def plotFile(dbName, dbPreffix, plotType,
-                   columnsStr, colorsStr, linesStr, markersStr,
-                   xcolumn, ylabel, xlabel, title, bins, orderColumn, orderDirection):
+def plotFile(dbName, dbPreffix, plotType, columnsStr, colorsStr, linesStr,
+             markersStr, xcolumn, ylabel, xlabel, title, bins, orderColumn,
+             orderDirection):
         columns = columnsStr.split()
         colors = colorsStr.split()
         lines = linesStr.split()
@@ -142,7 +148,7 @@ def plotFile(dbName, dbPreffix, plotType,
         
         return plotter
         
-        
+
 class PlotData():
     """ Small wrapper around table data such as: sqlite or metadata
     files. """

@@ -35,6 +35,7 @@ from os.path import join, dirname
 from collections import OrderedDict
 from itertools import izip
 import numpy
+import time
 
 import xmipp
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows

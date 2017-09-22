@@ -698,6 +698,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			// Set up the dialog that the button brings up.
 			colorChooser = new JColorChooser();
+			colorChooser.setColor(getParticlePicker().getColor());
 			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
 			colorChooser, new ActionListener()
 			{
@@ -1020,7 +1021,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		colorbt.setFocusPainted(false);
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
-                colorbt.setMargin(new Insets(0, 0, 0, 0));
+        colorbt.setMargin(new Insets(0, 0, 0, 0));
 		colorbt.addActionListener(new ColorActionListener());
 		colorpn.add(colorbt);
 	}
