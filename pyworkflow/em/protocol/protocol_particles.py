@@ -269,22 +269,20 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     def _insertPickMicrographStep(self, mic, prerequisites, *args):
         """ Basic method to insert a picking step for a given micrograph. """
-        micDict = mic.getObjDict(includeBasic=True)
         micStepId = self._insertFunctionStep('pickMicrographStep',
-                                             micDict, *args,
+                                             mic.getMicName(), *args,
                                              prerequisites=prerequisites)
 
         return micStepId
 
-    def pickMicrographStep(self, micDict, *args):
+    def pickMicrographStep(self, micName, *args):
         """ Step function that will be common for all picking protocols.
         It will take care of re-building the micrograph object from the micDict
         argument and perform any conversion if needed. Then, the function
         _pickMicrograph will be called, that should be implemented by each
         picking protocol.
         """
-        mic = Micrograph()
-        mic.setAttributesFromDict(micDict, setBasic=True, ignoreMissing=True)
+        mic = self.micDict[micName]
         micDoneFn = self._getMicDone(mic)
         micFn = mic.getFileName()
 
