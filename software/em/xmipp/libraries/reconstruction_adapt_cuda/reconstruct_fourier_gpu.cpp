@@ -366,7 +366,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 
     ApplyGeoParams params;
     params.only_apply_shifts = true;
-    MultidimArray<double> localPaddedImg;
+    MultidimArray<float> localPaddedImg;
 //	FourierTransformer localTransformerImg;
 //	MultidimArray< std::complex<double> > localPaddedFourier;
 //	if (0 == threadParams->buffer1) {
@@ -384,21 +384,19 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 //		ProjectionData* data = &threadParams->buffer1[bIndex];
 //		data->skip = true;
 		if (imgIndex >= threadParams->endImageIndex) {
-			std::cout << "skipping " << imgIndex << " because it is beyond the maxIndex" << std::endl;
 			continue;
 		}
 		//Read projection from selfile, read also angles and shifts if present
 		//but only apply shifts
 		proj.readApplyGeo(*(threadParams->selFile), objId[imgIndex], params);
-		rot = proj.rot();
-		tilt = proj.tilt();
-		psi = proj.psi();
 		if (parent->do_weights && proj.weight() == 0.f) {
-			std::cout << "skipping " << imgIndex << " because of 0 weight" << std::endl;
 			continue;
 		}
 
 		// Compute the coordinate axes associated to this projection
+		rot = proj.rot();
+		tilt = proj.tilt();
+		psi = proj.psi();
 		Euler_angles2matrix(rot, tilt, psi, Ainv);
 
 		Ainv = Ainv.transpose();
@@ -418,8 +416,6 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 			space->weight = (parent->do_weights) ? proj.weight() : 1.0;
 			space->UUID = UUID;
 
-			printf("transform %d ready\n", UUID);
-
 			threadParams->loadingBufferLength++;
 			UUID++;
 		}
@@ -436,8 +432,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
 			A2D_ELEM(localPaddedImg,i,j) = A2D_ELEM(mProj, i, j);
 		CenterFFT(localPaddedImg, true);
-		printf("converting img %d (%d th)\n", imgIndex, projIndex);
-		threadParams->loadingImageStack->fillWithTypeConvert(projIndex, localPaddedImg);
+		threadParams->loadingImageStack->fillImage(projIndex, localPaddedImg);
 
 		// FIXME preserve only for CPU-loading version
 //		// Fourier transformer for the images
@@ -498,7 +493,6 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 #endif
 #undef DEBUG22
 	}
-	printf("finish loading %d images\n", threadParams->loadingBufferLength);
 }
 
 
