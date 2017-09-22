@@ -174,7 +174,12 @@ def objectToRow(obj, row, attrDict, extraLabels=[]):
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
-            row.setValue(label, valueType(getattr(obj, attr).get()))
+            value = getattr(obj, attr).get()
+            if value:
+                row.setValue(label, valueType(value))
+            else:
+                print "WARNING: None found for attribue: ", attr
+                print "         Not setting value for label ", xmipp.label2Str(label)
 
     attrLabels = attrDict.values()
     
