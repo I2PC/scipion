@@ -108,7 +108,7 @@ class ProtImportVolumes(ProtImportImages):
                 vol.setLocation(dst)
                 t = Transform()
                 if setDefaultOrigin:
-                    t.setShifts(x/2, y/2, z/2)
+                    t.setShifts(-x/2, -y/2, -z/2)
                 else:
                     t.setShifts(self.x, self.y, self.z)
                 vol.setOrigin(t)
@@ -120,7 +120,7 @@ class ProtImportVolumes(ProtImportImages):
                     if setDefaultOrigin:
                         t = Transform()
                         if setDefaultOrigin:
-                            t.setShifts(x / 2, y / 2, z / 2)
+                            t.setShifts(-x / 2, -y / 2, -z / 2)
                         else:
                             t.setShifts(self.x, self.y, self.z)
                         vol.setOrigin(t)

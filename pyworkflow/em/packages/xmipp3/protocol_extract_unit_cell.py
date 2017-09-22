@@ -33,6 +33,8 @@ from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em import Volume, Transform
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
 from pyworkflow.em.data import Transform, Matrix
+import pyworkflow.protocol.constants as const
+from pyworkflow.em.viewer import getChimeraEnviron, ChimeraView, ChimeraClientView, ChimeraClient
 
 DEBUG = True
 
@@ -83,6 +85,13 @@ class XmippProtExtractUnit(EMProtocol):
         form.addParam('offset', FloatParam, default=0.,
                       condition='symmetryGroup<=%d' % (SYM_DIHEDRAL) ,
                       label="offset", help="rotate unit cell around z-axis by offset degrees")
+        group = form.addGroup('Origin of coordinates', expertLevel=const.LEVEL_ADVANCED)
+        group.addParam('x', FloatParam,
+                       label="x", help="x coordinate of Origin")
+        group.addParam('y', FloatParam,
+                       label="y", help="y coordinate of Origin")
+        group.addParam('z', FloatParam,
+                       label="z", help="z coordinate of Origin")
         form.addParam('innerRadius', FloatParam, default=-1,
                       label="Inner Radius (px)", help="inner Mask radius, if -1, the radius will be 0")
         form.addParam('outerRadius', FloatParam, default=-1,
