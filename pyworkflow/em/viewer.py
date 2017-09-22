@@ -223,7 +223,7 @@ class CtfView(ObjectView):
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
         labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio %s ' % extraLabels
+        labels += '_defocusAngle _defocusRatio _resolution _fitQuality %s ' % extraLabels
         labels += '  _micObj._filename'
 
         viewParams = {showj.MODE: showj.MODE_MD,
