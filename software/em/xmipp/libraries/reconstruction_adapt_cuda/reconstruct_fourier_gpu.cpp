@@ -361,22 +361,28 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		ProgRecFourierGPU* parent,
 		bool hasCTF, std::vector<size_t>& objId)
 {
+
+	static int UUID = 0;
+
     ApplyGeoParams params;
-    MultidimArray<double> localPaddedImg;
-	FourierTransformer localTransformerImg;
-	MultidimArray< std::complex<double> > localPaddedFourier;
     params.only_apply_shifts = true;
-	if (0 == threadParams->buffer1) {
-		// fixme must be initialized elsewhere, because it might be necessary to store a flag deciding if the FFT should be done on CPU or GPU
-		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
-	}
-	for (int bIndex = 0; bIndex < parent->bufferSize; bIndex++) {
+    MultidimArray<double> localPaddedImg;
+//	FourierTransformer localTransformerImg;
+//	MultidimArray< std::complex<double> > localPaddedFourier;
+//	if (0 == threadParams->buffer1) {
+//		// fixme must be initialized elsewhere, because it might be necessary to store a flag deciding if the FFT should be done on CPU or GPU
+//		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
+//	}
+	threadParams->loadingBufferLength = 0; // 'clean buffer'
+	for (int projIndex = 0; projIndex < parent->bufferSize; projIndex++) {
 		double rot, tilt, psi, weight;
 		Projection proj;
-		Matrix2D<double> localA(3, 3);
-		int imgIndex = threadParams->startImageIndex + bIndex;
-		ProjectionData* data = &threadParams->buffer1[bIndex];
-		data->skip = true;
+		Matrix2D<double> Ainv(3, 3);
+		int imgIndex = threadParams->startImageIndex + projIndex;
+
+//		TraverseSpace* space = &threadParams->buff1[bIndex];
+//		ProjectionData* data = &threadParams->buffer1[bIndex];
+//		data->skip = true;
 		if (imgIndex >= threadParams->endImageIndex) {
 			std::cout << "skipping " << imgIndex << " because it is beyond the maxIndex" << std::endl;
 			continue;
@@ -391,10 +397,38 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 			std::cout << "skipping " << imgIndex << " because of 0 weight" << std::endl;
 			continue;
 		}
-		data->weight = (parent->do_weights) ? proj.weight() : 1.0;
+
+		// Compute the coordinate axes associated to this projection
+		Euler_angles2matrix(rot, tilt, psi, Ainv);
+
+		Ainv = Ainv.transpose();
+		float transf[3][3];
+		float transfInv[3][3];
+		// prepare transforms for all  symmetries
+		for (int j = 0; j < parent->R_repository.size(); j++) {
+			TraverseSpace* space = &threadParams->loadingBuffer[threadParams->loadingBufferLength];
+
+			Matrix2D<double> A_SL=parent->R_repository[j]*(Ainv);
+			Matrix2D<double> A_SLInv=A_SL.inv();
+			A_SL.convertTo(transf);
+			A_SLInv.convertTo(transfInv);
+
+			parent->computeTraverseSpace(parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, projIndex,
+				transf, transfInv, space);
+			space->weight = (parent->do_weights) ? proj.weight() : 1.0;
+			space->UUID = UUID;
+
+			printf("transform %d ready\n", UUID);
+
+			threadParams->loadingBufferLength++;
+			UUID++;
+		}
+
+		///////    zpracovani obrazku ////////////////
 
 		// Copy the projection to the center of the padded image
 		// and compute its Fourier transform
+
 		proj().setXmippOrigin();
 		localPaddedImg.initZeros(parent->paddedImgSize, parent->paddedImgSize);
 		localPaddedImg.setXmippOrigin();
@@ -402,19 +436,21 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
 			A2D_ELEM(localPaddedImg,i,j) = A2D_ELEM(mProj, i, j);
 		CenterFFT(localPaddedImg, true);
+		printf("converting img %d (%d th)\n", imgIndex, projIndex);
+		threadParams->loadingImageStack->fillWithTypeConvert(projIndex, localPaddedImg);
 
-		// Fourier transformer for the images
-		localTransformerImg.setReal(localPaddedImg);
-		localTransformerImg.FourierTransform();
-		localTransformerImg.getFourierAlias(localPaddedFourier);
+		// FIXME preserve only for CPU-loading version
+//		// Fourier transformer for the images
+//		localTransformerImg.setReal(localPaddedImg);
+//		localTransformerImg.FourierTransform();
+//		localTransformerImg.getFourierAlias(localPaddedFourier);
 
-		// Compute the coordinate axes associated to this image
-		Euler_angles2matrix(rot, tilt, psi, localA);
 
-		data->localAInv = localA.transpose();
-		data->localA = localA.transpose().inv();
-//		data->img = cropAndShift(localPaddedFourier, parent);
-		data->origImg = localPaddedImg; // FIXME probably wrong
+
+//		data->localAInv = localA.transpose();
+//		data->localA = localA.transpose().inv();
+//		data->img = cropAndShift(localPaddedFourier, parent); // FIXME preserve only for CPU-loading version
+//		data->origImg = localPaddedImg;
 
 
 //		if (imgIndex == 12) {
@@ -426,14 +462,14 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 //		}
 
 
-		data->imgIndex = imgIndex;
-		if (hasCTF) {
-			Array2D<float>* CTF = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
-			Array2D<float>* modulator = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
-			preloadCTF(threadParams, objId[imgIndex],parent, CTF, modulator);
-		}
+//		data->imgIndex = imgIndex;
+//		if (hasCTF) { // FIXME reimplement, can be part of the image
+//			Array2D<float>* CTF = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
+//			Array2D<float>* modulator = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
+//			preloadCTF(threadParams, objId[imgIndex],parent, CTF, modulator);
+//		}
 		// set data as usable
-		data->skip = false;
+//		data->skip = false;
 		//#define DEBUG22
 #ifdef DEBUG22
                 //CORRECTO
@@ -462,6 +498,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 #endif
 #undef DEBUG22
 	}
+	printf("finish loading %d images\n", threadParams->loadingBufferLength);
 }
 
 
@@ -1088,9 +1125,17 @@ void ProgRecFourierGPU::loadImages(int startIndex, int endIndex) {
 }
 
 void ProgRecFourierGPU::swapLoadBuffers() {
-	ProjectionData* tmp = loadThread.buffer2;
-	loadThread.buffer2 = loadThread.buffer1;
-	loadThread.buffer1 = tmp;
+	TraverseSpace* tmp = loadThread.readyBuffer;
+	loadThread.readyBuffer = loadThread.loadingBuffer;
+	loadThread.loadingBuffer = tmp;
+
+	int tmp2 = loadThread.readyBufferLength;
+	loadThread.readyBufferLength = loadThread.loadingBufferLength;
+	loadThread.loadingBufferLength = tmp2;
+
+	GpuMultidimArrayAtCpu<float>* tmp3 = loadThread.readyImageStack;
+	loadThread.readyImageStack = loadThread.loadingImageStack;
+	loadThread.loadingImageStack = tmp3;
 }
 
 void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
@@ -1247,43 +1292,43 @@ void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
 
 
 FourierReconDataWrapper* ProgRecFourierGPU::processImgsOnGPU(ProjectionData* buffer, int& realBufferSize) {
-	int imgSizeX = buffer[0].origImg.xdim;
-	int fftSizeX = (imgSizeX/2)+1;
-	int imgSizeY = buffer[0].origImg.ydim;
-	GpuMultidimArrayAtCpu<float> original_image_stack(imgSizeX,imgSizeY,1,bufferSize);
+//	int imgSizeX = buffer[0].origImg.xdim;
+//	int fftSizeX = (imgSizeX/2)+1;
+//	int imgSizeY = buffer[0].origImg.ydim;
+//	GpuMultidimArrayAtCpu<float> original_image_stack(imgSizeX,imgSizeY,1,bufferSize);
 	GpuMultidimArrayAtGpu<float> image_stack_gpu;
-	realBufferSize = 0;
-	for (int i = 0; i < bufferSize; i++) {
-		if ( ! buffer[i].skip) {
-			original_image_stack.fillWithTypeConvert(i, buffer[i].origImg);
-			realBufferSize++;
-		}
-	}
-	original_image_stack.copyToGpu(image_stack_gpu);
+	realBufferSize = loadThread.readyBufferLength / R_repository.size();
+//	for (int i = 0; i < bufferSize; i++) {
+//		if ( ! buffer[i].skip) {
+//			original_image_stack.fillWithTypeConvert(i, buffer[i].origImg);
+//			realBufferSize++;
+//		}
+//	}
+	loadThread.readyImageStack->copyToGpu(image_stack_gpu);
 
 float* tmp;
 
-FourierReconDataWrapper* result = prepareBuffer(image_stack_gpu, maxVolumeIndexX / 2, maxVolumeIndexYZ, imgSizeY, maxResolutionSqr, realBufferSize, tmp);
+FourierReconDataWrapper* result = prepareBuffer(image_stack_gpu, maxVolumeIndexX / 2, maxVolumeIndexYZ, paddedImgSize, maxResolutionSqr, realBufferSize, tmp);
 
 
-	Image<double> Vout;
-	Vout().initZeros(realBufferSize,maxVolumeIndexYZ,maxVolumeIndexX / 2);
-	std::cout << "traversing " << realBufferSize * maxVolumeIndexYZ * (maxVolumeIndexX / 2) << " elements of Vout" << std::endl;
-//	for (int n = 0; n < bufferSize; n++) {
-		for (int i = 0; i < (realBufferSize * maxVolumeIndexYZ * (maxVolumeIndexX / 2)); i++) {
-			Vout.data[i] = tmp[i*2];
-		}
+//	Image<double> Vout;
+//	Vout().initZeros(realBufferSize,maxVolumeIndexYZ,maxVolumeIndexX / 2);
+//	std::cout << "traversing " << realBufferSize * maxVolumeIndexYZ * (maxVolumeIndexX / 2) << " elements of Vout" << std::endl;
+////	for (int n = 0; n < bufferSize; n++) {
+//		for (int i = 0; i < (realBufferSize * maxVolumeIndexYZ * (maxVolumeIndexX / 2)); i++) {
+//			Vout.data[i] = tmp[i*2];
+//		}
+////	}
+//	Vout.write("fftOnGpu");
+//
+//	delete[] tmp;
+//
+//	Image<double> Vout1;
+//	Vout1().initZeros(realBufferSize,imgSizeY,imgSizeX);
+//	for (int i = 0; i < (realBufferSize * imgSizeY * imgSizeX); i++) {
+//		Vout1.data[i] = original_image_stack.data[i];
 //	}
-	Vout.write("fftOnGpu");
-
-	delete[] tmp;
-
-	Image<double> Vout1;
-	Vout1().initZeros(realBufferSize,imgSizeY,imgSizeX);
-	for (int i = 0; i < (realBufferSize * imgSizeY * imgSizeX); i++) {
-		Vout1.data[i] = original_image_stack.data[i];
-	}
-	Vout1.write("originalImageStack");
+//	Vout1.write("originalImageStack");
 
 
 //			int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr
@@ -1293,7 +1338,7 @@ FourierReconDataWrapper* result = prepareBuffer(image_stack_gpu, maxVolumeIndexX
 //			original_image_stack.fillImage(i, buffer[i].origImg);
 //		}
 //	}
-	std::cout << "end of processImgsOnGPU" << std::endl;
+//	std::cout << "end of processImgsOnGPU" << std::endl;
 	return result;
 }
 
@@ -1309,15 +1354,17 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
 
-    int startLoadIndex = firstImageIndex;
-
 	/** holding transform/traverse space for each projection x symmetry */
 	int maxNoOfTransforms = bufferSize * R_repository.size();
-	TraverseSpace* traverseSpaces = new TraverseSpace[maxNoOfTransforms];
+	loadThread.loadingBuffer = new TraverseSpace[maxNoOfTransforms];
+	loadThread.readyBuffer = new TraverseSpace[maxNoOfTransforms];
+	loadThread.loadingImageStack = new GpuMultidimArrayAtCpu<float>(paddedImgSize, paddedImgSize, 1, bufferSize);
+	loadThread.readyImageStack = new GpuMultidimArrayAtCpu<float>(paddedImgSize, paddedImgSize, 1, bufferSize);
 
 	clock_t begin = clock();
 
 	int repaint = (int)ceil((double)SF.size()/60);
+    int startLoadIndex = firstImageIndex;
 	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 	barrier_wait( &barrier );
 	for(int i = 0; i < loops; i++) {
@@ -1325,14 +1372,15 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	startLoadIndex += bufferSize;
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 
-    	int noOfTransforms = prepareTransforms(loadThread.buffer2, traverseSpaces);
+//    	int noOfTransforms = prepareTransforms(loadThread.buffer2, traverseSpaces);
     	int realBufferSize;
-    	FourierReconDataWrapper* images = processImgsOnGPU(loadThread.buffer2, realBufferSize);
+    	FourierReconDataWrapper* images = processImgsOnGPU(NULL, realBufferSize);
 //    	sort(traverseSpaces, noOfTransforms);
+
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
-    			loadThread.buffer2,
+    			NULL,
 				(maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1),
-				realBufferSize, traverseSpaces, noOfTransforms,
+				realBufferSize, loadThread.readyBuffer, loadThread.readyBufferLength,
 				maxVolumeIndexX, maxVolumeIndexYZ,
 				useFast, blob.radius,
 				iDeltaSqrt,
@@ -1342,19 +1390,22 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 			progress_bar(startLoadIndex);
 		}
 
-		for(int tmp = 0; tmp < bufferSize; tmp++) {
-			loadThread.buffer2[i].clean();
-		}
+//		for(int tmp = 0; tmp < bufferSize; tmp++) {
+//			loadThread.buffer2[i].clean();
+//		}
     }
 
 	clock_t end = clock();
 	std::cout << "main loop: " << (end - begin) / CLOCKS_PER_SEC << std::endl;
 
-    delete[] traverseSpaces;
+    delete[] loadThread.readyBuffer;
+    delete[] loadThread.loadingBuffer; // FIXME create method
 
-	delete[] loadThread.buffer1;
-	delete[] loadThread.buffer2;
-	loadThread.buffer1 = loadThread.buffer2 = NULL;
+    delete loadThread.loadingImageStack;
+    delete loadThread.readyImageStack;
+
+	loadThread.readyBuffer = loadThread.loadingBuffer = NULL;
+	loadThread.loadingImageStack = loadThread.readyImageStack = NULL;
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {

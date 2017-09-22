@@ -443,18 +443,18 @@ void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
 __device__
 void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		const ProjectionDataGPU* data,
-		const float* img) {
+		const TraverseSpace& space,
+		const float* img, int xSize, int ySize) {
 	Point3D<float> imgPos;
 	float wBlob = 1.f;
 	float wCTF = 1.f;
 	float wModulator = 1.f;
 //	const float* __restrict__ img = data->img;
-	const float* __restrict__ CTF = data->CTF;
-	const float* __restrict__ modulator = data->modulator;
-	float dataWeight = data->weight;
-	int xSize = data->xSize;
-	int ySize = data->ySize;
+//	const float* __restrict__ CTF = data->CTF; // FIXME load differently, somehow
+//	const float* __restrict__ modulator = data->modulator; // FIXME load differently, somehow
+	float dataWeight = space.weight;
+//	int xSize = data->xSize;
+//	int ySize = data->ySize;
 
 	// transform current point to center
 	imgPos.x = x - cMaxVolumeIndexX/2;
@@ -473,10 +473,10 @@ void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
 	int index2D = imgY * xSize + imgX;
 
-	if (0 != CTF) {
-		wCTF = CTF[index2D];
-		wModulator = modulator[index2D];
-	}
+//	if (0 != CTF) {
+//		wCTF = CTF[index2D];
+//		wModulator = modulator[index2D]; // FIXME uncomment
+//	}
 
 	float weight = wBlob * wModulator * dataWeight;
 
@@ -498,7 +498,7 @@ void processVoxelBlob(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		float* blobTableSqrt,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		const ProjectionDataGPU* data,int imgCacheDim) {
+		const ProjectionDataGPU* data,int imgCacheDim) { // FIXME replace data
 	Point3D<float> imgPos;
 	int xSize = data->xSize;
 	int ySize = data->ySize;
@@ -749,12 +749,13 @@ void calculateAABB(const TraverseSpace& tSpace, const ProjectionDataGPU* project
 __device__
 void processProjection(
 		float* tempVolumeGPU, float *tempWeightsGPU,
-	ProjectionDataGPU* projectionData,
+	ProjectionDataGPU* SMAZAT, // FIXME remove
 	const TraverseSpace& tSpace,
 	const float transformInv[3][3],
 	float* devBlobTableSqrt,
 	int imgCacheDim,
-	const float* img) // FIXME add restrict
+	const float* img,// FIXME add restrict
+	int xSize, int ySize)
 {
 //	int imgSizeX = projectionData->xSize;
 //	int imgSizeY = projectionData->ySize;
@@ -801,7 +802,7 @@ void processProjection(
 					float hitZ;
 					if (getZ(idx, idy, hitZ, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
 						int z = (int)(hitZ + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData, img);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, tSpace.maxDistanceSqr, tSpace, img, xSize, ySize);
 					}
 				} else {
 					float z1, z2;
@@ -813,7 +814,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData, imgCacheDim );
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, NULL, imgCacheDim );
 						}
 					}
 				}
@@ -826,7 +827,7 @@ void processProjection(
 					float hitY;
 					if (getY(idx, hitY, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
 						int y = (int)(hitY + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData, img);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, y, idy, transformInv, tSpace.maxDistanceSqr, tSpace, img, xSize, ySize);
 					}
 				} else {
 					float y1, y2;
@@ -838,7 +839,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, NULL, imgCacheDim);
 						}
 					}
 				}
@@ -851,7 +852,7 @@ void processProjection(
 					float hitX;
 					if (getX(hitX, idx, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
 						int x = (int)(hitX + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData, img);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, x, idx, idy, transformInv, tSpace.maxDistanceSqr, tSpace, img, xSize, ySize);
 					}
 				} else {
 					float x1, x2;
@@ -863,7 +864,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, NULL, imgCacheDim);
 						}
 					}
 				}
@@ -912,7 +913,7 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB, ProjectionDataGPU* data,
 __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
-		ProjectionDataGPU* buffer, int bufferSize,
+		ProjectionDataGPU* SMAZAT, int bufferSize, // FIXME remove
 		TraverseSpace* traverseSpaces, int noOfTransforms,
 		float* devBlobTableSqrt,
 		int imgCacheDim,
@@ -928,19 +929,19 @@ void processBufferKernel(
 #endif
 
 
-	if (threadIdx.x == threadIdx.y == blockIdx.x == blockIdx.y == 0) {
-		for (int i = 0; i < bufferSize; i++) {
-//			buffer[i].img = safeData->getImgOnGPU(traverseSpaces[i].projectionIndex);
-			buffer[i].xSize = safeData->sizeX;
-			buffer[i].ySize = safeData->sizeY; // FIXME set elsewhere
-//			printf("reading from %p, sizeX %d sizeY %d \n", buffer[i].img, buffer[i].xSize, buffer[i].ySize );
-		}
-	}
-	__syncthreads();
+//	if (threadIdx.x == threadIdx.y == blockIdx.x == blockIdx.y == 0) {
+//		for (int i = 0; i < bufferSize; i++) {
+////			buffer[i].img = safeData->getImgOnGPU(traverseSpaces[i].projectionIndex);
+//			buffer[i].xSize = safeData->sizeX;
+//			buffer[i].ySize = safeData->sizeY; // FIXME set elsewhere
+////			printf("reading from %p, sizeX %d sizeY %d \n", buffer[i].img, buffer[i].xSize, buffer[i].ySize );
+//		}
+//	}
+//	__syncthreads();
 
 	for (int i = 0; i < noOfTransforms; i++) {
 		TraverseSpace* space = &traverseSpaces[i];
-		ProjectionDataGPU* data = &buffer[space->projectionIndex];
+//		ProjectionDataGPU* data = &buffer[space->projectionIndex];
 
 
 
@@ -961,10 +962,11 @@ void processBufferKernel(
 
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
-			data, *space, space->transformInv,
+			NULL, *space, space->transformInv,
 			devBlobTableSqrt,
 			imgCacheDim,
-			safeData->getImgOnGPU(space->projectionIndex));
+			safeData->getImgOnGPU(space->projectionIndex),
+			safeData->sizeX, safeData->sizeY);
 		__syncthreads(); // sync threads to avoid write after read problems
 	}
 //	__syncthreads();
@@ -1088,23 +1090,23 @@ FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 	prepareBufferKernel<<<dimGrid, dimBlock>>>(resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, bufferSize,
 			data->gpuCopy, maxResolutionSqr);
 
-	int tmpSize = bufferSize * sizeX * sizeY * 2*sizeof(float);
-	printf("velikost fft = x=%d y=%d, velikost ciloveho obrazku %d %d (%d)\n", resultingFFT.Xdim, resultingFFT.Ydim, sizeX, sizeY, tmpSize );
-	printf("parametry x %d y %d paddedimgSize %d bufferSize %d\n", sizeX, sizeY, paddedImgSize, bufferSize );
-	tmp = new float[tmpSize];
-//	ProjectionDataGPU* eee = new ProjectionDataGPU[bufferSize];
-//	cudaMemcpy(eee, devBuffer, bufferSize * sizeof(ProjectionDataGPU), cudaMemcpyDeviceToHost);
-//	gpuErrchk(cudaPeekAtLastError());
-//	for (int i = 0; i < bufferSize; i++) {
-	printf("trying to copy %d from %p\n", tmpSize, data->cpuCopy->dataOnGpu);
-		cudaMemcpy(tmp, data->cpuCopy->dataOnGpu, tmpSize, cudaMemcpyDeviceToHost);
-		gpuErrchk(cudaPeekAtLastError());
-//	}
-
-
-//	cudaFree(devBuffer);
-//		gpuErrchk( cudaPeekAtLastError() ); // can be done, as pointers are also stored on host
-
+//	int tmpSize = bufferSize * sizeX * sizeY * 2*sizeof(float);
+//	printf("velikost fft = x=%d y=%d, velikost ciloveho obrazku %d %d (%d)\n", resultingFFT.Xdim, resultingFFT.Ydim, sizeX, sizeY, tmpSize );
+//	printf("parametry x %d y %d paddedimgSize %d bufferSize %d\n", sizeX, sizeY, paddedImgSize, bufferSize );
+//	tmp = new float[tmpSize];
+////	ProjectionDataGPU* eee = new ProjectionDataGPU[bufferSize];
+////	cudaMemcpy(eee, devBuffer, bufferSize * sizeof(ProjectionDataGPU), cudaMemcpyDeviceToHost);
+////	gpuErrchk(cudaPeekAtLastError());
+////	for (int i = 0; i < bufferSize; i++) {
+//	printf("trying to copy %d from %p\n", tmpSize, data->cpuCopy->dataOnGpu);
+//		cudaMemcpy(tmp, data->cpuCopy->dataOnGpu, tmpSize, cudaMemcpyDeviceToHost);
+//		gpuErrchk(cudaPeekAtLastError());
+////	}
+//
+//
+////	cudaFree(devBuffer);
+////		gpuErrchk( cudaPeekAtLastError() ); // can be done, as pointers are also stored on host
+//
 	std::cout << "end of prepareBuffer" << std::endl;
 
 //	delete[] hostBuffer;
@@ -1121,8 +1123,8 @@ void processBufferGPU(float* tempVolumeGPU,
 		float* blobTableSqrt, int blobTableSize,
 		FourierReconDataWrapper* images) {
 
-	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
-	ProjectionDataGPU* devBuffer = copyProjectionData(hostBuffer, data, bufferSize);
+//	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
+//	ProjectionDataGPU* devBuffer = copyProjectionData(hostBuffer, data, bufferSize);
 
 
 //	size_t currentLimit;
@@ -1180,7 +1182,7 @@ void processBufferGPU(float* tempVolumeGPU,
 
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
 			tempVolumeGPU, tempWeightsGPU,
-			devBuffer, bufferSize,
+			NULL, bufferSize,
 			devTravSpaces, noOfTransforms,
 			devBlobTableSqrt,
 			imgCacheDim,
@@ -1210,13 +1212,13 @@ void processBufferGPU(float* tempVolumeGPU,
 //				gpuErrchk(cudaDeviceSynchronize());
 //
 
-	for (int i = 0 ; i < bufferSize; i++) {
-		hostBuffer[i].clean();
-
-	}
-	cudaFree(devBuffer);
-	gpuErrchk( cudaPeekAtLastError() );
-	delete[] hostBuffer;
+//	for (int i = 0 ; i < bufferSize; i++) {
+//		hostBuffer[i].clean();
+//
+//	}
+//	cudaFree(devBuffer);
+//	gpuErrchk( cudaPeekAtLastError() );
+//	delete[] hostBuffer;
 	cudaFree(devTravSpaces);
 	gpuErrchk( cudaPeekAtLastError() );
 	cudaFree(devBlobTableSqrt);

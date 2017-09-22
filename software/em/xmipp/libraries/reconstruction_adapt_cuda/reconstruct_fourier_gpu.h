@@ -75,8 +75,14 @@ struct LoadThreadParams
     int startImageIndex;
     int endImageIndex;
     MetaData* selFile;
-    ProjectionData* buffer1 = NULL;
-    ProjectionData* buffer2 = NULL;
+//    ProjectionData* buffer1 = NULL;
+//    ProjectionData* buffer2 = NULL;
+    TraverseSpace* loadingBuffer = NULL;
+    TraverseSpace* readyBuffer = NULL;
+    GpuMultidimArrayAtCpu<float>* loadingImageStack = NULL;
+    GpuMultidimArrayAtCpu<float>* readyImageStack = NULL;
+    int loadingBufferLength;
+    int readyBufferLength;
 };
 
 /** Fourier reconstruction parameters. */
