@@ -670,7 +670,7 @@ class ProtExtractParticles(ProtParticles):
 
     def _getExtractArgs(self):
         """ Should be implemented in sub-classes to define the argument
-        list that should be passed to the picking step function.
+        list that should be passed to the extract step function.
         """
         return []
 
