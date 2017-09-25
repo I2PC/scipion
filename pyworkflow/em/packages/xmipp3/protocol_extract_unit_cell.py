@@ -26,7 +26,7 @@
 
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam, IntParam
+from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam, IntParam, LabelParam
 from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
@@ -85,19 +85,21 @@ class XmippProtExtractUnit(EMProtocol):
         form.addParam('offset', FloatParam, default=0.,
                       condition='symmetryGroup<=%d' % (SYM_DIHEDRAL) ,
                       label="offset", help="rotate unit cell around z-axis by offset degrees")
-        group = form.addGroup('Origin of coordinates', expertLevel=const.LEVEL_ADVANCED)
-        group.addParam('x', FloatParam,
-                       label="x", help="x coordinate of Origin")
-        group.addParam('y', FloatParam,
-                       label="y", help="y coordinate of Origin")
-        group.addParam('z', FloatParam,
-                       label="z", help="z coordinate of Origin")
         form.addParam('innerRadius', FloatParam, default=-1,
                       label="Inner Radius (px)", help="inner Mask radius, if -1, the radius will be 0")
         form.addParam('outerRadius', FloatParam, default=-1,
                       label="Outer Radius (px)", help="outer Mask radius, if -1, the radius will be volume_size/2")
         form.addParam('expandFactor', FloatParam, default=0.,
                       label="Expand Factor", help="Increment cropped region by this factor")
+
+        form.addParam('Origin', LabelParam, default= True,
+                      label = 'Origin of Coordinates                                  ', expertLevel=const.LEVEL_ADVANCED)
+        form.addParam('x', FloatParam,
+                       label="x", help="x coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
+        form.addParam('y', FloatParam,
+                       label="y", help="y coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
+        form.addParam('z', FloatParam,
+                       label="z", help="z coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
