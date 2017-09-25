@@ -1227,6 +1227,17 @@ void CTFDescription::setRow(MDRow &row) const
     }
 }
 
+void CTFDescription::write(const FileName &fn)
+{
+	MDRow row;
+	setRow(row);
+
+	MetaData md;
+	md.setColumnFormat(false);
+	md.addRow(row);
+	md.write(fn);
+}
+
 /* Define Params ------------------------------------------------------------------- */
 void CTFDescription::defineParams(XmippProgram * program)
 {
@@ -1371,15 +1382,12 @@ void CTFDescription::lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> 
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
     int found = 0;
-    precomputeValues(0,0);
-    double last_ctf = getValuePureWithoutDampingAt(), ctf=0.0, state=1;
+    double last_ctf = getValuePureNoDampingNoPrecomputedAt(0,0), ctf=0.0, state=1; //getValuePureWithoutDampingAt()
     double w;
     for (w = 0; w <= wmax; w += wstep)
     {
         V2_BY_CT(freq, u, w);
-        //std::cout << "u = " << u << std::endl;
-        precomputeValues(XX(freq), YY(freq));
-        ctf = getValuePureWithoutDampingAt();
+        ctf = getValuePureNoDampingNoPrecomputedAt(XX(freq),YY(freq));
         switch (iwhat)
         {
         	case 0: // Looking for zeroes
