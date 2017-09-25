@@ -190,9 +190,8 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr);
 		}else{
 			if(myhandle.ptr == NULL){
-				planFptr = new cufftHandle;
+				myhandle.ptr = planFptr = new cufftHandle;
 				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr);
-				myhandle.ptr = (void *)planFptr;
 			}
 			planFptr=(cufftHandle *)myhandle.ptr;
 		}

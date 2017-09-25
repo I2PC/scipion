@@ -61,8 +61,10 @@ public:
 
 	void clear()
 	{
-		if (ptr!=NULL)
+		if (ptr!=NULL) {
 			mycufftDestroy(ptr);
+			delete ptr;
+		}
 		ptr=NULL;
 	}
 
