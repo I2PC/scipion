@@ -47,6 +47,7 @@ void ProgFilter::defineParams()
     MedianFilter::defineParams(this);
     BasisFilter::defineParams(this);
     LogFilter::defineParams(this);
+    RetinexFilter::defineParams(this);
     DenoiseTVFilter::defineParams(this);
 
     //examples
@@ -96,6 +97,8 @@ void ProgFilter::readParams()
         filter = new BasisFilter();
     else if (checkParam("--log"))
         filter = new LogFilter();
+    else if (checkParam("--retinex"))
+        filter = new RetinexFilter();
     else if (checkParam("--denoiseTV"))
         filter = new DenoiseTVFilter();
     else

@@ -29,7 +29,7 @@
 import pyworkflow.em.metadata as md
 from pyworkflow.object import String
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_ADVANCED, FloatParam)
+                                        LEVEL_ADVANCED, FloatParam, BooleanParam)
 from pyworkflow.em.protocol import ProtProcessParticles
 from convert import writeSetOfParticles, setXmippAttributes
 
@@ -67,6 +67,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
                       label='Percentage (%)', expertLevel=LEVEL_ADVANCED,
                       help='The worse percentage of particles according to SSNR are automatically disabled.', 
                       validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
+        form.addParam('addFeatures', BooleanParam, default=False, 
+                      label='Add features', expertLevel=LEVEL_ADVANCED,
+                      help='Add features used for the ranking to each one of the input particles')
         form.addParallelSection(threads=0, mpi=0)
         
     def _getDefaultParallel(self):
@@ -93,6 +96,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
         
         elif self.autoParRejection == self.REJ_PERCENTAGE:
             args += "--percent " + str(self.percentage.get())
+        
+        if self.addFeatures:
+            args += "--addFeatures "
 
         self.runJob("xmipp_image_sort_by_statistics", args)
         
@@ -126,10 +132,20 @@ class XmippProtScreenParticles(ProtProcessParticles):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
-            summary.append("The minimum ZScore is %.2f" % min(zscores))
-            summary.append("The maximum ZScore is %.2f" % max(zscores))
-            summary.append("The mean ZScore is %.2f" % (sum(zscores)*1.0/len(self.outputParticles)))
+            fnSummary = self._getExtraPath("summary.txt")
+            if not os.path.exists(fnSummary):
+                zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
+                if len(zscores)>0:
+                    fhSummary = open(fnSummary,"w")
+                    fhSummary.write("The minimum ZScore is %.2f\n" % min(zscores))
+                    fhSummary.write("The maximum ZScore is %.2f\n" % max(zscores))
+                    fhSummary.write("The mean ZScore is %.2f\n" % (sum(zscores)*1.0/len(self.outputParticles)))
+                fhSummary.close()
+            if os.path.exists(fnSummary):
+                fhSummary = open(fnSummary)
+                for line in fhSummary.readlines():
+                    summary.append(line.strip())
+                fhSummary.close()
         return summary
     
     def _validate(self):
@@ -158,6 +174,8 @@ class XmippProtScreenParticles(ProtProcessParticles):
     #--------------------------- UTILS functions -------------------------------------------- 
     def _updateParticle(self, item, row):
         setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1, md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1, md.MDL_ZSCORE_SNR2, md.MDL_CUMULATIVE_SSNR)
+        if self.addFeatures:
+            setXmippAttributes(item, row, md.MDL_SCORE_BY_SCREENING)
         if row.getValue(md.MDL_ENABLED) <= 0:
             item._appendItem = False
         else:
