@@ -1393,7 +1393,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 
 	prm.current_ctfmodel.forcePhysicalMeaning();
 	COPY_ctfmodel_TO_CURRENT_GUESS;
-	std::cout << "Best fit with Gaussian2:\n" << prm.current_ctfmodel<< std::endl;
+
 	if (prm.show_optimization)
 	{
 		std::cout << "Best fit with Gaussian2:\n" << prm.current_ctfmodel
@@ -1424,7 +1424,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	prm2D->adjust_params->initZeros();
 	prm2D->assignParametersFromCTF(prm2D->current_ctfmodel,MATRIX1D_ARRAY(*prm2D->adjust_params),0, ALL_CTF_PARAMETERS2D, true);
 
-
 	powellOptimizer(*prm2D->adjust_params, 0 + 1, ALL_CTF_PARAMETERS2D, CTF_fitness,
 						prm2D, 0.01, fitness, iter, steps, prm.show_optimization);
 
@@ -1453,7 +1452,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	prm2D->action = 7;
 	if (prm.fn_psd != "")
 	{
-		std::cout << "Aqui 1, " << getCurrentTimeString() << std::endl;
 		// Define mask between first and third zero
 		prm2D->mask_between_zeroes.initZeros(prm2D->mask);
 		Matrix1D<double> u(2), z1(2), z3(2);
@@ -1483,7 +1481,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 				DIRECT_MULTIDIM_ELEM(prm2D->mask_between_zeroes, n) = 1;
 		}
 
-		std::cout << "Aqui 2, " << getCurrentTimeString() << std::endl;
 		// Evaluate the correlation in this region
 		CTF_fitness(prm2D->adjust_params->adaptForNumericalRecipes(), prm2D);
 		// Save results
@@ -1519,7 +1516,8 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm2D->downsampleFactor, id);
 		MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
 		fn_rootCTFPARAM = fn_rootCTFPARAM + ".ctfparam_tmp";
-		// TODO fn_rootCTFPARAM.deleteFile();
+
+		fn_rootCTFPARAM.deleteFile();
 	}
 	output_ctfmodel = prm2D->current_ctfmodel;
 
