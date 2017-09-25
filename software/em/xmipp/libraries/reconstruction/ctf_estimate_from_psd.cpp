@@ -481,9 +481,9 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
     current_ctfmodel.produceSideInfo();
 
     // Write the two model quadrants
-    MultidimArray<int> mask;
+    MultidimArray<int> mask_norm;
     STARTINGX(enhancedPSD)=STARTINGY(enhancedPSD)=0;
-    mask.initZeros(enhancedPSD);
+    mask_norm.initZeros(enhancedPSD);
     model.resizeNoCopy(enhancedPSD);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
@@ -494,7 +494,7 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
             YY(idx) = i;
             FFT_idx2digfreq(model, idx, freq);
             if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
-                mask(i,j)=(int)mask(i,j);
+                mask_norm(i,j)=(int)mask(i,j);
             digfreq2contfreq(freq, freq, Tm);
 
             current_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -505,7 +505,7 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
 
     // Normalize the left part so that it has similar values to
     // the enhanced PSD
-    model.rangeAdjust(enhancedPSD, &mask);
+    model.rangeAdjust(enhancedPSD, &mask_norm);
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
@@ -546,9 +546,9 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
                             0, CTF_PARAMETERS, modelSimplification);
     current_ctfmodel.produceSideInfo();
 
-    MultidimArray<int> mask;
+    MultidimArray<int> mask_norm;
     STARTINGX(enhancedPSD)=STARTINGY(enhancedPSD)=0;
-    mask.initZeros(enhancedPSD);
+    mask_norm.initZeros(enhancedPSD);
     model.resizeNoCopy(enhancedPSD);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
@@ -562,7 +562,7 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
         if (w>max_freq_psd)
         	continue;
         if (fabs(XX(freq))>0.03 && fabs(YY(freq))>0.03)
-            mask(i,j)=(int)mask(i,j);
+            mask_norm(i,j)=(int)mask(i,j);
         digfreq2contfreq(freq, freq, Tm);
 
         current_ctfmodel.precomputeValues(XX(freq), YY(freq));
@@ -572,14 +572,13 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
 
     // Normalize the left part so that it has similar values to
     // the enhanced PSD
-    model.rangeAdjust(enhancedPSD, &mask);
+    model.rangeAdjust(enhancedPSD, &mask_norm);
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     if (j < Xdim / 2)
         model(i, j) = enhancedPSD(i, j);
 
-    // Produce a centered image
     CenterFFT(model, true);
 }
 
