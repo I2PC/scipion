@@ -445,16 +445,16 @@ void processVoxel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
 	int x, int y, int z,
 	FourierReconstructionData* const data,
-	const TraverseSpace& space)
+	const TraverseSpace* const space)
 {
 	Point3D<float> imgPos;
 	float wBlob = 1.f;
 	float wCTF = 1.f;
 	float wModulator = 1.f;
-	const float* __restrict__ img = data->getImgOnGPU(space.projectionIndex);
+	const float* __restrict__ img = data->getImgOnGPU(space->projectionIndex);
 //	const float* __restrict__ CTF = data->CTF; // FIXME load differently, somehow
 //	const float* __restrict__ modulator = data->modulator; // FIXME load differently, somehow
-	float dataWeight = space.weight;
+	float dataWeight = space->weight;
 	int xSize = data->sizeX;
 	int ySize = data->sizeY;
 
@@ -462,11 +462,11 @@ void processVoxel(
 	imgPos.x = x - cMaxVolumeIndexX/2;
 	imgPos.y = y - cMaxVolumeIndexYZ/2;
 	imgPos.z = z - cMaxVolumeIndexYZ/2;
-	if (imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z > space.maxDistanceSqr) {
+	if (imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z > space->maxDistanceSqr) {
 		return; // discard iterations that would access pixel with too high frequency
 	}
 	// rotate around center
-	multiply(space.transformInv, imgPos);
+	multiply(space->transformInv, imgPos);
 	// transform back and round
 	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
 	int imgX = clamp((int)(imgPos.x + 0.5f), 0, xSize - 1);
@@ -494,7 +494,7 @@ void processVoxel(
 __device__
 void processVoxelBlob(
 		float* tempVolumeGPU, float *tempWeightsGPU,
-		float* blobTableSqrt,
+		const float* blobTableSqrt,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
 		const ProjectionDataGPU* data,int imgCacheDim) { // FIXME replace data
 	Point3D<float> imgPos;
@@ -748,84 +748,84 @@ __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
 	FourierReconstructionData* const data,
-	const TraverseSpace& tSpace,
-	float* devBlobTableSqrt,
+	const TraverseSpace* const tSpace,
+	const float* devBlobTableSqrt,
 	int imgCacheDim)
 {
 	// map thread to each (2D) voxel
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
 
-	if (tSpace.XY == tSpace.dir) { // iterate XY plane
-		if (idy >= tSpace.minY && idy <= tSpace.maxY) {
-			if (idx >= tSpace.minX && idx <= tSpace.maxX) {
+	if (tSpace->XY == tSpace->dir) { // iterate XY plane
+		if (idy >= tSpace->minY && idy <= tSpace->maxY) {
+			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
 				if (cUseFast) {
 					float hitZ;
-					if (getZ(idx, idy, hitZ, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
+					if (getZ(idx, idy, hitZ, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
 						int z = (int)(hitZ + 0.5f); // rounding
 						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace);
 					}
 				} else {
 					float z1, z2;
-					bool hit1 = getZ(idx, idy, z1, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-					bool hit2 = getZ(idx, idy, z2, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+					bool hit1 = getZ(idx, idy, z1, tSpace->u, tSpace->v, tSpace->bottomOrigin); // lower plane
+					bool hit2 = getZ(idx, idy, z2, tSpace->u, tSpace->v, tSpace->topOrigin); // upper plane
 					if (hit1 || hit2) {
 						z1 = clamp(z1, 0, cMaxVolumeIndexYZ);
 						z2 = clamp(z2, 0, cMaxVolumeIndexYZ);
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, tSpace.transformInv, tSpace.maxDistanceSqr, NULL, imgCacheDim );
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, tSpace->transformInv, tSpace->maxDistanceSqr, NULL, imgCacheDim );
 						}
 					}
 				}
 			}
 		}
-	} else if (tSpace.XZ == tSpace.dir) { // iterate XZ plane
-		if (idy >= tSpace.minZ && idy <= tSpace.maxZ) { // map z -> y
-			if (idx >= tSpace.minX && idx <= tSpace.maxX) {
+	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
+		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
+			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
 				if (cUseFast) {
 					float hitY;
-					if (getY(idx, hitY, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
+					if (getY(idx, hitY, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
 						int y = (int)(hitY + 0.5f); // rounding
 						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace);
 					}
 				} else {
 					float y1, y2;
-					bool hit1 = getY(idx, y1, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-					bool hit2 = getY(idx, y2, idy, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+					bool hit1 = getY(idx, y1, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin); // lower plane
+					bool hit2 = getY(idx, y2, idy, tSpace->u, tSpace->v, tSpace->topOrigin); // upper plane
 					if (hit1 || hit2) {
 						y1 = clamp(y1, 0, cMaxVolumeIndexYZ);
 						y2 = clamp(y2, 0, cMaxVolumeIndexYZ);
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, tSpace.transformInv, tSpace.maxDistanceSqr, NULL, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, tSpace->transformInv, tSpace->maxDistanceSqr, NULL, imgCacheDim);
 						}
 					}
 				}
 			}
 		}
 	} else { // iterate YZ plane
-		if (idy >= tSpace.minZ && idy <= tSpace.maxZ) { // map z -> y
-			if (idx >= tSpace.minY && idx <= tSpace.maxY) { // map y > x
+		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
+			if (idx >= tSpace->minY && idx <= tSpace->maxY) { // map y > x
 				if (cUseFast) {
 					float hitX;
-					if (getX(hitX, idx, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
+					if (getX(hitX, idx, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
 						int x = (int)(hitX + 0.5f); // rounding
 						processVoxel(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace);
 					}
 				} else {
 					float x1, x2;
-					bool hit1 = getX(x1, idx, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-					bool hit2 = getX(x2, idx, idy, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+					bool hit1 = getX(x1, idx, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin); // lower plane
+					bool hit2 = getX(x2, idx, idy, tSpace->u, tSpace->v, tSpace->topOrigin); // upper plane
 					if (hit1 || hit2) {
 						x1 = clamp(x1, 0, cMaxVolumeIndexX);
 						x2 = clamp(x2, 0, cMaxVolumeIndexX);
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, tSpace.transformInv, tSpace.maxDistanceSqr, NULL, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, tSpace->transformInv, tSpace->maxDistanceSqr, NULL, imgCacheDim);
 						}
 					}
 				}
@@ -889,7 +889,7 @@ void processBufferKernel(
 #endif
 
 	for (int i = 0; i < noOfTransforms; i++) {
-		TraverseSpace space = traverseSpaces[i];
+		TraverseSpace* space = &traverseSpaces[i];
 
 #if SHARED_IMG
 		if ( ! cUseFast) {
