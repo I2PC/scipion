@@ -240,11 +240,11 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     def _insertAllSteps(self):
         self.initialIds = self._insertInitialSteps()
-        self.insertedDict = {}
+        self.micDict = OrderedDict()
         pwutils.makeFilePath(self._getAllDone())
 
-        pickMicIds = self._insertNewMicsSteps(self.insertedDict,
-                                              self.getInputMicrographs())
+        micDict, _ = self._loadInputList()
+        pickMicIds = self._insertNewMicsSteps(micDict.values())
 
         self._insertFinalSteps(pickMicIds)
 
@@ -269,22 +269,20 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     def _insertPickMicrographStep(self, mic, prerequisites, *args):
         """ Basic method to insert a picking step for a given micrograph. """
-        micDict = mic.getObjDict(includeBasic=True)
         micStepId = self._insertFunctionStep('pickMicrographStep',
-                                             micDict, *args,
+                                             mic.getMicName(), *args,
                                              prerequisites=prerequisites)
 
         return micStepId
 
-    def pickMicrographStep(self, micDict, *args):
+    def pickMicrographStep(self, micName, *args):
         """ Step function that will be common for all picking protocols.
         It will take care of re-building the micrograph object from the micDict
         argument and perform any conversion if needed. Then, the function
         _pickMicrograph will be called, that should be implemented by each
         picking protocol.
         """
-        mic = Micrograph()
-        mic.setAttributesFromDict(micDict, setBasic=True, ignoreMissing=True)
+        mic = self.micDict[micName]
         micDoneFn = self._getMicDone(mic)
         micFn = mic.getFileName()
 
@@ -318,7 +316,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self._checkNewInput()
         self._checkNewOutput()
 
-    def _insertNewMicsSteps(self, insertedDict, inputMics):
+    def _insertNewMicsSteps(self, inputMics):
         """ Insert steps to process new mics (from streaming)
         Params:
             insertedDict: contains already processed mics
@@ -327,23 +325,46 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         deps = []
         # For each mic insert the step to process it
         for mic in inputMics:
-            if mic.getObjId() not in insertedDict:
+            micKey = mic.getMicName()
+            if micKey not in self.micDict:
                 stepId = self._insertPickMicrographStep(mic, self.initialIds,
                                                         *self._getPickArgs())
                 deps.append(stepId)
-                insertedDict[mic.getObjId()] = stepId
+                self.micDict[micKey] = mic
         return deps
 
-    def _loadInputList(self):
-        """ Load the input set of micrographs and create a list. """
-        micsFile = self.getInputMicrographs().getFileName()
-        self.debug("Loading input db: %s" % micsFile)
-        micSet = SetOfMicrographs(filename=micsFile)
-        micSet.loadAllProperties()
-        self.listOfMics = [m.clone() for m in micSet]
-        self.streamClosed = micSet.isStreamClosed()
-        micSet.close()
+    def _loadSet(self, inputSet, SetClass, getKeyFunc):
+        """ Load a given input set if their items are not already present
+        in the self.micDict.
+        This can be used to load new micrographs for picking as well as
+        new CTF (if used) in streaming.
+        """
+        setFn = inputSet.getFileName()
+        self.debug("Loading input db: %s" % setFn)
+        updatedSet = SetClass(filename=setFn)
+        updatedSet.loadAllProperties()
+        newItemDict = OrderedDict()
+        for item in updatedSet:
+            micKey = getKeyFunc(item)
+            if micKey not in self.micDict:
+                newItemDict[micKey] = item.clone()
+        streamClosed = updatedSet.isStreamClosed()
+        updatedSet.close()
         self.debug("Closed db.")
+
+        return newItemDict, streamClosed
+
+    def _loadMics(self, micSet):
+        return self._loadSet(micSet, SetOfMicrographs,
+                        lambda mic: mic.getMicName())
+
+    def _loadCTFs(self, ctfSet):
+        return self._loadSet(ctfSet, SetOfCTF,
+                        lambda ctf: ctf.getMicrograph().getMicName())
+
+    def _loadInputList(self):
+        """ Load the input set of micrographs that are ready to be picked. """
+        return self._loadMics(self.getInputMicrographs())
 
     def _checkNewInput(self):
         # Check if there are new micrographs to process from the input set
@@ -361,13 +382,12 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
         self.lastCheck = now
         # Open input micrographs.sqlite and close it as soon as possible
-        self._loadInputList()
-        newMics = any(m.getObjId() not in self.insertedDict
-                        for m in self.listOfMics)
+        micDict, self.streamClosed = self._loadInputList()
+        newMics = micDict.values()
         outputStep = self._getFirstJoinStep()
 
         if newMics:
-            fDeps = self._insertNewMicsSteps(self.insertedDict, self.listOfMics)
+            fDeps = self._insertNewMicsSteps(newMics)
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
@@ -379,20 +399,22 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         # Load previously done items (from text file)
         doneList = self._readDoneList()
         # Check for newly done items
-        newDone = [m for m in self.listOfMics
+        listOfMics = self.micDict.values()
+        nMics = len(listOfMics)
+        newDone = [m for m in listOfMics
                    if m.getObjId() not in doneList and self._isMicDone(m)]
 
         # Update the file with the newly done mics
         # or exit from the function if no new done mics
         self.debug('_checkNewOutput: ')
         self.debug('   listOfMics: %s, doneList: %s, newDone: %s'
-                   % (len(self.listOfMics), len(doneList), len(newDone)))
+                   % (nMics, len(doneList), len(newDone)))
 
         firstTime = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
-        self.finished = self.streamClosed and allDone == len(self.listOfMics)
+        self.finished = self.streamClosed and allDone == nMics
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
         if newDone:
@@ -407,7 +429,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.debug('   finished: %s ' % self.finished)
         self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
         self.debug('        allDone (%s) == len(self.listOfMics (%s)'
-                   % (allDone, len(self.listOfMics)))
+                   % (allDone, nMics))
         self.debug('   streamMode: %s' % streamMode)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
@@ -877,7 +899,6 @@ class ProtExtractParticles(ProtParticles):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if newDone:
             self._updateOutputPartSet(newDone, streamMode)
-
             self._writeDoneList(newDone)
         elif not self.finished:
             # If we are not finished and no new output have been produced
