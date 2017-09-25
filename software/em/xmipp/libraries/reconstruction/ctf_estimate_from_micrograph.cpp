@@ -641,14 +641,13 @@ void ProgCTFEstimateFromMicrograph::run()
 				}
 				else
 				{
-                printf("Entrando ROUT_adjust\n");
-                ctf1Dmodel.isLocalCTF = false;	//Nuevo
-				ctf1Dmodel.x0 = 0;				//Nuevo
-				ctf1Dmodel.xF = (Xdim-1);		//Nuevo
-				ctf1Dmodel.y0 = 0;				//Nuevo
-				ctf1Dmodel.yF = (Ydim-1);		//Nuevo
-                ROUT_Adjust_CTFFast(prmEstimateCTFFromPSDFast,ctf1Dmodel, false); //Nuevo
-                printf("ROUT_Adjust Completado\n");
+				//1D acceleration
+                ctf1Dmodel.isLocalCTF = false;
+				ctf1Dmodel.x0 = 0;
+				ctf1Dmodel.xF = (Xdim-1);
+				ctf1Dmodel.y0 = 0;
+				ctf1Dmodel.yF = (Ydim-1);
+                ROUT_Adjust_CTFFast(prmEstimateCTFFromPSDFast,ctf1Dmodel, false);
 				}
                 // Evaluate PSD variance and write into the CTF
                 double stdQ = 0;
@@ -670,14 +669,13 @@ void ProgCTFEstimateFromMicrograph::run()
 
                 prmEstimateCTFFromPSD.bootstrap = true;
                 prmEstimateCTFFromPSD.show_optimization = true;
-                //prmEstimateCTFFromPSDFast.acceleration1D = true;
                 if (!acceleration1D)
                 {
                 MultidimArray<double> CTFs(bootstrapN, 32);
                 FileName fnBase = fn_psd.withoutExtension();
                 std::cerr << "Computing bootstrap ...\n";
                 init_progress_bar(bootstrapN);
-                /*for (int n = 0; n < bootstrapN; n++)
+                for (int n = 0; n < bootstrapN; n++)
                 {
                     CTFs(n, 31) = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                   ctfmodel, false);
@@ -733,21 +731,21 @@ void ProgCTFEstimateFromMicrograph::run()
 
                     progress_bar(n);
                 }
-                progress_bar(bootstrapN);*/
+                progress_bar(bootstrapN);
 
                 }
 ////////////////////////////CTF 1D execution///////////////////////////////////
                 else
                 {
                 	MultidimArray<double> CTFs(bootstrapN, 21);
-					prmEstimateCTFFromPSDFast.bootstrap = true; //Nuevo
-					prmEstimateCTFFromPSDFast.show_optimization = true; //Nuevo
+					prmEstimateCTFFromPSDFast.bootstrap = true;
+					prmEstimateCTFFromPSDFast.show_optimization = true;
 					FileName fnBase = fn_psd.withoutExtension();
 					std::cerr << "Computing bootstrap ...\n";
 					init_progress_bar(bootstrapN);
 					for (int n = 0; n < bootstrapN; n++)
 					{
-						CTFs(n, 21) = ROUT_Adjust_CTFFast(prmEstimateCTFFromPSDFast,ctf1Dmodel, false); //Nuevo
+						CTFs(n, 21) = ROUT_Adjust_CTFFast(prmEstimateCTFFromPSDFast,ctf1Dmodel, false);
 
 						CTFs(n, 0) = ctf1Dmodel.Tm;
 						CTFs(n, 1) = ctf1Dmodel.kV;
