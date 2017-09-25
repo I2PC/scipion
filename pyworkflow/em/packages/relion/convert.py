@@ -964,7 +964,6 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
 
     f = None
     lastMicId = None
-    c = 0
 
     extraLabels = coordSet.getFirstItem().hasAttribute('_rlnClassNumber')
     doScale = abs(scale - 1) > 0.001
@@ -979,10 +978,8 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
             # we need to close previous opened file
             if f:
                 f.close()
-                c = 0
             f = openStar(posDict[micId], extraLabels)
             lastMicId = micId
-        c += 1
 
         if doScale:
             x = coord.getX() * scale
@@ -1004,3 +1001,34 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
         f.close()
 
     return posDict.values()
+
+
+def writeMicCoordinates(mic, coordList, outputFn, getPosFunc=None):
+    """ Write the pos file as expected by Xmipp with the coordinates
+    of a given micrograph.
+    Params:
+        mic: input micrograph.
+        coordList: list of (x, y) pairs of the mic coordinates.
+        outputFn: output filename for the pos file .
+        isManual: if the coordinates are 'Manual' or 'Supervised'
+        getPosFunc: a function to get the positions from the coordinate,
+            it can be useful for scaling the coordinates if needed.
+    """
+    if getPosFunc is None:
+        getPosFunc = lambda coord: coord.getPostion()
+   
+    extraLabels = coordList[0].hasAttribute('_rlnClassNumber')
+    f = openStar(outputFn, extraLabels)
+
+    for coord in coordList:
+        x, y = getPosFunc(coord)
+        if not extraLabels:
+            f.write("%d %d \n" % (x, y))
+        else:
+            f.write("%d %d %d %0.6f %0.6f\n"
+                    % (x, y,
+                       coord._rlnClassNumber,
+                       coord._rlnAutopickFigureOfMerit,
+                       coord._rlnAnglePsi))
+
+    f.close()
