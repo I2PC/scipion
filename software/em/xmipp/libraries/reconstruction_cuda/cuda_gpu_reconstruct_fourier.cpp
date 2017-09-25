@@ -688,44 +688,44 @@ void mapToImage(Point3D<float>* box, int xSize, int ySize, const float transform
 }
 
 __device__
-void calculateAABB(const TraverseSpace& tSpace, const ProjectionDataGPU* projectionData, Point3D<float>* dest) {
+void calculateAABB(const TraverseSpace* tSpace, const FourierReconstructionData* projectionData, Point3D<float>* dest) {
 	Point3D<float> box[8];
-	if (tSpace.XY == tSpace.dir) { // iterate XY plane
+	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
 		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
 
 		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getZ(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getZ(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getZ(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getZ(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getZ(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getZ(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getZ(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getZ(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getZ(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getZ(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getZ(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin);
-	} else if (tSpace.XZ == tSpace.dir) { // iterate XZ plane
+		getZ(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
 		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
 
 		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getY(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getY(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getY(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getY(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getY(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getY(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getY(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getY(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getY(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getY(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getY(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getY(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 	} else { // iterate YZ plane
 		box[0].y = box[3].y = box[4].y = box[7].y = blockIdx.x*blockDim.x - cBlobRadius;
 		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
@@ -733,19 +733,19 @@ void calculateAABB(const TraverseSpace& tSpace, const ProjectionDataGPU* project
 		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getX(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getX(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getX(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getX(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getX(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getX(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getX(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getX(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getX(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 
-		getX(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
-		getX(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin);
+		getX(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 	}
-	mapToImage(box, projectionData->xSize, projectionData->ySize, tSpace.transformInv);
+	mapToImage(box, projectionData->sizeX, projectionData->sizeY, tSpace->transformInv);
 	computeAABB(dest, box);
 }
 
@@ -848,17 +848,20 @@ bool blockHasWork(Point3D<float>* AABB, int imgXSize, int imgYSize) {
 }
 
 __device__
-void getImgData(Point3D<float>* AABB, int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, float& vImag) {
+void getImgData(Point3D<float>* AABB,
+		int tXindex, int tYindex,
+		FourierReconstructionData* const data, int imgIndex,
+		float& vReal, float& vImag) {
 	int imgXindex = tXindex + AABB[0].x;
 	int imgYindex = tYindex + AABB[0].y;
 	if ((imgXindex >=0)
-			&& (imgXindex < data->xSize)
+			&& (imgXindex < data->sizeX)
 			&& (imgYindex >=0)
-			&& (imgYindex < data->ySize))
+			&& (imgYindex < data->sizeY))
 	{
-		int index = imgYindex * data->xSize + imgXindex; // copy data from image
-		vReal = data->img[2*index];
-		vImag = data->img[2*index + 1];
+		int index = imgYindex * data->sizeX + imgXindex; // copy data from image
+		vReal = data->getImgOnGPU(imgIndex)[2*index];
+		vImag = data->getImgOnGPU(imgIndex)[2*index + 1];
 
 	} else {
 		vReal = vImag = 0.f; // out of image bound, so return zero
@@ -867,11 +870,13 @@ void getImgData(Point3D<float>* AABB, int tXindex, int tYindex, ProjectionDataGP
 
 
 __device__
-void copyImgToCache(float2* dest, Point3D<float>* AABB, ProjectionDataGPU* data, int imgCacheDim) {
+void copyImgToCache(float2* dest, Point3D<float>* AABB,
+		 FourierReconstructionData* const data, int imgIndex,
+		 int imgCacheDim) {
 	for (int y = threadIdx.y; y < imgCacheDim; y += blockDim.y) {
 		for (int x = threadIdx.x; x < imgCacheDim; x += blockDim.x) {
 			int memIndex = y * imgCacheDim + x;
-			getImgData(AABB, x, y, data, dest[memIndex].x, dest[memIndex].y);
+			getImgData(AABB, x, y, data, imgIndex, dest[memIndex].x, dest[memIndex].y);
 		}
 	}
 }
@@ -899,12 +904,12 @@ void processBufferKernel(
 #if SHARED_IMG
 		if ( ! cUseFast) {
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
-				calculateAABB(*space, data, SHARED_AABB); // first thread calculates which part of the image should be shared
+				calculateAABB(space, data, SHARED_AABB); // first thread calculates which part of the image should be shared
 			}
 			__syncthreads();
-			if (blockHasWork(SHARED_AABB, data->xSize, data->ySize)) {
-				copyImgToCache(IMG, SHARED_AABB, data, imgCacheDim); // all threads copy image data to shared memory
-				__syncthreads(); // FIXME needs to be fixed for use with FourierReconstructionData
+			if (blockHasWork(SHARED_AABB, data->sizeX, data->sizeY)) {
+				copyImgToCache(IMG, SHARED_AABB, data, space->projectionIndex, imgCacheDim); // all threads copy image data to shared memory
+				__syncthreads();
 			} else {
 				continue; // whole block can exit
 			}
