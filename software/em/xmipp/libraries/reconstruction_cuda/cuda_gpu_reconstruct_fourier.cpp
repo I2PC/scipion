@@ -488,9 +488,12 @@ void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 //	}
 
 
-	tempVolumeGPU[2*index3D] += img[2*index2D] * weight * wCTF;
-	tempVolumeGPU[2*index3D + 1] += img[2*index2D + 1] * weight * wCTF;
-	tempWeightsGPU[index3D] += weight;
+//	tempVolumeGPU[2*index3D] += img[2*index2D] * weight * wCTF;
+//	tempVolumeGPU[2*index3D + 1] += img[2*index2D + 1] * weight * wCTF;
+//	tempWeightsGPU[index3D] += weight;
+	atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight * wCTF);
+	atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight * wCTF);
+	atomicAdd(&tempWeightsGPU[index3D], weight); // FIXME test other approaches
 }
 
 __device__
