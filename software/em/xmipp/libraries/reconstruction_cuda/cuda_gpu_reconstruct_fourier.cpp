@@ -1086,6 +1086,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	// holding fourier images to process
 	FourierReconDataWrapper* fourierData;
 
+	// process input data and get them to GPU, if necessary
 	if (NULL == paddedImages) {
 //		FIXME implement
 
@@ -1095,54 +1096,24 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 				maxResolutionSqr);
 	}
 
-//	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
-//	ProjectionDataGPU* devBuffer = copyProjectionData(hostBuffer, data, bufferSize);
-
-
-//	size_t currentLimit;
-//	cudaDeviceGetLimit(&currentLimit, cudaLimitPrintfFifoSize);
-//	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 1048576 * 2);
-//	gpuErrchk( cudaPeekAtLastError() );
-
-
-
-//	printf("vstup %f %f %f\n%f %f %f\n%f %f %f\n",
-//			data[0].localA(0, 0), data[0].localA(0,1), data[0].localA(0,2),
-//			data[0].localA(1, 0), data[0].localA(1,1), data[0].localA(1,2),
-//			data[0].localA(2, 0), data[0].localA(2,1), data[0].localA(2,2));
-//	printf("vstup1 %f %f %f\n%f %f %f\n%f %f %f\n",
-//			data[0].localAInv(0, 0), data[0].localAInv(0,1), data[0].localAInv(0,2),
-//			data[0].localAInv(1, 0), data[0].localAInv(1,1), data[0].localAInv(1,2),
-//			data[0].localAInv(2, 0), data[0].localAInv(2,1), data[0].localAInv(2,2));
-
-
-
-
-//		// New update of device variable with respect
-//		// to last update
-//		test_update<<<1,27>>>(tempVolumeGPU);
-//		   		gpuErrchk(cudaPeekAtLastError());
-//				gpuErrchk(cudaDeviceSynchronize());
-//				return;
-
+	// create space for remaining data
 	TraverseSpace* devTravSpaces;
 	cudaMalloc((void **) &devTravSpaces, noOfTransforms*sizeof(TraverseSpace));
-	gpuErrchk( cudaPeekAtLastError() );
 	float* devBlobTableSqrt;
 	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
 	gpuErrchk( cudaPeekAtLastError() );
 
+	// copy remaining data
 	cudaMemcpy(devTravSpaces, traverseSpaces, noOfTransforms*sizeof(TraverseSpace), cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
 	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
 
+	// run kernel
 	int size2D = maxVolIndexYZ + 1;
+	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
 
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
-	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
-
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			NULL, noOfImages,
@@ -1152,180 +1123,12 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 			fourierData->gpuCopy);
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
-//	ProjectionDataGPU*	hostBuffer = new ProjectionDataGPU[bufferSize];
-//	cudaMemcpy(devBuffer, hostBuffer, bufferSize*sizeof(ProjectionDataGPU), cudaMemcpyDeviceToHost);
-//	for (int i = 0; i < bufferSize; i++) {
-//		hostBuffer[i].clean();
-//		data[i].clean();
-//	}
 
-//	for(int a = 0; a < bufferSize; a++) {
-//		Array2D<std::complex<float> >* imgt = data[a].img;
-//		if (data[a].skip) continue;
-//		std::cout << "img " << data[a].imgIndex <<
-//				": " << (*imgt)(imgt->getXSize()/2, imgt->getYSize()/2) <<
-//				std::endl;
-//	}
-
-
-
-//	// First update with respect to initial values
-//		   test_init<<<1,27>>>(tempVolumeGPU, devBuffer, bufferSize, devSymmetries);
-//		   		gpuErrchk(cudaPeekAtLastError());
-//				gpuErrchk(cudaDeviceSynchronize());
-//
-
-//	for (int i = 0 ; i < bufferSize; i++) {
-//		hostBuffer[i].clean();
-//
-//	}
-//	cudaFree(devBuffer);
-//	gpuErrchk( cudaPeekAtLastError() );
-//	delete[] hostBuffer;
+	// delete remaining data
 	cudaFree(devTravSpaces);
-	gpuErrchk( cudaPeekAtLastError() );
 	cudaFree(devBlobTableSqrt);
 	gpuErrchk( cudaPeekAtLastError() );
-//	cudaFree(images);
-//	gpuErrchk( cudaPeekAtLastError() );
+
+	// delete input data
 	delete fourierData;
-		gpuErrchk( cudaPeekAtLastError() );
 }
-//
-//void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights) {
-//	std::cout << size << std::endl;
-//	std::complex<float>* tmp1 = new std::complex<float>[20];
-//	std::complex<float>* tmp2;
-//	cudaGetSymbolAddress((void **)&tmp2, tempVolume);
-//	gpuErrchk( cudaPeekAtLastError() );
-////	std::cout << cuCrealf(tempVolume[0]) << std::endl;
-////	cudaMemcpy(tmp1, tmp2, 20*sizeof(std::complex<float>), cudaMemcpyDeviceToHost);
-//	cudaMemcpyFromSymbol(tmp1, tempVolume, 20*sizeof(std::complex<float>));
-//	gpuErrchk( cudaPeekAtLastError() );
-//	for(int z = 0; z < 20; z++) {
-//	std::cout << tmp1[z] << " " << std::endl;
-////		for(int y = 0; y < 20; y++) {
-////			for(int x = 0; x < 20; x++) {
-////				volume[z][y][x] = tmp1[z*20*20+ y * size+ x];
-////			}
-////		}
-//	}
-//	delete[] tmp1;
-//
-//
-////	float* tmp2 = new float[20];
-////	cudaMemcpy(tmp2, tempWeights, 20*sizeof(float), cudaMemcpyDeviceToHost);
-////	gpuErrchk( cudaPeekAtLastError() );
-////	for(int z = 0; z < size; z++) {
-////		for(int y = 0; y < size; y++) {
-////			for(int x = 0; x < size; x++) {
-////				tempWeights[z][y][x] = tmp2[z*size*size+ y * size+ x];
-////			}
-////		}
-////	}
-////	delete[] tmp2;
-//}
-//
-//void allocateTempSpaces(int size) {
-//	float* tmp1;
-//	cudaGetSymbolAddress((void **)&tmp1, tempVolume);
-//	gpuErrchk( cudaPeekAtLastError() );
-//	if (NULL == tmp1) {
-//		std::cout << "allocating " << size << std::endl;
-//		cudaMalloc((void **)&tmp1, 20*sizeof(std::complex<float>));
-//		gpuErrchk( cudaPeekAtLastError() );
-//		cudaMemset(tmp1, 0.1,20 * sizeof(std::complex<float>));
-//		gpuErrchk( cudaPeekAtLastError() );
-////		cudaMalloc((void **)&tempWeights, 20*sizeof(float));
-////		gpuErrchk( cudaPeekAtLastError() );
-//	}
-//}
-//
-////void copyBuffer(ProjectionData* data, int size) {
-//////	if (NULL == buffer) {
-//////		cudaMalloc((void **)&buffer, size*sizeof(ProjectionDataGPU));
-////	ProjectionDataGPU*	hostBuffer = new ProjectionDataGPU[size];
-//////	}
-////	for (int i = 0; i < size; i++) {
-////		hostBuffer[i] = *copyProjectionData(data[i]);
-////	}
-////	cudaMemcpy(devBuffer, hostBuffer, size*sizeof(ProjectionDataGPU), cudaMemcpyHostToDevice);
-////}
-////
-////
-////void a(std::complex<float> *arr) {
-////	std::cerr  << "A"<< std::endl;
-////
-////	for(int i = 0; i < num; i++) {
-////		printf("%f ", arr[i].real());
-////	}
-////	printf("\n");
-////
-//////	//CUDA code
-//////	float *d_m1;
-//////
-////	size_t size=num*sizeof(std::complex<float>);
-////	cudaMalloc((void **)&d_m1, size);
-////	cudaMemcpy(d_m1, arr, size, cudaMemcpyHostToDevice);
-////	std::cerr  << "A hotovo"<< std::endl;
-////}
-////
-////void b() {
-////	std::cerr  << "B"<< std::endl;
-////	vecAdd<<<1, 20>>>(d_m1);
-////	std::cerr  << "B hotovo"<< std::endl;
-////}
-////
-////void c(std::complex<float>* arr) {
-////	std::cerr  << "C"<< std::endl;
-////	size_t size=num*sizeof(std::complex<float>);
-////	cudaMemcpy(arr, d_m1, size, cudaMemcpyDeviceToHost);
-////	cudaFree(d_m1);
-////	for(int i = 0; i < num; i++) {
-////		printf("%f ", arr[i].real());
-////	}
-////	printf("\n");
-////	std::cerr  << "C hotovo"<< std::endl;
-////}
-////
-////void moje(){
-//////
-//////	int num = 20;
-//////	std::cerr  << "Inside CUDA function "<< std::endl;
-//////
-//////	float* array = new float[num];
-//////	memset(array, 1, num*sizeof(float));
-//////
-//////	for(int i = 0; i < num; i++) {
-//////		printf("%f ", array[i]);
-//////	}
-//////	printf("\n");
-//////
-////////	//CUDA code
-//////
-////////
-//////	size_t size=num*sizeof(float);
-//////	cudaMalloc((void **)&d_m1, size);
-////////	cudaMalloc((void **)&d_m2, matSize);
-////////	cudaMalloc((void **)&d_m3, matSize);
-////////
-////////
-//////	cudaMemcpy(d_m1, array, size, cudaMemcpyHostToDevice);
-////////	cudaMemcpy(d_m2, m2, matSize, cudaMemcpyHostToDevice);
-////////
-////////	int numTh = 1024;
-////////	int numBlk = num*num/numTh;
-////////	if ((num*num)%numTh >0){
-////////			numBlk++;
-////////	}
-//////
-//////	vecAdd<<<1, 20>>>(d_m1);
-//////	cudaMemcpy(array, d_m1, size, cudaMemcpyDeviceToHost);
-////////
-//////
-//////
-//////	cudaFree(d_m1);
-////////	cudaFree(d_m2);
-////////	cudaFree(d_m3);
-//////	std::cerr  << "CUDA function done"<< std::endl;
-////}
