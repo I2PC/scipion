@@ -3,6 +3,7 @@
  * Authors:     Jose Roman Bilbao (jrbcast@ace.ual.es)
  *    			Roberto Marabini (roberto@cnb.csic.es)
  *    			Vahid Abrishami (vabrishami@cnb.csic.es)
+ *    			David Strelak (davidstrelak@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,12 +25,12 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef MPI_RECONSTRUCT_FOURIER_H_
-#define MPI_RECONSTRUCT_FOURIER_H_
+#ifndef MPI_RECONSTRUCT_FOURIER_ACCEL_H_
+#define MPI_RECONSTRUCT_FOURIER_ACCEL_H_
 
 #include "xmipp_mpi.h"
 #include <data/args.h>
-#include <reconstruction/reconstruct_fourier.h>
+#include <reconstruction/reconstruct_fourier_accel.h>
 #include <data/projection.h>
 #include <cstring>
 #include <cstdlib>
@@ -45,10 +46,7 @@
 #define TAG_STOP     1
 #define TAG_TRANSFER   2
 #define TAG_FREEWORKER    3
-#define TAG_COLLECT_FOR_FSC  4
 #define TAG_SETVERBOSE  5
-
-#define BUFFSIZE 10000000
 
 //TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
 
@@ -56,54 +54,42 @@
    @ingroup Programs */
 //@{
 
-class ProgMPIRecFourier: public ProgRecFourier, public XmippMpiProgram
+class ProgMPIRecFourierAccel: public ProgRecFourierAccel, public XmippMpiProgram
 {
 public:
-
-    /** Fourier transform size for volumes **/
-    long int sizeout;
-
-    /** Dvide the job in this number block with this number of images */
-    int mpi_job_size;
-
     /** Empty constructor */
-    ProgMPIRecFourier()
-    {}
+	ProgMPIRecFourierAccel(){};
 
     /*  constructor ------------------------------------------------------- */
-    ProgMPIRecFourier(int argc, char *argv[]);
+	ProgMPIRecFourierAccel(int argc, char *argv[]);
 
     /* constructor providing an MpiNode
      * this is useful for using this programs from others
      */
-    ProgMPIRecFourier(MpiNode * node);
+	ProgMPIRecFourierAccel(MpiNode * node);
 
-    /* Special way of reading to sync all nodes */
+    /** Special way of reading to sync all nodes */
     void read(int argc, char** argv);
 
-    /* Read parameters --------------------------------------------------------- */
-    void readParams();
+private:
+    /** Divide the job in this number block with this number of images */
+	int mpi_job_size;
 
-    /** destructor */
-    //    ~ProgMPIRecFourier();
+	/** Read parameters from command line */
+	void readParams();
 
-    /* Usage ------------------------------------------------------------------- */
-    void defineParams();
+	/** Specify supported command line arguments */
+	void defineParams();
 
-    /* Pre Run PreRun for all nodes but not for all works */
-    void preRun();
+	/** Pre Run PreRun for all nodes but not for all works */
+	void preRun();
 
-    /* Run --------------------------------------------------------------------- */
-    void run();
+	/** Main processing method */
+	void run();
 
-    int  sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm );
 
 };
 //@}
 //end of class MPI reconstruct fourier
 
-#endif /* MPI_RECONSTRUCT_FOURIER_H_ */
-
-
-
-
+#endif /* MPI_RECONSTRUCT_FOURIER_ACCEL_H_ */

@@ -1217,7 +1217,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnAnglesToUse = fnRestricted
                 
                 # Reconstruct Fourier
-                args="-i %s -o %s --sym %s --weight --fast"%(fnAnglesToUse,fnVol,self.symmetryGroup)
+                args="-i %s -o %s --sym %s --weight --thr %d"%(fnAnglesToUse,fnVol,self.symmetryGroup,self.numberOfThreads.get())
                 self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get())
                 
                 if deleteStack:
