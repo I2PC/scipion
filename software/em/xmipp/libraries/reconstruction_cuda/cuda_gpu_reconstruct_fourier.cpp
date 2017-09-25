@@ -993,21 +993,14 @@ float FFT_IDX2DIGFREQ(int idx, int size) {
 
 
 __global__
-void prepareBufferKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY, int iLength,
+void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY, int iLength,
 		FourierReconstructionData* oData, float maxResolutionSqr) {
 	// assign pixel to thread
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
 
-//	if (idx == idy == 0) {
-//		printf("oData: %p gpuData: %p\n", oData, oData->dataOnGpu);
-//	} // FIXME called too many times
-
-
 	int oSizeX = oData->sizeX;
-	int oSizeY = oData->sizeY;
-
-	int halfY = iSizeY / 2; // same as oSizeY
+	int halfY = iSizeY / 2;
 	float normFactor = iSizeY*iSizeY;
 
 	// input is an image in Fourier space (not normalized)
@@ -1041,90 +1034,66 @@ void prepareBufferKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY,
 }
 
 
-FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
-		int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr, int bufferSize, float*& tmp){
-
+FourierReconDataWrapper* convertImages(float* paddedImages, int noOfImages, int paddedImgSize,
+		int fftSizeX, int fftSizeY,
+		float maxResolutionSqr) {
+	// allocate data
+	GpuMultidimArrayAtCpu<float> imagesCPU(paddedImgSize, paddedImgSize, 1 , noOfImages, false);
+	GpuMultidimArrayAtGpu<float> imagesGPU;
+	imagesCPU.data = paddedImages;
+	// move them to gpu
+	imagesCPU.copyToGpu(imagesGPU);
+	// perform FFT
 	GpuMultidimArrayAtGpu<std::complex<float> > resultingFFT;
 	mycufftHandle myhandle;
-	ffts.fft(resultingFFT, myhandle);
+	imagesGPU.fft(resultingFFT, myhandle);
 	myhandle.clear(); // release unnecessary memory
 
-//	gpuErrchk( cudaPeekAtLastError() );
-//		gpuErrchk( cudaDeviceSynchronize() );
+	// create target variable
+	FourierReconDataWrapper* data = new FourierReconDataWrapper(fftSizeX, fftSizeY, noOfImages);
 
-
-
-
-
-//	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
-//	for (int i = 0; i < bufferSize; i++) {
-//		hostBuffer[i] = *new ProjectionDataGPU();
-//		cudaMalloc((void **) &hostBuffer[i].img, sizeX*sizeY*sizeof(float)*2);
-//		gpuErrchk( cudaPeekAtLastError() );
-//		cudaMemset(hostBuffer[i].img, 0.f, sizeX*sizeY*sizeof(float)*2);
-//		gpuErrchk( cudaPeekAtLastError() );
-//		printf("allocating %p for %p\n", hostBuffer[i].img, hostBuffer[i]);
-//		hostBuffer[i].xSize = sizeX;
-//		hostBuffer[i].ySize = sizeY;
-//	}
-//	ProjectionDataGPU* devBuffer;
-//	int size = bufferSize * sizeof(ProjectionDataGPU);
-//	cudaMalloc((void **) &devBuffer, size);
-//	gpuErrchk( cudaPeekAtLastError() );
-//	cudaMemcpy(devBuffer, hostBuffer, size, cudaMemcpyHostToDevice);
-//	gpuErrchk( cudaPeekAtLastError() );
-//	return devBuffer;
-
-
-//	int size = resultingFFT.Ndim * sizeof(ProjectionDataGPU);
-//	cudaMalloc((void **) &result, size);
-//	gpuErrchk( cudaPeekAtLastError() );
-//	for (int i = 0; i < ffts.Ndim; i++) {
-//
-//	}
-
-	FourierReconDataWrapper* data = new FourierReconDataWrapper(sizeX, sizeY, bufferSize);
-
+	// run kernel, one thread for each pixel of input FFT
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
-	dim3 dimGrid((int)ceil(paddedImgSize/dimBlock.x),(int)ceil(paddedImgSize/dimBlock.y));
-
+	dim3 dimGrid((int)ceil(resultingFFT.Xdim/dimBlock.x),(int)ceil(resultingFFT.Ydim/dimBlock.y));
 	printf("kernel %d %d x %d %d", dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y);
-
-	prepareBufferKernel<<<dimGrid, dimBlock>>>(resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, bufferSize,
+	convertImagesKernel<<<dimGrid, dimBlock>>>(
+			resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, resultingFFT.Ndim,
 			data->gpuCopy, maxResolutionSqr);
 
-//	int tmpSize = bufferSize * sizeX * sizeY * 2*sizeof(float);
-//	printf("velikost fft = x=%d y=%d, velikost ciloveho obrazku %d %d (%d)\n", resultingFFT.Xdim, resultingFFT.Ydim, sizeX, sizeY, tmpSize );
-//	printf("parametry x %d y %d paddedimgSize %d bufferSize %d\n", sizeX, sizeY, paddedImgSize, bufferSize );
-//	tmp = new float[tmpSize];
-////	ProjectionDataGPU* eee = new ProjectionDataGPU[bufferSize];
-////	cudaMemcpy(eee, devBuffer, bufferSize * sizeof(ProjectionDataGPU), cudaMemcpyDeviceToHost);
-////	gpuErrchk(cudaPeekAtLastError());
-////	for (int i = 0; i < bufferSize; i++) {
-//	printf("trying to copy %d from %p\n", tmpSize, data->cpuCopy->dataOnGpu);
-//		cudaMemcpy(tmp, data->cpuCopy->dataOnGpu, tmpSize, cudaMemcpyDeviceToHost);
-//		gpuErrchk(cudaPeekAtLastError());
-////	}
-//
-//
-////	cudaFree(devBuffer);
-////		gpuErrchk( cudaPeekAtLastError() ); // can be done, as pointers are also stored on host
-//
-	std::cout << "end of prepareBuffer" << std::endl;
+	// HACK destructor would delete allocated array, we don't want it here
+	imagesCPU.data = NULL;
 
-//	delete[] hostBuffer;
 	return data;
 }
 
-void processBufferGPU(float* tempVolumeGPU,
-		float* tempWeightsGPU,
-		ProjectionData* data, int N, int bufferSize,
+void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
+		float* paddedImages, Array2D<std::complex<float> >* readyFFTs, int noOfImages,
 		TraverseSpace* traverseSpaces, int noOfTransforms,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt,
 		float* blobTableSqrt, int blobTableSize,
-		FourierReconDataWrapper* images) {
+		int paddedImgSize, float maxResolutionSqr) {
+
+	// copy constants
+	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
+	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
+	cudaMemcpyToSymbol(cUseFast, &useFast,sizeof(useFast));
+	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
+	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
+	gpuErrchk( cudaPeekAtLastError() );
+
+	// holding fourier images to process
+	FourierReconDataWrapper* fourierData;
+
+	if (NULL == paddedImages) {
+//		FIXME implement
+
+	} else {
+		fourierData = convertImages(paddedImages, noOfImages, paddedImgSize,
+				maxVolIndexX / 2, maxVolIndexYZ,
+				maxResolutionSqr);
+	}
 
 //	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
 //	ProjectionDataGPU* devBuffer = copyProjectionData(hostBuffer, data, bufferSize);
@@ -1146,16 +1115,7 @@ void processBufferGPU(float* tempVolumeGPU,
 //			data[0].localAInv(1, 0), data[0].localAInv(1,1), data[0].localAInv(1,2),
 //			data[0].localAInv(2, 0), data[0].localAInv(2,1), data[0].localAInv(2,2));
 
-	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpyToSymbol(cUseFast, &useFast,sizeof(useFast));
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
-	gpuErrchk( cudaPeekAtLastError() );
+
 
 
 //		// New update of device variable with respect
@@ -1185,11 +1145,11 @@ void processBufferGPU(float* tempVolumeGPU,
 
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
 			tempVolumeGPU, tempWeightsGPU,
-			NULL, bufferSize,
+			NULL, noOfImages,
 			devTravSpaces, noOfTransforms,
 			devBlobTableSqrt,
 			imgCacheDim,
-			images->gpuCopy);
+			fourierData->gpuCopy);
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
 //	ProjectionDataGPU*	hostBuffer = new ProjectionDataGPU[bufferSize];
@@ -1228,7 +1188,7 @@ void processBufferGPU(float* tempVolumeGPU,
 	gpuErrchk( cudaPeekAtLastError() );
 //	cudaFree(images);
 //	gpuErrchk( cudaPeekAtLastError() );
-	delete images;
+	delete fourierData;
 		gpuErrchk( cudaPeekAtLastError() );
 }
 //

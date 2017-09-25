@@ -42,12 +42,12 @@ public:
 		data=NULL;
     }
 
-	GpuMultidimArrayAtCpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+	GpuMultidimArrayAtCpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1, bool allocate=true)
     {
-		resize(_Xdim, _Ydim, _Zdim, _Ndim);
+		resize(_Xdim, _Ydim, _Zdim, _Ndim, allocate);
     }
 
-	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1, bool allocate=true)
     {
 		Xdim=_Xdim;
 		Ydim=_Ydim;
@@ -56,7 +56,7 @@ public:
         yxdim=(size_t)_Ydim*_Xdim;
         zyxdim=yxdim*_Zdim;
         nzyxdim=zyxdim*_Ndim;
-        if (nzyxdim>0)
+        if (nzyxdim>0 && allocate)
         	data=new T[nzyxdim];
         else
         	data=NULL;

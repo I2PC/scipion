@@ -79,10 +79,12 @@ struct LoadThreadParams
 //    ProjectionData* buffer2 = NULL;
     TraverseSpace* loadingBuffer = NULL;
     TraverseSpace* readyBuffer = NULL;
-    GpuMultidimArrayAtCpu<float>* loadingImageStack = NULL;
-    GpuMultidimArrayAtCpu<float>* readyImageStack = NULL;
+    float* loadingPaddedImages = NULL;
+    float* readyPaddedImages = NULL;
     int loadingBufferLength;
     int readyBufferLength;
+
+    Array2D<std::complex<float> >* readyFFTs; // FIXME use properly
 };
 
 /** Fourier reconstruction parameters. */
@@ -476,8 +478,6 @@ private:
      */
     int prepareTransforms(ProjectionData* buffer,
     		TraverseSpace* traverseSpaces);
-
-    FourierReconDataWrapper* processImgsOnGPU(ProjectionData* buffer, int&);
 
     template<typename T>
     Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {

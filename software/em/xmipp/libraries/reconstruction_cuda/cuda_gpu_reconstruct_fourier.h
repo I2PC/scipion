@@ -115,16 +115,14 @@ FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 
 
 
-void processBufferGPU(
-		float* tempVolumeGPU,
-				float* tempWeightsGPU,
-				ProjectionData* data,int noOfPixel,int bufferSize,
-				TraverseSpace* traverseSpaces, int noOfTransforms,
-				int maxVolIndexX, int maxVolIndexYZ,
-				bool useFast, float blobRadius,
-				float iDeltaSqrt,
-				float* blobTableSqrt, int blobTableSize,
-				FourierReconDataWrapper* images);
+void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
+		float* paddedImages, Array2D<std::complex<float> >* readyFFTs, int noOfImages,
+		TraverseSpace* traverseSpaces, int noOfTransforms,
+		int maxVolIndexX, int maxVolIndexYZ,
+		bool useFast, float blobRadius,
+		float iDeltaSqrt,
+		float* blobTableSqrt, int blobTableSize,
+		int paddedImgSize, float maxResolutionSqr);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
 void copyBuffer(ProjectionData* data, int size);
 void allocateTempSpaces(int size);
