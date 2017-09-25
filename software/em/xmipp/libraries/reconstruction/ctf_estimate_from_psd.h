@@ -66,7 +66,6 @@ public:
     	w_digfreq_r = copy->w_digfreq_r;
     	///Masks
     	mask = copy->mask;
-    	//mask_between_zeroes = copy->mask_between_zeroes;
     	min_freq_psd = copy->min_freq_psd;
     	max_freq_psd = copy->max_freq_psd;
     	corr13 = copy->corr13;
@@ -76,6 +75,7 @@ public:
     	evaluation_reduction = copy->evaluation_reduction;
     	modelSimplification = copy->modelSimplification;
     	defocus_range = copy->defocus_range;
+    	downsampleFactor = copy->downsampleFactor;
 
     	enhanced_ctftomodel() = copy->enhanced_ctftomodel();
     	enhanced_ctftomodel_fullsize() = copy->enhanced_ctftomodel_fullsize();
@@ -84,12 +84,12 @@ public:
     	current_ctfmodel = copy->current_ctfmodel;
     	initial_ctfmodel = copy->initial_ctfmodel;
     	ctfmodel_defoci = copy->ctfmodel_defoci;
-    	//current_ctfmodel.produceSideInfo();
     	current_ctfmodel.precomputeValues(x_contfreq,y_contfreq);
 
     	Tm = copy->Tm;
     	f = copy->f;
     	ctfmodelSize = copy->ctfmodelSize;
+
     }
 
 public:
