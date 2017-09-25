@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *              Amaya Jimenez    (ajimenez@cnb.csic.es)
+# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# *              David Maluenda    (dmaluenda@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,7 +25,6 @@
 # *
 # **************************************************************************
 
-import os
 from os.path import getmtime, exists
 from datetime import datetime
 import numpy as np
@@ -52,44 +51,148 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     
     def __init__(self, **args):
         ProtProcessMovies.__init__(self, **args)
+        self.acceptedIdMoviesList = []
+        self.discartedIdMoviesList = []
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-    #    ProtProcessMovies._defineParams(self, form)
-        form.addSection(label='Input')
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
-              important=True,
-              label=Message.LABEL_INPUT_MOVS,
-              help='Select a set of previously imported movies.')
-        form.addParam('maxFrameShift', params.FloatParam, default=10, label='Max. frame shift (A)')
-        form.addParam('maxMovieShift', params.FloatParam, default=100, label='Max. movie shift (A)')
+        ProtProcessMovies._defineParams(self, form)
+        # form.addSection(label='Input')
+        # form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
+        #       important=True,
+        #       label=Message.LABEL_INPUT_MOVS,
+        #       help='Select a set of previously imported movies.')
+        form.addParam('maxFrameShift', params.FloatParam, default=10, 
+                       label='Max. frame shift (A)')
+        form.addParam('maxMovieShift', params.FloatParam, default=100,
+                       label='Max. movie shift (A)')
         
     #--------------------------- INSERT steps functions ------------------------
-
-    def _createOutputMovie(self, movie):
+    def _processMovie(self, movie):
         """ Create movie only if the alignment is less than the thresshold. """
+        
+        movieId = movie.getObjId()
         alignment = movie.getAlignment()
 
         if alignment is not None:
             shiftListX, shiftListY = alignment.getShifts()
             shiftArrayX = np.asarray(shiftListX)
             shiftArrayY = np.asarray(shiftListY)
-            rejectedByFrame = np.max(np.abs(shiftArrayX))*self.samplingRate>self.maxFrameShift.get() or \
-                              np.max(np.abs(shiftArrayY))*self.samplingRate>self.maxFrameShift.get()
+            samRate = self.samplingRate
+            rejectedByFrame = ( np.max(np.abs(shiftArrayX)) * samRate > 
+                                self.maxFrameShift.get()              or
+                                np.max(np.abs(shiftArrayY)) * samRate > 
+                                self.maxFrameShift.get() )
+
             cumsumX = np.cumsum(shiftArrayX)
             cumsumY = np.cumsum(shiftArrayY)
-            rejectedByMovie = np.max(np.abs(cumsumX))*self.samplingRate>self.maxMovieShift.get() or \
-                              np.max(np.abs(cumsumY))*self.samplingRate>self.maxMovieShift.get()
+            rejectedByMovie = ( np.max(np.abs(cumsumX)) * samRate > 
+                                self.maxMovieShift.get()          or
+                                np.max(np.abs(cumsumY)) * samRate >
+                                self.maxMovieShift.get() )
 
-            return not rejectedByFrame and not rejectedByMovie
-        else: # If movies are not aligned, this protocal makes not sense
-            return False # The protocol returns an empty SetOfMovies to poit out the non-sense.
+            if not rejectedByFrame and not rejectedByMovie:
+                self._updateLists(movieId,'accepted')
+            else:
+                self._updateLists(movieId,'discarted')
 
+        else:
+            # a no aligned movie is DISCARTED
+            # (maybe change this or add a param to control that) 
+            self._updateLists(movieId,'discarted')
+
+    def _checkNewOutput(self):
+        """ Check for already selected Movies and update the output set. """
+        if getattr(self, 'finished', False):
+            return
+
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+
+        # Check for newly done items
+        movieListIdAccepted = self._getLists('accepted')
+        movieListIdDiscarted = self._getLists('discarted')
+    
+        newDoneAccepted = [movieId for movieId in movieListIdAccepted
+                             if movieId not in doneList]
+        newDoneDiscarted = [movieId for movieId in movieListIdDiscarted
+                             if movieId not in doneList]
+
+        # Update the file with the newly done movies
+        # or exit from the function if no new done movies
+        self.debug('_checkNewOutput: ')
+        self.debug('   listOfMovies: %d,' %len(self.listOfMovies))
+        self.debug('   doneList: %d,' %len(doneList))
+        self.debug('   newDoneAccepted: %d.' %len(newDoneAccepted))
+        self.debug('   newDoneDiscarted: %d,' %len(newDoneDiscarted))
+
+        firstTime = len(doneList) == 0
+        # firstTimeDiscarted = len(doneListDiscarted) == 0
+        allDone = len(doneList) + len(newDoneAccepted) + len(newDoneDiscarted)
+    
+        # We have finished when there is not more input movies (stream closed)
+        # and the number of processed movie is equal to the number of inputs
+        # self.finished = (self.isStreamClosed == Set.STREAM_CLOSED and 
+        #                    allDone == len(self.listOfMovies))
+        self.finished = self.streamClosed and allDone == len(self.listOfMovies)
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        # reading the outputs
+        if (len(doneList)>0 or len(newDoneAccepted)>0):
+            movieSetAccepted = self._loadOutputSet(SetOfMovies, 'movies.sqlite')
+
+        #AJ new subsets with discarted movies
+        if (len(doneList)>0 or len(newDoneDiscarted)>0):
+            movieSetDiscarted = self._loadOutputSet(SetOfMovies,
+                                                       'moviesDiscarted.sqlite')
+        if newDoneAccepted:
+            inputMovieSet = self._loadInputMovieSet()
+            for movieId in newDoneAccepted:
+                movieAccepted = inputMovieSet[movieId].clone()
+                movieAccepted.setEnabled(True)
+                movieSetAccepted.append(movieAccepted)
+            inputMovieSet.close()
+
+        if newDoneDiscarted:
+            inputMovieSet = self._loadInputMovieSet()
+            for movieId in newDoneDiscarted:
+                movieDiscarted = inputMovieSet[movieId].clone()
+                movieDiscarted.setEnabled(False)
+                movieSetDiscarted.append(movieDiscarted)
+            inputMovieSet.close()
+
+        if not self.finished and not newDoneDiscarted and not newDoneAccepted:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+
+        if (exists(self._getPath('movies.sqlite'))):
+            self._updateOutputSet('outputMovies', movieSetAccepted, streamMode)
+
+        # AJ new subsets with discarted movies
+        if (exists(self._getPath('moviesDiscarted.sqlite'))):
+            self._updateOutputSet('outputMoviesDiscarted',
+                                  movieSetDiscarted, streamMode)
+            
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+        if (exists(self._getPath('movies.sqlite'))):
+            movieSetAccepted.close()
+
+        # AJ new subsets with discarted movies
+        if (exists(self._getPath('moviesDiscarted.sqlite'))):
+            movieSetDiscarted.close()
 
     #    # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
         pass
+
+    #--------------------------- UTILS functions -------------------------------
 
     def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
@@ -98,7 +201,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         Subclasses can override this function to change this behavior.
         """
         return True
-
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -109,7 +211,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         """
         setFile = self._getPath(baseName)
 
-        if os.path.exists(setFile):
+        if exists(setFile):
             outputSet = SetClass(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
@@ -120,77 +222,27 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         inputMovies = self.inputMovies.get()
         outputSet.copyInfo(inputMovies)
 
+        if fixSampling:
+            newSampling = inputMovies.getSamplingRate()
+            outputSet.setSamplingRate(newSampling)
+
         return outputSet
 
+    def _loadInputMovieSet(self):
+        movieFile = self.inputMovies.get().getFileName()
+        self.debug("Loading input db: %s" % movieFile)
+        movieSet = SetOfMovies(filename=movieFile)
+        movieSet.loadAllProperties()
+        return movieSet
 
+    def _getLists(self, accepted):
+        if accepted == 'accepted':
+            return self.acceptedIdMoviesList
+        else:
+            return self.discartedIdMoviesList
 
-    def _checkNewOutput(self):
-        if getattr(self, 'finished', False):
-            return
-
-        # Load previously done items (from text file)
-        doneList = self._readDoneList()
-        # Check for newly done items
-        newDone = [m for m in self.listOfMovies
-                   if m.getObjId() not in doneList and self._isMovieDone(m)]
-
-        # Update the file with the newly done movies
-        # or exit from the function if no new done movies
-        self.debug('_checkNewOutput: ')
-        self.debug('   listOfMovies: %s, doneList: %s, newDone: %s'
-                   % (len(self.listOfMovies), len(doneList), len(newDone)))
-
-        firstTime = len(doneList) == 0
-        allDone = len(doneList) + len(newDone)
-        # We have finished when there is not more input movies (stream closed)
-        # and the number of processed movies is equal to the number of inputs
-        self.finished = self.streamClosed and allDone == len(self.listOfMovies)
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-
-        if newDone:
-            self._writeDoneList(newDone)
-
-        elif not self.finished:
-            # If we are not finished and no new output have been produced
-            # it does not make sense to proceed and updated the outputs
-            # so we exit from the function here
-            return
-
-        self.debug('   finished: %s ' % self.finished)
-        self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
-        self.debug('        allDone (%s) == len(self.listOfMovies (%s)'
-                   % (allDone, len(self.listOfMovies)))
-        self.debug('   streamMode: %s' % streamMode)
-
-        if self._createOutputMovies():
-
-            saveMovie = self.getAttributeValue('doSaveMovie', False)
-            movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
-                                           fixSampling=saveMovie)
-            
-            for movie in newDone:
-                if self._createOutputMovie(movie):
-                    newMovie = movie.clone()
-                    movieSet.append(newMovie)
-
-            self._updateOutputSet('outputMovies', movieSet, streamMode)
-
-            # if firstTime:
-
-            #     # Probably is a good idea to store a cached summary for the
-            #     # first resulting movie of the processing.
-            #     # self._storeSummary(newDone[0])                 ----------------------
-
-            #     # If the movies are not written out, then dimensions can be
-            #     # copied from the input movies
-
-            #     if saveMovie:
-            #         movieSet.setDim(self.inputMovies.get().getDim())
-                    
-            #     self._defineTransformRelation(self.inputMovies, movieSet)
-
-        if self.finished:  # Unlock createOutputStep if finished all jobs
-            outputStep = self._getFirstJoinStep()
-            if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(STATUS_NEW)
-
+    def _updateLists(self, movieId, accepted):
+        if accepted == 'accepted':
+            return self.acceptedIdMoviesList.append(movieId)
+        else:
+            return self.discartedIdMoviesList.append(movieId)
