@@ -493,22 +493,25 @@ void processVoxel(
 
 __device__
 void processVoxelBlob(
-		float* tempVolumeGPU, float *tempWeightsGPU,
-		const float* blobTableSqrt,
-		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		const ProjectionDataGPU* data,int imgCacheDim) { // FIXME replace data
+	float* tempVolumeGPU, float *tempWeightsGPU,
+	int x, int y, int z,
+	FourierReconstructionData* const data,
+	const TraverseSpace* const space,
+	const float* blobTableSqrt,
+	int imgCacheDim)
+{
 	Point3D<float> imgPos;
-	int xSize = data->xSize;
-	int ySize = data->ySize;
+	int xSize = data->sizeX;
+	int ySize = data->sizeY;
 	// transform current point to center
 	imgPos.x = x - cMaxVolumeIndexX/2;
 	imgPos.y = y - cMaxVolumeIndexYZ/2;
 	imgPos.z = z - cMaxVolumeIndexYZ/2;
-	if ((imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z) > maxDistanceSqr) {
+	if ((imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z) > space->maxDistanceSqr) {
 		return; // discard iterations that would access pixel with too high frequency
 	}
 	// rotate around center
-	multiply(transform, imgPos);
+	multiply(space->transformInv, imgPos);
 	// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
 	imgPos.y += cMaxVolumeIndexYZ / 2;
 
@@ -531,14 +534,15 @@ void processVoxelBlob(
 	float volReal, volImag, w;
 	volReal = volImag = w = 0.f;
 #if !SHARED_IMG
-	const float* __restrict__ img = data->img;
+	const float* __restrict__ img = data->getImgOnGPU(space->projectionIndex);
 #endif
-	const float* __restrict__ CTF = data->CTF;
-	const float* __restrict__ modulator = data->modulator;
-	float dataWeight = data->weight;
+//	const float* __restrict__ CTF = data->CTF; // FIXME load differently, somehow
+//	const float* __restrict__ modulator = data->modulator; // FIXME load differently, somehow
+	float dataWeight = space->weight;
 
 	// ugly spaghetti code, but improves performance by app. 10%
-	if (0 != CTF) {
+	if (false) { // FIXME replace by NULL != CTF (commented out above)
+		/*
 		// check which pixel in the vicinity that should contribute
 		for (int i = minY; i <= maxY; i++) {
 			float ySqr = (imgPos.y - i) * (imgPos.y - i);
@@ -574,6 +578,7 @@ void processVoxelBlob(
 #endif
 			}
 		}
+		*/
 	} else {
 		// check which pixel in the vicinity that should contribute
 		for (int i = minY; i <= maxY; i++) {
@@ -775,7 +780,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, tSpace->transformInv, tSpace->maxDistanceSqr, NULL, imgCacheDim );
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -800,7 +805,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, tSpace->transformInv, tSpace->maxDistanceSqr, NULL, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -825,7 +830,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, tSpace->transformInv, tSpace->maxDistanceSqr, NULL, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
