@@ -461,7 +461,7 @@ public:
 			std::cout << "   Total atenuation(E)= " << E << std::endl;
 			std::cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
 			std::cout << "   CTF="
-			/*<< -K*(Ksin*sine_part - Kcos*cosine_part)*E*/ << std::endl;
+			<< -K*(Ksin*sine_part - Kcos*cosine_part)*E << std::endl;
 		}
 		return -K*(Ksin*sine_part - Kcos*cosine_part)*E;
 	}
@@ -526,7 +526,6 @@ public:
 	/// Compute pure CTF without damping at (U,V). Continuous frequencies
 	double getValuePureWithoutDampingAt(bool show = false) const
 	{
-
 		double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
 		double sine_part, cosine_part;
 		sincos(argument,&sine_part,&cosine_part);
@@ -569,7 +568,7 @@ public:
 			std::cout << " K1,K2,sin=" << K1 << " " << K2 << " "
 			<< sine_part << std::endl;
 			std::cout << " K3,Eespr=" << K3 << " " << Eespr << std::endl;
-			std::cout << " K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
+			//std::cout << " K4,Eispr=" << K4 << " " << /*Eispr*/ << std::endl;
 			std::cout << " K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
 			std::cout << " EdeltaR=" << EdeltaR << std::endl;
 			std::cout << " K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
@@ -915,7 +914,7 @@ public:
 
     /** Write to file.
         An exception is thrown if the file cannot be open.*/
-    //void write(const FileName &fn);
+    void write(const FileName &fn);
 
     /// Define parameters in the command line
     static void defineParams(XmippProgram * program);
@@ -1050,6 +1049,19 @@ public:
             << -K*(Ksin*sine_part - Kcos*cosine_part)*E + base_line << std::endl;
         }
         return -K*(Ksin*sine_part - Kcos*cosine_part)*E;
+    }
+
+    /// Compute CTF pure at (U,V). Continuous frequencies
+    inline double getValuePureNoDampingNoPrecomputedAt(double X, double Y) const
+    {
+        double u2 = X * X + Y * Y;
+        double u = sqrt(u2);
+        double u4 = u2 * u2;
+        double deltaf = getDeltafNoPrecomputed(X, Y);
+        double argument = K1 * deltaf * u2 + K2 * u4;
+        double sine_part, cosine_part;
+        sincos(argument,&sine_part, &cosine_part); // OK
+        return -(Ksin*sine_part - Kcos*cosine_part);
     }
 
     /// Deltaf at a given direction
