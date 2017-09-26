@@ -285,21 +285,24 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		List<ManualParticle> particles;
 		int index;
 		Color color = picker.getColor();
-		Color autoColor = color.darker();
-		if (!getMicrograph().isEmpty())
-		{
-			particles = getMicrograph().getManualParticles();
-			g2.setColor(color);
+        Color autoColor = getAutomaticColor(color);
+        Color delColor = getDeletedColor(color);
+        if (!getMicrograph().isEmpty()) {
+            particles = getMicrograph().getManualParticles();
+            g2.setColor(color);
 
-			for (index = 0; index < particles.size(); index++)
-				drawShape(g2, particles.get(index), false, continuousst);
+            for (index = 0; index < particles.size(); index++)
+                drawShape(g2, particles.get(index), false, thinContinuousSt);
 
-			g2.setColor(autoColor);
-			List<AutomaticParticle> autoparticles = getMicrograph().getAutomaticParticles();
+            List<AutomaticParticle> autoparticles = getMicrograph().getAutomaticParticles();
             for (AutomaticParticle autoparticle : autoparticles)
-                if (!autoparticle.isDeleted() && autoparticle.getCost() >= getFrame().getThreshold())
-                    drawShape(g2, autoparticle, false, continuousst);
-
+                if (!autoparticle.isDeleted() && autoparticle.getCost() >= getFrame().getThreshold()){
+                    g2.setColor(autoColor);
+                    drawShape(g2, autoparticle, false, thinContinuousSt);
+                }else if (autoparticle.isUnavailable() && picker.isShowDeleted()) {
+                    g2.setColor(delColor);
+                    drawShape(g2, autoparticle, false, thinContinuousSt);
+                }
 		}
 		if (active != null)
 		{
@@ -320,11 +323,40 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		}
 	}
 
-	@Override
+    private Color getAutomaticColor(Color color) {
+
+	    return moveColorHue(color, 0.66f);
+
+//	    return color.darker();
+    }
+
+    private Color getDeletedColor(Color color) {
+
+        return moveColorHue(color, 0.33f);
+
+//	    return color.darker();
+    }
+
+    private Color moveColorHue(Color color, float hueValue){
+        // Get saturation and brightness.
+        float[] hsbVals = new float[3];
+            Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
+
+        // Pass .5 (= 180 degrees) as HUE
+        float newHue = hsbVals[0] - hueValue;
+
+            if (newHue < 0) newHue = newHue + 1f;
+
+        Color newColor = new Color(Color.HSBtoRGB(newHue, hsbVals[1], hsbVals[2]));
+        return newColor;
+    }
+
+    @Override
 	public void refreshActive(PickerParticle p)
 	{
 		if (p == null)
-			active = null;
+			// active = null;
+            active = getLastParticle();
 		else
 			active = p;
 		repaint();
