@@ -238,6 +238,9 @@ class ProtCTFMicrographs(ProtMicrographs):
             return
 
         endCTFs = streamClosed and micSet.getSize() == ctfSet.getSize()
+        self.debug(' is stream closed? %s' % streamClosed)
+        self.debug(' micSet.getSize (%s) == (%s) ctfSet.getSize'
+                   % (micSet.getSize(), ctfSet.getSize()))
 
         if newCTFs:
             # Check if it is the first time we are registering CTF to
