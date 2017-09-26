@@ -257,8 +257,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
-	
-
 	public synchronized void updateTemplates(ImageGeneric templates, int templateindex)
 	{
                 
@@ -353,8 +351,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 		try
 		{
-                    if(templateindex == getTemplatesNumber())    
-                        templates.write(getTemplatesFile());
+            if(templateindex == getTemplatesNumber())
+                templates.write(getTemplatesFile());
 		}
 		catch (Exception e)
 		{
@@ -474,78 +472,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public synchronized void saveData(Micrograph m)
 	{
-                //System.out.println("saving data");
-//		SupervisedPickerMicrograph tm = (SupervisedPickerMicrograph) m;
-//		long id;
-//		try
-//		{
-//			MetaData md = new MetaData();
-//			String file;
-//			file = getOutputPath(m.getPosFile());
-//			if (!m.hasData())
-//				new File(file).delete();
-//			else
-//			{
-//				id = md.addObject();
-//				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, tm.getState().toString(), id);
-//				md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
-//				md.setValueDouble(MDLabel.MDL_COST, tm.getThreshold(), id);
-//				md.write("header@" + file); // using md.write will remove other
-//											// existing blocks
-//				md.clear();
-//
-//				for (ManualParticle p : tm.getManualParticles())
-//				{
-//					id = md.addObject();
-//					md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
-//					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
-//
-//				}
-//				md.writeBlock(getParticlesBlock(file));// to replace/append
-//			}
-//			md.destroy();
-//			saveAutomaticParticles(tm);
-
 
         JMetaDataIO.saveData((SupervisedPickerMicrograph) m, getOutputPath(m.getPosFile()));
         saveTemplates();
-                //System.out.println("saved");
-//		}
-//		catch (Exception e)
-//		{
-//			getLogger().log(Level.SEVERE, e.getMessage(), e);
-//			throw new IllegalArgumentException(e.getMessage());
-//		}
 
-	}
-
-	public void saveAutomaticParticles(SupervisedPickerMicrograph m)
-	{
-		try
-		{
-
-			long id;
-			if (m.hasAutomaticParticles())
-			{
-				MetaData md = new MetaData();
-				for (AutomaticParticle p : m.getAutomaticParticles())
-				{
-					id = md.addObject();
-					md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
-					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
-					md.setValueDouble(MDLabel.MDL_COST, p.getCost(), id);
-					md.setValueInt(MDLabel.MDL_ENABLED, (!p.isDeleted()) ? 1 : -1, id);
-				}
-				md.writeBlock(getParticlesAutoBlock(m));// to replace/append
-				md.destroy();
-			}
-
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
 	}
 
 	public SupervisedPickerMicrograph getMicrograph()
@@ -690,8 +620,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (mode == Mode.Supervised && getManualParticlesNumber() < classifier.getTrainingParticlesMinimum())
 			throw new IllegalArgumentException(String.format("You should have at least %s particles to go to %s mode", classifier.getTrainingParticlesMinimum(), Mode.Supervised));
 		this.mode = mode;
-                if(mode == Mode.Supervised)
-                    isautopick = true;
+
+		// If supervised
+		if(mode == Mode.Supervised)
+            isautopick = true;
 		if (mode == Mode.Manual)
 			convertAutomaticToManual();
 
@@ -777,11 +709,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return count;
 	}
         
-        public int getAutomaticParticlesNumber()
+    public int getAutomaticParticlesNumber()
 	{
 		int count = 0;
 		for (SupervisedPickerMicrograph m : micrographs)
-			count += m.getAutomaticParticlesNumber();
+			count += m.getAutomaticParticlesNumber(m.getThreshold());
 		return count;
 	}
 
@@ -1139,7 +1071,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			
 		addMicrographPos(trainRows, trainmic);
                 
-		new Thread(new TrainRunnable(frame, trainRows.toArray(new MDRow[]{}), trainmic)).start();
+		new Thread(new TrainRunnable(frame, trainRows.toArray(new MDRow[]{}), trainmic), "TrainAndAutopick").start();
 	}
 
 	/** Helper function to add a micrograph and its .pos file */
@@ -1155,13 +1087,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 
     @Override
     public int getParticlesCount() {
-        return getManualParticlesNumber() + getAutomaticParticlesNumber(0);
+        return getManualParticlesNumber() + getAutomaticParticlesNumber();
     }
 
-       
-
-	
-        
     public void loadParticles(SupervisedPickerMicrograph micrograph, Particle[] autopickRows)
     {
             Rectangle rectangle = micrograph.getRectangle();
@@ -1188,8 +1116,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
                 frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Autopicking...");
-		
-		new Thread(new AutopickRunnable(frame, next)).start();
+
+        try {
+            new Thread(new AutopickRunnable(frame, next), "Autopick").start();
+        }catch (Exception e){
+            this.logger.log(Level.SEVERE,"Autopick thread failed.");
+        }
+
 
 	}
 
@@ -1205,17 +1138,24 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
                     next.setState(MicrographState.Supervised);
 		saveData(current);
-		
-                
-		MDRow[] addedRows = getAddedRows(current);
-		MDRow[] autoRows = getAutomaticRows(current);
+
+
+        MDRow[] autoRows = getAutomaticRows(current);
+        MDRow[] addedRows = getAddedRows(current);
 		frame.getCanvas().setEnabled(false);
-                boolean isautopick = getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
-                if(isautopick)
-                    XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
-                else
-                    XmippWindowUtil.blockGUI(frame, "Correcting ...");
-		new Thread(new CorrectAndAutopickRunnable(frame, addedRows, autoRows, next)).start();
+
+        boolean isautopick = getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
+        // Show progress wheel
+        if(isautopick)
+            XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
+        else
+            XmippWindowUtil.blockGUI(frame, "Correcting ...");
+
+		try {
+            new Thread(new CorrectAndAutopickRunnable(frame, addedRows, autoRows, next), "CorrectAndAutopick").start();
+        }catch (Exception e){
+		    this.logger.log(Level.SEVERE,"Correct and Autopick thread failed.");
+        }
 
 	}
 
@@ -1234,8 +1174,8 @@ public class SupervisedParticlePicker extends ParticlePicker
                         }
 		return rows.toArray(new MDRow[]{});
 	}
-        
-        private MDRow[] getAutomaticRows(SupervisedPickerMicrograph m)
+    // Returns all automatic rows that matches the conditions, threshold is taken into account.
+    private MDRow[] getAutomaticRows(SupervisedPickerMicrograph m)
 	{
                 ArrayList<MDRow> rows = new ArrayList<MDRow>();
                 MDRow row;
@@ -1244,11 +1184,12 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 			for (AutomaticParticle p : m.getAutomaticParticles())
 			{
-                                row = new MDRow();
+			    row = new MDRow();
 				row.setValueInt(MDLabel.MDL_XCOOR, p.getX());
 				row.setValueInt(MDLabel.MDL_YCOOR, p.getY());
 				row.setValueDouble(MDLabel.MDL_COST, p.getCost());
-				row.setValueInt(MDLabel.MDL_ENABLED, p.isDeleted()? -1: 1);
+                // row.setValueInt(MDLabel.MDL_ENABLED, p.isDeleted()? -1: 1);
+                row.setValueInt(MDLabel.MDL_ENABLED, p.isUnavailable()? -1: 1);
 				rows.add(row);
 			}
 		}
@@ -1307,95 +1248,93 @@ public class SupervisedParticlePicker extends ParticlePicker
     
     public class UpdateTemplatesTask extends SwingWorker<String, Object>
     {
-            private final boolean resize;
-            public UpdateTemplatesTask(boolean resize)
+        private final boolean resize;
+        public UpdateTemplatesTask(boolean resize)
+        {
+            this.resize = resize;
+        }
+
+        @Override
+        protected String doInBackground() throws Exception
+        {
+            try
             {
-                this.resize = resize;
-            }
-            
-            @Override
-            protected String doInBackground() throws Exception
-            {
-                        try
+                if(uttask != null)
+                    uttask.cancel(true);
+                uttask = this;
+
+
+                ImageGeneric templates = new ImageGeneric(ImageGeneric.Float);
+                templates.resize(getSize(), getSize(), 1, getTemplatesNumber());
+
+                ImageGeneric igp;
+                List<ManualParticle> particles;
+
+                ManualParticle particle;
+                double[] align;
+
+                //FIXME: the template update needs to be done in a
+                // more efficient way, now we are using this maxcount
+                // to limit the number of particles used in the update
+                int count = 0;
+                int maxcount = 50;
+                //FIXME: This is a tweak to avoid losing time with big particles
+                if (getSize() > 256)
+                        maxcount = 10;
+                float[] matrix;
+                int templateindex = 0;
+                for (SupervisedPickerMicrograph m : getMicrographs())
+                {
+                        particles = m.getManualParticles();
+                        for (int i = 0; i < particles.size(); i++)
                         {
-                            if(uttask != null)
-                                uttask.cancel(true);
-                            uttask = this;
-
-
-                            ImageGeneric templates = new ImageGeneric(ImageGeneric.Float);
-                            templates.resize(getSize(), getSize(), 1, getTemplatesNumber());
-
-                            ImageGeneric igp;
-                            List<ManualParticle> particles;
-
-                            ManualParticle particle;
-                            double[] align;
-
-                            //FIXME: the template update needs to be done in a 
-                            // more efficient way, now we are using this maxcount
-                            // to limit the number of particles used in the update
-                            int count = 0;
-                            int maxcount = 50;
-                            //FIXME: This is a tweak to avoid losing time with big particles
-                            if (getSize() > 256)
-                                    maxcount = 10;
-                            float[] matrix;
-                            int templateindex = 0;
-                            for (SupervisedPickerMicrograph m : getMicrographs())
-                            {
-                                    particles = m.getManualParticles();
-                                    for (int i = 0; i < particles.size(); i++)
+                                if(isCancelled())
+                                    return null;
+                                if(count < maxcount)
+                                {
+                                    particle = particles.get(i);
+                                    if(resize)
+                                        particle.resetImage();
+                                    igp = particle.getImageGeneric();
+                                    if (templateindex < getTemplatesNumber())
                                     {
-                                            if(isCancelled())
-                                                return null;
-                                            if(count < maxcount)
-                                            {
-                                                particle = particles.get(i);
-                                                if(resize)
-                                                    particle.resetImage();
-                                                igp = particle.getImageGeneric();
-                                                if (templateindex < getTemplatesNumber())
-                                                {
-                                                        matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
-                                                        templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-                                                        templateindex ++;
-                                                }
-                                                else
-                                                {
-                                                        align = templates.alignImage(igp);
-                                                        particle.setLastalign(align);
-                                                        templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-                                                }
-                                                count++;
-                                            }
-
+                                            matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
+                                            templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
+                                            templateindex ++;
                                     }
-                            }
+                                    else
+                                    {
+                                            align = templates.alignImage(igp);
+                                            particle.setLastalign(align);
+                                            templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+                                    }
+                                    count++;
+                                }
 
-                            updateTemplates(templates, templateindex);
-                    }
-                    catch (Exception e)
-                    {
-                            e.printStackTrace();
-                            throw new IllegalArgumentException(e);
-                    }
-                    return "";
+                        }
+                }
+
+                updateTemplates(templates, templateindex);
             }
-
-            @Override
-            protected void done() {
-                        if(dialog != null && dialog.isVisible())
-                                       dialog.loadTemplates(true);
+            catch (Exception e)
+            {
+                    e.printStackTrace();
+                    throw new IllegalArgumentException(e);
             }
+            return "";
+        }
 
-
+        @Override
+        protected void done() {
+                    if(dialog != null && dialog.isVisible())
+                                   dialog.loadTemplates(true);
+        }
 
     }
     
-        public boolean isCorrectPending()//TO BE COMPLETED
-        {
-            return getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && isChanged();
-        }
+    public boolean isCorrectPending()//TO BE COMPLETED
+    {
+        return getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && isChanged();
+    }
 
 }
