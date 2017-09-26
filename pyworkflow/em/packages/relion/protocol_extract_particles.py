@@ -234,7 +234,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             partSet.setCoordinates(inputCoords)
     
     
-            hasCTF = self.ctfRelations.hasValue()
+            hasCTF = self._useCTF()
             partSet.setSamplingRate(self._getNewSampling())
             partSet.setHasCTF(hasCTF)
     
@@ -292,7 +292,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             self._defineOutputs(outputParticles=partSet)
             self._defineSourceRelation(self.inputCoordinates, partSet)
     
-            if self.ctfRelations.hasValue():
+            if self._useCTF():
                 self._defineSourceRelation(self.ctfRelations.get(), partSet)
 
     #--------------------------- INFO functions --------------------------------
@@ -303,11 +303,13 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             errors.append("Background diameter for normalization should "
                           "be equal or less than the box size.")
 
-        self._setupCtfProperties() # setup self.micKey among others
-        if self.ctfRelations.hasValue() and self.micKey is None:
-            errors.append('Some problem occurs matching micrographs and CTF.\n'
-                          'There were micrographs for which CTF was not found '
-                          'either using micName or micId.\n')
+        # We cannot check this if the protocol is in streaming.
+        
+        # self._setupCtfProperties() # setup self.micKey among others
+        # if self._useCTF() and self.micKey is None:
+        #     errors.append('Some problem occurs matching micrographs and '
+        #                   'CTF.\n There were micrographs for which CTF '
+        #                   'was not found either using micName or micId.\n')
         return errors
     
     def _citations(self):
@@ -443,24 +445,24 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
         return newSampling
 
-    def _setupCtfProperties(self):
-        inputMics = self.getInputMicrographs()
-        if self.ctfRelations.hasValue():
-            # Load CTF dictionary for all micrographs, all CTF should be present
-            self.ctfDict = {}
-            
-            for ctf in self.ctfRelations.get():
-                ctfMic = ctf.getMicrograph()
-                newCTF = ctf.clone()
-                self.ctfDict[ctfMic.getMicName()] = newCTF
-                self.ctfDict[ctfMic.getObjId()] = newCTF
-            
-            if all(mic.getMicName() in self.ctfDict for mic in inputMics):
-                self.micKey = lambda mic: mic.getMicName()
-            elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
-                self.micKey = lambda mic: mic.getObjId()
-            else:
-                self.micKey = None # some problem matching CTF
+    # def _setupCtfProperties(self):
+    #     inputMics = self.getInputMicrographs()
+    #     if self._useCTF():
+    #         # Load CTF dictionary for all micrographs, all CTF should be present
+    #         self.ctfDict = {}
+    #
+    #         for ctf in self.ctfRelations.get():
+    #             ctfMic = ctf.getMicrograph()
+    #             newCTF = ctf.clone()
+    #             self.ctfDict[ctfMic.getMicName()] = newCTF
+    #             self.ctfDict[ctfMic.getObjId()] = newCTF
+    #
+    #         if all(mic.getMicName() in self.ctfDict for mic in inputMics):
+    #             self.micKey = lambda mic: mic.getMicName()
+    #         elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
+    #             self.micKey = lambda mic: mic.getObjId()
+    #         else:
+    #             self.micKey = None # some problem matching CTF
             
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or
@@ -508,7 +510,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         return self._getPath('images.xmd')
 
     def createParticles(self, item, row):
-        particle = rowToParticle(row, readCtf=self.ctfRelations.hasValue())
+        particle = rowToParticle(row, readCtf=self._useCTF())
         coord = particle.getCoordinate()
         item.setY(coord.getY())
         item.setX(coord.getX())
@@ -532,7 +534,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         # The command will be launched from the working dir
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
-        if self.ctfRelations.get() is not None:
+        if self._useCTF() and not img.hasCTF():
             img.setCTF(self.ctfDict[img.getMicName()])
 
     def __getMicFile(self, mic, ext):
@@ -540,9 +542,11 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         The filename will be located in the extra folder and with
         the given extension.
         """
-        return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(),
-                                                         ext))
+        return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(),ext))
     
+    def _useCTF(self):
+        return self.ctfRelations.hasValue()
+
     def _getMicStarFile(self, mic):
         return self.__getMicFile(mic, 'star')
 
@@ -564,7 +568,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         return micsStar, partStar
 
     def _isStreamOpen(self):
-        if self.ctfRelations.hasValue():
+        if self._useCTF():
             ctfStreamOpen = self.ctfRelations.get().isStreamOpen()
         else:
             ctfStreamOpen = False

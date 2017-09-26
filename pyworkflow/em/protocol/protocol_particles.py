@@ -474,6 +474,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             outputCoords.enableAppend()
 
         self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
+        self.debug("Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCoords, streamMode)
 
         if firstTime:
@@ -896,6 +897,8 @@ class ProtExtractParticles(ProtParticles):
         # and the number of processed mics is equal to the number of inputs
         streamClosed = self._isStreamClosed()
         self.finished = streamClosed and allDone == inputLen
+        self.debug(' is finished? %s ' % self.finished)
+        self.debug(' is stream closed? %s ' % streamClosed)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if newDone:
             self._updateOutputPartSet(newDone, streamMode)
