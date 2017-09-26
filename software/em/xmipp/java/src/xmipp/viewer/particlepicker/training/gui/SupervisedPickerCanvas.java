@@ -292,7 +292,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
             g2.setColor(color);
 
             for (index = 0; index < particles.size(); index++)
-                drawShape(g2, particles.get(index), false, continuousst);
+                drawShape(g2, particles.get(index), false, thinContinuousSt);
 
             List<AutomaticParticle> autoparticles = getMicrograph().getAutomaticParticles();
             for (AutomaticParticle autoparticle : autoparticles)
@@ -325,14 +325,14 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 
     private Color getAutomaticColor(Color color) {
 
-	    return moveColorHue(color, 0.33f);
+	    return moveColorHue(color, 0.66f);
 
 //	    return color.darker();
     }
 
     private Color getDeletedColor(Color color) {
 
-        return moveColorHue(color, 0.66f);
+        return moveColorHue(color, 0.33f);
 
 //	    return color.darker();
     }
@@ -355,7 +355,8 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 	public void refreshActive(PickerParticle p)
 	{
 		if (p == null)
-			active = null;
+			// active = null;
+            active = getLastParticle();
 		else
 			active = p;
 		repaint();

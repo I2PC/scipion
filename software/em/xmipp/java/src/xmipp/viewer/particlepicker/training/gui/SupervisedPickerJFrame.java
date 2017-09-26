@@ -54,6 +54,7 @@ import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
+    public static final Color THRESHOLD_LABEL_CHANGE_COLOR = Color.DARK_GRAY;
     protected SupervisedPickerCanvas canvas;
     protected JMenuBar mb;
     protected SupervisedParticlePicker ppicker;
@@ -252,14 +253,14 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     public void setThresholdChanged(boolean changed){
 
         if (changed){
-            this.thresholdlb.setForeground(Color.RED);
+            this.thresholdlb.setForeground(THRESHOLD_LABEL_CHANGE_COLOR);
             this.setChanged(true);
         } else {
             this.thresholdlb.setForeground(Color.BLACK);
         }
     }
     public boolean hasThresholdChanged(){
-        return this.thresholdlb.getForeground() == Color.RED;
+        return this.thresholdlb.getForeground() == THRESHOLD_LABEL_CHANGE_COLOR;
     }
 
     public void setSaved(boolean saved) {
@@ -767,14 +768,16 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
         boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
         if (ppicker.isCorrectPending()) {
-            String msg = String.format("Would you like to correct training with added and deleted particles from micrograph %s?", current.getName());
-            result = XmippDialog.showQuestionYesNoCancel(this, msg);
-            if (result == XmippQuestionDialog.YES_OPTION) {
-                ppicker.correctAndAutopick(this, current, next);
-                isautopick = false;
-            }
-            if (result == XmippQuestionDialog.CANCEL_OPTION)
-                isautopick = false;
+            // Do not ask...always correct ans autopick.
+            // String msg = String.format("Would you like to correct training with added and deleted particles from micrograph %s?", current.getName());
+            // result = XmippDialog.showQuestionYesNoCancel(this, msg);
+            result = XmippQuestionDialog.YES_OPTION;
+            //if (result == XmippQuestionDialog.YES_OPTION) {
+            ppicker.correctAndAutopick(this, current, next);
+            isautopick = false;
+            //}
+            //if (result == XmippQuestionDialog.CANCEL_OPTION)
+            //    isautopick = false;
         }
         if (isautopick)// if not done before
         {

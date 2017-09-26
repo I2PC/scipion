@@ -75,6 +75,8 @@ public class CorrectAndAutopickRunnable implements Runnable
                 // Runs inside of the Swing UI thread
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
+                        // Select the worse particle as active
+                        frame.getCanvas().refreshActive(null);
                         frame.getCanvas().repaint();
                         frame.getCanvas().setEnabled(true);
                         XmippWindowUtil.releaseGUI(frame.getRootPane());
@@ -87,7 +89,12 @@ public class CorrectAndAutopickRunnable implements Runnable
             {
 
                 ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-                XmippDialog.showError(frame, "Classifier error");
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        XmippDialog.showError(frame, "Classifier error");
+                    }
+                });
+
             }
 		}
 	}

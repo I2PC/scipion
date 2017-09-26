@@ -60,6 +60,10 @@ public class AutopickRunnable implements Runnable
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     frame.setChanged(false);
+
+                    // Select the worse particle as active
+                    frame.getCanvas().refreshActive(null);
+
                     frame.getCanvas().repaint();
                     frame.getCanvas().setEnabled(true);
                     XmippWindowUtil.releaseGUI(frame.getRootPane());
