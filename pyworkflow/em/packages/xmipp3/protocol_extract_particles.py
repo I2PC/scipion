@@ -268,7 +268,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.backRadius > int(self.boxSize.get() / 2):
                 errors.append("Background radius for normalization should be "
                               "equal or less than half of the box size.")
-
+        
+        # We cannot check this if the protocol is in streaming.
+        
         #self._setupCtfProperties() # setup self.micKey among others
         # if self._useCTF() and self.micKey is None:
         #     errors.append('Some problem occurs matching micrographs and CTF.\n'
