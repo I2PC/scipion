@@ -488,7 +488,7 @@ public class MetaData {
 	/** Add new column to MetaData */
 	public native void addLabel(int label);
 
-	/** Rename a column off the MetaData */
+	/** Rename a MetaData column */
 	public native void renameColumn(int oldLabel, int newLabel);
 
 	/** Get the average and std images, result is left on input image */
