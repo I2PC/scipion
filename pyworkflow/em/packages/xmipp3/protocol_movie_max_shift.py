@@ -57,11 +57,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
-        # form.addSection(label='Input')
-        # form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
-        #       important=True,
-        #       label=Message.LABEL_INPUT_MOVS,
-        #       help='Select a set of previously imported movies.')
         form.addParam('maxFrameShift', params.FloatParam, default=10, 
                        label='Max. frame shift (A)')
         form.addParam('maxMovieShift', params.FloatParam, default=100,
