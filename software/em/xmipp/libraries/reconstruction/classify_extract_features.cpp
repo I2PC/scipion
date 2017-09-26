@@ -71,14 +71,16 @@ void ProgExtractFeatures::defineParams()
 }
 
 
-int ProgExtractFeatures::factorial(int n)
+int ProgExtractFeatures::facs(int n)
 {
-  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+    return (n == 1 || n == 0) ? 1 :
+           (n == 2) ? 2 :
+           (n == 3) ? 6 : 24;
 }
 
-std::vector<double> ProgExtractFeatures::extractLBP(const MultidimArray<double> &I)
+void ProgExtractFeatures::extractLBP(const MultidimArray<double> &I,
+                                     std::vector<double> &fv)
 {
-    std::vector<double> fv;
     std::vector<double> min_idxs, min_idxs_sort;
 
     unsigned char code;
@@ -127,13 +129,13 @@ std::vector<double> ProgExtractFeatures::extractLBP(const MultidimArray<double> 
         int idx = min_idxs_sort[i];
         fv.push_back(lbp_hist[idx]);
     }
-    return fv;
 }
 
 
-std::vector<double> ProgExtractFeatures::extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked)
+void ProgExtractFeatures::extractEntropy(const MultidimArray<double> &I,
+                                         MultidimArray<double> &Imasked,
+                                         std::vector<double> &fv)
 {
-    std::vector<double> fv;
     int hist[256] = {};
     int val;
 
@@ -142,7 +144,7 @@ std::vector<double> ProgExtractFeatures::extractEntropy(const MultidimArray<doub
     I.computeDoubleMinMax(m,M);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
     {
-        val = floor(((DIRECT_MULTIDIM_ELEM(I, n) - m) * 255.0) / (M-m));
+        val = floor(((DIRECT_MULTIDIM_ELEM(I, n) - m) * 255.0) / (M - m));
         hist[val]++;
     }
 
@@ -219,11 +221,11 @@ std::vector<double> ProgExtractFeatures::extractEntropy(const MultidimArray<doub
 
         fv.push_back(-1*entropy);
     }
-
-    return fv;
 }
 
-std::vector<double> ProgExtractFeatures::extractZernike(const MultidimArray<double> &I)
+
+void ProgExtractFeatures::extractZernike(const MultidimArray<double> &I,
+                                         std::vector<double> &fv)
 {
     MultidimArray<double> R, Theta, Rad;
     R.resize(I); R.setXmippOrigin();
@@ -231,36 +233,49 @@ std::vector<double> ProgExtractFeatures::extractZernike(const MultidimArray<doub
     Rad.resize(I); Rad.setXmippOrigin();
 
     double c;
-    int N = YSIZE(I);
+    int Sy = YSIZE(I);
+    int Sx = XSIZE(I);
     const std::complex<double> i(0.0, 1.0);
-    std::vector<double> fv;
+
+    for (int y = 0; y < Sy; y++)
+    {
+        int r2 = 2*(y+1)-Sy-1;
+
+        for (int x = 0; x < Sx; x++)
+        {
+            int r1 = 2*(x+1)-Sy-1;
+            DIRECT_A2D_ELEM(R,y,x) = sqrt(r1*r1 + r2*r2) / Sy;
+
+            if (DIRECT_A2D_ELEM(R,y,x) > 1) DIRECT_A2D_ELEM(R,y,x) = 0;
+
+            DIRECT_A2D_ELEM(Theta,y,x) = atan2((Sy+1-2*(y+1)), (2*(x+1)-Sy-1));
+        }
+    }
 
     for (int n = 1; n < 5; n++)
     {
         for (int m = -n; m < 0; m+=2)
         {
+            int mn = (n - abs(m)) / 2;
+            int nm = (n + abs(m)) / 2;
             std::complex<double> product = 0.0;
-            for (int y = 0; y < YSIZE(I); y++)
+
+            for (int y = 0; y < Sy; y++)
             {
-                for (int x = 0; x < XSIZE(I); x++)
+                for (int x = 0; x < Sx; x++)
                 {
-                    DIRECT_A2D_ELEM(R,y,x) =
-                        sqrt(pow(2*(x+1)-N-1,2.0) + pow(2*(y+1)-N-1,2.0)) / N;
-                    if (DIRECT_A2D_ELEM(R,y,x) > 1) DIRECT_A2D_ELEM(R,y,x) = 0;
-
                     DIRECT_A2D_ELEM(Rad,y,x) = 0;
-                    for (int s = 0; s <=(n-abs(m))/2; s++)
+                    for (int s = 0; s <= mn; s++)
                     {
-                        c = pow(-1.0,s) * factorial(n-s) / (factorial(s) *
-                            factorial((n+abs(m))/2-s) *
-                            factorial((n-abs(m))/2-s));
+                        int ns = n - 2*s;
+                        c = ((s%2 == 0) ? 1 : -1) *
+                            facs(n-s) / (facs(s) *
+                            facs(nm-s) *
+                            facs(mn-s));
 
-                        DIRECT_A2D_ELEM(Rad,y,x) = DIRECT_A2D_ELEM(Rad,y,x) +
-                            pow(c*DIRECT_A2D_ELEM(R,y,x), (n-2*s));
+                        DIRECT_A2D_ELEM(Rad,y,x) +=
+                            pow(c*DIRECT_A2D_ELEM(R,y,x), ns);
                     }
-
-                    DIRECT_A2D_ELEM(Theta,y,x) = atan2((N-1-2*(y+1)+2),
-                                                       (2*(x+1)-N+1-2));
 
                     product += DIRECT_A2D_ELEM(I,y,x) *
                                DIRECT_A2D_ELEM(Rad,y,x) *
@@ -271,8 +286,8 @@ std::vector<double> ProgExtractFeatures::extractZernike(const MultidimArray<doub
             fv.push_back(std::abs(product));
         }
     }
-    return fv;
 }
+
 
 void ProgExtractFeatures::run()
 {
@@ -282,6 +297,7 @@ void ProgExtractFeatures::run()
     FileName fnImg;
     MDRow row;
 	CorrelationAux aux;
+	std::vector<double> fv;
 
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -294,14 +310,25 @@ void ProgExtractFeatures::run()
     	    denoiseTVFilter(I(), 50);
 
         if (useLBP)
-            SF.setValue(MDL_SCORE_BY_LBP, extractLBP(I()), __iter.objId);
+        {
+            extractLBP(I(), fv);
+            SF.setValue(MDL_SCORE_BY_LBP, fv, __iter.objId);
+            fv.clear();
+        }
 
         if (useEntropy)
-            SF.setValue(MDL_SCORE_BY_ENTROPY, extractEntropy(I(),Imasked()), __iter.objId);
+        {
+            extractEntropy(I(), Imasked(), fv);
+            SF.setValue(MDL_SCORE_BY_ENTROPY, fv, __iter.objId);
+            fv.clear();
+        }
 
         if (useZernike)
-            SF.setValue(MDL_SCORE_BY_ZERNIKE, extractZernike(I()), __iter.objId);
-
+        {
+            extractZernike(I(), fv);
+            SF.setValue(MDL_SCORE_BY_ZERNIKE, fv, __iter.objId);
+            fv.clear();
+        }
     }
 
 	if (fnOut == "") fnOut = fnSel;

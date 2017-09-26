@@ -60,18 +60,18 @@ public:
     /// Define parameters
     void defineParams();
 
-    /// Function for computing factorial
-    int factorial(int n);
+    /// Function for returning factorial up to n=4
+    int facs(int n);
 
     /// Extracting LBP features
     /// See method at Ojala, Timo, Matti Pietikainen, and Topi Maenpaa.
     /// "Multiresolution gray-scale and rotation invariant texture
     /// classification with local binary patterns." IEEE Transactions on
     /// Pattern Analysis and Machine Intelligence 24.7 (2002): 971-987.
-    std::vector<double> extractLBP(const MultidimArray<double> &I);
+    void extractLBP(const MultidimArray<double> &I, std::vector<double> &fv);
 
     /// Extracting entropy features
-    std::vector<double> extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked);
+    void extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked, std::vector<double> &fv);
 
     /// Extracting Zernike moments
     /// See method at A. Tahmasbi, F. Saki, S. B. Shokouhi, Classification
@@ -81,7 +81,7 @@ public:
     /// F. Saki, A. Tahmasbi, H. Soltanian-Zadeh, S. B. Shokouhi,
     /// Fast opposite weight learning rules with application in breast
     /// cancer diagnosis, Comput. Biol. Med., vol. 43, no. 1, pp. 32-41, 2013.
-    std::vector<double> extractZernike(const MultidimArray<double> &I);
+    void extractZernike(const MultidimArray<double> &I, std::vector<double> &fv);
 
     /// Main routine
     void run();
