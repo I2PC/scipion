@@ -26,6 +26,8 @@
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
+from pyworkflow.em.protocol.monitors.protocol_monitor_movie_gain import MovieGainMonitorPlotter
+from pyworkflow.em.protocol.monitors.protocol_monitor_movie_gain import MonitorMovieGain
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
 from pyworkflow.em.data import SetOfMovies, Movie
@@ -57,13 +59,13 @@ class XmippProtMovieGain(ProtProcessMovies):
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select one or several movies. A gain image will '
                            'be calculated for each one of them.')
-        form.addParam('frameStep', IntParam, default=1,
+        form.addParam('frameStep', IntParam, default=5,
                       label="Frame step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every frame (frameStep=1) is used to '
                            'compute the movie gain. If you set '
                            'this parameter to 2, 3, ..., then only every 2nd, '
                            '3rd, ... frame will be used.')
-        form.addParam('movieStep', IntParam, default=1,
+        form.addParam('movieStep', IntParam, default=250,
                       label="Movie step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every movie (movieStep=1) is used to '
                            'compute the movie gain. If you set '
@@ -146,6 +148,16 @@ class XmippProtMovieGain(ProtProcessMovies):
             fhSummary.close()
             fnMonitorSummary.write("movie_%06d: %f %f %f %f\n" % (movieId, dev, p[0], p[4], max))
             fnMonitorSummary.close()
+
+        # NOT WORKING
+        # movieGainMonitor = MonitorMovieGain(self,
+        #                                     workingDir=self.workingDir.get(),
+        #                                     samplingInterval=60,
+        #                                     monitorTime=300,
+        #                                     stddevValue=0.04,
+        #                                     ratio1Value=1.15,
+        #                                     ratio2Value=4.5)
+        # MovieGainMonitorPlotter(movieGainMonitor.getData())
 
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
