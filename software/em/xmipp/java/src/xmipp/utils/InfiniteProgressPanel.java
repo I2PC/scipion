@@ -207,7 +207,7 @@ public class InfiniteProgressPanel extends JComponent implements MouseListener {
         addMouseListener(this);
         setVisible(true);
         ticker = buildTicker();
-        animation = new Thread(new Animator(true));
+        animation = new Thread(new Animator(true),"Progress panel");
         animation.start();
     }
 
