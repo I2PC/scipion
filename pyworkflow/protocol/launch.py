@@ -49,6 +49,7 @@ from pyworkflow.utils import redStr, greenStr, makeFilePath, join
 from pyworkflow.utils import process
 from time import sleep
 from multiprocessing.pool import ThreadPool, TimeoutError
+import drmaa
 
 UNKNOWN_JOBID = -1
 LOCALHOST = 'localhost'
@@ -204,7 +205,7 @@ def _copyFiles(protocol, rpath):
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict, cwd=None):
+def _submit(hostConfig, submitDict, cwd=None, useDrmaa=False):
     """ Submit a protocol to a queue system. Return its job id.
     """
     # Create forst the submission script to be launched
@@ -225,17 +226,30 @@ def _submit(hostConfig, submitDict, cwd=None):
     gcmd = greenStr(command)
     print("** Submiting to queue: '%s'" % gcmd)
 
-    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
-    out = p.communicate()[0]
-    # Try to parse the result of qsub, searching for a number (jobId)
-    s = re.search('(\d+)', out)
-    if s:
-        job = int(s.group(0))
-        print "launched job with id %s" % job
-        return job
+    if useDrmaa:
+        with drmaa.Session() as session:
+            job_template = session.createJobTemplate()
+            job_template.jobCategory = 'drmaa'
+            job_template.jobName = submitDict['JOB_NAME']
+            job_template.nativeSpecification = '-q high.q -P em -l gpu=1 -l gpu_arch=Pascal'
+            job_template.workingDirectory = cwd
+            job_template.remoteCommand = scripPath
+            job = session.runJob(job_template)
+            print "launched job with id %s" % job
+            session.deleteJobTemplate(template)
+            return job
     else:
-        print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
-        return UNKNOWN_JOBID
+        p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
+        out = p.communicate()[0]
+        # Try to parse the result of qsub, searching for a number (jobId)
+        s = re.search('(\d+)', out)
+        if s:
+            job = int(s.group(0))
+            print "launched job with id %s" % job
+            return job
+        else:
+            print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
+            return UNKNOWN_JOBID
 
 
 def _pass_though_no_gui_state(command):
