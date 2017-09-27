@@ -16,6 +16,8 @@ import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
+import javax.swing.*;
+
 /**
  *
  * @author airen
@@ -53,11 +55,21 @@ public class AutopickRunnable implements Runnable
 				((GenericClassifier)classifier).autopick(micrograph);
 				picker.loadMicrographData(micrograph);
 			}
-            frame.setChanged(false);
-			frame.getCanvas().repaint();
-			frame.getCanvas().setEnabled(true);
-			XmippWindowUtil.releaseGUI(frame.getRootPane());
-            frame.updateMicrographsModel();
+
+            // Runs inside of the Swing UI thread
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    frame.setChanged(false);
+
+                    // Select the worse particle as active
+                    frame.getCanvas().refreshActive(null);
+
+                    frame.getCanvas().repaint();
+                    frame.getCanvas().setEnabled(true);
+                    XmippWindowUtil.releaseGUI(frame.getRootPane());
+                    frame.updateMicrographsModel();
+                }
+            });
 		}
 
 	}

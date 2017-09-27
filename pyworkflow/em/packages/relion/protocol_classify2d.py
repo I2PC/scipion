@@ -98,13 +98,13 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         
     #--------------------------- INFO functions --------------------------------
     def _validateNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         return []
     
     def _validateContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         errors = []
@@ -123,7 +123,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         return errors
     
     def _summaryNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
@@ -134,7 +134,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         return summary
     
     def _summaryContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         summary = []
@@ -155,22 +155,20 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     
     #--------------------------- UTILS functions --------------------------------------------
     def _updateParticle(self, item, row):
-        #print "_updateParticle"
-        #row.printDict()
         item.setClassId(row.getValue(md.RLN_PARTICLE_CLASS))
         item.setTransform(rowToAlignment(row, em.ALIGN_2D))
         
         item._rlnNormCorrection = em.Float(row.getValue('rlnNormCorrection'))
         item._rlnLogLikeliContribution = em.Float(row.getValue('rlnLogLikeliContribution'))
         item._rlnMaxValueProbDistribution = em.Float(row.getValue('rlnMaxValueProbDistribution'))
+        item._rlnGroupName = em.String(row.getValue('rlnGroupName'))
         
     def _updateClass(self, item):
         classId = item.getObjId()
-        if  classId in self._classesInfo:
+        if classId in self._classesInfo:
             index, fn, row = self._classesInfo[classId]
             item.setAlignment2D()
             item.getRepresentative().setLocation(index, fn)
             item._rlnclassDistribution = em.Float(row.getValue('rlnClassDistribution'))
             item._rlnAccuracyRotations = em.Float(row.getValue('rlnAccuracyRotations'))
             item._rlnAccuracyTranslations = em.Float(row.getValue('rlnAccuracyTranslations'))
-
