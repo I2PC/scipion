@@ -258,7 +258,7 @@ class QueueStepExecutor(ThreadStepExecutor):
         submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
         self.threadCommands[threadId] += 1
         jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
-        submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
+        submitDict['JOB_NAME'] = "scipion" + submitDict['JOB_NAME'] + jobId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
         job = _submit(self.hostConfig, submitDict, cwd, useDrmaa=True)
         return self._waitForJob(job)
