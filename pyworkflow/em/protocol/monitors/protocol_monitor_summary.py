@@ -23,6 +23,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import os.path
+import pyworkflow.utils as pwutils
+
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor
 from protocol_monitor_ctf import MonitorCTF
@@ -45,6 +48,11 @@ class ProtMonitorSummary(ProtMonitor):
     _lastUpdateVersion = VERSION_1_1
     nifs = getnifs.get_network_interfaces()
     nifsNameList = [nif.getName() for nif in nifs]
+
+    def __init__(self, **kwargs):
+        ProtMonitor.__init__(self, **kwargs)
+        self.reportDir = ''
+        self.reportPath = ''
 
     def _defineParams(self, form):
         ProtMonitor._defineParams(self, form)
@@ -143,6 +151,7 @@ class ProtMonitorSummary(ProtMonitor):
 
     # --------------------------- STEPS functions ----------------------------
     def monitorStep(self):
+        # create monitors
         movieGainMonitor = self.createMovieGainMonitor()
         ctfMonitor = self.createCtfMonitor()
         sysMonitor = self.createSystemMonitor()
@@ -184,6 +193,12 @@ class ProtMonitorSummary(ProtMonitor):
         monitor.step = stepAll
 
         monitor.loop()
+
+    def createReportDir(self):
+        self.reportDir = os.path.abspath(self._getExtraPath(self.getProject().getShortName()))
+        self.reportPath = os.path.join(self.reportDir, 'index.html')
+        # create report dir
+        pwutils.makePath(self.reportDir)
 
     def _getCtfProtocol(self):
         for protPointer in self.inputProtocols:
@@ -259,11 +274,15 @@ class ProtMonitorSummary(ProtMonitor):
 
         return sysMon
 
+    def getReportPath(self):
+        return self.reportPath
+
     def createHtmlReport(self, ctfMonitor=None, sysMonitor=None,
                          movieGainMonitor=None):
         ctfMonitor = ctfMonitor or self.createCtfMonitor()
         sysMonitor = sysMonitor or self.createSystemMonitor()
         movieGainMonitor = movieGainMonitor or self.createMovieGainMonitor()
+        self.createReportDir()
 
         return ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor,
                           self.publishCmd.get(),

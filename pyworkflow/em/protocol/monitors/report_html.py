@@ -30,7 +30,7 @@ import json
 import os
 from os.path import join, exists, abspath, basename
 from numpy import histogram, array, insert
-from operator import itemgetter
+import multiprocessing
 
 from pyworkflow import getTemplatePath
 import pyworkflow.utils as pwutils
@@ -43,14 +43,16 @@ class ReportHtml:
     """ Create an html report with a summary of the processing.
     The report will be updated with a given frequency.
     """
-    def __init__(self, protocol, ctfMonitor, sysMonitor, movieGainMonitor, publishCmd=None,
-                 **kwargs):
+    def __init__(self, protocol, ctfMonitor, sysMonitor, movieGainMonitor, publishCmd=None, **kwargs):
         # The CTF protocol to monitor
         self.protocol = protocol
+        self.reportPath = protocol.reportPath
+        self.reportDir = protocol.reportDir
         self.provider = SummaryProvider(protocol)
         self.ctfMonitor = ctfMonitor
         self.sysMonitor = sysMonitor
         self.movieGainMonitor = movieGainMonitor
+        self.thumbsReady = 0
 
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
@@ -72,40 +74,97 @@ class ReportHtml:
         else:
             print(msg)
 
-    @staticmethod
-    def generateReportImages(imgPathList, targetDir, imageType, relPath=None, ext="png", **kwargs):
-        outputPaths = []
-        ih = ImageHandler()
-        if not exists(targetDir):
-            pwutils.makePath(targetDir)
+    def getThumbnailPaths(self, ctfData, ext="png"):
+        """Adds to the dict ctfData the paths to the report thumbnails, and creates their folders in the reportDir
+        if they don't exist. Also checks which thumbnails are ready. This function doesn't actually generate thumbnails,
+        only adds their paths to ctfData.
 
-        for imgPath in imgPathList:
-            if imageType == "psd":
-                movie = basename(os.path.dirname(imgPath))
-                imgOutPath = join(targetDir,
-                                  "%s_%s" % (movie, pwutils.replaceExt(basename(imgPath), ext)))
-                if not exists(imgOutPath):
-                    ih.computeThumbnail(imgPath, imgOutPath, scaleFactor=1)
+        ===== Params =====
+        - ctfData: dict resulting from calling ctfMonitor.getData()
+        - ext: extension of the thumbnail images. Defaults to png
 
-            elif imageType == "mic":
-                imgOutPath = join(targetDir, pwutils.replaceExt(basename(imgPath), ext))
-                if not exists(imgOutPath):
-                    scaleFactor = kwargs.get('scaleFactor', 6)
-                    ih.computeThumbnail(imgPath, imgOutPath, scaleFactor=scaleFactor)
+        ===== Returns =====
+        - micsReady: int with the number of micrographs that are ready to be displayed in the report i.e. how many rows
+                     in the table have all their thumbnails generated.
+        """
+        micsReady = 0
+        micsFolder = 'imgMicThumbs'
+        psdFolder = 'imgPsdThumbs'
+        shiftPlotsFolder = 'imgShiftThumbs'
+        ctfData[micsFolder] = []
+        ctfData[psdFolder] = []
+        micThumbDir = join(self.reportDir, micsFolder)
+        psdThumbDir = join(self.reportDir, psdFolder)
+        # Create folders if they don't exist
+        if 'imgShiftPath' in ctfData:
+            shiftPlotDir = join(self.reportDir, shiftPlotsFolder)
+            pwutils.makePath(micThumbDir, psdThumbDir, shiftPlotDir)
+            ctfData[shiftPlotsFolder] = []
+            copyShiftPlots = True
+        else:
+            pwutils.makePath(micThumbDir, psdThumbDir)
+            copyShiftPlots = False
 
-            elif imageType == "shift":
-                imgOutPath = join(targetDir,  pwutils.replaceExt(basename(imgPath), ext))
-                if not exists(imgOutPath):
-                    pwutils.copyFile(imgPath, targetDir)
+        for i in range(len(ctfData.get('imgMicPath', []))):
+            micPath = ctfData['imgMicPath'][i]
+            micThumb = join(micsFolder, pwutils.replaceExt(basename(micPath), ext))
+            ctfData[micsFolder].append(micThumb)
 
-            if relPath is not None:
-                # append path relative to relPath
-                outputPaths.append(os.path.relpath(imgOutPath, relPath))
+            psdPath = ctfData['imgPsdPath'][i]
+            movie = basename(os.path.dirname(psdPath))
+            psdThumb = join(psdFolder, "%s_%s" % (movie, pwutils.replaceExt(basename(psdPath), ext)))
+            ctfData[psdFolder].append(psdThumb)
+
+            if copyShiftPlots:
+                shiftPath = ctfData['imgShiftPath'][i]
+                shiftCopy = join(shiftPlotsFolder, pwutils.replaceExt(basename(shiftPath), ext))
+                ctfData[shiftPlotsFolder].append(shiftCopy)
+                shiftPlotReady = exists(join(self.reportDir, shiftCopy))
             else:
-                # append absolute path
-                outputPaths.append(imgOutPath)
+                shiftPlotReady = True
 
-        return outputPaths
+            # Check if all thumbnails are available
+            if exists(join(self.reportDir, micThumb)) and exists(join(self.reportDir, psdThumb)) and shiftPlotReady:
+                micsReady += 1
+
+        return micsReady
+
+    def generateReportImages(self, ctfData, thumbsReady=0, micScaleFactor=6):
+        """ Function to generate thumbnails for the report.
+
+        ===== Params =====
+        - ctfData: dict resulting from calling ctfMonitor.getData() after being modified in getThumbnailPaths.
+        - thumbsReady: number of micrographs to skip because they already have thumbnails.
+        - micScaleFactor: how much to reduce in size the micrographs.
+        """
+        ih = ImageHandler()
+        micsFolder = 'imgMicThumbs'
+        psdFolder = 'imgPsdThumbs'
+        shiftPlotsFolder = 'imgShiftThumbs'
+
+        numMics = len(ctfData['imgMicPath'])
+        numShiftPlots = len(ctfData.get('imgShiftPath', []))
+        print('Generating thumbnails for micrographs %s to %s' % (thumbsReady, numMics))
+
+        for i in range(thumbsReady, numMics):
+            print('Generating images for mic %d' % i)
+            # mic thumbnails
+            dstImgPath = join(self.reportDir, ctfData[micsFolder][i])
+            if not exists(dstImgPath):
+                ih.computeThumbnail(ctfData['imgMicPath'][i], dstImgPath, scaleFactor=micScaleFactor)
+
+            # psd thumbnails
+            dstImgPath = join(self.reportDir, ctfData[psdFolder][i])
+            if not exists(dstImgPath):
+                ih.computeThumbnail(ctfData['imgPsdPath'][i], dstImgPath, scaleFactor=1)
+
+            # shift plots
+            if numShiftPlots:
+                dstImgPath = join(self.reportDir, ctfData[shiftPlotsFolder][i])
+                if not exists(dstImgPath):
+                    pwutils.copyFile(ctfData['imgShiftPath'][i], os.path.dirname(dstImgPath))
+
+        return
 
     def processDefocusValues(self, defocusList):
         maxDefocus = self.protocol.maxDefocus.get()
@@ -135,18 +194,7 @@ class ReportHtml:
                             % self.template)
 
         project = self.protocol.getProject()
-
-        reportName = 'index.html'
         projName = project.getShortName()
-        reportDir = abspath(self.protocol._getExtraPath(projName))
-
-        if not exists(reportDir):
-            self.info("Creating report directory: %s" % reportDir)
-            pwutils.makePath(reportDir)
-
-        reportPath = join(reportDir, reportName)
-        pwutils.cleanPath(reportPath)
-
         acquisitionLines = ''
         self.provider.refreshObjects()
 
@@ -179,25 +227,28 @@ class ReportHtml:
         # Ctf monitor chart data
         data = [] if self.ctfMonitor is None else self.ctfMonitor.getData()
         if data:
-            # generate mic thumbnails
-            micThumbsDir = join(reportDir, 'imgMicThumbs')
-            data['imgMicThumbs'] = self.generateReportImages(data['imgMicPath'], micThumbsDir,
-                                                             'mic', relPath=reportDir)
-            # generate psd thumbnails
-            psdThumbsDir = join(reportDir, 'imgPsdThumbs')
-            data['imgPsdThumbs'] = self.generateReportImages(data['imgPsdPath'], psdThumbsDir,
-                                                             'psd', relPath=reportDir)
+            # get the thumbnail paths
+            micsReady = self.getThumbnailPaths(data)
+            # generate actual images in a separate thread
+            processName = 'Images %d to %d' % (self.thumbsReady, len(data['imgMicPath']))
+            process = multiprocessing.Process(name=processName, target=self.generateReportImages,
+                                              args=(data, self.thumbsReady))
+            process.start()
+            # update number of processed thumbnails
+            self.thumbsReady = len(data['imgMicPath'])
 
-            # copy shift plots
-            if data['imgShiftPath'] and data['imgShiftPath'][0] != "":
-                shiftPlotsDir = join(reportDir, 'imgShiftPlots')
-                data['imgShiftCopyPath'] = self.generateReportImages(data['imgShiftPath'], shiftPlotsDir,
-                                                                     'shift', relPath=reportDir)
             if len(data['defocusU']) < 100:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
             else:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'][:-50])
                 data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
+
+            # remove data of original pictures, report doesn't need it
+            for k in ['imgMicPath', 'imgPsdPath', 'imgShiftPath']:
+                data.pop(k)
+            # send over only thumbnails of the mics that have been fully processed
+            for k in ['imgMicThumbs', 'imgPsdThumbs', 'imgShiftThumbs']:
+                data[k] = data[k][:micsReady]
 
         ctfData = json.dumps(data)
 
@@ -224,16 +275,17 @@ class ReportHtml:
                 'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else '',
                 }
 
-        self.info("Writing report html to: %s" % abspath(reportPath))
-        reportFile = open(reportPath, 'w')
+        self.info("Writing report html to: %s" % abspath(self.reportPath))
+        pwutils.cleanPath(self.reportPath)
+        reportFile = open(self.reportPath, 'w')
         reportTemplate = reportTemplate % args
         reportFile.write(reportTemplate.encode('utf-8'))
         reportFile.close()
 
         if self.publishCmd:
             self.info("Publishing the report:")
-            cmd = self.publishCmd % {'REPORT_FOLDER': reportDir}
+            cmd = self.publishCmd % {'REPORT_FOLDER': self.reportDir}
             self.info(cmd)
             os.system(cmd)
 
-        return reportPath
+        return self.reportPath

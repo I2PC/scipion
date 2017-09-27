@@ -627,8 +627,8 @@
                                  report.ctfData.defocusV[index], report.ctfData.ratio[index],
                                  report.ctfData.astigmatism[index]
                                 ];
-                if('imgShiftCopyPath' in report.ctfData){
-                    var shiftPlotPath = report.ctfData.imgShiftCopyPath[index];
+                if('imgShiftThumbs' in report.ctfData){
+                    var shiftPlotPath = report.ctfData.imgShiftThumbs[index];
                     rowValues.splice(3, 0, imgHtml.format(shiftPlotPath,imgWidth));
                 }
                 dataset.unshift(rowValues);
@@ -642,7 +642,7 @@
                     {title: "Ratio"},
                     {title: "Astigmatism"}
                 ];
-            if ('imgShiftCopyPath' in report.ctfData){
+            if ('imgShiftThumbs' in report.ctfData){
                 cols.splice(3,0,{title: "ShiftPlot"})
             }
             $('#micTable').DataTable( {
