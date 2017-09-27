@@ -38,15 +38,17 @@ extern __shared__ float2 IMG[];
 
 // FIXME these methods should be directly in the header file. Alter behaviour of the caller so that
 // it does not have to leave from this class
-FourierReconstructionData::FourierReconstructionData(int sizeX, int sizeY, int noOfImages) {
+FourierReconstructionData::FourierReconstructionData(int sizeX, int sizeY, int noOfImages, bool erase) {
 	this->sizeX = sizeX;
 	this->sizeY = sizeY;
 	this->noOfImages = noOfImages;
 	int mallocSize = sizeX * sizeY * noOfImages * 2 * sizeof(float); // allocate complex float
 	cudaMalloc((void **) &dataOnGpu, mallocSize);
 	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemset(dataOnGpu, 0.f, mallocSize);
-	gpuErrchk( cudaPeekAtLastError() );
+	if (erase) {
+		cudaMemset(dataOnGpu, 0.f, mallocSize);
+		gpuErrchk( cudaPeekAtLastError() );
+	}
 	printf("FourierReconstructionData this: %p, gpuData: %p\n", this, this->dataOnGpu);
 }
 __device__
@@ -61,6 +63,13 @@ void FourierReconstructionData::clean() {
 
 FourierReconDataWrapper::FourierReconDataWrapper(int sizeX, int sizeY, int noOfImages) {
 	cpuCopy = new FourierReconstructionData(sizeX, sizeY, noOfImages);
+	copyCpuToGpu();
+}
+FourierReconDataWrapper::FourierReconDataWrapper(FourierReconstructionData* cpuCopy) {
+	this->cpuCopy = cpuCopy;
+	copyCpuToGpu();
+}
+void FourierReconDataWrapper::copyCpuToGpu() {
 	cudaMalloc((void **) &gpuCopy, sizeof(FourierReconstructionData));
 	gpuErrchk( cudaPeekAtLastError() );
 	cudaMemcpy(gpuCopy, cpuCopy, sizeof(FourierReconstructionData), cudaMemcpyHostToDevice);
@@ -898,6 +907,12 @@ void processBufferKernel(
 	}
 #endif
 
+
+	if (threadIdx.x == 0 &&  threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
+		printf("na gpu: %d %d %d %d %f %f\n", threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y,
+				data->getImgOnGPU(0)[data->sizeY], data->getImgOnGPU(0)[data->sizeY + 1]);
+	}
+
 	for (int i = 0; i < noOfTransforms; i++) {
 		TraverseSpace* space = &traverseSpaces[i];
 
@@ -1011,6 +1026,34 @@ FourierReconDataWrapper* convertImages(float* paddedImages, int noOfImages, int 
 	return data;
 }
 
+FourierReconDataWrapper* copyToGPU(Array2D<std::complex<float> >* readyFFTs, int noOfImages) {
+	// assuming at least one image is present
+	int sizeX = readyFFTs[0].getXSize();
+	int sizeY = readyFFTs[0].getYSize();
+	int imgSize = sizeX * sizeY;
+	int noOfElements = imgSize * noOfImages * 2; // *2 since it's complex number
+	float* tmp = new float[noOfElements];
+
+	// flatten the images
+	for(int i = 0; i < noOfImages; i++) {
+		for (int row = 0; row < readyFFTs[0].getYSize(); row++) {
+			int offset = (imgSize * i + row*sizeX) * 2; // *2 since it's complex number
+			memcpy(tmp + offset, readyFFTs[i].getRow(row), sizeX * sizeof(std::complex<float>));
+		}
+	}
+
+	FourierReconstructionData* fd = new FourierReconstructionData(sizeX,	sizeY, noOfImages, false);
+	// copy data to gpu
+	cudaMemcpy(fd->dataOnGpu, tmp, noOfElements * sizeof(float), cudaMemcpyHostToDevice);
+	gpuErrchk( cudaPeekAtLastError() );
+
+	// delete intermediate data and return
+	printf("copying FFTs %d %d %d %d cudamemcpy %d\n%f %f\n", sizeX, sizeY, imgSize, noOfElements, noOfElements * sizeof(float),
+			tmp[sizeY], tmp[sizeY + 1]);
+	delete[] tmp;
+	return new FourierReconDataWrapper(fd);
+}
+
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		float* paddedImages, Array2D<std::complex<float> >* readyFFTs, int noOfImages,
 		TraverseSpace* traverseSpaces, int noOfTransforms,
@@ -1033,8 +1076,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// process input data and get them to GPU, if necessary
 	if (NULL == paddedImages) {
-//		FIXME implement
-
+		fourierData = copyToGPU(readyFFTs, noOfImages);
 	} else {
 		fourierData = convertImages(paddedImages, noOfImages, paddedImgSize,
 				maxVolIndexX / 2, maxVolIndexYZ,
@@ -1056,10 +1098,6 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	// run kernel
 	int size2D = maxVolIndexYZ + 1;
 	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
-
-
-	printf("noOfImages: %d noOfTransforms: %d\n", noOfImages, noOfTransforms);
-
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(

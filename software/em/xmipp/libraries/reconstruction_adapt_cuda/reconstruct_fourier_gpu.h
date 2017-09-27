@@ -75,16 +75,15 @@ struct LoadThreadParams
     int startImageIndex;
     int endImageIndex;
     MetaData* selFile;
-//    ProjectionData* buffer1 = NULL;
-//    ProjectionData* buffer2 = NULL;
     TraverseSpace* loadingBuffer = NULL;
     TraverseSpace* readyBuffer = NULL;
+    Array2D<std::complex<float> >* readyFFTs = NULL;
+    Array2D<std::complex<float> >* loadingFFTs = NULL;
     float* loadingPaddedImages = NULL;
     float* readyPaddedImages = NULL;
     int loadingBufferLength;
     int readyBufferLength;
 
-    Array2D<std::complex<float> >* readyFFTs; // FIXME use properly
 };
 
 /** Fourier reconstruction parameters. */
@@ -284,6 +283,9 @@ private:
 
     /** Size of loading buffer (i.e. number of projection loaded in one buffer) */
     int bufferSize;
+
+    /** if set to true, FFT of the input projections are done on GPU */
+    bool fftOnGPU;
 
 // STATIC METHODS
 

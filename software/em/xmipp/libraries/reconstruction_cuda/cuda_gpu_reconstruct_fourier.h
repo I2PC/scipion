@@ -19,7 +19,7 @@
 
 struct FourierReconstructionData
 {
-	FourierReconstructionData(int sizeX, int sizeY, int noOfImages);
+	FourierReconstructionData(int sizeX, int sizeY, int noOfImages, bool erase=true);
 	void clean();
 	float* getImgOnGPU(int imgIndex);
 	float* dataOnGpu = NULL;
@@ -29,12 +29,17 @@ struct FourierReconstructionData
 
 };
 
+
+
 struct FourierReconDataWrapper
 {
 	FourierReconDataWrapper(int sizeX, int sizeY, int noOfImages);
+	FourierReconDataWrapper(FourierReconstructionData* cpuCopy);
 	~FourierReconDataWrapper();
 	FourierReconstructionData* cpuCopy;
 	FourierReconstructionData* gpuCopy;
+private:
+	void copyCpuToGpu();
 };
 
 struct ProjectionDataGPU

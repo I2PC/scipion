@@ -366,9 +366,11 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 
     ApplyGeoParams params;
     params.only_apply_shifts = true;
-    MultidimArray<float> localPaddedImg;
-//	FourierTransformer localTransformerImg;
-//	MultidimArray< std::complex<double> > localPaddedFourier;
+    MultidimArray<float> localPaddedImgFloat;
+    MultidimArray<double> localPaddedImgDouble;
+	FourierTransformer localTransformerImg;
+	// FIXME cannot be complex float due to build errors
+	MultidimArray< std::complex<double> > localPaddedFourier;
 //	if (0 == threadParams->buffer1) {
 //		// fixme must be initialized elsewhere, because it might be necessary to store a flag deciding if the FFT should be done on CPU or GPU
 //		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
@@ -388,6 +390,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		}
 		//Read projection from selfile, read also angles and shifts if present
 		//but only apply shifts (set above)
+		// FIXME following line is a current bottleneck, as it calls BSpline interpolation
 		proj.readApplyGeo(*(threadParams->selFile), objId[imgIndex], params);
 		if (parent->do_weights && proj.weight() == 0.f) {
 			continue;
@@ -420,46 +423,35 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 			UUID++;
 		}
 
-		///////    zpracovani obrazku ////////////////
-
 		// Copy the projection to the center of the padded image
 		// and compute its Fourier transform
-
 		proj().setXmippOrigin();
-		localPaddedImg.initZeros(parent->paddedImgSize, parent->paddedImgSize);
-		localPaddedImg.setXmippOrigin();
 		const MultidimArray<double> &mProj = proj();
-		FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
-			A2D_ELEM(localPaddedImg,i,j) = A2D_ELEM(mProj, i, j);
-		CenterFFT(localPaddedImg, true);
+		if (parent->fftOnGPU) {
+			localPaddedImgFloat.initZeros(parent->paddedImgSize, parent->paddedImgSize);
+			localPaddedImgFloat.setXmippOrigin();
+			FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
+				A2D_ELEM(localPaddedImgFloat,i,j) = A2D_ELEM(mProj, i, j);
+			CenterFFT(localPaddedImgFloat, true);
 
-		// add image at the end of the stack (that is long enough)
-		int imgSize = parent->paddedImgSize * parent->paddedImgSize;
-		memcpy(&threadParams->loadingPaddedImages[imgSize * projIndex],
-				localPaddedImg.data,
-				imgSize * sizeof(float));
+			// add image at the end of the stack (that is already long enough)
+			int imgSize = parent->paddedImgSize * parent->paddedImgSize;
+			memcpy(&threadParams->loadingPaddedImages[imgSize * projIndex],
+					localPaddedImgFloat.data,
+					imgSize * sizeof(float));
+		} else {
+			localPaddedImgDouble.initZeros(parent->paddedImgSize, parent->paddedImgSize);
+			localPaddedImgDouble.setXmippOrigin();
+			FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
+				A2D_ELEM(localPaddedImgDouble,i,j) = A2D_ELEM(mProj, i, j);
+			CenterFFT(localPaddedImgDouble, true);
 
-		// FIXME preserve only for CPU-loading version
-//		// Fourier transformer for the images
-//		localTransformerImg.setReal(localPaddedImg);
-//		localTransformerImg.FourierTransform();
-//		localTransformerImg.getFourierAlias(localPaddedFourier);
-
-
-
-//		data->localAInv = localA.transpose();
-//		data->localA = localA.transpose().inv();
-//		data->img = cropAndShift(localPaddedFourier, parent); // FIXME preserve only for CPU-loading version
-//		data->origImg = localPaddedImg;
-
-
-//		if (imgIndex == 12) {
-//			for (int y = 0; y < data->img->getYSize(); y++) {
-//				for (int x = 0; x < data->img->getXSize(); x++) {
-//					(*data->img)(x, y) = std::complex<float>(x*1000 + y, (x*1000 + y)/100000.f);
-//				}
-//			}
-//		}
+			// Fourier transformer for the images
+			localTransformerImg.setReal(localPaddedImgDouble);
+			localTransformerImg.FourierTransform();
+			localTransformerImg.getFourierAlias(localPaddedFourier);
+			threadParams->loadingFFTs[projIndex] = *cropAndShift(localPaddedFourier, parent);
+		}
 
 
 //		data->imgIndex = imgIndex;
@@ -1135,6 +1127,10 @@ void ProgRecFourierGPU::swapLoadBuffers() {
 	float* tmp3 = loadThread.readyPaddedImages;
 	loadThread.readyPaddedImages = loadThread.loadingPaddedImages;
 	loadThread.loadingPaddedImages = tmp3;
+
+	Array2D<std::complex<float> >* tmp4 = loadThread.readyFFTs;
+	loadThread.readyFFTs = loadThread.loadingFFTs;
+	loadThread.loadingFFTs = tmp4;
 }
 
 void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
@@ -1301,12 +1297,19 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
 
+    fftOnGPU = true; // FIXME implement some profiler that will decide if it's worth to use GPU for data loading
+
 	/** holding transform/traverse space for each projection x symmetry */
 	int maxNoOfTransforms = bufferSize * R_repository.size(); // FIXME create method
 	loadThread.loadingBuffer = new TraverseSpace[maxNoOfTransforms];
 	loadThread.readyBuffer = new TraverseSpace[maxNoOfTransforms];
-	loadThread.loadingPaddedImages = new float[paddedImgSize * paddedImgSize * bufferSize];
-	loadThread.readyPaddedImages = new float[paddedImgSize * paddedImgSize * bufferSize];
+	if (fftOnGPU) {
+		loadThread.loadingPaddedImages = new float[paddedImgSize * paddedImgSize * bufferSize];
+		loadThread.readyPaddedImages = new float[paddedImgSize * paddedImgSize * bufferSize];
+	} else {
+		loadThread.loadingFFTs = new Array2D<std::complex<float> >[bufferSize];
+		loadThread.readyFFTs = new Array2D<std::complex<float> >[bufferSize];
+	}
 
 	clock_t begin = clock();
 
@@ -1321,14 +1324,16 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 
     	// each image has N symmetries (at least identity)
     	int noOfImages = loadThread.readyBufferLength / R_repository.size();
-    	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
-    			loadThread.readyPaddedImages, loadThread.readyFFTs, noOfImages,
-				loadThread.readyBuffer, loadThread.readyBufferLength,
-				maxVolumeIndexX, maxVolumeIndexYZ,
-				useFast, blob.radius,
-				iDeltaSqrt,
-				blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
-				paddedImgSize, maxResolutionSqr);
+    	if (noOfImages > 0) { // it can happen that all images are skipped
+			processBufferGPU(tempVolumeGPU, tempWeightsGPU,
+					loadThread.readyPaddedImages, loadThread.readyFFTs, noOfImages,
+					loadThread.readyBuffer, loadThread.readyBufferLength,
+					maxVolumeIndexX, maxVolumeIndexYZ,
+					useFast, blob.radius,
+					iDeltaSqrt,
+					blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
+					paddedImgSize, maxResolutionSqr);
+    	}
     	barrier_wait( &barrier );
 		if (verbose && startLoadIndex%repaint==0) {
 			progress_bar(startLoadIndex);
@@ -1344,8 +1349,12 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     delete[] loadThread.loadingPaddedImages;
     delete[] loadThread.readyPaddedImages;
 
+    delete[] loadThread.loadingFFTs;
+    delete[] loadThread.readyFFTs;
+
 	loadThread.readyBuffer = loadThread.loadingBuffer = NULL;
 	loadThread.loadingPaddedImages = loadThread.readyPaddedImages = NULL;
+	loadThread.loadingFFTs = loadThread.readyFFTs = NULL;
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {

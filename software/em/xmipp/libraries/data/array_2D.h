@@ -33,6 +33,8 @@
 template<typename T>
 struct Array2D {
 public:
+	/* Empty constructor */
+	Array2D() : xSize(0), ySize(0), data(NULL) {};
 	/* Constructor, allocates the data immediately */
 	Array2D(int xSize, int ySize) :
 			xSize(xSize), ySize(ySize) {
