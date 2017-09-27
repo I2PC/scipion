@@ -51,7 +51,7 @@ from pyworkflow.config import isAFinalProtocol
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
-from pyworkflow.utils.properties import Message, Icon, Color
+from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
 
 from constants import STATUS_COLORS
 
@@ -578,7 +578,7 @@ class ProtocolsView(tk.Frame):
         self.keybinds = dict()
 
         # Register key binds
-        self._bindKeyPress('Delete', self._onDelPressed)
+        self._bindKeyPress(KEYSYM.DELETE, self._onDelPressed)
 
         self.__autoRefresh = None
         self.__autoRefreshCounter = INIT_REFRESH_SECONDS  # start by 3 secs
@@ -1211,6 +1211,8 @@ class ProtocolsView(tk.Frame):
                 nodeText = node.getName() + expandedStr
             else:
                 nodeText = nodeText + expandedStr + '\n' + node.run.getStatusMessage()
+                if node.run.summaryWarnings:
+                    nodeText += u' \u26a0'
 
         return nodeText
 
@@ -1529,6 +1531,7 @@ class ProtocolsView(tk.Frame):
         protocol = self.getSelectedProtocol()
         workingDir = protocol.getWorkingDir()
         if os.path.exists(workingDir):
+
             window = pwgui.browser.FileBrowserWindow("Browsing: " + workingDir,
                                                      master=self.windows,
                                                      path=workingDir)
