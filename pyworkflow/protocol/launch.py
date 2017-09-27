@@ -40,6 +40,7 @@ B. Remote execution:
 4- Get the result back after launching remotely
 """
 import os
+import stat
 import re
 import sys
 import traceback
@@ -220,6 +221,10 @@ def _submit(hostConfig, submitDict, cwd=None, drmaaSession=None):
     # to submit jobs if the submit script does not have end of line
     f.write(template + '\n\n')
     f.close()
+
+    st = os.stat(scripPath)
+    os.chmod(scripPath, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
     # This should format the command using a template like:
     # "qsub %(JOB_SCRIPT)s"
     command = hostConfig.getSubmitCommand() % submitDict
