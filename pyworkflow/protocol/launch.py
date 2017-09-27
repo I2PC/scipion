@@ -230,9 +230,12 @@ def _submit(hostConfig, submitDict, cwd=None, drmaaSession=None):
         job_template = drmaaSession.createJobTemplate()
         job_template.jobCategory = 'drmaa'
         job_template.jobName = submitDict['JOB_NAME']
-        job_template.nativeSpecification = '-q high.q -P em -l gpu=1 -l gpu_arch=Pascal'
+        job_template.nativeSpecification = '-q high.q -P em -l gpu=2 -l gpu_arch=Pascal'
+        job_template.outputPath = (':/dls/tmp/scipion')
+        job_template.errorPath = (':/dls/tmp/scipion')
         job_template.workingDirectory = cwd
         job_template.remoteCommand = scripPath
+        job_template.joinFiles = True
         job = drmaaSession.runJob(job_template)
         print "launched job with id %s" % job
         return job
