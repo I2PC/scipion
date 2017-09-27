@@ -235,6 +235,7 @@ def _submit(hostConfig, submitDict, cwd=None, drmaaSession=None):
         job_template.errorPath = (':/dls/tmp/scipion')
         job_template.workingDirectory = os.path.abspath(cwd)
         job_template.remoteCommand = scripPath
+        job_template.args = []
         job_template.joinFiles = True
         job = drmaaSession.runJob(job_template)
         print "launched job with id %s" % job
