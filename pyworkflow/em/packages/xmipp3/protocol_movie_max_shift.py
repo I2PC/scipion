@@ -57,6 +57,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
+
         form.addParam('maxFrameShift', params.FloatParam, default=10, 
                        label='Max. frame shift (A)')
         form.addParam('maxMovieShift', params.FloatParam, default=100,
@@ -86,13 +87,14 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                                 self.maxMovieShift.get() )
 
             if not rejectedByFrame and not rejectedByMovie:
-                self._updateIdList(movieId,'accepted')
+                self._updateLists(movieId,True)
             else:
-                self._updateIdList(movieId,'discarted')
+                self._updateLists(movieId,False)
+
         else:
             # a no aligned movie is DISCARTED
             # (maybe change this or add a param to control that) 
-            self._updateIdList(movieId,'discarted')
+            self._updateLists(movieId,False)
 
     def _checkNewOutput(self):
         """ Check for already selected Movies and update the output set. """
@@ -102,11 +104,10 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         # Load previously done items (from text file)
         doneList = self._readDoneList()
 
-        # Load Id lists 
-        movieListIdAccepted = self._getIdList('accepted')
-        movieListIdDiscarted = self._getIdList('discarted')
-    
         # Check for newly done items
+        movieListIdAccepted = self._getLists(True)
+        movieListIdDiscarted = self._getLists(False)
+    
         newDoneAccepted = [movieId for movieId in movieListIdAccepted
                              if movieId not in doneList]
         newDoneDiscarted = [movieId for movieId in movieListIdDiscarted
@@ -121,10 +122,13 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         self.debug('   newDoneDiscarted: %d,' %len(newDoneDiscarted))
 
         firstTime = len(doneList) == 0
+        # firstTimeDiscarted = len(doneListDiscarted) == 0
         allDone = len(doneList) + len(newDoneAccepted) + len(newDoneDiscarted)
     
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movie is equal to the number of inputs
+        # self.finished = (self.isStreamClosed == Set.STREAM_CLOSED and 
+        #                    allDone == len(self.listOfMovies))
         self.finished = self.streamClosed and allDone == len(self.listOfMovies)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
@@ -136,7 +140,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         if (len(doneList)>0 or len(newDoneDiscarted)>0):
             movieSetDiscarted = self._loadOutputSet(SetOfMovies,
                                                        'moviesDiscarted.sqlite')
-
         if newDoneAccepted:
             inputMovieSet = self._loadInputMovieSet()
             for movieId in newDoneAccepted:
@@ -165,7 +168,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         # AJ new subsets with discarted movies
         if (exists(self._getPath('moviesDiscarted.sqlite'))):
             self._updateOutputSet('outputMoviesDiscarted',
-                                                movieSetDiscarted, streamMode)
+                                  movieSetDiscarted, streamMode)
             
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -227,14 +230,14 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         movieSet.loadAllProperties()
         return movieSet
 
-    def _getIdList(self, accepted):
-        if accepted == 'accepted':
+    def _getLists(self, accepted):
+        if accepted:
             return self.acceptedIdMoviesList
         else:
             return self.discartedIdMoviesList
 
-    def _updateIdList(self, movieId, accepted):
-        if accepted == 'accepted':
+    def _updateLists(self, movieId, accepted):
+        if accepted:
             return self.acceptedIdMoviesList.append(movieId)
         else:
             return self.discartedIdMoviesList.append(movieId)
