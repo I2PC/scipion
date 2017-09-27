@@ -53,15 +53,12 @@ public:
     void defineParams();
 
     /// Function for recognizing non-noise particles
-    bool isParticle();
+    bool isParticle(const MultidimArray<double> &I);
 
     /// Execute
     void run();
 
 public:
-    /// Input image data
-    Image<double> Iref;
-
     /// Features derived in elimination process
     std::vector<double> features;
 };
