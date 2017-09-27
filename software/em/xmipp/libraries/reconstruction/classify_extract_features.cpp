@@ -245,7 +245,6 @@ void ProgExtractFeatures::extractZernike(const MultidimArray<double> &I,
         {
             int r1 = 2*(x+1)-Sy-1;
             DIRECT_A2D_ELEM(R,y,x) = sqrt(r1*r1 + r2*r2) / Sy;
-
             if (DIRECT_A2D_ELEM(R,y,x) > 1) DIRECT_A2D_ELEM(R,y,x) = 0;
 
             DIRECT_A2D_ELEM(Theta,y,x) = atan2((Sy+1-2*(y+1)), (2*(x+1)-Sy-1));
@@ -273,8 +272,8 @@ void ProgExtractFeatures::extractZernike(const MultidimArray<double> &I,
                             facs(nm-s) *
                             facs(mn-s));
 
-                        DIRECT_A2D_ELEM(Rad,y,x) +=
-                            pow(c*DIRECT_A2D_ELEM(R,y,x), ns);
+                        DIRECT_A2D_ELEM(Rad,y,x) += c *
+                            pow(DIRECT_A2D_ELEM(R,y,x), ns);
                     }
 
                     product += DIRECT_A2D_ELEM(I,y,x) *
