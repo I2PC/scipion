@@ -1,6 +1,6 @@
 /***************************************************************************
  * Authors:     Mohsen Kazemi (mkazemi@cnb.csic.es)
- *
+ *				Javier Vargas (javier.vargasbalbuena@mcgill.ca)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "../mpi_volume_homogenizer/volume_homogenizer.h"
-
+//# define DEBUG
 
 ProgVolumeHomogenizer::ProgVolumeHomogenizer()
 {
@@ -67,7 +67,7 @@ void ProgVolumeHomogenizer::xmipp2Opencv(const MultidimArray<double> &xmippArray
     int w = XSIZE(xmippArray);
     opencvMat = cv::Mat::zeros(h, w,CV_32FC1);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xmippArray)
-    opencvMat.at<float>(i,j) = DIRECT_A2D_ELEM(xmippArray,i,j);
+    opencvMat.at<float>(i,j) = (float) DIRECT_A2D_ELEM(xmippArray,i,j);
 }
 
 // Converts an OpenCV float matrix to an OpenCV Uint8 matrix
@@ -105,7 +105,6 @@ void ProgVolumeHomogenizer::run()
 	int projIdx = FIRST_IMAGE;
     FileName stackName = fnSetOfImgOut.removeAllExtensions() + ".stk";
     FileName mdName = fnSetOfImgOut.removeAllExtensions() + ".xmd";
-    FourierFilter filter;
     MDRow rowInput;
 
 	inV.read(fnVol);
@@ -121,14 +120,18 @@ void ProgVolumeHomogenizer::run()
 	createEmptyFile(fn_proj, XSIZE(inV()), YSIZE(inV()), 1, setOfImgIn.size(), true, WRITE_OVERWRITE);
 
 	//filtering the input and reference volumes
-	filter.FilterShape = RAISED_COSINE;
-	filter.FilterBand = LOWPASS;
-	filter.w1 = cutFreq;
-	filter.applyMaskSpace(inV());
-	filter.applyMaskSpace(refV());
+    FourierFilter Filter;
+    Filter.FilterBand=LOWPASS;
+    Filter.FilterShape=RAISED_COSINE;
+    Filter.w1=cutFreq;
+    Filter.generateMask(inV());
+    Filter.do_generate_3dmask=true;
+	Filter.applyMaskSpace(inV());
+	Filter.applyMaskSpace(refV());
 
 	//calculating progress time
 	size_t maxNImg = setOfImgIn.size();
+
 	if (rank == 0)
 		init_progress_bar(maxNImg);
 
@@ -152,6 +155,7 @@ void ProgVolumeHomogenizer::run()
 			//reprojection from input and reference volumes to calculate optical flow (OF)
 			projectVolume(inV(), projIn, YSIZE(inV()), XSIZE(inV()), rot, tilt, psi);
 			projectVolume(refV(), projRef, YSIZE(refV()), XSIZE(refV()), rot, tilt, psi);
+
 			if (flip)
 			{
 				projIn.mirrorX();
@@ -165,8 +169,23 @@ void ProgVolumeHomogenizer::run()
 			convert2Uint8(ProjIn,ProjIn8);
 			convert2Uint8(ProjRef,ProjRef8);
 
-			//OF algorithm
-			cv::calcOpticalFlowFarneback(ProjRef8, ProjIn8, flow, 0.5, 6, winSize, 3, 5, 1.1, 0);
+			//OF algorithm/*
+			/*
+			 * Parameters: *
+			prev – first 8-bit single-channel input image.
+			next – second input image of the same size and the same type as prev.
+			flow – computed flow image that has the same size as prev and type CV_32FC2.
+			pyr_scale – parameter, specifying the image scale (<1) to build pyramids for each image; pyr_scale=0.5 means a classical pyramid, where each next layer is twice smaller than the previous one.
+			levels – number of pyramid layers including the initial image; levels=1 means that no extra layers are created and only the original images are used.
+			winsize – averaging window size; larger values increase the algorithm robustness to image noise and give more chances for fast motion detection, but yield more blurred motion field.
+			iterations – number of iterations the algorithm does at each pyramid level.
+			poly_n – size of the pixel neighborhood used to find polynomial expansion in each pixel; larger values mean that the image will be approximated with smoother surfaces, yielding more robust algorithm and more blurred motion field, typically poly_n =5 or 7.
+			poly_sigma – standard deviation of the Gaussian that is used to smooth derivatives used as a basis for the polynomial expansion; for poly_n=5, you can set poly_sigma=1.1, for poly_n=7, a good value would be poly_sigma=1.5.
+			flags –
+			 */
+			//cv::calcOpticalFlowFarneback(ProjRef8, ProjIn8, flow, 0.9, 5, winSize, 15, 7, 1.5, 0);
+			//Moshen: cv::calcOpticalFlowFarneback(ProjRef8, ProjIn8, flow, 0.5, 6, winSize, 3, 5, 1.1, 0);
+			cv::calcOpticalFlowFarneback(ProjRef8, ProjIn8, flow, 0.5, 2, winSize, 15, 7, 1.5, 0);
 			cv::split(flow, planes);
 
 			for( int row = 0; row < planes[0].rows; row++ )
@@ -182,8 +201,28 @@ void ProgVolumeHomogenizer::run()
 			//preparing output data to use for xmipp
 			opencv2Xmipp(ImgCorr, imgCorr());
 
+#ifdef DEBUG
+			if (i==1)
+			{
+				imgIn.write("test_raw.spi"); // Raw image to deform Not filtered or modifed
+				projIn.write("test_projIn.spi"); //map projection of conformation to deform (Noise free and filter)
+				projRef.write("test_projRef.spi"); //map projection of conformation used as reference (deform to this conformation) (Noise free and filter)
+
+				cv::remap(ProjIn, ImgCorr, planes[0], planes[1], cv::INTER_CUBIC); //apply OF to the map projetion to see something
+				opencv2Xmipp(ImgCorr, imgCorr()); //transform to Xmipp
+				imgCorr.write("test_ProjIn_Deformed.spi"); //  Image deformed
+
+				Image<double> imgFlowX, imgFlowY;
+				opencv2Xmipp(planes[0], imgFlowX());
+				opencv2Xmipp(planes[1], imgFlowY());
+				imgFlowX.write("test_FlowX.spi");
+				imgFlowY.write("test_FlowY.spi");
+			}
+#endif
+
 			//filling output metaData
 			fn_proj.compose(i+1, stackName);
+
 			rowInput.setValue(MDL_IMAGE, fn_proj);
 			rowInput.setValue(MDL_SHIFT_X, 0.0);
 			rowInput.setValue(MDL_SHIFT_Y, 0.0);
