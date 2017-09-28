@@ -72,9 +72,6 @@ class viewerProtImportVolumes(ProtocolViewer):
             return ["chimera is not available. Either install it or choose option 'slices'. "]
         return []
 
-    def _getFinalPath(self, *paths):
-        return self.protocol._getExtraPath('Refinement', 'final', *paths)
-
     # ===============================================================================
     # ShowVolumes
     # ===============================================================================
