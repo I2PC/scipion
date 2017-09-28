@@ -181,10 +181,12 @@ class ProtMonitorSummary(ProtMonitor):
                     movieGainMonitor.step()
 
                 # sysmonitor watches all input protocols so
-                # when sysmonitor done we done
-                finished = sysMonitor.step()
+                # when sysmonitor done all protocols done
+                sysMonitorFinished = sysMonitor.step()
+                htmlFinished = reportHtml.generate(finished)
+                if sysMonitorFinished and htmlFinished:
+                    finished = True
 
-                reportHtml.generate(finished)
             except Exception as ex:
                 print("An error happened: %s" % ex)
             return finished

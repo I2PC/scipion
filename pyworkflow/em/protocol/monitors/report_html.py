@@ -52,7 +52,7 @@ class ReportHtml:
         self.ctfMonitor = ctfMonitor
         self.sysMonitor = sysMonitor
         self.movieGainMonitor = movieGainMonitor
-        self.thumbsReady = 0
+        self.thumbsDone = 0
 
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
@@ -75,16 +75,18 @@ class ReportHtml:
             print(msg)
 
     def getThumbnailPaths(self, ctfData, ext="png"):
-        """Adds to the dict ctfData the paths to the report thumbnails, and creates their folders in the reportDir
-        if they don't exist. Also checks which thumbnails are ready. This function doesn't actually generate thumbnails,
-        only adds their paths to ctfData.
+        """Adds to the dict ctfData the paths to the report thumbnails,
+        and creates their folders in the reportDir if they don't exist.
+        Also checks which thumbnails are ready. This function doesn't
+        actually generate thumbnails, only adds their paths to ctfData.
 
         ===== Params =====
         - ctfData: dict resulting from calling ctfMonitor.getData()
         - ext: extension of the thumbnail images. Defaults to png
 
         ===== Returns =====
-        - micsReady: int with the number of micrographs that are ready to be displayed in the report i.e. how many rows
+        - micsReady: int with the number of micrographs that are ready
+                     to be displayed in the report i.e. how many rows
                      in the table have all their thumbnails generated.
         """
         micsReady = 0
@@ -129,12 +131,13 @@ class ReportHtml:
 
         return micsReady
 
-    def generateReportImages(self, ctfData, thumbsReady=0, micScaleFactor=6):
+    def generateReportImages(self, ctfData, firstThumbIndex=0, micScaleFactor=6):
         """ Function to generate thumbnails for the report.
 
         ===== Params =====
-        - ctfData: dict resulting from calling ctfMonitor.getData() after being modified in getThumbnailPaths.
-        - thumbsReady: number of micrographs to skip because they already have thumbnails.
+        - ctfData: dict resulting from calling ctfMonitor.getData() after being
+                   modified in getThumbnailPaths.
+        - firstThumbIndex: index from which we start generating thumbnails
         - micScaleFactor: how much to reduce in size the micrographs.
         """
         ih = ImageHandler()
@@ -144,9 +147,9 @@ class ReportHtml:
 
         numMics = len(ctfData['imgMicPath'])
         numShiftPlots = len(ctfData.get('imgShiftPath', []))
-        print('Generating thumbnails for micrographs %s to %s' % (thumbsReady, numMics))
+        print('Generating thumbnails for micrographs %s to %s' % (firstThumbIndex, numMics))
 
-        for i in range(thumbsReady, numMics):
+        for i in range(firstThumbIndex, numMics):
             print('Generating images for mic %d' % i)
             # mic thumbnails
             dstImgPath = join(self.reportDir, ctfData[micsFolder][i])
@@ -162,7 +165,7 @@ class ReportHtml:
             if numShiftPlots:
                 dstImgPath = join(self.reportDir, ctfData[shiftPlotsFolder][i])
                 if not exists(dstImgPath):
-                    pwutils.copyFile(ctfData['imgShiftPath'][i], os.path.dirname(dstImgPath))
+                    pwutils.createAbsLink(ctfData['imgShiftPath'][i], dstImgPath)
 
         return
 
@@ -226,16 +229,21 @@ class ReportHtml:
 
         # Ctf monitor chart data
         data = [] if self.ctfMonitor is None else self.ctfMonitor.getData()
+        reportFinished = True
         if data:
             # get the thumbnail paths
             micsReady = self.getThumbnailPaths(data)
             # generate actual images in a separate thread
-            processName = 'Images %d to %d' % (self.thumbsReady, len(data['imgMicPath']))
+            processName = 'Images %d to %d' % (self.thumbsDone, len(data['imgMicPath']))
             process = multiprocessing.Process(name=processName, target=self.generateReportImages,
-                                              args=(data, self.thumbsReady))
+                                              args=(data, self.thumbsDone))
             process.start()
             # update number of processed thumbnails
-            self.thumbsReady = len(data['imgMicPath'])
+            self.thumbsDone = len(data['imgMicPath'])
+
+            # check if we generated any new images in this round
+            if micsReady < self.thumbsDone:
+                reportFinished = False
 
             if len(data['defocusU']) < 100:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
@@ -288,4 +296,4 @@ class ReportHtml:
             self.info(cmd)
             os.system(cmd)
 
-        return self.reportPath
+        return reportFinished

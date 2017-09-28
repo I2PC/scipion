@@ -44,7 +44,7 @@ import getnifs
 from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
-from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.protocol import getUpdatedProtocol
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.viewer import (DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 
@@ -253,15 +253,6 @@ class MonitorSystem(Monitor):
                                  isolation_level=None)
         self.cur = self.conn.cursor()
 
-    def _getUpdatedProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
-        # Close DB connections
-        prot2.getProject().closeMapper()
-        prot2.closeMappers()
-        return prot2
-
     def warning(self, msg):
         self.notify("Scipion System Monitor WARNING", msg)
 
@@ -361,7 +352,7 @@ class MonitorSystem(Monitor):
         # Return finished = True if all protocols have finished
         finished = []
         for prot in self.protocols:
-            updatedProt = self._getUpdatedProtocol(prot)
+            updatedProt = getUpdatedProtocol(prot)
             finished.append(updatedProt.getStatus() != STATUS_RUNNING)
 
         return all(finished)
