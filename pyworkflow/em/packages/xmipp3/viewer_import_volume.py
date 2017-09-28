@@ -1,5 +1,6 @@
-# *********************************************************************
-# * Authors:  Marta Martinez (mmmtnez@cnb.csic.es), May 2013
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -22,68 +23,150 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.eman2.viewer import ANGDIST_CHIMERA
 
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.packages.chimera.convert import runChimeraProgram, getProgram
-from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
+"""
+This module implements visualization program
+for input volumes.
+"""
+
 import os
-from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
+from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
+import pyworkflow.em as em
+import pyworkflow.protocol.params as params
+from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
+from distutils.spawn import find_executable
+from os.path import exists
+from pyworkflow.em.data import SetOfVolumes
 
-class viewerProtImportVolumes(XmippViewer):
-    """ Visualize the output of protocol volume strain """
+VOLUME_SLICES = 1
+VOLUME_CHIMERA = 0
+
+class viewerProtImportVolumes(ProtocolViewer):
+    """ Wrapper to visualize different type of objects
+    with the Xmipp program xmipp_showj. """
+
     _label = 'viewer input volume'
     _targets = [ProtImportVolumes]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
-    def __init__(self, **kwargs):
-        XmippViewer.__init__(self, **kwargs)
+    def _defineParams(self, form):
+        form.addSection(label='Visualization of input volumes')
+        form.addParam('displayVol', params.EnumParam,
+                       choices=['chimera', 'slices'],
+                       default=VOLUME_CHIMERA, display=params.EnumParam.DISPLAY_HLIST,
+                       label='Display volume with',
+                       help='*chimera*: display volumes as surface with Chimera.\n '
+                            '*slices*: display volumes as 2D slices along z axis.\n'
+                            'If number of volumes == 1, a system of coordinates is shown'
+                      )
 
 
-    # ROB: I know that there is a nice chimera interface
-    # but it does not work in this case since I am interested
-    # in reading the MRC header. So I will use chimera as
-    # an external program
+    def _getVisualizeDict(self):
+        return {
+            'displayVol': self._showVolumes,
+        }
 
-    def _visualize(self, obj, **args):
-        # save temporal file
-        outputVolume = self.protocol.outputVolume
-        sampling = outputVolume.getSamplingRate()
-        tmpFileNameBILD = self.protocol._getTmpPath("axis.bild")
-        dim = outputVolume.getDim()[0]
+    def _validate(self):
+        if find_executable("chimera") is None:
+            return ["chimera is not available. Either install it or choose option 'slices'. "]
+        return []
 
-        f = open(tmpFileNameBILD, "w")
-        arrowDict = {}
-        arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = dim /2
-        arrowDict["r1"] = dim / 20
-        arrowDict["r2"] = 4 * arrowDict["r1"]
-        arrowDict["rho"] = 7.5 * arrowDict["r1"]
+    def _getFinalPath(self, *paths):
+        return self.protocol._getExtraPath('Refinement', 'final', *paths)
 
+    # ===============================================================================
+    # ShowVolumes
+    # ===============================================================================
 
-        f.write(".color 1 0 0\n"
-                ".arrow 0 0 0 %(x)d 0 0 %(r1)f  \n"
-                ".color 1 1 0\n"
-                ".arrow 0 0 0 0 %(y)d 0 %(r1)f \n"
-                ".color 0 0 1\n"
-                ".arrow 0 0 0 0 0 %(z)d %(r1)f \n"%arrowDict)
-        f.close()
+    def _showVolumes(self, paramName=None):
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera()
 
+        elif self.displayVol == VOLUME_SLICES:
+            return self._createVolumesSqlite()
+
+    def _getVolumeName(self, vol):
+        volName = vol.getFileName().replace(':mrc', '')
+        if not exists(volName):
+            print "Volume %s does not exist" % volName
+        else:
+            return volName
+
+    def _getVolOrigin(self, vol):
+        """chimera only handles integer shifts"""
+        origin = vol.getOrigin(returnInitIfNone=True).getShifts()
+        x = int(origin[0])  # * sampling
+        y = int(origin[1])  # * sampling
+        z = int(origin[2])  # * sampling
+        return x, y, z
+
+    def _createSetOfVolumes(self):
+        try:
+            _setOfVolumes = self.protocol.outputVolumes
+            sampling = self.protocol.outputVolumes.getSamplingRate()
+        except:
+            _setOfVolumes = self.protocol._createSetOfVolumes()
+            _setOfVolumes.append(self.protocol.outputVolume)
+            sampling = self.protocol.outputVolume.getSamplingRate()
+        return sampling, _setOfVolumes
+
+    def _showVolumesChimera(self):
+        """ Create a chimera script to visualize selected volumes. """
         tmpFileNameCMD = self.protocol._getTmpPath("chimera.cmd")
         f = open(tmpFileNameCMD, "w")
-        origin1 = self.protocol.outputVolume.getOrigin(
-            returnInitIfNone=True).getShifts()
-        x = origin1[0] * sampling
-        y = origin1[1] * sampling
-        z = origin1[2] * sampling
+        sampling, _setOfVolumes = self._createSetOfVolumes()
+        count = 0  # first model in chimera is a volume
 
-        f.write("volume #0 style surface level .001 origin %f,%f,%f\n" % (x, y, z))
+        if len(_setOfVolumes) ==1:
+            count = 1 # first model in chimera is the bild file
+            dim = self.protocol.outputVolume.getDim()[0]
+            # if we have a single volume then create axis
+            # as bild file. Chimera must read the bild file first
+            # otherwise system of coordinates will not
+            # be in the center of the window
+            tmpFileNameBILD = self.protocol._getTmpPath("axis.bild")
+            tmpFileNameBILD = os.path.abspath(tmpFileNameBILD)
+            f.write("open %s\n" % tmpFileNameBILD)
+            ff = open(tmpFileNameBILD, "w+")
+            arrowDict = {}
+            arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
+                sampling * dim * 3. / 4.  # * 3./4 * sampling
+            arrowDict["r1"] = 0.1 * dim / 100.
+            arrowDict["r2"] = 4 * arrowDict["r1"]
+            arrowDict["rho"] = 0.75 * dim / 100.
+
+            ff.write(".color 1 0 0\n"
+                    ".arrow 0 0 0 %(x)d 0 0 %(r1)f %(r2)f %(rho)f\n"
+                    ".color 1 1 0\n"
+                    ".arrow 0 0 0 0 %(y)d 0 %(r1)f %(r2)f %(rho)f\n"
+                    ".color 0 0 1\n"
+                    ".arrow 0 0 0 0 0 %(z)d %(r1)f %(r2)f %(rho)f\n" %
+                     arrowDict)
+            ff.close()
+            count = 1  # skip first model because is not a 3D map
+
+        for vol in _setOfVolumes:
+            localVol = os.path.abspath(self._getVolumeName(vol))
+            x, y, z = self._getVolOrigin(vol)
+            f.write("open %s\n" % localVol)
+            f.write("volume#%d style surface voxelSize %f\n" %
+                    (count,sampling))
+            count += 1
+        if len(_setOfVolumes) > 1:
+            f.write('tile\n')
+        else:
+            f.write("volume#1 originIndex %d,%d,%d\n" % (x, y, z))
         f.close()
+        return [em.ChimeraView(tmpFileNameCMD)]
 
-        inputVol = outputVolume.getFileName().replace(':mrc', '')
-        args = " "
-        if os.path.exists(inputVol):
-            args += inputVol + " "
-        if os.path.exists(tmpFileNameBILD):
-            args += tmpFileNameBILD + " "
-        if os.path.exists(tmpFileNameCMD):
-            args += tmpFileNameCMD + " "
-        runChimeraProgram(getProgram(), args)
+    def _createVolumesSqlite(self):
+        """ Write an sqlite with all volumes selected for visualization. """
+        path = self.protocol._getExtraPath('viewer_volumes.sqlite')
+        sampling, _setOfVolumes = self._createSetOfVolumes()
+
+        files = []
+        for vol in _setOfVolumes:
+            files.append(self._getVolumeName(vol))
+        self.createVolumesSqlite(files, path, sampling)
+        return [em.ObjectView(self._project, self.protocol.strId(), path)]
