@@ -32,7 +32,7 @@ from os.path import exists, basename
 
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import copyFile
-
+import pyworkflow.protocol.constants as const
 import pyworkflow.protocol.params as params
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
@@ -63,16 +63,15 @@ class ProtImportVolumes(ProtImportImages):
                       " or provide it. So far only Modeling related programs"
                       " support this feature",
                       default=True)
-        group = form.addGroup('Origin', condition='not setDefaultOrigin')
-        group.addParam('x', params.FloatParam,
-                      condition='not setDefaultOrigin',
-                      label="x-offset", help="offset along x axis")
-        group.addParam('y', params.FloatParam,
-                      condition='not setDefaultOrigin',
-                      label="y-offset", help="offset along y axis")
-        group.addParam('z', params.FloatParam,
-                      condition='not setDefaultOrigin',
-                      label="z-offset", help="offset along z axis")
+        line = form.addLine('Offset',help="We follow the same convention than chimera,"
+                                          " i.e., same magnitude and opposite sign than CCP4.",
+                            condition='not setDefaultOrigin', expertLevel=const.LEVEL_ADVANCED)
+        line.addParam('x', params.FloatParam, condition='not setDefaultOrigin',
+                      label="x", help="offset along x axis", expertLevel=const.LEVEL_ADVANCED)
+        line.addParam('y', params.FloatParam, condition='not setDefaultOrigin',
+                      label="y", help="offset along y axis", expertLevel=const.LEVEL_ADVANCED)
+        line.addParam('z', params.FloatParam, condition='not setDefaultOrigin',
+                      label="z", help="offset along z axis", expertLevel=const.LEVEL_ADVANCED)
 
     def _insertAllSteps(self):
         self._insertFunctionStep('importVolumesStep', self.getPattern(),
@@ -108,7 +107,11 @@ class ProtImportVolumes(ProtImportImages):
                 vol.setLocation(dst)
                 t = Transform()
                 if setDefaultOrigin:
-                    t.setShifts(-x/2, -y/2, -z/2)
+                    if (z == 1 and n != 1):
+                        zDim = n
+                    else:
+                        zDim = z
+                    t.setShifts(x/2., y/2., zDim/2.)
                 else:
                     t.setShifts(self.x, self.y, self.z)
                 vol.setOrigin(t)
@@ -120,7 +123,9 @@ class ProtImportVolumes(ProtImportImages):
                     if setDefaultOrigin:
                         t = Transform()
                         if setDefaultOrigin:
-                            t.setShifts(-x / 2, -y / 2, -z / 2)
+                            print "setorigin", x,y,z
+                            t.setShifts(x / 2., y / 2., z / 2.)
+                            print "setorigin",t.getShifts()
                         else:
                             t.setShifts(self.x, self.y, self.z)
                         vol.setOrigin(t)
