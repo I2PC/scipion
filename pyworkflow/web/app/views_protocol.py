@@ -36,7 +36,7 @@ from pyworkflow.em import findWizardsFromDict, getSubclassesFromModules, Wizard
 from pyworkflow.em import Pointer, PointerList, Boolean, PointerParam
 from pyworkflow.protocol.params import MultiPointerParam, RelationParam, Line
 
-SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
+SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue', '_useQueueForJobs']
 OBJ_PARAMS =['runName', 'comment']
 
 def getPointerHtml(protVar):

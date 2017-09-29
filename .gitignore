@@ -69,7 +69,7 @@ foo.txt
 /pyworkflow/web/pages/resources/install/
 scipion_web_tools_django.log
 static/
-
+matplotlibrc
 
 # Scipion
 /config/*.conf

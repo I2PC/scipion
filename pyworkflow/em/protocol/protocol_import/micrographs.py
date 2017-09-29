@@ -447,61 +447,66 @@ class ProtImportMovies(ProtImportMicBase):
         serverSocket.listen(10)
         serverSocket.setblocking(0)
         self.serverSocket = serverSocket
-        self.connectionList = [serverSocket]
+        self.connectionList = {serverSocket.fileno(): serverSocket}
+
         self.info("Socket started on port " + str(self.socketPort))
         return serverSocket
 
     def iterFilenamesFromSocket(self):
-        recv_buffer = 4096  # Advisable to keep it as an exponent of 2
-        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
-        for sock in read_sockets:
-            if sock is self.serverSocket:
-                # New connection received through self.serverSocket
-                sockfd, addr = self.serverSocket.accept()
-                sockfd.setblocking(0)
-                self.connectionList.append(sockfd)
-                self.debug("Client (%s, %s) connected" % addr)
-                continue
-            else:
-                # Data received from a client, process it
-                try:
-                    # In Windows, sometimes when a TCP program closes abruptly,
-                    # a "Connection reset by peer" exception will be thrown
-                    data = sock.recv(recv_buffer)
-                    if data:
-                        files = shlex.split(data)
-                        self.debug("Data received in socket:")
-                        self.debug(files)
-                        for fileName in files:
-                            if os.path.exists(fileName):
-                                if fileName in self.importedFiles:
-                                    self._spreadMessage('WARNING: Not importing, already imported file %s \n' % fileName,
-                                                        sock)
-                                    continue
-                                else:
-                                    self._spreadMessage('OK: Importing file %s \n' % fileName, sock)
-                                    fileId = None
-                                    yield fileName, fileId
-                            else:
-                                self._spreadMessage('WARNING: Not importing, path does not exist %s \n' % fileName,
-                                                    sock)
-                                continue
+        poller = select.poll()
+        for fd in self.connectionList:
+            poller.register(self.connectionList[fd], select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR)
+        for fd, flag in poller.poll():
+            if flag & (select.POLLIN | select.POLLPRI):
+                self.info("Poller received some data (%s, %s) " % (fd, flag))
+                if fd is self.serverSocket.fileno():
+                    # New connection received through self.serverSocket
+                    sock, addr = self.serverSocket.accept()
+                    sock.setblocking(0)
+                    self.connectionList[sock.fileno()] = sock
+                    self.info("Client (%s, %s) connected" % addr)
+                else:
+                    for fileName, fileId in self.read_socket(fd):
+                        yield fileName, fileId
+            elif flag & (select.POLLHUP | select.POLLERR):
+                self.info("Client (%s, %s) disconnecting" % (fd, flag))
+                self.connectionList[fd].close()
+                del self.connectionList[fd]
+
+    def read_socket(self, fd):
+        # Data received from a client, process it
+        recv_buffer = 8192  # Advisable to keep it as an exponent of 2
+        try:
+            sock = self.connectionList[fd]
+            data = sock.recv(recv_buffer)
+            if data:
+                files = shlex.split(data)
+                self.info("Data received in socket:")
+                self.info(files)
+                for fileName in files:
+                    if os.path.exists(fileName):
+                        if fileName in self.importedFiles:
+                            self._spreadMessage('WARNING: Not importing, already imported file %s \n' % fileName, sock)
+                        else:
+                            self._spreadMessage('OK: Importing file %s \n' % fileName, sock)
+                            fileId = None
+                            yield fileName, fileId
                     else:
-                        continue
-                # client disconnected, remove from socket list
-                except Exception as e:
-                    self.debug("Exception reading socket!!")
-                    self.debug(str(e))
-                    sock.close()
-                    self.connectionList.remove(sock)
-                    continue
-        return
+                        self._spreadMessage('WARNING: Not importing, path does not exist %s \n' % fileName, sock)
+        # client disconnected, remove from socket list
+        except Exception as e:
+            self.debug("Exception reading socket!!")
+            self.debug(str(e))
+            sock.close()
+            if fd in self.connectionList:
+                del self.connectionList[fd]
 
     def _spreadMessage(self, message, sock):
         try:
+            self.info(message)
             if sock is not None:
+                self.info("sending OK message to client")
                 sock.send(message)
-            self.debug(message)
         except:
             pass
 
@@ -602,7 +607,8 @@ class ProtImportMovies(ProtImportMicBase):
 
                     # Now return the newly created movie file as imported file
                     self.createdStacks.add(movieFn)
-                    return
+                    if self.dataStreaming:
+                        return
         checkMovie()
 
     def ignoreCopy(self, source, dest):

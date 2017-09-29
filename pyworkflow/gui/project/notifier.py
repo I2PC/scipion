@@ -101,7 +101,6 @@ class ProjectNotifier(object):
         return True
 
     def notifyWorkflow(self):
-
         try:
             #check if enviroment exists otherwise abort
             if not pwutils.envVarOn('SCIPION_NOTIFY'):

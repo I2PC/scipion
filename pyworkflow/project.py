@@ -690,8 +690,8 @@ class Project(object):
         newProt = self.newProtocol(protocol.getClass())
         newProt.setObjLabel(protocol.getRunName() + ' (copy)')
         newProt.copyDefinitionAttributes(protocol)
-        newProt.copyAttributes(protocol, 'hostName', '_useQueue',
-                               '_queueParams')
+        newProt.copyAttributes(protocol, 'hostName', '_useQueue', '_queueParams')
+        newProt.copyAttributes(protocol, 'hostName', '_useQueueForJobs')
         return newProt
 
     def copyProtocol(self, protocol):
@@ -828,6 +828,8 @@ class Project(object):
                                                               None),
                                         objComment=protDict.get(
                                             'object.comment', None))
+                prot._useQueue.set(protDict.get('_useQueue', False))
+                prot._useQueueForJobs.set(protDict.get('_useQueueForJobs', False))
                 newDict[protId] = prot
                 self.saveProtocol(prot)
 

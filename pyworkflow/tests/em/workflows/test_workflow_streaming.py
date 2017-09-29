@@ -353,7 +353,7 @@ class TestStreamingSocket(BaseTest):
         while serverConnected:
             reply = clientSocket.recv(4096)
             if reply:
-                if absPath in reply:
+                if absPath.strip() in reply:
                     serverConnected = False
                 time.sleep(delay)  # wait a bit to check for reply
             else:

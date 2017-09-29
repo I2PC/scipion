@@ -1456,6 +1456,14 @@ class FormWindow(Window):
                                                   font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=c+1, pady=5, sticky='nw')
+
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE_FOR_JOBS, row=3, sticky='ne',
+                                column=c, padx=(15,5), pady=0)
+        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white',
+                                                  font=self.font)
+        self._addVarBinding(Message.VAR_QUEUE_FOR_JOBS, var)
+        frame.grid(row=3, column=c+1, pady=5, sticky='nw')
+
         # Commented out the button to edit queue since the queue dialog
         #  will be shown after pressing the 'Execute' button
         #btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
@@ -1464,7 +1472,10 @@ class FormWindow(Window):
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
                              highlightthickness=0, command=self._createHelpCommand(Message.HELP_USEQUEUE))
         btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
-        
+        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                             highlightthickness=0, command=self._createHelpCommand(Message.HELP_USEQUEUEPERJOB))
+        btnHelp.grid(row=3, column=c+3, padx=(5, 0), pady=2, sticky='ne')
+
         # Run Name not editable
         #entry.configure(state='readonly')
         # Run mode

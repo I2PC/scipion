@@ -281,6 +281,7 @@ MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_LAST = 'last' # shortcut to 'project last'
 MODE_HERE = 'here' # shortcut to 'project here'
+MODE_WORKFLOW = 'workflow'
 MODE_WEBSERVER = 'webserver'
 MODE_COLLECTSTATIC = 'collectstatic'
 MODE_TESTS = 'tests' # keep tests for compatibility
@@ -333,7 +334,10 @@ def main():
 
     elif mode == MODE_HERE:
         runApp('pw_project.py', args='here')
-        
+
+    elif mode == MODE_WORKFLOW:
+        runApp('pw_workflow_run.py', args=sys.argv[2:])
+
     elif mode == MODE_PROJECT:
         runApp('pw_project.py', args=sys.argv[2:])
 

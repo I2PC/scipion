@@ -26,6 +26,8 @@
 # **************************************************************************
 
 import sys, os
+import time
+
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 import pyworkflow.utils as pwutils
@@ -74,3 +76,9 @@ runs = project.getRuns()
 # and the graph is lineal
 for prot in runs:
     project.scheduleProtocol(prot)
+
+while True:
+    time.sleep(60)
+    if all(prot.isFinished() for prot in project.getRuns(iterate=True, refresh=True)):
+        break
+

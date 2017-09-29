@@ -27,7 +27,7 @@
 # *
 # ******************************************************************************
 
-import os
+import os, sys, traceback
 from itertools import izip
 
 import pyworkflow.protocol.params as params
@@ -342,7 +342,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                                                   input_params[2],
                                                                   input_params[0])
                 else:
-                    argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj,
+                    argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (self.scaleMaj,
                                                               self.scaleMin,
                                                               self.angDist)
 
@@ -386,6 +386,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                       outputFn=self._getOutputMicThumbnail(movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getName())
+            traceback.print_exc()
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):

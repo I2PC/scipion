@@ -208,7 +208,7 @@ class MonitorCTF(Monitor):
                                 defocusV FLOAT,
                                 defocus FLOAT,
                                 astigmatism FLOAT,
-                                ratio FLOAT, 
+                                ratio FLOAT,
                                 micPath STRING,
                                 psdPath STRING,
                                 shiftPlotPath STRING)

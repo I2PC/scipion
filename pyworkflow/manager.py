@@ -90,6 +90,8 @@ class Manager(object):
         else:
             projectPath = os.path.join(location, projectName)
 
+        print "creating a project at {}".format(projectPath)
+        print "(the default location would have been {}".format(self.getProjectPath(projectName))
         project = Project(projectPath)
         project.create(runsView=runsView, 
                        hostsConf=hostsConf, 

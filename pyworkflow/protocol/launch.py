@@ -41,10 +41,14 @@ B. Remote execution:
 """
 import os
 import re
+import sys
+import traceback
 from subprocess import Popen, PIPE
 import pyworkflow as pw
 from pyworkflow.utils import redStr, greenStr, makeFilePath, join
 from pyworkflow.utils import process
+from time import sleep
+from multiprocessing.pool import ThreadPool, TimeoutError
 
 UNKNOWN_JOBID = -1
 LOCALHOST = 'localhost'
@@ -142,7 +146,6 @@ def _runRemote(protocol, mode):
     """
     host = protocol.getHostConfig()
     tpl = "ssh %(address)s '%(scipion)s/scipion "
-
     if host.getScipionConfig() is not None:
         tpl += "--config %(config)s "
 
@@ -194,53 +197,66 @@ def _copyFiles(protocol, rpath):
         ssh: an ssh connection to copy the files.
     """
     remotePath = protocol.getHostConfig().getHostPath()
-
+    
+    
     for f in protocol.getFiles():
         remoteFile = join(remotePath, f)
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict):
+def _submit(hostConfig, submitDict, cwd=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
     # Create forst the submission script to be launched
     # formatting using the template
     template = hostConfig.getSubmitTemplate() % submitDict
-    #FIXME: CREATE THE PATH FIRST
+    # FIXME: CREATE THE PATH FIRST
     scripPath = submitDict['JOB_SCRIPT']
     f = open(scripPath, 'w')
-    #Ensure the path exists
+    # Ensure the path exists
     makeFilePath(scripPath)
     # Add some line ends because in some clusters it fails
     # to submit jobs if the submit script does not have end of line
-    f.write(template+'\n\n')
+    f.write(template + '\n\n')
     f.close()
-    # This should format the command using a template like: 
+    # This should format the command using a template like:
     # "qsub %(JOB_SCRIPT)s"
     command = hostConfig.getSubmitCommand() % submitDict
     gcmd = greenStr(command)
-    print "** Submiting to queue: '%s'" % gcmd
-    p = Popen(command, shell=True, stdout=PIPE)
+    print("** Submiting to queue: '%s'" % gcmd)
+
+    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
     out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
     s = re.search('(\d+)', out)
     if s:
-        return int(s.group(0))
+        job = int(s.group(0))
+        print "launched job with id %s" % job
+        return job
     else:
-        print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
+        print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
         return UNKNOWN_JOBID
 
-    
+
+def _pass_though_no_gui_state(command):
+    if 'SCIPION_NOGUI' in os.environ:
+        return 'export SCIPION_NOGUI=true;' + command
+    return command
+
+
 def _run(command, wait, stdin=None, stdout=None, stderr=None):
     """ Execute a command in a subprocess and return the pid. """
-    gcmd = greenStr(command)
+    guicmd = _pass_though_no_gui_state(command)
+    gcmd = greenStr(guicmd)
     print "** Running command: '%s'" % gcmd
-    p = Popen(command, shell=True, stdout=stdout, stderr=stderr)
+    guicmd = _pass_though_no_gui_state(command)
+    p = Popen(guicmd, shell=True, stdout=stdout, stderr=stderr)
     jobId = p.pid
     if wait:
         p.wait()
 
     return jobId
+
 
 # ******************************************************************
 # *                 Function related to STOP
@@ -259,4 +275,5 @@ def _stopLocal(protocol):
 
 def _stopRemote(protocol):
     _runRemote(protocol, 'stop')
+    
     
