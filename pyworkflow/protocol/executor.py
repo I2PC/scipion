@@ -43,7 +43,7 @@ import pyworkflow.utils.process as process
 import constants as cts
 
 from launch import _submit, UNKNOWN_JOBID
-
+from retrying import retry
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
@@ -261,46 +261,34 @@ class QueueStepExecutor(ThreadStepExecutor):
         jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
         submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
-        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd), "submit job")
-        return self._waitForJob(self.hostConfig, job)
+        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd))
+        return self._runWithTimeout(lambda: self._waitForJob(self.hostConfig, job))
 
-    def _runWithTimeout(self, command, description, timeout=30):
-        try:
-            # job submit should be fast even if the job is long
-            future = self.pool.apply_async(command)
-            return future.get(timeout)
-        except TimeoutError:
-            print "** Timeout trying to " + description
-            return None
-        except:
-            print "** unexpected error trying to " + description
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-            return None
+    def _retry_if_result_none(self, result):
+        """Return True if we should retry (in this case when result is None), False otherwise"""
+        return result is None
+
+    @retry(stop_max_attempt_number=10, wait_exponential_multiplier=1000, wait_exponential_max=120000, retry_on_result=self._retry_if_result_none)
+    def _runWithTimeout(self, command):
+        return command()
 
     def _waitForJob(self, hostConfig, jobid):
         if (jobid is None) or (jobid == UNKNOWN_JOBID):
             return 0
-        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
-        while True:
-            def runCommand():
-                p = Popen(command, shell=True, stdout=PIPE)
-                out = p.communicate()[0]
 
-                # FIXME: this is too specific to grid engine
-                s = re.search('exit_status\s+-*(\d+)', out)
-                if s:
-                    status = int(s.group(1))
-                    print "job %s finished with exist status %s" % (jobid, status)
-                    return status
-                else:
-                    print "job %s still running" % jobid
-                    return None
+        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}        
+        p = Popen(command, shell=True, stdout=PIPE)
+        out = p.communicate()[0]
 
-            status = self._runWithTimeout(runCommand, "find jobs status")
-            if status is not None:
-                return status
-            time.sleep(60)
+        # FIXME: this is too specific to grid engine
+        s = re.search('exit_status\s+-*(\d+)', out)
+        if s:
+            status = int(s.group(1))
+            print "job %s finished with exist status %s" % (jobid, status)
+            return status
+        else:
+            print "job %s still running" % jobid
+            return None
 
 
 class MPIStepExecutor(ThreadStepExecutor):
