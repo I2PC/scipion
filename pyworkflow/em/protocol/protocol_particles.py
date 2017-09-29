@@ -410,7 +410,6 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.debug('   listOfMics: %s, doneList: %s, newDone: %s'
                    % (nMics, len(doneList), len(newDone)))
 
-        firstTime = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
