@@ -123,9 +123,7 @@ class ProtImportVolumes(ProtImportImages):
                     if setDefaultOrigin:
                         t = Transform()
                         if setDefaultOrigin:
-                            print "setorigin", x,y,z
                             t.setShifts(x / 2., y / 2., z / 2.)
-                            print "setorigin",t.getShifts()
                         else:
                             t.setShifts(self.x, self.y, self.z)
                         vol.setOrigin(t)
