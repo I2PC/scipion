@@ -244,9 +244,6 @@ class QueueStepExecutor(ThreadStepExecutor):
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
 
-        self.session = drmaa.Session()
-        self.session.initialize()
-
         # This is a dirty hot-fix now because we are spawning too many threads
         # even for the case when nThreads = 1
         if nThreads > 1:
@@ -263,16 +260,15 @@ class QueueStepExecutor(ThreadStepExecutor):
         jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
         submitDict['JOB_NAME'] = "scipion" + submitDict['JOB_NAME'] + jobId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
-        job = _submit(self.hostConfig, submitDict, cwd, drmaaSession=self.session)
+        job = _submit(self.hostConfig, submitDict, cwd, useDrmaa=True)
         return self._waitForJob(job)
 
     def _waitForJob(self, jobid):
         if (jobid is None) or (jobid == UNKNOWN_JOBID):
             return 0
-        self.session.wait(jobid)
+        with drmaa.Session() as session:
+            session.wait(jobid)
 
-    def __del__(self):
-        self.session.exit()
 
 class MPIStepExecutor(ThreadStepExecutor):
     """ Run steps in parallel using threads.

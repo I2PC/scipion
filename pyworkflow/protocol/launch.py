@@ -205,7 +205,7 @@ def _copyFiles(protocol, rpath):
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict, cwd=None, drmaaSession=None):
+def _submit(hostConfig, submitDict, cwd=None, useDrmaa=False):
     """ Submit a protocol to a queue system. Return its job id.
     """
     # Create forst the submission script to be launched
@@ -226,16 +226,18 @@ def _submit(hostConfig, submitDict, cwd=None, drmaaSession=None):
     gcmd = greenStr(command)
     print("** Submiting to queue: '%s'" % gcmd)
 
-    if drmaaSession is not None:
-        job_template = drmaaSession.createJobTemplate()
-        job_template.jobCategory = 'drmaa'
-        job_template.jobName = submitDict['JOB_NAME']
-        job_template.nativeSpecification = '-q high.q -P em -l gpu=1 -l gpu_arch=Pascal'
-        job_template.workingDirectory = cwd
-        job_template.remoteCommand = scripPath
-        job = drmaaSession.runJob(job_template)
-        print "launched job with id %s" % job
-        return job
+    if useDrmaa:
+        with drmaa.Session() as session:
+            job_template = session.createJobTemplate()
+            job_template.jobCategory = 'drmaa'
+            job_template.jobName = submitDict['JOB_NAME']
+            job_template.nativeSpecification = '-q high.q -P em -l gpu=1 -l gpu_arch=Pascal'
+            job_template.workingDirectory = cwd
+            job_template.remoteCommand = scripPath
+            job = session.runJob(job_template)
+            print "launched job with id %s" % job
+            session.deleteJobTemplate(template)
+            return job
     else:
         p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
         out = p.communicate()[0]
