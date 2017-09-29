@@ -32,10 +32,11 @@ from os.path import exists, basename
 
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import copyFile
-
+import pyworkflow.protocol.constants as const
 import pyworkflow.protocol.params as params
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
+from pyworkflow.em.data import Transform
 
 from base import ProtImportFiles
 from images import ProtImportImages
@@ -55,14 +56,30 @@ class ProtImportVolumes(ProtImportImages):
         by subclasses to change what parameters to include.
         """
         form.addParam('samplingRate', params.FloatParam,
-                   label=Message.LABEL_SAMP_RATE)
-    
+                      label=Message.LABEL_SAMP_RATE)
+        form.addParam('setDefaultOrigin', params.BooleanParam,
+                      label="setDefaultOrigin",
+                      help="Set origin of coordinates in the 3D map center (true)"
+                      " or provide it. So far only Modeling related programs"
+                      " support this feature",
+                      default=True)
+        line = form.addLine('Offset',help="We follow the same convention than chimera,"
+                                          " i.e., same magnitude and opposite sign than CCP4.",
+                            condition='not setDefaultOrigin', expertLevel=const.LEVEL_ADVANCED)
+        line.addParam('x', params.FloatParam, condition='not setDefaultOrigin',
+                      label="x", help="offset along x axis", expertLevel=const.LEVEL_ADVANCED)
+        line.addParam('y', params.FloatParam, condition='not setDefaultOrigin',
+                      label="y", help="offset along y axis", expertLevel=const.LEVEL_ADVANCED)
+        line.addParam('z', params.FloatParam, condition='not setDefaultOrigin',
+                      label="z", help="offset along z axis", expertLevel=const.LEVEL_ADVANCED)
+
     def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumesStep', self.getPattern(), self.samplingRate.get())
+        self._insertFunctionStep('importVolumesStep', self.getPattern(),
+                                 self.samplingRate.get(), self.setDefaultOrigin.get())
 
     #--------------------------- STEPS functions ---------------------------------------------------
     
-    def importVolumesStep(self, pattern, samplingRate):
+    def importVolumesStep(self, pattern, samplingRate, setDefaultOrigin = True):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -70,12 +87,12 @@ class ProtImportVolumes(ProtImportImages):
 
         # Create a Volume template object
         vol = Volume()
-        vol.setSamplingRate(self.samplingRate.get())
+        vol.setSamplingRate(samplingRate)
         copyOrLink = self.getCopyOrLink()
         imgh = ImageHandler()
 
         volSet = self._createSetOfVolumes()
-        volSet.setSamplingRate(self.samplingRate.get())
+        volSet.setSamplingRate(samplingRate)
 
         for fileName, fileId in self.iterFiles():
             dst = self._getExtraPath(basename(fileName))
@@ -88,13 +105,29 @@ class ProtImportVolumes(ProtImportImages):
                 if dst.endswith('.mrc'):
                     dst += ':mrc'
                 vol.setLocation(dst)
+                t = Transform()
+                if setDefaultOrigin:
+                    if (z == 1 and n != 1):
+                        zDim = n
+                    else:
+                        zDim = z
+                    t.setShifts(x/2., y/2., zDim/2.)
+                else:
+                    t.setShifts(self.x, self.y, self.z)
+                vol.setOrigin(t)
                 volSet.append(vol)
             else:
                 for index in range(1, n+1):
                     vol.cleanObjId()
                     vol.setLocation(index, dst)
+                    if setDefaultOrigin:
+                        t = Transform()
+                        if setDefaultOrigin:
+                            t.setShifts(x / 2., y / 2., z / 2.)
+                        else:
+                            t.setShifts(self.x, self.y, self.z)
+                        vol.setOrigin(t)
                     volSet.append(vol)
-
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
