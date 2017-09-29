@@ -47,7 +47,6 @@ from protocol_extract_coordinates import ProtExtractCoords
 from protocol_stress import ProtStress
 from protocol_create_stream_data import ProtCreateStreamData
 from parallel import ProtTestParallel
-
 from monitors import *
 from protocol_export import *
 #from protocol_export.protocol_export_emdb import ProtExportEMDB
