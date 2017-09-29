@@ -52,7 +52,6 @@ class TestImportVolumes(TestImportBase):
         self.launchProtocol(prot1)
         volume = prot1.outputVolume
         t = volume.getOrigin()
-        print "t_volume_1_mrc: ", t
         x, y, z = t.getShifts()
         self.assertEqual(32, x)
         self.assertEqual(32, y)
@@ -74,7 +73,6 @@ class TestImportVolumes(TestImportBase):
         self.launchProtocol(prot2)
         volume = prot2.outputVolume
         t = volume.getOrigin()
-        print "t_volume_1_origin_mrc: ", t
         x, y, z = t.getShifts()
         self.assertEqual(8, x)
         self.assertEqual(16, y)
@@ -93,7 +91,6 @@ class TestImportVolumes(TestImportBase):
         self.launchProtocol(prot3)
         for volume in prot3.outputVolumes:
             t = volume.getOrigin()
-            print "t_import_mrc: ", t
             x, y, z = t.getShifts()
             self.assertEqual(32, x)
             self.assertEqual(32, y)
@@ -115,7 +112,6 @@ class TestImportVolumes(TestImportBase):
         self.launchProtocol(prot4)
         for volume in prot4.outputVolumes:
             t = volume.getOrigin()
-            print "t_import2_mrc: ", t
             x, y, z = t.getShifts()
             self.assertEqual(8, x)
             self.assertEqual(16, y)
@@ -138,7 +134,6 @@ class TestImportVolumes(TestImportBase):
         self.launchProtocol(prot1)
         for volume in  prot1.outputVolumes:
             t = volume.getOrigin()
-            print "t_pattern_import_mrc: ", t
             x, y, z = t.getShifts()
             self.assertEqual(32, x)
             self.assertEqual(32, y)
@@ -147,11 +142,6 @@ class TestImportVolumes(TestImportBase):
         # Id's should be taken from filename   
         args['filesPath'] = self.dsRelion.getFile('import/case2/relion_volumes.mrc') 
         args['filesPattern'] = ''
-        #args['samplingRate'] = 2.1
-        #args['setDefaultOrigin'] = False
-        #args['x'] = 8
-        #args['y'] = 16
-        #args['z'] = 24
         prot2 = self.newProtocol(ProtImportVolumes, **args)
         prot2.setObjLabel('from mrc stack')
         self.launchProtocol(prot2)
