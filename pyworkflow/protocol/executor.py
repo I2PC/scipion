@@ -37,7 +37,6 @@ import threading
 import os
 import re
 from subprocess import Popen, PIPE
-from multiprocessing.pool import ThreadPool, TimeoutError
 
 import pyworkflow.utils.process as process
 import constants as cts
@@ -243,8 +242,6 @@ class QueueStepExecutor(ThreadStepExecutor):
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
 
-        self.pool = ThreadPool(processes=1)
-
         # This is a dirty hot-fix now because we are spawning too many threads
         # even for the case when nThreads = 1
         if nThreads > 1:
@@ -264,11 +261,7 @@ class QueueStepExecutor(ThreadStepExecutor):
         job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd))
         return self._runWithTimeout(lambda: self._waitForJob(self.hostConfig, job))
 
-    def _retry_if_result_none(self, result):
-        """Return True if we should retry (in this case when result is None), False otherwise"""
-        return result is None
-
-    @retry(stop_max_attempt_number=10, wait_exponential_multiplier=1000, wait_exponential_max=120000, retry_on_result=self._retry_if_result_none)
+    @retry(stop_max_attempt_number=10, wait_exponential_multiplier=1000, wait_exponential_max=120000, retry_on_result=(lambda r: r is None))
     def _runWithTimeout(self, command):
         return command()
 
