@@ -33,7 +33,6 @@ from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    readSetOfParticles)
 import numpy as np
 
-
 class XmippProtVolumeHomogenizer(ProtProcessParticles):
     
     """    
@@ -50,75 +49,126 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
+        form.addParam('doGoldStandard', params.BooleanParam, default=False,
+                      label='do Gold Standard?',
+                      help="If YES provide half1 and half2 maps for reference"
+                           "and for input volumes.")
+        
         form.addParam('referenceVolume', params.PointerParam,
+                 condition='not doGoldStandard',
                  pointerClass='Volume',
                  label='Reference volume', 
-                 help="This is the volume that will be used as the reference"
-                      "in OF algorithm. If you want to use Gold-Standard"
-                      "provide here half1 map and in Advanced settings fill out" 
-                      "reference half2")
-        form.addParam('referenceVolume2', params.PointerParam,
+                 help="This is the volume that will be used as the reference "
+                      "in OF algorithm. If you want to use Gold-Standard "
+                      "provide here half1 map")
+        
+        form.addParam('referenceVolume1', params.PointerParam,
+                 condition='doGoldStandard',
                  pointerClass='Volume',
-                 label='Reference volume Half2', 
-                 help="This is the volume that will be used as the reference"
-                      "in OF algorithm. If you want to use Gold-Standard"
-                      "provide here half1 map and in Advanced settings fill out" 
-                      "reference half2")
+                 label='Reference volume half1', 
+                 help="This is the half1 volume that will be used as the reference"
+                      "for half1 in OF algorithm.")
+        
+        form.addParam('referenceVolume2', params.PointerParam,
+                 condition='doGoldStandard',
+                 pointerClass='Volume',
+                 label='Reference volume half2', 
+                 help="This is half2 volume that will be used as the reference"
+                      "for half2 in OF algorithm.")
+        
         form.addParam('inputVolume', params.PointerParam,
+                 condition='not doGoldStandard',
                  pointerClass='Volume',
                  label='Input volume', 
-                 help="Volume that we want to deform its related particles.")
+                 help="Volume that we want to process its related particles.")
+
+        form.addParam('inputVolume1', params.PointerParam,
+                 pointerClass='Volume',
+                 condition='doGoldStandard',
+                 label='Input volume half1', 
+                 help="Volume that we want to process its related particles."
+                       "It should represent half1 map.")
+
+        form.addParam('inputVolume2', params.PointerParam,
+                 pointerClass='Volume',
+                 condition='doGoldStandard',
+                 label='Input volume half2', 
+                 help="Volume that we want to process its related particles."
+                       "It should represent half2 map.")
+                
         form.addParam('inputParticles', params.PointerParam, 
                       pointerClass='SetOfParticles',
                       pointerCondition='hasAlignmentProj',
                       label="Input particles",  
                       help="Aligned particles related to the input volume. "
-                           "These particles will be deformed (corrected) "
-                           "based on the reference volume using OF algorithm.")        
+                           "These particles will be processed (deformed) "
+                           "based on the reference volume using OF algorithm."
+                           "If selected doGoldStandard True the particles have to have"
+                           "information about the halfId they belong.")
+        
         form.addParam('doAlignment', params.BooleanParam, default=False,
                       label='Reference and input volumes need to be aligned?',
                       help="Input and reference volumes must be aligned. "
                            "If you have not aligned them before choose this "
                            "option, so protocol will handle it internally.")
-        form.addParam('cutOffFrequency', params.FloatParam, default = -1,
-                      label="Cut-off frequency",
-                      help="This digital frequency is used to filter both "
-                           "input and reference voluem."
-                           "IF it is (-1), cut-off frequency will be based on "
-                           "Nyquist theorem.\n"
-                           "Note:\n"
-                           "Based on the experimental results, the best value "
-                           "for cut-off frequency is 20A "
-                           "(digitalFrequency = samplingRate/20)")
+
+        form.addParam('resLimit', params.FloatParam, default = 20,
+                      label="Resolution Limit (A)",
+                      help="Resolution limit used to low pass filter both "
+                           "input and reference map(s)."
+                           "Based on previous experimental results, a good value "
+                           "for  seems to be 20A ")
+        
         form.addParam('winSize', params.IntParam, default=50,
                        label="Window size",
                        expertLevel=params.LEVEL_ADVANCED,
                        help="Size of the search window at each pyramid level "
                             "(shifts are assumed to be constant "
-                            "within this window).")          
+                            "within this window).")
                       
         form.addParallelSection(threads=1, mpi=2)
     #--------------------------- INSERT steps functions --------------------------------------------
 
-    def _insertAllSteps(self):            
+    def _insertAllSteps(self):
+        
         inputParticlesMd = self._getExtraPath('input_particles.xmd')
         inputParticles = self.inputParticles.get()
-        writeSetOfParticles(inputParticles, inputParticlesMd)
-        inputVol = self.inputVolume.get().getFileName()
-        referenceVol = self.referenceVolume.get().getFileName()
         
-        if not self.doAlignment.get():
-            self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                     inputVol, referenceVol, inputParticlesMd)
+        writeSetOfParticles(inputParticles, inputParticlesMd)
+        
+        #If doGoldStandard then we have two halves
+        if not self.doGoldStandard.get():
+            inputVol = self.inputVolume.get().getFileName()
+            referenceVol = self.referenceVolume.get().getFileName()
+
+            if not self.doAlignment.get():         #No alignment
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol, referenceVol, inputParticlesMd)
+            else:
+                
+                fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
+                fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
+                
+                fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
+                self._insertFunctionStep('volumeAlignmentStep', 
+                                         referenceVol, inputVol, fnAlignedVolFf, 
+                                         fnAlnVolFfLcl, fnInPartsNewAng)
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         fnAlnVolFfLcl, referenceVol, fnInPartsNewAng)
         else:
-            fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
-            fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
-            fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
-            self._insertFunctionStep('volumeAlignmentStep', 
-                                     referenceVol, inputVol, fnAlignedVolFf, 
-                                     fnAlnVolFfLcl, fnInPartsNewAng)
-            self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                     fnAlnVolFfLcl, referenceVol, fnInPartsNewAng)
+            inputVol1 = self.inputVolume1.get().getFileName()
+            inputVol2 = self.inputVolume2.get().getFileName()
+            referenceVol1 = self.referenceVolume1.get().getFileName()
+            referenceVol2 = self.referenceVolume2.get().getFileName()
+            
+            if self.doAlignment.get():
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol1, referenceVol1, inputParticlesMd)
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol2, referenceVol2, inputParticlesMd)
+#TODO Ubset of particles according to their HalfID!!!! 
+#Now this code does not work!!!!!
+
                         
         self._insertFunctionStep('createOutputStep')        
     #--------------------------- STEPS functions --------------------------------------------
@@ -166,18 +216,21 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         
     def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd):
         winSize = self.winSize.get()
-        if self.cutOffFrequency.get() == -1:
-            cutFreq = 0.5
-        else:
-            cutFreq = self.cutOffFrequency.get()
-        fnOutput = self._getExtraPath('deformed-particles')        
-          
+        
+        sampling_rate = self.inputParticles.getSamplingRate()
+        resLimitDig = sampling_rate/self.resLimit.get()
+        
+        fnOutput = self._getExtraPath('deformed-particles')
+
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get()
+        
         self.runJob("xmipp_volume_homogenizer", 
                     "-i %s -ref %s -img %s -o %s --winSize %d --cutFreq %f" % (
                     inputVol, referenceVol, inputParticlesMd, 
-                    fnOutput, winSize, cutFreq), 
-                    numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())        
-    
+                    fnOutput, winSize, resLimitDig), 
+                    numberOfMpi=nproc,numberOfThreads=nT)
+            
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()        
         fnDeformedParticles = self._getExtraPath('deformed-particles.xmd')
@@ -226,4 +279,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             errors.append("Input particles and input map do not have "
                           "the same dimensions!!!")
         return errors              
+#TODO: Validate that if use gold-standard the particles have halfID metadata info
+#TODO: Validate that if use gold-standard the particles have halfID metadata.
+
     
