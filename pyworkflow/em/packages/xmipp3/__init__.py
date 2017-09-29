@@ -43,7 +43,7 @@ from pdb import *
 from protocol_preprocess import *
 
 from viewer import XmippViewer
-from viewer_import_volume import viewerProtImportVolumes
+
 
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
