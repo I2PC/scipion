@@ -57,11 +57,11 @@ from convert import ImageHandler
 
 import xmipp
 
-from viewer_fsc import FscViewer
-from viewer_pdf import PDFReportViewer
-from viewer_monitor_summary import ViewerMonitorSummary
-from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
-from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
+#from viewer_fsc import FscViewer
+#from viewer_pdf import PDFReportViewer
+#from viewer_monitor_summary import ViewerMonitorSummary
+#from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
+#from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
 
 #------------------------ Some common Views ------------------
 
