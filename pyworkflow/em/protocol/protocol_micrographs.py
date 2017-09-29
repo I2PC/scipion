@@ -1,7 +1,9 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:     Josue Gomez BLanco (jgomez@cnb.csic.es)
 # *              Roberto Marabini (roberto@cnb.csic.es)
+# *              Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,18 +27,21 @@
 # *
 # **************************************************************************
 
-from os.path import exists, dirname, join
+from os.path import exists, dirname, join, getmtime
+from datetime import datetime
+from collections import OrderedDict
 
-from pyworkflow.object import Boolean, Pointer
+
+from pyworkflow.object import Set, Boolean, Pointer
 from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
                                            STATUS_NEW)
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         BooleanParam, FileParam)
-from pyworkflow.utils.path import copyTree, removeBaseExt, makePath
+from pyworkflow.utils.path import copyTree, removeBaseExt, makePath, makeFilePath
 from pyworkflow.utils.properties import Message
+from pyworkflow.utils.utils import prettyTime
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfMicrographs, SetOfCTF
-
 
 
 class ProtMicrographs(EMProtocol):
@@ -65,7 +70,8 @@ class ProtCTFMicrographs(ProtMicrographs):
                        allowsNull=True)
 
         form.addParam('inputMicrographs', PointerParam, important=True,
-                      condition='not recalculate', label=Message.LABEL_INPUT_MIC,
+                      condition='not recalculate',
+                      label=Message.LABEL_INPUT_MIC,
                       pointerClass='SetOfMicrographs')
         form.addParam('ctfDownFactor', FloatParam, default=1.,
                       label='CTF Downsampling factor',
@@ -129,16 +135,12 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ Insert the steps to perform CTF estimation, or re-estimation,
         on a set of micrographs.
         """
-        # Store all steps ids, final step createOutput depends on all of them
-        deps = []
-        fDeps = []
-        self.insertedDict = {}
-
         if not self.recalculate:
-            deps = self._insertEstimationSteps(self.insertedDict,
-                                               self.inputMicrographs.get())
-            # Insert step to create output objects
-            fDeps = self._insertFinalSteps(deps)
+            self.initialIds = self._insertInitialSteps()
+            self.micDict = OrderedDict()
+            micDict, _ = self._loadInputList()
+            ctfIds = self._insertNewMicsSteps(micDict.values())
+            self._insertFinalSteps(ctfIds)
             # For the streaming mode, the steps function have a 'wait' flag
             # that can be turned on/off. For example, here we insert the
             # createOutputStep but it wait=True, which means that can not be
@@ -150,136 +152,42 @@ class ProtCTFMicrographs(ProtMicrographs):
                 # Insert previous estimation or re-estimation an so on...
                 self._insertPreviousSteps()
                 self.isFirstTime.set(False)
-            fDeps = self._insertRecalculateSteps()
+            ctfIds = self._insertRecalculateSteps()
             # For now the streaming is not allowed for recalculate CTF
             waitCondition = False
 
-        self._insertFunctionStep('createOutputStep', prerequisites=fDeps,
+        self._insertFunctionStep('createOutputStep', prerequisites=ctfIds,
                                  wait=waitCondition)
 
-    def _insertFinalSteps(self, deps):
-        """ This should be implemented in subclasses"""
+    def _insertInitialSteps(self):
+        """ Override this function to insert some steps before the
+        estimate ctfs steps.
+        Should return a list of ids of the initial steps. """
+        return []
+
+    def _insertNewMicsSteps(self, inputMics):
+        """ Insert steps to process new mics (from streaming)
+        Params:
+            inputMics: input mics set to be check
+        """
+        deps = []
+        # For each mic insert the step to process it
+        for mic in inputMics:
+            micKey = mic.getMicName()
+            if micKey not in self.micDict:
+                args = [mic.getFileName(), self._getMicrographDir(mic), micKey]
+                stepId = self._insertEstimationSteps(self.initialIds, *args)
+                deps.append(stepId)
+                self.micDict[micKey] = mic
         return deps
 
-    def _getFirstJoinStepName(self):
-        # This function will be used for streamming, to check which is
-        # the first function that need to wait for all micrographs
-        # to have completed, this can be overriden in subclasses
-        # (e.g., in Xmipp 'sortPSDStep')
-        return 'createOutputStep'
-
-    def _getFirstJoinStep(self):
-        for s in self._steps:
-            if s.funcName == self._getFirstJoinStepName():
-                return s
-        return None
-
-    def _checkNewMicrographs(self, micSet, outputStep):
-        """ Check if there are new micrographs to be processed
-        and add the necessary steps.
-        """
-        newMics = []
-        for micFn, _, mic in self._iterMicrographs(micSet):
-            if mic.getMicName() not in self.insertedDict:
-                newMics.append(micFn)
-
-        if newMics:
-            fDeps = self._insertEstimationSteps(self.insertedDict, micSet)
-            self._storeSteps()
-            self._numberOfSteps.set(len(self._steps))
-            self._store(self._numberOfSteps)
-            if outputStep:
-                outputStep.addPrerequisites(*fDeps)
-
-        return newMics
-
-    def _checkNewCTFs(self, micSet):
-        """ Check for already computed CTF and update the output set. """
-        newCTFs = []
-        ctfDict = {}
-        ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
-        ctfSet.setMicrographs(self.inputMicrographs)
-
-        for ctf in ctfSet:
-            ctfDict[ctf.getObjId()] = True
-
-        if ctfDict: # it means there are previous ctfs computed
-            ctfSet.loadAllProperties()
-            if ctfSet.getSize():
-                ctfSet.enableAppend()
-        else:
-            ctfSet.setStreamState(ctfSet.STREAM_OPEN)
-
-        for micFn, micDir, mic in self._iterMicrographs(micSet):
-            if (exists(self._getMicrographDone(micDir))
-                and not mic.getObjId() in ctfDict):
-                ctf = self._createCtfModel(mic)
-                ctfSet.append(ctf)
-                newCTFs.append(mic.getObjId())
-
-        return ctfSet, newCTFs
-
-    def _stepsCheck(self):
-        # For now the streaming is not allowed for recalculate CTF
-        if self.recalculate:
-            return
-
-        # Check if there are new micrographs to process
-        micFn = self.inputMicrographs.get().getFileName()
-        micSet = SetOfMicrographs(filename=micFn)
-        micSet.loadAllProperties()
-        streamClosed = micSet.isStreamClosed()
-
-        outputStep = self._getFirstJoinStep()
-        self._checkNewMicrographs(micSet, outputStep)
-        ctfSet, newCTFs = self._checkNewCTFs(micSet)
-
-        if ctfSet is None:
-            return
-
-        endCTFs = streamClosed and micSet.getSize() == ctfSet.getSize()
-        self.debug(' is stream closed? %s' % streamClosed)
-        self.debug(' micSet.getSize (%s) == (%s) ctfSet.getSize'
-                   % (micSet.getSize(), ctfSet.getSize()))
-
-        if newCTFs:
-            # Check if it is the first time we are registering CTF to
-            # create the CTF_RELATION only once
-            firstTime = not self.hasAttribute('outputCTF')
-            ctfSet.setMicrographs(self.inputMicrographs)
-            self._computeDefocusRange(ctfSet)
-            streamMode = ctfSet.STREAM_CLOSED if endCTFs else ctfSet.STREAM_OPEN
-            self._updateOutputSet('outputCTF', ctfSet, streamMode)
-            if firstTime:  # define relation just once
-                # Using a pointer to define the relations is more robust to
-                # scheduling and id changes between the protocol run.db and
-                # the main project database.
-                self._defineCtfRelation(self.inputMicrographs,
-                                        Pointer(value=self,
-                                                extended='outputCTF'))
-        else:
-            ctfSet.close()
-
-        if outputStep and outputStep.isWaiting() and endCTFs:
-            outputStep.setStatus(STATUS_NEW)
-
-        micSet.close()
-
-    def _insertEstimationSteps(self, insertedDict, inputMics):
-        estimDeps = []
+    def _insertEstimationSteps(self, prerequisites, *args):
+        """ Basic method to insert a estimateCTF step for a given micrograph."""
         self._defineValues()
         self._prepareCommand()
-        # For each micrograph insert the steps to process it
-        for micFn, micDir, mic in self._iterMicrographs(inputMics):
-            if mic.getMicName() not in insertedDict:
-                # CTF estimation
-                # Make estimation steps independent between them
-                stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
-                                                  mic.getMicName(),
-                                                  prerequisites=[])
-                estimDeps.append(stepId)
-                insertedDict[mic.getMicName()] = stepId
-        return estimDeps
+        micStepId = self._insertFunctionStep('_estimateCTF', *args,
+                                             prerequisites=prerequisites)
+        return micStepId
 
     def _insertRecalculateSteps(self):
         recalDeps = []
@@ -298,6 +206,23 @@ class ProtCTFMicrographs(ProtMicrographs):
                                                   prerequisites=[copyId])
                 recalDeps.append(stepId)
         return recalDeps
+
+    def _insertFinalSteps(self, deps):
+        """ This should be implemented in subclasses"""
+        return deps
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streamming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
 
     #--------------------------- STEPS functions -------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
@@ -407,8 +332,8 @@ class ProtCTFMicrographs(ProtMicrographs):
     #--------------------------- UTILS functions -------------------------------
     def _defineValues(self):
         """ This function get some parameters of the micrographs"""
-        # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get()
+        # Get pointer to input micrographs
+        self.inputMics = self.getInputMicrographs()
         acq = self.inputMics.getAcquisition()
 
         self._params = {'voltage': acq.getVoltage(),
@@ -513,6 +438,206 @@ class ProtCTFMicrographs(ProtMicrographs):
         of a SetOfMicrographs.
         """
         raise Exception("DEPRECATED")
+
+    def getInputMicrographsPointer(self):
+        return self.inputMicrographs
+
+    def getInputMicrographs(self):
+        return self.getInputMicrographsPointer().get()
+
+    # ------ Methods for Streaming picking --------------
+    def _stepsCheck(self):
+        # To allow streaming ctf estimation we need to detect:
+        #   1) new micrographs ready to be picked
+        #   2) new output ctfs that have been produced and add then
+        #      to the output set.
+    
+        # For now the streaming is not allowed for recalculate CTF
+        if self.recalculate:
+            return
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _checkNewInput(self):
+        # Check if there are new micrographs to process from the input set
+        localFile = self.getInputMicrographs().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(getmtime(localFile))
+        self.debug('Last check: %s, modification: %s'
+                  % (prettyTime(self.lastCheck),
+                     prettyTime(mTime)))
+        # If the input micrographs.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'listOfMics'):
+            return None
+
+        self.lastCheck = now
+        # Open input micrographs.sqlite and close it as soon as possible
+        micDict, self.streamClosed = self._loadInputList()
+        newMics = micDict.values()
+        outputStep = self._getFirstJoinStep()
+
+        if newMics:
+            fDeps = self._insertNewMicsSteps(newMics)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+    def _checkNewOutput(self):
+        if getattr(self, 'finished', False):
+            return
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+        # Check for newly done items
+        listOfMics = self.micDict.values()
+        nMics = len(listOfMics)
+        newDone = [m for m in listOfMics
+                   if m.getObjId() not in doneList and self._isMicDone(m)]
+
+        # Update the file with the newly done mics
+        # or exit from the function if no new done mics
+        self.debug('_checkNewOutput: ')
+        self.debug('   listOfMics: %s, doneList: %s, newDone: %s'
+                   % (nMics, len(doneList), len(newDone)))
+
+        allDone = len(doneList) + len(newDone)
+        # We have finished when there is not more input mics (stream closed)
+        # and the number of processed mics is equal to the number of inputs
+        self.finished = self.streamClosed and allDone == nMics
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        self.debug('   streamMode: %s newDone: %s' % (streamMode,
+                                                      not(newDone == [])))
+
+        if newDone:
+            newDoneUpdated = self._updateOutputCTFSet(newDone, streamMode)
+            self._writeDoneList(newDoneUpdated)
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+
+        self.debug('   finished: %s ' % self.finished)
+        self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
+        self.debug('        allDone (%s) == len(self.listOfMics (%s)'
+                   % (allDone, nMics))
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            self._updateStreamState(streamMode)
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+    def _loadInputList(self):
+        """ Load the input set of micrographs that are ready to be picked. """
+        return self._loadSet(self.getInputMicrographs(), SetOfMicrographs,
+                        lambda mic: mic.getMicName())
+        
+    def _loadSet(self, inputSet, SetClass, getKeyFunc):
+        """ Load a given input set if their items are not already present
+        in the self.micDict.
+        This can be used to load new micrographs for picking as well as
+        new CTF (if used) in streaming.
+        """
+        setFn = inputSet.getFileName()
+        self.debug("Loading input db: %s" % setFn)
+        updatedSet = SetClass(filename=setFn)
+        updatedSet.loadAllProperties()
+        newItemDict = OrderedDict()
+        for item in updatedSet:
+            micKey = getKeyFunc(item)
+            if micKey not in self.micDict:
+                newItemDict[micKey] = item.clone()
+        streamClosed = updatedSet.isStreamClosed()
+        updatedSet.close()
+        self.debug("Closed db.")
+
+        return newItemDict, streamClosed
+
+    def _updateOutputCTFSet(self, micList, streamMode):
+        micDoneList = [mic for mic in micList]
+        # Do no proceed if there is not micrograph ready
+        if not micDoneList:
+            return []
+
+        outputName = 'outputCTF'
+        outputCtf = getattr(self, outputName, None)
+
+        # If there is not outputCTF yet, it means that is the first
+        # time we are updating output CTFs, so we need to first create
+        # the output set
+        firstTime = outputCtf is None
+
+        if firstTime:
+            outputCtf = self._createSetOfCTF()
+        else:
+            outputCtf.enableAppend()
+
+        outputCtf.setMicrographs(self.getInputMicrographs())
+
+        for micFn, micDir, mic in self._iterMicrographs(micList):
+            ctf = self._createCtfModel(mic)
+            outputCtf.append(ctf)
+
+        self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
+        self._updateOutputSet(outputName, outputCtf, streamMode)
+
+        if firstTime:  # define relation just once
+            # Using a pointer to define the relations is more robust to
+            # scheduling and id changes between the protocol run.db and
+            # the main project database.
+            self._defineCtfRelation(self.getInputMicrographsPointer(),
+                                    outputCtf)
+
+        return micDoneList
+
+    def _updateStreamState(self, streamMode):
+        outputName = 'outputCTF'
+        outputCtf = getattr(self, outputName, None)
+
+        # If there are not outputCoordinates yet, it means that is the first
+        # time we are updating output coordinates, so we need to first create
+        # the output set
+        firstTime = outputCtf is None
+
+        if firstTime:
+            micSetPtr = self.getInputMicrographsPointer()
+            outputCtf = self._createSetOfCoordinates(micSetPtr)
+        else:
+            outputCtf.enableAppend()
+
+        self.debug(" _updateStreamState Stream Mode: %s " % streamMode)
+        self._updateOutputSet(outputName, outputCtf, streamMode)
+
+    def _readDoneList(self):
+        """ Read from a text file the id's of the items that have been done. """
+        doneFile = self._getAllDone()
+        doneList = []
+        # Check what items have been previously done
+        if exists(doneFile):
+            with open(doneFile) as f:
+                doneList += [int(line.strip()) for line in f]
+        return doneList
+
+    def _writeDoneList(self, micList):
+        """ Write to a text file the items that have been done. """
+        doneFile = self._getAllDone()
+
+        if not exists(doneFile):
+            makeFilePath(doneFile)
+
+        with open(doneFile, 'a') as f:
+            for mic in micList:
+                f.write('%d\n' % mic.getObjId())
+
+    def _isMicDone(self, mic):
+        """ A mic is done if the marker file exists. """
+        micDir = self._getMicrographDir(mic)
+        return exists(self._getMicrographDone(micDir))
+
+    def _getAllDone(self):
+        return self._getExtraPath('DONE', 'all.TXT')
 
 
 class ProtPreprocessMicrographs(ProtMicrographs):
