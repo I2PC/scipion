@@ -92,13 +92,15 @@ class XmippProtExtractUnit(EMProtocol):
         form.addParam('expandFactor', FloatParam, default=0.,
                       label="Expand Factor", help="Increment cropped region by this factor")
 
-        form.addParam('Origin', LabelParam, default= True,
-                      label = 'Origin of Coordinates                                  ', expertLevel=const.LEVEL_ADVANCED)
-        form.addParam('x', FloatParam,
+        line= form.addLine('Origin', help = 'Origin of Coordinates.\n' 
+                      "We follow the same convention than chimera,"
+                      " i.e., same magnitude and opposite sign than CCP4.",
+                      expertLevel=const.LEVEL_ADVANCED)
+        line.addParam('x', FloatParam,
                        label="x", help="x coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
-        form.addParam('y', FloatParam,
+        line.addParam('y', FloatParam,
                        label="y", help="y coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
-        form.addParam('z', FloatParam,
+        line.addParam('z', FloatParam,
                        label="z", help="z coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
 
     #--------------------------- INSERT steps functions --------------------------------------------
