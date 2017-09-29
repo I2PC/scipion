@@ -43,7 +43,6 @@ import pyworkflow.utils.process as process
 import constants as cts
 
 from launch import _submit, UNKNOWN_JOBID
-import drmaa
 
 
 class StepExecutor():
@@ -244,6 +243,8 @@ class QueueStepExecutor(ThreadStepExecutor):
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
 
+        self.pool = ThreadPool(processes=1)
+
         # This is a dirty hot-fix now because we are spawning too many threads
         # even for the case when nThreads = 1
         if nThreads > 1:
@@ -260,14 +261,46 @@ class QueueStepExecutor(ThreadStepExecutor):
         jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
         submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
-        job = _submit(self.hostConfig, submitDict, cwd, useDrmaa=True)
-        return self._waitForJob(job)
+        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd), "submit job")
+        return self._waitForJob(self.hostConfig, job)
 
-    def _waitForJob(self, jobid):
+    def _runWithTimeout(self, command, description, timeout=30):
+        try:
+            # job submit should be fast even if the job is long
+            future = self.pool.apply_async(command)
+            return future.get(timeout)
+        except TimeoutError:
+            print "** Timeout trying to " + description
+            return None
+        except:
+            print "** unexpected error trying to " + description
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            return None
+
+    def _waitForJob(self, hostConfig, jobid):
         if (jobid is None) or (jobid == UNKNOWN_JOBID):
             return 0
-        with drmaa.Session() as session:
-            session.wait(jobid)
+        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
+        while True:
+            def runCommand():
+                p = Popen(command, shell=True, stdout=PIPE)
+                out = p.communicate()[0]
+
+                # FIXME: this is too specific to grid engine
+                s = re.search('exit_status\s+-*(\d+)', out)
+                if s:
+                    status = int(s.group(1))
+                    print "job %s finished with exist status %s" % (jobid, status)
+                    return status
+                else:
+                    print "job %s still running" % jobid
+                    return None
+
+            status = self._runWithTimeout(runCommand, "find jobs status")
+            if status is not None:
+                return status
+            time.sleep(60)
 
 
 class MPIStepExecutor(ThreadStepExecutor):
