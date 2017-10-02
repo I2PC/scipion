@@ -90,6 +90,7 @@ from protocol_ml2d import XmippProtML2D
 from protocol_movie_gain import XmippProtMovieGain
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
+from protocol_movie_max_shift import XmippProtMovieMaxShift
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
 from protocol_multiple_fscs import XmippProtMultipleFSCs
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
