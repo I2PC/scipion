@@ -125,6 +125,11 @@ class ProtRelionExportCtf(EMProtocol):
         print "Writing set: %s" % inputCTF
         print " to: %s" % starFile
 
+        acq = ctfMicSet.getAcquisition()
+        self.samplingRate = ctfMicSet.getSamplingRate()
+        mag = acq.getMagnification()
+        self.detectorPixelSize = 1e-4 * self.samplingRate * mag
+
         writeSetOfMicrographs(micSet, starFile,
                               preprocessImageRow=self.preprocessMicrograph)
 
@@ -137,7 +142,7 @@ class ProtRelionExportCtf(EMProtocol):
 
     def _summary(self):
         summary = []
-        ctfStarFn = self._getPath(self.CTF_STAR_FILE)
+        ctfStarFn = self._getPath(self.CTF_STAR_FILE % self.getObjId())
 
         if os.path.exists(ctfStarFn):
             summary.append("Output CTF STAR file written to: \n%s" % ctfStarFn)
@@ -148,12 +153,11 @@ class ProtRelionExportCtf(EMProtocol):
     
     #--------------------------- UTILS functions -------------------------------
     def preprocessMicrograph(self, mic, micRow):
-        sampling = mic.getSamplingRate()
         mag = mic.getAcquisition().getMagnification()
 
-        micRow.setValue('rlnSamplingRate', sampling)
+        micRow.setValue('rlnSamplingRate', self.samplingRate)
         micRow.setValue('rlnMagnification', mag)
-        micRow.setValue('rlnDetectorPixelSize', 1e-4 * sampling * mag)
+        micRow.setValue('rlnDetectorPixelSize', self.detectorPixelSize)
         micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
 
         ctf = mic.getCTF()

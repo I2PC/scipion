@@ -67,7 +67,9 @@ COOR_EXTRA_LABELS = [
 CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
-       ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
+       ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
+       ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
+       ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
 
 CTF_PSD_DICT = OrderedDict([
@@ -101,9 +103,8 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
     xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
     xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
-    xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+    #xmipp.MDL_CTF_CRIT_FITTINGSCORE,
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
-    xmipp.MDL_CTF_CRIT_MAXFREQ,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
     xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
@@ -173,7 +174,12 @@ def objectToRow(obj, row, attrDict, extraLabels=[]):
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
-            row.setValue(label, valueType(getattr(obj, attr).get()))
+            value = getattr(obj, attr).get()
+            if value:
+                row.setValue(label, valueType(value))
+            else:
+                print "WARNING: None found for attribue: ", attr
+                print "         Not setting value for label ", xmipp.label2Str(label)
 
     attrLabels = attrDict.values()
     
@@ -312,10 +318,6 @@ def micrographToCTFParam(mic, ctfparam):
     will be returned, if not, the new file. 
     """
     ctf = mic.getCTF()
-    
-    if hasattr(ctf, '_xmippMd'):
-        return ctf._xmippMd.get()
-    
     md = xmipp.MetaData()
     md.setColumnFormat(False)
     row = XmippMdRow()
@@ -324,9 +326,7 @@ def micrographToCTFParam(mic, ctfparam):
     row.writeToMd(md, md.addObject())
     md.write(ctfparam)
     
-    return ctfparam
 
-    
 def imageToRow(img, imgRow, imgLabel, **kwargs):
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
@@ -638,6 +638,7 @@ loop_
     f.write(s)
     return f
 
+
 def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
@@ -699,6 +700,47 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
 
     return posDict.values()
 
+
+def writeCoordsConfig(configFn, boxSize=100, isManual=True):
+    """ Write the config.xmd file needed for Xmipp extraction.
+    Params:
+        configFn: The filename were to store the configuration.
+        boxSize: the box size in pixels for extraction.
+        isManual: if particles are in 'Manual' or 'Supervised' state
+    """
+    state = 'Manual' if isManual else 'Supervised'
+    # Write config.xmd metadata
+    md = xmipp.MetaData()
+    # Write properties block
+    objId = md.addObject()
+    md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
+    md.setValue(xmipp.MDL_PICKING_STATE, state, objId)
+    md.write('properties@%s' % configFn)
+
+
+def writeMicCoordinates(mic, coordList, outputFn, isManual=True, getPosFunc=None):
+    """ Write the pos file as expected by Xmipp with the coordinates
+    of a given micrograph.
+    Params:
+        mic: input micrograph.
+        coordList: list of (x, y) pairs of the mic coordinates.
+        outputFn: output filename for the pos file .
+        isManual: if the coordinates are 'Manual' or 'Supervised'
+        getPosFunc: a function to get the positions from the coordinate,
+            it can be useful for scaling the coordinates if needed.
+    """
+    if getPosFunc is None:
+        getPosFunc = lambda coord: coord.getPostion()
+
+    f = openMd(outputFn, ismanual=isManual)
+
+    for coord in coordList:
+        x, y = getPosFunc(coord)
+        f.write(" %06d   1   %d  %d  %d   %06d\n"
+                % (coord.getObjId(), x, y, 1, mic.getObjId()))
+    
+    f.close()
+    
 
 def readSetOfCoordinates(outputDir, micSet, coordSet):
     """ Read from Xmipp .pos files.

@@ -35,8 +35,6 @@ import time
 from collections import OrderedDict
 import datetime as dt
 
-import datetime
-
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
 import pyworkflow.hosts as pwhosts
@@ -72,6 +70,7 @@ class Project(object):
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
         self._isLink = os.path.islink(path)
+        self._isInReadOnlyFolder = False
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -187,8 +186,15 @@ class Project(object):
 
     def saveSettings(self):
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self.settings.write()
+
+    def createSettings(self, runsView=1, readOnly=False):
+        self.settings = pwconfig.ProjectSettings()
+        self.settings.setRunsView(runsView)
+        self.settings.setReadOnly(readOnly)
+        self.settings.write(self.settingsPath)
+        return self.settings
 
     def createMapper(self, sqliteFn):
         """ Create a new SqliteMapper object and pass as classes dict
@@ -220,6 +226,12 @@ class Project(object):
             raise Exception(
                 "Cannot load project, path doesn't exist: %s" % self.path)
 
+        # If folder is read only, flag it and warn about it.
+        if not os.access(self.path, os.W_OK):
+            self._isInReadOnlyFolder = True
+            print("WARNING on project \"%s\": don't have write permissions for project folder. "
+                  "Loading as READ-ONLY." % self.shortName)
+
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
@@ -232,7 +244,7 @@ class Project(object):
 
             # FIXME: Handle settings argument here
 
-            # It is possible that settings does not exists if 
+            # It is possible that settings does not exists if
             # we are loading a project after a Project.setDbName,
             # used when running protocols
             settingsPath = os.path.join(self.path, self.settingsPath)
@@ -355,16 +367,14 @@ class Project(object):
         pwutils.path.makePath(self.path)
         os.chdir(self.path)  # Before doing nothing go to project dir
         self._cleanData()
-        print "Creating project at: ", os.path.abspath(self.dbPath)
+        print("Creating project at: ", os.path.abspath(self.dbPath))
         # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         # Store creation time
         self._storeCreationTime(dt.datetime.now())
         # Load settings from .conf files and write .sqlite
-        self.settings = pwconfig.ProjectSettings()
-        self.settings.setRunsView(runsView)
-        self.settings.setReadOnly(readOnly)
-        self.settings.write(self.settingsPath)
+        self.settings = self.createSettings(runsView=runsView,
+                                            readOnly=readOnly)
         # Create other paths inside project
         for p in self.pathList:
             pwutils.path.makePath(p)
@@ -449,7 +459,8 @@ class Project(object):
                         skipUpdatedProtocols=True):
 
         # If this is read only exit
-        if self.isReadOnly(): return
+        if self.openedAsReadOnly():
+            return
 
         if skipUpdatedProtocols:
             # If we are already updated, comparing timestamps
@@ -496,7 +507,7 @@ class Project(object):
             prot2.getProject().closeMapper()
             prot2.closeMappers()
 
-        except Exception, ex:
+        except Exception as ex:
             print("Error trying to update protocol: %s(jobId=%s)\n "
                   "ERROR: %s, tries=%d"
                   % (protocol.getObjName(), jobId, ex, tries))
@@ -572,7 +583,7 @@ class Project(object):
         """ Check if any modification operation is allowed for
         this group of protocols. 
         """
-        if self.isReadOnly():
+        if self.openedAsReadOnly():
             raise Exception(msg + " Running in READ-ONLY mode.")
 
         self._checkProtocolsDependencies(protocols, msg)
@@ -903,7 +914,7 @@ class Project(object):
 
     def _storeProtocol(self, protocol):
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self.mapper.store(protocol)
             self.mapper.commit()
 
@@ -917,7 +928,7 @@ class Project(object):
         """Insert a new protocol instance in the database"""
 
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self._storeProtocol(protocol)  # Store first to get a proper id
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (
@@ -944,6 +955,9 @@ class Project(object):
 
             for r in self.runs:
                 self._setProtocolMapper(r)
+
+                # Check for run warnings
+                r.checkSummaryWarnings()
 
                 # Update nodes that are running and were not invoked
                 # by other protocols
@@ -1019,7 +1033,7 @@ class Project(object):
         """
 
         if refresh or self._runsGraph is None:
-            runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
+            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids) if not r.isChild()]
             self._runsGraph = self.getGraphFromRuns(runs)
             
         return self._runsGraph
@@ -1097,6 +1111,15 @@ class Project(object):
             pObj = self.getObject(rel['object_parent_id'])
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
+
+            if pObj is None or pp.get() is None:
+                print("project._getRelationGraph: ERROR, pointer to parent is "
+                      "None. IGNORING IT.\n")
+                for key in rel.keys():
+                    print("%s: %s" % (key, rel[key]))
+                    
+                continue
+
             pid = pp.getUniqueId()
             parent = g.getNode(pid)
 
@@ -1220,6 +1243,12 @@ class Project(object):
             return False
 
         return self.settings.getReadOnly()
+
+    def isInReadOnlyFolder(self):
+        return self._isInReadOnlyFolder
+
+    def openedAsReadOnly(self):
+        return self.isReadOnly() or self.isInReadOnlyFolder()
 
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
