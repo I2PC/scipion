@@ -311,6 +311,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
             # If the input is in streaming, follow the base class policy
             # about inserting new steps and discovery new input/output
             ProtParticlePickingAuto._insertAllSteps(self)
+            self.createOutputStep = self._doNothing
         else:
             # If not in streaming, then we will just insert a single step to
             # pick all micrographs at once since it is much faster
@@ -454,6 +455,22 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         self._pickMicrographsFromStar(self._getMicStarFile(mic), params,
                                       threshold, minDistance, fom)
 
+    def _createSetOfCoordinates(self, micSet, suffix=''):
+        """ Override this method to set the box size. """
+        coordSet = ProtParticlePickingAuto._createSetOfCoordinates(self, micSet,
+                                                                   suffix=suffix)
+        coordSet.setBoxSize(self.getBoxSize())
+
+        return coordSet
+
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
+        """ Parse back the output star files and populate the SetOfCoordinates.
+        """
+        template = self._getExtraPath("%s_autopick.star")
+        starFiles = [template % pwutils.removeBaseExt(mic.getFileName())
+                     for mic in micList]
+        readSetOfCoordinates(coordSet, starFiles, micList)
+
     # -------------------------- STEPS functions -------------------------------
     def autopickStep(self, micStarFile, params, threshold,
                      minDistance, maxStddevNoise, fom):
@@ -480,11 +497,10 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                 self._deleteChild('outputMicrographs', self.outputMicrographs)
 
         coordSet = self._createSetOfCoordinates(micSet)
-        coordSet.setBoxSize(self.getBoxSize())
         template = self._getExtraPath("%s_autopick.star")
         starFiles = [template % pwutils.removeBaseExt(mic.getFileName())
                      for mic in micSet]
-        readSetOfCoordinates(coordSet, starFiles)
+        readSetOfCoordinates(coordSet, starFiles, micSet)
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.getInputMicrographsPointer(),

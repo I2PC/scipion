@@ -887,16 +887,17 @@ def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 
 
-def readSetOfCoordinates(coordSet, coordFiles):
+def readSetOfCoordinates(coordSet, coordFiles, micList=None):
     """ Read a set of coordinates from given coordinate files
     associated to some SetOfMicrographs.
     Params:
         micSet and coordFiles should have same length and same order.
         coordSet: empty SetOfCoordinates to be populated.
     """
-    micSet = coordSet.getMicrographs()
-    
-    for mic, coordFn in izip(micSet, coordFiles):
+    if micList is None:
+        micList = coordSet.getMicrographs()
+
+    for mic, coordFn in izip(micList, coordFiles):
 
         if not os.path.exists(coordFn):
             print "WARNING: Missing coordinates star file: ", coordFn
