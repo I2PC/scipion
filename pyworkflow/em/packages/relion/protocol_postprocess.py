@@ -25,14 +25,12 @@
 # *
 # **************************************************************************
 
-import os
-
 from pyworkflow.protocol.params import (PointerParam, FloatParam, FileParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume, VolumeMask
 from pyworkflow.em.protocol import ProtAnalysis3D, ImageHandler
 import pyworkflow.em.metadata as md
-from convert import getVersion
+from pyworkflow.utils import exists
 import pyworkflow.utils.path as putils
 
 
@@ -62,7 +60,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
                       pointerClass="ProtRefine3D",
                       label='Select a previous refinement protocol',
                       help='Select any previous refinement protocol to get the '
-                           '3D half maps. Note that is recomended that the '
+                           '3D half maps. Note that it is recommended that the '
                            'refinement protocol uses a gold-standard method.')
         form.addSection(label='Masking')
         form.addParam('doAutoMask', BooleanParam, default=True,
@@ -71,7 +69,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
                            'threshold')
         form.addParam('initMaskThreshold', FloatParam, default=0.02,
                       condition='doAutoMask',
-                      label='Initial binarisation threshold',
+                      label='Initial binarization threshold',
                       help='This threshold is used to make an initial binary '
                            'mask from the average of the two unfiltered '
                            'half-reconstructions. If you do not know what '
@@ -148,8 +146,6 @@ class ProtRelionPostprocess(ProtAnalysis3D):
                            'using a resolution that is higher than the '
                            'gold-standard FSC-reported resolution, take care '
                            'not to interpret noise in the map for signal...')
-        if getVersion() == "2.0":
-            pass
         form.addParam('filterEdgeWidth', IntParam, default=2,
                       expertLevel=LEVEL_ADVANCED,
                       label='Low-pass filter edge width:',
@@ -239,26 +235,26 @@ class ProtRelionPostprocess(ProtAnalysis3D):
         volume.setFileName(self._getExtraPath('postprocess.mrc'))
         vol = self.protRefine.get().outputVolume
         pxSize = vol.getSamplingRate()
-        
         volume.setSamplingRate(pxSize)
-        mask = VolumeMask()
-        mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
-        mask.setSamplingRate(pxSize)
-        
         self._defineOutputs(outputVolume=volume)
-        self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(vol, volume)
-        self._defineSourceRelation(vol, mask)
-    
+
+        if self.doAutoMask:
+            mask = VolumeMask()
+            mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
+            mask.setSamplingRate(pxSize)
+            self._defineOutputs(outputMask=mask)
+            self._defineSourceRelation(vol, mask)
+
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        """ Should be overriden in subclasses to
-        return summary message for NORMAL EXECUTION. 
+        """ Should be overwritten in subclasses to
+        return summary message for NORMAL EXECUTION.
         """
         errors = []
         mtfFile = self.mtf.get()
         
-        if mtfFile and not os.path.exists(mtfFile):
+        if mtfFile and not exists(mtfFile):
             errors.append("Missing MTF-file '%s'" % mtfFile)
 
         protClassName = self.protRefine.get().getClassName()
@@ -272,15 +268,15 @@ class ProtRelionPostprocess(ProtAnalysis3D):
         return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
         postStarFn = self._getExtraPath("postprocess.star")
-        if os.path.exists(postStarFn):
+        if exists(postStarFn):
             mdResol = md.RowMetaData(postStarFn)
             resol = mdResol.getValue(md.RLN_POSTPROCESS_FINAL_RESOLUTION)
-            summary.append("Final resolution: *%0.2f*" % resol)
+            summary.append("Final resolution: *%0.2f A*" % resol)
         
         return summary
         
@@ -288,12 +284,12 @@ class ProtRelionPostprocess(ProtAnalysis3D):
     def _defineParamDict(self):
         """ Define all parameters to run relion_postprocess"""
         volume = self.protRefine.get().outputVolume
-        self.paramDict = {'--i' : self._getTmpPath("relion"),
-                          '--o' : self._getExtraPath('postprocess'),
-                          '--angpix' : volume.getSamplingRate(),
+        self.paramDict = {'--i': self._getTmpPath("relion"),
+                          '--o': self._getExtraPath('postprocess'),
+                          '--angpix': volume.getSamplingRate(),
                           # Expert params
-                          '--filter_edge_width' : self.filterEdgeWidth.get(),
-                          '--randomize_at_fsc' : self.randomizeAtFsc.get()
+                          '--filter_edge_width': self.filterEdgeWidth.get(),
+                          '--randomize_at_fsc': self.randomizeAtFsc.get()
                           }
         if self.doAutoMask:
             self.paramDict['--auto_mask'] = ''
