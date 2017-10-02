@@ -142,7 +142,7 @@ class ProtMonitorSummary(ProtMonitor):
                            "You can use the special token %(REPORT_FOLDER)s "
                            "that will be replaced with the report folder. "
                            "For example: \n"
-                           "rsync -av %(REPORT_FOLDER)s "
+                           "rsync -avL %(REPORT_FOLDER)s "
                            "scipion@webserver:public_html/")
 
     # --------------------------- INSERT steps functions ---------------------
