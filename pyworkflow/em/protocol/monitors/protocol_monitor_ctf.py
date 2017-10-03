@@ -29,6 +29,7 @@ import sys
 
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor, EmailNotifier
+from report_html import MIC_PATH, PSD_PATH, SHIFT_PATH
 import sqlite3 as lite
 import time, sys
 
@@ -229,9 +230,9 @@ class MonitorCTF(Monitor):
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
             'idValues': get('id'),
-            'imgMicPath': get('micPath'),
-            'imgPsdPath': get('psdPath'),
-            'imgShiftPath': get('shiftPlotPath')
+            MIC_PATH: get('micPath'),
+            PSD_PATH: get('psdPath'),
+            SHIFT_PATH: get('shiftPlotPath')
         }
         # conn.close()
         return data

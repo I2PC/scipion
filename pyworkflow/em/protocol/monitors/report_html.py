@@ -37,6 +37,18 @@ import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
 from pyworkflow.em.convert import ImageHandler
 
+####################### CONSTANTS ##########################
+# These constants are the keys used in the ctfMonitor function
+# getData() to store paths to micrographs, psd files and shift plots
+MIC_PATH = 'imgMicPath'
+PSD_PATH = 'imgPsdPath'
+SHIFT_PATH = 'imgShiftPath'
+# These constants are the name of the folders where thumbnails
+# for the html report will be stored. They are also the keys to
+# the attribute thumbPaths.
+MIC_THUMBS = 'imgMicThumbs'
+PSD_THUMBS = 'imgPsdThumbs'
+SHIFT_THUMBS = 'imgShiftThumbs'
 
 
 class ReportHtml:
@@ -54,9 +66,9 @@ class ReportHtml:
         self.movieGainMonitor = movieGainMonitor
         self.lastThumbIndex = 0
         self.thumbsReady = 0
-        self.thumbPaths = {'imgMicThumbs': [],
-                           'imgPsdThumbs': [],
-                           'imgShiftThumbs': []}
+        self.thumbPaths = {MIC_THUMBS: [],
+                           PSD_THUMBS: [],
+                           SHIFT_THUMBS: []}
 
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
@@ -95,32 +107,29 @@ class ReportHtml:
         - ext: extension of the thumbnail images. Defaults to png.
 
         """
-        micsFolder = 'imgMicThumbs'  # key from self.thumbPaths
-        psdFolder = 'imgPsdThumbs'  # key from self.thumbPaths
-        shiftPlotsFolder = 'imgShiftThumbs'  # key from self.thumbPaths
-        copyShiftPlots = 'imgShiftPath' in ctfData
+        copyShiftPlots = SHIFT_PATH in ctfData
 
         # If we're in the first round, create thumbnail folders
         if self.lastThumbIndex == 0:
             if not copyShiftPlots:
-                self.thumbPaths.pop('imgShiftPath')
+                self.thumbPaths.pop(SHIFT_PATH)
             folderPaths = [join(self.reportDir, f) for f in self.thumbPaths.keys()]
             pwutils.makePath(*folderPaths)
 
-        for i in range(self.lastThumbIndex, len(ctfData['imgMicPath'])):
-            micPath = ctfData['imgMicPath'][i]
-            micThumb = join(micsFolder, pwutils.replaceExt(basename(micPath), ext))
-            self.thumbPaths[micsFolder].append(micThumb)
+        for i in range(self.lastThumbIndex, len(ctfData[MIC_PATH])):
+            micPath = ctfData[MIC_PATH][i]
+            micThumb = join(MIC_THUMBS, pwutils.replaceExt(basename(micPath), ext))
+            self.thumbPaths[MIC_THUMBS].append(micThumb)
 
-            psdPath = ctfData['imgPsdPath'][i]
+            psdPath = ctfData[PSD_PATH][i]
             movie = basename(os.path.dirname(psdPath))
-            psdThumb = join(psdFolder, "%s_%s" % (movie, pwutils.replaceExt(basename(psdPath), ext)))
-            self.thumbPaths[psdFolder].append(psdThumb)
+            psdThumb = join(PSD_THUMBS, "%s_%s" % (movie, pwutils.replaceExt(basename(psdPath), ext)))
+            self.thumbPaths[PSD_THUMBS].append(psdThumb)
 
             if copyShiftPlots:
-                shiftPath = ctfData['imgShiftPath'][i]
-                shiftCopy = join(shiftPlotsFolder, pwutils.replaceExt(basename(shiftPath), ext))
-                self.thumbPaths[shiftPlotsFolder].append(shiftCopy)
+                shiftPath = ctfData[SHIFT_PATH][i]
+                shiftCopy = join(SHIFT_THUMBS, pwutils.replaceExt(basename(shiftPath), ext))
+                self.thumbPaths[SHIFT_THUMBS].append(shiftCopy)
 
         return
 
@@ -134,30 +143,27 @@ class ReportHtml:
         - micScaleFactor: how much to reduce in size the micrographs.
         """
         ih = ImageHandler()
-        micsFolder = 'imgMicThumbs'
-        psdFolder = 'imgPsdThumbs'
-        shiftPlotsFolder = 'imgShiftThumbs'
 
-        numMics = len(ctfData['imgMicPath'])
-        numShiftPlots = len(ctfData.get('imgShiftPath', []))
+        numMics = len(ctfData[MIC_PATH])
+        numShiftPlots = len(ctfData.get(SHIFT_PATH, []))
 
         for i in range(firstThumbIndex, numMics):
             print('Generating images for mic %d' % i)
             # mic thumbnails
-            dstImgPath = join(self.reportDir, self.thumbPaths[micsFolder][i])
+            dstImgPath = join(self.reportDir, self.thumbPaths[MIC_THUMBS][i])
             if not exists(dstImgPath):
-                ih.computeThumbnail(ctfData['imgMicPath'][i], dstImgPath, scaleFactor=micScaleFactor)
+                ih.computeThumbnail(ctfData[MIC_PATH][i], dstImgPath, scaleFactor=micScaleFactor)
 
             # psd thumbnails
-            dstImgPath = join(self.reportDir, self.thumbPaths[psdFolder][i])
+            dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
             if not exists(dstImgPath):
-                ih.computeThumbnail(ctfData['imgPsdPath'][i], dstImgPath, scaleFactor=1)
+                ih.computeThumbnail(ctfData[PSD_PATH][i], dstImgPath, scaleFactor=1)
 
             # shift plots
             if numShiftPlots:
-                dstImgPath = join(self.reportDir, self.thumbPaths[shiftPlotsFolder][i])
+                dstImgPath = join(self.reportDir, self.thumbPaths[SHIFT_THUMBS][i])
                 if not exists(dstImgPath):
-                    pwutils.createAbsLink(ctfData['imgShiftPath'][i], dstImgPath)
+                    pwutils.createAbsLink(ctfData[SHIFT_PATH][i], dstImgPath)
 
         return
 
@@ -224,7 +230,7 @@ class ReportHtml:
         reportFinished = True
 
         if data:
-            numImages = len(data['imgMicPath'])
+            numImages = len(data[MIC_PATH])
 
             if self.lastThumbIndex < numImages:  # if there are new images to generate in this round
                 # get the thumbnail paths
@@ -240,7 +246,7 @@ class ReportHtml:
                                                       args=(data, self.lastThumbIndex))
                     process.start()
                 # update number of thumbnails we generated
-                self.lastThumbIndex = len(data['imgMicPath'])
+                self.lastThumbIndex = len(data[MIC_PATH])
 
             self.thumbsReady = self.checkNewThumbsReady()
 
@@ -255,7 +261,7 @@ class ReportHtml:
                 data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
 
             # remove data of original pictures, report doesn't need it
-            for k in ['imgMicPath', 'imgPsdPath', 'imgShiftPath']:
+            for k in [MIC_PATH, PSD_PATH, SHIFT_PATH]:
                 data.pop(k)
             # send over only thumbnails of the mics that have been fully processed
             for k in self.thumbPaths:
