@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# *              Tomas Majtner (tmajtner@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,21 +25,20 @@
 # *
 # **************************************************************************
 from pyworkflow import VERSION_1_1
+from pyworkflow.em.data import SetOfMovies, Movie
+from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
+from pyworkflow.em.protocol.monitors import MovieGainMonitorPlotter, MonitorMovieGain
+from pyworkflow.object import Set
+from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.em.protocol.monitors.protocol_monitor_movie_gain import MovieGainMonitorPlotter
-from pyworkflow.em.protocol.monitors.protocol_monitor_movie_gain import MonitorMovieGain
-from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
-from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
-from pyworkflow.em.data import SetOfMovies, Movie
-from pyworkflow.object import Set
 import pyworkflow.protocol.constants as cons
 import pyworkflow.em as em
 import numpy as np
 import os
 import math
 import xmipp
-
+from pyworkflow.em.plotter import EmPlotter
 
 class XmippProtMovieGain(ProtProcessMovies):
     """
@@ -84,6 +84,7 @@ class XmippProtMovieGain(ProtProcessMovies):
     #--------------------------- STEPS functions -------------------------------
 
     def createOutputStep(self):
+        self._insertFunctionStep('monitorStep')
         # Do nothing now, the output should be ready.
         pass
 
@@ -148,16 +149,6 @@ class XmippProtMovieGain(ProtProcessMovies):
             fhSummary.close()
             fnMonitorSummary.write("movie_%06d: %f %f %f %f\n" % (movieId, dev, p[0], p[4], max))
             fnMonitorSummary.close()
-
-        # NOT WORKING
-        # movieGainMonitor = MonitorMovieGain(self,
-        #                                     workingDir=self.workingDir.get(),
-        #                                     samplingInterval=60,
-        #                                     monitorTime=300,
-        #                                     stddevValue=0.04,
-        #                                     ratio1Value=1.15,
-        #                                     ratio2Value=4.5)
-        # MovieGainMonitorPlotter(movieGainMonitor.getData())
 
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
@@ -279,6 +270,39 @@ class XmippProtMovieGain(ProtProcessMovies):
 
         # Close set databaset to avoid locking it
         outputSet.close()
+
+
+    def monitorStep(self):
+        idValues = []
+        stddevValues = []
+        ratio1Values = []
+        ratio2Values = []
+
+        fnSummary = self._getPath("summaryForMonitor.txt")
+        if not os.path.exists(fnSummary) < 1:
+            fhSummary = open(fnSummary, "r")
+            for idx, line in enumerate(fhSummary.readlines()):
+                stddev, perc25, perc975, maxVal = map(float, line.split()[1:])
+                idValues.append(idx)
+                stddevValues.append(stddev)
+                ratio1Values.append(perc975 / perc25)
+                ratio2Values.append(maxVal / perc975)
+            fhSummary.close()
+
+        data = {
+            'idValues': idValues,
+            'standard_deviation': stddevValues,
+            'ratio1': ratio1Values,
+            'ratio2': ratio2Values
+        }
+
+        print("-----------------------before")
+        xplotter = EmPlotter(1, 1)
+        a = xplotter.createSubPlot("Factor %d vs %d" % (10, 10),
+                                   "Factor %d" % 5, "Factor %d" % 5)
+        a.plot(data['ratio1'], data['ratio2'], 'o')
+        xplotter.show()
+        print("-----------------------after")
 
     #--------------------------- INFO functions -------------------------------
     def _summary(self):
