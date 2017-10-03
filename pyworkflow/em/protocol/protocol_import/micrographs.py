@@ -25,14 +25,14 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import BaseHTTPServer
 import os
 from os.path import join, basename
 import re
 from datetime import timedelta
-import socket
-import select
 import shlex
+from Queue import Queue, Empty
+from threading import Thread
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -41,7 +41,6 @@ from pyworkflow.em import ImageHandler
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 
 from images import ProtImportImages
-
 
 
 class ProtImportMicBase(ProtImportImages):
@@ -287,8 +286,7 @@ class ProtImportMovies(ProtImportMicBase):
 
     def __init__(self, **kwargs):
         ProtImportMicBase.__init__(self, **kwargs)
-        self.serverSocket = None
-        self.connectionList = None
+        self.http_server = None
 
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)
@@ -387,7 +385,7 @@ class ProtImportMovies(ProtImportMicBase):
 
         if self.dataStreaming or inputIndividualFrames:
             if self.streamingSocket:
-                self.launchSocket()
+                self.launchServer()
             funcName = 'importImagesStreamStep'
         else:
             funcName = 'importImagesStep'
@@ -448,75 +446,23 @@ class ProtImportMovies(ProtImportMicBase):
         imgSet.setDim(dim)
         imgSet.setFramesRange(range)
 
-    def launchSocket(self):
+    def launchServer(self):
         host = ''  # Where do we get this?!!
-        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        serverSocket.bind((host, self.socketPort))
-        serverSocket.listen(10)
-        serverSocket.setblocking(0)
-        self.serverSocket = serverSocket
-        self.connectionList = [serverSocket]
-        self.info("Socket started on port " + str(self.socketPort))
-        return serverSocket
+        self.http_server = BaseHTTPServer.HTTPServer((host, self.socketPort), RESTRequestHandler)
+        Thread(target=self.http_server.serve_forever).start()
+        self.http_server.serve_forever()
+        self.info("Server started on port " + str(self.socketPort))
 
     def iterFilenamesFromSocket(self):
-        recv_buffer = 4096  # Advisable to keep it as an exponent of 2
-        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
-        for sock in read_sockets:
-            if sock is self.serverSocket:
-                # New connection received through self.serverSocket
-                sockfd, addr = self.serverSocket.accept()
-                sockfd.setblocking(0)
-                self.connectionList.append(sockfd)
-                self.debug("Client (%s, %s) connected" % addr)
-                continue
-            else:
-                # Data received from a client, process it
-                try:
-                    # In Windows, sometimes when a TCP program closes abruptly,
-                    # a "Connection reset by peer" exception will be thrown
-                    data = sock.recv(recv_buffer)
-                    if data:
-                        files = shlex.split(data)
-                        self.debug("Data received in socket:")
-                        self.debug(files)
-                        for fileName in files:
-                            uniqueFn = self._getUniqueFileName(fileName, files)
-                            if uniqueFn in self.importedFiles:
-                                self._spreadMessage('WARNING: Not importing,'
-                                                    ' already imported file %s '
-                                                    '\n' % fileName, sock)
-                                continue
-                            else:
-                                if os.path.exists(fileName):
-                                    self._spreadMessage('OK: Importing file %s '
-                                                        '\n' % fileName, sock)
-                                    fileId = None
-                                    yield fileName, uniqueFn, fileId
-                                else:
-                                    self._spreadMessage('WARNING: Not '
-                                                        'importing , path does '
-                                                        'not exist %s '
-                                                        '\n' % fileName, sock)
-                                    continue
-                    else:
-                        continue
-                # client disconnected, remove from socket list
-                except Exception as e:
-                    self.debug("Exception reading socket!!")
-                    self.debug(str(e))
-                    sock.close()
-                    self.connectionList.remove(sock)
-                    continue
-        return
-
-    def _spreadMessage(self, message, sock):
         try:
-            if sock is not None:
-                sock.send(message)
-            self.debug(message)
-        except:
+            while True:
+                fileName = RESTRequestHandler.buffer.get_nowait()
+                if fileName in self.importedFiles:
+                    self.info('WARNING: Not importing, already imported file %s \n' % fileName)
+                else:
+                    self.info('OK: Importing file %s \n' % fileName)
+                yield fileName, None
+        except Empty:
             pass
 
     def iterNewInputFiles(self):
@@ -636,5 +582,20 @@ class ProtImportMovies(ProtImportMicBase):
     def _cleanUp(self):
         if self.streamingSocket:
             self.debug('Closing socket...')
-            self.serverSocket.shutdown(socket.SHUT_RDWR)
-            self.serverSocket.close()
+            self.http_server.server_close()
+
+class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    buffer = Queue()
+
+    def __init__(self, *args, **kwargs):
+        BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
+
+    def do_POST(self):
+        content_len = int(self.headers.getheader('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        files = shlex.split(post_body)
+        self.info("Data received in socket:")
+        self.info(files)
+        for file in files:
+            self.buffer.put(file)
+            self.send_response(200)
