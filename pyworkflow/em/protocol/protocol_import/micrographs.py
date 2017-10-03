@@ -441,7 +441,6 @@ class ProtImportMovies(ProtImportMicBase):
         host = ''  # Where do we get this?!!
         self.http_server = BaseHTTPServer.HTTPServer((host, self.socketPort), RESTRequestHandler)
         Thread(target=self.http_server.serve_forever).start()
-        self.http_server.serve_forever()
         self.info("Server started on port " + str(self.socketPort))
 
     def iterFilenamesFromSocket(self):
@@ -452,9 +451,9 @@ class ProtImportMovies(ProtImportMicBase):
                     self.info('WARNING: Not importing, already imported file %s \n' % fileName)
                 else:
                     self.info('OK: Importing file %s \n' % fileName)
-                yield fileName, None
+                    yield fileName, None
         except Empty:
-            pass
+            self.info('buffer empty')
 
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
@@ -582,8 +581,8 @@ class RESTRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         content_len = int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
         files = shlex.split(post_body)
-        self.info("Data received in socket:")
-        self.info(files)
-        for file in files:
-            self.buffer.put(file)
+        print "Data received in socket:"
+        for f in files:
+            print f
+            self.buffer.put(f)
             self.send_response(200)
