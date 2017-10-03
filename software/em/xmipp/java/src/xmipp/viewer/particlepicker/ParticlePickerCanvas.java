@@ -32,8 +32,8 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
 {
 	public final static BasicStroke dashedst = new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke continuousst = new BasicStroke(2.0f);
-	public final static BasicStroke activest = new BasicStroke(3.0f);
-	//public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
+    public final static BasicStroke thinContinuousSt = new BasicStroke(1.5f);
+	public final static BasicStroke activest = new BasicStroke(1.5f);
         
 	protected ParticlePickerJFrame frame;
 	protected Micrograph micrograph;
@@ -109,6 +109,12 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
 				setActiveMoved(true);
 				manageActive(active.getX() + step, active.getY());
 			}
+            else if (code == ParticlePickerJFrame.ERASE_ACTIVE)
+            {
+                removeParticle((P) active);
+                this.active = getLastParticle();
+                refresh();
+            }
 		}
 		if (code == ParticlePickerJFrame.TOGGLE_MARKER_KEY)
 		{
