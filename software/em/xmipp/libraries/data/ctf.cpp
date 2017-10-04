@@ -540,7 +540,6 @@ void CTFDescription1D::readParams(XmippProgram * program)
 	alpha=program->getDoubleParam("--convergence_cone");
 	DeltaF=program->getDoubleParam("--longitudinal_displace");
 	DeltaR=program->getDoubleParam("--transversal_displace");
-	//Q0=program->getDoubleParam("--Q0");
 	K=program->getDoubleParam("--K");
 }
 
@@ -1140,7 +1139,7 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 	        row.getValueOrDefault(MDL_CTF_ENV_R1, envR1, 0);
 	        row.getValueOrDefault(MDL_CTF_ENV_R2, envR2, 0);*/
     	}
-    	/*else if (row.containsLabel(MDL_CTF_MODEL))
+    	else if (row.containsLabel(MDL_CTF_MODEL))
     	{
     		FileName fnctf;
     		row.getValue(MDL_CTF_MODEL,fnctf);
@@ -1149,7 +1148,7 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
     		readFromMetadataRow(ctfparam,ctfparam.firstObject(),disable_if_not_K);
     	}
 
-        if (K == 0 && disable_if_not_K)
+        /*if (K == 0 && disable_if_not_K)
             enable_CTF = false;*/
     }
     if (enable_CTFnoise)
@@ -1183,12 +1182,21 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 
 void CTFDescription::readFromMetadataRow(const MetaData &md, size_t id, bool disable_if_not_K)
 {
-	CTFDescription1D::readFromMetadataRow(md,id,disable_if_not_K);
+	MDRow row;
+	md.getRow(row, id);
+	readFromMdRow(row, disable_if_not_K);
 }
 
 void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
 {
-	CTFDescription1D::read(fn,disable_if_not_K);
+	if (fn.isMetaData())
+	{
+		MetaData md;
+		md.read(fn);
+		MDRow row;
+		md.getRow(row, md.firstObject());
+		readFromMdRow(row, disable_if_not_K);
+	}
 }
 
 /* Write ------------------------------------------------------------------- */
@@ -1382,7 +1390,7 @@ void CTFDescription::lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> 
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
     int found = 0;
-    double last_ctf = getValuePureNoDampingNoPrecomputedAt(0,0), ctf=0.0, state=1; //getValuePureWithoutDampingAt()
+    double last_ctf = getValuePureNoDampingNoPrecomputedAt(0,0) , ctf=0.0, state=1; //getValuePureWithoutDampingAt()
     double w;
     for (w = 0; w <= wmax; w += wstep)
     {
