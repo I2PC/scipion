@@ -29,7 +29,7 @@ Some Spider protocol base classes.
 
 from pyworkflow.em import EMProtocol
 
-from ..spider import runTemplate
+from ..spider import runTemplate, environment
 from ..convert import writeSetOfImages
 
 
@@ -80,3 +80,8 @@ class SpiderProtocol(EMProtocol):
             if 'FATAL ERROR ENCOUNTERED IN BATCH MODE' in line:
                 raise Exception('Spider script error!')
         f.close()
+
+    @staticmethod
+    def isInstalled():
+        return environment.isInstalled()
+

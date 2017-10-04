@@ -41,7 +41,7 @@ from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesM
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider, HotButton
 
-from spider import SpiderShell, runCustomMaskScript
+from spider import SpiderShell, runCustomMaskScript, environment
 from constants import FILTER_FERMI
 from convert import locationToSpider
 from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 
@@ -131,6 +131,13 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
+
+        if not environment.isInstalled():
+            dialog.showWarning("Spider not installed",
+                               "Spider package is not installed, please "
+                               "install it or ask you system admin to do it "
+                               "for you.", form.root)
+            return
 
         if provider is not None:
             d = SpiderFilterDialog(form.root, provider, 

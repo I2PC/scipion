@@ -303,6 +303,10 @@ class Protocol(Step):
     # Version where protocol appeared first time
     _lastUpdateVersion = pw.VERSION_1
 
+    @staticmethod
+    def isInstalled():
+        return True
+
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)        
         self._steps = [] # List of steps that will be executed

@@ -42,6 +42,8 @@ from pyworkflow import em
 from pyworkflow.mapper import SqliteMapper
 
 PATH = os.path.dirname(__file__)
+PROTOCOL_DISABLED_TAG = 'protocol-disabled'
+PROTOCOL_TAG = 'protocol'
 
 
 def loadSettings(dbPath):
@@ -239,7 +241,9 @@ def addAllProtocols(protocols):
                 packages[packageName] = packageMenu
 
             # Add the protocol
-            protLine = {"tag": "protocol", "value": k, "text": v.getClassLabel(prependPackageName=False)}
+            tag = getProtocolTag(v.isInstalled())
+
+            protLine = {"tag": tag, "value": k, "text": v.getClassLabel(prependPackageName=False)}
 
             # If it's a new protocol
             if v.isNew():
@@ -249,6 +253,10 @@ def addAllProtocols(protocols):
             addToTree(packageMenu, protLine)
 
     protocols["All"] = allProtMenu
+
+
+def getProtocolTag(isInstalled):
+    return PROTOCOL_TAG if isInstalled else PROTOCOL_DISABLED_TAG
 
 
 def loadWebConf():

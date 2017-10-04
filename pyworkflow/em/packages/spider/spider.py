@@ -62,6 +62,7 @@ def getEnviron():
     SPIDER_DIR = env.getFirst(('SPIDER_HOME', 'SPIDER_DIR'), mandatory=True)  #
     # Scipion
     # definition
+    env.setInstallationPath(SPIDER_DIR)
     
     if SPIDER_DIR is None:
         errors = ''
