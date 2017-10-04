@@ -181,13 +181,14 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
       CTF1.read(fnCTF);
     }
     else
-      CTF1.readFromMdRow(rowIn);
+    	CTF1.readFromMdRow(rowIn);
 
     FileName fnRoot = fnMicrograph.withoutExtension();
 
     CTF1.produceSideInfo();
     evaluation.defocusU=CTF1.DeltafU;
     evaluation.defocusV=CTF1.DeltafV;
+
 
     if (rowIn.containsLabel(MDL_CTF_MODEL2))
     	rowIn.getValue(MDL_CTF_MODEL2,fnCTF2);
@@ -219,10 +220,14 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
      * This is the expression of critBeating
      */
     evaluation.beating=1.0/sqrt(PI/(CTF1.K1*abs(CTF1.DeltafU-CTF1.DeltafV)));
+    std::cout << "DefocusUV =" << CTF1.DeltafU << " " << CTF1.DeltafV << std::endl;
+    std::cout << "K1 = " << CTF1.K1 << std::endl;
+    std::cout << "beating = " << 1.0/sqrt(PI/(CTF1.K1*abs(CTF1.DeltafU-CTF1.DeltafV))) << std::endl;
 
     // Read input PSD data
     Image<double> PSD;
     PSD.read(fnPSD);
+
     // Enhance the PSD
     ProgCTFEnhancePSD enhancePSD;
     enhancePSD.filter_w1 = filter_w1;
@@ -284,6 +289,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     CTF1.precomputeValues(0.0,0.0);
 	double idamping0=1.0/CTF1.getValueDampingAt();
 	double f2pixel=CTF1.Tm*XSIZE(PSD()); // COSS *downsampling
+
 	if (rowIn.containsLabel(MDL_CTF_DOWNSAMPLE_PERFORMED))
 	{
 		double aux;
@@ -294,7 +300,6 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 	MetaData mdEnvelope;
 	Matrix1D< double > envelope(100);
 	envelope.initZeros();
-
 	double Nalpha = 180;
     for (double alpha=0; alpha<=PI; alpha+=PI/Nalpha, N++)
     {
@@ -309,7 +314,6 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 
     	// Get the first minimum (it is at higher frequency than the zero)
     	CTF1.lookFor(1, u, freqMin1, -1);
-
     	pixelZero1=freqZero1*f2pixel;
     	pixelMin1=freqMin1*f2pixel;
     	double psdZero=PSD().interpolatedElement2D(XX(pixelZero1),YY(pixelZero1),0.0);
@@ -361,7 +365,6 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 		objId2 = mdEnvelope.addObject();
 		idx++;
 	}
-
     evaluation.firstZeroAvg/=N;
     evaluation.firstZeroRatio=maxModuleZero/minModuleZero;
     firstZeroAvgPSD/=N;
