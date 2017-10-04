@@ -66,6 +66,9 @@ public:
     	w_digfreq_r = copy->w_digfreq_r;
     	///Masks
     	mask = copy->mask;
+    	mask_between_zeroes = copy->mask_between_zeroes;
+    	max_freq = copy->max_freq;
+    	min_freq = copy->min_freq;
     	min_freq_psd = copy->min_freq_psd;
     	max_freq_psd = copy->max_freq_psd;
     	corr13 = copy->corr13;
@@ -89,6 +92,8 @@ public:
     	Tm = copy->Tm;
     	f = copy->f;
     	ctfmodelSize = copy->ctfmodelSize;
+    	show_optimization = copy->show_optimization;
+    	fn_psd = copy->fn_psd;
 
     }
 
