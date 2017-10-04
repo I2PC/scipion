@@ -722,10 +722,10 @@ double ProgCTFEstimateFromPSD::CTF_fitness_object(double *p)
     double lowerLimit = 1.1 * min_freq_psd;
     double upperLimit = 0.9 * max_freq_psd;
     const MultidimArray<double>& local_enhanced_ctf = enhanced_ctftomodel();
-    //global_prm->global_psd_exp_radial.initZeros();
     int XdimW=XSIZE(w_digfreq);
     int YdimW=YSIZE(w_digfreq);
     corr13=0;
+
     for (int i = 0; i < YdimW; i += evaluation_reduction)
         for (int j = 0; j < XdimW; j += evaluation_reduction)
         {
@@ -829,7 +829,6 @@ double ProgCTFEstimateFromPSD::CTF_fitness_object(double *p)
             N++;
         }
 
-
     if (N > 0)
         retval = distsum / N;
     else
@@ -841,7 +840,6 @@ double ProgCTFEstimateFromPSD::CTF_fitness_object(double *p)
     if ( (((action >= 3) && (action <= 4)) || (action == 7))
          && (Ncorr > 0) && (enhanced_weight != 0) )
     {
-
         model_avg /= Ncorr;
         enhanced_avg /= Ncorr;
         double correlation_coeff = enhanced_model / Ncorr
@@ -878,7 +876,6 @@ double ProgCTFEstimateFromPSD::CTF_fitness_object(double *p)
                 << " (" << correlation_coeff << ")" << std::endl;
             }
         }
-
         // Correlation of the derivative of the radial profile
         if (action==3 || evaluation_reduction==1)
         {
