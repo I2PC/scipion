@@ -47,8 +47,8 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
     _criterion = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
                   "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR "
-                  "ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3 OR "
-                  "ctfCritNonAstigmaticValidty>25")
+                  "ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0 OR "
+                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>50000 OR ctfBgGaussianSigmaU<1000")
 
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
@@ -72,7 +72,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
     def _defineProcessParams(self, form):
         form.addParam('doInitialCTF', params.BooleanParam, default=False,
                       label="Use defoci from a previous CTF estimation")
-        form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
+        form.addParam('ctfRelations',params.RelationParam, allowsNull=True,
                       condition='doInitialCTF',
                       relationName=em.RELATION_CTF,
                       attributeName='getInputMicrographs',
@@ -482,6 +482,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
         # Evaluate if estimated ctf is good enough
         try:
+            #if fnEval == "Runs/003984_XmippProtCTFMicrographs/extra/FoilHole_2052784_Data_2047433_2047434_20161203_0346_frames_aligned_mic/xmipp_ctf.xmd":
+                #print("Run xmipp_ctf_sort_psds -i %s"%fnEval)
+                #aaaaa
             self.runJob("xmipp_ctf_sort_psds", "-i %s" % (fnEval))
         except Exception:
             pass
@@ -499,7 +502,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             mdCTFparam.setValue(md.MDL_ENABLED, -1, mdCTFparam.firstObject())
             mdCTFparam.write(fnEval)
             retval = False
-
+            
         pwutils.path.cleanPath(fnRejected)
 
         return retval
