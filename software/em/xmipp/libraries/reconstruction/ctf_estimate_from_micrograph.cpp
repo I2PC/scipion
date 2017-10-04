@@ -641,7 +641,7 @@ void ProgCTFEstimateFromMicrograph::run()
 				}
 				else
 				{
-				//1D acceleration
+				std::cout << "1D acceleration" << std::endl;
                 ctf1Dmodel.isLocalCTF = false;
 				ctf1Dmodel.x0 = 0;
 				ctf1Dmodel.xF = (Xdim-1);
