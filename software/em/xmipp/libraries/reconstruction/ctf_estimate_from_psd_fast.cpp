@@ -42,7 +42,7 @@ extern double CTF_fitness(double *p, void *vprm);
 #define ALL_CTF_PARAMETERS           26
 #define CTF_PARAMETERS               20
 #define PARAMETRIC_CTF_PARAMETERS    16
-#define BACKGROUND_CTF_PARAMETERS    9
+#define BACKGROUND_CTF_PARAMETERS     9
 #define SQRT_CTF_PARAMETERS           6
 #define ENVELOPE_PARAMETERS          11
 #define DEFOCUS_PARAMETERS            3
@@ -65,13 +65,7 @@ std::ofstream fhDebug;
 
 namespace AdjustCTF1D
 {
-// Some aliases
 ProgCTFEstimateFromPSDFast *global_prm;
-ProgCTFEstimateFromPSD *global_prm2D;
-
-// CTF model and noise model
-//CTFDescription1D global_ctfmodel;
-//CTFDescription1D global_ctfmodel_defoci;
 }
 
 using namespace AdjustCTF1D;
@@ -150,12 +144,6 @@ void ProgCTFEstimateFromPSDFast::assignParametersFromCTF_fast(CTFDescription1D &
                                MATRIX1D_ARRAY(*global_prm->adjust_params),0,ALL_CTF_PARAMETERS, \
                                global_prm->modelSimplification);
 
-/*#define COPY_ctfmodel_TO_CURRENT_GUESS_2D \
-	    global_prm2D->assignParametersFromCTF(global_prm2D->current_ctfmodel, \
-	                               MATRIX1D_ARRAY(*global_prm2D->adjust_params),0,ALL_CTF_PARAMETERS2D, \
-	                               global_prm->modelSimplification);*/
-
-
 
 /* Read parameters --------------------------------------------------------- */
 void ProgCTFEstimateFromPSDFast::readBasicParams(XmippProgram *program)
@@ -170,15 +158,6 @@ void ProgCTFEstimateFromPSDFast::readBasicParams(XmippProgram *program)
 
 }
 
-/*void ProgCTFEstimateFromPSDFast::readParams()
-{
-    readBasicParams(this);
-}*/
-/* Show -------------------------------------------------------------------- */
-/*void ProgCTFEstimateFromPSDFast::show()
-{
-	ProgCTFBasicParams::show();
-}*/
 /* Usage ------------------------------------------------------------------- */
 void ProgCTFEstimateFromPSDFast::defineBasicParams(XmippProgram * program)
 {
@@ -439,7 +418,7 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 		current_ctfmodel.precomputeValues(i);
 		double bg = current_ctfmodel.getValueNoiseAt();
 
-		double envelope=0, ctf_without_damping, ctf_with_damping=0;
+		double envelope=0, ctf_without_damping, ctf_with_damping=0, current_envelope = 0;
 		double ctf2_th=0;
 		switch (action)
 		{
@@ -1262,12 +1241,6 @@ void ProgCTFEstimateFromPSDFast::estimate_background_gauss_parameters2_fast()
     }
 }
 
-/*double CTF_fitness2D(double *p, void *)
-{
-	ProgCTFEstimateFromPSDFast *prm=(ProgCTFEstimateFromPSDFast *) vprm;
-	return prm->CTF_fitness2D(p);
-
-}*/
 #undef DEBUG
 
 
@@ -1286,6 +1259,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	prm.value_th = -1;
 	prm.min_freq_psd = prm.min_freq;
 	prm.max_freq_psd = prm.max_freq;
+	//prm.current_ctfmodel.freq_max = prm.max_freq;
 
 	// Set some global variables
 	prm.adjust_params = &prm.adjust;
@@ -1346,6 +1320,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	/************************************************************************/
 
 	prm.action = 2;
+	std::cout << prm.max_gauss_freq << std::endl;
 	prm.current_ctfmodel.enable_CTF = true;
 
 	prm.current_ctfmodel.kV = prm.initial_ctfmodel.kV;
@@ -1378,7 +1353,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	if (prm.modelSimplification < 2)
 		prm.estimate_background_gauss_parameters2_fast();
 
-
 	steps.resize(ALL_CTF_PARAMETERS);
 	steps.initConstant(1);
 	steps(1) = 0; // kV
@@ -1404,31 +1378,30 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	/************************************************************************/
 	/* STEP 12: 2D estimation parameters          							*/
 	/************************************************************************/
-
+	prm.adjust_params->resize(ALL_CTF_PARAMETERS2D);
+	ProgCTFEstimateFromPSD *prm2D = new ProgCTFEstimateFromPSD(&prm);
 	steps.resize(ALL_CTF_PARAMETERS2D);
 	steps.initConstant(1);
 	steps(3) = 0; // kV
 	steps(5) = 0; // The spherical aberration (Cs) is not optimized
-	if (prm.initial_ctfmodel.Q0 != 0)
+	if (prm2D->initial_ctfmodel.Q0 != 0)
 	    steps(15) = 0; // Q0
-	 if (prm.modelSimplification >= 3)
+	 if (prm2D->modelSimplification >= 3)
 		steps(20) = steps(21) = steps(23) = 0;
-	if (prm.modelSimplification >= 2)
+	if (prm2D->modelSimplification >= 2)
 		steps(24) = steps(25) = steps(26) = steps(27) = steps(28) = steps(29) = 0;
-	if (prm.modelSimplification >= 1)
+	if (prm2D->modelSimplification >= 1)
 		steps(10) = steps(11) = 0;
-	prm.adjust_params->resize(ALL_CTF_PARAMETERS2D);
-	ProgCTFEstimateFromPSD *prm2D = new ProgCTFEstimateFromPSD(&prm);
 
 	prm2D->adjust_params = prm.adjust_params;
 	prm2D->adjust_params->initZeros();
 	prm2D->assignParametersFromCTF(prm2D->current_ctfmodel,MATRIX1D_ARRAY(*prm2D->adjust_params),0, ALL_CTF_PARAMETERS2D, true);
 
 	powellOptimizer(*prm2D->adjust_params, 0 + 1, ALL_CTF_PARAMETERS2D, CTF_fitness,
-						prm2D, 0.01, fitness, iter, steps, prm.show_optimization);
+						prm2D, 0.01, fitness, iter, steps, prm2D->show_optimization);
 
 	prm2D->current_ctfmodel.forcePhysicalMeaning();
-	//COPY_ctfmodel_TO_CURRENT_GUESS_2D;
+
 	//We adopt that always  DeltafU > DeltafV so if this is not the case we change the values and the angle
 	if ( prm2D->current_ctfmodel.DeltafV > prm2D->current_ctfmodel.DeltafU)
 	{
@@ -1437,20 +1410,18 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		prm2D->current_ctfmodel.DeltafU = prm2D->current_ctfmodel.DeltafV;
 		prm2D->current_ctfmodel.DeltafV = temp;
 		prm2D->current_ctfmodel.azimuthal_angle -= 90;
-		//COPY_ctfmodel_TO_CURRENT_GUESS_2D;
 	}
 	prm2D->assignParametersFromCTF(prm2D->current_ctfmodel,MATRIX1D_ARRAY(*prm2D->adjust_params),0, ALL_CTF_PARAMETERS2D, true);
-	if (prm.show_optimization)
+	if (prm2D->show_optimization)
 	{
 		std::cout << "Best fit with 2D parameters:\n" << prm2D->current_ctfmodel << std::endl;
 		prm2D->saveIntermediateResults("step05b_estimate_2D_parameters", true);
 	}
-
 	/************************************************************************/
 	/* STEP 13: Produce output                                              */
 	/************************************************************************/
 	prm2D->action = 7;
-	if (prm.fn_psd != "")
+	if (prm2D->fn_psd != "")
 	{
 		// Define mask between first and third zero
 		prm2D->mask_between_zeroes.initZeros(prm2D->mask);
@@ -1480,11 +1451,11 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 			if (wn<=z3m && wn>=z1m)
 				DIRECT_MULTIDIM_ELEM(prm2D->mask_between_zeroes, n) = 1;
 		}
-
 		// Evaluate the correlation in this region
+		//prm2D->show_inf=3; // QUITAR
 		CTF_fitness(prm2D->adjust_params->adaptForNumericalRecipes(), prm2D);
 		// Save results
-		FileName fn_rootCTFPARAM = prm.fn_psd.withoutExtension();
+		FileName fn_rootCTFPARAM = prm2D->fn_psd.withoutExtension();
 
 		FileName fn_rootMODEL = fn_rootCTFPARAM;
 		size_t atPosition=fn_rootCTFPARAM.find('@');
