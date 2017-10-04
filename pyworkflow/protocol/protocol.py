@@ -376,7 +376,10 @@ class Protocol(Step):
         self.methodsVar = String()
         # Create a variable to know if the protocol has expert params
         self._hasExpert = None
-        
+
+        # Store warnings here
+        self.summaryWarnings = []
+
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
         attributes of self, also store the key in attrList.
@@ -1452,11 +1455,29 @@ class Protocol(Step):
             msg += " (done %d/%d)" % (self.stepsDone, self.numberOfSteps)
 
         return msg
-    
+
     def getRunMode(self):
         """ Return the mode of execution, either:
         MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
+
+    def addSummaryWarning(self, warningDescription):
+        """Appends the warningDescription param to the list of summaryWarnings.
+        Will be printed in the protocol summary."""
+        self.summaryWarnings.append(warningDescription)
+        return self.summaryWarnings
+
+    def checkSummaryWarnings(self):
+        """ Checks for warnings that we want to tell the user about by adding a
+        warning sign to the run box and a description to the run summary. Returns
+        summaryWarnings with any changes made to it during the check.
+        List of warnings checked:
+        1. If the folder for this protocol run exists.
+        """
+        if not os.path.exists(self.workingDir.get()):
+            self.addSummaryWarning(("*Missing run data*: The directory for this run is missing, so it won't be"
+                                    "possible to use its outputs in other protocols."))
+        return self.summaryWarnings
 
     def isContinued(self):
         """ Return if running in continue mode (MODE_RESUME). """
@@ -1537,6 +1558,10 @@ class Protocol(Step):
             
         if self.getError().hasValue():
             baseSummary += ['', '*ERROR:*', self.getError().get()]
+
+        if self.summaryWarnings:
+            baseSummary += ['', '*WARNINGS:*']
+            baseSummary += self.summaryWarnings
             
         return baseSummary
     
@@ -1582,7 +1607,7 @@ class Protocol(Step):
                 label = cite['id']
             else:
                 label = cite['author'].split(' and ')[0].split(',')[0].strip()
-                label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
+                label += ', et al., %s, %s' % (cite['journal'], cite['year'])
 
             if len(cite['doi'].strip())>0:
                 text = '[[%s][%s]] ' % (cite['doi'].strip(), label)

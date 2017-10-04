@@ -34,7 +34,8 @@ from protocol.monitors import ProtMonitorSummary, SummaryProvider
 from pyworkflow.gui.tree import BoundTree
 from pyworkflow.gui.widgets import Button, HotButton
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-from pyworkflow.em.protocol.monitors import CtfMonitorPlotter, MovieGainMonitorPlotter, SystemMonitorPlotter
+from pyworkflow.em.protocol.monitors import \
+    (CtfMonitorPlotter, MovieGainMonitorPlotter, SystemMonitorPlotter)
 
 
 class ViewerMonitorSummary(Viewer):
@@ -98,9 +99,11 @@ class SummaryWindow(pwgui.Window):
         def add(t1, t2):
             tk.Label(lf, text=t1).grid(row=self.r, column=0, sticky='ne',
                                        padx=(10, 5), pady=(5, 0))
-            tk.Label(lf, text=t2, font=self.fontBold).grid(row=self.r, column=1,
+            tk.Label(lf, text=t2, font=self.fontBold).grid(row=self.r,
+                                                           column=1,
                                                            sticky='nw',
-                                                           padx=(5, 25), pady=0)
+                                                           padx=(5, 25),
+                                                           pady=0)
             self.r += 1
 
         for k, v in self.provider.acquisition:
@@ -121,21 +124,23 @@ class SummaryWindow(pwgui.Window):
 
         ctfBtn = Button(subframe, "CTF Monitor", command=self._monitorCTF)
         ctfBtn.grid(row=0, column=0, sticky='nw', padx=(0, 5))
-        if self.protocol.createCtfMonitor() == None:
+        if self.protocol.createCtfMonitor() is None:
             ctfBtn['state'] = 'disabled'
 
-        movieGainBtn = Button(subframe, "Movie Gain Monitor", command=self._monitorMovieGain)
+        movieGainBtn = Button(subframe, "Movie Gain Monitor",
+                              command=self._monitorMovieGain)
         movieGainBtn.grid(row=0, column=1, sticky='nw', padx=(0, 5))
-        if self.protocol.createMovieGainMonitor() == None:
+        if self.protocol.createMovieGainMonitor() is None:
             movieGainBtn['state'] = 'disabled'
 
-        sysBtn = Button(subframe, "System Monitor", command=self._monitorSystem)
+        sysBtn = Button(subframe, "System Monitor",
+                        command=self._monitorSystem)
         sysBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
-        if self.protocol.createSystemMonitor() == None:
+        if self.protocol.createSystemMonitor() is None:
             sysBtn['state'] = 'disabled'
 
         htmlBtn = HotButton(subframe, 'Generate HTML Report',
-                           command=self._generateHTML)
+                            command=self._generateHTML)
         htmlBtn.grid(row=0, column=3, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
@@ -148,7 +153,9 @@ class SummaryWindow(pwgui.Window):
         MovieGainMonitorPlotter(self.protocol.createMovieGainMonitor()).show()
 
     def _monitorSystem(self, e=None):
-        SystemMonitorPlotter(self.protocol.createSystemMonitor()).show()
+        nifName = self.protocol.nifsNameList[self.protocol.netInterfaces.get()]
+        SystemMonitorPlotter(self.protocol.createSystemMonitor(),
+                             nifName).show()
 
     def _updateLabel(self):
         self.updateVar.set('Updated: %s' % pwutils.prettyTime(secs=True))
