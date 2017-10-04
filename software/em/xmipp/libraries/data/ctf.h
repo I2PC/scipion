@@ -30,6 +30,7 @@
 #include "xmipp_filename.h"
 #include "metadata.h"
 #include "xmipp_fft.h"
+//#include "ctf_estimate_from_psd_fast.h"
 
 
 const int CTF_BASIC_LABELS_SIZE = 5;
@@ -290,6 +291,8 @@ public:
 	double bgR1, bgR2, bgR3;
 	// Envelope polynomial
 	double envR0, envR1, envR2;
+	//Maximum frequency to estimate values
+	double freq_max;
 
 	/** Empty constructor. */
 	CTFDescription1D()
@@ -549,6 +552,7 @@ public:
 	{
 		double u2 = X * X;
 		double u = sqrt(u2);
+		//if(u2 > freq_max) return 0;
 		double u4 = u2 * u2;
 		double deltaf = Defocus;
 		double argument = K1 * deltaf * u2 + K2 * u4;
@@ -1018,8 +1022,9 @@ public:
     {
         double u2 = X * X + Y * Y;
         double u = sqrt(u2);
+        //if(u2 > freq_max) return 0;
         double u4 = u2 * u2;
-        // if (u2>=ua2) return 0;
+        //if (u2>=ua2) return 0;
         double deltaf = getDeltafNoPrecomputed(X, Y);
         double argument = K1 * deltaf * u2 + K2 * u4;
         double sine_part, cosine_part;
@@ -1056,6 +1061,7 @@ public:
     {
         double u2 = X * X + Y * Y;
         double u = sqrt(u2);
+        //if(u2 > freq_max) return 0;
         double u4 = u2 * u2;
         double deltaf = getDeltafNoPrecomputed(X, Y);
         double argument = K1 * deltaf * u2 + K2 * u4;
