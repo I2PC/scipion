@@ -18,15 +18,15 @@ def usage(error):
     print """
     ERROR: %s
     
-    Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER
+    Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER TIME
         INPUT_PATTERN: input pattern matching input files.
         OUTPUT_FOLDER: where to create the output links.
-        time: the time that the last link will be touched.        
+        TIME: the time that the last link will be touched.        
     """ % error
     sys.exit(1)    
 
 
-if len(sys.argv) != 3:
+if len(sys.argv) != 4:
     usage("Incorrect number of input parameters")
 
 inputPattern = sys.argv[1]
@@ -44,7 +44,7 @@ pwutils.makePath(outputDir)
 
 aTime = 30
 n = 5
-t = aTime / n
+t = float(sys.argv[3]) #aTime / n
 print "t=%s" % t
 
 for f in inputFiles:
