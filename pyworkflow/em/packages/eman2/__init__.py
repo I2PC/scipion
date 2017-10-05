@@ -38,6 +38,7 @@ from protocol_boxing import EmanProtBoxing
 from protocol_initialmodel import EmanProtInitModel
 from protocol_reconstruct import EmanProtReconstruct
 from protocol_refineasy import EmanProtRefine
+from protocol_localscale import EmanProtLocScale
 from protocol_autopick import SparxGaussianProtPicking
 from viewer import EmanViewer, RefineEasyViewer
 from wizard import SparxGaussianPickerWizard
