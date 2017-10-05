@@ -43,7 +43,7 @@
 
 void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask &mask, GpuCorrelationAux &d_correlationAux,
 		mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar, mycufftHandle &myhandleAux,
-		StructuresAux &myStructureAux)
+		StructuresAux &myStructureAux, MDIterator *iter)
 {
 	size_t Xdim, Ydim, Zdim, Ndim;
 	getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
@@ -58,13 +58,13 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 
 	GpuMultidimArrayAtCpu<float> original_image_stack(Xdim,Ydim,1,numImages);
 
-	MDIterator *iter = new MDIterator(SF);
+	//MDIterator *iter = new MDIterator(SF);
 
 	size_t n=0;
 	for(int i=firstIdx; i<firstIdx+numImages; i++){
 
 		SF.getValue(MDL_IMAGE,fnImg,iter->objId);
-		std::cerr << i << ". Image: " << fnImg << std::endl;
+		std::cerr << iter->objId << ". Image: " << fnImg << std::endl;
 		Iref.read(fnImg);
 		original_image_stack.fillImage(n,Iref()/8);
 
@@ -74,7 +74,7 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 		n++;
 	}
 
-	delete iter;
+	//delete iter;
 
 	GpuMultidimArrayAtGpu<float> image_stack_gpu(Xdim,Ydim,1,numImages);
 	original_image_stack.copyToGpu(image_stack_gpu);
@@ -321,11 +321,11 @@ int check_gpu_memory(size_t Xdim, size_t Ydim, int percent){
 	return (int)((data[1]*percent/100)/bytes);
 }
 
-
+/*
 //AJ NOTA: cambiar todo este metodo para que calcule primero los pesos y luego se quede
 //con los Nref mayores¿?¿?¿?
 void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float> &matrixCorrCpu_mirror, MultidimArray<float> &corrTotalRow,
-		MultidimArray<float> &weights, int Nref, size_t mdExpSize, size_t mdInSize){
+		MultidimArray<float> &weights, int Nref, size_t mdExpSize, size_t mdInSize, MultidimArray<float> &weightsMax, bool simplifiedMd){
 
 	MultidimArray<float> colAux;
 	for(int i=0; i<2*mdInSize; i++){
@@ -401,16 +401,156 @@ void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float>
 	}
 	weights=weights1*weights2;
 
+	//AJ new to store the maximum weight for every exp image
+	if(simplifiedMd && Nref>1){
+		weightsMax.resize(mdExpSize);
+		for(int i=0; i<mdInSize; i++){
+			for(int j=0; j<mdExpSize; j++){
+				if(DIRECT_A2D_ELEM(weights,j,i)!=0){
+					if(DIRECT_A2D_ELEM(weights,j,i)>DIRECT_A1D_ELEM(weightsMax,j))
+						DIRECT_A1D_ELEM(weightsMax,j) = DIRECT_A2D_ELEM(weights,j,i);
+				}
+				if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
+					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)>DIRECT_A1D_ELEM(weightsMax,j))
+						DIRECT_A1D_ELEM(weightsMax,j) = DIRECT_A2D_ELEM(weights,j,i+mdInSize);
+				}
+			}
+		}
+	}
+	//END AJ new
+
+}
+*/
+
+
+void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float> &matrixCorrCpu_mirror, MultidimArray<float> &corrTotalRow,
+		MultidimArray<float> &weights, int Nref, size_t mdExpSize, size_t mdInSize, MultidimArray<float> &weightsMax, bool simplifiedMd){
+
+	MultidimArray<float> colAux;
+	for(int i=0; i<2*mdInSize; i++){
+		if(i<mdInSize){
+			matrixCorrCpu.getRow(i,colAux); //col
+			corrTotalRow.setCol(i, colAux);
+		}else{
+			matrixCorrCpu_mirror.getRow(i-mdInSize,colAux); //col
+			corrTotalRow.setCol(i, colAux);
+		}
+	}
+	MultidimArray<float> corrTotalCol(1,1,2*mdExpSize, mdInSize);
+	MultidimArray<float> rowAux;
+	for(int i=0; i<2*mdExpSize; i++){
+		if(i<mdExpSize){
+			matrixCorrCpu.getCol(i,rowAux); //row
+			corrTotalCol.setRow(i, rowAux);
+		}else{
+			matrixCorrCpu_mirror.getCol(i-mdExpSize,rowAux); //row
+			corrTotalCol.setRow(i, rowAux);
+		}
+	}
+
+	//Order the correlation matrix by rows and columns
+	MultidimArray<float> rowCorr;
+	MultidimArray<int> rowIndexOrder;
+	MultidimArray<int> corrOrderByRowIndex(1,1,mdExpSize, 2*mdInSize);
+
+	MultidimArray<float> colCorr;
+	MultidimArray<int> colIndexOrder;
+	MultidimArray<int> corrOrderByColIndex(1,1,2*mdExpSize, mdInSize);
+
+	for (size_t i=0; i<mdExpSize; i++){
+		corrTotalRow.getRow(i, rowCorr);
+		rowCorr.indexSort(rowIndexOrder);
+		corrOrderByRowIndex.setRow(i, rowIndexOrder);
+	}
+	for (size_t i=0; i<mdInSize; i++){
+		corrTotalCol.getCol(i, colCorr);
+		colCorr.indexSort(colIndexOrder);
+		corrOrderByColIndex.setCol(i, colIndexOrder);
+	}
+	corrOrderByRowIndex.selfReverseX();
+	corrOrderByColIndex.selfReverseY();
+
+
+	//AJ To calculate the weights of every image
+	MultidimArray<float> weights1(1,1,mdExpSize,2*mdInSize);
+	MultidimArray<float> weights2(1,1,mdExpSize,2*mdInSize);
+
+	for(int i=0; i<mdExpSize; i++){
+		int idxMax = DIRECT_A2D_ELEM(corrOrderByRowIndex,i,0)-1;
+		for(int j=0; j<2*mdInSize; j++){
+			int idx = DIRECT_A2D_ELEM(corrOrderByRowIndex,i,j)-1;
+			if(DIRECT_A2D_ELEM(corrTotalRow,i,idx)<0)
+				break;
+			float weight = 1.0 - (j/(float)corrOrderByRowIndex.xdim);
+			weight *= DIRECT_A2D_ELEM(corrTotalRow,i,idx) / DIRECT_A2D_ELEM(corrTotalRow,i,idxMax);
+			DIRECT_A2D_ELEM(weights1, i, idx) = weight;
+		}
+	}
+	for(int i=0; i<mdInSize; i++){
+		int idxMax = DIRECT_A2D_ELEM(corrOrderByColIndex,0,i)-1;
+		for(int j=0; j<2*mdExpSize; j++){
+			int idx = DIRECT_A2D_ELEM(corrOrderByColIndex,j,i)-1;
+			float weight = 1.0 - (j/(float)corrOrderByColIndex.ydim);
+			weight *= DIRECT_A2D_ELEM(corrTotalCol,idx,i) / DIRECT_A2D_ELEM(corrTotalCol,idxMax,i);
+			if(idx<mdExpSize){
+				DIRECT_A2D_ELEM(weights2, idx, i) = weight;
+			}else{
+				DIRECT_A2D_ELEM(weights2, idx-mdExpSize, i+mdInSize) = weight;
+			}
+		}
+	}
+	weights=weights1*weights2;
+
+
+	//AJ
+	MultidimArray<float> rowWeights;
+	MultidimArray<int> rowIndexOrderWeights;
+	MultidimArray<int> weightsOrderByRowIndex(1,1,mdExpSize, 2*mdInSize);
+	for (size_t i=0; i<mdExpSize; i++){
+		weights.getRow(i, rowWeights);
+		rowWeights.indexSort(rowIndexOrderWeights);
+		weightsOrderByRowIndex.setRow(i, rowIndexOrderWeights);
+	}
+	weightsOrderByRowIndex.selfReverseX();
+	for(int i=0; i<mdExpSize; i++){
+		int idxMax = DIRECT_A2D_ELEM(weightsOrderByRowIndex,i,0)-1;
+		for(int j=Nref; j<2*mdInSize; j++){
+			int idx = DIRECT_A2D_ELEM(weightsOrderByRowIndex,i,j)-1;
+			DIRECT_A2D_ELEM(weights, i, idx) = 0;
+		}
+	}
+	//END AJ
+
+
+	//AJ new to store the maximum weight for every exp image
+	if(simplifiedMd && Nref>1){
+		weightsMax.resize(mdExpSize);
+		for(int i=0; i<mdInSize; i++){
+			for(int j=0; j<mdExpSize; j++){
+				if(DIRECT_A2D_ELEM(weights,j,i)!=0){
+					if(DIRECT_A2D_ELEM(weights,j,i)>DIRECT_A1D_ELEM(weightsMax,j))
+						DIRECT_A1D_ELEM(weightsMax,j) = DIRECT_A2D_ELEM(weights,j,i);
+				}
+				if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
+					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)>DIRECT_A1D_ELEM(weightsMax,j))
+						DIRECT_A1D_ELEM(weightsMax,j) = DIRECT_A2D_ELEM(weights,j,i+mdInSize);
+				}
+			}
+		}
+	}
+	//END AJ
 
 }
 
 
-void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_out, size_t mdExpSize, size_t mdInSize, MultidimArray<float> weights,
-		MultidimArray<float> corrTotalRow, MultidimArray<float> *matrixTransCpu, MultidimArray<float> *matrixTransCpu_mirror, int maxShift){
+void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_out, size_t mdExpSize, size_t mdInSize, MultidimArray<float> &weights,
+		MultidimArray<float> &corrTotalRow, MultidimArray<float> *matrixTransCpu, MultidimArray<float> *matrixTransCpu_mirror, int maxShift,
+		MultidimArray<float> &weightsMax, bool simplifiedMd, int Nref){
 
 	double maxShift2 = maxShift*maxShift;
 	Matrix2D<double> bestM(3,3);
 	MultidimArray<float> out2(3,3);
+	Matrix2D<double>out2Matrix(3,3);
 	MDRow rowOut;
 	MetaData mdOut;
 	String nameImg, nameRef;
@@ -434,20 +574,48 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 			SF.getRow(row, iter->objId);
 
 			if(DIRECT_A2D_ELEM(weights,i,j)!=0){
+
+				//AJ new to store the maximum weight for every exp image
+				if(simplifiedMd && Nref>1){
+					if(DIRECT_A2D_ELEM(weights,i,j)!=DIRECT_A1D_ELEM(weightsMax,i)){
+						if(iter->hasNext())
+							iter->moveNext();
+						continue;
+					}
+				}
+				//END AJ
+
+				rowOut.setValue(MDL_ITEM_ID, iterExp->objId);
 				rowOut.setValue(MDL_IMAGE,nameImg);
 				rowOut.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, i, j));
 				rowOut.setValue(MDL_MAXCC, (double)DIRECT_A2D_ELEM(corrTotalRow, i, j));
 				if(j<mdInSize){
 					flip = false;
-					matrixTransCpu[i].getSlice(j, out2);
+					matrixTransCpu[j].getSlice(i, out2); //matrixTransCpu[i].getSlice(j, out2);
 					idxJ = j;
 				}else{
 					flip = true;
-					matrixTransCpu_mirror[i].getSlice(j-mdInSize, out2);
+					matrixTransCpu_mirror[j-mdInSize].getSlice(i, out2); //matrixTransCpu_mirror[i].getSlice(j-mdInSize, out2);
 					idxJ = j-mdInSize;
 				}
-				double shiftX = (double)DIRECT_A2D_ELEM(out2,0,2);
-				double shiftY = (double)DIRECT_A2D_ELEM(out2,1,2);
+
+				//AJ NEW
+				MAT_ELEM(out2Matrix,0,0) = DIRECT_A2D_ELEM(out2,0,0);
+				MAT_ELEM(out2Matrix,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+				MAT_ELEM(out2Matrix,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+
+				MAT_ELEM(out2Matrix,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+				MAT_ELEM(out2Matrix,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+				MAT_ELEM(out2Matrix,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+
+				MAT_ELEM(out2Matrix,2,0)=0.0;
+				MAT_ELEM(out2Matrix,2,1)=0.0;
+				MAT_ELEM(out2Matrix,2,2)=1.0;
+				out2Matrix.selfInverse();
+				//FIN AJ NEW
+
+				double shiftX = MAT_ELEM(out2Matrix,0,2);//(double)DIRECT_A2D_ELEM(out2,0,2);
+				double shiftY = MAT_ELEM(out2Matrix,1,2);//(double)DIRECT_A2D_ELEM(out2,1,2);
 				if (shiftX*shiftX + shiftY*shiftY > maxShift2){
 					if(iter->hasNext())
 						iter->moveNext();
@@ -457,13 +625,13 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				rowOut.setValue(MDL_FLIP, flip);
 
 				double scale;
-				MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
-				MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-				MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+				MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
+				MAT_ELEM(bestM,0,1)=MAT_ELEM(out2Matrix,0,1);//DIRECT_A2D_ELEM(out2,0,1);
+				MAT_ELEM(bestM,0,2)=MAT_ELEM(out2Matrix,0,2);//DIRECT_A2D_ELEM(out2,0,2);
 
-				MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-				MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-				MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+				MAT_ELEM(bestM,1,0)=MAT_ELEM(out2Matrix,1,0);//DIRECT_A2D_ELEM(out2,1,0);
+				MAT_ELEM(bestM,1,1)=MAT_ELEM(out2Matrix,1,1);//DIRECT_A2D_ELEM(out2,1,1);
+				MAT_ELEM(bestM,1,2)=MAT_ELEM(out2Matrix,1,2);//DIRECT_A2D_ELEM(out2,1,2);
 
 				MAT_ELEM(bestM,2,0)=0.0;
 				MAT_ELEM(bestM,2,1)=0.0;
@@ -477,6 +645,15 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
 				if (flip)
 					shiftX*=-1;
+
+				//AJ NEW
+				if(flip){
+					shiftX*=-1;
+					//shiftY*=-1;
+					psi*=-1;
+				}
+				//FIN AJ NEW
+
 				rowOut.setValue(MDL_SHIFT_X, -shiftX);
 				rowOut.setValue(MDL_SHIFT_Y, -shiftY);
 				row.getValue(MDL_ANGLE_ROT, rot);
@@ -485,7 +662,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				rowOut.setValue(MDL_ANGLE_TILT, tilt);
 				rowOut.setValue(MDL_ANGLE_PSI, psi);
 
-				rowOut.setValue(MDL_REF, idxJ);
+				rowOut.setValue(MDL_REF, idxJ+1);
 				mdOut.addRow(rowOut);
 			}
 			if(iter->hasNext())
@@ -503,11 +680,12 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 
 
 void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t mdExpSize, size_t mdInSize,
-		MultidimArray<float> weights, MultidimArray<float> *matrixTransCpu, MultidimArray<float> *matrixTransCpu_mirror,
-		int maxShift, FileName fn_classes_out, bool simplifiedMd, int Nref){
+		MultidimArray<float> &weights, MultidimArray<float> *matrixTransCpu, MultidimArray<float> *matrixTransCpu_mirror,
+		int maxShift, FileName fn_classes_out, MultidimArray<float> &weightsMax, bool simplifiedMd, int Nref){
 
 	double maxShift2 = maxShift*maxShift;
 	MultidimArray<float> out2(3,3);
+	Matrix2D<double> out2Matrix(3,3);
 	double rot, tilt, psi;
 	int *NexpVector;
 
@@ -517,6 +695,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	Image<double> Inew, Iexp_aux, Inew2;
 	Matrix2D<double> E(3,3);
 	MultidimArray<float> auxtr(3,3);
+	Matrix2D<double> auxtrMatrix(3,3);
 	MultidimArray<double> refSum(1, 1, yAux, xAux);
 	bool firstTime=true;
 
@@ -531,6 +710,10 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	mask.generate_mask();
 
 
+	/*std::cerr << "weights: " << weights << std::endl;
+	if(simplifiedMd && Nref>1)
+		std::cerr << "weightsMax: " << weightsMax << std::endl;*/
+
 	CorrelationAux auxCenter;
 	RotationalCorrelationAux auxCenter2;
 
@@ -538,28 +721,6 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	MDRow rowSF;
 	MDIterator *iterSFexp = new MDIterator();
 	MDRow rowSFexp;
-
-	//AJ new to store the maximum weight for every exp image
-	MultidimArray<float> weightsMax;
-	if(simplifiedMd && Nref>1){
-		weightsMax.resize(mdExpSize);
-		for(int i=0; i<mdInSize; i++){
-			for(int j=0; j<mdExpSize; j++){
-				if(DIRECT_A2D_ELEM(weights,j,i)!=0){
-					if(DIRECT_A2D_ELEM(weights,j,i)>DIRECT_A1D_ELEM(weightsMax,j))
-						DIRECT_A1D_ELEM(weightsMax,j) = DIRECT_A2D_ELEM(weights,j,i);
-				}
-				if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
-					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)>DIRECT_A1D_ELEM(weightsMax,j))
-						DIRECT_A1D_ELEM(weightsMax,j) = DIRECT_A2D_ELEM(weights,j,i+mdInSize);
-				}
-			}
-		}
-	}
-	//END AJ new
-	/*std::cerr << "weights: " << weights << std::endl;
-	if(simplifiedMd && Nref>1)
-		std::cerr << "weightsMax: " << weightsMax << std::endl;*/
 
 	bool skip_image;
 	NexpVector = new int[mdInSize];
@@ -586,37 +747,52 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			skip_image=false;
 			SFexp.getRow(rowSFexp, iterSFexp->objId);
 			rowSFexp.getValue(MDL_IMAGE, fnExpNew);
-			Iexp_aux.read(fnExpNew);
 
 			long int pointer1=i*xAux*yAux;
 			long int pointer2=i*xAux*yAux;
 
 			if(DIRECT_A2D_ELEM(weights,j,i)!=0){
 
+				Iexp_aux.read(fnExpNew);
+
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ new
+				//END AJ
 
-				matrixTransCpu[j].getSlice(i, auxtr);
+				matrixTransCpu[i].getSlice(j, auxtr); //matrixTransCpu[j].getSlice(i, auxtr);
+				//AJ NEW
+				MAT_ELEM(auxtrMatrix,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
+				MAT_ELEM(auxtrMatrix,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
+				MAT_ELEM(auxtrMatrix,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
 
-				double shiftX = (double)DIRECT_A2D_ELEM(auxtr,0,2);
-				double shiftY = (double)DIRECT_A2D_ELEM(auxtr,1,2);
+				MAT_ELEM(auxtrMatrix,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
+				MAT_ELEM(auxtrMatrix,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
+				MAT_ELEM(auxtrMatrix,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+
+				MAT_ELEM(auxtrMatrix,2,0)=0.0;
+				MAT_ELEM(auxtrMatrix,2,1)=0.0;
+				MAT_ELEM(auxtrMatrix,2,2)=1.0;
+				auxtrMatrix.selfInverse();
+				//FIN AJ NEW
+
+				double shiftX = MAT_ELEM(auxtrMatrix,0,2);//(double)DIRECT_A2D_ELEM(auxtr,0,2);
+				double shiftY = MAT_ELEM(auxtrMatrix,1,2);//(double)DIRECT_A2D_ELEM(auxtr,1,2);
 				if (shiftX*shiftX + shiftY*shiftY > maxShift2)
 					skip_image=true;
 
 				if(!skip_image){
 					NexpVector[i]++;
 
-					MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
-					MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
-					MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
+					MAT_ELEM(E,0,0)=MAT_ELEM(auxtrMatrix,0,0);//DIRECT_A2D_ELEM(auxtr,0,0);
+					MAT_ELEM(E,0,1)=MAT_ELEM(auxtrMatrix,0,1);//DIRECT_A2D_ELEM(auxtr,0,1);
+					MAT_ELEM(E,0,2)=MAT_ELEM(auxtrMatrix,0,2);//DIRECT_A2D_ELEM(auxtr,0,2);
 
-					MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
-					MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
-					MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+					MAT_ELEM(E,1,0)=MAT_ELEM(auxtrMatrix,1,0);//DIRECT_A2D_ELEM(auxtr,1,0);
+					MAT_ELEM(E,1,1)=MAT_ELEM(auxtrMatrix,1,1);//DIRECT_A2D_ELEM(auxtr,1,1);
+					MAT_ELEM(E,1,2)=MAT_ELEM(auxtrMatrix,1,2);//DIRECT_A2D_ELEM(auxtr,1,2);
 
 					MAT_ELEM(E,2,0)=0.0;
 					MAT_ELEM(E,2,1)=0.0;
@@ -625,6 +801,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
 
 					Iexp_aux().resetOrigin();
+
 					refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i);
 					change=true;
 					normWeight+=DIRECT_A2D_ELEM(weights,j,i);
@@ -633,17 +810,33 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			skip_image=false;
 			if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
 
+				Iexp_aux.read(fnExpNew);
+
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ new
+				//END AJ
 
-				matrixTransCpu_mirror[j].getSlice(i, auxtr);
+				matrixTransCpu_mirror[i].getSlice(j, auxtr); //matrixTransCpu_mirror[j].getSlice(i, auxtr);
+				//AJ NEW
+				MAT_ELEM(auxtrMatrix,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
+				MAT_ELEM(auxtrMatrix,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
+				MAT_ELEM(auxtrMatrix,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
 
-				double shiftX = (double)DIRECT_A2D_ELEM(auxtr,0,2);
-				double shiftY = (double)DIRECT_A2D_ELEM(auxtr,1,2);
+				MAT_ELEM(auxtrMatrix,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
+				MAT_ELEM(auxtrMatrix,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
+				MAT_ELEM(auxtrMatrix,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+
+				MAT_ELEM(auxtrMatrix,2,0)=0.0;
+				MAT_ELEM(auxtrMatrix,2,1)=0.0;
+				MAT_ELEM(auxtrMatrix,2,2)=1.0;
+				auxtrMatrix.selfInverse();
+				//FIN AJ NEW
+
+				double shiftX = MAT_ELEM(auxtrMatrix,0,2);//(double)DIRECT_A2D_ELEM(auxtr,0,2);
+				double shiftY = MAT_ELEM(auxtrMatrix,1,2);//(double)DIRECT_A2D_ELEM(auxtr,1,2);
 				if (shiftX*shiftX + shiftY*shiftY > maxShift2)
 					skip_image=true;
 
@@ -652,21 +845,29 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					NexpVector[i]++;
 					Iexp_aux().selfReverseX();
 
-					MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
-					MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
-					MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
+					MAT_ELEM(E,0,0)=MAT_ELEM(auxtrMatrix,0,0);//DIRECT_A2D_ELEM(auxtr,0,0);
+					MAT_ELEM(E,0,1)=MAT_ELEM(auxtrMatrix,0,1);//DIRECT_A2D_ELEM(auxtr,0,1);
+					MAT_ELEM(E,0,2)=MAT_ELEM(auxtrMatrix,0,2);//DIRECT_A2D_ELEM(auxtr,0,2);
 
-					MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
-					MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
-					MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+					MAT_ELEM(E,1,0)=MAT_ELEM(auxtrMatrix,1,0);//DIRECT_A2D_ELEM(auxtr,1,0);
+					MAT_ELEM(E,1,1)=MAT_ELEM(auxtrMatrix,1,1);//DIRECT_A2D_ELEM(auxtr,1,1);
+					MAT_ELEM(E,1,2)=MAT_ELEM(auxtrMatrix,1,2);//DIRECT_A2D_ELEM(auxtr,1,2);
 
 					MAT_ELEM(E,2,0)=0.0;
 					MAT_ELEM(E,2,1)=0.0;
 					MAT_ELEM(E,2,2)=1.0;
 
+					//AJ NEW
+					MAT_ELEM(E,0,2)*=-1;
+					//MAT_ELEM(E,1,2)*=-1;
+					MAT_ELEM(E,0,1)*=-1;
+					MAT_ELEM(E,1,0)*=-1;
+					//FIN AJ NEW//
+
 					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
 
 					Iexp_aux().resetOrigin();
+
 					refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i+mdInSize);
 					change=true;
 					normWeight+=DIRECT_A2D_ELEM(weights,j,i+mdInSize);
@@ -744,6 +945,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			skip_image=false;
 			SFexp.getRow(rowSFexp, iterSFexp->objId);
 			rowSFexp.getValue(MDL_IMAGE, fnExpIm);
+
 			if(DIRECT_A2D_ELEM(weights,j,i)!=0){
 
 				//AJ new to store the maximum weight for every exp image
@@ -751,30 +953,45 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ new
+				//END AJ
 
-				matrixTransCpu[j].getSlice(i, out2);
+				matrixTransCpu[i].getSlice(j, out2); //matrixTransCpu[j].getSlice(i, out2);
+				//AJ NEW
+				MAT_ELEM(out2Matrix,0,0)=DIRECT_A2D_ELEM(out2,0,0);
+				MAT_ELEM(out2Matrix,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+				MAT_ELEM(out2Matrix,0,2)=DIRECT_A2D_ELEM(out2,0,2);
 
-				double sx = (double)DIRECT_A2D_ELEM(out2,0,2);
-				double sy = (double)DIRECT_A2D_ELEM(out2,1,2);
+				MAT_ELEM(out2Matrix,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+				MAT_ELEM(out2Matrix,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+				MAT_ELEM(out2Matrix,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+
+				MAT_ELEM(out2Matrix,2,0)=0.0;
+				MAT_ELEM(out2Matrix,2,1)=0.0;
+				MAT_ELEM(out2Matrix,2,2)=1.0;
+				out2Matrix.selfInverse();
+				//FIN AJ NEW
+
+				double sx = MAT_ELEM(out2Matrix,0,2); //(double)DIRECT_A2D_ELEM(out2,0,2);
+				double sy = MAT_ELEM(out2Matrix,1,2); //(double)DIRECT_A2D_ELEM(out2,1,2);
 				if (sx*sx + sy*sy > maxShift2)
 					skip_image=true;
 
 				if(!skip_image){
 
+					row.setValue(MDL_ITEM_ID, iterSFexp->objId);
 					row.setValue(MDL_IMAGE, fnExpIm);
 					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i));
 					row.setValue(MDL_FLIP, false);
 
 					double scale, shiftX, shiftY, psi;
 					bool flip;
-					MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
-					MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-					MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+					MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
+					MAT_ELEM(bestM,0,1)=MAT_ELEM(out2Matrix,0,1);//DIRECT_A2D_ELEM(out2,0,1);
+					MAT_ELEM(bestM,0,2)=MAT_ELEM(out2Matrix,0,2);//DIRECT_A2D_ELEM(out2,0,2);
 
-					MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-					MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-					MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+					MAT_ELEM(bestM,1,0)=MAT_ELEM(out2Matrix,1,0);//DIRECT_A2D_ELEM(out2,1,0);
+					MAT_ELEM(bestM,1,1)=MAT_ELEM(out2Matrix,1,1);//DIRECT_A2D_ELEM(out2,1,1);
+					MAT_ELEM(bestM,1,2)=MAT_ELEM(out2Matrix,1,2);//DIRECT_A2D_ELEM(out2,1,2);
 
 					MAT_ELEM(bestM,2,0)=0.0;
 					MAT_ELEM(bestM,2,1)=0.0;
@@ -790,9 +1007,11 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_PSI, psi);
+					row.setValue(MDL_REF,i+1);
 					SFq.addRow(row);
 				}
 			}
+
 			skip_image=false;
 			if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
 
@@ -801,30 +1020,45 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ new
+				//END AJ
 
-				matrixTransCpu_mirror[j].getSlice(i, out2);
+				matrixTransCpu_mirror[i].getSlice(j, out2); //matrixTransCpu_mirror[j].getSlice(i, out2);
+				//AJ NEW
+				MAT_ELEM(out2Matrix,0,0)=DIRECT_A2D_ELEM(out2,0,0);
+				MAT_ELEM(out2Matrix,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+				MAT_ELEM(out2Matrix,0,2)=DIRECT_A2D_ELEM(out2,0,2);
 
-				double sx = (double)DIRECT_A2D_ELEM(out2,0,2);
-				double sy = (double)DIRECT_A2D_ELEM(out2,1,2);
+				MAT_ELEM(out2Matrix,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+				MAT_ELEM(out2Matrix,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+				MAT_ELEM(out2Matrix,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+
+				MAT_ELEM(out2Matrix,2,0)=0.0;
+				MAT_ELEM(out2Matrix,2,1)=0.0;
+				MAT_ELEM(out2Matrix,2,2)=1.0;
+				out2Matrix.selfInverse();
+				//FIN AJ NEW
+
+				double sx = MAT_ELEM(out2Matrix,0,2); //(double)DIRECT_A2D_ELEM(out2,0,2);
+				double sy = MAT_ELEM(out2Matrix,1,2); //(double)DIRECT_A2D_ELEM(out2,1,2);
 				if (sx*sx + sy*sy > maxShift2)
 					skip_image=true;
 
 				if(!skip_image){
 
+					row.setValue(MDL_ITEM_ID, iterSFexp->objId);
 					row.setValue(MDL_IMAGE, fnExpIm);
 					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i+mdInSize));
 					row.setValue(MDL_FLIP, true);
 
 					double scale, shiftX, shiftY, psi;
 					bool flip;
-					MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
-					MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-					MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+					MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
+					MAT_ELEM(bestM,0,1)=MAT_ELEM(out2Matrix,0,1);//DIRECT_A2D_ELEM(out2,0,1);
+					MAT_ELEM(bestM,0,2)=MAT_ELEM(out2Matrix,0,2);//DIRECT_A2D_ELEM(out2,0,2);
 
-					MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-					MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-					MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+					MAT_ELEM(bestM,1,0)=MAT_ELEM(out2Matrix,1,0);//DIRECT_A2D_ELEM(out2,1,0);
+					MAT_ELEM(bestM,1,1)=MAT_ELEM(out2Matrix,1,1);//DIRECT_A2D_ELEM(out2,1,1);
+					MAT_ELEM(bestM,1,2)=MAT_ELEM(out2Matrix,1,2);//DIRECT_A2D_ELEM(out2,1,2);
 
 					MAT_ELEM(bestM,2,0)=0.0;
 					MAT_ELEM(bestM,2,1)=0.0;
@@ -836,14 +1070,21 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
 
+					//AJ NEW
+					shiftX*=-1;
+					//shiftY*=-1;
+					psi*=-1;
+					//FIN AJ NEW
+
 					shiftX*=-1;
 					row.setValue(MDL_SHIFT_X, -shiftX);
-					row.setValue(MDL_SHIFT_Y, -shiftX);
+					row.setValue(MDL_SHIFT_Y, -shiftY);
 					rowSF.getValue(MDL_ANGLE_ROT, rot);
 					row.setValue(MDL_ANGLE_ROT, rot);
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_PSI, psi);
+					row.setValue(MDL_REF,i+1);
 					SFq.addRow(row);
 				}
 			}
@@ -868,11 +1109,15 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 void ProgGpuCorrelation::run()
 {
 
-	//PROJECTION IMAGES PART
+	//PROJECTION IMAGES
 	size_t Xdim, Ydim, Zdim, Ndim;
 	SF.read(fn_ref,NULL);
 	size_t mdInSize = SF.size();
 	getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
+
+	//EXPERIMENTAL IMAGES
+	SFexp.read(fn_exp,NULL);
+	size_t mdExpSize = SFexp.size();
 
 	// Generate mask
 	Mask mask;
@@ -895,29 +1140,27 @@ void ProgGpuCorrelation::run()
 
 
 	//AJ check_gpu_memory to know how many images we can copy in the gpu memory
-    float limit=1.3; //0.877;
-	int available_images_proj = mdInSize;
-	if(Xdim*Ydim*mdInSize*4*100/memory[1]>limit){
+    float limit=0.877; //0.877; 1.3;
+	int available_images_proj = mdExpSize; //mdInSize
+	if(Xdim*Ydim*mdExpSize*4*100/memory[1]>limit){ //mdInSize
 		available_images_proj = floor(memory[1]*(limit/100)/(Xdim*Ydim*4));
 	}
-	if(Xdim*2*Ydim*2*mdInSize>maxGridSize[0]){
+	if(Xdim*2*Ydim*2*mdExpSize>maxGridSize[0]){ //mdInSize
 		available_images_proj = floor((round(maxGridSize[0]*0.9))/(Xdim*Ydim));
 	}
 
-	SFexp.read(fn_exp,NULL);
-	size_t mdExpSize = SFexp.size();
 
 	//matrix with all the best transformations in CPU
-	MultidimArray<float> *matrixTransCpu = new MultidimArray<float> [mdExpSize];
-	for(int i=0; i<mdExpSize; i++)
-		matrixTransCpu[i].coreAllocate(1, mdInSize, 3, 3);
-	MultidimArray<float> *matrixTransCpu_mirror = new MultidimArray<float> [mdExpSize];
-	for(int i=0; i<mdExpSize; i++)
-		matrixTransCpu_mirror[i].coreAllocate(1, mdInSize, 3, 3);
+	MultidimArray<float> *matrixTransCpu = new MultidimArray<float> [mdInSize]; //mdExpSize
+	for(int i=0; i<mdInSize; i++) //mdExpSize
+		matrixTransCpu[i].coreAllocate(1, mdExpSize, 3, 3); //mdInSize
+	MultidimArray<float> *matrixTransCpu_mirror = new MultidimArray<float> [mdInSize]; //mdExpSize
+	for(int i=0; i<mdInSize; i++) //mdExpSize
+		matrixTransCpu_mirror[i].coreAllocate(1, mdExpSize, 3, 3); //mdInSize
 
 	//correlation matrix
-	MultidimArray<float> matrixCorrCpu(1, 1, mdExpSize, mdInSize);
-	MultidimArray<float> matrixCorrCpu_mirror(1, 1, mdExpSize, mdInSize);
+	MultidimArray<float> matrixCorrCpu(1, 1, mdInSize, mdExpSize); //mdExpSize, mdInSize
+	MultidimArray<float> matrixCorrCpu_mirror(1, 1, mdInSize, mdExpSize); //mdExpSize, mdInSize
 
 	//Aux vectors with maximum values of correlation in RT and TR steps
 	float *max_vector_rt;
@@ -953,6 +1196,8 @@ void ProgGpuCorrelation::run()
 
 	StructuresAux myStructureAux;
 
+	MDIterator *iter = new MDIterator(SFexp); //SF
+
 	//Loop over the reference images
 	while(!finish){
 
@@ -976,8 +1221,9 @@ void ProgGpuCorrelation::run()
 		myStructureAux.polar2_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
 
 
-		preprocess_images_reference(SF, firstIdx, available_images_proj, mask, d_referenceAux,
-				myhandlePadded, myhandleMask, myhandlePolar, myhandleAux, myStructureAux);
+		//SF
+		preprocess_images_reference(SFexp, firstIdx, available_images_proj, mask, d_referenceAux,
+				myhandlePadded, myhandleMask, myhandlePolar, myhandleAux, myStructureAux, iter);
 
 	    d_referenceAux.maskCount=maskCount;
 		d_referenceAux.produceSideInfo(myhandlePaddedB, myhandleMaskB, myStructureAux);
@@ -987,7 +1233,7 @@ void ProgGpuCorrelation::run()
 		size_t expIndex = 0;
 		MDRow rowExp;
 		FileName fnImgExp;
-		MDIterator *iterExp = new MDIterator(SFexp);
+		MDIterator *iterExp = new MDIterator(SF); //SFexp
 
 		GpuCorrelationAux d_experimentalAux;
 		d_experimentalAux.XdimOrig=d_referenceAux.XdimOrig;
@@ -998,7 +1244,7 @@ void ProgGpuCorrelation::run()
 		d_experimentalAux.YdimPolar=d_referenceAux.YdimPolar;
 
 		size_t n=0;
-		int available_images_exp = mdExpSize;
+		int available_images_exp = mdInSize; //mdExpSize
 		while(available_images_exp && iterExp->objId!=0){
 
 			transMat_tr.initialize();
@@ -1017,24 +1263,25 @@ void ProgGpuCorrelation::run()
 			expIndex = iterExp->objId;
 			available_images_exp--;
 
-			SFexp.getRow(rowExp, expIndex);
+			SF.getRow(rowExp, expIndex); //SFexp
 			rowExp.getValue(MDL_IMAGE, fnImgExp);
 			std::cerr << expIndex << ". Image: " << fnImgExp << std::endl;
 
 			//AJ calling the function to align the images
 			bool mirror=false;
+			//SFexp
 			align_experimental_image(fnImgExp, d_referenceAux, d_experimentalAux, transMat_tr, transMat_rt,
-					max_vector_tr, max_vector_rt, SFexp, available_images_proj, mirror, maxShift,
+					max_vector_tr, max_vector_rt, SF, available_images_proj, mirror, maxShift,
 					myhandlePadded, myhandleMask, myhandlePolar, myhandlePaddedB, myhandleMaskB, myhandlePolarB,
 					myStructureAux);
 
 
 			mirror=true;
+			//SFexp
 			align_experimental_image(fnImgExp, d_referenceAux, d_experimentalAux, transMat_tr_mirror, transMat_rt_mirror,
-							max_vector_tr_mirror, max_vector_rt_mirror, SFexp, available_images_proj, mirror, maxShift,
+							max_vector_tr_mirror, max_vector_rt_mirror, SF, available_images_proj, mirror, maxShift,
 							myhandlePadded, myhandleMask, myhandlePolar, myhandlePaddedB, myhandleMaskB, myhandlePolarB,
 							myStructureAux);
-
 
 			//AJ to check the best transformation among all the evaluated
 			for(int i=0; i<available_images_proj; i++){
@@ -1065,11 +1312,11 @@ void ProgGpuCorrelation::run()
 		delete iterExp;
 		firstIdx +=available_images_proj;
 		int aux;
-		if(firstIdx+available_images_proj > mdInSize){
+		if(firstIdx+available_images_proj > mdExpSize){ //mdInSize
 			aux=available_images_proj;
-			available_images_proj=mdInSize-firstIdx;
+			available_images_proj=mdExpSize-firstIdx; //mdInSize
 		}
-		if(firstIdx==mdInSize){
+		if(firstIdx==mdExpSize){ //mdInSize
 			finish=true;
 		}
 		if(aux!=available_images_proj){
@@ -1083,6 +1330,10 @@ void ProgGpuCorrelation::run()
 
 	}//End loop over the reference images while(!finish)
 
+	//std::cerr << "matrixCorrCpu: " << matrixCorrCpu << std::endl;
+
+	delete iter;
+
 	myhandlePadded.clear();
 	myhandleMask.clear();
 	myhandlePolar.clear();
@@ -1090,8 +1341,8 @@ void ProgGpuCorrelation::run()
 	myhandleMaskB.clear();
 	myhandlePolarB.clear();
 
-
 	MultidimArray<float> weights(1,1,mdExpSize,2*mdInSize);
+	MultidimArray<float> weightsMax;
 	MultidimArray<float> corrTotalRow(1,1,mdExpSize, 2*mdInSize);
 	int Nref;
 	if(keepN){
@@ -1101,22 +1352,26 @@ void ProgGpuCorrelation::run()
 		if(Nref==0)
 			Nref=1;
 	}
-	calculate_weights(matrixCorrCpu, matrixCorrCpu_mirror, corrTotalRow, weights, Nref, mdExpSize, mdInSize);
+
+	calculate_weights(matrixCorrCpu, matrixCorrCpu_mirror, corrTotalRow, weights, Nref, mdExpSize, mdInSize, weightsMax, simplifiedMd);
+
+	//std::cerr << "weights: " << weights << std::endl;
 
 	generate_metadata(SF, SFexp, fnDir, fn_out, mdExpSize, mdInSize, weights, corrTotalRow, matrixTransCpu,
-			matrixTransCpu_mirror, maxShift);
+			matrixTransCpu_mirror, maxShift, weightsMax, simplifiedMd, Nref);
 
 	if(generate_out)
 		generate_output_classes(SF, SFexp, fnDir, mdExpSize, mdInSize, weights, matrixTransCpu,
-				matrixTransCpu_mirror, maxShift, fn_classes_out, simplifiedMd, Nref);
+				matrixTransCpu_mirror, maxShift, fn_classes_out, weightsMax, simplifiedMd, Nref);
+
 
 	//Free memory in CPU
-	for(int i=0; i<mdExpSize; i++)
+	for(int i=0; i<mdInSize; i++) //mdExpSize
 		matrixTransCpu[i].coreDeallocate();
 	delete []matrixTransCpu;
 	delete []max_vector_tr;
 	delete []max_vector_rt;
-	for(int i=0; i<mdExpSize; i++)
+	for(int i=0; i<mdInSize; i++) //mdExpSize
 		matrixTransCpu_mirror[i].coreDeallocate();
 	delete []matrixTransCpu_mirror;
 	delete []max_vector_tr_mirror;
