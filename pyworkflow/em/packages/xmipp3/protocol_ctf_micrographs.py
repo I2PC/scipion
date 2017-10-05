@@ -99,6 +99,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                       help='Automatically reject micrographs whose CTF looks '
                            'suspicious.')
 
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
+
     # --------------------------- INSERT steps functions -----------------------
     def _stepsCheck(self):
         # The streaming is not allowed for recalculate CTF
