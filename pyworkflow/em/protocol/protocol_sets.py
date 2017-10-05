@@ -34,6 +34,7 @@ This module contains protocols related to Set operations such us:
 import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
+import pyworkflow.utils as pwutils
 from pyworkflow.object import Boolean
 
 class ProtSets(EMProtocol):
@@ -469,3 +470,47 @@ class ProtSubSet(ProtSets):
             return ["The elements of %s that also are referenced in %s" %
                     (self.inputFullSet.getName(), self.inputSubSet.getName()),
                     "are now in %s" % getattr(self, key).getName()]
+
+class ProtSubSetByMic(ProtSets):
+    """    
+    Create a subset of those particles coming from a particular set of micrographs 
+    """
+    _label = 'subset by micrograph'
+
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):    
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputParticles', pwprot.params.PointerParam, pointerClass='SetOfParticles',
+            label="Set of particles", 
+            help='Set of particles from which the subset will be taken')
+        add('inputMicrographs', pwprot.params.PointerParam, pointerClass='SetOfMicrographs',
+            label="Set of micrographs",
+            help='Only the particles in this set of micrographs will be output')
+
+    #--------------------------- INSERT steps functions --------------------------------------------   
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+
+    #--------------------------- STEPS functions --------------------------------------------
+    def createOutputStep(self):
+        inputParticles = self.inputParticles.get()
+        inputMicrographs = self.inputMicrographs.get()
+
+        outputSet = self._createSetOfParticles()
+        outputSet.copyInfo(inputParticles)
+
+        micIds = []
+        #micNames = []
+        for mic in inputMicrographs:
+            #micNames.append(pwutils.removeBaseExt(mic.getMicName()))
+            micIds.append(mic.getObjId())
+
+        for particle in inputParticles:
+            if particle.getMicId() in micIds:
+                outputSet.append(particle)
+            
+        self._defineOutputs(outputParticles=outputSet)
+        self._defineTransformRelation(inputParticles, outputSet)
+        self._defineTransformRelation(inputMicrographs, outputSet)
