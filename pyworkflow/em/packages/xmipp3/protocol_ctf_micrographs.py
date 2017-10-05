@@ -160,7 +160,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                             " --downSamplingPerformed %f" % downFactor)
             except Exception, ex:
                 print >> sys.stderr, "xmipp_ctf_estimate_from_micrograph has " \
-                                     "failed with micrograph %s" % baseFn
+                                     "failed with micrograph %s" % finalName
 
             # Check the quality of the estimation and reject it necessary
             if self.evaluateSingleMicrograph(micFn, micDir):
