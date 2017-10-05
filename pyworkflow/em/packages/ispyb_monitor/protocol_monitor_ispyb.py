@@ -70,7 +70,7 @@ class ProtMonitorISPyB(ProtMonitor):
 
         monitor = MonitorISPyB(self, workingDir=self._getPath(),
                                samplingInterval=self.samplingInterval.get(),
-                               monitorTime=100,
+                               monitorTime=10000,
                                inputProtocols=inputProtocols,
                                visit=self.visit.get(),
                                dbconf=self.db.get(),
