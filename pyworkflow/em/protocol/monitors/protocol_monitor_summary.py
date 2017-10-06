@@ -32,7 +32,7 @@ from protocol_monitor_ctf import MonitorCTF
 from protocol_monitor_movie_gain import MonitorMovieGain
 from protocol_monitor_system import MonitorSystem
 from pyworkflow import VERSION_1_1
-from pyworkflow.em.protocol import ProtCTFMicrographs, ProtProcessMovies
+from pyworkflow.em.protocol import ProtCTFMicrographs, ProtProcessMovies, ProtAlignMovies
 from pyworkflow.em.protocol.monitors.report_html import ReportHtml
 import getnifs
 
@@ -202,6 +202,13 @@ class ProtMonitorSummary(ProtMonitor):
         # create report dir
         pwutils.makePath(self.reportDir)
 
+    def _getAlignProtocol(self):
+        for protPointer in self.inputProtocols:
+            prot = protPointer.get()
+            if isinstance(prot, ProtAlignMovies):
+                return prot
+        return None
+
     def _getCtfProtocol(self):
         for protPointer in self.inputProtocols:
             prot = protPointer.get()
@@ -285,7 +292,9 @@ class ProtMonitorSummary(ProtMonitor):
         sysMonitor = sysMonitor or self.createSystemMonitor()
         movieGainMonitor = movieGainMonitor or self.createMovieGainMonitor()
         self.createReportDir()
-
-        return ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor,
+        htmlReport = ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor,
                           self.publishCmd.get(),
                           refreshSecs=self.samplingInterval.get())
+        htmlReport.setUp()
+
+        return htmlReport
