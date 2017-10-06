@@ -51,32 +51,37 @@ def parseGctfOutput(filename):
     """ Retrieve defocus U, V, angle, crossCorrelation
     and ctfResolution from the output file of the Gctf execution.
     """
-    result = None
-    result1 = ()
-    ansi_escape = re.compile(r'\x1b[^m]*m')
+
     if os.path.exists(filename):
+        # Create an empty list with: defU, defV, angle, CC and resolution
+        result = [0.] * 6
         f = open(filename)
         for line in f:
             if 'Final Values' in line:
+                parts = line.strip().split()
                 # line = DefocusU, DefocusV, Angle, crossCorrelation, Final, Values
                 # OR
                 # line = DefocusU, DefocusV, Angle, ctfPhaseShift, crossCorrelation, Final, Values
                 length = len(line.split())
-                if length == 6:
-                    result1 = tuple(map(float, line.split()[:4]))
-                    result1 += (.0,)  # ctfPhaseShift = 0
+                # Always map defU, defV and angle
+                result[0:3] = map(float, parts[0:3])
+
+                if parts[4] == 'Final': # no ctfPhaseShift
+                    result[3] = float(parts[3])
                 else:
-                    result1 = tuple(map(float, line.split()[:3]))
-                    result1 += tuple(map(float, (line.split()[4], line.split()[3])))
+                    result[3] = float(parts[4]) # CC is now in position 4
+                    result[4] = float(parts[3]) # get ctfPhaseShift
             if 'Resolution limit estimated by EPA' in line:
                 # Take ctfResolution as a tuple
                 # that is the last value in the line
                 # but remove escape characters first
-                result2 = ansi_escape.sub('', line)
-                result3 = tuple(map(float,result2.split()[-1:]))
-                result = result1 + result3
+                result[5] = float(line.strip().split()[-1])
                 break
         f.close()
+    else:
+        result = None
+        print "Warning: Missing file: ", filename
+
     return result
 
 
