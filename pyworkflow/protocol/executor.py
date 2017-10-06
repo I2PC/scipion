@@ -243,7 +243,8 @@ class QueueStepExecutor(ThreadStepExecutor):
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
 
-        self.pool = ThreadPool(processes=1)
+        # set to > 1 threads because one "stuck" thread caused a run to fail
+        self.pool = ThreadPool(processes=10)
 
         # This is a dirty hot-fix now because we are spawning too many threads
         # even for the case when nThreads = 1
