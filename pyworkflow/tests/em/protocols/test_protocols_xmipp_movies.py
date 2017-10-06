@@ -636,16 +636,21 @@ class TestMaxShift(BaseTest):
                                               magnification=50000)
     
     def _checkMaxShiftFiltering(self, protocol, goldDecision):
+        # Decision: = True for ACCEPTING Movies ; = False for DISCARTING Movies.
+        # if the Movie must be accepted: 
+        #                     outputMovies EXISTS and outputMoviesDiscarted NOT.
+        # if the Movie must be rejected: 
+        #                     outputMoviesDiscarted EXIST and outputMovies NOT.
         if goldDecision:
             self.assertIsNotNone(getattr(protocol, 'outputMovies', None),
-                              "Accepted Output were not created. Bad filtering")
+                      "outputMovies (accepted) were not created. Bad filtering")
             self.assertIsNone(getattr(protocol, 'outputMoviesDiscarted', None),
-                                 "Discarted Output were created. Bad filtering")
+                            "outputMoviesDiscarted were created. Bad filtering")
         else:
             self.assertIsNotNone(getattr(protocol, 'outputMoviesDiscarted', None),
-                             "Discarted Output were not created. Bad filtering")
+                        "outputMoviesDiscarted were not created. Bad filtering")
             self.assertIsNone(getattr(protocol, 'outputMovies', None),
-                                  "Accepted Output were created. Bad filtering")
+                         "outputMovies (accepted)t were created. Bad filtering")
 
     def _checkAlignment(self, movie, goldRange, goldRoi):
         alignment = movie.getAlignment()
