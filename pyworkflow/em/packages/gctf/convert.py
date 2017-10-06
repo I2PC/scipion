@@ -75,7 +75,7 @@ def parseGctfOutput(filename):
                 # Take ctfResolution as a tuple
                 # that is the last value in the line
                 # but remove escape characters first
-                result[5] = float(line.strip().split()[-1])
+                result[5] = float(line.strip().split()[-2])
                 break
         f.close()
     else:
