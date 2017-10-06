@@ -597,20 +597,6 @@ class Environ(dict):
         else:
             print "Some paths do not exist in: % s" % libraryPath
 
-    def setInstallationPath(self, path):
-        """ Path to the package installation"""
-        # noinspection PyAttributeOutsideInit
-        self._installationPath = path
-
-    def isInstalled(self):
-        """ Returns true if installation variable is defined
-         and points to an existent path"""
-        # return true if installation path is not defined to fallback
-        #  on default behaviour.
-        return os.path.exists(self._installationPath) \
-            if self._installationPath is not None else True
-
-
 def existsVariablePaths(variableValue):
     """ Check if the path (or paths) in variableValue exists.
     Multiple paths are allowed if separated by os."""

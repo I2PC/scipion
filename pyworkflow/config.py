@@ -40,6 +40,9 @@ import pyworkflow.object as pwobj
 import pyworkflow.hosts as pwhosts
 from pyworkflow import em
 from pyworkflow.mapper import SqliteMapper
+from pyworkflow.protocol import isProtocolInstalled
+
+ALL_PROTOCOLS = "All"
 
 PATH = os.path.dirname(__file__)
 PROTOCOL_DISABLED_TAG = 'protocol-disabled'
@@ -218,7 +221,7 @@ def addAllProtocols(protocols):
     # Sort the dictionary
     allProtsSorted = OrderedDict(sorted(allProts.items(), key= lambda e: e[1].getClassLabel()))
 
-    allProtMenu = ProtocolConfig("All")
+    allProtMenu = ProtocolConfig(ALL_PROTOCOLS)
     packages = {}
     # Group protocols by package name
     for k, v in allProtsSorted.iteritems():
@@ -241,7 +244,7 @@ def addAllProtocols(protocols):
                 packages[packageName] = packageMenu
 
             # Add the protocol
-            tag = getProtocolTag(v.isInstalled())
+            tag = getProtocolTag(isProtocolInstalled(v))
 
             protLine = {"tag": tag, "value": k, "text": v.getClassLabel(prependPackageName=False)}
 
@@ -252,7 +255,7 @@ def addAllProtocols(protocols):
 
             addToTree(packageMenu, protLine)
 
-    protocols["All"] = allProtMenu
+    protocols[ALL_PROTOCOLS] = allProtMenu
 
 
 def getProtocolTag(isInstalled):

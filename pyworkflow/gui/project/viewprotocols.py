@@ -351,7 +351,9 @@ class SearchProtocolWindow(pwgui.Window):
             if isAFinalProtocol(prot, key):
                 label = prot.getClassLabel().lower()
                 if keyword in label:
-                    protList.append((key, label, prot.isInstalled()))
+                    protList.append((key,
+                                     label,
+                                     pwprot.isProtocolInstalled(prot)))
 
         # Sort by label
         protList.sort(key=lambda x: x[1])  # sort by label

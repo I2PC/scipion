@@ -80,8 +80,3 @@ class SpiderProtocol(EMProtocol):
             if 'FATAL ERROR ENCOUNTERED IN BATCH MODE' in line:
                 raise Exception('Spider script error!')
         f.close()
-
-    @staticmethod
-    def isInstalled():
-        return environment.isInstalled()
-

@@ -30,9 +30,19 @@ import subprocess
 import re
 
 from pyworkflow.object import String
+from pyworkflow.protocol.package import Package
 from pyworkflow.utils import runJob, Environ
 from pyworkflow.utils.path import replaceBaseExt, removeBaseExt
 from pyworkflow.em.data import EMObject
+
+# Config variable names
+# From scipion config
+SPIDER_DIR = 'SPIDER_DIR'
+SPIDER_HOME = 'SPIDER_HOME'
+# From environment
+SPPROC_DIR = 'SPPROC_DIR'
+SPMAN_DIR = 'SPMAN_DIR'
+SPBIN_DIR = 'SPBIN_DIR'
 
 
 END_HEADER = 'END BATCH HEADER'
@@ -59,36 +69,40 @@ def getEnviron():
     """
     global SPIDER
     env = Environ(os.environ)
-    SPIDER_DIR = env.getFirst(('SPIDER_HOME', 'SPIDER_DIR'), mandatory=True)  #
+    SPIDER_PATH = env.getFirst((SPIDER_HOME, SPIDER_DIR), mandatory=True)  #
     # Scipion
     # definition
-    env.setInstallationPath(SPIDER_DIR)
-    
-    if SPIDER_DIR is None:
+
+    # env.setInstalled(os.path.exists(SPIDER_DIR))
+
+    if SPIDER_PATH is None:
         errors = ''
-        for var in ['SPBIN_DIR', 'SPMAN_DIR', 'SPPROC_DIR']:
+        for var in [SPBIN_DIR, SPMAN_DIR, SPPROC_DIR]:
             if not var in env:
                 errors += "\n   Missing SPIDER variable: '%s'" % var
         if len(errors):
             print "ERRORS: " + errors
     else: 
-        env.update({'SPBIN_DIR': join(SPIDER_DIR, 'bin') + '/', # Spider needs this extra slash at the end
-                    'SPMAN_DIR': join(SPIDER_DIR, 'man') + '/',
-                    'SPPROC_DIR': join(SPIDER_DIR, 'proc') + '/'
+        env.update({SPBIN_DIR: join(SPIDER_PATH, 'bin') + '/', # Spider needs this extra slash at the end
+                    SPMAN_DIR: join(SPIDER_PATH, 'man') + '/',
+                    SPPROC_DIR: join(SPIDER_PATH, 'proc') + '/'
                     })
     
     # Get the executable or 'spider' by default
-    SPIDER = join(env['SPBIN_DIR'], env.get('SPIDER', 'spider_linux_mp_intel64'))
+    SPIDER = join(env[SPBIN_DIR], env.get('SPIDER', 'spider_linux_mp_intel64'))
     # expand ~ and vars
     SPIDER = abspath(os.path.expanduser(os.path.expandvars(SPIDER)))
         
-    env.set('PATH', env['SPBIN_DIR'], env.END)
+    env.set('PATH', env[SPBIN_DIR], env.END)
     
     return env
     
 
 environment = getEnviron()
+package = Package("Spider", os.path.exists(environment[SPBIN_DIR]))
 
+def getPackage():
+    return package
 
 def _getFile(*paths):
     return join(PATH, *paths)
