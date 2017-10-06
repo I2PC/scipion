@@ -107,7 +107,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         # Check for newly done items
         movieListIdAccepted = self._getLists(True)
         movieListIdDiscarted = self._getLists(False)
-    
+
         newDoneAccepted = [movieId for movieId in movieListIdAccepted
                              if movieId not in doneList]
         newDoneDiscarted = [movieId for movieId in movieListIdDiscarted
@@ -127,8 +127,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movie is equal to the number of inputs
-        # self.finished = (self.isStreamClosed == Set.STREAM_CLOSED and 
-        #                    allDone == len(self.listOfMovies))
         self.finished = self.streamClosed and allDone == len(self.listOfMovies)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
@@ -170,19 +168,20 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             self._updateOutputSet('outputMoviesDiscarted',
                                   movieSetDiscarted, streamMode)
             
-        if self.finished:  # Unlock createOutputStep if finished all jobs
+        # Unlock createOutputStep if finished all jobs
+        if self.finished:  
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
 
+        # Close the output objects
         if (exists(self._getPath('movies.sqlite'))):
             movieSetAccepted.close()
 
-        # AJ new subsets with discarted movies
         if (exists(self._getPath('moviesDiscarted.sqlite'))):
             movieSetDiscarted.close()
 
-    #    # FIXME: Methods will change when using the streaming for the output
+    # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
         pass
@@ -198,12 +197,10 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         return True
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
-        """
-        Load the output set if it exists or create a new one.
+        """ Load the output set if it exists or create a new one.
         fixSampling: correct the output sampling rate if binning was used,
         except for the case when the original movies are kept and shifts
-        refers to that one.
-        """
+        refers to that one. """
         setFile = self._getPath(baseName)
 
         if exists(setFile):
