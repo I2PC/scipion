@@ -24,6 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.metadata.functions import label2Str
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Xmipp specific files
@@ -68,8 +69,8 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
-       ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
-       ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
+#       ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
+#       ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
 
 CTF_PSD_DICT = OrderedDict([
@@ -103,7 +104,7 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
     xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
     xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
-    #xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+    xmipp.MDL_CTF_CRIT_FITTINGSCORE,
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
@@ -115,6 +116,7 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_CRIT_PSDCORRELATION90,
     xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL,
     xmipp.MDL_CTF_CRIT_NORMALITY,
+    xmipp.MDL_CTF_CRIT_MAXFREQ,
     # In xmipp the ctf also contains acquisition information
     xmipp.MDL_CTF_Q0,
     xmipp.MDL_CTF_CS,
