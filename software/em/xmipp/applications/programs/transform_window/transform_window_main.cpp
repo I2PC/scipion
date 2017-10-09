@@ -39,7 +39,7 @@ public:
 	int xF, yF, zF;
 	String sym;
 	//unit cell option parameters
-	double rmin, rmax, expand, offset, sampling;
+	double rmin, rmax, expand, offset, sampling, x_origin, y_origin, z_origin;
 	double padValue;
 	String padType;
 	WindowMode mode;
@@ -103,7 +103,7 @@ public:
 		addParamsLine(
 				"                                         : are supposed to be the same");
 		addParamsLine(
-				"  or --unitcell <sym> <rmin=0> <rmax=0> <expandFactor=0> <offset=0> <sampling=1.>: Extract a unit cell from volume");
+				"  or --unitcell <sym> <rmin=0> <rmax=0> <expandFactor=0> <offset=0> <sampling=1.> <x_origin=-1.> <y_origin=-1.> <z_origin=-1.> : Extract a unit cell from volume");
 		addParamsLine(
 				"                                         : sym = particle symmetry");
 		addParamsLine(
@@ -114,6 +114,12 @@ public:
 				"                                         : offset= for CN symmetry rotate unit cell by this angle");
 		addParamsLine(
 				"                                         : sampling=if the output is a mrc file it will use this value to fill the header");
+		addParamsLine(
+				"                                         : x_origin = origin x coordinate introduced by the user with the input volume");
+		addParamsLine(
+				"                                         : y_origin = origin y coordinate introduced by the user with the input volume");
+		addParamsLine(
+				"                                         : z_origin = origin z coordinate introduced by the user with the input volume");
 		addParamsLine(
 				"  [--physical]                           : use physical instead of logical coordinates");
 		addParamsLine("    requires --corners;");
@@ -197,7 +203,7 @@ public:
 			mode = SIZEMODE;
 			physical_coords = false;
 		}
-		//<sym> <rmin=0> <rmax=0> <expandFactor=0> <offset=0> : Extract a unit cell from volume");
+		//<sym> <rmin=0> <rmax=0> <expandFactor=0> <offset=0> <x_offset=-1.> <y_offset=-1.> <z_offset=-1.>: Extract a unit cell from volume");
 
 		else if (checkParam("--crop")) {
 			cropX = getIntParam("--crop", 0);
@@ -217,6 +223,10 @@ public:
 			expand = getDoubleParam("--unitcell", 3);
 			offset = DEG2RAD(getDoubleParam("--unitcell", 4));
 			sampling = getDoubleParam("--unitcell", 5);
+			x_origin = getDoubleParam("--unitcell", 6);
+			y_origin = getDoubleParam("--unitcell", 7);
+			z_origin = getDoubleParam("--unitcell", 8);
+
 			mode = UNITCELLMODE;
 		}
 	}
@@ -241,8 +251,10 @@ public:
 					<< std::endl;
 			break;
 		case UNITCELLMODE:
-			std::cout << "Sym: " << sym << " rmin, rmax:" << rmin << ", " << rmax
-			          << " sampling " << sampling
+			std::cout << "Sym: " << sym << ", rmin: " << rmin << ", rmax: " << rmax
+					  << ", Expand Factor: " << expand << ", offset: " << offset
+					  << ", sampling: " << sampling << "; Origin: "
+			          << " x: " << x_origin << ", y: " << y_origin << ", z: " << z_origin
 					  << std::endl;
 			break;
 		}
@@ -264,7 +276,7 @@ public:
 	void unitcell(ImageGeneric &in3Dmap,
 			      ImageGeneric & out3DDmap) {
 		//1) init class and compute auxiliary vectors
-		UnitCell UC(sym, rmin, rmax, expand, offset, sampling);
+		UnitCell UC(sym, rmin, rmax, expand, offset, sampling, x_origin, y_origin, z_origin);
 		//2) mask image
 		UC.maskUnitCell(in3Dmap,out3DDmap);
 		//3) shift them
