@@ -81,11 +81,12 @@ void UnitCell::doIcosahedral(int symmetry) {
 		REPORT_ERROR(ERR_ARG_INCORRECT, "Symmetry not implemented");
 	_minZ = rmax;
 	_maxZ = rmin;
+
 	icoSymmetry(_centre, _5f, _5fp, _5fpp, expanded);
 }
 
 UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
-		double offset, double sampling) {
+		double offset, double sampling, double x_origin, double y_origin, double z_origin) {
 	// list of numbers smaller than 10000 which have prime decomposition
 	// that does not contain prime number greater than 19
 	// This is the greates prime number that can handle ccp4 fft routine
@@ -93,8 +94,11 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 	this->rmin = rmin; //delete voxels closer to the center than this radius
 	this->rmax = rmax; //delete voxels more far away to the center than this radius
 	this->offset = offset; //rotate unit cell this degrees
-	this->expanded = expanded;
-	this->sampling = sampling;
+	this->expanded = expanded; //coefficient of expansion
+	this->sampling = sampling; // Angstrom/pixels relation 
+	this->x_origin = x_origin; // origin x coordinate introduced with the input volume
+	this->y_origin = y_origin; // origin y coordinate introduced with the input volume
+	this->z_origin = z_origin; // origin z coordinate introduced with the input volume
 	this->newOriginAfterExpansion = vectorR3(0., 0., 0.);
 	SL.isSymmetryGroup(sym, symmetry, sym_order); //parse symmetry string
 	std::cerr << "symmetry: " << symmetry << std::endl;
@@ -556,6 +560,10 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 	//1) get dimensions
 	size_t xDim, yDim, zDim;
 	in3Dmap.getDimensions(xDim, yDim, zDim);
+	double x_offset = x_origin - xDim/2.; //difference between default and user introduced x_origin coordinate
+	double y_offset = y_origin - yDim/2.; //difference between default and user introduced y_origin coordinate
+	double z_offset = z_origin - zDim/2; //difference between default and user introduced z_origin coordinate
+	
 	if (rmax == 0)
 		rmax = (double) xDim / 2.;
 
@@ -857,11 +865,25 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 						}
 
 						if (doIt) {
-							A3D_ELEM(*imageMap2,k,i,j) = A3D_ELEM(*map, k, i, j);
+							if (x_offset == 0.0 && y_offset == 0.0 && z_offset == 0.0){
+								A3D_ELEM(*imageMap2,k,i,j) = A3D_ELEM(*map, k, i, j);
+							}else if (x_offset != 0.0 || y_offset != 0.0 || z_offset != 0.0){
+								int k1 = k + z_offset;
+								int i1 = i + y_offset;
+								int j1 = j + x_offset;
+								A3D_ELEM(*imageMap2,k1,i1,j1) = A3D_ELEM(*map, k1, i1, j1);
+							}
 						}
 					}
 				}
-
+		if (x_offset != 0.0 || y_offset != 0.0 || z_offset != 0.0){
+			iMinZ = iMinZ + z_offset;
+			iMinY = iMinY + y_offset;
+			iMinX = iMinX + x_offset;
+			iMaxZ = iMaxZ + z_offset;
+			iMaxY = iMaxY + y_offset;
+			iMaxX = iMaxX + x_offset;
+		}
 		imageMap2->selfWindow(iMinZ, iMinY, iMinX, iMaxZ, iMaxY, iMaxX, 0.);
 		MDRow MD;
 		out3DDmap.setDataMode(_DATA_ALL);
