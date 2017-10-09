@@ -34,6 +34,12 @@ private:
 	double sampling;
 	//vectors defining expansion direction
 	double expanded;
+	//origin x coordinate introduced by the user with the input volume
+	double x_origin;
+	//origin y coordinate introduced by the user with the input volume
+	double y_origin;
+	//origin z coordinate introduced by the user with the input volume
+	double z_origin;
 	//new origin after expansion
 	Matrix1D<double>  newOriginAfterExpansion;
 	//
@@ -102,7 +108,7 @@ public:
 	//~UnitCell();
 	/** unit auxiliary vectors */
 	UnitCell(String sym, double rmin, double rmax, double expanded,
-			double offset,double sampling);
+			double offset, double sampling, double x_origin, double y_origin, double z_origin);
 	/** process CN symmetry */
 	void doCyclic(int order=1);
 	/** process DN symmetry */
