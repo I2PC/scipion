@@ -35,6 +35,7 @@ import datetime
 import traceback
 import threading
 import os
+import signal
 import re
 from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool, TimeoutError
@@ -275,8 +276,16 @@ class QueueStepExecutor(ThreadStepExecutor):
             return 0
 
         command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}        
-        p = Popen(command, shell=True, stdout=PIPE)
-        out = p.communicate()[0]
+        p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
+
+        def communicate():
+            return p.communicate()[0]
+
+        try:
+            out = self.pool.apply_async(communicate).get(30)
+        except TimeoutError:
+            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+            return None
 
         # FIXME: this is too specific to grid engine
         s = re.search('exit_status\s+-*(\d+)', out)
