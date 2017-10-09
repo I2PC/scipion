@@ -253,8 +253,8 @@ class ReportHtml:
             elif v > maxDefocus:
                 aboveThresh += 1
         zipped = zip(values, labels)
-        zipped[:0] = [(-belowThresh, "0-%d" % minDefocus)]  # Negative values for highcharts heatmap color scale
-        zipped.append((-aboveThresh, "> %d" % maxDefocus))
+        zipped[:0] = [(belowThresh, "0-%d" % minDefocus)]
+        zipped.append((aboveThresh, "> %d" % maxDefocus))
 
         return zipped
 
