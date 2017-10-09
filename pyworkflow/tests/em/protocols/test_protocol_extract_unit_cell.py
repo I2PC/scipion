@@ -45,7 +45,7 @@ from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms import XmippProtConv
 from icosahedron import *
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
 from pyworkflow.em.data import Transform
-
+from pyworkflow.object import Boolean, Float
 OFFSET = 22.5
 
 # function to write the coordinates of a phantom (3D map) for icosahedral symmetry in a text file
@@ -329,6 +329,18 @@ class TestProtModelBuilding(BaseTest):
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),OFFSET)
         self.box[SYM_CYCLIC] = (50, 52, 81)
         self.extractunitCell(SYM_CYCLIC, OFFSET)
+        #test for cyclic symmetries C1 and C2
+        self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
+                                             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
+        self.box[SYM_CYCLIC] = (81, 81, 81)
+        self.symOrder = 1
+        self.extractunitCell(SYM_CYCLIC)
+        self.symOrder = 8
+        self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
+                                             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
+        self.box[SYM_CYCLIC] = (81, 45, 81)
+        self.symOrder = 2
+        self.extractunitCell(SYM_CYCLIC)
 
     # function to extract the unit cell of dihedral symmetry
     def test_extractunitCelldihedral(self):
@@ -379,37 +391,75 @@ class TestProtModelBuilding(BaseTest):
         self.extractunitCell(SYM_In25)
         self.extractunitCell(SYM_In25r)
 
-    # general function to extract the unit cell
-    def extractunitCell(self, sym, offset=0):
+    def test_extractunitCellHalfIco(self):
+        self.innerRadius = 37.
+        self.outerRadius = 79.
+        self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r] , 'xmipp', XMIPP_SYM_NAME[SYM_I222r])
+        self.box[SYM_I222r] = (91, 70, 53)
 
-        """ extract unit cell from icosahedral pahntom
+        self.extractunitCell(SYM_I222r, cropZ=True)  # crowther 222
+
+    # general function to extract the unit cell
+    def extractunitCell(self, sym, offset=0, cropZ=False):
+
+        """ extract unit cell from icosahedral phantom
             using xmipp_i2 symmetry
         """
         # create phantom (3D map)
         _samplingRate = 1.34
-        _, outputFile = mkstemp(suffix=".mrc")
+        _, outputFile1 = mkstemp(suffix=".mrc")
         command = "xmipp_phantom_create "
         args    = " -i %s"% self.filename[sym]
-        args += " -o %s"%outputFile
+        args += " -o %s"%outputFile1
         runJob(None, command, args,env=getEnviron())
-        ccp4header = Ccp4Header(outputFile, readHeader= True)
-        ccp4header.setSampling(_samplingRate)
+        ccp4header = Ccp4Header(outputFile1, readHeader= True)
         x,y,z = ccp4header.getDims()
         t=Transform()
-        t.setShifts(-x/2, -y/2, -z/2)
+
+
+        if cropZ:
+            _, outputFile2 = mkstemp(suffix=".mrc")
+            args = "-i %s -o %s" % (outputFile1, outputFile2)
+            args += " --corners "
+            args += " %d " % (- x / 2)
+            args += " %d " % (- y / 2)
+            args += " %d " % (0)
+            args += " %d " % (+ x / 2)
+            args += " %d " % (+ y / 2)
+            args += " %d " % (+ z / 2)
+            runJob(None, "xmipp_transform_window", args, env=getEnviron())
+            t.setShifts(0,0,0)
+            outputFile = outputFile2
+            ccp4header = Ccp4Header(outputFile2, readHeader=True)
+        else:
+            t.setShifts(0, 0, 0)
+            outputFile = outputFile1
+
+        ccp4header.setSampling(_samplingRate)
         ccp4header.setOffset(t)
         ccp4header.writeHeader()
 
         #import volume
-        args = {'filesPath': outputFile,
-                'filesPattern': '',
-                'samplingRate': _samplingRate,
-                'copyFiles': True,
-                }
+        if cropZ:
+            args = {'filesPath': outputFile,
+                    'filesPattern': '',
+                    'samplingRate': _samplingRate,
+                    'copyFiles': True,
+                    'setDefaultOrigin': False,
+                    'x': 90,
+                    'y': 90,
+                    'z': 0.
+                    }
+        else:
+            args = {'filesPath': outputFile,
+                    'filesPattern': '',
+                    'samplingRate': _samplingRate,
+                    'copyFiles': True,
+                    'setDefaultOrigin': True,
+                    }
         prot = self.newProtocol(ProtImportVolumes, **args)
         prot.setObjLabel('import volume(%s)'% XMIPP_SYM_NAME[sym])
         self.launchProtocol(prot)
-
         # execute protocol extract unitCell
         args = {'inputVolumes': prot.outputVolume,
                 'symmetryGroup': sym,
