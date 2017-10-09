@@ -92,17 +92,6 @@ class XmippProtExtractUnit(EMProtocol):
         form.addParam('expandFactor', FloatParam, default=0.,
                       label="Expand Factor", help="Increment cropped region by this factor")
 
-        line= form.addLine('Origin', help = 'Origin of Coordinates.\n' 
-                      "We follow the same convention than chimera,"
-                      " i.e., same magnitude and opposite sign than CCP4.",
-                      expertLevel=const.LEVEL_ADVANCED)
-        line.addParam('x', FloatParam,
-                       label="x", help="x coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
-        line.addParam('y', FloatParam,
-                       label="y", help="y coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
-        line.addParam('z', FloatParam,
-                       label="z", help="z coordinate of Origin", expertLevel=const.LEVEL_ADVANCED)
-
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
@@ -130,6 +119,9 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f "% self.expandFactor.get()
         args += " %f "% self.offset.get()
         args += " %f "% self.inputVolumes.get().getSamplingRate()
+        args += " %f "% self.inputVolumes.get().getOrigin().getShifts()[0] #x origin coordinate
+        args += " %f "% self.inputVolumes.get().getOrigin().getShifts()[1] #y origin coordinate
+        args += " %f "% self.inputVolumes.get().getOrigin().getShifts()[2] #z origin coordinate
 
         self.runJob("xmipp_transform_window", args)
 
@@ -141,8 +133,17 @@ class XmippProtExtractUnit(EMProtocol):
         #
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader= True)
         t=Transform()
-        x,y,z = ccp4header.getOffset()
-        t.setShifts(x,y,z)
+        x,y,z = ccp4header.getOffset() #output vol coordinate origen
+        _inputVol = self.inputVolumes.get()
+        x_origin = _inputVol.getOrigin().getShifts()[0]#x origin coordinate
+        y_origin = _inputVol.getOrigin().getShifts()[1]#y origin coordinate
+        z_origin = _inputVol.getOrigin().getShifts()[2]#z origin coordinate
+        if x_origin != _inputVol.getDim()[0]/2. and y_origin != _inputVol.getDim()[1]/2. \
+                and z_origin != _inputVol.getDim()[2]/2.:
+            x = x + (_inputVol.getDim()[0] / 2. - x_origin)#x output vol coordinate origen
+            y = y + (_inputVol.getDim()[1] / 2. - y_origin)#y output vol coordinate origen
+            z = z + (_inputVol.getDim()[2] / 2. - z_origin)#z output vol coordinate origen
+        t.setShifts(-x,-y,-z)  # we follow chimera convention no MRC
         vol.setOrigin(t)
         #
         self._defineOutputs(outputVolume=vol)
@@ -168,3 +169,4 @@ class XmippProtExtractUnit(EMProtocol):
 
     def replace_at_index(self, tup, ix, val):
        return tup[:ix] + (val,) + tup[ix+1:]
+
