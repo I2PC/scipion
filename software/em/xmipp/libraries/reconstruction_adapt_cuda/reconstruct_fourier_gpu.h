@@ -67,6 +67,9 @@
 //@{
 class ProgRecFourierGPU;
 
+
+
+
 /** Struct holding information for loading thread */
 struct LoadThreadParams
 {
@@ -75,14 +78,21 @@ struct LoadThreadParams
     int startImageIndex;
     int endImageIndex;
     MetaData* selFile;
-    TraverseSpace* loadingBuffer = NULL;
-    TraverseSpace* readyBuffer = NULL;
-    Array2D<std::complex<float> >* readyFFTs = NULL;
-    Array2D<std::complex<float> >* loadingFFTs = NULL;
-    float* loadingPaddedImages = NULL;
-    float* readyPaddedImages = NULL;
-    int loadingBufferLength;
-    int readyBufferLength;
+//    TraverseSpace* loadingBuffer = NULL;
+//    TraverseSpace* readyBuffer = NULL;
+//    Array2D<std::complex<float> >* readyFFTs = NULL;
+//    Array2D<std::complex<float> >* loadingFFTs = NULL;
+//    Array2D<std::complex<float> >* readyCTFs = NULL;
+//    Array2D<std::complex<float> >* loadingCTFs = NULL;
+//    Array2D<std::complex<float> >* readyMods = NULL;
+//    Array2D<std::complex<float> >* loadingMods = NULL;
+//    float* loadingPaddedImages = NULL;
+//    float* readyPaddedImages = NULL;
+//    int loadingBufferLength;
+//    int readyBufferLength;
+
+    FRecBufferData* lBuffer;
+    FRecBufferData* rBuffer;
 
 };
 
@@ -317,9 +327,11 @@ private:
      * Method returns a 2D array with Fourier coefficients, shifted so that low frequencies are
      * in the center of the Y axis (i.e. semicircle)
      */
-    static Array2D<std::complex<float> >* cropAndShift(
+    static void cropAndShift(
     		MultidimArray<std::complex<double> >& paddedFourier,
-    		ProgRecFourierGPU* parent);
+    		ProgRecFourierGPU* parent,
+			FRecBufferData* buffer,
+			float* dest);
 
     /** Returns value within the range (included) */
     template<typename T, typename U>

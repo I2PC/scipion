@@ -36,6 +36,15 @@ extern __shared__ float2 IMG[];
 //	}
 //}
 
+
+
+__host__ __device__
+float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
+	return FRecBufferData::getNthItem(array, itemIndex);
+}
+
+
+
 // FIXME these methods should be directly in the header file. Alter behaviour of the caller so that
 // it does not have to leave from this class
 FourierReconstructionData::FourierReconstructionData(int sizeX, int sizeY, int noOfImages, bool erase) {
@@ -909,8 +918,7 @@ void processBufferKernel(
 
 
 	if (threadIdx.x == 0 &&  threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
-		printf("na gpu: %d %d %d %d %f %f\n", threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y,
-				data->getImgOnGPU(0)[data->sizeY], data->getImgOnGPU(0)[data->sizeY + 1]);
+//		printf("\n\n%f\n\n", aaa->getNthItem(aaa->FFTs, 0)[0]);
 	}
 
 	for (int i = 0; i < noOfTransforms; i++) {
@@ -1026,36 +1034,35 @@ FourierReconDataWrapper* convertImages(float* paddedImages, int noOfImages, int 
 	return data;
 }
 
-FourierReconDataWrapper* copyToGPU(Array2D<std::complex<float> >* readyFFTs, int noOfImages) {
+FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
+		int sizeX, int sizeY) {
 	// assuming at least one image is present
-	int sizeX = readyFFTs[0].getXSize();
-	int sizeY = readyFFTs[0].getYSize();
 	int imgSize = sizeX * sizeY;
 	int noOfElements = imgSize * noOfImages * 2; // *2 since it's complex number
-	float* tmp = new float[noOfElements];
+//	float* tmp = new float[noOfElements];
 
-	// flatten the images
-	for(int i = 0; i < noOfImages; i++) {
-		for (int row = 0; row < readyFFTs[0].getYSize(); row++) {
-			int offset = (imgSize * i + row*sizeX) * 2; // *2 since it's complex number
-			memcpy(tmp + offset, readyFFTs[i].getRow(row), sizeX * sizeof(std::complex<float>));
-		}
-	}
+//	// flatten the images
+//	for(int i = 0; i < noOfImages; i++) {
+//		for (int row = 0; row < readyFFTs[0].getYSize(); row++) {
+//			int offset = (imgSize * i + row*sizeX) * 2; // *2 since it's complex number
+//			memcpy(tmp + offset, readyFFTs[i].getRow(row), sizeX * sizeof(std::complex<float>));
+//		}
+//	}
 
 	FourierReconstructionData* fd = new FourierReconstructionData(sizeX,	sizeY, noOfImages, false);
 	// copy data to gpu
-	cudaMemcpy(fd->dataOnGpu, tmp, noOfElements * sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(fd->dataOnGpu, readyFFTs, noOfElements * sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
 
 	// delete intermediate data and return
-	printf("copying FFTs %d %d %d %d cudamemcpy %d\n%f %f\n", sizeX, sizeY, imgSize, noOfElements, noOfElements * sizeof(float),
-			tmp[sizeY], tmp[sizeY + 1]);
-	delete[] tmp;
+//	printf("copying FFTs %d %d %d %d cudamemcpy %d\n%f %f\n", sizeX, sizeY, imgSize, noOfElements, noOfElements * sizeof(float),
+//			tmp[sizeY], tmp[sizeY + 1]);
+//	delete[] tmp;
 	return new FourierReconDataWrapper(fd);
 }
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		float* paddedImages, Array2D<std::complex<float> >* readyFFTs, int noOfImages,
+		float* paddedImages, float* readyFFTs, int noOfImages,
 		TraverseSpace* traverseSpaces, int noOfTransforms,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
@@ -1076,7 +1083,8 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// process input data and get them to GPU, if necessary
 	if (NULL == paddedImages) {
-		fourierData = copyToGPU(readyFFTs, noOfImages);
+		fourierData = copyToGPU(readyFFTs, noOfImages,
+				maxVolIndexX / 2, maxVolIndexYZ);
 	} else {
 		fourierData = convertImages(paddedImages, noOfImages, paddedImgSize,
 				maxVolIndexX / 2, maxVolIndexYZ,
@@ -1094,6 +1102,11 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	cudaMemcpy(devTravSpaces, traverseSpaces, noOfTransforms*sizeof(TraverseSpace), cudaMemcpyHostToDevice);
 	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
+
+
+//	FRecBufferData* aaa = new FRecBufferData(true, false, 1, 1, 1, 1,1);
+//	aaa->FFTs[0] = 112567.112567;
+
 
 	// run kernel
 	int size2D = maxVolIndexYZ + 1;

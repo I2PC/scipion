@@ -17,6 +17,87 @@
 
 //static ProjectionData* projData;
 
+struct FRecBufferData
+{
+	FRecBufferData(bool hasFFTs, bool hasCTFs,
+			int fftSizeX, int fftSizeY,	int paddedImgSize,
+			int maxNoOfImages, int noOfSymmetries) :
+			hasFFTs(hasFFTs), hasCTFs(hasCTFs),
+			fftSizeX(fftSizeX), fftSizeY(fftSizeY), paddedImgSize(paddedImgSize) {
+		if (hasFFTs) {
+			paddedImages = NULL;
+			FFTs = new float[fftSizeX * fftSizeY * maxNoOfImages * 2]; // *2 since it's complex
+		} else {
+			FFTs = NULL;
+			paddedImages = new float[paddedImgSize * paddedImgSize * maxNoOfImages];
+		}
+
+		if (hasCTFs) {
+			CTFs = new float[fftSizeX * fftSizeY * maxNoOfImages];
+			modulators = new float[fftSizeX * fftSizeY * maxNoOfImages];
+		} else {
+			CTFs = modulators = NULL;
+		}
+
+		spaces = new TraverseSpace[maxNoOfImages * noOfSymmetries];
+		noOfImages = noOfSpaces = 0;
+	};
+
+	~FRecBufferData() {
+		delete[] FFTs;
+		delete[] CTFs;
+		delete[] paddedImages;
+		delete[] modulators;
+		FFTs = CTFs = paddedImages = modulators = NULL;
+
+		delete[] spaces;
+		spaces = NULL;
+	}
+
+	int getPaddedImgSize() {
+		return paddedImgSize * paddedImgSize;
+	}
+
+	int getPaddedImgByteSize() {
+		return getPaddedImgSize() * sizeof(float);
+	}
+
+	float* getNthItem(float* array, int itemIndex) {
+		if (array == FFTs) return array + (fftSizeX * fftSizeY * itemIndex * 2); // *2 since it's complex
+		if (array == CTFs) return array + (fftSizeX * fftSizeY * itemIndex);
+		if (array == modulators) return array + (fftSizeX * fftSizeY * itemIndex);
+		if (array == paddedImages) return array + (paddedImgSize * paddedImgSize * itemIndex);
+		return NULL; // undefined
+	}
+
+	int getNoOfElements(float* array) {
+		if (array == FFTs) return (fftSizeX * fftSizeY * noOfImages * 2); // *2 since it's complex
+		if (array == CTFs) return (fftSizeX * fftSizeY * noOfImages);
+		if (array == modulators) return (fftSizeX * fftSizeY * noOfImages);
+		if (array == paddedImages) return (paddedImgSize * paddedImgSize * noOfImages);
+		return -1; // undefined
+	}
+
+	float* FFTs;
+	float* CTFs;
+	float* paddedImages;
+	float* modulators;
+	TraverseSpace* spaces;
+	int noOfSpaces;
+	int fftSizeX;
+	int fftSizeY;
+	int paddedImgSize;
+	int noOfImages;
+	bool hasFFTs;
+	bool hasCTFs;
+};
+
+struct FRecBufferDataGPU : FRecBufferData {
+	float* getNthItem(float* array, int itemIndex);
+};
+
+
+
 struct FourierReconstructionData
 {
 	FourierReconstructionData(int sizeX, int sizeY, int noOfImages, bool erase=true);
@@ -121,7 +202,7 @@ FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		float* paddedImages, Array2D<std::complex<float> >* readyFFTs, int noOfImages,
+		float* paddedImages, float* readyFFTs, int noOfImages,
 		TraverseSpace* traverseSpaces, int noOfTransforms,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
