@@ -251,10 +251,10 @@ class BsoftProtBlocres(ProtAnalysis3D):
         #Actions
         params =  ' -v 1'  # No Verbose
         params += ' -criterion %s' % CRITERION_CHOICES[self.resolutionCriterion.get()]
-        if (self.method is True):
-            params += ' -box %f' %self.box.get()
+        if (self.method):
+            params += ' -box %i' %self.box.get()
         else:
-            params += ' -shell %f' % self.shell.get()
+            params += ' -shell %i' % self.shell.get()
 
         #Parameters
         params += ' -sampling %f,%f,%f' % (sampling, sampling, sampling)
@@ -262,7 +262,7 @@ class BsoftProtBlocres(ProtAnalysis3D):
         params += ' -maxresolution %f' % self.maxresolution.get()
         params += ' -cutoff %f' % self.cutoff.get()
         if self.fill.get() != '':
-            params += ' -fill %f' % self.fill.get()
+            params += ' -fill %i' % self.fill.get()
 
         #Parameters for local resolution
         params += ' -pad %f' % self.pad.get()
