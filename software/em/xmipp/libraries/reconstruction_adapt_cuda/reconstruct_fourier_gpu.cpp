@@ -1344,13 +1344,12 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //    	int noOfImages = loadThread.readyBufferLength / R_repository.size();
     	if (loadThread.rBuffer->noOfImages > 0) { // it can happen that all images are skipped
 			processBufferGPU(tempVolumeGPU, tempWeightsGPU,
-					loadThread.rBuffer->paddedImages, loadThread.rBuffer->FFTs, loadThread.rBuffer->noOfImages, // FIXME contract
-					loadThread.rBuffer->spaces, loadThread.rBuffer->noOfSpaces,
+					loadThread.rBuffer,
 					maxVolumeIndexX, maxVolumeIndexYZ,
 					useFast, blob.radius,
 					iDeltaSqrt,
 					blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
-					paddedImgSize, maxResolutionSqr);
+					maxResolutionSqr);
     	}
     	barrier_wait( &barrier );
 		if (verbose && startLoadIndex%repaint==0) {

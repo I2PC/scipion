@@ -38,9 +38,72 @@ extern __shared__ float2 IMG[];
 
 
 
-__host__ __device__
-float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
-	return FRecBufferData::getNthItem(array, itemIndex);
+//__host__ __device__
+//float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
+//	return FRecBufferData::getNthItem(array, itemIndex);
+//}
+
+FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
+
+	printf("FRecBufferDataGPU orig: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
+			orig, orig->FFTs,orig->CTFs, orig->paddedImages, orig->modulators, orig->spaces);
+
+
+	// copy metadata
+	hasCTFs = orig->hasCTFs;
+	hasFFTs = orig->hasFFTs;
+	noOfImages = orig->noOfImages;
+	paddedImgSize = orig->paddedImgSize;
+	fftSizeX = orig->fftSizeX;
+	fftSizeY = orig->fftSizeY;
+	noOfSpaces = orig->noOfSpaces;
+
+	FFTs = CTFs = paddedImages = modulators = NULL;
+
+	// allocate space at GPU and copy
+	allocAndCopy(orig->FFTs, FFTs, orig);
+	allocAndCopy(orig->CTFs, CTFs, orig);
+	allocAndCopy(orig->paddedImages, paddedImages, orig);
+	allocAndCopy(orig->modulators, modulators, orig);
+	allocAndCopy(orig->spaces, spaces, orig);
+	printf("FRecBufferDataGPU this: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
+			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
+}
+
+FRecBufferDataGPU::~FRecBufferDataGPU() {
+	printf("~FRecBufferDataGPU this: %p, spaces: %p\n", this, this->spaces);
+	cudaFree(FFTs);
+	cudaFree(CTFs);
+	cudaFree(paddedImages);
+	cudaFree(modulators);
+	cudaFree(spaces);
+	gpuErrchk( cudaPeekAtLastError() );
+
+	setDefault();
+}
+
+template<typename T>
+void FRecBufferDataGPU::allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* orig) {
+	if (NULL != srcArray) {
+		size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
+		cudaMalloc((void **) &dstArray, bytes);
+		cudaMemcpy(dstArray, srcArray, bytes, cudaMemcpyHostToDevice);
+		gpuErrchk( cudaPeekAtLastError() );
+	}
+}
+
+FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(FRecBufferData* orig) {
+	cpuCopy = new FRecBufferDataGPU(orig);
+	cudaMalloc((void **) &gpuCopy, sizeof(FRecBufferDataGPU));
+	gpuErrchk( cudaPeekAtLastError() );
+	cudaMemcpy(gpuCopy, cpuCopy, sizeof(FRecBufferDataGPU), cudaMemcpyHostToDevice);
+	gpuErrchk( cudaPeekAtLastError() );
+}
+
+FRecBufferDataGPUWrapper::~FRecBufferDataGPUWrapper() {
+	cudaFree(gpuCopy);
+	gpuErrchk( cudaPeekAtLastError() );
+	delete cpuCopy;
 }
 
 
@@ -918,7 +981,7 @@ void processBufferKernel(
 
 
 	if (threadIdx.x == 0 &&  threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
-//		printf("\n\n%f\n\n", aaa->getNthItem(aaa->FFTs, 0)[0]);
+		printf("\n\n%p\n\n", traverseSpaces);
 	}
 
 	for (int i = 0; i < noOfTransforms; i++) {
@@ -1062,13 +1125,12 @@ FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
 }
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		float* paddedImages, float* readyFFTs, int noOfImages,
-		TraverseSpace* traverseSpaces, int noOfTransforms,
+		FRecBufferData* rBuffer, // FIXME rename
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt,
 		float* blobTableSqrt, int blobTableSize,
-		int paddedImgSize, float maxResolutionSqr) {
+		float maxResolutionSqr) {
 
 	// copy constants
 	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
@@ -1080,26 +1142,27 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// holding fourier images to process
 	FourierReconDataWrapper* fourierData;
+	FRecBufferDataGPUWrapper bufferWrapper(rBuffer);
 
 	// process input data and get them to GPU, if necessary
-	if (NULL == paddedImages) {
-		fourierData = copyToGPU(readyFFTs, noOfImages,
+	if (rBuffer->hasFFTs) {
+		fourierData = copyToGPU(rBuffer->FFTs, rBuffer->noOfImages,
 				maxVolIndexX / 2, maxVolIndexYZ);
 	} else {
-		fourierData = convertImages(paddedImages, noOfImages, paddedImgSize,
+		fourierData = convertImages(rBuffer->paddedImages, rBuffer->noOfImages, rBuffer->paddedImgSize,
 				maxVolIndexX / 2, maxVolIndexYZ,
 				maxResolutionSqr);
 	}
 
 	// create space for remaining data
-	TraverseSpace* devTravSpaces;
-	cudaMalloc((void **) &devTravSpaces, noOfTransforms*sizeof(TraverseSpace));
+//	TraverseSpace* devTravSpaces;
+//	cudaMalloc((void **) &devTravSpaces, rBuffer->noOfSpaces*sizeof(TraverseSpace));
 	float* devBlobTableSqrt;
 	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
 	gpuErrchk( cudaPeekAtLastError() );
 
 	// copy remaining data
-	cudaMemcpy(devTravSpaces, traverseSpaces, noOfTransforms*sizeof(TraverseSpace), cudaMemcpyHostToDevice);
+//	cudaMemcpy(devTravSpaces, rBuffer->spaces, rBuffer->noOfSpaces*sizeof(TraverseSpace), cudaMemcpyHostToDevice);
 	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
 
@@ -1116,14 +1179,14 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			fourierData->gpuCopy,
-			devTravSpaces, noOfTransforms,
+			bufferWrapper.cpuCopy->spaces, bufferWrapper.cpuCopy->noOfSpaces,
 			devBlobTableSqrt,
 			imgCacheDim);
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
 
 	// delete remaining data
-	cudaFree(devTravSpaces);
+//	cudaFree(devTravSpaces);
 	cudaFree(devBlobTableSqrt);
 	gpuErrchk( cudaPeekAtLastError() );
 

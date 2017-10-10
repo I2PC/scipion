@@ -12,91 +12,33 @@
 #include <data/fourier_reconstruction_traverse_space.h>
 #include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
 #include <reconstruction_cuda/cuda_xmipp_utils.h>
-
+#include "data/fourier_reconstruction_buffer.h"
 
 
 //static ProjectionData* projData;
 
-struct FRecBufferData
-{
-	FRecBufferData(bool hasFFTs, bool hasCTFs,
-			int fftSizeX, int fftSizeY,	int paddedImgSize,
-			int maxNoOfImages, int noOfSymmetries) :
-			hasFFTs(hasFFTs), hasCTFs(hasCTFs),
-			fftSizeX(fftSizeX), fftSizeY(fftSizeY), paddedImgSize(paddedImgSize) {
-		if (hasFFTs) {
-			paddedImages = NULL;
-			FFTs = new float[fftSizeX * fftSizeY * maxNoOfImages * 2]; // *2 since it's complex
-		} else {
-			FFTs = NULL;
-			paddedImages = new float[paddedImgSize * paddedImgSize * maxNoOfImages];
-		}
 
-		if (hasCTFs) {
-			CTFs = new float[fftSizeX * fftSizeY * maxNoOfImages];
-			modulators = new float[fftSizeX * fftSizeY * maxNoOfImages];
-		} else {
-			CTFs = modulators = NULL;
-		}
 
-		spaces = new TraverseSpace[maxNoOfImages * noOfSymmetries];
-		noOfImages = noOfSpaces = 0;
-	};
+struct FRecBufferDataGPU : public FRecBufferData {
 
-	~FRecBufferData() {
-		delete[] FFTs;
-		delete[] CTFs;
-		delete[] paddedImages;
-		delete[] modulators;
-		FFTs = CTFs = paddedImages = modulators = NULL;
+	FRecBufferDataGPU(FRecBufferData* orig);
+	~FRecBufferDataGPU();
 
-		delete[] spaces;
-		spaces = NULL;
-	}
+//	float* getNthItem(float* array, int itemIndex);
 
-	int getPaddedImgSize() {
-		return paddedImgSize * paddedImgSize;
-	}
-
-	int getPaddedImgByteSize() {
-		return getPaddedImgSize() * sizeof(float);
-	}
-
-	float* getNthItem(float* array, int itemIndex) {
-		if (array == FFTs) return array + (fftSizeX * fftSizeY * itemIndex * 2); // *2 since it's complex
-		if (array == CTFs) return array + (fftSizeX * fftSizeY * itemIndex);
-		if (array == modulators) return array + (fftSizeX * fftSizeY * itemIndex);
-		if (array == paddedImages) return array + (paddedImgSize * paddedImgSize * itemIndex);
-		return NULL; // undefined
-	}
-
-	int getNoOfElements(float* array) {
-		if (array == FFTs) return (fftSizeX * fftSizeY * noOfImages * 2); // *2 since it's complex
-		if (array == CTFs) return (fftSizeX * fftSizeY * noOfImages);
-		if (array == modulators) return (fftSizeX * fftSizeY * noOfImages);
-		if (array == paddedImages) return (paddedImgSize * paddedImgSize * noOfImages);
-		return -1; // undefined
-	}
-
-	float* FFTs;
-	float* CTFs;
-	float* paddedImages;
-	float* modulators;
-	TraverseSpace* spaces;
-	int noOfSpaces;
-	int fftSizeX;
-	int fftSizeY;
-	int paddedImgSize;
-	int noOfImages;
-	bool hasFFTs;
-	bool hasCTFs;
+private:
+	template<typename T>
+	void allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* orig);
 };
 
-struct FRecBufferDataGPU : FRecBufferData {
-	float* getNthItem(float* array, int itemIndex);
+struct FRecBufferDataGPUWrapper {
+
+	FRecBufferDataGPUWrapper(FRecBufferData* orig);
+	~FRecBufferDataGPUWrapper();
+
+	FRecBufferDataGPU* cpuCopy;
+	FRecBufferDataGPU* gpuCopy;
 };
-
-
 
 struct FourierReconstructionData
 {
@@ -202,13 +144,12 @@ FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		float* paddedImages, float* readyFFTs, int noOfImages,
-		TraverseSpace* traverseSpaces, int noOfTransforms,
+		FRecBufferData* buffer,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt,
 		float* blobTableSqrt, int blobTableSize,
-		int paddedImgSize, float maxResolutionSqr);
+		float maxResolutionSqr);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
 void copyBuffer(ProjectionData* data, int size);
 void allocateTempSpaces(int size);
