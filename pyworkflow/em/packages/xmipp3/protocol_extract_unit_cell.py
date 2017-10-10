@@ -133,16 +133,14 @@ class XmippProtExtractUnit(EMProtocol):
         #
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader= True)
         t=Transform()
-        x,y,z = ccp4header.getOffset() #output vol coordinate origen
+        x, y, z = ccp4header.getOffset() #output vol coordinate origen
         _inputVol = self.inputVolumes.get()
-        x_origin = _inputVol.getOrigin().getShifts()[0]#x origin coordinate
-        y_origin = _inputVol.getOrigin().getShifts()[1]#y origin coordinate
-        z_origin = _inputVol.getOrigin().getShifts()[2]#z origin coordinate
-        if x_origin != _inputVol.getDim()[0]/2. and y_origin != _inputVol.getDim()[1]/2. \
-                and z_origin != _inputVol.getDim()[2]/2.:
-            x = x + (_inputVol.getDim()[0] / 2. - x_origin)#x output vol coordinate origen
-            y = y + (_inputVol.getDim()[1] / 2. - y_origin)#y output vol coordinate origen
-            z = z + (_inputVol.getDim()[2] / 2. - z_origin)#z output vol coordinate origen
+        x_origin = _inputVol.getOrigin().getShifts()[0]  # x origin coordinate
+        y_origin = _inputVol.getOrigin().getShifts()[1]  # y origin coordinate
+        z_origin = _inputVol.getOrigin().getShifts()[2]  # z origin coordinate
+        x += _inputVol.getDim()[0] / 2. - x_origin  # x output vol coordinate origen
+        y += _inputVol.getDim()[1] / 2. - y_origin  # y output vol coordinate origen
+        z += _inputVol.getDim()[2] / 2. - z_origin  # z output vol coordinate origen
         t.setShifts(-x,-y,-z)  # we follow chimera convention no MRC
         vol.setOrigin(t)
         #
