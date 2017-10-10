@@ -189,7 +189,7 @@ class MicrographsView(ObjectView):
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
-                      showj.ZOOM: 100
+                      showj.ZOOM: 50
                       }
 
         if renderLabels:
@@ -208,6 +208,7 @@ class CtfView(ObjectView):
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
+                    '_ctffind4_ctfPhaseShift',
                     '_xmipp_ctfCritFirstZero',
                     ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidity',
@@ -229,7 +230,7 @@ class CtfView(ObjectView):
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
-                      showj.ZOOM: 100
+                      showj.ZOOM: 50
                      }
 
         if psdLabels:
