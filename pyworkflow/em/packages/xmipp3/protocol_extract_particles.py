@@ -93,7 +93,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       pointerClass='SetOfMicrographs',
                       condition='downsampleType != %s' % SAME_AS_PICKING,
                       important=True, label='Input micrographs',
-                      help='Select the SetOfMicrographs from which to extract.')
+                      help='Select the SetOfMicrographs to extract from.')
 
         form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
                       relationName=RELATION_CTF,
@@ -488,6 +488,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             errors.append('Some problem occurs matching micrographs and CTF.\n'
                           'There were micrographs for which CTF was not found '
                           'either using micName or micId.\n')
+
+        # Clear the CTFs if micrograph source is "same as picking" to avoid unconsistencies
+        if not self._micsOther():
+            self.inputMicrographs.set(None)
+
         return errors
     
     def _citations(self):
