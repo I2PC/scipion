@@ -42,6 +42,20 @@ url = "http://www.sciencedirect.com/science/article/pii/S1047847706001997",
 author = "J. Bernard Heymann and David M. Belnap",
 keywords = "Single particle analysis Tomography",
 }
+
+
+@article{Cardone2013,
+title = "One number does not fit all: mapping local variations in resolution in cryo-EM reconstructions",
+journal = "Journal of Structural Biology ",
+volume = "184",
+number = "2",
+pages = "226 - 236",
+year = "2013",
+doi = "http://dx.doi.org/10.1016/j.jsb.2013.08.002",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847713002086",
+author = "G. Cardone and J.B. Heynmann and A.C.Steven",
+keywords = "Local Resolution",
+}
 """
 
 

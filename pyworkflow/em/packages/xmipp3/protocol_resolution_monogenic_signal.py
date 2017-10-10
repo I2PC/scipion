@@ -40,6 +40,7 @@ MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoRes'
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
 OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
+OUTPUT_HISTOGRAM = 'hist.xmd'
 OUTPUT_MASK_FILE = 'output_Mask.vol'
 FN_MEAN_VOL = 'mean_volume.vol'
 METADATA_MASK_FILE = 'mask_data.xmd'
@@ -258,7 +259,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --mask binary_file %s' % self._getExtraPath(OUTPUT_MASK_FILE)
         params += ' --steps %f' % 30
         params += ' --range %f %f' % (self.min_res_init, self.max_res_init)#(self.minRes.get(), self.maxRes.get())
-        params += ' -o %s' % self._getExtraPath('hist.xmd')
+        params += ' -o %s' % self._getExtraPath(OUTPUT_HISTOGRAM)
 
         self.runJob('xmipp_image_histogram', params)
         
