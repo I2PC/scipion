@@ -36,7 +36,8 @@ from numpy import flipud
 import socket
 
 import pyworkflow as pw
-from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
+from pyworkflow.em import ImageHandler
+from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils import Environ, runJob
 from pyworkflow.utils import getFreePort
 from pyworkflow.gui.matplotlib_image import ImageWindow
@@ -743,8 +744,41 @@ def getVmdEnviron():
     environ.set('PATH', os.path.join(os.environ['VMD_HOME'], 'bin'),
                 position=Environ.BEGIN)
     return environ
+
+
+class LocalResolutionViewer(ProtocolViewer):
+    """
+    Visualization tools for local resolution results.
+
+    """
+    def __init__(self, *args, **kwargs):
+        ProtocolViewer.__init__(self, *args, **kwargs)
     
-       
+    def getImgData(self, imgFile):
+        import numpy as np
+        img = ImageHandler().read(imgFile)
+        imgData = img.getData()
+
+        maxRes = np.amax(imgData)
+        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
+        minRes = np.amin(imgData2)
+
+        return imgData2, minRes, maxRes
+
+    def getSlice(self, index, volumeData):
+        return int((index) * volumeData.shape[0] / 9)
+
+    def getSliceImage(self, volumeData, index, dataAxis):
+        slice = self.getSlice(index, volumeData)
+        if dataAxis == 'y':
+            imgSlice = volumeData[:, slice, :]
+        elif dataAxis == 'x':
+            imgSlice = volumeData[:, :, slice]
+        else:
+            imgSlice = volumeData[slice, :, :]
+        return imgSlice
+
+
 class VmdView(CommandView):
     """ View for calling an external command. """
     def __init__(self, vmdCommand, **kwargs):
