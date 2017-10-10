@@ -45,5 +45,3 @@ from viewer_classify import SpiderViewerWard, SpiderViewerDiday
 from viewer_refinement import SpiderViewerRefinement
 
 
-# Force to load the environment
-_package = getPackage()

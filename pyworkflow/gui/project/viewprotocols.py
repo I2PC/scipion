@@ -353,7 +353,7 @@ class SearchProtocolWindow(pwgui.Window):
                 if keyword in label:
                     protList.append((key,
                                      label,
-                                     pwprot.isProtocolInstalled(prot)))
+                                     prot.isInstalled()))
 
         # Sort by label
         protList.sort(key=lambda x: x[1])  # sort by label

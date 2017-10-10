@@ -40,7 +40,6 @@ import pyworkflow.object as pwobj
 import pyworkflow.hosts as pwhosts
 from pyworkflow import em
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.protocol import isProtocolInstalled
 
 ALL_PROTOCOLS = "All"
 
@@ -237,16 +236,18 @@ def addAllProtocols(protocols):
             if packageMenu is None:
 
                 # Add it to the menu ...
-                packageLine = {"tag": "package", "value": packageName, "text": packageName}
+                packageLine = {"tag": "package", "value": packageName,
+                               "text": packageName}
                 packageMenu = addToTree(allProtMenu, packageLine)
 
                 # Store it in the dict
                 packages[packageName] = packageMenu
 
             # Add the protocol
-            tag = getProtocolTag(isProtocolInstalled(v))
+            tag = getProtocolTag(v.isInstalled())
 
-            protLine = {"tag": tag, "value": k, "text": v.getClassLabel(prependPackageName=False)}
+            protLine = {"tag": tag, "value": k,
+                        "text": v.getClassLabel(prependPackageName=False)}
 
             # If it's a new protocol
             if v.isNew():

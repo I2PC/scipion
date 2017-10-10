@@ -1498,6 +1498,25 @@ class Protocol(Step):
         """
         return []
 
+    @classmethod
+    def isInstalled(cls):
+        # We a consider a protocol installed if there are not errors
+        # from the _validateInstallation function
+        return not cls.validateInstallation()
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        By default, we will check if the protocols' package provide a
+        validateInstallation function and use it.
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        validateFunc = getattr(cls.getClassPackage(),
+                               'validateInstallation', None)
+        return validateFunc() if validateFunc is not None else []
+
     def validate(self):
         """ Check that input parameters are correct.
         Return a list with errors, if the list is empty, all was ok.         
@@ -1520,6 +1539,9 @@ class Protocol(Step):
             errors += ['*%s* %s' % (label, err) for err in paramErrors]
             # Validate specific for the subclass
         try:
+            installErrors = self.validateInstallation()
+            if installErrors:
+                errors += installErrors
             childErrors = self._validate()
             if childErrors:
                 errors += childErrors
@@ -1893,25 +1915,3 @@ def isProtocolUpToDate(protocol):
     else:
         return protTS > dbTS
 
-
-def isProtocolInstalled(protClass):
-    """ Returns true if the protocol package is installed
-    Parameter: Protocol class"""
-
-    installed = None
-
-    if hasattr(protClass, '_package'):
-        # get the module (named_package)
-        m = protClass._package
-
-        # If it has an _environment attribute
-        if hasattr(m, '_package'):
-            # Query the environment for the status
-            installed = m._package.isInstalled()
-
-    if __debug__ and installed is None:
-        print
-        'Protocol module %s without _package initialized at module/__init__.py.' % protClass.__name__
-        installed = True
-
-    return installed

@@ -99,10 +99,19 @@ def getEnviron():
     
 
 environment = getEnviron()
-package = Package("Spider", os.path.exists(environment[SPBIN_DIR]))
 
-def getPackage():
-    return package
+
+def validateInstallation():
+    """ This function will be used to check if SPIDER is properly installed. """
+    missingPaths = ["%s: %s" % (var, environment[var])
+                    for var in [SPBIN_DIR, SPMAN_DIR, SPPROC_DIR]
+                    if not os.path.exists(environment[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors
+
 
 def _getFile(*paths):
     return join(PATH, *paths)

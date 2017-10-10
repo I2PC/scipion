@@ -35,17 +35,19 @@ import ttk
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.constants import UNIT_PIXEL
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesMaskRadiiWizard,
-                                  FilterParticlesWizard, DownsampleDialog, ImagePreviewDialog,
-                                  ListTreeProvider)
+from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard,
+                                  ParticlesMaskRadiiWizard,
+                                  FilterParticlesWizard, DownsampleDialog,
+                                  ImagePreviewDialog, ListTreeProvider)
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider, HotButton
 
-from spider import SpiderShell, runCustomMaskScript, getPackage
+from spider import SpiderShell, runCustomMaskScript
 from constants import FILTER_FERMI
 from convert import locationToSpider
-from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 
-                      SpiderProtFilter, SpiderProtCustomMask, SpiderProtRefinement)
+from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR,
+                      SpiderProtAlignPairwise, SpiderProtFilter,
+                      SpiderProtCustomMask, SpiderProtRefinement)
 
 
 #===============================================================================
@@ -119,7 +121,8 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
         protParams['input']= protocol.inputParticles
         protParams['label']= label
         protParams['value']= value
-        protParams['mode']= [protocol.filterType.get(), protocol.filterMode.get(),
+        protParams['mode']= [protocol.filterType.get(),
+                             protocol.filterMode.get(),
                              protocol.usePadding.get()]
 
         return protParams
@@ -132,11 +135,11 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
-        if not getPackage().isInstalled():
-            dialog.showWarning("Spider not installed",
-                               "Spider package is not installed, please "
-                               "install it or ask you system admin to do it "
-                               "for you.", form.root)
+        installErrors = protocol.validateInstallation()
+
+        if installErrors:
+            dialog.showError("SPIDER not properly installed.",
+                             "\n".join(installErrors),  form.root)
             return
 
         if provider is not None:
@@ -151,7 +154,8 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
                 if protocol.filterType == FILTER_FERMI:
                     form.setVar('temperature', d.getTemperature())
         else:
-            dialog.showWarning("Input particles", "Select particles first", form.root)  
+            dialog.showWarning("Input particles",
+                               "Select particles first", form.root)
     
 #===============================================================================
 # UTILS
