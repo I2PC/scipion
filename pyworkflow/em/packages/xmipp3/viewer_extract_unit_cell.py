@@ -152,7 +152,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         d['innerRadius'] = self.protocol.innerRadius.get() * sampling
         d['symmetry'] = symMapperScipionchimera[self.protocol.symmetryGroup.get()]
 
-        if self.protocol.symmetryGroup >= SYM_I222 and x_input == _inputVol.getDim()[0]/2. and y_input == _inputVol.getDim()[1]/2. and z_input == _inputVol.getDim()[2]/2.:
+        if self.protocol.symmetryGroup >= SYM_I222:
             f.write("shape icosahedron mesh true radius %(outerRadius)d orientation %(symmetry)s\n" % d)
         step = (d['outerRadius'] - d['innerRadius']) / float(len(cMap) - 1)
         f.write("scolor #2  geom radial center 0,0,0 cmap ")
