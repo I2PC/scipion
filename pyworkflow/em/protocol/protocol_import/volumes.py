@@ -58,7 +58,7 @@ class ProtImportVolumes(ProtImportImages):
         form.addParam('samplingRate', params.FloatParam,
                       label=Message.LABEL_SAMP_RATE)
         form.addParam('setDefaultOrigin', params.BooleanParam,
-                      label="setDefaultOrigin",
+                      label="Set Default Origin",
                       help="Set origin of coordinates in the 3D map center (true)"
                       " or provide it. So far only Modeling related programs"
                       " support this feature",
