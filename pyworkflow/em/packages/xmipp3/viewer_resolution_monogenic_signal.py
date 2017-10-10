@@ -27,6 +27,7 @@
 
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.viewer import LocalResolutionViewer
+from pyworkflow.em.packages.xmipp3 import XmippPlotter
 from pyworkflow.em.constants import *
 from pyworkflow.em import OrderedDict 
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
@@ -130,15 +131,28 @@ class XmippMonoResViewer(LocalResolutionViewer):
     
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
-        imgData2, min_Res, max_Res = self.getImgData(imageFile)
+        imgData, min_Res, max_Res = self.getImgData(imageFile)
 
-        fig, im = self._plotVolumeSlices('MonoRes slices', imgData2,
+#         xplotter = XmippPlotter(x=2, y=2, mainTitle="Local Resolution Slices "
+#                                                      "along %s-axis."
+#                                                      %self._getAxis())
+#         for i in xrange(4):
+#             slice = self.getSlice(i+1, imgData)
+#             a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
+#             matrix = self.getSliceImage(imgData, i+1, self._getAxis())
+#             plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
+#                                        cmap=self._getColorName(),
+#                                        interpolation="nearest")
+#         xplotter.getColorBar(plot)
+#         return [xplotter]
+        fig, im = self._plotVolumeSlices('MonoRes slices', imgData,
                                          min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
-
+ 
         return [Plotter(figure = fig)]
+
 
     def _plotHistogram(self, param=None):
         md = MetaData()
