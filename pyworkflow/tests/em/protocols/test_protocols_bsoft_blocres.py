@@ -90,7 +90,27 @@ class TestBsoftBlocres(TestBsoftBlocresBase):
                                    inputVolume=self.protImportHalf1.outputVolume,
                                    inputVolume2=self.protImportHalf2.outputVolume,
                                    mask=self.protCreateMask.outputMask,
+                                   method=True,
                                    box=20,
+                                   resolutionCriterion=CRITERION_FSC,
+                                   cutoff=0.5,
+                                   step=1,
+                                   maxresolution=2,
+                                   fill=0,
+                                   pad=PAD_BOX,
+                                   symmetry='',
+                                   smooth=True)
+        self.launchProtocol(blocres)
+        self.assertTrue(exists(blocres._getExtraPath(OUTPUT_RESOLUTION_FILE)),
+                        "blocres has failed")
+
+    def testBlocres2(self):
+        blocres = self.newProtocol(BsoftProtBlocres,
+                                   objLabel='blocres',
+                                   inputVolume=self.protImportHalf1.outputVolume,
+                                   inputVolume2=self.protImportHalf2.outputVolume,
+                                   mask=self.protCreateMask.outputMask,
+                                   method=False,
                                    shell=20,
                                    resolutionCriterion=CRITERION_FSC,
                                    cutoff=0.5,
