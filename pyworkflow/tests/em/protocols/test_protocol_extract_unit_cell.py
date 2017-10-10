@@ -321,21 +321,28 @@ class TestProtModelBuilding(BaseTest):
     def test_extractunitCellcyclic(self):
         self.innerRadius = 0.
         self.outerRadius = 40.
+
+        #C8
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder))
         self.box[SYM_CYCLIC] = (60, 49, 81)
         self.extractunitCell(SYM_CYCLIC)
+
+        #C8 + offset
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),OFFSET)
         self.box[SYM_CYCLIC] = (50, 52, 81)
         self.extractunitCell(SYM_CYCLIC, OFFSET)
-        #test for cyclic symmetries C1 and C2
+
+        #C1
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
         self.box[SYM_CYCLIC] = (81, 81, 81)
         self.symOrder = 1
         self.extractunitCell(SYM_CYCLIC)
-        self.symOrder = 8
+
+        #C2
+        self.symOrder = 8  # set to 8 so a pretty 8 fold phantom is created
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
         self.box[SYM_CYCLIC] = (81, 45, 81)
@@ -346,10 +353,14 @@ class TestProtModelBuilding(BaseTest):
     def test_extractunitCelldihedral(self):
         self.innerRadius = 0.
         self.outerRadius = 40.
+
+        #D8
         self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
                                                  'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder))
         self.box[SYM_DIHEDRAL] = (60, 49, 81)
         self.extractunitCell(SYM_DIHEDRAL)
+
+        #D8 + offset
         self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
                                                  'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), OFFSET)
         self.box[SYM_DIHEDRAL] = (50, 52, 81)
