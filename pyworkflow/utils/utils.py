@@ -337,6 +337,9 @@ def getColorStr(text, color, bold=False):
         attr.append('1')
     return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), text)
 
+def yellowStr(text):
+    return getColorStr(text, color='yellow')
+
 def greenStr(text):
     return getColorStr(text, color='green')
 

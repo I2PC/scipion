@@ -189,6 +189,13 @@ class Project(object):
         if not self.openedAsReadOnly():
             self.settings.write()
 
+    def createSettings(self, runsView=1, readOnly=False):
+        self.settings = pwconfig.ProjectSettings()
+        self.settings.setRunsView(runsView)
+        self.settings.setReadOnly(readOnly)
+        self.settings.write(self.settingsPath)
+        return self.settings
+
     def createMapper(self, sqliteFn):
         """ Create a new SqliteMapper object and pass as classes dict
         all globals and update with data and protocols from em.
@@ -221,10 +228,9 @@ class Project(object):
 
         # If folder is read only, flag it and warn about it.
         if not os.access(self.path, os.W_OK):
-
             self._isInReadOnlyFolder = True
-            print("Warning: don't have write permissions for project folder. "
-                  "Opening as READ-ONLY.")
+            print("WARNING on project \"%s\": don't have write permissions for project folder. "
+                  "Loading as READ-ONLY." % self.shortName)
 
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
@@ -361,16 +367,14 @@ class Project(object):
         pwutils.path.makePath(self.path)
         os.chdir(self.path)  # Before doing nothing go to project dir
         self._cleanData()
-        print "Creating project at: ", os.path.abspath(self.dbPath)
+        print("Creating project at: ", os.path.abspath(self.dbPath))
         # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         # Store creation time
         self._storeCreationTime(dt.datetime.now())
         # Load settings from .conf files and write .sqlite
-        self.settings = pwconfig.ProjectSettings()
-        self.settings.setRunsView(runsView)
-        self.settings.setReadOnly(readOnly)
-        self.settings.write(self.settingsPath)
+        self.settings = self.createSettings(runsView=runsView,
+                                            readOnly=readOnly)
         # Create other paths inside project
         for p in self.pathList:
             pwutils.path.makePath(p)
@@ -952,6 +956,9 @@ class Project(object):
             for r in self.runs:
                 self._setProtocolMapper(r)
 
+                # Check for run warnings
+                r.checkSummaryWarnings()
+
                 # Update nodes that are running and were not invoked
                 # by other protocols
                 if r.isActive():
@@ -1026,7 +1033,7 @@ class Project(object):
         """
 
         if refresh or self._runsGraph is None:
-            runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
+            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids) if not r.isChild()]
             self._runsGraph = self.getGraphFromRuns(runs)
             
         return self._runsGraph
