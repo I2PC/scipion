@@ -44,6 +44,7 @@ from protocol_preprocess import *
 
 from viewer import XmippViewer
 
+
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
@@ -58,11 +59,12 @@ from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
 from viewer_reconstruct_highres import XmippReconstructHighResViewer
 from viewer_solid_angles import SolidAnglesViewer
-from viewer_swarm import XmippReconstructSwarmViewer
-from viewer_ransac import XmippViewerRansac
+#from viewer_extract_unit_cell import viewerXmippProtExtractUnit
+from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
+from protocol_3dbionotes import XmippProt3DBionotes
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
@@ -76,7 +78,6 @@ from protocol_cltomo import XmippProtCLTomo
 from protocol_compare_reprojections import XmippProtCompareReprojections
 from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
-from protocol_ctf_selection import XmippProtCTFSelection
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
 from protocol_subtract_projection import XmippProtSubtractProjection
@@ -84,6 +85,7 @@ from protocol_denoise_particles import XmippProtDenoiseParticles
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_movies import XmippProtExtractMovieParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
+from protocol_extract_unit_cell import XmippProtExtractUnit
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
@@ -105,7 +107,6 @@ from protocol_ransac import XmippProtRansac
 from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_reconstruct_highres import XmippProtReconstructHighRes
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
-from protocol_reconstruct_swarm import XmippProtReconstructSwarm
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from protocol_rotational_spectra import XmippProtRotSpectra 
