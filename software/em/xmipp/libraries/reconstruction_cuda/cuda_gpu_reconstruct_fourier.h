@@ -24,7 +24,7 @@ struct FRecBufferDataGPU : public FRecBufferData {
 	FRecBufferDataGPU(FRecBufferData* orig);
 	~FRecBufferDataGPU();
 
-//	float* getNthItem(float* array, int itemIndex);
+	float* getNthItem(float* array, int itemIndex);
 
 private:
 	template<typename T>

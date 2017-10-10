@@ -38,10 +38,14 @@ extern __shared__ float2 IMG[];
 
 
 
-//__host__ __device__
-//float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
-//	return FRecBufferData::getNthItem(array, itemIndex);
-//}
+__host__ __device__
+float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
+	if (array == FFTs) return array + (fftSizeX * fftSizeY * itemIndex * 2); // *2 since it's complex
+	if (array == CTFs) return array + (fftSizeX * fftSizeY * itemIndex);
+	if (array == modulators) return array + (fftSizeX * fftSizeY * itemIndex);
+	if (array == paddedImages) return array + (paddedImgSize * paddedImgSize * itemIndex);
+	return NULL; // undefined
+}
 
 FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
 
@@ -525,19 +529,19 @@ __device__
 void processVoxel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
 	int x, int y, int z,
-	FourierReconstructionData* const data,
+	FRecBufferDataGPU* const data,
 	const TraverseSpace* const space)
 {
 	Point3D<float> imgPos;
 	float wBlob = 1.f;
 	float wCTF = 1.f;
 	float wModulator = 1.f;
-	const float* __restrict__ img = data->getImgOnGPU(space->projectionIndex);
+	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
 //	const float* __restrict__ CTF = data->CTF; // FIXME load differently, somehow
 //	const float* __restrict__ modulator = data->modulator; // FIXME load differently, somehow
 	float dataWeight = space->weight;
-	int xSize = data->sizeX;
-	int ySize = data->sizeY;
+	int xSize = data->fftSizeX;
+	int ySize = data->fftSizeY;
 
 	// transform current point to center
 	imgPos.x = x - cMaxVolumeIndexX/2;
@@ -576,14 +580,14 @@ __device__
 void processVoxelBlob(
 	float* tempVolumeGPU, float *tempWeightsGPU,
 	int x, int y, int z,
-	FourierReconstructionData* const data,
+	FRecBufferDataGPU* const data,
 	const TraverseSpace* const space,
 	const float* blobTableSqrt,
 	int imgCacheDim)
 {
 	Point3D<float> imgPos;
-	int xSize = data->sizeX;
-	int ySize = data->sizeY;
+	int xSize = data->fftSizeX;
+	int ySize = data->fftSizeY;
 	// transform current point to center
 	imgPos.x = x - cMaxVolumeIndexX/2;
 	imgPos.y = y - cMaxVolumeIndexYZ/2;
@@ -615,7 +619,7 @@ void processVoxelBlob(
 	float volReal, volImag, w;
 	volReal = volImag = w = 0.f;
 #if !SHARED_IMG
-	const float* __restrict__ img = data->getImgOnGPU(space->projectionIndex);
+	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
 #endif
 //	const float* __restrict__ CTF = data->CTF; // FIXME load differently, somehow
 //	const float* __restrict__ modulator = data->modulator; // FIXME load differently, somehow
@@ -833,7 +837,7 @@ void calculateAABB(const TraverseSpace* tSpace, const FourierReconstructionData*
 __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
-	FourierReconstructionData* const data,
+	FRecBufferDataGPU* const data,
 	const TraverseSpace* const tSpace,
 	const float* devBlobTableSqrt,
 	int imgCacheDim)
@@ -965,8 +969,7 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
 __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
-		FourierReconstructionData* data,
-		TraverseSpace* traverseSpaces, int noOfTransforms,
+		FRecBufferDataGPU* buffer,
 		float* devBlobTableSqrt,
 		int imgCacheDim) {
 #if SHARED_BLOB_TABLE
@@ -980,12 +983,12 @@ void processBufferKernel(
 #endif
 
 
-	if (threadIdx.x == 0 &&  threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
-		printf("\n\n%p\n\n", traverseSpaces);
-	}
+//	if (threadIdx.x == 0 &&  threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
+//		printf("\n\n%p\n\n", traverseSpaces);
+//	}
 
-	for (int i = 0; i < noOfTransforms; i++) {
-		TraverseSpace* space = &traverseSpaces[i];
+	for (int i = 0; i < buffer->noOfSpaces; i++) {
+		TraverseSpace* space = &buffer->spaces[i];
 
 #if SHARED_IMG
 		if ( ! cUseFast) {
@@ -1004,7 +1007,7 @@ void processBufferKernel(
 
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
-			data, space,
+			buffer, space,
 			devBlobTableSqrt,
 			imgCacheDim);
 		__syncthreads(); // sync threads to avoid write after read problems
@@ -1178,8 +1181,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
 			tempVolumeGPU, tempWeightsGPU,
-			fourierData->gpuCopy,
-			bufferWrapper.cpuCopy->spaces, bufferWrapper.cpuCopy->noOfSpaces,
+			bufferWrapper.gpuCopy,
 			devBlobTableSqrt,
 			imgCacheDim);
 	gpuErrchk( cudaPeekAtLastError() );
