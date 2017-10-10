@@ -32,6 +32,8 @@
 #include <data/metadata_extension.h>
 #include <data/filters.h>
 
+#include <data/xmipp_funcs.h>
+
 #include <algorithm>
 #include "xmipp_gpu_utils.h"
 #include <reconstruction_cuda/cuda_gpu_correlation.h>
@@ -585,7 +587,9 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				}
 				//END AJ
 
-				rowOut.setValue(MDL_ITEM_ID, iterExp->objId);
+				size_t itemId;
+				rowExp.getValue(MDL_ITEM_ID, itemId);
+				rowOut.setValue(MDL_ITEM_ID, itemId);
 				rowOut.setValue(MDL_IMAGE,nameImg);
 				rowOut.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, i, j));
 				rowOut.setValue(MDL_MAXCC, (double)DIRECT_A2D_ELEM(corrTotalRow, i, j));
@@ -978,7 +982,9 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 				if(!skip_image){
 
-					row.setValue(MDL_ITEM_ID, iterSFexp->objId);
+					size_t itemId;
+					rowSFexp.getValue(MDL_ITEM_ID, itemId);
+					row.setValue(MDL_ITEM_ID, itemId);
 					row.setValue(MDL_IMAGE, fnExpIm);
 					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i));
 					row.setValue(MDL_FLIP, false);
@@ -1045,7 +1051,9 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 				if(!skip_image){
 
-					row.setValue(MDL_ITEM_ID, iterSFexp->objId);
+					size_t itemId;
+					rowSFexp.getValue(MDL_ITEM_ID, itemId);
+					row.setValue(MDL_ITEM_ID, itemId);
 					row.setValue(MDL_IMAGE, fnExpIm);
 					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i+mdInSize));
 					row.setValue(MDL_FLIP, true);
@@ -1142,12 +1150,18 @@ void ProgGpuCorrelation::run()
 	//AJ check_gpu_memory to know how many images we can copy in the gpu memory
     float limit=0.877; //0.877; 1.3;
 	int available_images_proj = mdExpSize; //mdInSize
+	int available1 = mdExpSize;
+	int available2 = mdExpSize;
 	if(Xdim*Ydim*mdExpSize*4*100/memory[1]>limit){ //mdInSize
-		available_images_proj = floor(memory[1]*(limit/100)/(Xdim*Ydim*4));
+		available1 = floor(memory[1]*(limit/100)/(Xdim*Ydim*4));
 	}
 	if(Xdim*2*Ydim*2*mdExpSize>maxGridSize[0]){ //mdInSize
-		available_images_proj = floor((round(maxGridSize[0]*0.9))/(Xdim*Ydim));
+		available2 = floor((round(maxGridSize[0]*0.9))/(Xdim*Ydim*2*2));
 	}
+	if (available1<available2)
+		available_images_proj = available1;
+	else
+		available_images_proj = available2;
 
 
 	//matrix with all the best transformations in CPU
@@ -1213,13 +1227,11 @@ void ProgGpuCorrelation::run()
 		transMat_tr_mirror.resize(available_images_proj);
 		transMat_rt_mirror.resize(available_images_proj);
 
-
 		myStructureAux.padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
 		myStructureAux.padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
 		myStructureAux.padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
 		myStructureAux.polar_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
 		myStructureAux.polar2_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
-
 
 		//SF
 		preprocess_images_reference(SFexp, firstIdx, available_images_proj, mask, d_referenceAux,
@@ -1353,7 +1365,13 @@ void ProgGpuCorrelation::run()
 			Nref=1;
 	}
 
+	Timer timer;
+	size_t myTime1 = timer.tic();
+
 	calculate_weights(matrixCorrCpu, matrixCorrCpu_mirror, corrTotalRow, weights, Nref, mdExpSize, mdInSize, weightsMax, simplifiedMd);
+
+	size_t diff = timer.elapsed();
+	std::cout << "Time in calculate_weights: " << diff << " msecs." << std::endl;
 
 	//std::cerr << "weights: " << weights << std::endl;
 
