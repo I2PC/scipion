@@ -24,12 +24,17 @@
 # *
 # **************************************************************************
 
+
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.viewer import LocalResolutionViewer
+from pyworkflow.em.constants import *
+from pyworkflow.em import OrderedDict 
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
+from protocol_resolution_monogenic_signal import (XmippProtMonoRes,
+                                                  OUTPUT_RESOLUTION_FILE,
+                                                  OUTPUT_RESOLUTION_FILE_CHIMERA) 
 from pyworkflow.em.viewer import ChimeraView, DataView
-from protocol_resolution_monogenic_signal import XmippProtMonoRes, OUTPUT_RESOLUTION_FILE
 from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
 import numpy as np
@@ -38,35 +43,9 @@ from matplotlib import cm
 import matplotlib.colors as mcolors
 from pyworkflow.utils import getExt, removeExt
 from os.path import abspath
-from collections import OrderedDict
-
-OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
-
-# Color maps
-COLOR_JET = 0
-COLOR_TERRAIN = 1
-COLOR_GIST_EARTH = 2
-COLOR_GIST_NCAR = 3
-COLOR_GNU_PLOT = 4
-COLOR_GNU_PLOT2 = 5
-COLOR_OTHER = 6
-
-COLOR_CHOICES = OrderedDict() #[-1]*(OP_RESET+1)
-
-COLOR_CHOICES[COLOR_JET]  = 'jet'
-COLOR_CHOICES[COLOR_TERRAIN] = 'terrain'
-COLOR_CHOICES[COLOR_GIST_EARTH] = 'gist_earth'
-COLOR_CHOICES[COLOR_GIST_NCAR] = 'gist_ncar'
-COLOR_CHOICES[COLOR_GNU_PLOT] = 'gnuplot'
-COLOR_CHOICES[COLOR_GNU_PLOT2] = 'gnuplot2'
-COLOR_CHOICES[COLOR_OTHER] = 'other'
 
 binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
 
-#Axis code
-AX_X = 0
-AX_Y = 1
-AX_Z = 2
 
 class XmippMonoResViewer(LocalResolutionViewer):
     """
@@ -79,6 +58,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
     _label = 'viewer MonoRes'
     _targets = [XmippProtMonoRes]      
     _environments = [DESKTOP_TKINTER]
+
     
     @staticmethod
     def getColorMapChoices():
@@ -101,7 +81,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
                       label="Show resolution histogram")
         
         group = form.addGroup('Colored resolution Slices and Volumes')
-        group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
+        group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES,
                       default=COLOR_JET,
                       label='Color map',
                       help='Select the color map to apply to the resolution map. '
@@ -158,7 +138,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
 
-        return Plotter(figure = plt.show(fig))
+        return [Plotter(figure = fig)]
 
     def _plotHistogram(self, param=None):
         md = MetaData()
@@ -179,14 +159,14 @@ class XmippMonoResViewer(LocalResolutionViewer):
             x_axis.append(x_axis_)
             y_axis.append(y_axis_)
         delta = x1-x0
-        plt.figure()
+        fig = plt.figure()
         plt.bar(x_axis, y_axis, width = delta)
         plt.title("Resolutions Histogram")
         plt.xlabel("Resolution (A)")
         plt.ylabel("Counts")
         
         
-        return Plotter(figure = plt.show())
+        return [Plotter(figure = fig)]
 
 
     def _getAxis(self):

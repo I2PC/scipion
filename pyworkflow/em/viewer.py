@@ -36,7 +36,8 @@ from numpy import flipud
 import socket
 
 import pyworkflow as pw
-from pyworkflow.em import ImageHandler
+from pyworkflow.em.constants import *
+from pyworkflow.em import ImageHandler, OrderedDict
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils import Environ, runJob
 from pyworkflow.utils import getFreePort
@@ -751,6 +752,8 @@ class LocalResolutionViewer(ProtocolViewer):
     Visualization tools for local resolution results.
 
     """
+    binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
+    
     def __init__(self, *args, **kwargs):
         ProtocolViewer.__init__(self, *args, **kwargs)
     
