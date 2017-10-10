@@ -225,11 +225,13 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                         continue
                 ##############################################################################
                 copy(self._getExtraPath(join('level%03d' % level,'general_level%03d' % level + '_classes.xmd')), self._getExtraPath('last_classes.xmd'), )
+                copy(self._getExtraPath(join('level%03d' % level, 'general_images_level%03d' % level + '.xmd')), self._getExtraPath('last_images.xmd'), )
                 return
 
             listNumImgs, listNameImgs = self.checkOutput(level)
             self.cleaningPath(level)
             level = level + 1
+
 
 
     def splitStep(self, level):
@@ -711,23 +713,22 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
 
 
-    # --------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions ------------------------------
 
     def _fillClassesFromLevel(self, clsSet):
         """ Create the SetOfClasses2D from a given iteration. """
         myFileClasses = self._getExtraPath('last_classes.xmd')
+        myFileImages = self._getExtraPath('last_images.xmd')
         self._loadClassesInfo(myFileClasses)
-        blocks = md.getBlocksInMetaDataFile(myFileClasses)
-        for __, block in enumerate(blocks):
-            if block.startswith('class0'):
-                xmpMd = block + "@" + myFileClasses
-                iterator = md.SetMdIterator(xmpMd, sortByLabel=md.MDL_ITEM_ID,
-                                            updateItemCallback=self._updateParticle,
-                                            skipDisabled=True)
-                # itemDataIterator is not necessary because, the class SetMdIterator
-                # contain all the information about the metadata
-                clsSet.classifyItems(updateItemCallback=iterator.updateItem,
-                                     updateClassCallback=self._updateClass)
+        xmpMd = myFileImages
+        iterator = md.SetMdIterator(xmpMd, sortByLabel=md.MDL_ITEM_ID,
+                                    updateItemCallback=self._updateParticle,
+                                    skipDisabled=True)
+
+        # itemDataIterator is not necessary because, the class SetMdIterator
+        # contain all the information about the metadata
+        clsSet.classifyItems(updateItemCallback=iterator.updateItem,
+                             updateClassCallback=self._updateClass)
 
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(md.MDL_REF))
@@ -750,7 +751,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
         mdClasses = md.MetaData(filename)
         for classNumber, row in enumerate(md.iterRows(mdClasses)):
-            sys.stdout.flush()
             index, fn = xmippToLocation(row.getValue(md.MDL_IMAGE))
             self._classesInfo[classNumber + 1] = (index, fn, row.clone())
 
