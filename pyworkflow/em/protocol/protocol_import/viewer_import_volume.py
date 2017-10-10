@@ -148,7 +148,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             localVol = os.path.abspath(self._getVolumeName(vol))
             x, y, z = self._getVolOrigin(vol)
             f.write("open %s\n" % localVol)
-            f.write("volume#%d style surface voxelSize %f\n" %
+            f.write("volume#%d style surface level 0.001 voxelSize %f\n" %
                     (count,sampling))
             count += 1
         if len(_setOfVolumes) > 1:
