@@ -117,6 +117,16 @@ PAD_CHOICES[PAD_NONE]  = 'None'
 PAD_CHOICES[PAD_BOX]  = 'Box'
 PAD_CHOICES[PAD_SHELL] = 'Shell'
 
+METHOD_CHOICES = OrderedDict()
+
+METHOD_BOX = 0
+METHOD_SHELL = 1
+
+METHOD_CHOICES[METHOD_BOX]  = 'Box'
+METHOD_CHOICES[METHOD_SHELL]  = 'Shell'
+
+
+
 
 class BsoftProtBlocres(ProtAnalysis3D):
     """ Wrapper around blocres program.
@@ -146,12 +156,19 @@ class BsoftProtBlocres(ProtAnalysis3D):
                       label='Mask',
                       help="""Mask file to use for limiting the analysis to a defined region
                       and level value to use (optional, default: all but zero).""")
-        form.addParam('box', params.IntParam, default=20,
+        
+        form.addParam('method', params.BooleanParam, default=True,
+                      label='Use Box',
+                      help="""The local (box) and shell (shell) resolution 
+                      calculations are mutually exclusive.""")
+        
+        form.addParam('box', params.IntParam, default=20, condition = '(method)',
                       label='Box',
                       help="""Kernel size for determining local resolution (pixels/voxels)""")
-        form.addParam('shell', params.IntParam, default=20,
+        form.addParam('shell', params.IntParam, default=20, condition ='(not method)',
                       label='Shell',
                       help="""Shell width for determining radial resolution (pixels/voxels).""")
+        
         line = form.addLine('Resolution Criterion')
         line.addParam('resolutionCriterion', params.EnumParam, choices=CRITERION_CHOICES.values(),
                       default=CRITERION_FSC,
@@ -234,8 +251,10 @@ class BsoftProtBlocres(ProtAnalysis3D):
         #Actions
         params =  ' -v 1'  # No Verbose
         params += ' -criterion %s' % CRITERION_CHOICES[self.resolutionCriterion.get()]
-        params += ' -box %f' %self.box.get()
-        params += ' -shell %f' % self.shell.get()
+        if (self.method is True):
+            params += ' -box %f' %self.box.get()
+        else:
+            params += ' -shell %f' % self.shell.get()
 
         #Parameters
         params += ' -sampling %f,%f,%f' % (sampling, sampling, sampling)

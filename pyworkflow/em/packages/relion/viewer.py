@@ -33,6 +33,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.viewer import LocalResolutionViewer
 from pyworkflow.em.data import SetOfParticles, SetOfImages
 from pyworkflow.em.plotter import EmPlotter
+from pyworkflow.em.constants import *
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params
 from pyworkflow.viewer import (Viewer, ProtocolViewer, DESKTOP_TKINTER,
@@ -1551,34 +1552,7 @@ class RelionSortViewer(Viewer):
 
         return views
 
-
-# Color maps
-COLOR_JET = 0
-COLOR_TERRAIN = 1
-COLOR_GIST_EARTH = 2
-COLOR_GIST_NCAR = 3
-COLOR_GNU_PLOT = 4
-COLOR_GNU_PLOT2 = 5
-COLOR_OTHER = 6
-
-COLOR_CHOICES = em.OrderedDict()
-
-COLOR_CHOICES[COLOR_JET] = 'jet'
-COLOR_CHOICES[COLOR_TERRAIN] = 'terrain'
-COLOR_CHOICES[COLOR_GIST_EARTH] = 'gist_earth'
-COLOR_CHOICES[COLOR_GIST_NCAR] = 'gist_ncar'
-COLOR_CHOICES[COLOR_GNU_PLOT] = 'gnuplot'
-COLOR_CHOICES[COLOR_GNU_PLOT2] = 'gnuplot2'
-COLOR_CHOICES[COLOR_OTHER] = 'other'
-
 binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
-
-
-# Axis code
-AX_X = 0
-AX_Y = 1
-AX_Z = 2
-
 
 class RelionLocalResViewer(LocalResolutionViewer):
     """
@@ -1596,7 +1570,7 @@ class RelionLocalResViewer(LocalResolutionViewer):
         form.addSection(label='Visualization')
         group = form.addGroup('Colored resolution')
         group.addParam('colorMap', params.EnumParam,
-                       choices=COLOR_CHOICES.values(),
+                       choices=COLOR_CHOICES,
                        default=COLOR_JET,
                        label='Color map',
                        help='Select the color map to apply to the resolution '
