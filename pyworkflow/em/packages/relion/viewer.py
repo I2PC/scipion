@@ -30,6 +30,7 @@ from os.path import exists
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
 import pyworkflow.em.metadata as md
+from pyworkflow.em.viewer import LocalResolutionViewer
 from pyworkflow.em.data import SetOfParticles, SetOfImages
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -1579,7 +1580,7 @@ AX_Y = 1
 AX_Z = 2
 
 
-class RelionLocalResViewer(ProtocolViewer):
+class RelionLocalResViewer(LocalResolutionViewer):
     """
     Visualization tools for local resolution results.
 
@@ -1631,15 +1632,15 @@ class RelionLocalResViewer(ProtocolViewer):
 # ==============================================================================
     def _showVolumeSlices(self, param=None):
         imageFile = self.protocol._getFileName('resolMap')
-        imgData, minRes, maxRes = self._getImgData(imageFile)
+        imgData, minRes, maxRes = self.getImgData(imageFile+":mrc")
         
         xplotter = RelionPlotter(x=2, y=2, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
         for i in xrange(4):
-            slice = self._getSlice(i+1, imgData)
+            slice = self.getSlice(i+1, imgData)
             a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
-            matrix = self._getSliceImage(imgData, i+1, self._getAxis())
+            matrix = self.getSliceImage(imgData, i+1, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, minRes, maxRes,
                                        cmap=self._getColorName(),
                                        interpolation="nearest")
@@ -1660,30 +1661,6 @@ class RelionLocalResViewer(ProtocolViewer):
 # ==============================================================================
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
-
-    def _getImgData(self, imgFile):
-        import numpy as np
-        img = em.ImageHandler().read(imgFile+":mrc")
-        imgData = img.getData()
-
-        maxRes = np.amax(imgData)
-        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
-        minRes = np.amin(imgData2)
-
-        return imgData2, minRes, maxRes
-
-    def _getSlice(self, index, volumeData):
-        return int((index + 3) * volumeData.shape[0] / 9)
-
-    def _getSliceImage(self, volumeData, index, dataAxis):
-        slice = self._getSlice(index, volumeData)
-        if dataAxis == 'y':
-            imgSlice = volumeData[:, slice, :]
-        elif dataAxis == 'x':
-            imgSlice = volumeData[:, :, slice]
-        else:
-            imgSlice = volumeData[slice, :, :]
-        return imgSlice
     
     def _getColorName(self):
         if self.colorMap.get() != COLOR_OTHER:
@@ -1697,7 +1674,7 @@ class RelionLocalResViewer(ProtocolViewer):
         fhCmd = open(scriptFile, 'w')
         imageFile = os.path.abspath(self.protocol._getFileName('resolMap'))
         
-        _, minRes, maxRes = self._getImgData(imageFile)
+        _, minRes, maxRes = self.getImgData(imageFile)
         
         stepColors = self._getStepColors(minRes, maxRes)
         colorList = plotter.getHexColorList(stepColors, self._getColorName())

@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.gui.plotter import Plotter
+from pyworkflow.em.viewer import LocalResolutionViewer
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, DataView
@@ -67,7 +68,7 @@ AX_X = 0
 AX_Y = 1
 AX_Z = 2
 
-class XmippMonoResViewer(ProtocolViewer):
+class XmippMonoResViewer(LocalResolutionViewer):
     """
     Visualization tools for MonoRes results.
     
@@ -149,23 +150,15 @@ class XmippMonoResViewer(ProtocolViewer):
     
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
-        img = ImageHandler().read(imageFile)
-        imgData = img.getData()
-        max_Res = np.amax(imgData)
+        imgData2, min_Res, max_Res = self.getImgData(imageFile)
 
-        #  This is to generate figures for the paper
-        # min_Res = np.amin(imgData)
-        # imgData2 = imgData
-        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
-        
-        min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('MonoRes slices', imgData2,
                                          min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
 
-        return plt.show(fig)
+        return Plotter(figure = plt.show(fig))
 
     def _plotHistogram(self, param=None):
         md = MetaData()
@@ -192,7 +185,8 @@ class XmippMonoResViewer(ProtocolViewer):
         plt.xlabel("Resolution (A)")
         plt.ylabel("Counts")
         
-        return plt.show()
+        
+        return Plotter(figure = plt.show())
 
 
     def _getAxis(self):
@@ -217,19 +211,10 @@ class XmippMonoResViewer(ProtocolViewer):
         f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
         f.suptitle(title, fontsize=titleFontSize, color=titleColor, fontweight='bold')
     
-        def getSlice(slice):
-            if dataAxis == 'y':
-                return volumeData[:,slice,:]
-            elif dataAxis == 'x':
-                return volumeData[:,:,slice]
-            else:
-                return volumeData[slice,:,:]
-    
         def showSlice(ax, index):
             sliceTitle = 'Slice %s' % int(index*size/9)
-            slice = int(index*origSize/9)
             ax.set_title(sliceTitle, fontsize=sliceFontSize, color=sliceColor)
-            return ax.imshow(getSlice(slice), vmin=vminData, vmax=vmaxData,
+            return ax.imshow(self.getSliceImage(volumeData, index, dataAxis), vmin=vminData, vmax=vmaxData,
                              cmap=self.getColorMap(), interpolation="nearest")
         
         im = showSlice(ax1, 3)
