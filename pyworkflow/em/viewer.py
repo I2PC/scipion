@@ -769,7 +769,7 @@ class LocalResolutionViewer(ProtocolViewer):
         return imgData2, minRes, maxRes
 
     def getSlice(self, index, volumeData):
-        return int(index*volumeData.shape[0] / 5)
+        return int(index*volumeData.shape[0] / 9)
         #return int((index+3) * volumeData.shape[0] / 9)
 
     def getSliceImage(self, volumeData, index, dataAxis):

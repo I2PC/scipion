@@ -135,10 +135,11 @@ class XmippMonoResViewer(LocalResolutionViewer):
         xplotter = XmippPlotter(x=2, y=2, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
-        for i in xrange(4):
-            slice = self.getSlice(i+1, imgData)
+        for i in xrange(3,7):
+            print i 
+            slice = self.getSlice(i, imgData)
             a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
-            matrix = self.getSliceImage(imgData, i+1, self._getAxis())
+            matrix = self.getSliceImage(imgData, i, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
                                        cmap=self.getColorMap(),
                                        interpolation="nearest")
