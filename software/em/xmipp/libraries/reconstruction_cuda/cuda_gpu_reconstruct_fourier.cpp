@@ -541,8 +541,8 @@ void processVoxel(
 	float wCTF = 1.f;
 	float wModulator = 1.f;
 	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
-//	const float* __restrict__ CTF = data->CTF; // FIXME load differently, somehow
-//	const float* __restrict__ modulator = data->modulator; // FIXME load differently, somehow
+
+
 	float dataWeight = space->weight;
 	int xSize = data->fftSizeX;
 	int ySize = data->fftSizeY;
@@ -564,20 +564,19 @@ void processVoxel(
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
 	int index2D = imgY * xSize + imgX;
 
-//	if (0 != CTF) {
-//		wCTF = CTF[index2D];
-//		wModulator = modulator[index2D]; // FIXME uncomment
-//	}
+	if (data->hasCTFs) {
+		const float* __restrict__ CTF = data->getNthItem(data->CTFs, space->projectionIndex);
+		const float* __restrict__ modulator = data->getNthItem(data->modulators, space->projectionIndex);
+		wCTF = CTF[index2D];
+		wModulator = modulator[index2D];
+	}
 
 	float weight = wBlob * wModulator * dataWeight;
 
-
-//	tempVolumeGPU[2*index3D] += img[2*index2D] * weight * wCTF;
-//	tempVolumeGPU[2*index3D + 1] += img[2*index2D + 1] * weight * wCTF;
-//	tempWeightsGPU[index3D] += weight;
+	 // use atomic as two blocks can write to same voxel
 	atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight * wCTF);
 	atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight * wCTF);
-	atomicAdd(&tempWeightsGPU[index3D], weight); // FIXME test other approaches
+	atomicAdd(&tempWeightsGPU[index3D], weight);
 }
 
 __device__
@@ -625,13 +624,13 @@ void processVoxelBlob(
 #if !SHARED_IMG
 	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
 #endif
-//	const float* __restrict__ CTF = data->CTF; // FIXME load differently, somehow
-//	const float* __restrict__ modulator = data->modulator; // FIXME load differently, somehow
 	float dataWeight = space->weight;
 
 	// ugly spaghetti code, but improves performance by app. 10%
-	if (false) { // FIXME replace by NULL != CTF (commented out above)
-		/*
+	if (data->hasCTFs) {
+		const float* __restrict__ CTF = data->getNthItem(data->CTFs, space->projectionIndex);
+		const float* __restrict__ modulator = data->getNthItem(data->modulators, space->projectionIndex);
+
 		// check which pixel in the vicinity that should contribute
 		for (int i = minY; i <= maxY; i++) {
 			float ySqr = (imgPos.y - i) * (imgPos.y - i);
@@ -667,7 +666,6 @@ void processVoxelBlob(
 #endif
 			}
 		}
-		*/
 	} else {
 		// check which pixel in the vicinity that should contribute
 		for (int i = minY; i <= maxY; i++) {
@@ -704,12 +702,10 @@ void processVoxelBlob(
 			}
 		}
 	}
+	// use atomic as two blocks can write to same voxel
 	atomicAdd(&tempVolumeGPU[2*index3D], volReal);
 	atomicAdd(&tempVolumeGPU[2*index3D + 1], volImag);
-	atomicAdd(&tempWeightsGPU[index3D], w); // FIXME test other approaches
-//	tempVolumeGPU[2*index3D] += volReal;
-//	tempVolumeGPU[2*index3D + 1] += volImag;
-//	tempWeightsGPU[index3D] += w;
+	atomicAdd(&tempWeightsGPU[index3D], w);
 }
 
 
@@ -777,7 +773,7 @@ void mapToImage(Point3D<float>* box, int xSize, int ySize, const float transform
 }
 
 __device__
-void calculateAABB(const TraverseSpace* tSpace, const FourierReconstructionData* projectionData, Point3D<float>* dest) {
+void calculateAABB(const TraverseSpace* tSpace, const FRecBufferDataGPU* buffer, Point3D<float>* dest) {
 	Point3D<float> box[8];
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
@@ -834,7 +830,7 @@ void calculateAABB(const TraverseSpace* tSpace, const FourierReconstructionData*
 		getX(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
 		getX(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
 	}
-	mapToImage(box, projectionData->sizeX, projectionData->sizeY, tSpace->transformInv);
+	mapToImage(box, buffer->fftSizeX, buffer->fftSizeY, tSpace->transformInv);
 	computeAABB(dest, box);
 }
 
@@ -939,18 +935,18 @@ bool blockHasWork(Point3D<float>* AABB, int imgXSize, int imgYSize) {
 __device__
 void getImgData(Point3D<float>* AABB,
 		int tXindex, int tYindex,
-		FourierReconstructionData* const data, int imgIndex,
+		FRecBufferDataGPU* const buffer, int imgIndex,
 		float& vReal, float& vImag) {
 	int imgXindex = tXindex + AABB[0].x;
 	int imgYindex = tYindex + AABB[0].y;
 	if ((imgXindex >=0)
-			&& (imgXindex < data->sizeX)
+			&& (imgXindex < buffer->fftSizeX)
 			&& (imgYindex >=0)
-			&& (imgYindex < data->sizeY))
+			&& (imgYindex < buffer->fftSizeY))
 	{
-		int index = imgYindex * data->sizeX + imgXindex; // copy data from image
-		vReal = data->getImgOnGPU(imgIndex)[2*index];
-		vImag = data->getImgOnGPU(imgIndex)[2*index + 1];
+		int index = imgYindex * buffer->fftSizeX + imgXindex; // copy data from image
+		vReal = buffer->getNthItem(buffer->FFTs, imgIndex)[2*index];
+		vImag = buffer->getNthItem(buffer->FFTs, imgIndex)[2*index + 1];
 
 	} else {
 		vReal = vImag = 0.f; // out of image bound, so return zero
@@ -960,12 +956,12 @@ void getImgData(Point3D<float>* AABB,
 
 __device__
 void copyImgToCache(float2* dest, Point3D<float>* AABB,
-		 FourierReconstructionData* const data, int imgIndex,
+		FRecBufferDataGPU* const buffer, int imgIndex,
 		 int imgCacheDim) {
 	for (int y = threadIdx.y; y < imgCacheDim; y += blockDim.y) {
 		for (int x = threadIdx.x; x < imgCacheDim; x += blockDim.x) {
 			int memIndex = y * imgCacheDim + x;
-			getImgData(AABB, x, y, data, imgIndex, dest[memIndex].x, dest[memIndex].y);
+			getImgData(AABB, x, y, buffer, imgIndex, dest[memIndex].x, dest[memIndex].y);
 		}
 	}
 }
@@ -986,22 +982,17 @@ void processBufferKernel(
 	}
 #endif
 
-
-//	if (threadIdx.x == 0 &&  threadIdx.y == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
-//		printf("\n\n%p\n\n", traverseSpaces);
-//	}
-
 	for (int i = 0; i < buffer->noOfSpaces; i++) {
 		TraverseSpace* space = &buffer->spaces[i];
 
 #if SHARED_IMG
 		if ( ! cUseFast) {
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
-				calculateAABB(space, data, SHARED_AABB); // first thread calculates which part of the image should be shared
+				calculateAABB(space, buffer, SHARED_AABB); // first thread calculates which part of the image should be shared
 			}
 			__syncthreads();
-			if (blockHasWork(SHARED_AABB, data->sizeX, data->sizeY)) {
-				copyImgToCache(IMG, SHARED_AABB, data, space->projectionIndex, imgCacheDim); // all threads copy image data to shared memory
+			if (blockHasWork(SHARED_AABB, buffer->fftSizeX, buffer->fftSizeY)) {
+				copyImgToCache(IMG, SHARED_AABB, buffer, space->projectionIndex, imgCacheDim); // all threads copy image data to shared memory
 				__syncthreads();
 			} else {
 				continue; // whole block can exit
@@ -1090,7 +1081,9 @@ void convertImages(
 	// allocate memory for final FFTs and update device copy
 	cudaMalloc((void **) &hostBuffer->FFTs, hostBuffer->getFFTsByteSize());
 	cudaMemset(hostBuffer->FFTs, 0.f, hostBuffer->getFFTsByteSize()); // clear it, as kernel writes only to some parts
+	gpuErrchk( cudaPeekAtLastError() );
 	wrapper.copyToDevice();
+
 
 	// run kernel, one thread for each pixel of input FFT
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
@@ -1103,6 +1096,7 @@ void convertImages(
 	// buffers have to be updated accordingly
 	hostBuffer->hasFFTs = true;
 	cudaFree(hostBuffer->paddedImages);
+	gpuErrchk( cudaPeekAtLastError() );
 	hostBuffer->paddedImages = NULL;
 	wrapper.copyToDevice();
 }
@@ -1159,18 +1153,11 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		convertImages(bufferWrapper, maxResolutionSqr);
 	}
 
-
-	// create space for remaining data
-//	TraverseSpace* devTravSpaces;
-//	cudaMalloc((void **) &devTravSpaces, rBuffer->noOfSpaces*sizeof(TraverseSpace));
-	float* devBlobTableSqrt;
+	// copy blob data
+	float* devBlobTableSqrt; // FIXME since these data do not change, consider storing them just once
 	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
-	gpuErrchk( cudaPeekAtLastError() );
-
-	// copy remaining data
 	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
-
 
 	// run kernel
 	int size2D = maxVolIndexYZ + 1;
@@ -1185,8 +1172,8 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
 
-	// delete remaining data
-	// gpu copy of buffer is cleaned by destructor
+	// delete blob data
+	// data in both buffers is cleaned by destructor
 	cudaFree(devBlobTableSqrt);
 	gpuErrchk( cudaPeekAtLastError() );
 }
