@@ -92,6 +92,7 @@ class ProtRelionBase(EMProtocol):
                   'data_scipion': self.extraIter + 'data_scipion.sqlite',
                   'projections': self.extraIter + '%(half)sclass%(ref3d)03d_projections.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
+                  'data': self.extraIter + 'data.star',
                   'model': self.extraIter + 'model.star',
                   'shiny': self._getExtraPath('shiny/shiny.star'),
                   'optimiser': self.extraIter + 'optimiser.star',
@@ -782,8 +783,10 @@ class ProtRelionBase(EMProtocol):
                                     movieFn, None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(movieFn)
-                mdParts = md.MetaData(self._getFileName('input_star'))
-                
+                continueRun = self.continueRun.get()
+                continueIter = self._getContinueIter()
+                mdParts = md.MetaData(continueRun._getFileName('data', iter = continueIter))
+
                 if getVersion() == V1_3:
                     mdParts.renameColumn(md.RLN_IMAGE_NAME,
                                          md.RLN_PARTICLE_NAME)
