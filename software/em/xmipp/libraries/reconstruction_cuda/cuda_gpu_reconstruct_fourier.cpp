@@ -98,10 +98,7 @@ void FRecBufferDataGPU::allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* 
 
 FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(FRecBufferData* orig) {
 	cpuCopy = new FRecBufferDataGPU(orig);
-	cudaMalloc((void **) &gpuCopy, sizeof(FRecBufferDataGPU));
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpy(gpuCopy, cpuCopy, sizeof(FRecBufferDataGPU), cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
+	gpuCopy = NULL;
 }
 
 FRecBufferDataGPUWrapper::~FRecBufferDataGPUWrapper() {
@@ -110,7 +107,14 @@ FRecBufferDataGPUWrapper::~FRecBufferDataGPUWrapper() {
 	delete cpuCopy;
 }
 
-
+void FRecBufferDataGPUWrapper::copyToDevice() {
+	if (NULL == gpuCopy) {
+		cudaMalloc((void **) &gpuCopy, sizeof(FRecBufferDataGPU));
+		gpuErrchk( cudaPeekAtLastError() );
+	}
+	cudaMemcpy(gpuCopy, cpuCopy, sizeof(FRecBufferDataGPU), cudaMemcpyHostToDevice);
+	gpuErrchk( cudaPeekAtLastError() );
+}
 
 // FIXME these methods should be directly in the header file. Alter behaviour of the caller so that
 // it does not have to leave from this class
@@ -1029,14 +1033,14 @@ float FFT_IDX2DIGFREQ(int idx, int size) {
 
 __global__
 void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY, int iLength,
-		FourierReconstructionData* oData, float maxResolutionSqr) {
+		 FRecBufferDataGPU* oBuffer, float maxResolutionSqr) {
 	// assign pixel to thread
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
 
-	int oSizeX = oData->sizeX;
 	int halfY = iSizeY / 2;
 	float normFactor = iSizeY*iSizeY;
+	int oSizeX = oBuffer->fftSizeX;
 
 	// input is an image in Fourier space (not normalized)
 	// with low frequencies in the inner corners
@@ -1061,43 +1065,46 @@ void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY,
 				float* iValue = (float*)&(iFouriers[iIndex]);
 
 				// copy data and perform normalization
-				oData->getImgOnGPU(n)[2*oIndex] = iValue[0] / normFactor;
-				oData->getImgOnGPU(n)[2*oIndex + 1] = iValue[1] / normFactor;
+				oBuffer->getNthItem(oBuffer->FFTs, n)[2*oIndex] = iValue[0] / normFactor;
+				oBuffer->getNthItem(oBuffer->FFTs, n)[2*oIndex + 1] = iValue[1] / normFactor;
 			}
 		}
 	}
 }
 
 
-FourierReconDataWrapper* convertImages(float* paddedImages, int noOfImages, int paddedImgSize,
-		int fftSizeX, int fftSizeY,
+void convertImages(
+		FRecBufferDataGPUWrapper& wrapper,
 		float maxResolutionSqr) {
-	// allocate data
-	GpuMultidimArrayAtCpu<float> imagesCPU(paddedImgSize, paddedImgSize, 1 , noOfImages, false);
-	GpuMultidimArrayAtGpu<float> imagesGPU;
-	imagesCPU.data = paddedImages;
-	// move them to gpu
-	imagesCPU.copyToGpu(imagesGPU);
+	FRecBufferDataGPU* hostBuffer = wrapper.cpuCopy;
+	// store to proper structure
+	GpuMultidimArrayAtGpu<float> imagesGPU(
+			hostBuffer->paddedImgSize, hostBuffer->paddedImgSize, 1, hostBuffer->noOfImages, hostBuffer->paddedImages);
 	// perform FFT
 	GpuMultidimArrayAtGpu<std::complex<float> > resultingFFT;
 	mycufftHandle myhandle;
 	imagesGPU.fft(resultingFFT, myhandle);
 	myhandle.clear(); // release unnecessary memory
+	imagesGPU.d_data = NULL; // unbind the data
 
-	// create target variable
-	FourierReconDataWrapper* data = new FourierReconDataWrapper(fftSizeX, fftSizeY, noOfImages);
+	// allocate memory for final FFTs and update device copy
+	cudaMalloc((void **) &hostBuffer->FFTs, hostBuffer->getFFTsByteSize());
+	cudaMemset(hostBuffer->FFTs, 0.f, hostBuffer->getFFTsByteSize()); // clear it, as kernel writes only to some parts
+	wrapper.copyToDevice();
 
 	// run kernel, one thread for each pixel of input FFT
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(resultingFFT.Xdim/dimBlock.x),(int)ceil(resultingFFT.Ydim/dimBlock.y));
 	convertImagesKernel<<<dimGrid, dimBlock>>>(
 			resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, resultingFFT.Ndim,
-			data->gpuCopy, maxResolutionSqr);
+			wrapper.gpuCopy, maxResolutionSqr);
 
-	// HACK destructor would delete allocated array, we don't want it here
-	imagesCPU.data = NULL;
-
-	return data;
+	// now we have converted input images to FFTs in the required format
+	// buffers have to be updated accordingly
+	hostBuffer->hasFFTs = true;
+	cudaFree(hostBuffer->paddedImages);
+	hostBuffer->paddedImages = NULL;
+	wrapper.copyToDevice();
 }
 
 FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
@@ -1143,19 +1150,15 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
 	gpuErrchk( cudaPeekAtLastError() );
 
-	// holding fourier images to process
-	FourierReconDataWrapper* fourierData;
+	// copy all data to gpu
 	FRecBufferDataGPUWrapper bufferWrapper(rBuffer);
+	bufferWrapper.copyToDevice();
 
-	// process input data and get them to GPU, if necessary
-	if (rBuffer->hasFFTs) {
-		fourierData = copyToGPU(rBuffer->FFTs, rBuffer->noOfImages,
-				maxVolIndexX / 2, maxVolIndexYZ);
-	} else {
-		fourierData = convertImages(rBuffer->paddedImages, rBuffer->noOfImages, rBuffer->paddedImgSize,
-				maxVolIndexX / 2, maxVolIndexYZ,
-				maxResolutionSqr);
+	// process input data if necessary
+	if ( ! bufferWrapper.cpuCopy->hasFFTs) {
+		convertImages(bufferWrapper, maxResolutionSqr);
 	}
+
 
 	// create space for remaining data
 //	TraverseSpace* devTravSpaces;
@@ -1165,13 +1168,8 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	gpuErrchk( cudaPeekAtLastError() );
 
 	// copy remaining data
-//	cudaMemcpy(devTravSpaces, rBuffer->spaces, rBuffer->noOfSpaces*sizeof(TraverseSpace), cudaMemcpyHostToDevice);
 	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
-
-
-//	FRecBufferData* aaa = new FRecBufferData(true, false, 1, 1, 1, 1,1);
-//	aaa->FFTs[0] = 112567.112567;
 
 
 	// run kernel
@@ -1188,10 +1186,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	gpuErrchk( cudaDeviceSynchronize() );
 
 	// delete remaining data
-//	cudaFree(devTravSpaces);
+	// gpu copy of buffer is cleaned by destructor
 	cudaFree(devBlobTableSqrt);
 	gpuErrchk( cudaPeekAtLastError() );
-
-	// delete input data
-	delete fourierData;
 }

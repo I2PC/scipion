@@ -214,6 +214,12 @@ public:
 		resize(_Xdim, _Ydim, _Zdim, _Ndim);
     }
 
+	GpuMultidimArrayAtGpu(size_t _Xdim, size_t _Ydim, size_t _Zdim, size_t _Ndim, T* deviceData)
+    {
+		setDims(_Xdim, _Ydim, _Zdim, _Ndim);
+		d_data = deviceData;
+    }
+
 	template<typename T1>
 	void resize(const GpuMultidimArrayAtGpu<T1>& array)
 	{
@@ -230,14 +236,8 @@ public:
 		}
 
 		clear();
+		setDims(_Xdim, _Ydim, _Zdim, _Ndim);
 
-		Xdim=_Xdim;
-		Ydim=_Ydim;
-		Zdim=_Zdim;
-		Ndim=_Ndim;
-        yxdim=(size_t)_Ydim*_Xdim;
-        zyxdim=yxdim*_Zdim;
-        nzyxdim=zyxdim*_Ndim;
         gpuMalloc((void**) &d_data,nzyxdim*sizeof(T));
 
     }
@@ -303,6 +303,17 @@ public:
 
 	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
 
+
+private:
+	void setDims(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1) {
+		Xdim=_Xdim;
+		Ydim=_Ydim;
+		Zdim=_Zdim;
+		Ndim=_Ndim;
+		yxdim=(size_t)_Ydim*_Xdim;
+		zyxdim=yxdim*_Zdim;
+		nzyxdim=zyxdim*_Ndim;
+	}
 };
 
 #endif

@@ -55,6 +55,10 @@ struct FRecBufferData
 		return getPaddedImgSize() * sizeof(float);
 	}
 
+	int getFFTsByteSize() {
+		return getNoOfElements(FFTs) * sizeof(float);
+	}
+
 	float* getNthItem(float* array, int itemIndex) {
 		if (array == FFTs) return array + (fftSizeX * fftSizeY * itemIndex * 2); // *2 since it's complex
 		if (array == CTFs) return array + (fftSizeX * fftSizeY * itemIndex);

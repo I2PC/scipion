@@ -35,6 +35,7 @@ struct FRecBufferDataGPUWrapper {
 
 	FRecBufferDataGPUWrapper(FRecBufferData* orig);
 	~FRecBufferDataGPUWrapper();
+	void copyToDevice();
 
 	FRecBufferDataGPU* cpuCopy;
 	FRecBufferDataGPU* gpuCopy;
