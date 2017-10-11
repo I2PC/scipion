@@ -529,6 +529,8 @@ class Project(object):
             raise
         finally:
             protocol.setAborted()
+            protocol.setMapper(self.createMapper(protocol.getDbPath()))
+            protocol._store()
             self._storeProtocol(protocol)
 
     def continueProtocol(self, protocol):
