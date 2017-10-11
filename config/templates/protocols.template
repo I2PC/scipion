@@ -122,6 +122,7 @@ Protocols SPA = [
 	{"tag": "section", "text": "3D", "children": [
 		{"tag": "protocol_group", "text": "Initial volume", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "EmanProtInitModel",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelionInitialModel",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtRansac",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSignificant",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSwarm",  "text": "default"},
@@ -185,6 +186,7 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
     			{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},
+    			{"tag": "protocol", "value": "ProtRelionLocalRes",   "text": "default"},
                 {"tag": "protocol", "value": "BsoftProtBfilter", "text": "default"}
 			]},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
