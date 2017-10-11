@@ -32,7 +32,7 @@ from pyworkflow.em.packages.bsoft.protocol_blocres import (OUTPUT_RESOLUTION_FIL
                                                            PAD_NONE, PAD_BOX, PAD_SHELL)
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pyworkflow.em.packages.xmipp3 import XmippProtCreateMask3D
-from pyworkflow.em.packages.bsoft import BsoftProtBlocres
+from pyworkflow.em.packages.bsoft.protocol_blocres import BsoftProtBlocres
 from pyworkflow.em.protocol import ProtImportVolumes
 
 
@@ -103,6 +103,7 @@ class TestBsoftBlocres(TestBsoftBlocresBase):
         self.launchProtocol(blocres)
         self.assertTrue(exists(blocres._getExtraPath(OUTPUT_RESOLUTION_FILE)),
                         "blocres has failed")
+
 
     def testBlocres2(self):
         blocres = self.newProtocol(BsoftProtBlocres,

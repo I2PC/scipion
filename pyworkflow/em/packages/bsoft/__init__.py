@@ -35,6 +35,7 @@ _references = ['Heymann2007']
 
 from protocol_particle_pick import BsoftProtParticlePicking
 from protocol_bfilter import BsoftProtBfilter
+from protocol_blocres import BsoftProtBlocres
 
 from wizard import BsoftFilterParticlesWizard
 
@@ -44,4 +45,4 @@ _environ = getEnviron()
 
 # Since bsoft is not installed by default,
 # remove for now the viewer
-#from viewer import BsoftViewer
+from viewer import BsoftViewerBlocres

@@ -30,14 +30,15 @@ from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer
 from pyworkflow.em.constants import *
 from pyworkflow.gui.plotter import Plotter
+from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import Volume
 import numpy as np
-from protocol_blocres import BsoftProtBlocres, OUTPUT_RESOLUTION_FILE
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from convert import getEnviron
 from pyworkflow.em.viewer import ChimeraView, DataView, LocalResolutionViewer
+from protocol_blocres import BsoftProtBlocres, OUTPUT_RESOLUTION_FILE
 
 
 #------------------------ Some views and  viewers ------------------------
@@ -67,16 +68,20 @@ class BsoftViewer(Viewer):
         fn = obj.getFileName()
         BsoftVolumeView(fn).show()
 
-
+class BsoftPlotter(EmPlotter):
+    """ Class to create several plots with Bsoft utilities"""
+    def __init__(self, x=1, y=1, mainTitle="", **kwargs):
+        EmPlotter.__init__(self, x, y, mainTitle, **kwargs)
+ 
 binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
 
-class BsoftViewerBlocres(LocalResolutionViewer):
+class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
     """
     Visualization tools for blocres results.
 
     blocres is a bsoft package for computing the local resolution of 3D
     density maps studied in structural biology, primarily by cryo-electron
-    microscopy (cryo-EM).
+    microscopy (cryo-EM).    
     """
     _label = 'viewer blocres'
     _targets = [BsoftProtBlocres]
@@ -88,7 +93,6 @@ class BsoftViewerBlocres(LocalResolutionViewer):
    
     def __init__(self, *args, **kwargs):
         ProtocolViewer.__init__(self, *args, **kwargs)
-
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
@@ -122,8 +126,6 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         group.addParam('doShowVolumeColorSlices', LabelParam,
               label="Show colored slices")
 
-
-        
     def _getVisualizeDict(self):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowVolumeSlices': self._showVolumeSlices,
@@ -141,19 +143,23 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         cm2 = DataView(self.protocol.inputVolume2.get().getFileName())
 
         return [cm]
-        
     
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
-        imgData2, min_Res, max_Res = self.getImgData(imageFile)
+        imgData, min_Res, max_Res = self.getImgData(imageFile)
 
-        fig, im = self._plotVolumeSlices('blocres slices', imgData2,
-                                         min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
-        cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
-        cbar = fig.colorbar(im, cax=cax)
-        cbar.ax.invert_yaxis()
-
-        return [Plotter(figure = fig)]
+        xplotter = BsoftPlotter(x=2, y=2, mainTitle="Local Resolution Slices "
+                                                     "along %s-axis."
+                                                     %self._getAxis())
+        for i in xrange(4):
+            slice = self.getSlice(i+1, imgData)
+            a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
+            matrix = self.getSliceImage(imgData, i+1, self._getAxis())
+            plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
+                                       cmap=self.getColorMap(),
+                                       interpolation="nearest")
+        xplotter.getColorBar(plot)
+        return [xplotter]
 
 
     def _plotHistogram(self, param=None):
@@ -181,12 +187,8 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         plt.title("Resolutions Histogram")
         plt.xlabel("Resolution (A)")
         plt.ylabel("Counts")    
-        
 
-        
-        
         return [Plotter(figure = fig)]
-
 
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
@@ -207,23 +209,23 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         origSize = kwargs.get('orig_n', size)
         dataAxis = kwargs.get('dataAxis', 'z')
     
+        print size
         f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
         f.suptitle(title, fontsize=titleFontSize, color=titleColor, fontweight='bold')
     
         def showSlice(ax, index):
-            sliceTitle = 'Slice %s' % int(index*size/9)
+            sliceTitle = 'Slice %s' % self.getSlice(index, volumeData)
             ax.set_title(sliceTitle, fontsize=sliceFontSize, color=sliceColor)
-            return ax.imshow(self.getSliceImage(volumeData, index, dataAxis), vmin=vminData, vmax=vmaxData,
+            return ax.imshow(self.getSliceImage(volumeData, index+3, dataAxis), vmin=vminData, vmax=vmaxData,
                              cmap=self.getColorMap(), interpolation="nearest")
-        
-        im = showSlice(ax1, 3)
-        showSlice(ax2, 4)
-        showSlice(ax3, 5)
-        showSlice(ax4, 6)
+
+        im = showSlice(ax1, 0)
+        showSlice(ax2, 1)
+        showSlice(ax3, 2)
+        showSlice(ax4, 3)
         
         return f, im 
     
-   
     def getColorMap(self):
         if (COLOR_CHOICES[self.colorMap.get()] is 'other'): 
             cmap = cm.get_cmap(self.otherColorMap.get())
