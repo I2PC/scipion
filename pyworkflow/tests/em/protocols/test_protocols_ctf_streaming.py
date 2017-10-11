@@ -84,14 +84,16 @@ class TestCtfStreaming(BaseTest):
                   'yDim': 4096,
                   'nDim': MICS,
                   'samplingRate': 1.25,
-                  'creationInterval': 5,
+                  'creationInterval': 15,
                   'delay': 0,
                   'setof': SET_OF_RANDOM_MICROGRAPHS}  # SetOfMicrographs
 
-        # put some stress on the system
+        # create mic in streaming mode
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
+
+        # wait until a microgrph has been created
         counter = 1
         while not protStream.hasAttribute('outputMicrographs'):
             time.sleep(10)
@@ -100,9 +102,9 @@ class TestCtfStreaming(BaseTest):
                 break
             counter += 1
 
-        # then introduce monitor, checking all the time ctf and saving to
-        # database
+        # run ctffind4
         protCTF = ProtCTFFind(useCftfind4=True)
+        time.sleep(10)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
         protCTF.highRes.set(0.4)
@@ -117,7 +119,8 @@ class TestCtfStreaming(BaseTest):
         protCTF2.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF2)
         checkOutputs(protCTF2)
-
+        
+        # run gctf
         # check if box has nvidia cuda libs.
         try:
             nvmlInit()  # fails if not GPU attached
@@ -130,6 +133,3 @@ class TestCtfStreaming(BaseTest):
         except NVMLError, err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
-
-
-

@@ -276,6 +276,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         #     errors.append('Some problem occurs matching micrographs and CTF.\n'
         #                   'There were micrographs for which CTF was not found '
         #                   'either using micName or micId.\n')
+
+        # Clear the CTFs if micrograph source is "same as picking" to avoid unconsistencies
+        if not self._micsOther():
+            self.inputMicrographs.set(None)
+
         return errors
     
     def _citations(self):
