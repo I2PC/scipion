@@ -122,7 +122,7 @@ void ProgRecFourierGPU::run()
 		init_progress_bar(SF.size());
     }
     // Create loading thread stuff
-    createLoadingThread();
+//    createLoadingThread();
     //Computing interpolated volume
     processImages(0, SF.size() - 1);
     // Get data from GPU
@@ -131,26 +131,26 @@ void ProgRecFourierGPU::run()
     mirrorAndCropTempSpaces();
     //Saving the volume
     finishComputations(fn_out);
-    cleanLoadingThread();
+//    cleanLoadingThread();
 }
 
-void ProgRecFourierGPU::createLoadingThread() {
-	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
-	loadThread.parent = this;
-	loadThread.selFile = &SF;
-	pthread_create( &loadThread.id , NULL, loadImageThread, (void *)(&loadThread) );
-	threadOpCode = PRELOAD_IMAGE;
+void ProgRecFourierGPU::createThread(int gpuStream, int startIndex, int endIndex, LoadThreadParams& thread) {
+//	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
+	thread.parent = this;
+	thread.selFile = &SF;
+	pthread_create( &thread.id , NULL, loadImageThread, (void *)(&thread) );
+//	thread->threadOpCode = PRELOAD_IMAGE;
+	thread.startImageIndex = startIndex;
+	thread.endImageIndex = endIndex;
 }
 
-void ProgRecFourierGPU::cleanLoadingThread() {
-	delete loadThread.rBuffer;
-	delete loadThread.lBuffer;
-	loadThread.rBuffer = loadThread.lBuffer = NULL;
-	threadOpCode = EXIT_THREAD;
-	// Waiting for thread to finish
-	barrier_wait( &barrier );
-	pthread_join(*(&loadThread.id), NULL);
-	barrier_destroy( &barrier );
+void ProgRecFourierGPU::cleanThread(LoadThreadParams* thread) {
+//	delete thread->rBuffer;
+//	delete thread->lBuffer;
+//	thread->rBuffer = thread->lBuffer = NULL;
+//	thread->threadOpCode = EXIT_THREAD;
+
+
 }
 
 void ProgRecFourierGPU::produceSideinfo()
@@ -235,6 +235,8 @@ void ProgRecFourierGPU::produceSideinfo()
             R_repository.push_back(R);
         }
     }
+    // query the system on the number of cores
+	noOfCores = 2;//std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
 inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v) {
@@ -377,7 +379,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 	// FIXME cannot be complex float due to build errors
 	MultidimArray< std::complex<double> > localPaddedFourier;
 
-	FRecBufferData* lData = threadParams->lBuffer;
+	FRecBufferData* lData = threadParams->buffer;
 	lData->noOfImages = lData->noOfSpaces = 0; // 'clean buffer'
 	for (int projIndex = 0; projIndex < parent->bufferSize; projIndex++) {
 		double rot, tilt, psi, weight;
@@ -391,6 +393,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		if (imgIndex >= threadParams->endImageIndex) {
 			continue;
 		}
+		printf("thread %d loading img %d ", threadParams->id, imgIndex);
 		//Read projection from selfile, read also angles and shifts if present
 		//but only apply shifts (set above)
 		// FIXME following line is a current bottleneck, as it calls BSpline interpolation
@@ -399,6 +402,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 			continue;
 		}
 
+		printf("load done ");
 		// Compute the coordinate axes associated to this projection
 		rot = proj.rot();
 		tilt = proj.tilt();
@@ -425,6 +429,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 			lData->noOfSpaces++;
 			UUID++;
 		}
+		printf("spaces done ");
 		// each image has N symmetries (at least identity)
 		lData->noOfImages = lData->noOfSpaces / parent->R_repository.size();
 
@@ -457,7 +462,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 					localPaddedImgFloat.data,
 					lData->getPaddedImgByteSize());
 		}
-
+		printf("completed\n");
 
 //		data->imgIndex = imgIndex;
 //		if (hasCTF) { // FIXME reimplement, can be part of the image
@@ -516,33 +521,42 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 
     parent->fftOnGPU = false;
 
-    threadParams->lBuffer = new FRecBufferData( ! parent->fftOnGPU, hasCTF,
+    threadParams->buffer = new FRecBufferData( ! parent->fftOnGPU, hasCTF,
     		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
 			parent->bufferSize, (int)parent->R_repository.size());
-    threadParams->rBuffer = new FRecBufferData( ! parent->fftOnGPU, hasCTF,
-       		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
-			parent->bufferSize, (int)parent->R_repository.size());
 
-    do
-    {
-        barrier_wait( barrier );
+    int firstImageIndex = threadParams->startImageIndex;
+    int lastImageIndex = threadParams->endImageIndex;
+    int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)parent->bufferSize);
+    printf("thread %d should load img %d-%d\n", threadParams->id, firstImageIndex, lastImageIndex);
+    std::cout << std::endl;
 
-        switch ( parent->threadOpCode )
-        {
-        case PRELOAD_IMAGE:
-            {
-            	preloadBuffer(threadParams, parent, hasCTF, objId);
-                break;
-            }
-        case EXIT_THREAD:
-            return NULL;
-        default:
-            break;
-        }
+    int startLoadIndex = firstImageIndex;
+    for(int i = 0; i < loops; i++) {
 
-        barrier_wait( barrier );
-    }
-    while ( true );
+    	threadParams->startImageIndex = startLoadIndex;
+    	threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
+    	printf("thread %d will now load img %d-%d\n", threadParams->id, threadParams->startImageIndex, threadParams->endImageIndex);
+    	preloadBuffer(threadParams, parent, hasCTF, objId);
+
+		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
+			printf("thread %d will proces img %d-%d\n", threadParams->id, threadParams->startImageIndex, threadParams->endImageIndex);
+			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
+				threadParams->buffer,
+				parent->maxVolumeIndexX, parent->maxVolumeIndexYZ,
+				parent->useFast, parent->blob.radius,
+				parent->iDeltaSqrt,
+				parent->blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
+				parent->maxResolutionSqr);
+		}
+		printf("thread %d processing done\n", threadParams->id);
+		// update next iteration;
+		startLoadIndex += parent->bufferSize;
+	}
+    printf("thread %d done\n", threadParams->id);
+    delete threadParams->buffer;
+    threadParams->buffer = NULL;
+    barrier_wait( barrier );// notify that thread finished
 }
 
 template<typename T, typename U>
@@ -1124,10 +1138,12 @@ void ProgRecFourierGPU::processWeights() {
 }
 
 void ProgRecFourierGPU::loadImages(int startIndex, int endIndex) {
+	/*
 	loadThread.startImageIndex = startIndex;
 	loadThread.endImageIndex = endIndex;
 	// Awaking sleeping threads
 	barrier_wait( &barrier );
+	*/
 }
 
 void ProgRecFourierGPU::swapLoadBuffers() {
@@ -1146,9 +1162,11 @@ void ProgRecFourierGPU::swapLoadBuffers() {
 //	Array2D<std::complex<float> >* tmp4 = loadThread.readyFFTs;
 //	loadThread.readyFFTs = loadThread.loadingFFTs;
 //	loadThread.loadingFFTs = tmp4;
+	/*
 	FRecBufferData* tmp = loadThread.rBuffer;
 	loadThread.rBuffer = loadThread.lBuffer;
 	loadThread.lBuffer = tmp;
+	*/
 }
 
 void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
@@ -1304,8 +1322,9 @@ void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
 }
 
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
+
 {
-	int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)bufferSize);
+	printf("zpracuj %d - %d\n", firstImageIndex, lastImageIndex);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
     if (NULL == tempVolumeGPU) {
@@ -1314,6 +1333,37 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     if (NULL == tempWeightsGPU) {
     	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
+
+//    if (NULL == workThreads) {
+	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
+	workThreads = new LoadThreadParams[noOfCores];
+	barrier_init( &barrier, noOfCores + 1 );
+	for (int i = 0; i < noOfCores; i++) {
+		int sIndex = firstImageIndex + i*imgPerThread;
+		int eIndex = std::min(lastImageIndex, sIndex + imgPerThread-1);
+		createThread(i, sIndex, eIndex, workThreads[i]);
+		if (workThreads[i].selFile->getFilename().empty()) {
+			std::cout << "PRUSER, vlakno " << i << std::endl;
+		}
+	}
+	std::cout << "vlakna bezi" << std::endl;
+//    }
+
+//	barrier_wait( &barrier ); // all threads finished calculation
+//	for (int i = 0; i < noOfCores; i++) {
+//		cleanThread(&workThreads[i]);
+//	}
+	// Waiting for threads to finish
+	barrier_wait( &barrier );
+	std::cout << "vlakna skoncila" << std::endl;
+	for (int i = 0; i < noOfCores; i++) {
+		pthread_join(workThreads[i].id, NULL);
+	}
+	delete[] workThreads;
+	barrier_destroy( &barrier );
+
+	std::cout << "DONE" << std::endl;
+
 
 //    fftOnGPU = t; // FIXME implement some profiler that will decide if it's worth to use GPU for data loading
 
@@ -1328,7 +1378,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //		loadThread.loadingFFTs = new Array2D<std::complex<float> >[bufferSize];
 //		loadThread.readyFFTs = new Array2D<std::complex<float> >[bufferSize];
 //	}
-
+/*
 	clock_t begin = clock();
 
 	int repaint = (int)ceil((double)SF.size()/60);
@@ -1371,7 +1421,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //
 //	loadThread.readyBuffer = loadThread.loadingBuffer = NULL;
 //	loadThread.loadingPaddedImages = loadThread.readyPaddedImages = NULL;
-//	loadThread.loadingFFTs = loadThread.readyFFTs = NULL;
+//	loadThread.loadingFFTs = loadThread.readyFFTs = NULL; */
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {
@@ -1398,7 +1448,7 @@ void ProgRecFourierGPU::finishComputations( const FileName &out_name )
     Image<double> Vout;
     Vout().initZeros(paddedImgSize,paddedImgSize,paddedImgSize);
     FourierTransformer transformerVol;
-    transformerVol.setThreadsNumber(2); // use just main and 'loading' thread
+    transformerVol.setThreadsNumber(noOfCores);
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();

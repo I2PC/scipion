@@ -142,7 +142,7 @@ void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
 FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 		int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr, int, float*&);
 
-
+void waitForGPU();
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		FRecBufferData* buffer,

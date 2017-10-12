@@ -610,6 +610,7 @@ bool MDSql::getObjectValue(const int objId, MDObject  &value)
     }
     else
     {
+    	std::cout << "ERROR metadata_cql.cpp getObjectValue "<< objId << " failed" << std::endl;
         return false;
     }
     //not finalize now because cached

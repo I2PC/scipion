@@ -59,8 +59,8 @@
 #define MINIMUMWEIGHT 0.001
 #define ACCURACY 0.001
 
-#define EXIT_THREAD 0
-#define PRELOAD_IMAGE 1
+//#define EXIT_THREAD 0
+//#define PRELOAD_IMAGE 1
 
 /**@defgroup FourierReconstruction Fourier reconstruction
    @ingroup ReconsLibrary */
@@ -91,8 +91,12 @@ struct LoadThreadParams
 //    int loadingBufferLength;
 //    int readyBufferLength;
 
-    FRecBufferData* lBuffer;
-    FRecBufferData* rBuffer;
+    FRecBufferData* buffer;
+
+//    /** Tells the thread what to do next */
+//    int threadOpCode;
+
+    int gpuStream;
 
 };
 
@@ -120,7 +124,7 @@ protected:
 // 	FIELDS
 
     /** Thread used for loading input data */
-    LoadThreadParams loadThread;
+    LoadThreadParams* workThreads;
 
     /** SelFile containing all projections */
     MetaData SF;
@@ -199,12 +203,12 @@ protected:
      * Method will create thread used for loading images
      * and set all necessary values/variables
      */
-    void createLoadingThread();
+    void createThread(int gpuStream, int startIndex, int endIndex, LoadThreadParams& thread);
 
     /**
      * Method will release all resources allocated for loading images
      */
-    void cleanLoadingThread();
+    void cleanThread(LoadThreadParams* thread);
 
     /** Read arguments from command line */
     void readParams();
@@ -264,9 +268,6 @@ private:
     /** Maximum interesting resolution squared */
     float maxResolutionSqr;
 
-    /** Tells the loading thread what to do next */
-    int threadOpCode;
-
     /** Barrier synchronization for threads */
     barrier_t barrier;
 
@@ -296,6 +297,9 @@ private:
 
     /** if set to true, FFT of the input projections are done on GPU */
     bool fftOnGPU;
+
+    /** holds number of cores available at the host system */
+    int noOfCores;
 
 // STATIC METHODS
 

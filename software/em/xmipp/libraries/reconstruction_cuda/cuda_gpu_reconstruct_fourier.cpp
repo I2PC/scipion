@@ -1128,6 +1128,11 @@ FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
 	return new FourierReconDataWrapper(fd);
 }
 
+void waitForGPU() {
+	gpuErrchk( cudaPeekAtLastError() );
+	gpuErrchk( cudaDeviceSynchronize() );
+}
+
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		FRecBufferData* rBuffer, // FIXME rename
 		int maxVolIndexX, int maxVolIndexYZ,
@@ -1169,8 +1174,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 			bufferWrapper.gpuCopy,
 			devBlobTableSqrt,
 			imgCacheDim);
-	gpuErrchk( cudaPeekAtLastError() );
-	gpuErrchk( cudaDeviceSynchronize() );
+
 
 	// delete blob data
 	// data in both buffers is cleaned by destructor
