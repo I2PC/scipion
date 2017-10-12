@@ -62,7 +62,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                       "in OF algorithm. If you want to use Gold-Standard "
                       "provide here half1 map")
         
-        form.addParam('referenceVolume1', params.PointerParam,
+        form.addParam('referenceVolume1', params.PointerParam, 
                  condition='doGoldStandard',
                  pointerClass='Volume',
                  label='Reference volume half1', 
@@ -83,20 +83,20 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                  help="Volume that we want to process its related particles.")
 
         form.addParam('inputVolume1', params.PointerParam,
-                 pointerClass='Volume',
                  condition='doGoldStandard',
+                 pointerClass='Volume',
                  label='Input volume half1', 
                  help="Volume that we want to process its related particles."
                        "It should represent half1 map.")
 
         form.addParam('inputVolume2', params.PointerParam,
-                 pointerClass='Volume',
                  condition='doGoldStandard',
+                 pointerClass='Volume',
                  label='Input volume half2', 
                  help="Volume that we want to process its related particles."
                        "It should represent half2 map.")
                 
-        form.addParam('inputParticles', params.PointerParam, 
+        form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
                       pointerCondition='hasAlignmentProj',
                       label="Input particles",  
@@ -130,42 +130,71 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
-        
-        inputParticlesMd = self._getExtraPath('input_particles.xmd')
-        inputParticles = self.inputParticles.get()
-        
-        writeSetOfParticles(inputParticles, inputParticlesMd)
-        
+              
         #If doGoldStandard then we have two halves
-        if not self.doGoldStandard.get():
-            inputVol = self.inputVolume.get().getFileName()
-            referenceVol = self.referenceVolume.get().getFileName()
+        if self.doGoldStandard.get():            
+            inputParticlesMd1 = self._getExtraPath('input_particles_half1.xmd')
+            inputParticles = self.inputParticles.get()        
+            inputParticlesHalf1 = self._createSetOfParticles()            
+            inputParticlesHalf1.copyInfo(inputParticles)
+            inputParticlesHalf1.copyItems(inputParticles,
+                                 updateItemCallback=self._setHalf1)                                
+            writeSetOfParticles(inputParticlesHalf1, inputParticlesMd1)
+    
+            inputParticlesMd2 = self._getExtraPath('input_particles_half2.xmd')
+            inputParticles = self.inputParticles.get()        
+            inputParticlesHalf2 = self._createSetOfParticles()            
+            inputParticlesHalf2.copyInfo(inputParticles)
+            inputParticlesHalf2.copyItems(inputParticles,
+                                 updateItemCallback=self._setHalf2)                                
+            writeSetOfParticles(inputParticlesHalf2, inputParticlesMd2)
+            
+            inputVol1 = self.inputVolume1.get().getFileName()
+            inputVol2 = self.inputVolume2.get().getFileName()
+            referenceVol1 = self.referenceVolume1.get().getFileName()
+            referenceVol2 = self.referenceVolume2.get().getFileName()
 
             if not self.doAlignment.get():         #No alignment
+                fnOutputHalf1 = self._getExtraPath('deformed_particles_half1')
+                fnOutputHalf2 = self._getExtraPath('deformed_particles_half2')
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                         inputVol, referenceVol, inputParticlesMd)
+                                         inputVol1, referenceVol1, inputParticlesMd1,fnOutputHalf1)
+                
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol2, referenceVol2, inputParticlesMd2,fnOutputHalf2)
+
             else:
                 
-                fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
+                print("Nothing") 
+                '''fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
                 fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
                 
                 fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
                 self._insertFunctionStep('volumeAlignmentStep', 
                                          referenceVol, inputVol, fnAlignedVolFf, 
                                          fnAlnVolFfLcl, fnInPartsNewAng)
+                
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                         fnAlnVolFfLcl, referenceVol, fnInPartsNewAng)
+                                         inputVol1, referenceVol1, inputParticlesMd1)
+                
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol2, referenceVol2, inputParticlesMd2)
+                '''
         else:
-            inputVol1 = self.inputVolume1.get().getFileName()
-            inputVol2 = self.inputVolume2.get().getFileName()
-            referenceVol1 = self.referenceVolume1.get().getFileName()
-            referenceVol2 = self.referenceVolume2.get().getFileName()
             
-            if self.doAlignment.get():
+            inputParticlesMd = self._getExtraPath('input_particles.xmd')
+            inputParticles = self.inputParticles.get()                
+            writeSetOfParticles(inputParticles, inputParticlesMd)
+            
+            inputVol = self.inputVolume.get().getFileName()
+            referenceVol = self.referenceVolume.get().getFileName()    
+            
+            fnOutput = self._getExtraPath('deformed_particles')
+            if not self.doAlignment.get():
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                         inputVol1, referenceVol1, inputParticlesMd)
-                self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                         inputVol2, referenceVol2, inputParticlesMd)
+                                         inputVol, referenceVol, inputParticlesMd, fnOutput)
+            else:
+                print("None")
 #TODO Ubset of particles according to their HalfID!!!! 
 #Now this code does not work!!!!!
 
@@ -214,14 +243,12 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         outputSet.copyInfo(inputParts)                
         writeSetOfParticles(outputSet, fnInPartsNewAng)             
         
-    def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd):
+    def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd, fnOutput):
         winSize = self.winSize.get()
         
-        sampling_rate = self.inputParticles.getSamplingRate()
+        sampling_rate = self.inputParticles.get().getSamplingRate()
         resLimitDig = sampling_rate/self.resLimit.get()
         
-        fnOutput = self._getExtraPath('deformed-particles')
-
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get()
         
@@ -233,12 +260,27 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()        
-        fnDeformedParticles = self._getExtraPath('deformed-particles.xmd')
-
-        outputSetOfParticles = self._createSetOfParticles()
-        readSetOfParticles(fnDeformedParticles, outputSetOfParticles)        
-        outputSetOfParticles.copyInfo(inputParticles)        
-        self._defineOutputs(outputParticles=outputSetOfParticles)              
+        inputClassName = str(inputParticles.getClassName())
+        
+        if not self.doGoldStandard.get():            
+            fnDeformedParticles = self._getExtraPath('deformed_particles.xmd')
+            outputSetOfParticles = self._createSetOfParticles()
+            readSetOfParticles(fnDeformedParticles, outputSetOfParticles)        
+            outputSetOfParticles.copyInfo(inputParticles)        
+            self._defineOutputs(outputParticles=outputSetOfParticles)              
+        else:
+            fnDeformedParticlesHalf1 = self._getExtraPath('deformed_particles_half1.xmd')
+            outputSetOfParticlesHalf1 = self._createSetOfParticles()            
+            readSetOfParticles(fnDeformedParticlesHalf1, outputSetOfParticlesHalf1)                                
+            outputSetOfParticlesHalf1.copyInfo(inputParticles)                      
+            key = 'output' + inputClassName.replace('SetOf', '') + '%02d'  
+            self._defineOutputs(**{key % 1: outputSetOfParticlesHalf1})
+            
+            fnDeformedParticlesHalf2 = self._getExtraPath('deformed_particles_half2.xmd')
+            outputSetOfParticlesHalf2 = self._createSetOfParticles()                                  
+            readSetOfParticles(fnDeformedParticlesHalf2, outputSetOfParticlesHalf2)
+            outputSetOfParticlesHalf2.copyInfo(inputParticles)            
+            self._defineOutputs(**{key % 2: outputSetOfParticlesHalf2})        
     #--------------------------- INFO functions -------------------------------------------- 
     
     def _summary(self):
@@ -267,9 +309,17 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     def _citations(self):
         return ['**********????????????????????************']
     
+    def _setHalf1(self, item, row):
+        if (item._rln_halfId == 1):
+            item._appendItem=False
+
+    def _setHalf2(self, item, row):
+        if (item._rln_halfId == 2):
+            item._appendItem=False
+            
     def _validate(self):
         errors=[]
-        inputVolDim = self.inputVolume.get().getDim()[0]
+        '''inputVolDim = self.inputVolume.get().getDim()[0]
         inputParticlesDim = self.inputParticles.get().getDim()[0]
         referenceVolDim = self.referenceVolume.get().getDim()[0]
         if inputVolDim != referenceVolDim:
@@ -278,6 +328,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         if inputParticlesDim != inputVolDim:
             errors.append("Input particles and input map do not have "
                           "the same dimensions!!!")
+        '''
         return errors              
 #TODO: Validate that if use gold-standard the particles have halfID metadata info
 #TODO: Validate that if use gold-standard the particles have halfID metadata.
