@@ -408,15 +408,20 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
     #--------------------------- UTILS functions --------------------------------
     def _getCtfResol(self, ctf):
-        if ctf.hasAttribute('_ctffind4_ctfResolution'):
-            return ctf._ctffind4_ctfResolution.get(), False
-        elif ctf.hasAttribute('_gctf_ctfResolution'):
-            return ctf._gctf_ctfResolution.get(), False
-        elif ctf.hasAttribute('_xmipp_ctfCritMaxFreq'):
-            return ctf._xmipp_ctfCritMaxFreq.get(), True
+        resolution = ctf.getResolution()
+        if resolution is not None:
+            return resolution
         else:
-            # if 0, the protocol does not select by ctf resolution.
             return 0
+        # if ctf.hasAttribute('_ctffind4_ctfResolution'):
+        #     return ctf._ctffind4_ctfResolution.get(), False
+        # elif ctf.hasAttribute('_gctf_ctfResolution'):
+        #     return ctf._gctf_ctfResolution.get(), False
+        # elif ctf.hasAttribute('_xmipp_ctfCritMaxFreq'):
+        #     return ctf._xmipp_ctfCritMaxFreq.get(), True
+        # else:
+        #     # if 0, the protocol does not select by ctf resolution.
+        #     return 0
     
     def _readDoneListDiscarded(self):
         """ Read from a text file the id's of the items that have been done. """

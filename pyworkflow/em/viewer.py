@@ -209,9 +209,10 @@ class CtfView(ObjectView):
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
                     '_xmipp_ctfCritFirstZero',
-                    ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
-                    '_xmipp_ctfCritNonAstigmaticValidity',
-                    '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq'
+                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
+                    '_xmipp_ctfCritNonAstigmaticValidty',
+                    '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq',
+                    '_xmipp_ctfCritPsdCorr90'
                    ]
 
     def __init__(self, project, ctfSet, other='', **kwargs):
@@ -223,7 +224,7 @@ class CtfView(ObjectView):
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
         labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio %s ' % extraLabels
+        labels += '_defocusAngle _defocusRatio _resolution _fitQuality %s ' % extraLabels
         labels += '  _micObj._filename'
 
         viewParams = {showj.MODE: showj.MODE_MD,
