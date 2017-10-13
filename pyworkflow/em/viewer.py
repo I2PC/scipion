@@ -34,7 +34,7 @@ from threading import Thread
 from multiprocessing.connection import Client
 from numpy import flipud
 import socket
-try:#python 2
+try:  # python 2
     import Tkinter as tk
     import tkFont
     import ttk

@@ -22,34 +22,40 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
-# general protocol to test the appropriate extraction of the unit cell from symmetries cyclic,
-# dihedral, tetrahedral, octahedral, and icosahedral, that are available to select in the form
-# for the extraction of the unit cell from a specific volume
+# general protocol to test the appropriate extraction of the unit cell from
+# symmetries cyclic,dihedral, tetrahedral, octahedral, and icosahedral,
+# that are available to select in the form for the extraction of the unit
+# cell from a specific volume
 
 import os
-import numpy as np
 import math
-import collections
 from tempfile import mkstemp
 from pyworkflow.utils import runJob
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.packages.xmipp3 import getEnviron
 from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
 from pyworkflow.em.protocol import ProtImportVolumes
-from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell import XmippProtExtractUnit
-from pyworkflow.em.constants import SYM_I222r, SYM_I222, SCIPION_SYM_NAME, SYM_In25, SYM_In25r,\
-     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL
+from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell \
+    import XmippProtExtractUnit
+from pyworkflow.em.constants import SYM_I222r, SYM_I222, SCIPION_SYM_NAME, \
+    SYM_In25, SYM_In25r, SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, \
+    SYM_OCTAHEDRAL
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import NMA_MASK_THRE
-from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
+from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base \
+    import NMA_MASK_THRE
+from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms \
+    import XmippProtConvertToPseudoAtoms
 from icosahedron import *
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
 from pyworkflow.em.data import Transform
-from pyworkflow.object import Boolean, Float
+
 OFFSET = 22.5
 
-# function to write the coordinates of a phantom (3D map) for icosahedral symmetry in a text file
-def generate_ico(sym, mode, f, ):
+# function to write the coordinates of a phantom (3D map) for icosahedral
+# symmetry in a text file
+
+
+def generate_ico(sym, mode, f):
     icosahedron = Icosahedron(orientation=sym)
     center = []
     x = 0.
@@ -62,9 +68,11 @@ def generate_ico(sym, mode, f, ):
     # print 5fold points
     for vertice in icosahedron.get_vertices():
         if mode == 'xmipp':
-            f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (vertice[0], vertice[1], vertice[2]))
+            f.write("sph  + 1. %.3f %.3f %.3f .15\n" %
+                    (vertice[0], vertice[1], vertice[2]))
         else:
-            f.write('.sphere %.3f %.3f %.3f .15\n' % (vertice[0], vertice[1], vertice[2]))
+            f.write('.sphere %.3f %.3f %.3f .15\n' %
+                    (vertice[0], vertice[1], vertice[2]))
 
     # print 3fold points
     if mode == 'xmipp':
@@ -96,7 +104,10 @@ def generate_ico(sym, mode, f, ):
         else:
             f.write('.sphere %.3f %.3f %.3f .09\n' % (x, y, z))
 
-# function to write the coordinates of a phantom (3D map) for cyclic symmetry (order 8) in a text file
+# function to write the coordinates of a phantom (3D map) for cyclic symmetry
+# (order 8) in a text file
+
+
 def generate_cyclic(order, offset, mode, f, ):
     center = []
     z_value = [-.45, 0]
@@ -116,28 +127,31 @@ def generate_cyclic(order, offset, mode, f, ):
         else:
             f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
         for point in range(order):
-            x= math.cos(2*point*math.pi/order + offset)
-            y= math.sin(2*point*math.pi/order + offset)
+            x = math.cos(2*point*math.pi/order + offset)
+            y = math.sin(2*point*math.pi/order + offset)
             if mode == 'xmipp':
-                f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x,y,z))
+                f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x, y, z))
             else:
-                f.write('.sphere %.3f %.3f %.3f .15\n' % (x,y,z))
+                f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
         for point in range(order):
-            x= math.cos(2*point*math.pi/order + offset)/2
-            y= math.sin(2*point*math.pi/order + offset)/2
+            x = math.cos(2*point*math.pi/order + offset)/2
+            y = math.sin(2*point*math.pi/order + offset)/2
             if mode == 'xmipp':
-                f.write("sph  + 1. %.3f %.3f %.3f .10\n" % (x,y,z))
+                f.write("sph  + 1. %.3f %.3f %.3f .10\n" % (x, y, z))
             else:
-                f.write('.sphere %.3f %.3f %.3f .10\n' % (x,y,z))
+                f.write('.sphere %.3f %.3f %.3f .10\n' % (x, y, z))
         for point in range(order):
-            x= math.cos(2*point*math.pi/order + offset)/4
-            y= math.sin(2*point*math.pi/order + offset)/4
+            x = math.cos(2*point*math.pi/order + offset)/4
+            y = math.sin(2*point*math.pi/order + offset)/4
             if mode == 'xmipp':
-                f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (x,y,z))
+                f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (x, y, z))
             else:
-                f.write('.sphere %.3f %.3f %.3f .05\n' % (x,y,z))
+                f.write('.sphere %.3f %.3f %.3f .05\n' % (x, y, z))
 
-# function to write the coordinates of a phantom (3D map) for dihedral symmetry (order 8) in a text file
+# function to write the coordinates of a phantom (3D map) for dihedral symmetry
+# (order 8) in a text file
+
+
 def generate_dihedral(order, offset, mode, f, ):
     center = []
     z_value = [-.45, 0., .45]
@@ -149,31 +163,34 @@ def generate_dihedral(order, offset, mode, f, ):
         else:
             f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
         for point in range(order):
-            x= math.cos(2*point*math.pi/order + offset)
-            y= math.sin(2*point*math.pi/order + offset)
+            x = math.cos(2*point*math.pi/order + offset)
+            y = math.sin(2*point*math.pi/order + offset)
             if mode == 'xmipp':
-                f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x,y,z))
+                f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x, y, z))
             else:
-                f.write('.sphere %.3f %.3f %.3f .15\n' % (x,y,z))
+                f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
         for point in range(order):
-            x= math.cos(2*point*math.pi/order + offset)/2
-            y= math.sin(2*point*math.pi/order + offset)/2
+            x = math.cos(2*point*math.pi/order + offset)/2
+            y = math.sin(2*point*math.pi/order + offset)/2
             if mode == 'xmipp':
-                f.write("sph  + 1. %.3f %.3f %.3f .10\n" % (x,y,z))
+                f.write("sph  + 1. %.3f %.3f %.3f .10\n" % (x, y, z))
             else:
-                f.write('.sphere %.3f %.3f %.3f .10\n' % (x,y,z))
+                f.write('.sphere %.3f %.3f %.3f .10\n' % (x, y, z))
         for point in range(order):
-            x= math.cos(2*point*math.pi/order + offset)/4
-            y= math.sin(2*point*math.pi/order + offset)/4
+            x = math.cos(2*point*math.pi/order + offset)/4
+            y = math.sin(2*point*math.pi/order + offset)/4
             if mode == 'xmipp':
-                f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (x,y,z))
+                f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (x, y, z))
             else:
-                f.write('.sphere %.3f %.3f %.3f .05\n' % (x,y,z))
+                f.write('.sphere %.3f %.3f %.3f .05\n' % (x, y, z))
 
-# function to write the coordinates of a phantom (3D map) for tetrahedral symmetry in a text file
+# function to write the coordinates of a phantom (3D map) for tetrahedral
+# symmetry in a text file
+
+
 def generate_tetrahedral(mode, f, ):
-    centroid = [0.,0.,0.]
-    rmax = 1.;
+    centroid = [0., 0., 0.]
+    rmax = 1.
     _3f = [0., 0., 1.]
     _3fp = [0., 0.94281, - 0.33333]
     _3fpp = [0.81650, - 0.47140, - 0.33333]
@@ -189,7 +206,7 @@ def generate_tetrahedral(mode, f, ):
         else:
             f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
         if (x, y, z) != (0., 0., 0.):
-            vertices.append([x,y,z])
+            vertices.append([x, y, z])
     edges = []
     for i in range(len(vertices)):
         for j in range(len(vertices)):
@@ -202,14 +219,19 @@ def generate_tetrahedral(mode, f, ):
                     if edge not in edges:
                         edges.append(edge)
                         if mode == 'xmipp':
-                            f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (edge[0], edge[1], edge[2]))
+                            f.write("sph  + 1. %.3f %.3f %.3f .05\n" %
+                                    (edge[0], edge[1], edge[2]))
                         else:
-                            f.write('.sphere %.3f %.3f %.3f .05\n' % (edge[0], edge[1], edge[2]))
+                            f.write('.sphere %.3f %.3f %.3f .05\n' %
+                                    (edge[0], edge[1], edge[2]))
 
-# function to write the coordinates of a phantom (3D map) for octahedral symmetry in a text file
+# function to write the coordinates of a phantom (3D map) for octahedral
+# symmetry in a text file
+
+
 def generate_octahedral(mode, f, ):
-    centre = [0.,0.,0.]
-    rmax = 1.;
+    centre = [0., 0., 0.]
+    rmax = 1.
     _4f = [1., 0., 0.]
     _4fp = [0., 1., 0.]
     _4fpp = [0., 0., 1.]
@@ -227,7 +249,7 @@ def generate_octahedral(mode, f, ):
         else:
             f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
         if (x, y, z) != (0., 0., 0.):
-            vertices.append([x,y,z])
+            vertices.append([x, y, z])
     edges = []
     for i in range(len(vertices)):
         for j in range(len(vertices)):
@@ -237,28 +259,39 @@ def generate_octahedral(mode, f, ):
                 z = (0.5) * (vertices[i][2] + vertices[j][2])
                 edge = [x, y, z]
                 if (x, y, z) != (0., 0., 0.):
-                     if edge not in edges:
+                    if edge not in edges:
                         edges.append(edge)
                         if mode == 'xmipp':
-                            f.write("sph  + 1. %.3f %.3f %.3f .10\n" % (edge[0], edge[1], edge[2]))
+                            f.write("sph  + 1. %.3f %.3f %.3f .10\n" %
+                                    (edge[0], edge[1], edge[2]))
                         else:
-                            f.write('.sphere %.3f %.3f %.3f .10\n' % (edge[0], edge[1], edge[2]))
-    baricentres = [[(1./3.)*rmax, (1./3.)*rmax, (1./3.)*rmax], [(1./3.)*rmax, (1./3.)*rmax, (-1./3.)*rmax],
-                   [(1./3.)*rmax, (-1./3.)*rmax, (1./3.)*rmax], [(1./3.)*rmax, (-1./3.)*rmax, (-1./3.)*rmax],
-                   [(-1./3.)*rmax, (1./3.)*rmax, (1./3.)*rmax], [(-1./3.)*rmax, (1./3.)*rmax, (-1./3.)*rmax],
-                   [(-1./3.)*rmax, (-1./3.)*rmax, (1./3.)*rmax], [(-1./3.)*rmax, (-1./3.)*rmax, (-1./3.)*rmax]]
+                            f.write('.sphere %.3f %.3f %.3f .10\n' %
+                                    (edge[0], edge[1], edge[2]))
+    baricentres = [[(1./3.)*rmax, (1./3.)*rmax, (1./3.)*rmax],
+                   [(1./3.)*rmax, (1./3.)*rmax, (-1./3.)*rmax],
+                   [(1./3.)*rmax, (-1./3.)*rmax, (1./3.)*rmax],
+                   [(1./3.)*rmax, (-1./3.)*rmax, (-1./3.)*rmax],
+                   [(-1./3.)*rmax, (1./3.)*rmax, (1./3.)*rmax],
+                   [(-1./3.)*rmax, (1./3.)*rmax, (-1./3.)*rmax],
+                   [(-1./3.)*rmax, (-1./3.)*rmax, (1./3.)*rmax],
+                   [(-1./3.)*rmax, (-1./3.)*rmax, (-1./3.)*rmax]]
     for baricentre in baricentres:
         if mode == 'xmipp':
-            f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (baricentre[0], baricentre[1], baricentre[2]))
+            f.write("sph  + 1. %.3f %.3f %.3f .05\n" %
+                    (baricentre[0], baricentre[1], baricentre[2]))
         else:
-            f.write('.sphere %.3f %.3f %.3f .05\n' % (baricentre[0], baricentre[1], baricentre[2]))
+            f.write('.sphere %.3f %.3f %.3f .05\n' %
+                    (baricentre[0], baricentre[1], baricentre[2]))
 
-# general function to generate the coordinates files for phantoms (3D map) for every symmetry
-def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
+# general function to generate the coordinates files for phantoms (3D map)
+# for every symmetry
+
+
+def generate(sym='I2n5', mode='xmipp', suffix="_i2", offset=0.):
     offset = math.radians(offset)
     symPreffix = sym[:1]
-    symSuffix  = sym[1:]
-    if mode=='xmipp':
+    symSuffix = sym[1:]
+    if mode == 'xmipp':
         suffix += ".feat"
     else:
         suffix += ".bild"
@@ -266,8 +299,7 @@ def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
     (fd, filename) = mkstemp(suffix=suffix)
     f = os.fdopen(fd, "w")
 
-
-    if mode=='xmipp':
+    if mode == 'xmipp':
         f.write("""# Phantom description file, (generated with phantom help)
 # General Volume Parameters:
 #      Xdim      Ydim      Zdim   Background_Density Scale
@@ -278,7 +310,7 @@ def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
     else:
         f.write(""".scale 60
 .comment system of coordinates
-.color 1 0 0       
+.color 1 0 0
 .arrow 0 0 0 2 0 0 0.025
 .color 0 1 0
 .arrow 0 0 0 0 2 0 0.025
@@ -301,18 +333,20 @@ def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
     f.close()
     return filename
 
-# general class to test the extraction of the unit cell of cyclic, dihedral, tetrahedral,
-# octahedral, and isosahedral symmetries
+# general class to test the extraction of the unit cell of cyclic, dihedral,
+# tetrahedral, octahedral, and isosahedral symmetries
+
+
 class TestProtModelBuilding(BaseTest):
     @classmethod
     def setUpClass(cls):
         cls.mode = 'xmipp'
-        #Cyclic
-        cls.symOrder=8#phantom symmetry order for CN and similars
+        # Cyclic
+        cls.symOrder = 8  # phantom symmetry order for CN and similars
 
-        #general
+        # general
         cls.innerRadius = None
-        cls.outerRadius= None
+        cls.outerRadius = None
         setupTestProject(cls)
         cls.filename = {}
         cls.box = {}
@@ -322,29 +356,33 @@ class TestProtModelBuilding(BaseTest):
         self.innerRadius = 0.
         self.outerRadius = 40.
 
-        #C8
-        self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
-                                             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder))
+        # C8
+        self.filename[SYM_CYCLIC] = generate(
+            SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),
+            'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder))
         self.box[SYM_CYCLIC] = (60, 49, 81)
         self.extractunitCell(SYM_CYCLIC)
 
-        #C8 + offset
-        self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
-                                             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),OFFSET)
+        # C8 + offset
+        self.filename[SYM_CYCLIC] = generate(
+            SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),
+            'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder), OFFSET)
         self.box[SYM_CYCLIC] = (50, 52, 81)
         self.extractunitCell(SYM_CYCLIC, OFFSET)
 
-        #C1
-        self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
-                                             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
+        # C1
+        self.filename[SYM_CYCLIC] = generate(
+            SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
+            'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
         self.box[SYM_CYCLIC] = (81, 81, 81)
         self.symOrder = 1
         self.extractunitCell(SYM_CYCLIC)
 
-        #C2
+        # C2
         self.symOrder = 8  # set to 8 so a pretty 8 fold phantom is created
-        self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
-                                             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
+        self.filename[SYM_CYCLIC] = generate(
+            SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
+            'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
         self.box[SYM_CYCLIC] = (81, 45, 81)
         self.symOrder = 2
         self.extractunitCell(SYM_CYCLIC)
@@ -354,15 +392,17 @@ class TestProtModelBuilding(BaseTest):
         self.innerRadius = 0.
         self.outerRadius = 40.
 
-        #D8
-        self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
-                                                 'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder))
+        # D8
+        self.filename[SYM_DIHEDRAL] = generate(
+            SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
+            'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder))
         self.box[SYM_DIHEDRAL] = (60, 49, 81)
         self.extractunitCell(SYM_DIHEDRAL)
 
-        #D8 + offset
-        self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
-                                                 'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), OFFSET)
+        # D8 + offset
+        self.filename[SYM_DIHEDRAL] = generate(
+            SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), 'xmipp',
+            XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), OFFSET)
         self.box[SYM_DIHEDRAL] = (50, 52, 81)
         self.extractunitCell(SYM_DIHEDRAL, OFFSET)
 
@@ -370,8 +410,9 @@ class TestProtModelBuilding(BaseTest):
     def test_extractunitCelltetrahedral(self):
         self.innerRadius = 0.
         self.outerRadius = 90.
-        self.filename[SYM_TETRAHEDRAL] = generate(SCIPION_SYM_NAME[SYM_TETRAHEDRAL],
-                                               'xmipp', XMIPP_SYM_NAME[SYM_TETRAHEDRAL])
+        self.filename[SYM_TETRAHEDRAL] = generate(
+            SCIPION_SYM_NAME[SYM_TETRAHEDRAL],
+            'xmipp', XMIPP_SYM_NAME[SYM_TETRAHEDRAL])
         self.box[SYM_TETRAHEDRAL] = (80, 140, 181)
         self.extractunitCell(SYM_TETRAHEDRAL)
 
@@ -379,8 +420,9 @@ class TestProtModelBuilding(BaseTest):
     def test_extractunitCelloctahedral(self):
         self.innerRadius = 0.
         self.outerRadius = 90.
-        self.filename[SYM_OCTAHEDRAL] = generate(SCIPION_SYM_NAME[SYM_OCTAHEDRAL],
-                                               'xmipp', XMIPP_SYM_NAME[SYM_OCTAHEDRAL])
+        self.filename[SYM_OCTAHEDRAL] = generate(
+            SCIPION_SYM_NAME[SYM_OCTAHEDRAL],
+            'xmipp', XMIPP_SYM_NAME[SYM_OCTAHEDRAL])
         self.box[SYM_OCTAHEDRAL] = (110, 55, 181)
         self.extractunitCell(SYM_OCTAHEDRAL)
 
@@ -388,24 +430,29 @@ class TestProtModelBuilding(BaseTest):
     def test_extractunitCellIco(self):
         self.innerRadius = 37.
         self.outerRadius = 79.
-        self.filename[SYM_I222] = generate(SCIPION_SYM_NAME[SYM_I222] , 'xmipp', XMIPP_SYM_NAME[SYM_I222])
-        self.box[SYM_I222] = (94, 92 ,53)
-        self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r] , 'xmipp', XMIPP_SYM_NAME[SYM_I222r])
+        self.filename[SYM_I222] = generate(SCIPION_SYM_NAME[SYM_I222],
+                                           'xmipp', XMIPP_SYM_NAME[SYM_I222])
+        self.box[SYM_I222] = (94, 92, 53)
+        self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r],
+                                            'xmipp', XMIPP_SYM_NAME[SYM_I222r])
         self.box[SYM_I222r] = (92, 71, 53)
-        self.filename[SYM_In25] = generate(SCIPION_SYM_NAME[SYM_In25], 'xmipp', XMIPP_SYM_NAME[SYM_In25])
-        self.box[SYM_In25] = (70,94,115)
-        self.filename[SYM_In25r] = generate(SCIPION_SYM_NAME[SYM_In25r], 'xmipp', XMIPP_SYM_NAME[SYM_In25r])
-        self.box[SYM_In25r] = (70,71,55)
+        self.filename[SYM_In25] = generate(SCIPION_SYM_NAME[SYM_In25],
+                                           'xmipp', XMIPP_SYM_NAME[SYM_In25])
+        self.box[SYM_In25] = (70, 94, 115)
+        self.filename[SYM_In25r] = generate(SCIPION_SYM_NAME[SYM_In25r],
+                                            'xmipp', XMIPP_SYM_NAME[SYM_In25r])
+        self.box[SYM_In25r] = (70, 71, 55)
 
-        self.extractunitCell(SYM_I222)#no crowther 222
-        self.extractunitCell(SYM_I222r)#crowther 222
+        self.extractunitCell(SYM_I222)  # no crowther 222
+        self.extractunitCell(SYM_I222r)  # crowther 222
         self.extractunitCell(SYM_In25)
         self.extractunitCell(SYM_In25r)
 
     def test_extractunitCellHalfIco(self):
         self.innerRadius = 37.
         self.outerRadius = 79.
-        self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r] , 'xmipp', XMIPP_SYM_NAME[SYM_I222r])
+        self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r],
+                                            'xmipp', XMIPP_SYM_NAME[SYM_I222r])
         self.box[SYM_I222r] = (91, 70, 53)
 
         self.extractunitCell(SYM_I222r, cropZ=True)  # crowther 222
@@ -420,13 +467,12 @@ class TestProtModelBuilding(BaseTest):
         _samplingRate = 1.34
         _, outputFile1 = mkstemp(suffix=".mrc")
         command = "xmipp_phantom_create "
-        args    = " -i %s"% self.filename[sym]
-        args += " -o %s"%outputFile1
-        runJob(None, command, args,env=getEnviron())
-        ccp4header = Ccp4Header(outputFile1, readHeader= True)
-        x,y,z = ccp4header.getDims()
-        t=Transform()
-
+        args = " -i %s" % self.filename[sym]
+        args += " -o %s" % outputFile1
+        runJob(None, command, args, env=getEnviron())
+        ccp4header = Ccp4Header(outputFile1, readHeader=True)
+        x, y, z = ccp4header.getDims()
+        t = Transform()
 
         if cropZ:
             _, outputFile2 = mkstemp(suffix=".mrc")
@@ -439,7 +485,7 @@ class TestProtModelBuilding(BaseTest):
             args += " %d " % (+ y / 2)
             args += " %d " % (+ z / 2)
             runJob(None, "xmipp_transform_window", args, env=getEnviron())
-            t.setShifts(0,0,0)
+            t.setShifts(0, 0, 0)
             outputFile = outputFile2
             ccp4header = Ccp4Header(outputFile2, readHeader=True)
         else:
@@ -450,7 +496,7 @@ class TestProtModelBuilding(BaseTest):
         ccp4header.setOffset(t)
         ccp4header.writeHeader()
 
-        #import volume
+        # import volume
         if cropZ:
             args = {'filesPath': outputFile,
                     'filesPattern': '',
@@ -469,7 +515,7 @@ class TestProtModelBuilding(BaseTest):
                     'setDefaultOrigin': True,
                     }
         prot = self.newProtocol(ProtImportVolumes, **args)
-        prot.setObjLabel('import volume(%s)'% XMIPP_SYM_NAME[sym])
+        prot.setObjLabel('import volume(%s)' % XMIPP_SYM_NAME[sym])
         self.launchProtocol(prot)
         # execute protocol extract unitCell
         args = {'inputVolumes': prot.outputVolume,
@@ -484,28 +530,27 @@ class TestProtModelBuilding(BaseTest):
         prot.setObjLabel('extract unit cell')
         self.launchProtocol(prot)
 
-        #check results
+        # check results
         ih = ImageHandler()
-        xdim, ydim, zdim, ndim = ih.getDimensions(prot.outputVolume.getFileName())
-        self.assertEqual(xdim,self.box[sym][0])
-        self.assertEqual(ydim,self.box[sym][1])
-        self.assertEqual(zdim,self.box[sym][2])
+        xdim, ydim, zdim, ndim = \
+            ih.getDimensions(prot.outputVolume.getFileName())
+        self.assertEqual(xdim, self.box[sym][0])
+        self.assertEqual(ydim, self.box[sym][1])
+        self.assertEqual(zdim, self.box[sym][2])
 
-        #create pdb fileoot
-        args = {'inputStructure':prot.outputVolume,
-                'maskMode':NMA_MASK_THRE,
-                'maskThreshold':0.5,
-                'pseudoAtomRadius':1.5
+        # create pdb fileoot
+        args = {'inputStructure': prot.outputVolume,
+                'maskMode': NMA_MASK_THRE,
+                'maskThreshold': 0.5,
+                'pseudoAtomRadius': 1.5
                 }
         prot = self.newProtocol(XmippProtConvertToPseudoAtoms, **args)
         prot.setObjLabel('get pdb')
         self.launchProtocol(prot)
 
-        #check results
+        # check results
         filenamePdb = prot._getPath('pseudoatoms.pdb')
         self.assertTrue(os.path.isfile(filenamePdb))
-        #delete temporary files
+        # delete temporary files
         os.remove(self.filename[sym])
         os.remove(outputFile)
-
-

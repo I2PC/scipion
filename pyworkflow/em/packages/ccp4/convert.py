@@ -36,9 +36,8 @@ import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 import struct
 
-
 #
-cootPdbTemplateFileName="scipionOut%04d.pdb"
+cootPdbTemplateFileName = "scipionOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
 
 
@@ -51,23 +50,25 @@ def getEnviron(ccp4First=True):
             }, position=pos)
     return environ
 
+
 def runCCP4Program(program, args="", extraEnvDict=None):
     """ Internal shortcut function to launch a CCP4 program. """
-    env=getEnviron()
-    #env.update(_envDict)
+    env = getEnviron()
+    # env.update(_envDict)
     print "extraEnvDict", extraEnvDict
     if extraEnvDict is not None:
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
 
+
 def adaptBinFileToCCP4(inFileName, outFileName, scipionOrigin):
     """ Check input file format.
         if mrc, check if header and scipion database agree (regarding origin)
-        if header and scipion object have the same origin creates a link to 
+        if header and scipion object have the same origin creates a link to
         original file. Otherwise copy the file and fix the origin
     """
     if inFileName.endswith('.mrc') or inFileName.endswith('.map'):
-        ccp4header = Ccp4Header(inFileName, readHeader= True)
+        ccp4header = Ccp4Header(inFileName, readHeader=True)
         ccp4Origin = ccp4header.getOffset()
         if ccp4Origin == scipionOrigin:
             pwutils.createLink(inFileName, outFileName)
@@ -80,10 +81,11 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOrigin):
 
 def getProgram(progName):
     """ Return the program binary that will be used. """
-    if (not 'CCP4_HOME' in os.environ):
+    if 'CCP4_HOME' not in os.environ:
         return None
     return os.path.join(os.environ['CCP4_HOME'], 'bin',
-                           os.path.basename(progName))
+                        os.path.basename(progName))
+
 
 class Ccp4Header():
     """
@@ -106,8 +108,8 @@ class Ccp4Header():
                                 4 = Transform stored as Complex Reals
                                 5 == 0
                                 Note: Mode 2 is the normal mode used in
-                                      the CCP4 programs. Other modes than 2 and 0
-                                      may NOT WORK
+                                      the CCP4 programs. Other modes than 2
+                                      and 0 may NOT WORK
        5      NCSTART         Number of first COLUMN  in map
        6      NRSTART         Number of first ROW     in map
        7      NSSTART         Number of first SECTION in map
@@ -120,25 +122,26 @@ class Ccp4Header():
       14      Alpha           Cell Angles     (Degrees)
       15      Beta                         "
       16      Gamma                        "
-      17      MAPC            Which axis corresponds to Cols.  (1,2,3 for X,Y,Z)
-      18      MAPR            Which axis corresponds to Rows   (1,2,3 for X,Y,Z)
+      17      MAPC            Which axis corresponds to Cols. (1,2,3 for X,Y,Z)
+      18      MAPR            Which axis corresponds to Rows. (1,2,3 for X,Y,Z)
       19      MAPS            Which axis corresponds to Sects. (1,2,3 for X,Y,Z)
       20      AMIN            Minimum density value
       21      AMAX            Maximum density value
       22      AMEAN           Mean    density value    (Average)
       23      ISPG            Space group number
-      24      NSYMBT          Number of bytes used for storing symmetry operators
+      24      NSYMBT          Number of bytes used for storing symmetry
+                              operators
       25      LSKFLG          Flag for skew transformation, =0 none, =1 if foll
-      26-34   SKWMAT          Skew matrix S (in order S11, S12, S13, S21 etc) if
-                              LSKFLG .ne. 0.
+      26-34   SKWMAT          Skew matrix S (in order S11, S12, S13, S21 etc)
+                              if LSKFLG .ne. 0.
       35-37   SKWTRN          Skew translation t if LSKFLG .ne. 0.
                               Skew transformation is from standard orthogonal
-                              coordinate frame (as used for atoms) to orthogonal
-                              map frame, as
-                                      Xo(map) = S * (Xo(atoms) - t)
-      38      future use       (some of these are used by the MSUBSX routines
+                              coordinate frame (as used for atoms)
+                              to orthogonal map frame, as
+                              Xo(map) = S * (Xo(atoms) - t)
+      38      future use      (some of these are used by the MSUBSX routines
        .          "              in MAPBRICK, MAPCONT and FRODO)
-       .          "   (all set to zero by default)
+       .          "           (all set to zero by default)
        .          "
       52          "
       53    MAP             Character string 'MAP ' to identify file type
@@ -153,8 +156,8 @@ class Ccp4Header():
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
 
-    def __init__(self, fileName, readHeader= False):
-        self._name   = fileName.replace(':mrc', '')# remove mrc ending
+    def __init__(self, fileName, readHeader=False):
+        self._name = fileName.replace(':mrc', '')  # remove mrc ending
         self._header = collections.OrderedDict()
         self.chain = "< 3i i 3i 3i 3f 144s 3f"
 
@@ -168,7 +171,7 @@ class Ccp4Header():
 
     def setOffset(self,  originTransform):
         originMatrix = originTransform.getMatrix()
-        #TODO: check matrix
+        # TODO: check matrix
         self._header['NCSTART'] = originMatrix[3][0]
         self._header['NRSTART'] = originMatrix[3][1]
         self._header['NSSTART'] = originMatrix[3][2]
@@ -184,16 +187,16 @@ class Ccp4Header():
                self._header['NS']
 
     def readHeader(self):
-        #check file exists
+        # check file exists
 
-        #read header
-        f = open(self._name,'rb')
-        s = f.read(52*4)#read header from word 0 to 51
+        # read header
+        f = open(self._name, 'rb')
+        s = f.read(52*4)  # read header from word 0 to 51
         f.close()
         a = struct.unpack(self.chain, s)
 
-        #fill dicionary
-        #self._header['empty']=""
+        # fill dicionary
+        # self._header['empty']=""
         self._header['NC'] = a[0]
         self._header['NR'] = a[1]
         self._header['NS'] = a[2]
@@ -207,7 +210,7 @@ class Ccp4Header():
         self._header['Xlength'] = a[10]
         self._header['Ylength'] = a[11]
         self._header['Zlength'] = a[12]
-        self._header['dummy1'] = a[13] # "< 3i i 3i 3i 3f 36s 3f"
+        self._header['dummy1'] = a[13]  # "< 3i i 3i 3i 3f 36s 3f"
         self._header['originX'] = a[14]
         self._header['originY'] = a[15]
         self._header['originZ'] = a[16]
@@ -219,8 +222,8 @@ class Ccp4Header():
         self._header = newHeader
 
     def writeHeader(self):
-        ss=struct.Struct(self.chain)
-        t=tuple(self._header.values())
+        ss = struct.Struct(self.chain)
+        t = tuple(self._header.values())
         packed_data = ss.pack(*t)
         f = open(self._name, 'r+')
         f.write(packed_data)
