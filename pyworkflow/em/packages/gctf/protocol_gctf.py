@@ -353,6 +353,9 @@ class ProtGctf(em.ProtCTFMicrographs):
                           "~/.config/scipion/scipion.conf\n"
                           "and set GCTF variables properly."
                           % self._getProgram())
+        if self.doPhShEst and getVersion() == '0.50':
+            errors.append('This version of Gctf (0.50) does not support phase shift estimation!'
+                          ' Please update to a newer version.')
         return errors
 
     def _citations(self):

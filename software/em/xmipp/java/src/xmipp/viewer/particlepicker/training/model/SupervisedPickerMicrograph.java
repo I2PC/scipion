@@ -173,7 +173,7 @@ public class SupervisedPickerMicrograph extends Micrograph
 		return autoparticles.size() - getAutomaticParticlesDeleted(threshold);
 	}
         
-        public int getAutomaticParticlesNumber()
+    public int getAutomaticParticlesNumber()
 	{
 		if (autoparticles.isEmpty())
 			return 0;
