@@ -113,8 +113,9 @@ class TestCtfStreaming(BaseTest):
         self.proj.launchProtocol(protCTF, wait=True)
         checkOutputs(protCTF)
 
-        kwargs = {
-            'numberOfThreads': 3}
+        kwargs = {'ctfDownFactor': 2,
+                  'numberOfThreads': 3
+                  }
         protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
         protCTF2.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF2)
