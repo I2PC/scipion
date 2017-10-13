@@ -202,10 +202,8 @@ bool MetaData::setValueCol(const MDObject &mdValueIn)
 
 bool MetaData::getValue(MDObject &mdValueOut, size_t id) const
 {
-    if (!containsLabel(mdValueOut.label)) {
-    	std::cout << this->eFilename << " does not contain label " << mdValueOut.label << std::endl;
+    if (!containsLabel(mdValueOut.label))
         return false;
-    }
 
     if (id == BAD_OBJID)
         REPORT_ERROR(ERR_MD_NOACTIVE, "getValue: please provide objId other than -1");
@@ -312,10 +310,8 @@ bool MetaData::getRow(MDRow &row, size_t id) const
     for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
     {
         MDObject obj(*it);
-        if (!getValue(obj, id)) {
-        	std::cout << "metadata::getRow getValue " << obj.label << " id "<< id << " failed" << std::endl;
+        if (!getValue(obj, id))
             return false;
-        }
         row.setValue(obj);
     }
     return true;

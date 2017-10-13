@@ -137,11 +137,14 @@ void ProgRecFourierGPU::run()
 void ProgRecFourierGPU::createThread(int gpuStream, int startIndex, int endIndex, LoadThreadParams& thread) {
 //	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
 	thread.parent = this;
-	thread.selFile = &SF;
+	// HACK threads cannot share the same object, as it would lead to race conditioning
+	// during data load (as SQLITE seems to be non-thread-safe)
+	thread.selFile = new MetaData(SF);
 	pthread_create( &thread.id , NULL, loadImageThread, (void *)(&thread) );
 //	thread->threadOpCode = PRELOAD_IMAGE;
 	thread.startImageIndex = startIndex;
 	thread.endImageIndex = endIndex;
+	thread.gpuStream = gpuStream;
 }
 
 void ProgRecFourierGPU::cleanThread(LoadThreadParams* thread) {
@@ -236,7 +239,7 @@ void ProgRecFourierGPU::produceSideinfo()
         }
     }
     // query the system on the number of cores
-	noOfCores = 2;//std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
+	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
 inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v) {
@@ -393,7 +396,6 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		if (imgIndex >= threadParams->endImageIndex) {
 			continue;
 		}
-		printf("thread %d loading img %d ", threadParams->id, imgIndex);
 		//Read projection from selfile, read also angles and shifts if present
 		//but only apply shifts (set above)
 		// FIXME following line is a current bottleneck, as it calls BSpline interpolation
@@ -402,7 +404,6 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 			continue;
 		}
 
-		printf("load done ");
 		// Compute the coordinate axes associated to this projection
 		rot = proj.rot();
 		tilt = proj.tilt();
@@ -429,7 +430,6 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 			lData->noOfSpaces++;
 			UUID++;
 		}
-		printf("spaces done ");
 		// each image has N symmetries (at least identity)
 		lData->noOfImages = lData->noOfSpaces / parent->R_repository.size();
 
@@ -462,7 +462,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 					localPaddedImgFloat.data,
 					lData->getPaddedImgByteSize());
 		}
-		printf("completed\n");
+
 
 //		data->imgIndex = imgIndex;
 //		if (hasCTF) { // FIXME reimplement, can be part of the image
@@ -528,7 +528,7 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
     int firstImageIndex = threadParams->startImageIndex;
     int lastImageIndex = threadParams->endImageIndex;
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)parent->bufferSize);
-    printf("thread %d should load img %d-%d\n", threadParams->id, firstImageIndex, lastImageIndex);
+    printf("thread %d should load img %d-%d\n", threadParams->gpuStream, firstImageIndex, lastImageIndex);
     std::cout << std::endl;
 
     int startLoadIndex = firstImageIndex;
@@ -536,25 +536,27 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 
     	threadParams->startImageIndex = startLoadIndex;
     	threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
-    	printf("thread %d will now load img %d-%d\n", threadParams->id, threadParams->startImageIndex, threadParams->endImageIndex);
+    	printf("thread %d will now load img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
     	preloadBuffer(threadParams, parent, hasCTF, objId);
 
 		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
-			printf("thread %d will proces img %d-%d\n", threadParams->id, threadParams->startImageIndex, threadParams->endImageIndex);
+			printf("thread %d will proces img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
 			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
 				threadParams->buffer,
 				parent->maxVolumeIndexX, parent->maxVolumeIndexYZ,
 				parent->useFast, parent->blob.radius,
 				parent->iDeltaSqrt,
 				parent->blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
-				parent->maxResolutionSqr);
+				parent->maxResolutionSqr,
+				threadParams->gpuStream);
 		}
-		printf("thread %d processing done\n", threadParams->id);
+		printf("thread %d processing done\n", threadParams->gpuStream);
 		// update next iteration;
 		startLoadIndex += parent->bufferSize;
 	}
-    printf("thread %d done\n", threadParams->id);
+    printf("thread %d done\n", threadParams->gpuStream);
     delete threadParams->buffer;
+    delete threadParams->selFile;
     threadParams->buffer = NULL;
     barrier_wait( barrier );// notify that thread finished
 }
@@ -1322,9 +1324,7 @@ void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
 }
 
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
-
 {
-	printf("zpracuj %d - %d\n", firstImageIndex, lastImageIndex);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
     if (NULL == tempVolumeGPU) {
@@ -1334,7 +1334,8 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
 
-//    if (NULL == workThreads) {
+    createStreams(noOfCores);
+
 	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
 	workThreads = new LoadThreadParams[noOfCores];
 	barrier_init( &barrier, noOfCores + 1 );
@@ -1346,24 +1347,14 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 			std::cout << "PRUSER, vlakno " << i << std::endl;
 		}
 	}
-	std::cout << "vlakna bezi" << std::endl;
-//    }
-
-//	barrier_wait( &barrier ); // all threads finished calculation
-//	for (int i = 0; i < noOfCores; i++) {
-//		cleanThread(&workThreads[i]);
-//	}
 	// Waiting for threads to finish
 	barrier_wait( &barrier );
-	std::cout << "vlakna skoncila" << std::endl;
 	for (int i = 0; i < noOfCores; i++) {
 		pthread_join(workThreads[i].id, NULL);
 	}
 	delete[] workThreads;
+	deleteStreams(noOfCores);
 	barrier_destroy( &barrier );
-
-	std::cout << "DONE" << std::endl;
-
 
 //    fftOnGPU = t; // FIXME implement some profiler that will decide if it's worth to use GPU for data loading
 

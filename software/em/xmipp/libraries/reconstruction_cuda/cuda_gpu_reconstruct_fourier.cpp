@@ -21,7 +21,7 @@ extern __shared__ float2 IMG[];
 #endif
 
 
-
+cudaStream_t* streams; // fixme move elsewhere (but it cannot be in header :( )
 
 ////void copyProjectionData(ProjectionData* data);
 ////static ProjectionDataGPU* copyProjectionData(ProjectionData& data);
@@ -47,7 +47,7 @@ float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
 	return NULL; // undefined
 }
 
-FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
+FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig, int stream) {
 
 	printf("FRecBufferDataGPU orig: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
 			orig, orig->FFTs,orig->CTFs, orig->paddedImages, orig->modulators, orig->spaces);
@@ -65,11 +65,11 @@ FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
 	FFTs = CTFs = paddedImages = modulators = NULL;
 
 	// allocate space at GPU and copy
-	allocAndCopy(orig->FFTs, FFTs, orig);
-	allocAndCopy(orig->CTFs, CTFs, orig);
-	allocAndCopy(orig->paddedImages, paddedImages, orig);
-	allocAndCopy(orig->modulators, modulators, orig);
-	allocAndCopy(orig->spaces, spaces, orig);
+	allocAndCopy(orig->FFTs, FFTs, orig, stream);
+	allocAndCopy(orig->CTFs, CTFs, orig, stream);
+	allocAndCopy(orig->paddedImages, paddedImages, orig, stream);
+	allocAndCopy(orig->modulators, modulators, orig, stream);
+	allocAndCopy(orig->spaces, spaces, orig, stream);
 	printf("FRecBufferDataGPU this: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
 			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
 }
@@ -87,17 +87,19 @@ FRecBufferDataGPU::~FRecBufferDataGPU() {
 }
 
 template<typename T>
-void FRecBufferDataGPU::allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* orig) {
+void FRecBufferDataGPU::allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* orig, int stream) {
 	if (NULL != srcArray) {
 		size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
 		cudaMalloc((void **) &dstArray, bytes);
-		cudaMemcpy(dstArray, srcArray, bytes, cudaMemcpyHostToDevice);
+		cudaHostRegister(srcArray, bytes, 0);
+		cudaMemcpyAsync(dstArray, srcArray, bytes, cudaMemcpyHostToDevice, streams[stream]);
+		cudaHostUnregister(srcArray);
 		gpuErrchk( cudaPeekAtLastError() );
 	}
 }
 
-FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(FRecBufferData* orig) {
-	cpuCopy = new FRecBufferDataGPU(orig);
+FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(FRecBufferData* orig, int stream) {
+	cpuCopy = new FRecBufferDataGPU(orig, stream);
 	gpuCopy = NULL;
 }
 
@@ -107,12 +109,12 @@ FRecBufferDataGPUWrapper::~FRecBufferDataGPUWrapper() {
 	delete cpuCopy;
 }
 
-void FRecBufferDataGPUWrapper::copyToDevice() {
+void FRecBufferDataGPUWrapper::copyToDevice(int stream) {
 	if (NULL == gpuCopy) {
 		cudaMalloc((void **) &gpuCopy, sizeof(FRecBufferDataGPU));
 		gpuErrchk( cudaPeekAtLastError() );
 	}
-	cudaMemcpy(gpuCopy, cpuCopy, sizeof(FRecBufferDataGPU), cudaMemcpyHostToDevice);
+	cudaMemcpyAsync(gpuCopy, cpuCopy, sizeof(FRecBufferDataGPU), cudaMemcpyHostToDevice, streams[stream]);
 	gpuErrchk( cudaPeekAtLastError() );
 }
 
@@ -1066,7 +1068,8 @@ void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY,
 
 void convertImages(
 		FRecBufferDataGPUWrapper& wrapper,
-		float maxResolutionSqr) {
+		float maxResolutionSqr,
+		int stream) {
 	FRecBufferDataGPU* hostBuffer = wrapper.cpuCopy;
 	// store to proper structure
 	GpuMultidimArrayAtGpu<float> imagesGPU(
@@ -1078,11 +1081,16 @@ void convertImages(
 	myhandle.clear(); // release unnecessary memory
 	imagesGPU.d_data = NULL; // unbind the data
 
+	// now we have performed FFTs of the input images, which are not necessary anymore
+	// buffers have to be updated accordingly
 	// allocate memory for final FFTs and update device copy
+	hostBuffer->hasFFTs = true;
+	cudaFree(hostBuffer->paddedImages);
+	hostBuffer->paddedImages = NULL;
 	cudaMalloc((void **) &hostBuffer->FFTs, hostBuffer->getFFTsByteSize());
 	cudaMemset(hostBuffer->FFTs, 0.f, hostBuffer->getFFTsByteSize()); // clear it, as kernel writes only to some parts
+	wrapper.copyToDevice(stream);
 	gpuErrchk( cudaPeekAtLastError() );
-	wrapper.copyToDevice();
 
 
 	// run kernel, one thread for each pixel of input FFT
@@ -1093,12 +1101,6 @@ void convertImages(
 			wrapper.gpuCopy, maxResolutionSqr);
 
 	// now we have converted input images to FFTs in the required format
-	// buffers have to be updated accordingly
-	hostBuffer->hasFFTs = true;
-	cudaFree(hostBuffer->paddedImages);
-	gpuErrchk( cudaPeekAtLastError() );
-	hostBuffer->paddedImages = NULL;
-	wrapper.copyToDevice();
 }
 
 FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
@@ -1133,43 +1135,64 @@ void waitForGPU() {
 	gpuErrchk( cudaDeviceSynchronize() );
 }
 
+void createStreams(int count) {
+	streams = new cudaStream_t[count];
+	for (int i = 0; i < count; i++) {
+		cudaStreamCreate(&streams[i]);
+	}
+}
+
+void deleteStreams(int count) {
+	for (int i = 0; i < count; i++) {
+		cudaStreamDestroy(streams[i]);
+	}
+	delete[] streams;
+}
+
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		FRecBufferData* rBuffer, // FIXME rename
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt,
 		float* blobTableSqrt, int blobTableSize,
-		float maxResolutionSqr) {
+		float maxResolutionSqr, int streamIndex) {
 
-	// copy constants
-	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
-	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
-	cudaMemcpyToSymbol(cUseFast, &useFast,sizeof(useFast));
-	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
-	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
+	cudaStream_t stream = streams[streamIndex];
+	// enqueue copy constants
+	cudaMemcpyToSymbolAsync(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX), 0, cudaMemcpyHostToDevice, stream);
+	cudaMemcpyToSymbolAsync(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ), 0, cudaMemcpyHostToDevice, stream);
+	cudaMemcpyToSymbolAsync(cUseFast, &useFast,sizeof(useFast), 0, cudaMemcpyHostToDevice, stream);
+	cudaMemcpyToSymbolAsync(cBlobRadius, &blobRadius,sizeof(blobRadius), 0, cudaMemcpyHostToDevice, stream);
+	cudaMemcpyToSymbolAsync(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt), 0, cudaMemcpyHostToDevice, stream);
 	gpuErrchk( cudaPeekAtLastError() );
 
 	// copy all data to gpu
-	FRecBufferDataGPUWrapper bufferWrapper(rBuffer);
-	bufferWrapper.copyToDevice();
+	FRecBufferDataGPUWrapper bufferWrapper(rBuffer, streamIndex);
+	bufferWrapper.copyToDevice(streamIndex);
 
 	// process input data if necessary
 	if ( ! bufferWrapper.cpuCopy->hasFFTs) {
-		convertImages(bufferWrapper, maxResolutionSqr);
+		convertImages(bufferWrapper, maxResolutionSqr, streamIndex);
 	}
+	// now wait till all necessary data are loaded to GPU (so that host can continue in work)
+	cudaStreamSynchronize(stream);
+
 
 	// copy blob data
 	float* devBlobTableSqrt; // FIXME since these data do not change, consider storing them just once
-	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
-	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
+//	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
+//	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
+//	gpuErrchk( cudaPeekAtLastError() );
 
-	// run kernel
+	printf("about to call kernel from thread %d\n", stream);
+	fflush(stdout);
+
+	// enqueue kernel and return control
 	int size2D = maxVolIndexYZ + 1;
 	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
-	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
+	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			bufferWrapper.gpuCopy,
 			devBlobTableSqrt,
@@ -1178,6 +1201,8 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// delete blob data
 	// data in both buffers is cleaned by destructor
-	cudaFree(devBlobTableSqrt);
-	gpuErrchk( cudaPeekAtLastError() );
+//	cudaFree(devBlobTableSqrt);
+//	gpuErrchk( cudaPeekAtLastError() );
+	printf("leaving processBufferGPU thread %d\n", stream);
+	fflush(stdout);
 }

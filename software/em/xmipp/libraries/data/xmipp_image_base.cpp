@@ -155,7 +155,7 @@ void ImageBase::mapFile2Write(size_t Xdim, size_t Ydim, size_t Zdim, const FileN
 /** General read function
  */
 /** Macros for don't type */
-#define GET_ROW()               MDRow row; if (! md.getRow(row, objId)) std::cout <<"md.getRow returned false" <<std::endl;
+#define GET_ROW()               MDRow row; md.getRow(row, objId)
 
 #define READ_AND_RETURN()        ImageFHandler* hFile = openFile(name);\
                                   int err = _read(name, hFile, params.datamode, params.select_img); \
@@ -202,12 +202,7 @@ int ImageBase::readApplyGeo(const MetaData &md, size_t objId,
 {
     GET_ROW();
     FileName name;
-    if ( ! row.getValue(MDL_IMAGE, name)) {
-    	std::cout << "getValue returned NULL" << std::endl;
-    }
-    if (name.isEmpty()) {
-    	std::cout << "name is empty in readApplyGeo" << std::endl;
-    }
+    row.getValue(MDL_IMAGE, name);
     READ_AND_RETURN();
 }
 
@@ -494,10 +489,8 @@ void ImageBase::getInfo(const FileName &name, ImageInfo &imgInfo)
   */
 ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
 {
-    if (name.empty()) {
-    	std::cout << "ERROR openFile cannot open empty filename" << name.c_str() << std::endl;
+    if (name.empty())
         REPORT_ERROR(ERR_PARAM_INCORRECT, "ImageBase::openFile Cannot open an empty Filename.");
-    }
 
     ImageFHandler* hFile = new ImageFHandler;
     FileName fileName, headName = "";

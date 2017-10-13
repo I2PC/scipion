@@ -21,21 +21,21 @@
 
 struct FRecBufferDataGPU : public FRecBufferData {
 
-	FRecBufferDataGPU(FRecBufferData* orig);
+	FRecBufferDataGPU(FRecBufferData* orig, int stream);
 	~FRecBufferDataGPU();
 
 	float* getNthItem(float* array, int itemIndex);
 
 private:
 	template<typename T>
-	void allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* orig);
+	void allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* orig, int stream);
 };
 
 struct FRecBufferDataGPUWrapper {
 
-	FRecBufferDataGPUWrapper(FRecBufferData* orig);
+	FRecBufferDataGPUWrapper(FRecBufferData* orig, int stream);
 	~FRecBufferDataGPUWrapper();
-	void copyToDevice();
+	void copyToDevice(int stream);
 
 	FRecBufferDataGPU* cpuCopy;
 	FRecBufferDataGPU* gpuCopy;
@@ -130,6 +130,10 @@ private:
 };
 
 
+void createStreams(int count);
+
+void deleteStreams(int count);
+
 /** Method to allocate 3D array (continuous) of given size^3 */
 float* allocateGPU(float*& where, int size, int typeSize);
 void releaseGPU(float*& where);
@@ -150,7 +154,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt,
 		float* blobTableSqrt, int blobTableSize,
-		float maxResolutionSqr);
+		float maxResolutionSqr, int stream);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
 void copyBuffer(ProjectionData* data, int size);
 void allocateTempSpaces(int size);
