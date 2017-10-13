@@ -34,8 +34,8 @@ class TestImportBase(BaseTest):
         cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         cls.dsEmx = DataSet.getDataSet('emx')
         cls.dsMda = DataSet.getDataSet('mda')
-        
-    
+
+
 class TestImportVolumes(TestImportBase):
 
     def test_default_origin(self):
@@ -125,22 +125,21 @@ class TestImportVolumes(TestImportBase):
                 'samplingRate': 2.1,
                 'setDefaultOrigin': True,
                 }
-        
-        
-        # Id's should be set increasing from 1 if ### is not in the 
-        # pattern
+
+        # Id's should be set increasing from 1 if ### is not in the pattern
         prot1 = self.newProtocol(ProtImportVolumes, **args)
         prot1.setObjLabel('import mrc')
         self.launchProtocol(prot1)
-        for volume in  prot1.outputVolumes:
+        for volume in prot1.outputVolumes:
             t = volume.getOrigin()
             x, y, z = t.getShifts()
             self.assertEqual(32, x)
             self.assertEqual(32, y)
             self.assertEqual(32, z)
 
-        # Id's should be taken from filename   
-        args['filesPath'] = self.dsRelion.getFile('import/case2/relion_volumes.mrc') 
+        # Id's should be taken from filename
+        args['filesPath'] = self.dsRelion.getFile('import/case2/'
+                                                  'relion_volumes.mrc')
         args['filesPattern'] = ''
         prot2 = self.newProtocol(ProtImportVolumes, **args)
         prot2.setObjLabel('from mrc stack')
@@ -149,8 +148,9 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(3, prot2.outputVolumes.getSize())
         self.assertEqual(60, prot2.outputVolumes.getDim()[0])
 
-        # Id's should be taken from filename   
-        args['filesPath'] = self.dsRelion.getFile('import/case2/relion_volumes.stk') 
+        # Id's should be taken from filename
+        args['filesPath'] = self.dsRelion.getFile('import/case2/'
+                                                  'relion_volumes.stk')
         args['filesPattern'] = ''
         prot3 = self.newProtocol(ProtImportVolumes, **args)
         prot3.setObjLabel('from spider stack')
