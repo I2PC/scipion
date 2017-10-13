@@ -406,7 +406,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        boxSize=750,
                                        downsampleType=OTHER,
                                        doInvert=False,
-                                       doFlip=False)
+                                       doFlip=False,
+                                       doBorders=False)
         protExtract.setObjLabel("extract-avoid borders")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
