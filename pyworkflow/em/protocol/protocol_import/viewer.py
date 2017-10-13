@@ -37,6 +37,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from distutils.spawn import find_executable
 from os.path import exists
+from tkMessageBox import showerror
 
 
 VOLUME_SLICES = 1
@@ -84,10 +85,10 @@ class viewerProtImportVolumes(ProtocolViewer):
             return self._showVolumesChimera()
 
         elif self.displayVol == VOLUME_SLICES:
-            return self._showVolumesXmipp()
+            return self._showVolumesSlices()
 
     def _getVolumeName(self, vol):
-        volName = vol.getFileName().replace(':mrc', '')
+        volName = vol.getFileName().split(":")[0]
         if not exists(volName):
             print "Volume %s does not exist" % volName
         else:
@@ -148,6 +149,8 @@ class viewerProtImportVolumes(ProtocolViewer):
 
         for vol in _setOfVolumes:
             localVol = os.path.abspath(self._getVolumeName(vol))
+            if localVol.endswith("stk"):
+                errorWindow(None, "Extension .stk is not supported")
             x, y, z = self._getVolOrigin(vol)
             f.write("open %s\n" % localVol)
             f.write("volume#%d style surface voxelSize %f\n" %
@@ -161,7 +164,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         import pyworkflow.em as em
         return [em.ChimeraView(tmpFileNameCMD)]
 
-    def _showVolumesXmipp(self):
+    def _showVolumesSlices(self):
         # Write an sqlite with all volumes selected for visualization.
 
         sampling, setOfVolumes = self._createSetOfVolumes()
@@ -170,3 +173,13 @@ class viewerProtImportVolumes(ProtocolViewer):
             return [self.objectView(self.protocol.outputVolume)]
 
         return [self.objectView(setOfVolumes)]
+
+
+def errorWindow(tkParent, msg):
+    try:
+        showerror("Error",  # bar title
+                  msg,  # message
+                  parent=tkParent)
+    except:
+        print("Error:", msg)
+

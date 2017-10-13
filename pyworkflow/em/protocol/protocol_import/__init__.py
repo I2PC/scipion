@@ -37,4 +37,4 @@ from masks import ProtImportMask
 from micrographs import ProtImportMicrographs, ProtImportMovies
 from particles import ProtImportParticles, ProtImportAverages
 from volumes import ProtImportVolumes, ProtImportPdb
-from viewer_import_volume import viewerProtImportVolumes
+from viewer import viewerProtImportVolumes
