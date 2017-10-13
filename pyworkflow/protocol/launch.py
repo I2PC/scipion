@@ -49,7 +49,6 @@ from pyworkflow.utils import redStr, greenStr, makeFilePath, join
 from pyworkflow.utils import process
 from time import sleep
 from multiprocessing.pool import ThreadPool, TimeoutError
-import signal
 
 UNKNOWN_JOBID = -1
 LOCALHOST = 'localhost'
@@ -205,7 +204,7 @@ def _copyFiles(protocol, rpath):
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict, cwd=None, pool=None):
+def _submit(hostConfig, submitDict, cwd=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
     # Create forst the submission script to be launched
@@ -226,19 +225,8 @@ def _submit(hostConfig, submitDict, cwd=None, pool=None):
     gcmd = greenStr(command)
     print("** Submiting to queue: '%s'" % gcmd)
 
-    p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
-    def communicate():
-        return p.communicate()[0]
-
-    if pool:
-        try:
-            out = pool.apply_async(communicate).get(30)
-        except TimeoutError:
-            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-            return None
-    else:
-        out = communicate()
-
+    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
+    out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
     s = re.search('(\d+)', out)
     if s:
