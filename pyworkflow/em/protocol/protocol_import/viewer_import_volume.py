@@ -42,6 +42,7 @@ from os.path import exists
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
+
 class viewerProtImportVolumes(ProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
@@ -53,14 +54,15 @@ class viewerProtImportVolumes(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization of input volumes')
         form.addParam('displayVol', params.EnumParam,
-                       choices=['chimera', 'slices'],
-                       default=VOLUME_CHIMERA, display=params.EnumParam.DISPLAY_HLIST,
-                       label='Display volume with',
-                       help='*chimera*: display volumes as surface with Chimera.\n '
-                            '*slices*: display volumes as 2D slices along z axis.\n'
-                            'If number of volumes == 1, a system of coordinates is shown'
+                      choices=['chimera', 'slices'],
+                      default=VOLUME_CHIMERA,
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      label='Display volume with',
+                      help='*chimera*: display volumes as surface with '
+                           'Chimera.\n *slices*: display volumes as 2D slices '
+                           'along z axis.\n If number of volumes == 1, '
+                           'a system of coordinates is shown'
                       )
-
 
     def _getVisualizeDict(self):
         return {
@@ -69,12 +71,13 @@ class viewerProtImportVolumes(ProtocolViewer):
 
     def _validate(self):
         if find_executable("chimera") is None:
-            return ["chimera is not available. Either install it or choose option 'slices'. "]
+            return ["chimera is not available. "
+                    "Either install it or choose option 'slices'. "]
         return []
 
-    # ===============================================================================
+    # =========================================================================
     # ShowVolumes
-    # ===============================================================================
+    # =========================================================================
 
     def _showVolumes(self, paramName=None):
         if self.displayVol == VOLUME_CHIMERA:
@@ -116,8 +119,8 @@ class viewerProtImportVolumes(ProtocolViewer):
         sampling, _setOfVolumes = self._createSetOfVolumes()
         count = 0  # first model in chimera is a volume
 
-        if len(_setOfVolumes) ==1:
-            count = 1 # first model in chimera is the bild file
+        if len(_setOfVolumes) == 1:
+            count = 1  # first model in chimera is the bild file
             dim = self.protocol.outputVolume.getDim()[0]
             # if we have a single volume then create axis
             # as bild file. Chimera must read the bild file first
@@ -130,15 +133,15 @@ class viewerProtImportVolumes(ProtocolViewer):
             arrowDict = {}
             arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
                 sampling * dim * 3. / 4.
-            arrowDict["r1"] = 0.1 #sampling * dim / 600.
+            arrowDict["r1"] = 0.1
             arrowDict["r2"] = 4 * arrowDict["r1"]
-            arrowDict["rho"] = 0.75 #sampling * dim / 150.
+            arrowDict["rho"] = 0.75
             ff.write(".color 1 0 0\n"
-                    ".arrow 0 0 0 %(x)d 0 0 %(r1)f %(r2)f %(rho)f\n"
-                    ".color 1 1 0\n"
-                    ".arrow 0 0 0 0 %(y)d 0 %(r1)f %(r2)f %(rho)f\n"
-                    ".color 0 0 1\n"
-                    ".arrow 0 0 0 0 0 %(z)d %(r1)f %(r2)f %(rho)f\n" %
+                     ".arrow 0 0 0 %(x)d 0 0 %(r1)f %(r2)f %(rho)f\n"
+                     ".color 1 1 0\n"
+                     ".arrow 0 0 0 0 %(y)d 0 %(r1)f %(r2)f %(rho)f\n"
+                     ".color 0 0 1\n"
+                     ".arrow 0 0 0 0 0 %(z)d %(r1)f %(r2)f %(rho)f\n" %
                      arrowDict)
             ff.close()
             count = 1  # skip first model because is not a 3D map
@@ -148,7 +151,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             x, y, z = self._getVolOrigin(vol)
             f.write("open %s\n" % localVol)
             f.write("volume#%d style surface voxelSize %f\n" %
-                    (count,sampling))
+                    (count, sampling))
             count += 1
         if len(_setOfVolumes) > 1:
             f.write('tile\n')
@@ -159,7 +162,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         return [em.ChimeraView(tmpFileNameCMD)]
 
     def _showVolumesXmipp(self):
-        #Write an sqlite with all volumes selected for visualization.
+        # Write an sqlite with all volumes selected for visualization.
 
         sampling, setOfVolumes = self._createSetOfVolumes()
 
