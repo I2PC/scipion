@@ -195,6 +195,13 @@ class XmippProtMLTomo(ProtClassify3D):
                       label='Do not align',
                       help="Keep angles and shifts fixed "
                            "(otherwise start from random)")
+        form.addParam('maskFile', params.PointerParam,
+                      pointerClass='VolumeMask',
+                      allowsNull=True,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Mask', condition='dontAlign',
+                      help='Mask input volumes; only valid in combination '
+                           'with --dont_align')
         form.addParam('onlyAvg', params.BooleanParam, default=False,
                       label='Only average',
                       help="Keep orientations and classes, "
@@ -256,12 +263,6 @@ class XmippProtMLTomo(ProtClassify3D):
                       label='Expected origin offset std (px)',
                       help="Expected standard deviation for origin offset "
                            "(in pixels)")
-        form.addParam('maskFile', params.PointerParam,
-                      pointerClass='VolumeMask',
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Mask', condition='dontAlign',
-                      help='Mask input volumes; only valid in combination '
-                           'with --dont_align')
 
         form.addParallelSection(threads=1, mpi=3)
 

@@ -89,12 +89,10 @@ class XmippMLTomoViewer(ProtocolViewer):
         group.addParam('showClasses3D', EnumParam, default=CLASSES_ALL,
                        choices=['all', 'selection'],
                        display=EnumParam.DISPLAY_HLIST,
-                       label='3D Class to visualize',
-                       help='')
+                       label='3D Class to visualize')
         group.addParam('class3DSelection', NumericRangeParam, default='1',
                        condition='showClasses3D == %d' % CLASSES_SEL,
-                       label='Classes list',
-                       help='')
+                       label='Classes list')
         group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'],
                        default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST,
                        label='Display volume with',
@@ -106,8 +104,7 @@ class XmippMLTomoViewer(ProtocolViewer):
                        choices=['new', 'active'],
                        label='Figure', display=EnumParam.DISPLAY_HLIST)
         group.addParam('resolutionPlotsFSC', LabelParam, default=True,
-                       label='Display resolution plots (FSC)',
-                       help='')
+                       label='Display resolution plots (FSC)')
 
     def _getVisualizeDict(self):
         self._load()
@@ -197,11 +194,11 @@ class XmippMLTomoViewer(ProtocolViewer):
                               addButton=True)
         fscSet = self.protocol._createSetOfFSCs()
         for ref3d in self._refsList:
-            blockName = 'model_class_%d@' % ref3d
+            blockName = 'class_%06d@' % ref3d
             for it in self._iterations:
                 fscFn = self.protocol._getFileName('fsc_it', iter=it)
                 if exists(fscFn):
-                    fsc = self._plotFSC(None, blockName + fscFn, 'iter %d' % it)
+                    fsc = self._plotFSC(None, blockName + fscFn, 'iter %d, class %d' % (it, ref3d))
                     fscSet.append(fsc)
         fscViewer.visualize(fscSet)
 
@@ -209,8 +206,8 @@ class XmippMLTomoViewer(ProtocolViewer):
 
     def _plotFSC(self, a, fscFn, label):
         mdStar = md.MetaData(fscFn)
-        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
-        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
+        resolution_inv = [mdStar.getValue(md.MDL_RESOLUTION_FREQ, id) for id in mdStar]
+        frc = [mdStar.getValue(md.MDL_RESOLUTION_FRC, id) for id in mdStar]
         fsc = FSC(objLabel=label)
         fsc.setData(resolution_inv, frc)
 

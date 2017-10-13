@@ -3396,7 +3396,7 @@ ProgMLTomo::writeOutputFiles(const int iter,
     MultidimArray<double> fracline(2);
     MetaData SFo, SFc;
     MetaData DFl;
-    MetaData MDo, MDo_sorted, MDSel;
+    MetaData MDo, MDo_sorted, MDSel, MDfsc;
     std::string comment;
     Image<double> Vt;
 
@@ -3463,7 +3463,7 @@ ProgMLTomo::writeOutputFiles(const int iter,
     MDref.write(formatString("classes@%s", fn_tmp.c_str()));
 
     // Write out FSC curves
-    std::ofstream fh;
+/*    std::ofstream fh;
     fn_tmp = fn_base + ".fsc";
     fh.open((fn_tmp).c_str(), std::ios::out);
     if (!fh)
@@ -3480,6 +3480,20 @@ ProgMLTomo::writeOutputFiles(const int iter,
         fh << "\n";
     }
     fh.close();
+*/
+    MDfsc.clear();
+    fn_tmp = fn_base + ".fsc";
+    for (int refno = 0; refno < nr_ref; refno++)
+    {
+        for (int idx = 1; idx < hdim + 1; idx++)
+            {
+            size_t id=MDfsc.addObject();
+            MDfsc.setValue(MDL_RESOLUTION_FREQ, fsc[0](idx), id);
+            MDfsc.setValue(MDL_RESOLUTION_FRC, fsc[refno + 1](idx), id);
+            }
+        MDfsc.write(formatString("class_%06d@%s", refno + 1, fn_tmp.c_str()), MD_APPEND);
+        MDfsc.clear();
+    }
 
     // Write out images with new docfile data
     fn_tmp = fn_base + "_img.xmd";
