@@ -24,18 +24,20 @@
 # *
 # **************************************************************************
 
+
 import re
 from glob import glob
 
-from convert import readSetOfClassesVol, getImageLocation, writeSetOfVolumes
-from pyworkflow.em import ProtClassify3D
-from pyworkflow.em.data import SetOfVolumes
+from pyworkflow.em import ProtClassify3D, ALIGN_PROJ, Float
+from pyworkflow.em.data import SetOfVolumes, SetOfClassesVol
 from pyworkflow.em.constants import ALIGN_NONE
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from xmipp3 import getEnviron, XmippMdRow
+from xmipp3 import getEnviron
+import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
-import xmipp
+from convert import (readSetOfClassesVol, getImageLocation,
+                     writeSetOfVolumes, rowToAlignment)
 
 
 MISSING_WEDGE_Y = 0
@@ -45,60 +47,104 @@ MISSING_CONE = 3
 
 
 class XmippProtMLTomo(ProtClassify3D):
-    """ Align and classify 3D images with missing data regions in Fourier space,
-    e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement
-    based on a maximum-likelihood (ML) target function.
+    """ Align and classify 3D images with missing data regions in Fourier
+    space, e.g. subtomograms or RCT reconstructions, by a 3D
+    multi-reference refinement based on a maximum-likelihood (ML) target
+    function.
 
     See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Ml_tomo_v31
     for further documentation
     """
     _label = 'mltomo'
 
+    def _initialize(self):
+        """ This function is mean to be called after the
+        working dir for the protocol have been set.
+        (maybe after recovery from mapper)
+        """
+        self._createFilenameTemplates()
+        self._createIterTemplates()
+
+    def _createFilenameTemplates(self):
+        """ Centralize how files are called for iterations and references. """
+        self.extraIter = self._getExtraPath('results/mltomo_it%(iter)06d')
+        myDict = {
+                  'data_it': self.extraIter + '_img.xmd',
+                  #'data': self._getExtraPath('results/mltomo_img.xmd'),
+                  'classes_scipion': self.extraIter + '_classes_scipion.sqlite',
+                  'log_it': self.extraIter + '_log.xmd',
+                  'ref_it': self.extraIter + '_ref.xmd',
+                  'ref': self._getExtraPath('results/mltomo_ref.xmd'),
+                  'fsc_it': self.extraIter + '.fsc',
+                  #'fsc': self._getExtraPath('results/mltomo.fsc'),
+                  'volume': self.extraIter + '_ref%(ref3d)06d.vol'
+                  }
+        self._updateFilenamesDict(myDict)
+
+    def _createIterTemplates(self):
+        """ Setup the regex on how to find iterations. """
+        self._iterTemplate = self._getFileName('ref_it', iter=0).replace('000000', '??????')
+        # Iterations will be identify by _itXXXXXX_ where XXXXXX is the iteration number
+        # and is restricted to only 6 digits.
+        self._iterRegex = re.compile('_it(\d{6,6})_')
+
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='General params')
-        form.addParam('inputVols', params.PointerParam, pointerClass="SetOfVolumes",
+        form.addParam('inputVols', params.PointerParam,
+                      pointerClass="SetOfVolumes",
                       label='Set of volumes',
                       help="Set of input volumes")
         form.addParam('copyAlignment', params.BooleanParam, default=True,
                       label='Consider previous alignment?',
-                      help='If set to Yes, then alignment information from input'
-                           ' volumes will be considered.')
+                      help='If set to Yes, then alignment information '
+                           'from input volumes will be considered.')
         form.addParam('generateRefs', params.BooleanParam, default=True,
                       label='Automatically generate references',
-                      help="If set to true, 3D classes will be generated automatically. "
-                           "Otherwise you can provide initial reference volumes yourself.")
+                      help="If set to true, 3D classes will be generated "
+                           "automatically. Otherwise you can provide initial "
+                           "reference volumes yourself.")
         form.addParam('numberOfReferences', params.IntParam,
-                      label='Number of references', default=3, condition="generateRefs",
+                      label='Number of references', default=3,
+                      condition="generateRefs",
                       help="Number of references to generate automatically")
-        form.addParam('inputRefVols', params.PointerParam, pointerClass="SetOfVolumes, Volume",
+        form.addParam('inputRefVols', params.PointerParam,
+                      pointerClass="SetOfVolumes, Volume",
                       condition="not generateRefs",
                       label='Input reference volume(s)',
                       help="Provide a set of initial reference volumes")
         form.addParam('numberOfIterations', params.IntParam,
                       label='Number of iterations', default=25,
                       help="Maximum number of iterations to perform")
-        form.addParam('symmetry', params.StringParam, default='c1', label='Symmetry group',
-                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry for a description "
-                           "of the symmetry groups format. If no symmetry is present, give c1")
+        form.addParam('symmetry', params.StringParam, default='c1',
+                      label='Symmetry group',
+                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry "
+                           "for a description of the symmetry groups format. If no "
+                           "symmetry is present, give c1")
         form.addParam('missingDataType', params.EnumParam,
-                      choices=['wedge_y', 'wedge_x', 'pyramid', 'cone'], default=0,
+                      choices=['wedge_y', 'wedge_x', 'pyramid', 'cone'],
+                      default=0,
                       display=params.EnumParam.DISPLAY_COMBO,
                       label='Missing data regions',
                       help="Provide missing data region type:\n\n"
-                           "a) wedge_y for a missing wedge where the tilt axis is along Y\n"
-                           "b) wedge_x for a missing wedge where the tilt axis is along X\n"
-                           "c) pyramid for a missing pyramid where the tilt axes are along Y and X\n"
+                           "a) wedge_y for a missing wedge where the tilt "
+                           "axis is along Y\n"
+                           "b) wedge_x for a missing wedge where the tilt "
+                           "axis is along X\n"
+                           "c) pyramid for a missing pyramid where the tilt "
+                           "axes are along Y and X\n"
                            "d) cone for a missing cone (pointing along Z)")
         form.addParam('missingAng', params.StringParam, default='-60 60',
                       label='Angles of missing data',
-                      help='Provide angles for missing data area in the following format:\n\n'
+                      help='Provide angles for missing data area in the '
+                           'following format:\n\n'
                            'for wedge_y or wedge_x: -60 60\n'
                            'for pyramid: -60 60 -60 60 (for y and x, respectively)\n'
                            'for cone: 45')
         form.addParam('maxCC', params.BooleanParam, default=False,
                       label='Use CC instead of ML',
-                      help='Use constrained cross-correlation and weighted averaging instead of ML')
+                      help='Use constrained cross-correlation and weighted '
+                           'averaging instead of ML')
 
         form.addSection(label='Sampling')
         form.addParam('angSampling', params.FloatParam, default=10.0,
@@ -106,8 +152,9 @@ class XmippProtMLTomo(ProtClassify3D):
                       help="Angular sampling rate (in degrees)")
         form.addParam('angSearch', params.FloatParam, default=-1.0,
                       label='Angular search range (deg)',
-                      help="Angular search range around orientations of input particles "
-                           "(by default [-1.0], exhaustive searches are performed)")
+                      help="Angular search range around orientations of "
+                           "input particles (by default [-1.0], exhaustive "
+                           "searches are performed)")
         form.addParam('globalPsi', params.BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Exhaustive psi search',
@@ -115,36 +162,43 @@ class XmippProtMLTomo(ProtClassify3D):
         form.addParam('limitTrans', params.FloatParam, default=-1.0,
                       expertLevel=LEVEL_ADVANCED,
                       label='Max shift (px)',
-                      help="Maximum allowed shifts (negative value means no restriction)")
+                      help="Maximum allowed shifts "
+                           "(negative value means no restriction)")
 
-        line = form.addLine('Tilt angle limits (deg)', expertLevel=LEVEL_ADVANCED,
+        line = form.addLine('Tilt angle limits (deg)',
+                            expertLevel=LEVEL_ADVANCED,
                             help='Limits for tilt angle search (in degrees)')
         line.addParam('tiltMin', params.FloatParam, default=0.0, label='Min')
         line.addParam('tiltMax', params.FloatParam, default=180.0, label='Max')
         form.addParam('psiSampling', params.FloatParam, default=-1.0,
                       expertLevel=LEVEL_ADVANCED,
                       label='Psi angle sampling (deg)',
-                      help="Angular sampling rate for the in-plane rotations (in degrees)")
+                      help="Angular sampling rate for the in-plane "
+                           "rotations (in degrees)")
 
         form.addSection(label='Restrictions')
         form.addParam('dim', params.IntParam, default=-1,
                       label='Downscale input to (px)',
-                      help="Use downscaled (in fourier space) images of this size (in pixels)")
+                      help="Use downscaled (in fourier space) images of this "
+                           "size (in pixels)")
         form.addParam('maxRes', params.FloatParam, default=0.5,
                       label='Maximum resolution (px^-1)',
                       help="Maximum resolution (in pixel^-1) to use")
         form.addParam('doPerturb', params.BooleanParam, default=False,
                       label='Perturb',
-                      help="Apply random perturbations to angular sampling in each iteration")
+                      help="Apply random perturbations to angular sampling "
+                           "in each iteration")
         form.addParam('dontRotate', params.BooleanParam, default=False,
                       label='Do not rotate',
                       help="Keep orientations fixed, only translate and classify")
         form.addParam('dontAlign', params.BooleanParam, default=False,
                       label='Do not align',
-                      help="Keep angles and shifts fixed (otherwise start from random)")
+                      help="Keep angles and shifts fixed "
+                           "(otherwise start from random)")
         form.addParam('onlyAvg', params.BooleanParam, default=False,
                       label='Only average',
-                      help="Keep orientations and classes, only output weighted averages")
+                      help="Keep orientations and classes, "
+                           "only output weighted averages")
         form.addParam('dontImpute', params.BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Do not impute',
@@ -153,20 +207,23 @@ class XmippProtMLTomo(ProtClassify3D):
                       expertLevel=LEVEL_ADVANCED,
                       condition='dontImpute',
                       label='Threshold for averaging',
-                      help='Threshold to avoid division by zero for weighted averaging')
+                      help='Threshold to avoid division by zero '
+                           'for weighted averaging')
         form.addParam('fixSigmaNoise', params.BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Fix sigma noise',
-                      help='Do not re-estimate the standard deviation in the pixel noise')
+                      help='Do not re-estimate the standard deviation in '
+                           'the pixel noise')
         form.addParam('fixSigmaOffset', params.BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Fix sigma offsets',
-                      help='Do not re-estimate the standard deviation in the origin offsets')
+                      help='Do not re-estimate the standard deviation in the '
+                           'origin offsets')
         form.addParam('fixFrac', params.BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Fix model fractions',
-                      help='Do not re-estimate the model fractions. Calculations start with'
-                           'even distribution.')
+                      help='Do not re-estimate the model fractions. '
+                           'Calculations start with even distribution.')
 
         form.addSection(label='Advanced')
         line = form.addLine('Regularization parameters',
@@ -197,16 +254,20 @@ class XmippProtMLTomo(ProtClassify3D):
         form.addParam('stdOrig', params.FloatParam, default=3.0,
                       expertLevel=LEVEL_ADVANCED,
                       label='Expected origin offset std (px)',
-                      help="Expected standard deviation for origin offset (in pixels)")
-        form.addParam('maskFile', params.PointerParam, pointerClass='VolumeMask',
+                      help="Expected standard deviation for origin offset "
+                           "(in pixels)")
+        form.addParam('maskFile', params.PointerParam,
+                      pointerClass='VolumeMask',
                       expertLevel=LEVEL_ADVANCED,
                       label='Mask', condition='dontAlign',
-                      help='Mask input volumes; only valid in combination with --dont_align')
+                      help='Mask input volumes; only valid in combination '
+                           'with --dont_align')
 
         form.addParallelSection(threads=1, mpi=3)
 
     #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
+        self._initialize()
         self._insertFunctionStep('convertInputs')
         self._insertFunctionStep('runMLTomo')
         self._insertFunctionStep('createOutput')
@@ -231,71 +292,66 @@ class XmippProtMLTomo(ProtClassify3D):
                           postprocessImageRow=self._postprocessVolumeRow,
                           alignType=alignType)
         if not vols.hasAlignment():
-            mdFn = xmipp.MetaData(fnVols)
-            mdFn.fillConstant(xmipp.MDL_ANGLE_ROT, 0.)
-            mdFn.fillConstant(xmipp.MDL_ANGLE_TILT, 0.)
-            mdFn.fillConstant(xmipp.MDL_ANGLE_PSI, 0.)
-            mdFn.fillConstant(xmipp.MDL_SHIFT_X, 0.)
-            mdFn.fillConstant(xmipp.MDL_SHIFT_Y, 0.)
-            mdFn.fillConstant(xmipp.MDL_SHIFT_Z, 0.)
-            mdFn.write(fnVols, xmipp.MD_OVERWRITE)
+            mdFn = md.MetaData(fnVols)
+            mdFn.fillConstant(md.MDL_ANGLE_ROT, 0.)
+            mdFn.fillConstant(md.MDL_ANGLE_TILT, 0.)
+            mdFn.fillConstant(md.MDL_ANGLE_PSI, 0.)
+            mdFn.fillConstant(md.MDL_SHIFT_X, 0.)
+            mdFn.fillConstant(md.MDL_SHIFT_Y, 0.)
+            mdFn.fillConstant(md.MDL_SHIFT_Z, 0.)
+            mdFn.write(fnVols, md.MD_OVERWRITE)
 
         # set missing angles
         missType = ['wedge_y', 'wedge_x', 'pyramid', 'cone']
         missNum = self.missingDataType.get()
         missAng = self.missingAng.get()
         missDataFn = self._getExtraPath('wedges.xmd')
-        md = xmipp.MetaData()
         missAngValues = str(missAng).strip().split()
+        thetaY0, thetaYF, thetaX0, thetaXF = 0, 0, 0, 0
+        mdFn = md.MetaData()
 
         if missNum == MISSING_WEDGE_X:
             thetaX0, thetaXF = missAngValues
-            thetaY0, thetaYF = 0, 0
         elif missNum == MISSING_WEDGE_Y:
-            thetaX0, thetaXF = 0, 0
             thetaY0, thetaYF = missAngValues
         elif missNum == MISSING_PYRAMID:
             thetaY0, thetaYF, thetaX0, thetaXF = missAngValues
         else:  # MISSING_CONE
             thetaY0 = missAngValues[0]
-            thetaX0, thetaXF, thetaYF = 0, 0, 0
 
         for i in range(1, vols.getSize() + 1):
-            objId = md.addObject()
-            row = XmippMdRow()
-            row.setValue(xmipp.MDL_MISSINGREGION_NR, missNum + 1)
-            row.setValue(xmipp.MDL_MISSINGREGION_TYPE, missType[missNum])
-            row.setValue(xmipp.MDL_MISSINGREGION_THX0, float(thetaX0))
-            row.setValue(xmipp.MDL_MISSINGREGION_THXF, float(thetaXF))
-            row.setValue(xmipp.MDL_MISSINGREGION_THY0, float(thetaY0))
-            row.setValue(xmipp.MDL_MISSINGREGION_THYF, float(thetaYF))
-            row.writeToMd(md, objId)
+            row = md.Row()
+            row.setValue(md.MDL_MISSINGREGION_NR, missNum + 1)
+            row.setValue(md.MDL_MISSINGREGION_TYPE, missType[missNum])
+            row.setValue(md.MDL_MISSINGREGION_THX0, float(thetaX0))
+            row.setValue(md.MDL_MISSINGREGION_THXF, float(thetaXF))
+            row.setValue(md.MDL_MISSINGREGION_THY0, float(thetaY0))
+            row.setValue(md.MDL_MISSINGREGION_THYF, float(thetaYF))
+            row.addToMd(mdFn)
 
-        md.write(missDataFn, xmipp.MD_APPEND)
+        mdFn.write(missDataFn, md.MD_APPEND)
 
     def createRefMd(self, vols):
         refVols = self._getExtraPath('ref_volumes.xmd')
-        md = xmipp.MetaData()
+        mdFn = md.MetaData()
 
         if self.isSetOfVolumes():
             for vol in vols:
                 imgId = vol.getObjId()
-                objId = md.addObject()
-                row = XmippMdRow()
-                row.setValue(xmipp.MDL_ITEM_ID, long(imgId))
-                row.setValue(xmipp.MDL_IMAGE, getImageLocation(vol))
-                row.setValue(xmipp.MDL_ENABLED, 1)
-                row.writeToMd(md, objId)
+                row = md.Row()
+                row.setValue(md.MDL_ITEM_ID, long(imgId))
+                row.setValue(md.MDL_IMAGE, getImageLocation(vol))
+                row.setValue(md.MDL_ENABLED, 1)
+                row.addToMd(md)
         else:
             imgId = vols.getObjId()
-            objId = md.addObject()
-            row = XmippMdRow()
-            row.setValue(xmipp.MDL_ITEM_ID, long(imgId))
-            row.setValue(xmipp.MDL_IMAGE, getImageLocation(vols))
-            row.setValue(xmipp.MDL_ENABLED, 1)
-            row.writeToMd(md, objId)
+            row = md.Row()
+            row.setValue(md.MDL_ITEM_ID, long(imgId))
+            row.setValue(md.MDL_IMAGE, getImageLocation(vols))
+            row.setValue(md.MDL_ENABLED, 1)
+            row.addToMd(md)
 
-        md.write(refVols, xmipp.MD_APPEND)
+        mdFn.write(refVols, md.MD_APPEND)
 
     def runMLTomo(self):
         fnVols = self._getExtraPath('input_volumes.xmd')
@@ -314,14 +370,17 @@ class XmippProtMLTomo(ProtClassify3D):
         params += ' --ang %0.1f' % self.angSampling.get()
         params += ' --ang_search %0.1f' % self.angSearch.get()
         params += ' --limit_trans %0.1f' % self.limitTrans.get()
-        params += ' --tilt0 %0.1f --tiltF %0.1f' % (self.tiltMin.get(), self.tiltMax.get())
+        params += ' --tilt0 %0.1f --tiltF %0.1f' % (self.tiltMin.get(),
+                                                    self.tiltMax.get())
         params += ' --psi_sampling %0.1f' % self.psiSampling.get()
-        params += ' --reg0 %0.1f --regF %0.1f' % (self.regIni.get(), self.regFinal.get())
+        params += ' --reg0 %0.1f --regF %0.1f' % (self.regIni.get(),
+                                                  self.regFinal.get())
         params += ' --impute_iter %d' % self.numberOfImpIterations.get()
         #params += ' --istart %d' % self.iterStart.get()
         params += ' --eps %0.2f' % self.eps.get()
         params += ' --pixel_size %0.2f' % self.inputVols.get().getSamplingRate()
-        params += ' --noise %0.1f --offset %0.1f' % (self.stdNoise.get(), self.stdOrig.get())
+        params += ' --noise %0.1f --offset %0.1f' % (self.stdNoise.get(),
+                                                     self.stdOrig.get())
         params += ' --thr %d' % self.numberOfThreads.get()
 
         if self.generateRefs:
@@ -353,7 +412,8 @@ class XmippProtMLTomo(ProtClassify3D):
             params += ' --mask %s' % self.maskFile.get().getFileName()
 
         self.runJob('xmipp_ml_tomo', '%s' % params,
-                    env=self.getMLTomoEnviron(), numberOfMpi=self.numberOfMpi.get(),
+                    env=self.getMLTomoEnviron(),
+                    numberOfMpi=self.numberOfMpi.get(),
                     numberOfThreads=self.numberOfThreads.get())
     
     def createOutput(self):
@@ -362,7 +422,7 @@ class XmippProtMLTomo(ProtClassify3D):
         #   mltomo_refXXXXXX.vol output volume - 3D class
         #   mltomo_img.xmd contains alignment metadata for all vols
         #   mltomo.fsc
-        outputGlobalMdFn = self._getExtraPath('results/mltomo_ref.xmd')
+        outputGlobalMdFn = self._getFileName('ref')
         setOfClasses = self._createSetOfClassesVol()
         setOfClasses.setImages(self.inputVols.get())
         readSetOfClassesVol(setOfClasses, outputGlobalMdFn)
@@ -375,12 +435,14 @@ class XmippProtMLTomo(ProtClassify3D):
         if not hasattr(self, 'outputClasses'):
             messages.append('Output is not ready')
         else:
-            messages.append('Number of input volumes: %d' % self.inputVols.get().getSize())
+            messages.append('Number of input volumes: %d' %
+                            self.inputVols.get().getSize())
             if self.generateRefs:
                 messages.append('References were auto-generated')
             else:
                 messages.append('References were provided by user')
-            messages.append('Number of output classes: %d' % self.outputClasses.getSize())
+            messages.append('Number of output classes: %d' %
+                            self.outputClasses.getSize())
 
         return messages
 
@@ -390,11 +452,14 @@ class XmippProtMLTomo(ProtClassify3D):
         angString = self.missingAng.get()
         angs = str(angString).split()
         if (missNum == 0 or missNum == 1) and len(angs) != 2:
-            errors.append('Wrong angles of missing data! Provide two values for a missing wedge')
+            errors.append('Wrong angles of missing data! Provide two values '
+                          'for a missing wedge')
         elif missNum == 2 and len(angs) != 4:
-            errors.append('Wrong angles of missing data! Provide four values for a missing pyramid')
+            errors.append('Wrong angles of missing data! Provide four values '
+                          'for a missing pyramid')
         elif missNum == 3 and len(angs) != 1:
-            errors.append('Wrong angles of missing data! Provide one value for a missing cone')
+            errors.append('Wrong angles of missing data! Provide one value '
+                          'for a missing cone')
 
         return errors
 
@@ -413,22 +478,82 @@ class XmippProtMLTomo(ProtClassify3D):
         # explicitly set this from protocol input
         # to avoid conflict with input metadata
         missNum = self.missingDataType.get()
-        imgRow.setValue(xmipp.MDL_MISSINGREGION_NR, missNum + 1)
+        imgRow.setValue(md.MDL_MISSINGREGION_NR, missNum + 1)
 
-        if not imgRow.hasLabel(xmipp.MDL_REF):
-            imgRow.setValue(xmipp.MDL_REF, 1)
-        if not imgRow.hasLabel(xmipp.MDL_LL):
-            imgRow.setValue(xmipp.MDL_LL, 1.)
+        if not imgRow.hasLabel(md.MDL_REF):
+            imgRow.setValue(md.MDL_REF, 1)
+        if not imgRow.hasLabel(md.MDL_LL):
+            imgRow.setValue(md.MDL_LL, 1.)
+
+    def _firstIter(self):
+        return self._getIterNumber(0) or 1
+
+    def _lastIter(self):
+        return self._getIterNumber(-1)
 
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
         result = None
-        iterTemplate = pwutils.join(self._getExtraPath("results"), "mltomo_it??????_ref.xmd")
-        iterRegex = re.compile('_it(\d{6,6})_')
-        files = sorted(glob(iterTemplate))
+        files = sorted(glob(self._iterTemplate))
         if files:
             f = files[index]
-            s = iterRegex.search(f)
+            s = self._iterRegex.search(f)
             if s:
                 result = int(s.group(1))  # group 1 is 6 digits iteration number
         return result
+
+    def _getIterClasses(self, it, clean=False):
+        """ Return a classes .sqlite file for this iteration.
+        If the file doesn't exists, it will be created by
+        converting from this iteration mltomo_it??????_img.xmd file.
+        """
+        data_classes = self._getFileName('classes_scipion', iter=it)
+
+        if clean:
+            pwutils.cleanPath(data_classes)
+
+        if not pwutils.exists(data_classes):
+            clsSet = SetOfClassesVol(filename=data_classes)
+            clsSet.setImages(self.inputVols.get())
+            self._fillClassesFromIter(clsSet, it)
+            clsSet.write()
+            clsSet.close()
+
+        return data_classes
+
+    def _loadClassesInfo(self, iteration):
+        """ Read some information about the produced MLtomo 3D classes
+        from the *ref.xmd file.
+        """
+        self._classesInfo = {}  # store classes info, indexed by class id
+        modelFn = md.MetaData('classes@' +
+                              self._getFileName('ref_it', iter=iteration))
+
+        for classNumber, row in enumerate(md.iterRows(modelFn)):
+            fn = str(row.getValue(md.MDL_IMAGE))
+            # Store info indexed by id, we need to store the row.clone() since
+            # the same reference is used for iteration
+            self._classesInfo[classNumber + 1] = (fn, row.clone())
+
+    def _fillClassesFromIter(self, clsSet, iteration):
+        """ Create the SetOfClassesVol from a given iteration. """
+        self._loadClassesInfo(iteration)
+        dataFn = self._getFileName('data_it', iter=iteration)
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                             updateClassCallback=self._updateClass,
+                             itemDataIterator=md.iterRows(dataFn,
+                                                          sortByLabel=md.MDL_ITEM_ID))
+
+    def _updateParticle(self, item, row):
+        item.setClassId(row.getValue(md.MDL_REF))
+        item.setTransform(rowToAlignment(row, ALIGN_PROJ))
+        item._xmippLogLikeliContribution = Float(row.getValue(md.MDL_LL))
+
+    def _updateClass(self, item):
+        classId = item.getObjId()
+        if classId in self._classesInfo:
+            fn, row = self._classesInfo[classId]
+            item.setAlignmentProj()
+            item.getRepresentative().setLocation(1, fn)
+            item._xmippWeight = Float(row.getValue(md.MDL_WEIGHT))
+            item._xmippSignalChange = Float(row.getValue(md.MDL_SIGNALCHANGE))
