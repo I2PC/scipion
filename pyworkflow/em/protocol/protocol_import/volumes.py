@@ -25,11 +25,11 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
+In this module are protocol base classes related to EM imports of Micrographs,
+Particles, Volumes...
 """
 
 from os.path import exists, basename
-
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import copyFile
 import pyworkflow.protocol.constants as const
@@ -37,20 +37,18 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
-
 from base import ProtImportFiles
 from images import ProtImportImages
-
 
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
     _outputClassName = 'SetOfVolumes'
     _label = 'import volumes'
-    
+
     def __init__(self, **args):
-        ProtImportImages.__init__(self, **args)         
-       
+        ProtImportImages.__init__(self, **args)
+
     def _defineAcquisitionParams(self, form):
         """ Define acquisition parameters, it can be overriden
         by subclasses to change what parameters to include.
@@ -59,27 +57,32 @@ class ProtImportVolumes(ProtImportImages):
                       label=Message.LABEL_SAMP_RATE)
         form.addParam('setDefaultOrigin', params.BooleanParam,
                       label="setDefaultOrigin",
-                      help="Set origin of coordinates in the 3D map center (true)"
-                      " or provide it. So far only Modeling related programs"
-                      " support this feature",
-                      default=True)
-        line = form.addLine('Offset',help="We follow the same convention than chimera,"
-                                          " i.e., same magnitude and opposite sign than CCP4.",
-                            condition='not setDefaultOrigin', expertLevel=const.LEVEL_ADVANCED)
+                      help="Set origin of coordinates in the 3D map center "
+                           "(true)or provide it. So far only Modeling related "
+                           "programs support this feature", default=True)
+        line = form.addLine('Offset',
+                            help="We follow the same convention than chimera,"
+                            " which means same magnitude and opposite sign "
+                            "than CCP4.", condition='not setDefaultOrigin',
+                            expertLevel=const.LEVEL_ADVANCED)
         line.addParam('x', params.FloatParam, condition='not setDefaultOrigin',
-                      label="x", help="offset along x axis", expertLevel=const.LEVEL_ADVANCED)
+                      label="x", help="offset along x axis",
+                      expertLevel=const.LEVEL_ADVANCED)
         line.addParam('y', params.FloatParam, condition='not setDefaultOrigin',
-                      label="y", help="offset along y axis", expertLevel=const.LEVEL_ADVANCED)
+                      label="y", help="offset along y axis",
+                      expertLevel=const.LEVEL_ADVANCED)
         line.addParam('z', params.FloatParam, condition='not setDefaultOrigin',
-                      label="z", help="offset along z axis", expertLevel=const.LEVEL_ADVANCED)
+                      label="z", help="offset along z axis",
+                      expertLevel=const.LEVEL_ADVANCED)
 
     def _insertAllSteps(self):
         self._insertFunctionStep('importVolumesStep', self.getPattern(),
-                                 self.samplingRate.get(), self.setDefaultOrigin.get())
+                                 self.samplingRate.get(),
+                                 self.setDefaultOrigin.get())
 
-    #--------------------------- STEPS functions ---------------------------------------------------
-    
-    def importVolumesStep(self, pattern, samplingRate, setDefaultOrigin = True):
+    # --------------------------- STEPS functions -----------------------------
+
+    def importVolumesStep(self, pattern, samplingRate, setDefaultOrigin=True):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -100,7 +103,7 @@ class ProtImportVolumes(ProtImportImages):
             x, y, z, n = imgh.getDimensions(dst)
             # First case considers when reading mrc without volume flag
             # Second one considers single volumes (not in stack)
-            if (z == 1 and n != 1) or (z !=1 and n == 1):
+            if (z == 1 and n != 1) or (z != 1 and n == 1):
                 vol.setObjId(fileId)
                 if dst.endswith('.mrc'):
                     dst += ':mrc'
@@ -133,52 +136,58 @@ class ProtImportVolumes(ProtImportImages):
         else:
             self._defineOutputs(outputVolume=vol)
 
-    #--------------------------- INFO functions ----------------------------------------------------
-    
+    # --------------------------- INFO functions ------------------------------
+
     def _getVolMessage(self):
         if self.hasAttribute('outputVolume'):
-            return "Volume %s"% self.getObjectTag('outputVolume')
+            return "Volume %s" % self.getObjectTag('outputVolume')
         else:
             return "Volumes %s" % self.getObjectTag('outputVolumes')
-        
+
     def _summary(self):
         summary = []
-        if self.hasAttribute('outputVolume') or self.hasAttribute('outputVolumes'):
-            summary.append("%s imported from:\n%s" % (self._getVolMessage(), self.getPattern()))
+        if self.hasAttribute('outputVolume') or \
+                self.hasAttribute('outputVolumes'):
+            summary.append("%s imported from:\n%s" % (self._getVolMessage(),
+                           self.getPattern()))
 
-            summary.append(u"Sampling rate: *%0.2f* (Å/px)" % self.samplingRate.get())
+            summary.append(u"Sampling rate: *%0.2f* (Å/px)" %
+                           self.samplingRate.get())
         return summary
-    
+
     def _methods(self):
         methods = []
-        if self.hasAttribute('outputVolume') or self.hasAttribute('outputVolumes'):
-            methods.append(" %s imported with a sampling rate *%0.2f*" % (self._getVolMessage(), self.samplingRate.get()),)
+        if self.hasAttribute('outputVolume') or \
+                self.hasAttribute('outputVolumes'):
+            methods.append(" %s imported with a sampling rate *%0.2f*" %
+                           (self._getVolMessage(), self.samplingRate.get()),)
         return methods
-    
-    
-        
+
+
 class ProtImportPdb(ProtImportFiles):
     """ Protocol to import a set of pdb volumes to the project"""
     _label = 'import pdb volumes'
     IMPORT_FROM_ID = 0
-    IMPORT_FROM_FILES = 1 
-    
+    IMPORT_FROM_FILES = 1
+
     def __init__(self, **args):
         ProtImportFiles.__init__(self, **args)
-       
+
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputPdbData', params.EnumParam, choices=['id', 'file'],
                       label="Import PDB from", default=self.IMPORT_FROM_ID,
                       display=params.EnumParam.DISPLAY_HLIST,
-                      help='Import PDB data from online server or a local file')
-        form.addParam('pdbId', params.StringParam, condition='inputPdbData == IMPORT_FROM_ID',
+                      help='Import PDB data from online server or local file')
+        form.addParam('pdbId', params.StringParam,
+                      condition='inputPdbData == IMPORT_FROM_ID',
                       label="Pdb Id ", allowsNull=True,
                       help='Type a pdb Id (four alphanumeric characters).')
-        form.addParam('pdbFile', params.PathParam,
-                      label="File path", condition='inputPdbData == IMPORT_FROM_FILES', allowsNull=True,
+        form.addParam('pdbFile', params.PathParam, label="File path",
+                      condition='inputPdbData == IMPORT_FROM_FILES',
+                      allowsNull=True,
                       help='Specify a path to desired PDB structure.')
-         
+
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
             pdbPath = self._getPath('%s.pdb' % self.pdbId.get())
@@ -186,7 +195,7 @@ class ProtImportPdb(ProtImportFiles):
         else:
             pdbPath = self.pdbFile.get()
         self._insertFunctionStep('createOutputStep', pdbPath)
-        
+
     def pdbDownloadStep(self, pdbPath):
         """Download all pdb files in file_list and unzip them."""
         downloadPdb(self.pdbId.get(), pdbPath, self._log)
@@ -196,7 +205,7 @@ class ProtImportPdb(ProtImportFiles):
         """
         if not exists(pdbPath):
             raise Exception("PDB not found at *%s*" % pdbPath)
-        
+
         baseName = basename(pdbPath)
         localPath = self._getExtraPath(baseName)
         copyFile(pdbPath, localPath)
@@ -211,13 +220,11 @@ class ProtImportPdb(ProtImportFiles):
             summary = ['PDB imported from file: *%s*' % self.pdbFile]
 
         return summary
-    
+
     def _validate(self):
         errors = []
-        if (self.inputPdbData == self.IMPORT_FROM_FILES and
-            not exists(self.pdbFile.get())):
+        if (self.inputPdbData == self.IMPORT_FROM_FILES and not exists(
+                self.pdbFile.get())):
             errors.append("PDB not found at *%s*" % self.pdbPath.get())
-        #TODO: maybe also validate that if exists is a valid PDB file 
+        # TODO: maybe also validate that if exists is a valid PDB file
         return errors
-    
-    
