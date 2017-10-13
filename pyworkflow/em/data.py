@@ -551,9 +551,7 @@ class Image(EMObject):
             if returnInitIfNone:
                 t= Transform()
                 x, y, z=self.getDim()
-                if z == 1:
-                    z= 1
-                else:
+                if z > 1:
                     z= z/2
                 t.setShifts(x/2, y/2, z)
                 return t # The identity matrix
