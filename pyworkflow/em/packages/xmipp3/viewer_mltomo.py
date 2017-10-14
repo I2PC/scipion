@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This module implement the viewer for Xmipp mltomo protocol
+This module implements the viewer for Xmipp mltomo protocol
 """
 
 import os
@@ -138,9 +138,9 @@ class XmippMLTomoViewer(ProtocolViewer):
             views.append(v)
         return views
 
-# ===============================================================================
+# =============================================================================
 # ShowVolumes
-# ===============================================================================
+# =============================================================================
     def _showVolumes(self, paramName=None):
         if self.displayVol == VOLUME_CHIMERA:
             return self._showVolumesChimera()
@@ -177,14 +177,13 @@ class XmippMLTomoViewer(ProtocolViewer):
             f.close()
             view = ChimeraView(cmdFile)
         else:
-            # view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
             view = ChimeraClientView(volumes[0])
 
         return [view]
 
-# ===============================================================================
+# =============================================================================
 # plotFSC
-# ===============================================================================
+# =============================================================================
     def _showFSC(self, paramName=None):
         md.activateMathExtensions()
         fscViewer = FscViewer(project=self.protocol.getProject(),
@@ -213,9 +212,9 @@ class XmippMLTomoViewer(ProtocolViewer):
 
         return fsc
 
-# ===============================================================================
+# =============================================================================
 # Utils Functions
-# ===============================================================================
+# =============================================================================
 
     def createDataView(self, filename, viewParams={}):
         return DataView(filename, env=self._env, viewParams=viewParams)
@@ -238,7 +237,7 @@ class XmippMLTomoViewer(ProtocolViewer):
 
     def _getZoom(self):
         # Ensure that classes are shown at least at 128 px to
-        # properly see the rlnClassDistribution label.
+        # properly see the other xmipp labels.
         dim = self.protocol.inputVols.get().getDim()[0]
         if dim < 128:
             zoom = 128*100/dim
@@ -248,9 +247,9 @@ class XmippMLTomoViewer(ProtocolViewer):
 
     def _getRange(self, var, label):
         """ Check if the range is not empty.
-        :param var: The variable to retrieve the value
-        :param label: the label used for the message string
-        :return: the list with the range of values, empty
+        var: The variable to retrieve the value
+        label: the label used for the message string
+        return: the list with the range of values, empty
         """
         value = var.get()
         if value is None or not value.strip():
@@ -269,7 +268,8 @@ class XmippMLTomoViewer(ProtocolViewer):
         return vols
 
     def _load(self):
-        """ Load selected iterations and classes 3D for visualization mode. """
+        """ Load selected iterations and classes 3D
+        for visualization mode. """
         self._refsList = [1]
         if self.showClasses3D == CLASSES_ALL:
             self._refsList = range(1, self.protocol.numberOfReferences.get() + 1)

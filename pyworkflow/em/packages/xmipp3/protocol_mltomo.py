@@ -84,8 +84,8 @@ class XmippProtMLTomo(ProtClassify3D):
     def _createIterTemplates(self):
         """ Setup the regex on how to find iterations. """
         self._iterTemplate = self._getFileName('ref_it', iter=0).replace('000000', '??????')
-        # Iterations will be identify by _itXXXXXX_ where XXXXXX is the iteration number
-        # and is restricted to only 6 digits.
+        # Iterations will be identify by _itXXXXXX_ where XXXXXX is the
+        # iteration number and is restricted to only 6 digits.
         self._iterRegex = re.compile('_it(\d{6,6})_')
 
     #--------------------------- DEFINE param functions -----------------------
@@ -283,7 +283,6 @@ class XmippProtMLTomo(ProtClassify3D):
 
     def createInputMd(self, vols):
         fnVols = self._getExtraPath('input_volumes.xmd')
-        # If copyAlignmet is set to False pass alignType to ALIGN_NONE
         if self.copyAlignment:
             alignType = vols.getAlignment()
         else:
