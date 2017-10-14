@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# * MRC Laboratory of Molecular Biology, MRC-LMB
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -25,15 +25,14 @@
 # **************************************************************************
 
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.xmipp3 import ProtImportVolumes, XmippProtMLTomo
 
 
 class TestMLTomoBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='xmipp_programs'):
         cls.dataset = DataSet.getDataSet(dataProject)
-        cls.volsFn = cls.dataset.getFile('input/Ml_tomo/Subnadnorm/*.norm')
-        cls.refsFn = cls.dataset.getFile('input/Ml_tomo/vir_norm.spi')
+        cls.volsFn = cls.dataset.getFile('input/ml_tomo/*em')
 
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate):
@@ -49,24 +48,20 @@ class TestXmippMLtomo(TestMLTomoBase):
     def setUpClass(cls):
         setupTestProject(cls)
         TestMLTomoBase.setData()
-        cls.protImportVol = cls.runImportVolumes(cls.volsFn, 3.5)
-        cls.protImportRefVol = cls.runImportVolumes(cls.refsFn, 3.5)
-    
+        cls.protImportVol = cls.runImportVolumes(cls.volsFn, 15.0)
+
     def testProtXmippMLTomo(self):
         prot = self.newProtocol(XmippProtMLTomo,
-                                generateRefs=False,
-                                numberOfIterations=3,
-                                symmetry='i3',
-                                missingDataType=0,
-                                missingAng='-63.20 64.47',
-                                maxCC=True,
-                                angSampling=5,
-                                dim=16,
-                                maxRes=0.45,
-                                numberOfMpi=2, numberOfThreads=1)
+                                numberOfReferences=2,
+                                numberOfIterations=5,
+                                symmetry='c1',
+                                missingAng='-60 60',
+                                angSampling=30,
+                                doPerturb=True,
+                                regIni=5.0,
+                                numberOfMpi=3, numberOfThreads=1)
         prot.inputVols.set(self.protImportVol.outputVolumes)
-        prot.inputRefVols.set(self.protImportRefVol.outputVolume)
         self.launchProtocol(prot)
         
         self.assertIsNotNone(getattr(prot, 'outputClasses', None),
-                             "There was a problem with ML_tomo:\n" + prot.getErrorMessage())
+                             "There was a problem when running ml_tomo:\n" + prot.getErrorMessage())

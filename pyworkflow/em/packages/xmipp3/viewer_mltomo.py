@@ -121,6 +121,11 @@ class XmippMLTomoViewer(ProtocolViewer):
             fn = self.protocol.outputClasses.getFileName()
             v = self.createScipionView(fn)
             views.append(v)
+        elif self.viewIter == ITER_LAST:  # run not finished
+            for it in self._iterations:
+                fn = self.protocol._getIterClasses(it)
+                v = self.createScipionView(fn)
+                views.append(v)
         else:
             self._iterations = self._getRange(self.iterSelection, 'iterations')
             for it in self._iterations:

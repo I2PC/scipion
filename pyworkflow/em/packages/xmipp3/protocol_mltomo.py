@@ -233,13 +233,18 @@ class XmippProtMLTomo(ProtClassify3D):
                            'Calculations start with even distribution.')
 
         form.addSection(label='Advanced')
-        line = form.addLine('Regularization parameters',
-                            help='Regularization parameters (in N/K^2)')
+        group = form.addGroup('Regularization parameters')
+        line = group.addLine('Regularization',
+                             help='Regularization parameters (in N/K^2)')
 
         line.addParam('regIni', params.FloatParam, default=0.0,
                       label='Initial')
         line.addParam('regFinal', params.FloatParam, default=0.0,
                       label='Final')
+        group.addParam('regSteps', params.IntParam, default=5,
+                       label='Steps',
+                       help='Number of iterations in which the regularization '
+                            'is changed from reg0 to regF')
 
         form.addParam('numberOfImpIterations', params.IntParam,
                       expertLevel=LEVEL_ADVANCED,
@@ -291,7 +296,7 @@ class XmippProtMLTomo(ProtClassify3D):
         writeSetOfVolumes(vols, fnVols,
                           postprocessImageRow=self._postprocessVolumeRow,
                           alignType=alignType)
-        if not vols.hasAlignment():
+        if not vols.hasAlignment() or not self.copyAlignment:
             mdFn = md.MetaData(fnVols)
             mdFn.fillConstant(md.MDL_ANGLE_ROT, 0.)
             mdFn.fillConstant(md.MDL_ANGLE_TILT, 0.)
@@ -342,14 +347,14 @@ class XmippProtMLTomo(ProtClassify3D):
                 row.setValue(md.MDL_ITEM_ID, long(imgId))
                 row.setValue(md.MDL_IMAGE, getImageLocation(vol))
                 row.setValue(md.MDL_ENABLED, 1)
-                row.addToMd(md)
+                row.addToMd(mdFn)
         else:
             imgId = vols.getObjId()
             row = md.Row()
             row.setValue(md.MDL_ITEM_ID, long(imgId))
             row.setValue(md.MDL_IMAGE, getImageLocation(vols))
             row.setValue(md.MDL_ENABLED, 1)
-            row.addToMd(md)
+            row.addToMd(mdFn)
 
         mdFn.write(refVols, md.MD_APPEND)
 
@@ -373,8 +378,8 @@ class XmippProtMLTomo(ProtClassify3D):
         params += ' --tilt0 %0.1f --tiltF %0.1f' % (self.tiltMin.get(),
                                                     self.tiltMax.get())
         params += ' --psi_sampling %0.1f' % self.psiSampling.get()
-        params += ' --reg0 %0.1f --regF %0.1f' % (self.regIni.get(),
-                                                  self.regFinal.get())
+        params += ' --reg0 %0.1f --regF %0.1f --reg_steps %d' % \
+                  (self.regIni.get(), self.regFinal.get(), self.regSteps.get())
         params += ' --impute_iter %d' % self.numberOfImpIterations.get()
         #params += ' --istart %d' % self.iterStart.get()
         params += ' --eps %0.2f' % self.eps.get()
@@ -387,6 +392,10 @@ class XmippProtMLTomo(ProtClassify3D):
             params += ' --nref %d' % self.numberOfReferences.get()
         else:
             params += ' --ref %s' % refVols
+        if self.copyAlignment:
+            params += ' --keep_angles'
+            # when considering alignment, use it,
+            # otherwise starts from random angles
         if self.doPerturb:
             params += ' --perturb'
         if self.dontRotate:
@@ -460,6 +469,10 @@ class XmippProtMLTomo(ProtClassify3D):
         elif missNum == 3 and len(angs) != 1:
             errors.append('Wrong angles of missing data! Provide one value '
                           'for a missing cone')
+
+        if not self.copyAlignment and self.angSearch != -1:
+            errors.append('You cannot do local searches when '
+                          'ignoring input alignments.')
 
         return errors
 
