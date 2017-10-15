@@ -132,10 +132,21 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        ctfStr = "defocus(U,V,a) = (%0.2f,%0.2f,%0.2f)" % \
-                 (self._defocusU.get(),
-                  self._defocusV.get(),
-                  self._defocusAngle.get())
+        if self._resolution.hasValue():
+            ctfStr = "defocus(U,V,a,re,fit) = " \
+                     "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
+                     (self._defocusU.get(),
+                      self._defocusV.get(),
+                      self._defocusAngle.get(),
+                      self._resolution.get(),
+                      self._fitQuality.get()
+                      )
+        else:   # TODO; remove eventually,
+                # compatibility with old ctfmodel
+            ctfStr = "defocus(U,V,a) = " \
+                     "(%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
+                                              self._defocusV.get(),
+                                              self._defocusAngle.get())
 
         if self._micObj:
             ctfStr + " mic=%s" % self._micObj
@@ -155,6 +166,9 @@ class CTFModel(EMObject):
             return self._xmipp_ctfCritMaxFreq.get()
         else:
             return self._resolution.get()
+
+    def resolutionHasValue(self):
+        return self._resolution.hasValue()
 
     def setResolution(self, value):
         self._resolution.set(value)
