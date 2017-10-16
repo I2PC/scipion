@@ -13,6 +13,7 @@
 #include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
 #include <reconstruction_cuda/cuda_xmipp_utils.h>
 #include "data/fourier_reconstruction_buffer.h"
+#include <map>
 
 
 //static ProjectionData* projData;
@@ -21,20 +22,25 @@
 
 struct FRecBufferDataGPU : public FRecBufferData {
 
-	FRecBufferDataGPU(FRecBufferData* orig, int stream);
+	FRecBufferDataGPU(FRecBufferData* orig);
 	~FRecBufferDataGPU();
 
 	float* getNthItem(float* array, int itemIndex);
+	void copyDataFrom(FRecBufferData* orig, int stream);
 
 private:
 	template<typename T>
-	void allocAndCopy(T* srcArray, T*& dstArray, FRecBufferData* orig, int stream);
+	void copy(T* srcArray, T*& dstArray, FRecBufferData* orig, int stream);
+	template<typename T>
+	void alloc(T* srcArray, T*& dstArray, FRecBufferData* orig);
+	void copyMetadata(FRecBufferData* orig);
 };
 
 struct FRecBufferDataGPUWrapper {
 
-	FRecBufferDataGPUWrapper(FRecBufferData* orig, int stream);
+	FRecBufferDataGPUWrapper(FRecBufferData* orig);
 	~FRecBufferDataGPUWrapper();
+	void copyFrom(FRecBufferData* orig, int stream);
 	void copyToDevice(int stream);
 
 	FRecBufferDataGPU* cpuCopy;
@@ -128,6 +134,11 @@ private:
 	template<typename T, typename U>
 	void copy(const Array2D<T>& from, U& to);
 };
+
+
+
+void allocateWrapper(FRecBufferData* buffer, int streamIndex);
+void releaseWrapper(int streamIndex);
 
 
 void createStreams(int count);

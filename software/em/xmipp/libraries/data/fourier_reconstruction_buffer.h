@@ -17,6 +17,9 @@ struct FRecBufferData
 			int maxNoOfImages, int noOfSymmetries) :
 			hasFFTs(hasFFTs), hasCTFs(hasCTFs),
 			fftSizeX(fftSizeX), fftSizeY(fftSizeY), paddedImgSize(paddedImgSize) {
+		this->maxNoOfImages = maxNoOfImages;
+		this->maxNoOfSymmetries = noOfSymmetries;
+
 		if (hasFFTs) {
 			paddedImages = NULL;
 			FFTs = new float[fftSizeX * fftSizeY * maxNoOfImages * 2]; // *2 since it's complex
@@ -79,6 +82,19 @@ struct FRecBufferData
 		return noOfSpaces;
 	}
 
+	int getMaxByteSize(float* array) {
+		if (array == FFTs) return (fftSizeX * fftSizeY * maxNoOfImages * 2 * sizeof(float)); // *2 since it's complex
+		if (array == CTFs) return (fftSizeX * fftSizeY * maxNoOfImages * sizeof(float));
+		if (array == modulators) return (fftSizeX * fftSizeY * maxNoOfImages * sizeof(float));
+		if (array == paddedImages) return (paddedImgSize * paddedImgSize * maxNoOfImages * sizeof(float));
+		return -1; // undefined
+	}
+
+	int getMaxByteSize(TraverseSpace* array) {
+		if (array == spaces) return (maxNoOfSymmetries * maxNoOfImages * sizeof(TraverseSpace));
+		return -1; // undefined
+	}
+
 	float* FFTs;
 	float* CTFs;
 	float* paddedImages;
@@ -90,12 +106,15 @@ struct FRecBufferData
 	int fftSizeY;
 	int paddedImgSize;
 	int noOfImages;
+	int maxNoOfImages;
+	int maxNoOfSymmetries;
 	bool hasFFTs;
 	bool hasCTFs;
 
 	void setDefault() {
 		hasCTFs = hasFFTs = false;
-		noOfImages = noOfSpaces = fftSizeX = fftSizeY = paddedImgSize = -1;
+		noOfImages = noOfSpaces = fftSizeX = fftSizeY = paddedImgSize
+				= maxNoOfImages = maxNoOfSymmetries = -1;
 
 		FFTs = CTFs = paddedImages = modulators = NULL;
 		spaces = NULL;

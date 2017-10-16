@@ -525,6 +525,8 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
     		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
 			parent->bufferSize, (int)parent->R_repository.size());
 
+    allocateWrapper(threadParams->buffer, threadParams->gpuStream);
+
     int firstImageIndex = threadParams->startImageIndex;
     int lastImageIndex = threadParams->endImageIndex;
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)parent->bufferSize);
@@ -555,6 +557,7 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 		startLoadIndex += parent->bufferSize;
 	}
     printf("thread %d done\n", threadParams->gpuStream);
+    releaseWrapper(threadParams->gpuStream);
     delete threadParams->buffer;
     delete threadParams->selFile;
     threadParams->buffer = NULL;
