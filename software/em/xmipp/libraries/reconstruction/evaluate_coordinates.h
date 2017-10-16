@@ -41,6 +41,9 @@ public:
 
     /**  Filename of evaluated file with coordinates */
     FileName fnEval;
+    
+    /** Rootname */
+    FileName rootName;
 
     /**  Number of micrographs */
     int numMic;
