@@ -1185,22 +1185,26 @@ void releaseWrapper(int streamIndex) {
 	delete wrappers[streamIndex];
 }
 
-void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		FRecBufferData* rBuffer, // FIXME rename
+void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
-		float iDeltaSqrt,
+		float iDeltaSqrt) {
+	// enqueue copy constants
+	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
+	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
+	cudaMemcpyToSymbol(cUseFast, &useFast,sizeof(useFast));
+	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
+	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
+	gpuErrchk( cudaPeekAtLastError() );
+}
+
+void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
+		FRecBufferData* rBuffer, // FIXME rename
+		float blobRadius, int maxVolIndexYZ,
 		float* blobTableSqrt, int blobTableSize,
 		float maxResolutionSqr, int streamIndex) {
 
 	cudaStream_t stream = streams[streamIndex];
-	// enqueue copy constants
-	cudaMemcpyToSymbolAsync(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX), 0, cudaMemcpyHostToDevice, stream);
-	cudaMemcpyToSymbolAsync(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ), 0, cudaMemcpyHostToDevice, stream);
-	cudaMemcpyToSymbolAsync(cUseFast, &useFast,sizeof(useFast), 0, cudaMemcpyHostToDevice, stream);
-	cudaMemcpyToSymbolAsync(cBlobRadius, &blobRadius,sizeof(blobRadius), 0, cudaMemcpyHostToDevice, stream);
-	cudaMemcpyToSymbolAsync(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt), 0, cudaMemcpyHostToDevice, stream);
-	gpuErrchk( cudaPeekAtLastError() );
 
 	// copy all data to gpu
 	FRecBufferDataGPUWrapper* wrapper = wrappers[streamIndex];

@@ -159,11 +159,14 @@ FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 
 void waitForGPU();
 
-void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		FRecBufferData* buffer,
+void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
-		float iDeltaSqrt,
+		float iDeltaSqrt);
+
+void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
+		FRecBufferData* buffer,
+		float blobRadius, int maxVolIndexYZ,
 		float* blobTableSqrt, int blobTableSize,
 		float maxResolutionSqr, int stream);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);

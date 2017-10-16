@@ -545,9 +545,7 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 			printf("thread %d will proces img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
 			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
 				threadParams->buffer,
-				parent->maxVolumeIndexX, parent->maxVolumeIndexYZ,
-				parent->useFast, parent->blob.radius,
-				parent->iDeltaSqrt,
+				parent->blob.radius, parent->maxVolumeIndexYZ,
 				parent->blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
 				parent->maxResolutionSqr,
 				threadParams->gpuStream);
@@ -1338,7 +1336,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     }
 
     createStreams(noOfCores);
-
+    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, useFast, blob.radius, iDeltaSqrt);
 	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
 	workThreads = new RecFourierWorkThread[noOfCores];
 	barrier_init( &barrier, noOfCores + 1 );
