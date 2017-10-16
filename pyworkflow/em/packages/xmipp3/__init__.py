@@ -59,6 +59,7 @@ from viewer_volume_strain import XmippVolumeStrainViewer
 from viewer_reconstruct_highres import XmippReconstructHighResViewer
 from viewer_solid_angles import SolidAnglesViewer
 from viewer_swarm import XmippReconstructSwarmViewer
+from viewer_ransac import XmippViewerRansac
 
 from plotter import XmippPlotter
 

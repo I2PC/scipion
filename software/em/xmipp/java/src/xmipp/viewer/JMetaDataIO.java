@@ -71,7 +71,8 @@ public class JMetaDataIO {
                                         out.write(String.format(vformat, p.getX()));
                                         out.write(String.format(vformat, p.getY()));
                                         out.write(String.format(vformat, p.getCost()));
-                                        enabled = !p.isDeleted() ? 1 : -1;
+//                                        enabled = !p.isDeleted()? 1 : -1;
+                                        enabled = !p.isUnavailable() ? 1 : -1;
                                         out.write(String.format(vformat, enabled));
                                         out.newLine();
                                 }
