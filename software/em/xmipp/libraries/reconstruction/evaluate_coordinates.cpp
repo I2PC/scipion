@@ -33,6 +33,7 @@ void ProgEvaluateCoordinates::readParams()
     fnEval = getParam("-e");
     numMic = getIntParam("-n");
     errMargin = getIntParam("-t");
+    rootName = getParam("--root");
 }
 
 // Show ====================================================================
@@ -45,6 +46,7 @@ void ProgEvaluateCoordinates::show()
     << "Coordinates to evaluate:           " << fnEval       << std::endl
     << "Number of micrographs:             " << numMic       << std::endl
     << "Tolerance of center misplacement:  " << errMargin    << std::endl
+    << "Root name:                         " << rootName     << std::endl
     ;
 }
 
@@ -56,6 +58,7 @@ void ProgEvaluateCoordinates::defineParams()
     addParamsLine("  -e <selfile>     : Selfile containing coordinates to evaluate");
     addParamsLine("  -n <int>         : Number of micrographs");
     addParamsLine("  [-t <int=10>]    : Tolerance of center misplacement");
+    addParamsLine("  --root <rootName> : Root name of the micrographs");
 }
 
 void ProgEvaluateCoordinates::run()
@@ -68,8 +71,8 @@ void ProgEvaluateCoordinates::run()
     {
         // Here you need to change the identifiers based on datasets
         // TODO: loading names and counts of mics automatically?
-        FileName micGT = formatString("mic_KLH_Dataset_I_Blind_Test_%04d@%s", m, fnGt.c_str());
-        FileName micEval = formatString("mic_KLH_Dataset_I_Blind_Test_%04d@%s", m, fnEval.c_str());
+        FileName micGT = formatString("%s_%04d@%s", rootName, m, fnGt.c_str());
+        FileName micEval = formatString("%s_%04d@%s", rootName, m, fnEval.c_str());
 
         GT.read(micGT);
         Eval.read(micEval);
