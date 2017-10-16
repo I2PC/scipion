@@ -71,7 +71,7 @@ class ProgRecFourierGPU;
 
 
 /** Struct holding information for loading thread */
-struct LoadThreadParams
+struct RecFourierWorkThread
 {
     pthread_t id;
     ProgRecFourierGPU * parent;
@@ -124,7 +124,7 @@ protected:
 // 	FIELDS
 
     /** Thread used for loading input data */
-    LoadThreadParams* workThreads;
+    RecFourierWorkThread* workThreads;
 
     /** SelFile containing all projections */
     MetaData SF;
@@ -203,12 +203,12 @@ protected:
      * Method will create thread used for loading images
      * and set all necessary values/variables
      */
-    void createThread(int gpuStream, int startIndex, int endIndex, LoadThreadParams& thread);
+    void createThread(int gpuStream, int startIndex, int endIndex, RecFourierWorkThread& thread);
 
     /**
      * Method will release all resources allocated for loading images
      */
-    void cleanThread(LoadThreadParams* thread);
+    void cleanThread(RecFourierWorkThread* thread);
 
     /** Read arguments from command line */
     void readParams();
@@ -403,13 +403,13 @@ private:
     static void convertToExpectedSpace(T*** input, int size,
     	MultidimArray<U>& VoutFourier);
     /** Method to load a buffer of images from input file */
-    static void preloadBuffer(LoadThreadParams * threadParams,
+    static void preloadBuffer(RecFourierWorkThread * threadParams,
     		ProgRecFourierGPU* parent,
     		bool hasCTF, std::vector<size_t>& objId);
     /**
      * Method computes CTF and weight modulator for each pixel in the image
      */
-    static void preloadCTF(LoadThreadParams* threadParams,
+    static void preloadCTF(RecFourierWorkThread* threadParams,
     		size_t imgIndex,
 			ProgRecFourierGPU* parent,
     		Array2D<float>* CTF,

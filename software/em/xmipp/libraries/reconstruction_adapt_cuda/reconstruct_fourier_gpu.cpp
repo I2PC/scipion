@@ -134,20 +134,20 @@ void ProgRecFourierGPU::run()
 //    cleanLoadingThread();
 }
 
-void ProgRecFourierGPU::createThread(int gpuStream, int startIndex, int endIndex, LoadThreadParams& thread) {
+void ProgRecFourierGPU::createThread(int gpuStream, int startIndex, int endIndex, RecFourierWorkThread& thread) {
 //	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
 	thread.parent = this;
 	// HACK threads cannot share the same object, as it would lead to race conditioning
 	// during data load (as SQLITE seems to be non-thread-safe)
 	thread.selFile = new MetaData(SF);
-	pthread_create( &thread.id , NULL, loadImageThread, (void *)(&thread) );
 //	thread->threadOpCode = PRELOAD_IMAGE;
 	thread.startImageIndex = startIndex;
 	thread.endImageIndex = endIndex;
 	thread.gpuStream = gpuStream;
+	pthread_create( &thread.id , NULL, loadImageThread, (void *)(&thread) );
 }
 
-void ProgRecFourierGPU::cleanThread(LoadThreadParams* thread) {
+void ProgRecFourierGPU::cleanThread(RecFourierWorkThread* thread) {
 //	delete thread->rBuffer;
 //	delete thread->lBuffer;
 //	thread->rBuffer = thread->lBuffer = NULL;
@@ -367,7 +367,7 @@ void ProgRecFourierGPU::cropAndShift(
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
-void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
+void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 		ProgRecFourierGPU* parent,
 		bool hasCTF, std::vector<size_t>& objId)
 {
@@ -509,7 +509,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 
 void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 {
-    LoadThreadParams* threadParams = (LoadThreadParams *) threadArgs;
+    RecFourierWorkThread* threadParams = (RecFourierWorkThread *) threadArgs;
     ProgRecFourierGPU* parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
 
@@ -528,7 +528,7 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
     int firstImageIndex = threadParams->startImageIndex;
     int lastImageIndex = threadParams->endImageIndex;
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)parent->bufferSize);
-    printf("thread %d should load img %d-%d\n", threadParams->gpuStream, firstImageIndex, lastImageIndex);
+    printf("thread %d should load img %d-%d in %d loops\n", threadParams->gpuStream, firstImageIndex, lastImageIndex, loops);
     std::cout << std::endl;
 
     int startLoadIndex = firstImageIndex;
@@ -686,7 +686,7 @@ void static printAABB(Point3D<float> AABB[]) {
 		<< std::endl;
 }
 
-inline void ProgRecFourierGPU::preloadCTF(LoadThreadParams* threadParams,
+inline void ProgRecFourierGPU::preloadCTF(RecFourierWorkThread* threadParams,
 		size_t imgIndex,
 		ProgRecFourierGPU* parent,
 		Array2D<float>* CTF,
@@ -1337,7 +1337,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     createStreams(noOfCores);
 
 	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
-	workThreads = new LoadThreadParams[noOfCores];
+	workThreads = new RecFourierWorkThread[noOfCores];
 	barrier_init( &barrier, noOfCores + 1 );
 	for (int i = 0; i < noOfCores; i++) {
 		int sIndex = firstImageIndex + i*imgPerThread;
