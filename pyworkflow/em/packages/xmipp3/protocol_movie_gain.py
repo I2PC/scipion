@@ -24,10 +24,11 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import SetOfMovies, Movie
 from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
-from pyworkflow.em.protocol.monitors import MovieGainMonitorPlotter, MonitorMovieGain
+from pyworkflow.em.protocol.monitors import MonitorMovieGain, MovieGainMonitorPlotter
 from pyworkflow.object import Set
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.utils.properties import Message
@@ -38,7 +39,6 @@ import numpy as np
 import os
 import math
 import xmipp
-from pyworkflow.em.plotter import EmPlotter
 
 class XmippProtMovieGain(ProtProcessMovies):
     """
@@ -50,6 +50,7 @@ class XmippProtMovieGain(ProtProcessMovies):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = em.STEPS_PARALLEL
+        self.protocol = args.get('protocol')
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -84,8 +85,19 @@ class XmippProtMovieGain(ProtProcessMovies):
     #--------------------------- STEPS functions -------------------------------
 
     def createOutputStep(self):
-        self._insertFunctionStep('monitorStep')
         # Do nothing now, the output should be ready.
+        movieGainMonitor = MonitorMovieGain(
+            self.get(),
+            workingDir=self.workingDir.get(),
+            samplingInterval=60,
+            monitorTime=300,
+            stddevValue=0.04,
+            ratio1Value=1.15,
+            ratio2Value=4.5)
+
+        print(movieGainMonitor.ratio1Value)
+        MovieGainMonitorPlotter(movieGainMonitor).show()
+        print(movieGainMonitor.ratio2Value)
         pass
 
 
@@ -270,39 +282,6 @@ class XmippProtMovieGain(ProtProcessMovies):
 
         # Close set databaset to avoid locking it
         outputSet.close()
-
-
-    def monitorStep(self):
-        idValues = []
-        stddevValues = []
-        ratio1Values = []
-        ratio2Values = []
-
-        fnSummary = self._getPath("summaryForMonitor.txt")
-        if not os.path.exists(fnSummary) < 1:
-            fhSummary = open(fnSummary, "r")
-            for idx, line in enumerate(fhSummary.readlines()):
-                stddev, perc25, perc975, maxVal = map(float, line.split()[1:])
-                idValues.append(idx)
-                stddevValues.append(stddev)
-                ratio1Values.append(perc975 / perc25)
-                ratio2Values.append(maxVal / perc975)
-            fhSummary.close()
-
-        data = {
-            'idValues': idValues,
-            'standard_deviation': stddevValues,
-            'ratio1': ratio1Values,
-            'ratio2': ratio2Values
-        }
-
-        print("-----------------------before")
-        xplotter = EmPlotter(1, 1)
-        a = xplotter.createSubPlot("Factor %d vs %d" % (10, 10),
-                                   "Factor %d" % 5, "Factor %d" % 5)
-        a.plot(data['ratio1'], data['ratio2'], 'o')
-        xplotter.show()
-        print("-----------------------after")
 
     #--------------------------- INFO functions -------------------------------
     def _summary(self):
