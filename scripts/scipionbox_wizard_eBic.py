@@ -71,6 +71,7 @@ PROJECT_NAME = 'PROJECT_NAME'
 SCIPION_WORKFLOW_TEMPLATE = 'SCIPION_WORKFLOW_TEMPLATE'
 # Where to save the new custimized workflow
 JSON_DESTINATION = 'JSON_DESTINATION'
+MRC_SOURCE = 'MRC_SOURCE'
 
 # Variables to enter and write in the template
 DOSE_PER_FRAME = 'dosePerFrame'
@@ -297,13 +298,18 @@ class BoxWizardView(tk.Frame):
         try:
             # Compose the destination using the session id (
             destination = self._getConfValue(JSON_DESTINATION)
+            source = self._getConfValue(MRC_SOURCE)
             sessionId = self._getValue(PROJECT_NAME)
             destination = destination.format(sessionId)
+            source = source.format(sessionId)
 
             if not self._validateDestination(destination): return False
 
             # Get a dictionary with only the values to write in the template
             replacementDict = self._vars2Dict()
+
+            replacementDict['visit'] = sessionId
+            replacementDict['filesPath'] = source
 
             # Get the template and open it
             template = self._getConfValue(SCIPION_WORKFLOW_TEMPLATE)
