@@ -57,11 +57,15 @@ FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
 	FFTs = CTFs = paddedImages = modulators = NULL;
 
 	// allocate space at GPU
-	alloc(orig->FFTs, FFTs, orig);
-	alloc(orig->CTFs, CTFs, orig);
-	alloc(orig->paddedImages, paddedImages, orig);
-	alloc(orig->modulators, modulators, orig);
+	alloc(orig->FFTs, FFTs, orig); // FFT are always necessary
 	alloc(orig->spaces, spaces, orig);
+	if ( ! hasFFTs) {
+		alloc(orig->paddedImages, paddedImages, orig);
+	}
+	if (hasCTFs) {
+		alloc(orig->CTFs, CTFs, orig);
+		alloc(orig->modulators, modulators, orig);
+	}
 	printf("FRecBufferDataGPU this: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
 			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
 }
@@ -113,11 +117,9 @@ void FRecBufferDataGPU::copy(T* srcArray, T*& dstArray, FRecBufferData* orig, in
 
 template<typename T>
 void FRecBufferDataGPU::alloc(T* srcArray, T*& dstArray, FRecBufferData* orig) {
-	if (NULL != srcArray) {
-		size_t bytes = orig->getMaxByteSize(srcArray);
-		cudaMalloc((void **) &dstArray, bytes);
-		gpuErrchk( cudaPeekAtLastError() );
-	}
+	size_t bytes = orig->getMaxByteSize(srcArray);
+	cudaMalloc((void **) &dstArray, bytes);
+	gpuErrchk( cudaPeekAtLastError() );
 }
 
 FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(FRecBufferData* orig) {
@@ -1093,10 +1095,10 @@ void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY,
 
 
 void convertImages(
-		FRecBufferDataGPUWrapper& wrapper,
+		FRecBufferDataGPUWrapper* wrapper,
 		float maxResolutionSqr,
-		int stream) {
-	FRecBufferDataGPU* hostBuffer = wrapper.cpuCopy;
+		int streamIndex) {
+	FRecBufferDataGPU* hostBuffer = wrapper->cpuCopy;
 	// store to proper structure
 	GpuMultidimArrayAtGpu<float> imagesGPU(
 			hostBuffer->paddedImgSize, hostBuffer->paddedImgSize, 1, hostBuffer->noOfImages, hostBuffer->paddedImages);
@@ -1107,15 +1109,11 @@ void convertImages(
 	myhandle.clear(); // release unnecessary memory
 	imagesGPU.d_data = NULL; // unbind the data
 
-	// now we have performed FFTs of the input images, which are not necessary anymore
+	// now we have performed FFTs of the input images
 	// buffers have to be updated accordingly
-	// allocate memory for final FFTs and update device copy
 	hostBuffer->hasFFTs = true;
-	cudaFree(hostBuffer->paddedImages);
-	hostBuffer->paddedImages = NULL;
-	cudaMalloc((void **) &hostBuffer->FFTs, hostBuffer->getFFTsByteSize());
-	cudaMemset(hostBuffer->FFTs, 0.f, hostBuffer->getFFTsByteSize()); // clear it, as kernel writes only to some parts
-	wrapper.copyToDevice(stream);
+	cudaMemsetAsync(hostBuffer->FFTs, 0.f, hostBuffer->getFFTsByteSize(), streams[streamIndex]); // clear it, as kernel writes only to some parts
+	wrapper->copyToDevice(streamIndex);
 	gpuErrchk( cudaPeekAtLastError() );
 
 
@@ -1124,7 +1122,7 @@ void convertImages(
 	dim3 dimGrid((int)ceil(resultingFFT.Xdim/dimBlock.x),(int)ceil(resultingFFT.Ydim/dimBlock.y));
 	convertImagesKernel<<<dimGrid, dimBlock>>>(
 			resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, resultingFFT.Ndim,
-			wrapper.gpuCopy, maxResolutionSqr);
+			wrapper->gpuCopy, maxResolutionSqr);
 
 	// now we have converted input images to FFTs in the required format
 }
@@ -1213,7 +1211,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// process input data if necessary
 	if ( ! wrapper->cpuCopy->hasFFTs) {
-		convertImages(*wrapper, maxResolutionSqr, streamIndex);
+		convertImages(wrapper, maxResolutionSqr, streamIndex);
 	}
 	// now wait till all necessary data are loaded to GPU (so that host can continue in work)
 	cudaStreamSynchronize(stream);
