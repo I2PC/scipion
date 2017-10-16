@@ -138,7 +138,7 @@ class ProtMonitorSystem(ProtMonitor):
         group.addParam('doDiskIO', params.BooleanParam, default=False,
                        label="Check Disk IO",
                        help="Set to true if you want to monitor the Disk "
-                            "Acces")
+                            "Access")
 
     # --------------------------- STEPS functions ----------------------------
 
@@ -375,7 +375,7 @@ class MonitorSystem(Monitor):
         return self.labelList
 
     def getData(self):
-        """Fill a dictionay for each label in self.labeldisk.
+        """Fill a dictionary for each label in self.labeldisk.
         The key is the label name. Teh value a list with
         data read from the database"""
         cur = self.cur
