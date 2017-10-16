@@ -1,6 +1,7 @@
 /***************************************************************************
  *
- * Authors:    Tomas Majtner           tmajtner@cnb.csic.es (2017)
+ * Authors:     Roberto Marabini roberto@cnb.csic.es
+ * 				David Strelak (davidstrelak@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -22,46 +23,12 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _PROG_EVALUATECOORDINATES
-#define _PROG_EVALUATECOORDINATES
 
-#include <data/xmipp_program.h>
-
-class ProgEvaluateCoordinates: public XmippProgram
+#include <reconstruction/reconstruct_fourier_accel.h>
+int main(int argc, char **argv)
 {
-public:
-    // SelFile with the ground truth
-    MetaData GT;
 
-    // SelFile with the coordinates for evaluation
-    MetaData Eval;
-
-    /** Filename of ground truth coordinates */
-    FileName fnGt;
-
-    /**  Filename of evaluated file with coordinates */
-    FileName fnEval;
-    
-    /** Rootname */
-    FileName rootName;
-
-    /**  Number of micrographs */
-    int numMic;
-
-    /**  Error margin (toleration of misplacement of object center) */
-    int errMargin;
-
-public:
-    /// Read argument
-    void readParams();
-
-    /// Show
-    void show();
-
-    /// Define parameters
-    void defineParams();
-
-    /// Main routine
-    void run();
-};
-#endif
+    ProgRecFourierAccel program;
+    program.read(argc, argv);
+    return program.tryRun();
+}

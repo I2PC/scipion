@@ -210,6 +210,14 @@ public:
         return;
     }
 
+    /** Use input as a reference to Fourier data. */
+    template <typename T>
+    void setFourierAlias(T& V)
+    {
+        fFourier.alias(V);
+        return;
+    }
+
     /** Get Fourier coefficients. */
     template <typename T>
     void getFourierCopy(T& V)
@@ -363,6 +371,12 @@ public:
     {
         fftw_cleanup();
     }
+
+    /** Recompute transformation plan. Call this method after setting real/fourier alias
+     	 and before calling Transform() to correctly update this object.
+    */
+    void recomputePlanR2C();
+
     /** Computes the transform, specified in Init() function
         If normalization=true the forward transform is normalized
         (no normalization is made in the inverse transform)
