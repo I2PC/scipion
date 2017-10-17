@@ -47,6 +47,9 @@ public:
     /**  Parameter for using entropy features */
     bool useEntropy;
 
+    /**  Parameter for using entropy features */
+    bool useGranulo;
+
     /**  Parameter for using variance features */
     bool useVariance;
 
@@ -75,6 +78,9 @@ public:
 
     /// Extracting entropy features
     void extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked, std::vector<double> &fv);
+
+    /// Extracting granulometry features
+    void extractGranulo(const MultidimArray<double> &I, std::vector<double> &fv);
 
     /// Extracting variance features
     void extractVariance(const MultidimArray<double> &I, std::vector<double> &fv);

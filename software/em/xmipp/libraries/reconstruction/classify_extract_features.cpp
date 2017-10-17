@@ -40,6 +40,7 @@ void ProgExtractFeatures::readParams()
     noDenoising = checkParam("--noDenoising");
     useLBP = checkParam("--lbp");
     useEntropy = checkParam("--entropy");
+    useGranulo = checkParam("--granulo");
     useVariance = checkParam("--variance");
     useZernike = checkParam("--zernike");
 }
@@ -55,6 +56,7 @@ void ProgExtractFeatures::show()
     << "Turn off denoising:        " << noDenoising  << std::endl
     << "Extract LBP features:      " << useLBP       << std::endl
     << "Extract entropy features:  " << useEntropy   << std::endl
+    << "Extract granulo features:  " << useGranulo   << std::endl
     << "Extract variance features: " << useVariance  << std::endl
     << "Extract Zernike moments:   " << useZernike   << std::endl
     ;
@@ -69,6 +71,7 @@ void ProgExtractFeatures::defineParams()
     addParamsLine("  [--noDenoising]               : Turn off denoising");
     addParamsLine("  [--lbp]                       : Extract LBP features");
     addParamsLine("  [--entropy]                   : Extract entropy features");
+    addParamsLine("  [--granulo]                   : Extract granulo features");
     addParamsLine("  [--variance]                  : Extract variance features");
     addParamsLine("  [--zernike]                   : Extract Zernike moments");
 }
@@ -226,6 +229,77 @@ void ProgExtractFeatures::extractEntropy(const MultidimArray<double> &I,
     }
 }
 
+void ProgExtractFeatures::extractGranulo(const MultidimArray<double> &I,
+                                         std::vector<double> &fv)
+{
+    Image<double> G;
+    G().resizeNoCopy(I);
+    double m, M;
+    I.computeDoubleMinMax(m, M);
+
+    for (int N = 1; N < 5; N++)
+    {
+        // creating circular structuring element
+        int size = N*2 + 1;
+        bool struct_elem[size][size];
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+                struct_elem[x][y] = ((x-N)*(x-N) + (y-N)*(y-N)) <= N*N;
+        }
+
+        // morphological erosion
+        double sum = 0.0;
+        for (int y = 0; y < YSIZE(I); y++)
+        {
+            for (int x = 0; x < XSIZE(I); x++)
+            {
+                double struct_min = M;
+
+                for (int yy = y-N; yy <= y+N; yy++)
+                {
+                    if (yy < 0 || yy >= YSIZE(I)) continue;
+
+                    for (int xx = x-N; xx <= x+N; xx++)
+                    {
+                        if (xx < 0 || xx >= XSIZE(I)) continue;
+
+                        if (struct_elem[xx+N-x][yy+N-y] &&
+                            DIRECT_A2D_ELEM(I, yy, xx) < struct_min)
+                            struct_min = DIRECT_A2D_ELEM(I, yy, xx);
+                    }
+                }
+                DIRECT_A2D_ELEM(G(), y, x) = struct_min;
+            }
+        }
+
+        // morphological dilation (dilation after erosion = opening)
+        for (int y = 0; y < YSIZE(I); y++)
+        {
+            for (int x = 0; x < XSIZE(I); x++)
+            {
+                double struct_max = m;
+
+                for (int yy = y-N; yy <= y+N; yy++)
+                {
+                    if (yy < 0 || yy >= YSIZE(I)) continue;
+
+                    for (int xx = x-N; xx <= x+N; xx++)
+                    {
+                        if (xx < 0 || xx >= XSIZE(I)) continue;
+
+                        if (struct_elem[xx+N-x][yy+N-y] &&
+                            DIRECT_A2D_ELEM(G(), yy, xx) > struct_max)
+                            struct_max = DIRECT_A2D_ELEM(G(), yy, xx);
+                    }
+                }
+                sum += struct_max;
+            }
+        }
+        fv.push_back(sum);
+    }
+}
+
 void ProgExtractFeatures::extractVariance(const MultidimArray<double> &I,
                                           std::vector<double> &fv)
 {
@@ -380,6 +454,13 @@ void ProgExtractFeatures::run()
         {
             extractEntropy(I(), Imasked(), fv);
             SF.setValue(MDL_SCORE_BY_ENTROPY, fv, __iter.objId);
+            fv.clear();
+        }
+
+        if (useGranulo)
+        {
+            extractGranulo(I(), fv);
+            SF.setValue(MDL_SCORE_BY_GRANULO, fv, __iter.objId);
             fv.clear();
         }
 
