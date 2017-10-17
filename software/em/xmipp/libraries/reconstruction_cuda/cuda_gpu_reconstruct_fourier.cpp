@@ -1120,7 +1120,7 @@ void convertImages(
 
 	// run kernel, one thread for each pixel of input FFT
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
-	dim3 dimGrid((int)ceil(resultingFFT.Xdim/dimBlock.x),(int)ceil(resultingFFT.Ydim/dimBlock.y));
+	dim3 dimGrid(ceil(resultingFFT.Xdim/(float)dimBlock.x), ceil(resultingFFT.Ydim/(float)dimBlock.y));
 	convertImagesKernel<<<dimGrid, dimBlock>>>(
 			resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, resultingFFT.Ndim,
 			wrapper->gpuCopy, maxResolutionSqr);
@@ -1235,7 +1235,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	int size2D = maxVolIndexYZ + 1;
 	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
-	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
+	dim3 dimGrid(ceil(size2D/(float)dimBlock.x),ceil(size2D/(float)dimBlock.y));
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
