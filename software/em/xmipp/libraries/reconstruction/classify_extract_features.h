@@ -56,7 +56,13 @@ public:
     /**  Parameter for using Zernike moments */
     bool useZernike;
 
+    /** Parameter for ramp */
+    bool useRamp;
+
 public:
+    ProgExtractFeatures();
+    ~ProgExtractFeatures();
+
     /// Read argument
     void readParams();
 
@@ -95,11 +101,18 @@ public:
     /// cancer diagnosis, Comput. Biol. Med., vol. 43, no. 1, pp. 32-41, 2013.
     void extractZernike(const MultidimArray<double> &I, std::vector<double> &fv);
 
+    /// Gray ramp coefficients
+    void extractRamp(const MultidimArray<double> &I, std::vector<double> &fv);
+
     /// Main routine
     void run();
 
 public:
     /**  Masks for entropy features */
     MultidimArray<int> masks[7];
+
+    MultidimArray<int> rampMask;
+    FitPoint *fitPoints;
+    int NmaskPoints;
 };
 #endif
