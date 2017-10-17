@@ -63,7 +63,7 @@ class TestCtfSelection(BaseTest):
                   'samplingRate': 1.25,
                   'creationInterval': 5,
                   'delay':0,
-                  'setof': 0 # SetOfMicrographs
+                  'setof': 2 # SetOfMicrographs
                   }
 
         #create input micrographs

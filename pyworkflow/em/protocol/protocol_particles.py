@@ -138,6 +138,19 @@ class ProtParticlePicking(ProtParticles):
 
         return methodsMsgs
 
+    def _summary(self):
+        summary = []
+        if self.getInputMicrographs() is not None:
+            summary.append("Number of input micrographs: %d"
+                           % self.getInputMicrographs().getSize())
+
+        if self.getOutputsSize() >= 1:
+            for key, output in self.iterOutputAttributes(EMObject):
+                summary.append("*%s:* \n %s " % (key, output.getObjComment()))
+        else:
+            summary.append(Message.TEXT_NO_OUTPUT_CO)
+        return summary
+
     def getInputMicrographsPointer(self):
         return self.inputMicrographs
 
@@ -173,19 +186,6 @@ class ProtParticlePicking(ProtParticles):
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         pass
-
-    def _summary(self):
-        summary = []
-        if self.getInputMicrographs() is not None:
-            summary.append("Number of input micrographs: %d"
-                           % self.getInputMicrographs().getSize())
-
-        if self.getOutputsSize() >= 1:
-            for key, output in self.iterOutputAttributes(EMObject):
-                summary.append("*%s:* \n %s " % (key, output.getObjComment()))
-        else:
-            summary.append(Message.TEXT_NO_OUTPUT_CO)
-        return summary
 
     def getCoordsDir(self):
         pass
@@ -410,12 +410,13 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.debug('   listOfMics: %s, doneList: %s, newDone: %s'
                    % (nMics, len(doneList), len(newDone)))
 
-        firstTime = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
         self.finished = self.streamClosed and allDone == nMics
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        self.debug('   streamMode: %s newDone: %s' % (streamMode,
+                                                      not(newDone == [])))
 
         if newDone:
             newDoneUpdated = self._updateOutputCoordSet(newDone, streamMode)
@@ -430,9 +431,9 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
         self.debug('        allDone (%s) == len(self.listOfMics (%s)'
                    % (allDone, nMics))
-        self.debug('   streamMode: %s' % streamMode)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
+            self._updateStreamState(streamMode)
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
@@ -474,7 +475,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             outputCoords.enableAppend()
 
         self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
-        self.debug("Stream Mode: %s " % streamMode)
+        self.debug(" _updateOutputCoordSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCoords, streamMode)
 
         if firstTime:
@@ -482,6 +483,25 @@ class ProtParticlePickingAuto(ProtParticlePicking):
                                        outputCoords)
 
         return micDoneList
+
+    def _updateStreamState(self, streamMode):
+
+        outputName = 'outputCoordinates'
+        outputCoords = getattr(self, outputName, None)
+
+        # If there are not outputCoordinates yet, it means that is the first
+        # time we are updating output coordinates, so we need to first create
+        # the output set
+        firstTime = outputCoords is None
+
+        if firstTime:
+            micSetPtr = self.getInputMicrographsPointer()
+            outputCoords = self._createSetOfCoordinates(micSetPtr)
+        else:
+            outputCoords.enableAppend()
+
+        self.debug(" _updateStreamState Stream Mode: %s " % streamMode)
+        self._updateOutputSet(outputName, outputCoords, streamMode)
 
     def _getMicDone(self, mic):
         return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())

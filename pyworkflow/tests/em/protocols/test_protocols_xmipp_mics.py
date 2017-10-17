@@ -231,39 +231,13 @@ class TestXmippCTFEstimation(TestXmippBase):
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
         self.proj.launchProtocol(protCTF, wait=True)
-        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         ctfModel = protCTF.outputCTF.getFirstItem()
         self.assertAlmostEquals(ctfModel.getDefocusU(),23825.9, delta=500)
         self.assertAlmostEquals(ctfModel.getDefocusV(),23520.3, delta=500)
         self.assertAlmostEquals(ctfModel.getDefocusAngle(), 49.2882, delta=5)
-        sampling = ctfModel.getMicrograph().getSamplingRate() * protCTF.ctfDownFactor.get()
+        sampling = ctfModel.getMicrograph().getSamplingRate()
         self.assertAlmostEquals(sampling, 2.474, delta=0.001)
-
-
-# class TestXmippCTFRestimation(TestXmippBase):
-#     """This class check if the protocol to determine the CTF in Xmipp works properly."""
-#     @classmethod
-#     def setUpClass(cls):
-#         setupTestProject(cls)
-#         TestXmippBase.setData()
-#         cls.protImport = cls.runImportMicrographBPV(cls.micsFn)
-#         cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, 3, 4)
-#     
-#     def testCTF(self):
-#         # Estimate CTF on the downsampled micrographs
-#         print "Performing CTF..."
-#         protCTF = XmippProtCTFMicrographs(numberOfThreads=4)
-#         protCTF.inputMicrographs.set(self.protDown.outputMicrographs)        
-#         self.proj.launchProtocol(protCTF, wait=True)
-#         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
-#         
-        print "Performing CTF Recalculation..."
-#         str = "1,22000,24000,0,0.05,0.26; 3,21000,23000,0,0.04,0.3"
-#         protReCTF = XmippProtRecalculateCTF(numberOfThreads=3, numberOfMpi=1)
-#         protReCTF.inputCtf.set(protCTF.outputCTF)
-#         protReCTF.inputValues.set(str)
-#         self.proj.launchProtocol(protReCTF, wait=True)
-#         self.assertIsNotNone(protReCTF.outputCTF, "SetOfCTF has not been produced in CTF Recalculation.")
 
 
 class TestXmippAutomaticPicking(TestXmippBase):
