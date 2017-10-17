@@ -47,6 +47,9 @@ public:
     /**  Parameter for using entropy features */
     bool useEntropy;
 
+    /**  Parameter for using variance features */
+    bool useVariance;
+
     /**  Parameter for using Zernike moments */
     bool useZernike;
 
@@ -72,6 +75,9 @@ public:
 
     /// Extracting entropy features
     void extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked, std::vector<double> &fv);
+
+    /// Extracting variance features
+    void extractVariance(const MultidimArray<double> &I, std::vector<double> &fv);
 
     /// Extracting Zernike moments
     /// See method at A. Tahmasbi, F. Saki, S. B. Shokouhi, Classification
