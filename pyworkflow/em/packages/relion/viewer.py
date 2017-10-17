@@ -1611,10 +1611,12 @@ class RelionLocalResViewer(LocalResolutionViewer):
         xplotter = RelionPlotter(x=2, y=2, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
-        for i in xrange(4):
-            slice = self.getSlice(i+1, imgData)
+        #The slices to be shown are close to the center. Volume size is divided in 
+        # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
+        for i in xrange(3,7): 
+            slice = self.getSlice(i, imgData)
             a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
-            matrix = self.getSliceImage(imgData, i+1, self._getAxis())
+            matrix = self.getSliceImage(imgData, i, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, minRes, maxRes,
                                        cmap=self._getColorName(),
                                        interpolation="nearest")

@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from convert import getEnviron
 from pyworkflow.em.viewer import ChimeraView, DataView, LocalResolutionViewer
-from protocol_blocres import BsoftProtBlocres, OUTPUT_RESOLUTION_FILE
+from protocol_blocres import BsoftProtBlocres, FN_RESOLMAP
 
 
 #------------------------ Some views and  viewers ------------------------
@@ -111,13 +111,14 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
                       default=COLOR_JET,
                       label='Color map',
                       help='Select the color map to apply to the resolution map. '
-                            'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html.')
+                      'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html.')
         
         group.addParam('otherColorMap', StringParam, default='jet',
                       condition = binaryCondition,
                       label='Customized Color map',
-                      help='Name of a color map to apply to the resolution map. Valid names can be found at '
-                            'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html')
+                      help='Name of a color map to apply to the resolution map.'
+                      ' Valid names can be found at '
+                      'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html')
         group.addParam('sliceAxis', EnumParam, default=AX_Z,
                        choices=['x', 'y', 'z'],
                        display=EnumParam.DISPLAY_HLIST,
@@ -127,6 +128,7 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
               label="Show colored slices")
 
     def _getVisualizeDict(self):
+        self.protocol._createFilenameTemplates()
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowVolumeSlices': self._showVolumeSlices,
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
@@ -145,16 +147,19 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
         return [cm]
     
     def _showVolumeColorSlices(self, param=None):
-        imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        import os
+        imageFile = self.protocol._getFileName(FN_RESOLMAP)
         imgData, min_Res, max_Res = self.getImgData(imageFile)
 
         xplotter = BsoftPlotter(x=2, y=2, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
-        for i in xrange(4):
-            slice = self.getSlice(i+1, imgData)
+        #The slices to be shown are close to the center. Volume size is divided in 
+        # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
+        for i in xrange(3,7): 
+            slice = self.getSlice(i, imgData)
             a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
-            matrix = self.getSliceImage(imgData, i+1, self._getAxis())
+            matrix = self.getSliceImage(imgData, i, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
                                        cmap=self.getColorMap(),
                                        interpolation="nearest")
@@ -163,7 +168,7 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
 
 
     def _plotHistogram(self, param=None):
-        imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        imageFile = self.protocol._getFileName(FN_RESOLMAP)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         Res = imgData[imgData!=self.protocol.fill.get()]
@@ -193,38 +198,6 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
 
-    def _plotVolumeSlices(self, title, volumeData, vminData, vmaxData, cmap, **kwargs):
-        """ Helper function to create plots of volumes slices. 
-        Params:
-            title: string that will be used as title for the figure.
-            volumeData: numpy array representing a volume from where to take the slices.
-            cmap: color map to represent the slices.
-        """
-        # Get some customization parameters, by providing with default values
-        titleFontSize = kwargs.get('titleFontSize', 14)
-        titleColor = kwargs.get('titleColor','#104E8B')
-        sliceFontSize = kwargs.get('sliceFontSize', 10)
-        sliceColor = kwargs.get('sliceColor', '#104E8B')
-        size = kwargs.get('n', volumeData.shape[0])
-        origSize = kwargs.get('orig_n', size)
-        dataAxis = kwargs.get('dataAxis', 'z')
-    
-        print size
-        f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-        f.suptitle(title, fontsize=titleFontSize, color=titleColor, fontweight='bold')
-    
-        def showSlice(ax, index):
-            sliceTitle = 'Slice %s' % self.getSlice(index, volumeData)
-            ax.set_title(sliceTitle, fontsize=sliceFontSize, color=sliceColor)
-            return ax.imshow(self.getSliceImage(volumeData, index+3, dataAxis), vmin=vminData, vmax=vmaxData,
-                             cmap=self.getColorMap(), interpolation="nearest")
-
-        im = showSlice(ax1, 0)
-        showSlice(ax2, 1)
-        showSlice(ax3, 2)
-        showSlice(ax4, 3)
-        
-        return f, im 
     
     def getColorMap(self):
         if (COLOR_CHOICES[self.colorMap.get()] is 'other'): 

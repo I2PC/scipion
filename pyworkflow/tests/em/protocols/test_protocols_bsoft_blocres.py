@@ -27,9 +27,6 @@
 import unittest, sys
 # import numpy as np
 from pyworkflow.em import exists
-from pyworkflow.em.packages.bsoft.protocol_blocres import (OUTPUT_RESOLUTION_FILE, CRITERION_FSC,
-                                                           CRITERION_DPR, CRITERION_SSNR, CRITERION_RAB,
-                                                           PAD_NONE, PAD_BOX, PAD_SHELL)
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pyworkflow.em.packages.xmipp3 import XmippProtCreateMask3D
 from pyworkflow.em.packages.bsoft.protocol_blocres import BsoftProtBlocres
@@ -92,16 +89,16 @@ class TestBsoftBlocres(TestBsoftBlocresBase):
                                    mask=self.protCreateMask.outputMask,
                                    method=True,
                                    box=20,
-                                   resolutionCriterion=CRITERION_FSC,
+                                   resolutionCriterion=0,
                                    cutoff=0.5,
                                    step=1,
                                    maxresolution=2,
                                    fill=0,
-                                   pad=PAD_BOX,
+                                   pad=1,
                                    symmetry='',
                                    smooth=True)
         self.launchProtocol(blocres)
-        self.assertTrue(exists(blocres._getExtraPath(OUTPUT_RESOLUTION_FILE)),
+        self.assertIsNotNone(blocres.resolution_Volume,
                         "blocres has failed")
 
 
@@ -113,14 +110,14 @@ class TestBsoftBlocres(TestBsoftBlocresBase):
                                    mask=self.protCreateMask.outputMask,
                                    method=False,
                                    shell=20,
-                                   resolutionCriterion=CRITERION_FSC,
+                                   resolutionCriterion=0,
                                    cutoff=0.5,
                                    step=1,
                                    maxresolution=2,
                                    fill=0,
-                                   pad=PAD_BOX,
+                                   pad=1,
                                    symmetry='',
                                    smooth=True)
         self.launchProtocol(blocres)
-        self.assertTrue(exists(blocres._getExtraPath(OUTPUT_RESOLUTION_FILE)),
+        self.assertIsNotNone(blocres.resolution_Volume,
                         "blocres has failed")

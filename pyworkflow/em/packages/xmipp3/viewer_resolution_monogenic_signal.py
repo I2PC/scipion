@@ -90,8 +90,9 @@ class XmippMonoResViewer(LocalResolutionViewer):
         group.addParam('otherColorMap', StringParam, default='jet',
                       condition = binaryCondition,
                       label='Customized Color map',
-                      help='Name of a color map to apply to the resolution map. Valid names can be found at '
-                            'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html')
+                      help='Name of a color map to apply to the resolution map.'
+                      ' Valid names can be found at '
+                      'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html')
         group.addParam('sliceAxis', EnumParam, default=AX_Z,
                        choices=['x', 'y', 'z'],
                        display=EnumParam.DISPLAY_HLIST,
@@ -106,6 +107,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
 
         
     def _getVisualizeDict(self):
+        self.protocol._createFilenameTemplates()
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowVolumeSlices': self._showVolumeSlices,
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
@@ -129,14 +131,15 @@ class XmippMonoResViewer(LocalResolutionViewer):
         
     
     def _showVolumeColorSlices(self, param=None):
-        imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        imageFile = self.protocol._getFileName(OUTPUT_RESOLUTION_FILE)
         imgData, min_Res, max_Res = self.getImgData(imageFile)
 
         xplotter = XmippPlotter(x=2, y=2, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
-        for i in xrange(3,7):
-            print i 
+        #The slices to be shown are close to the center. Volume size is divided in 
+        # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
+        for i in xrange(3,7): 
             slice = self.getSlice(i, imgData)
             a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
             matrix = self.getSliceImage(imgData, i, self._getAxis())
@@ -175,41 +178,8 @@ class XmippMonoResViewer(LocalResolutionViewer):
         
         return [Plotter(figure = fig)]
 
-
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
-
-    def _plotVolumeSlices(self, title, volumeData, vminData, vmaxData, cmap, **kwargs):
-        """ Helper function to create plots of volumes slices. 
-        Params:
-            title: string that will be used as title for the figure.
-            volumeData: numpy array representing a volume from where to take the slices.
-            cmap: color map to represent the slices.
-        """
-        # Get some customization parameters, by providing with default values
-        titleFontSize = kwargs.get('titleFontSize', 14)
-        titleColor = kwargs.get('titleColor','#104E8B')
-        sliceFontSize = kwargs.get('sliceFontSize', 10)
-        sliceColor = kwargs.get('sliceColor', '#104E8B')
-        size = kwargs.get('n', volumeData.shape[0])
-        origSize = kwargs.get('orig_n', size)
-        dataAxis = kwargs.get('dataAxis', 'z')
-    
-        f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-        f.suptitle(title, fontsize=titleFontSize, color=titleColor, fontweight='bold')
-    
-        def showSlice(ax, index):
-            sliceTitle = 'Slice %s' % int(index*size/9)
-            ax.set_title(sliceTitle, fontsize=sliceFontSize, color=sliceColor)
-            return ax.imshow(self.getSliceImage(volumeData, index, dataAxis), vmin=vminData, vmax=vmaxData,
-                             cmap=self.getColorMap(), interpolation="nearest")
-        
-        im = showSlice(ax1, 3)
-        showSlice(ax2, 4)
-        showSlice(ax3, 5)
-        showSlice(ax4, 6)
-        
-        return f, im 
 
     def _showChimera(self, param=None):
         self.createChimeraScript()
@@ -240,7 +210,8 @@ class XmippMonoResViewer(LocalResolutionViewer):
         colorList = self.colorMapToColorList(colors_labels, self.getColorMap())
         
         if self.protocol.halfVolumes.get() is True:
-            #fhCmd.write("open %s\n" % (fnRoot+FN_MEAN_VOL)) #Perhaps to check the use of mean volume is useful
+            #fhCmd.write("open %s\n" % (fnRoot+FN_MEAN_VOL)) #Perhaps to check 
+            #the use of mean volume is useful
             fnbase = removeExt(self.protocol.inputVolume.get().getFileName())
             ext = getExt(self.protocol.inputVolume.get().getFileName())
             fninput = abspath(fnbase + ext[0:4])
@@ -283,8 +254,8 @@ class XmippMonoResViewer(LocalResolutionViewer):
 
     @staticmethod
     def colorMapToColorList(steps, colorMap):
-        """ Returns a list of pairs resolution, hexColor to be used in chimera scripts for coloring the volume and
-        the colorKey """
+        """ Returns a list of pairs resolution, hexColor to be used in chimera 
+        scripts for coloring the volume and the colorKey """
 
         # Get the map used by monoRes
         colors = ()
