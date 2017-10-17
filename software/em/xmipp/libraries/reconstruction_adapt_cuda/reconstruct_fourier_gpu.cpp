@@ -509,6 +509,8 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 
 void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 {
+	XMIPP_TRY
+
     RecFourierWorkThread* threadParams = (RecFourierWorkThread *) threadArgs;
     ProgRecFourierGPU* parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
@@ -560,6 +562,8 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
     delete threadParams->selFile;
     threadParams->buffer = NULL;
     barrier_wait( barrier );// notify that thread finished
+
+	XMIPP_CATCH // catch possible exception
 }
 
 template<typename T, typename U>
