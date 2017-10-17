@@ -77,15 +77,17 @@ MRC_SOURCE = 'MRC_SOURCE'
 DOSE_PER_FRAME = 'dosePerFrame'
 MAGNIFICATION = 'magnification'
 PHASEPLATE = 'doPhShEst'
+NUMBER_OF_FRAMES = 'numberOfIndividualFrames'
 
-vars2Use = [DOSE_PER_FRAME, MAGNIFICATION, PHASEPLATE]
+vars2Use = [DOSE_PER_FRAME, MAGNIFICATION, PHASEPLATE, NUMBER_OF_FRAMES]
 
 # Define some string constants
 LABELS = {
     PROJECT_NAME: "Session id",
     DOSE_PER_FRAME: "Dose per frame",
     MAGNIFICATION: "Magnification",
-    PHASEPLATE: "Use phase shift estimation"
+    PHASEPLATE: "Use phase shift estimation",
+    NUMBER_OF_FRAMES: "Number of frames per movie"
 }
 
 MICROSCOPE = "Microscope"
@@ -253,7 +255,8 @@ class BoxWizardView(tk.Frame):
 
         _addPair(DOSE_PER_FRAME, 2, labelFrame2)
         _addPair(MAGNIFICATION, 3, labelFrame2)
-        _addCheckPair(PHASEPLATE, 4, labelFrame2)
+        _addPair(NUMBER_OF_FRAMES, 4, labelFrame2, traceCallback=self._onInputChange)
+        _addCheckPair(PHASEPLATE, 5, labelFrame2)
 
         frame.columnconfigure(0, weight=1)
 
@@ -269,6 +272,7 @@ class BoxWizardView(tk.Frame):
         return self.vars[varKey]
 
     def _getValue(self, varKey):
+        print "getting {} from {}".format(varKey, self.vars)
         return self.vars[varKey].get()
 
     def _setValue(self, varKey, value):
@@ -366,6 +370,9 @@ class BoxWizardView(tk.Frame):
     def _validProjectName(self):
         return PROJECT_REGEX.match(self._getProjectName())
 
+    def _validNumberOfFrames(self):
+        return self._getValue(NUMBER_OF_FRAMES).isdigit()
+
     def _isInputReady(self):
         return self.microscope is not None and self._validProjectName()
 
@@ -374,6 +381,8 @@ class BoxWizardView(tk.Frame):
             msg = 'Select microscope'
         elif not self._validProjectName():
             msg = ('Invalid session id.')
+        elif not self._validNumberOfFrames():
+            msg = ('Invalid number of frames')
         else:
             msg = ''
 
