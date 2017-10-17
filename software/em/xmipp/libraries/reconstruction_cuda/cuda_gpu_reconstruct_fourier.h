@@ -159,6 +159,10 @@ FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
 
 void waitForGPU();
 
+void copyBlobTable(float* blobTableSqrt, int blobTableSize);
+
+void releaseBlobTable();
+
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
@@ -167,7 +171,6 @@ void copyConstants(
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		FRecBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ,
-		float* blobTableSqrt, int blobTableSize,
 		float maxResolutionSqr, int stream);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
 void copyBuffer(ProjectionData* data, int size);

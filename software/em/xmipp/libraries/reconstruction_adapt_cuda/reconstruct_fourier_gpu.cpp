@@ -546,7 +546,6 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
 				threadParams->buffer,
 				parent->blob.radius, parent->maxVolumeIndexYZ,
-				parent->blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
 				parent->maxResolutionSqr,
 				threadParams->gpuStream);
 		}
@@ -1337,6 +1336,9 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 
     createStreams(noOfCores);
     copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, useFast, blob.radius, iDeltaSqrt);
+    if ( ! useFast) {
+    	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
+    }
 	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
 	workThreads = new RecFourierWorkThread[noOfCores];
 	barrier_init( &barrier, noOfCores + 1 );
@@ -1344,18 +1346,16 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 		int sIndex = firstImageIndex + i*imgPerThread;
 		int eIndex = std::min(lastImageIndex, sIndex + imgPerThread-1);
 		createThread(i, sIndex, eIndex, workThreads[i]);
-		if (workThreads[i].selFile->getFilename().empty()) {
-			std::cout << "PRUSER, vlakno " << i << std::endl;
-		}
 	}
 	// Waiting for threads to finish
 	barrier_wait( &barrier );
 	for (int i = 0; i < noOfCores; i++) {
 		pthread_join(workThreads[i].id, NULL);
 	}
-	delete[] workThreads;
-	deleteStreams(noOfCores);
 	barrier_destroy( &barrier );
+	delete[] workThreads;
+	releaseBlobTable();
+	deleteStreams(noOfCores);
 
 //    fftOnGPU = t; // FIXME implement some profiler that will decide if it's worth to use GPU for data loading
 

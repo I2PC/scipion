@@ -23,6 +23,7 @@ extern __shared__ float2 IMG[];
 
 cudaStream_t* streams; // fixme move elsewhere (but it cannot be in header :( )
 std::map<int,FRecBufferDataGPUWrapper*> wrappers;
+float* devBlobTableSqrt = NULL;
 
 ////void copyProjectionData(ProjectionData* data);
 ////static ProjectionDataGPU* copyProjectionData(ProjectionData& data);
@@ -1178,6 +1179,17 @@ void allocateWrapper(FRecBufferData* buffer, int streamIndex) {
 	wrappers[streamIndex] = new FRecBufferDataGPUWrapper(buffer);
 }
 
+void copyBlobTable(float* blobTableSqrt, int blobTableSize) {
+	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
+	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
+	gpuErrchk( cudaPeekAtLastError() );
+}
+
+void releaseBlobTable() {
+	cudaFree(devBlobTableSqrt);
+	gpuErrchk( cudaPeekAtLastError() );
+}
+
 
 void releaseWrapper(int streamIndex) {
 	delete wrappers[streamIndex];
@@ -1199,7 +1211,6 @@ void copyConstants(
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		FRecBufferData* rBuffer, // FIXME rename
 		float blobRadius, int maxVolIndexYZ,
-		float* blobTableSqrt, int blobTableSize,
 		float maxResolutionSqr, int streamIndex) {
 
 	cudaStream_t stream = streams[streamIndex];
@@ -1216,12 +1227,6 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	// now wait till all necessary data are loaded to GPU (so that host can continue in work)
 	cudaStreamSynchronize(stream);
 
-
-	// copy blob data
-	float* devBlobTableSqrt; // FIXME since these data do not change, consider storing them just once
-//	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
-//	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
-//	gpuErrchk( cudaPeekAtLastError() );
 
 	printf("about to call kernel from thread %d\n", stream);
 	fflush(stdout);
@@ -1240,8 +1245,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// delete blob data
 	// data in both buffers is cleaned by destructor
-//	cudaFree(devBlobTableSqrt);
-//	gpuErrchk( cudaPeekAtLastError() );
+
 	printf("leaving processBufferGPU thread %d\n", stream);
 	fflush(stdout);
 }
