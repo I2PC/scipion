@@ -415,6 +415,8 @@ private:
     		Array2D<float>* CTF,
     		Array2D<float>* modulator);
 
+    void logProgress(int increment);
+
 // METHODS
 
     /** Method will set indexes of the images to load and open sync barrier */

@@ -548,6 +548,7 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 				parent->blob.radius, parent->maxVolumeIndexYZ,
 				parent->maxResolutionSqr,
 				threadParams->gpuStream);
+			parent->logProgress(threadParams->buffer->noOfImages);
 		}
 		printf("thread %d processing done\n", threadParams->gpuStream);
 		// update next iteration;
@@ -1323,8 +1324,26 @@ void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
 	}
 }
 
+void ProgRecFourierGPU::logProgress(int increment) {
+	static int repaintAfter = (int)ceil((double)SF.size()/60);
+	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	static int noOfDone = 0;
+	static int noOfLogs = 0;
+	if (verbose) {
+		pthread_mutex_lock(&mutex);
+		noOfDone += increment;
+		while (noOfLogs < (noOfDone / repaintAfter)) {
+			progress_bar(noOfDone);
+			noOfLogs++;
+		}
+		pthread_mutex_unlock(&mutex);
+	}
+}
+
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
+
+
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
     if (NULL == tempVolumeGPU) {
