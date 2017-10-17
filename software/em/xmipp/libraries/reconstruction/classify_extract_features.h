@@ -38,11 +38,20 @@ public:
     /**  Filename output root */
     FileName fnOut;
 
+    /**  Parameter for turning off denoising */
+    bool noDenoising;
+
     /**  Parameter for using LBP */
     bool useLBP;
 
     /**  Parameter for using entropy features */
     bool useEntropy;
+
+    /**  Parameter for using variance features */
+    bool useVariance;
+
+    /**  Parameter for using Zernike moments */
+    bool useZernike;
 
 public:
     /// Read argument
@@ -54,15 +63,31 @@ public:
     /// Define parameters
     void defineParams();
 
+    /// Function for returning factorial up to n=4
+    int facs(int n);
+
     /// Extracting LBP features
     /// See method at Ojala, Timo, Matti Pietikainen, and Topi Maenpaa.
     /// "Multiresolution gray-scale and rotation invariant texture
     /// classification with local binary patterns." IEEE Transactions on
     /// Pattern Analysis and Machine Intelligence 24.7 (2002): 971-987.
-    std::vector<double> extractLBP(const MultidimArray<double> &I);
+    void extractLBP(const MultidimArray<double> &I, std::vector<double> &fv);
 
     /// Extracting entropy features
-    std::vector<double> extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked);
+    void extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked, std::vector<double> &fv);
+
+    /// Extracting variance features
+    void extractVariance(const MultidimArray<double> &I, std::vector<double> &fv);
+
+    /// Extracting Zernike moments
+    /// See method at A. Tahmasbi, F. Saki, S. B. Shokouhi, Classification
+    /// of Benign and Malignant Masses Based on Zernike Moments,
+    /// Comput. Biol. Med., vol. 41, no. 8, pp. 726-735, 2011
+    /// and also
+    /// F. Saki, A. Tahmasbi, H. Soltanian-Zadeh, S. B. Shokouhi,
+    /// Fast opposite weight learning rules with application in breast
+    /// cancer diagnosis, Comput. Biol. Med., vol. 43, no. 1, pp. 32-41, 2013.
+    void extractZernike(const MultidimArray<double> &I, std::vector<double> &fv);
 
     /// Main routine
     void run();
