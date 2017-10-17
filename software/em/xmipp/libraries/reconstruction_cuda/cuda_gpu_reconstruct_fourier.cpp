@@ -51,8 +51,8 @@ float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
 
 FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
 
-	printf("FRecBufferDataGPU orig: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
-			orig, orig->FFTs,orig->CTFs, orig->paddedImages, orig->modulators, orig->spaces);
+//	printf("FRecBufferDataGPU orig: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
+//			orig, orig->FFTs,orig->CTFs, orig->paddedImages, orig->modulators, orig->spaces);
 
 	copyMetadata(orig);
 	FFTs = CTFs = paddedImages = modulators = NULL;
@@ -67,8 +67,8 @@ FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
 		alloc(orig->CTFs, CTFs, orig);
 		alloc(orig->modulators, modulators, orig);
 	}
-	printf("FRecBufferDataGPU this: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
-			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
+//	printf("FRecBufferDataGPU this: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
+//			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
 }
 
 void FRecBufferDataGPU::copyDataFrom(FRecBufferData* orig, int stream) {
@@ -93,7 +93,7 @@ void FRecBufferDataGPU::copyMetadata(FRecBufferData* orig) {
 }
 
 FRecBufferDataGPU::~FRecBufferDataGPU() {
-	printf("~FRecBufferDataGPU this: %p, spaces: %p\n", this, this->spaces);
+//	printf("~FRecBufferDataGPU this: %p, spaces: %p\n", this, this->spaces);
 	cudaFree(FFTs);
 	cudaFree(CTFs);
 	cudaFree(paddedImages);
@@ -108,7 +108,7 @@ template<typename T>
 void FRecBufferDataGPU::copy(T* srcArray, T*& dstArray, FRecBufferData* orig, int stream) {
 	if (NULL != srcArray) {
 		size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
-		printf("copying %d bytes from %p to %p, stream %d\n", bytes, srcArray, dstArray, stream);
+//		printf("copying %d bytes from %p to %p, stream %d\n", bytes, srcArray, dstArray, stream);
 		cudaHostRegister(srcArray, bytes, 0);
 		cudaMemcpyAsync(dstArray, srcArray, bytes, cudaMemcpyHostToDevice, streams[stream]);
 		cudaHostUnregister(srcArray);
@@ -1228,8 +1228,8 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	cudaStreamSynchronize(stream);
 
 
-	printf("about to call kernel from thread %d\n", stream);
-	fflush(stdout);
+//	printf("about to call kernel from thread %d\n", stream);
+//	fflush(stdout);
 
 	// enqueue kernel and return control
 	int size2D = maxVolIndexYZ + 1;
@@ -1246,6 +1246,6 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	// delete blob data
 	// data in both buffers is cleaned by destructor
 
-	printf("leaving processBufferGPU thread %d\n", stream);
-	fflush(stdout);
+//	printf("leaving processBufferGPU thread %d\n", stream);
+//	fflush(stdout);
 }

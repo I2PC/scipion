@@ -65,8 +65,8 @@ void createPlanFFT(size_t Xdim, size_t Ydim, size_t Ndim, size_t Zdim, bool forw
 	int rdist = Xdim*Ydim*Zdim;	    // --- Distance between batches
 	int fdist = Xfdim*Ydim*Zdim;
 
-	printf("%d %d %d %d %d\n", Xdim, Xfdim, Ydim, Zdim, Ndim);
-	printf("rank %d  nr %d %d stride %d dist %d nf %d %d stride %d dist %d ndim %d\n", NRANK, nr[0], nr[1], rstride, rdist, nf[0], nf[1],  fstride, fdist, Ndim);
+//	printf("%d %d %d %d %d\n", Xdim, Xfdim, Ydim, Zdim, Ndim);
+//	printf("rank %d  nr %d %d stride %d dist %d nf %d %d stride %d dist %d ndim %d\n", NRANK, nr[0], nr[1], rstride, rdist, nf[0], nf[1],  fstride, fdist, Ndim);
 
 	if(forward){
 		gpuErrchkFFT(cufftPlanMany(plan, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_R2C, Ndim));

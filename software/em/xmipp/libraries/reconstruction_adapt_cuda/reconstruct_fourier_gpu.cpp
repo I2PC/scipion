@@ -532,19 +532,19 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
     int firstImageIndex = threadParams->startImageIndex;
     int lastImageIndex = threadParams->endImageIndex;
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)parent->bufferSize);
-    printf("thread %d should load img %d-%d in %d loops\n", threadParams->gpuStream, firstImageIndex, lastImageIndex, loops);
-    std::cout << std::endl;
+//    printf("thread %d should load img %d-%d in %d loops\n", threadParams->gpuStream, firstImageIndex, lastImageIndex, loops);
+//    std::cout << std::endl;
 
     int startLoadIndex = firstImageIndex;
     for(int i = 0; i < loops; i++) {
 
     	threadParams->startImageIndex = startLoadIndex;
     	threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
-    	printf("thread %d will now load img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
+//    	printf("thread %d will now load img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
     	preloadBuffer(threadParams, parent, hasCTF, objId);
 
 		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
-			printf("thread %d will proces img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
+//			printf("thread %d will proces img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
 			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
 				threadParams->buffer,
 				parent->blob.radius, parent->maxVolumeIndexYZ,
@@ -552,11 +552,11 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 				threadParams->gpuStream);
 			parent->logProgress(threadParams->buffer->noOfImages);
 		}
-		printf("thread %d processing done\n", threadParams->gpuStream);
+//		printf("thread %d processing done\n", threadParams->gpuStream);
 		// update next iteration;
 		startLoadIndex += parent->bufferSize;
 	}
-    printf("thread %d done\n", threadParams->gpuStream);
+//    printf("thread %d done\n", threadParams->gpuStream);
     releaseWrapper(threadParams->gpuStream);
     delete threadParams->buffer;
     delete threadParams->selFile;
