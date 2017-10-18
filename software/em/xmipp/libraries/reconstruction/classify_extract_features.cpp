@@ -48,12 +48,12 @@ void ProgExtractFeatures::readParams()
     fnSel = getParam("-i");
     fnOut = getParam("-o");
     noDenoising = checkParam("--noDenoising");
-    useLBP = checkParam("--lbp");
     useEntropy = checkParam("--entropy");
     useGranulo = checkParam("--granulo");
+    useLBP = checkParam("--lbp");
+    useRamp = checkParam("--ramp");
     useVariance = checkParam("--variance");
     useZernike = checkParam("--zernike");
-    useRamp = checkParam("--ramp");
 }
 
 // Show ====================================================================
@@ -65,12 +65,12 @@ void ProgExtractFeatures::show()
     << "Input selfile:             " << fnSel        << std::endl
     << "Output selfile:            " << fnOut        << std::endl
     << "Turn off denoising:        " << noDenoising  << std::endl
-    << "Extract LBP features:      " << useLBP       << std::endl
     << "Extract entropy features:  " << useEntropy   << std::endl
     << "Extract granulo features:  " << useGranulo   << std::endl
+    << "Extract LBP features:      " << useLBP       << std::endl
+    << "Extract ramp coefficients: " << useRamp      << std::endl
     << "Extract variance features: " << useVariance  << std::endl
     << "Extract Zernike moments:   " << useZernike   << std::endl
-    << "Extract ramp coefficients: " << useRamp      << std::endl
     ;
 }
 
@@ -81,12 +81,12 @@ void ProgExtractFeatures::defineParams()
     addParamsLine("  -i <selfile>                  : Selfile containing images to be clustered");
     addParamsLine("  [-o <selfile=\"\">]           : Output selfile");
     addParamsLine("  [--noDenoising]               : Turn off denoising");
-    addParamsLine("  [--lbp]                       : Extract LBP features");
     addParamsLine("  [--entropy]                   : Extract entropy features");
     addParamsLine("  [--granulo]                   : Extract granulo features");
+    addParamsLine("  [--lbp]                       : Extract LBP features");
+    addParamsLine("  [--ramp]                      : Extract Ramp coefficients");
     addParamsLine("  [--variance]                  : Extract variance features");
     addParamsLine("  [--zernike]                   : Extract Zernike moments");
-    addParamsLine("  [--ramp]                      : Extract Ramp coefficients");
 }
 
 
@@ -95,59 +95,6 @@ int ProgExtractFeatures::facs(int n)
     return (n == 1 || n == 0) ? 1 :
            (n == 2) ? 2 :
            (n == 3) ? 6 : 24;
-}
-
-void ProgExtractFeatures::extractLBP(const MultidimArray<double> &I,
-                                     std::vector<double> &fv)
-{
-    std::vector<double> min_idxs, min_idxs_sort;
-
-    unsigned char code;
-    double center;
-    int lbp_hist[256] = {};
-
-    for (int i = 0; i < 256; i++)
-    {
-        code = i;
-        int code_min = (int) code;
-        for (int ii = 0; ii < 7; ii++)
-        {
-            unsigned char c = code & 1;
-            code >>= 1;
-            code |= (c << 7);
-            if ((int) code < code_min)
-                code_min = (int) code;
-        }
-        min_idxs.push_back(code_min);
-    }
-    min_idxs_sort = min_idxs;
-    std::sort(min_idxs_sort.begin(), min_idxs_sort.end());
-    std::unique(min_idxs_sort.begin(), min_idxs_sort.end());
-
-    for (int y = 1; y < (YSIZE(I)-1); y++)
-    {
-        for (int x = 1; x < (XSIZE(I)-1); x++)
-        {
-            code = 0;
-            center = DIRECT_A2D_ELEM(I,y,x);
-            code |= (DIRECT_A2D_ELEM(I,y-1,x-1) > center) << 7;
-            code |= (DIRECT_A2D_ELEM(I,y-1,x  ) > center) << 6;
-            code |= (DIRECT_A2D_ELEM(I,y-1,x+1) > center) << 5;
-            code |= (DIRECT_A2D_ELEM(I,y,  x+1) > center) << 4;
-            code |= (DIRECT_A2D_ELEM(I,y+1,x+1) > center) << 3;
-            code |= (DIRECT_A2D_ELEM(I,y+1,x  ) > center) << 2;
-            code |= (DIRECT_A2D_ELEM(I,y+1,x-1) > center) << 1;
-            code |= (DIRECT_A2D_ELEM(I,y  ,x-1) > center) << 0;
-            int idx = min_idxs[(int) code];
-            lbp_hist[idx]++;
-        }
-    }
-
-    for (int i = 0; i < 36; i++)
-    {
-        int idx = min_idxs_sort[i];
-        fv.push_back(lbp_hist[idx]);
-    }
 }
 
 
@@ -242,6 +189,7 @@ void ProgExtractFeatures::extractEntropy(const MultidimArray<double> &I,
     }
 }
 
+
 void ProgExtractFeatures::extractGranulo(const MultidimArray<double> &I,
                                          std::vector<double> &fv)
 {
@@ -312,6 +260,93 @@ void ProgExtractFeatures::extractGranulo(const MultidimArray<double> &I,
         fv.push_back(sum);
     }
 }
+
+
+void ProgExtractFeatures::extractLBP(const MultidimArray<double> &I,
+                                     std::vector<double> &fv)
+{
+    std::vector<double> min_idxs, min_idxs_sort;
+
+    unsigned char code;
+    double center;
+    int lbp_hist[256] = {};
+
+    for (int i = 0; i < 256; i++)
+    {
+        code = i;
+        int code_min = (int) code;
+        for (int ii = 0; ii < 7; ii++)
+        {
+            unsigned char c = code & 1;
+            code >>= 1;
+            code |= (c << 7);
+            if ((int) code < code_min)
+                code_min = (int) code;
+        }
+        min_idxs.push_back(code_min);
+    }
+    min_idxs_sort = min_idxs;
+    std::sort(min_idxs_sort.begin(), min_idxs_sort.end());
+    std::unique(min_idxs_sort.begin(), min_idxs_sort.end());
+
+    for (int y = 1; y < (YSIZE(I)-1); y++)
+    {
+        for (int x = 1; x < (XSIZE(I)-1); x++)
+        {
+            code = 0;
+            center = DIRECT_A2D_ELEM(I,y,x);
+            code |= (DIRECT_A2D_ELEM(I,y-1,x-1) > center) << 7;
+            code |= (DIRECT_A2D_ELEM(I,y-1,x  ) > center) << 6;
+            code |= (DIRECT_A2D_ELEM(I,y-1,x+1) > center) << 5;
+            code |= (DIRECT_A2D_ELEM(I,y,  x+1) > center) << 4;
+            code |= (DIRECT_A2D_ELEM(I,y+1,x+1) > center) << 3;
+            code |= (DIRECT_A2D_ELEM(I,y+1,x  ) > center) << 2;
+            code |= (DIRECT_A2D_ELEM(I,y+1,x-1) > center) << 1;
+            code |= (DIRECT_A2D_ELEM(I,y  ,x-1) > center) << 0;
+            int idx = min_idxs[(int) code];
+            lbp_hist[idx]++;
+        }
+    }
+
+    for (int i = 0; i < 36; i++)
+    {
+        int idx = min_idxs_sort[i];
+        fv.push_back(lbp_hist[idx]);
+    }
+}
+
+
+void ProgExtractFeatures::extractRamp(const MultidimArray<double> &I,
+                                            std::vector<double> &fv)
+{
+	if (XSIZE(rampMask)==0)
+	{
+		rampMask.resize(I);
+		rampMask.setXmippOrigin();
+		BinaryCircularMask(rampMask,XSIZE(I)/2,OUTSIDE_MASK);
+		NmaskPoints=rampMask.sum();
+		fitPoints=new FitPoint[NmaskPoints];
+	}
+	size_t idx=0;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
+    {
+        if (A2D_ELEM(rampMask, i, j))
+        {
+        	FitPoint &p=fitPoints[idx++];
+            p.x = j;
+            p.y = i;
+            p.z = A2D_ELEM(I, i, j);
+            p.w = 1.;
+        }
+    }
+
+    double pA, pB, pC;
+	least_squares_plane_fit(fitPoints, NmaskPoints, pA, pB, pC);
+	fv.push_back(pA);
+	fv.push_back(pB);
+	fv.push_back(pC);
+}
+
 
 void ProgExtractFeatures::extractVariance(const MultidimArray<double> &I,
                                           std::vector<double> &fv)
@@ -435,36 +470,6 @@ void ProgExtractFeatures::extractZernike(const MultidimArray<double> &I,
     }
 }
 
-void ProgExtractFeatures::extractRamp(const MultidimArray<double> &I,
-                                            std::vector<double> &fv)
-{
-	if (XSIZE(rampMask)==0)
-	{
-		rampMask.resize(I);
-		rampMask.setXmippOrigin();
-		BinaryCircularMask(rampMask,XSIZE(I)/2,OUTSIDE_MASK);
-		NmaskPoints=rampMask.sum();
-		fitPoints=new FitPoint[NmaskPoints];
-	}
-	size_t idx=0;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
-    {
-        if (A2D_ELEM(rampMask, i, j))
-        {
-        	FitPoint &p=fitPoints[idx++];
-            p.x = j;
-            p.y = i;
-            p.z = A2D_ELEM(I, i, j);
-            p.w = 1.;
-        }
-    }
-
-    double pA, pB, pC;
-	least_squares_plane_fit(fitPoints, NmaskPoints, pA, pB, pC);
-	fv.push_back(pA);
-	fv.push_back(pB);
-	fv.push_back(pC);
-}
 
 void ProgExtractFeatures::run()
 {
@@ -488,46 +493,40 @@ void ProgExtractFeatures::run()
 
     	if (!noDenoising)
     	    denoiseTVFilter(I(), 50);
-
-        if (useLBP)
-        {
-            extractLBP(I(), fv);
-            SF.setValue(MDL_SCORE_BY_LBP, fv, __iter.objId);
-            fv.clear();
-        }
-
         if (useEntropy)
         {
             extractEntropy(I(), Imasked(), fv);
             SF.setValue(MDL_SCORE_BY_ENTROPY, fv, __iter.objId);
             fv.clear();
         }
-
         if (useGranulo)
         {
             extractGranulo(I(), fv);
             SF.setValue(MDL_SCORE_BY_GRANULO, fv, __iter.objId);
             fv.clear();
         }
-
+        if (useLBP)
+        {
+            extractLBP(I(), fv);
+            SF.setValue(MDL_SCORE_BY_LBP, fv, __iter.objId);
+            fv.clear();
+        }
+        if (useRamp)
+        {
+            extractRamp(I(), fv);
+            SF.setValue(MDL_SCORE_BY_RAMP, fv, __iter.objId);
+            fv.clear();
+        }
         if (useVariance)
         {
             extractVariance(I(), fv);
             SF.setValue(MDL_SCORE_BY_VARIANCE, fv, __iter.objId);
             fv.clear();
         }
-
         if (useZernike)
         {
             extractZernike(I(), fv);
             SF.setValue(MDL_SCORE_BY_ZERNIKE, fv, __iter.objId);
-            fv.clear();
-        }
-
-        if (useRamp)
-        {
-            extractRamp(I(), fv);
-            SF.setValue(MDL_SCORE_BY_RAMP, fv, __iter.objId);
             fv.clear();
         }
         idx++;
