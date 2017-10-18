@@ -49,7 +49,12 @@ float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
 	return NULL; // undefined
 }
 
-FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
+__host__ __device__
+int FRecBufferDataGPU::getNoOfSpaces() {
+	return noOfImages * noOfSymmetries;
+}
+
+FRecBufferDataGPU::FRecBufferDataGPU(RecFourierBufferData* orig) {
 
 //	printf("FRecBufferDataGPU orig: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
 //			orig, orig->FFTs,orig->CTFs, orig->paddedImages, orig->modulators, orig->spaces);
@@ -71,7 +76,7 @@ FRecBufferDataGPU::FRecBufferDataGPU(FRecBufferData* orig) {
 //			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
 }
 
-void FRecBufferDataGPU::copyDataFrom(FRecBufferData* orig, int stream) {
+void FRecBufferDataGPU::copyDataFrom(RecFourierBufferData* orig, int stream) {
 	copyMetadata(orig);
 	copy(orig->FFTs, FFTs, orig, stream);
 	copy(orig->CTFs, CTFs, orig, stream);
@@ -80,16 +85,15 @@ void FRecBufferDataGPU::copyDataFrom(FRecBufferData* orig, int stream) {
 	copy(orig->spaces, spaces, orig, stream);
 }
 
-void FRecBufferDataGPU::copyMetadata(FRecBufferData* orig) {
+void FRecBufferDataGPU::copyMetadata(RecFourierBufferData* orig) {
 	hasCTFs = orig->hasCTFs;
 	hasFFTs = orig->hasFFTs;
 	noOfImages = orig->noOfImages;
 	paddedImgSize = orig->paddedImgSize;
 	fftSizeX = orig->fftSizeX;
 	fftSizeY = orig->fftSizeY;
-	noOfSpaces = orig->noOfSpaces;
 	maxNoOfImages = orig->maxNoOfImages;
-	maxNoOfSymmetries = orig->maxNoOfSymmetries;
+	noOfSymmetries = orig->noOfSymmetries;
 }
 
 FRecBufferDataGPU::~FRecBufferDataGPU() {
@@ -101,11 +105,11 @@ FRecBufferDataGPU::~FRecBufferDataGPU() {
 	cudaFree(spaces);
 	gpuErrchk( cudaPeekAtLastError() );
 
-	setDefault();
+	invalidate();
 }
 
 template<typename T>
-void FRecBufferDataGPU::copy(T* srcArray, T*& dstArray, FRecBufferData* orig, int stream) {
+void FRecBufferDataGPU::copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream) {
 	if (NULL != srcArray) {
 		size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
 //		printf("copying %d bytes from %p to %p, stream %d\n", bytes, srcArray, dstArray, stream);
@@ -117,13 +121,13 @@ void FRecBufferDataGPU::copy(T* srcArray, T*& dstArray, FRecBufferData* orig, in
 }
 
 template<typename T>
-void FRecBufferDataGPU::alloc(T* srcArray, T*& dstArray, FRecBufferData* orig) {
+void FRecBufferDataGPU::alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig) {
 	size_t bytes = orig->getMaxByteSize(srcArray);
 	cudaMalloc((void **) &dstArray, bytes);
 	gpuErrchk( cudaPeekAtLastError() );
 }
 
-FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(FRecBufferData* orig) {
+FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(RecFourierBufferData* orig) {
 	cpuCopy = new FRecBufferDataGPU(orig);
 	gpuCopy = NULL;
 }
@@ -134,7 +138,7 @@ FRecBufferDataGPUWrapper::~FRecBufferDataGPUWrapper() {
 	delete cpuCopy;
 }
 
-void FRecBufferDataGPUWrapper::copyFrom(FRecBufferData* orig, int stream) {
+void FRecBufferDataGPUWrapper::copyFrom(RecFourierBufferData* orig, int stream) {
 	cpuCopy->copyDataFrom(orig, stream);
 }
 
@@ -1013,7 +1017,7 @@ void processBufferKernel(
 	}
 #endif
 
-	for (int i = 0; i < buffer->noOfSpaces; i++) {
+	for (int i = 0; i < buffer->getNoOfSpaces(); i++) {
 		TraverseSpace* space = &buffer->spaces[i];
 
 #if SHARED_IMG
@@ -1175,7 +1179,7 @@ void deleteStreams(int count) {
 }
 
 
-void allocateWrapper(FRecBufferData* buffer, int streamIndex) {
+void allocateWrapper(RecFourierBufferData* buffer, int streamIndex) {
 	wrappers[streamIndex] = new FRecBufferDataGPUWrapper(buffer);
 }
 
@@ -1209,7 +1213,7 @@ void copyConstants(
 }
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		FRecBufferData* rBuffer, // FIXME rename
+		RecFourierBufferData* rBuffer, // FIXME rename
 		float blobRadius, int maxVolIndexYZ,
 		float maxResolutionSqr, int streamIndex) {
 

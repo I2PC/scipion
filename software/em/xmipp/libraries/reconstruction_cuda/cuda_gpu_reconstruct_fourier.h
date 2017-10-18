@@ -12,35 +12,36 @@
 #include <data/fourier_reconstruction_traverse_space.h>
 #include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
 #include <reconstruction_cuda/cuda_xmipp_utils.h>
-#include "data/fourier_reconstruction_buffer.h"
 #include <map>
+#include "data/reconstruct_fourier_buffer_data.h"
 
 
 //static ProjectionData* projData;
 
 
 
-struct FRecBufferDataGPU : public FRecBufferData {
+struct FRecBufferDataGPU : public RecFourierBufferData {
 
-	FRecBufferDataGPU(FRecBufferData* orig);
+	FRecBufferDataGPU(RecFourierBufferData* orig);
 	~FRecBufferDataGPU();
 
 	float* getNthItem(float* array, int itemIndex);
-	void copyDataFrom(FRecBufferData* orig, int stream);
+	void copyDataFrom(RecFourierBufferData* orig, int stream);
+	int getNoOfSpaces();
 
 private:
 	template<typename T>
-	void copy(T* srcArray, T*& dstArray, FRecBufferData* orig, int stream);
+	void copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream);
 	template<typename T>
-	void alloc(T* srcArray, T*& dstArray, FRecBufferData* orig);
-	void copyMetadata(FRecBufferData* orig);
+	void alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig);
+	void copyMetadata(RecFourierBufferData* orig);
 };
 
 struct FRecBufferDataGPUWrapper {
 
-	FRecBufferDataGPUWrapper(FRecBufferData* orig);
+	FRecBufferDataGPUWrapper(RecFourierBufferData* orig);
 	~FRecBufferDataGPUWrapper();
-	void copyFrom(FRecBufferData* orig, int stream);
+	void copyFrom(RecFourierBufferData* orig, int stream);
 	void copyToDevice(int stream);
 
 	FRecBufferDataGPU* cpuCopy;
@@ -137,7 +138,7 @@ private:
 
 
 
-void allocateWrapper(FRecBufferData* buffer, int streamIndex);
+void allocateWrapper(RecFourierBufferData* buffer, int streamIndex);
 void releaseWrapper(int streamIndex);
 
 
@@ -169,7 +170,7 @@ void copyConstants(
 		float iDeltaSqrt);
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		FRecBufferData* buffer,
+		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ,
 		float maxResolutionSqr, int stream);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);

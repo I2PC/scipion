@@ -91,7 +91,7 @@ struct RecFourierWorkThread
 //    int loadingBufferLength;
 //    int readyBufferLength;
 
-    FRecBufferData* buffer;
+    RecFourierBufferData* buffer;
 
 //    /** Tells the thread what to do next */
 //    int threadOpCode;
@@ -334,7 +334,7 @@ private:
     static void cropAndShift(
     		MultidimArray<std::complex<double> >& paddedFourier,
     		ProgRecFourierGPU* parent,
-			FRecBufferData* buffer,
+			RecFourierBufferData* buffer,
 			float* dest);
 
     /** Returns value within the range (included) */

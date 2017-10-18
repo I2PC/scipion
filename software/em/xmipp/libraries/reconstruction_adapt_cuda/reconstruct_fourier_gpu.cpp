@@ -257,7 +257,7 @@ inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, Point3D<f
 void ProgRecFourierGPU::cropAndShift(
 		MultidimArray<std::complex<double> >& paddedFourier,
 		ProgRecFourierGPU* parent,
-		FRecBufferData* buffer,
+		RecFourierBufferData* buffer,
 		float* dest) {
 	int sizeX = buffer->fftSizeX;
 	int sizeY = buffer->fftSizeY;
@@ -382,8 +382,8 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 	// FIXME cannot be complex float due to build errors
 	MultidimArray< std::complex<double> > localPaddedFourier;
 
-	FRecBufferData* lData = threadParams->buffer;
-	lData->noOfImages = lData->noOfSpaces = 0; // 'clean buffer'
+	RecFourierBufferData* lData = threadParams->buffer;
+	lData->noOfImages = 0; // 'clean buffer'
 	for (int projIndex = 0; projIndex < parent->bufferSize; projIndex++) {
 		double rot, tilt, psi, weight;
 		Projection proj;
@@ -414,8 +414,9 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 		float transf[3][3];
 		float transfInv[3][3];
 		// prepare transforms for all  symmetries
+		int travSpaceOffset = lData->noOfImages * lData->noOfSymmetries;
 		for (int j = 0; j < parent->R_repository.size(); j++) {
-			TraverseSpace* space = &lData->spaces[lData->noOfSpaces];
+			TraverseSpace* space = &lData->spaces[travSpaceOffset + j];
 
 			Matrix2D<double> A_SL=parent->R_repository[j]*(Ainv);
 			Matrix2D<double> A_SLInv=A_SL.inv();
@@ -427,11 +428,8 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 			space->weight = (parent->do_weights) ? proj.weight() : 1.0;
 			space->UUID = UUID;
 
-			lData->noOfSpaces++;
 			UUID++;
 		}
-		// each image has N symmetries (at least identity)
-		lData->noOfImages = lData->noOfSpaces / parent->R_repository.size();
 
 		// Copy the projection to the center of the padded image
 		// and compute its Fourier transform
@@ -463,6 +461,7 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 					lData->getPaddedImgByteSize());
 		}
 
+		lData->noOfImages++; // new image added to buffer
 
 //		data->imgIndex = imgIndex;
 //		if (hasCTF) { // FIXME reimplement, can be part of the image
@@ -523,7 +522,7 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
 
     parent->fftOnGPU = false;
 
-    threadParams->buffer = new FRecBufferData( ! parent->fftOnGPU, hasCTF,
+    threadParams->buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
     		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
 			parent->bufferSize, (int)parent->R_repository.size());
 
