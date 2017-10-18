@@ -4,6 +4,7 @@
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
  *              Vahid Abrishami (vabrishami@cnb.csic.es)
+ *              David Strelak (davidstrelak@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -767,60 +768,6 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 		space->dir = space->XY;
 	}
 }
-/*
-int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
-		RecFourierProjectionTraverseSpace* traverseSpaces) {
-	int index = 0;
-	static int UUID = 0;
-	float transf[3][3];
-	float transfInv[3][3];
-	for (int i = 0; i < bufferSize; i++) {
-		if (buffer[i].skip) {
-			continue;
-		}
-		Matrix2D<double> Ainv = buffer[i].localAInv;
-		for (int j = 0; j < R_repository.size(); j++) {
-			Matrix2D<double> A_SL=R_repository[j]*(Ainv);
-			Matrix2D<double> A_SLInv=A_SL.inv();
-			A_SL.convertTo(transf);
-			A_SLInv.convertTo(transfInv);
-
-//			if (UUID == 1058) {
-//							std::cout << "UUID: " << UUID << " ";
-//						}
-			computeTraverseSpace(maxVolumeIndexX / 2, maxVolumeIndexYZ, i,
-					transf, transfInv, &traverseSpaces[index]);
-
-//			if (UUID == 1058) {
-//				std::cout << "konec" << std::endl;
-//			}
-
-			UUID++;
-			index++;
-		}
-	}
-//	std::cout << "prepared: " << index << " transformations" << std::endl;
-	return index;
-}
-*/
-
-void ProgRecFourierGPU::sort(RecFourierProjectionTraverseSpace* input, int size) {
-	// greedy TSP, using search sort
-	for (int i = 0; i < (size-1); i++) {
-		int closestIndex;
-		float distance = std::numeric_limits<float>::max();
-		for (int j = (i+1); j < size; j++) {
-			float d = getDistanceSqr(input[i].unitNormal, input[j].unitNormal);
-			if (d < distance) {
-				distance = d;
-				closestIndex = j;
-			}
-		}
-		RecFourierProjectionTraverseSpace tmp = input[i+1];
-		input[i+1] = input[closestIndex];
-		input[closestIndex] = tmp;
-	}
-}
 
 void ProgRecFourierGPU::logProgress(int increment) {
 	static int repaintAfter = (int)ceil((double)SF.size()/60);
@@ -840,32 +787,33 @@ void ProgRecFourierGPU::logProgress(int increment) {
 
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
-
-
-
-	// the +1 is to prevent outOfBound reading when mirroring the result (later)
+	// initialize GPU
     if (NULL == tempVolumeGPU) {
     	allocateGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
     }
     if (NULL == tempWeightsGPU) {
     	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
-
     createStreams(noOfCores);
     copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, useFast, blob.radius, iDeltaSqrt);
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }
+
+	// create threads
 	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
 	workThreads = new RecFourierWorkThread[noOfCores];
-	barrier_init( &barrier, noOfCores + 1 );
+	barrier_init( &barrier, noOfCores + 1 ); // + main thread
 	for (int i = 0; i < noOfCores; i++) {
 		int sIndex = firstImageIndex + i*imgPerThread;
 		int eIndex = std::min(lastImageIndex, sIndex + imgPerThread-1);
 		createWorkThread(i, sIndex, eIndex, workThreads[i]);
 	}
+
 	// Waiting for threads to finish
 	barrier_wait( &barrier );
+
+	// clean threads and GPU
 	for (int i = 0; i < noOfCores; i++) {
 		pthread_join(workThreads[i].id, NULL);
 	}
@@ -873,64 +821,6 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	delete[] workThreads;
 	releaseBlobTable();
 	deleteStreams(noOfCores);
-
-//    fftOnGPU = t; // FIXME implement some profiler that will decide if it's worth to use GPU for data loading
-
-//	/** holding transform/traverse space for each projection x symmetry */
-//	int maxNoOfTransforms = bufferSize * R_repository.size(); // FIXME create method
-//	loadThread.loadingBuffer = new TraverseSpace[maxNoOfTransforms];
-//	loadThread.readyBuffer = new TraverseSpace[maxNoOfTransforms];
-//	if (fftOnGPU) {
-//		loadThread.loadingPaddedImages = new float[paddedImgSize * paddedImgSize * bufferSize];
-//		loadThread.readyPaddedImages = new float[paddedImgSize * paddedImgSize * bufferSize];
-//	} else {
-//		loadThread.loadingFFTs = new Array2D<std::complex<float> >[bufferSize];
-//		loadThread.readyFFTs = new Array2D<std::complex<float> >[bufferSize];
-//	}
-/*
-	clock_t begin = clock();
-
-	int repaint = (int)ceil((double)SF.size()/60);
-    int startLoadIndex = firstImageIndex;
-	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
-	barrier_wait( &barrier );
-	for(int i = 0; i < loops; i++) {
-		swapLoadBuffers();
-    	startLoadIndex += bufferSize;
-    	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
-
-
-//    	int noOfImages = loadThread.readyBufferLength / R_repository.size();
-    	if (loadThread.rBuffer->noOfImages > 0) { // it can happen that all images are skipped
-			processBufferGPU(tempVolumeGPU, tempWeightsGPU,
-					loadThread.rBuffer,
-					maxVolumeIndexX, maxVolumeIndexYZ,
-					useFast, blob.radius,
-					iDeltaSqrt,
-					blobTableSqrt, BLOB_TABLE_SIZE_SQRT,
-					maxResolutionSqr);
-    	}
-    	barrier_wait( &barrier );
-		if (verbose && startLoadIndex%repaint==0) {
-			progress_bar(startLoadIndex);
-		}
-    }
-
-	clock_t end = clock();
-	std::cout << "main loop: " << (end - begin) / CLOCKS_PER_SEC << std::endl;
-
-//    delete[] loadThread.readyBuffer;
-//    delete[] loadThread.loadingBuffer; // FIXME create method
-//
-//    delete[] loadThread.loadingPaddedImages;
-//    delete[] loadThread.readyPaddedImages;
-//
-//    delete[] loadThread.loadingFFTs;
-//    delete[] loadThread.readyFFTs;
-//
-//	loadThread.readyBuffer = loadThread.loadingBuffer = NULL;
-//	loadThread.loadingPaddedImages = loadThread.readyPaddedImages = NULL;
-//	loadThread.loadingFFTs = loadThread.readyFFTs = NULL; */
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {

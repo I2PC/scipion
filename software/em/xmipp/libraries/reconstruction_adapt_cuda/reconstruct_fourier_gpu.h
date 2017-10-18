@@ -380,8 +380,6 @@ private:
 			RecFourierBufferData* buffer,
     		int storeIndex);
 
-    void logProgress(int increment);
-
 // METHODS
 
     /**
@@ -434,6 +432,13 @@ private:
 //    int prepareTransforms(ProjectionData* buffer,
 //    		RecFourierProjectionTraverseSpace* traverseSpaces);
 
+
+    /**
+     * Method logs than 'increment' more pictures were processed
+     * Thread safe
+     */
+    void logProgress(int increment);
+
     template<typename T>
     Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
     	Point3D<T> result;
@@ -458,8 +463,6 @@ private:
 	T getDistanceSqr(const Point3D<T>& u, const Point3D<T>& v) {
 		return (u.x-v.x)*(u.x-v.x) + (u.y-v.y)*(u.y-v.y) + (u.z-v.z)*(u.z-v.z);
 	}
-
-    void sort(RecFourierProjectionTraverseSpace* input, int size);
 
     template<typename T>
     static T getDot(const Point3D<T>&u, const Point3D<T>& v) {
