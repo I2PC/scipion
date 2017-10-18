@@ -200,15 +200,14 @@ protected:
     void processWeights();
 
     /**
-     * Method will create thread used for loading images
-     * and set all necessary values/variables
+     * Method will create thread used for loading and processing images
+     * Thread starts the work immediately
+     * gpuStream - stream to use
+     * startIndex - index of the first projection to process
+     * endIndex - index of the last projection to process
+     * thread - used for referencing the thread
      */
-    void createThread(int gpuStream, int startIndex, int endIndex, RecFourierWorkThread& thread);
-
-    /**
-     * Method will release all resources allocated for loading images
-     */
-    void cleanThread(RecFourierWorkThread* thread);
+    void createWorkThread(int gpuStream, int startIndex, int endIndex, RecFourierWorkThread& thread);
 
     /** Read arguments from command line */
     void readParams();
@@ -295,10 +294,10 @@ private:
     /** Size of loading buffer (i.e. number of projection loaded in one buffer) */
     int bufferSize;
 
-    /** if set to true, FFT of the input projections are done on GPU */
+    /** If set to true, FFT of the input projections shall be done on GPU */
     bool fftOnGPU;
 
-    /** holds number of cores available at the host system */
+    /** Holds number of cores available at the host system */
     int noOfCores;
 
 // STATIC METHODS
@@ -311,8 +310,8 @@ private:
     template<typename T>
     void release(T***& array, int ySize, int zSize);
 
-    /** Method running on separate thread */
-	static void* loadImageThread(void* threadArgs);
+    /** Method running on separate thread, loading images and processing them on GPU */
+	static void* threadRoutine(void* threadArgs);
 
 	/** Function behaving like an identity, i.e returning passed value */
 	template<typename T>

@@ -45,6 +45,8 @@ void ProgRecFourierGPU::defineParams()
     addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
     addParamsLine("  [--fast]                       : Do the blobing at the end of the computation.");
     addParamsLine("                                 : Gives slightly different results, but is faster.");
+    addParamsLine("  [--fftOnGPU]                   : Perform the FFT conversion of the input images on GPU.");
+    addParamsLine("                                 : Requires more memory on GPU (see also --bufferSize).");
     addParamsLine("  [--useCTF]                     : Use CTF information if present");
     addParamsLine("  [--sampling <Ts=1>]            : sampling rate of the input images in Angstroms/pixel");
     addParamsLine("                                 : It is only used when correcting for the CTF");
@@ -71,6 +73,7 @@ void ProgRecFourierGPU::readParams()
     blob.order    = getIntParam("--blob", 1);
     blob.alpha    = getDoubleParam("--blob", 2);
     useFast		  = checkParam("--fast");
+    fftOnGPU	  = checkParam("--fftOnGPU");
     maxResolution = getDoubleParam("--max_resolution");
     useCTF = checkParam("--useCTF");
     isPhaseFlipped = checkParam("--phaseFlipped");
@@ -117,12 +120,9 @@ void ProgRecFourierGPU::run()
 {
     show();
     produceSideinfo();
-    // Process all images in the selfile
     if (verbose) {
 		init_progress_bar(SF.size());
     }
-    // Create loading thread stuff
-//    createLoadingThread();
     //Computing interpolated volume
     processImages(0, SF.size() - 1);
     // Get data from GPU
@@ -131,30 +131,19 @@ void ProgRecFourierGPU::run()
     mirrorAndCropTempSpaces();
     //Saving the volume
     finishComputations(fn_out);
-//    cleanLoadingThread();
 }
 
-void ProgRecFourierGPU::createThread(int gpuStream, int startIndex, int endIndex, RecFourierWorkThread& thread) {
-//	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
+void ProgRecFourierGPU::createWorkThread(int gpuStream, int startIndex, int endIndex, RecFourierWorkThread& thread) {
 	thread.parent = this;
 	// HACK threads cannot share the same object, as it would lead to race conditioning
 	// during data load (as SQLITE seems to be non-thread-safe)
-	thread.selFile = new MetaData(SF);
-//	thread->threadOpCode = PRELOAD_IMAGE;
+	thread.selFile = new MetaData(SF); // FIXME in extremely fast calculations, SQLITE methods sometimes crash
 	thread.startImageIndex = startIndex;
 	thread.endImageIndex = endIndex;
 	thread.gpuStream = gpuStream;
-	pthread_create( &thread.id , NULL, loadImageThread, (void *)(&thread) );
+	pthread_create( &thread.id , NULL, threadRoutine, (void *)(&thread) );
 }
 
-void ProgRecFourierGPU::cleanThread(RecFourierWorkThread* thread) {
-//	delete thread->rBuffer;
-//	delete thread->lBuffer;
-//	thread->rBuffer = thread->lBuffer = NULL;
-//	thread->threadOpCode = EXIT_THREAD;
-
-
-}
 
 void ProgRecFourierGPU::produceSideinfo()
 {
@@ -238,6 +227,7 @@ void ProgRecFourierGPU::produceSideinfo()
             R_repository.push_back(R);
         }
     }
+
     // query the system on the number of cores
 	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
@@ -285,84 +275,6 @@ void ProgRecFourierGPU::cropAndShift(
 		}
 	}
 }
-
-
-//void preprocess_images_reference(MetaData &SF, int numImages, Mask &mask,
-//		GpuCorrelationAux &d_correlationAux)
-//{
-//	size_t Xdim, Ydim, Zdim, Ndim;
-//	getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
-//	size_t pad_Xdim=2*Xdim-1;
-//	size_t pad_Ydim=2*Ydim-1;
-//
-//	d_correlationAux.Xdim=pad_Xdim;
-//	d_correlationAux.Ydim=pad_Ydim;
-//
-//	size_t objIndex = 0;
-//	MDRow rowIn;
-//	FileName fnImg;
-//	Image<double> Iref;
-//	size_t radius=(size_t)mask.R1;
-//
-//	GpuMultidimArrayAtCpu<double> original_image_stack(Xdim,Ydim,1,numImages);
-//
-//	MDIterator *iter = new MDIterator(SF);
-//
-//	int available_images=numImages;
-//	size_t n=0;
-//	while(available_images && iter->objId!=0){
-//
-//		objIndex = iter->objId;
-//		available_images--;
-//
-//		SF.getRow(rowIn, objIndex);
-//		rowIn.getValue(MDL_IMAGE, fnImg);
-//		std::cerr << objIndex << ". Image: " << fnImg << std::endl;
-//		Iref.read(fnImg);
-//		original_image_stack.fillImage(n,Iref());
-//
-//		if(iter->hasNext())
-//			iter->moveNext();
-//
-//		n++;
-//	}
-//	delete iter;
-//
-//	//AJ new masking and padding
-//	original_image_stack.copyToGpu(d_correlationAux.d_original_image);
-//	GpuMultidimArrayAtGpu<double> image_stack_gpu(Xdim,Ydim,1,numImages);
-//	original_image_stack.copyToGpu(image_stack_gpu);
-//	MultidimArray<int> maskArray = mask.get_binary_mask();
-//	MultidimArray<double> dMask;
-//	typeCast(maskArray, dMask);
-//	GpuMultidimArrayAtGpu<double> mask_device(Xdim, Ydim, Zdim, 1);
-//	mask_device.copyToGpu(MULTIDIM_ARRAY(dMask));
-//
-//	GpuMultidimArrayAtGpu<double> padded_image_gpu, padded_image2_gpu, padded_mask_gpu;
-//	padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, numImages);
-//	padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, numImages);
-//	padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
-//
-//	padding_masking(image_stack_gpu, mask_device, padded_image_gpu, padded_image2_gpu,
-//			padded_mask_gpu, NULL, false);
-//
-//	//TODO AJ check the size of the data to avoid exceed the CUDA FFT size
-//	padded_image_gpu.fft(d_correlationAux.d_projFFT);
-//	padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT);
-//	padded_mask_gpu.fft(d_correlationAux.d_maskFFT);
-//
-//	//Polar transform of the projected images
-//	d_correlationAux.XdimPolar=360;
-//	d_correlationAux.YdimPolar=radius;
-//	GpuMultidimArrayAtGpu<double> polar_gpu(360,radius,1,numImages);
-//	GpuMultidimArrayAtGpu<double> polar2_gpu(360,radius,1,numImages);
-//	cuda_cart2polar(d_correlationAux.d_original_image, polar_gpu, polar2_gpu, false);
-//	//FFT
-//	polar_gpu.fft(d_correlationAux.d_projPolarFFT);
-//	polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT);
-//
-//}
-
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -500,8 +412,7 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 
 
 
-void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
-{
+void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	XMIPP_TRY
 
     RecFourierWorkThread* threadParams = (RecFourierWorkThread *) threadArgs;
@@ -513,8 +424,6 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
     bool hasCTF = parent->useCTF
     		&& (threadParams->selFile->containsLabel(MDL_CTF_MODEL)
     				|| threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU));
-
-    parent->fftOnGPU = false;
 
     threadParams->buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
     		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
@@ -557,6 +466,8 @@ void * ProgRecFourierGPU::loadImageThread( void * threadArgs )
     barrier_wait( barrier );// notify that thread finished
 
 	XMIPP_CATCH // catch possible exception
+
+	return NULL;
 }
 
 template<typename T, typename U>
@@ -1362,7 +1273,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	for (int i = 0; i < noOfCores; i++) {
 		int sIndex = firstImageIndex + i*imgPerThread;
 		int eIndex = std::min(lastImageIndex, sIndex + imgPerThread-1);
-		createThread(i, sIndex, eIndex, workThreads[i]);
+		createWorkThread(i, sIndex, eIndex, workThreads[i]);
 	}
 	// Waiting for threads to finish
 	barrier_wait( &barrier );
