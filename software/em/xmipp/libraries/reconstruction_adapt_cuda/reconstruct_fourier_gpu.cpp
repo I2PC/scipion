@@ -135,9 +135,6 @@ void ProgRecFourierGPU::run()
 
 void ProgRecFourierGPU::createWorkThread(int gpuStream, int startIndex, int endIndex, RecFourierWorkThread& thread) {
 	thread.parent = this;
-	// HACK threads cannot share the same object, as it would lead to race conditioning
-	// during data load (as SQLITE seems to be non-thread-safe)
-	thread.selFile = new MetaData(SF); // FIXME in extremely fast calculations, SQLITE methods sometimes crash
 	thread.startImageIndex = startIndex;
 	thread.endImageIndex = endIndex;
 	thread.gpuStream = gpuStream;
@@ -370,46 +367,41 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 	}
 }
 
-
-
-
-
-
 void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
-	XMIPP_TRY
+	XMIPP_TRY // in case some method throws a xmipp exception
 
     RecFourierWorkThread* threadParams = (RecFourierWorkThread *) threadArgs;
     ProgRecFourierGPU* parent = threadParams->parent;
-    barrier_t * barrier = &(parent->barrier);
-
     std::vector<size_t> objId;
+    // HACK threads cannot share the same object, as it would lead to race conditioning
+	// during data load (as SQLITE seems to be non-thread-safe)
+    // FIXME in extremely fast calculations, SQLITE methods sometimes fail, causing program to crash
+    threadParams->selFile = new MetaData(SF);
     threadParams->selFile->findObjects(objId);
     bool hasCTF = parent->useCTF
     		&& (threadParams->selFile->containsLabel(MDL_CTF_MODEL)
     				|| threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU));
 
+    // allocate buffer
     threadParams->buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
     		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
 			parent->bufferSize, (int)parent->R_repository.size());
-
+    // allocate GPU
     allocateWrapper(threadParams->buffer, threadParams->gpuStream);
 
+    // main work routine
     int firstImageIndex = threadParams->startImageIndex;
     int lastImageIndex = threadParams->endImageIndex;
-    int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)parent->bufferSize);
-//    printf("thread %d should load img %d-%d in %d loops\n", threadParams->gpuStream, firstImageIndex, lastImageIndex, loops);
-//    std::cout << std::endl;
-
-    int startLoadIndex = firstImageIndex;
-    for(int i = 0; i < loops; i++) {
-
+    for(int startLoadIndex = firstImageIndex;
+    		startLoadIndex <= lastImageIndex;
+    		startLoadIndex += parent->bufferSize) {
+    	// load data
     	threadParams->startImageIndex = startLoadIndex;
     	threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
-//    	printf("thread %d will now load img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
     	preloadBuffer(threadParams, parent, hasCTF, objId);
 
+    	// send them for processing
 		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
-//			printf("thread %d will proces img %d-%d\n", threadParams->gpuStream, threadParams->startImageIndex, threadParams->endImageIndex);
 			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
 				threadParams->buffer,
 				parent->blob.radius, parent->maxVolumeIndexYZ,
@@ -417,19 +409,18 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 				threadParams->gpuStream);
 			parent->logProgress(threadParams->buffer->noOfImages);
 		}
-//		printf("thread %d processing done\n", threadParams->gpuStream);
-		// update next iteration;
-		startLoadIndex += parent->bufferSize;
+		// once the processing finished, buffer can be reused
 	}
-//    printf("thread %d done\n", threadParams->gpuStream);
+
+    // clean after itself
     releaseWrapper(threadParams->gpuStream);
     delete threadParams->buffer;
-    delete threadParams->selFile;
     threadParams->buffer = NULL;
-    barrier_wait( barrier );// notify that thread finished
+    delete threadParams->selFile;
+    threadParams->selFile = NULL;
+    barrier_wait( &parent->barrier );// notify that thread finished
 
 	XMIPP_CATCH // catch possible exception
-
 	return NULL;
 }
 

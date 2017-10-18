@@ -70,34 +70,16 @@ class ProgRecFourierGPU;
 
 
 
-/** Struct holding information for loading thread */
+/** Struct representing the working thread */
 struct RecFourierWorkThread
 {
     pthread_t id;
     ProgRecFourierGPU * parent;
-    int startImageIndex;
-    int endImageIndex;
-    MetaData* selFile;
-//    TraverseSpace* loadingBuffer = NULL;
-//    TraverseSpace* readyBuffer = NULL;
-//    Array2D<std::complex<float> >* readyFFTs = NULL;
-//    Array2D<std::complex<float> >* loadingFFTs = NULL;
-//    Array2D<std::complex<float> >* readyCTFs = NULL;
-//    Array2D<std::complex<float> >* loadingCTFs = NULL;
-//    Array2D<std::complex<float> >* readyMods = NULL;
-//    Array2D<std::complex<float> >* loadingMods = NULL;
-//    float* loadingPaddedImages = NULL;
-//    float* readyPaddedImages = NULL;
-//    int loadingBufferLength;
-//    int readyBufferLength;
-
-    RecFourierBufferData* buffer;
-
-//    /** Tells the thread what to do next */
-//    int threadOpCode;
-
-    int gpuStream;
-
+    int startImageIndex; // index of the first projection to process
+    int endImageIndex; // index of the last projection to process
+    MetaData* selFile; // used for loading data
+    RecFourierBufferData* buffer; // where data are loaded
+    int gpuStream; // index of stream on GPU device
 };
 
 /** Fourier reconstruction parameters. */
