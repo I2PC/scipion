@@ -4,6 +4,7 @@
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
  *              Vahid Abrishami (vabrishami@cnb.csic.es)
+ *              David Strelak (davidstrelak@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -35,7 +36,6 @@
 #include <data/xmipp_funcs.h>
 #include <data/xmipp_image.h>
 #include <data/projection.h>
-#include <data/point3D.h>
 #include <data/xmipp_threads.h>
 #include <data/blobs.h>
 #include <data/metadata.h>
@@ -48,27 +48,15 @@
 #include <reconstruction/recons.h>
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
-#include <reconstruction_cuda/cuda_gpu_reconstruct_fourier.h>
-#include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
-#include <reconstruction_cuda/cuda_xmipp_utils.h>
-#include "data/reconstruct_fourier_projection_traverse_space.h"
+#include "data/point3D.h"
 #include "data/reconstruct_fourier_defines.h"
-#define BLOB_TABLE_SIZE 5000
-#define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with cuda_gpu_reconstruct_fourier.cpp
-
-#define MINIMUMWEIGHT 0.001
-#define ACCURACY 0.001
-
-//#define EXIT_THREAD 0
-//#define PRELOAD_IMAGE 1
+#include "data/reconstruct_fourier_projection_traverse_space.h"
+#include "reconstruction_cuda/cuda_gpu_reconstruct_fourier.h"
 
 /**@defgroup FourierReconstruction Fourier reconstruction
    @ingroup ReconsLibrary */
 //@{
 class ProgRecFourierGPU;
-
-
-
 
 /** Struct representing the working thread */
 struct RecFourierWorkThread
@@ -82,7 +70,6 @@ struct RecFourierWorkThread
     int gpuStream; // index of stream on GPU device
 };
 
-/** Fourier reconstruction parameters. */
 class ProgRecFourierGPU : public ProgReconsBase
 {
 public:
@@ -123,7 +110,6 @@ protected:
     /** maximal index in the temporal volumes, X axis */
 	int maxVolumeIndexX;
 
-//	METHODS
 	/**
 	 * 3D volume holding the cropped (without high frequencies) Fourier space.
 	 * Lowest frequencies are in the center, i.e. Fourier space creates a
@@ -142,7 +128,7 @@ protected:
 	 * Lowest frequencies are in the center, i.e. Fourier space creates a
 	 * sphere within a cube.
 	 * Valid for GPU, i.e. it is equivalent to tempVolume, which has been flattened
-	 * Each pair of represents a complex value
+	 * Each two successive values represent one complex number
 	 */
 	float* tempVolumeGPU = NULL;
 
@@ -153,6 +139,7 @@ protected:
 	 */
 	float* tempWeightsGPU = NULL;
 
+//	METHODS
 
 	/**
 	 * Method will take temp spaces (containing complex conjugate values
@@ -168,7 +155,7 @@ protected:
     void getGPUData();
 
     /**
-     * Method will enforce Hermitian symmetry, i.e will remove make sure
+     * Method will enforce Hermitian symmetry, i.e will make sure
      * that the values in temporal space at X=0 are complex conjugate of
      * in respect to center of the space
      */
@@ -273,7 +260,7 @@ private:
     /** Size of the image including padding. Image must be a square */
     int paddedImgSize;
 
-    /** Size of loading buffer (i.e. number of projection loaded in one buffer) */
+    /** Size of loading buffer (i.e. max number of projection loaded in one buffer) */
     int bufferSize;
 
     /** If set to true, FFT of the input projections shall be done on GPU */
@@ -351,12 +338,6 @@ private:
     		float minX, float minY, float minZ,
     		float maxX, float maxY, float maxZ);
 
-    /** Returns true if x is in (min, max) interval */
-    template <typename T>
-    static bool inRange(T x, T min, T max) {
-    	return (x > min) && (x < max);
-    }
-
     /** Method returns vectors defining the plane */
     static void getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v);
 
@@ -367,10 +348,12 @@ private:
     template<typename T, typename U>
     static void convertToExpectedSpace(T*** input, int size,
     	MultidimArray<U>& VoutFourier);
+
     /** Method to load a buffer of images from input file */
-    static void preloadBuffer(RecFourierWorkThread * threadParams,
+    static void prepareBuffer(RecFourierWorkThread * threadParams,
     		ProgRecFourierGPU* parent,
     		bool hasCTF, std::vector<size_t>& objId);
+
     /**
      * Method computes CTF and weight modulator for each pixel in the image
      */
@@ -379,6 +362,32 @@ private:
 			ProgRecFourierGPU* parent,
 			RecFourierBufferData* buffer,
     		int storeIndex);
+
+    /**
+     * Method calculates a (normalized) normal vector to the vector u and v
+     */
+    template<typename T>
+    static Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
+    	Point3D<T> result;
+    	result.x = u.y*v.z - u.z*v.y;
+    	result.y = u.z*v.x - u.x*v.z;
+    	result.z = u.x*v.y - u.y*v.x;
+    	if (normalize) {
+    		float length = getLength(result);
+    		result.x /= length;
+    		result.y /= length;
+    		result.z /= length;
+    	}
+    	return result;
+    }
+
+    /**
+     * Returns length of the vector
+     */
+    template<typename T>
+    static T getLength(const Point3D<T>& v) {
+    	return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    }
 
 // METHODS
 
@@ -426,48 +435,11 @@ private:
     void computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
     		MATRIX& transform, MATRIX& transformInv, RecFourierProjectionTraverseSpace* space);
 
-//    /**
-//     * Method will precalculate (inverse) transformation for each projection data x symmetry
-//     */
-//    int prepareTransforms(ProjectionData* buffer,
-//    		RecFourierProjectionTraverseSpace* traverseSpaces);
-
-
     /**
      * Method logs than 'increment' more pictures were processed
      * Thread safe
      */
     void logProgress(int increment);
-
-    template<typename T>
-    Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
-    	Point3D<T> result;
-    	result.x = u.y*v.z - u.z*v.y;
-    	result.y = u.z*v.x - u.x*v.z;
-    	result.z = u.x*v.y - u.y*v.x;
-    	if (normalize) {
-    		float length = getLength(result);
-    		result.x /= length;
-    		result.y /= length;
-    		result.z /= length;
-    	}
-    	return result;
-    }
-
-    template<typename T>
-    T getLength(const Point3D<T>& v) {
-    	return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-    }
-
-	template<typename T>
-	T getDistanceSqr(const Point3D<T>& u, const Point3D<T>& v) {
-		return (u.x-v.x)*(u.x-v.x) + (u.y-v.y)*(u.y-v.y) + (u.z-v.z)*(u.z-v.z);
-	}
-
-    template<typename T>
-    static T getDot(const Point3D<T>&u, const Point3D<T>& v) {
-    	return u.x*v.x + u.y*v.y + u.z*v.z;
-    }
 };
 //@}
 #endif

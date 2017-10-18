@@ -274,7 +274,7 @@ void ProgRecFourierGPU::cropAndShift(
 	}
 }
 
-void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
+void ProgRecFourierGPU::prepareBuffer(RecFourierWorkThread* threadParams,
 		ProgRecFourierGPU* parent,
 		bool hasCTF, std::vector<size_t>& objId)
 {
@@ -399,7 +399,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     	// load data
     	threadParams->startImageIndex = startLoadIndex;
     	threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
-    	preloadBuffer(threadParams, parent, hasCTF, objId);
+    	prepareBuffer(threadParams, parent, hasCTF, objId);
 
     	// send them for processing
 		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
