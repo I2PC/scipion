@@ -53,7 +53,6 @@ Point3D<float> u, v;
  * In case the blob radius is zero, these variables hold the same point
  */
 Point3D<float> topOrigin, bottomOrigin;
-Point3D<float> unitNormal; // created from u->v (i.e. right-handed)
 int projectionIndex; // index to array of projections, which holds appropriate (visual) data
 float transformInv[3][3]; // rotation matrix, describing transformation to default position
 float weight; // of the projection

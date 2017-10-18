@@ -360,7 +360,7 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 		}
 
 		if (hasCTF) {
-			preloadCTF(threadParams, objId[imgIndex],parent, buffer, projIndex);
+			computeCTFCorrection(threadParams, objId[imgIndex],parent, buffer, projIndex);
 		}
 
 		buffer->noOfImages++; // new image added to buffer
@@ -376,7 +376,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     // HACK threads cannot share the same object, as it would lead to race conditioning
 	// during data load (as SQLITE seems to be non-thread-safe)
     // FIXME in extremely fast calculations, SQLITE methods sometimes fail, causing program to crash
-    threadParams->selFile = new MetaData(SF);
+    threadParams->selFile = new MetaData(parent->SF);
     threadParams->selFile->findObjects(objId);
     bool hasCTF = parent->useCTF
     		&& (threadParams->selFile->containsLabel(MDL_CTF_MODEL)
@@ -424,14 +424,6 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	return NULL;
 }
 
-template<typename T, typename U>
-inline U ProgRecFourierGPU::clamp(U val, T min, T max) {
-	U res = val;
-	res = (res > max) ? max : res;
-	res = (res < min) ? min : res;
-	return res;
-}
-
 inline void ProgRecFourierGPU::multiply(const float transform[3][3], Point3D<float>& inOut) {
 	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
 	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
@@ -453,45 +445,6 @@ void ProgRecFourierGPU::createProjectionCuboid(Point3D<float>* cuboid, float siz
 	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
 	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
 }
-//
-//inline bool ProgRecFourierGPU::getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0) {
-//	// from parametric eq. of the plane
-//	float x0 = p0.x;
-//	float y0 = p0.y;
-//	float z0 = p0.z;
-//
-//	float u = ((y-y0)*a.x + (x0-x)*a.y) / (a.x * b.y - b.x * a.y);
-//	float t = (-x0 + x - u*b.x) / (a.x);
-//
-//	z = z0 + t*a.z + u*b.z;
-//	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
-//}
-//
-//inline bool ProgRecFourierGPU::getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
-//	// from parametric eq. of the plane
-//	float x0 = p0.x;
-//	float y0 = p0.y;
-//	float z0 = p0.z;
-//
-//	float u = ((z-z0)*a.x + (x0-x)*a.z) / (a.x * b.z - b.x * a.z);
-//	float t = (-x0 + x - u*b.x) / (a.x);
-//
-//	y = y0 + t*a.y + u*b.y;
-//	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
-//}
-//
-//inline bool ProgRecFourierGPU::getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
-//	// from parametric eq. of the plane
-//	float x0 = p0.x;
-//	float y0 = p0.y;
-//	float z0 = p0.z;
-//
-//	float u = ((z-z0)*a.y + (y0-y)*a.z) / (a.y * b.z - b.y * a.z);
-//	float t = (-y0 + y - u*b.y) / (a.y);
-//
-//	x = x0 + t*a.x + u*b.x;
-//	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
-//}
 
 inline void ProgRecFourierGPU::translateCuboid(Point3D<float>* cuboid, Point3D<float> vector) {
 	for (int i = 0; i < 8; i++) {
@@ -549,12 +502,11 @@ void static printAABB(Point3D<float> AABB[]) {
 		<< std::endl;
 }
 
-inline void ProgRecFourierGPU::preloadCTF(RecFourierWorkThread* threadParams,
+inline void ProgRecFourierGPU::computeCTFCorrection(RecFourierWorkThread* threadParams,
 		size_t imgIndex,
 		ProgRecFourierGPU* parent,
 		RecFourierBufferData* buffer,
-		int storeIndex)
-{
+		int storeIndex) {
 	CTFDescription ctf;
 	ctf.readFromMetadataRow(*(threadParams->selFile), imgIndex);
 	ctf.produceSideInfo();
@@ -592,234 +544,6 @@ inline void ProgRecFourierGPU::preloadCTF(RecFourierWorkThread* threadParams,
 		}
 	}
 }
-
-//
-//inline void ProgRecFourierGPU::processVoxel(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-//		ProjectionData* const data) {
-//	Point3D imgPos;
-//	float wBlob = 1.f;
-//	float wCTF = 1.f;
-//	float wModulator = 1.f;
-//
-//	// transform current point to center
-//	imgPos.x = x - maxVolumeIndexX/2;
-//	imgPos.y = y - maxVolumeIndexYZ/2;
-//	imgPos.z = z - maxVolumeIndexYZ/2;
-//	if (imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z > maxDistanceSqr) {
-//		return; // discard iterations that would access pixel with too high frequency
-//	}
-//	// rotate around center
-//	multiply(transform, imgPos);
-//	// transform back and round
-//	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
-//	int imgX = clamp((int)(imgPos.x + 0.5f), 0, data->img->getXSize() - 1);
-//	int imgY = clamp((int)(imgPos.y + 0.5f + maxVolumeIndexYZ / 2), 0, data->img->getYSize() - 1);
-//
-//	if (0 != data->CTF) {
-//		wCTF = (*data->CTF)(imgX, imgY);
-//		wModulator = (*data->modulator)(imgX, imgY);
-//	}
-//
-//	float weight = wBlob * wModulator * data->weight;
-//
-//	tempVolume[z][y][x] += (*data->img)(imgX, imgY) * weight * wCTF;
-//	tempWeights[z][y][x] += weight;
-//}
-//
-//inline void ProgRecFourierGPU::processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-//		ProjectionData* const data) {
-//	Point3D imgPos;
-//	// transform current point to center
-//	imgPos.x = x - maxVolumeIndexX/2;
-//	imgPos.y = y - maxVolumeIndexYZ/2;
-//	imgPos.z = z - maxVolumeIndexYZ/2;
-//	if ((imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z) > maxDistanceSqr) {
-//		return; // discard iterations that would access pixel with too high frequency
-//	}
-//	// rotate around center
-//	multiply(transform, imgPos);
-//	// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
-//	imgPos.y += maxVolumeIndexYZ / 2;
-//
-//	// check that we don't want to collect data from far far away ...
-//	float radiusSqr = blob.radius * blob.radius;
-//	float zSqr = imgPos.z * imgPos.z;
-//	if (zSqr > radiusSqr) return;
-//
-//	// create blob bounding box
-//	int minX = std::ceil(imgPos.x - blob.radius);
-//	int maxX = std::floor(imgPos.x + blob.radius);
-//	int minY = std::ceil(imgPos.y - blob.radius);
-//	int maxY = std::floor(imgPos.y + blob.radius);
-//	minX = std::max(minX, 0);
-//	minY = std::max(minY, 0);
-//	maxX = std::min(maxX, data->img->getXSize()-1);
-//	maxY = std::min(maxY, data->img->getYSize()-1);
-//	std::complex<float>* targetVolume = &tempVolume[z][y][x];
-//	float* targetWeight = &tempWeights[z][y][x];
-//	// ugly spaghetti code, but improves performance by app. 10%
-//	if (0 != data->CTF) {
-//		// check which pixel in the vicinity that should contribute
-//		for (int i = minY; i <= maxY; i++) {
-//			float ySqr = (imgPos.y - i) * (imgPos.y - i);
-//			float yzSqr = ySqr + zSqr;
-//			if (yzSqr > radiusSqr) continue;
-//			for (int j = minX; j <= maxX; j++) {
-//				float xD = imgPos.x - j;
-//				float distanceSqr = xD*xD + yzSqr;
-//				if (distanceSqr > radiusSqr) continue;
-//
-//				float wCTF = (*data->CTF)(j, i);
-//				float wModulator = (*data->modulator)(j, i);
-//				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
-//				float wBlob = blobTableSqrt[aux];
-//				float weight = wBlob * wModulator * data->weight;
-//				*targetWeight += weight;
-//				*targetVolume += (*data->img)(j, i) * weight * wCTF;
-//			}
-//		}
-//	} else {
-//		// check which pixel in the vicinity that should contribute
-//		for (int i = minY; i <= maxY; i++) {
-//			float ySqr = (imgPos.y - i) * (imgPos.y - i);
-//			float yzSqr = ySqr + zSqr;
-//			if (yzSqr > radiusSqr) continue;
-//			for (int j = minX; j <= maxX; j++) {
-//				float xD = imgPos.x - j;
-//				float distanceSqr = xD*xD + yzSqr;
-//				if (distanceSqr > radiusSqr) continue;
-//
-//				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
-//				float wBlob = blobTableSqrt[aux];
-//
-//				float weight = wBlob * data->weight;
-//				*targetWeight += weight;
-//				*targetVolume += (*data->img)(j, i) * weight;
-//			}
-//		}
-//	}
-//
-//}
-
-inline void ProgRecFourierGPU::convert(Matrix2D<double>& in, float out[3][3]) {
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			out[i][j] = in(i, j);
-		}
-	}
-}
-//
-//void ProgRecFourierGPU::processProjection(
-//	ProjectionData* projectionData,
-//	const float transform[3][3],
-//	const float transformInv[3][3])
-//{
-//	int imgSizeX = projectionData->img->getXSize();
-//	int imgSizeY = projectionData->img->getYSize();
-//	const float maxDistanceSqr = (imgSizeX+(useFast ? 0.f : blob.radius)) * (imgSizeX+(useFast ? 0.f : blob.radius));
-//	Point3D origin = {maxVolumeIndexX/2.f, maxVolumeIndexYZ/2.f, maxVolumeIndexYZ/2.f};
-//	Point3D u, v;
-//	Point3D AABB[2];
-//	Point3D cuboid[8];
-//
-//	// calculate affected space
-//	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, useFast ? 0.f : blob.radius);
-//	rotateCuboid(cuboid, transform);
-//	translateCuboid(cuboid, origin);
-//	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
-//	getVectors(cuboid, u, v);
-//
-//	// prepare traversing
-//	int minY, minX, minZ;
-//	int maxY, maxX, maxZ;
-//	minZ = floor(AABB[0].z);
-//	minY = floor(AABB[0].y);
-//	minX = floor(AABB[0].x);
-//	maxZ = ceil(AABB[1].z);
-//	maxY = ceil(AABB[1].y);
-//	maxX = ceil(AABB[1].x);
-//	int dX, dY, dZ;
-//	dX = maxX - minX;
-//	dY = maxY - minY;
-//	dZ = maxZ - minZ;
-//
-//	if (dZ <= dX && dZ <= dY) { // iterate XY plane
-//		for(int y = minY; y <= maxY; y++) {
-//			for(int x = minX; x <= maxX; x++) {
-//				if (useFast) {
-//					float hitZ;
-//					if (getZ(x, y, hitZ, u, v, *cuboid)) {
-//						int z = (int)(hitZ + 0.5f); // rounding
-//						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
-//					}
-//				} else {
-//					float z1, z2;
-//					bool hit1 = getZ(x, y, z1, u, v, *cuboid); // lower plane
-//					bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4)); // upper plane
-//					if (hit1 || hit2) {
-//						z1 = clamp(z1, 0, maxVolumeIndexYZ);
-//						z2 = clamp(z2, 0, maxVolumeIndexYZ);
-//						float lower = std::min(z1, z2);
-//						float upper = std::max(z1, z2);
-//						for (int z = std::floor(lower); z <= std::ceil(upper); z++) {
-//							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
-//						}
-//					}
-//				}
-//			}
-//		}
-//	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
-//		for(int z = minZ; z <= maxZ; z++) {
-//			for(int x = minX; x <= maxX; x++) {
-//				if (useFast) {
-//					float hitY;
-//					if (getY(x, hitY, z, u, v, *cuboid)) {
-//						int y = (int)(hitY + 0.5f); // rounding
-//						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
-//					}
-//				} else {
-//					float y1, y2;
-//					bool hit1 = getY(x, y1, z, u, v, *cuboid); // lower plane
-//					bool hit2 = getY(x, y2, z, u, v, *(cuboid + 4)); // upper plane
-//					if (hit1 || hit2) {
-//						y1 = clamp(y1, 0, maxVolumeIndexYZ);
-//						y2 = clamp(y2, 0, maxVolumeIndexYZ);
-//						float lower = std::min(y1, y2);
-//						float upper = std::max(y1, y2);
-//						for (int y = std::floor(lower); y <= std::ceil(upper); y++) {
-//							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
-//						}
-//					}
-//				}
-//			}
-//		}
-//	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
-//		for(int z = minZ; z <= maxZ; z++) {
-//			for(int y = minY; y <= maxY; y++) {
-//				if (useFast) {
-//					float hitX;
-//					if (getX(hitX, y, z, u, v, *cuboid)) {
-//						int x = (int)(hitX + 0.5f); // rounding
-//						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
-//					}
-//				} else {
-//					float x1, x2;
-//					bool hit1 = getX(x1, y, z, u, v, *cuboid); // lower plane
-//					bool hit2 = getX(x2, y, z, u, v, *(cuboid + 4)); // upper plane
-//					if (hit1 || hit2) {
-//						x1 = clamp(x1, 0, maxVolumeIndexX);
-//						x2 = clamp(x2, 0, maxVolumeIndexX);
-//						float lower = std::min(x1, x2);
-//						float upper = std::max(x1, x2);
-//						for (int x = std::floor(lower); x <= std::ceil(upper); x++) {
-//							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
 
 template<typename T>
 T*** ProgRecFourierGPU::allocate(T***& where, int xSize, int ySize, int zSize) {
@@ -931,7 +655,6 @@ void ProgRecFourierGPU::mirrorAndCropTempSpaces() {
 
 template<typename T>
 void ProgRecFourierGPU::mirrorAndCrop(T***& input, T (*f)(T)) {
-
 	T*** output;
 	// create new storage, notice that just 'right hand side - X axis' of the input will be preserved, left will be converted to its complex conjugate
 	allocate(output, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
@@ -1000,77 +723,6 @@ void ProgRecFourierGPU::processWeights() {
 	}
 }
 
-void ProgRecFourierGPU::loadImages(int startIndex, int endIndex) {
-	/*
-	loadThread.startImageIndex = startIndex;
-	loadThread.endImageIndex = endIndex;
-	// Awaking sleeping threads
-	barrier_wait( &barrier );
-	*/
-}
-
-void ProgRecFourierGPU::swapLoadBuffers() {
-//	TraverseSpace* tmp = loadThread.readyBuffer;
-//	loadThread.readyBuffer = loadThread.loadingBuffer;
-//	loadThread.loadingBuffer = tmp;
-//
-//	int tmp2 = loadThread.readyBufferLength;
-//	loadThread.readyBufferLength = loadThread.loadingBufferLength;
-//	loadThread.loadingBufferLength = tmp2;
-//
-//	float* tmp3 = loadThread.readyPaddedImages;
-//	loadThread.readyPaddedImages = loadThread.loadingPaddedImages;
-//	loadThread.loadingPaddedImages = tmp3;
-//
-//	Array2D<std::complex<float> >* tmp4 = loadThread.readyFFTs;
-//	loadThread.readyFFTs = loadThread.loadingFFTs;
-//	loadThread.loadingFFTs = tmp4;
-	/*
-	FRecBufferData* tmp = loadThread.rBuffer;
-	loadThread.rBuffer = loadThread.lBuffer;
-	loadThread.lBuffer = tmp;
-	*/
-}
-/*
-void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
-{
-	int repaint = (int)ceil((double)SF.size()/60);
-	for ( int i = 0 ; i < bufferSize; i++ ) {
-		ProjectionData* projData = &buffer[i];
-		Array2D<std::complex<float> >* myPaddedFourier = projData->img;
-		if (projData->skip) {
-			continue;
-		}
-		if (verbose && projData->imgIndex%repaint==0) {
-			progress_bar(projData->imgIndex);
-		}
-
-		Matrix2D<double> *Ainv = &projData->localAInv;
-		// Loop over all symmetries
-		for (size_t isym = 0; isym < R_repository.size(); isym++)
-		{
-			// Compute the coordinate axes of the symmetrized projection
-			Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
-			Matrix2D<double> A_SLInv=A_SL.inv();
-			float transf[3][3];
-			float transfInv[3][3];
-			convert(A_SL, transf);
-			convert(A_SLInv, transfInv);
-//			processProjection(//tempVolume, tempWeights, size,
-//					projData, transf, transfInv);
-		}
-		projData->clean();
-	}
-}
-*/
-
-static void print(Point3D<float>* cuboid) {
-	for (int i = 0; i < 9; i++) {
-		std::cout << cuboid[i%8].x << " " << cuboid[i%8].y << " " << cuboid[i%8].z << std::endl;
-	}
-	std::cout << std::endl;
-}
-
 void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
 		MATRIX& transform, MATRIX& transformInv, RecFourierProjectionTraverseSpace* space) {
 	Point3D<float> cuboid[8];
@@ -1079,13 +731,11 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, useFast ? 0.f : blob.radius);
 	rotateCuboid(cuboid, transform);
 	translateCuboid(cuboid, origin);
-//	if (space->UUID == 3916) print(cuboid);
 	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
-//	if (space->UUID == 3916) printAABB(AABB);
+
 	// store data
 	space->projectionIndex = projectionIndex;
 	getVectors(cuboid, space->u, space->v);
-	space->unitNormal = getNormal(space->u, space->v, true);
 	space->minZ = floor(AABB[0].z);
 	space->minY = floor(AABB[0].y);
 	space->minX = floor(AABB[0].x);
@@ -1103,16 +753,12 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	}
 
 	// calculate best traverse direction
-	int dX, dY, dZ;
-	dX = space->maxX - space->minX;
-	dY = space->maxY - space->minY;
-	dZ = space->maxZ - space->minZ;
+	Point3D<float> unitNormal = getNormal(space->u, space->v, true);
+	float nX = std::abs(unitNormal.x);
+	float nY = std::abs(unitNormal.y);
+	float nZ = std::abs(unitNormal.z);
 
-	float nX = std::abs(space->unitNormal.x);
-	float nY = std::abs(space->unitNormal.y);
-	float nZ = std::abs(space->unitNormal.z);
-
-
+	// biggest vector indicates ideal direction
 	if (nX >= nY  && nX >= nZ) { // iterate YZ plane
 		space->dir = space->YZ;
 	} else if (nY >= nX && nY >= nZ) { // iterate XZ plane
@@ -1120,15 +766,6 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	} else if (nZ >= nX && nZ >= nY) { // iterate XY plane
 		space->dir = space->XY;
 	}
-
-//	if (dZ <= dX && dZ <= dY) { // iterate XY plane
-//		if (space->dir != space->XY) std::cout << "Chyba";
-//	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
-//		if (space->dir != space->XZ) std::cout << "Chyba";
-//	} else { // iterate YZ plane
-//		if (space->dir != space->YZ)  std::cout << "Chyba";
-//	}
-//	std::cout << "vzdalenosti: " << nX << " " << nY << " " << nZ  << " pouzivam : " << space->dir << std::endl;
 }
 /*
 int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,

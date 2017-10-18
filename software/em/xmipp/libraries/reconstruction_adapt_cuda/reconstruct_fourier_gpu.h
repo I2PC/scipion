@@ -318,10 +318,6 @@ private:
 			RecFourierBufferData* buffer,
 			float* dest);
 
-    /** Returns value within the range (included) */
-    template<typename T, typename U>
-    static U clamp(U val, T min, T max);
-
     /**
     *          7____6
     *         3/___2/
@@ -361,23 +357,11 @@ private:
     	return (x > min) && (x < max);
     }
 
-//    /** Returns X coordinate of the point [y, z] on the plane defined by p0 (origin) and two vectors */
-//    static bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0);
-//
-//    /** Returns Y coordinate of the point [x, z] on the plane defined by p0 (origin) and two vectors */
-//    static bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0);
-//
-//    /** Returns Z coordinate of the point [x, y] on the plane defined by p0 (origin) and two vectors */
-//    static bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0);
-
     /** Method returns vectors defining the plane */
     static void getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v);
 
-//    /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
-//    static void printAABB(Point3D* AABB);
-
-    /** Method will convert Matrix2D matrix to float[3][3] */
-    static void convert(Matrix2D<double>& in, float out[3][3]);
+    /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
+    static void printAABB(Point3D<float> AABB[]);
 
     /** Method to convert temporal space to expected (original) format */
     template<typename T, typename U>
@@ -390,7 +374,7 @@ private:
     /**
      * Method computes CTF and weight modulator for each pixel in the image
      */
-    static void preloadCTF(RecFourierWorkThread* threadParams,
+    static void computeCTFCorrection(RecFourierWorkThread* threadParams,
     		size_t imgIndex,
 			ProgRecFourierGPU* parent,
 			RecFourierBufferData* buffer,
@@ -399,18 +383,6 @@ private:
     void logProgress(int increment);
 
 // METHODS
-
-    /** Method will set indexes of the images to load and open sync barrier */
-    void loadImages(int startIndex, int endIndex);
-
-    /** Method swaps buffers of the loading thread */
-    void swapLoadBuffers();
-
-//    /**
-//     * Method will use data stored in the buffer and update temporal
-//     * storages appropriately.
-//     */
-//    void processBuffer(ProjectionData* buffer);
 
     /**
 	 * Method will take input array (of size
@@ -444,35 +416,17 @@ private:
     	}
     }
 
+    /**
+     * Method calculates a traversal space information for specific projection
+     * imgSizeX - X size of the projection
+     * imgSizeY - Y size of the projection
+     * projectionIndex - index to some array where the respective projection is stored
+     * transform - forward rotation that should be applied to the projection
+     * transformInv - inverse transformation
+     * space - which will be filled
+     */
     void computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
     		MATRIX& transform, MATRIX& transformInv, RecFourierProjectionTraverseSpace* space);
-
-//    /**
-//     * Method will process one projection image and add result to temporal
-//     * spaces. Method also shows progress of the calculation.
-//     */
-//    void processProjection(
-//    	ProjectionData* projectionData,
-//    	const float transform[3][3],
-//    	const float transformInv[3][3]);
-
-//    /**
-//     * Method will map one voxel from the temporal
-//     * spaces to the given projection and update temporal spaces
-//     * using the pixel value of the projection.
-//     */
-//    void processVoxel(
-//    		int x, int y, int z,
-//			const float transform[3][3], float maxDistanceSqr,
-//    		ProjectionData* const data);
-
-//    /**
-//     * Method will map one voxel from the temporal
-//     * spaces to the given projection and update temporal spaces
-//     * using the pixel values of the projection withing the blob distance.
-//     */
-//    void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-//    		ProjectionData* const data);
 
 //    /**
 //     * Method will precalculate (inverse) transformation for each projection data x symmetry
