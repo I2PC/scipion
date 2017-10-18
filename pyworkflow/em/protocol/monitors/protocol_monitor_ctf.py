@@ -29,6 +29,7 @@ import sys
 
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor, EmailNotifier
+from report_html import PSD_PATH
 import sqlite3 as lite
 import time, sys
 
@@ -173,9 +174,9 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,micPath,psdPath,shiftPlotPath )
-                     VALUES(%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, defocusU,
-                     defocusV, defocusAngle, defocusU / defocusV, micPath, psdPath, shiftPlotPath)
+            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
+                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
+                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
@@ -209,9 +210,7 @@ class MonitorCTF(Monitor):
                                 defocus FLOAT,
                                 astigmatism FLOAT,
                                 ratio FLOAT, 
-                                micPath STRING,
-                                psdPath STRING,
-                                shiftPlotPath STRING)
+                                psdPath STRING)
                                 """ % self._tableName)
 
     def getData(self):
@@ -229,9 +228,7 @@ class MonitorCTF(Monitor):
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
             'idValues': get('id'),
-            'imgMicPath': get('micPath'),
-            'imgPsdPath': get('psdPath'),
-            'imgShiftPath': get('shiftPlotPath')
+            PSD_PATH: get('psdPath'),
         }
         # conn.close()
         return data

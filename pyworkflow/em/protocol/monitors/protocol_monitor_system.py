@@ -44,7 +44,7 @@ import getnifs
 from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
-from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.protocol import getUpdatedProtocol
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.viewer import (DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 
@@ -138,7 +138,7 @@ class ProtMonitorSystem(ProtMonitor):
         group.addParam('doDiskIO', params.BooleanParam, default=False,
                        label="Check Disk IO",
                        help="Set to true if you want to monitor the Disk "
-                            "Acces")
+                            "Access")
 
     # --------------------------- STEPS functions ----------------------------
 
@@ -253,15 +253,6 @@ class MonitorSystem(Monitor):
                                  isolation_level=None)
         self.cur = self.conn.cursor()
 
-    def _getUpdatedProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
-        # Close DB connections
-        prot2.getProject().closeMapper()
-        prot2.closeMappers()
-        return prot2
-
     def warning(self, msg):
         self.notify("Scipion System Monitor WARNING", msg)
 
@@ -359,8 +350,12 @@ class MonitorSystem(Monitor):
             print("ERROR: saving one data point (monitor). I continue")
 
         # Return finished = True if all protocols have finished
-        return all(self._getUpdatedProtocol(prot).getStatus() != STATUS_RUNNING
-                   for prot in self.protocols)
+        finished = []
+        for prot in self.protocols:
+            updatedProt = getUpdatedProtocol(prot)
+            finished.append(updatedProt.getStatus() != STATUS_RUNNING)
+
+        return all(finished)
 
     def _createTable(self):
         sqlCommand = """CREATE TABLE IF NOT EXISTS  %s(
@@ -380,7 +375,7 @@ class MonitorSystem(Monitor):
         return self.labelList
 
     def getData(self):
-        """Fill a dictionay for each label in self.labeldisk.
+        """Fill a dictionary for each label in self.labeldisk.
         The key is the label name. Teh value a list with
         data read from the database"""
         cur = self.cur
