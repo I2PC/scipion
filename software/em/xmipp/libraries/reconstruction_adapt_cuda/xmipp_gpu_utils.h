@@ -42,12 +42,12 @@ public:
 		data=NULL;
     }
 
-	GpuMultidimArrayAtCpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1, bool allocate=true)
+	GpuMultidimArrayAtCpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
-		resize(_Xdim, _Ydim, _Zdim, _Ndim, allocate);
+		resize(_Xdim, _Ydim, _Zdim, _Ndim);
     }
 
-	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1, bool allocate=true)
+	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
 		Xdim=_Xdim;
 		Ydim=_Ydim;
@@ -56,7 +56,7 @@ public:
         yxdim=(size_t)_Ydim*_Xdim;
         zyxdim=yxdim*_Zdim;
         nzyxdim=zyxdim*_Ndim;
-        if (nzyxdim>0 && allocate)
+        if (nzyxdim>0)
         	data=new T[nzyxdim];
         else
         	data=NULL;
@@ -65,15 +65,6 @@ public:
 	void fillImage(size_t n, const MultidimArray<T> &from)
 	{
 		memcpy(data+n*zyxdim, MULTIDIM_ARRAY(from), MULTIDIM_SIZE(from)*sizeof(T));
-	}
-
-	template<typename T1>
-	void fillWithTypeConvert(size_t destOffset, const MultidimArray<T1> &from)
-	{
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(from) {
-			data[destOffset*zyxdim + n] = (T1)from[n];
-		}
-//		memcpy(data+n*zyxdim, MULTIDIM_ARRAY(from), MULTIDIM_SIZE(from)*sizeof(T));
 	}
 
 	bool isEmpty()
@@ -86,7 +77,6 @@ public:
 		if (gpuArray.isEmpty())
 			gpuArray.resize(Xdim,Ydim,Zdim,Ndim);
 
-		printf("copyToGpu %d %d %d %d (%d)\n", Xdim, Ydim, Zdim, Ndim,nzyxdim*sizeof(T));
 		gpuCopyFromCPUToGPU(data, gpuArray.d_data, nzyxdim*sizeof(T));
 	}
 
@@ -105,16 +95,6 @@ public:
 			gpuCopyFromCPUToGPU(data, &gpuArray.d_data[index], nzyxdim*sizeof(T));
 			index=index+nzyxdim;
 		}
-	}
-
-	void giveOneImage(GpuMultidimArrayAtCpu<T> out, int idx){
-		if (out.isEmpty())
-			out.resize(Xdim,Ydim,Zdim,1);
-		memcpy(out.data, data[idx*zyxdim], zyxdim*sizeof(T));
-	}
-
-	void setOneImage(GpuMultidimArrayAtCpu<T> in, int idx){
-		memcpy(data[idx*zyxdim], in.data, zyxdim*sizeof(T));
 	}
 
 	void clear()
