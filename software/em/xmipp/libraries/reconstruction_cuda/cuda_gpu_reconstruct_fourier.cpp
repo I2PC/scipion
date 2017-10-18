@@ -569,7 +569,7 @@ void processVoxel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
 	int x, int y, int z,
 	FRecBufferDataGPU* const data,
-	const TraverseSpace* const space)
+	const RecFourierProjectionTraverseSpace* const space)
 {
 	Point3D<float> imgPos;
 	float wBlob = 1.f;
@@ -619,7 +619,7 @@ void processVoxelBlob(
 	float* tempVolumeGPU, float *tempWeightsGPU,
 	int x, int y, int z,
 	FRecBufferDataGPU* const data,
-	const TraverseSpace* const space,
+	const RecFourierProjectionTraverseSpace* const space,
 	const float* blobTableSqrt,
 	int imgCacheDim)
 {
@@ -808,7 +808,7 @@ void mapToImage(Point3D<float>* box, int xSize, int ySize, const float transform
 }
 
 __device__
-void calculateAABB(const TraverseSpace* tSpace, const FRecBufferDataGPU* buffer, Point3D<float>* dest) {
+void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const FRecBufferDataGPU* buffer, Point3D<float>* dest) {
 	Point3D<float> box[8];
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
@@ -873,7 +873,7 @@ __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
 	FRecBufferDataGPU* const data,
-	const TraverseSpace* const tSpace,
+	const RecFourierProjectionTraverseSpace* const tSpace,
 	const float* devBlobTableSqrt,
 	int imgCacheDim)
 {
@@ -1018,7 +1018,7 @@ void processBufferKernel(
 #endif
 
 	for (int i = 0; i < buffer->getNoOfSpaces(); i++) {
-		TraverseSpace* space = &buffer->spaces[i];
+		RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
 
 #if SHARED_IMG
 		if ( ! cUseFast) {

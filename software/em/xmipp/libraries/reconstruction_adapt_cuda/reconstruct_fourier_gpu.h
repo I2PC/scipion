@@ -31,7 +31,6 @@
 
 #include <iostream>
 #include <limits>
-#include <data/fourier_reconstruction_traverse_space.h>
 #include <data/xmipp_fftw.h>
 #include <data/xmipp_funcs.h>
 #include <data/xmipp_image.h>
@@ -53,6 +52,7 @@
 #include <reconstruction_cuda/cuda_gpu_reconstruct_fourier.h>
 #include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
 #include <reconstruction_cuda/cuda_xmipp_utils.h>
+#include "data/reconstruct_fourier_projection_traverse_space.h"
 #define BLOB_TABLE_SIZE 5000
 #define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with cuda_gpu_reconstruct_fourier.cpp
 
@@ -464,7 +464,7 @@ private:
     }
 
     void computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
-    		MATRIX& transform, MATRIX& transformInv, TraverseSpace* space);
+    		MATRIX& transform, MATRIX& transformInv, RecFourierProjectionTraverseSpace* space);
 
 //    /**
 //     * Method will process one projection image and add result to temporal
@@ -497,7 +497,7 @@ private:
      * Method will precalculate (inverse) transformation for each projection data x symmetry
      */
     int prepareTransforms(ProjectionData* buffer,
-    		TraverseSpace* traverseSpaces);
+    		RecFourierProjectionTraverseSpace* traverseSpaces);
 
     template<typename T>
     Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
@@ -524,7 +524,7 @@ private:
 		return (u.x-v.x)*(u.x-v.x) + (u.y-v.y)*(u.y-v.y) + (u.z-v.z)*(u.z-v.z);
 	}
 
-    void sort(TraverseSpace* input, int size);
+    void sort(RecFourierProjectionTraverseSpace* input, int size);
 
     template<typename T>
     static T getDot(const Point3D<T>&u, const Point3D<T>& v) {

@@ -9,10 +9,11 @@
 #define XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_
 
 #include <data/projection_data.h>
-#include <data/fourier_reconstruction_traverse_space.h>
 #include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
 #include <reconstruction_cuda/cuda_xmipp_utils.h>
 #include <map>
+
+#include "data/reconstruct_fourier_projection_traverse_space.h"
 #include "data/reconstruct_fourier_buffer_data.h"
 
 

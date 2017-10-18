@@ -26,7 +26,7 @@
 #ifndef XMIPP_LIBRARIES_DATA_RECONSTRUCT_FOURIER_BUFFER_DATA_H_
 #define XMIPP_LIBRARIES_DATA_RECONSTRUCT_FOURIER_BUFFER_DATA_H_
 
-#include "fourier_reconstruction_traverse_space.h"
+#include "reconstruct_fourier_projection_traverse_space.h"
 
 /**
  * Struct holding data for calculating Fourier Reconstruction
@@ -51,7 +51,7 @@ struct RecFourierBufferData
 			hasFFTs(hasFFTs), hasCTFs(hasCTFs),
 			fftSizeX(fftSizeX), fftSizeY(fftSizeY), paddedImgSize(paddedImgSize),
 			maxNoOfImages(maxNoOfImages),noOfSymmetries(noOfSymmetries), noOfImages(0) {
-		spaces = new TraverseSpace[maxNoOfImages * noOfSymmetries];
+		spaces = new RecFourierProjectionTraverseSpace[maxNoOfImages * noOfSymmetries];
 		if (hasFFTs) {
 			paddedImages = NULL;
 			FFTs = new float[fftSizeX * fftSizeY * maxNoOfImages * 2]; // *2 since it's complex
@@ -129,7 +129,7 @@ struct RecFourierBufferData
 	 * returns no of objects currently stored in the array OR
 	 * -1 if 'array' is not from this buffer
 	 */
-	int getNoOfElements(TraverseSpace* array) {
+	int getNoOfElements(RecFourierProjectionTraverseSpace* array) {
 		return noOfImages * noOfSymmetries;
 	}
 
@@ -149,8 +149,8 @@ struct RecFourierBufferData
 	 * returns max size of the 'array' in bytes OR
 	 * -1 if 'array' is not from this buffer
 	 */
-	int getMaxByteSize(TraverseSpace* array) {
-		if (array == spaces) return (noOfSymmetries * maxNoOfImages * sizeof(TraverseSpace));
+	int getMaxByteSize(RecFourierProjectionTraverseSpace* array) {
+		if (array == spaces) return (noOfSymmetries * maxNoOfImages * sizeof(RecFourierProjectionTraverseSpace));
 		return -1; // undefined
 	}
 
@@ -166,7 +166,7 @@ struct RecFourierBufferData
 	 */
 	float* paddedImages;
 	// holds spaces for each FFT
-	TraverseSpace* spaces;
+	RecFourierProjectionTraverseSpace* spaces;
 
 	int fftSizeX;
 	int fftSizeY;

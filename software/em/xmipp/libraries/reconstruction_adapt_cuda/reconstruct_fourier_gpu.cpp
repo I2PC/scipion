@@ -371,9 +371,6 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 		ProgRecFourierGPU* parent,
 		bool hasCTF, std::vector<size_t>& objId)
 {
-
-	static int UUID = 0;
-
     ApplyGeoParams params;
     params.only_apply_shifts = true;
     MultidimArray<float> localPaddedImgFloat;
@@ -416,7 +413,7 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 		// prepare transforms for all  symmetries
 		int travSpaceOffset = lData->noOfImages * lData->noOfSymmetries;
 		for (int j = 0; j < parent->R_repository.size(); j++) {
-			TraverseSpace* space = &lData->spaces[travSpaceOffset + j];
+			RecFourierProjectionTraverseSpace* space = &lData->spaces[travSpaceOffset + j];
 
 			Matrix2D<double> A_SL=parent->R_repository[j]*(Ainv);
 			Matrix2D<double> A_SLInv=A_SL.inv();
@@ -426,9 +423,6 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 			parent->computeTraverseSpace(lData->fftSizeX, lData->fftSizeY, projIndex,
 				transf, transfInv, space);
 			space->weight = (parent->do_weights) ? proj.weight() : 1.0;
-			space->UUID = UUID;
-
-			UUID++;
 		}
 
 		// Copy the projection to the center of the padded image
@@ -1214,7 +1208,7 @@ static void print(Point3D<float>* cuboid) {
 }
 
 void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
-		MATRIX& transform, MATRIX& transformInv, TraverseSpace* space) {
+		MATRIX& transform, MATRIX& transformInv, RecFourierProjectionTraverseSpace* space) {
 	Point3D<float> cuboid[8];
 	Point3D<float> AABB[2];
 	Point3D<float> origin = {maxVolumeIndexX/2.f, maxVolumeIndexYZ/2.f, maxVolumeIndexYZ/2.f};
@@ -1274,7 +1268,7 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 }
 
 int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
-		TraverseSpace* traverseSpaces) {
+		RecFourierProjectionTraverseSpace* traverseSpaces) {
 	int index = 0;
 	static int UUID = 0;
 	float transf[3][3];
@@ -1293,7 +1287,6 @@ int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 //			if (UUID == 1058) {
 //							std::cout << "UUID: " << UUID << " ";
 //						}
-			traverseSpaces[index].UUID = UUID;
 			computeTraverseSpace(maxVolumeIndexX / 2, maxVolumeIndexYZ, i,
 					transf, transfInv, &traverseSpaces[index]);
 
@@ -1309,7 +1302,7 @@ int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 	return index;
 }
 
-void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
+void ProgRecFourierGPU::sort(RecFourierProjectionTraverseSpace* input, int size) {
 	// greedy TSP, using search sort
 	for (int i = 0; i < (size-1); i++) {
 		int closestIndex;
@@ -1321,7 +1314,7 @@ void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
 				closestIndex = j;
 			}
 		}
-		TraverseSpace tmp = input[i+1];
+		RecFourierProjectionTraverseSpace tmp = input[i+1];
 		input[i+1] = input[closestIndex];
 		input[closestIndex] = tmp;
 	}
