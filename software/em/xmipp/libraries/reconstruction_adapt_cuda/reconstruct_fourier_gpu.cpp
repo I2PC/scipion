@@ -276,9 +276,6 @@ void ProgRecFourierGPU::cropAndShift(
 	}
 }
 
-#define SSTR( x ) static_cast< std::ostringstream & >( \
-        ( std::ostringstream() << std::dec << x ) ).str()
-
 void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 		ProgRecFourierGPU* parent,
 		bool hasCTF, std::vector<size_t>& objId)
@@ -291,17 +288,14 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 	// FIXME cannot be complex float due to build errors
 	MultidimArray< std::complex<double> > localPaddedFourier;
 
-	RecFourierBufferData* lData = threadParams->buffer;
-	lData->noOfImages = 0; // 'clean buffer'
+	RecFourierBufferData* buffer = threadParams->buffer;
+	buffer->noOfImages = 0; // 'clean' buffer
 	for (int projIndex = 0; projIndex < parent->bufferSize; projIndex++) {
 		double rot, tilt, psi, weight;
 		Projection proj;
 		Matrix2D<double> Ainv(3, 3);
 		int imgIndex = threadParams->startImageIndex + projIndex;
 
-//		TraverseSpace* space = &threadParams->buff1[bIndex];
-//		ProjectionData* data = &threadParams->buffer1[bIndex];
-//		data->skip = true;
 		if (imgIndex >= threadParams->endImageIndex) {
 			continue;
 		}
@@ -322,27 +316,28 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 		Ainv = Ainv.transpose();
 		float transf[3][3];
 		float transfInv[3][3];
+
 		// prepare transforms for all  symmetries
-		int travSpaceOffset = lData->noOfImages * lData->noOfSymmetries;
+		int travSpaceOffset = buffer->noOfImages * buffer->noOfSymmetries;
 		for (int j = 0; j < parent->R_repository.size(); j++) {
-			RecFourierProjectionTraverseSpace* space = &lData->spaces[travSpaceOffset + j];
+			RecFourierProjectionTraverseSpace* space = &buffer->spaces[travSpaceOffset + j];
 
 			Matrix2D<double> A_SL=parent->R_repository[j]*(Ainv);
 			Matrix2D<double> A_SLInv=A_SL.inv();
 			A_SL.convertTo(transf);
 			A_SLInv.convertTo(transfInv);
 
-			parent->computeTraverseSpace(lData->fftSizeX, lData->fftSizeY, projIndex,
+			parent->computeTraverseSpace(buffer->fftSizeX, buffer->fftSizeY, projIndex,
 				transf, transfInv, space);
 			space->weight = (parent->do_weights) ? proj.weight() : 1.0;
 		}
 
 		// Copy the projection to the center of the padded image
-		// and compute its Fourier transform
+		// and compute its Fourier transform, if requested
 		proj().setXmippOrigin();
 		const MultidimArray<double> &mProj = proj();
-		if (lData->hasFFTs) {
-			localPaddedImgDouble.initZeros(lData->paddedImgSize, lData->paddedImgSize);
+		if (buffer->hasFFTs) {
+			localPaddedImgDouble.initZeros(buffer->paddedImgSize, buffer->paddedImgSize);
 			localPaddedImgDouble.setXmippOrigin();
 			FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
 				A2D_ELEM(localPaddedImgDouble,i,j) = A2D_ELEM(mProj, i, j);
@@ -353,7 +348,7 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 			localTransformerImg.FourierTransform();
 			localTransformerImg.getFourierAlias(localPaddedFourier);
 			cropAndShift(localPaddedFourier, parent,
-					lData, lData->getNthItem(lData->FFTs, projIndex));
+					buffer, buffer->getNthItem(buffer->FFTs, projIndex));
 		} else {
 			localPaddedImgFloat.initZeros(parent->paddedImgSize, parent->paddedImgSize);
 			localPaddedImgFloat.setXmippOrigin();
@@ -362,48 +357,16 @@ void ProgRecFourierGPU::preloadBuffer(RecFourierWorkThread* threadParams,
 			CenterFFT(localPaddedImgFloat, true);
 
 			// add image at the end of the stack (that is already long enough)
-			memcpy(lData->getNthItem(lData->paddedImages, projIndex),
+			memcpy(buffer->getNthItem(buffer->paddedImages, projIndex),
 					localPaddedImgFloat.data,
-					lData->getPaddedImgByteSize());
+					buffer->getPaddedImgByteSize());
 		}
 
-		lData->noOfImages++; // new image added to buffer
+		if (hasCTF) {
+			preloadCTF(threadParams, objId[imgIndex],parent, buffer, projIndex);
+		}
 
-//		data->imgIndex = imgIndex;
-//		if (hasCTF) { // FIXME reimplement, can be part of the image
-//			Array2D<float>* CTF = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
-//			Array2D<float>* modulator = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
-//			preloadCTF(threadParams, objId[imgIndex],parent, CTF, modulator);
-//		}
-		// set data as usable
-//		data->skip = false;
-		//#define DEBUG22
-#ifdef DEBUG22
-                //CORRECTO
-
-			if(threadParams->myThreadID%1==0)
-			{
-				proj.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
- integerToString(threadParams->imageIndex) + "proj.spi");
-
-				ImageXmipp save44;
-				save44()=localPaddedImg;
-				save44.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
- integerToString(threadParams->imageIndex) + "local_padded_img.spi");
-
-				FourierImage save33;
-				save33()=localPaddedFourier;
-				save33.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
- integerToString(threadParams->imageIndex) + "local_padded_fourier.spi");
-				FourierImage save22;
-				//save22()=*paddedFourier;
-				save22().alias(*(threadParams->localPaddedFourier));
-				save22.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
- integerToString(threadParams->imageIndex) + "_padded_fourier.spi");
-			}
-
-#endif
-#undef DEBUG22
+		buffer->noOfImages++; // new image added to buffer
 	}
 }
 
@@ -598,18 +561,18 @@ void static printAABB(Point3D<float> AABB[]) {
 inline void ProgRecFourierGPU::preloadCTF(RecFourierWorkThread* threadParams,
 		size_t imgIndex,
 		ProgRecFourierGPU* parent,
-		Array2D<float>* CTF,
-		Array2D<float>* modulator)
+		RecFourierBufferData* buffer,
+		int storeIndex)
 {
 	CTFDescription ctf;
 	ctf.readFromMetadataRow(*(threadParams->selFile), imgIndex);
 	ctf.produceSideInfo();
 	float freqX, freqY;
 	float CTFVal, modulatorVal;
-	for (int y = 0; y < CTF->getYSize(); y++) {
+	for (int y = 0; y < buffer->fftSizeY; y++) {
 		// since Y axis is shifted to center, we have to use different calculation
 		freqY = (y - (parent->paddedImgSize / 2.f)) / (float) parent->paddedImgSize;
-		for (int x = 0; x < CTF->getXSize(); x++) {
+		for (int x = 0; x < buffer->fftSizeY; x++) {
 			CTFVal = modulatorVal = 1.f;
 			// get respective frequency
 			FFT_IDX2DIGFREQ(x, parent->paddedImgSize, freqX);
@@ -632,13 +595,11 @@ inline void ProgRecFourierGPU::preloadCTF(RecFourierWorkThread* threadParams,
 			if (parent->isPhaseFlipped)
 				CTFVal = fabs(CTFVal);
 
-			(*CTF)(x, y) = CTFVal;
-			(*modulator)(x, y) = modulatorVal;
+			int index = y * buffer->fftSizeX + x;
+			buffer->getNthItem(buffer->CTFs, storeIndex)[index] = CTFVal;
+			buffer->getNthItem(buffer->modulators, storeIndex)[index] = modulatorVal;
 		}
 	}
-
-
-
 }
 
 //

@@ -411,8 +411,8 @@ private:
     static void preloadCTF(RecFourierWorkThread* threadParams,
     		size_t imgIndex,
 			ProgRecFourierGPU* parent,
-    		Array2D<float>* CTF,
-    		Array2D<float>* modulator);
+			RecFourierBufferData* buffer,
+    		int storeIndex);
 
     void logProgress(int increment);
 
