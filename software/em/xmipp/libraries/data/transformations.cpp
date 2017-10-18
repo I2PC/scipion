@@ -1130,3 +1130,43 @@ void radiallySymmetrize(const MultidimArray<double>& img, MultidimArray<double> 
         DIRECT_MULTIDIM_ELEM(radialImg,n)=A1D_ELEM(radial_mean,d);
     }
 }
+
+
+void rotation3DMatrixFromIcoOrientations(const char* icoFrom, const char* icoTo, Matrix2D<double> &R)
+{
+    std::vector<char> symLabel;
+    symLabel.push_back((int)icoFrom[1]);
+    symLabel.push_back((int)icoTo[1]);
+    Matrix1D<double> xyz(3); 
+    Matrix2D<double> Rfrom, Rto;
+
+    for(int i=0; i<2; i++)
+    {
+        switch (symLabel[i])
+        {
+            case '1':
+                xyz = vectorR3(0.0, 90.0, 0.0);
+                break;
+            case '2':
+                xyz = vectorR3(0.0, 0.0, 0.0);
+                break;
+            case '3':
+                xyz = vectorR3(0.0, 31.7175, 0.0);
+                break;
+            case '4':
+                xyz = vectorR3(0.0, -31.7175, 0.0);
+                break;
+            case '5':
+                xyz = vectorR3(31.7175, 90.0, 0.0); // not aviable yet
+                break;
+            case '6':
+                xyz = vectorR3(-31.7175, 90.0, 0.0); // not aviable yet
+                break;
+        }
+        if (i==0)
+            Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), Rfrom, true);
+        else
+            Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), Rto, true);
+    }
+    R = Rto * Rfrom.transpose();
+}

@@ -314,6 +314,19 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         form.addParam('doChangeHand', BooleanParam, default=False,
                       label="Change hand", 
                       help='Change hand by applying a mirror along X.')
+        # Change from one icosahedral standard orientation to another
+        form.addParam('doRotateIco', BooleanParam, default=False,
+                      label="Change icosahedral orientation", 
+                      help='hange from one icosahedral standard orientation to another.')
+        form.addParam('rotateFromIco', EnumParam, choices=['i1','i2','i3','i4'],
+                       display=EnumParam.DISPLAY_COMBO, default=0,
+                       label='from', condition='doRotateIco', 
+                       help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]] '
+                            'for a description of the symmetry groups format.'
+                            'If no symmetry is present, set the Symmetrize field to not.')
+        form.addParam('rotateToIco', EnumParam, choices=['i1','i2','i3','i4'],
+                       label='to', default=1, display=EnumParam.DISPLAY_COMBO,
+                       condition='doRotateIco')
         # Randomize the phases
         form.addParam('doRandomize', BooleanParam, default=False,
                       label="Randomize phases", 
@@ -379,14 +392,18 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     def _insertProcessStep(self):
         self.isFirstStep = True
         # this is for when the options selected has changed and the protocol is resumed
-        changeInserts = [self.doChangeHand, self.doRandomize, self.doSymmetrize, 
-                         self.doLaplacian,
-                         self.doAdjust, self.doSegment, self.doInvert, self.doNormalize, 
+        changeInserts = [self.doChangeHand, self.doRotateIco, self.doRandomize, 
+                         self.doSymmetrize, self.doLaplacian, self.doAdjust, 
+                         self.doSegment, self.doInvert, self.doNormalize, 
                          self.doThreshold]
 
         if self.doChangeHand:
             args = self._argsChangeHand()
             self._insertFunctionStep("changeHandStep", args, changeInserts)
+
+        if self.doRotateIco:
+            args = self._argsRotateIco()
+            self._insertFunctionStep("rotateIcoStep", args, changeInserts)   
         
         if self.doRandomize:
             args = self._argsRandomize()
@@ -433,6 +450,9 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         
     def changeHandStep(self, args, changeInserts):
         self.runJob("xmipp_transform_mirror", args)
+
+    def rotateIcoStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_geometry", args)  
     
     def randomizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_randomize_phases", args)
@@ -529,6 +549,19 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             args = "-i %s" % self.outputStk
         args += " --flipX"
         
+        return args
+
+    def _argsRotateIco(self):
+        if self.isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            self._setFalseFirstStep()
+        else:
+            args = "-i %s" % self.outputStk
+        args += " --rotate_volume icosahedral i%d i%s --dont_wrap" % (self.rotateFromIco.get()+1, self.rotateToIco.get()+1)
+
         return args
     
     def _argsRandomize(self):
