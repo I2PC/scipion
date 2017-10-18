@@ -1168,7 +1168,7 @@ void ProgRecFourierGPU::swapLoadBuffers() {
 	loadThread.lBuffer = tmp;
 	*/
 }
-
+/*
 void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
 {
 	int repaint = (int)ceil((double)SF.size()/60);
@@ -1199,6 +1199,7 @@ void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
 		projData->clean();
 	}
 }
+*/
 
 static void print(Point3D<float>* cuboid) {
 	for (int i = 0; i < 9; i++) {
@@ -1266,7 +1267,7 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 //	}
 //	std::cout << "vzdalenosti: " << nX << " " << nY << " " << nZ  << " pouzivam : " << space->dir << std::endl;
 }
-
+/*
 int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 		RecFourierProjectionTraverseSpace* traverseSpaces) {
 	int index = 0;
@@ -1301,6 +1302,7 @@ int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 //	std::cout << "prepared: " << index << " transformations" << std::endl;
 	return index;
 }
+*/
 
 void ProgRecFourierGPU::sort(RecFourierProjectionTraverseSpace* input, int size) {
 	// greedy TSP, using search sort

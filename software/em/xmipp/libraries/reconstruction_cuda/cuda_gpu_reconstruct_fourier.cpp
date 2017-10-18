@@ -199,7 +199,7 @@ FourierReconDataWrapper::~FourierReconDataWrapper() {
 	delete cpuCopy;
 }
 // end of FIXME
-
+/*
 void ProjectionDataGPU::clean() {
 	cudaFree(img);
 		gpuErrchk(cudaPeekAtLastError());
@@ -228,7 +228,7 @@ void ProjectionDataGPU::copy(const Array2D<T>& from, U& to) {
 		gpuErrchk(cudaPeekAtLastError());
 		delete[] tmp;
 	}
-
+*/
 
 
 __device__
@@ -384,7 +384,7 @@ inline void multiply(const MATRIX& a, const MATRIX& b, MATRIX& c) {
 //
 //
 
-
+/*
 __global__ void test_init(float* test,
 		ProjectionDataGPU* buffer, int bufferSize,
 		MATRIX* devSymmetries) {
@@ -420,7 +420,8 @@ __global__ void test_init(float* test,
 	test[2*i] += 0.f;
 	test[2*i+1] += 0.f;
 }
-
+*/
+/*
 static ProjectionDataGPU* copyProjectionData(ProjectionDataGPU* hostBuffer,
 		ProjectionData* data, int bufferSize) {
 	for (int i = 0; i < bufferSize; i++) {
@@ -434,6 +435,7 @@ static ProjectionDataGPU* copyProjectionData(ProjectionDataGPU* hostBuffer,
 	gpuErrchk( cudaPeekAtLastError() );
 	return devBuffer;
 }
+*/
 /** Returns true if x is in (min, max) interval */
 
 template <typename T>

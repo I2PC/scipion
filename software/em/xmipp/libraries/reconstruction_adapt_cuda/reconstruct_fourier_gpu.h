@@ -36,7 +36,6 @@
 #include <data/xmipp_image.h>
 #include <data/projection.h>
 #include <data/point3D.h>
-#include <data/projection_data.h>
 #include <data/xmipp_threads.h>
 #include <data/blobs.h>
 #include <data/metadata.h>
@@ -53,6 +52,7 @@
 #include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
 #include <reconstruction_cuda/cuda_xmipp_utils.h>
 #include "data/reconstruct_fourier_projection_traverse_space.h"
+#include "data/reconstruct_fourier_defines.h"
 #define BLOB_TABLE_SIZE 5000
 #define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with cuda_gpu_reconstruct_fourier.cpp
 
@@ -425,11 +425,11 @@ private:
     /** Method swaps buffers of the loading thread */
     void swapLoadBuffers();
 
-    /**
-     * Method will use data stored in the buffer and update temporal
-     * storages appropriately.
-     */
-    void processBuffer(ProjectionData* buffer);
+//    /**
+//     * Method will use data stored in the buffer and update temporal
+//     * storages appropriately.
+//     */
+//    void processBuffer(ProjectionData* buffer);
 
     /**
 	 * Method will take input array (of size
@@ -475,29 +475,29 @@ private:
 //    	const float transform[3][3],
 //    	const float transformInv[3][3]);
 
-    /**
-     * Method will map one voxel from the temporal
-     * spaces to the given projection and update temporal spaces
-     * using the pixel value of the projection.
-     */
-    void processVoxel(
-    		int x, int y, int z,
-			const float transform[3][3], float maxDistanceSqr,
-    		ProjectionData* const data);
+//    /**
+//     * Method will map one voxel from the temporal
+//     * spaces to the given projection and update temporal spaces
+//     * using the pixel value of the projection.
+//     */
+//    void processVoxel(
+//    		int x, int y, int z,
+//			const float transform[3][3], float maxDistanceSqr,
+//    		ProjectionData* const data);
 
-    /**
-     * Method will map one voxel from the temporal
-     * spaces to the given projection and update temporal spaces
-     * using the pixel values of the projection withing the blob distance.
-     */
-    void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-    		ProjectionData* const data);
+//    /**
+//     * Method will map one voxel from the temporal
+//     * spaces to the given projection and update temporal spaces
+//     * using the pixel values of the projection withing the blob distance.
+//     */
+//    void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
+//    		ProjectionData* const data);
 
-    /**
-     * Method will precalculate (inverse) transformation for each projection data x symmetry
-     */
-    int prepareTransforms(ProjectionData* buffer,
-    		RecFourierProjectionTraverseSpace* traverseSpaces);
+//    /**
+//     * Method will precalculate (inverse) transformation for each projection data x symmetry
+//     */
+//    int prepareTransforms(ProjectionData* buffer,
+//    		RecFourierProjectionTraverseSpace* traverseSpaces);
 
     template<typename T>
     Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
