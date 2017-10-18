@@ -44,9 +44,9 @@ from pyworkflow.em import Volume
 
 class ChimeraProtRigidFit(EMProtocol):
     """Protocol to perform rigid fit using Chimera.
-        Execute command *scipionwrite [model #n] [refmodel #p] [saverefmodel=0|1]* from command
+        Execute command *scipionwrite [model #n] [refmodel #p] [saverefmodel 0|1]* from command
         line in order to transferm fitted pdb to scipion. Default values are model=#0,
-        refmodel =#1 and saverefmodel=0 (false).
+        refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
     _label = 'rigid fit'
     _version = VERSION_1_2
