@@ -82,24 +82,26 @@ class ProtPickingDifference(ProtParticlePicking):
         negCoords = self.negativeCoordinates.get()
         inputMics = inputCoords.getMicrographs()
         outputCoords = self._createSetOfCoordinates(inputMics)
-        outputCoords.copyInfo(inputCoords)
+        outputCoords.setBoxSize(inputCoords.getBoxSize())
 
         r2 = radius * radius # to avoid computing sqrt when comparing distances
 
-        def _discard(coord, mic):
+        def _discard(coord, negPos):
             """ Find if there is a close negative particle to this one. """
             x, y = coord.getPosition()
 
-            for ncoord in negCoords:
-                dist = abs((x - ncoord.getX()) * (y - ncoord.getY()))
-                if dist < r2:
+            for nx, ny in negPos:
+                if abs((x - nx) * (y - ny)) < r2:
                     return True
+
             return False # Far enough from all negative coordinates
 
         # Read all consensus particles
         for mic in inputMics:
-            for coord in inputCoords.iterCoords(mic):
-                if not _discard(coord):
+            negPos = [(c.getX(), c.getY())
+                      for c in negCoords.iterCoordinates(mic)]
+            for coord in inputCoords.iterCoordinates(mic):
+                if not _discard(coord, negPos):
                     outputCoords.append(coord)
 
         # Set output

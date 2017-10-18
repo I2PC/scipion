@@ -47,7 +47,7 @@ from protocol_extract_coordinates import ProtExtractCoords
 from protocol_stress import ProtStress
 from protocol_create_stream_data import ProtCreateStreamData
 from parallel import ProtTestParallel
-from protocol_picking_difference import
+from protocol_picking_difference import ProtPickingDifference
 
 from monitors import *
 
