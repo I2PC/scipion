@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Pablo Conesa (pconesa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,21 +23,40 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.gui.project.constants import STATUS_COLORS
+from pyworkflow.protocol import STATUS_FAILED
 
 
-from pyworkflow.protocol import (STATUS_SAVED, STATUS_LAUNCHED, STATUS_RUNNING,
-                                 STATUS_FINISHED, STATUS_FAILED,
-                                 STATUS_INTERACTIVE, STATUS_ABORTED,
-                                 STATUS_SCHEDULED)
+def getStatusColorFromNode(node):
 
-STATUS_COLORS = {
-               STATUS_SAVED: '#D9F1FA',
-               STATUS_LAUNCHED: '#D9F1FA',
-               STATUS_RUNNING: '#FCCE62',
-               STATUS_FINISHED: '#D2F5CB',
-               STATUS_FAILED: '#F5CCCB',
-               STATUS_INTERACTIVE: '#F3F5CB',
-               STATUS_ABORTED: '#F5CCCB',
-               STATUS_SCHEDULED: '#F3F5CB'
-               }
+    # If it is a run node (not PROJECT)
+    return getStatusColorFromRun(node.run)
 
+
+def getStatusColorFromRun(prot):
+    """
+    Returns the color associated with the status
+    -------
+
+    """
+
+    if prot:
+        return getStatusColor(prot.status.get(STATUS_FAILED))
+    else:
+        return getStatusColor()
+
+
+def getStatusColor(status=None, default='#ADD8E6'):
+    """
+    Parameters
+    ----------
+    status status of the protocol
+
+    Returns the color associated with he status
+    -------
+
+    """
+    if status:
+        return STATUS_COLORS[status]
+    else:
+        return default
