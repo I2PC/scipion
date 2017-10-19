@@ -76,6 +76,8 @@ MRC_SOURCE = 'MRC_SOURCE'
 # Variables to enter and write in the template
 DOSE_PER_FRAME = 'dosePerFrame'
 MAGNIFICATION = 'magnification'
+SAMPLING_RATE= 'samplingRate'
+WINDOW_SIZE= 'windowSize'
 PHASEPLATE = 'doPhShEst'
 NUMBER_OF_FRAMES = 'numberOfIndividualFrames'
 
@@ -86,6 +88,8 @@ LABELS = {
     PROJECT_NAME: "Session id",
     DOSE_PER_FRAME: "Dose per frame",
     MAGNIFICATION: "Magnification",
+    SAMPLING_RATE: "Magnification",
+    WINDOW_SIZE: "Window Size",
     PHASEPLATE: "Use phase shift estimation",
     NUMBER_OF_FRAMES: "Number of frames per movie"
 }
@@ -255,8 +259,10 @@ class BoxWizardView(tk.Frame):
 
         _addPair(DOSE_PER_FRAME, 2, labelFrame2)
         _addPair(MAGNIFICATION, 3, labelFrame2)
-        _addPair(NUMBER_OF_FRAMES, 4, labelFrame2, traceCallback=self._onInputChange)
-        _addCheckPair(PHASEPLATE, 5, labelFrame2)
+        _addPair(SAMPLING_RATE, 4, labelFrame2, value=1.3)
+        _addPair(WINDOW_SIZE, 5, labelFrame2, value=512)
+        _addPair(NUMBER_OF_FRAMES, 6, labelFrame2, traceCallback=self._onInputChange)
+        _addCheckPair(PHASEPLATE, 7, labelFrame2)
 
         frame.columnconfigure(0, weight=1)
 
