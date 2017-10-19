@@ -104,14 +104,17 @@ void ProgTransformGeometry::readParams()
         splineDegree = LINEAR;
     flip = checkParam("--flip");
 
-    /** In most cases output "-o" is a metadata with the new geometry keeping the names of input images
-     *  so we set the flags to keep the same image names in the output metadata
+    /** In most cases output "-o" is a metadata with the new geometry keeping 
+     *  the names of input images so we set the flags to keep the same image 
+     *  names in the output metadata
      */
     if ( !checkParam("--oroot") && fn_out.hasMetadataExtension())
     {
         if ( input_is_metadata && !applyTransform )
             each_image_produces_an_output = !(produces_a_metadata = true);
-        else /** If "-o" is a metadata but we are writing output images, -o can only be a stack if --oroot is no passed, and then MD is generated automatically **/
+        else /** If "-o" is a metadata but we are writing output images, 
+              *  -o can only be a stack if --oroot is no passed, and 
+              *  then MD is generated automatically **/
             fn_out = fn_out.replaceExtension("stk");
     }
     else if ( !checkParam("--oroot") && !checkParam("-o") )
@@ -124,7 +127,7 @@ void ProgTransformGeometry::calculateRotationMatrix()
     const char * rotateType = getParam("--rotate_volume");
     Matrix1D<double> xyz(3);
     if (!STR_EQUAL(rotateType, "icosahedral"))
-    {
+    {   // params are char for icosahedral option
         XX(xyz) = getDoubleParam("--rotate_volume", 1); //rot
         YY(xyz) = getDoubleParam("--rotate_volume", 2); //tilt
         ZZ(xyz) = getDoubleParam("--rotate_volume", 3); //psi
@@ -202,7 +205,10 @@ void ProgTransformGeometry::preProcess()
         A = A.inv();
 }
 
-void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
+void ProgTransformGeometry::processImage(const FileName &fnImg,
+                                         const FileName &fnImgOut,
+                                         const MDRow &rowIn,
+                                         MDRow &rowOut)
 {
 
     if (checkParam("--matrix"))
