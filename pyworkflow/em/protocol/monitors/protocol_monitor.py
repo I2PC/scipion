@@ -34,6 +34,7 @@ from pyworkflow.protocol import getProtocolFromDb
 
 
 
+
 class ProtMonitor(EMProtocol):
     """ This is the base class for implementing 'Monitors', a special type
     of protocols intended to be used in the context of the Scipion-Box,

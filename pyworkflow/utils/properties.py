@@ -382,7 +382,8 @@ class Icon():
     LIGHTBULB = 'fa-lightbulb-o.png'
     PLUS_CIRCLE = 'fa-plus-circle.png'
     LINK = 'fa-iconmoon-link.png'
-
+    ROOT = 'root.png'
+    ROCKET = 'fa-rocket.png'
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
@@ -416,3 +417,9 @@ class colorText:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
+class KEYSYM:
+    """ Keysym values for evaluating key pressed within events
+    as reported at http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/key-names.html
+    """
+    DELETE = 'Delete'
+    RETURN = 'Return'

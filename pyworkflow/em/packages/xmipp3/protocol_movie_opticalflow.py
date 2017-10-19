@@ -140,7 +140,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         writeMovieMd(movie, inputMd, a0, aN, useAlignment=self.useAlignment)
         
         args = '-i %s ' % inputMd
-        args += '-o %s ' % self._getOutputShifts(movie)
+        args += '-o "%s" ' % self._getOutputShifts(movie)
         args += ' --frameRange %d %d ' % (0, aN - a0)
 
         if dark:
@@ -161,7 +161,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         # We should save the movie either if the user selected it (default)
         # or if the PSD is going to be computed
         if self.doSaveAveMic or self.doComputePSD:
-            args += '--oavg %s ' % outMicFn
+            args += '--oavg "%s" ' % outMicFn
 
         if self.doComputePSD:
             args  += '--oavgInitial %s ' % aveMic
@@ -237,7 +237,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             inputSet = self.inputMovies.get()
             movie = inputSet.getFirstItem()
             if (not movie.hasAlignment()) and self.useAlignment:
-                errors.append("Your movies has not alignment. Please, set *No* "
+                errors.append("Your movies have no alignment. Please, set *No* "
                               "the parameter _Use previous movie alignment to SUM"
                               " frames?_")
 
@@ -381,7 +381,7 @@ def showCartesianShiftsPlot(inputSet, itemId):
         plotter = createAlignmentPlot(meanX, meanY)
         plotter.show()
     else:
-        print "This items does not have OF alignment set. "
+        print "These items do not have OF alignment set. "
 
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNCARTESIAN,

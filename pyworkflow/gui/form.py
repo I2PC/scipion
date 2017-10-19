@@ -367,6 +367,10 @@ class SubclassesTreeProvider(TreeProvider):
                             p._allowsSelection = True
                             objects.append(p)
 
+                        # JMRT: Adding the inner items cause a significant
+                        # performance penalty, anyway, subsets can be selected
+                        # from showj GUI and used as inputs.
+                        # If attr is a set, then we should consider its elements
                         # JMRT: The inclusion of subitems as possible inputs
                         # is causing a performance penalty. So for the moment
                         # we will restrict that to SetOfVolumes only
@@ -1470,8 +1474,8 @@ class FormWindow(Window):
         #runSection.addContent()
         runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
         
-        return commonFrame
-
+        return commonFrame 
+ 
     def _createHelpCommand(self, msg):
         """ Show the help of some value of the header. """
         return lambda: showInfo("Help", msg, self.root)

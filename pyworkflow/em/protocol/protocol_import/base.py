@@ -136,12 +136,6 @@ class ProtImportFiles(ProtImport):
               label="File timeout (secs)",
               help="Interval of time (in seconds) after which, if a file \n"
                    "has not changed, we consider it as a new file. \n")
-        
-        form.addParam('endTokenFile', params.StringParam, default=None,
-              condition='dataStreaming',
-              label="End token file",
-              help="Specify an ending file if you want to have more control\n"
-                   "about when to stop importing files.")
 
     def _defineImportParams(self, form):
         """ Override to add options related to the different types
