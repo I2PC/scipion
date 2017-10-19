@@ -1113,6 +1113,15 @@ class Project(object):
             pObj = self.getObject(rel['object_parent_id'])
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
+
+            if pObj is None or pp.get() is None:
+                print("project._getRelationGraph: ERROR, pointer to parent is "
+                      "None. IGNORING IT.\n")
+                for key in rel.keys():
+                    print("%s: %s" % (key, rel[key]))
+                    
+                continue
+
             pid = pp.getUniqueId()
             parent = g.getNode(pid)
 
