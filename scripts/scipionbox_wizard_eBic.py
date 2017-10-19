@@ -320,6 +320,7 @@ class BoxWizardView(tk.Frame):
 
             replacementDict['visit'] = sessionId
             replacementDict['filesPath'] = source
+            replacementDict['findPhaseShift'] = self._getValue(PHASEPLATE)
 
             # Get the template and open it
             template = self._getConfValue(SCIPION_WORKFLOW_TEMPLATE)
