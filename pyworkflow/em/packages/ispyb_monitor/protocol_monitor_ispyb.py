@@ -319,7 +319,7 @@ class MonitorISPyB(Monitor):
                     self.ctfs[micId] = {}
 
                 self.ctfs[micId].update({
-                    'estimatedDefocus': (ctf.getDefocusV()**2 + ctf.getDefocusU()**2)**0.5,
+                    'estimatedDefocus': ((ctf.getDefocusV() + ctf.getDefocusU())/2),
                     'astigmatism': ctf.getDefocusRatio(),
                     'astigmatismAngle': ctf.getDefocusAngle(),
                     'fftTheoreticalFullPath': psdPng,
