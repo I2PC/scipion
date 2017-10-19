@@ -88,7 +88,7 @@ LABELS = {
     PROJECT_NAME: "Session id",
     DOSE_PER_FRAME: "Dose per frame",
     MAGNIFICATION: "Magnification",
-    SAMPLING_RATE: "Magnification",
+    SAMPLING_RATE: "Sampling Rate",
     WINDOW_SIZE: "Window Size",
     PHASEPLATE: "Use phase shift estimation",
     NUMBER_OF_FRAMES: "Number of frames per movie"
