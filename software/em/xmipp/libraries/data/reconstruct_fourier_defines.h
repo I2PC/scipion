@@ -30,4 +30,9 @@ typedef float MATRIX[3][3];
 #define BLOB_TABLE_SIZE_SQRT 10000
 #define ACCURACY 0.001
 
+// GPU specific
+#define BLOCK_DIM 16
+#define SHARED_BLOB_TABLE 0
+#define SHARED_IMG 0
+
 #endif /* XMIPP_LIBRARIES_DATA_RECONSTRUCT_FOURIER_DEFINES_H_ */

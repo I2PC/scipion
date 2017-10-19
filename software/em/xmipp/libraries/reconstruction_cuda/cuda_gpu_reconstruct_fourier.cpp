@@ -1,17 +1,33 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <cuda_runtime_api.h>
-#include "cuda_gpu_reconstruct_fourier.h"
-#include <reconstruction_cuda/cuda_utils.h>
+/***************************************************************************
+ *
+ * Authors:     David Strelak (davidstrelak@gmail.com)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
 
-#define BLOCK_DIM 16
-#define SHARED_BLOB_TABLE 0
-#define SHARED_IMG 0
+#include <cuda_runtime_api.h>
+#include "reconstruction_cuda/cuda_utils.h" // cannot be in header as it includes cuda headers
+#include "cuda_gpu_reconstruct_fourier.h"
 
 #if SHARED_BLOB_TABLE
-#define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with reconstruct_fourier_gpu.h
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
 
@@ -20,28 +36,39 @@ __shared__ Point3D<float> SHARED_AABB[2];
 extern __shared__ float2 IMG[];
 #endif
 
+// FIELDS
 
-cudaStream_t* streams; // fixme move elsewhere (but it cannot be in header :( )
+// holding streams used for calculation. present on CPU
+cudaStream_t* streams;
+
+// wrapper to hold pointers to GPU memory (and have it also accessible from CPU)
 std::map<int,FRecBufferDataGPUWrapper*> wrappers;
+
+// holding blob coeficient table. present on GPU
 float* devBlobTableSqrt = NULL;
 
-////void copyProjectionData(ProjectionData* data);
-////static ProjectionDataGPU* copyProjectionData(ProjectionData& data);
-//#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-//inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
-//		true) {
-//	if (code != cudaSuccess) {
-//		fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file,
-//				line);
-//		if (abort)
-//			exit(code);
-//	}
-//}
 
+struct RecFourierBufferDataGPU : public RecFourierBufferData {
 
+	RecFourierBufferDataGPU(RecFourierBufferData* orig);
+	~RecFourierBufferDataGPU();
 
-__host__ __device__
-float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
+	__device__
+	float* getNthItem(float* array, int itemIndex);
+	void copyDataFrom(RecFourierBufferData* orig, int stream);
+	__device__
+	int getNoOfSpaces();
+
+private:
+	template<typename T>
+	void copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream);
+	template<typename T>
+	void alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig);
+	void copyMetadata(RecFourierBufferData* orig);
+};
+
+__device__
+float* RecFourierBufferDataGPU::getNthItem(float* array, int itemIndex) {
 	if (array == FFTs) return array + (fftSizeX * fftSizeY * itemIndex * 2); // *2 since it's complex
 	if (array == CTFs) return array + (fftSizeX * fftSizeY * itemIndex);
 	if (array == modulators) return array + (fftSizeX * fftSizeY * itemIndex);
@@ -49,12 +76,12 @@ float* FRecBufferDataGPU::getNthItem(float* array, int itemIndex) {
 	return NULL; // undefined
 }
 
-__host__ __device__
-int FRecBufferDataGPU::getNoOfSpaces() {
+__device__
+int RecFourierBufferDataGPU::getNoOfSpaces() {
 	return noOfImages * noOfSymmetries;
 }
 
-FRecBufferDataGPU::FRecBufferDataGPU(RecFourierBufferData* orig) {
+RecFourierBufferDataGPU::RecFourierBufferDataGPU(RecFourierBufferData* orig) {
 
 //	printf("FRecBufferDataGPU orig: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
 //			orig, orig->FFTs,orig->CTFs, orig->paddedImages, orig->modulators, orig->spaces);
@@ -76,7 +103,7 @@ FRecBufferDataGPU::FRecBufferDataGPU(RecFourierBufferData* orig) {
 //			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
 }
 
-void FRecBufferDataGPU::copyDataFrom(RecFourierBufferData* orig, int stream) {
+void RecFourierBufferDataGPU::copyDataFrom(RecFourierBufferData* orig, int stream) {
 	copyMetadata(orig);
 	copy(orig->FFTs, FFTs, orig, stream);
 	copy(orig->CTFs, CTFs, orig, stream);
@@ -85,7 +112,7 @@ void FRecBufferDataGPU::copyDataFrom(RecFourierBufferData* orig, int stream) {
 	copy(orig->spaces, spaces, orig, stream);
 }
 
-void FRecBufferDataGPU::copyMetadata(RecFourierBufferData* orig) {
+void RecFourierBufferDataGPU::copyMetadata(RecFourierBufferData* orig) {
 	hasCTFs = orig->hasCTFs;
 	hasFFTs = orig->hasFFTs;
 	noOfImages = orig->noOfImages;
@@ -96,7 +123,7 @@ void FRecBufferDataGPU::copyMetadata(RecFourierBufferData* orig) {
 	noOfSymmetries = orig->noOfSymmetries;
 }
 
-FRecBufferDataGPU::~FRecBufferDataGPU() {
+RecFourierBufferDataGPU::~RecFourierBufferDataGPU() {
 //	printf("~FRecBufferDataGPU this: %p, spaces: %p\n", this, this->spaces);
 	cudaFree(FFTs);
 	cudaFree(CTFs);
@@ -109,7 +136,7 @@ FRecBufferDataGPU::~FRecBufferDataGPU() {
 }
 
 template<typename T>
-void FRecBufferDataGPU::copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream) {
+void RecFourierBufferDataGPU::copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream) {
 	if (NULL != srcArray) {
 		size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
 //		printf("copying %d bytes from %p to %p, stream %d\n", bytes, srcArray, dstArray, stream);
@@ -121,14 +148,14 @@ void FRecBufferDataGPU::copy(T* srcArray, T*& dstArray, RecFourierBufferData* or
 }
 
 template<typename T>
-void FRecBufferDataGPU::alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig) {
+void RecFourierBufferDataGPU::alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig) {
 	size_t bytes = orig->getMaxByteSize(srcArray);
 	cudaMalloc((void **) &dstArray, bytes);
 	gpuErrchk( cudaPeekAtLastError() );
 }
 
 FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(RecFourierBufferData* orig) {
-	cpuCopy = new FRecBufferDataGPU(orig);
+	cpuCopy = new RecFourierBufferDataGPU(orig);
 	gpuCopy = NULL;
 }
 
@@ -144,13 +171,13 @@ void FRecBufferDataGPUWrapper::copyFrom(RecFourierBufferData* orig, int stream) 
 
 void FRecBufferDataGPUWrapper::copyToDevice(int stream) {
 	if (NULL == gpuCopy) {
-		cudaMalloc((void **) &gpuCopy, sizeof(FRecBufferDataGPU));
+		cudaMalloc((void **) &gpuCopy, sizeof(RecFourierBufferDataGPU));
 		gpuErrchk( cudaPeekAtLastError() );
 	}
-	cudaMemcpyAsync(gpuCopy, cpuCopy, sizeof(FRecBufferDataGPU), cudaMemcpyHostToDevice, streams[stream]);
+	cudaMemcpyAsync(gpuCopy, cpuCopy, sizeof(RecFourierBufferDataGPU), cudaMemcpyHostToDevice, streams[stream]);
 	gpuErrchk( cudaPeekAtLastError() );
 }
-
+/*
 // FIXME these methods should be directly in the header file. Alter behaviour of the caller so that
 // it does not have to leave from this class
 FourierReconstructionData::FourierReconstructionData(int sizeX, int sizeY, int noOfImages, bool erase) {
@@ -198,6 +225,7 @@ FourierReconDataWrapper::~FourierReconDataWrapper() {
 	cpuCopy->clean();
 	delete cpuCopy;
 }
+*/
 // end of FIXME
 /*
 void ProjectionDataGPU::clean() {
@@ -257,13 +285,13 @@ void printAABB(Point3D<float>* AABB) {
 		AABB[0].x, AABB[1].y, AABB[0].z);
 }
 
-float* allocateGPU(float*& where, int size, int typeSize) { // FIXME move to some utils class
-	cudaMalloc((void**)&where, size * size * size * typeSize);
+float* allocateTempVolumeGPU(float*& ptr, int size, int typeSize) {
+	cudaMalloc((void**)&ptr, size * size * size * typeSize);
 	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemset(where, 0.f, size * size * size * typeSize);
+	cudaMemset(ptr, 0.f, size * size * size * typeSize);
 	gpuErrchk( cudaPeekAtLastError() );
 
-	return where;
+	return ptr;
 }
 
 
@@ -300,7 +328,7 @@ __global__ void test_update(float* test) {
 
 
 
-void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
+void copyTempVolumes(std::complex<float>*** tempVol, float*** tempWeights,
 		float* tempVolGPU, float* tempWeightsGPU,
 		int size) {
 	for (int z = 0; z < size; z++) {
@@ -313,10 +341,10 @@ void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
 	gpuErrchk(cudaPeekAtLastError());
 }
 
-void releaseGPU(float*& where) {
-	cudaFree(where);
+void releaseTempVolumeGPU(float*& ptr) {
+	cudaFree(ptr);
+	ptr = NULL;
 	gpuErrchk(cudaPeekAtLastError());
-	where = NULL;
 }
 
 
@@ -436,13 +464,13 @@ static ProjectionDataGPU* copyProjectionData(ProjectionDataGPU* hostBuffer,
 	return devBuffer;
 }
 */
-/** Returns true if x is in (min, max) interval */
 
+/** Returns true if x is in (min, max) interval */
 template <typename T>
 __device__ static bool inRange(T x, T min, T max) {
 	return (x > min) && (x < max);
 }
-
+/** Returns value within the range (included) */
 template<typename T, typename U>
 __device__ inline U clamp(U val, T min, T max) {
 	U res = (val > max) ? max : val;
@@ -570,7 +598,7 @@ __device__
 void processVoxel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
 	int x, int y, int z,
-	FRecBufferDataGPU* const data,
+	RecFourierBufferDataGPU* const data,
 	const RecFourierProjectionTraverseSpace* const space)
 {
 	Point3D<float> imgPos;
@@ -620,7 +648,7 @@ __device__
 void processVoxelBlob(
 	float* tempVolumeGPU, float *tempWeightsGPU,
 	int x, int y, int z,
-	FRecBufferDataGPU* const data,
+	RecFourierBufferDataGPU* const data,
 	const RecFourierProjectionTraverseSpace* const space,
 	const float* blobTableSqrt,
 	int imgCacheDim)
@@ -810,7 +838,7 @@ void mapToImage(Point3D<float>* box, int xSize, int ySize, const float transform
 }
 
 __device__
-void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const FRecBufferDataGPU* buffer, Point3D<float>* dest) {
+void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const RecFourierBufferDataGPU* buffer, Point3D<float>* dest) {
 	Point3D<float> box[8];
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
@@ -874,7 +902,7 @@ void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const FRecBu
 __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
-	FRecBufferDataGPU* const data,
+	RecFourierBufferDataGPU* const data,
 	const RecFourierProjectionTraverseSpace* const tSpace,
 	const float* devBlobTableSqrt,
 	int imgCacheDim)
@@ -972,7 +1000,7 @@ bool blockHasWork(Point3D<float>* AABB, int imgXSize, int imgYSize) {
 __device__
 void getImgData(Point3D<float>* AABB,
 		int tXindex, int tYindex,
-		FRecBufferDataGPU* const buffer, int imgIndex,
+		RecFourierBufferDataGPU* const buffer, int imgIndex,
 		float& vReal, float& vImag) {
 	int imgXindex = tXindex + AABB[0].x;
 	int imgYindex = tYindex + AABB[0].y;
@@ -993,7 +1021,7 @@ void getImgData(Point3D<float>* AABB,
 
 __device__
 void copyImgToCache(float2* dest, Point3D<float>* AABB,
-		FRecBufferDataGPU* const buffer, int imgIndex,
+		RecFourierBufferDataGPU* const buffer, int imgIndex,
 		 int imgCacheDim) {
 	for (int y = threadIdx.y; y < imgCacheDim; y += blockDim.y) {
 		for (int x = threadIdx.x; x < imgCacheDim; x += blockDim.x) {
@@ -1006,7 +1034,7 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
 __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
-		FRecBufferDataGPU* buffer,
+		RecFourierBufferDataGPU* buffer,
 		float* devBlobTableSqrt,
 		int imgCacheDim) {
 #if SHARED_BLOB_TABLE
@@ -1061,7 +1089,7 @@ float FFT_IDX2DIGFREQ(int idx, int size) {
 
 __global__
 void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY, int iLength,
-		 FRecBufferDataGPU* oBuffer, float maxResolutionSqr) {
+		 RecFourierBufferDataGPU* oBuffer, float maxResolutionSqr) {
 	// assign pixel to thread
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
@@ -1105,7 +1133,7 @@ void convertImages(
 		FRecBufferDataGPUWrapper* wrapper,
 		float maxResolutionSqr,
 		int streamIndex) {
-	FRecBufferDataGPU* hostBuffer = wrapper->cpuCopy;
+	RecFourierBufferDataGPU* hostBuffer = wrapper->cpuCopy;
 	// store to proper structure
 	GpuMultidimArrayAtGpu<float> imagesGPU(
 			hostBuffer->paddedImgSize, hostBuffer->paddedImgSize, 1, hostBuffer->noOfImages, hostBuffer->paddedImages);
@@ -1133,7 +1161,7 @@ void convertImages(
 
 	// now we have converted input images to FFTs in the required format
 }
-
+/*
 FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
 		int sizeX, int sizeY) {
 	// assuming at least one image is present
@@ -1160,6 +1188,7 @@ FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
 //	delete[] tmp;
 	return new FourierReconDataWrapper(fd);
 }
+*/
 
 void waitForGPU() {
 	gpuErrchk( cudaPeekAtLastError() );

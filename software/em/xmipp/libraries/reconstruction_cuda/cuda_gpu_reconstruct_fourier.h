@@ -1,189 +1,151 @@
-/*
- * cuda_gpu_reconstruct_fourier.h
+/***************************************************************************
  *
- *  Created on: Aug 11, 2017
- *      Author: david
- */
+ * Authors:     David Strelak (davidstrelak@gmail.com)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
 
 #ifndef XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_
 #define XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_
 
-#include <reconstruction_adapt_cuda/xmipp_gpu_utils.h>
-#include <reconstruction_cuda/cuda_xmipp_utils.h>
 #include <map>
 
 #include "data/reconstruct_fourier_projection_traverse_space.h"
 #include "data/reconstruct_fourier_buffer_data.h"
 #include "data/reconstruct_fourier_defines.h"
 
+#include "reconstruction_cuda/cuda_xmipp_utils.h"
+#include "reconstruction_adapt_cuda/xmipp_gpu_utils.h"
 
-//static ProjectionData* projData;
 
+struct RecFourierBufferDataGPU;
 
-
-struct FRecBufferDataGPU : public RecFourierBufferData {
-
-	FRecBufferDataGPU(RecFourierBufferData* orig);
-	~FRecBufferDataGPU();
-
-	float* getNthItem(float* array, int itemIndex);
-	void copyDataFrom(RecFourierBufferData* orig, int stream);
-	int getNoOfSpaces();
-
-private:
-	template<typename T>
-	void copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream);
-	template<typename T>
-	void alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig);
-	void copyMetadata(RecFourierBufferData* orig);
-};
-
+/**
+ * This struct simplifies work with pointers on GPU
+ * It holds a copy both in CPU and GPU memory space
+ */
 struct FRecBufferDataGPUWrapper {
-
 	FRecBufferDataGPUWrapper(RecFourierBufferData* orig);
 	~FRecBufferDataGPUWrapper();
+	/**
+	 * Copy the content of the 'orig' buffer to new object
+	 * Original buffer can be cleaned after.
+	 * Works asynchronously on given stream
+	 */
 	void copyFrom(RecFourierBufferData* orig, int stream);
+
+	/**
+	 * Copy CPU version to GPU, asynchronously on given stream
+	 */
 	void copyToDevice(int stream);
 
-	FRecBufferDataGPU* cpuCopy;
-	FRecBufferDataGPU* gpuCopy;
+	// object in CPU memory space
+	RecFourierBufferDataGPU* cpuCopy;
+	// object in GPU memory space
+	RecFourierBufferDataGPU* gpuCopy;
 };
 
-struct FourierReconstructionData
-{
-	FourierReconstructionData(int sizeX, int sizeY, int noOfImages, bool erase=true);
-	void clean();
-	float* getImgOnGPU(int imgIndex);
-	float* dataOnGpu = NULL;
-	int sizeX = 0;
-	int sizeY = 0;
-	int noOfImages = 0;
-
-};
-
-
-
-struct FourierReconDataWrapper
-{
-	FourierReconDataWrapper(int sizeX, int sizeY, int noOfImages);
-	FourierReconDataWrapper(FourierReconstructionData* cpuCopy);
-	~FourierReconDataWrapper();
-	FourierReconstructionData* cpuCopy;
-	FourierReconstructionData* gpuCopy;
-private:
-	void copyCpuToGpu();
-};
 /**
-struct ProjectionDataGPU
-{
-	bool skip;
-	float* img;
-	float* CTF;
-	float* modulator;
-	int xSize;
-	int ySize;
-	int imgIndex;
-	float weight;
-	float localAInv[3][3];
-	float localA[3][3];
-public:
-	ProjectionDataGPU() {
-//		printf("constructor %p\n", this);
-			setDefault();
-		}
-	~ProjectionDataGPU() {
-//		printf("destructor %p, img %p\n", this, img);
-	}
-	ProjectionDataGPU(const ProjectionData& data) {
-//		printf("constructor from ProjectionData %p\n", this);
-		skip = data.skip;
-		if (skip) {
-			setDefault();
-			return;
-		}
-//		copy(*data.img, img);
-//		if (NULL != data.CTF) {
-			img = NULL;
-//			copy(*data.CTF, CTF);
-//		} else {
-			CTF = NULL;
-//		}
-//		if (NULL != data.modulator) {
-//			copy(*data.modulator, modulator);
-//		} else {
-			modulator = NULL;
-//		}
-//		xSize = data.img->getXSize();
-//		ySize = data.img->getYSize();
-		imgIndex = data.imgIndex;
-		weight = data.weight;
-		data.localAInv.convertTo(localAInv);
-		data.localA.convertTo(localA);
-	}
-	// Remove stored data and set to skip
-	void clean();
-	void setDefault() {
-		skip = true;
-		img = NULL;
-		CTF = NULL;
-		modulator = NULL;
-		xSize = 0;
-		ySize = 0;
-		imgIndex = -1;
-		weight = 0;
-	}
-private:
-	template<typename T, typename U>
-	void copy(const Array2D<T>& from, U& to);
-};
-*/
-
-
+ * Method will allocate buffer wrapper for given stream
+ * 'buffer' is used for size references, i.e. it has to have the same
+ * sizes that will be used later, during calculation
+ * Blocking operation
+ */
 void allocateWrapper(RecFourierBufferData* buffer, int streamIndex);
+
+/**
+ * Release all resources allocated with the buffer wrapper, for given stream
+ * Blocking operation
+ */
 void releaseWrapper(int streamIndex);
 
-
+/**
+ * Allocate 'count' streams on default GPU
+ * Blocking operation
+ */
 void createStreams(int count);
 
+/**
+ * Delete streams allocated on default GPU
+ * Blocking operation
+ */
 void deleteStreams(int count);
 
-/** Method to allocate 3D array (continuous) of given size^3 */
-float* allocateGPU(float*& where, int size, int typeSize);
-void releaseGPU(float*& where);
-void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
+/**
+ *  Method to allocate 3D array (continuous) of given size^3
+ *  Allocated array is cleared (to 0 zero)
+ *  Blocking operation
+ */
+float* allocateTempVolumeGPU(float*& ptr, int size, int typeSize);
+
+/**
+ * Release memory at GPU
+ * Blocking operation
+ */
+void releaseTempVolumeGPU(float*& ptr);
+
+/**
+ * Method will copy continuous 3D arrays (with side of size) from GPU
+ * to non-continuous arrays on CPU
+ * Blocking operation
+ */
+void copyTempVolumes(std::complex<float>*** tempVol, float*** tempWeights,
 		float* tempVolGPU, float* tempWeightsGPU,
 		int size);
 
-
-
-FourierReconDataWrapper* prepareBuffer(GpuMultidimArrayAtGpu<float>& ffts,
-		int sizeX, int sizeY, int paddedImgSize, float maxResolutionSqr, int, float*&);
-
+/**
+ * Blocking method. Once returns, all operation on default GPU are done
+ */
 void waitForGPU();
 
-void copyBlobTable(float* blobTableSqrt, int blobTableSize);
+/**
+ * Method will allocate space at GPU and copy there content of the table
+ * Blocking operation
+ */
+void copyBlobTable(float* blobTableSqrt, int size);
 
+/**
+ * Method will release all resources allocated for the blob table at GPU
+ * Blocking operation
+ */
 void releaseBlobTable();
 
+/**
+ * Method will copy constants used for calculation to GPU memory
+ * Blocking operation
+ */
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt);
 
+/**
+ * Method will copy content of the 'buffer' to GPU and
+ * runs the calculation (asynchronously on given stream).
+ * Once it returns, 'buffer' object can be reused.
+ * See also createStreams(int)
+ */
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ,
 		float maxResolutionSqr, int stream);
-void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
-// void copyBuffer(ProjectionData* data, int size);
-void allocateTempSpaces(int size);
-
-void a(std::complex<float>* a);
-void b();
-void c(std::complex<float>* a);
-
-void moje();
-
-static int num = 20;
 
 #endif /* XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_ */

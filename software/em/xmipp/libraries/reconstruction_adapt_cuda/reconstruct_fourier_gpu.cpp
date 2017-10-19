@@ -643,9 +643,9 @@ void ProgRecFourierGPU::getGPUData() {
 		allocate(tempWeights, maxVolumeIndexYZ + 1, maxVolumeIndexYZ + 1,
 				maxVolumeIndexYZ + 1);
 	}
-	copyTempSpaces(tempVolume, tempWeights, tempVolumeGPU, tempWeightsGPU, maxVolumeIndexYZ + 1);
-	releaseGPU(tempVolumeGPU);
-	releaseGPU(tempWeightsGPU);
+	copyTempVolumes(tempVolume, tempWeights, tempVolumeGPU, tempWeightsGPU, maxVolumeIndexYZ + 1);
+	releaseTempVolumeGPU(tempVolumeGPU);
+	releaseTempVolumeGPU(tempWeightsGPU);
 }
 
 void ProgRecFourierGPU::mirrorAndCropTempSpaces() {
@@ -789,10 +789,10 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
 	// initialize GPU
     if (NULL == tempVolumeGPU) {
-    	allocateGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
+    	allocateTempVolumeGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
     }
     if (NULL == tempWeightsGPU) {
-    	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
+    	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
     createStreams(noOfCores);
     copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, useFast, blob.radius, iDeltaSqrt);
