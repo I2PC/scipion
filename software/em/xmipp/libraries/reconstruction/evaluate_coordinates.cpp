@@ -54,10 +54,10 @@ void ProgEvaluateCoordinates::show()
 void ProgEvaluateCoordinates::defineParams()
 {
     addUsageLine("Evaluates the set of coordinates against the ground truth");
-    addParamsLine("  -g <selfile>     : Selfile containing ground truth coordinates");
-    addParamsLine("  -e <selfile>     : Selfile containing coordinates to evaluate");
-    addParamsLine("  -n <int>         : Number of micrographs");
-    addParamsLine("  [-t <int=10>]    : Tolerance of center misplacement");
+    addParamsLine("  -g <selfile>      : Selfile containing ground truth coordinates");
+    addParamsLine("  -e <selfile>      : Selfile containing coordinates to evaluate");
+    addParamsLine("  -n <int>          : Number of micrographs");
+    addParamsLine("  [-t <int=10>]     : Tolerance of center misplacement");
     addParamsLine("  --root <rootName> : Root name of the micrographs");
 }
 
@@ -71,8 +71,8 @@ void ProgEvaluateCoordinates::run()
     {
         // Here you need to change the identifiers based on datasets
         // TODO: loading names and counts of mics automatically?
-        FileName micGT = formatString("%s_%04d@%s", rootName, m, fnGt.c_str());
-        FileName micEval = formatString("%s_%04d@%s", rootName, m, fnEval.c_str());
+        FileName micGT = formatString("%s_%04d@%s", rootName.c_str(), m, fnGt.c_str());
+        FileName micEval = formatString("%s_%04d@%s", rootName.c_str(), m, fnEval.c_str());
 
         GT.read(micGT);
         Eval.read(micEval);
