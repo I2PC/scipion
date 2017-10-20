@@ -35,6 +35,7 @@ import random
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import \
     (SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMovies)
+from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMovies
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename, exists
 from pyworkflow.em.convert import ImageHandler
@@ -43,6 +44,8 @@ from pyworkflow.utils.path import createLink
 SET_OF_MOVIES = 0
 SET_OF_MICROGRAPHS = 1
 SET_OF_RANDOM_MICROGRAPHS = 2
+
+
 
 
 class ProtCreateStreamData(EMProtocol):
@@ -75,7 +78,7 @@ class ProtCreateStreamData(EMProtocol):
                       label='set Of',
                       help='create set of')
         form.addParam('inputMovie', params.PointerParam, pointerClass='Movie',
-                      condition="setof==%d" % SET_OF_MOVIES,
+                      condition="setof==%d"%SET_OF_MOVIES,
                       label="movie",
                       help='This movie will be copied "number of items" times')
         form.addParam('inputMic', params.PointerParam,
@@ -162,6 +165,7 @@ class ProtCreateStreamData(EMProtocol):
             obj = Micrograph()
         else:
             raise Exception('Unknown data type')
+
 
         counter = 0
         for k, v in self.dictObj.iteritems():

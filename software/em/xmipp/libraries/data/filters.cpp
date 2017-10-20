@@ -27,6 +27,7 @@
 #include <list>
 #include "morphology.h"
 #include "wavelet.h"
+#include "xmipp_fftw.h"
 
 /* Subtract background ---------------------------------------------------- */
 void substractBackgroundPlane(MultidimArray<double> &I)
@@ -3142,6 +3143,25 @@ void LogFilter::apply(MultidimArray<double> &img)
         logFilter(img, a,b,c);
 }
 
+void DenoiseTVFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Total Variation Denoising method for micrographs ==");
+    program->addParamsLine("  [--denoiseTV]");
+    program->addParamsLine("  [--maxIterTV <maxIter>]");
+}
+
+/** Read from program command line */
+void DenoiseTVFilter::readParams(XmippProgram * program)
+{
+    maxIter = program->getIntParam("--maxIterTV");
+}
+
+/** Apply the filter to an image or volume*/
+void DenoiseTVFilter::apply(MultidimArray<double> &img)
+{
+    denoiseTVFilter(img, maxIter);
+}
+
 /** Define the parameters for use inside an Xmipp program */
 void BackgroundFilter::defineParams(XmippProgram * program)
 {
@@ -3316,3 +3336,396 @@ void BasisFilter::apply(MultidimArray<double> &img)
     img = result;
 }
 
+/** Define the parameters for use inside an Xmipp program */
+void RetinexFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Retinex ==");
+    program->addParamsLine(
+        "  [ --retinex <percentile=0.9> <mask_file=\"\"> <eps=1>] : Retinex filter, remove a given percentile of the");
+    program->addParamsLine("         : Laplacian within the mask, epsilon controls the behaviour at low frequency");
+}
+
+/** Read from program command line */
+void RetinexFilter::readParams(XmippProgram * program)
+{
+    percentile = program->getDoubleParam("--retinex",0);
+    String fnMask = program->getParam("--retinex",1);
+    if (fnMask=="")
+    	mask = NULL;
+    else
+    {
+        mask = new Image<int>;
+        mask->read(fnMask);
+    }
+    eps = program->getDoubleParam("--retinex",2);
+}
+void RetinexFilter::laplacian(const MultidimArray<double> &img,
+   MultidimArray< std::complex<double> > &fimg, bool direct)
+{
+    if (ZSIZE(img)>1)
+    {
+        Matrix1D<double> w(3);
+        for (size_t k=0; k<ZSIZE(fimg); k++)
+        {
+            FFT_IDX2DIGFREQ(k,ZSIZE(img),ZZ(w));
+            double filter_k=6+eps-2*cos(TWOPI*ZZ(w));
+            for (size_t i=0; i<YSIZE(fimg); i++)
+            {
+                FFT_IDX2DIGFREQ(i,YSIZE(img),YY(w));
+                double filter_ki=filter_k-2*cos(TWOPI*YY(w));
+                for (size_t j=0; j<XSIZE(fimg); j++)
+                {
+                    FFT_IDX2DIGFREQ(j,XSIZE(img),XX(w));
+                    double filter_kij=filter_ki-2*cos(TWOPI*XX(w));
+                    if (!direct && filter_kij>0)
+                        filter_kij=1.0/filter_kij;
+                    DIRECT_A3D_ELEM(fimg,k,i,j)*=filter_kij;
+                }
+            }
+        }
+    }
+    else
+    {
+        Matrix1D<double> w(2);
+		for (size_t i=0; i<YSIZE(fimg); i++)
+		{
+			FFT_IDX2DIGFREQ(i,YSIZE(img),YY(w));
+			double filter_i=4+eps-2*cos(TWOPI*YY(w));
+			for (size_t j=0; j<XSIZE(fimg); j++)
+			{
+				FFT_IDX2DIGFREQ(j,XSIZE(img),XX(w));
+				double filter_ij=filter_i-2*cos(TWOPI*XX(w));
+				if (!direct && filter_ij>0)
+					filter_ij=1.0/filter_ij;
+				DIRECT_A2D_ELEM(fimg,i,j)*=filter_ij;
+			}
+		}
+    }
+}
+
+/** Apply the filter to an image or volume*/
+void RetinexFilter::apply(MultidimArray<double> &img)
+{
+    FourierTransformer fft;
+    MultidimArray< std::complex<double> > fimg;
+
+    // Apply forward Laplacian
+    fft.FourierTransform(img,fimg,false);
+    laplacian(img,fimg,true);
+    fft.inverseFourierTransform();
+
+    // Compute the threshold outside the mask
+    double *sortedValues=NULL;
+    size_t Nsorted=0;
+    if (mask==NULL)
+    {
+        Nsorted=MULTIDIM_SIZE(img);
+        sortedValues=new double[Nsorted];
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+            sortedValues[n]=fabs(DIRECT_MULTIDIM_ELEM(img,n));
+    }
+    else
+    {
+        const MultidimArray<int> &mmask=(*mask)();
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+            if (DIRECT_MULTIDIM_ELEM(mmask,n)==0)
+               Nsorted+=1;
+
+        sortedValues=new double[Nsorted];
+        size_t i=0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+            if (DIRECT_MULTIDIM_ELEM(mmask,n)==0)
+                 sortedValues[i++]=fabs(DIRECT_MULTIDIM_ELEM(img,n));
+    }
+    std::sort(sortedValues,sortedValues+Nsorted);
+    double threshold=sortedValues[(size_t)(percentile*Nsorted)];
+
+    // Apply threshold
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+        if (fabs(DIRECT_MULTIDIM_ELEM(img,n))<threshold)
+            DIRECT_MULTIDIM_ELEM(img,n)=0.0;
+
+    fft.FourierTransform(img,fimg,false);
+    laplacian(img,fimg,false);
+    fft.inverseFourierTransform();
+}
+
+// Denoising using Spectral Projected Gradient (SPG) optimization
+/** Compute energy.
+ *  * @ingroup Filters
+ *  energy function
+ *  0.5*|vst(X)-Y|^2 + mu*TV(X) = data_term + mu*TV
+ *
+ * X=current image
+ * Y=sensed image
+ * mu=regularization weight (on TV norm)
+ */
+double denoiseTVenergy(double mu,
+              const MultidimArray<double>& X,
+              const MultidimArray<double>& Y,
+              double s,
+              double q,
+              double lambda,
+              double sigmag,
+              double g)
+{
+    // parameter beta which role is to prevent division with zeros
+    const double beta = 0.00001;
+    const double beta2 = beta*beta;
+
+    double m = 0;
+    double tv = 0;
+    const double K1 = ((3.0/8.0)*lambda*lambda + sigmag*sigmag - lambda*g) / (s*s);
+    const double K2 = lambda * (q/(s*s));
+    const double K3 = 2.0 / lambda;
+    double Xij, Yij, dXx, dXy, d, msqrt;
+    int i1, j1;
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(X)
+    {
+        Xij = DIRECT_A2D_ELEM(X,i,j);
+        Yij = DIRECT_A2D_ELEM(Y,i,j);
+        i1 = i + 1;
+        if (i1==YSIZE(X))
+           i1 = 0;
+        j1 = j + 1;
+        if (j1==XSIZE(X))
+           j1 = 0;
+
+        dXx = DIRECT_A2D_ELEM(X,i,j1) - Xij;
+        dXy = DIRECT_A2D_ELEM(X,i1,j) - Xij;
+        tv += sqrt(dXx*dXx + dXy*dXy + beta2);
+
+        d = K2*Xij + K1;
+        msqrt = K3 * sqrt(std::max(0.0, d)) - Yij;
+        m += msqrt*msqrt;
+    }
+    return 0.5*m + mu*tv;
+}
+
+/** Compute gradient.
+ *  * @ingroup Filters
+ *  Jacobian of Energy_TV
+ *  0.5*|vst(X)-Y|^2 + mu*TV(X)
+ *
+ * X=current image
+ * Y=sensed image
+ * mu=regularization weight (on TV norm)
+ */
+void denoiseTVgradient(double mu,
+                const MultidimArray<double>& X,
+                const MultidimArray<double>& Y,
+                double s,
+                double q,
+                double lambda,
+                double sigmag,
+                double g,
+                MultidimArray<double>& gradientI
+                )
+{
+    // parameter beta which role is to prevent division with zeros
+    const double beta = 0.00001;
+    const double beta2 = beta*beta;
+
+    MultidimArray<double> d = X;
+    double K1 = ((3.0/8.0)*lambda*lambda + sigmag*sigmag - lambda*g) / (s*s);
+    double K2 = lambda * (q/s*s);
+    double K3 = (2.0 / (lambda*lambda)) * (q / (s*s)) * lambda;
+    double Xij, Yij, dXx, dXy, dij, d_left, d_up, X_left, X_right, X_up, X_down, dTV, dE;
+    int i1, j1, i_1, j_1;
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(X)
+    {
+        Xij = DIRECT_A2D_ELEM(X,i,j);
+        i1 = i + 1;
+        if (i1==YSIZE(X))
+           i1 = 0;
+        j1 = j + 1;
+        if (j1==XSIZE(X))
+           j1 = 0;
+
+        dXx = DIRECT_A2D_ELEM(X,i,j1) - Xij;
+        dXy = DIRECT_A2D_ELEM(X,i1,j) - Xij;
+        DIRECT_A2D_ELEM(d,i,j) = 1.0 / sqrt(dXx*dXx + dXy*dXy + beta2);
+    }
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(d)
+    {
+        dij = DIRECT_A2D_ELEM(d,i,j);
+        Xij = DIRECT_A2D_ELEM(X,i,j);
+        Yij = DIRECT_A2D_ELEM(Y,i,j);
+        i1 = i + 1;
+        if (i1==YSIZE(d))
+           i1 = 0;
+        j1 = j + 1;
+        if (j1==XSIZE(d))
+           j1 = 0;
+        i_1 = i - 1;
+        if (i_1==-1)
+           i_1 = YSIZE(d) - 1;
+        j_1 = j - 1;
+        if (j_1==-1)
+           j_1 = XSIZE(d) - 1;
+
+        d_left = DIRECT_A2D_ELEM(d,i,j_1);
+        d_up = DIRECT_A2D_ELEM(d,i_1,j);
+        X_left = DIRECT_A2D_ELEM(X,i,j_1);
+        X_right = DIRECT_A2D_ELEM(X,i,j1);
+        X_up = DIRECT_A2D_ELEM(X,i_1,j);
+        X_down = DIRECT_A2D_ELEM(X,i1,j);
+
+        dTV = Xij * (2.0*dij + d_left + d_up) - X_left*d_left - X_up*d_up - dij*(X_right + X_down);
+
+        if (K2*Xij + K1 > 0)
+            dE = K3 - (q / (s*s)) * Yij / sqrt((Xij * (q / (s*s)) * lambda + K1));
+        else
+            dE = 0;
+
+        DIRECT_A2D_ELEM(gradientI,i,j) = dE + mu*dTV;
+    }
+}
+
+/** Function which makes projections on feasible set.
+ *  * @ingroup Filters
+ */
+void denoiseTVproj(const MultidimArray<double>& X,
+          const MultidimArray<double>& Y,
+          double theta,
+          MultidimArray<double>& dold)
+{
+    double div;
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(X)
+    {
+        div = DIRECT_A2D_ELEM(X,i,j) - (DIRECT_A2D_ELEM(Y,i,j)*theta);
+        if (div < 0)
+           DIRECT_A2D_ELEM(dold,i,j) = 0 - DIRECT_A2D_ELEM(X,i,j);
+        else if (div > 1)
+           DIRECT_A2D_ELEM(dold,i,j) = 1 - DIRECT_A2D_ELEM(X,i,j);
+        else
+           DIRECT_A2D_ELEM(dold,i,j) = div - DIRECT_A2D_ELEM(X,i,j);
+    }
+}
+
+/** Compute denoising.
+ *  * @ingroup Filters
+ */
+void denoiseTVFilter(MultidimArray<double> &xnew, int maxIter)
+{
+    // parameters for denoising
+    double lambda = 1.0;    // Poisson scaling factor
+    double sigmag = 5.8;  // Gaussian component N(g,sigma^2)
+    double g = 0.0;
+
+    // *** Anscombe transformation of input image ***
+    double q = 255.0;
+
+    double xnewmin = xnew.computeMin();
+    double xnewscale = 255.0 / (xnew.computeMax() - xnewmin);
+
+    // apply generalized Anscombe VST tranformation
+    double K1 = ((3.0/8.0)*lambda*lambda + sigmag*sigmag - lambda*g);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(xnew)
+    {
+        DIRECT_MULTIDIM_ELEM(xnew, n) = (DIRECT_MULTIDIM_ELEM(xnew, n) - xnewmin) * xnewscale;
+        DIRECT_MULTIDIM_ELEM(xnew, n) = 2.0 / lambda * sqrt(std::max(0.0, lambda*DIRECT_MULTIDIM_ELEM(xnew, n) + K1));
+    }
+
+    double mx = xnew.computeMax();
+
+    // xold = initial degraded image
+    MultidimArray<double> xold = xnew;
+    MultidimArray<double> grold = xnew;
+    MultidimArray<double> grnew = xnew;
+    MultidimArray<double> dold = xnew;
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xnew)
+    {
+        DIRECT_A2D_ELEM(xold,i,j) = DIRECT_A2D_ELEM(xnew,i,j) / mx;
+    }
+    MultidimArray<double> origInput = xold;
+
+    // *** Spectral Projected Gradient (SPG) optimization ***
+    // parameters of optimization
+    double tol = 0;
+    double theta;
+    double thetamin = 0.001;
+    double thetamax = 1000;
+    double gamma = 0.0001;
+    double sigma1 = 0.1;
+    double sigma2 = 0.9;
+    double mu = 0.03;
+
+    // initial objective function value of xold
+    double fold = denoiseTVenergy(mu, xold, origInput, mx, q, lambda, sigmag, g);
+
+    // gradient of objective function
+    denoiseTVgradient(mu, xold, origInput, mx, q, lambda, sigmag, g, grold);
+
+    denoiseTVproj(xold, grold, 1.0, dold);
+
+    double delta, ksi, fnew, s_norm, p, s2, xij;
+    for (int kk=1; kk <= maxIter; kk++)
+    {
+        delta = 0;
+
+        // make a step
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xnew)
+        {
+            DIRECT_A2D_ELEM(xnew,i,j) = DIRECT_A2D_ELEM(xold,i,j) + DIRECT_A2D_ELEM(dold,i,j);
+            delta += DIRECT_A2D_ELEM(grold,i,j) * DIRECT_A2D_ELEM(dold,i,j);
+        }
+
+        // objective function of xnew
+        fnew = denoiseTVenergy(mu, xnew, origInput, mx, q, lambda, sigmag, g);
+
+        ksi = 1.0;
+
+        while (fnew > fold + gamma*ksi*delta)
+        {
+            double ksitsl = -0.5 * (ksi*ksi) * delta / (fnew - fold - ksi*delta);
+            if ((ksitsl >= sigma1)  && (ksitsl <= sigma2*ksi))
+                ksi = ksitsl;
+            else
+                ksi = ksi / 2.0;
+
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xnew)
+            {
+                DIRECT_A2D_ELEM(xnew,i,j) = DIRECT_A2D_ELEM(xold,i,j) + ksi*DIRECT_A2D_ELEM(dold,i,j);
+            }
+
+            // because we updated xnew, update also function value
+            fnew = denoiseTVenergy(mu, xnew, origInput, mx, q, lambda, sigmag, g);
+        }
+
+        denoiseTVgradient(mu, xnew, origInput, mx, q, lambda, sigmag, g, grnew);
+
+        s_norm = -100;
+        p = 0;
+        s2 = 0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xnew)
+        {
+            xij = (DIRECT_A2D_ELEM(xnew,i,j) - DIRECT_A2D_ELEM(xold,i,j));
+            p += xij * (DIRECT_A2D_ELEM(grnew,i,j) - DIRECT_A2D_ELEM(grold,i,j));
+            s2 += xij * xij;
+            if (xij > s_norm) s_norm = xij;
+        }
+
+        if (s_norm < tol)
+            break;
+
+        if (p <= 0)
+            theta = thetamax;
+        else
+            theta = std::min(thetamax, std::max(thetamin, s2/p));
+
+        denoiseTVproj(xnew, grnew, theta, dold);
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xold)
+        {
+            DIRECT_A2D_ELEM(xold,i,j) = DIRECT_A2D_ELEM(xnew,i,j);
+            DIRECT_A2D_ELEM(grold,i,j) = DIRECT_A2D_ELEM(grnew,i,j);
+        }
+
+        // we already computed it, let's use it for next round
+        fold = fnew;
+    }
+}
