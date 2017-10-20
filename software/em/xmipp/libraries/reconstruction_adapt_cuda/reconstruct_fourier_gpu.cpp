@@ -405,7 +405,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
 			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
 				threadParams->buffer,
-				parent->blob.radius, parent->maxVolumeIndexYZ,
+				parent->blob.radius, parent->maxVolumeIndexYZ, parent->useFast,
 				parent->maxResolutionSqr,
 				threadParams->gpuStream);
 			parent->logProgress(threadParams->buffer->noOfImages);
@@ -795,7 +795,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
     createStreams(noOfCores);
-    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, useFast, blob.radius, iDeltaSqrt);
+    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, blob.radius, iDeltaSqrt);
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }

@@ -49,7 +49,6 @@ float* devBlobTableSqrt = NULL;
 
 __device__ __constant__ int cMaxVolumeIndexX = 0;
 __device__ __constant__ int cMaxVolumeIndexYZ = 0;
-__device__ __constant__ bool cUseFast = false;
 __device__ __constant__ float cBlobRadius = 0.f;
 __device__ __constant__ float cIDeltaSqrt = 0.f;
 
@@ -337,6 +336,7 @@ void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
  * spaces to the given projection and update temporal spaces
  * using the pixel value of the projection.
  */
+template<bool hasCTF>
 __device__
 void processVoxel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
@@ -372,7 +372,7 @@ void processVoxel(
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
 	int index2D = imgY * xSize + imgX;
 
-	if (data->hasCTFs) {
+	if (hasCTF) {
 		const float* __restrict__ CTF = data->getNthItem(data->CTFs, space->projectionIndex);
 		const float* __restrict__ modulator = data->getNthItem(data->modulators, space->projectionIndex);
 		wCTF = CTF[index2D];
@@ -392,6 +392,7 @@ void processVoxel(
  * spaces to the given projection and update temporal spaces
  * using the pixel values of the projection withing the blob distance.
  */
+template<bool hasCTF>
 __device__
 void processVoxelBlob(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -440,7 +441,7 @@ void processVoxelBlob(
 	float dataWeight = space->weight;
 
 	// ugly spaghetti code, but improves performance by app. 10%
-	if (data->hasCTFs) {
+	if (hasCTF) {
 		const float* __restrict__ CTF = data->getNthItem(data->CTFs, space->projectionIndex);
 		const float* __restrict__ modulator = data->getNthItem(data->modulators, space->projectionIndex);
 
@@ -525,6 +526,7 @@ void processVoxelBlob(
   * Method will process one projection image and add result to temporal
   * spaces.
   */
+template<bool useFast, bool hasCTF>
 __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -540,11 +542,11 @@ void processProjection(
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		if (idy >= tSpace->minY && idy <= tSpace->maxY) {
 			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
-				if (cUseFast) {
+				if (useFast) {
 					float hitZ;
 					if (getZ(idx, idy, hitZ, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
 						int z = (int)(hitZ + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace);
+						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace);
 					}
 				} else {
 					float z1, z2;
@@ -556,7 +558,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -565,11 +567,11 @@ void processProjection(
 	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
 		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
 			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
-				if (cUseFast) {
+				if (useFast) {
 					float hitY;
 					if (getY(idx, hitY, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
 						int y = (int)(hitY + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace);
+						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace);
 					}
 				} else {
 					float y1, y2;
@@ -581,7 +583,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -590,11 +592,11 @@ void processProjection(
 	} else { // iterate YZ plane
 		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
 			if (idx >= tSpace->minY && idx <= tSpace->maxY) { // map y > x
-				if (cUseFast) {
+				if (useFast) {
 					float hitX;
 					if (getX(hitX, idx, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
 						int x = (int)(hitX + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace);
+						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace);
 					}
 				} else {
 					float x1, x2;
@@ -606,7 +608,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob<hasCTF>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -767,6 +769,7 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
  */
+template<bool useFast, bool hasCTF>
 __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
@@ -774,7 +777,7 @@ void processBufferKernel(
 		float* devBlobTableSqrt,
 		int imgCacheDim) {
 #if SHARED_BLOB_TABLE
-	if ( ! cUseFast) {
+	if ( ! useFast) {
 		// copy blob table to shared memory
 		int id = threadIdx.y*blockDim.x + threadIdx.x;
 		int blockSize = blockDim.x * blockDim.y;
@@ -788,7 +791,7 @@ void processBufferKernel(
 		RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
 
 #if SHARED_IMG
-		if ( ! cUseFast) {
+		if ( ! useFast) {
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
 				// first thread calculates which part of the image should be shared
 				calculateAABB(space, buffer, SHARED_AABB);
@@ -805,7 +808,7 @@ void processBufferKernel(
 		}
 #endif
 
-		processProjection(
+		processProjection<useFast, hasCTF>(
 			tempVolumeGPU, tempWeightsGPU,
 			buffer, space,
 			devBlobTableSqrt,
@@ -943,11 +946,9 @@ void releaseWrapper(int streamIndex) {
 
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
-		bool useFast, float blobRadius,
-		float iDeltaSqrt) {
+		float blobRadius, float iDeltaSqrt) {
 	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
 	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
-	cudaMemcpyToSymbol(cUseFast, &useFast,sizeof(useFast));
 	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
 	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
 	gpuErrchk( cudaPeekAtLastError() );
@@ -961,7 +962,7 @@ void copyConstants(
  */
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
-		float blobRadius, int maxVolIndexYZ,
+		float blobRadius, int maxVolIndexYZ, bool useFast,
 		float maxResolutionSqr, int streamIndex) {
 
 	cudaStream_t stream = streams[streamIndex];
@@ -983,9 +984,38 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid(ceil(size2D/(float)dimBlock.x),ceil(size2D/(float)dimBlock.y));
-	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+
+	// by using templates, we can save some registers, especially for 'fast' version
+	if (useFast && buffer->hasCTFs) {
+		processBufferKernel<true, true><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
 			imgCacheDim);
+		   return;
+   }
+   if (useFast && !buffer->hasCTFs) {
+	   processBufferKernel<true, false><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+				tempVolumeGPU, tempWeightsGPU,
+				wrapper->gpuCopy,
+				devBlobTableSqrt,
+				imgCacheDim);
+	   return;
+   }
+   if (!useFast && buffer->hasCTFs) {
+	   processBufferKernel<false, true><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+			tempVolumeGPU, tempWeightsGPU,
+			wrapper->gpuCopy,
+			devBlobTableSqrt,
+			imgCacheDim);
+	   return;
+   }
+   if (!useFast && !buffer->hasCTFs) {
+	   processBufferKernel<false, false><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+			tempVolumeGPU, tempWeightsGPU,
+			wrapper->gpuCopy,
+			devBlobTableSqrt,
+			imgCacheDim);
+	   return;
+   }
 }
