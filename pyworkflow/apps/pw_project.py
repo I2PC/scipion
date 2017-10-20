@@ -35,6 +35,7 @@ import time
 
 from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
+import pyworkflow.utils as pwutils
 
 
 if __name__ == '__main__':
@@ -50,7 +51,27 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
-        if projName == 'last':  # Get last project
+
+        # Handle special name 'here' to create a project
+        # from the current directory
+        if projName == 'here':
+            cwd = os.environ['SCIPION_CWD']
+            print "\nYou are trying to create a project here:", pwutils.cyan(cwd)
+
+            if os.listdir(cwd):
+                print pwutils.red('\nWARNING: this folder is not empty!!!')
+            key = raw_input("\nDo you want to create a project here? [y/N]?")
+
+            if key.lower().strip() != 'y':
+                print "\nAborting..."
+                sys.exit(0)
+            else:
+                print "\nCreating project...."
+                projName = os.path.basename(cwd)
+                projDir = os.path.dirname(cwd)
+                proj = manager.createProject(projName, location=projDir)
+
+        elif projName == 'last':  # Get last project
             projects = manager.listProjects()
             if not projects:
                 sys.exit("No projects yet, cannot open the last one.")

@@ -25,7 +25,7 @@
 # **************************************************************************
 from pyworkflow import VERSION_1_1
 from pyworkflow.em import ProtCreateMask3D, VolumeMask
-from convert import convertBinaryVol
+from convert import convertBinaryVol, isVersion2
 import pyworkflow.protocol.params as params
 
 
@@ -48,6 +48,12 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
         form.addParam('inputVolume', params.PointerParam, pointerClass="Volume",
                       label="Input volume",
                       help="Select the volume that will be used to create the mask")
+        if isVersion2():
+            form.addParam('initialLowPassFilterA', params.FloatParam, default=-1,
+                          label='Lowpass filter map by (A)',
+                          help='Lowpass filter that will be applied to the input map, '
+                               'prior to binarization. To calculate solvent masks, a '
+                               'lowpass filter of 15-20A may work well.')
         # TODO: add wizard
         form.addParam('threshold', params.FloatParam, default=0.01,
                       label='Threshold',
@@ -106,6 +112,9 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
                     '--extend_inimask ': self.extend.get(),
                     '--width_soft_edge ': self.edge.get()
                     }
+        if isVersion2() and self.initialLowPassFilterA.get() != -1:
+            argsDict['--lowpass '] = self.initialLowPassFilterA.get()
+
         args = ' --o %s ' % self.maskFile
         args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 

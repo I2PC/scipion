@@ -36,31 +36,32 @@ import os
 from os.path import exists
 from pyworkflow.em.data import (SetOfVolumes)
 
-
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
+
 class viewerXmippProtExtractUnit(ProtocolViewer):
     """ Visualize the input and output volumes of protocol XmippProtExtractUnit
-        by choosing Chimera (3D) or Xmipp visualizer (2D). The axes of coordinates
-        x, y, z will be shown by choosing Chimera"""
+        by choosing Chimera (3D) or Xmipp visualizer (2D).
+        The axes of coordinates x, y, z will be shown by choosing Chimera"""
     _label = 'viewer extract unit cell'
     _targets = [XmippProtExtractUnit]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
-#"""ROB: I know that there is a nice chimera interface
-# but it does not work in this case since I am interested
-# in reading the MRC header. So I will use chimera as
-# an external program"""
+    # ROB: I know that there is a nice chimera interface but it does not work
+    # in this case since I am interested in reading the MRC header. So I will
+    # use chimera as an external program
+
     def _defineParams(self, form):
-        form.addSection(label = 'Visualization of input volume and extracted unit cell')
+        form.addSection(label='Visualization of input volume and extracted '
+                              'unit cell')
         form.addParam('displayVol', params.EnumParam,
-                      choices = ['chimera', 'slices'],
-                      default = VOLUME_CHIMERA, display = params.EnumParam.DISPLAY_HLIST,
-                      label = 'Display volume with',
-                      help = '*chimera*: display volumes as surface with Chimera.\n'
-                             '*slices*: display volumes as 2D slices along z axis.\n'
-                     )
+                      choices=['chimera', 'slices'], default=VOLUME_CHIMERA,
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      label='Display volume with',
+                      help='*chimera*: display volumes as surface with '
+                           'Chimera.\n*slices*: display volumes as 2D slices '
+                           'along z axis.\n')
 
     def _getVisualizeDict(self):
         return{
@@ -69,13 +70,15 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
 
     def _validate(self):
         if find_executable('chimera') is None:
-            return ["chimera is not available. Either install it or choose option 'slices'. "]
+            return ["chimera is not available. Either install it or choose"
+                    " option 'slices'. "]
         return []
 
-#====================================================================================================
-# Show Volumes
-#====================================================================================================
-    def _showVolumes(self, paramName =None):
+    # =========================================================================
+    # Show Volumes
+    # =========================================================================
+
+    def _showVolumes(self, paramName=None):
         if self.displayVol == VOLUME_CHIMERA:
             return self._showVolumesChimera()
         elif self.displayVol == VOLUME_SLICES:
@@ -86,7 +89,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         return volName
 
     def _getOrigin(self, vol):
-        origin = vol.getOrigin(returnInitIfNone = True).getShifts()
+        origin = vol.getOrigin(returnInitIfNone=True).getShifts()
         x = int(origin[0])
         y = int(origin[1])
         z = int(origin[2])
@@ -97,7 +100,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             tmpFileName = self.protocol._getTmpPath("tmpVolumes.sqlite")
             _inputVol = self.protocol.inputVolumes.get()
             _outputVol = self.protocol.outputVolume
-            setOfVolumes = SetOfVolumes(filename = tmpFileName)
+            setOfVolumes = SetOfVolumes(filename=tmpFileName)
             setOfVolumes.append(_inputVol)
             setOfVolumes.append(_outputVol)
             setOfVolumes.write()
@@ -134,26 +137,31 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         _inputVol = self.protocol.inputVolumes.get()
         _outputVol = self.protocol.outputVolume
         inputVolFileName = os.path.abspath(self._getVolumeName(_inputVol))
-        x_input, y_input, z_input = self. _getOrigin(_inputVol)#input vol origin coordinates
+        # input vol origin coordinates
+        x_input, y_input, z_input = self. _getOrigin(_inputVol)
         f.write("open %s\n" % inputVolFileName)
-        f.write("volume #1 style mesh level 0.001 voxelSize %f originIndex %d,%d,%d\n"
+        f.write("volume #1 style mesh level 0.001 voxelSize %f originIndex "
+                "%d,%d,%d\n"
                 % (_inputVol.getSamplingRate(), x_input, y_input, z_input))
 
         outputVolFileName = os.path.abspath(self._getVolumeName(_outputVol))
-        x_output, y_output, z_output = self. _getOrigin(_outputVol)#output vol origin coordinates
+        # output vol origin coordinates
+        x_output, y_output, z_output = self. _getOrigin(_outputVol)
         f.write("open %s\n" % outputVolFileName)
-        f.write("volume #2 style surface level 0.001 voxelSize %f originIndex %d,%d,%d\n"
+        f.write("volume #2 style surface level 0.001 voxelSize %f originIndex "
+                "%d,%d,%d\n"
                 % (_outputVol.getSamplingRate(), x_output, y_output, z_output))
-
 
         cMap = ['red', 'yellow', 'green', 'cyan', 'blue']
         d = {}
         d['outerRadius'] = self.protocol.outerRadius.get() * sampling
         d['innerRadius'] = self.protocol.innerRadius.get() * sampling
-        d['symmetry'] = symMapperScipionchimera[self.protocol.symmetryGroup.get()]
+        d['symmetry'] = \
+            symMapperScipionchimera[self.protocol.symmetryGroup.get()]
 
-        if self.protocol.symmetryGroup >= SYM_I222 and x_input == _inputVol.getDim()[0]/2. and y_input == _inputVol.getDim()[1]/2. and z_input == _inputVol.getDim()[2]/2.:
-            f.write("shape icosahedron mesh true radius %(outerRadius)d orientation %(symmetry)s\n" % d)
+        if self.protocol.symmetryGroup >= SYM_I222:
+            f.write("shape icosahedron mesh true radius %(outerRadius)d "
+                    "orientation %(symmetry)s\n" % d)
         step = (d['outerRadius'] - d['innerRadius']) / float(len(cMap) - 1)
         f.write("scolor #2  geom radial center 0,0,0 cmap ")
         counter = 0
@@ -172,4 +180,3 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         setOfVolumes = self._createSetOfVolumes()
 
         return [self.objectView(setOfVolumes)]
-

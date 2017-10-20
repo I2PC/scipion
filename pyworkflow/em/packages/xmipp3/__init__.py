@@ -27,7 +27,7 @@
 This sub-package contains Xmipp specific protocols
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
+from bibtex import _bibtex  # Load bibtex dict with references
 
 _logo = "xmipp_logo.png"
 _references = ['delaRosaTrevin2013', 'Sorzano2013']
@@ -39,9 +39,7 @@ from dataimport import *
 # some sub-packages
 from nma import *
 from pdb import *
-
 from protocol_preprocess import *
-
 from viewer import XmippViewer
 
 
@@ -59,7 +57,6 @@ from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
 from viewer_reconstruct_highres import XmippReconstructHighResViewer
 from viewer_solid_angles import SolidAnglesViewer
-#from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter

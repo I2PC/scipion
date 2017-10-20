@@ -86,7 +86,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         if isinstance(inputSet, SetOfParticles):
             self._particlesOutputStep(inputSet, inputCTF)
         else:
-            self._microgrpahsOutputStep(inputSet, inputCTF)
+            self._micrographsOutputStep(inputSet, inputCTF)
             
     def _particlesOutputStep(self, inputSet, inputCTF):
         outputParts = self._createSetOfParticles()
@@ -140,7 +140,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
                 newMic = mic.clone()
                 outputSet.append(newMic)
         
-    def _microgrpahsOutputStep(self, inputSet, inputCTF):           
+    def _micrographsOutputStep(self, inputSet, inputCTF):
         outputMics = self._createSetOfMicrographs()
         outputMics.copyInfo(inputSet)
         ctfDict = {}

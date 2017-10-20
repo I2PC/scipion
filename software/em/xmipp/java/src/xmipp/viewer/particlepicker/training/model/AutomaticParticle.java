@@ -23,6 +23,14 @@ public class AutomaticParticle extends ManualParticle {
 	{
 		return deleted;
 	}
+	public boolean isUnavailable()
+    {
+        return deleted || ! aboveThreshold();
+    }
+    public boolean aboveThreshold()
+    {
+        return getCost() >= ((SupervisedPickerMicrograph)micrograph).getThreshold();
+    }
 
 	
 	

@@ -35,81 +35,83 @@ class Message():
     # print MyMessage.label
 
     # Header List
-    VIEW_DATA = 'Data'
     VIEW_PROJECTS = 'Projects'
     VIEW_PROTOCOLS = 'Protocols'
+    VIEW_DATA = 'Data'
     VIEW_UPLOAD = 'Upload'
     
     # Projects Template
-    LABEL_CREATE_PROJECT = 'Create Project'
-    LABEL_CREATED = 'Created: '
-    LABEL_DELETE_PROJECT = '[Delete]'
-    LABEL_IMPORT_PROJECT = 'Import project'
-    LABEL_MODIFIED = 'Modified: '
     LABEL_PROJECTS = 'Projects'
-    LABEL_RENAME_PROJECT = '[Rename]'
-    MESSAGE_DELETE_PROJECT = 'This will *delete* the project and all its *data*. Are you sure?'
+    LABEL_CREATE_PROJECT = 'Create Project'
+    LABEL_IMPORT_PROJECT = 'Import project'
     TITLE_CREATE_PROJECT = 'Enter the project name'
     TITLE_CREATE_PROJECT_NAME = 'Project Name: '
-    TITLE_DELETE_PROJECT = 'Confirm project deletion'
     TITLE_EDIT_OBJECT = 'Edit Object properties'
+    MESSAGE_DELETE_PROJECT = 'This will *delete* the project and all its *data*. Are you sure?'
+    LABEL_DELETE_PROJECT = '[Delete]'
+    TITLE_DELETE_PROJECT = 'Confirm project deletion'
+    LABEL_RENAME_PROJECT = '[Rename]'
     TITLE_RENAME_PROJECT = 'Confirm project renaming'
+    LABEL_CREATED = 'Created: '
+    LABEL_MODIFIED = 'Modified: '
     
     # Project Content Template
     LABEL_PROJECT = 'Project '
     #-- Protocol Treeview --
-    LABEL_PROTTREE_NONE = 'None'
     LABEL_WORKFLOW = 'Workflow View: '
+    LABEL_PROTTREE_NONE = 'None'
     #-- Toolbar --
-    LABEL_ANALYZE = 'Analyze Results'
-    LABEL_BROWSE = 'Browse'
-    LABEL_BROWSE_ACTION = 'Browse '
-    LABEL_CONTINUE = 'Continue'
-    LABEL_CONTINUE_ACTION = 'Approve continue'
-    LABEL_COPY = 'Copy'
-    LABEL_COPY_ACTION = 'Copy   '
-    LABEL_DB = 'Db'
-    LABEL_DEFAULT = 'Default'
-    LABEL_DELETE = 'Delete'
-    LABEL_DELETE_ACTION = 'Delete    '
-    LABEL_EDIT = 'Edit'
-    LABEL_EDIT_ACTION = 'Edit     '
-    LABEL_EXPORT = 'Export'
-    LABEL_LIST = 'List'
     LABEL_NEW = 'New'
     LABEL_NEW_ACTION = 'New     '
-    LABEL_REFRESH = 'Refresh'
-    LABEL_SMALLTREE = 'Small Tree'
+    LABEL_EDIT = 'Edit'
+    LABEL_EDIT_ACTION = 'Edit     '
+    LABEL_COPY = 'Copy'
+    LABEL_COPY_ACTION = 'Copy   '
+    LABEL_DELETE = 'Delete'
+    LABEL_DELETE_ACTION = 'Delete    '
     LABEL_STEPS = 'Steps'
+    LABEL_BROWSE = 'Browse'
+    LABEL_BROWSE_ACTION = 'Browse '
+    LABEL_DB = 'Db'
     LABEL_STOP = 'Stop'
     LABEL_STOP_ACTION = 'Stop execution'
+    LABEL_ANALYZE = 'Analyze Results'
     LABEL_TREE = 'Tree'
-#ROB
-    LABEL_BIB_BTN = 'Export references'
- 
+    LABEL_SMALLTREE = 'Small Tree'
+    LABEL_LIST = 'List'
+    LABEL_REFRESH = 'Refresh'
+    LABEL_DEFAULT = 'Default'
+    LABEL_CONTINUE = 'Continue'
+    LABEL_CONTINUE_ACTION = 'Approve continue'
+    LABEL_EXPORT = 'Export'
+    
     #-- Tabs --
-    LABEL_COMMENT = 'Comments'
     LABEL_DATA = 'Data'
-    LABEL_EXECUTION = 'Run mode'
-    LABEL_INPUT = 'Input'
-
-    LABEL_LOGS = 'Output Logs'
-    LABEL_LOGS_ERROR = 'Error Log'
-    LABEL_LOGS_OUTPUT = 'Output Log'
-    LABEL_LOGS_SCIPION = 'Scipion Log'
-    LABEL_METHODS = 'Methods'
-    LABEL_OBJCREATED = 'Created'
-    LABEL_OBJINFO = 'Info'
-    LABEL_OBJLABEL = 'Label'
-    LABEL_OBJSUMMARY = 'Object Summary'
-    LABEL_OUTPUT = 'Output'
-    LABEL_PARALLEL = 'Parallel'
-    LABEL_RUNNAME = 'Run name'
     LABEL_SUMMARY = 'Summary'
-    NO_INFO_LOGS = 'No logs information.'
-    NO_INFO_METHODS = 'No methods information.'
+    LABEL_INPUT = 'Input'
+    LABEL_OUTPUT = 'Output'
+    LABEL_COMMENT = 'Comments'
+    
+    LABEL_OBJSUMMARY = 'Object Summary'
+    LABEL_OBJINFO = 'Info'
+    LABEL_OBJCREATED = 'Created'
+    LABEL_OBJLABEL = 'Label'
+    
+    LABEL_METHODS = 'Methods'
+    LABEL_BIB_BTN = 'Export references'
+    LABEL_LOGS = 'Output Logs'
+    LABEL_LOGS_OUTPUT = 'Output Log'
+    LABEL_LOGS_ERROR = 'Error Log'
+    LABEL_LOGS_SCIPION = 'Scipion Log'
+    
+    LABEL_RUNNAME = 'Run name'
+    LABEL_EXECUTION = 'Run mode'
+    LABEL_PARALLEL = 'Parallel'
+    
     NO_INFO_SUMMARY = 'No summary information.'
-    NO_SAVE_SETTINGS = 'Error try to save settings.'
+    NO_INFO_METHODS = 'No methods information.'
+    NO_INFO_LOGS = 'No logs information.'
+    NO_SAVE_SETTINGS = 'Error trying to save settings.'
     
     #-------- Protocol Form messages ----------
     LABEL_CITE = 'Cite'
@@ -372,7 +374,8 @@ class Icon():
     LIGHTBULB = 'fa-lightbulb-o.png'
     PLUS_CIRCLE = 'fa-plus-circle.png'
     LINK = 'fa-iconmoon-link.png'
-
+    ROOT = 'root.png'
+    ROCKET = 'fa-rocket.png'
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
@@ -406,3 +409,9 @@ class colorText:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
+class KEYSYM:
+    """ Keysym values for evaluating key pressed within events
+    as reported at http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/key-names.html
+    """
+    DELETE = 'Delete'
+    RETURN = 'Return'

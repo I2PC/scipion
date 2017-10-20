@@ -82,6 +82,7 @@ class XmippViewer(Viewer):
                 SetOfPDBs,
                 XmippProtCompareReprojections,
                 XmippParticlePickingAutomatic,
+                XmippProtExtractParticles,
                 XmippProtExtractParticlesPairs,
                 XmippProtKerdensom,
                 ProtParticlePicking,

@@ -470,23 +470,16 @@ void UnitCell::octahedralSymmetry(const Matrix1D<double> & _centre,
 	Matrix1D<double> new_expandedUnitCell_4 = expandedUnitCell[4]
 			- newOriginAfterExpansion;
 	//vectors normal to faces of the expanded unit cell
-	planeVectors.push_back(
-			(1)
-					* vectorProduct(new_expandedUnitCell_1,
+	planeVectors.push_back(vectorProduct(new_expandedUnitCell_1,
 							new_expandedUnitCell_2));
-	planeVectors.push_back(
-			(1)
-					* vectorProduct(new_expandedUnitCell_2,
+	planeVectors.push_back(vectorProduct(new_expandedUnitCell_2,
 							new_expandedUnitCell_3));
-	planeVectors.push_back(
-			(1)
-					* vectorProduct(new_expandedUnitCell_3,
+	planeVectors.push_back(vectorProduct(new_expandedUnitCell_3,
 							new_expandedUnitCell_4));
-	planeVectors.push_back(
-			(1)
-					* vectorProduct(new_expandedUnitCell_4,
+	planeVectors.push_back(vectorProduct(new_expandedUnitCell_4,
 							new_expandedUnitCell_1));
-#include "chimeraTesterO.txt" //draws the (expanded) unit cell and directions of vectExpansion vectors using chimera
+#include "chimeraTesterO.txt" //draws the (expanded) unit cell 
+	//and directions of vectExpansion vectors using chimera
 }//FUNCTION icoSymmetry fills out the variable planeVectors
 // (normal vectors to the polyhedron that define a unit cell)
 void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
@@ -867,7 +860,7 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 						if (doIt) {
 							if (x_offset == 0.0 && y_offset == 0.0 && z_offset == 0.0){
 								A3D_ELEM(*imageMap2,k,i,j) = A3D_ELEM(*map, k, i, j);
-							}else if (x_offset != 0.0 || y_offset != 0.0 || z_offset != 0.0){
+							}else {
 								int k1 = k + z_offset;
 								int i1 = i + y_offset;
 								int j1 = j + x_offset;

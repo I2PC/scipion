@@ -75,9 +75,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # inserting each of the steps for each movie
         self.insertedDict = {}
         self.samplingRate = self.inputMovies.get().getSamplingRate()
-        # FIXME: Not working in scipion-box
-        #self.convertStepId = self._insertFunctionStep('convertInputStep')
-
+        
+        # Conversion step is part of processMovieStep because of streaming.
         movieSteps = self._insertNewMoviesSteps(self.insertedDict,
                                                 self.inputMovies.get())
         finalSteps = self._insertFinalSteps(movieSteps)
@@ -295,6 +294,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _getAllDone(self):
         return self._getExtraPath('DONE_all.TXT')
 
+    def _getAllFailed(self):
+        return self._getExtraPath('FAILED_all.TXT')
+
     def _readDoneList(self):
         """ Read from a text file the id's of the items that have been done. """
         doneFile = self._getAllDone()
@@ -306,10 +308,26 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
         return doneList
 
+    def _readFailedList(self):
+        """ Read from a text file the id's of the items that have failed. """
+        failedFile = self._getAllFailed()
+        failedList = []
+        # Check what items have been previously done
+        if os.path.exists(failedFile):
+            with open(failedFile) as f:
+                failedList += [int(line.strip()) for line in f]
+
+        return failedList
+
     def _writeDoneList(self, movieList):
         """ Write to a text file the items that have been done. """
-        doneFile = self._getAllDone()
         with open(self._getAllDone(), 'a') as f:
+            for movie in movieList:
+                f.write('%d\n' % movie.getObjId())
+
+    def _writeFailedList(self, movieList):
+        """ Write to a text file the items that have failed. """
+        with open(self._getAllFailed(), 'a') as f:
             for movie in movieList:
                 f.write('%d\n' % movie.getObjId())
 

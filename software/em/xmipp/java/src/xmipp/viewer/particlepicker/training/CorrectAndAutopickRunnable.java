@@ -19,6 +19,8 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
+import javax.swing.*;
+
 /**
  *
  * @author airen
@@ -60,17 +62,39 @@ public class CorrectAndAutopickRunnable implements Runnable
 					autopickRows = classifier.autopick(next.getFile(), next.getAutopickpercent());
 					picker.loadParticles(next, autopickRows);
                     picker.saveData(next);
-                    frame.setChanged(false);
+                    // Runs inside of the Swing UI thread
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            frame.setChanged(false);
+                        }
+                    });
+
 				}
-				frame.getCanvas().repaint();
-				frame.getCanvas().setEnabled(true);
-				XmippWindowUtil.releaseGUI(frame.getRootPane());
-	            frame.updateMicrographsModel(true);
+
+
+                // Runs inside of the Swing UI thread
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        // Select the worse particle as active
+                        frame.getCanvas().refreshActive(null);
+                        frame.getCanvas().repaint();
+                        frame.getCanvas().setEnabled(true);
+                        XmippWindowUtil.releaseGUI(frame.getRootPane());
+                        frame.updateMicrographsModel(true);
+                    }
+                });
+
             }
             catch(Exception e)
             {
+
                 ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-                XmippDialog.showError(frame, "Classifier error");
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        XmippDialog.showError(frame, "Classifier error");
+                    }
+                });
+
             }
 		}
 	}
