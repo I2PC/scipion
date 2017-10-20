@@ -67,8 +67,8 @@ class ProtUnionSet(ProtSets):
 
             if  inputText == 'All':
                 pointerClass = 'EMSet'
-#             elif inputText == 'CTFs + Micrographs':
-#                 pointerClass = 'SetOfCTF'
+            # elif inputText == 'CTFs + Micrographs':
+            #     pointerClass = 'SetOfCTF'
             else:
                 pointerClass = 'SetOf' + inputText
             # For relatively small set we usually want to include
@@ -83,7 +83,7 @@ class ProtUnionSet(ProtSets):
         
         self.inputType.trace(onChangeInputType)
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
@@ -125,11 +125,11 @@ class ProtUnionSet(ProtSets):
         
         # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
 
-    #--------------------------- INSERT steps functions --------------------------------------------   
+    #--------------------------- INSERT steps functions ------------------------  
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
 
@@ -199,7 +199,7 @@ class ProtUnionSet(ProtSets):
         return commonAttrs
 
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         # Are all inputSets from the same class?
         classes = {x.get().getClassName() for x in self.inputSets}
@@ -207,14 +207,14 @@ class ProtUnionSet(ProtSets):
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
 
-#        if not self.ignoreExtraAttributes:
-#            # Do all inputSets contain elements with the same attributes defined?
-#            def attrNames(s):  # get attribute names of the first element of set s
-#                return sorted(iter(s.get()).next().getObjDict().keys())
-#            attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
-#            if len(attrs) > 1:
-#                return ["All elements must have the same attributes.",
-#                        "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+       # if not self.ignoreExtraAttributes:
+       #     # Do all inputSets contain elements with the same attributes defined?
+       #     def attrNames(s):  # get attribute names of the first element of set s
+       #         return sorted(iter(s.get()).next().getObjDict().keys())
+       #     attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+       #     if len(attrs) > 1:
+       #         return ["All elements must have the same attributes.",
+       #                 "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
 
         return []  # no errors
 
@@ -234,7 +234,7 @@ class ProtSplitSet(ProtSets):
     """
     _label = 'split sets'
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -250,11 +250,11 @@ class ProtSplitSet(ProtSets):
                       label="Randomize elements",
                       help='Put the elements at random in the different subsets.')
     
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputClassName = str(inputSet.getClassName())
@@ -289,7 +289,7 @@ class ProtSplitSet(ProtSets):
             self._defineOutputs(**{key % i: subset})
             self._defineTransformRelation(inputSet, subset)
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         if self.inputSet.get().getSize() < self.numberOfSets:
@@ -323,7 +323,7 @@ class ProtSubSet(ProtSets):
     SET_INTERSECTION = 0
     SET_DIFFERENCE = 1
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
 
@@ -364,11 +364,11 @@ class ProtSubSet(ProtSets):
                  'will be included. If _difference_, elements that\n'
                  'are in input but not in other will picked.')
 
-    #--------------------------- INSERT steps functions --------------------------------------------   
+    #--------------------------- INSERT steps functions ------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         inputFullSet = self.inputFullSet.get()
 
@@ -412,7 +412,7 @@ class ProtSubSet(ProtSets):
         else:
             self.summaryVar.set('Output was not generated. Resulting set was EMPTY!!!')
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
 
@@ -471,29 +471,30 @@ class ProtSubSet(ProtSets):
                     (self.inputFullSet.getName(), self.inputSubSet.getName()),
                     "are now in %s" % getattr(self, key).getName()]
 
+
 class ProtSubSetByMic(ProtSets):
     """    
     Create a subset of those particles coming from a particular set of micrographs 
     """
     _label = 'subset by micrograph'
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
 
         add = form.addParam  # short notation
-        add('inputParticles', pwprot.params.PointerParam, pointerClass='SetOfParticles',
-            label="Set of particles", 
+        add('inputParticles', pwprot.params.PointerParam,
+            pointerClass='SetOfParticles', label="Set of particles", 
             help='Set of particles from which the subset will be taken')
-        add('inputMicrographs', pwprot.params.PointerParam, pointerClass='SetOfMicrographs',
-            label="Set of micrographs",
+        add('inputMicrographs', pwprot.params.PointerParam, 
+            pointerClass='SetOfMicrographs', label="Set of micrographs",
             help='Only the particles in this set of micrographs will be output')
 
-    #--------------------------- INSERT steps functions --------------------------------------------   
+    #--------------------------- INSERT steps functions ------------------------  
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()
         inputMicrographs = self.inputMicrographs.get()
