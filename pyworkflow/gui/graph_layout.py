@@ -58,29 +58,38 @@ class BasicLayout(GraphLayout):
     def _drawNode(self, node):
         """ Allocate node with x=0 and y=0. """
 
-        parents = node.getParents()
-        if not parents:
-            print "EMPTY NODE ask JM"
-            return
-        maxParent = parents[0]
-        
-        for p in parents[1:]:
-            if p.y > maxParent.y:
-                maxParent = p
-                
-        siblings = maxParent.getChilds()
-        
-        if len(siblings) == 1:
-            node.x = maxParent.x
-            node.y = maxParent.y + self.DY
-        else:
-            rightSibling = siblings[0]
-            for s in siblings:
-                if s.x > rightSibling.x:
-                    rightSibling = s
-            node.x = rightSibling.x + rightSibling.width/2 + self.DX + node.width/2
-            node.y = rightSibling.y
-        
+        try:
+            parents = node.getParents()
+            if not parents:
+                print "EMPTY NODE ask JM"
+                return
+            maxParent = parents[0]
+
+            for p in parents[1:]:
+                if p.y > maxParent.y:
+                    maxParent = p
+
+            siblings = maxParent.getChilds()
+
+            if len(siblings) == 1:
+                node.x = maxParent.x
+                node.y = maxParent.y + self.DY
+            else:
+                rightSibling = siblings[0]
+                for s in siblings:
+                    if s.x > rightSibling.x:
+                        rightSibling = s
+                node.x = rightSibling.x + rightSibling.width/2 + self.DX + node.width/2
+                node.y = rightSibling.y
+        except Exception as e:
+            from pyworkflow.utils import envVarOn
+            if envVarOn('SCIPION_DEBUG'):
+                print "Can't draw node: %s" % node, e
+                import traceback
+                traceback.print_stack()
+            else:
+                # Do nothing
+                return
 
 class LevelTreeLayout(GraphLayout):
     """ Organize the nodes of the graph by levels.
