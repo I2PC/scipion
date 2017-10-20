@@ -216,6 +216,18 @@ void releaseTempVolumeGPU(float*& ptr) {
 	gpuErrchk(cudaPeekAtLastError());
 }
 
+
+/** Index to frequency
+ *
+ * Given an index and a size of the FFT, this function returns the corresponding
+ * digital frequency (-1/2 to 1/2)
+ */ // FIXME unify with xmipp_fft.h::FFT_IDX2DIGFREQ
+__device__
+float FFT_IDX2DIGFREQ(int idx, int size) {
+	if (size <= 1) return 0;
+	return ((idx <= (size / 2)) ? idx : (-size + idx)) / (float)size;
+}
+
 /** Returns true if x is in (min, max), i.e. opened, interval */
 template <typename T>
 __device__
@@ -509,132 +521,10 @@ void processVoxelBlob(
 	atomicAdd(&tempWeightsGPU[index3D], w);
 }
 
-
-//__device__
-//void print(Point3D* cuboid) {
-//	printf("\n");
-//	for (int i = 0; i < 9; i++) {
-//		printf("%f %f %f\n", cuboid[i%8].x, cuboid[i%8].y, cuboid[i%8].z);
-//	}
-//	printf("\n");
-//}
-
-//void AABBToCube(Point3D<float>& AABB[], Point3D<float>& cube[]) {
-//	cube[0].x = AABB[0].x;
-//	cube[0].y = AABB[0].y;
-//	cube[0].z = AABB[0].z;
-//
-//	cube[1].x = AABB[0].x;
-//	cube[1].y = AABB[0].y;
-//	cube[1].z = AABB[0].z;
-//
-//	cube[2].x = AABB[0].x;
-//	cube[2].y = AABB[0].y;
-//	cube[2].z = AABB[0].z;
-//
-//	cube[3].x = AABB[0].x;
-//	cube[3].y = AABB[0].y;
-//	cube[3].z = AABB[0].z;
-//
-//	cube[4].x = AABB[0].x;
-//	cube[4].y = AABB[0].y;
-//	cube[4].z = AABB[0].z;
-//
-//	cube[5].x = AABB[0].x;
-//	cube[5].y = AABB[0].y;
-//	cube[5].z = AABB[0].z;
-//
-//	cube[6].x = AABB[0].x;
-//	cube[6].y = AABB[0].y;
-//	cube[6].z = AABB[0].z;
-//
-//	cube[7].x = AABB[0].x;
-//	cube[7].y = AABB[0].y;
-//	cube[7].z = AABB[0].z;
-//}
-
-__device__
-void mapToImage(Point3D<float>* box, int xSize, int ySize, const float transform[3][3]) {
-	for (int i = 0; i < 8; i++) {
-		Point3D<float> imgPos;
-		// transform current point to center
-		imgPos.x = box[i].x - cMaxVolumeIndexX/2;
-		imgPos.y = box[i].y - cMaxVolumeIndexYZ/2;
-		imgPos.z = box[i].z - cMaxVolumeIndexYZ/2;
-//		if ((imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z) > maxDistanceSqr) {
-//			return; // discard iterations that would access pixel with too high frequency
-//		}
-		// rotate around center
-		multiply(transform, imgPos);
-		// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
-		imgPos.y += cMaxVolumeIndexYZ / 2;
-
-		box[i] = imgPos;
-	}
-}
-
-__device__
-void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const RecFourierBufferDataGPU* buffer, Point3D<float>* dest) {
-	Point3D<float> box[8];
-	if (tSpace->XY == tSpace->dir) { // iterate XY plane
-		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
-
-		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
-		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
-
-		getZ(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getZ(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getZ(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getZ(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
-		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
-
-		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
-		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
-
-		getY(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getY(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getY(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getY(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-	} else { // iterate YZ plane
-		box[0].y = box[3].y = box[4].y = box[7].y = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
-
-		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
-		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
-
-		getX(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getX(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getX(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-
-		getX(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
-	}
-	mapToImage(box, buffer->fftSizeX, buffer->fftSizeY, tSpace->transformInv);
-	computeAABB(dest, box);
-}
-
+/**
+  * Method will process one projection image and add result to temporal
+  * spaces.
+  */
 __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -725,14 +615,115 @@ void processProjection(
 	}
 }
 
+/**
+ * Method will rotate box using transformation matrix around center of the
+ * working space
+ */
 __device__
-bool blockHasWork(Point3D<float>* AABB, int imgXSize, int imgYSize) {
+void rotate(Point3D<float>* box, const float transform[3][3]) {
+	for (int i = 0; i < 8; i++) {
+		Point3D<float> imgPos;
+		// transform current point to center
+		imgPos.x = box[i].x - cMaxVolumeIndexX/2;
+		imgPos.y = box[i].y - cMaxVolumeIndexYZ/2;
+		imgPos.z = box[i].z - cMaxVolumeIndexYZ/2;
+		// rotate around center
+		multiply(transform, imgPos);
+		// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
+		imgPos.y += cMaxVolumeIndexYZ / 2;
+
+		box[i] = imgPos;
+	}
+}
+
+/**
+ * Method calculates an Axis Aligned Bounding Box in the image space.
+ * AABB is guaranteed to be big enough that all threads in the block,
+ * while processing the traverse space, will not read image data outside
+ * of the AABB
+ */
+__device__
+void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const RecFourierBufferDataGPU* buffer, Point3D<float>* dest) {
+	Point3D<float> box[8];
+	// calculate AABB for the whole working block
+	if (tSpace->XY == tSpace->dir) { // iterate XY plane
+		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
+		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
+
+		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
+		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
+
+		getZ(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getZ(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getZ(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getZ(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getZ(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
+		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
+		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
+
+		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
+		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
+
+		getY(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getY(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getY(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getY(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getY(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+	} else { // iterate YZ plane
+		box[0].y = box[3].y = box[4].y = box[7].y = blockIdx.x*blockDim.x - cBlobRadius;
+		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
+
+		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
+		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
+
+		getX(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getX(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getX(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+
+		getX(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
+		getX(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+	}
+	// transform AABB to the image domain
+	rotate(box, tSpace->transformInv);
+	// AABB is projected on image. Create new AABB that will encompass all vertices
+	computeAABB(dest, box);
+}
+
+/**
+ * Method returns true if AABB lies within the image boundaries
+ */
+__device__
+bool isWithin(Point3D<float>* AABB, int imgXSize, int imgYSize) {
 	return (AABB[0].x < imgXSize)
 			&& (AABB[1].x >= 0)
 			&& (AABB[0].y < imgYSize)
 			&& (AABB[1].y >= 0);
 }
 
+/**
+ * Method will load data from image at position tXindex, tYindex
+ * and return them.
+ * In case the data lies outside of the image boundaries, zeros (0,0)
+ * are returned
+ */
 __device__
 void getImgData(Point3D<float>* AABB,
 		int tXindex, int tYindex,
@@ -743,8 +734,7 @@ void getImgData(Point3D<float>* AABB,
 	if ((imgXindex >=0)
 			&& (imgXindex < buffer->fftSizeX)
 			&& (imgYindex >=0)
-			&& (imgYindex < buffer->fftSizeY))
-	{
+			&& (imgYindex < buffer->fftSizeY))	{
 		int index = imgYindex * buffer->fftSizeX + imgXindex; // copy data from image
 		vReal = buffer->getNthItem(buffer->FFTs, imgIndex)[2*index];
 		vImag = buffer->getNthItem(buffer->FFTs, imgIndex)[2*index + 1];
@@ -754,7 +744,13 @@ void getImgData(Point3D<float>* AABB,
 	}
 }
 
-
+/**
+ * Method will copy imgIndex(th) data from buffer
+ * to given destination (shared memory).
+ * Only data within AABB will be copied.
+ * Destination is expected to be continuous array of sufficient
+ * size (imgCacheDim^2)
+ */
 __device__
 void copyImgToCache(float2* dest, Point3D<float>* AABB,
 		RecFourierBufferDataGPU* const buffer, int imgIndex,
@@ -767,6 +763,10 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
 	}
 }
 
+/**
+ * Method will use data stored in the buffer and update temporal
+ * storages appropriately.
+ */
 __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
@@ -775,6 +775,7 @@ void processBufferKernel(
 		int imgCacheDim) {
 #if SHARED_BLOB_TABLE
 	if ( ! cUseFast) {
+		// copy blob table to shared memory
 		int id = threadIdx.y*blockDim.x + threadIdx.x;
 		int blockSize = blockDim.x * blockDim.y;
 		for (int i = id; i < BLOB_TABLE_SIZE_SQRT; i+= blockSize)
@@ -789,14 +790,17 @@ void processBufferKernel(
 #if SHARED_IMG
 		if ( ! cUseFast) {
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
-				calculateAABB(space, buffer, SHARED_AABB); // first thread calculates which part of the image should be shared
+				// first thread calculates which part of the image should be shared
+				calculateAABB(space, buffer, SHARED_AABB);
 			}
 			__syncthreads();
-			if (blockHasWork(SHARED_AABB, buffer->fftSizeX, buffer->fftSizeY)) {
-				copyImgToCache(IMG, SHARED_AABB, buffer, space->projectionIndex, imgCacheDim); // all threads copy image data to shared memory
+			// check if the block will have to copy data from image
+			if (isWithin(SHARED_AABB, buffer->fftSizeX, buffer->fftSizeY)) {
+				// all threads copy image data to shared memory
+				copyImgToCache(IMG, SHARED_AABB, buffer, space->projectionIndex, imgCacheDim);
 				__syncthreads();
 			} else {
-				continue; // whole block can exit
+				continue; // whole block can exit, as it's not reading from image
 			}
 		}
 #endif
@@ -810,19 +814,15 @@ void processBufferKernel(
 	}
 }
 
-/** Index to frequency
- *
- * Given an index and a size of the FFT, this function returns the corresponding
- * digital frequency (-1/2 to 1/2)
+/**
+ * Method will process the 'paddedFourier' (not shifted, i.e. low frequencies are in corners)
+ * in the following way:
+ * high frequencies are skipped (replaced by zero (0))
+ * space is shifted, so that low frequencies are in the middle of the Y axis
+ * resulting space is cropped.
+ * Method returns a 2D array with Fourier coefficients, shifted so that low frequencies are
+ * in the center of the Y axis (i.e. semicircle)
  */
-// FIXME move to utils
-__device__
-float FFT_IDX2DIGFREQ(int idx, int size) {
-	if (size <= 1) return 0;
-	return ((idx <= (size / 2)) ? idx : (-size + idx)) / (float)size;
-}
-
-
 __global__
 void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY, int iLength,
 		 RecFourierBufferDataGPU* oBuffer, float maxResolutionSqr) {
@@ -864,11 +864,18 @@ void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY,
 	}
 }
 
-
+/**
+ * Method takes padded input pictures, performs FFT and convert resulting images
+ * as necessary for the algorithm.
+ * Asynchronous method.
+ */
 void convertImages(
 		FRecBufferDataGPUWrapper* wrapper,
 		float maxResolutionSqr,
 		int streamIndex) {
+
+	cudaStream_t stream = streams[streamIndex];
+
 	RecFourierBufferDataGPU* hostBuffer = wrapper->cpuCopy;
 	// store to proper structure
 	GpuMultidimArrayAtGpu<float> imagesGPU(
@@ -883,48 +890,18 @@ void convertImages(
 	// now we have performed FFTs of the input images
 	// buffers have to be updated accordingly
 	hostBuffer->hasFFTs = true;
-	cudaMemsetAsync(hostBuffer->FFTs, 0.f, hostBuffer->getFFTsByteSize(), streams[streamIndex]); // clear it, as kernel writes only to some parts
+	cudaMemsetAsync(hostBuffer->FFTs, 0.f, hostBuffer->getFFTsByteSize(), stream); // clear it, as kernel writes only to some parts
 	wrapper->copyToDevice(streamIndex);
 	gpuErrchk( cudaPeekAtLastError() );
-
 
 	// run kernel, one thread for each pixel of input FFT
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid(ceil(resultingFFT.Xdim/(float)dimBlock.x), ceil(resultingFFT.Ydim/(float)dimBlock.y));
-	convertImagesKernel<<<dimGrid, dimBlock>>>(
+	convertImagesKernel<<<dimGrid, dimBlock, 0, stream>>>(
 			resultingFFT.d_data, resultingFFT.Xdim, resultingFFT.Ydim, resultingFFT.Ndim,
 			wrapper->gpuCopy, maxResolutionSqr);
-
 	// now we have converted input images to FFTs in the required format
 }
-/*
-FourierReconDataWrapper* copyToGPU(float* readyFFTs, int noOfImages,
-		int sizeX, int sizeY) {
-	// assuming at least one image is present
-	int imgSize = sizeX * sizeY;
-	int noOfElements = imgSize * noOfImages * 2; // *2 since it's complex number
-//	float* tmp = new float[noOfElements];
-
-//	// flatten the images
-//	for(int i = 0; i < noOfImages; i++) {
-//		for (int row = 0; row < readyFFTs[0].getYSize(); row++) {
-//			int offset = (imgSize * i + row*sizeX) * 2; // *2 since it's complex number
-//			memcpy(tmp + offset, readyFFTs[i].getRow(row), sizeX * sizeof(std::complex<float>));
-//		}
-//	}
-
-	FourierReconstructionData* fd = new FourierReconstructionData(sizeX,	sizeY, noOfImages, false);
-	// copy data to gpu
-	cudaMemcpy(fd->dataOnGpu, readyFFTs, noOfElements * sizeof(float), cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
-
-	// delete intermediate data and return
-//	printf("copying FFTs %d %d %d %d cudamemcpy %d\n%f %f\n", sizeX, sizeY, imgSize, noOfElements, noOfElements * sizeof(float),
-//			tmp[sizeY], tmp[sizeY + 1]);
-//	delete[] tmp;
-	return new FourierReconDataWrapper(fd);
-}
-*/
 
 void waitForGPU() {
 	gpuErrchk( cudaPeekAtLastError() );
@@ -945,7 +922,6 @@ void deleteStreams(int count) {
 	delete[] streams;
 }
 
-
 void allocateWrapper(RecFourierBufferData* buffer, int streamIndex) {
 	wrappers[streamIndex] = new FRecBufferDataGPUWrapper(buffer);
 }
@@ -961,7 +937,6 @@ void releaseBlobTable() {
 	gpuErrchk( cudaPeekAtLastError() );
 }
 
-
 void releaseWrapper(int streamIndex) {
 	delete wrappers[streamIndex];
 }
@@ -970,7 +945,6 @@ void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt) {
-	// enqueue copy constants
 	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
 	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
 	cudaMemcpyToSymbol(cUseFast, &useFast,sizeof(useFast));
@@ -979,8 +953,14 @@ void copyConstants(
 	gpuErrchk( cudaPeekAtLastError() );
 }
 
+/**
+ * Method will use data stored in the buffer and update temporal
+ * storages appropriately.
+ * Acuall calculation is done asynchronously, but 'buffer' can be reused
+ * once the method returns.
+ */
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		RecFourierBufferData* rBuffer, // FIXME rename
+		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ,
 		float maxResolutionSqr, int streamIndex) {
 
@@ -988,7 +968,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// copy all data to gpu
 	FRecBufferDataGPUWrapper* wrapper = wrappers[streamIndex];
-	wrapper->copyFrom(rBuffer, streamIndex);
+	wrapper->copyFrom(buffer, streamIndex);
 	wrapper->copyToDevice(streamIndex);
 
 	// process input data if necessary
@@ -997,10 +977,6 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	}
 	// now wait till all necessary data are loaded to GPU (so that host can continue in work)
 	cudaStreamSynchronize(stream);
-
-
-//	printf("about to call kernel from thread %d\n", stream);
-//	fflush(stdout);
 
 	// enqueue kernel and return control
 	int size2D = maxVolIndexYZ + 1;
@@ -1012,11 +988,4 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
 			imgCacheDim);
-
-
-	// delete blob data
-	// data in both buffers is cleaned by destructor
-
-//	printf("leaving processBufferGPU thread %d\n", stream);
-//	fflush(stdout);
 }
