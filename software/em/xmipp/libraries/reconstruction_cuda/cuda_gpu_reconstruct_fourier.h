@@ -45,6 +45,7 @@ struct RecFourierBufferDataGPU;
 struct FRecBufferDataGPUWrapper {
 	FRecBufferDataGPUWrapper(RecFourierBufferData* orig);
 	~FRecBufferDataGPUWrapper();
+
 	/**
 	 * Copy the content of the 'orig' buffer to new object
 	 * Original buffer can be cleaned after.
@@ -59,6 +60,7 @@ struct FRecBufferDataGPUWrapper {
 
 	// object in CPU memory space
 	RecFourierBufferDataGPU* cpuCopy;
+
 	// object in GPU memory space
 	RecFourierBufferDataGPU* gpuCopy;
 };

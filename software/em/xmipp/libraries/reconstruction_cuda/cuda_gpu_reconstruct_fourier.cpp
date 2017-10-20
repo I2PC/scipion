@@ -38,121 +38,132 @@ extern __shared__ float2 IMG[];
 
 // FIELDS
 
-// holding streams used for calculation. present on CPU
+// Holding streams used for calculation. Present on CPU
 cudaStream_t* streams;
 
-// wrapper to hold pointers to GPU memory (and have it also accessible from CPU)
+// Wrapper to hold pointers to GPU memory (and have it also accessible from CPU)
 std::map<int,FRecBufferDataGPUWrapper*> wrappers;
 
-// holding blob coeficient table. present on GPU
+// Holding blob coefficient table. Present on GPU
 float* devBlobTableSqrt = NULL;
 
+__device__ __constant__ int cMaxVolumeIndexX = 0;
+__device__ __constant__ int cMaxVolumeIndexYZ = 0;
+__device__ __constant__ bool cUseFast = false;
+__device__ __constant__ float cBlobRadius = 0.f;
+__device__ __constant__ float cIDeltaSqrt = 0.f;
 
+/**
+ * Structure for buffer data on GPU
+ * Adds some utility methods for copying data to GPU and device specific code.
+ * Variables are stored in the same memory space as holding object, but
+ * pointers point to the GPU memory
+ */
 struct RecFourierBufferDataGPU : public RecFourierBufferData {
 
-	RecFourierBufferDataGPU(RecFourierBufferData* orig);
-	~RecFourierBufferDataGPU();
+	RecFourierBufferDataGPU(RecFourierBufferData* orig) {
+		copyMetadata(orig);
+		FFTs = CTFs = paddedImages = modulators = NULL;
 
+		// allocate space at GPU
+		alloc(orig->FFTs, FFTs, orig); // FFT are always necessary
+		alloc(orig->spaces, spaces, orig);
+		if ( ! hasFFTs) {
+			alloc(orig->paddedImages, paddedImages, orig);
+		}
+		if (hasCTFs) {
+			alloc(orig->CTFs, CTFs, orig);
+			alloc(orig->modulators, modulators, orig);
+		}
+	}
+
+	~RecFourierBufferDataGPU() {
+		cudaFree(FFTs);
+		cudaFree(CTFs);
+		cudaFree(paddedImages);
+		cudaFree(modulators);
+		cudaFree(spaces);
+		gpuErrchk( cudaPeekAtLastError() );
+
+		invalidate();
+	}
+
+	/**
+	 * Same as in parent struct, but implemented for device
+	 */
 	__device__
-	float* getNthItem(float* array, int itemIndex);
-	void copyDataFrom(RecFourierBufferData* orig, int stream);
+	float* getNthItem(float* array, int itemIndex) {
+		if (array == FFTs) return array + (fftSizeX * fftSizeY * itemIndex * 2); // *2 since it's complex
+		if (array == CTFs) return array + (fftSizeX * fftSizeY * itemIndex);
+		if (array == modulators) return array + (fftSizeX * fftSizeY * itemIndex);
+		if (array == paddedImages) return array + (paddedImgSize * paddedImgSize * itemIndex);
+		return NULL; // undefined
+	}
+
+	/**
+	 * Method copies data from buffer. Asynchronous method
+	 */
+	void copyDataFrom(RecFourierBufferData* orig, int stream) {
+		copyMetadata(orig);
+		copy(orig->FFTs, FFTs, orig, stream);
+		copy(orig->CTFs, CTFs, orig, stream);
+		copy(orig->paddedImages, paddedImages, orig, stream);
+		copy(orig->modulators, modulators, orig, stream);
+		copy(orig->spaces, spaces, orig, stream);
+	}
+
+	/**
+	 * Same as in parent struct, but implemented for device
+	 */
 	__device__
-	int getNoOfSpaces();
+	int getNoOfSpaces() {
+		return noOfImages * noOfSymmetries;
+	}
 
 private:
+	/**
+	 * Method copies content of srcArray (host) to 'dstArray' (device, must be allocated a priory)
+	 * Arrays are supposed to be from the 'orig' buffer, or this object.
+	 * Asynchronous method.
+	 */
 	template<typename T>
-	void copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream);
+	void copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream) {
+		if (NULL != srcArray) {
+			size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
+			cudaHostRegister(srcArray, bytes, 0);
+			cudaMemcpyAsync(dstArray, srcArray, bytes, cudaMemcpyHostToDevice, streams[stream]);
+			cudaHostUnregister(srcArray);
+			gpuErrchk( cudaPeekAtLastError() );
+		}
+	}
+
+	/**
+	 * Method allocates 'dstArray' (device) to the size of 'srcArray' of the 'orig' buffer
+	 * Blocking method
+	 */
 	template<typename T>
-	void alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig);
-	void copyMetadata(RecFourierBufferData* orig);
-};
-
-__device__
-float* RecFourierBufferDataGPU::getNthItem(float* array, int itemIndex) {
-	if (array == FFTs) return array + (fftSizeX * fftSizeY * itemIndex * 2); // *2 since it's complex
-	if (array == CTFs) return array + (fftSizeX * fftSizeY * itemIndex);
-	if (array == modulators) return array + (fftSizeX * fftSizeY * itemIndex);
-	if (array == paddedImages) return array + (paddedImgSize * paddedImgSize * itemIndex);
-	return NULL; // undefined
-}
-
-__device__
-int RecFourierBufferDataGPU::getNoOfSpaces() {
-	return noOfImages * noOfSymmetries;
-}
-
-RecFourierBufferDataGPU::RecFourierBufferDataGPU(RecFourierBufferData* orig) {
-
-//	printf("FRecBufferDataGPU orig: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
-//			orig, orig->FFTs,orig->CTFs, orig->paddedImages, orig->modulators, orig->spaces);
-
-	copyMetadata(orig);
-	FFTs = CTFs = paddedImages = modulators = NULL;
-
-	// allocate space at GPU
-	alloc(orig->FFTs, FFTs, orig); // FFT are always necessary
-	alloc(orig->spaces, spaces, orig);
-	if ( ! hasFFTs) {
-		alloc(orig->paddedImages, paddedImages, orig);
-	}
-	if (hasCTFs) {
-		alloc(orig->CTFs, CTFs, orig);
-		alloc(orig->modulators, modulators, orig);
-	}
-//	printf("FRecBufferDataGPU this: %p, FFTs: %p CTFs:%p paddedImages:%p modulators:%p spaces:%p\n",
-//			this, this->FFTs,this->CTFs, this->paddedImages, this->modulators, this->spaces);
-}
-
-void RecFourierBufferDataGPU::copyDataFrom(RecFourierBufferData* orig, int stream) {
-	copyMetadata(orig);
-	copy(orig->FFTs, FFTs, orig, stream);
-	copy(orig->CTFs, CTFs, orig, stream);
-	copy(orig->paddedImages, paddedImages, orig, stream);
-	copy(orig->modulators, modulators, orig, stream);
-	copy(orig->spaces, spaces, orig, stream);
-}
-
-void RecFourierBufferDataGPU::copyMetadata(RecFourierBufferData* orig) {
-	hasCTFs = orig->hasCTFs;
-	hasFFTs = orig->hasFFTs;
-	noOfImages = orig->noOfImages;
-	paddedImgSize = orig->paddedImgSize;
-	fftSizeX = orig->fftSizeX;
-	fftSizeY = orig->fftSizeY;
-	maxNoOfImages = orig->maxNoOfImages;
-	noOfSymmetries = orig->noOfSymmetries;
-}
-
-RecFourierBufferDataGPU::~RecFourierBufferDataGPU() {
-//	printf("~FRecBufferDataGPU this: %p, spaces: %p\n", this, this->spaces);
-	cudaFree(FFTs);
-	cudaFree(CTFs);
-	cudaFree(paddedImages);
-	cudaFree(modulators);
-	cudaFree(spaces);
-	gpuErrchk( cudaPeekAtLastError() );
-
-	invalidate();
-}
-
-template<typename T>
-void RecFourierBufferDataGPU::copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream) {
-	if (NULL != srcArray) {
-		size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
-//		printf("copying %d bytes from %p to %p, stream %d\n", bytes, srcArray, dstArray, stream);
-		cudaHostRegister(srcArray, bytes, 0);
-		cudaMemcpyAsync(dstArray, srcArray, bytes, cudaMemcpyHostToDevice, streams[stream]);
-		cudaHostUnregister(srcArray);
+	void alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig) {
+		size_t bytes = orig->getMaxByteSize(srcArray);
+		cudaMalloc((void **) &dstArray, bytes);
 		gpuErrchk( cudaPeekAtLastError() );
 	}
-}
 
-template<typename T>
-void RecFourierBufferDataGPU::alloc(T* srcArray, T*& dstArray, RecFourierBufferData* orig) {
-	size_t bytes = orig->getMaxByteSize(srcArray);
-	cudaMalloc((void **) &dstArray, bytes);
-	gpuErrchk( cudaPeekAtLastError() );
-}
+	/**
+	 * Method copies 'metadata' (fields, not arrays) from the 'orig' buffer
+	 * Blocking method
+	 */
+	void copyMetadata(RecFourierBufferData* orig) {
+		hasCTFs = orig->hasCTFs;
+		hasFFTs = orig->hasFFTs;
+		noOfImages = orig->noOfImages;
+		paddedImgSize = orig->paddedImgSize;
+		fftSizeX = orig->fftSizeX;
+		fftSizeY = orig->fftSizeY;
+		maxNoOfImages = orig->maxNoOfImages;
+		noOfSymmetries = orig->noOfSymmetries;
+	}
+};
+
 
 FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(RecFourierBufferData* orig) {
 	cpuCopy = new RecFourierBufferDataGPU(orig);
@@ -177,156 +188,14 @@ void FRecBufferDataGPUWrapper::copyToDevice(int stream) {
 	cudaMemcpyAsync(gpuCopy, cpuCopy, sizeof(RecFourierBufferDataGPU), cudaMemcpyHostToDevice, streams[stream]);
 	gpuErrchk( cudaPeekAtLastError() );
 }
-/*
-// FIXME these methods should be directly in the header file. Alter behaviour of the caller so that
-// it does not have to leave from this class
-FourierReconstructionData::FourierReconstructionData(int sizeX, int sizeY, int noOfImages, bool erase) {
-	this->sizeX = sizeX;
-	this->sizeY = sizeY;
-	this->noOfImages = noOfImages;
-	int mallocSize = sizeX * sizeY * noOfImages * 2 * sizeof(float); // allocate complex float
-	cudaMalloc((void **) &dataOnGpu, mallocSize);
-	gpuErrchk( cudaPeekAtLastError() );
-	if (erase) {
-		cudaMemset(dataOnGpu, 0.f, mallocSize);
-		gpuErrchk( cudaPeekAtLastError() );
-	}
-	printf("FourierReconstructionData this: %p, gpuData: %p\n", this, this->dataOnGpu);
-}
-__device__
-float* FourierReconstructionData::getImgOnGPU(int imgIndex) {
-	return dataOnGpu + (imgIndex * sizeX * sizeY * 2); // *2 for complex float
-}
-void FourierReconstructionData::clean() {
-	printf("FourierReconstructionData::clean this: %p, gpuData: %p\n", this, this->dataOnGpu);
-	cudaFree(dataOnGpu);
-	gpuErrchk( cudaPeekAtLastError() );
-}
-
-FourierReconDataWrapper::FourierReconDataWrapper(int sizeX, int sizeY, int noOfImages) {
-	cpuCopy = new FourierReconstructionData(sizeX, sizeY, noOfImages);
-	copyCpuToGpu();
-}
-FourierReconDataWrapper::FourierReconDataWrapper(FourierReconstructionData* cpuCopy) {
-	this->cpuCopy = cpuCopy;
-	copyCpuToGpu();
-}
-void FourierReconDataWrapper::copyCpuToGpu() {
-	cudaMalloc((void **) &gpuCopy, sizeof(FourierReconstructionData));
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpy(gpuCopy, cpuCopy, sizeof(FourierReconstructionData), cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
-	printf("FourierReconDataWrapper this: %p, cpuCopy: %p, cpuCopy->gpuData: %p, gpuCopy: %p\n", this, cpuCopy, cpuCopy->dataOnGpu, gpuCopy);
-}
-FourierReconDataWrapper::~FourierReconDataWrapper() {
-	printf("FourierReconDataWrapper destructor this: %p, cpuCopy: %p, cpuCopy->gpuData: %p, gpuCopy: %p\n", this, cpuCopy, cpuCopy->dataOnGpu, gpuCopy);
-	cudaFree(gpuCopy);
-	gpuErrchk( cudaPeekAtLastError() );
-	cpuCopy->clean();
-	delete cpuCopy;
-}
-*/
-// end of FIXME
-/*
-void ProjectionDataGPU::clean() {
-	cudaFree(img);
-		gpuErrchk(cudaPeekAtLastError());
-	cudaFree(CTF);
-		gpuErrchk(cudaPeekAtLastError());
-	cudaFree(modulator);
-		gpuErrchk(cudaPeekAtLastError());
-	setDefault();
-}
-template<typename T, typename U>
-void ProjectionDataGPU::copy(const Array2D<T>& from, U& to) {
-		int xSize = from.getXSize();
-		int ySize = from.getYSize();
-		int N = xSize * ySize;
-		// flatten the input array
-		T* tmp = new T[N];
-		for (int y = 0; y < ySize; y++) {
-			memcpy(&tmp[y * xSize],
-					from.getRow(y),
-					sizeof(T)*xSize);
-		}
-		// Allocate device pointer.
-		cudaMalloc((void**) &(to), sizeof(T) * N);
-		// Copy content from host to device.
-		cudaMemcpy(to, tmp, sizeof(T)*N, cudaMemcpyHostToDevice);
-		gpuErrchk(cudaPeekAtLastError());
-		delete[] tmp;
-	}
-*/
-
-
-__device__
-void printAABB(Point3D<float>* AABB) {
-	// one base
-	printf("\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-		AABB[0].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[0].z,
-		AABB[0].x, AABB[1].y, AABB[0].z,
-		AABB[0].x, AABB[0].y, AABB[0].z);
-	// other base with one connection
-	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-		AABB[0].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[0].y, AABB[1].z);
-	// lines between bases
-	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n\n",
-		AABB[1].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[0].z);
-}
 
 float* allocateTempVolumeGPU(float*& ptr, int size, int typeSize) {
 	cudaMalloc((void**)&ptr, size * size * size * typeSize);
-	gpuErrchk( cudaPeekAtLastError() );
 	cudaMemset(ptr, 0.f, size * size * size * typeSize);
 	gpuErrchk( cudaPeekAtLastError() );
 
 	return ptr;
 }
-
-
-__device__ __constant__ int cMaxVolumeIndexX = 0;
-__device__ __constant__ int cMaxVolumeIndexYZ = 0;
-__device__ __constant__ bool cUseFast = false;
-__device__ __constant__ float cBlobRadius = 0.f;
-__device__ __constant__ float cIDeltaSqrt = 0.f;
-
-
-__global__ void test_update(float* test) {
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
-	test[2*i] += i;
-	test[2*i+1] += i/10.f;
-	printf("%d", cMaxVolumeIndexX);
-}
-
-//void processBufferGPU(float* tempVolumeGPU,
-//		float* tempWeightsGPU,
-//		ProjectionData* data, int N, int bufferSize,
-//		MATRIX* symmetries, MATRIX* symmetriesInv, int symSize) {
-//
-//// First update with respect to initial values
-//   test_init<<<1,27>>>(tempVolumeGPU);
-//   		gpuErrchk(cudaPeekAtLastError());
-//		gpuErrchk(cudaDeviceSynchronize());
-//
-//// New update of device variable with respect
-//// to last update
-//test_update<<<1,27>>>(tempVolumeGPU);
-//   		gpuErrchk(cudaPeekAtLastError());
-//		gpuErrchk(cudaDeviceSynchronize());
-//	}
-
-
 
 void copyTempVolumes(std::complex<float>*** tempVol, float*** tempWeights,
 		float* tempVolGPU, float* tempWeightsGPU,
@@ -347,135 +216,25 @@ void releaseTempVolumeGPU(float*& ptr) {
 	gpuErrchk(cudaPeekAtLastError());
 }
 
-
-
-
-
-
-//#include <cuda_runtime.h>
-//#include <limits>
-////
-////// FIXME remove
-//////#include <iostream>
-//////#include <stdio.h>
-////
-////static cuFloatComplex *d_m1;
-//
-
-//
-//__device__
-//float* tempVolume = NULL;
-//__device__
-//float* tempWeights = NULL;
-////
-////
-////
-////
-__device__
-inline void multiply(const MATRIX& a, const MATRIX& b, MATRIX& c) {
-	c[0][0] = a[0][0] * b[0][0] + a[0][1] * b[1][0] + a[0][2] * b[2][0];
-	c[0][1] = a[0][0] * b[0][1] + a[0][1] * b[1][1] + a[0][2] * b[2][1];
-	c[0][2] = a[0][0] * b[0][2] + a[0][1] * b[1][2] + a[0][2] * b[2][2];
-
-	c[1][0] = a[1][0] * b[0][0] + a[1][1] * b[1][0] + a[1][2] * b[2][0];
-	c[1][1] = a[1][0] * b[0][1] + a[1][1] * b[1][1] + a[1][2] * b[2][1];
-	c[1][2] = a[1][0] * b[0][2] + a[1][1] * b[1][2] + a[1][2] * b[2][2];
-
-	c[2][0] = a[2][0] * b[0][0] + a[2][1] * b[1][0] + a[2][2] * b[2][0];
-	c[2][1] = a[2][0] * b[0][1] + a[2][1] * b[1][1] + a[2][2] * b[2][1];
-	c[2][2] = a[2][0] * b[0][2] + a[2][1] * b[1][2] + a[2][2] * b[2][2];
-}
-//
-//
-////
-////
-////
-////
-//////CUDA functions
-////__global__ void
-////vecAdd(cuFloatComplex *A)
-////{
-////	int i = blockDim.x * blockIdx.x + threadIdx.x;
-////	A[i] = cuCaddf(A[i], make_cuFloatComplex (i, 0));
-////    printf("%f ", cuCrealf(A[i]));
-////}
-////
-////__global__ void test(ProjectionDataGPU* data) {
-////	int i = blockDim.x * blockIdx.x + threadIdx.x;
-//////	data->img[i] += i;
-////	data->img[i] = cuCaddf(data->img[i], make_cuFloatComplex (i, 0));
-////    printf("%f ", cuCrealf(data->img[i]));
-////}
-////
-////#define MUL(a,b) cuCmulf(a, make_cuFloatComplex(b, 0))
-//
-//
-//
-
-/*
-__global__ void test_init(float* test,
-		ProjectionDataGPU* buffer, int bufferSize,
-		MATRIX* devSymmetries) {
-//	if (NULL == test) {
-//		printf("setting\n");
-//		test = input;
-//	}
-	int i = blockDim.x * blockIdx.x + threadIdx.x;
-	if (1 == i) {
-		printf("kernel %d %s %f\n", buffer[0].imgIndex, buffer[0].skip ? "true" : "false", buffer[0].weight);
-		printf("kernel %d %s %f\n", buffer[1].imgIndex, buffer[1].skip ? "true" : "false", buffer[1].weight);
-
-		for (int a = 0; a < 12; a++) {
-			printf("(%f,%f) ", buffer[0].img[2*a], buffer[0].img[(2*a) + 1]);
-		}
-
-		printf("vlakno 1\n");
-		for(int a = 0; a < bufferSize; a++) {
-			if (buffer[a].skip) {
-//				printf("preskakuju\n");
-				continue;
-			}
-			printf("%f %f %f\n%f %f %f\n%f %f %f\n", devSymmetries[0][0][0], devSymmetries[0][0][1], devSymmetries[0][0][2],
-					devSymmetries[0][1][0], devSymmetries[0][1][1], devSymmetries[0][1][2],
-					devSymmetries[0][2][0], devSymmetries[0][2][1], devSymmetries[0][2][2]);
-//			int index = ((buffer[a].ySize/2) * buffer[a].xSize) + buffer[a].xSize/2;
-//			printf("img kernel %d: (%f,%f)\n",
-//					buffer[a].imgIndex,
-//					buffer[a].img[index],
-//					buffer[a].img[index+1]);
-		}
-	}
-	test[2*i] += 0.f;
-	test[2*i+1] += 0.f;
-}
-*/
-/*
-static ProjectionDataGPU* copyProjectionData(ProjectionDataGPU* hostBuffer,
-		ProjectionData* data, int bufferSize) {
-	for (int i = 0; i < bufferSize; i++) {
-		hostBuffer[i] = *new ProjectionDataGPU(data[i]);
-	}
-	ProjectionDataGPU* devBuffer;
-	int size = bufferSize * sizeof(ProjectionDataGPU);
-	cudaMalloc((void **) &devBuffer, size);
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpy(devBuffer, hostBuffer, size, cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
-	return devBuffer;
-}
-*/
-
-/** Returns true if x is in (min, max) interval */
+/** Returns true if x is in (min, max), i.e. opened, interval */
 template <typename T>
-__device__ static bool inRange(T x, T min, T max) {
+__device__
+static bool inRange(T x, T min, T max) {
 	return (x > min) && (x < max);
 }
+
 /** Returns value within the range (included) */
 template<typename T, typename U>
-__device__ inline U clamp(U val, T min, T max) {
+__device__
+static U clamp(U val, T min, T max) {
 	U res = (val > max) ? max : val;
 	return (res < min) ? min : res;
 }
+
+/**
+ * Calculates Z coordinate of the point [x, y] on the plane defined by p0 (origin) and two vectors
+ * Returns 'true' if the in point lies within parallelogram
+ */
 __device__
 bool getZ(float x, float y, float& z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
@@ -490,6 +249,10 @@ bool getZ(float x, float y, float& z, const Point3D<float>& a, const Point3D<flo
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
+/**
+ * Calculates Y coordinate of the point [x, z] on the plane defined by p0 (origin) and two vectors
+ * Returns 'true' if the in point lies within parallelogram
+ */
 __device__
 bool getY(float x, float& y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
@@ -504,6 +267,10 @@ bool getY(float x, float& y, float z, const Point3D<float>& a, const Point3D<flo
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
+/**
+ * Calculates X coordinate of the point [y, z] on the plane defined by p0 (origin) and two vectors
+ * Returns 'true' if the in point lies within parallelogram
+ */
 __device__
 bool getX(float& x, float y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
@@ -518,20 +285,7 @@ bool getX(float& x, float y, float z, const Point3D<float>& a, const Point3D<flo
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
-//__device__
-//void createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize)
-//{
-//	float halfY = sizeY / 2.0f;
-//	cuboid[0].x = cuboid[3].x = cuboid[4].x = cuboid[7].x = 0.f - blobSize;
-//	cuboid[1].x = cuboid[2].x = cuboid[5].x = cuboid[6].x = sizeX + blobSize;
-//
-//	cuboid[0].y = cuboid[1].y = cuboid[4].y = cuboid[5].y = -(halfY + blobSize);
-//	cuboid[2].y = cuboid[3].y = cuboid[6].y = cuboid[7].y = halfY + blobSize;
-//
-//	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
-//	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
-//}
-//
+/** Do 3x3 x 1x3 matrix-vector multiplication */
 __device__
 void multiply(const float transform[3][3], Point3D<float>& inOut) {
 	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
@@ -541,35 +295,8 @@ void multiply(const float transform[3][3], Point3D<float>& inOut) {
 	inOut.y = tmp1;
 	inOut.z = tmp2;
 }
-//
-//__device__
-////* Apply rotation transform to cuboid */
-//void rotateCuboid(Point3D* cuboid, const float transform[3][3]) {
-//	for (int i = 0; i < 8; i++) {
-//		multiply(transform, cuboid[i]);
-//	}
-//}
-//
-//__device__
-//void translateCuboid(Point3D* cuboid, Point3D vector) {
-//	for (int i = 0; i < 8; i++) {
-//		cuboid[i].x += vector.x;
-//		cuboid[i].y += vector.y;
-//		cuboid[i].z += vector.z;
-//	}
-//}
-//__device__
-//void getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
-//	float x0 = plane[0].x;
-//	float y0 = plane[0].y;
-//	float z0 = plane[0].z;
-//	u.x = plane[1].x - x0;
-//	u.y = plane[1].y - y0;
-//	u.z = plane[1].z - z0;
-//	v.x = plane[3].x - x0;
-//	v.y = plane[3].y - y0;
-//	v.z = plane[3].z - z0;
-//}
+
+/** Compute Axis Aligned Bounding Box of given cuboid */
 __device__
 void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
 	AABB[0].x = AABB[0].y = AABB[0].z = INFINITY;
@@ -593,7 +320,11 @@ void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
 	AABB[1].z = floorf(AABB[1].z);
 }
 
-
+/**
+ * Method will map one voxel from the temporal
+ * spaces to the given projection and update temporal spaces
+ * using the pixel value of the projection.
+ */
 __device__
 void processVoxel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
@@ -644,6 +375,11 @@ void processVoxel(
 	atomicAdd(&tempWeightsGPU[index3D], weight);
 }
 
+/**
+ * Method will map one voxel from the temporal
+ * spaces to the given projection and update temporal spaces
+ * using the pixel values of the projection withing the blob distance.
+ */
 __device__
 void processVoxelBlob(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -696,7 +432,7 @@ void processVoxelBlob(
 		const float* __restrict__ CTF = data->getNthItem(data->CTFs, space->projectionIndex);
 		const float* __restrict__ modulator = data->getNthItem(data->modulators, space->projectionIndex);
 
-		// check which pixel in the vicinity that should contribute
+		// check which pixel in the vicinity should contribute
 		for (int i = minY; i <= maxY; i++) {
 			float ySqr = (imgPos.y - i) * (imgPos.y - i);
 			float yzSqr = ySqr + zSqr;
@@ -714,7 +450,7 @@ void processVoxelBlob(
 
 				float wCTF = CTF[index2D];
 				float wModulator = modulator[index2D];
-				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
+				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f));
 #if SHARED_BLOB_TABLE
 				float wBlob = BLOB_TABLE[aux];
 #else
@@ -732,7 +468,7 @@ void processVoxelBlob(
 			}
 		}
 	} else {
-		// check which pixel in the vicinity that should contribute
+		// check which pixel in the vicinity should contribute
 		for (int i = minY; i <= maxY; i++) {
 			float ySqr = (imgPos.y - i) * (imgPos.y - i);
 			float yzSqr = ySqr + zSqr;
@@ -748,7 +484,7 @@ void processVoxelBlob(
 				int index2D = i * xSize + j;
 #endif
 
-				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
+				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f));
 #if SHARED_BLOB_TABLE
 				float wBlob = BLOB_TABLE[aux];
 #else
