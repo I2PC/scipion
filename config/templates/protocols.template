@@ -152,7 +152,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtReconstructHighRes", "text": "default"},
         	{"tag": "protocol", "value": "XmippProtProjMatch",  "text": "default"},
         	{"tag": "protocol", "value": "EmanProtRefine",  "text": "default"},
-        	{"tag": "protocol", "value": "EmanProtLocScale",  "text": "default"},
+        	{"tag": "protocol", "value": "ProtLocScale",  "text": "default"},
         	{"tag": "protocol", "value": "SpiderProtRefinement",  "text": "default"},
         	{"tag": "section", "text": "more", "openItem": "False", "children": [
     	        {"tag": "protocol", "value": "ProtRelionPolish", "text": "default"}
