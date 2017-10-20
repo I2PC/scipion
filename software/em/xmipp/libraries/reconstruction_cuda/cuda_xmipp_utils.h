@@ -63,7 +63,6 @@ public:
 	{
 		if (ptr!=NULL) {
 			mycufftDestroy(ptr);
-			delete ptr;
 		}
 		ptr=NULL;
 	}
