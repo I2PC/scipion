@@ -50,7 +50,6 @@ class XmippProtMovieGain(ProtProcessMovies):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = em.STEPS_PARALLEL
-        self.protocol = args.get('protocol')
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -85,9 +84,10 @@ class XmippProtMovieGain(ProtProcessMovies):
     #--------------------------- STEPS functions -------------------------------
 
     def createOutputStep(self):
-        # Do nothing now, the output should be ready.
+        movieGainProt = self.getProject().newProtocol(XmippProtMovieGain)
+        movieGainProt.setProject(self.getProject())
         movieGainMonitor = MonitorMovieGain(
-            self.get(),
+            movieGainProt,
             workingDir=self.workingDir.get(),
             samplingInterval=60,
             monitorTime=300,
@@ -95,10 +95,8 @@ class XmippProtMovieGain(ProtProcessMovies):
             ratio1Value=1.15,
             ratio2Value=4.5)
 
-        print(movieGainMonitor.ratio1Value)
+        print("------------------------------------------------------------")
         MovieGainMonitorPlotter(movieGainMonitor).show()
-        print(movieGainMonitor.ratio2Value)
-        pass
 
 
     def _insertNewMoviesSteps(self, insertedDict, inputMovies):
