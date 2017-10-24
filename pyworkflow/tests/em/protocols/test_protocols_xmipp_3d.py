@@ -299,6 +299,7 @@ class TestXmippPreprocessVolumes(TestXmippBase):
 
         print "Run preprocess a volume using mask_1 in the symmetrization"
         protPreprocessVol3 = XmippProtPreprocessVolumes(doChangeHand=False, doRandomize=False,
+                                                        doRotateIco=True, rotateFromIco=0, rotateToIco=2,
                                                         doSymmetrize=True, symmetryGroup='i3',
                                                         doSegment=False, doNormalize=False,
                                                         doInvert=False, doThreshold=False,

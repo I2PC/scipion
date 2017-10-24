@@ -81,6 +81,13 @@ if __name__ == '__main__':
         try:
             projWindow = ProjectWindow(projPath)
         except Exception as e:
+            # Print any exception
+            print("ERROR: At pw_project.py loading Project %s.\n"
+                  "       Message: %s\n" % (projPath, e))
+
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+
             sys.exit(e)
         projWindow.show()
     else:

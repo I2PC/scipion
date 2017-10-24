@@ -26,7 +26,6 @@
 
 import Tkinter as tk
 
-
 import pyworkflow.gui as pwgui
 import pyworkflow.gui.text as text
 import pyworkflow.utils as pwutils
@@ -36,7 +35,6 @@ from pyworkflow.gui.widgets import Button, HotButton
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 from pyworkflow.em.protocol.monitors import \
     (CtfMonitorPlotter, MovieGainMonitorPlotter, SystemMonitorPlotter)
-
 
 class ViewerMonitorSummary(Viewer):
     """ Wrapper to visualize PDF objects. """
@@ -139,8 +137,8 @@ class SummaryWindow(pwgui.Window):
         if self.protocol.createSystemMonitor() is None:
             sysBtn['state'] = 'disabled'
 
-        htmlBtn = HotButton(subframe, 'Generate HTML Report',
-                            command=self._generateHTML)
+        htmlBtn = HotButton(subframe, 'Open HTML Report',
+                            command=self._openHTML)
         htmlBtn.grid(row=0, column=3, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
@@ -167,7 +165,11 @@ class SummaryWindow(pwgui.Window):
         self.tree.update()
         self._updateLabel()
 
-    def _generateHTML(self, e=None):
+    def _openHTML(self, e=None):
         reportHtml = self.protocol.createHtmlReport()
-        reportPath = reportHtml.generate(self.protocol.isFinished())
-        text._open_cmd(reportPath)
+        reportPath = reportHtml.reportPath
+        if pwutils.exists(reportPath):
+            text._open_cmd(reportPath)
+        else:
+            self.showInfo('Your html file is not ready yet. Please try again in a minute.' % reportPath)
+
