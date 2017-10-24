@@ -64,7 +64,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         if self.doImageAlignment:
             args['--healpix_order'] = self.angularSamplingDeg.get()
             args['--offset_range'] = self.offsetSearchRangePix.get()
-            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+            args['--offset_step']  = self.offsetSearchStepPix.get() * self._getSamplingFactor()
             if self.localAngularSearch:
                 args['--sigma_ang'] = self.localAngularSearchRange.get() / 3.
         else:

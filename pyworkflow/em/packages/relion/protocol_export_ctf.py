@@ -156,3 +156,7 @@ class ProtRelionExportCtf(EMProtocol):
         micRow.setValue('rlnSamplingRate', self.samplingRate)
         micRow.setValue('rlnDetectorPixelSize', self.detectorPixelSize)
         micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
+        ctf = mic.getCTF()
+        if ctf.hasAttribute('_ctffind4_ctfPhaseShift'):
+            micRow.setValue('rlnPhaseShift',
+                            ctf._ctffind4_ctfPhaseShift.get())
