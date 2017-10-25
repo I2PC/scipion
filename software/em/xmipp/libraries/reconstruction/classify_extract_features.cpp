@@ -198,7 +198,14 @@ void ProgExtractFeatures::extractGranulo(const MultidimArray<double> &I,
     double m, M;
     I.computeDoubleMinMax(m, M);
 
-    for (int N = 1; N < 5; N++)
+    if (XSIZE(I) < 15 || YSIZE(I) < 15)
+    {
+        std::cerr << "ERROR: Input image must be at least 15x15px"
+                  << "to extract granulo features!\n";
+        exit(1);
+    }
+
+    for (int N = 1; N < 7; N++)
     {
         // creating circular structuring element
         int size = N*2 + 1;
