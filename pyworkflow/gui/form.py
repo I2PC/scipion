@@ -1602,7 +1602,9 @@ class FormWindow(Window):
             not self._isLegacyProtocol()):
 
             # Check editable or not:
-            btnState = tk.DISABLED if self.protocol.isActive() else tk.NORMAL
+            btnState = tk.DISABLED if (self.protocol.isActive()
+                                       and not self.protocol.isInteractive()) \
+                                   else tk.NORMAL
 
             self.btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN,
                                   Icon.ACTION_SAVE, command=self.save,
