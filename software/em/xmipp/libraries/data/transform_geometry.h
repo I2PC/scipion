@@ -57,6 +57,5 @@ protected:
     void calculateRotationMatrix();
     void preProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
-
 };
 #endif //TRANSFORMGEOMETRY_H

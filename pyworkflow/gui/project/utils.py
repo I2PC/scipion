@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Laura del Cano (ldelcano@cnb.csic.es)
+# * Authors:     Pablo Conesa (pconesa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,18 +23,40 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This package contains the protocols and data for APPION
-"""
-
-_logo = "ncbi_logo.png"
-
-from bibtex import _bibtex
-from convert import getEnviron
-from protocol_dogpicker import DogPickerProtPicking
-from wizard import DogPickerWizard
+from pyworkflow.gui.project.constants import STATUS_COLORS
+from pyworkflow.protocol import STATUS_FAILED
 
 
-#_references = ['Voss2009']
+def getStatusColorFromNode(node):
 
-_environ = getEnviron()
+    # If it is a run node (not PROJECT)
+    return getStatusColorFromRun(node.run)
+
+
+def getStatusColorFromRun(prot):
+    """
+    Returns the color associated with the status
+    -------
+
+    """
+
+    if prot:
+        return getStatusColor(prot.status.get(STATUS_FAILED))
+    else:
+        return getStatusColor()
+
+
+def getStatusColor(status=None, default='#ADD8E6'):
+    """
+    Parameters
+    ----------
+    status status of the protocol
+
+    Returns the color associated with he status
+    -------
+
+    """
+    if status:
+        return STATUS_COLORS[status]
+    else:
+        return default
