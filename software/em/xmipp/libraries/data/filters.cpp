@@ -758,10 +758,45 @@ void fillBinaryObject(MultidimArray<double> &I, int neighbourhood)
         I(i, j) = 1;
 }
 
+/* Variance filter ----------------------------------------------------------*/
+void varianceFilter(MultidimArray<double> &V, int kernelSize)
+{
+    int kernelSize_2 = kernelSize/2;
+    MultidimArray<double> kernel(kernelSize,kernelSize);
+    kernel.setXmippOrigin();
+    
+    double stdKernel, varKernel, avgKernel, min_val, max_val;
+    std::cout << " Inside variance filter:" << std::endl;
+    Matrix1D<int> corner1, corner2;
+
+    for (int i=kernelSize_2; i<(int)YSIZE(V)-kernelSize_2; i++)
+    {
+        for (int j=kernelSize_2; j<(int)XSIZE(V)-kernelSize_2; j++)
+            {
+                // XX(corner1) = i-kernelSize_2;
+                // YY(corner1) = j-kernelSize_2;
+                // XX(corner2) = i+kernelSize_2-1;
+                // YY(corner2) = j+kernelSize_2-1;
+
+                // V.computeStats(avgKernel, stdKernel, min_val, max_val,
+                //       corner1, corner2);
+
+                V.window(kernel,  i-kernelSize_2  ,  j-kernelSize_2  ,
+                                 i+kernelSize_2-1 , j+kernelSize_2-1 );
+                kernel.selfABS();
+                stdKernel = kernel.computeStddev();
+
+                varKernel = stdKernel*stdKernel;
+                DIRECT_A2D_ELEM(V, i, j) = varKernel;
+            }
+        std::cout << stdKernel << std::endl;
+    }
+}
+
 /* Otsu Segmentation ------------------------------------------------------- */
 void OtsuSegmentation(MultidimArray<double> &V)
 {
-    V.checkDimension(3);
+    // V.checkDimension(3);
 
     // Compute the probability density function
     Histogram1D hist;

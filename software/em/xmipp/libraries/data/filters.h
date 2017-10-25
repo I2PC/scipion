@@ -186,6 +186,12 @@ void keepBiggestComponent(MultidimArray< double >& I,
  */
 void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
 
+/** Computes the variance in a certain zone base on ImageJ filters plug in
+ * @ingroup Filters
+ *
+ */
+void varianceFilter(MultidimArray<double> &V, int kernelSize = 20);
+
 /** Segment an object using Otsu's method
  * @ingroup Filters
  *
