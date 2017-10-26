@@ -728,12 +728,16 @@ class PdbFile(EMFile):
     def getVolume(self):
         return self._volume
 
+    def hasVolume(self):
+        return self._volume is not None
+
     def setVolume(self, volume):
         self._volume = volume
 
     def __str__(self):
-        return "%s (pseudoatoms=%s)" % \
-               (self.getClassName(), self.getPseudoAtoms())
+        return "%s (pseudoatoms=%s, volume=%s)" % \
+               (self.getClassName(), self.getPseudoAtoms(),
+                self.hasVolume())
 
 
 class EMSet(Set, EMObject):
