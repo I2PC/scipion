@@ -188,8 +188,7 @@ class DownsampleWizard(EmWizard):
     @classmethod
     def getView(self):
         return "wiz_downsampling"
-        
-    
+
 class CtfWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
@@ -212,7 +211,16 @@ class CtfWizard(EmWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_ctf"           
+        return "wiz_ctf"
+
+    def getAutodownsampling(self,protocol):
+        sampling_rate = protocol.inputMicrographs.get().getSamplingRate()
+        downsampling_factor = 1.5 / sampling_rate
+        if downsampling_factor < 1:
+            downsampling_factor = 1
+        return downsampling_factor
+
+
     
 class MaskRadiusWizard(EmWizard):
         
