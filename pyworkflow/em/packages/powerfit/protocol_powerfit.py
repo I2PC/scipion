@@ -35,6 +35,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 #import powerfit
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
+from pyworkflow.em.packages.ccp4.convert import adaptBinFileToCCP4
 
 class PowerfitProtRigidFit(ProtFitting3D):
     """ Protocol for fitting a PDB into a 3D volume
@@ -74,15 +75,27 @@ class PowerfitProtRigidFit(ProtFitting3D):
         
     #--------------------------- STEPS functions -------------------------------
     def powerfitWrapper(self):
+        # adaptBinFileToCCP4
+        # PDB -> volume
+        # import PDB add volume
+        # outPDB <- volume
+        # origin
         img = ImageHandler()
         fnVol = self._getExtraPath('volume.mrc')
         vol = self.inputVol.get()
         img.convert(vol,fnVol)
 
-        ccp4header = Ccp4Header(fnVol, readHeader= True)
-        ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True))
-        ccp4header.setSampling(vol.getSamplingRate())
-        ccp4header.writeHeader()
+        # get input 3D map filename
+        inFileName = vol.getFileName()
+        # create local copy of 3Dmap
+        localInFileName = fnVol
+        adaptBinFileToCCP4(inFileName, localInFileName, vol.getOrigin(
+            returnInitIfNone=True))
+
+        #ccp4header = Ccp4Header(fnVol, readHeader= True)
+        #ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True))
+        #ccp4header.setSampling(vol.getSamplingRate())
+        #ccp4header.writeHeader()
 
         args = "%s %f %s -d %s -p %d -a %f -n %d"%(fnVol,self.resolution,self.inputPDB.get().getFileName(), self._getExtraPath(),self.numberOfThreads,
                                                    self.angleStep, self.nModels)
