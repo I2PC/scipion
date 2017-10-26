@@ -100,7 +100,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         # create local copy of 3Dmap
         localInFileName = self._getVolumeFileName()
         adaptBinFileToCCP4(inFileName, localInFileName,
-                           self.inputVolume.get().getOrigin().getShifts())
+                           self.inputVolume.get().getOrigin(
+                               returnInitIfNone=True))
 
     # --------------------------- STEPS functions --------------------------------------------
     def createScriptFileStep(self):
