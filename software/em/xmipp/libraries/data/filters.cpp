@@ -759,38 +759,65 @@ void fillBinaryObject(MultidimArray<double> &I, int neighbourhood)
 }
 
 /* Variance filter ----------------------------------------------------------*/
-void varianceFilter(MultidimArray<double> &V, int kernelSize)
+void varianceFilter(MultidimArray<double> &imIN, MultidimArray<double> &imAVG,
+                    MultidimArray<double> &imVAR, int kernelSize)
 {
     int kernelSize_2 = kernelSize/2;
-    MultidimArray<double> kernel(kernelSize,kernelSize);
+    MultidimArray<double> kernel;
+    kernel.resize(kernelSize,kernelSize);
     kernel.setXmippOrigin();
     
     double stdKernel, varKernel, avgKernel, min_val, max_val;
     std::cout << " Inside variance filter:" << std::endl;
-    Matrix1D<int> corner1, corner2;
-
-    for (int i=kernelSize_2; i<(int)YSIZE(V)-kernelSize_2; i++)
+    int x0, y0, xF, yF;
+    
+    for (int i=0; i<(int)YSIZE(imIN); i++)
     {
-        for (int j=kernelSize_2; j<(int)XSIZE(V)-kernelSize_2; j++)
+        for (int j=0; j<(int)XSIZE(imIN); j++)
             {
-                // XX(corner1) = i-kernelSize_2;
-                // YY(corner1) = j-kernelSize_2;
-                // XX(corner2) = i+kernelSize_2-1;
-                // YY(corner2) = j+kernelSize_2-1;
+                x0 = j-kernelSize_2;
+                y0 = i-kernelSize_2;
+                xF = j+kernelSize_2-1;
+                yF = i+kernelSize_2-1;
 
-                // V.computeStats(avgKernel, stdKernel, min_val, max_val,
-                //       corner1, corner2);
+                if(j<kernelSize_2)
+                    x0 = 0;
+                else if (j>YSIZE(imIN)-kernelSize_2)
+                    xF = XSIZE(imIN);
 
-                V.window(kernel,  i-kernelSize_2  ,  j-kernelSize_2  ,
-                                 i+kernelSize_2-1 , j+kernelSize_2-1 );
-                kernel.selfABS();
-                stdKernel = kernel.computeStddev();
+                if(i<kernelSize_2)
+                    y0 = 0;
+                else if (i>XSIZE(imIN)-kernelSize_2)
+                    yF = YSIZE(imIN);
+
+                // std::cout << "Corner 1 = (" << XX(corner1) << "," << YY(corner1) << ") ; ";
+                // std::cout << "Corner 2 = (" << XX(corner2) << "," << YY(corner2) << ") : ";
+
+                // imIN.computeStats(avgKernel, stdKernel, min_val, max_val,
+                //                                               corner1, corner2);
+
+                imIN.window(kernel, y0, x0, yF, xF);
+                
+                kernel.computeStats(avgKernel, stdKernel, min_val, max_val);
+                // std::cout << "Kernel size: " << XSIZE(kernel) << "x" << YSIZE(kernel) << std::endl;
+
+                // kernel.selfNormalize();
+                // stdKernel = kernel.computeStddev();
 
                 varKernel = stdKernel*stdKernel;
-                DIRECT_A2D_ELEM(V, i, j) = varKernel;
+
+                DIRECT_A2D_ELEM(imAVG, i, j) = avgKernel;
+                DIRECT_A2D_ELEM(imVAR, i, j) = varKernel;
+
             }
-        std::cout << stdKernel << std::endl;
+        // std::cout << "Corner 1 = (" << XX(corner1) << "," << YY(corner1) << ") ; " ;
+        // std::cout << "Corner 2 = (" << XX(corner2) << "," << YY(corner2) << ") : " ;
+        // std::cout << " i = " << i << " ; avgKernel = " <<
+        //                avgKernel << " ; stdKernel = " << stdKernel << std::endl;
     }
+    // varMask.write("VARoutput.mrc");
+    // avgMask.write("AVGoutput.mrc");
+
 }
 
 /* Otsu Segmentation ------------------------------------------------------- */

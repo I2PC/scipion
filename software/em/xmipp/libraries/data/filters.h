@@ -190,7 +190,8 @@ void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
  * @ingroup Filters
  *
  */
-void varianceFilter(MultidimArray<double> &V, int kernelSize = 20);
+void varianceFilter(MultidimArray<double> &imIN, MultidimArray<double> &imAVG,
+                    MultidimArray<double> &imVAR, int kernelSize = 20);
 
 /** Segment an object using Otsu's method
  * @ingroup Filters

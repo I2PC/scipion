@@ -71,16 +71,26 @@ void ProgCoordinatesCarbonFilter::run()
 	im.read(fnInMic);
 
     MultidimArray<double> &matrixMic = im();
-
+    MultidimArray<double> matrixAvg(YSIZE(matrixMic),XSIZE(matrixMic));
+    matrixAvg.setXmippOrigin();
+    MultidimArray<double> matrixVar = matrixAvg;
+    
     std::cout << "Matrix size: " << XSIZE(matrixMic) << "x" << YSIZE(matrixMic) << std::endl;
 
-    varianceFilter(matrixMic);
+    varianceFilter(matrixMic, matrixAvg, matrixVar, patchSize);
+    matrixAvg.selfABS();
+
+    std::cout << "Resulting matrix size: " << XSIZE(matrixMic) << "x" << YSIZE(matrixMic) << std::endl;
 
     // OtsuSegmentation(matrixMic);
 
-    Image<double> imOut(matrixMic);
 
-    imOut.write(fnOutCoord);
+    
+    Image<double> imAvg(matrixAvg), imVar(matrixVar);
+
+    imAvg.write("outputAvg.mrc");
+    imVar.write("outputVar.mrc");
+    
 
 
 
