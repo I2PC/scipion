@@ -230,7 +230,7 @@ class CtfView(ObjectView):
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
-                      showj.ZOOM: 100
+                      showj.ZOOM: 50
                      }
 
         if psdLabels:
