@@ -60,7 +60,6 @@ def runCCP4Program(program, args="", extraEnvDict=None):
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
 
-
 def adaptBinFileToCCP4(inFileName, outFileName, scipionOrigin):
     """ Check input file format.
         if mrc, check if header and scipion database agree (regarding origin)
