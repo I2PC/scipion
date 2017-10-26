@@ -236,7 +236,7 @@ def saveDataToDataBase():
 
 
 def main(projectName, userName, webserviceURL, dataBaseName):
-    #load the project changes the default directory
+    # load the project changes the default directory
     if not os.path.isabs(dataBaseName):
         dataBaseName = os.path.join(os.getcwd(),dataBaseName)
 
@@ -244,12 +244,18 @@ def main(projectName, userName, webserviceURL, dataBaseName):
     projectUuid = _getUuid(project)  # get project unique identifier
     if dataBaseName is not None:  #if output goes to database
         coon = connectToDataBase(dataBaseName)  #open cursor in data base
-        #create tables -if needed- and insert project and category
+        # create tables -if needed- and insert project and category
         initializeDataBase(projectName, userName, projectUuid, coon) #create
     else:
-        pass
-        # initializeWebserver(projectName, userName, startDate, serverUrl)
-    data, histogram = getData(project)<<<<<<<<<<<<<<<<<
+        pass  # nothing to do here, database is already created
+              # may be in the future allow category creation
+              # initializeWebserver(projectName, userName, startDate, serverUrl)
+    data, histogram = getData(project)#<<<<<<<<<<<<<<<<<
+    average =
+    histogram =
+
+    #convert to string and send or store
+    #create minimalistic test histogram
     # store user_name, projectName, date
     # TODO: until end
     # get resolution data
