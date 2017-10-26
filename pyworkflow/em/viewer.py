@@ -534,12 +534,15 @@ class ChimeraViewer(Viewer):
 
     def visualize(self, obj, **kwargs):
         cls = type(obj)
-
         if issubclass(cls, PdbFile):
             fn = obj.getFileName()
             if obj.getPseudoAtoms():
                 if hasattr(obj, '_chimeraScript'):
                     fn = obj._chimeraScript.get()
+            elif obj.hasVolume():
+                pass
+                #print "YES"
+                #print "obj.hasVolume(): ", obj.hasVolume()
             ChimeraView(fn).show()
             # FIXME: there is an asymmetry between ProtocolViewer and Viewer
             # for the first, the visualize method return a list of View's
