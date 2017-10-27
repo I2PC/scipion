@@ -161,10 +161,12 @@ class ReportHtml:
                 alignedMicSet = list(updatedAlignProt.outputMicrographs.getIdSet())
             else:
                 alignedMicSet = []
-            # thumbsDone = len(self.thumbPaths[MIC_THUMBS])
             for micId in alignedMicSet[alignThumbsDone:]:
                 mic = updatedAlignProt.outputMicrographs[micId]
-                srcMicFn = mic.thumbnail.getFileName() if hasattr(mic, 'thumbnail') else mic.getFileName()
+                if hasattr(mic, 'thumbnail'):
+                    srcMicFn = abspath(mic.thumbnail.getFileName())
+                else:
+                    srcMicFn = mic.getFileName()
                 micThumbFn = join(MIC_THUMBS, pwutils.replaceExt(basename(srcMicFn), ext))
                 self.thumbPaths[MIC_PATH].append(srcMicFn)
                 self.thumbPaths[MIC_THUMBS].append(micThumbFn)
@@ -195,6 +197,7 @@ class ReportHtml:
         - firstCtfThumbIndex: index from which we start generating thumbnails related
                               to the results of the ctf protocol.
         - micScaleFactor: how much to reduce in size the micrographs.
+
         """
         ih = ImageHandler()
 

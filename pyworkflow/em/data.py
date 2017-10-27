@@ -1092,7 +1092,14 @@ class SetOfCTF(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        self._micrographsPointer.set(micrographs)
+        """ Set the micrographs from which this CTFs were estimated.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
 
 
 class SetOfDefocusGroup(EMSet):
@@ -1271,11 +1278,15 @@ class SetOfCoordinates(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        """ Set the SetOfMicrograph associates with
-        this set of coordinates.
-         """
-        self._micrographsPointer.set(micrographs)
-
+        """ Set the micrographs associated with this set of coordinates.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
+        
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())

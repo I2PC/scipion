@@ -57,6 +57,29 @@ class TestCtfStreaming(BaseTest):
     def test_pattern(self):
         """ Import several Particles from a given pattern.
         """
+        def checkOutputs(prot):
+            while not (prot.isFinished() or prot.isFailed()):
+                time.sleep(10)
+                prot = self._updateProtocol(prot)
+                if prot.hasAttribute("outputCTF"):
+                    ctfSet = SetOfCTF(filename=prot._getPath(CTF_SQLITE))
+                    baseFn = prot._getPath(CTF_SQLITE)
+                    self.assertTrue(os.path.isfile(baseFn))
+                    counter = 0
+                    if ctfSet.getSize() > counter:
+                        counter += 1
+                        for ctf in ctfSet:
+                            self.assertNotEqual(ctf._resolution.get(), None)
+                            self.assertNotEqual(ctf._fitQuality.get(), None)
+                            self.assertNotEqual(ctf.isEnabled(), None)
+                            self.assertNotEqual(ctf._defocusU.get(), None)
+                            self.assertNotEqual(ctf._defocusV.get(), None)
+                            self.assertNotEqual(ctf._defocusRatio.get(), None)
+            self.assertIsNotNone(prot.outputCTF,
+                                 "Error: outputCTF is not produced "
+                                 "in %s." % prot.getClassName())
+            self.assertEqual(prot.outputCTF.getSize(), MICS)
+
         kwargs = {'xDim': 4096,
                   'yDim': 4096,
                   'nDim': MICS,
@@ -89,8 +112,17 @@ class TestCtfStreaming(BaseTest):
         protCTF.highRes.set(0.4)
         protCTF.lowRes.set(0.05)
         protCTF.numberOfThreads.set(4)
-        self.proj.launchProtocol(protCTF, wait=False)
+        self.proj.launchProtocol(protCTF, wait=True)
+        checkOutputs(protCTF)
 
+        kwargs = {'ctfDownFactor': 2,
+                  'numberOfThreads': 3
+                  }
+        protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
+        protCTF2.inputMicrographs.set(protStream.outputMicrographs)
+        self.proj.launchProtocol(protCTF2)
+        checkOutputs(protCTF2)
+        
         # run gctf
         # check if box has nvidia cuda libs.
         try:
@@ -99,9 +131,12 @@ class TestCtfStreaming(BaseTest):
             protCTF3.inputMicrographs.set(protStream.outputMicrographs)
             protCTF3.ctfDownFactor.set(2)
             self.proj.launchProtocol(protCTF3, wait=False)
+            checkOutputs(protCTF3)
+
         except NVMLError, err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
+
 
         # run xmipp ctf. Since this is the slower method wait until finish
         # before running asserts
@@ -127,3 +162,4 @@ class TestCtfStreaming(BaseTest):
             self.assertNotEqual(ctf._defocusU.get(), None)
             self.assertNotEqual(ctf._defocusV.get(), None)
             self.assertNotEqual(ctf._defocusRatio.get(), None)
+
