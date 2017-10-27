@@ -128,12 +128,13 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f " % self.expandFactor.get()
         args += " %f " % self.offset.get()
         args += " %f " % self.inputVolumes.get().getSamplingRate()
+        origin = self.inputVolumes.get().getOrigin().getShifts()
         # x origin coordinate
-        args += " %f " % self.inputVolumes.get().getOrigin().getShifts()[0]
+        args += " %f " % origin[0]
         # y origin coordinate
-        args += " %f " % self.inputVolumes.get().getOrigin().getShifts()[1]
+        args += " %f " % origin[1]
         # z origin coordinate
-        args += " %f " % self.inputVolumes.get().getOrigin().getShifts()[2]
+        args += " %f " % origin[2]
 
         self.runJob("xmipp_transform_window", args)
 
@@ -146,15 +147,17 @@ class XmippProtExtractUnit(EMProtocol):
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader=True)
         t = Transform()
         x, y, z = ccp4header.getOffset()  # origin output vol coordinates
-        _inputVol = self.inputVolumes.get()
+        #_inputVol = self.inputVolumes.get()
+        origin = self.inputVolumes.get().getOrigin().getShifts()
         # x, y, z origin input vol coordinates
-        x_origin = _inputVol.getOrigin().getShifts()[0]
-        y_origin = _inputVol.getOrigin().getShifts()[1]
-        z_origin = _inputVol.getOrigin().getShifts()[2]
+        x_origin = origin[0]
+        y_origin = origin[1]
+        z_origin = origin[2]
         # x, y, z origin output vol coordinates
-        x += _inputVol.getDim()[0] / 2. - x_origin
-        y += _inputVol.getDim()[1] / 2. - y_origin
-        z += _inputVol.getDim()[2] / 2. - z_origin
+        dim = self.inputVolumes.get().getDim()
+        x += dim[0] / 2. - x_origin
+        y += dim[1] / 2. - y_origin
+        z += dim[2] / 2. - z_origin
         t.setShifts(-x, -y, -z)  # we follow chimera convention no MRC
         vol.setOrigin(t)
         #
