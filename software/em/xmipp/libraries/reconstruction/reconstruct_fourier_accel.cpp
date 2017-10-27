@@ -267,8 +267,7 @@ Array2D<std::complex<float> >* ProgRecFourierAccel::cropAndShift(MultidimArray<s
 				}
 				// do the shift
 				int myPadI = (i < halfY) ?	i + sizeX : i - paddedFourier.ydim + sizeX;
-				(*result)(j, myPadI).real() =	paddedFourierTmp.real();
-				(*result)(j, myPadI).imag() =	paddedFourierTmp.imag();
+				(*result)(j, myPadI) = std::complex<float>(paddedFourierTmp.real(), paddedFourierTmp.imag());
 			}
 		}
 	}
