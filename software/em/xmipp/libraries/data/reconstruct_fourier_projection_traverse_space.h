@@ -55,6 +55,7 @@ Point3D<float> u, v;
 Point3D<float> topOrigin, bottomOrigin;
 int projectionIndex; // index to array of projections, which holds appropriate (visual) data
 float transformInv[3][3]; // rotation matrix, describing transformation to default position
+float transform[3][3]; // rotation matrix, describing transformation from default position
 float weight; // of the projection
 };
 

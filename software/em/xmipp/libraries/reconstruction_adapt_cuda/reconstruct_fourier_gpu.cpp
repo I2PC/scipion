@@ -403,7 +403,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
     	// send them for processing
 		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
-			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
+			processBufferGPUInverse(parent->tempVolumeGPU, parent->tempWeightsGPU,
 				threadParams->buffer,
 				parent->blob.radius, parent->maxVolumeIndexYZ, parent->useFast,
 				parent->maxResolutionSqr,
@@ -750,6 +750,7 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			space->transformInv[i][j] = transformInv[i][j];
+			space->transform[i][j] = transform[i][j];
 		}
 	}
 

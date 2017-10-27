@@ -149,4 +149,9 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		float blobRadius, int maxVolIndexYZ, bool useFast,
 		float maxResolutionSqr, int stream);
 
+void processBufferGPUInverse(float* tempVolumeGPU, float* tempWeightsGPU,
+		RecFourierBufferData* buffer,
+		float blobRadius, int maxVolIndexYZ, bool useFast,
+		float maxResolutionSqr, int streamIndex);
+
 #endif /* XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_ */
