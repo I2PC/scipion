@@ -2,6 +2,8 @@
     <HEAD>
         <!-- jquery-->
         <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
+        <!-- JQuery plugins-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js"></script>
         <!--highcharts-->
         <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
         <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
@@ -325,6 +327,7 @@
 
             if (report.movieGainData.length == 0) {
                 $('#movieGain').hide();
+                return;
             }
 
             $('#movieGainChart').highcharts({
@@ -404,6 +407,7 @@
 
             if (!('defocusU' in report.ctfData)) {
                 $('#ctf').hide();
+                return;
             }
 
 
@@ -549,10 +553,89 @@
 
         }
 
+
+
+        function getSystemSeries() {
+
+            colors = ["#000000", "#0000FF", "#FF0000", "#00FF00", "#FFFF00", "#00FFFF", "#FF00FF"];
+            systemSeries = [];
+            colorIndex = 0;
+
+            for (var key in report.systemData) {
+                serie = report.systemData[key];
+
+                if (!Array.isArray(serie)){
+                    continue;
+                } else {
+                    if (key == "idValues"){
+                        continue;
+                    }else {
+                        enabled = isChartSerieVisible(key);
+                        color = colors[colorIndex];
+                        hchSerie = systemSerie2HighChartSerie(key, serie, color, enabled);
+                        colorIndex = (colorIndex +1)%%colors.length;
+                        systemSeries.push(hchSerie);
+                    }
+                }
+            }
+
+            return systemSeries;
+        }
+
+        function systemSerie2HighChartSerie(name, serie, color, enabled){
+
+            hchSerie = {
+                name: name,
+                data: serie,
+                color: color,
+                visible: enabled
+            };
+
+            return hchSerie;
+
+        }
+
+        function storeChartSeriesVisibility(chart){
+
+            for (var serieId in chart.series) {
+
+                var serie = chart.series[serieId];
+                Cookies.set(serie.name, serie.visible);
+            }
+        };
+
+        function isChartSerieVisible(serieName){
+
+            var visible = Cookies.get(serieName);
+
+            if (visible == undefined)
+                visible = String(true);
+
+            return visible == String(true);
+        }
+
         function addSystemChart () {
 
             if (report.systemData.length == 0) {
                 $('#system').hide();
+                return;
+            }
+
+            // Fill the system series
+            systemSeries = getSystemSeries();
+
+            // Listen to series hide/show events
+            plotOptions  = {series:
+                {events:
+                    {
+                        hide: function () {
+                            storeChartSeriesVisibility(this.chart)
+                        },
+                        show: function () {
+                            storeChartSeriesVisibility(this.chart)
+                        }
+                    }
+                }
             }
 
 
@@ -594,24 +677,13 @@
                     verticalAlign: 'middle',
                     borderWidth: 0
                 },
-                series: [{
-                    name: 'Memory',
-                    data: report.systemData.mem,
-                    color: '#FF0000'
-                }, {
-                    name: 'Cpu',
-                    data: report.systemData.cpu,
-                    color: '#00FF00'
-                }, {
-                    name: 'Swap',
-                    data: report.systemData.swap,
-                    color: '#0000FF'
-                }],
+                series: systemSeries,
                 chart:{
                     zoomType: 'x',
                     panning: true,
                     panKey:'shift'
-                } 
+                },
+                plotOptions: plotOptions
             });
 
             // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up

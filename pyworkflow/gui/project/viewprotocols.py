@@ -55,6 +55,7 @@ from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
 
 from constants import STATUS_COLORS
+from pyworkflow.gui.project.utils import getStatusColorFromNode
 
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
@@ -1072,7 +1073,7 @@ class ProtocolsView(tk.Frame):
         nodeText = self._getNodeText(node)
 
         # Get status color
-        statusColor = self._getStatusColor(node)
+        statusColor = getStatusColorFromNode(node)
 
         # Get the box color (depends on color mode: label or status)
         boxColor = self._getBoxColor(nodeInfo, statusColor, node)
@@ -1202,15 +1203,6 @@ class ProtocolsView(tk.Frame):
                 pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize,
                            color='black', anchor=item)
 
-    @staticmethod
-    def _getStatusColor(node):
-
-        # If it is a run node (not PROJECT)
-        if node.run:
-            status = node.run.status.get(pwprot.STATUS_FAILED)
-            return STATUS_COLORS[status]
-        else:
-            return '#ADD8E6'  # Light blue
 
     def _getNodeText(self, node):
 

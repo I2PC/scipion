@@ -70,7 +70,8 @@ leads to objective and high-quality results.
         if not self.doContinue:
             args['--healpix_order'] = self.angularSamplingDeg.get()
             args['--offset_range'] = self.offsetSearchRangePix.get()
-            args['--offset_step'] = self.offsetSearchStepPix.get() * 2
+
+            args['--offset_step'] = self.offsetSearchStepPix.get() * self._getSamplingFactor()
             args['--auto_refine'] = ''
             args['--split_random_halves'] = ''
             
