@@ -29,10 +29,9 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.data import Coordinate
+from pyworkflow.em.packages.bamfordlab import ETHAN_HOME
 from pyworkflow.em.protocol import ProtParticlePicking
-from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
-
 
 
 class ProtEthanPicker(ProtParticlePicking):
@@ -142,7 +141,7 @@ class ProtEthanPicker(ProtParticlePicking):
 
     #--------------------------- UTILS functions -------------------------------
     def getProgram(self):
-        return os.path.join(os.environ.get('ETHAN_HOME'), 'ethan')
+        return os.path.join(os.environ.get(ETHAN_HOME), 'ethan')
 
     def _getMicDir(self, micFn):
         return self._getExtraPath()

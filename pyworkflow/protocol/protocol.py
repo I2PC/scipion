@@ -32,11 +32,8 @@ execution and tracking like: Step and Protocol
 
 import os
 import sys
-import datetime as dt
 import pickle
 import json
-from collections import OrderedDict
-import traceback
 import time
 
 import pyworkflow as pw
@@ -1017,6 +1014,9 @@ class Protocol(Step):
         pass
 
     def copy(self, other, copyId=True):
+
+        from pyworkflow.project import OBJECT_PARENT_ID
+
         copyDict = Object.copy(self, other, copyId)
         self._store()
         self.mapper.deleteRelations(self)
@@ -1024,7 +1024,7 @@ class Protocol(Step):
         for r in other.getRelations():
             rName = r['name']
             rCreator = r['parent_id']
-            rParent = r['object_parent_id']
+            rParent = r[OBJECT_PARENT_ID]
             rChild = r['object_child_id']
             rParentExt = r['object_parent_extended']
             rChildExt = r['object_child_extended']

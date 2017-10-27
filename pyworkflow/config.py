@@ -250,7 +250,7 @@ def addAllProtocols(protocols):
                         "text": v.getClassLabel(prependPackageName=False)}
 
             # If it's a new protocol
-            if v.isNew():
+            if v.isNew() and v.isInstalled():
                 # add the new icon
                 protLine["icon"] = "newProt.png"
 
