@@ -30,7 +30,6 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.packages.bamfordlab import ETHAN_HOME
-from pyworkflow.em.protocol import ProtParticlePicking
 from pyworkflow.em.protocol import ProtParticlePickingAuto
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
