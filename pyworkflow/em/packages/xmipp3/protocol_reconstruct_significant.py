@@ -24,13 +24,17 @@
 # *
 # **************************************************************************
 
+import math
+
 from pyworkflow.utils import Timer
+from pyworkflow.utils.path import cleanPattern, cleanPath
 from pyworkflow.em import *  
 from pyworkflow.em.packages.xmipp3.convert import volumeToRow
 from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 from convert import writeSetOfClasses2D, writeSetOfParticles
 import pyworkflow.em.metadata as metadata
 from pyworkflow.protocol.params import *
+import xmipp
 
 
 
@@ -55,6 +59,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                       label="Symmetry group",
                       help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
                       'for a description of the symmetry groups format, If no symmetry is present, give c1.')  
+        form.addParam('useGPU', BooleanParam, default=False, label="Use GPU")
         form.addParam('thereisRefVolume', BooleanParam, default=False,
                       label="Is there a reference volume(s)?", 
                        help='You may use a reference volume to initialize the calculations. For instance, '
@@ -141,8 +146,10 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         # Convert input images if necessary
         self.imgsFn = self._getExtraPath('input_classes.xmd')
         self._insertFunctionStep('convertInputStep', self.imgsFn)
-        
-        args = self.getSignificantArgs(self.imgsFn)    
+        SL = xmipp.SymList()
+        SL.readSymmetryFile(self.symmetryGroup.get())
+        self.trueSymsNo = SL.getTrueSymsNo()
+
         n = self.iter.get()
         alpha0 = self.alpha0.get()
         deltaAlpha = (self.alphaF.get() - alpha0) / n
@@ -150,34 +157,59 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         # Insert one step per iteration
         for i in range(n):
             alpha = 1 - (alpha0 + deltaAlpha * i)/100.0
-            self._insertFunctionStep('significantStep', i+1, alpha, args)           
+            self._insertFunctionStep('significantStep', i+1, alpha)
             
         self._insertFunctionStep('createOutputStep')        
 
     #--------------------------- STEPS functions --------------------------------------------   
-    def significantStep(self, iterNumber, alpha, args):
+    def significantStep(self, iterNumber, alpha):
         iterDir = self._getTmpPath('iter%03d' % iterNumber)
         makePath(iterDir)
-        args += ' --odir %s' % iterDir
-        args += ' --alpha0 %f --alphaF %f' % (alpha, alpha)
-        prevVolFn = self.getIterVolume(iterNumber-1)
+        prevVolFn = self.getIterVolume(iterNumber - 1)
         volFn = self.getIterVolume(iterNumber)
-        
-        if iterNumber == 1:
-            if self.thereisRefVolume:
-                args += " --initvolumes " + self._getExtraPath('input_volumes.xmd')
-            else:
-                args += " --numberOfVolumes 1"
-        else:
-            args += " --initvolumes %s" % prevVolFn
-        
+        anglesFn = self._getExtraPath('angles_iter%03d.xmd' % iterNumber)
+
         t = Timer()
         t.tic()
-        self.runJob("xmipp_reconstruct_significant", args)
-        t.toc('Significant took: ')
+        if self.useGPU and iterNumber>1:
+            # Generate projections
+            fnGalleryRoot = join(iterDir,"gallery")
+            args="-i %s -o %s.stk --sampling_rate %f --sym %s --compute_neighbors "\
+                 "--angular_distance -1 --experimental_images %s "\
+                 "--min_tilt_angle %f --max_tilt_angle %f -v 0 --perturb %f"%\
+                 (prevVolFn,fnGalleryRoot,self.angularSampling,self.symmetryGroup,
+                  self.imgsFn,self.minTilt,self.maxTilt,math.sin(self.angularSampling.get())/4)
+            self.runJob("xmipp_angular_project_library ",args)
+
+            # Align
+            print("self.trueSymsNo", self.trueSymsNo)
+            if self.trueSymsNo!=0: #AJ REVISAR ESTO PARA C1 - EL ALPHA NO PARECE ESTAR BIEN EN C1
+                alphaApply = alpha*self.trueSymsNo
+            else:
+                alphaApply = alpha
+            args = '-i_ref %s.doc -i_exp %s -o %s --significance %f '\
+                   '--maxShift %f'%\
+                   (fnGalleryRoot,self.imgsFn,anglesFn,alphaApply,
+                    self.maximumShift)
+            self.runJob("xmipp_cuda_correlation", args, numberOfMpi=1)
+            cleanPattern(fnGalleryRoot+"*")
+        else:
+            args = self.getSignificantArgs(self.imgsFn)
+            args += ' --odir %s' % iterDir
+            args += ' --alpha0 %f --alphaF %f' % (alpha, alpha)
+
+            if iterNumber == 1:
+                if self.thereisRefVolume:
+                    args += " --initvolumes " + self._getExtraPath('input_volumes.xmd')
+                else:
+                    args += " --numberOfVolumes 1"
+            else:
+                args += " --initvolumes %s" % prevVolFn
         
-        anglesFn = self._getExtraPath('angles_iter%03d.xmd' % iterNumber)
-        moveFile(os.path.join(iterDir, 'angles_iter001_00.xmd'), anglesFn)
+            self.runJob("xmipp_reconstruct_significant", args)
+            moveFile(os.path.join(iterDir, 'angles_iter001_00.xmd'), anglesFn)
+        t.toc('Significant took: ')
+
         reconsArgs = ' -i %s' %  anglesFn
         reconsArgs += ' -o %s' % volFn
         reconsArgs += ' --weight -v 0  --sym %s ' % self.symmetryGroup
@@ -190,7 +222,13 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         xdim = self.inputSet.get().getDimensions()[0]
         maskArgs = "-i %s --mask circular %d -v 0" % (volFn, -xdim/2)
         self.runJob('xmipp_transform_mask', maskArgs, numberOfMpi=1)
-        
+
+#        self.runJob('xmipp_transform_filter',
+#                    '-i %s --fourier low_pass %f --sampling %f' % \
+#                    (fnReferenceVol,
+#                     targetResolution + self.nextResolutionOffset.get(),
+#                     TsCurrent), numberOfMpi=1)
+
         if not self.keepIntermediate:
             cleanPath(prevVolFn, iterDir)
             
@@ -211,7 +249,19 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             md = xmipp.MetaData()
             row.writeToMd(md, md.addObject())
             md.write(fnVolumes)
-        
+
+    # TsCurrent = max(self.TsOrig, targetResolution / 3)
+#        Xdim=self.inputParticles.get().getDimensions()[0]
+#        newXdim=long(round(Xdim*self.TsOrig/TsCurrent))
+#        if newXdim<40:
+#            newXdim=long(40)
+#            TsCurrent=Xdim*(self.TsOrig/newXdim)
+#        if newXdim!=Xdim:
+#            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(self.imgsFn,fnNewParticles,newXdim),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+#        else:
+#            self.runJob("xmipp_image_convert","-i %s -o %s --save_metadata_stack %s"%(self.imgsFn,fnNewParticles,join(fnDir,"images.xmd")),
+#                        numberOfMpi=1)
+
     def createOutputStep(self):
         lastIter = self.getLastIteration(1)
         vol = Volume()
