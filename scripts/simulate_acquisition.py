@@ -42,10 +42,10 @@ print "Cleaning output directory: ", outputDir
 pwutils.cleanPath(outputDir)
 pwutils.makePath(outputDir)
 
-aTime = 30
+aTime = float(sys.argv[3])
 n = 5
-t = float(sys.argv[3]) #aTime / n
-print "t=%s" % t
+t = aTime / n
+print "t=%s" % aTime
 
 for f in inputFiles:
     outputPath = os.path.join(outputDir, os.path.basename(f))
