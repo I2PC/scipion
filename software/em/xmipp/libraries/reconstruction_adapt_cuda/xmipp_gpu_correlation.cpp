@@ -641,12 +641,12 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				MAT_ELEM(bestM,2,1)=0.0;
 				MAT_ELEM(bestM,2,2)=1.0;
 				if(flip){
-					MAT_ELEM(bestM,0,0)*=-1;
-					MAT_ELEM(bestM,1,0)*=-1;
+					MAT_ELEM(bestM,0,0)*=-1; //bestM
+					MAT_ELEM(bestM,1,0)*=-1; //bestM
 				}
-				bestM=bestM.inv();
+				bestM=bestM.inv(); //bestM
 
-				transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
+				transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi); //bestM
 				if (flip)
 					shiftX*=-1;
 
@@ -696,12 +696,13 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	size_t xAux, yAux, zAux, nAux;
 	getImageSize(SF,xAux,yAux,zAux,nAux);
 	FileName fnImgNew, fnExpNew, fnRoot, fnStackOut, fnOut, fnStackMD, fnClass;
-	Image<double> Inew, Iexp_aux, Inew2;
+	Image<double> Inew, Iexp_aux, Inew2, Iexp_out;
 	Matrix2D<double> E(3,3);
 	MultidimArray<float> auxtr(3,3);
 	Matrix2D<double> auxtrMatrix(3,3);
 	MultidimArray<double> refSum(1, 1, yAux, xAux);
 	bool firstTime=true;
+	int refNum;
 
 	// Generate mask
 	Mask mask;
@@ -726,6 +727,11 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	MDIterator *iterSFexp = new MDIterator();
 	MDRow rowSFexp;
 
+
+	Timer timer;
+	size_t myTime1 = timer.tic();
+
+
 	bool skip_image;
 	NexpVector = new int[mdInSize];
 	for(int i=0; i<mdInSize; i++){
@@ -735,6 +741,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		SF.getRow(rowSF, iterSF->objId);
 		rowSF.getValue(MDL_IMAGE, fnImgNew);
+		rowSF.getValue(MDL_REF, refNum);
+
 		iterSFexp->init(SFexp);
 
 		refSum.initZeros();
@@ -802,7 +810,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					MAT_ELEM(E,2,1)=0.0;
 					MAT_ELEM(E,2,2)=1.0;
 
-					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
+					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0); //E
+					//applyGeometry(LINEAR,Iexp_out(),Iexp_aux(),auxtrMatrix,IS_NOT_INV,DONT_WRAP,0.0);
 
 					Iexp_aux().resetOrigin();
 
@@ -862,13 +871,12 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					MAT_ELEM(E,2,2)=1.0;
 
 					//AJ NEW
-					MAT_ELEM(E,0,2)*=-1;
-					//MAT_ELEM(E,1,2)*=-1;
-					MAT_ELEM(E,0,1)*=-1;
-					MAT_ELEM(E,1,0)*=-1;
+					MAT_ELEM(E,0,2)*=-1; //E
+					MAT_ELEM(E,0,1)*=-1; //E
+					MAT_ELEM(E,1,0)*=-1; //E
 					//FIN AJ NEW//
 
-					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0);
+					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,DONT_WRAP,0.0); //E
 
 					Iexp_aux().resetOrigin();
 
@@ -881,6 +889,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 				iterSFexp->moveNext();
 		}
 
+		FileName fnStackNo;
+		fnStackNo.compose(refNum, fnStackOut);
 		if(change){
 			refSum/=normWeight;
 			Inew()=refSum;
@@ -888,7 +898,11 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			//masking to avoid wrapping in the edges of the image
 			mask.apply_mask(Inew(), Inew2());
 			Inew2().resetOrigin();
-			Inew2.write(fnStackOut,i+1,true,WRITE_APPEND);
+			Inew2.write(fnStackNo,i,true,WRITE_APPEND);
+		}else{
+			MultidimArray<double> zeros(1, 1, yAux, xAux);
+			Inew2() = zeros;
+			Inew2.write(fnStackNo,i,true,WRITE_APPEND);
 		}
 
 		if(iterSF->hasNext())
@@ -896,8 +910,15 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	}
 
 
+	size_t diff = timer.elapsed();
+	std::cout << "Time in creating the representative images: " << diff << " msecs." << std::endl;
+
+
 	iterSFexp->init(SFexp);
 	iterSF->init(SF);
+
+	Timer timer2;
+	size_t myTime2 = timer2.tic();
 
 	Matrix2D<double> bestM(3,3);
 	MetaData SFout;
@@ -908,42 +929,53 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		//SF.getRow(rowSF, iterSF->objId);
 		//rowSF.getValue(MDL_IMAGE, fnImgNew);
 		//fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
+		SF.getRow(rowSF, iterSF->objId);
+		rowSF.getValue(MDL_REF, refNum);
+
 		fnRoot=fn_classes_out.withoutExtension();
-		fnStackMD=formatString("%s/%s.xmd",fnDir.c_str(),fnRoot.c_str());
-		fnClass.compose(i + 1, fnStackOut);
+		fnStackMD=formatString("%s/%s.xmd", fnDir.c_str(), fnRoot.c_str());
+		fnClass.compose(refNum, fnStackOut);
 
 		if(fnStackMD.exists() && firstTime)
 			fnStackMD.deleteFile();
 
 		firstTime=false;
-		if(NexpVector[i]==0){
-			//if(iterSF->hasNext())
-				//iterSF->moveNext();
+		/*if(NexpVector[i]==0){
+			if(iterSF->hasNext())
+				iterSF->moveNext();
 			continue;
-		}
+		}*/
 
 		size_t id = SFout.addObject();
-		SFout.setValue(MDL_REF, i + 1, id);
+		SFout.setValue(MDL_REF, refNum, id);
 		SFout.setValue(MDL_IMAGE, fnClass, id);
 		SFout.setValue(MDL_CLASS_COUNT,(size_t)NexpVector[i], id);
 
-		//if(iterSF->hasNext())
-			//iterSF->moveNext();
+		if(iterSF->hasNext())
+			iterSF->moveNext();
 	}
 	SFout.write("classes@"+fnStackMD, MD_APPEND);
 
-	//iterSF->init(SF);
+	size_t diff2 = timer2.elapsed();
+	std::cout << "Time in writing the classes metadata: " << diff2 << " msecs." << std::endl;
+
+	Timer timer3;
+	size_t myTime3 = timer3.tic();
+
+	iterSF->init(SF);
 	FileName fnExpIm;
 	MDRow row;
 	for(int i=0; i<mdInSize; i++){
 		skip_image=false;
 		SF.getRow(rowSF, iterSF->objId);
+		rowSF.getValue(MDL_REF, refNum);
 		iterSFexp->init(SFexp);
-		if(NexpVector[i]==0){
+		/*if(NexpVector[i]==0){
 			if(iterSF->hasNext())
 				iterSF->moveNext();
 			continue;
-		}
+		}*/
+
 		MetaData SFq;
 		for(int j=0; j<mdExpSize; j++){
 			skip_image=false;
@@ -1002,9 +1034,9 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					MAT_ELEM(bestM,2,0)=0.0;
 					MAT_ELEM(bestM,2,1)=0.0;
 					MAT_ELEM(bestM,2,2)=1.0;
-					bestM=bestM.inv();
+					bestM=bestM.inv(); //bestM
 
-					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
+					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi); //bestM
 
 					row.setValue(MDL_SHIFT_X, -shiftX);
 					row.setValue(MDL_SHIFT_Y, -shiftY);
@@ -1013,7 +1045,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_PSI, psi);
-					row.setValue(MDL_REF,i+1);
+					row.setValue(MDL_REF,refNum);
 					SFq.addRow(row);
 				}
 			}
@@ -1072,15 +1104,14 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					MAT_ELEM(bestM,2,1)=0.0;
 					MAT_ELEM(bestM,2,2)=1.0;
 
-					MAT_ELEM(bestM,0,0)*=-1;
-					MAT_ELEM(bestM,1,0)*=-1;
-					bestM=bestM.inv();
+					MAT_ELEM(bestM,0,0)*=-1; //bestM
+					MAT_ELEM(bestM,1,0)*=-1; //bestM
+					bestM=bestM.inv(); //bestM
 
-					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi);
+					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi); //bestM
 
 					//AJ NEW
 					shiftX*=-1;
-					//shiftY*=-1;
 					psi*=-1;
 					//FIN AJ NEW
 
@@ -1092,7 +1123,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_TILT, tilt);
 					row.setValue(MDL_ANGLE_PSI, psi);
-					row.setValue(MDL_REF,i+1);
+					row.setValue(MDL_REF,refNum);
 					SFq.addRow(row);
 				}
 			}
@@ -1101,11 +1132,15 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		}
 		MetaData SFq_sorted;
 		SFq_sorted.sort(SFq, MDL_IMAGE);
-		SFq_sorted.write(formatString("class%06d_images@%s",i+1,fnStackMD.c_str()),MD_APPEND);
+		SFq_sorted.write(formatString("class%06d_images@%s",refNum,fnStackMD.c_str()),MD_APPEND);
 
 		if(iterSF->hasNext())
 			iterSF->moveNext();
 	}
+
+	size_t diff3 = timer3.elapsed();
+	std::cout << "Time in writing all the class metadata: " << diff3 << " msecs." << std::endl;
+
 
 	delete []NexpVector;
 	delete iterSF;
@@ -1375,12 +1410,24 @@ void ProgGpuCorrelation::run()
 
 	//std::cerr << "weights: " << weights << std::endl;
 
+	size_t myTime2 = timer.tic();
+
 	generate_metadata(SF, SFexp, fnDir, fn_out, mdExpSize, mdInSize, weights, corrTotalRow, matrixTransCpu,
 			matrixTransCpu_mirror, maxShift, weightsMax, simplifiedMd, Nref);
+
+	size_t diff2 = timer.elapsed();
+	std::cout << "Time in generate_metadata: " << diff2 << " msecs." << std::endl;
+
+
+	size_t myTime3 = timer.tic();
+
 
 	if(generate_out)
 		generate_output_classes(SF, SFexp, fnDir, mdExpSize, mdInSize, weights, matrixTransCpu,
 				matrixTransCpu_mirror, maxShift, fn_classes_out, weightsMax, simplifiedMd, Nref);
+
+	size_t diff3 = timer.elapsed();
+	std::cout << "Time in generate_output_classes: " << diff3 << " msecs." << std::endl;
 
 
 	//Free memory in CPU
