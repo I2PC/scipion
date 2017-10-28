@@ -37,6 +37,7 @@ from os.path import join, exists
 from os import mkdir, remove, listdir
 import sys
 
+
 class XmippProtGpuCrrCL2D(ProtAlign2D):
     """ Aligns a set of particles using the GPU Correlation algorithm. """
     _label = 'align with GPU Correlation'
