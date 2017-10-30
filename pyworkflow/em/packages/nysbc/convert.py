@@ -43,7 +43,6 @@ def getEnviron():
 
     environ.update({
         'PATH': join(NYSBC_3DFSC_HOME, 'ThreeDFSC'),
-        'PYTHONPATH': join(NYSBC_3DFSC_HOME, 'ThreeDFSC')
     }, position=Environ.BEGIN)
     return environ
 

@@ -28,28 +28,26 @@ Protocol wrapper around the 3D FSC tool for directional
 resolution estimation
 """
 
-import os, sys
-import subprocess
+import os
 
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.utils import exists, join
+from pyworkflow.utils import exists, join, basename
 from convert import getEnviron
 
 
 class Prot3DFSC(ProtAnalysis3D):
     """
-    3DFSC is software tool for quantify the directional
+    3D FSC is software tool for quantifying directional
     resolution using 3D Fourier shell correlation volumes.
      
-    More information at https://github.com/nysbc/Anisotropy
+    Find more information at https://github.com/nysbc/Anisotropy
     """
     _label = '3D FSC'
 
-    INPUT_HELP = """ Input volumes for 3DFSC.
-    Required volumes:
+    INPUT_HELP = """ Required input volumes for 3D FSC:
         1. First half map of 3D reconstruction. Can be masked or unmasked.
         2. Second half map of 3D reconstruction. Can be masked or unmasked.
         3. Full map of 3D reconstruction. Can be masked or unmasked, sharpened or unsharpened.
@@ -57,6 +55,23 @@ class Prot3DFSC(ProtAnalysis3D):
     
     def __init__(self, **kwargs):
         ProtAnalysis3D.__init__(self, **kwargs)
+
+    def _initialize(self):
+        """ This function is mean to be called after the
+        working dir for the protocol have been set. (maybe after recovery from mapper)
+        """
+        self._createFilenameTemplates()
+
+    def _createFilenameTemplates(self):
+        """ Centralize how files are called for iterations and references. """
+        myDict = {
+                  'input_volFn': self._getExtraPath( 'volume_full.mrc'),
+                  'input_half1Fn': self._getExtraPath( 'volume_half1.mrc'),
+                  'input_half2Fn': self._getExtraPath( 'volume_half2.mrc'),
+                  'input_maskFn': self._getExtraPath( 'mask.mrc'),
+                  }
+
+        self._updateFilenamesDict(myDict)
 
     #--------------------------- DEFINE param functions ------------------------
 
@@ -77,7 +92,7 @@ class Prot3DFSC(ProtAnalysis3D):
 
         form.addParam('applyMask', params.BooleanParam, default=False,
                       label="Mask input volume?",
-                      help='If given, it would be used to mask the half maps'
+                      help='If given, it would be used to mask the half maps '
                            'during 3DFSC generation and analysis.')
         form.addParam('maskVolume', params.PointerParam, label="Mask volume",
                       pointerClass='VolumeMask', condition="applyMask",
@@ -109,14 +124,16 @@ class Prot3DFSC(ProtAnalysis3D):
                             'to determine sphericity deviation across spatial '
                             'frequencies. This can be useful to evaluate possible '
                             'effects of overfitting or improperly assigned '
-                            'orientations')
+                            'orientations.')
 
     #--------------------------- INSERT steps functions ------------------------
     
     def _insertAllSteps(self):
         # Insert processing steps
+        self._initialize()
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('run3DFSCStep')
+        self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions -------------------------------
     
@@ -125,40 +142,26 @@ class Prot3DFSC(ProtAnalysis3D):
         ih = ImageHandler()
 
         ih.convert(self.volumeHalf1.get().getLocation(),
-                   self._getExtraPath('vol_half1.mrc'))
+                   self._getFileName('input_half1Fn'))
         ih.convert(self.volumeHalf2.get().getLocation(),
-                   self._getExtraPath('vol_half2.mrc'))
+                   self._getFileName('input_half2Fn'))
         ih.convert(self.inputVolume.get().getLocation(),
-                   self._getExtraPath('vol_full.mrc'))
+                   self._getFileName('input_volFn'))
         if self.maskVolume.get() is not None:
             ih.convert(self.maskVolume.get().getLocation(),
-                       self._getExtraPath('mask.mrc'))
+                       self._getFileName('input_maskFn'))
 
     def run3DFSCStep(self):
         """ Call ResMap.py with the appropriate parameters. """
-        args = self._getArgs(None)
+        args = self._getArgs()
         param = ' '.join(['%s=%s' % (k, str(v)) for k, v in args.iteritems()])
-        program = join(getEnviron().get('NYSBC_3DFSC_HOME'), 'ThreeDFSC', 'ThreeDFSC_Start.py')
+        program =  self._getProgram()
 
-        fn = open(self._getExtraPath('script.sh'), 'w')
-        line = '''#!/bin/bash
-#source ~/eman22.rc
-source activate fsc
-python %s "%s"
-source deactivate
-        ''' % (program, param)
-        fn.write(line)
-        fn.close()
+        self.runJob('unset PYTHONPATH && source activate fsc && python %s %s && source deactivate' %
+                    (program, param), '', cwd=self._getExtraPath(), env=getEnviron())
 
-        subprocess.Popen('bash ./script.sh', shell=True,
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         #env=getEnviron(),
-                         cwd=self._getExtraPath())
-
-        #self.runJob('bash ./script.sh', '',
-        #            cwd=self._getExtraPath())
-        #            env=getEnviron())
+    def createOutputStep(self):
+        pass
 
     #--------------------------- INFO functions --------------------------------
     
@@ -189,12 +192,12 @@ source deactivate
     
     #--------------------------- UTILS functions -------------------------------
  
-    def _getArgs(self, workingDir):
+    def _getArgs(self):
         """ Prepare the args dictionary."""
 
-        args = {'--halfmap1': self._getExtraPath('vol_half1.mrc'),
-                '--halfmap2': self._getExtraPath('vol_half2.mrc'),
-                '--fullmap': self._getExtraPath('vol_full.mrc'),
+        args = {'--halfmap1': basename(self._getFileName('input_half1Fn')),
+                '--halfmap2': basename(self._getFileName('input_half2Fn')),
+                '--fullmap': basename(self._getFileName('input_volFn')),
                 '--apix': self.inputVolume.get().getSamplingRate(),
                 '--ThreeDFSC': '3D-FSC',
                 '--dthetaInDegrees': self.dTheta.get(),
@@ -204,7 +207,7 @@ source deactivate
                 '--numThresholdsForSphericityCalcs': self.numThr.get()
                 }
         if self.applyMask and self.maskVolume:
-            args.update({'--mask': self._getExtraPath('mask.mrc')})
+            args.update({'--mask': basename(self._getFileName('input_maskFn'))})
 
         return args
 
@@ -212,4 +215,5 @@ source deactivate
         """ Return the program binary that will be used. """
         if 'NYSBC_3DFSC_HOME' not in os.environ:
             return None
-        return 'python3 ' + os.path.join(os.environ['NYSBC_3DFSC_HOME'], 'ThreeDFSC/ThreeDFSC_Start.py')
+        cmd = join(getEnviron().get('NYSBC_3DFSC_HOME'), 'ThreeDFSC', 'ThreeDFSC_Start.py')
+        return str(cmd)
