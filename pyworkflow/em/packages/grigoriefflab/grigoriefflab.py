@@ -27,7 +27,7 @@
 import os
 from os.path import join, exists
 
-MAGDIST_HOMA_VAR = 'MAGDIST_HOME'
+MAGDIST_HOME_VAR = 'MAGDIST_HOME'
 
 SUMMOVIE_HOME = 'SUMMOVIE_HOME'
 
@@ -93,7 +93,7 @@ FREALIGNMP_PATH = join(FREALIGN_HOME, 'bin', FREALIGNMP)
 CALC_OCC_PATH = join(FREALIGN_HOME, 'bin', CALC_OCC)
 RSAMPLE_PATH = join(FREALIGN_HOME, 'bin', RSAMPLE)
 
-MAGDIST_HOME = _getHome(MAGDIST_HOMA_VAR, 'mag_distortion')
+MAGDIST_HOME = _getHome(MAGDIST_HOME_VAR, 'mag_distortion')
 MAGDISTEST_PATH = join(MAGDIST_HOME, 'bin', MAGDISTEST)
 MAGDISTCORR_PATH = join(MAGDIST_HOME, 'bin', MAGDISTCORR)
 
@@ -111,5 +111,5 @@ def validateMagDistorsionInstallation():
     missingPaths = []
 
     if not os.path.exists(MAGDIST_HOME):
-        missingPaths.append("%s : %s" % (MAGDIST_HOMA_VAR, MAGDIST_HOME))
+        missingPaths.append("%s : %s" % (MAGDIST_HOME_VAR, MAGDIST_HOME))
     return missingPaths
