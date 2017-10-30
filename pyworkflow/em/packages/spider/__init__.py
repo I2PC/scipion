@@ -43,3 +43,5 @@ from viewer import SpiderViewer
 from viewer_capca import SpiderViewerCAPCA
 from viewer_classify import SpiderViewerWard, SpiderViewerDiday
 from viewer_refinement import SpiderViewerRefinement
+
+

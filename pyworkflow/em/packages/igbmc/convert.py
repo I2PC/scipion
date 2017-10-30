@@ -35,7 +35,7 @@ from os.path import join
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
-
+from pyworkflow.em.packages.igbmc import GEMPICKER_HOME
 
 
 def readSetOfCoordinates(workingDir, micSet, coordSet):
@@ -70,7 +70,7 @@ def getProgram(useGPU):
     else:
         binary = os.environ['GEMPICKER']
 
-    program = join(os.environ['GEMPICKER_HOME'], os.path.basename(binary))
+    program = join(os.environ[GEMPICKER_HOME], os.path.basename(binary))
     return program
 
 
