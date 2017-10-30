@@ -520,4 +520,12 @@ env.addPackage('ethan', version='1.2',
                tar='ethan-1.2.tgz',
                commands=[('make', 'ethan')])
 
+fsc_commands = [('conda env create -f environment.yml',
+                 '/home/gsharov/soft/EMAN2.2/envs/fsc')]
+
+env.addPackage('nysbc-3DFSC', version='2.5',
+               tar='nysbc-3DFSC_2.5.tgz',
+               commands=fsc_commands,
+               neededProgs=['conda'])
+
 env.execute()

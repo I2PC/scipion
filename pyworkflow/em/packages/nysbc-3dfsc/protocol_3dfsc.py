@@ -1,0 +1,215 @@
+# **************************************************************************
+# *
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
+# *
+# * MRC Laboratory of Molecular Biology (MRC-LMB)
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'scipion@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+Protocol wrapper around the 3D FSC tool for directional
+resolution estimation
+"""
+
+import os, sys
+import subprocess
+
+import pyworkflow.protocol.params as params
+from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.gui.plotter import Plotter
+from pyworkflow.utils import exists, join
+from convert import getEnviron
+
+
+class Prot3DFSC(ProtAnalysis3D):
+    """
+    3DFSC is software tool for quantify the directional
+    resolution using 3D Fourier shell correlation volumes.
+     
+    More information at https://github.com/nysbc/Anisotropy
+    """
+    _label = '3D FSC'
+
+    INPUT_HELP = """ Input volumes for 3DFSC.
+    Required volumes:
+        1. First half map of 3D reconstruction. Can be masked or unmasked.
+        2. Second half map of 3D reconstruction. Can be masked or unmasked.
+        3. Full map of 3D reconstruction. Can be masked or unmasked, sharpened or unsharpened.
+    """
+    
+    def __init__(self, **kwargs):
+        ProtAnalysis3D.__init__(self, **kwargs)
+
+    #--------------------------- DEFINE param functions ------------------------
+
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputVolume', params.PointerParam,
+                      pointerClass='Volume',
+                      label="Input volume", important=True,
+                      help=self.INPUT_HELP)
+        form.addParam('volumeHalf1', params.PointerParam,
+                      label="Volume half 1", important=True,
+                      pointerClass='Volume',
+                      help=self.INPUT_HELP)
+        form.addParam('volumeHalf2', params.PointerParam,
+                      pointerClass='Volume',
+                      label="Volume half 2", important=True,
+                      help=self.INPUT_HELP)
+
+        form.addParam('applyMask', params.BooleanParam, default=False,
+                      label="Mask input volume?",
+                      help='If given, it would be used to mask the half maps'
+                           'during 3DFSC generation and analysis.')
+        form.addParam('maskVolume', params.PointerParam, label="Mask volume",
+                      pointerClass='VolumeMask', condition="applyMask",
+                      help='Select a volume to apply as a mask.')
+
+        group = form.addGroup('Extra parameters')
+        group.addParam('dTheta', params.FloatParam, default=20,
+                       label='Angle of cone (deg)',
+                       help='Angle of cone to be used for 3D FSC sampling in '
+                            'degrees. Default is 20 degrees.')
+        group.addParam('fscCutoff', params.FloatParam, default=0.143,
+                       label='FSC cutoff',
+                       help='FSC cutoff criterion. 0.143 is default.')
+        group.addParam('thrSph', params.FloatParam, default=0.5,
+                       label='Sphericity threshold',
+                       help='Threshold value for 3DFSC volume for calculating '
+                            'sphericity. 0.5 is default.')
+        group.addParam('hpFilter', params.FloatParam, default=200,
+                       label='High-pass filter (A)',
+                       help='High-pass filter for thresholding in Angstrom. '
+                            'Prevents small dips in directional FSCs at low spatial '
+                            'frequency due to noise from messing up the '
+                            'thresholding step. Decrease if you see a huge wedge '
+                            'missing from your thresholded 3DFSC volume. 200 '
+                            'Angstroms is default.')
+        group.addParam('numThr', params.IntParam, default=1,
+                       label='Number of threshold for sphericity',
+                       help='Calculate sphericities at different threshold cutoffs '
+                            'to determine sphericity deviation across spatial '
+                            'frequencies. This can be useful to evaluate possible '
+                            'effects of overfitting or improperly assigned '
+                            'orientations')
+
+    #--------------------------- INSERT steps functions ------------------------
+    
+    def _insertAllSteps(self):
+        # Insert processing steps
+        self._insertFunctionStep('convertInputStep')
+        self._insertFunctionStep('run3DFSCStep')
+
+    #--------------------------- STEPS functions -------------------------------
+    
+    def convertInputStep(self):
+        """ Convert input volumes to .mrc as expected by 3DFSC."""
+        ih = ImageHandler()
+
+        ih.convert(self.volumeHalf1.get().getLocation(),
+                   self._getExtraPath('vol_half1.mrc'))
+        ih.convert(self.volumeHalf2.get().getLocation(),
+                   self._getExtraPath('vol_half2.mrc'))
+        ih.convert(self.inputVolume.get().getLocation(),
+                   self._getExtraPath('vol_full.mrc'))
+        if self.maskVolume.get() is not None:
+            ih.convert(self.maskVolume.get().getLocation(),
+                       self._getExtraPath('mask.mrc'))
+
+    def run3DFSCStep(self):
+        """ Call ResMap.py with the appropriate parameters. """
+        args = self._getArgs(None)
+        param = ' '.join(['%s=%s' % (k, str(v)) for k, v in args.iteritems()])
+        program = join(getEnviron().get('NYSBC_3DFSC_HOME'), 'ThreeDFSC', 'ThreeDFSC_Start.py')
+
+        fn = open(self._getExtraPath('script.sh'), 'w')
+        line = '''#!/bin/bash
+#source ~/eman22.rc
+source activate fsc
+python %s "%s"
+source deactivate
+        ''' % (program, param)
+        fn.write(line)
+        fn.close()
+
+        subprocess.Popen('bash ./script.sh', shell=True,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         #env=getEnviron(),
+                         cwd=self._getExtraPath())
+
+        #self.runJob('bash ./script.sh', '',
+        #            cwd=self._getExtraPath())
+        #            env=getEnviron())
+
+    #--------------------------- INFO functions --------------------------------
+    
+    def _summary(self):
+        summary = []
+
+        if exists(self._getExtraPath('Results_3D-FSC/Plots3D-FSC.jpg')):
+            pass
+            #results = self._parseOutput()
+            #summary.append('Mean resolution: %0.2f A' % results[0])
+            #summary.append('Median resolution: %0.2f A' % results[1])
+        else:
+            summary.append("Output is not ready yet.")
+
+        return summary
+    
+    def _validate(self):
+        errors = []
+
+        half1 = self.volumeHalf1.get()
+        half2 = self.volumeHalf2.get()
+        if half1.getSamplingRate() != half2.getSamplingRate():
+            errors.append('The selected half volumes have not the same pixel size.')
+        if half1.getXDim() != half2.getXDim():
+            errors.append('The selected half volumes have not the same dimensions.')
+                
+        return errors
+    
+    #--------------------------- UTILS functions -------------------------------
+ 
+    def _getArgs(self, workingDir):
+        """ Prepare the args dictionary."""
+
+        args = {'--halfmap1': self._getExtraPath('vol_half1.mrc'),
+                '--halfmap2': self._getExtraPath('vol_half2.mrc'),
+                '--fullmap': self._getExtraPath('vol_full.mrc'),
+                '--apix': self.inputVolume.get().getSamplingRate(),
+                '--ThreeDFSC': '3D-FSC',
+                '--dthetaInDegrees': self.dTheta.get(),
+                '--FSCCutoff': self.fscCutoff.get(),
+                '--ThresholdForSphericity': self.thrSph.get(),
+                '--HighPassFilter': self.hpFilter.get(),
+                '--numThresholdsForSphericityCalcs': self.numThr.get()
+                }
+        if self.applyMask and self.maskVolume:
+            args.update({'--mask': self._getExtraPath('mask.mrc')})
+
+        return args
+
+    def _getProgram(self):
+        """ Return the program binary that will be used. """
+        if 'NYSBC_3DFSC_HOME' not in os.environ:
+            return None
+        return 'python3 ' + os.path.join(os.environ['NYSBC_3DFSC_HOME'], 'ThreeDFSC/ThreeDFSC_Start.py')
