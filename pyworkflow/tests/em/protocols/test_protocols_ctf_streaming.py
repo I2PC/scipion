@@ -153,7 +153,7 @@ class TestCtfStreaming(BaseTest):
         baseFn = protCTF._getPath(CTF_SQLITE)
         self.assertTrue(os.path.isfile(baseFn))
 
-        self.assertEqual(ctfSet.getSize(), MICS)
+        self.assertSetSize(ctfSet, MICS, "Ctffind4 output size does not match")
 
         for ctf in ctfSet:
             self.assertNotEqual(ctf._resolution.get(), None)

@@ -614,18 +614,29 @@ def setPsdFiles(ctfModel, ctfRow):
 
 def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a metadata. """
-    # for compatibility reason ignore resolution and fitQuality
+    # Check if the row has CTF values, this could be called from a xmipp
+    # particles metadata
     if _containsAll(ctfRow, CTF_DICT_NORESOLUTION):
+
+        # for compatibility reason ignore resolution and fitQuality
+        # Instantiate Scipion CTF Model
         ctfModel = CTFModel()
-        if ctfRow.containsLabel("_resolution"):
+
+        # Case for metadata coming with Xmipp resolution label
+        # Populate Scipion CTF from metadata row (using mapping dictionary
+        # plus extra labels
+        if ctfRow.containsLabel(xmipp.label2Str(xmipp.MDL_CTF_CRIT_MAXFREQ)):
             rowToObject(ctfRow, ctfModel, CTF_DICT,
                         extraLabels=CTF_EXTRA_LABELS)
         else:
             rowToObject(ctfRow, ctfModel, CTF_DICT_NORESOLUTION,
                         extraLabels=CTF_EXTRA_LABELS_PLUS_RESOLUTION)
 
+        # Standarize defocus values
         ctfModel.standardize()
+        # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
+
     else:
         ctfModel = None
 
