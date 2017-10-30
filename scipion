@@ -444,6 +444,15 @@ Example: scipion install eman-2.12
             if '--no-xmipp' in args:
                 return 0
 
+            # Get xmipp source code file
+            xmippArgsSource = join(SCIPION_HOME, 'software', 'em', 'xmipp',
+                                   'libraries', 'data', 'args.h')
+            if not os.path.exists(xmippArgsSource):
+                print "Xmipp source code file %s not found. It seems you have" \
+                      " downloaded the binaries. Skipping Xmipp compilation."\
+                      % xmippArgsSource
+                return 0
+
             cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
             from install.funcs import green, yellow
             print(green('Compiling Xmipp ...'))
