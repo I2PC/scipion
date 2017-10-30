@@ -44,6 +44,8 @@ import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import MODE_RESTART
 
+OBJECT_PARENT_ID = 'object_parent_id'
+
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
@@ -1119,7 +1121,14 @@ class Project(object):
                 g.aliasNode(node, p2.getUniqueId())
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            # Duplicated ...
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
+
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
 
@@ -1215,7 +1224,12 @@ class Project(object):
         objectsDict = {}
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
 

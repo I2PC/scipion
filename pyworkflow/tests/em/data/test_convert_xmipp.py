@@ -992,7 +992,7 @@ class TestSetConvert(BaseTest):
             xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
             xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
             xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
-            xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+            #xmipp.MDL_CTF_CRIT_FITTINGSCORE,
             xmipp.MDL_CTF_CRIT_FITTINGCORR13,
             xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
             xmipp.MDL_CTF_CRIT_PSDVARIANCE,
@@ -1008,7 +1008,8 @@ class TestSetConvert(BaseTest):
 
         for label in ALL_CTF_LABELS:
             attrName = '_xmipp_%s' % xmipp.label2Str(label)
-            self.assertAlmostEquals(mdCtf.getValue(label, objId), ctf.getAttributeValue(attrName))
+            self.assertAlmostEquals(mdCtf.getValue(label, objId),
+                                    ctf.getAttributeValue(attrName))
         
     def test_writeSetOfDefocusGroups(self):
         #TODO: FIX THIS test according to the new SetOfDefocusGroup

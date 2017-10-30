@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+from pyworkflow import VERSION_1_2
 from pyworkflow.protocol.params import (PointerParam, FloatParam, FileParam,
                                         IntParam, LabelParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
@@ -43,7 +43,7 @@ class ProtRelionLocalRes(ProtAnalysis3D):
     of that mask.
     """
     _label = 'local resolution'
-
+    _lastUpdateVersion = VERSION_1_2
     @classmethod
     def isDisabled(cls):
         return not isVersion2()
