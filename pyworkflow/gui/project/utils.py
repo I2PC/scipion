@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# * Authors:     Pablo Conesa (pconesa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,27 +23,40 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains data and protocol classes
-wrapping ATSAS programs http://www.embl-hamburg.de/biosaxs/software.html
-"""
-from pyworkflow.utils import commandExists
+from pyworkflow.gui.project.constants import STATUS_COLORS
+from pyworkflow.protocol import STATUS_FAILED
 
-_logo = "atsas_logo.gif"
-CRYSOL = "crysol"
-from bibtex import _bibtex # Load bibtex dict with references
-from atsas import *
-from protocol_pdb_to_saxs import AtsasProtConvertPdbToSAXS
-from viewer import AtsasViewer
 
-def validateInstallation():
-    """ This function will be used to check if ATSAS is properly installed. """
-    missingPaths = []
+def getStatusColorFromNode(node):
 
-    if not (commandExists(CRYSOL)):
-        missingPaths.append("%s not found in the system" % CRYSOL)
+    # If it is a run node (not PROJECT)
+    return getStatusColorFromRun(node.run)
 
-    if missingPaths:
-        return ["Missing variables:"] + missingPaths
+
+def getStatusColorFromRun(prot):
+    """
+    Returns the color associated with the status
+    -------
+
+    """
+
+    if prot:
+        return getStatusColor(prot.status.get(STATUS_FAILED))
     else:
-        return [] # No errors
+        return getStatusColor()
+
+
+def getStatusColor(status=None, default='#ADD8E6'):
+    """
+    Parameters
+    ----------
+    status status of the protocol
+
+    Returns the color associated with he status
+    -------
+
+    """
+    if status:
+        return STATUS_COLORS[status]
+    else:
+        return default
