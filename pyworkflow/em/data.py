@@ -167,14 +167,14 @@ class CTFModel(EMObject):
         else:
             return self._resolution.get()
 
-    def resolutionHasValue(self):
+    def hasResolution(self):
         return self._resolution.hasValue()
 
     def setResolution(self, value):
         self._resolution.set(value)
 
     def getFitQuality(self):
-        # this is an awful hack to read freq either from ctffid/gctf or xmipp
+        # this is an awful hack to read freq either from ctffind/gctf or xmipp
         # labels assigned to max resolution used to be different
         # It should be eventually removed
         if self._fitQuality.hasValue():

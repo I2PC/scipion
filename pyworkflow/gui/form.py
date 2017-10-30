@@ -1725,7 +1725,7 @@ class FormWindow(Window):
         errors = self.protocol.validate()
         
         if errors:
-            self.showError(errors)
+            self.showInfo(errors)
         else:
             warns = self.protocol.warnings()
             if warns and not self.askYesNo("There are some warnings",

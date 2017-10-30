@@ -589,7 +589,7 @@ def class2DToRow(class2D, classRow):
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
     # TODO: compatibility check remove eventually
-    if ctfModel.resolutionHasValue():
+    if ctfModel.hasResolution():
         objectToRow(ctfModel, ctfRow, CTF_DICT,
                     extraLabels=CTF_EXTRA_LABELS)
     else:
