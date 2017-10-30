@@ -40,6 +40,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.utils import exists
 
+RESMAP_HOME = 'RESMAP_HOME'
 
 
 class ProtResMap(ProtAnalysis3D):
@@ -63,7 +64,19 @@ class ProtResMap(ProtAnalysis3D):
            While a similar effect is often obtained by B-factor sharpening,
            please make sure that the spectrum does not blow up near Nyquist.
     """
-    
+
+    @classmethod
+    def validateInstallation(cls):
+        """ This function will be used to check if package is properly installed."""
+        missingPaths = ["%s: %s" % (var, os.environ[var])
+                        for var in [RESMAP_HOME]
+                        if not os.path.exists(os.environ[var])]
+
+        if missingPaths:
+            return ["Missing variables:"] + missingPaths
+        else:
+            return []  # No errors
+
     def __init__(self, **kwargs):
         ProtAnalysis3D.__init__(self, **kwargs)
         self.histogramData = String()
@@ -244,7 +257,7 @@ class ProtResMap(ProtAnalysis3D):
         volumes = ['volume1.map', 'volume2.map']
         
         # Add resmap libraries to the path
-        sys.path.append(os.environ['RESMAP_HOME'])
+        sys.path.append(os.environ[RESMAP_HOME])
         from ResMap_algorithm import ResMap_algorithm
         from ResMap_fileIO import MRC_Data
         
