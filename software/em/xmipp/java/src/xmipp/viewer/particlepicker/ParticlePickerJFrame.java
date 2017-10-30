@@ -69,6 +69,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
     public static final int PREVIOUS_MICROGRAPH_KEY = KeyEvent.VK_W;
     public static final int TOGGLE_MARKER_KEY = KeyEvent.VK_SPACE;
     public static final int TOGGLE_NORMAL_MODE_KEY = KeyEvent.VK_P;
+    public static final int ERASE_ACTIVE = KeyEvent.VK_DELETE;
     protected ParticlesDialog particlesdialog;
 
 	protected JMenuItem ijmi;
@@ -540,7 +541,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	protected void openHelpURl()
 	{
-		XmippWindowUtil.openURI("https://github.com/biocompwebs/scipion/wiki/Picker");
+		XmippWindowUtil.openURI("https://github.com/I2PC/scipion/wiki/Picker");
 	}
 
 	protected abstract void resetMicrograph();
@@ -698,6 +699,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			// Set up the dialog that the button brings up.
 			colorChooser = new JColorChooser();
+			colorChooser.setColor(getParticlePicker().getColor());
 			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
 			colorChooser, new ActionListener()
 			{
@@ -1020,7 +1022,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		colorbt.setFocusPainted(false);
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
-                colorbt.setMargin(new Insets(0, 0, 0, 0));
+        colorbt.setMargin(new Insets(0, 0, 0, 0));
 		colorbt.addActionListener(new ColorActionListener());
 		colorpn.add(colorbt);
 	}
@@ -1219,7 +1221,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         map.put((char)TOGGLE_ERASE_MODE_KEY, "Toggle between erase and picking");
         map.put((char)NEXT_MICROGRAPH_KEY, "Select Next Micrograph");
         map.put((char)PREVIOUS_MICROGRAPH_KEY, "Select Previous Micrograph");
-        map.put((char)TOGGLE_MARKER_KEY, "hide/show particle markers");
+        map.put("Space bar", "hide/show particle markers.");
 
         if (linearModeAvailable()) {
 

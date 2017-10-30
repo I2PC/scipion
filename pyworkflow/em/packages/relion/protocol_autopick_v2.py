@@ -26,14 +26,18 @@
 
 import os
 from os.path import relpath
+
 import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+from pyworkflow.em.protocol.protocol_particles import ProtParticlePickingAuto
 from pyworkflow.em.constants import RELATION_CTF, ALIGN_NONE
-from protocol_base import ProtRelionBase
-from convert import writeSetOfMicrographs, writeReferences, readSetOfCoordinates, \
-    isVersion2
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils.properties import Message
 import pyworkflow.utils as pwutils
+import pyworkflow.em.metadata as md
+
+from protocol_base import ProtRelionBase
+from convert import (writeSetOfMicrographs, writeReferences,
+                     readSetOfCoordinates, isVersion2, micrographToRow)
 
 
 REF_AVERAGES = 0
@@ -46,7 +50,7 @@ MICS_AUTO = 0
 MICS_SUBSET = 1
 
 
-class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
+class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
     """
     This Relion protocol uses the 'relion_autopick' program to pick particles
     from micrographs, either using templates or gaussian blobs.
@@ -72,166 +76,6 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
     @classmethod
     def isDisabled(cls):
         return not isVersion2()
-
-    #--------------------------- INSERT steps functions ------------------------
-    def _insertAllSteps(self):
-        # Convert the input micrographs and references to
-        # the required Relion star files
-        inputRefs = self.getInputReferences()
-        refId = inputRefs.strId() if self.useInputReferences() else 'Gaussian'
-        convertId = self._insertFunctionStep('convertInputStep',
-                                             self.getInputMicrographs().strId(),
-                                             refId, self.runType.get())
-        allMicSteps = []
-        micStar = self._getPath('input_micrographs.star')
-        autopickId = self._insertAutopickStep(micStar, convertId)
-        allMicSteps.append(autopickId)
-
-        # Register final coordinates as output
-        self._insertFunctionStep('createOutputStep',
-                                 prerequisites=allMicSteps)
-
-
-
-    #--------------------------- STEPS functions -------------------------------
-    def _preprocessMicrographRow(self, img, imgRow):
-        # Temporarly convert the few micrographs to tmp and make sure
-        # they are in 'mrc' format
-        # Get basename and replace extension by 'mrc'
-        newName = pwutils.replaceBaseExt(img.getFileName(), 'mrc')
-        newPath = self._getExtraPath(newName)
-
-        # If the micrographs are in 'mrc' format just create a link
-        # if not, convert to 'mrc'
-        if img.getFileName().endswith('mrc'):
-            pwutils.createLink(img.getFileName(), newPath)
-        else:
-            self._ih.convert(img, newPath)
-        # The command will be launched from the working dir
-        # so, let's make the micrograph path relative to that
-        img.setFileName(os.path.join('extra', newName))
-        if self.ctfRelations.get() is not None:
-            img.setCTF(self.ctfDict[img.getMicName()])
-
-    def _postprocessMicrographRow(self, img, imgRow):
-        imgRow.writeToFile(self._getMicStarFile(img))
-
-    def _getMicStarFile(self, mic):
-        return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(),
-                                                         'star'))
-
-    def convertInputStep(self, micsId, refsId, runType):
-        # runType is passed as parameter to force a re-execute of this step
-        # if there is a change in the type
-
-        self._ih = ImageHandler() # used to convert micrographs
-        # Match ctf information against the micrographs
-        self.ctfDict = {}
-        if self.ctfRelations.get() is not None:
-            for ctf in self.ctfRelations.get():
-                self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
-
-        micStar = self._getPath('input_micrographs.star')
-        writeSetOfMicrographs(self.getMicrographList(), micStar,
-                              alignType=ALIGN_NONE,
-                              preprocessImageRow=self._preprocessMicrographRow,
-                              postprocessImageRow=self._postprocessMicrographRow)
-
-        if self.useInputReferences():
-            writeReferences(self.getInputReferences(),
-                            self._getPath('input_references'), useBasename=True)
-
-    def _pickMicrograph(self, micStarFile, params, threshold,
-                               minDistance, maxStddevNoise, fom):
-        """ Launch the 'relion_autopick' for all micrographs. """
-        params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
-        params += ' --max_stddev_noise %0.3f' % maxStddevNoise
-        params += ' --threshold %0.3f ' % threshold
-        params += ' --min_distance %0.3f %s' % (minDistance, fom)
-
-        self.runJob(self._getProgram('relion_autopick'), params,
-                    cwd=self.getWorkingDir())
-
-    #--------------------------- UTILS functions -------------------------------
-    def getInputReferences(self):
-        return self.inputReferences.get()
-
-    def getInputMicrographsPointer(self):
-        return self.inputMicrographs
-
-    def getInputMicrographs(self):
-        return self.getInputMicrographsPointer().get()
-
-    def getMicrographList(self):
-        """ Return the list of micrographs (either a subset or the full set)
-        that will be used for optimizing the parameters or the picking.
-        """
-        # Use all micrographs only when going for the full picking
-        inputMics = self.getInputMicrographs()
-
-        if not self.isRunOptimize():
-            return inputMics
-
-        if self.micrographsSelection == MICS_AUTO:
-            # Lets sort micrograph by defocus and take the equally-space
-            # number of them from the list
-            inputCTFs = self.ctfRelations.get()
-            sortedMicIds = []
-
-            for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
-                itemId = ctf.getObjId()
-                if itemId in inputMics:
-                    sortedMicIds.append(itemId)
-
-            nMics = self.micrographsNumber.get()
-            space = len(sortedMicIds) / (nMics - 1)
-
-            micIds = [sortedMicIds[0], sortedMicIds[-1]]
-            pos = 0
-            while len(micIds) < nMics:  # just add first and last
-                pos += space
-                micIds.insert(1, sortedMicIds[pos])
-        else: # Subset selection
-            micIds = [mic.getObjId() for mic in self.micrographsSubset.get()]
-
-        mics = []
-        for micId in micIds:
-            mic = inputMics[micId]
-
-            if mic is None:
-                raise Exception('Invalid micrograph id: %s' % micId)
-
-            mics.append(mic.clone())
-
-        return mics
-
-    def getCoordsDir(self):
-        return self._getTmpPath('xmipp_coordinates')
-
-    def _writeXmippCoords(self, coordSet):
-        micSet = self.getInputMicrographs()
-        coordPath = self._getTmpPath('xmipp_coordinates')
-        pwutils.cleanPath(coordPath)
-        pwutils.makePath(coordPath)
-        import pyworkflow.em.packages.xmipp3 as xmipp3
-        micPath = micSet.getFileName()
-        xmipp3.writeSetOfCoordinates(coordPath, coordSet, ismanual=False)
-        return micPath, coordPath
-
-    def writeXmippOutputCoords(self):
-        return self._writeXmippCoords(self.outputCoordinates)
-
-    def writeXmippCoords(self):
-        """ Write the SetOfCoordinates as expected by Xmipp
-        to be displayed with its GUI.
-        """
-        micSet = self.getInputMicrographs()
-        coordSet = self._createSetOfCoordinates(micSet)
-        coordSet.setBoxSize(self.getInputReferences().getDim()[0])
-        starFiles = [self._getExtraPath(pwutils.removeBaseExt(mic.getFileName())
-                                        + '_autopick.star') for mic in micSet]
-        readSetOfCoordinates(coordSet, starFiles)
-        return self._writeXmippCoords(coordSet)
 
     # -------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -263,6 +107,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
 
         group = form.addGroup('Micrographs for optimization',
                               condition='runType==%d' % RUN_OPTIMIZE)
+
         group.addParam('micrographsSelection', params.EnumParam,
                        default=MICS_AUTO,
                        choices=['automatic selection', 'input subset'],
@@ -445,7 +290,95 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
 
         form.addParallelSection(threads=0, mpi=4)
 
-    # -------------------------- INSERT steps functions ------------------------
+    #--------------------------- STEPS functions -------------------------------
+
+    def _pickMicrograph(self, micStarFile, params, threshold,
+                               minDistance, maxStddevNoise, fom):
+        """ Launch the 'relion_autopick' for all micrographs. """
+        params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
+        params += ' --max_stddev_noise %0.3f' % maxStddevNoise
+        params += ' --threshold %0.3f ' % threshold
+        params += ' --min_distance %0.3f %s' % (minDistance, fom)
+
+        self.runJob(self._getProgram('relion_autopick'), params,
+                    cwd=self.getWorkingDir())
+
+    #--------------------------- INSERT steps functions ------------------------
+    def _insertAllSteps(self):
+        self.inputStreaming = self.getInputMicrographs().isStreamOpen()
+
+        if self.inputStreaming and not self.isRunOptimize():
+            # If the input is in streaming, follow the base class policy
+            # about inserting new steps and discovery new input/output
+            ProtParticlePickingAuto._insertAllSteps(self)
+            self.createOutputStep = self._doNothing
+        else:
+            # If not in streaming, then we will just insert a single step to
+            # pick all micrographs at once since it is much faster
+            self._insertInitialSteps()
+            self._insertFunctionStep('_pickMicrographsFromStar',
+                                     self._getPath('input_micrographs.star'),
+                                     *self._getPickArgs())
+            self._insertFunctionStep('createOutputStep')
+
+            # Disable streaming functions:
+            self._insertFinalSteps = self._doNothing
+            self._stepsCheck = self._doNothing
+
+    def _insertInitialSteps(self):
+        # Convert the input micrographs and references to
+        # the required Relion star files
+        inputRefs = self.getInputReferences()
+        refId = inputRefs.strId() if self.useInputReferences() else 'Gaussian'
+        convertId = self._insertFunctionStep('convertInputStep',
+                                             self.getInputMicrographs().strId(),
+                                             refId, self.runType.get())
+        return [convertId]
+
+    def _doNothing(self, *args):
+        pass # used to avoid some streaming functions
+
+    def _loadInputList(self):
+        """ This function is re-implemented in this protocol, because it have
+         a SetOfCTF as input, so for streaming, we only want to report those
+         micrographs for which the CTF is ready.
+        """
+        micDict, micClose = self._loadMics(self.getInputMicrographs())
+        ctfDict, ctfClosed = self._loadCTFs(self.ctfRelations.get())
+
+        # Remove the micrographs that have not CTF
+        # and set the CTF property for those who have it
+        for micKey, mic in micDict.iteritems():
+            if micKey in ctfDict:
+                mic.setCTF(ctfDict[micKey])
+            else:
+                del micDict[micKey]
+
+        # Return the updated micDict and the closed status
+        return micDict, micClose and ctfClosed
+
+    #--------------------------- STEPS functions -------------------------------
+
+    def convertInputStep(self, micsId, refsId, runType):
+        # runType is passed as parameter to force a re-execute of this step
+        # if there is a change in the type
+
+        self._ih = ImageHandler() # used to convert micrographs
+        # Match ctf information against the micrographs
+        self.ctfDict = {}
+        if self.ctfRelations.get() is not None:
+            for ctf in self.ctfRelations.get():
+                self.ctfDict[ctf.getMicrograph().getMicName()] = ctf.clone()
+
+        micStar = self._getPath('input_micrographs.star')
+        writeSetOfMicrographs(self.getMicrographList(), micStar,
+                              alignType=ALIGN_NONE,
+                              preprocessImageRow=self._preprocessMicrographRow,
+                              postprocessImageRow=self._postprocessMicrographRow)
+
+        if self.useInputReferences():
+            writeReferences(self.getInputReferences(),
+                            self._getPath('input_references'), useBasename=True)
 
     def getAutopickParams(self):
         # Return the autopicking parameters except for the interative ones:
@@ -487,24 +420,63 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
 
         return params
 
-    def _insertAutopickStep(self, micStarFile, convertId):
+    def _getPickArgs(self):
+        basicArgs = self.getAutopickParams()
+        threshold = self.pickingThreshold.get()
+        interDist = self.interParticleDistance.get()
         fomParam = ' --write_fom_maps' if self.isRunOptimize() else ''
+        return [basicArgs, threshold, interDist, fomParam]
 
-        return self._insertFunctionStep('autopickStep',
-                                        micStarFile,
-                                        self.getAutopickParams(),
-                                        self.pickingThreshold.get(),
-                                        self.interParticleDistance.get(),
-                                        self.maxStddevNoise.get(),
-                                        fomParam,
-                                        prerequisites=[convertId])
+    def _pickMicrographsFromStar(self, micStarFile, params,
+                                 threshold, minDistance, fom):
+        """ Launch the 'relion_autopick' for micrographs in the inputStarFile.
+         If the input set of complete, the star file will contain all the
+         micrographs. If working in streaming, it will be only one micrograph.
+        """
+        params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
+        params += ' --threshold %0.3f ' % threshold
+        params += ' --min_distance %0.3f %s' % (minDistance, fom)
+
+        program = self._getProgram('relion_autopick')
+
+        self.runJob(program, params, cwd=self.getWorkingDir())
+
+    def _pickMicrograph(self, mic, params, threshold, minDistance, fom):
+        """ This method should be invoked only when working in streaming mode.
+        """
+        # We need to write the needed star files
+        # TODO: We need to check when working in real streaming, not all
+        # TODO: CTF will be available and this needs to be taken into account
+        micRow = md.Row()
+        self._preprocessMicrographRow(mic, micRow)
+        micrographToRow(mic, micRow)
+        self._postprocessMicrographRow(mic, micRow)
+        print micRow
+        self._pickMicrographsFromStar(self._getMicStarFile(mic), params,
+                                      threshold, minDistance, fom)
+
+    def _createSetOfCoordinates(self, micSet, suffix=''):
+        """ Override this method to set the box size. """
+        coordSet = ProtParticlePickingAuto._createSetOfCoordinates(self, micSet,
+                                                                   suffix=suffix)
+        coordSet.setBoxSize(self.getBoxSize())
+
+        return coordSet
+
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
+        """ Parse back the output star files and populate the SetOfCoordinates.
+        """
+        template = self._getExtraPath("%s_autopick.star")
+        starFiles = [template % pwutils.removeBaseExt(mic.getFileName())
+                     for mic in micList]
+        readSetOfCoordinates(coordSet, starFiles, micList)
 
     # -------------------------- STEPS functions -------------------------------
     def autopickStep(self, micStarFile, params, threshold,
                      minDistance, maxStddevNoise, fom):
         """ This method is used from the wizard to optimize the parameters. """
-        self._pickMicrograph(micStarFile, params, threshold,
-                             minDistance, maxStddevNoise, fom)
+        self._pickMicrographsFromStar(micStarFile, params, threshold,
+                                      minDistance, maxStddevNoise, fom)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -525,20 +497,10 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                 self._deleteChild('outputMicrographs', self.outputMicrographs)
 
         coordSet = self._createSetOfCoordinates(micSet)
-        if self.useInputReferences():
-            boxSize = self.getInputReferences().getDim()[0]
-        else:
-            # Let figure out a reasonable box-size given the particle diamenter
-            # Let's assume that particle diameter is 75% of the box size
-            # and we need to convert from A to pixels
-            boxAng = 1.25 * self.particleDiameter.get()
-            boxSize = int( boxAng / micSet.getSamplingRate())
-
-        coordSet.setBoxSize(boxSize)
         template = self._getExtraPath("%s_autopick.star")
         starFiles = [template % pwutils.removeBaseExt(mic.getFileName())
                      for mic in micSet]
-        readSetOfCoordinates(coordSet, starFiles)
+        readSetOfCoordinates(coordSet, starFiles, micSet)
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.getInputMicrographsPointer(),
@@ -608,6 +570,19 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         summary = []
         return summary
 
+    def _methods(self):
+        methodsMsgs = []
+        if self.getOutputsSize() > 0:
+            output = self.getCoords()
+            methodsMsgs.append("%s: User picked %d particles with a particle "
+                               "size of %d px."
+                               % (self.getObjectTag(output), output.getSize(),
+                                  output.getBoxSize()))
+        else:
+            methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
+    
+        return methodsMsgs
+
     # -------------------------- UTILS functions -------------------------------
     def useInputReferences(self):
         return self.referencesType == REF_AVERAGES
@@ -621,6 +596,131 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         if inputRefs is None:
             return None
         else:
-            return inputRefs.getDim()[0] * inputRefs.getSamplingRate()
-                
+            return inputRefs.getXDim() * inputRefs.getSamplingRate()
 
+    def getBoxSize(self):
+        """ Return a reasonable box-size in pixels. """
+        inputRefs = self.getInputReferences()
+        inputMics = self.getInputMicrographs()
+        micsSampling = inputMics.getSamplingRate()
+
+        if inputRefs is None:
+            boxSize = int(self.maskDiameter.get() * 1.25 / micsSampling)
+        else:
+            # Scale boxsize if the pixel size of the references is not the same
+            # of the micrographs
+            scale = inputRefs.getSamplingRate() / micsSampling
+            boxSize = int(inputRefs.getXDim() * scale)
+
+        if boxSize % 2 == 1:
+            boxSize += 1 # Use even box size for relion
+
+        return boxSize
+                
+    def getInputReferences(self):
+        return self.inputReferences.get()
+
+    def getInputMicrographsPointer(self):
+        return self.inputMicrographs
+
+    def getInputMicrographs(self):
+        return self.getInputMicrographsPointer().get()
+
+    def getMicrographList(self):
+        """ Return the list of micrographs (either a subset or the full set)
+        that will be used for optimizing the parameters or the picking.
+        """
+        # Use all micrographs only when going for the full picking
+        inputMics = self.getInputMicrographs()
+
+        if not self.isRunOptimize():
+            return inputMics
+
+        if self.micrographsSelection == MICS_AUTO:
+            # Lets sort micrograph by defocus and take the equally-space
+            # number of them from the list
+            inputCTFs = self.ctfRelations.get()
+            sortedMicIds = []
+
+            for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
+                itemId = ctf.getObjId()
+                if itemId in inputMics:
+                    sortedMicIds.append(itemId)
+
+            nMics = self.micrographsNumber.get()
+            space = len(sortedMicIds) / (nMics - 1)
+
+            micIds = [sortedMicIds[0], sortedMicIds[-1]]
+            pos = 0
+            while len(micIds) < nMics:  # just add first and last
+                pos += space
+                micIds.insert(1, sortedMicIds[pos])
+        else: # Subset selection
+            micIds = [mic.getObjId() for mic in self.micrographsSubset.get()]
+
+        mics = []
+        for micId in micIds:
+            mic = inputMics[micId]
+
+            if mic is None:
+                raise Exception('Invalid micrograph id: %s' % micId)
+
+            mics.append(mic.clone())
+
+        return mics
+
+    def getCoordsDir(self):
+        return self._getTmpPath('xmipp_coordinates')
+
+    def _writeXmippCoords(self, coordSet):
+        micSet = self.getInputMicrographs()
+        coordPath = self._getTmpPath('xmipp_coordinates')
+        pwutils.cleanPath(coordPath)
+        pwutils.makePath(coordPath)
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        micPath = micSet.getFileName()
+        xmipp3.writeSetOfCoordinates(coordPath, coordSet, ismanual=False)
+        return micPath, coordPath
+
+    def writeXmippOutputCoords(self):
+        return self._writeXmippCoords(self.outputCoordinates)
+
+    def writeXmippCoords(self):
+        """ Write the SetOfCoordinates as expected by Xmipp
+        to be displayed with its GUI.
+        """
+        micSet = self.getInputMicrographs()
+        coordSet = self._createSetOfCoordinates(micSet)
+        coordSet.setBoxSize(self.getBoxSize())
+        starFiles = [self._getExtraPath(pwutils.removeBaseExt(mic.getFileName())
+                                        + '_autopick.star') for mic in micSet]
+        readSetOfCoordinates(coordSet, starFiles)
+        return self._writeXmippCoords(coordSet)
+
+    def _preprocessMicrographRow(self, img, imgRow):
+        # Temporarly convert the few micrographs to tmp and make sure
+        # they are in 'mrc' format
+        # Get basename and replace extension by 'mrc'
+        newName = pwutils.replaceBaseExt(img.getFileName(), 'mrc')
+        newPath = self._getExtraPath(newName)
+
+        # If the micrographs are in 'mrc' format just create a link
+        # if not, convert to 'mrc'
+        if img.getFileName().endswith('mrc'):
+            pwutils.createLink(img.getFileName(), newPath)
+        else:
+            self._ih.convert(img, newPath)
+        # The command will be launched from the working dir
+        # so, let's make the micrograph path relative to that
+        img.setFileName(os.path.join('extra', newName))
+        # JMRT: The following is not needed since it is set when loading CTF
+        # if self.ctfRelations.get() is not None:
+        #     img.setCTF(self.ctfDict[img.getMicName()])
+
+    def _postprocessMicrographRow(self, img, imgRow):
+        print "Writing md to: ", self._getMicStarFile(img)
+        imgRow.writeToFile(self._getMicStarFile(img))
+
+    def _getMicStarFile(self, mic):
+        micBase = pwutils.replaceBaseExt(mic.getFileName(), 'star')
+        return self._getExtraPath(micBase)

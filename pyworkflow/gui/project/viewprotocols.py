@@ -51,9 +51,10 @@ from pyworkflow.config import isAFinalProtocol
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
-from pyworkflow.utils.properties import Message, Icon, Color
+from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
 
 from constants import STATUS_COLORS
+from pyworkflow.gui.project.utils import getStatusColorFromNode
 
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
@@ -178,13 +179,15 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
         else:
             status = None
 
+        stoppable = status in [pwprot.STATUS_RUNNING, pwprot.STATUS_SCHEDULED]
+
         return [(ACTION_EDIT, single),
                 (ACTION_COPY, True),
                 (ACTION_DELETE, status != pwprot.STATUS_RUNNING),
                 (ACTION_STEPS, single),
                 (ACTION_BROWSE, single),
                 (ACTION_DB, single),
-                (ACTION_STOP, status == pwprot.STATUS_RUNNING and single),
+                (ACTION_STOP, stoppable and single),
                 (ACTION_EXPORT, not single),
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
@@ -576,7 +579,7 @@ class ProtocolsView(tk.Frame):
         self.keybinds = dict()
 
         # Register key binds
-        self._bindKeyPress('Delete', self._onDelPressed)
+        self._bindKeyPress(KEYSYM.DELETE, self._onDelPressed)
 
         self.__autoRefresh = None
         self.__autoRefreshCounter = INIT_REFRESH_SECONDS  # start by 3 secs
@@ -1055,7 +1058,7 @@ class ProtocolsView(tk.Frame):
         nodeText = self._getNodeText(node)
 
         # Get status color
-        statusColor = self._getStatusColor(node)
+        statusColor = getStatusColorFromNode(node)
 
         # Get the box color (depends on color mode: label or status)
         boxColor = self._getBoxColor(nodeInfo, statusColor, node)
@@ -1185,15 +1188,6 @@ class ProtocolsView(tk.Frame):
                 pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize,
                            color='black', anchor=item)
 
-    @staticmethod
-    def _getStatusColor(node):
-
-        # If it is a run node (not PROJECT)
-        if node.run:
-            status = node.run.status.get(pwprot.STATUS_FAILED)
-            return STATUS_COLORS[status]
-        else:
-            return '#ADD8E6'  # Light blue
 
     def _getNodeText(self, node):
 
@@ -1209,6 +1203,8 @@ class ProtocolsView(tk.Frame):
                 nodeText = node.getName() + expandedStr
             else:
                 nodeText = nodeText + expandedStr + '\n' + node.run.getStatusMessage()
+                if node.run.summaryWarnings:
+                    nodeText += u' \u26a0'
 
         return nodeText
 
@@ -1527,6 +1523,7 @@ class ProtocolsView(tk.Frame):
         protocol = self.getSelectedProtocol()
         workingDir = protocol.getWorkingDir()
         if os.path.exists(workingDir):
+
             window = pwgui.browser.FileBrowserWindow("Browsing: " + workingDir,
                                                      master=self.windows,
                                                      path=workingDir)
@@ -1652,14 +1649,17 @@ class ProtocolsView(tk.Frame):
         # to be executed in the same thread
         self.windows.enqueue(lambda: self._executeSaveProtocol(prot))
 
-    def _executeSaveProtocol(self, prot, onlySave=False):
+    def _executeSaveProtocol(self, prot, onlySave=False, doSchedule=False):
         if onlySave:
             self.project.saveProtocol(prot)
             msg = Message.LABEL_SAVED_FORM
             # msg = "Protocol successfully saved."
 
         else:
-            self.project.launchProtocol(prot)
+            if doSchedule:
+                self.project.scheduleProtocol(prot)
+            else:
+                self.project.launchProtocol(prot)
             # Select the launched protocol to display its summary, methods..etc
             self._selection.clear()
             self._selection.append(prot.getObjId())

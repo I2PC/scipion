@@ -36,13 +36,18 @@ import stat
 
 import Tkinter as tk
 
+import time
 import xmipp
-from pyworkflow.utils.properties import Icon
+
+from pyworkflow.utils import ROOT, getParentFolder
+from pyworkflow.utils.properties import Icon, KEYSYM
 import gui
 from pyworkflow.utils import dirname, getHomePath, prettySize, getExt, dateStr
 from tree import BoundTree, TreeProvider
 from text import TaggedText, openTextFileEditor
 from widgets import Button, HotButton
+
+PARENT_FOLDER = ".."
 
 
 class ObjectBrowser(tk.Frame):
@@ -113,7 +118,7 @@ class ObjectBrowser(tk.Frame):
         self.label.grid(row=0, column=0, sticky='news')
         
     def _fillRightBottom(self, bottom):
-        self.text = TaggedText(bottom, width=40, height=15, bg='white')
+        self.text = TaggedText(bottom, width=40, height=15, bg='white', takefocus=0)
         self.text.grid(row=0, column=0, sticky='news')
         
     def _itemClicked(self, obj):
@@ -173,6 +178,7 @@ class FileInfo(object):
 
     def getDate(self):
         return self._stat.st_mtime if self._stat else 0
+
 
 class FileHandler(object):
     """ This class will be used to get the icon, preview and info
@@ -257,7 +263,7 @@ class ImageFileHandler(FileHandler):
     def getFileActions(self, objFile):
         from pyworkflow.em.viewer import DataView
         fn = objFile.getPath()
-        return [('Open with Xmipp viewer', lambda : DataView(fn).show(),
+        return [('Open with Xmipp viewer', lambda: DataView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
     
     
@@ -281,7 +287,7 @@ class ChimeraHandler(FileHandler):
     def getFileActions(self, objFile):
         from pyworkflow.em.viewer import ChimeraView
         fn = objFile.getPath()
-        return [('Open with Chimera', lambda : ChimeraView(fn).show(),
+        return [('Open with Chimera', lambda: ChimeraView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
     
     def getFileIcon(self, objFile):
@@ -357,8 +363,8 @@ class MdFileHandler(ImageFileHandler):
             msg += self._getMdString(filename)
             
         return self._imgPreview, msg
-    
-    
+
+
 class FileTreeProvider(TreeProvider):
     """ Populate a tree with files and folders of a given path """
     
@@ -378,10 +384,11 @@ class FileTreeProvider(TreeProvider):
         for fileExt in extensions:
             cls._FILE_HANDLERS[fileExt] = fileHandler
         
-    def __init__(self, currentDir=None, showHidden=False):
+    def __init__(self, currentDir=None, showHidden=False, onlyFolders=False):
         TreeProvider.__init__(self, sortingColumnName=self.FILE_COLUMN)
         self._currentDir = os.path.abspath(currentDir)
         self._showHidden = showHidden
+        self._onlyFolders = onlyFolders
         self.getColumns = lambda: [(self.FILE_COLUMN, 300),
                                    (self.SIZE_COLUMN, 70), ('Time', 150)]
     
@@ -417,12 +424,30 @@ class FileTreeProvider(TreeProvider):
         return actions
     
     def getObjects(self):
-        files = os.listdir(self._currentDir)
-        #files.sort()
+
         fileInfoList = []
-        for f in files:
-            if self._showHidden or not f.startswith('.'):
+        if not self._currentDir == ROOT:
+            fileInfoList.append(FileInfo(self._currentDir, PARENT_FOLDER))
+
+        try:
+            # This might fail if there is not granted
+            files = os.listdir(self._currentDir)
+
+            for f in files:
+
+                fullPath = os.path.join(self._currentDir, f)
+                # If f is a file and only need folders
+                if self._onlyFolders and not os.path.isdir(fullPath):
+                    continue
+
+                # Do not add hidden files if not requested
+                if not self._showHidden and f.startswith('.'):
+                    continue
+
+                # All ok...add item.
                 fileInfoList.append(FileInfo(self._currentDir, f))
+        except Exception as e:
+            print "Can't list files at " + self._currentDir, e.message
 
         # Sort objects
         fileInfoList.sort(key=self.fileKey, reverse=not self.isSortingAscending())
@@ -452,7 +477,7 @@ class FileBrowser(ObjectBrowser):
     """ The FileBrowser is a particular class of ObjectBrowser
     where the "objects" are just files and directories.
     """
-    def __init__(self, parent, initialDir='.', 
+    def __init__(self, parent, initialDir='.',
                  selectionType=SELECT_FILE, 
                  selectionSingle=True, 
                  allowFilter=True, 
@@ -461,25 +486,38 @@ class FileBrowser(ObjectBrowser):
                  showHidden=False, # Show hidden files or not?
                  selectButton='Select', # Change the Select button text
                  entryLabel=None, # Display an entry for some input
-                 entryValue='' # Display a value in the entry field
+                 entryValue='', # Display a value in the entry field
+                 showInfo=None, # Used to notify errors or messages
+                 shortCuts=None, # Shortcuts to common locations/paths
+                 onlyFolders=False
                  ):
-        """ 
-        """
-        self._provider = FileTreeProvider(initialDir, showHidden)
+        self.pathVar = tk.StringVar()
+        self.pathVar.set(os.path.abspath(initialDir))
+        self.pathEntry = None
+        self.previousSearch = None
+        self.previousSearchTS = None
+        self.shortCuts = shortCuts
+        self._provider = FileTreeProvider(initialDir, showHidden, onlyFolders)
         self.selectButton = selectButton
         self.entryLabel = entryLabel
         self.entryVar = tk.StringVar()
         self.entryVar.set(entryValue)
-        
+
+        self.showInfo = showInfo or self._showInfo
+
         ObjectBrowser.__init__(self, parent, self._provider)
         
         if selectionType == SELECT_NONE:
             selectButton = None
-            
-    
+
         buttonsFrame = tk.Frame(self)
         self._fillButtonsFrame(buttonsFrame)
         buttonsFrame.grid(row=1, column=0)
+
+    def _showInfo(self, msg):
+        """ Default way (print to console) to show a message with a given info.
+        """
+        print msg
 
     def _fillLeftPanel(self, frame):
         """ Redefine this method to include a buttons toolbar and
@@ -492,11 +530,25 @@ class FileBrowser(ObjectBrowser):
         ObjectBrowser._fillLeftPanel(self, treeFrame)
         # Register the double-click event
         self.tree.itemDoubleClick = self._itemDoubleClick
-        treeFrame.grid(row=1, column=0, sticky='news')
+        # Register keypress event
+        self.tree.itemKeyPressed = self._itemKeyPressed
+
+        treeRow = 2
+        treeFrame.grid(row=treeRow, column=0, sticky='news')
         # Toolbar frame
         toolbarFrame = tk.Frame(frame)
         self._fillToolbar(toolbarFrame)
         toolbarFrame.grid(row=0, column=0, sticky='new')
+
+        pathFrame = tk.Frame(frame)
+        pathLabel = tk.Label(pathFrame, text='Path')
+        pathLabel.grid(row=0, column=0, padx=5, pady=5)
+        pathEntry = tk.Entry(pathFrame, bg='white', width=65,
+                             textvariable=self.pathVar)
+        pathEntry.grid(row=0, column=1, sticky='new', pady=5)
+        pathEntry.bind("<Return>", self._onEnterPath)
+        self.pathEntry = pathEntry
+        pathFrame.grid(row=1, column=0, sticky='new')
         
         # Entry frame, could be used for filter
         if self.entryLabel:  
@@ -509,24 +561,39 @@ class FileBrowser(ObjectBrowser):
                      bg='white',
                      width=50).grid(row=0, column=1, sticky='nw')
         
-        frame.rowconfigure(1, weight=1)
+        frame.rowconfigure(treeRow, weight=1)
+
+    def _addButton(self, frame, text, image, command):
+        btn = tk.Label(frame, text=text, image=self.getImage(image),
+                   compound=tk.LEFT, cursor='hand2')
+        btn.bind('<Button-1>', command)
+        btn.grid(row=0, column=self._col, sticky='nw',
+                 padx=(0, 5), pady=5)
+        self._col += 1
 
     def _fillToolbar(self, frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
-        
-        def addButton(text, image, command):
-            btn = tk.Label(frame, text=text, image=self.getImage(image), 
-                       compound=tk.LEFT, cursor='hand2')
-            btn.bind('<Button-1>', command)
-            btn.grid(row=0, column=self._col, sticky='nw',
-                     padx=(0, 5), pady=5)
-            self._col += 1
-            
-        addButton('Refresh', Icon.ACTION_REFRESH, self._actionRefresh)
-        addButton('Home', Icon.HOME, self._actionHome)
-        addButton('Back', Icon.ARROW_LEFT, self._actionUp)
-        addButton('Up', Icon.ARROW_UP, self._actionUp)
+
+        self._addButton(frame, 'Refresh', Icon.ACTION_REFRESH,
+                        self._actionRefresh)
+        self._addButton(frame, 'Home', Icon.HOME, self._actionHome)
+        self._addButton(frame, 'Launch folder', Icon.ROCKET,
+                        self._actionLaunchFolder)
+        self._addButton(frame, 'Working dir', Icon.ACTION_BROWSE, self._actionWorkingDir)
+        self._addButton(frame, 'Up', Icon.ARROW_UP, self._actionUp)
+
+        # Add shortcuts
+        self._addShortCuts(frame)
+
+    def _addShortCuts(self, frame):
+        """ Add shortcuts if available"""
+        if self.shortCuts:
+            for shortCut in self.shortCuts:
+                self._addButton(frame,
+                                shortCut.name,
+                                shortCut.icon,
+                                lambda e: self._goDir(shortCut.path))
         
     def _fillButtonsFrame(self, frame):
         """ Add button to the bottom frame if the selectMode
@@ -542,15 +609,43 @@ class FileBrowser(ObjectBrowser):
         self.tree.update()
         
     def _goDir(self, newDir):
+
+        newDir = os.path.abspath(newDir)
+
+        # Add a final "/" to the path: abspath is removing it except for "/"
+        if not newDir.endswith(os.path.sep):
+            newDir += os.path.sep
+
+        self.pathVar.set(newDir)
+        self.pathEntry.icursor(len(newDir))
         self.treeProvider.setDir(newDir)
         self.tree.update()
+        self.tree.focus_set()
+
+        itemKeyToSelect = PARENT_FOLDER
+        if not self.tree._objDict.has_key(PARENT_FOLDER):
+            itemKeyToSelect = self.tree.get_children()[0]
+
+        self.tree.selectChild(itemKeyToSelect)
+        self.tree.focus(itemKeyToSelect)
         
     def _actionUp(self, e=None):
-        self._goDir(dirname(self.treeProvider.getDir()))
+        parentFolder = getParentFolder(self.treeProvider.getDir())
+        self._goDir(parentFolder)
         
     def _actionHome(self, e=None):
         self._goDir(getHomePath())
-        
+
+    def _actionRoot(self, e=None):
+        self._goDir("/")
+
+    def _actionLaunchFolder(self, e=None):
+        launchFolder = os.getenv("SCIPION_CWD")
+        self._goDir(launchFolder)
+
+    def _actionWorkingDir(self, e=None):
+        self._goDir(os.getcwd())
+
     def _itemDoubleClick(self, obj):
         if obj.isDir():
             self._goDir(obj.getPath())
@@ -559,6 +654,48 @@ class FileBrowser(ObjectBrowser):
             if actions:
                 # actions[0] = first Action, [1] = the action callback
                 actions[0][1]()
+
+    def _itemKeyPressed(self, obj, e=None):
+
+        if e.keysym in [KEYSYM.RETURN]:
+            self._itemDoubleClick(obj)
+            return
+
+        textToSearch = self._composeTextToSearch(e.char)
+
+        # locate an item in starting with that letter.
+        self._searchItem(textToSearch)
+
+    def _composeTextToSearch(self, newChar):
+
+        currentMiliseconds = time.time()
+
+        if (self.previousSearchTS is not None) and \
+                ((currentMiliseconds - self.previousSearchTS) < 0.3):
+            newChar = self.previousSearch + newChar
+
+        self.previousSearch = newChar
+        self.previousSearchTS = currentMiliseconds
+
+        return newChar
+
+    def _searchItem(self, char):
+        """ locate an item in starting with that letter."""
+        try:
+            self.tree.search(char)
+        except Exception as e:
+            # seems to raise an exception but selects things right.
+            #print "Can't search item in browser. Using char " + char, e.message
+            pass
+
+    def _onEnterPath(self, e=None):
+        path = os.path.abspath(self.pathVar.get())
+        if os.path.exists(path):
+            self._goDir(path)
+
+        else:
+            self.showInfo("Path '%s' does not exists. " % path)
+            self.pathEntry.focus()
             
     def onClose(self):
         pass
@@ -577,8 +714,21 @@ class FileBrowser(ObjectBrowser):
     
     def getCurrentDir(self):
         return self.treeProvider.getDir()
-        
-        
+
+
+class ShortCut:
+    """ Shortcuts to paths to be displayed in the file browser"""
+    @staticmethod
+    def factory(path, name, icon=None, toolTip=""):
+        """ Factory method to create shortcuts"""
+        return ShortCut(path, name, icon, toolTip)
+
+    def __init__(self, path, name, icon=None, toolTip=""):
+        self.path = path
+        self.name = name
+        self.icon = icon
+        self.toolTip = toolTip
+
 class BrowserWindow(gui.Window):
     """ Windows to hold a browser frame inside. """
     def __init__(self, title, master=None, **kwargs):
@@ -602,11 +752,15 @@ def isStandardImage(filename):
        
 class FileBrowserWindow(BrowserWindow):
     """ Windows to hold a file browser frame inside. """
-    def __init__(self, title, master=None, path=None, 
-                 onSelect=None, **kwargs):
+
+    def __init__(self, title, master=None, path=None,
+                 onSelect=None, shortCuts=None, **kwargs):
         BrowserWindow.__init__(self, title, master, **kwargs)
         self.registerHandlers()
-        browser = FileBrowser(self.root, path, **kwargs)
+        browser = FileBrowser(self.root, path,
+                              showInfo=lambda msg: self.showInfo(msg, "Info"),
+                              shortCuts=shortCuts,
+                              **kwargs)
         if onSelect:
             def selected(obj):
                 onSelect(obj)

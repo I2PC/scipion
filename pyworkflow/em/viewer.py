@@ -51,9 +51,12 @@ import xmipp
 
 from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
+
+# FIXME: Why this monitors are imported here?
 from viewer_monitor_summary import ViewerMonitorSummary
 from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
 from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
+from protocol.monitors.protocol_monitor_movie_gain import ProtMonitorMovieGainViewer
 
 #------------------------ Some common Views ------------------
 
@@ -98,7 +101,8 @@ class DataView(View):
         return params
     
     def getShowJWebParams(self):
-    
+
+    # FIXME: Maybe it is time to remove this old commented lines
     #=OLD SHOWJ WEB DOCUMENTATION===============================================
     # Extra parameters can be used to configure table layout and set render function for a column
     # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
@@ -177,10 +181,8 @@ class MicrographsView(ObjectView):
     def __init__(self, project, micSet, other='', **kwargs):
         first = micSet.getFirstItem()
 
-        first.printAll()
-
         def existingLabels(labelList):
-            print("labelList: ", labelList)
+
             return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
         renderLabels = existingLabels(self.RENDER_LABELS)
@@ -204,15 +206,19 @@ class MicrographsView(ObjectView):
 class CtfView(ObjectView):
     """ Customized ObjectView for SetOfCTF objects . """
     # All extra labels that we want to show if present in the CTF results
-    PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile', '_xmipp_enhanced_psd',
-                  '_xmipp_ctfmodel_quadrant', '_xmipp_ctfmodel_halfplane',
-                  '_micObj.plotGlobal._filename'
+    PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile',
+                  '_xmipp_enhanced_psd', '_xmipp_ctfmodel_quadrant',
+                  '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
-    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_xmipp_ctfCritFirstZero',
-                    ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
-                    '_xmipp_ctfCritNonAstigmaticValidity',
-                    '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq'
+    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
+                    '_ctffind4_ctfPhaseShift',
+                    '_xmipp_ctfCritFirstZero',
+                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
+                    '_xmipp_ctfCritNonAstigmaticValidty',
+                    '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq',
+                    '_xmipp_ctfCritPsdCorr90'
                    ]
+
     def __init__(self, project, ctfSet, other='', **kwargs):
         first = ctfSet.getFirstItem()
 
@@ -222,7 +228,8 @@ class CtfView(ObjectView):
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
         labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio %s  _micObj._filename' % extraLabels
+        labels += '_defocusAngle _defocusRatio _resolution _fitQuality %s ' % extraLabels
+        labels += '  _micObj._filename'
 
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
@@ -239,6 +246,10 @@ class CtfView(ObjectView):
         if first.hasAttribute('_ctffind4_ctfResolution'):
             import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
+
+        elif first.hasAttribute('_gctf_ctfResolution'):
+            from pyworkflow.em.packages.gctf.viewer import OBJCMD_GCTF
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,

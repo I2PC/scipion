@@ -27,6 +27,7 @@
 
 import pyworkflow.object as pwobj
 from pyworkflow.gui.tree import TreeProvider
+from pyworkflow.protocol import getUpdatedProtocol
 
 
 class SummaryProvider(TreeProvider):
@@ -45,17 +46,23 @@ class SummaryProvider(TreeProvider):
 
     def refreshObjects(self):
         objects = []
+        objIds = []  # need to store ids too to avoid duplication in runs table
 
         def addObj(objId, name, output='', size='', parent=None):
-            obj = pwobj.Object(objId=objId)
-            obj.name = name
-            obj.output = output
-            obj.outSize = size
-            obj._objParent = parent
-            objects.append(obj)
-            return obj
+            if objId not in objIds:
+                obj = pwobj.Object(objId=objId)
+                obj.name = name
+                obj.output = output
+                obj.outSize = size
+                obj._objParent = parent
+                objIds.append(objId)
+                objects.append(obj)
+                return obj
+            else:
+                return None
 
-        runs = [p.get() for p in self.protocol.inputProtocols]
+        inputProts = self.protocol.getInputProtocols()
+        runs = [getUpdatedProtocol(p) for p in inputProts]
         g = self.protocol.getProject().getGraphFromRuns(runs)
 
         nodes = g.getRoot().iterChildsBreadth()
@@ -72,9 +79,8 @@ class SummaryProvider(TreeProvider):
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
                 from pyworkflow.em import ProtImportImages
-                #NOTE by rmarabini do not use the angstrom symbol instead of A
-                #it breaks html production in the monitor:
-                #UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 
+                # NOTE by Yaiza: we force the string containing the Å to be unicode
+                # because this is the encoding used when generating report in report_html.py
                 if isinstance(prot, ProtImportImages):
                     self.acquisition = [("Microscope Voltage: ",
                                          prot.voltage.get()),
@@ -82,7 +88,7 @@ class SummaryProvider(TreeProvider):
                                          prot.sphericalAberration.get()),
                                         ("Magnification: ",
                                          prot.magnification.get()),
-                                        ("Pixel Size (A/px): ",
+                                        (u"Pixel Size (Å/px): ",
                                          outSet.getSamplingRate())
                                         ]
 
