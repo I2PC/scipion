@@ -49,6 +49,7 @@ public:
 	/// Read parameters
 	void readBasicParams(XmippProgram *program);
 
+	void readParams();
 	/// Define basic parameters
 	static void defineBasicParams(XmippProgram * program);
 
