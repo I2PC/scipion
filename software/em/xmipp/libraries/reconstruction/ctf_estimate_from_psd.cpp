@@ -39,7 +39,7 @@
 double CTF_fitness(double *, void *);
 
 /* Number of CTF parameters */
-#define ALL_CTF_PARAMETERS           36
+#define ALL_CTF_PARAMETERS           38
 #define CTF_PARAMETERS               30
 #define PARAMETRIC_CTF_PARAMETERS    16
 #define BACKGROUND_CTF_PARAMETERS    14
@@ -161,6 +161,8 @@ void ProgCTFEstimateFromPSD::assignCTFfromParameters(double *p, CTFDescription &
     ASSIGN_CTF_PARAM(33, gaussian_angle2);
     ASSIGN_CTF_PARAM(34, cU2);
     ASSIGN_CTF_PARAM(35, cV2);
+    ASSIGN_CTF_PARAM(36, phase_shift);
+    ASSIGN_CTF_PARAM(37, VPP_radius);
 
 }//function assignCTFfromParameters
 
@@ -246,6 +248,8 @@ void ProgCTFEstimateFromPSD::assignParametersFromCTF(CTFDescription &ctfmodel, d
     ASSIGN_PARAM_CTF(33, gaussian_angle2);
     ASSIGN_PARAM_CTF(34, cU2);
     ASSIGN_PARAM_CTF(35, cV2);
+    ASSIGN_PARAM_CTF(36, phase_shift);
+    ASSIGN_PARAM_CTF(37, VPP_radius);
 }
 
 #define COPY_ctfmodel_TO_CURRENT_GUESS \
@@ -256,7 +260,7 @@ void ProgCTFEstimateFromPSD::assignParametersFromCTF(CTFDescription &ctfmodel, d
 /* Read parameters --------------------------------------------------------- */
 void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program)
 {
-	ProgCTFBasicParams::readBasicParams(program);
+	//ProgCTFBasicParams::readBasicParams(program);
 
     initial_ctfmodel.enable_CTF = initial_ctfmodel.enable_CTFnoise = true;
     initial_ctfmodel.readParams(program);
@@ -266,10 +270,11 @@ void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program)
 
 }
 
-/*void ProgCTFEstimateFromPSD::readParams()
+void ProgCTFEstimateFromPSD::readParams()
 {
-    readBasicParams(this);
-}*/
+	fn_psd = getParam("--psd");
+	readBasicParams(this);
+}
 
 /* Show -------------------------------------------------------------------- */
 /*void ProgCTFEstimateFromPSD::show()
@@ -317,7 +322,6 @@ void ProgCTFEstimateFromPSD::generateModelSoFar(Image<double> &I, bool apply_log
     assignCTFfromParameters(MATRIX1D_ARRAY(*adjust_params), current_ctfmodel,
                             0, ALL_CTF_PARAMETERS, modelSimplification);
     current_ctfmodel.produceSideInfo();
-
     I().initZeros(*f);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
     {
@@ -397,7 +401,7 @@ void ProgCTFEstimateFromPSD::saveIntermediateResults(const FileName &fn_root, bo
             "save_intermediate_results::Cannot open plot file for writing\n");
     plotX << "# freq_dig freq_angstrom model psd enhanced logModel logPsd\n";
     plotY << "# freq_dig freq_angstrom model psd enhanced logModel logPsd\n";
-    plot_radial << "# freq_dig freq_angstrom model psd enhanced logModel logPsd\n";
+    //plot_radial << "# freq_dig freq_angstrom model psd enhanced logModel logPsd\n";
 
     // Generate cut along X
     for (int i = STARTINGY(save()); i <= FINISHINGY(save()) / 2; i++)
@@ -431,7 +435,6 @@ void ProgCTFEstimateFromPSD::saveIntermediateResults(const FileName &fn_root, bo
     radial_CTFampl_avg.initZeros(YSIZE(save()) / 2);
     radial_enhanced_avg.initZeros(YSIZE(save()) / 2);
     radial_N.initZeros(YSIZE(save()) / 2);
-
     FOR_ALL_ELEMENTS_IN_ARRAY2D(w_digfreq)
     {
         if (mask(i, j) <= 0)
@@ -802,6 +805,7 @@ double ProgCTFEstimateFromPSD::CTF_fitness_object(double *p)
                         enhanced_avg += enhanced_ctf;
                         model_avg += ctf_with_damping2;
                         Ncorr++;
+
                         if (action==3)
                         {
                             int r = A2D_ELEM(w_digfreq_r,i, j);
@@ -2268,6 +2272,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmo
     /************************************************************************/
     prm.action = 2;
     prm.current_ctfmodel.enable_CTF = true;
+    prm.current_ctfmodel.phase_shift = prm.initial_ctfmodel.phase_shift;
+    prm.current_ctfmodel.VPP_radius = prm.initial_ctfmodel.VPP_radius;
     if (prm.initial_ctfmodel.K == 0)
     {
     	prm.current_ctfmodel.kV = prm.initial_ctfmodel.kV;
@@ -2325,6 +2331,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmo
     steps.initConstant(1);
     steps(3) = 0; // kV
     steps(5) = 0; // The spherical aberration (Cs) is not optimized
+    steps(37) = 0; //VPP radius not optimized
     if (prm.initial_ctfmodel.Q0 != 0)
         steps(15) = 0; // Q0
     if (prm.modelSimplification >= 3)
@@ -2333,6 +2340,8 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmo
         steps(24) = steps(25) = steps(26) = steps(27) = steps(28) = steps(29) = 0;
     if (prm.modelSimplification >= 1)
         steps(10) = steps(11) = 0;
+    if (std::floor(prm.initial_ctfmodel.VPP_radius) == 0)
+    	steps(36) = 0; //VPP phase shift
 
     powellOptimizer(*prm.adjust_params, 0 + 1, ALL_CTF_PARAMETERS, CTF_fitness,
                     global_prm, 0.01, fitness, iter, steps, prm.show_optimization);
