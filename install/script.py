@@ -477,6 +477,9 @@ env.addPackage('motioncor2', version='17.01.30',
 env.addPackage('motioncor2', version='1.0.0',
                tar='motioncor2_1.0.0.tgz')
 
+env.addPackage('motioncor2', version='1.0.1',
+               tar='motioncor2-1.0.1.tgz')
+
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')
 

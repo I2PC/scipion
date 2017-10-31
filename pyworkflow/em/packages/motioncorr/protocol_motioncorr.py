@@ -64,6 +64,15 @@ class ProtMotionCorr(ProtAlignMovies):
         ProtAlignMovies.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
 
+    def isSemVersion(self):
+        """ Return True if it is a semantic version of motioncor2.
+        It started with release 1.0.0.
+        """
+        return getVersion('MOTIONCOR2').startswith('1.0.')
+
+    def isLatestVersion(self):
+        return getVersion('MOTIONCOR2') == '1.0.1'
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         form.addParam('gpuMsg', params.LabelParam, default=True,
@@ -139,6 +148,15 @@ class ProtMotionCorr(ProtAlignMovies):
         line.addParam('patchX', params.IntParam, default=5, label='X')
         line.addParam('patchY', params.IntParam, default=5, label='Y')
 
+        if self.isLatestVersion():
+            form.addParam('patchOverlap', params.IntParam, default=0,
+                          label='Patches overlap (%)',
+                          help="Specify the overlapping between adjacent "
+                               "patches. \nFor example, overlap=20 means that "
+                               "each patch will have a 20% overlapping with "
+                               "its neighboring patches in each dimension. \n"
+                               "Note: NEW in version 1.0.1")
+
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
                       help='Group every specified number of frames by adding '
@@ -191,7 +209,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                 'Also, make sure MOTIONCOR2_CUDA_LIB or '
                                 'CUDA_LIB point to cuda-8.0/lib path')
 
-        if getVersion('MOTIONCOR2') in ['1.0.0']:
+        if self.isSemVersion():
             form.addParam('defectFile', params.FileParam, allowsNull=True,
                           expertLevel=cons.LEVEL_ADVANCED,
                           condition='useMotioncor2',
@@ -321,9 +339,15 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
-            if getVersion('MOTIONCOR2') in ['1.0.0']:
+            if self.isSemVersion():
                 if self.defectFile.get():
                     argsDict['-DefectFile'] = self.defectFile.get()
+
+                # Currently only version 1.0.1
+                if self.isLatestVersion():
+                    patchOverlap = self.getAttributeValue('patchOverlap', None)
+                    if patchOverlap: # 0 or None is False
+                        argsDict['-Patch'] += " %d" % patchOverlap
 
             if self._supportsMagCorrection() and self.doMagCor:
                 if self.useEst:
