@@ -35,6 +35,8 @@ from pyworkflow.utils.path import replaceBaseExt
 END_HEADER = 'END BATCH HEADER'
 PATH = abspath(dirname(__file__))
 SCRIPTS_DIR = 'scripts'
+IMAGIC_DIR = 'IMAGIC_DIR'
+IMAGIC_HOME = 'IMAGIC_HOME'
 
 # Regular expression for parsing vars in script header
 # Match strings of the type "# key=value # some comment"
@@ -81,7 +83,7 @@ def getEnviron():
 
 def getImagicHomeDir():
     env = Environ(os.environ)
-    imagicdir = env.getFirst(('IMAGIC_HOME', 'IMAGIC_DIR'), mandatory=True)  #
+    imagicdir = env.getFirst((IMAGIC_HOME, IMAGIC_DIR), mandatory=True)  #
     # Scipion
     # definition
     return env, imagicdir
