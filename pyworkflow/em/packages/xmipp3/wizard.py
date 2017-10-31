@@ -103,22 +103,31 @@ class XmippCTFWizard(CtfWizard):
         params = self._getParameters(protocol)
         _value = params['value']
         _label = params['label']
-        
+
+        if protocol.AutoDownsampling:
+            downSampling = self.getAutodownsampling(protocol)
+        else:
+            downSampling = _value[0]
+
 #        form.setParamFromVar('inputMicrographs') # update selected input micrographs
         provider = self._getProvider(protocol)
         
         if provider is not None:
             args = {'unit': UNIT_PIXEL,
-                    'downsample': _value[0],
+                    'downsample': downSampling, #_value[0],
                     'lf': _value[1],
                     'hf': _value[2]
                     }
+            oldDowsample = downSampling
             d = CtfDownsampleDialog(form.root, provider, **args)
 
             if d.resultYes():
-                form.setVar(_label[0], d.getDownsample())
+                newDownsample=d.getDownsample()
+                form.setVar(_label[0], newDownsample)
                 form.setVar(_label[1], d.getLowFreq())
                 form.setVar(_label[2], d.getHighFreq())
+                if abs(newDownsample-oldDowsample)>1e-4:
+                    form.setVar("AutoDownsampling",False)
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)    
     
