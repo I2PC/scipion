@@ -75,6 +75,7 @@ public:
 
     	show_inf = copy->show_inf;
     	heavy_penalization = copy->heavy_penalization;
+    	penalize = copy->penalize;
     	evaluation_reduction = copy->evaluation_reduction;
     	modelSimplification = copy->modelSimplification;
     	defocus_range = copy->defocus_range;
@@ -101,6 +102,8 @@ public:
     
     /// Read parameters
     void readBasicParams(XmippProgram *program);
+
+    void readParams();
 
     /// Define basic parameters
     static void defineBasicParams(XmippProgram * program);
