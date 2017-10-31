@@ -293,6 +293,9 @@ public:
 	double envR0, envR1, envR2;
 	//Maximum frequency to estimate values
 	double freq_max;
+	//Extra parameters for VPP
+	double phase_shift;
+	double VPP_radius;
 
 	/** Empty constructor. */
 	CTFDescription1D()
@@ -418,6 +421,8 @@ public:
 		 double aux=K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u;
 		 double Ealpha = exp(-K6 * aux * aux);
 		 double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		 if (E < 0)
+			 E	= 0;
 		 if (show)
 		 {
 			 std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -438,7 +443,12 @@ public:
 	 /// Compute CTF pure at (U,V). Continuous frequencies
 	inline double getValuePureAt(bool show = false) const
 	{
-		double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
+		double VPP;
+		if(VPP_radius != 0)
+			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
+		else
+			VPP = 0;
+		double argument = VPP + K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
 		double sine_part, cosine_part;
 		sincos(argument,&sine_part, &cosine_part); // OK
 		double Eespr = exp(-K3 * precomputed.u4); // OK
@@ -449,6 +459,8 @@ public:
 		double Ealpha = exp(-K6 * aux * aux); // OK
 		// CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
 		double E = Eespr * EdeltaF * EdeltaR * Ealpha + envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		if (E < 0)
+			E	= 0;
 		if (show)
 		{
 			std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -472,7 +484,12 @@ public:
 	/// Compute CTF pure at (U,V). Continuous frequencies
 	inline double getValuePureNoKAt() const
 	{
-		double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
+		double VPP;
+		if(VPP_radius != 0)
+			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
+		else
+			VPP = 0;
+		double argument = VPP + K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
 		double sine_part, cosine_part;
 		sincos(argument,&sine_part, &cosine_part); // OK
 		double Eespr = exp(-K3 * precomputed.u4); // OK
@@ -483,6 +500,8 @@ public:
 		double Ealpha = exp(-K6 * aux * aux); // OK
 		// CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
 		double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		if (E < 0)
+			E	= 0;
 		return -(Ksin*sine_part - Kcos*cosine_part)*E;
 	}
 
@@ -490,9 +509,6 @@ public:
 	//#define DEBUG
 	inline double getValueNoiseAt(bool show = false) const
 	{
-
-		//double sqr = sq;
-
 		double c = Gc1;
 		double sigmaG1 = sigma1;
 
@@ -529,7 +545,12 @@ public:
 	/// Compute pure CTF without damping at (U,V). Continuous frequencies
 	double getValuePureWithoutDampingAt(bool show = false) const
 	{
-		double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
+		double VPP;
+		if(VPP_radius != 0)
+			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
+		else
+			VPP = 0;
+		double argument = VPP + K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
 		double sine_part, cosine_part;
 		sincos(argument,&sine_part,&cosine_part);
 
@@ -552,10 +573,14 @@ public:
 	{
 		double u2 = X * X;
 		double u = sqrt(u2);
-		//if(u2 > freq_max) return 0;
 		double u4 = u2 * u2;
 		double deltaf = Defocus;
-		double argument = K1 * deltaf * u2 + K2 * u4;
+		double VPP;
+		if(VPP_radius != 0)
+			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
+		else
+			VPP = 0;
+		double argument = VPP + K1 * deltaf * u2 + K2 * u4;
 		double sine_part, cosine_part;
 		sincos(argument,&sine_part, &cosine_part); // OK
 		double Eespr = exp(-K3 * u4); // OK
@@ -565,6 +590,8 @@ public:
 		double Ealpha = exp(-K6 * (K7 * u2 * u + deltaf * u) * (K7 * u2 * u + deltaf * u)); // OK
 		// CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
 		double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		if (E < 0)
+			E	= 0;
 		if (show)
 		{
 			std::cout << " Deltaf=" << deltaf << std::endl;
@@ -889,6 +916,8 @@ public:
     	gaussian_angle2 = 0;
     	sqrt_angle = 0;
     	enable_CTFnoise = copy.enable_CTFnoise;
+    	phase_shift = copy.phase_shift;
+    	VPP_radius = copy.VPP_radius;
     }
 
     /** Read from file.
@@ -1022,11 +1051,15 @@ public:
     {
         double u2 = X * X + Y * Y;
         double u = sqrt(u2);
-        //if(u2 > freq_max) return 0;
         double u4 = u2 * u2;
         //if (u2>=ua2) return 0;
         double deltaf = getDeltafNoPrecomputed(X, Y);
-        double argument = K1 * deltaf * u2 + K2 * u4;
+        double VPP;
+        if(VPP_radius != 0)
+			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
+		else
+			VPP = 0;
+        double argument = VPP + K1 * deltaf * u2 + K2 * u4;
         double sine_part, cosine_part;
         sincos(argument,&sine_part, &cosine_part); // OK
         double Eespr = exp(-K3 * u4); // OK
@@ -1036,6 +1069,8 @@ public:
         double Ealpha = exp(-K6 * (K7 * u2 * u + deltaf * u) * (K7 * u2 * u + deltaf * u)); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
         double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
+        if (E < 0)
+        	E	= 0;
         if (show)
         {
             std::cout << " Deltaf=" << deltaf << std::endl;
@@ -1064,7 +1099,12 @@ public:
         //if(u2 > freq_max) return 0;
         double u4 = u2 * u2;
         double deltaf = getDeltafNoPrecomputed(X, Y);
-        double argument = K1 * deltaf * u2 + K2 * u4;
+        double VPP;
+        if(VPP_radius != 0)
+			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
+		else
+			VPP = 0;
+        double argument = VPP + K1 * deltaf * u2 + K2 * u4;
         double sine_part, cosine_part;
         sincos(argument,&sine_part, &cosine_part); // OK
         return -(Ksin*sine_part - Kcos*cosine_part);
