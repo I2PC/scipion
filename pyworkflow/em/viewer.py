@@ -51,6 +51,8 @@ import xmipp
 
 from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
+
+# FIXME: Why this monitors are imported here?
 from viewer_monitor_summary import ViewerMonitorSummary
 from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
 from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
@@ -99,7 +101,8 @@ class DataView(View):
         return params
     
     def getShowJWebParams(self):
-    
+
+    # FIXME: Maybe it is time to remove this old commented lines
     #=OLD SHOWJ WEB DOCUMENTATION===============================================
     # Extra parameters can be used to configure table layout and set render function for a column
     # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
@@ -189,7 +192,7 @@ class MicrographsView(ObjectView):
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
-                      showj.ZOOM: 100
+                      showj.ZOOM: 50
                       }
 
         if renderLabels:
@@ -208,6 +211,7 @@ class CtfView(ObjectView):
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
+                    '_ctffind4_ctfPhaseShift',
                     '_xmipp_ctfCritFirstZero',
                     '_xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
