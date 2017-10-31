@@ -510,6 +510,8 @@ void CTFDescription1D::defineParams(XmippProgram * program)
 	program->addParamsLine("  [--transversal_displace++ <DeltaR=0>] : Angstrom. Ex: 3");
 	program->addParamsLine("  [--Q0++ <Q0=0>]                       : Percentage of cosine (Q0>0)");
 	program->addParamsLine("  [--K++ <K=0>]                         : Global gain");
+	program->addParamsLine("  [--phase_shift++ <phase_shift>]     : VPP phase shift");
+	program->addParamsLine("  [--VPP_radius++ <VPP_radius>]       : phase plate radius");
 }
 
 /* Read from command line -------------------------------------------------- */
@@ -534,6 +536,14 @@ void CTFDescription1D::readParams(XmippProgram * program)
 		Defocus=program->getDoubleParam("--defocusU");
 	if (program->checkParam("--Q0"))
 		Q0=program->getDoubleParam("--Q0");
+	if (program->checkParam("--phase_shift"))
+		phase_shift=program->getDoubleParam("--phase_shift");
+	else
+		phase_shift = 0.0;
+	if (program->checkParam("--VPP_radius"))
+		VPP_radius=program->getDoubleParam("--VPP_radius");
+	else
+		VPP_radius = 0.0;
 	Ca=program->getDoubleParam("--chromatic_aberration");
 	espr=program->getDoubleParam("--energy_loss");
 	ispr=program->getDoubleParam("--lens_stability");
@@ -581,6 +591,8 @@ std::ostream & operator << (std::ostream &out, const CTFDescription1D &ctf)
         << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
         << "sigma2=               " << ctf.sigma2          << std::endl
         << "Gc2=                  " << ctf.Gc2             << std::endl
+		<< "phase_shift=          " << ctf.phase_shift 	   << std::endl
+		<< "VPP_radius=      	  " << ctf.VPP_radius  	   << std::endl
         ;
     }
     return out;
@@ -1108,6 +1120,10 @@ void CTFDescription1D::forcePhysicalMeaning()
             if (Gc2*Tm < 0.01)
                 Gc2 = 0.011 / Tm;
         }
+        if (phase_shift > 6.28)
+        {
+        	phase_shift = phase_shift/floor(phase_shift/6.28) - 6.28;
+        }
     }
 }
 #undef DEBUG
@@ -1170,6 +1186,7 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_CU, cU2, 0);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_CV, cV2, cU2);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2, 0);
+        row.getValueOrDefault(MDL_CTF_PHASE_SHIFT, phase_shift, 0);
         //row.getValueOrDefault(MDL_CTF_BG_R1, bgR1, 0);
         //row.getValueOrDefault(MDL_CTF_BG_R2, bgR2, 0);
         //row.getValueOrDefault(MDL_CTF_BG_R3, bgR3, 0);
@@ -1224,6 +1241,7 @@ void CTFDescription::setRow(MDRow &row) const
         row.setValue(MDL_CTF_BG_GAUSSIAN2_CU, cU2);
         row.setValue(MDL_CTF_BG_GAUSSIAN2_CV, cV2);
         row.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2);
+        row.setValue(MDL_CTF_PHASE_SHIFT, phase_shift);
 
     }
     if (isLocalCTF)
@@ -1317,6 +1335,8 @@ std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
         << "cU2=                  " << ctf.cU2             << std::endl
 		<< "cV2=                  " << ctf.cV2             << std::endl
 		<< "gaussian_angle2=      " << ctf.gaussian_angle2 << std::endl
+		<< "phase_shift=          " << ctf.phase_shift 	   << std::endl
+		<< "VPP_radius=      	  " << ctf.VPP_radius  	   << std::endl
         ;
     }
     return out;
