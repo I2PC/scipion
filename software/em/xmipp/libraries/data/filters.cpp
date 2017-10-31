@@ -28,6 +28,7 @@
 #include "morphology.h"
 #include "wavelet.h"
 #include "xmipp_fftw.h"
+#include <reconstruction/fourier_filter.h>
 
 /* Subtract background ---------------------------------------------------- */
 void substractBackgroundPlane(MultidimArray<double> &I)
@@ -759,66 +760,104 @@ void fillBinaryObject(MultidimArray<double> &I, int neighbourhood)
 }
 
 /* Variance filter ----------------------------------------------------------*/
-void varianceFilter(MultidimArray<double> &imIN, MultidimArray<double> &imAVG,
-                    MultidimArray<double> &imVAR, int kernelSize)
+void noisyZonesFilter(MultidimArray<double> &I, int kernelSize)
 {
+    
     int kernelSize_2 = kernelSize/2;
     MultidimArray<double> kernel;
     kernel.resize(kernelSize,kernelSize);
     kernel.setXmippOrigin();
-    
+
+    MultidimArray<double> mAvg=I, mVar=I;
     double stdKernel, varKernel, avgKernel, min_val, max_val;
-    std::cout << " Inside variance filter:" << std::endl;
     int x0, y0, xF, yF;
     
-    for (int i=0; i<(int)YSIZE(imIN); i++)
-    {
-        for (int j=0; j<(int)XSIZE(imIN); j++)
+    for (int i=kernelSize_2; i<(int)YSIZE(I); i+=kernelSize_2)
+        for (int j=kernelSize_2; j<(int)XSIZE(I); j+=kernelSize_2)
             {
                 x0 = j-kernelSize_2;
                 y0 = i-kernelSize_2;
                 xF = j+kernelSize_2-1;
                 yF = i+kernelSize_2-1;
 
-                if(j<kernelSize_2)
+                if (x0 < 0)
                     x0 = 0;
-                else if (j>YSIZE(imIN)-kernelSize_2)
-                    xF = XSIZE(imIN);
-
-                if(i<kernelSize_2)
+                if (xF > XSIZE(I))
+                    xF = XSIZE(I);
+                if (y0 < 0)
                     y0 = 0;
-                else if (i>XSIZE(imIN)-kernelSize_2)
-                    yF = YSIZE(imIN);
+                if (yF > YSIZE(I))
+                    yF = YSIZE(I);
 
-                // std::cout << "Corner 1 = (" << XX(corner1) << "," << YY(corner1) << ") ; ";
-                // std::cout << "Corner 2 = (" << XX(corner2) << "," << YY(corner2) << ") : ";
-
-                // imIN.computeStats(avgKernel, stdKernel, min_val, max_val,
-                //                                               corner1, corner2);
-
-                imIN.window(kernel, y0, x0, yF, xF);
-                
+                I.window(kernel, y0, x0, yF, xF);
                 kernel.computeStats(avgKernel, stdKernel, min_val, max_val);
-                // std::cout << "Kernel size: " << XSIZE(kernel) << "x" << YSIZE(kernel) << std::endl;
-
-                // kernel.selfNormalize();
-                // stdKernel = kernel.computeStddev();
-
                 varKernel = stdKernel*stdKernel;
 
-                DIRECT_A2D_ELEM(imAVG, i, j) = avgKernel;
-                DIRECT_A2D_ELEM(imVAR, i, j) = varKernel;
+                DIRECT_A2D_ELEM(mAvg, i, j) = avgKernel*avgKernel;
+                DIRECT_A2D_ELEM(mVar, i, j) = varKernel;
 
             }
-        // std::cout << "Corner 1 = (" << XX(corner1) << "," << YY(corner1) << ") ; " ;
-        // std::cout << "Corner 2 = (" << XX(corner2) << "," << YY(corner2) << ") : " ;
-        // std::cout << " i = " << i << " ; avgKernel = " <<
-        //                avgKernel << " ; stdKernel = " << stdKernel << std::endl;
-    }
-    // varMask.write("VARoutput.mrc");
-    // avgMask.write("AVGoutput.mrc");
+
+    // mAvg.selfABS();
+
+    // filtering to fill the matrices
+    FourierFilter filter;
+    filter.FilterShape = REALGAUSSIAN;
+    filter.FilterBand = LOWPASS;
+    filter.w1=(kernelSize_2);
+    filter.applyMaskSpace(mAvg);
+    filter.applyMaskSpace(mVar);
+
+    // // Draw to debug
+    // Image<double> imAvg(mAvg), imVar(mVar);
+    // imAvg.write("AvgFilter.mrc");
+    // imVar.write("VarFilter.mrc");
+
+    // Working in a auxilary windows to avoid borders bad defined
+    MultidimArray<double> mAvgAux(YSIZE(I)-kernelSize,XSIZE(I)-kernelSize),
+                          mVarAux(YSIZE(I)-kernelSize,XSIZE(I)-kernelSize);
+    mAvgAux.setXmippOrigin();
+    mVarAux.setXmippOrigin();
+    mAvg.window(mAvgAux,STARTINGY(mAvg)+kernelSize_2, STARTINGX(mAvg)+kernelSize_2,
+                       FINISHINGY(mAvg)-kernelSize_2, FINISHINGX(mAvg)-kernelSize_2);
+    mVar.window(mVarAux,STARTINGY(mVar)+kernelSize_2, STARTINGX(mVar)+kernelSize_2,
+                       FINISHINGY(mVar)-kernelSize_2, FINISHINGX(mVar)-kernelSize_2);
+
+
+    // Refiltering to get a smoother distribution
+    filter.w1=(XSIZE(I)/40);
+    filter.applyMaskSpace(mAvgAux);
+    filter.applyMaskSpace(mVarAux);
+
+    // Binarization
+    MultidimArray<double> mAvgAuxBin = mAvgAux, mVarAuxBin = mVarAux;
+    EntropySegmentation(mAvgAuxBin);
+    float th = EntropyOtsuSegmentation(mVarAuxBin,0.02,false);
+    mVarAuxBin.binarize(th*0.9);
+    mAvgAuxBin = 1-mAvgAuxBin;
+    // std::cout << "binarize threshold = " << th << std::endl;
+
+    // Returning to the previous windows size
+    MultidimArray<double> mAvgBin = mAvg, mVarBin = mVar;
+    mAvgAuxBin.window(mAvgBin, STARTINGY(mVar), STARTINGX(mVar),
+                              FINISHINGY(mVar), FINISHINGX(mVar));
+    mVarAuxBin.window(mVarBin, STARTINGY(mVar), STARTINGX(mVar),
+                              FINISHINGY(mVar), FINISHINGX(mVar));
+
+    // // Draw to debug
+    // Image<double> imAvgBin(mAvgBin), imVarBin(mVarBin);
+    // imAvgBin.write("noisyZoneFilter_AVGmask.mrc");
+    // imVarBin.write("noisyZoneFilter_VARmask.mrc");
+
+    // Combining both masks
+    I = 1 - (mVarBin * mAvgBin);
+
+    erode2D(I, I, 4, 0, kernelSize*3);
+
+    // fillBinaryObject(I)
 
 }
+
 
 /* Otsu Segmentation ------------------------------------------------------- */
 void OtsuSegmentation(MultidimArray<double> &V)
@@ -870,7 +909,7 @@ void OtsuSegmentation(MultidimArray<double> &V)
 /* Entropy Segmentation ---------------------------------------------------- */
 void EntropySegmentation(MultidimArray<double> &V)
 {
-    V.checkDimension(3);
+    // V.checkDimension(3);
 
     // Compute the probability density function
     Histogram1D hist;

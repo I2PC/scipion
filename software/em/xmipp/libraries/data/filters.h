@@ -186,12 +186,11 @@ void keepBiggestComponent(MultidimArray< double >& I,
  */
 void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
 
-/** Computes the variance in a certain zone base on ImageJ filters plug in
+/** Creates a binary mask with 0 where both, variance and mean are high.
  * @ingroup Filters
  *
  */
-void varianceFilter(MultidimArray<double> &imIN, MultidimArray<double> &imAVG,
-                    MultidimArray<double> &imVAR, int kernelSize = 20);
+void noisyZonesFilter(MultidimArray<double> &I, int kernelSize = 10);
 
 /** Segment an object using Otsu's method
  * @ingroup Filters

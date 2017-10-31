@@ -30,6 +30,8 @@
 /*#include <data/xmipp_image.h>
 #include <data/filters.h>*/
 #include <data/micrograph.h>
+#include <data/morphology.h>
+// #include <reconstruction/fourier_filter.h>
 
 
 /**@defgroup CoordinatesMicrographFilters Coordinates Micrograph Filter
@@ -46,9 +48,9 @@ public:
     FileName fnInMic;
 
     /** Root path for output */
-    FileName fnOutCoord;
+    FileName fnRoot;
 
-    /** Patch is of size: size x size x size */
+    /** Patch is of size: size x size */
     int patchSize;
 
 public:
