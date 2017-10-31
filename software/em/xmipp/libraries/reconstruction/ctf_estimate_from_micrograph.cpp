@@ -77,12 +77,14 @@ void ProgCTFEstimateFromMicrograph::readParams()
     }
     estimate_ctf = !checkParam("--dont_estimate_ctf");
     acceleration1D = checkParam("--acceleration1D");
+
     if (estimate_ctf)
     {
     	if (!acceleration1D)
     		prmEstimateCTFFromPSD.readBasicParams(this);
     	else
     		prmEstimateCTFFromPSDFast.readBasicParams(this); //Nuevo
+
     }
 
     bootstrapN = getIntParam("--bootstrapFit");
@@ -557,7 +559,7 @@ void ProgCTFEstimateFromMicrograph::run()
     if (verbose)
         progress_bar(div_Number);
 
-    // If averaging, compute the CTF model ----------------------------------  //El programa ejecuta esto
+    // If averaging, compute the CTF model ----------------------------------  //Program execution
     if (psd_mode == OnePerMicrograph)
     {
 
