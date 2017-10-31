@@ -220,9 +220,6 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
      * This is the expression of critBeating
      */
     evaluation.beating=1.0/sqrt(PI/(CTF1.K1*abs(CTF1.DeltafU-CTF1.DeltafV)));
-    std::cout << "DefocusUV =" << CTF1.DeltafU << " " << CTF1.DeltafV << std::endl;
-    std::cout << "K1 = " << CTF1.K1 << std::endl;
-    std::cout << "beating = " << 1.0/sqrt(PI/(CTF1.K1*abs(CTF1.DeltafU-CTF1.DeltafV))) << std::endl;
 
     // Read input PSD data
     Image<double> PSD;
@@ -414,7 +411,6 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 	rowOut.setValue(MDL_CTF_CRIT_DAMPING,evaluation.maxDampingAtBorder);
     if (evaluation.firstZeroDisagreement>0)
     	rowOut.setValue(MDL_CTF_CRIT_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement);
-
     rowOut.setValue(MDL_CTF_CRIT_FIRSTZERORATIO,evaluation.firstZeroRatio);
     rowOut.setValue(MDL_CTF_ENVELOPE_PLOT,evaluation.ctf_envelope_ssnr);
     rowOut.setValue(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_RATIO,evaluation.firstMinimumStddev_ZeroStddev);
