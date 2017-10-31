@@ -50,6 +50,12 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                   "ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0 OR "
                   "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>50000 OR ctfBgGaussianSigmaU<1000")
 
+    _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
+                  "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
+                  "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR "
+                  "ctfCritCtfMargin>0 OR ctfCritNonAstigmaticValidty<0 OR "
+                  "ctfCritNonAstigmaticValidty>25")
+
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
 
@@ -70,17 +76,49 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         self._updateFilenamesDict(_templateDict)
 
     def _defineProcessParams(self, form):
+        # Change default value for Automatic downsampling
+        param = form.getParam("AutoDownsampling")
+        param.setDefault(True)
+
         form.addParam('doInitialCTF', params.BooleanParam, default=False,
                       label="Use defoci from a previous CTF estimation")
         form.addParam('ctfRelations',params.RelationParam, allowsNull=True,
                       condition='doInitialCTF',
                       relationName=em.RELATION_CTF,
-                      attributeName='getInputMicrographs',
+                      attributeName='inputMicrographs',
                       label='Previous CTF estimation',
                       help='Choose some CTF estimation related to input '
                            'micrographs, in case you want to use the defocus '
                            'values found previously')
+        form.addParam('findPhaseShift', params.BooleanParam, default=False,
+                      label="Find additional phase shift?",
+                      #condition='doInitialCTF',
+                      help='If the data was collected with phase plate, this will find '
+                           'additional phase shift due to phase plate',
+                      expertLevel=params.LEVEL_ADVANCED)
 
+        group = form.addGroup('Phase shift parameters')
+        group.addParam('minPhaseShift', params.FloatParam, default=0.0,
+                       label="Minimum phase shift (rad)",
+                       condition='findPhaseShift',
+                       help='Lower bound of the search for additional phase shift. '
+                            'Phase shift is of scattered electrons relative to '
+                            'unscattered electrons. In radians.',
+                       expertLevel=params.LEVEL_ADVANCED)
+        group.addParam('maxPhaseShift', params.FloatParam, default=3.15,
+                       label="Maximum phase shift (rad)",
+                       condition='findPhaseShift',
+                       help='Upper bound of the search for additional phase shift. '
+                            'Phase shift is of scattered electrons relative to '
+                            'unscattered electrons. In radians. '
+                            'Please use value between 0.10 and 3.15',
+                       expertLevel=params.LEVEL_ADVANCED)
+        group.addParam('stepPhaseShift', params.FloatParam, default=0.2,
+                       label="Phase shift search step (rad)",
+                       condition='findPhaseShift',
+                       help='Step size for phase shift search (radians)',
+                       expertLevel=params.LEVEL_ADVANCED)
+        
         form.addParam('doCTFAutoDownsampling', params.BooleanParam,
                       default=True,
                       label="Automatic CTF downsampling detection",
@@ -89,6 +127,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                            'automatically tries by default the suggested '
                            'Downsample factor; and if it fails, +1; '
                            'and if it fails, -1.')
+
         form.addParam('doFastDefocus', params.BooleanParam, default=True,
                       label="Fast defocus estimate",
                       expertLevel=pwconst.LEVEL_ADVANCED,
@@ -216,13 +255,15 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         localParams = self.__params.copy()
         if self.doInitialCTF:
             if self.ctfDict[micName] > 0:
-                localParams['defocusU'] = self.ctfDict[micName]
-                localParams['defocus_range'] = 0.01 * self.ctfDict[micName]
+                localParams['defocusU'], localParams['phaseShift0'] = self.ctfDict[micName]
+                localParams['defocus_range'] = 0.1 * localParams['defocusU']
         else:
             ma = self._params['maxDefocus']
             mi = self._params['minDefocus']
             localParams['defocusU'] = (ma + mi) / 2
             localParams['defocus_range'] = (ma - mi) / 2
+            if self.findPhaseShift:
+                localParams['phaseShift0'] = self._params['phaseShift0']
 
         # Create micrograph dir under extra directory
         pwutils.path.makePath(micDir)
@@ -230,7 +271,10 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             raise Exception("No created dir: %s " % micDir)
 
         finalName = micFn
-        ctfDownFactor = self.ctfDownFactor.get()
+        if self.AutoDownsampling:
+            ctfDownFactor = em.calculateAutodownsampling(self.inputMics.getSamplingRate())
+        else:
+            ctfDownFactor = self.ctfDownFactor.get()
         downsampleList = [ctfDownFactor]
 
         if self.doCTFAutoDownsampling:
@@ -242,10 +286,10 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                     downsampleList.append((ctfDownFactor + 1) / 2)
 
         deleteTmp = ""
-        
         for downFactor in downsampleList:
             # Downsample if necessary
             if downFactor != 1:
+                #downFactor = downFactor+1
                 # Replace extension by 'mrc' cause there are some formats that
                 # cannot be written (such as dm3)
                 baseFn = pwutils.path.replaceBaseExt(micFn, 'mrc')
@@ -320,7 +364,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         self._prepareRecalCommand(ctfModel)
         # CTF estimation with Xmipp
         self.runJob(self._program, self._args % self._params)
-
         mic = ctfModel.getMicrograph()
         micDir = self._getMicrographDir(mic)
         self.evaluateSingleMicrograph(mic.getFileName(), micDir)
@@ -336,6 +379,15 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                 validateMsgs.append('If you want to use a previous estimation '
                                     'of the CTF, the corresponding set of CTFs '
                                     'is needed')
+
+        valueStep = round(self.stepPhaseShift.get(), 2)
+        valueMin = round(self.minPhaseShift.get(), 2)
+        valueMax = round(self.maxPhaseShift.get(), 2)
+
+        if not (self.minPhaseShift < self.maxPhaseShift and
+                        valueStep <= (valueMax - valueMin) and
+                            0.10 <= valueMax <= 3.15):
+            validateMsgs.append('Wrong values for phase shift search.')
         return validateMsgs
 
     def _summary(self):
@@ -367,9 +419,16 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
     # --------------------------- UTILS functions ------------------------------
     def _prepareArgs(self, params):
-        self._args = ("--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate "
+        if not self.findPhaseShift:
+            self._args = ("--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate "
                       "%(samplingRate)s --defocusU %(defocusU)f --defocus_range "
                       "%(defocus_range)f --overlap 0.7 --acceleration1D")
+        else:
+            self._args = ("--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate "
+                      "%(samplingRate)s --defocusU %(defocusU)f --defocus_range "
+                      "%(defocus_range)f --overlap 0.7 --acceleration1D --phase_shift %(phaseShift0)f "
+                      "--VPP_radius 0.005")
+
         for par, val in params.iteritems():
             self._args += " --%s %s" % (par, str(val))
 
@@ -396,13 +455,25 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             self.ctfDict = {}
             for ctf in self.ctfRelations.get():
                 ctfName = ctf.getMicrograph().getMicName()
-                self.ctfDict[ctfName] = ctf.getDefocusU()
+                phaseShift0 = 0
+                if self.findPhaseShift:
+                    if hasattr(ctf,"_gctf_ctfPhaseShift"):
+                        phaseShift0=ctf._gctf_ctfPhaseShift
+                    elif hasattr(ctf,"_ctffind4_ctfPhaseShift"):
+                        phaseShift0=ctf._ctffind4_ctfPhaseShift
+                    else:
+                        phaseShift0 = 1.65 # pi/2
+                self.ctfDict[ctfName] = (ctf.getDefocusU(),phaseShift0.get())
+
+
+        if self.findPhaseShift and not self.ctfRelations.hasValue():
+            self._params['phaseShift0'] = 1.65
 
     def _prepareRecalCommand(self, ctfModel):
         if self.recalculate:
             self._defineRecalValues(ctfModel)
             self._createFilenameTemplates()
-            self._program = 'xmipp_ctf_estimate_from_psd'
+            self._program = 'xmipp_ctf_estimate_from_psd_fast'
             self._args = "--psd %(psdFn)s "
             line = ctfModel.getObjComment().split()
 
@@ -417,17 +488,16 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             micDir = self._getMicrographDir(mic)
             fnCTFparam = self._getFileName('ctfparam', micDir=micDir)
             mdCTFParam = md.MetaData(fnCTFparam)
-            downFactor = mdCTFParam.getValue(md.MDL_CTF_DOWNSAMPLE_PERFORMED,
-                                             mdCTFParam.firstObject())
+            downFactor = em.calculateAutodownsampling(mic.getSamplingRate())
+            #mdCTFParam.setValue(md.MDL_CTF_DOWNSAMPLE_PERFORMED,downFactor)
+                                             #mdCTFParam.firstObject())
             # cleanPath(fnCTFparam)
-
             params2 = {'psdFn': join(micDir, psdFile),
                        'defocusU': float(line[0]),
-                       'defocusV': float(line[1]),
-                       'angle': line[2],
+                       #'defocusV': float(line[1]),
+                       #'angle': line[2],
                        }
             self._params = dict(self._params.items() + params2.items())
-
             # Mapping between base protocol parameters and the package specific
             # command options
             self.__params = {'sampling_rate': self._params['samplingRate']
@@ -438,8 +508,8 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                              'min_freq': line[3],
                              'max_freq': line[4],
                              'defocusU': self._params['defocusU'],
-                             'defocusV': self._params['defocusV'],
-                             'azimuthal_angle': self._params['angle'],
+                             #'defocusV': self._params['defocusV'],
+                             #'azimuthal_angle': self._params['angle'],
                              'Q0': self._params['ampContrast'],
                              'defocus_range': 5000,
                              'ctfmodelSize': size
@@ -447,6 +517,14 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
             for par, val in self.__params.iteritems():
                 self._args += " --%s %s" % (par, str(val))
+
+            if self.findPhaseShift:
+                self._params['phaseShift'] = "yes"
+                self._params['minPhaseShift'] = self.minPhaseShift.get()
+                self._params['maxPhaseShift'] = self.maxPhaseShift.get()
+                self._params['stepPhaseShift'] = self.stepPhaseShift.get()
+            else:
+                self._params['phaseShift'] = "no"
 
     def _setPsdFiles(self, ctfModel, micDir):
         ctfModel._psdFile = String(self._getFileName('psd', micDir=micDir))
@@ -492,7 +570,14 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         # Check if it is a good micrograph
         fnRejected = self._getTmpPath(pwutils.path.basename(micFn +
                                                         "_rejected.xmd"))
-        self.runJob("xmipp_metadata_utilities",
+
+        if self.findPhaseShift:
+            self.runJob("xmipp_metadata_utilities",
+                        '-i %s --query select "%s" -o %s'
+                        % (fnEval, self._criterion_phaseplate, fnRejected))
+
+        else:
+            self.runJob("xmipp_metadata_utilities",
                     '-i %s --query select "%s" -o %s'
                     % (fnEval, self._criterion, fnRejected))
 
@@ -587,6 +672,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         return micSet
 
     def _createCtfModel(self, mic):
+
         micDir = self._getMicrographDir(mic)
         ctfparam = self._getFileName('ctfparam', micDir=micDir)
         ctfModel2 = readCTFModel(ctfparam, mic)
