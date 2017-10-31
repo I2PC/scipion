@@ -28,7 +28,9 @@ import json
 import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtStress, ProtMonitorSystem
-from pyworkflow.gui.project.notifier import ProjectNotifier
+from pyworkflow.gui.project.notifier import ProjectNotifier, \
+    SCIPION_STATS_WORKFLOW_APP
+
 
 class TestNotifier(BaseTest):
     @classmethod
@@ -36,7 +38,7 @@ class TestNotifier(BaseTest):
         setupTestProject(cls)
 
     def _getUrl(self):
-        return os.environ.get('SCIPION_NOTIFY_URL', 'http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/').strip()
+        return os.environ.get('SCIPION_NOTIFY_URL', SCIPION_STATS_WORKFLOW_APP).strip()
 
     def test_projectNotifier(self):
         """ Execute a protocol and then report on it

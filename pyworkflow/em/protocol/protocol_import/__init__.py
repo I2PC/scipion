@@ -30,10 +30,11 @@ of objects.
 """
 
 from base import ProtImport, ProtImportFiles
-from images import ProtImportImages
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
 from coordinates import ProtImportCoordinates
 from ctfs import ProtImportCTF
-from volumes import ProtImportVolumes, ProtImportPdb
+from images import ProtImportImages
 from masks import ProtImportMask
+from micrographs import ProtImportMicrographs, ProtImportMovies
+from particles import ProtImportParticles, ProtImportAverages
+from volumes import ProtImportVolumes, ProtImportPdb
+from viewer import viewerProtImportVolumes

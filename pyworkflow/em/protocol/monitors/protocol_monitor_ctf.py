@@ -29,6 +29,7 @@ import sys
 
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor, EmailNotifier
+from report_html import PSD_PATH
 import sqlite3 as lite
 import time, sys
 
@@ -173,6 +174,9 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
+#            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
+#                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
+#                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
             sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,micPath,psdPath,shiftPlotPath )
                      VALUES(%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, defocusU,
                      defocusV, defocusAngle, defocusU / defocusV, micPath, psdPath, shiftPlotPath)
@@ -232,7 +236,7 @@ class MonitorCTF(Monitor):
             'imgMicPath': get('micPath'),
             'imgPsdPath': get('psdPath'),
             'imgShiftPath': get('shiftPlotPath')
-        }
+         }
         # conn.close()
         return data
 
