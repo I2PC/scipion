@@ -25,6 +25,8 @@
 # **************************************************************************
 
 import os
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 
 from pyworkflow.protocol.params import LabelParam, EnumParam
 from pyworkflow.utils import exists
@@ -142,16 +144,24 @@ class ThreedFscViewer(ProtocolViewer):
 # =============================================================================
 
     def _showHistogram(self, param=None):
-        return [ImageView(self.protocol._getFileName('out_histogram'))]
+        img = mpimg.imread(self.protocol._getFileName('out_histogram'))
+        imgplot = plt.imshow(img)
+        plt.show()
+        return [imgplot]
 
     def _showPlotFT(self, param=None):
-        return [ImageView(self.protocol._getFileName('out_plotFT'))]
+        img = mpimg.imread(self.protocol._getFileName('out_plotFT'))
+        imgplot = plt.imshow(img)
+        plt.show()
+        return [imgplot]
 
     def _showPlot3DFSC(self, param=None):
-        return [ImageView(self.protocol._getFileName('out_plot3DFSC'))]
+        img = mpimg.imread(self.protocol._getFileName('out_plot3DFSC'))
+        imgplot = plt.imshow(img)
+        plt.show()
+        return [imgplot]
 
     def _showChimera(self, param=None):
-        #os.system('chimera "%s" &' % self.protocol._getFileName('out_cmdChimera'))
         cmdFile = self.protocol._getFileName('out_cmdChimera')
         view = ChimeraView(cmdFile)
         return [view]

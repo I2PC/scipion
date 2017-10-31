@@ -164,7 +164,7 @@ class Prot3DFSC(ProtAnalysis3D):
         args = self._getArgs()
         param = ' '.join(['%s=%s' % (k, str(v)) for k, v in args.iteritems()])
         program = self._getProgram()
-        self.info("Running: %s %s" % (program, param))
+        self.info("**Running:** %s %s" % (program, param))
 
         f = open(self._getExtraPath('script.sh'), "w")
         line = """#!/bin/bash
@@ -177,14 +177,7 @@ source deactivate
         f.write(line)
         f.close()
 
-        import os
-        import stat
-
-        st = os.stat(self._getExtraPath('script.sh'))
-        os.chmod(self._getExtraPath('script.sh'), st.st_mode | stat.S_IEXEC)
-
-        self.runJob('./script.sh', '', cwd=self._getExtraPath())
-
+        self.runJob('/bin/bash ./script.sh', '', cwd=self._getExtraPath(), env=getEnviron())
         #self.runJob('unset PYTHONPATH && source activate fsc && python %s %s && source deactivate' %
         #            (program, param), '', cwd=self._getExtraPath(),
         #            env=getEnviron())
@@ -205,7 +198,7 @@ source deactivate
         if self.getOutputsSize() > 0:
             logFn = self.getLogPaths()[0]
             sph = findSphericity(logFn)
-            summary.append('Sphericity:: %0.3f ' % sph)
+            summary.append('Sphericity: %0.3f ' % sph)
         else:
             summary.append("Output is not ready yet.")
 
