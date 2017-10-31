@@ -33,9 +33,9 @@ import os
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.gui.plotter import Plotter
-from pyworkflow.utils import exists, join, basename
-from convert import getEnviron
+from pyworkflow.em.data import Volume
+from pyworkflow.utils import join, basename
+from convert import getEnviron, findSphericity
 
 
 class Prot3DFSC(ProtAnalysis3D):
@@ -65,10 +65,18 @@ class Prot3DFSC(ProtAnalysis3D):
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
         myDict = {
-                  'input_volFn': self._getExtraPath( 'volume_full.mrc'),
-                  'input_half1Fn': self._getExtraPath( 'volume_half1.mrc'),
-                  'input_half2Fn': self._getExtraPath( 'volume_half2.mrc'),
-                  'input_maskFn': self._getExtraPath( 'mask.mrc'),
+                  'input_volFn': self._getExtraPath('volume_full.mrc'),
+                  'input_half1Fn': self._getExtraPath('volume_half1.mrc'),
+                  'input_half2Fn': self._getExtraPath('volume_half2.mrc'),
+                  'input_maskFn': self._getExtraPath('mask.mrc'),
+                  'out_histogram': self._getExtraPath('Results_3D-FSC/histogram.png'),
+                  'out_plot3DFSC': self._getExtraPath('Results_3D-FSC/Plots3D-FSC.jpg'),
+                  'out_plotFT': self._getExtraPath('Results_3D-FSC/FTPlot3D-FSC.jpg'),
+                  'out_vol3DFSC': self._getExtraPath('Results_3D-FSC/3D-FSC.mrc'),
+                  'out_vol3DFSC-th': self._getExtraPath('Results_3D-FSC/3D-FSC_Thresholded.mrc'),
+                  'out_vol3DFSC-thbin': self._getExtraPath('Results_3D-FSC/3D-FSC_ThresholdedBinarized.mrc'),
+                  'out_cmdChimera': self._getExtraPath('Results_3D-FSC/Chimera/3DFSCPlot_Chimera.cmd'),
+                  'out_globalFSC': self._getExtraPath('Results_3D-FSC/ResEM3D-FSCOutglobalFSC.csv')
                   }
 
         self._updateFilenamesDict(myDict)
@@ -155,24 +163,49 @@ class Prot3DFSC(ProtAnalysis3D):
         """ Call ResMap.py with the appropriate parameters. """
         args = self._getArgs()
         param = ' '.join(['%s=%s' % (k, str(v)) for k, v in args.iteritems()])
-        program =  self._getProgram()
+        program = self._getProgram()
+        self.info("Running: %s %s" % (program, param))
 
-        self.runJob('unset PYTHONPATH && source activate fsc && python %s %s && source deactivate' %
-                    (program, param), '', cwd=self._getExtraPath(), env=getEnviron())
+        f = open(self._getExtraPath('script.sh'), "w")
+        line = """#!/bin/bash
+source ~/eman22.bashrc
+unset PYTHONPATH
+source activate fsc
+python %s %s
+source deactivate
+""" % (program, param)
+        f.write(line)
+        f.close()
+
+        import os
+        import stat
+
+        st = os.stat(self._getExtraPath('script.sh'))
+        os.chmod(self._getExtraPath('script.sh'), st.st_mode | stat.S_IEXEC)
+
+        self.runJob('./script.sh', '', cwd=self._getExtraPath())
+
+        #self.runJob('unset PYTHONPATH && source activate fsc && python %s %s && source deactivate' %
+        #            (program, param), '', cwd=self._getExtraPath(),
+        #            env=getEnviron())
 
     def createOutputStep(self):
-        pass
+        inputVol = self.inputVolume.get()
+        vol = Volume()
+        vol.setFileName(self._getFileName('out_vol3DFSC'))
+        vol.setSamplingRate(inputVol.getSamplingRate())
+
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(self.inputVolume, vol)
 
     #--------------------------- INFO functions --------------------------------
     
     def _summary(self):
         summary = []
-
-        if exists(self._getExtraPath('Results_3D-FSC/Plots3D-FSC.jpg')):
-            pass
-            #results = self._parseOutput()
-            #summary.append('Mean resolution: %0.2f A' % results[0])
-            #summary.append('Median resolution: %0.2f A' % results[1])
+        if self.getOutputsSize() > 0:
+            logFn = self.getLogPaths()[0]
+            sph = findSphericity(logFn)
+            summary.append('Sphericity:: %0.3f ' % sph)
         else:
             summary.append("Output is not ready yet.")
 
@@ -215,5 +248,5 @@ class Prot3DFSC(ProtAnalysis3D):
         """ Return the program binary that will be used. """
         if 'NYSBC_3DFSC_HOME' not in os.environ:
             return None
-        cmd = join(getEnviron().get('NYSBC_3DFSC_HOME'), 'ThreeDFSC', 'ThreeDFSC_Start.py')
+        cmd = join(os.environ['NYSBC_3DFSC_HOME'], 'ThreeDFSC', 'ThreeDFSC_Start.py')
         return str(cmd)

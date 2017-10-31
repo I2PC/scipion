@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Laura del Cano (ldelcano@cnb.csic.es)
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * MRC Laboratory of Molecular Biology (MRC-LMB)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@
 # **************************************************************************
 """
 This module contains converter functions that will serve to:
-1. Write from base classes to Appion specific files
-2. Read from Appion files to base classes
+1. Write from base classes to 3DFSC specific files
+2. Read from 3DFSC files to base classes
 """
 
 import os
@@ -70,3 +70,14 @@ def validateInstallation():
         return ["Missing variables:"] + missingPaths
     else:
         return []  # No errors
+
+
+def findSphericity(fn):
+    f = open(fn, 'r')
+    sph = 0.
+    for line in f.readlines():
+        if 'Sphericity is ' in line:
+            sph = float(line.split()[2])
+    f.close()
+
+    return sph
