@@ -26,6 +26,8 @@ import os
 
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData
+from pyworkflow.em.protocol.protocol_create_stream_data import \
+    SET_OF_RANDOM_MICROGRAPHS
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.packages.xmipp3 import XmippProtCTFSelection
@@ -38,6 +40,7 @@ MICS = os.environ.get('SCIPION_TEST_MICS', 10)
 
 CTF_SQLITE = "ctfs.sqlite"
 MIC_SQLITE = "micrographs.sqlite"
+MIC_DISCARDED_SQLITE = "micrographsDiscarded.sqlite"
 
 
 class TestCtfSelection(BaseTest):
@@ -62,16 +65,16 @@ class TestCtfSelection(BaseTest):
                   'nDim': MICS,
                   'samplingRate': 1.25,
                   'creationInterval': 5,
-                  'delay':0,
-                  'setof': 0 # SetOfMicrographs
+                  'delay': 0,
+                  'setof': SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
                   }
 
-        #create input micrographs
+        # create input micrographs
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
-        self.proj.launchProtocol(protStream,wait=False)
+        self.proj.launchProtocol(protStream, wait=False)
 
-        counter=1
+        counter = 1
         while not protStream.hasAttribute('outputMicrographs'):
             time.sleep(2)
             protStream = self._updateProtocol(protStream)
@@ -79,7 +82,8 @@ class TestCtfSelection(BaseTest):
                 break
             counter += 1
 
-        #then introduce monitor, checking all the time ctf and sving to database
+        # then introduce monitor, checking all the time ctf and
+        # saving to database
         protCTF = ProtCTFFind(useCftfind4=True)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
@@ -123,17 +127,16 @@ class TestCtfSelection(BaseTest):
             'maxDefocus': 40000,
             'minDefocus': 1000,
             'astigmatism': 1000,
-            'resolution': 4
+            'resolution': 3.7,
         }
 
         protCTFSel2 = self.newProtocol(XmippProtCTFSelection, **kwargs)
         protCTFSel2.inputCTF.set(protCTFSel.outputCTF)
         self.proj.launchProtocol(protCTFSel2)
 
-        counter=1
-
+        counter = 1
         while not (protCTFSel2.hasAttribute('outputCTF') and
-                   protCTFSel2.hasAttribute('outputMicrograph')):
+                   protCTFSel2.hasAttribute('outputMicrographs')):
 
             time.sleep(2)
             protCTFSel2 = self._updateProtocol(protCTFSel2)
@@ -141,35 +144,55 @@ class TestCtfSelection(BaseTest):
                 self.assertTrue(False)
             counter += 1
 
-        baseFn = protCTFSel2._getPath(CTF_SQLITE)
-        self.assertTrue(os.path.isfile(baseFn))
-        baseFn = protCTFSel2._getPath(MIC_SQLITE)
-        self.assertTrue(os.path.isfile(baseFn))
-
-        micSet = SetOfMicrographs(filename=protCTFSel2._getPath(MIC_SQLITE))
-        ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))
+        # AJ the number of micrographs discarded and selected in the first CTF
+        # selection protocol must be equal to the number of mics in the
+        # CTF estimation protocol
+        micSetDiscarded1 = SetOfMicrographs(
+            filename=protCTFSel._getPath(MIC_DISCARDED_SQLITE))
+        micSet1 = SetOfMicrographs(
+            filename=protCTFSel._getPath(MIC_SQLITE))
         counter = 1
-        while not (ctfSet.getSize()==10 and micSet.getSize()==10):
+        while not ((micSetDiscarded1.getSize() + micSet1.getSize()) == 10):
             time.sleep(2)
-            micSet = SetOfMicrographs(filename=protCTFSel2._getPath(MIC_SQLITE))
-            ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))
+            micSetDiscarded1 = SetOfMicrographs(
+                filename=protCTFSel._getPath(MIC_DISCARDED_SQLITE))
+            micSet1 = SetOfMicrographs(
+                filename=protCTFSel._getPath(MIC_SQLITE))
             if counter > 100:
                 self.assertTrue(False)
             counter += 1
 
-        ctfSetIn = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
-        for ctf, ctfOut in zip(ctfSetIn, ctfSet):
+        # AJ the number of micrographs discarded and selected in the second CTF
+        # selection protocol must be equal to the number of ctfs in the first
+        # CTF selection protocol
+        micSetDiscarded2 = SetOfMicrographs(
+            filename=protCTFSel2._getPath(MIC_DISCARDED_SQLITE))
+        micSet2 = SetOfMicrographs(
+            filename=protCTFSel2._getPath(MIC_SQLITE))
+        ctfSet1 = SetOfCTF(filename=protCTFSel._getPath(CTF_SQLITE))
+        counter = 1
+        while not (ctfSet1.getSize() == (micSetDiscarded2.getSize() +
+                                         micSet2.getSize())):
+            time.sleep(2)
+            micSetDiscarded2 = SetOfMicrographs(
+                filename=protCTFSel2._getPath(MIC_DISCARDED_SQLITE))
+            micSet2 = SetOfMicrographs(
+                filename=protCTFSel2._getPath(MIC_SQLITE))
+            ctfSet1 = SetOfCTF(filename=protCTFSel._getPath(CTF_SQLITE))
+            if counter > 100:
+                self.assertTrue(False)
+            counter += 1
+
+        ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))
+        for ctf in ctfSet:
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
             astigm = defocusU - defocusV
-            resol = ctf._ctffind4_ctfResolution.get() # TODO
-            if defocusU > 1000 and defocusU < 28000 and \
-            defocusV > 1000 and defocusV < 28000 and \
-            astigm < 1000 and resol < 4:
-                self.assertTrue(ctfOut.isEnabled(),
-                                "ctf with id %d enabled is "
-                                "False and should be True")
-            else:
-                self.assertFalse(ctfOut.isEnabled(),
-                                 "ctf with id %d enabled is "
-                                 "True and should be False")
+            resol = ctf.getResolution()  # TODO
+            if defocusU < 1000 \
+                    or defocusU > 28000 \
+                    or defocusV < 1000 \
+                    or defocusV > 28000 \
+                    or astigm > 1000 or resol > 3.7:
+                self.assertTrue(False, "A CTF without the correct parameters"
+                                       " is included in the output set")

@@ -295,7 +295,7 @@ public class XmippWindowUtil
     
     public static String executeCommand(String command, boolean wait) throws Exception {
             //System.out.println(command);
-            Process p = Runtime.getRuntime().exec(command);
+            Process p = Runtime.getRuntime().exec(new String[] { "bash", "-c", command });
             if(wait)
             {
                 p.waitFor();

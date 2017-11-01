@@ -19,7 +19,7 @@ public class Particle implements Comparable<Particle> {
 	{
 		this.x = x;
 		this.y = y;
-                this.cost = cost;
+		this.cost = cost;
 	}
 	
 	

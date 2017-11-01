@@ -28,7 +28,7 @@ import os
 import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
-from grigoriefflab import UNBLUR_PATH, getVersion
+from grigoriefflab import UNBLUR_PATH, getVersion, UNBLUR_HOME
 from convert import readShiftsMovieAlignment
 
 
@@ -39,6 +39,20 @@ class ProtUnblur(ProtAlignMovies):
     """
     _label = 'unblur'
     CONVERT_TO_MRC = 'mrc'
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        Can't rely on package function since this is a "multi package" package
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        missingPaths = []
+
+        if not os.path.exists(UNBLUR_PATH):
+            missingPaths.append("%s : %s" % (UNBLUR_HOME, UNBLUR_PATH))
+        return missingPaths
 
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Alignment')

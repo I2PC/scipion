@@ -342,7 +342,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                                                   input_params[2],
                                                                   input_params[0])
                 else:
-                    argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (self.scaleMaj,
+                    argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj,
                                                               self.scaleMin,
                                                               self.angDist)
 

@@ -29,14 +29,16 @@ import sys
 
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor, EmailNotifier
+from report_html import PSD_PATH
 import sqlite3 as lite
 import time, sys
 
 from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 import tkMessageBox
-from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
-from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.protocol.constants import STATUS_RUNNING
+from pyworkflow.protocol import getUpdatedProtocol
+
 from pyworkflow.em.plotter import EmPlotter
 
 CTF_LOG_SQLITE = 'ctf_log.sqlite'
@@ -136,9 +138,12 @@ class MonitorCTF(Monitor):
         self._createTable()
 
     def step(self):
-        prot = self.getUpdatedProtocol(self.protocol)
+        prot = getUpdatedProtocol(self.protocol)
         # Create set of processed CTF from CTF protocol
-        CTFset = prot.outputCTF.getIdSet()
+        if hasattr(prot, 'outputCTF'):
+            CTFset = prot.outputCTF.getIdSet()
+        else:
+            return False
         # find difference
         sys.stdout.flush()
         diffSet = CTFset - self.readCTFs
@@ -150,6 +155,14 @@ class MonitorCTF(Monitor):
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
             defocusAngle = ctf.getDefocusAngle()
+            psdPath = os.path.abspath(ctf.getPsdFile())
+            micPath = os.path.abspath(ctf.getMicrograph().getFileName())
+            shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
+                         or getattr(ctf.getMicrograph(), 'plotGlobal', None))
+            if shiftPlot is not None:
+                shiftPlotPath = os.path.abspath(shiftPlot.getFileName())
+            else:
+                shiftPlotPath = ""
 
             if defocusU < defocusV:
                 aux = defocusV
@@ -161,13 +174,17 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio) VALUES(%f,%f,%f,%f);""" \
-                  % (self._tableName, defocusU, defocusV, defocusAngle,
-                     defocusU / defocusV)
+#            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
+#                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
+#                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
+            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,micPath,psdPath,shiftPlotPath )
+                     VALUES(%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, defocusU,
+                     defocusV, defocusAngle, defocusU / defocusV, micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
                 print("ERROR: saving one data point (CTF monitor). I continue")
+                print e
 
             if (defocusU / defocusV) > (1. + astigmatism):
                 self.warning("Defocus ratio (defocusU / defocusV)  = %f."
@@ -195,7 +212,10 @@ class MonitorCTF(Monitor):
                                 defocusV FLOAT,
                                 defocus FLOAT,
                                 astigmatism FLOAT,
-                                ratio FLOAT)
+                                ratio FLOAT, 
+                                micPath STRING,
+                                psdPath STRING,
+                                shiftPlotPath STRING)
                                 """ % self._tableName)
 
     def getData(self):
@@ -212,8 +232,11 @@ class MonitorCTF(Monitor):
             'defocusV': get('defocusV'),
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
-            'idValues': get('id')
-        }
+            'idValues': get('id'),
+            'imgMicPath': get('micPath'),
+            'imgPsdPath': get('psdPath'),
+            'imgShiftPath': get('shiftPlotPath')
+         }
         # conn.close()
         return data
 
@@ -318,7 +341,12 @@ class CtfMonitorPlotter(EmPlotter):
 
     def paint(self, labels):
         for label in labels:
-            self.lines[label],=self.ax.plot([], [], '-',label=label)
+            if (label == 'defocusU'):
+                self.lines[label], = self.ax.plot([], [], '-o',
+                                                  label=label, color='b')
+            else:
+                self.lines[label], = self.ax.plot([], [], '-o',
+                                                  label=label, color='r')
 
         anim = animation.FuncAnimation(self.fig, self.animate,
                                        interval=self.monitor.samplingInterval*1000)#miliseconds

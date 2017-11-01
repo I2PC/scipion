@@ -44,6 +44,8 @@ import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import MODE_RESTART
 
+OBJECT_PARENT_ID = 'object_parent_id'
+
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
@@ -189,6 +191,13 @@ class Project(object):
         if not self.openedAsReadOnly():
             self.settings.write()
 
+    def createSettings(self, runsView=1, readOnly=False):
+        self.settings = pwconfig.ProjectSettings()
+        self.settings.setRunsView(runsView)
+        self.settings.setReadOnly(readOnly)
+        self.settings.write(self.settingsPath)
+        return self.settings
+
     def createMapper(self, sqliteFn):
         """ Create a new SqliteMapper object and pass as classes dict
         all globals and update with data and protocols from em.
@@ -215,39 +224,47 @@ class Project(object):
                 If forProtocol is True, the settings and protocols.conf will
                 not be loaded.
         """
+
         if not os.path.exists(self.path):
             raise Exception(
                 "Cannot load project, path doesn't exist: %s" % self.path)
 
         # If folder is read only, flag it and warn about it.
         if not os.access(self.path, os.W_OK):
-
             self._isInReadOnlyFolder = True
-            print("Warning: don't have write permissions for project folder. "
-                  "Opening as READ-ONLY.")
+            print("WARNING on project \"%s\": don't have write permissions for project folder. "
+                  "Loading as READ-ONLY." % self.shortName)
 
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
-        self._loadDb(dbPath)
+        try:
 
-        self._loadHosts(hostsConf)
+            self._loadDb(dbPath)
 
-        if loadAllConfig:
-            self._loadProtocols(protocolsConf)
+            self._loadHosts(hostsConf)
 
-            # FIXME: Handle settings argument here
+            if loadAllConfig:
+                self._loadProtocols(protocolsConf)
 
-            # It is possible that settings does not exists if
-            # we are loading a project after a Project.setDbName,
-            # used when running protocols
-            settingsPath = os.path.join(self.path, self.settingsPath)
-            if os.path.exists(settingsPath):
-                self.settings = pwconfig.loadSettings(settingsPath)
-            else:
-                self.settings = None
+                # FIXME: Handle settings argument here
 
-        self._loadCreationTime()
+                # It is possible that settings does not exists if
+                # we are loading a project after a Project.setDbName,
+                # used when running protocols
+                settingsPath = os.path.join(self.path, self.settingsPath)
+                if os.path.exists(settingsPath):
+                    self.settings = pwconfig.loadSettings(settingsPath)
+                else:
+                    self.settings = None
+
+            self._loadCreationTime()
+
+        # Catch any exception..
+        except Exception as e:
+            print("ERROR: Project %s load failed.\n"
+                 "       Message: %s\n" % (self.path, e))
+
 
     def _loadCreationTime(self):
         # Load creation time, it should be in project.sqlite or
@@ -361,16 +378,14 @@ class Project(object):
         pwutils.path.makePath(self.path)
         os.chdir(self.path)  # Before doing nothing go to project dir
         self._cleanData()
-        print "Creating project at: ", os.path.abspath(self.dbPath)
+        print("Creating project at: ", os.path.abspath(self.dbPath))
         # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
         # Store creation time
         self._storeCreationTime(dt.datetime.now())
         # Load settings from .conf files and write .sqlite
-        self.settings = pwconfig.ProjectSettings()
-        self.settings.setRunsView(runsView)
-        self.settings.setReadOnly(readOnly)
-        self.settings.write(self.settingsPath)
+        self.settings = self.createSettings(runsView=runsView,
+                                            readOnly=readOnly)
         # Create other paths inside project
         for p in self.pathList:
             pwutils.path.makePath(p)
@@ -525,6 +540,8 @@ class Project(object):
             raise
         finally:
             protocol.setAborted()
+            protocol.setMapper(self.createMapper(protocol.getDbPath()))
+            protocol._store()
             self._storeProtocol(protocol)
 
     def continueProtocol(self, protocol):
@@ -954,6 +971,9 @@ class Project(object):
             for r in self.runs:
                 self._setProtocolMapper(r)
 
+                # Check for run warnings
+                r.checkSummaryWarnings()
+
                 # Update nodes that are running and were not invoked
                 # by other protocols
                 if r.isActive():
@@ -1028,9 +1048,9 @@ class Project(object):
         """
 
         if refresh or self._runsGraph is None:
-            runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
+            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids) if not r.isChild()]
             self._runsGraph = self.getGraphFromRuns(runs)
-            
+
         return self._runsGraph
 
     def getGraphFromRuns(self, runs):
@@ -1083,7 +1103,7 @@ class Project(object):
                 rootNode.addChild(n)
 
         return g
-    
+
     def _getRelationGraph(self, relation=em.RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
@@ -1103,9 +1123,25 @@ class Project(object):
                 g.aliasNode(node, p2.getUniqueId())
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            # Duplicated ...
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
+
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
+
+            if pObj is None or pp.get() is None:
+                print("project._getRelationGraph: ERROR, pointer to parent is "
+                      "None. IGNORING IT.\n")
+                for key in rel.keys():
+                    print("%s: %s" % (key, rel[key]))
+
+                continue
+
             pid = pp.getUniqueId()
             parent = g.getNode(pid)
 
@@ -1190,7 +1226,12 @@ class Project(object):
         objectsDict = {}
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
 
