@@ -73,6 +73,12 @@ class ProtMotionCorr(ProtAlignMovies):
     def isLatestVersion(self):
         return getVersion('MOTIONCOR2') == '1.0.1'
 
+    def _getConvertExtension(self, filename):
+        """ Check wether it is needed to convert to .mrc or not """
+        ext = pwutils.getExt(filename).lower()
+        print "_getConvertExtension: ", ext
+        return None if ext in ['.mrc', '.mrcs', '.tiff', '.tif'] else 'mrc'
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         form.addParam('gpuMsg', params.LabelParam, default=True,
@@ -370,7 +376,15 @@ class ProtMotionCorr(ProtAlignMovies):
                                                               self.scaleMin,
                                                               self.angDist)
 
-            args = ' -InMrc "%s" ' % movie.getBaseName()
+            ext = pwutils.getExt(movie.getFileName()).lower()
+
+            if ext in ['.mrc', '.mrcs']:
+                args = ' -InMrc "%s" ' % movie.getBaseName()
+            elif ext in ['.tif', '.tiff']:
+                args = ' -InTiff "%s" ' % movie.getBaseName()
+            else:
+                raise Exception("Unsupported format: %s" % ext)
+
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
