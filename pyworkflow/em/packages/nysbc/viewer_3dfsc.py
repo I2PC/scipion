@@ -122,8 +122,6 @@ class ThreedFscViewer(ProtocolViewer):
             f.close()
             view = ChimeraView(cmdFile)
         else:
-            # view = CommandView('xmipp_chimera_client --input "%s"
-            # --mode projector 256 &' % volumes[0])
             view = ChimeraClientView(volumes[0])
 
         return [view]
@@ -146,18 +144,21 @@ class ThreedFscViewer(ProtocolViewer):
     def _showHistogram(self, param=None):
         img = mpimg.imread(self.protocol._getFileName('out_histogram'))
         imgplot = plt.imshow(img)
+        plt.axis('off')
         plt.show()
         return [imgplot]
 
     def _showPlotFT(self, param=None):
         img = mpimg.imread(self.protocol._getFileName('out_plotFT'))
         imgplot = plt.imshow(img)
+        plt.axis('off')
         plt.show()
         return [imgplot]
 
     def _showPlot3DFSC(self, param=None):
         img = mpimg.imread(self.protocol._getFileName('out_plot3DFSC'))
         imgplot = plt.imshow(img)
+        plt.axis('off')
         plt.show()
         return [imgplot]
 

@@ -34,7 +34,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Volume
-from pyworkflow.utils import join, basename
+from pyworkflow.utils import join, basename, exists
 from convert import getEnviron, findSphericity
 
 
@@ -106,19 +106,19 @@ class Prot3DFSC(ProtAnalysis3D):
                       pointerClass='VolumeMask', condition="applyMask",
                       help='Select a volume to apply as a mask.')
 
-        group = form.addGroup('Extra parameters')
-        group.addParam('dTheta', params.FloatParam, default=20,
+        form.addSection(label='Extra params')
+        form.addParam('dTheta', params.FloatParam, default=20,
                        label='Angle of cone (deg)',
                        help='Angle of cone to be used for 3D FSC sampling in '
                             'degrees. Default is 20 degrees.')
-        group.addParam('fscCutoff', params.FloatParam, default=0.143,
+        form.addParam('fscCutoff', params.FloatParam, default=0.143,
                        label='FSC cutoff',
                        help='FSC cutoff criterion. 0.143 is default.')
-        group.addParam('thrSph', params.FloatParam, default=0.5,
+        form.addParam('thrSph', params.FloatParam, default=0.5,
                        label='Sphericity threshold',
                        help='Threshold value for 3DFSC volume for calculating '
                             'sphericity. 0.5 is default.')
-        group.addParam('hpFilter', params.FloatParam, default=200,
+        form.addParam('hpFilter', params.FloatParam, default=200,
                        label='High-pass filter (A)',
                        help='High-pass filter for thresholding in Angstrom. '
                             'Prevents small dips in directional FSCs at low spatial '
@@ -126,7 +126,7 @@ class Prot3DFSC(ProtAnalysis3D):
                             'thresholding step. Decrease if you see a huge wedge '
                             'missing from your thresholded 3DFSC volume. 200 '
                             'Angstroms is default.')
-        group.addParam('numThr', params.IntParam, default=1,
+        form.addParam('numThr', params.IntParam, default=1,
                        label='Number of threshold for sphericity',
                        help='Calculate sphericities at different threshold cutoffs '
                             'to determine sphericity deviation across spatial '
@@ -168,7 +168,6 @@ class Prot3DFSC(ProtAnalysis3D):
 
         f = open(self._getExtraPath('script.sh'), "w")
         line = """#!/bin/bash
-source ~/eman22.bashrc
 unset PYTHONPATH
 source activate fsc
 python %s %s
@@ -183,13 +182,15 @@ source deactivate
         #            env=getEnviron())
 
     def createOutputStep(self):
-        inputVol = self.inputVolume.get()
-        vol = Volume()
-        vol.setFileName(self._getFileName('out_vol3DFSC'))
-        vol.setSamplingRate(inputVol.getSamplingRate())
+        if exists(self._getFileName('out_vol3DFSC')):
+            inputVol = self.inputVolume.get()
+            vol = Volume()
+            vol.setObjLabel('3D FSC')
+            vol.setFileName(self._getFileName('out_vol3DFSC'))
+            vol.setSamplingRate(inputVol.getSamplingRate())
 
-        self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(self.inputVolume, vol)
+            self._defineOutputs(outputVolume=vol)
+            self._defineSourceRelation(self.inputVolume, vol)
 
     #--------------------------- INFO functions --------------------------------
     
@@ -209,10 +210,14 @@ source deactivate
 
         half1 = self.volumeHalf1.get()
         half2 = self.volumeHalf2.get()
+        mask = self.maskVolume.get() or None
         if half1.getSamplingRate() != half2.getSamplingRate():
             errors.append('The selected half volumes have not the same pixel size.')
         if half1.getXDim() != half2.getXDim():
             errors.append('The selected half volumes have not the same dimensions.')
+        if self.applyMask and mask:
+            if mask.getXDim() != self.inputVolume.get().getXDim():
+                errors.append('Input volume and the mask have different dimensions.')
                 
         return errors
     

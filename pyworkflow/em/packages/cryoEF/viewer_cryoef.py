@@ -24,8 +24,6 @@
 # *
 # **************************************************************************
 
-import matplotlib.pyplot as plt
-
 from pyworkflow.protocol.params import LabelParam, EnumParam, IntParam
 from pyworkflow.utils import exists
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
@@ -88,7 +86,7 @@ class CryoEFViewer(ProtocolViewer):
                       expertLevel=LEVEL_ADVANCED,
                       label='Spheres size')
         form.addParam('doShowHistogram', LabelParam,
-                      label="Show histogram")
+                      label="Show PSF resolution histogram")
         form.addParam('doShowLog', LabelParam,
                       label="Show output log")
 
@@ -120,9 +118,9 @@ class CryoEFViewer(ProtocolViewer):
         vols = str(self._getVolumeNames())
         return [DataView(vols)]
 
-# ===============================================================================
+# =============================================================================
 # showAngularDistribution
-# ===============================================================================
+# =============================================================================
     def _showAngularDistribution(self, paramName=None):
         views = []
         plot = self._createAngDist2D()
@@ -145,12 +143,11 @@ class CryoEFViewer(ProtocolViewer):
 
         return plotter
 
-# ===============================================================================
+# =============================================================================
 
     def _showHistogram(self, param=None):
         fn = self.protocol._getFileName('output_hist')
         f = open(fn)
-
         views = []
         numberOfBins = 10
         plotter = EmPlotter()

@@ -521,12 +521,12 @@ env.addPackage('ethan', version='1.2',
                commands=[('make', 'ethan')])
 
 fsc_commands = [('conda env create -f environment.yml',
-                 '/home/gsharov/soft/EMAN2.2/envs/fsc')]
+                 '/home/gsharov/soft/EMAN2.2/envs/fsc')]  # TODO:fix this
 
 env.addPackage('nysbc-3DFSC', version='2.5',
                tar='nysbc-3DFSC_2.5.tgz',
                commands=fsc_commands,
-               neededProgs=['conda'])
+               neededProgs=['conda'])  # TODO: check this
 
 env.addPackage('cryoEF', version='1.1.0',
                tar='cryoEF_v1.1.0.tgz')

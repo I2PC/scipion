@@ -51,8 +51,9 @@ class ProtCryoEF(ProtAnalysis3D):
 
     def _initialize(self):
         """ This function is mean to be called after the
-        working dir for the protocol have been set. (maybe after recovery from mapper)
-        """
+   working dir for the protocol have been set.
+   (maybe after recovery from mapper)
+   """
         self._createFilenameTemplates()
 
     def _createFilenameTemplates(self):
@@ -86,9 +87,6 @@ class ProtCryoEF(ProtAnalysis3D):
         form.addParam('diam', params.IntParam, default=200,
                       label='Particle diameter (A)',
                       help='Approximate particle diameter, in Angstroms.')
-        form.addParam('boxSize', params.IntParam, default=128,
-                      label='Box size (px)',
-                      help='Particle box size in pixels.')
         form.addParam('angAcc', params.IntParam, default=1,
                       label='Angular accuracy (deg)',
                       expertLevel=LEVEL_ADVANCED,
@@ -101,7 +99,9 @@ class ProtCryoEF(ProtAnalysis3D):
         form.addParam('FSCres', params.IntParam, default=-1,
                       label='FSC resolution (A)',
                       expertLevel=LEVEL_ADVANCED,
-                      help='FSC resolution using 0.143 criterion.')
+                      help='FSC resolution using 0.143 criterion. '
+                           'Default (-1) value means that resolution will be '
+                           'automatically estimated from B-factor.')
         form.addParam('maxTilt', params.IntParam, default=45,
                       label='Max tilt angle (deg)',
                       expertLevel=LEVEL_ADVANCED,
@@ -182,7 +182,7 @@ class ProtCryoEF(ProtAnalysis3D):
     def _getArgs(self):
         """ Prepare the args dictionary."""
         args = {'-f': self._getFileName('anglesFn'),
-                '-b': self.boxSize.get(),
+                '-b': self._getInputParticles().getFirstItem().getXDim(),
                 '-a': self.angAcc.get(),
                 '-B': self.Bfact.get(),
                 '-D': self.diam.get(),
