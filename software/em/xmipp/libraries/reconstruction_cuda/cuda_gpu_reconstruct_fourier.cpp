@@ -987,7 +987,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// by using templates, we can save some registers, especially for 'fast' version
 	if (useFast && buffer->hasCTFs) {
-		processBufferKernel<true, true><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+		processBufferKernel<true, true><<<dimGrid, dimBlock, 0, stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
@@ -995,15 +995,17 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		   return;
    }
    if (useFast && !buffer->hasCTFs) {
-	   processBufferKernel<true, false><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+	   processBufferKernel<true, false><<<dimGrid, dimBlock, 0, stream>>>(
 				tempVolumeGPU, tempWeightsGPU,
 				wrapper->gpuCopy,
 				devBlobTableSqrt,
 				imgCacheDim);
 	   return;
    }
+   // if making copy of the image in shared memory, allocate enough space
+   int sharedMemSize = SHARED_IMG ? (imgCacheDim*imgCacheDim*sizeof(float2)) : 0;
    if (!useFast && buffer->hasCTFs) {
-	   processBufferKernel<false, true><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+	   processBufferKernel<false, true><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
@@ -1011,7 +1013,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	   return;
    }
    if (!useFast && !buffer->hasCTFs) {
-	   processBufferKernel<false, false><<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2), stream>>>(
+	   processBufferKernel<false, false><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
