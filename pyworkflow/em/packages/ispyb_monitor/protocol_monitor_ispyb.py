@@ -321,6 +321,7 @@ class MonitorISPyB(Monitor):
                 self.ctfs[micId].update({
                     'estimatedDefocus': ((ctf.getDefocusV() + ctf.getDefocusU())/2),
                     'astigmatism': ctf.getDefocusRatio(),
+                    'estimatedResolution': ctf.getResolution(),
                     'astigmatismAngle': ctf.getDefocusAngle(),
                     'fftTheoreticalFullPath': psdPng,
                     'programs': getattr(prot, '_label', lambda x: None),
