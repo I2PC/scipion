@@ -24,6 +24,8 @@
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes, ProtSubSet
 from pyworkflow.em.packages.xmipp3.protocol_volume_homogenizer import XmippProtVolumeHomogenizer
+from pyworkflow.em.data import SetOfParticles, Particle, Acquisition, Coordinate, CTFModel
+from pyworkflow.object import Float
     
 class TestVolumeHomogenizer(BaseTest):
     @classmethod
@@ -48,6 +50,7 @@ class TestVolumeHomogenizer(BaseTest):
     def importFromRelionRefine3D(self):
         """ Import aligned Particles
         """
+        
         prot = self.newProtocol(ProtImportParticles,
                                  objLabel='particles from relion (auto-refine 3d)',
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
@@ -60,11 +63,24 @@ class TestVolumeHomogenizer(BaseTest):
         self.assertIsNotNone(prot.outputParticles.getFileName(), 
                              "There was a problem with the import")
         
+        print self.getOutputPath("kk.sqlite")
+
+        inputParticles1 = SetOfParticles(filename=self.getOutputPath("kk.sqlite"))
+        inputParticles1.copyInfo(prot.outputClasses.__getitem__(1))
+
+        for p in prot.outputClasses.__getitem__(1):
+            inputParticles1.append(p)   #JVVVVVVVVVVVVVVVVVVVVVV   AQUIIIIIIIIIIIIIIIIIIIIIIIIIIII
+                    
+        return prot  
+    
+    def subSetOfParticles(self):
+        
         protSubset = self.newProtocol(ProtSubSet, 
                                       objLabel='subset of particles',
                                       chooseAtRandom=True,
                                       nElements=200)
-        protSubset.inputFullSet.set(prot.outputParticles)        
+       
+        protSubset.inputFullSet.set(self.inputParticles1)
         self.launchProtocol(protSubset)
         self.assertIsNotNone(protSubset.outputParticles.getFileName(), 
                              "There was a problem with the protSubset")        
@@ -74,8 +90,11 @@ class TestVolumeHomogenizer(BaseTest):
     def test_volumeHomogenizer(self):
         """ Test protocol volume homogenizer
         """
-        protImportVols = self.importVolumes()
-        protImportParts = self.importFromRelionRefine3D()        
+        #protImportVols = self.importVolumes()
+        self.protImportParts = self.importFromRelionRefine3D() 
+        protSubSet = self.subSetOfParticles()
+        
+        '''
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
                                 objLabel='volume homogenizer')
         protVolumeHomogenizer.referenceVolume.set(protImportVols.outputVolume)
@@ -83,3 +102,4 @@ class TestVolumeHomogenizer(BaseTest):
         protVolumeHomogenizer.inputParticles.set(protImportParts.outputParticles)
         protVolumeHomogenizer.doAlignment.set(True)  
         self.launchProtocol(protVolumeHomogenizer)
+        '''
