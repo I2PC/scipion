@@ -80,7 +80,8 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_deactivateThreadMuting(JNIEnv *env, jo
     bool error=false;
     XMIPP_JAVA_TRY
     {
-        error=MDSql::deactivateThreadMuting();
+    	MetaData * md = GET_INTERNAL_METADATA(jobj);
+        error=md->getDatabase()->deactivateThreadMuting();
     }
     XMIPP_JAVA_CATCH;
 

@@ -152,6 +152,7 @@ void ProgRecFourierGPU::produceSideinfo()
     // Read the input images
     SF.read(fn_in);
     SF.removeDisabled();
+    SF.getDatabase()->activateThreadMuting();
 
     // Ask for memory for the output volume and its Fourier transform
     size_t objId = SF.firstObject();
@@ -374,10 +375,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     RecFourierWorkThread* threadParams = (RecFourierWorkThread *) threadArgs;
     ProgRecFourierGPU* parent = threadParams->parent;
     std::vector<size_t> objId;
-    // HACK threads cannot share the same object, as it would lead to race conditioning
-	// during data load (as SQLITE seems to be non-thread-safe)
-    // FIXME in extremely fast calculations, SQLITE methods sometimes fail, causing program to crash
-    threadParams->selFile = new MetaData(parent->SF);
+
+    threadParams->selFile = &parent->SF;
     threadParams->selFile->findObjects(objId);
     bool hasCTF = parent->useCTF
     		&& (threadParams->selFile->containsLabel(MDL_CTF_MODEL)
@@ -417,7 +416,6 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     releaseWrapper(threadParams->gpuStream);
     delete threadParams->buffer;
     threadParams->buffer = NULL;
-    delete threadParams->selFile;
     threadParams->selFile = NULL;
     barrier_wait( &parent->barrier );// notify that thread finished
 
