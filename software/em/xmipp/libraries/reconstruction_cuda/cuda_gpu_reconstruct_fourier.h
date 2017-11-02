@@ -136,7 +136,8 @@ void releaseBlobTable();
  */
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
-		float blobRadius, float iDeltaSqrt);
+		float blobRadius, float blobAlpha,
+		float iDeltaSqrt, float iw0);
 
 /**
  * Method will copy content of the 'buffer' to GPU and
@@ -147,6 +148,6 @@ void copyConstants(
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ, bool useFast,
-		float maxResolutionSqr, int stream);
+		float maxResolutionSqr, int stream, int blobOrder);
 
 #endif /* XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_ */

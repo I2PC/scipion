@@ -50,7 +50,127 @@ float* devBlobTableSqrt = NULL;
 __device__ __constant__ int cMaxVolumeIndexX = 0;
 __device__ __constant__ int cMaxVolumeIndexYZ = 0;
 __device__ __constant__ float cBlobRadius = 0.f;
+__device__ __constant__ float cBlobAlpha = 0.f;
+__device__ __constant__ float cIw0 = 0.f;
 __device__ __constant__ float cIDeltaSqrt = 0.f;
+
+
+__device__
+float bessi0(float x)
+{
+    float y, ax, ans;
+    if ((ax = fabsf(x)) < 3.75f)
+    {
+        y = x / 3.75f;
+        y *= y;
+        ans = 1.f + y * (3.5156229f + y * (3.0899424f + y * (1.2067492f
+                                          + y * (0.2659732f + y * (0.360768e-1f + y * 0.45813e-2f)))));
+    }
+    else
+    {
+        y = 3.75f / ax;
+        ans = (expf(ax) / sqrtf(ax)) * (0.39894228f + y * (0.1328592e-1f
+                                      + y * (0.225319e-2f + y * (-0.157565e-2f + y * (0.916281e-2f
+                                                                + y * (-0.2057706e-1f + y * (0.2635537e-1f + y * (-0.1647633e-1f
+                                                                                            + y * 0.392377e-2f))))))));
+    }
+    return ans;
+}
+
+__device__
+float bessi1(float x)
+{
+    float ax, ans;
+    float y;
+    if ((ax = fabsf(x)) < 3.75f)
+    {
+        y = x / 3.75f;
+        y *= y;
+        ans = ax * (0.5f + y * (0.87890594f + y * (0.51498869f + y * (0.15084934f
+                               + y * (0.2658733e-1f + y * (0.301532e-2f + y * 0.32411e-3f))))));
+    }
+    else
+    {
+        y = 3.75f / ax;
+        ans = 0.2282967e-1f + y * (-0.2895312e-1f + y * (0.1787654e-1f
+                                  - y * 0.420059e-2f));
+        ans = 0.39894228f + y * (-0.3988024e-1f + y * (-0.362018e-2f
+                                + y * (0.163801e-2f + y * (-0.1031555e-1f + y * ans))));
+        ans *= (expf(ax) / sqrtf(ax));
+    }
+    return x < 0.0 ? -ans : ans;
+}
+
+__device__
+float bessi2(float x)
+{
+    return (x == 0) ? 0 : bessi0(x) - ((2*1) / x) * bessi1(x);
+}
+
+__device__
+float bessi3(float x)
+{
+    return (x == 0) ? 0 : bessi1(x) - ((2*2) / x) * bessi2(x);
+}
+
+__device__
+float bessi4(float x)
+{
+    return (x == 0) ? 0 : bessi2(x) - ((2*3) / x) * bessi3(x);
+}
+
+
+template<int order>
+__device__
+float kaiserValue(float r, float a, float alpha)
+{
+    float rda, rdas, arg, w;
+
+    rda = r / a;
+    if (rda <= 1.f)
+    {
+        rdas = rda * rda;
+        arg = alpha * sqrtf(1.f - rdas);
+        if (order == 0)
+        {
+            w = bessi0(arg) / bessi0(alpha);
+        }
+        else if (order == 1)
+        {
+            w = sqrtf (1.f - rdas);
+            if (alpha != 0.f)
+                w *= bessi1(arg) / bessi1(alpha);
+        }
+        else if (order == 2)
+        {
+            w = sqrtf (1.f - rdas);
+            w = w * w;
+            if (alpha != 0.f)
+                w *= bessi2(arg) / bessi2(alpha);
+        }
+        else if (order == 3)
+        {
+            w = sqrtf (1.f - rdas);
+            w = w * w * w;
+            if (alpha != 0.f)
+                w *= bessi3(arg) / bessi3(alpha);
+        }
+        else if (order == 4)
+        {
+            w = sqrtf (1.f - rdas);
+            w = w * w * w *w;
+            if (alpha != 0.f)
+                w *= bessi4(arg) / bessi4(alpha);
+        }
+        else {
+        	printf("order (%d) out of range in kaiser_value(): %s, %d\n", order, __FILE__, __LINE__);
+        }
+    }
+    else
+        w = 0.f;
+
+    return w;
+}
 
 /**
  * Structure for buffer data on GPU
@@ -392,7 +512,7 @@ void processVoxel(
  * spaces to the given projection and update temporal spaces
  * using the pixel values of the projection withing the blob distance.
  */
-template<bool hasCTF>
+template<bool hasCTF, int blobOrder>
 __device__
 void processVoxelBlob(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -463,11 +583,15 @@ void processVoxelBlob(
 
 				float wCTF = CTF[index2D];
 				float wModulator = modulator[index2D];
+#if PRECOMPUTE_BLOB_VAL
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f));
-#if SHARED_BLOB_TABLE
+	#if SHARED_BLOB_TABLE
 				float wBlob = BLOB_TABLE[aux];
-#else
+	#else
 				float wBlob = blobTableSqrt[aux];
+	#endif
+#else
+				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
 #endif
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
@@ -497,13 +621,16 @@ void processVoxelBlob(
 				int index2D = i * xSize + j;
 #endif
 
+#if PRECOMPUTE_BLOB_VAL
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f));
 #if SHARED_BLOB_TABLE
 				float wBlob = BLOB_TABLE[aux];
 #else
 				float wBlob = blobTableSqrt[aux];
 #endif
-
+#else
+				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
+#endif
 				float weight = wBlob * dataWeight;
 				w += weight;
 #if SHARED_IMG
@@ -526,7 +653,7 @@ void processVoxelBlob(
   * Method will process one projection image and add result to temporal
   * spaces.
   */
-template<bool useFast, bool hasCTF>
+template<bool useFast, bool hasCTF, int blobOrder>
 __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -558,7 +685,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -583,7 +710,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -608,7 +735,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob<hasCTF>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -769,7 +896,7 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
  */
-template<bool useFast, bool hasCTF>
+template<bool useFast, bool hasCTF, int blobOrder>
 __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
@@ -808,7 +935,7 @@ void processBufferKernel(
 		}
 #endif
 
-		processProjection<useFast, hasCTF>(
+		processProjection<useFast, hasCTF, blobOrder>(
 			tempVolumeGPU, tempWeightsGPU,
 			buffer, space,
 			devBlobTableSqrt,
@@ -946,10 +1073,13 @@ void releaseWrapper(int streamIndex) {
 
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
-		float blobRadius, float iDeltaSqrt) {
+		float blobRadius, float blobAlpha,
+		float iDeltaSqrt, float iw0) {
 	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
 	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
 	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
+	cudaMemcpyToSymbol(cBlobAlpha, &blobAlpha,sizeof(blobAlpha));
+	cudaMemcpyToSymbol(cIw0, &iw0,sizeof(iw0));
 	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
 	gpuErrchk( cudaPeekAtLastError() );
 }
@@ -960,7 +1090,8 @@ void copyConstants(
  * Acuall calculation is done asynchronously, but 'buffer' can be reused
  * once the method returns.
  */
-void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
+template<int blobOrder>
+void processBufferGPU_(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ, bool useFast,
 		float maxResolutionSqr, int streamIndex) {
@@ -987,7 +1118,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 
 	// by using templates, we can save some registers, especially for 'fast' version
 	if (useFast && buffer->hasCTFs) {
-		processBufferKernel<true, true><<<dimGrid, dimBlock, 0, stream>>>(
+		processBufferKernel<true, true, blobOrder><<<dimGrid, dimBlock, 0, stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
@@ -995,7 +1126,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		   return;
    }
    if (useFast && !buffer->hasCTFs) {
-	   processBufferKernel<true, false><<<dimGrid, dimBlock, 0, stream>>>(
+	   processBufferKernel<true, false, blobOrder><<<dimGrid, dimBlock, 0, stream>>>(
 				tempVolumeGPU, tempWeightsGPU,
 				wrapper->gpuCopy,
 				devBlobTableSqrt,
@@ -1005,7 +1136,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
    // if making copy of the image in shared memory, allocate enough space
    int sharedMemSize = SHARED_IMG ? (imgCacheDim*imgCacheDim*sizeof(float2)) : 0;
    if (!useFast && buffer->hasCTFs) {
-	   processBufferKernel<false, true><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
+	   processBufferKernel<false, true, blobOrder><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
@@ -1013,7 +1144,7 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	   return;
    }
    if (!useFast && !buffer->hasCTFs) {
-	   processBufferKernel<false, false><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
+	   processBufferKernel<false, false, blobOrder><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			wrapper->gpuCopy,
 			devBlobTableSqrt,
@@ -1021,3 +1152,49 @@ void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 	   return;
    }
 }
+
+void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
+		RecFourierBufferData* buffer,
+		float blobRadius, int maxVolIndexYZ, bool useFast,
+		float maxResolutionSqr, int streamIndex, int blobOrder) {
+	switch ((int)(blobOrder)) {
+	case 0:
+		processBufferGPU_<0>(tempVolumeGPU, tempWeightsGPU,
+			buffer,
+			blobRadius, maxVolIndexYZ, useFast,
+			maxResolutionSqr,
+			streamIndex);
+		break;
+	case 1:
+		processBufferGPU_<1>(tempVolumeGPU, tempWeightsGPU,
+				buffer,
+				blobRadius, maxVolIndexYZ, useFast,
+				maxResolutionSqr,
+				streamIndex);
+		break;
+	case 2:
+		processBufferGPU_<2>(tempVolumeGPU, tempWeightsGPU,
+				buffer,
+				blobRadius, maxVolIndexYZ, useFast,
+				maxResolutionSqr,
+				streamIndex);
+		break;
+	case 3:
+		processBufferGPU_<3>(tempVolumeGPU, tempWeightsGPU,
+				buffer,
+				blobRadius, maxVolIndexYZ, useFast,
+				maxResolutionSqr,
+				streamIndex);
+		break;
+	case 4:
+		processBufferGPU_<4>(tempVolumeGPU, tempWeightsGPU,
+				buffer,
+				blobRadius, maxVolIndexYZ, useFast,
+				maxResolutionSqr,
+				streamIndex);
+		break;
+	default:
+		REPORT_ERROR(ERR_VALUE_INCORRECT, "m out of range [0..4] in kaiser_value()");
+	}
+}
+

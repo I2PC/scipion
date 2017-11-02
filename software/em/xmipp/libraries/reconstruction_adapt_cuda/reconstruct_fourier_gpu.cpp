@@ -182,15 +182,15 @@ void ProgRecFourierGPU::produceSideinfo()
     double deltaFourier  = (sqrt(3.)*Xdim/2.)/(BLOB_TABLE_SIZE_SQRT-1);
 
     // The interpolation kernel must integrate to 1
-    double iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
+    iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
     double padXdim3 = padding_factor_vol * Xdim;
     padXdim3 = padXdim3 * padXdim3 * padXdim3;
     double blobTableSize = blob.radius*sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
     for (int i = 0; i < BLOB_TABLE_SIZE_SQRT; i++)
     {
-        //use a r*r sample instead of r
-        //DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
-        blobTableSqrt[i] = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
+		//use a r*r sample instead of r
+		//DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
+		blobTableSqrt[i] = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
         //***
         //DIRECT_VEC_ELEM(fourierBlobTableSqrt,i) =
         //     blob_Fourier_val(fourierBlobTableSize*sqrt(i), blobFourier)*padXdim3  *iw0;
@@ -406,7 +406,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 				threadParams->buffer,
 				parent->blob.radius, parent->maxVolumeIndexYZ, parent->useFast,
 				parent->maxResolutionSqr,
-				threadParams->gpuStream);
+				threadParams->gpuStream,
+				parent->blob.order);
 			parent->logProgress(threadParams->buffer->noOfImages);
 		}
 		// once the processing finished, buffer can be reused
@@ -793,7 +794,8 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
     createStreams(noOfCores);
-    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, blob.radius, iDeltaSqrt);
+    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
+    		blob.radius, blob.alpha, iDeltaSqrt, iw0);
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }

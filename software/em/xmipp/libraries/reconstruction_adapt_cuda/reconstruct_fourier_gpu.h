@@ -203,6 +203,9 @@ protected:
 private:
 //    FIELDS
 
+    /** variable used for blob table values calculation */
+    double iw0;
+
     /** File with symmetries */
     FileName fn_sym;
 
