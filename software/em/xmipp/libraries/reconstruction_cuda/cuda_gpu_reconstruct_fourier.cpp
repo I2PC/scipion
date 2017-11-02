@@ -369,14 +369,10 @@ static U clamp(U val, T min, T max) {
 __device__
 bool getZ(float x, float y, float& z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
-	float x0 = p0.x;
-	float y0 = p0.y;
-	float z0 = p0.z;
+	float u = ((y-p0.y)*a.x + (p0.x-x)*a.y) / (a.x * b.y - b.x * a.y);
+	float t = (-p0.x + x - u*b.x) / (a.x);
 
-	float u = ((y-y0)*a.x + (x0-x)*a.y) / (a.x * b.y - b.x * a.y);
-	float t = (-x0 + x - u*b.x) / (a.x);
-
-	z = z0 + t*a.z + u*b.z;
+	z = p0.z + t*a.z + u*b.z;
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
@@ -387,14 +383,10 @@ bool getZ(float x, float y, float& z, const Point3D<float>& a, const Point3D<flo
 __device__
 bool getY(float x, float& y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
-	float x0 = p0.x;
-	float y0 = p0.y;
-	float z0 = p0.z;
+	float u = ((z-p0.z)*a.x + (p0.x-x)*a.z) / (a.x * b.z - b.x * a.z);
+	float t = (-p0.x + x - u*b.x) / (a.x);
 
-	float u = ((z-z0)*a.x + (x0-x)*a.z) / (a.x * b.z - b.x * a.z);
-	float t = (-x0 + x - u*b.x) / (a.x);
-
-	y = y0 + t*a.y + u*b.y;
+	y = p0.y + t*a.y + u*b.y;
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
@@ -405,14 +397,10 @@ bool getY(float x, float& y, float z, const Point3D<float>& a, const Point3D<flo
 __device__
 bool getX(float& x, float y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
-	float x0 = p0.x;
-	float y0 = p0.y;
-	float z0 = p0.z;
+	float u = ((z-p0.z)*a.y + (p0.y-y)*a.z) / (a.y * b.z - b.y * a.z);
+	float t = (-p0.y + y - u*b.y) / (a.y);
 
-	float u = ((z-z0)*a.y + (y0-y)*a.z) / (a.y * b.z - b.y * a.z);
-	float t = (-y0 + y - u*b.y) / (a.y);
-
-	x = x0 + t*a.x + u*b.x;
+	x = p0.x + t*a.x + u*b.x;
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
@@ -523,8 +511,8 @@ void processVoxelBlob(
 	int imgCacheDim)
 {
 	Point3D<float> imgPos;
-	int xSize = data->fftSizeX;
-	int ySize = data->fftSizeY;
+	volatile int xSize = data->fftSizeX;
+	volatile int ySize = data->fftSizeY;
 	// transform current point to center
 	imgPos.x = x - cMaxVolumeIndexX/2;
 	imgPos.y = y - cMaxVolumeIndexYZ/2;
@@ -663,8 +651,8 @@ void processProjection(
 	int imgCacheDim)
 {
 	// map thread to each (2D) voxel
-	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	int idy = blockIdx.y*blockDim.y + threadIdx.y;
+	volatile int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	volatile int idy = blockIdx.y*blockDim.y + threadIdx.y;
 
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		if (idy >= tSpace->minY && idy <= tSpace->maxY) {
@@ -906,8 +894,8 @@ void processBufferKernel(
 #if SHARED_BLOB_TABLE
 	if ( ! useFast) {
 		// copy blob table to shared memory
-		int id = threadIdx.y*blockDim.x + threadIdx.x;
-		int blockSize = blockDim.x * blockDim.y;
+		volatile int id = threadIdx.y*blockDim.x + threadIdx.x;
+		volatile int blockSize = blockDim.x * blockDim.y;
 		for (int i = id; i < BLOB_TABLE_SIZE_SQRT; i+= blockSize)
 			BLOB_TABLE[i] = devBlobTableSqrt[i];
 		__syncthreads();
@@ -957,8 +945,8 @@ __global__
 void convertImagesKernel(std::complex<float>* iFouriers, int iSizeX, int iSizeY, int iLength,
 		 RecFourierBufferDataGPU* oBuffer, float maxResolutionSqr) {
 	// assign pixel to thread
-	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	int idy = blockIdx.y*blockDim.y + threadIdx.y;
+	volatile int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	volatile int idy = blockIdx.y*blockDim.y + threadIdx.y;
 
 	int halfY = iSizeY / 2;
 	float normFactor = iSizeY*iSizeY;
