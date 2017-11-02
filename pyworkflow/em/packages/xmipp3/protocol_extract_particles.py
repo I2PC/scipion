@@ -141,6 +141,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
                            'value is 0, then half the box size is used.')
+        form.addParam('doNoisyZonesFilter', params.BooleanParam, default=False,
+                      label='Filter noisy zones',
+                      help='Reject particles from granulated areas of the '
+                           'micrograph. Often, the granulated areas correspond '
+                           'to the carbon substrate.')
 
         form.addParallelSection(threads=4, mpi=1)
     
@@ -168,10 +173,20 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         outputRoot = str(self._getExtraPath(baseMicName))
         fnPosFile = self._getMicPos(mic)
 
-        # If it has coordinates extract the particles
-        particlesMd = 'particles@%s' % fnPosFile
+        
+        # get the coordinates of the particles (discarting the noisy zone, if so)
+        if not self.doNoisyZonesFilter:
+            particlesMd = 'particles@%s' % fnPosFile
+        else:
+            args = '-c %s' % fnPosFile
+            args += ' -m %s' % mic.getFileName()
+            args += ' --oroot %s' % outputRoot
+            self.runJob('xmipp_coordinates_noisy_zones_filter', args)
+            particlesMd = 'particles@' + outputRoot + '_good.pos'
+
         boxSize = self.boxSize.get()
 
+        # If it has coordinates extract the particles
         if exists(fnPosFile):
             # Create a list with micrographs operations (programs in xmipp) and
             # the required command line parameters (except input/ouput files)
@@ -486,6 +501,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Return the corresponding .pos file for a given micrograph. """
         micBase = pwutils.removeBaseExt(mic.getFileName())
         return self._getExtraPath(micBase + ".pos")
+
 
     def _getMicXmd(self, mic):
         """ Return the corresponding .xmd with extracted particles

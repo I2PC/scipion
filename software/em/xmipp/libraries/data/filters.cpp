@@ -832,8 +832,9 @@ void noisyZonesFilter(MultidimArray<double> &I, int kernelSize)
     // Binarization
     MultidimArray<double> mAvgAuxBin = mAvgAux, mVarAuxBin = mVarAux;
     EntropySegmentation(mAvgAuxBin);
-    float th = EntropyOtsuSegmentation(mVarAuxBin,0.02,false);
-    mVarAuxBin.binarize(th*0.9);
+    // float th = EntropyOtsuSegmentation(mAvgAuxBin,0.05,false);
+    // mAvgAuxBin.binarize(th*0.92);
+    EntropySegmentation(mVarAuxBin);
     mAvgAuxBin = 1-mAvgAuxBin;
     // std::cout << "binarize threshold = " << th << std::endl;
 

@@ -502,7 +502,7 @@ for p in ['angular_break_symmetry',
           'classify_first_split',
           'classify_kerdensom',
 		
-          'coordinates_carbon_filter',
+          'coordinates_noisy_zones_filter',
 
 	        'ctf_correct_wiener2d',
           'ctf_correct_wiener3d',
