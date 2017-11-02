@@ -21,6 +21,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
+import os
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes, ProtSubSet
 from pyworkflow.em.packages.xmipp3.protocol_volume_homogenizer import XmippProtVolumeHomogenizer
@@ -50,49 +51,70 @@ class TestVolumeHomogenizer(BaseTest):
     def importFromRelionRefine3D(self):
         """ Import aligned Particles
         """
-        
-        prot = self.newProtocol(ProtImportParticles,
-                                 objLabel='particles from relion (auto-refine 3d)',
-                                 importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                 starFile=self.dsRelion.getFile('import/classify3d/extra/relion_it015_data.star'),
-                                 magnification=10000,
-                                 samplingRate=7.08,
-                                 haveDataBeenPhaseFlipped=True
-                                 )
-        self.launchProtocol(prot)        
-        self.assertIsNotNone(prot.outputParticles.getFileName(), 
-                             "There was a problem with the import")
-        
-        print self.getOutputPath("kk.sqlite")
-
-        inputParticles1 = SetOfParticles(filename=self.getOutputPath("kk.sqlite"))
-        inputParticles1.copyInfo(prot.outputClasses.__getitem__(1))
-
-        for p in prot.outputClasses.__getitem__(1):
-            inputParticles1.append(p)   #JVVVVVVVVVVVVVVVVVVVVVV   AQUIIIIIIIIIIIIIIIIIIIIIIIIIIII
-                    
-        return prot  
     
-    def subSetOfParticles(self):
+        prot = self.newProtocol(ProtImportParticles,
+                                objLabel='particles from relion (auto-refine 3d)',
+                                importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                starFile=self.dsRelion.getFile('import/classify3d/extra/relion_it015_data.star'),
+                                magnification=10000,
+                                samplingRate=7.08,
+                                haveDataBeenPhaseFlipped=True
+                                )
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputParticles.getFileName(),
+                             "There was a problem with the import")
+    
+        return prot
+    
+    def getParticles(self, protImport, classid=1):
+        dbPartSet = protImport._getPath("particles_class-%d.sqlite" % classid)
+        class3D = protImport.outputClasses[classid]
+        if os.path.exists(dbPartSet):
+            os.remove(dbPartSet)
+        partSet = SetOfParticles(filename=dbPartSet)
+        partSet.copyInfo(class3D)
+    
+        # print "Type: ", type(class3D)
+        for part in class3D:
+            # print "Particle: ", part.printAll()
+            partSet.append(part)
+        partSet.write()
+        partSet.close()
         
-        protSubset = self.newProtocol(ProtSubSet, 
-                                      objLabel='subset of particles',
-                                      chooseAtRandom=True,
-                                      nElements=200)
-       
-        protSubset.inputFullSet.set(self.inputParticles1)
-        self.launchProtocol(protSubset)
-        self.assertIsNotNone(protSubset.outputParticles.getFileName(), 
-                             "There was a problem with the protSubset")        
-                          
-        return protSubset
+        protImportCls1 = self.newProtocol(ProtImportParticles,
+                                objLabel='particles class-%d' % classid,
+                                importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                sqliteFile=dbPartSet,
+                                magnification=10000,
+                                samplingRate=7.08,
+                                haveDataBeenPhaseFlipped=True
+                                )
+        self.launchProtocol(protImportCls1)
+        self.assertIsNotNone(protImportCls1.outputParticles.getFileName(),
+                             "There was a problem with the import")
+        return protImportCls1
+        
+    # def subSetOfParticles(self):
+    #
+    #     protSubset = self.newProtocol(ProtSubSet,
+    #                                   objLabel='subset of particles',
+    #                                   chooseAtRandom=True,
+    #                                   nElements=200)
+    #
+    #     protSubset.inputFullSet.set(self.inputParticles1)
+    #     self.launchProtocol(protSubset)
+    #     self.assertIsNotNone(protSubset.outputParticles.getFileName(),
+    #                          "There was a problem with the protSubset")
+    #
+    #     return protSubset
          
     def test_volumeHomogenizer(self):
         """ Test protocol volume homogenizer
         """
         #protImportVols = self.importVolumes()
-        self.protImportParts = self.importFromRelionRefine3D() 
-        protSubSet = self.subSetOfParticles()
+        protImpClasses = self.importFromRelionRefine3D()
+        importPartClass1 = self.getParticles(protImpClasses, classid=1)
+        # protSubSet = self.subSetOfParticles()
         
         '''
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
