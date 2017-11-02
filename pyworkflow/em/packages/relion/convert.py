@@ -42,6 +42,7 @@ from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
+RELION_HOME = 'RELION_HOME'
 ACQUISITION_DICT = OrderedDict([ 
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
@@ -128,7 +129,7 @@ def getEnviron():
     
     environ = Environ(os.environ)
 
-    relionHome = os.environ['RELION_HOME']
+    relionHome = os.environ[RELION_HOME]
     
     binPath = join(relionHome, 'bin')
     libPath = join(relionHome, 'lib') + ":" + join(relionHome, 'lib64')
@@ -144,7 +145,6 @@ def getEnviron():
     environ.addLibrary(cudaLib)
 
     return environ
-
 
 def getVersion():
     path = os.environ['RELION_HOME']
