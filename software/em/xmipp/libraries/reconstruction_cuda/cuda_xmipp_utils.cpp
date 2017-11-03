@@ -84,40 +84,90 @@ void gpuFree(void* d_data)
 	gpuErrchk(cudaFree(d_data));
 }
 
-
-void initializeIdentity(float* d_data, size_t Ndim)
+void cpuMalloc(void** h_data, size_t Nbytes)
 {
-	float identity[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-	for(int i=0; i<Ndim; i++)
-		gpuErrchk(cudaMemcpy((void*)&d_data[i*9], &identity[0], 9*sizeof(float), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMallocHost(h_data, Nbytes));
 }
 
-void setTranslationMatrix(float* d_data, float posX, float posY, int n)
+void cpuFree(void* h_data)
+{
+	gpuErrchk(cudaFreeHost(h_data));
+}
+
+void initializeIdentity(float* d_data, float *h_data, size_t Ndim)
+{
+	//float *matrices = new float[Ndim*9];
+	for(int i=0; i<Ndim; i++){
+		float aux_matrix[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+		int offset=i*9;;
+		for (int j=0; j<9; j++)
+			h_data[offset+j] = aux_matrix[j];
+	}
+	gpuErrchk(cudaMemcpyAsync((void*)d_data, h_data, Ndim*9*sizeof(float), cudaMemcpyHostToDevice));
+	//delete []matrices;
+
+}
+
+/*void setTranslationMatrix(float* d_data, float posX, float posY, int n)
 {
 	float matrix[9] = {1, 0, posX, 0, 1, posY, 0, 0, 1};
 	gpuErrchk(cudaMemcpy((void*)&d_data[n*9], &matrix[0], 9*sizeof(float), cudaMemcpyHostToDevice));
+}*/
+
+void setTranslationMatrix(float* d_data, float* posX, float* posY, int Ndim)
+{
+	float *matrices;
+	gpuErrchk(cudaMallocHost((void**)&matrices, sizeof(float)*Ndim*9));
+
+	for(int i=0; i<Ndim; i++){
+		float aux_matrix[9] = {1, 0, -posX[i], 0, 1, -posY[i], 0, 0, 1};
+		int offset=i*9;
+		//memcpy(&matrices[offset], &aux_matrix, 9*sizeof(float));
+		for (int j=0; j<9; j++)
+			matrices[offset+j] = aux_matrix[j];
+	}
+	gpuErrchk(cudaMemcpyAsync((void*)d_data, matrices, Ndim*9*sizeof(float), cudaMemcpyHostToDevice));
+	delete []matrices;
 }
 
-void setRotationMatrix(float* d_data, float ang, int n)
+/*void setRotationMatrix(float* d_data, float ang, int n)
 {
 	float rad = (float)(ang*PI/180);
 	float matrix[9] = {cosf(rad), -sinf(rad), 0, sinf(rad), cosf(rad), 0, 0, 0, 1};
 	gpuErrchk(cudaMemcpy((void*)&d_data[n*9], &matrix[0], 9*sizeof(float), cudaMemcpyHostToDevice));
+}*/
+void setRotationMatrix(float* d_data, float* ang, int Ndim)
+{
+
+	float *rad_vector;
+	gpuErrchk(cudaMallocHost((void**)&rad_vector, sizeof(float)*Ndim*9));
+
+	for(int i=0; i<Ndim; i++){
+		float rad = (float)(-ang[i]*PI/180);
+		float matrix[9] = {cosf(rad), -sinf(rad), 0, sinf(rad), cosf(rad), 0, 0, 0, 1};
+		int offset=i*9;
+		for (int j=0; j<9; j++)
+			rad_vector[offset+j] = matrix[j];
+	}
+	gpuErrchk(cudaMemcpyAsync((void*)d_data, rad_vector, Ndim*9*sizeof(float), cudaMemcpyHostToDevice));
+	delete []rad_vector;
 }
 
 void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes)
 {
-	gpuErrchk(cudaMemcpy(d_data, data, Nbytes, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyAsync(d_data, data, Nbytes, cudaMemcpyHostToDevice));
 }
 
 void gpuCopyFromGPUToCPU(void* d_data, void* data, size_t Nbytes)
 {
-	gpuErrchk(cudaMemcpy(data, d_data, Nbytes, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyAsync(data, d_data, Nbytes, cudaMemcpyDeviceToHost));
+
+	cudaStreamSynchronize(0);
 }
 
 void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, size_t Nbytes)
 {
-	gpuErrchk(cudaMemcpy(d_dataTo, d_dataFrom, Nbytes, cudaMemcpyDeviceToDevice));
+	gpuErrchk(cudaMemcpyAsync(d_dataTo, d_dataFrom, Nbytes, cudaMemcpyDeviceToDevice));
 }
 
 int gridFromBlock(int tasks, int Nthreads)
