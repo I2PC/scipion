@@ -242,7 +242,7 @@
             <SECTION id="mics">
                 <H2>Micrographs</H2>
                 <TABLE id="micTable" class="display"></TABLE>
-                <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -714,11 +714,11 @@
                 cols.push({"title": "DefocusU"}, {"title": "DefocusV"},
                           {"title": "Ratio"}, {"title": "Astigmatism"});
             }
-            $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
-                var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp"><img width={1} src={0} alt="{0}"></a></div>';
-                var imgWidth = Math.floor($('#content').width() * 0.2);
-                var rowValues = [report.ctfData.micId[index], imgHtml.format(imgMicPath, imgWidth)];
+            var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="{0}"></a></div>';
+            var imgWidth = Math.floor($('#content').width() * 0.2);
 
+            $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
+                var rowValues = [report.ctfData.micId[index], imgHtml.format(imgMicPath, imgWidth)];
                 if('imgShiftThumbs' in report.ctfData){
                     var shiftPlotPath = report.ctfData.imgShiftThumbs[index];
                     rowValues.push(imgHtml.format(shiftPlotPath,imgWidth));
@@ -763,16 +763,13 @@
         
         populateReport();
 
-        $(document).ready(function(){
-            $('.popUp').on('click', function() {
-                $('.imagepreview').attr('src', $(this).find('img').attr('src'));
-                $('.modal-title').text($(this).find('img').attr('alt'));
-                $('#imagemodal').modal('show');
-                return false;
-		    });
-
+        $('.popUp').on('click', function() {
+            $('.imagepreview').attr('src', $(this).find('img').attr('src'));
+            $('.modal-title').text($(this).find('img').attr('alt'));
+            $('#modal').modal('show');
+            return false;
         });
-        
-        
+
+
     </SCRIPT>
 <HTML>
