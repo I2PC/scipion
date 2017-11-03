@@ -169,11 +169,13 @@ class TestVolumeHomogenizer(BaseTest):
         protVolumeHomogenizer.doAlignment.set(False)
           
         self.launchProtocol(protVolumeHomogenizer)        
-        self.assertIsNotNone(protVolumeHomogenizer.outputParticles.getFileName(),
+        self.assertIsNotNone(protVolumeHomogenizer.outputParticles01.getFileName(),
+                              "There was a problem with the homoNoGoldStandard")
+        
+        self.assertIsNotNone(protVolumeHomogenizer.outputParticles02.getFileName(),
                               "There was a problem with the homoNoGoldStandard")
         
         return protVolumeHomogenizer
-
             
         
     def test_volumeHomogenizer(self):
