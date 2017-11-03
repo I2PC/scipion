@@ -907,6 +907,9 @@ void processBufferKernel(
 
 #if SHARED_IMG
 		if ( ! useFast) {
+			// make sure that all threads start at the same time
+			// as they can come from previous iteration
+			__syncthreads();
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
 				// first thread calculates which part of the image should be shared
 				calculateAABB(space, buffer, SHARED_AABB);
