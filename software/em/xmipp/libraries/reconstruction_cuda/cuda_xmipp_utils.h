@@ -7,10 +7,12 @@
 void mycufftDestroy(void *ptr);
 void gpuMalloc(void** d_data, size_t Nbytes);
 void gpuFree(void* d_data);
+void cpuMalloc(void** h_data, size_t Nbytes);
+void cpuFree(void* h_data);
 void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, size_t Nbytes);
-void initializeIdentity(float* d_data, size_t Ndim);
-void setTranslationMatrix(float* d_data, float posX, float posY, int n);
-void setRotationMatrix(float* d_data, float ang, int n);
+void initializeIdentity(float* d_data, float *h_data, size_t Ndim);
+void setTranslationMatrix(float* d_data, float* posX, float* posY, int Ndim);
+void setRotationMatrix(float* d_data, float *ang, int Ndim);
 void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes);
 void gpuCopyFromGPUToCPU(void* d_data, void* data, size_t Nbytes);
 int gridFromBlock(int tasks, int Nthreads);
@@ -97,17 +99,20 @@ class TransformMatrix
 public:
 	size_t Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
     T* d_data;
+	T* h_data;
 
     TransformMatrix()
     {
 		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
 		d_data=NULL;
+		h_data=NULL;
     }
 
     TransformMatrix(size_t _Ndim, size_t _Xdim=3, size_t _Ydim=3, size_t _Zdim=1)
     {
 		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
 		d_data=NULL;
+		h_data=NULL;
 		resize(_Ndim, _Xdim, _Ydim, _Zdim);
     }
 
@@ -133,20 +138,24 @@ public:
         zyxdim=yxdim*_Zdim;
         nzyxdim=zyxdim*_Ndim;
         gpuMalloc((void**) &d_data,nzyxdim*sizeof(T));
-        initializeIdentity(d_data, Ndim);
+        cpuMalloc((void**) &h_data,nzyxdim*sizeof(T));
+        initializeIdentity(d_data, h_data, Ndim);
     }
 
 	bool isEmpty()
 	{
-		return d_data==NULL;
+		return d_data==NULL && h_data==NULL;
 	}
 
 	void clear()
 	{
 		if (d_data!=NULL)
 			gpuFree((void*) d_data);
+		if (h_data!=NULL)
+			cpuFree((void*) h_data);
 		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
 		d_data=NULL;
+		h_data=NULL;
 	}
 
 	~TransformMatrix()
@@ -156,19 +165,21 @@ public:
 
 	void initialize()
 	{
-		initializeIdentity(d_data, Ndim);
+		initializeIdentity(d_data, h_data, Ndim);
 	}
 
-	void setTranslation(const float* posX, const float* posY)
+	void setTranslation(float* posX, float* posY, float *d_out_max)
 	{
-		for(int i=0; i<Ndim; i++)
-			setTranslationMatrix(d_data, -posX[i], -posY[i], i);
+		/*for(int i=0; i<Ndim; i++)
+			setTranslationMatrix(d_data, -posX[i], -posY[i], i);*/
+		setTranslationMatrix(d_data, posX, posY, Ndim);
 	}
 
-	void setRotation(const float* ang)
+	void setRotation(float* ang)
 	{
-		for(int i=0; i<Ndim; i++)
-			setRotationMatrix(d_data, -ang[i], i);
+		/*for(int i=0; i<Ndim; i++)
+			setRotationMatrix(d_data, -ang[i], i);*/
+		setRotationMatrix(d_data, ang, Ndim);
 	}
 
 	void copyMatrix(TransformMatrix<float> &lastMatrix)
@@ -179,15 +190,16 @@ public:
 		gpuCopyFromGPUToGPU(d_data, lastMatrix.d_data, nzyxdim*sizeof(float));
 	}
 
-	void copyMatrixToCpu(float* &matrixCpu)
+	void copyMatrixToCpu()
 	{
-		gpuCopyFromGPUToCPU(d_data, matrixCpu, nzyxdim*sizeof(float));
+		gpuCopyFromGPUToCPU(d_data, h_data, nzyxdim*sizeof(float));
 	}
 
 	void copyOneMatrixToCpu(float* &matrixCpu, int idxCpu, int idxGpu)
 	{
 		gpuCopyFromGPUToCPU(&d_data[9*idxGpu], &matrixCpu[9*idxCpu], 9*sizeof(float));
 	}
+
 
 };
 
@@ -222,6 +234,7 @@ public:
 	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
 
+		//FIXME what happens if x and y swaps?
 		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim){
 
 			return;
@@ -302,5 +315,121 @@ public:
 	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
 
 };
+
+
+
+template<typename T>
+class GpuMultidimArray //for both sides, GPU and CPU
+{
+public:
+	size_t Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
+    T* d_data;
+    T* h_data;
+
+	GpuMultidimArray()
+    {
+		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
+		d_data=NULL;
+		h_data=NULL;
+    }
+
+	GpuMultidimArray(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+    {
+		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
+		d_data=NULL;
+		h_data=NULL;
+		resize(_Xdim, _Ydim, _Zdim, _Ndim);
+    }
+
+	template<typename T1>
+	void resize(const GpuMultidimArray<T1>& array)
+	{
+
+		resize(array.Xdim, array.Ydim, array.Zdim, array.Ndim);
+	}
+
+	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+    {
+
+		//FIXME what happens if x and y swaps?
+		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim){
+
+			return;
+		}
+
+		clear();
+
+		Xdim=_Xdim;
+		Ydim=_Ydim;
+		Zdim=_Zdim;
+		Ndim=_Ndim;
+        yxdim=(size_t)_Ydim*_Xdim;
+        zyxdim=yxdim*_Zdim;
+        nzyxdim=zyxdim*_Ndim;
+        gpuMalloc((void**) &d_data,nzyxdim*sizeof(T));
+        cpuMalloc((void**) &h_data,nzyxdim*sizeof(T));
+
+    }
+
+	bool isEmpty()
+	{
+		return d_data==NULL && h_data==NULL;
+	}
+
+	void clear()
+	{
+		if (d_data!=NULL)
+			gpuFree((void*) d_data);
+		if (h_data!=NULL)
+			cpuFree((void*) h_data);
+		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
+		d_data=NULL;
+		h_data=NULL;
+	}
+
+	~GpuMultidimArray()
+	{
+		clear();
+	}
+
+	void copyMyDataToGpu()
+	{
+		gpuCopyFromCPUToGPU((void *)h_data, (void *)d_data, nzyxdim*sizeof(T));
+	}
+
+	void copyMyDataToCpu()
+	{
+		gpuCopyFromGPUToCPU((void *)d_data, (void *)h_data, nzyxdim*sizeof(T));
+	}
+
+	void fillImageInCpu(size_t n, const T *from, size_t dim)
+	{
+		memcpy(h_data+n*zyxdim, from, dim*sizeof(T));
+	}
+
+	void calculateGridSize(const XmippDim3 &blockSize, XmippDim3 &gridSize) const
+	{
+		gridSize.x=gridFromBlock(Xdim,blockSize.x);
+		gridSize.y=gridFromBlock(Ydim,blockSize.y);
+		gridSize.z=gridFromBlock(Zdim,blockSize.z);
+	}
+
+	void calculateGridSizeVectorized(const XmippDim3 &blockSize, XmippDim3 &gridSize) const
+	{
+		gridSize.x=gridFromBlock(nzyxdim,blockSize.x);
+		gridSize.y=1;
+		gridSize.z=1;
+	}
+
+	template <typename T1>
+	void fft(GpuMultidimArray<T1> &fourierTransform, mycufftHandle &myhandle);
+
+	// RealSpace must already be resized
+	template <typename T1>
+	void ifft(GpuMultidimArray<T1> &realSpace, mycufftHandle &myhandle);
+
+
+};
+
 
 #endif
