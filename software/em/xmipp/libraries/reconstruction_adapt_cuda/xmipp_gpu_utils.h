@@ -56,9 +56,10 @@ public:
         yxdim=(size_t)_Ydim*_Xdim;
         zyxdim=yxdim*_Zdim;
         nzyxdim=zyxdim*_Ndim;
-        if (nzyxdim>0)
-        	data=new T[nzyxdim];
-        else
+        if (nzyxdim>0){
+        	//data=new T[nzyxdim];
+        	cpuMalloc((void**)&data, nzyxdim*sizeof(T));
+        }else
         	data=NULL;
     }
 
@@ -83,6 +84,7 @@ public:
 	void copyFromGpu(GpuMultidimArrayAtGpu<T> &gpuArray)
 	{
 		gpuCopyFromGPUToCPU(gpuArray.d_data, data, nzyxdim*sizeof(T));
+
 	}
 
 	void copyToGpuMultiple(GpuMultidimArrayAtGpu<T> &gpuArray, int numCopy)
@@ -109,7 +111,7 @@ public:
 
 	void clear()
 	{
-		delete []data;
+		cpuFree(data);
 	}
 
 	~GpuMultidimArrayAtCpu()
