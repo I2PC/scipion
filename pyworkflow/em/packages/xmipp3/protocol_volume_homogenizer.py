@@ -159,27 +159,25 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                 fnOutputHalf1 = self._getExtraPath('deformed_particles_half1')
                 fnOutputHalf2 = self._getExtraPath('deformed_particles_half2')
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                         inputVol1, referenceVol1, inputParticlesMd1,fnOutputHalf1)
-                
+                                         inputVol1, referenceVol1, inputParticlesMd1,fnOutputHalf1)                
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
                                          inputVol2, referenceVol2, inputParticlesMd2,fnOutputHalf2)
 
             else:
                 
-                print("Nothing") 
-                '''fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
-                fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
-                
+                print("Nothing")
+                '''
+                fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
+                fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')                
                 fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
                 self._insertFunctionStep('volumeAlignmentStep', 
-                                         referenceVol, inputVol, fnAlignedVolFf, 
-                                         fnAlnVolFfLcl, fnInPartsNewAng)
-                
+                                         inputVol1, referenceVol1, fnAlignedVolFf, 
+                                         fnAlnVolFfLcl, fnInPartsNewAng)                
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                         inputVol1, referenceVol1, inputParticlesMd1)
-                
+                                         inputVol1, referenceVol1, inputParticlesMd1)                
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
                                          inputVol2, referenceVol2, inputParticlesMd2)
+
                 '''
         else:
             
@@ -188,65 +186,75 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             writeSetOfParticles(inputParticles, inputParticlesMd)
             
             inputVol = self.changeExtension(self.inputVolume.get().getFileName())
-            referenceVol = self.changeExtension(self.referenceVolume.get().getFileName())    
-            
+            referenceVol = self.changeExtension(self.referenceVolume.get().getFileName())                
             fnOutput = self._getExtraPath('deformed_particles')
+            
             if not self.doAlignment.get():
                 self._insertFunctionStep('opticalFlowAlignmentStep', 
                                          inputVol, referenceVol, inputParticlesMd, fnOutput)
             else:
-                print("None")
+                
+                fnInputToRefGlobal = self._getExtraPath('aligned_inputVol_to_refVol_Gobal.vol')
+                fnInputToRefLocal = self._getExtraPath('aligned_inputVol_to_refVol_Local.vol')                
+                fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
+                self._insertFunctionStep('volumeAlignmentStep', 
+                                         inputVol, referenceVol, fnInputToRefGlobal, 
+                                         fnInputToRefLocal, fnInPartsNewAng)                
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         fnInputToRefLocal, referenceVol, fnInPartsNewAng, fnOutput)                
 #TODO Ubset of particles according to their HalfID!!!! 
 #Now this code does not work!!!!!
 
                         
         self._insertFunctionStep('createOutputStep')        
     #--------------------------- STEPS functions --------------------------------------------
-    
-    
+        
     def changeExtension(self, vol):
             extVol = getExt(vol)
             if (extVol == '.mrc') or (extVol == '.map'):
                 vol = vol + ':mrc'
             return vol
+            
+    def volumeAlignmentStep (self, inputVol, referenceVol, fnInputToRefGlobal, 
+                                   fnInputToRefLocal, fnInPartsNewAng):
+        '''The input vol is modified towards the reference vol first by a global alignment and then by a local one'''
+        '''The particles orientations are changed accordingly'''
         
-    
-    def volumeAlignmentStep (self, referenceVol, inputVol, fnAlignedVolFf, 
-                                   fnAlnVolFfLcl, fnInPartsNewAng):
-        fnTransformMatFF = self._getExtraPath('transformation-matrix-FF.txt')
-        alignArgsFf = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
+        fnTransformMatGlobal = self._getExtraPath('transformation-matrix-Global.txt')
+        alignArgsGlobal = "--i1 %s --i2 %s --apply %s --dontScale" % (referenceVol, 
                                                       inputVol, 
-                                                      fnAlignedVolFf)
-        alignArgsFf += " --frm --copyGeo %s" % fnTransformMatFF
-        self.runJob('xmipp_volume_align', alignArgsFf, numberOfMpi = 1)        
+                                                      fnInputToRefGlobal)
+        alignArgsGlobal += " --frm --copyGeo %s" % fnTransformMatGlobal
+        self.runJob('xmipp_volume_align', alignArgsGlobal, numberOfMpi=1,numberOfThreads=1)        
         
-        fnTransformMatLocal = self._getExtraPath('transformation-matrix-local.txt')
-        alignArgsLocal = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
-                                                         fnAlignedVolFf, 
-                                                         fnAlnVolFfLcl)
+        fnTransformMatLocal = self._getExtraPath('transformation-matrix-Local.txt')
+        alignArgsLocal = "--i1 %s --i2 %s --apply %s --show_fit" % (referenceVol, 
+                                                         fnInputToRefGlobal, 
+                                                         fnInputToRefLocal)
         alignArgsLocal += " --local --rot 0 0 1 --tilt 0 0 1"
         alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
-        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s" % fnTransformMatLocal        
+        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s --dontScale" % fnTransformMatLocal        
         self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi = 1)
                  
-        #apply transformation matrix to input ratricles
-        transMatFromFileFF = np.loadtxt(fnTransformMatFF)
+        #apply transformation matrix to input patricles
+        transMatFromFileFF = np.loadtxt(fnTransformMatGlobal)
         transformationArrayFF = np.reshape(transMatFromFileFF,(4,4))
         transformMatrixFF = np.matrix(transformationArrayFF)
         
         transMatFromFileLocal = np.loadtxt(fnTransformMatLocal)
         transformationArrayLocal = np.reshape(transMatFromFileLocal,(4,4))
         transformMatrixLocal = np.matrix(transformationArrayLocal)
-        
+
+#ESTO NO ME LO CREO        
         transformMatrix = transformMatrixFF * transformMatrixLocal
-        print "Transformation matrix used to apply to the input particles =\n"
-        print transformMatrix
+        
         inputParts = self.inputParticles.get()
         outputSet = self._createSetOfParticles()
         for part in inputParts.iterItems():        
             partTransformMat = part.getTransform().getMatrix()            
             partTransformMatrix = np.matrix(partTransformMat)            
-            newTransformMatrix = transformMatrix * partTransformMatrix                      
+            newTransformMatrix = transformMatrix * partTransformMatrix
+                         
             part.getTransform().setMatrix(newTransformMatrix)
             outputSet.append(part)       
         outputSet.copyInfo(inputParts)                
@@ -290,6 +298,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             readSetOfParticles(fnDeformedParticlesHalf2, outputSetOfParticlesHalf2)
             outputSetOfParticlesHalf2.copyInfo(inputParticles)            
             self._defineOutputs(**{key % 2: outputSetOfParticlesHalf2})        
+            
     #--------------------------- INFO functions -------------------------------------------- 
     
     def _summary(self):
