@@ -39,6 +39,7 @@ private:
 	bool significance, keepN, simplifiedMd;
 	double alpha;
 	int maxShift;
+	int sizePad;
 
 public:
     //Input metadata file
