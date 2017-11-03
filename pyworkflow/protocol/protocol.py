@@ -618,6 +618,23 @@ class Protocol(Step):
                     return True
         return False
 
+    def allowsGpu(self):
+        """ Returns True if this protocol allows GPU computation. """
+        return self.hasAttribute(GPU_LIST)
+
+    def requiresGpu(self):
+        """ Return True if this protocol can only be executed in GPU. """
+        return self.allowsGpu() and not self.hasAttribute(USE_GPU)
+
+    def usesGpu(self):
+        return self.allowsGpu() and self.getAttributeValue(USE_GPU, True)
+
+    def getGpuList(self):
+        if not self.allowsGpu():
+            return []
+
+        return self.gpuList.get() # FIXME: support list expansion
+
     def getOutputsSize(self):
         return sum(1 for _ in self.iterOutputEM())
 
