@@ -43,6 +43,48 @@
 #include <sys/time.h>
 
 
+// A function to print all prime factors of a given number n
+void primeFactors(int n, int *out)
+{
+	int n_orig = n;
+	// Print the number of 2s that divide n
+	while (n%2 == 0)
+	{
+		//printf("%d ", 2);
+		out[0]++;
+		n = n/2;
+	}
+
+	// n must be odd at this point. So we can skip
+	// one element (Note i = i +2)
+	for (int i = 3; i <= sqrt(n_orig); i = i+2)
+	{
+		// While i divides n, print i and divide n
+		while (n%i == 0)
+		{
+			//printf("%d ", i);
+			if (i==3)
+				out[1]++;
+			else if (i==5)
+				out[2]++;
+			else if (i==7)
+				out[3]++;
+			else if(i>7)
+				out[4]++;
+
+			n = n/i;
+		}
+	}
+
+	// This condition is to handle the case when n
+	// is a prime number greater than 2
+	if (n > 2){
+		//printf ("%d ", n);
+		out[4]++;
+	}
+}
+
+
 void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask &mask, GpuCorrelationAux &d_correlationAux,
 		mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar, mycufftHandle &myhandleAux,
 		StructuresAux &myStructureAux, MDIterator *iter)
@@ -80,24 +122,68 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 
 	GpuMultidimArrayAtGpu<float> image_stack_gpu(Xdim,Ydim,1,numImages);
 	original_image_stack.copyToGpu(image_stack_gpu);
+
 	MultidimArray<int> maskArray = mask.get_binary_mask();
 	MultidimArray<float> dMask;
 	typeCast(maskArray, dMask);
 	d_correlationAux.d_mask.resize(Xdim, Ydim, Zdim, 1);
-	d_correlationAux.d_mask.copyToGpu(MULTIDIM_ARRAY(dMask));
+	float *mask_aux;
+	cpuMalloc((void**)&mask_aux, sizeof(float)*Xdim*Ydim*Zdim);
+	memcpy(mask_aux, MULTIDIM_ARRAY(dMask), sizeof(float)*Xdim*Ydim*Zdim);
+	d_correlationAux.d_mask.copyToGpu(mask_aux);
 
 	padding_masking(image_stack_gpu, d_correlationAux.d_mask, myStructureAux.padded_image_gpu, myStructureAux.padded_image2_gpu,
 			myStructureAux.padded_mask_gpu, false);
 
+	//printf("Preprocess reference images \n");
+	//printf("myStructureAux.padded_image_gpu.Xdim %i \n", myStructureAux.padded_image_gpu.Xdim);
+	//printf("myStructureAux.padded_image_gpu.Ydim %i \n", myStructureAux.padded_image_gpu.Ydim);
+	//printf("myStructureAux.padded_image_gpu.Ndim %i \n", myStructureAux.padded_image_gpu.Ndim);
+
+	//struct timeval begin, end;
+	//gettimeofday(&begin, NULL);
+
     myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
+
+    //gettimeofday(&end, NULL);
+    //double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
+    //printf("Padded FFT time ref %lf \n", elapsed);
 
     myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded);
     myStructureAux.padded_mask_gpu.fft(d_correlationAux.d_maskFFT, myhandleMask);
 
 	//Polar transform of the projected images
 	cuda_cart2polar(image_stack_gpu, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, false);
+
+	//printf("myStructureAux.polar_gpu.Xdim %i \n", myStructureAux.polar_gpu.Xdim);
+	//printf("myStructureAux.polar_gpu.Ydim %i \n", myStructureAux.polar_gpu.Ydim);
+	//printf("myStructureAux.polar_gpu.Ndim %i \n", myStructureAux.polar_gpu.Ndim);
+
+	//gettimeofday(&begin, NULL);
+
     myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar);
+
+    //gettimeofday(&end, NULL);
+	//elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
+	//printf("Polar FFT time %lf \n", elapsed);
+
     myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar);
+
+    /*/AJ to write the image
+    FileName myFile;
+    Image<float> Iout;
+    MultidimArray<float> out;
+    GpuMultidimArrayAtCpu<float> image(d_correlationAux.d_mask.Xdim,d_correlationAux.d_mask.Ydim,1,d_correlationAux.d_mask.Ndim);
+    image.copyFromGpu(d_correlationAux.d_mask);
+    out.coreAllocate(1, 1, d_correlationAux.d_mask.Ydim, d_correlationAux.d_mask.Xdim);
+	memcpy(MULTIDIM_ARRAY(out), image.data, d_correlationAux.d_mask.Xdim*d_correlationAux.d_mask.Ydim*sizeof(float));
+	Iout() = out;
+	int idx=1;
+	myFile.compose("nuevo", idx, "jpg");
+	Iout.write(myFile);
+	out.coreDeallocate();
+	//END AJ/*/
+
 
 }
 
@@ -115,11 +201,11 @@ void preprocess_images_experimental(MetaData &SF, FileName &fnImg, int numImages
 	size_t radius=d_correlationAux.YdimPolar;
 	size_t angles = d_correlationAux.XdimPolar;
 
+	GpuMultidimArrayAtCpu<float> original_image_stack(Xdim,Ydim,1,numImagesRef);
+
 	if(firstStep==0){
 
 		Image<float> Iref;
-
-		GpuMultidimArrayAtCpu<float> original_image_stack(Xdim,Ydim,1,numImagesRef);
 
 		Iref.read(fnImg);
 
@@ -137,7 +223,21 @@ void preprocess_images_experimental(MetaData &SF, FileName &fnImg, int numImages
 	if(!rotation){
 		padding_masking(d_correlationAux.d_original_image, mask, myStructureAux.padded_image_gpu, myStructureAux.padded_image2_gpu,
 				myStructureAux.padded_mask_gpu, true);
-	    myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
+
+		//printf("Preprocess experimental images \n");
+		//printf("myStructureAux.padded_image_gpu.Xdim %i \n", myStructureAux.padded_image_gpu.Xdim);
+		//printf("myStructureAux.padded_image_gpu.Ydim %i \n", myStructureAux.padded_image_gpu.Ydim);
+		//printf("myStructureAux.padded_image_gpu.Ndim %i \n", myStructureAux.padded_image_gpu.Ndim);
+
+		//struct timeval begin, end;
+		//gettimeofday(&begin, NULL);
+
+		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
+
+		//gettimeofday(&end, NULL);
+		//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
+		//printf("Padded FFT time %lf \n", elapsed);
+
 	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded);
 		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT);
 	}
@@ -168,6 +268,22 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 	if(!rotation){
 		padding_masking(d_correlationAux.d_transform_image, mask, myStructureAux.padded_image_gpu, myStructureAux.padded_image2_gpu,
 				myStructureAux.padded_mask_gpu, true);
+
+		//printf("Preprocess experimental images \n");
+		//printf("myStructureAux.padded_image_gpu.Xdim %i \n", myStructureAux.padded_image_gpu.Xdim);
+		//printf("myStructureAux.padded_image_gpu.Ydim %i \n", myStructureAux.padded_image_gpu.Ydim);
+		//printf("myStructureAux.padded_image_gpu.Ndim %i \n", myStructureAux.padded_image_gpu.Ndim);
+
+		//struct timeval begin, end;
+		//gettimeofday(&begin, NULL);
+
+		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
+
+		//gettimeofday(&end, NULL);
+		//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
+		//printf("Padded FFT time %lf \n", elapsed);
+
+
 	    myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
 	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded);
 		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT);
@@ -191,7 +307,7 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 {
 
 	bool rotation;
-	TransformMatrix<float> *transMat, *transMat_md;
+	TransformMatrix<float> *transMat;
 	float *max_vector;
 
 	for(int firstStep=0; firstStep<2; firstStep++){
@@ -285,6 +401,8 @@ void ProgGpuCorrelation::readParams()
    	fnDir = getParam("--odir");
    	maxShift = getIntParam("--maxShift");
 
+   	sizePad = getIntParam("--sizePad");
+
 }
 
 // Show ====================================================================
@@ -311,6 +429,7 @@ void ProgGpuCorrelation::defineParams()
 	addParamsLine("   [--odir <outputDir=\".\">]           : Output directory to save the aligned images");
     addParamsLine("   [--maxShift <s=10>]                  : Maximum shift allowed (+-this amount)");
     addParamsLine("   [--simplifiedMd <b=false>]     : To generate a simplified metadata with only the maximum weight image stores");
+    addParamsLine("   [--sizePad <pad=100>]    ");
     addUsageLine("Computes the correlation between a set of experimental images with respect "
     		     "to a set of reference images with CUDA in GPU");
 
@@ -677,6 +796,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 	}
 	String fnFinal=formatString("%s/%s",fnDir.c_str(),fn_out.c_str());
 	mdOut.write(fnFinal);
+	//printf("fnFinal %s \n", fnFinal.c_str()); //TODO fix what happens when dont put an odir but the name has a path, appears something like ./path/filename.whatever
 
 	delete iterExp;
 
@@ -727,11 +847,10 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	MDIterator *iterSFexp = new MDIterator();
 	MDRow rowSFexp;
 
-
 	Timer timer;
 	size_t myTime1 = timer.tic();
 
-
+	int countingClasses=1;
 	bool skip_image;
 	NexpVector = new int[mdInSize];
 	for(int i=0; i<mdInSize; i++){
@@ -741,7 +860,10 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		SF.getRow(rowSF, iterSF->objId);
 		rowSF.getValue(MDL_IMAGE, fnImgNew);
-		rowSF.getValue(MDL_REF, refNum);
+		if(rowSF.containsLabel(MDL_REF))
+			rowSF.getValue(MDL_REF, refNum);
+		else
+			refNum=countingClasses;
 
 		iterSFexp->init(SFexp);
 
@@ -907,6 +1029,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		if(iterSF->hasNext())
 			iterSF->moveNext();
+
+		countingClasses++;
 	}
 
 
@@ -920,6 +1044,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	Timer timer2;
 	size_t myTime2 = timer2.tic();
 
+	countingClasses=1;
 	Matrix2D<double> bestM(3,3);
 	MetaData SFout;
 	firstTime=true;
@@ -930,7 +1055,10 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		//rowSF.getValue(MDL_IMAGE, fnImgNew);
 		//fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
 		SF.getRow(rowSF, iterSF->objId);
-		rowSF.getValue(MDL_REF, refNum);
+		if(rowSF.containsLabel(MDL_REF))
+			rowSF.getValue(MDL_REF, refNum);
+		else
+			refNum = countingClasses;
 
 		fnRoot=fn_classes_out.withoutExtension();
 		fnStackMD=formatString("%s/%s.xmd", fnDir.c_str(), fnRoot.c_str());
@@ -953,6 +1081,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		if(iterSF->hasNext())
 			iterSF->moveNext();
+
+		countingClasses++;
 	}
 	SFout.write("classes@"+fnStackMD, MD_APPEND);
 
@@ -1152,11 +1282,17 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 void ProgGpuCorrelation::run()
 {
 
+	struct timeval begin, end;
+	gettimeofday(&begin, NULL);
+
+
+
 	//PROJECTION IMAGES
 	size_t Xdim, Ydim, Zdim, Ndim;
 	SF.read(fn_ref,NULL);
 	size_t mdInSize = SF.size();
 	getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
+
 
 	//EXPERIMENTAL IMAGES
 	SFexp.read(fn_exp,NULL);
@@ -1167,7 +1303,31 @@ void ProgGpuCorrelation::run()
     mask.type = BINARY_CIRCULAR_MASK;
 	mask.mode = INNER_MASK;
 	size_t rad = (size_t)std::min(Xdim*0.48, Ydim*0.48);
-	rad = (rad%2==0) ? rad : (rad+1);
+
+	int number = rad;
+	int *out = new int[5];
+
+	//printf("rad %i \n", (int)rad);
+
+	while(true){
+		if (number%2!=0){
+			number--;
+			continue;
+		}
+		for (int z=0; z<5; z++)
+			out[z]=0;
+		primeFactors(number, out);
+		if ((out[0]!=0 || out[1]!=0 || out[2]!=0 || out[3]!=0) && out[4]==0){
+			rad = number;
+			break;
+		}
+		else
+			number--;
+	}
+
+	//printf("rad %i \n", (int)rad);
+
+	//rad = (rad%2==0) ? rad : (rad+1);
 	mask.R1 = rad;
 	mask.resize(Ydim,Xdim);
 	mask.get_binary_mask().setXmippOrigin();
@@ -1217,7 +1377,7 @@ void ProgGpuCorrelation::run()
 	float *max_vector_rt_mirror;
 	float *max_vector_tr_mirror;
 
-	//Transformation matrix in GPU
+	//Transformation matrix in GPU and CPU
 	TransformMatrix<float> transMat_tr;
 	TransformMatrix<float> transMat_rt;
 	TransformMatrix<float> transMat_tr_mirror;
@@ -1233,15 +1393,42 @@ void ProgGpuCorrelation::run()
 	GpuCorrelationAux d_referenceAux;
 
 	size_t pad_Xdim=2*Xdim-1;
-	pad_Xdim = (pad_Xdim%2==0) ? pad_Xdim:(pad_Xdim+1);
 	size_t pad_Ydim=2*Ydim-1;
-	pad_Ydim = (pad_Ydim%2==0) ? pad_Ydim:(pad_Ydim+1);
+
+
+	//////
+	number = pad_Xdim;
+
+	while(true){
+		if (number%2!=0){
+			number++;
+			continue;
+		}
+		for (int z=0; z<5; z++)
+			out[z]=0;
+		primeFactors(number, out);
+		if ((out[0]!=0 || out[1]!=0 || out[2]!=0 || out[3]!=0) && out[4]==0){
+			pad_Xdim = number;
+			break;
+		}
+		else
+			number++;
+	}
+
+	pad_Ydim = pad_Xdim;
+	//printf("pad_Xdim %i pad_Ydim %i\n", pad_Xdim, pad_Ydim);
+	//////
+
+	//pad_Xdim = 512; //sizePad; //(pad_Xdim%2==0) ? pad_Xdim:(pad_Xdim+1);
+	//pad_Ydim = 512; //sizePad; //(pad_Ydim%2==0) ? pad_Ydim:(pad_Ydim+1);
 	d_referenceAux.XdimOrig=Xdim;
 	d_referenceAux.YdimOrig=Ydim;
 	d_referenceAux.Xdim=pad_Xdim;
 	d_referenceAux.Ydim=pad_Ydim;
 	d_referenceAux.XdimPolar=360;
 	d_referenceAux.YdimPolar=(size_t)mask.R1;
+
+	//printf("Xdim %i, Ydim %i \n", pad_Xdim, pad_Ydim);
 
 	StructuresAux myStructureAux;
 
@@ -1251,16 +1438,26 @@ void ProgGpuCorrelation::run()
 	while(!finish){
 
 		//Aux vectors with maximum values of correlation in RT and TR steps
-		max_vector_rt = new float [available_images_proj];
-		max_vector_tr = new float [available_images_proj];
-		max_vector_rt_mirror = new float [available_images_proj];
-		max_vector_tr_mirror = new float [available_images_proj];
+		cpuMalloc((void**)&max_vector_tr, sizeof(float)*available_images_proj);
+		cpuMalloc((void**)&max_vector_rt, sizeof(float)*available_images_proj);
+		cpuMalloc((void**)&max_vector_tr_mirror, sizeof(float)*available_images_proj);
+		cpuMalloc((void**)&max_vector_rt_mirror, sizeof(float)*available_images_proj);
 
-		//Transformation matrix in GPU
+		//Transformation matrix in GPU and CPU
 		transMat_tr.resize(available_images_proj);
 		transMat_rt.resize(available_images_proj);
 		transMat_tr_mirror.resize(available_images_proj);
 		transMat_rt_mirror.resize(available_images_proj);
+
+		/*//Auxiliar matrix with all the best transformations in CPU
+		MultidimArray<float> matrixTRCpuAux;
+		matrixTRCpuAux.coreAllocate(1, available_images_proj, 3, 3);
+		MultidimArray<float> matrixTRCpuAux_mirror;
+		matrixTRCpuAux_mirror.coreAllocate(1, available_images_proj, 3, 3);
+		MultidimArray<float> matrixRTCpuAux;
+		matrixRTCpuAux.coreAllocate(1, available_images_proj, 3, 3);
+		MultidimArray<float> matrixRTCpuAux_mirror;
+		matrixRTCpuAux_mirror.coreAllocate(1, available_images_proj, 3, 3);*/
 
 		myStructureAux.padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
 		myStructureAux.padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
@@ -1272,9 +1469,9 @@ void ProgGpuCorrelation::run()
 		preprocess_images_reference(SFexp, firstIdx, available_images_proj, mask, d_referenceAux,
 				myhandlePadded, myhandleMask, myhandlePolar, myhandleAux, myStructureAux, iter);
 
+
 	    d_referenceAux.maskCount=maskCount;
 		d_referenceAux.produceSideInfo(myhandlePaddedB, myhandleMaskB, myStructureAux);
-
 
 		//EXPERIMENTAL IMAGES PART
 		size_t expIndex = 0;
@@ -1331,20 +1528,38 @@ void ProgGpuCorrelation::run()
 							myStructureAux);
 
 			//AJ to check the best transformation among all the evaluated
+			transMat_tr.copyMatrixToCpu();
+			transMat_tr_mirror.copyMatrixToCpu();
+			transMat_rt.copyMatrixToCpu();
+			transMat_rt_mirror.copyMatrixToCpu();
+
+			MultidimArray<float> out2(3,3);
 			for(int i=0; i<available_images_proj; i++){
 				if(max_vector_tr[i]>max_vector_rt[i]){
-					transMat_tr.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu[n]), firstIdx+i, i);
+					//transMat_tr.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu[n]), firstIdx+i, i);
+					//matrixTRCpuAux.getSlice(i, out2);
+					memcpy(MULTIDIM_ARRAY(out2), &transMat_tr.h_data[i*9], 9*sizeof(float));
+					matrixTransCpu[n].setSlice(firstIdx+i, out2);
 					A2D_ELEM(matrixCorrCpu, n, firstIdx+i) = max_vector_tr[i];
 				}else{
-					transMat_rt.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu[n]), firstIdx+i, i);
+					//transMat_rt.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu[n]), firstIdx+i, i);
+					//matrixRTCpuAux.getSlice(i, out2);
+					memcpy(MULTIDIM_ARRAY(out2), &transMat_rt.h_data[i*9], 9*sizeof(float));
+					matrixTransCpu[n].setSlice(firstIdx+i, out2);
 					A2D_ELEM(matrixCorrCpu, n, firstIdx+i) = max_vector_rt[i];
 				}
 				//mirror image
 				if(max_vector_tr_mirror[i]>max_vector_rt_mirror[i]){
-					transMat_tr_mirror.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu_mirror[n]), firstIdx+i, i);
+					//transMat_tr_mirror.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu_mirror[n]), firstIdx+i, i);
+					//matrixTRCpuAux_mirror.getSlice(i, out2);
+					memcpy(MULTIDIM_ARRAY(out2), &transMat_tr_mirror.h_data[i*9], 9*sizeof(float));
+					matrixTransCpu_mirror[n].setSlice(firstIdx+i, out2);
 					A2D_ELEM(matrixCorrCpu_mirror, n, firstIdx+i) = max_vector_tr_mirror[i];
 				}else{
-					transMat_rt_mirror.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu_mirror[n]), firstIdx+i, i);
+					//transMat_rt_mirror.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu_mirror[n]), firstIdx+i, i);
+					//matrixRTCpuAux_mirror.getSlice(i, out2);
+					memcpy(MULTIDIM_ARRAY(out2), &transMat_rt_mirror.h_data[i*9], 9*sizeof(float));
+					matrixTransCpu_mirror[n].setSlice(firstIdx+i, out2);
 					A2D_ELEM(matrixCorrCpu_mirror, n, firstIdx+i) = max_vector_rt_mirror[i];
 				}
 			}
@@ -1374,6 +1589,7 @@ void ProgGpuCorrelation::run()
 			myhandleMaskB.clear();
 			myhandlePolarB.clear();
 		}
+
 
 	}//End loop over the reference images while(!finish)
 
@@ -1434,12 +1650,17 @@ void ProgGpuCorrelation::run()
 	for(int i=0; i<mdInSize; i++) //mdExpSize
 		matrixTransCpu[i].coreDeallocate();
 	delete []matrixTransCpu;
-	delete []max_vector_tr;
-	delete []max_vector_rt;
 	for(int i=0; i<mdInSize; i++) //mdExpSize
 		matrixTransCpu_mirror[i].coreDeallocate();
 	delete []matrixTransCpu_mirror;
-	delete []max_vector_tr_mirror;
-	delete []max_vector_rt_mirror;
+
+	cpuFree(max_vector_tr);
+	cpuFree(max_vector_rt);
+	cpuFree(max_vector_tr_mirror);
+	cpuFree(max_vector_rt_mirror);
+
+	gettimeofday(&end, NULL);
+	double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
+	printf("Total time %lf \n", elapsed);
 
 }
