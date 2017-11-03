@@ -31,6 +31,7 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, 
                                                    readSetOfParticles)
+from pyworkflow.utils import getExt
 import numpy as np
 
 class XmippProtVolumeHomogenizer(ProtProcessParticles):
@@ -149,10 +150,10 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                                  updateItemCallback=self._setHalf2)                                
             writeSetOfParticles(inputParticlesHalf2, inputParticlesMd2)
             
-            inputVol1 = self.inputVolume1.get().getFileName()
-            inputVol2 = self.inputVolume2.get().getFileName()
-            referenceVol1 = self.referenceVolume1.get().getFileName()
-            referenceVol2 = self.referenceVolume2.get().getFileName()
+            inputVol1 = self.changeExtension(self.inputVolume1.get().getFileName())
+            inputVol2 = self.changeExtension(self.inputVolume2.get().getFileName())
+            referenceVol1 = self.changeExtension(self.referenceVolume1.get().getFileName())
+            referenceVol2 = self.changeExtension(self.referenceVolume2.get().getFileName())
 
             if not self.doAlignment.get():         #No alignment
                 fnOutputHalf1 = self._getExtraPath('deformed_particles_half1')
@@ -186,8 +187,8 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             inputParticles = self.inputParticles.get()                
             writeSetOfParticles(inputParticles, inputParticlesMd)
             
-            inputVol = self.inputVolume.get().getFileName()
-            referenceVol = self.referenceVolume.get().getFileName()    
+            inputVol = self.changeExtension(self.inputVolume.get().getFileName())
+            referenceVol = self.changeExtension(self.referenceVolume.get().getFileName())    
             
             fnOutput = self._getExtraPath('deformed_particles')
             if not self.doAlignment.get():
@@ -201,6 +202,14 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                         
         self._insertFunctionStep('createOutputStep')        
     #--------------------------- STEPS functions --------------------------------------------
+    
+    
+    def changeExtension(self, vol):
+            extVol = getExt(vol)
+            if (extVol == '.mrc') or (extVol == '.map'):
+                vol = vol + ':mrc'
+            return vol
+        
     
     def volumeAlignmentStep (self, referenceVol, inputVol, fnAlignedVolFf, 
                                    fnAlnVolFfLcl, fnInPartsNewAng):
