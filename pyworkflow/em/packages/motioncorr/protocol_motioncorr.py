@@ -85,7 +85,7 @@ class ProtMotionCorr(ProtAlignMovies):
                       label='WARNING! You need to have installed CUDA'
                             ' libraries and a Nvidia GPU')
 
-        form.addParam('GPUIDs', params.StringParam, default='0',
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
                       expertLevel=cons.LEVEL_ADVANCED,
                       label="Choose GPU IDs",
                       help="GPU may have several cores. Set it to zero"
@@ -289,7 +289,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-ned': '%d' % aN,
                         '-nss': '%d' % s0,
                         '-nes': '%d' % sN,
-                        '-gpu': self.GPUIDs.get(),
+                        '-gpu': self.gpuList.get(),
                         '-flg': logFile,
                         }
 
@@ -338,7 +338,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
                         '-kV': inputMovies.getAcquisition().getVoltage(),
-                        '-Gpu': self.GPUIDs.get(),
+                        '-Gpu': self.gpuList.get(),
                         '-LogFile': logFileBase,
                         }
             if getVersion('MOTIONCOR2') != '03162016':
@@ -455,7 +455,7 @@ class ProtMotionCorr(ProtAlignMovies):
                           "path (%s). Please, check scipion configuration."
                           % (cudaConst, CUDA_LIB, cudaLib))
 
-        gpu = self.GPUIDs.get()
+        gpu = self.gpuList.get()
 
         if not self.useMotioncor2:
             bin = self.binFactor.get()
