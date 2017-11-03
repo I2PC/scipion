@@ -63,6 +63,23 @@ def progInPath(prog):
     return False
 
 
+def progInstalled(prog):
+    """ Is program installed? Execute call or return False."""
+    if prog != '':
+        try:
+            prog += ' --version'
+            print("Checking dependencies: %s" % prog)
+            ret = call(prog, shell=True)
+            if ret != 0:
+                return False
+            else:
+                return True
+        except OSError:
+            return False
+    else:
+        return True
+
+
 def checkLib(lib, target=None):
     """ See if we have library lib """
     try:
@@ -523,6 +540,16 @@ class Environment:
             commands: a list with actions to be executed to install the package
         """
         # Add to the list of available packages, for reference (used in --help).
+        neededProgs = kwargs.get('neededProgs', [])
+
+        if name in sys.argv[2:]:
+            # Check that we have the necessary programs in place.
+            for prog in neededProgs:
+                assert progInstalled(prog), ("Cannot find necessary program: %s\n"
+                                             "To be able to install %s, please "
+                                             "install %s and try again" %
+                                             (prog, name, prog))
+
         if name not in self._packages:
             self._packages[name] = []
 
