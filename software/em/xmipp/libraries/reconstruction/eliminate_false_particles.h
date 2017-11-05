@@ -22,12 +22,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _PROG_ELIMINATE_NONPARTICLES
-#define _PROG_ELIMINATE_NONPARTICLES
+#ifndef _PROG_ELIMINATE_FALSEPARTICLES
+#define _PROG_ELIMINATE_FALSEPARTICLES
 
 #include <data/xmipp_program.h>
 
-class ProgEliminateNonParticles: public XmippProgram
+class ProgEliminateFalseParticles: public XmippProgram
 {
 public:
 	/// Name of the input metadata
@@ -52,15 +52,8 @@ public:
     /// Define input parameters
     void defineParams();
 
-    /// Function for recognizing non-noise particles
-    bool isParticle(const MultidimArray<double> &I);
-
     /// Execute
     void run();
-
-public:
-    /// Features derived in elimination process
-    std::vector<double> features;
 };
 
 #endif

@@ -1,4 +1,4 @@
-# ******************************************************************************
+# *****************************************************************************
 # *
 # * Authors:     Tomas Majtner         tmajtner@cnb.csic.es (2017)
 # *
@@ -22,7 +22,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
-# ******************************************************************************
+# *****************************************************************************
 
 import os
 import pyworkflow.em as em
@@ -35,19 +35,19 @@ from pyworkflow.utils.properties import Message
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
 
 
-class XmippProtEliminateNonParticles(ProtClassify2D):
+class XmippProtEliminateFalseParticles(ProtClassify2D):
     """ Takes a set of particles and using statistical methods (variance of
     variances of sub-parts of input image) eliminates those samples, where
     there is no object/particle (only noise is presented there). Threshold
     parameter can be used for fine-tuning the algorithm for type of data. """
 
-    _label = 'eliminate non-particles'
+    _label = 'eliminate false particles'
 
     def __init__(self, **args):
         ProtClassify2D.__init__(self, **args)
         self.stepsExecutionMode = em.STEPS_PARALLEL
 
-    # --------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
 
@@ -57,15 +57,20 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
                       help='Select the input images to be classified.')
         form.addParam('threshold', param.FloatParam, default=1.5,
                       label='Threshold used in elimination:',
-                      help='Higher threshold => more particles will be eliminated.')
+                      help='Higher threshold => '
+                           'more particles will be eliminated.')
 
         form.addParallelSection(threads=1, mpi=1)
 
-    # --------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self.insertedDict = {}
-        self._insertNewPartsSteps(self.insertedDict)
-        self._insertFunctionStep('createOutputStep', wait=True)
+        self.finished = False
+        self.SetOfParticles = [m.clone() for m in self.inputParticles.get()]
+        partsSteps = self._insertNewPartsSteps(self.insertedDict,
+                                               self.SetOfParticles)
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=partsSteps, wait=True)
 
     def createOutputStep(self):
         pass
@@ -83,21 +88,47 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
                 return s
         return None
 
-    def _insertNewPartsSteps(self, insertedDict):
+    def _insertNewPartsSteps(self, insertedDict, inputParticles):
+        """ Insert steps to process new movies (from streaming)
+        Param:
+            insertedDict: contains already processed movies
+            inputParticles: input particles set to be checked
+        """
         deps = []
-        writeSetOfParticles([m.clone() for m in self.inputParticles.get()
-                   if int(m.getObjId()) not in self._readDoneList()],
+        writeSetOfParticles([m.clone() for m in inputParticles],
+                            self._getExtraPath("allDone.xmd"),
+                            alignType=em.ALIGN_NONE)
+        writeSetOfParticles([m.clone() for m in inputParticles
+                             if int(m.getObjId()) not in insertedDict],
                             self._getExtraPath("newDone.xmd"),
                             alignType=em.ALIGN_NONE)
-        stepId = self._insertStepsForParticles(
-            self._getExtraPath("newDone.xmd"),
-            self._getExtraPath("output.xmd"),
-            self._getExtraPath("eliminated.xmd"))
+        stepId = \
+            self._insertFunctionStep('eliminationStep',
+                                     self._getExtraPath("newDone.xmd"),
+                                     self._getExtraPath("newOutput.xmd"),
+                                     self._getExtraPath("newEliminated.xmd"),
+                                     prerequisites=[])
         deps.append(stepId)
-        for part in self.inputParticles.get():
-            if part.getObjId() not in insertedDict:
-                insertedDict[part.getObjId()] = stepId
+        for m in inputParticles:
+            if int(m.getObjId()) not in insertedDict:
+                insertedDict[m.getObjId()] = stepId
         return deps
+
+    def eliminationStep(self, fnInputMd, fnOutputMd, fnElimMd):
+        args = "-i %s -o %s -e %s -t %f" % (
+        fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
+        self.runJob("xmipp_eliminate_false_particles", args)
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        if os.path.exists(self._getExtraPath("newOutput.xmd")):
+            outSet = self._loadOutputSet(SetOfParticles,
+                                         'outputParticles.sqlite')
+            readSetOfParticles(self._getExtraPath("newOutput.xmd"), outSet)
+            self._updateOutputSet('outputParticles', outSet, streamMode)
+        if os.path.exists(self._getExtraPath("newEliminated.xmd")):
+            outSet = self._loadOutputSet(SetOfParticles,
+                                     'eliminatedParticles.sqlite')
+            readSetOfParticles(self._getExtraPath("newEliminated.xmd"), outSet)
+            self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
     def _stepsCheck(self):
         # Input particles set can be loaded or None when checked for new inputs
@@ -113,11 +144,14 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
         self.SetOfParticles = [m.clone() for m in partsSet]
         self.streamClosed = partsSet.isStreamClosed()
         partsSet.close()
-        newParts = any(m.getObjId() not in self.insertedDict
-                       for m in self.inputParticles.get())
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
+        newParts = any(m.getObjId() not in partsSet
+                       for m in self.SetOfParticles)
         outputStep = self._getFirstJoinStep()
         if newParts:
-            fDeps = self._insertNewPartsSteps(self.insertedDict)
+            fDeps = self._insertNewPartsSteps(self.insertedDict,
+                                              self.SetOfParticles)
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
@@ -128,14 +162,11 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
         # Load previously done items (from text file)
         doneList = self._readDoneList()
         # Check for newly done items
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
         newDone = [m.clone() for m in self.SetOfParticles
-                   if int(m.getObjId()) not in doneList]
-        # We have finished when there is not more input particles (stream closed)
-        # and the number of processed particles is equal to the number of inputs
-        self.finished = self.streamClosed and (len(doneList) + len(
-            newDone)) == len(self.SetOfParticles)
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-
+                   if m.getObjId() not in doneList]
+        self.finished = self.streamClosed and (len(doneList) == len(partsSet))
         if newDone:
             self._writeDoneList(newDone)
         elif not self.finished:
@@ -143,16 +174,6 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
             return
-
-        outSet = self._loadOutputSet(SetOfParticles, 'outputParticles.sqlite')
-        readSetOfParticles(self._getExtraPath('output.xmd'), outSet)
-        self._updateOutputSet('outputParticles', outSet, streamMode)
-
-        outSet = self._loadOutputSet(SetOfParticles,
-                                     'eliminatedParticles.sqlite')
-        readSetOfParticles(self._getExtraPath('eliminated.xmd'), outSet)
-        self._updateOutputSet('eliminatedParticles', outSet, streamMode)
-
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
@@ -188,22 +209,9 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
         # Close set databaset to avoid locking it
         outputSet.close()
 
-
-    def _insertStepsForParticles(self, inputParts, outputParts, elimParts):
-        classifyStepId = self._insertFunctionStep('eliminationStep',
-                                                  inputParts,
-                                                  outputParts,
-                                                  elimParts)
-        return classifyStepId
-
-    def eliminationStep(self, fnInputMd, fnOutputMd, fnElimMd):
-        args = "-i %s -o %s -e %s -t %f" % (
-        fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
-        self.runJob("xmipp_eliminate_nonparticles", args)
-
     # --------------------------- UTILS functions -----------------------------
     def _readDoneList(self):
-        """ Read from a text file the id's of the items that have been done. """
+        """ Read from a file the id's of the items that have been done. """
         doneFile = self._getAllDone()
         doneList = []
         # Check what items have been previously done
@@ -216,7 +224,7 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
         return self._getExtraPath('DONE_all.TXT')
 
     def _writeDoneList(self, partList):
-        """ Write to a text file the items that have been done. """
+        """ Write to a file the items that have been done. """
         with open(self._getAllDone(), 'a') as f:
             for part in partList:
                 f.write('%d\n' % part.getObjId())
