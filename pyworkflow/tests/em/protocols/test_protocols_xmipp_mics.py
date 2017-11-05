@@ -585,7 +585,7 @@ class TestXmippExtractParticles(TestXmippBase):
         self._checkSamplingConsistency(outputParts)
 
 
-class TestXmippEliminatinfFalsePositives(TestXmippBase):
+class TestXmippEliminatingFalsePositives(TestXmippBase):
     """This class check if the protocol for eliminating
      false positives particles in Xmipp works properly."""
     @classmethod
@@ -636,7 +636,7 @@ class TestXmippEliminatinfFalsePositives(TestXmippBase):
                         protExtract.outputParticles.getSize(),
                         "Output sets size does not much the input set size.")
 
-        kwargs = {'nDim': 20,  # 10 objects/particles
+        kwargs = {'nDim': 20,  # 20 objects/particles
                   'creationInterval': 1,  # wait 1 sec. after creation
                   'setof': 3,  # create SetOfParticles
                   'inputParticles': protExtract.outputParticles
