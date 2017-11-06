@@ -45,7 +45,7 @@ from constants import (MOD2_SIMPLE_SEARCH_REFINEMENT, MOD_REFINEMENT,
                        EWA_SIMPLE_HAND, EWA_SIMPLE, FSC_3DR_ODD, FSC_3DR_EVEN,
                        FSC_3DR_ALL, MEM_1, MEM_2, INTERPOLATION_0,
                        REF_ANGLES, REF_SHIFTS)
-from grigoriefflab import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
+from grigoriefflab import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH, FREALIGN_HOME_VAR
 
 
 class ProtFrealignBase(EMProtocol):
@@ -54,6 +54,21 @@ class ProtFrealignBase(EMProtocol):
     and several parameters
     """
     IS_REFINE = True
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        Can't rely on package function since this is a "multi package" package
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        missingPaths = []
+
+        if not os.path.exists(FREALIGN_PATH):
+            missingPaths.append("%s : Freealign installation not "
+                                " - %s" % (FREALIGN_HOME_VAR, FREALIGN_PATH))
+        return missingPaths
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
