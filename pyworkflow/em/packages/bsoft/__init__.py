@@ -26,12 +26,13 @@
 """
 This package contains the protocols and data for BSOFT
 """
+import os
 
 from bibtex import _bibtex # Load bibtex dict with references
  
 _logo = "bsoft_logo.png"
 _references = ['Heymann2007']
-
+BSOFT_HOME_VAR = 'BSOFT_HOME'
 
 from protocol_particle_pick import BsoftProtParticlePicking
 from protocol_bfilter import BsoftProtBfilter
@@ -45,3 +46,14 @@ _environ = getEnviron()
 # Since bsoft is not installed by default,
 # remove for now the viewer
 #from viewer import BsoftViewer
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed. """
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in [BSOFT_HOME_VAR]
+                    if not os.path.exists(_environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors
