@@ -51,9 +51,9 @@ class ProtCryoEF(ProtAnalysis3D):
 
     def _initialize(self):
         """ This function is mean to be called after the
-   working dir for the protocol have been set.
-   (maybe after recovery from mapper)
-   """
+        working dir for the protocol have been set.
+        (maybe after recovery from mapper)
+        """
         self._createFilenameTemplates()
 
     def _createFilenameTemplates(self):

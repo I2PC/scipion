@@ -108,8 +108,8 @@ def iterAngles(fn):
 def writeAnglesFn(img, fn):
     # get alignment parameters for each particle
     shifts, angles = geometryFromMatrix(img.getTransform().getMatrix())
-    _, theta, phi = angles
-    fn.write("%0.6f %0.6f\n" % (phi, theta))
+    rot, tilt, _ = angles
+    fn.write("%0.6f %0.6f\n" % (rot, tilt))
 
 
 def geometryFromMatrix(matrix, inverseTransform=True):
