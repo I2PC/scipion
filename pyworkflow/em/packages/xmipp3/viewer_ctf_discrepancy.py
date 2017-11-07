@@ -36,7 +36,6 @@ from pyworkflow.utils.path import cleanPath
 import numpy as np
 
 
-
 class XmippCTFDiscrepancyViewer(ProtocolViewer):
     """ This protocol computes the maximum resolution up to which two
      CTF estimations would be ``equivalent'', defining ``equivalent'' as having
@@ -47,51 +46,49 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
     _targets = [XmippProtCTFDiscrepancy]
     _memory = False
     resolutionThresholdOLD = -1
-    #temporary metadata file with ctf that has some resolution greathan than X
-    tmpMetadataFile='viewersTmp.sqlite'
+    # temporary metadata file with ctf that has some resolution greathan than X
+    tmpMetadataFile = 'viewersTmp.sqlite'
 
     def _defineParams(self, form):
-        
         form.addSection(label='Visualization')
-        #group = form.addGroup('Overall results')
+        # group = form.addGroup('Overall results')
         form.addParam('visualizePairs', LabelParam,
                       label="Visualize ctf + max resolution.",
                       help="""Reference CTF plus a new column with resolution up to which
-                      reference CTF and target reference  are similar"""  )
+                      reference CTF and target reference  are similar""")
         form.addParam('visualizeHistogram', IntParam, default=10,
                       label="Visualize Histogram (Bin size)",
-                      help="Histogram of the resolution at which two methods are equivalent")
+                      help="Histogram of the resolution at which two methods"
+                           " are equivalent")
 
     def _getVisualizeDict(self):
         return {
                  'visualizePairs': self._visualizePairs,
                  'visualizeHistogram': self._visualizeHistogram
-                }        
+                }
 
     def _visualizePairs(self, e=None):
         views = []
 
-        #display metadata with selected variables
-        labels = 'id enabled _psdFile _micObj_filename _discrepancy_resolution _discrepancy_astigmatism _defocusU _defocusV _defocusAngle'
+        # display metadata with selected variables
+        labels = 'id enabled _psdFile _micObj_filename _resolution' \
+                 ' _discrepancy_astigmatism _defocusU _defocusV _defocusAngle'
         views.append(ObjectView(self._project,
-                                self.protocol.strId(), 
+                                self.protocol.strId(),
                                 self.protocol.outputCTF.getFileName(),
-                                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
-        return views 
-
+                                viewParams={MODE: MODE_MD, ORDER: labels,
+                                            VISIBLE: labels}))
+        return views
 
     def _visualizeHistogram(self, e=None):
         views = []
         numberOfBins = self.visualizeHistogram.get()
         numberOfBins = min(numberOfBins, self.protocol.outputCTF.getSize())
         plotter = EmPlotter()
-        plotter.createSubPlot("Resolution Discrepancies histogram", 
-                      "Resolution (A)", "# of Comparisons")
-        resolution = [ctf._discrepancy_resolution.get() for ctf in self.protocol.outputCTF]
-        #print "resolution", resolution
-        #print "numberOfBins",numberOfBins,self.protocol.outputCTF.getSize()
+        plotter.createSubPlot("Resolution Discrepancies histogram",
+                              "Resolution (A)", "# of Comparisons")
+        resolution = [ctf.getResolution() for ctf in self.protocol.outputCTF]
         plotter.plotHist(resolution, nbins=numberOfBins)
-        #ROB: why do I need this show?
+        # ROB: why do I need this show?
         plotter.show()
         return views.append(plotter)
-

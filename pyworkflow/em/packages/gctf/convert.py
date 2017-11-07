@@ -31,12 +31,14 @@ This module contains converter functions that will serve to:
 
 import os
 import re
+
+from pyworkflow.em.packages.gctf import GCTF_HOME
 from pyworkflow.object import Float
 import pyworkflow.utils as pwutils
 
 
 def getVersion():
-    path = os.environ['GCTF_HOME']
+    path = os.environ[GCTF_HOME]
     for v in getSupportedVersions():
         if v in path or v in os.path.realpath(path):
             return v
