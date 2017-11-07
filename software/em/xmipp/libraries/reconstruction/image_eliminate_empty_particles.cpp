@@ -23,13 +23,13 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "eliminate_false_particles.h"
+#include "image_eliminate_empty_particles.h"
 #include "classify_extract_features.h"
 #include <data/filters.h>
 
 
 // Read arguments ==========================================================
-void ProgEliminateFalseParticles::readParams()
+void ProgEliminateEmptyParticles::readParams()
 {
     fnIn = getParam("-i");
     fnOut = getParam("-o");
@@ -38,7 +38,7 @@ void ProgEliminateFalseParticles::readParams()
 }
 
 // Show ====================================================================
-void ProgEliminateFalseParticles::show()
+void ProgEliminateEmptyParticles::show()
 {
     if (verbose==0)
         return;
@@ -51,16 +51,16 @@ void ProgEliminateFalseParticles::show()
 }
 
 // Usage ===================================================================
-void ProgEliminateFalseParticles::defineParams()
+void ProgEliminateEmptyParticles::defineParams()
 {
-    addUsageLine("Eliminates false particles (false positives from picking)");
+    addUsageLine("Eliminates empty particles (false positives from picking)");
     addParamsLine("  -i <selfile>                       : Selfile containing set of input particles");
     addParamsLine("  [-o <selfile=\"output.xmd\">]      : Output selfile");
     addParamsLine("  [-e <selfile=\"eliminated.xmd\">]  : Eliminated particles selfile");
     addParamsLine("  -t <float>                         : Threshold used by algorithm");
 }
 
-void ProgEliminateFalseParticles::run()
+void ProgEliminateEmptyParticles::run()
 {
     MetaData SF;
     SF.read(fnIn);

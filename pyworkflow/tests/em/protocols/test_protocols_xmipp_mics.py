@@ -585,9 +585,9 @@ class TestXmippExtractParticles(TestXmippBase):
         self._checkSamplingConsistency(outputParts)
 
 
-class TestXmippEliminatingFalsePositives(TestXmippBase):
+class TestXmippEliminatingEmptyParticles(TestXmippBase):
     """This class check if the protocol for eliminating
-     false positives particles in Xmipp works properly."""
+     empty particles in Xmipp works properly."""
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -623,7 +623,7 @@ class TestXmippEliminatingFalsePositives(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         self.launchProtocol(protExtract)
 
-        protElimination1 = self.newProtocol(XmippProtEliminateFalseParticles)
+        protElimination1 = self.newProtocol(XmippProtEliminateEmptyParticles)
         protElimination1.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protElimination1)
 
@@ -649,7 +649,7 @@ class TestXmippEliminatingFalsePositives(TestXmippBase):
             time.sleep(1)
             protStream = self._updateProtocol(protStream)
 
-        protElimination2 = self.newProtocol(XmippProtEliminateFalseParticles)
+        protElimination2 = self.newProtocol(XmippProtEliminateEmptyParticles)
         protElimination2.inputParticles.set(protStream.outputParticles)
         self.launchProtocol(protElimination2)
 

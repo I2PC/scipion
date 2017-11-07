@@ -23,6 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/eliminate_false_particles.h>
+#include <reconstruction/image_eliminate_empty_particles.h>
 
-RUN_XMIPP_PROGRAM(ProgEliminateFalseParticles)
+RUN_XMIPP_PROGRAM(ProgEliminateEmptyParticles)

@@ -22,12 +22,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _PROG_ELIMINATE_FALSEPARTICLES
-#define _PROG_ELIMINATE_FALSEPARTICLES
+#ifndef _PROG_ELIMINATE_EMPTY_PARTICLES
+#define _PROG_ELIMINATE_EMPTY_PARTICLES
 
 #include <data/xmipp_program.h>
 
-class ProgEliminateFalseParticles: public XmippProgram
+class ProgEliminateEmptyParticles: public XmippProgram
 {
 public:
 	/// Name of the input metadata

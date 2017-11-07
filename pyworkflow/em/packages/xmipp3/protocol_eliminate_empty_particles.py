@@ -35,13 +35,13 @@ from pyworkflow.utils.properties import Message
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
 
 
-class XmippProtEliminateFalseParticles(ProtClassify2D):
+class XmippProtEliminateEmptyParticles(ProtClassify2D):
     """ Takes a set of particles and using statistical methods (variance of
     variances of sub-parts of input image) eliminates those samples, where
     there is no object/particle (only noise is presented there). Threshold
     parameter can be used for fine-tuning the algorithm for type of data. """
 
-    _label = 'eliminate false particles'
+    _label = 'eliminate empty particles'
 
     def __init__(self, **args):
         ProtClassify2D.__init__(self, **args)
@@ -117,7 +117,7 @@ class XmippProtEliminateFalseParticles(ProtClassify2D):
     def eliminationStep(self, fnInputMd, fnOutputMd, fnElimMd):
         args = "-i %s -o %s -e %s -t %f" % (
         fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
-        self.runJob("xmipp_eliminate_false_particles", args)
+        self.runJob("xmipp_image_eliminate_empty_particles", args)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if os.path.exists(self._getExtraPath("newOutput.xmd")):
             outSet = self._loadOutputSet(SetOfParticles,
