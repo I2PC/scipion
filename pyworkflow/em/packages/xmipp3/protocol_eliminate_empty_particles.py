@@ -119,15 +119,15 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
         self.runJob("xmipp_image_eliminate_empty_particles", args)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-        if os.path.exists(self._getExtraPath("newOutput.xmd")):
+        if os.path.exists(fnOutputMd):
             outSet = self._loadOutputSet(SetOfParticles,
                                          'outputParticles.sqlite')
-            readSetOfParticles(self._getExtraPath("newOutput.xmd"), outSet)
+            readSetOfParticles(fnOutputMd, outSet)
             self._updateOutputSet('outputParticles', outSet, streamMode)
-        if os.path.exists(self._getExtraPath("newEliminated.xmd")):
+        if os.path.exists(fnElimMd):
             outSet = self._loadOutputSet(SetOfParticles,
                                      'eliminatedParticles.sqlite')
-            readSetOfParticles(self._getExtraPath("newEliminated.xmd"), outSet)
+            readSetOfParticles(fnElimMd, outSet)
             self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
     def _stepsCheck(self):
