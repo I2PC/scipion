@@ -29,10 +29,10 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.data import Coordinate
+from pyworkflow.em.packages.bamfordlab import ETHAN_HOME
 from pyworkflow.em.protocol import ProtParticlePickingAuto
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
-
 
 
 class ProtEthanPicker(ProtParticlePickingAuto):
@@ -49,7 +49,7 @@ class ProtEthanPicker(ProtParticlePickingAuto):
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-    
+
         ProtParticlePickingAuto._defineParams(self, form)
         form.addParam('radius', params.IntParam,
                       label='Radius of particle (px)')
@@ -118,10 +118,10 @@ class ProtEthanPicker(ProtParticlePickingAuto):
 
         # Clean temporary micrograph
         pwutils.cleanPath(fnMicFull)
-    
+
     def createOutputStep(self):
         pass
-    
+
     # --------------------------- INFO functions -------------------------------
     def _summary(self):
         summary = []
@@ -149,19 +149,19 @@ class ProtEthanPicker(ProtParticlePickingAuto):
 
     #--------------------------- UTILS functions -------------------------------
     def getProgram(self):
-        return os.path.join(os.environ.get('ETHAN_HOME'), 'ethan')
+        return os.path.join(os.environ.get(ETHAN_HOME), 'ethan')
 
     def _getMicDir(self, micFn):
         return self._getExtraPath()
 
     def _getMicPosFn(self, micFn):
         return pwutils.replaceBaseExt(micFn, 'txt')
-    
+
     def _getPickArgs(self):
         """ In this case, only return the radius as argument.
         """
         return [self.radius.get()]
-    
+
     def readCoordsFromMics(self, workingDir, micList, coordSet):
         coordSet.setBoxSize(self.radius.get() * 2)
         for mic in micList:

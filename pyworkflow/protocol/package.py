@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# * Authors:     P. Conesa Mingo (pconesa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,27 +23,20 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
 """
-This sub-package contains data and protocol classes
-wrapping ATSAS programs http://www.embl-hamburg.de/biosaxs/software.html
+This modules contains classes related to EM package management
 """
-from pyworkflow.utils import commandExists
 
-_logo = "atsas_logo.gif"
-CRYSOL = "crysol"
-from bibtex import _bibtex # Load bibtex dict with references
-from atsas import *
-from protocol_pdb_to_saxs import AtsasProtConvertPdbToSAXS
-from viewer import AtsasViewer
 
-def validateInstallation():
-    """ This function will be used to check if ATSAS is properly installed. """
-    missingPaths = []
+class Package:
+    def __init__(self, name, installed):
+        self._name = name
+        self._installed = installed
 
-    if not (commandExists(CRYSOL)):
-        missingPaths.append("%s not found in the system" % CRYSOL)
+    def isInstalled(self):
+        return self._installed
 
-    if missingPaths:
-        return ["Missing variables:"] + missingPaths
-    else:
-        return [] # No errors
+    def getName(self):
+        return self._name
