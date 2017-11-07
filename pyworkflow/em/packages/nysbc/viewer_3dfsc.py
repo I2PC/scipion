@@ -140,27 +140,21 @@ class ThreedFscViewer(ProtocolViewer):
         return [ObjectView(self._project, self.protocol.strId(), path)]
 
 # =============================================================================
+    def _showPlot(self, fn):
+        img = mpimg.imread(self.protocol._getFileName(fn))
+        imgplot = plt.imshow(img)
+        plt.axis('off')
+        plt.show()
+        return [imgplot]
 
     def _showHistogram(self, param=None):
-        img = mpimg.imread(self.protocol._getFileName('out_histogram'))
-        imgplot = plt.imshow(img)
-        plt.axis('off')
-        plt.show()
-        return [imgplot]
+        self._showPlot('out_histogram')
 
     def _showPlotFT(self, param=None):
-        img = mpimg.imread(self.protocol._getFileName('out_plotFT'))
-        imgplot = plt.imshow(img)
-        plt.axis('off')
-        plt.show()
-        return [imgplot]
+        self._showPlot('out_plotFT')
 
     def _showPlot3DFSC(self, param=None):
-        img = mpimg.imread(self.protocol._getFileName('out_plot3DFSC'))
-        imgplot = plt.imshow(img)
-        plt.axis('off')
-        plt.show()
-        return [imgplot]
+        self._showPlot('out_plot3DFSC')
 
     def _showChimera(self, param=None):
         cmdFile = self.protocol._getFileName('out_cmdChimera')

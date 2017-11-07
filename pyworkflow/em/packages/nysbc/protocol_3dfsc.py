@@ -121,18 +121,18 @@ class Prot3DFSC(ProtAnalysis3D):
         form.addParam('hpFilter', params.FloatParam, default=200,
                        label='High-pass filter (A)',
                        help='High-pass filter for thresholding in Angstrom. '
-                            'Prevents small dips in directional FSCs at low spatial '
-                            'frequency due to noise from messing up the '
-                            'thresholding step. Decrease if you see a huge wedge '
-                            'missing from your thresholded 3DFSC volume. 200 '
-                            'Angstroms is default.')
+                            'Prevents small dips in directional FSCs at low '
+                            'spatial frequency due to noise from messing up '
+                            'the thresholding step. Decrease if you see a '
+                            'huge wedge missing from your thresholded 3DFSC '
+                            'volume. 200 Angstroms is default.')
         form.addParam('numThr', params.IntParam, default=1,
                        label='Number of threshold for sphericity',
-                       help='Calculate sphericities at different threshold cutoffs '
-                            'to determine sphericity deviation across spatial '
-                            'frequencies. This can be useful to evaluate possible '
-                            'effects of overfitting or improperly assigned '
-                            'orientations.')
+                       help='Calculate sphericities at different threshold '
+                            'cutoffs to determine sphericity deviation across '
+                            'spatial frequencies. This can be useful to '
+                            'evaluate possible effects of overfitting or '
+                            'improperly assigned orientations.')
 
     #--------------------------- INSERT steps functions ------------------------
     
@@ -167,19 +167,21 @@ class Prot3DFSC(ProtAnalysis3D):
         self.info("**Running:** %s %s" % (program, param))
 
         f = open(self._getExtraPath('script.sh'), "w")
-        line = """#!/bin/bash
-unset PYTHONPATH
-source activate fsc
-python %s %s
-source deactivate
-""" % (program, param)
+        shellName = os.environ.get('SHELL')
+        if 'bash' in shellName:
+            line = '#!%s\nunset PYTHONPATH\n' %shellName
+        else:  # csh etc
+            line = '#! %s -f\nunsetenv PYTHONPATH\n' % shellName
+
+        line += 'source activate fsc\npython %s %s\nsource deactivate' % (
+            program, param)
         f.write(line)
         f.close()
 
-        self.runJob('/bin/bash ./script.sh', '', cwd=self._getExtraPath(), env=getEnviron())
-        #self.runJob('unset PYTHONPATH && source activate fsc && python %s %s && source deactivate' %
-        #            (program, param), '', cwd=self._getExtraPath(),
-        #            env=getEnviron())
+        self.runJob('%s ./script.sh' % shellName, '', cwd=self._getExtraPath(),
+                    env=getEnviron())
+        if not exists(self._getFileName('out_vol3DFSC')):
+            raise Exception('3D FSC run failed!')
 
     def createOutputStep(self):
         if exists(self._getFileName('out_vol3DFSC')):
@@ -212,12 +214,15 @@ source deactivate
         half2 = self.volumeHalf2.get()
         mask = self.maskVolume.get() or None
         if half1.getSamplingRate() != half2.getSamplingRate():
-            errors.append('The selected half volumes have not the same pixel size.')
+            errors.append('The selected half volumes have not the same pixel '
+                          'size.')
         if half1.getXDim() != half2.getXDim():
-            errors.append('The selected half volumes have not the same dimensions.')
+            errors.append('The selected half volumes have not the same '
+                          'dimensions.')
         if self.applyMask and mask:
             if mask.getXDim() != self.inputVolume.get().getXDim():
-                errors.append('Input volume and the mask have different dimensions.')
+                errors.append('Input volume and the mask have different '
+                              'dimensions.')
                 
         return errors
     
@@ -246,5 +251,6 @@ source deactivate
         """ Return the program binary that will be used. """
         if 'NYSBC_3DFSC_HOME' not in os.environ:
             return None
-        cmd = join(os.environ['NYSBC_3DFSC_HOME'], 'ThreeDFSC', 'ThreeDFSC_Start.py')
+        cmd = join(os.environ['NYSBC_3DFSC_HOME'], 'ThreeDFSC',
+                   'ThreeDFSC_Start.py')
         return str(cmd)
