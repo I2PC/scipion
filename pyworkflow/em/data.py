@@ -1429,7 +1429,7 @@ class Transform(EMObject):
         m[2, 3] = z
                 
     def composeTransform(self, matrix):
-        '''Apply a transformation matrix to the current matrix '''
+        '''Apply a transformation matrix to the current matrix '''        
         oldMatrix = self.getMatrix()
         oldRotMatrix = oldMatrix[0:3,0:3]        
         oldTransVector =  np.reshape(oldMatrix[0:3,3],(3,1))        
@@ -1439,9 +1439,11 @@ class Transform(EMObject):
         newRotMat = rotMatrix * oldRotMatrix
         newTransVector =  (oldTransVector + transVector)
         
-        matrix[0:3,0:3] = newRotMat
-        matrix[0:3,3] = newTransVector
-        self._matrix.setMatrix(matrix)
+        new_matrix = matrix * 0
+        new_matrix[0:3,0:3] = newRotMat
+        new_matrix[0:3,3] = newTransVector
+        new_matrix[3,3]=1
+        self._matrix.setMatrix(new_matrix)
 
 class Class2D(SetOfParticles):
     """ Represent a Class that groups Particles objects.
