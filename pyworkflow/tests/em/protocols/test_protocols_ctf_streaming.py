@@ -93,7 +93,7 @@ class TestCtfStreaming(BaseTest):
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
 
-        # wait until a microgrph has been created
+        # wait until a micrograph has been created
         counter = 1
         while not protStream.hasAttribute('outputMicrographs'):
             time.sleep(10)
@@ -103,8 +103,10 @@ class TestCtfStreaming(BaseTest):
             counter += 1
 
         # run ctffind4
+        # then introduce monitor, checking all the time ctf and saving to
+        # database
         protCTF = ProtCTFFind(useCftfind4=True)
-        time.sleep(10)
+        #time.sleep(10)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
         protCTF.highRes.set(0.4)
@@ -134,3 +136,30 @@ class TestCtfStreaming(BaseTest):
         except NVMLError, err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
+
+
+        # run xmipp ctf. Since this is the slower method wait until finish
+        # before running asserts
+        kwargs = {
+            'numberOfThreads': MICS + 1}
+        protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
+        protCTF2.inputMicrographs.set(protStream.outputMicrographs)
+        protCTF2.ctfDownFactor.set(2)
+
+        self.proj.launchProtocol(protCTF2, wait=True)
+
+        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+
+        baseFn = protCTF._getPath(CTF_SQLITE)
+        self.assertTrue(os.path.isfile(baseFn))
+
+        self.assertSetSize(ctfSet, MICS, "Ctffind4 output size does not match")
+
+        for ctf in ctfSet:
+            self.assertNotEqual(ctf._resolution.get(), None)
+            self.assertNotEqual(ctf._fitQuality.get(), None)
+            self.assertNotEqual(ctf.isEnabled(), None)
+            self.assertNotEqual(ctf._defocusU.get(), None)
+            self.assertNotEqual(ctf._defocusV.get(), None)
+            self.assertNotEqual(ctf._defocusRatio.get(), None)
+

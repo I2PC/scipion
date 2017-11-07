@@ -64,17 +64,6 @@ COOR_EXTRA_LABELS = [
     md.RLN_ORIENT_PSI
     ]
 
-CTF_BASICDICT = OrderedDict([
-       ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
-       ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
-       ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
-       ])
-
-CTF_EXTENDEDDICT = OrderedDict([
-       ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
-       ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
-       ])
-
 CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
@@ -82,6 +71,14 @@ CTF_DICT = OrderedDict([
        ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
        ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
+
+# TODO: remove next dictionary when all
+# cTFmodel has resolution and fitQuality
+CTF_DICT_NORESOLUTION = OrderedDict([
+        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
+        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
+        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
+        ])
 
 CTF_PSD_DICT = OrderedDict([
        ("_psdFile", xmipp.MDL_PSD),
@@ -114,7 +111,52 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
     xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
     xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
-    #xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+    xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
+    xmipp.MDL_CTF_CRIT_PSDVARIANCE,
+    xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
+    xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST,
+    xmipp.MDL_CTF_CRIT_FIRSTZEROAVG,
+    xmipp.MDL_CTF_CRIT_DAMPING,
+    xmipp.MDL_CTF_CRIT_FIRSTZERORATIO,
+    xmipp.MDL_CTF_CRIT_PSDCORRELATION90,
+    xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL,
+    xmipp.MDL_CTF_CRIT_NORMALITY,
+    # In xmipp the ctf also contains acquisition information
+    xmipp.MDL_CTF_Q0,
+    xmipp.MDL_CTF_CS,
+    xmipp.MDL_CTF_VOLTAGE,
+    xmipp.MDL_CTF_SAMPLING_RATE
+    ]
+
+# TODO: remove next dictionary when all
+# cTFmodel has resolution and fitquality
+CTF_EXTRA_LABELS_PLUS_RESOLUTION = [
+    xmipp.MDL_CTF_CA,
+    xmipp.MDL_CTF_ENERGY_LOSS,
+    xmipp.MDL_CTF_LENS_STABILITY,
+    xmipp.MDL_CTF_CONVERGENCE_CONE,
+    xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT,
+    xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT,
+    xmipp.MDL_CTF_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU,
+    xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV,
+    xmipp.MDL_CTF_BG_GAUSSIAN_CU,
+    xmipp.MDL_CTF_BG_GAUSSIAN_CV,
+    xmipp.MDL_CTF_BG_SQRT_K,
+    xmipp.MDL_CTF_BG_SQRT_U,
+    xmipp.MDL_CTF_BG_SQRT_V,
+    xmipp.MDL_CTF_BG_SQRT_ANGLE,
+    xmipp.MDL_CTF_BG_BASELINE,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
+    xmipp.MDL_CTF_CRIT_MAXFREQ,  # ###
+    xmipp.MDL_CTF_CRIT_FITTINGSCORE,  # ###
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
@@ -184,15 +226,9 @@ def objectToRow(obj, row, attrDict, extraLabels=[]):
 
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
-
-            # TODO: the if line ensures compatibility of old xmipp modelCTF
-            # with new version that contains _resolution and _fitQuality
-            # these lines should be removed in the future
-            getattrValue = getattr(obj, attr)
-            if getattrValue.hasValue():
-                valueType = getLabelPythonType(label)
-                row.setValue(label, valueType(getattrValue.get()))
-
+            valueType = getLabelPythonType(label)
+            row.setValue(label, valueType(getattr(obj, attr).get()))
+            
     attrLabels = attrDict.values()
 
     for label in extraLabels:
@@ -235,14 +271,8 @@ def setXmippAttributes(obj, objRow, *labels):
     and the datatype will be set correctly.
     """
     for label in labels:
-        try:
-            setattr(obj, '_xmipp_%s' % xmipp.label2Str(label),
-                    objRow.getValueAsObject(label))
-        except:
-            print "Attribute %s not available", xmipp.label2Str(label)
-            # TODO ROB: import CTF for xmipp fails if with erro
-            # Protocol failed: 'NoneType' object has no attribute
-            # '_xmipp_ctfCritNonAstigmaticValidty'
+        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label),
+                objRow.getValueAsObject(label))
 
 
 def rowFromMd(md, objId):
@@ -357,7 +387,7 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     if preprocessImageRow:
         preprocessImageRow(img, imgRow)
 
-    setRowId(imgRow, img) # Set the id in the metadata as MDL_ITEM_ID
+    setRowId(imgRow, img)  # Set the id in the metadata as MDL_ITEM_ID
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
     imgRow.setValue(imgLabel, fn)
@@ -374,7 +404,6 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
 
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
-
 
     # Write all extra labels to the row
     objectToRow(img, imgRow, {}, extraLabels=IMAGE_EXTRA_LABELS)
@@ -447,7 +476,8 @@ def rowToMicrograph(micRow, **kwargs):
 
 def volumeToRow(vol, volRow, **kwargs):
     """ Set labels values from Micrograph mic to md row. """
-    imageToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE, writeAcquisition=False, **kwargs)
+    imageToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE,
+               writeAcquisition=False, **kwargs)
 
 
 def rowToVolume(volRow, **kwargs):
@@ -558,7 +588,13 @@ def class2DToRow(class2D, classRow):
 
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
-    objectToRow(ctfModel, ctfRow, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
+    # TODO: compatibility check remove eventually
+    if ctfModel.hasResolution():
+        objectToRow(ctfModel, ctfRow, CTF_DICT,
+                    extraLabels=CTF_EXTRA_LABELS)
+    else:
+        objectToRow(ctfModel, ctfRow, CTF_DICT_NORESOLUTION,
+                    extraLabels=CTF_EXTRA_LABELS)
 
 
 def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
@@ -578,11 +614,29 @@ def setPsdFiles(ctfModel, ctfRow):
 
 def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a metadata. """
-    if _containsAll(ctfRow, CTF_BASICDICT):  # for compatibility reason ignore resolution and fitquality
+    # Check if the row has CTF values, this could be called from a xmipp
+    # particles metadata
+    if _containsAll(ctfRow, CTF_DICT_NORESOLUTION):
+
+        # for compatibility reason ignore resolution and fitQuality
+        # Instantiate Scipion CTF Model
         ctfModel = CTFModel()
-        rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
+
+        # Case for metadata coming with Xmipp resolution label
+        # Populate Scipion CTF from metadata row (using mapping dictionary
+        # plus extra labels
+        if ctfRow.containsLabel(xmipp.label2Str(xmipp.MDL_CTF_CRIT_MAXFREQ)):
+            rowToObject(ctfRow, ctfModel, CTF_DICT,
+                        extraLabels=CTF_EXTRA_LABELS)
+        else:
+            rowToObject(ctfRow, ctfModel, CTF_DICT_NORESOLUTION,
+                        extraLabels=CTF_EXTRA_LABELS_PLUS_RESOLUTION)
+
+        # Standarize defocus values
         ctfModel.standardize()
+        # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
+
     else:
         ctfModel = None
 
@@ -657,7 +711,7 @@ loop_
  _ycoor
  _cost
  _micrographId
-"""%(state, block)
+""" % (state, block)
     f.write(s)
     return f
 
@@ -682,7 +736,6 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
 
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
         posDict[mic.getObjId()] = posFn
-
 
     f = None
     lastMicId = None
@@ -779,13 +832,15 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
     configfile = join(outputDir, 'config.xmd')
     if exists(configfile):
         md = xmipp.MetaData('properties@' + join(outputDir, 'config.xmd'))
-        boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, md.firstObject())
+        boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE,
+                              md.firstObject())
         coordSet.setBoxSize(boxSize)
     for mic in micSet:
         posFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'pos'))
         readCoordinates(mic, posFile, coordSet, outputDir)
 
     coordSet._xmippMd = String(outputDir)
+
 
 def readCoordinates(mic, fileName, coordsSet, outputDir):
         posMd = readPosCoordinates(fileName)
@@ -853,7 +908,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         else:
             kwargs['alignType'] = ALIGN_NONE
 
-    if imgMd.size()>0:
+    if imgMd.size() > 0:
         for objId in imgMd:
             imgRow = rowFromMd(imgMd, objId)
             img = rowToFunc(imgRow, **kwargs)
@@ -896,10 +951,12 @@ def readAnglesFromMicrographs(micFile, anglesSet):
         anglesSet.append(angles)
 
 
-def writeSetOfImages(imgSet, filename, imgToFunc, blockName='Images', **kwargs):
+def writeSetOfImages(imgSet, filename, imgToFunc,
+                     blockName='Images', **kwargs):
     """ This function will write a SetOfImages as a Xmipp metadata.
     Params:
-        imgSet: the set of images to be written (particles, micrographs or volumes)
+        imgSet: the set of images to be written (particles,
+        micrographs or volumes)
         filename: the filename where to write the metadata.
         rowFunc: this function can be used to setup the row before
             adding to metadata.
@@ -965,7 +1022,7 @@ def writeSetOfCTFs(ctfSet, mdCTF):
     ctfSet._xmippMd = String(mdCTF)
 
 
-def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
+def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup):  # also metadata
     """ Write a defocuGroupSet on metadata format.
     Params:
         defocusGroupSet: the SetOfDefocus that will be read.
@@ -987,7 +1044,8 @@ def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
     defocusGroupSet._xmippMd = String(fnDefocusGroup)
 
 
-def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeParticles=True):
+def writeSetOfClasses2D(classes2DSet, filename,
+                        classesBlock='classes', writeParticles=True):
     """ This function will write a SetOfClasses2D as Xmipp metadata.
     Params:
         classes2DSet: the SetOfClasses2D instance.
@@ -995,7 +1053,8 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writePar
     """
     classFn = '%s@%s' % (classesBlock, filename)
     classMd = xmipp.MetaData()
-    classMd.write(classFn) # Empty write to ensure the classes is the first block
+    classMd.write(classFn)  # Empty write to ensure the classes is the first
+    # block
 
     classRow = XmippMdRow()
     for class2D in classes2DSet:
@@ -1012,7 +1071,8 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writePar
                     imgRow.writeToMd(imagesMd, imagesMd.addObject())
             imagesMd.write(imagesFn, xmipp.MD_APPEND)
 
-    classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
+    # Empty write to ensure the classes is the first block
+    classMd.write(classFn, xmipp.MD_APPEND)
 
 
 def writeSetOfMicrographsPairs(uSet, tSet, filename):
@@ -1085,12 +1145,15 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     __readSetOfClasses(SetOfParticles, readSetOfParticles,
                        classesSet, filename, classesBlock, **kwargs)
 
-def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **kwargs):
+
+def readSetOfClasses2D(classes2DSet, filename,
+                       classesBlock='classes', **kwargs):
     """ Just a wrapper to readSetOfClasses. """
     readSetOfClasses(classes2DSet, filename, classesBlock, **kwargs)
 
 
-def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **kwargs):
+def readSetOfClasses3D(classes3DSet, filename,
+                       classesBlock='classes', **kwargs):
     """ Just a wrapper to readSetOfClasses. """
     readSetOfClasses(classes3DSet, filename, classesBlock, **kwargs)
 
@@ -1103,8 +1166,10 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
     """
     classFn = '%s@%s' % (classesBlock, filename)
     classMd = xmipp.MetaData()
-    classMd.write(classFn) # Empty write to ensure the classes is the first block
-    #FIXME: review implementation of this function since there are syntax errors
+    classMd.write(classFn)  # Empty write to ensure the classes is the first
+    # block
+    # FIXME: review implementation of this function since there are syntax
+    # errors
     classRow = XmippMdRow()
     for classVol in classesVolSet:
         classVolToRow(classVol, classRow)
@@ -1119,10 +1184,12 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
             imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
 
-    classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
+    # Empty write to ensure the classes is the first block
+    classMd.write(classFn, xmipp.MD_APPEND)
 
 
-def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **kwargs):
+def readSetOfClassesVol(classesVolSet, filename,
+                        classesBlock='classes', **kwargs):
     """read from Xmipp image metadata.
         fnImages: The metadata filename where the particles properties are.
         imgSet: the SetOfParticles that will be populated.
@@ -1238,7 +1305,8 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 
 
 def geometryFromMatrix(matrix, inverseTransform):
-    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    from pyworkflow.em.transformations import \
+        translation_from_matrix, euler_from_matrix
     if inverseTransform:
         matrix = numpy.linalg.inv(matrix)
         shifts = -translation_from_matrix(matrix)
@@ -1288,37 +1356,41 @@ def rowToAlignment(alignmentRow, alignType):
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             if flip:
-                angles[1] =  angles[1]+180 # tilt + 180
-                angles[2] = 180 - angles[2] # 180 - psi
-                shifts[0] = -shifts[0] # -x
+                angles[1] = angles[1]+180  # tilt + 180
+                angles[2] = 180 - angles[2]  # 180 - psi
+                shifts[0] = -shifts[0]  # -x
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
-            if rot !=0. and psi !=0:
+            if rot != 0. and psi != 0:
                 print "HORROR rot and psi are different from zero in 2D case"
-            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) + \
-                        alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
+            angles[0] = \
+                alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)\
+                + alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
 
         matrix = matrixFromGeometry(shifts, angles, inverseTransform)
 
         if flip:
-            if alignType==ALIGN_2D:
-                matrix[0,:2] *=  -1.#invert only the first two columns keep x
-                matrix[2,2]   =  -1.#set 3D rot
-            elif alignType==ALIGN_3D:
-                matrix[0,:3] *= -1.#now, invert first line excluding x
-                matrix[3,3] *= -1.
-            elif alignType==ALIGN_PROJ:
+            if alignType == ALIGN_2D:
+                matrix[0, :2] *= -1.  # invert only the first two columns
+                # keep x
+                matrix[2, 2] = -1.  # set 3D rot
+            elif alignType == ALIGN_3D:
+                matrix[0, :3] *= -1.  # now, invert first line excluding x
+                matrix[3, 3] *= -1.
+            elif alignType == ALIGN_PROJ:
                 pass
 
         alignment.setMatrix(matrix)
 
-        #FIXME: now are also storing the alignment parameters since
-        # the conversions to the Transform matrix have not been extensively tested.
+        # FIXME: now are also storing the alignment parameters since
+        # the conversions to the Transform matrix have not been extensively
+        # tested.
         # After this, we should only keep the matrix
-        #for paramName, label in ALIGNMENT_DICT.iteritems():
+        # for paramName, label in ALIGNMENT_DICT.iteritems():
         #    if alignmentRow.hasLabel(label):
-        #        setattr(alignment, paramName, alignmentRow.getValueAsObject(label))
+        #        setattr(alignment, paramName,
+        #                alignmentRow.getValueAsObject(label))
     else:
         alignment = None
 
@@ -1337,29 +1409,29 @@ def alignmentToRow(alignment, alignmentRow, alignType):
 
     is2D = alignType == ALIGN_2D
     inverseTransform = alignType == ALIGN_PROJ
-    #only flip is meaninfull if 2D case
-    #in that case the 2x2 determinant is negative
+    # only flip is meaninfull if 2D case
+    # in that case the 2x2 determinant is negative
     flip = False
     matrix = alignment.getMatrix()
-    if alignType==ALIGN_2D:
-        #get 2x2 matrix and check if negative
-        flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
+    if alignType == ALIGN_2D:
+        # get 2x2 matrix and check if negative
+        flip = bool(numpy.linalg.det(matrix[0:2, 0:2]) < 0)
         if flip:
-            matrix[0,:2] *= -1.#invert only the first two columns keep x
-            matrix[2,2]   =  1.#set 3D rot
+            matrix[0, :2] *= -1.  # invert only the first two columns keep x
+            matrix[2, 2] = 1.  # set 3D rot
         else:
             pass
 
-    elif alignType==ALIGN_3D:
-        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+    elif alignType == ALIGN_3D:
+        flip = bool(numpy.linalg.det(matrix[0:3, 0:3]) < 0)
         if flip:
-            matrix[0,:4] *= -1.#now, invert first line including x
-            matrix[3,3]   =  1.#set 3D rot
+            matrix[0, :4] *= -1.  # now, invert first line including x
+            matrix[3, 3] = 1.  # set 3D rot
         else:
             pass
 
     else:
-        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        flip = bool(numpy.linalg.det(matrix[0:3, 0:3]) < 0)
         if flip:
             raise Exception("the det of the transformation matrix is "
                             "negative. This is not a valid transformation "
@@ -1372,7 +1444,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         angle = angles[0] + angles[2]
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angle)
     else:
-        #if alignType == ALIGN_3D:
+        # if alignType == ALIGN_3D:
         alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
@@ -1385,7 +1457,7 @@ def fillClasses(clsSet, updateClassCallback=None):
     Iterate over the input images and append to the corresponding class.
     It is important that each image has the classId properly set.
     """
-    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    clsDict = {}  # Dictionary to store the (classId, classSet) pairs
     inputImages = clsSet.getImages()
 
     for img in inputImages:
@@ -1393,7 +1465,8 @@ def fillClasses(clsSet, updateClassCallback=None):
         if ref is None:
             raise Exception('Particle classId is None!!!')
 
-        if not ref in clsDict: # Register a new class set if the ref was not found.
+        # Register a new class set if the ref was not found.
+        if ref not in clsDict:
             classItem = clsSet.ITEM_TYPE(objId=ref)
             rep = clsSet.REP_TYPE()
             classItem.setRepresentative(rep)
@@ -1404,30 +1477,33 @@ def fillClasses(clsSet, updateClassCallback=None):
                 updateClassCallback(classItem)
             clsSet.append(classItem)
         else:
-            classItem = clsDict[ref] # Try to get the class set given its ref number
+            # Try to get the class set given its ref number
+            classItem = clsDict[ref]
         classItem.append(img)
 
     for classItem in clsDict.values():
         clsSet.update(classItem)
 
 
-#FIXME: USE THIS FUNCTION AS THE WAY TO CREATE CLASSES, REMOVE THE NEXT ONE
+# FIXME: USE THIS FUNCTION AS THE WAY TO CREATE CLASSES, REMOVE THE NEXT ONE
 def createClassesFromImages2(inputImages, inputMd,
                              classesFn, ClassType, classLabel,
-                             alignType, getClassFn=None, preprocessImageRow=None):
+                             alignType, getClassFn=None,
+                             preprocessImageRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
         inputImages: the SetOfImages that were initially classified by relion.
         inputMd: the filename metadata.
         classesFn: filename where to write the classes.
-        ClassType: the output type of the classes set ( usually SetOfClass2D or 3D )
+        ClassType: the output type of the classes set ( usually SetOfClass2D or
+        3D )
         classLabel: label that is the class reference.
         classFnTemplate: the template to get the classes averages filenames
         iter: the iteration number, just used in Class template
     """
     mdIter = iterMdRows(inputMd)
-    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    clsDict = {}  # Dictionary to store the (classId, classSet) pairs
     clsSet = ClassType(filename=classesFn)
     clsSet.setImages(inputImages)
     hasCtf = inputImages.hasCTF()
@@ -1438,7 +1514,8 @@ def createClassesFromImages2(inputImages, inputMd,
         if ref is None:
             raise Exception('MDL_REF not found in metadata: %s' % inputMd)
 
-        if not ref in clsDict: # Register a new class set if the ref was not found.
+        if ref not in clsDict:  # Register a new class set if the ref was not
+                                # found.
             classItem = clsSet.ITEM_TYPE(objId=ref)
             if getClassFn is None:
                 refFn = ''
@@ -1456,7 +1533,8 @@ def createClassesFromImages2(inputImages, inputMd,
             classItem.setAcquisition(inputImages.getAcquisition())
             clsSet.append(classItem)
         else:
-            classItem = clsDict[ref] # Try to get the class set given its ref number
+            # Try to get the class set given its ref number
+            classItem = clsDict[ref]
 
         img.setTransform(rowToAlignment(row, alignType))
         classItem.append(img)
@@ -1467,7 +1545,8 @@ def createClassesFromImages2(inputImages, inputMd,
     clsSet.write()
     return clsSet
 
-#FIXME: remove this function and use previous one
+
+# FIXME: remove this function and use previous one
 def createClassesFromImages(inputImages, inputMd,
                             classesFn, ClassType, classLabel, classFnTemplate,
                             alignType, iter, preprocessImageRow=None):
@@ -1477,12 +1556,14 @@ def createClassesFromImages(inputImages, inputMd,
         inputImages: the SetOfImages that were initially classified by relion.
         inputMd: the filename metadata.
         classesFn: filename where to write the classes.
-        ClassType: the output type of the classes set ( usually SetOfClass2D or 3D )
+        ClassType: the output type of the classes set
+                   (usually SetOfClass2D or 3D)
         classLabel: label that is the class reference.
         classFnTemplate: the template to get the classes averages filenames
         iter: the iteration number, just used in Class template
     """
-    # We assume here that the volumes (classes3d) are in the same folder than imgsFn
+    # We assume here that the volumes (classes3d) are in the same folder than
+    #    imgsFn
     # rootDir here is defined to be used expanding locals()
     if "@" in inputMd:
         inputFn = inputMd.split('@')[1]
@@ -1513,8 +1594,7 @@ def readShiftsMovieAlignment(xmdFn):
 
 
 def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
-
-    movieAlignment=movie.getAlignment()
+    movieAlignment = movie.getAlignment()
     shiftListX, shiftListY = movieAlignment.getShifts()
     # Generating metadata for global shifts
     a0, aN = movieAlignment.getRange()
@@ -1561,7 +1641,8 @@ def writeMovieMd(movie, outXmd, f1, fN, useAlignment=False):
             lastFrame = frames
 
     if f1 < firstFrame or fN > lastFrame:
-        raise Exception("Frame range could not be greater than the movie one. ")
+        raise Exception("Frame range could not be greater"
+                        " than the movie one.")
 
     ih = ImageHandler()
 
@@ -1593,9 +1674,11 @@ def writeMovieMd(movie, outXmd, f1, fN, useAlignment=False):
     movieMd.write(outXmd)
 
 
-def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=False):
-    f = open(filename,'w')
-    str = "# XMIPP_STAR_1 *\n#\ndata_block1\n_dimensions2D '%d %d'\n" % (dimX, dimX)
+def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False,
+                           ctfCorr=False):
+    f = open(filename, 'w')
+    str = "# XMIPP_STAR_1 *\n#\ndata_block1\n_dimensions2D '%d %d'\n" % \
+          (dimX, dimX)
     str += "_projAngleFile %s\n" % partSetMd
     str += "_ctfPhaseFlipped %d\n_ctfCorrected %d\n" % (phFlip, ctfCorr)
     str += "_applyShift 1\n_noisePixelLevel    '0 0'\n"
