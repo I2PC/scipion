@@ -28,7 +28,6 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, StringParam, 
                                         BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
-from convert import readSetOfVolumes
 from pyworkflow.object import Float
 from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt
@@ -92,7 +91,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       condition='(halfVolumes) or (not halfVolumes)',
                       label="Binary Mask", important=True,
                       help='The mask determines which points are specimen'
-                      ' and which oFN_FILTERED_MAPnes not')
+                      ' and which are not')
 
         group = form.addGroup('Extra parameters')
         group.addParam('symmetry', StringParam, default='c1',
@@ -103,10 +102,11 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'If no symmetry is present, give c1.')
 
         line = group.addLine('Resolution Range (A)',
-                            help="If the user knows the range of resolutions or only a"
-                                 " range of frequency needs to be analysed")
+                            help="If the user knows the range of resolutions or"
+                                " only a range of frequency needs to be analysed")
         
-        group.addParam('significance', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
+        group.addParam('significance', FloatParam, default=0.95, 
+                       expertLevel=LEVEL_ADVANCED,
                       label="Significance",
                       help='Relution is computed using hipothesis tests, '
                       'this value determines the significance of that test')
@@ -172,10 +172,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
     def _insertAllSteps(self):
             # Convert input into xmipp Metadata format
         self._createFilenameTemplates() 
-        convertId = self._insertFunctionStep('convertInputStep', )
-        MS = self._insertFunctionStep('resolutionMonogenicSignalStep',
-                                      prerequisites=[convertId])
-        self._insertFunctionStep('createOutputStep', prerequisites=[MS])
+        self._insertFunctionStep('convertInputStep', )
+        self._insertFunctionStep('resolutionMonogenicSignalStep')
+        self._insertFunctionStep('createOutputStep')
         self._insertFunctionStep("createHistrogram")
 
     def convertInputStep(self):
@@ -216,7 +215,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
         # Number of frequencies
         if self.stepSize.hasValue():
-            Nfreqs = round((self.maxRes.get() - self.minRes.get())/self.stepSize.get())
+            Nfreqs = round(
+                    (self.maxRes.get() - self.minRes.get())/self.stepSize.get())
         else:
             Nfreqs = 50
   
@@ -261,7 +261,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --volumeRadius %f' % xdim
-        params += ' --chimera_volume %s' % self._getFileName(OUTPUT_RESOLUTION_FILE_CHIMERA)
+        params += ' --chimera_volume %s' % self._getFileName(
+                                                    OUTPUT_RESOLUTION_FILE_CHIMERA)
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)  
@@ -288,7 +289,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
         mData = md.MetaData(self._getFileName(METADATA_MASK_FILE))
         NvoxelsOriginalMask = float(mData.getValue(md.MDL_COUNT, mData.firstObject()))
         NvoxelsOutputMask = float(mData.getValue(md.MDL_COUNT2, mData.firstObject()))
-        nvox = int(round(((NvoxelsOriginalMask-NvoxelsOutputMask)/NvoxelsOriginalMask)*100))
+        nvox = int(round(
+                ((NvoxelsOriginalMask-NvoxelsOutputMask)/NvoxelsOriginalMask)*100))
         return nvox
 
     def getMinMax(self, imageFile):

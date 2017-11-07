@@ -28,16 +28,19 @@
 from pyworkflow.em.viewer import CommandView, Viewer, DESKTOP_TKINTER
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer
-from pyworkflow.em.constants import *
+from pyworkflow.em.constants import (COLOR_CHOICES, COLOR_OTHER, COLOR_JET, 
+                                     COLOR_TERRAIN, COLOR_GIST_EARTH, 
+                                     COLOR_GIST_NCAR, COLOR_GNU_PLOT,
+                                      COLOR_GNU_PLOT2, AX_X, AX_Y, AX_Z)
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.plotter import EmPlotter
-from pyworkflow.em import ImageHandler
+#from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import Volume
-import numpy as np
-import matplotlib.pyplot as plt
+#import numpy as np
+#import matplotlib.pyplot as plt
 from matplotlib import cm
 from convert import getEnviron
-from pyworkflow.em.viewer import ChimeraView, DataView, LocalResolutionViewer
+from pyworkflow.em.viewer import DataView, LocalResolutionViewer
 from protocol_blocres import BsoftProtBlocres, FN_RESOLMAP
 
 
@@ -75,7 +78,7 @@ class BsoftPlotter(EmPlotter):
  
 binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
 
-class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
+class BsoftViewerBlocres(LocalResolutionViewer):
     """
     Visualization tools for blocres results.
 
@@ -87,10 +90,6 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
     _targets = [BsoftProtBlocres]
     _environments = [DESKTOP_TKINTER]
     
-    @staticmethod
-    def getColorMapChoices():
-        return plt.colormaps()
-   
     def __init__(self, *args, **kwargs):
         ProtocolViewer.__init__(self, *args, **kwargs)
 
@@ -136,18 +135,16 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
                 }
        
     def _showVolumeSlices(self, param=None):
-        cm = DataView(self.protocol.outputVolume.getFileName())
+        out_cm = DataView(self.protocol.outputVolume.getFileName())
         
-        return [cm]
+        return [out_cm]
     
     def _showOriginalVolumeSlices(self, param=None):
-        cm = DataView(self.protocol.inputVolume.get().getFileName())
-        cm2 = DataView(self.protocol.inputVolume2.get().getFileName())
+        out_cm = DataView(self.protocol.inputVolume.get().getFileName())
 
-        return [cm]
+        return [out_cm]
     
     def _showVolumeColorSlices(self, param=None):
-        import os
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
         imgData, min_Res, max_Res = self.getImgData(imageFile)
 
@@ -169,31 +166,36 @@ class BsoftViewerBlocres(LocalResolutionViewer, BsoftProtBlocres):
 
     def _plotHistogram(self, param=None):
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
-        img = ImageHandler().read(imageFile)
-        imgData = img.getData()
-        Res = imgData[imgData!=self.protocol.fill.get()]
-        minres = np.amin(Res)
-        maxres = np.amax(Res)
-        steps = 30
-        stepSize = (maxres - minres)/steps
-        x_axis = []
-        y_axis = []
-    
-        for idx in range(0,steps):
-            x_axis_aux = minres + idx*stepSize
-            x_axis.append(x_axis_aux)
-            auxRes = Res[Res<(minres+(idx+1)*stepSize)]
-            auxRes2 = auxRes[auxRes>=(minres+(idx*stepSize))]
-            length = len(auxRes2)
-            y_axis_aux = int(length)
-            y_axis.append(y_axis_aux)
-        fig = plt.figure()        
-        plt.bar(x_axis, y_axis, width = stepSize)    
-        plt.title("Resolutions Histogram")
-        plt.xlabel("Resolution (A)")
-        plt.ylabel("Counts")    
-
+        nbins = 30;
+        fig = self.plotHist(imageFile, nbins)
         return [Plotter(figure = fig)]
+        
+#         imageFile = self.protocol._getFileName(FN_RESOLMAP)
+#         img = ImageHandler().read(imageFile)
+#         imgData = img.getData()
+#         Res = imgData[imgData!=self.protocol.fill.get()]
+#         minres = np.amin(Res)
+#         maxres = np.amax(Res)
+#         steps = 30
+#         stepSize = (maxres - minres)/steps
+#         x_axis = []
+#         y_axis = []
+#     
+#         for idx in range(0,steps):
+#             x_axis_aux = minres + idx*stepSize
+#             x_axis.append(x_axis_aux)
+#             auxRes = Res[Res<(minres+(idx+1)*stepSize)]
+#             auxRes2 = auxRes[auxRes>=(minres+(idx*stepSize))]
+#             length = len(auxRes2)
+#             y_axis_aux = int(length)
+#             y_axis.append(y_axis_aux)
+#         fig = plt.figure()        
+#         plt.bar(x_axis, y_axis, width = stepSize)    
+#         plt.title("Resolutions Histogram")
+#         plt.xlabel("Resolution (A)")
+#         plt.ylabel("Counts")    
+
+#         return [Plotter(figure = fig)]
 
     def _getAxis(self):
         return self.getEnumText('sliceAxis')

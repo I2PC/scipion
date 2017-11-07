@@ -29,13 +29,13 @@ Local Resolution
 
 from pyworkflow import VERSION_1_1
 import pyworkflow.protocol.params as params
-from pyworkflow.utils import getExt
+# from pyworkflow.utils import getExt
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
 from pyworkflow.em import ImageHandler
-from collections import OrderedDict
+# from collections import OrderedDict
 from pyworkflow.em.data import Volume
 import numpy as np
-import pyworkflow.em.metadata as md
+# import pyworkflow.em.metadata as md
        
 """
 Bsoft program: blocres
@@ -85,11 +85,13 @@ class BsoftProtBlocres(ProtAnalysis3D):
                       help="""The local (box) and shell (shell) resolution 
                       calculations are mutually exclusive.""")
         
-        form.addParam('box', params.IntParam, default=20, condition = '(method)',
+        form.addParam('box', params.IntParam, default=20,
+                      condition = '(method)',
                       label='Box',
                       help="""Kernel size for determining 
                       local resolution (pixels/voxels)""")
-        form.addParam('shell', params.IntParam, default=20, condition ='(not method)',
+        form.addParam('shell', params.IntParam, default=20, 
+                      condition ='(not method)',
                       label='Shell',
                       help="""Shell width for determining 
                       radial resolution (pixels/voxels).""")
@@ -148,16 +150,16 @@ class BsoftProtBlocres(ProtAnalysis3D):
                  FN_RESOLMAP: self._getExtraPath("resolutionMap.map")
                  }
         self._updateFilenamesDict(myDict)
-
-    #--------------------------- INSERT steps functions --------------------------------------------
+        
+    #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         # Insert processing steps
         self._createFilenameTemplates()
-        convertId = self._insertFunctionStep('convertInputStep')
-        ResId = self._insertFunctionStep('resolutionStep', prerequisites=[convertId])
-        self._insertFunctionStep('createOutputStep', prerequisites=[ResId])
+        self._insertFunctionStep('convertInputStep')
+        self._insertFunctionStep('resolutionStep')
+        self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions --------------------------------------------   
+    #--------------------------- STEPS functions -------------------------------   
     def convertInputStep(self):
         # blocres works with .map
         vol1Fn = self.inputVolume.get().getFileName()
@@ -218,6 +220,18 @@ class BsoftProtBlocres(ProtAnalysis3D):
         volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
         self._defineOutputs(resolution_Volume=volume)
         self._defineSourceRelation(self.inputVolume, volume)
+        
+        imageFile = self._getFileName(FN_RESOLMAP)
+        min_, max_ = self.getMinMax(imageFile)
+        self.min_res_init.set(round(min_*100)/100)
+        self.max_res_init.set(round(max_*100)/100)
+    
+    def getMinMax(self, imageFile):
+        img = ImageHandler().read(imageFile)
+        imgData = img.getData()
+        min_res = round(np.amin(imgData) * 100) / 100
+        max_res = round(np.amax(imgData) * 100) / 100
+        return min_res, max_res
 
 #--------------------------- INFO functions -----------------------------------
     def _validate(self):
@@ -230,7 +244,9 @@ class BsoftProtBlocres(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
-        return summary
+        summary.append("Highest resolution %.2f Å,   "
+                       "Lowest resolution %.2f Å. \n" % (self.min_res_init,
+                                                         self.max_res_init))
     
     def _methods(self):
         methods = []
