@@ -583,8 +583,88 @@ class TestXmippExtractParticles(TestXmippBase):
                              "There was a problem generating the output.")
         self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
         self._checkSamplingConsistency(outputParts)
-    
-    # Sorting particles is not possible in streaming mode. Thus, all params
+
+
+class TestXmippEliminatingEmptyParticles(TestXmippBase):
+    """This class check if the protocol for eliminating
+     empty particles in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport1 = cls.runImportMicrographBPV(cls.micsFn)
+        cls.protDown1 = cls.runDownsamplingMicrographs(
+            cls.protImport1.outputMicrographs, 5)
+        cls.protCTF = \
+            cls.newProtocol(ProtImportCTF,
+                            importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
+                            filesPath=cls.dataset.getFile('ctfsDir'),
+                            filesPattern='*.ctfparam')
+        cls.protCTF.inputMicrographs.set(cls.protImport.outputMicrographs)
+        cls.proj.launchProtocol(cls.protCTF, wait=True)
+        cls.protPP = cls.runFakedPicking(cls.protDown.outputMicrographs,
+                                         cls.allCrdsDir)
+
+    def _updateProtocol(self, prot):
+        prot2 = getProtocolFromDb(prot.getProject().path,
+                                  prot.getDbPath(),
+                                  prot.getObjId())
+        # Close DB connections
+        prot2.getProject().closeMapper()
+        prot2.closeMappers()
+        return prot2
+
+    def testStreamingAndNonStreaming(self):
+        protExtract = self.newProtocol(XmippProtExtractParticles,
+                                       boxSize=110,
+                                       downsampleType=SAME_AS_PICKING,
+                                       doInvert=False,
+                                       doFlip=False)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        self.launchProtocol(protExtract)
+
+        protElimination1 = self.newProtocol(XmippProtEliminateEmptyParticles)
+        protElimination1.inputParticles.set(protExtract.outputParticles)
+        self.launchProtocol(protElimination1)
+
+        outSet = SetOfParticles(
+            filename=protElimination1._getPath('outputParticles.sqlite'))
+        elimSet = SetOfParticles(
+            filename=protElimination1._getPath('eliminatedParticles.sqlite'))
+
+        self.assertTrue(outSet.getSize() + elimSet.getSize() ==
+                        protExtract.outputParticles.getSize(),
+                        "Output sets size does not much the input set size.")
+
+        kwargs = {'nDim': 20,  # 20 objects/particles
+                  'creationInterval': 1,  # wait 1 sec. after creation
+                  'setof': 3,  # create SetOfParticles
+                  'inputParticles': protExtract.outputParticles
+                  }
+
+        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        self.proj.launchProtocol(protStream, wait=False)
+
+        while not protStream.hasAttribute('outputParticles'):
+            time.sleep(1)
+            protStream = self._updateProtocol(protStream)
+
+        protElimination2 = self.newProtocol(XmippProtEliminateEmptyParticles)
+        protElimination2.inputParticles.set(protStream.outputParticles)
+        self.launchProtocol(protElimination2)
+
+        partSet = SetOfParticles(
+            filename=protStream._getPath("particles.sqlite"))
+        outSet = SetOfParticles(
+            filename=protElimination2._getPath('outputParticles.sqlite'))
+        elimSet = SetOfParticles(
+            filename=protElimination2._getPath('eliminatedParticles.sqlite'))
+        self.assertTrue(outSet.getSize() + elimSet.getSize() ==
+                        partSet.getSize(),
+                        "Output sets size does not much the input set size.")
+
+
+            # Sorting particles is not possible in streaming mode. Thus, all params
     # related with was removed from extract particle protocol. There exists
     # another protocol (screen particles) to do it.
 
