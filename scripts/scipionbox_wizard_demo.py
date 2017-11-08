@@ -203,7 +203,6 @@ class BoxWizardView(tk.Frame):
 
         self._fields = getFields(self._template)
 
-        print ("Fields size: ", len(self._fields))
         row = 2
         for field in self._fields.values():
             self._addPair(field.getTitle(), row, labelFrame2,
@@ -214,7 +213,6 @@ class BoxWizardView(tk.Frame):
         return self.vars[varKey]
 
     def _getValue(self, varKey):
-        print ("getting {} from {}".format(varKey, self.vars))
         return self.vars[varKey].get()
 
     def _setValue(self, varKey, value):
@@ -256,7 +254,7 @@ class BoxWizardView(tk.Frame):
 
         # Download the required data
         # pwutils.runCommand(scipion +
-        #                    " testdata --download jmbFalconMovies")
+        #                     " testdata --download jmbFalconMovies")
 
         # Create the project
         createProjectScript = os.path.join(scriptsPath, 'create_project.py')
@@ -362,8 +360,12 @@ def validPath(value):
 
 
 def validDecimal(value):
-    float(value)
-    return True
+
+    try:
+        float(value)
+        return True
+    except Exception as e:
+        return False
 
 
 def validBoolean(value):
