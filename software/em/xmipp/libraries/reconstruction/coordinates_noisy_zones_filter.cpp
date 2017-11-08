@@ -28,28 +28,31 @@
 void ProgCoordinatesNoisyZonesFilter::defineParams()
 {
     // Parameters
-    addParamsLine(" -c <coordinates> : Input coordinates");
-    addParamsLine(" -m <micrograph> : Reference volume");
+    addParamsLine(" --pos <coordinates> : Input coordinates");
+    addParamsLine(" --mic <micrograph> : Reference volume");
     addParamsLine(" [--patchSize <n=10>] : Patch size for the variance/mean filter");
+    addParamsLine(" [--giniCoeff <g=0.3>] : Gini coefficient threshold to applay the filter");
     addParamsLine(" --oroot <fnRoot> : Rootname for the output coordinates");
 }
 
 void ProgCoordinatesNoisyZonesFilter::readParams()
 {
-	fnInCoord = getParam("-c");
-	fnInMic = getParam("-m");
+	fnInCoord = getParam("--pos");
+	fnInMic = getParam("--mic");
 	fnRoot = getParam("--oroot");
 	patchSize = getIntParam("--patchSize");
+    giniCoeffTh = getDoubleParam("--giniCoeff");
 }
 
 void ProgCoordinatesNoisyZonesFilter::show()
 {
     if (verbose)
 		std::cout
-		<< "Input Coordinates:  " << fnInCoord  << std::endl
-		<< "Input Micrograph:   " << fnInMic  << std::endl
-		<< "Output rootname:    " << fnRoot << std::endl
-		<< "Patch size:         " << patchSize << std::endl
+		<< "Input Coordinates:     " << fnInCoord  << std::endl
+		<< "Input Micrograph:      " << fnInMic  << std::endl
+		<< "Output rootname:       " << fnRoot << std::endl
+		<< "Patch size:            " << patchSize << std::endl
+        << "Gini coeff. threshold: " << giniCoeffTh << std::endl
 		;
 }
 
@@ -57,8 +60,6 @@ void ProgCoordinatesNoisyZonesFilter::show()
 void ProgCoordinatesNoisyZonesFilter::run()
 {
     show();
-
-    int patchSize_2 = patchSize/2;
 
     Micrograph mic;
     mic.open_micrograph(fnInMic);
@@ -74,14 +75,25 @@ void ProgCoordinatesNoisyZonesFilter::run()
     
     // Appling filters
     MultidimArray<double> binMask=matrixMic;
-    noisyZonesFilter(binMask, patchSize);
+    double giniV = grainFilter(binMask, patchSize, giniCoeffTh);
 
-    // if (verbose>1)
+    // if (giniV<giniCoeffTh)
     // {
-        Image<double> imComb(binMask);
-        imComb.write(fnRoot+"_mask.mrc");
+    //     std::cout << "   > > >   " << fnInMic << " : " 
+    //               << "   > > >   G I N I   Coef : " 
+    //               << giniV << "   > > >   OK!" << std::endl << std::endl;
+    // }else if (giniV<(1-giniCoeffTh)){
+    //     std::cout << "   > > >   " << fnInMic << " : " 
+    //               << "   > > >   G I N I   Coef : " 
+    //               << giniV << "   > > >   In the middle!!" << std::endl;
+    // }else{
+    //     std::cout << "   > > >   " << fnInMic << " : " 
+    //               << "   > > >   G I N I   Coef : " 
+    //               << giniV << "   > > >   To Process!!" << std::endl;
     // }
-
+    Image<double> imMask(binMask);
+    imMask.write(fnRoot+"_mask.mrc");
+    
 
     std::vector<Particle_coords> goodCoords;
     std::vector<Particle_coords> badCoords;
@@ -94,12 +106,18 @@ void ProgCoordinatesNoisyZonesFilter::run()
     	else
     		badCoords.push_back(coord);
     }
-    mic.coords = goodCoords;
-    mic.write_coordinates(0,0,(String)"particles@"+fnRoot+"_good.pos");
-    mic.coords = badCoords;
-    mic.write_coordinates(0,0,(String)"particles@"+fnRoot+"_bad.pos");
+    if (goodCoords.size()>0)
+    {
+        mic.coords = goodCoords;
+        mic.write_coordinates(0,0,(String)"particles@"+fnRoot+"_good.pos");
+    }
+    if (badCoords.size()>0)
+    {
+        mic.coords = badCoords;
+        mic.write_coordinates(0,0,(String)"particles@"+fnRoot+"_bad.pos");
+    }
 
     std::cout << "Discarted " << badCoords.size() << "/" << nPart << 
-                 " by the noisy zone filter." << std::endl;
+                 " particles by the noisy zone filter." << std::endl;
 }
 #undef DEBUG

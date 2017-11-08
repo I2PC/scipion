@@ -53,6 +53,9 @@ public:
     /** Patch is of size: size x size */
     int patchSize;
 
+    /** Gini coefficient threshold */
+    double giniCoeffTh;
+
 public:
     virtual void defineParams();
     virtual void readParams();

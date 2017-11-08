@@ -760,9 +760,56 @@ void fillBinaryObject(MultidimArray<double> &I, int neighbourhood)
 }
 
 /* Variance filter ----------------------------------------------------------*/
+void varianceFilter(MultidimArray<double> &I, int kernelSize)
+{
+    int kernelSize_2 = kernelSize/2;
+    MultidimArray<double> kernel;
+    kernel.resize(kernelSize,kernelSize);
+    kernel.setXmippOrigin();
+
+    MultidimArray<double> aux(XSIZE(I),YSIZE(I));
+    aux.setXmippOrigin();
+    double stdKernel, varKernel, avgKernel, min_val, max_val;
+    int x0, y0, xF, yF;
+    
+    for (int i=kernelSize_2; i<(int)YSIZE(I); i+=kernelSize_2)
+        for (int j=kernelSize_2; j<(int)XSIZE(I); j+=kernelSize_2)
+            {
+                x0 = j-kernelSize_2;
+                y0 = i-kernelSize_2;
+                xF = j+kernelSize_2-1;
+                yF = i+kernelSize_2-1;
+
+                if (x0 < 0)
+                    x0 = 0;
+                if (xF > XSIZE(I))
+                    xF = XSIZE(I);
+                if (y0 < 0)
+                    y0 = 0;
+                if (yF > YSIZE(I))
+                    yF = YSIZE(I);
+
+                I.window(kernel, y0, x0, yF, xF);
+                kernel.computeStats(avgKernel, stdKernel, min_val, max_val);
+                varKernel = stdKernel*stdKernel;
+
+                DIRECT_A2D_ELEM(aux, i, j) = varKernel;
+
+            }
+
+    I=aux;
+    // filtering to fill the matrices
+    FourierFilter filter;
+    filter.FilterShape = REALGAUSSIAN;
+    filter.FilterBand = LOWPASS;
+    filter.w1 = kernelSize_2;
+    filter.applyMaskSpace(I);
+}
+
+
+/* Grain filter -------------------------------------------------------------*/
 void noisyZonesFilter(MultidimArray<double> &I, int kernelSize)
 {
-    
     int kernelSize_2 = kernelSize/2;
     MultidimArray<double> kernel;
     kernel.resize(kernelSize,kernelSize);
@@ -804,7 +851,7 @@ void noisyZonesFilter(MultidimArray<double> &I, int kernelSize)
     FourierFilter filter;
     filter.FilterShape = REALGAUSSIAN;
     filter.FilterBand = LOWPASS;
-    filter.w1=(kernelSize_2);
+    filter.w1 = kernelSize_2;
     filter.applyMaskSpace(mAvg);
     filter.applyMaskSpace(mVar);
 
@@ -825,16 +872,16 @@ void noisyZonesFilter(MultidimArray<double> &I, int kernelSize)
 
 
     // Refiltering to get a smoother distribution
-    filter.w1=(XSIZE(I)/40);
-    filter.applyMaskSpace(mAvgAux);
-    filter.applyMaskSpace(mVarAux);
+    // filter.w1 = XSIZE(I)/40;
+    // filter.applyMaskSpace(mAvgAux);
+    // filter.applyMaskSpace(mVarAux);
 
     // Binarization
     MultidimArray<double> mAvgAuxBin = mAvgAux, mVarAuxBin = mVarAux;
-    EntropySegmentation(mAvgAuxBin);
-    // float th = EntropyOtsuSegmentation(mAvgAuxBin,0.05,false);
-    // mAvgAuxBin.binarize(th*0.92);
     EntropySegmentation(mVarAuxBin);
+    // EntropySegmentation(mAvgAuxBin);
+    float th = EntropyOtsuSegmentation(mAvgAuxBin,0.05,false);
+    mAvgAuxBin.binarize(th*0.92);
     mAvgAuxBin = 1-mAvgAuxBin;
     // std::cout << "binarize threshold = " << th << std::endl;
 
@@ -851,14 +898,177 @@ void noisyZonesFilter(MultidimArray<double> &I, int kernelSize)
     // imVarBin.write("noisyZoneFilter_VARmask.mrc");
 
     // Combining both masks
-    I = 1 - (mVarBin * mAvgBin);
-
-    erode2D(I, I, 4, 0, kernelSize*3);
-
-    // fillBinaryObject(I)
-
+    I = 1-(mVarBin*mAvgBin);
 }
 
+
+double grainFilter(MultidimArray<double> &I, int kernelSize, double giniThreshold)
+{
+    int kernelSize_2 = kernelSize/2;
+    MultidimArray<double> kernel, Iin = I;
+    kernel.resize(kernelSize,kernelSize);
+    kernel.setXmippOrigin();
+
+    // First filtering to avoid small structures
+    FourierFilter filter;
+    filter.FilterShape = REALGAUSSIAN;
+    filter.FilterBand = LOWPASS;
+    filter.w1 = 4;
+    filter.applyMaskSpace(I);
+
+    // Variance filter
+    MultidimArray<double> mVar=I; //, mAvg=I;
+    double stdKernel, varKernel, avgKernel, min_val, max_val;
+    int x0, y0, xF, yF;
+    for (int i=kernelSize_2; i<(int)YSIZE(I); i+=kernelSize_2)
+        for (int j=kernelSize_2; j<(int)XSIZE(I); j+=kernelSize_2)
+            {
+                x0 = j-kernelSize_2;
+                y0 = i-kernelSize_2;
+                xF = j+kernelSize_2-1;
+                yF = i+kernelSize_2-1;
+
+                if (x0 < 0)
+                    x0 = 0;
+                if (xF > XSIZE(I))
+                    xF = XSIZE(I);
+                if (y0 < 0)
+                    y0 = 0;
+                if (yF > YSIZE(I))
+                    yF = YSIZE(I);
+
+                I.window(kernel, y0, x0, yF, xF);
+                kernel.computeStats(avgKernel, stdKernel, min_val, max_val);
+                varKernel = stdKernel*stdKernel;
+
+                // DIRECT_A2D_ELEM(mAvg, i, j) = avgKernel*avgKernel;
+                DIRECT_A2D_ELEM(mVar, i, j) = varKernel;
+            }
+            
+    // filtering to fill the matrix
+    filter.w1 = kernelSize_2;
+    filter.applyMaskSpace(mVar);
+
+
+    //  --- GINI COEFF: ---
+    // normalized histogram
+    MultidimArray<double> mGini = I;
+    mGini -= mGini.computeMin();
+    mGini /= mGini.computeMax();
+    Histogram1D hist;
+    hist.clear();
+    compute_hist(mGini, hist, 256);
+
+    // Core of the Gini Coefficient
+    double height=0, area=0, giniV;
+    MultidimArray<double> sortedList=hist;
+    hist.sort(sortedList); // ----------------------------------------------------------
+    for (int i=0; i<XSIZE(sortedList); i++)
+    {
+        height += DIRECT_MULTIDIM_ELEM(sortedList,i);
+        area += height - DIRECT_MULTIDIM_ELEM(sortedList,i)/2.0;
+    }
+    double fair_area = height*XSIZE(hist)/2.0;
+    giniV = std::pow((fair_area-area)/fair_area,2); //std::abs
+
+
+    // binarization of variance filter if Gini coeff is larger than the threshold
+    if (giniV<giniThreshold)
+    {   
+        std::cout << "   > > >      > > >   G I N I   Coef : " 
+                  << giniV << "   > > >   OK!" << std::endl << std::endl;
+            I = I*0+1;
+    }
+    else if(giniV<(1-giniThreshold))
+    {
+        std::cout << "   > > >      > > >   G I N I   Coef : " 
+                  << giniV << "   > > >   In the middle!!" << std::endl;
+        noisyZonesFilter(Iin,10);
+        I = Iin;
+        erode2D(I, I, 4, 0, kernelSize_2);
+    }
+    else
+    {
+        std::cout << "   > > >      > > >   G I N I   Coef : " 
+                  << giniV << "   > > >   To Process!!" << std::endl;
+        // Working in a auxilary windows to avoid borders bad defined
+        MultidimArray<double> mVarAux(YSIZE(I)-kernelSize,XSIZE(I)-kernelSize);
+        mVarAux.setXmippOrigin();
+        mVar.window(mVarAux,STARTINGY(mVar)+kernelSize_2, STARTINGX(mVar)+kernelSize_2,
+                           FINISHINGY(mVar)-kernelSize_2, FINISHINGX(mVar)-kernelSize_2);
+
+        // Refiltering to get a smoother distribution
+        filter.w1 = XSIZE(I)/40;
+        filter.applyMaskSpace(mVarAux);
+
+        // Binarization
+        MultidimArray<double> mVarAuxBin = mVarAux;
+        EntropySegmentation(mVarAuxBin);
+
+        // Returning to the previous windows size
+        MultidimArray<double> mVarBin = mVar;
+        mVarAuxBin.window(mVarBin, STARTINGY(mVar), STARTINGX(mVar),
+                                  FINISHINGY(mVar), FINISHINGX(mVar));
+
+        // Combining both masks
+        I = (1-mVarBin);
+
+        // dilate2D(I, I, 8, 0, kernelSize_2);
+        erode2D(I, I, 4, 0, kernelSize/4);
+    }
+    double Iavg, Istd;
+    I.computeAvgStdev(Iavg,Istd);
+    if (Iavg<0.6)
+    {
+        I = I*0+1;
+        std::cout << " Discarting coord mask !! ("<<Iavg*100<<"\% zeros)"<< std::endl;
+    }
+    return giniV;
+}
+
+
+/* Gini Coefficient -------------------------------------------------------- */
+double giniCoeff(MultidimArray<double> &I, int varKernelSize)
+{
+    MultidimArray<double> im = I;
+    
+    FourierFilter filter;
+    filter.FilterShape = REALGAUSSIAN;
+    filter.FilterBand = LOWPASS;
+    filter.w1 = 4;
+    filter.applyMaskSpace(im);
+   
+    // Image<double> imG(im);
+    // imG.write("I_Gauss.mrc");
+
+    varianceFilter(im, varKernelSize);
+
+    // Image<double> imGV(im);
+    // imGV.write("I_Gauss_Var.mrc");
+   
+    im -= im.computeMin();
+    im /= im.computeMax();
+
+    // Image<double> imGVN(im);
+    // imGVN.write("I_Gauss_Var_Norm.mrc");
+   
+    Histogram1D hist;
+    hist.clear();
+    compute_hist(im, hist, 256);
+
+    MultidimArray<double> sortedList=hist;
+    hist.sort(sortedList);
+    double height=0, area=0;
+    for (int i=0; i<XSIZE(sortedList); i++)
+    {
+        height += DIRECT_MULTIDIM_ELEM(sortedList,i);
+        area += height - DIRECT_MULTIDIM_ELEM(sortedList,i)/2.0;
+    }
+        
+    double fair_area = height*XSIZE(hist)/2.0;
+
+    return (fair_area-area)/fair_area;
+}
 
 /* Otsu Segmentation ------------------------------------------------------- */
 void OtsuSegmentation(MultidimArray<double> &V)
