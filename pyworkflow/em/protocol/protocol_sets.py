@@ -503,9 +503,8 @@ class ProtSubSetByMic(ProtSets):
         outputSet.copyInfo(inputParticles)
 
         micIds = []
-        #micNames = []
+
         for mic in inputMicrographs:
-            #micNames.append(pwutils.removeBaseExt(mic.getMicName()))
             micIds.append(mic.getObjId())
 
         for particle in inputParticles:
@@ -514,4 +513,24 @@ class ProtSubSetByMic(ProtSets):
             
         self._defineOutputs(outputParticles=outputSet)
         self._defineTransformRelation(inputParticles, outputSet)
-        self._defineTransformRelation(inputMicrographs, outputSet)
+
+    #--------------------------- INFO functions --------------------------------
+    def _validate(self):
+        """Make sure the input data make sense."""
+
+        randomParticle = random.choice(list(self.inputParticles.get()))
+
+        # Make sure that the particles hasMicId, thus they come from some Mic
+        if randomParticle.hasMicId():
+            return []
+        else:
+            return ['The _Input Particles_ must come from some Micrographs '
+                    'of the workflow.\n(particles must have micID)']
+
+    def _summary(self):
+        if not hasattr(self, 'outputParticles'):
+            return ["Protocol has not finished yet."]
+        else:
+            return ['A subset of *%d* particles is made from a total of *%d* '
+                    'particles.' % (self.outputParticles.getSize(), 
+                                    self.inputParticles.get().getSize())]
