@@ -484,10 +484,10 @@ class ProtSubSetByMic(ProtSets):
 
         add = form.addParam  # short notation
         add('inputParticles', pwprot.params.PointerParam,
-            pointerClass='SetOfParticles', label="Set of particles", 
+            pointerClass='SetOfParticles', label="Input particles", 
             help='Set of particles from which the subset will be taken')
         add('inputMicrographs', pwprot.params.PointerParam, 
-            pointerClass='SetOfMicrographs', label="Set of micrographs",
+            pointerClass='SetOfMicrographs', label="Input micrographs",
             help='Only the particles in this set of micrographs will be output')
 
     #--------------------------- INSERT steps functions ------------------------  
