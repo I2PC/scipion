@@ -24,6 +24,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
 """
 Creates a scipion workflow file (json formatted) base on a template.
 The template may have some ~placeholders~ that will be overwritten with values
@@ -116,7 +118,7 @@ class BoxWizardView(tk.Frame):
 
         # Add the create project button
         btnFrame = tk.Frame(self, bg='white')
-        btn = HotButton(btnFrame, text="Create template",
+        btn = HotButton(btnFrame, text="Start demo",
                         font=self.bigFontBold,
                         command=self._onAction)
         btn.grid(row=0, column=1, sticky='ne', padx=10, pady=10)
@@ -139,7 +141,7 @@ class BoxWizardView(tk.Frame):
                                    font=self.bigFontBold)
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
-        defaultProjectName = datetime.datetime.now().strftime("%Y%m%d_%I:%M:%S")
+        defaultProjectName = "demo_" + datetime.datetime.now().strftime("%I%M%S")
         self._addPair(PROJECT_NAME, 1, labelFrame, value=defaultProjectName)
         self._addPair(MESSAGE, 4, labelFrame, widget='label')
 
@@ -147,7 +149,7 @@ class BoxWizardView(tk.Frame):
         labelFrame.columnconfigure(0, minsize=120)
         labelFrame.columnconfigure(1, weight=1)
 
-        labelFrame2 = tk.LabelFrame(frame, text=' Values ', bg='white',
+        labelFrame2 = tk.LabelFrame(frame, text=' Acquisition values ', bg='white',
                                     font=self.bigFontBold)
 
         labelFrame2.grid(row=1, column=0, sticky='nw', padx=20, pady=10)
@@ -201,6 +203,7 @@ class BoxWizardView(tk.Frame):
 
         self._fields = getFields(self._template)
 
+        print ("Fields size: ", len(self._fields))
         row = 2
         for field in self._fields.values():
             self._addPair(field.getTitle(), row, labelFrame2,
@@ -211,7 +214,7 @@ class BoxWizardView(tk.Frame):
         return self.vars[varKey]
 
     def _getValue(self, varKey):
-        print "getting {} from {}".format(varKey, self.vars)
+        print ("getting {} from {}".format(varKey, self.vars))
         return self.vars[varKey].get()
 
     def _setValue(self, varKey, value):
@@ -227,8 +230,8 @@ class BoxWizardView(tk.Frame):
             field.setValue(newValue)
             if not field.validate():
                 errors.append("%s value does not validate. Value: %s, Type: %s"
-                              % (field.getTitle(), field.getValue(), field.getType()))
-
+                              % (field.getTitle(), field.getValue(),
+                                 field.getType()))
 
         # Do more checks only if there are not previous errors
         if errors:
@@ -251,6 +254,10 @@ class BoxWizardView(tk.Frame):
         scipion = os.path.join(os.environ.get('SCIPION_HOME'), 'scipion')
         scriptsPath = os.path.join(os.environ.get('SCIPION_HOME'), 'scripts')
 
+        # Download the required data
+        # pwutils.runCommand(scipion +
+        #                    " testdata --download jmbFalconMovies")
+
         # Create the project
         createProjectScript = os.path.join(scriptsPath, 'create_project.py')
         pwutils.runCommand(scipion + " python " + createProjectScript + " " +
@@ -264,15 +271,11 @@ class BoxWizardView(tk.Frame):
         # Launch scipion
         pwutils.runCommand(scipion + " project " + projectName)
 
-
-
-
-
     def _createTemplate(self):
 
         try:
-            # Compose the destination using the session id
-            (fileHandle, path) = tempfile.mkstemp()  # Where to write the json file.
+            # Where to write the json file.
+            (fileHandle, path) = tempfile.mkstemp()
 
             replaceFields(self._fields.values(), self._template)
 
@@ -281,8 +284,7 @@ class BoxWizardView(tk.Frame):
             os.write(fileHandle, finalJson)
             os.close(fileHandle)
 
-            print "New workflow saved at " + path
-
+            print("New workflow saved at " + path)
 
         except Exception as e:
             self.windows.showError(
@@ -329,20 +331,21 @@ FIELD_TYPE_DECIMAL = "4"
 
 
 """ VALIDATION METHODS"""
-def validate(value, type):
-    if type == FIELD_TYPE_BOOLEAN:
+def validate(value, fieldType):
+    if fieldType == FIELD_TYPE_BOOLEAN:
         return validBoolean(value)
-    elif type == FIELD_TYPE_DECIMAL:
+    elif fieldType == FIELD_TYPE_DECIMAL:
         return validDecimal(value)
-    elif type == FIELD_TYPE_INTEGER:
+    elif fieldType == FIELD_TYPE_INTEGER:
         return validInteger(value)
-    elif type == FIELD_TYPE_PATH:
+    elif fieldType == FIELD_TYPE_PATH:
         return validPath(value)
-    elif type == FIELD_TYPE_STR:
+    elif fieldType == FIELD_TYPE_STR:
         return validString(value)
 
     else:
-        print "Type %s for %snot recognized. Review the template." % (type, value)
+        print("Type %s for %snot recognized. Review the template." \
+              % (type, value))
         return
 
 
@@ -369,20 +372,20 @@ def validBoolean(value):
 
 def getFields(template):
 
-    def fieldStr2Field(index, fieldString):
+    def fieldStr2Field(fieldIndex, fieldString):
         fieldLst = fieldString.split('|')
 
         title = fieldLst[0]
         defaultValue = fieldLst[1] if len(fieldLst) >= 2 else None
         varType = fieldLst[2] if len(fieldLst) >= 3 else None
 
-        return FormField(index, title, defaultValue, varType)
+        return FormField(fieldIndex, title, defaultValue, varType)
 
     fields = {}
     # For each field found in the template
     for index in xrange(1, len(template), 2):
         field = fieldStr2Field(index, template[index])
-        fields[field.getValue()] =field
+        fields[field.getTitle()] = field
 
     return fields
 
@@ -417,10 +420,10 @@ def getTemplate():
         "copyFiles": false,
         "haveDataBeenPhaseFlipped": false,
         "acquisitionWizard": null,
-        "voltage": 200.0,
-        "sphericalAberration": 2.7,
-        "amplitudeContrast": 0.1,
-        "magnification": ~Magnification|50000|3~,
+        "voltage": ~Voltage|200|4~,
+        "sphericalAberration": ~Spherical aberration|7.08|4~,
+        "amplitudeContrast": ~Amplitude contrast|0.1|4~,
+        "magnification": 50000,
         "samplingRateMode": 0,
         "samplingRate": ~Sampling rate|7.08|4~,
         "scannedPixelSize": 7.0,
