@@ -30,7 +30,9 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, 
-                                                   readSetOfParticles)
+                                                   readSetOfParticles,
+                                                   geometryFromMatrix,
+                                                   matrixFromGeometry)
 from pyworkflow.utils import getExt
 import numpy as np
 
@@ -196,7 +198,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                 
                 fnInputToRefGlobal = self._getExtraPath('aligned_inputVol_to_refVol_Gobal.vol')
                 fnInputToRefLocal = self._getExtraPath('aligned_inputVol_to_refVol_Local.vol')                
-                fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
+                fnInPartsNewAng = self._getExtraPath("inputparts_anglesModified.xmd")
                 self._insertFunctionStep('volumeAlignmentStep', 
                                          inputVol, referenceVol, fnInputToRefGlobal, 
                                          fnInputToRefLocal, fnInPartsNewAng)                
@@ -218,45 +220,59 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     def volumeAlignmentStep (self, inputVol, referenceVol, fnInputToRefGlobal, 
                                    fnInputToRefLocal, fnInPartsNewAng):
         '''The input vol is modified towards the reference vol first by a global alignment and then by a local one'''
-        '''The particles orientations are changed accordingly'''
+        '''The particles orientations are changed accordingly'''               
         
         fnTransformMatGlobal = self._getExtraPath('transformation-matrix-Global.txt')
-        alignArgsGlobal = "--i1 %s --i2 %s --apply %s --dontScale" % (referenceVol, 
-                                                      inputVol, 
-                                                      fnInputToRefGlobal)
-        alignArgsGlobal += " --frm --copyGeo %s" % fnTransformMatGlobal
-        self.runJob('xmipp_volume_align', alignArgsGlobal, numberOfMpi=1,numberOfThreads=1)        
-        
         fnTransformMatLocal = self._getExtraPath('transformation-matrix-Local.txt')
-        alignArgsLocal = "--i1 %s --i2 %s --apply %s --show_fit" % (referenceVol, 
-                                                         fnInputToRefGlobal, 
-                                                         fnInputToRefLocal)
-        alignArgsLocal += " --local --rot 0 0 1 --tilt 0 0 1"
-        alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
-        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s --dontScale" % fnTransformMatLocal        
-        self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi = 1)
-                 
-        #apply transformation matrix to input patricles
-        transMatFromFileFF = np.loadtxt(fnTransformMatGlobal)
-        transformationArrayFF = np.reshape(transMatFromFileFF,(4,4))
-        transformMatrixFF = np.matrix(transformationArrayFF)
-        
-        transMatFromFileLocal = np.loadtxt(fnTransformMatLocal)
-        transformationArrayLocal = np.reshape(transMatFromFileLocal,(4,4))
-        transformMatrixLocal = np.matrix(transformationArrayLocal)
 
-#ESTO NO ME LO CREO        
-        transformMatrix = transformMatrixFF * transformMatrixLocal
-        
+        alignArgsGlobal = "--i1 %s --i2 %s --apply %s --dontScale  --frm --show_fit --copyGeo %s" % (referenceVol,
+                                                                                                     inputVol,                                                              
+                                                                                                     fnInputToRefGlobal,                                                                         
+                                                                                                     fnTransformMatGlobal)
+ 
+        alignArgsLocal = "--i1 %s --i2 %s --apply %s --show_fit  --local --dontScale --copyGeo %s " % (referenceVol, 
+                                                                                                       fnInputToRefGlobal, 
+                                                                                                       fnInputToRefLocal,
+                                                                                                       fnTransformMatLocal)
+
         inputParts = self.inputParticles.get()
         outputSet = self._createSetOfParticles()
-        for part in inputParts.iterItems():        
-            partTransformMat = part.getTransform().getMatrix()            
-            partTransformMatrix = np.matrix(partTransformMat)            
-            newTransformMatrix = transformMatrix * partTransformMatrix
-                         
-            part.getTransform().setMatrix(newTransformMatrix)
-            outputSet.append(part)       
+                                
+        # Obtain information about the Global transformation                                
+        self.runJob('xmipp_volume_align', alignArgsGlobal, numberOfMpi=1, numberOfThreads=1)
+        transMatFromFileFF = np.loadtxt(fnTransformMatGlobal)
+        transformationArrayFF = np.reshape(transMatFromFileFF, (4, 4))
+        transformMatrixFF = np.matrix(transformationArrayFF)
+        shifts, angles = geometryFromMatrix(transformMatrixFF, False) 
+        print("Global transformation to be applied: ")
+        print(transformMatrixFF)
+        print("Shifts and angles to be applied: ")
+        print(shifts, angles)
+        matG = matrixFromGeometry(shifts, angles,False)
+        print matG
+        print("\n ")        
+        #alignArgsLocal += "--rot %s --tilt %s --psi %s -x %s -y %s -z %s" % (angles[0], angles[1], angles[2],
+        #                                                                     shifts[0],shifts[1],shifts[2])
+                                                        
+        # Obtain information about the Local transformation       
+        self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi=1)
+        transMatFromFileLocal = np.loadtxt(fnTransformMatLocal)
+        transformationArrayLocal = np.reshape(transMatFromFileLocal, (4, 4))
+        transformMatrixLocal = np.matrix(transformationArrayLocal)
+        shifts, angles = geometryFromMatrix(transformMatrixLocal, False)
+        print("Local transformation to be applied: ")
+        print(transformMatrixLocal)
+        print("Shifts and angles to be applied: ")
+        print(shifts, angles)
+        matL = matrixFromGeometry(shifts, angles,False)
+        print matL 
+        print("\n ")
+            
+        for part in inputParts.iterItems():  
+            part.getTransform().composeTransform(transformMatrixFF)
+            part.getTransform().composeTransform(transformMatrixLocal)
+            outputSet.append(part)   
+                                                   
         outputSet.copyInfo(inputParts)                
         writeSetOfParticles(outputSet, fnInPartsNewAng)             
         
