@@ -519,18 +519,16 @@ class ProtSubSetByMic(ProtSets):
         """Make sure the input data make sense."""
 
         randomParticle = random.choice(list(self.inputParticles.get()))
-
         # Make sure that the particles hasMicId, thus they come from some Mic
-        if randomParticle.hasMicId():
-            return []
-        else:
+        if not randomParticle.hasMicId():
             return ['The _Input Particles_ must come from some Micrographs '
                     'of the workflow.\n(particles must have micID)']
 
     def _summary(self):
         if not hasattr(self, 'outputParticles'):
-            return ["Protocol has not finished yet."]
+            summary = ["Protocol has not finished yet."]
         else:
-            return ['A subset of *%d* particles is made from a total of *%d* '
-                    'particles.' % (self.outputParticles.getSize(), 
+            summary = ['A subset of *%d* particles is made from a total of *%d*'
+                       ' particles.' % (self.outputParticles.getSize(), 
                                     self.inputParticles.get().getSize())]
+        return summary
