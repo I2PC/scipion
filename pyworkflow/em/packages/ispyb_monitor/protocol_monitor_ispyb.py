@@ -455,11 +455,10 @@ class ISPyBdb:
         self._create_group()
 
     def _create_group(self):
-        self.visit_id = self.core.retrieve_visit_id(self.cursor, self.experimentParams['visit'])
+        self.visit_id = self.core.retrieve_visit_id(self.experimentParams['visit'])
         params = self.mxacquisition.get_data_collection_group_params()
         params['parentid'] = self.visit_id
-        self.group_id = self.mxacquisition.insert_data_collection_group(self.cursor,
-                                                                        self.convert_float_types(params).values())
+        self.group_id = self.mxacquisition.insert_data_collection_group(self.convert_float_types(params).values())
 
     def get_data_collection_params(self):
         params = self.mxacquisition.get_data_collection_params()
@@ -468,19 +467,19 @@ class ISPyBdb:
         return params
 
     def update_data_collection(self, params):
-        return self.mxacquisition.insert_data_collection(self.cursor, self.convert_float_types(params).values())
+        return self.mxacquisition.insert_data_collection(self.convert_float_types(params).values())
 
     def get_image_params(self):
         return self.mxacquisition.get_image_params()
 
     def update_image(self, params):
-        return self.mxacquisition.update_image(self.cursor, self.convert_float_types(params).values())
+        return self.mxacquisition.update_image(self.convert_float_types(params).values())
 
     def get_motion_correction_params(self):
         return self.emacquisition.get_motion_correction_params()
 
     def update_motion_correction(self, params):
-        return self.emacquisition.insert_motion_correction(self.cursor, self.convert_float_types(params).values())
+        return self.emacquisition.insert_motion_correction(self.convert_float_types(params).values())
 
     def get_motion_correction_drift_params(self):
         return self.get_motion_correction_drift_params()
@@ -492,13 +491,13 @@ class ISPyBdb:
         return self.emacquisition.get_ctf_params()
 
     def update_ctf(self, params):
-        return self.emacquisition.insert_ctf(self.cursor, self.convert_float_types(params).values())
+        return self.emacquisition.insert_ctf(self.convert_float_types(params).values())
 
     def get_program_params(self):
         return self.mxdatareduction.get_program_params()
 
     def update_program(self, params):
-        return self.mxdatareduction.insert_program(self.cursor, self.convert_float_types(params).values())
+        return self.mxdatareduction.insert_program(self.convert_float_types(params).values())
 
     def convert_float_types(self, params):
         for k in params:
