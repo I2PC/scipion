@@ -161,7 +161,6 @@ class MonitorISPyB(Monitor):
                 program = self.ispybDb.get_program_params()
                 self.safe_update(program, self.motion_corrections[itemId])
                 program['starttime'] = self.now()
-                program['endtime'] = self.now()
                 program_id = self.ispybDb.update_program(program)
                 self.motion_corrections[itemId]['autoProcProgramId'] = program_id
 
