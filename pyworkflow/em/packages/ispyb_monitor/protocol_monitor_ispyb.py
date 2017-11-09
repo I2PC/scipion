@@ -26,8 +26,8 @@
 # *
 # **************************************************************************
 
+from os import environ
 from os.path import realpath, join, dirname, exists, basename, abspath
-import os
 from collections import OrderedDict
 import math
 from datetime import datetime
@@ -444,17 +444,14 @@ class ISPyBdb:
     def __init__(self, db, experimentParams):
         self.experimentParams = experimentParams
 
-        from ispyb.dbconnection import dbconnection
-        from ispyb.core import core
-        from ispyb.mxacquisition import mxacquisition
-        from ispyb.emacquisition import emacquisition
-        from ispyb.mxdatareduction import mxdatareduction
+        from ispyb import factory
 
-        self.dbconnection = dbconnection
-        self.core = core
-        self.mxacquisition = mxacquisition
-        self.emacquisition = emacquisition
-        self.mxdatareduction = mxdatareduction
+        config = environ['ISPYB_CONFIG']
+        self.dbconnection = factory.create_connection(config)
+        self.core = factory.create_data_area(factory.DataAreaType.CORE, self.dbconnection)
+        self.mxacquisition = factory.create_data_area(factory.DataAreaType.MXACQUISITION, self.dbconnection)
+        self.emacquisition = factory.create_data_area(factory.DataAreaType.EMACQUISITION, self.dbconnection)
+        self.mxdatareduction = factory.create_data_area(factory.DataAreaType.MXPROCESSING, self.dbconnection)
 
         self._loadCursor(db)
         self._create_group()
