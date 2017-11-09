@@ -495,7 +495,7 @@ class ISPyBdb:
         return self.mxdatareduction.get_program_params()
 
     def update_program(self, params):
-        return self.mxdatareduction.insert_program(self.convert_float_types(params).values())
+        return self.mxdatareduction.upsert_program(self.convert_float_types(params).values())
 
     def convert_float_types(self, params):
         for k in params:
