@@ -103,8 +103,7 @@ class MonitorISPyB(Monitor):
         self.dbconf = kwargs['dbconf']
         self.project = kwargs['project']
         self.inputProtocols = self._sortInputProtocols(kwargs['inputProtocols'])
-        self.ispybDb = ISPyBdb(["prod", "dev", "test"][self.dbconf],
-                               experimentParams={'visit': self.visit})
+        self.ispybDb = ISPyBdb(experimentParams={'visit': self.visit})
     @staticmethod
     def _sortInputProtocols(protList):
         # we need sorted input protocols in order to process objects correctly
@@ -441,7 +440,7 @@ def createAlignmentPlot(meanX, meanY):
 
 class ISPyBdb:
     """ This is a Facade to provide access to the ispyb_api to store movies."""
-    def __init__(self, db, experimentParams):
+    def __init__(self, experimentParams):
         self.experimentParams = experimentParams
 
         from ispyb import factory
@@ -453,14 +452,7 @@ class ISPyBdb:
         self.emacquisition = factory.create_data_area(factory.DataAreaType.EMACQUISITION, self.dbconnection)
         self.mxdatareduction = factory.create_data_area(factory.DataAreaType.MXPROCESSING, self.dbconnection)
 
-        self._loadCursor(db)
         self._create_group()
-
-    def _loadCursor(self, db):
-        # db should be one of: 'prod', 'dev' or 'test'
-        # let's try to connect to db and get a cursor
-        if self.dbconnection:
-            self.cursor = self.dbconnection.connect(db)
 
     def _create_group(self):
         self.visit_id = self.core.retrieve_visit_id(self.cursor, self.experimentParams['visit'])
