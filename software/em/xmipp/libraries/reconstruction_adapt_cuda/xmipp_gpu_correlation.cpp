@@ -87,7 +87,7 @@ void primeFactors(int n, int *out)
 
 void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask &mask, GpuCorrelationAux &d_correlationAux,
 		mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar, mycufftHandle &myhandleAux,
-		StructuresAux &myStructureAux, MDIterator *iter)
+		StructuresAux &myStructureAux, MDIterator *iter, myStreamHandle myStream)
 {
 	size_t Xdim, Ydim, Zdim, Ndim;
 	getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
@@ -121,7 +121,7 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 	//delete iter;
 
 	GpuMultidimArrayAtGpu<float> image_stack_gpu(Xdim,Ydim,1,numImages);
-	original_image_stack.copyToGpu(image_stack_gpu);
+	original_image_stack.copyToGpu(image_stack_gpu, myStream);
 
 	MultidimArray<int> maskArray = mask.get_binary_mask();
 	MultidimArray<float> dMask;
@@ -130,10 +130,10 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 	float *mask_aux;
 	cpuMalloc((void**)&mask_aux, sizeof(float)*Xdim*Ydim*Zdim);
 	memcpy(mask_aux, MULTIDIM_ARRAY(dMask), sizeof(float)*Xdim*Ydim*Zdim);
-	d_correlationAux.d_mask.copyToGpu(mask_aux);
+	d_correlationAux.d_mask.copyToGpu(mask_aux, myStream);
 
 	padding_masking(image_stack_gpu, d_correlationAux.d_mask, myStructureAux.padded_image_gpu, myStructureAux.padded_image2_gpu,
-			myStructureAux.padded_mask_gpu, false);
+			myStructureAux.padded_mask_gpu, false, myStream);
 
 	//printf("Preprocess reference images \n");
 	//printf("myStructureAux.padded_image_gpu.Xdim %i \n", myStructureAux.padded_image_gpu.Xdim);
@@ -143,17 +143,17 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 	//struct timeval begin, end;
 	//gettimeofday(&begin, NULL);
 
-    myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
+    myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded, myStream);
 
     //gettimeofday(&end, NULL);
     //double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
     //printf("Padded FFT time ref %lf \n", elapsed);
 
-    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded);
-    myStructureAux.padded_mask_gpu.fft(d_correlationAux.d_maskFFT, myhandleMask);
+    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream);
+    myStructureAux.padded_mask_gpu.fft(d_correlationAux.d_maskFFT, myhandleMask, myStream);
 
 	//Polar transform of the projected images
-	cuda_cart2polar(image_stack_gpu, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, false);
+	cuda_cart2polar(image_stack_gpu, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, false, myStream);
 
 	//printf("myStructureAux.polar_gpu.Xdim %i \n", myStructureAux.polar_gpu.Xdim);
 	//printf("myStructureAux.polar_gpu.Ydim %i \n", myStructureAux.polar_gpu.Ydim);
@@ -161,13 +161,13 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 
 	//gettimeofday(&begin, NULL);
 
-    myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar);
+    myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream);
 
     //gettimeofday(&end, NULL);
 	//elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
 	//printf("Polar FFT time %lf \n", elapsed);
 
-    myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar);
+    myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream);
 
     /*/AJ to write the image
     FileName myFile;
@@ -192,7 +192,7 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 void preprocess_images_experimental(MetaData &SF, FileName &fnImg, int numImagesRef, GpuMultidimArrayAtGpu<float> &mask,
 		GpuMultidimArrayAtGpu< std::complex<float> > &d_maskFFT, GpuCorrelationAux &d_correlationAux, bool rotation,
 		int firstStep, bool mirror, mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar,
-		StructuresAux &myStructureAux)
+		StructuresAux &myStructureAux, myStreamHandle myStream)
 {
 	size_t Xdim, Ydim, Zdim, Ndim;
 	getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
@@ -216,13 +216,14 @@ void preprocess_images_experimental(MetaData &SF, FileName &fnImg, int numImages
 
 		for(size_t i=0; i<numImagesRef; i++)
 			original_image_stack.fillImage(i,Iref()/8);
-		original_image_stack.copyToGpu(d_correlationAux.d_original_image);
 
 	}
 
+		original_image_stack.copyToGpu(d_correlationAux.d_original_image, myStream);
+
 	if(!rotation){
 		padding_masking(d_correlationAux.d_original_image, mask, myStructureAux.padded_image_gpu, myStructureAux.padded_image2_gpu,
-				myStructureAux.padded_mask_gpu, true);
+				myStructureAux.padded_mask_gpu, true, myStream);
 
 		//printf("Preprocess experimental images \n");
 		//printf("myStructureAux.padded_image_gpu.Xdim %i \n", myStructureAux.padded_image_gpu.Xdim);
@@ -232,28 +233,270 @@ void preprocess_images_experimental(MetaData &SF, FileName &fnImg, int numImages
 		//struct timeval begin, end;
 		//gettimeofday(&begin, NULL);
 
-		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
+		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded, myStream);
 
 		//gettimeofday(&end, NULL);
 		//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
 		//printf("Padded FFT time %lf \n", elapsed);
 
-	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded);
-		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT);
+	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream);
+		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT, myStream);
+
+	    /*/AJ to write the image
+	    FileName myFile;
+	    Image<float> Iout;
+	    MultidimArray<float> out;
+	    GpuMultidimArrayAtCpu<float> image(myStructureAux.padded_image_gpu.Xdim,myStructureAux.padded_image_gpu.Ydim,1,myStructureAux.padded_image_gpu.Ndim);
+	    image.copyFromGpu(myStructureAux.padded_image_gpu, myStream);
+	    out.coreAllocate(1, 1, myStructureAux.padded_image_gpu.Ydim, myStructureAux.padded_image_gpu.Xdim);
+		memcpy(MULTIDIM_ARRAY(out), image.data, myStructureAux.padded_image_gpu.Xdim*myStructureAux.padded_image_gpu.Ydim*sizeof(float));
+		Iout() = out;
+		int idx=1;
+		myFile.compose("PaddedFirstOrig", 1, "jpg");
+		Iout.write(myFile);
+		out.coreDeallocate();
+		//END AJ/*/
+
+
 	}
 
 	if(rotation){
-		cuda_cart2polar(d_correlationAux.d_original_image, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, true);
-	    myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar);
-	    myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar);
+		cuda_cart2polar(d_correlationAux.d_original_image, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, true, myStream);
+	    myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream);
+	    myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream);
+
+	    //AJ to write the image
+	    //GpuMultidimArrayAtCpu< float > image(d_correlationAux.d_projPolarFFT.Xdim,d_correlationAux.d_projPolarFFT.Ydim,1,d_correlationAux.d_projPolarFFT.Ndim);
+	    //calculateAbs(d_correlationAux.d_projPolarFFT.d_data, image.data, image.nzyxdim, myStream);
+
+	    /*FileName myFile;
+	    Image< float > Iout;
+	    MultidimArray< float > out;
+	    //GpuMultidimArrayAtCpu< float > image(d_correlationAuxRT.d_projPolarFFT.Xdim,d_correlationAuxRT.d_projPolarFFT.Ydim,1,d_correlationAuxRT.d_projPolarFFT.Ndim);
+	    //image.copyFromGpu(d_correlationAuxRT.d_projPolarFFT, myStreamRT);
+	    out.coreAllocate(1, 1, d_correlationAux.d_projPolarFFT.Ydim, d_correlationAux.d_projPolarFFT.Xdim);
+		memcpy(MULTIDIM_ARRAY(out), image.data, d_correlationAux.d_projPolarFFT.Xdim*d_correlationAux.d_projPolarFFT.Ydim*sizeof(float));
+		Iout() = out;
+		int idx=1;
+		myFile.compose("YoQueSeOrig", 1, "mrc");
+		Iout.write(myFile);
+		out.coreDeallocate();
+		//END AJ/*/
 	}
+
+}
+
+
+
+void preprocess_images_experimental_two(MetaData &SF, FileName &fnImg, int numImagesRef, GpuMultidimArrayAtGpu<float> &mask,
+		GpuMultidimArrayAtGpu< std::complex<float> > &d_maskFFT,
+		GpuCorrelationAux &d_correlationAuxTR, GpuCorrelationAux &d_correlationAuxRT,
+		bool rotation, int firstStep, bool mirror,
+		mycufftHandle &myhandlePaddedTR, mycufftHandle &myhandleMaskTR, mycufftHandle &myhandlePolarTR,
+		mycufftHandle &myhandlePaddedRT, mycufftHandle &myhandleMaskRT, mycufftHandle &myhandlePolarRT,
+		StructuresAux &myStructureAuxTR, StructuresAux &myStructureAuxRT,
+		myStreamHandle &myStreamTR, myStreamHandle &myStreamRT)
+{
+
+
+	size_t Xdim, Ydim, Zdim, Ndim;
+	getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
+	size_t pad_Xdim=d_correlationAuxTR.Xdim;
+	size_t pad_Ydim=d_correlationAuxTR.Ydim;
+	size_t radius=d_correlationAuxTR.YdimPolar;
+	size_t angles = d_correlationAuxTR.XdimPolar;
+
+	GpuMultidimArrayAtCpu<float> original_image_stack(Xdim,Ydim,1,numImagesRef);
+
+	if(firstStep==0){
+
+		Image<float> Iref;
+
+		Iref.read(fnImg);
+
+		//AJ mirror of the image
+		if(mirror)
+			Iref().selfReverseX();
+		//END AJ mirror
+
+		for(size_t i=0; i<numImagesRef; i++)
+			original_image_stack.fillImage(i,Iref()/8);
+
+	}
+
+		d_correlationAuxTR.d_original_image.resize(Xdim,Ydim,1,numImagesRef);
+		d_correlationAuxRT.d_original_image.resize(Xdim,Ydim,1,numImagesRef);
+		d_correlationAuxTR.d_projFFT.resize((pad_Xdim/2)+1, pad_Ydim, 1, numImagesRef);
+		d_correlationAuxTR.d_projSquaredFFT.resize((pad_Xdim/2)+1, pad_Ydim, 1, numImagesRef);
+		d_correlationAuxRT.d_projPolarFFT.resize((angles/2)+1, radius, 1, numImagesRef);
+		d_correlationAuxRT.d_projPolarSquaredFFT.resize((angles/2)+1, radius, 1, numImagesRef);
+		d_correlationAuxTR.d_maskFFT.resize(d_maskFFT);
+
+		//printf("preprocess exp pad_Xdim %i, pad_Ydim %i, Xdim %i, Ydim %i, Ndim %i, Zdim %i \n", pad_Xdim, pad_Ydim, Xdim, Ydim, Zdim, numImagesRef);
+
+		original_image_stack.copyToGpu(d_correlationAuxTR.d_original_image, myStreamTR);
+
+		padding_masking(d_correlationAuxTR.d_original_image, mask, myStructureAuxTR.padded_image_gpu, myStructureAuxTR.padded_image2_gpu,
+				myStructureAuxTR.padded_mask_gpu, true, myStreamTR);
+
+		original_image_stack.copyToGpu(d_correlationAuxRT.d_original_image, myStreamRT);
+
+		cuda_cart2polar(d_correlationAuxRT.d_original_image, myStructureAuxRT.polar_gpu, myStructureAuxRT.polar2_gpu, true, myStreamRT);
+
+		myStructureAuxTR.padded_image_gpu.fft(d_correlationAuxTR.d_projFFT, myhandlePaddedTR, myStreamTR);
+		myStructureAuxTR.padded_image2_gpu.fft(d_correlationAuxTR.d_projSquaredFFT, myhandlePaddedTR, myStreamTR);
+		d_maskFFT.copyGpuToGpu(d_correlationAuxTR.d_maskFFT, myStreamTR);
+
+	    myStructureAuxRT.polar_gpu.fft(d_correlationAuxRT.d_projPolarFFT, myhandlePolarRT, myStreamRT);
+	    myStructureAuxRT.polar2_gpu.fft(d_correlationAuxRT.d_projPolarSquaredFFT, myhandlePolarRT, myStreamRT);
+
+	    /*
+	    printf("Polar\n");
+		GpuMultidimArrayAtCpu< float > image(d_correlationAuxRT.d_projPolarFFT.Xdim,d_correlationAuxRT.d_projPolarFFT.Ydim,1,d_correlationAuxRT.d_projPolarFFT.Ndim);
+		calculateAbs(d_correlationAuxRT.d_projPolarFFT.d_data, image.data, image.nzyxdim, myStreamRT);
+
+		waitGpu(myStreamTR, true);
+
+		printf("Padded\n");
+	    GpuMultidimArrayAtCpu< float > image2(d_correlationAuxTR.d_projFFT.Xdim,d_correlationAuxTR.d_projFFT.Ydim,1,d_correlationAuxTR.d_projFFT.Ndim);
+	    calculateAbs(d_correlationAuxTR.d_projFFT.d_data, image2.data, image2.nzyxdim, myStreamTR);
+
+	    waitGpu(myStreamTR, true);
+	    printf("Fin preprocess_images_experimental_two \n");
+		*/
+
+
+	    /*/AJ to write the image
+	    GpuMultidimArrayAtCpu< float > image(d_correlationAuxRT.d_projPolarFFT.Xdim,d_correlationAuxRT.d_projPolarFFT.Ydim,1,d_correlationAuxRT.d_projPolarFFT.Ndim);
+	    calculateAbs(d_correlationAuxRT.d_projPolarFFT.d_data, image.data, image.nzyxdim);
+
+	    FileName myFile;
+	    Image< float > Iout;
+	    MultidimArray< float > out;
+	    //GpuMultidimArrayAtCpu< float > image(d_correlationAuxRT.d_projPolarFFT.Xdim,d_correlationAuxRT.d_projPolarFFT.Ydim,1,d_correlationAuxRT.d_projPolarFFT.Ndim);
+	    //image.copyFromGpu(d_correlationAuxRT.d_projPolarFFT, myStreamRT);
+	    out.coreAllocate(1, 1, d_correlationAuxRT.d_projPolarFFT.Ydim, d_correlationAuxRT.d_projPolarFFT.Xdim);
+		memcpy(MULTIDIM_ARRAY(out), image.data, d_correlationAuxRT.d_projPolarFFT.Xdim*d_correlationAuxRT.d_projPolarFFT.Ydim*sizeof(float));
+		Iout() = out;
+		int idx=1;
+		myFile.compose("YoQueSe2", 1, "mrc");
+		Iout.write(myFile);
+		out.coreDeallocate();
+		//END AJ/*/
+
+	    /*/AJ to write the image
+	    image.resize(myStructureAuxTR.padded_image_gpu.Xdim,myStructureAuxTR.padded_image_gpu.Ydim,1,myStructureAuxTR.padded_image_gpu.Ndim);
+	    image.copyFromGpu(myStructureAuxTR.padded_image_gpu, myStreamTR);
+	    out.coreAllocate(1, 1, myStructureAuxTR.padded_image_gpu.Ydim, myStructureAuxTR.padded_image_gpu.Xdim);
+		memcpy(MULTIDIM_ARRAY(out), image.data, myStructureAuxTR.padded_image_gpu.Xdim*myStructureAuxTR.padded_image_gpu.Ydim*sizeof(float));
+		Iout() = out;
+		idx=1;
+		myFile.compose("PaddedFirst", 1, "jpg");
+		Iout.write(myFile);
+		out.coreDeallocate();
+		//END AJ/*/
+
+}
+
+
+
+void preprocess_images_experimental_transform_two(MetaData &SF, FileName &fnImg, int numImagesRef, GpuMultidimArrayAtGpu<float> &mask,
+		GpuMultidimArrayAtGpu< std::complex<float> > &d_maskFFT,
+		GpuCorrelationAux &d_correlationAuxOne, GpuCorrelationAux &d_correlationAuxTwo,
+		bool rotation, int firstStep, bool mirror,
+		mycufftHandle &myhandlePaddedOne, mycufftHandle &myhandleMaskOne, mycufftHandle &myhandlePolarOne,
+		mycufftHandle &myhandlePaddedTwo, mycufftHandle &myhandleMaskTwo, mycufftHandle &myhandlePolarTwo,
+		StructuresAux &myStructureAuxOne, StructuresAux &myStructureAuxTwo,
+		myStreamHandle &myStreamOne, myStreamHandle &myStreamTwo, int step)
+{
+
+	size_t Xdim = d_correlationAuxOne.d_transform_image.Xdim;
+	size_t Ydim = d_correlationAuxOne.d_transform_image.Ydim;
+	size_t Zdim = d_correlationAuxOne.d_transform_image.Zdim;
+	size_t Ndim = d_correlationAuxOne.d_transform_image.Ndim;
+	size_t pad_Xdim=d_correlationAuxOne.Xdim;
+	size_t pad_Ydim=d_correlationAuxOne.Ydim;
+	size_t radius=d_correlationAuxOne.YdimPolar;
+	size_t angles = d_correlationAuxOne.XdimPolar;
+
+	d_correlationAuxOne.d_projFFT.resize((pad_Xdim/2)+1, pad_Ydim, 1, numImagesRef);
+	d_correlationAuxOne.d_projSquaredFFT.resize((pad_Xdim/2)+1, pad_Ydim, 1, numImagesRef);
+	d_correlationAuxTwo.d_projPolarFFT.resize((angles/2)+1, radius, 1, numImagesRef);
+	d_correlationAuxTwo.d_projPolarSquaredFFT.resize((angles/2)+1, radius, 1, numImagesRef);
+	d_correlationAuxOne.d_maskFFT.resize(d_maskFFT);
+
+
+	padding_masking(d_correlationAuxOne.d_transform_image, mask, myStructureAuxOne.padded_image_gpu, myStructureAuxOne.padded_image2_gpu,
+			myStructureAuxOne.padded_mask_gpu, true, myStreamOne);
+
+	cuda_cart2polar(d_correlationAuxTwo.d_transform_image, myStructureAuxTwo.polar_gpu, myStructureAuxTwo.polar2_gpu, true, myStreamTwo);
+
+	myStructureAuxOne.padded_image_gpu.fft(d_correlationAuxOne.d_projFFT, myhandlePaddedOne, myStreamOne);
+	myStructureAuxOne.padded_image2_gpu.fft(d_correlationAuxOne.d_projSquaredFFT, myhandlePaddedOne, myStreamOne);
+	d_maskFFT.copyGpuToGpu(d_correlationAuxOne.d_maskFFT, myStreamOne);
+
+	myStructureAuxTwo.polar_gpu.fft(d_correlationAuxTwo.d_projPolarFFT, myhandlePolarTwo, myStreamTwo);
+	myStructureAuxTwo.polar2_gpu.fft(d_correlationAuxTwo.d_projPolarSquaredFFT, myhandlePolarTwo, myStreamTwo);
+
+
+	/*
+	printf("Polar\n");
+	GpuMultidimArrayAtCpu< float > image(d_correlationAuxTwo.d_projPolarFFT.Xdim,d_correlationAuxTwo.d_projPolarFFT.Ydim,1,d_correlationAuxTwo.d_projPolarFFT.Ndim);
+	calculateAbs(d_correlationAuxTwo.d_projPolarFFT.d_data, image.data, image.nzyxdim, myStreamTwo);
+
+	waitGpu(myStreamTwo, true);
+
+	printf("Padded\n");
+	GpuMultidimArrayAtCpu< float > image2(d_correlationAuxOne.d_projFFT.Xdim,d_correlationAuxOne.d_projFFT.Ydim,1,d_correlationAuxOne.d_projFFT.Ndim);
+	calculateAbs(d_correlationAuxOne.d_projFFT.d_data, image2.data, image2.nzyxdim, myStreamOne);
+
+	waitGpu(myStreamTwo, true);
+
+	printf("Mask\n");
+	GpuMultidimArrayAtCpu< float > image3(d_correlationAuxOne.d_maskFFT.Xdim,d_correlationAuxOne.d_maskFFT.Ydim,1,d_correlationAuxOne.d_maskFFT.Ndim);
+	calculateAbs(d_correlationAuxOne.d_maskFFT.d_data, image3.data, image3.nzyxdim, myStreamOne);
+
+	waitGpu(myStreamOne, true);
+	printf("Fin preprocess_images_experimental_transform_two \n");
+	*/
+
+    /*/AJ to write the image
+    FileName myFile;
+    Image<float> Iout;
+    MultidimArray<float> out;
+    GpuMultidimArrayAtCpu<float> image(myStructureAuxTwo.polar_gpu.Xdim,myStructureAuxTwo.polar_gpu.Ydim,1,myStructureAuxTwo.polar_gpu.Ndim);
+    image.copyFromGpu(myStructureAuxTwo.polar_gpu, myStreamTwo);
+    out.coreAllocate(1, 1, myStructureAuxTwo.polar_gpu.Ydim, myStructureAuxTwo.polar_gpu.Xdim);
+	memcpy(MULTIDIM_ARRAY(out), image.data, myStructureAuxTwo.polar_gpu.Xdim*myStructureAuxTwo.polar_gpu.Ydim*sizeof(float));
+	Iout() = out;
+	int idx=1;
+	myFile.compose("PolarNew", step, "jpg");
+	Iout.write(myFile);
+	out.coreDeallocate();
+	//END AJ/*/
+
+    /*/AJ to write the image
+	FileName myFile;
+	Image<float> Iout;
+	MultidimArray<float> out;
+	GpuMultidimArrayAtCpu<float> image(myStructureAuxTwo.polar_gpu.Xdim,myStructureAuxTwo.polar_gpu.Ydim,1,myStructureAuxTwo.polar_gpu.Ndim);
+    image.resize(myStructureAuxOne.padded_image_gpu.Xdim,myStructureAuxOne.padded_image_gpu.Ydim,1,myStructureAuxOne.padded_image_gpu.Ndim);
+    image.copyFromGpu(myStructureAuxOne.padded_image_gpu, myStreamTwo);
+    out.coreAllocate(1, 1, myStructureAuxOne.padded_image_gpu.Ydim, myStructureAuxOne.padded_image_gpu.Xdim);
+	memcpy(MULTIDIM_ARRAY(out), image.data, myStructureAuxOne.padded_image_gpu.Xdim*myStructureAuxOne.padded_image_gpu.Ydim*sizeof(float));
+	Iout() = out;
+	int idx=1;
+	myFile.compose("PaddedNew", step, "jpg");
+	Iout.write(myFile);
+	out.coreDeallocate();
+	//END AJ/*/
 
 }
 
 
 void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAux, GpuMultidimArrayAtGpu<float> &mask,
 		GpuMultidimArrayAtGpu< std::complex<float> > &d_maskFFT, bool rotation, int step, mycufftHandle &myhandlePadded,
-		mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar, StructuresAux &myStructureAux)
+		mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar, StructuresAux &myStructureAux, myStreamHandle myStream)
 {
 
 	size_t Xdim = d_correlationAux.d_transform_image.Xdim;
@@ -267,7 +510,7 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 
 	if(!rotation){
 		padding_masking(d_correlationAux.d_transform_image, mask, myStructureAux.padded_image_gpu, myStructureAux.padded_image2_gpu,
-				myStructureAux.padded_mask_gpu, true);
+				myStructureAux.padded_mask_gpu, true, myStream);
 
 		//printf("Preprocess experimental images \n");
 		//printf("myStructureAux.padded_image_gpu.Xdim %i \n", myStructureAux.padded_image_gpu.Xdim);
@@ -277,99 +520,287 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 		//struct timeval begin, end;
 		//gettimeofday(&begin, NULL);
 
-		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
+		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded, myStream);
 
 		//gettimeofday(&end, NULL);
 		//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
 		//printf("Padded FFT time %lf \n", elapsed);
 
+	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream);
+		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT, myStream);
 
-	    myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded);
-	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded);
-		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT);
+	    /*/AJ to write the image
+	    FileName myFile;
+	    Image<float> Iout;
+	    MultidimArray<float> out;
+	    GpuMultidimArrayAtCpu<float> image(myStructureAux.padded_image_gpu.Xdim,myStructureAux.padded_image_gpu.Ydim,1,myStructureAux.padded_image_gpu.Ndim);
+	    image.copyFromGpu(myStructureAux.padded_image_gpu, myStream);
+	    out.coreAllocate(1, 1, myStructureAux.padded_image_gpu.Ydim, myStructureAux.padded_image_gpu.Xdim);
+		memcpy(MULTIDIM_ARRAY(out), image.data, myStructureAux.padded_image_gpu.Xdim*myStructureAux.padded_image_gpu.Ydim*sizeof(float));
+		Iout() = out;
+		int idx=1;
+		myFile.compose("PaddedOrig", step+1, "jpg");
+		Iout.write(myFile);
+		out.coreDeallocate();
+		//END AJ/*/
+
 	}
 
 	//Polar transform of the projected images
 	if(rotation){
-		cuda_cart2polar(d_correlationAux.d_transform_image, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, true);
-		myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar);
-		myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar);
+		cuda_cart2polar(d_correlationAux.d_transform_image, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, true, myStream);
+		myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream);
+		myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream);
+
+	    /*/AJ to write the image
+	    FileName myFile;
+	    Image<float> Iout;
+	    MultidimArray<float> out;
+	    GpuMultidimArrayAtCpu<float> image(myStructureAux.polar_gpu.Xdim,myStructureAux.polar_gpu.Ydim,1,myStructureAux.polar_gpu.Ndim);
+	    image.copyFromGpu(myStructureAux.polar_gpu, myStream);
+	    out.coreAllocate(1, 1, myStructureAux.polar_gpu.Ydim, myStructureAux.polar_gpu.Xdim);
+		memcpy(MULTIDIM_ARRAY(out), image.data, myStructureAux.polar_gpu.Xdim*myStructureAux.polar_gpu.Ydim*sizeof(float));
+		Iout() = out;
+		int idx=1;
+		myFile.compose("PolarOrig", step+1, "jpg");
+		Iout.write(myFile);
+		out.coreDeallocate();
+		//END AJ/*/
+
 	}
+
 
 }
 
-void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_referenceAux, GpuCorrelationAux &d_experimentalAux,
+void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_referenceAux,
+		GpuCorrelationAux &d_experimentalAuxTR, GpuCorrelationAux &d_experimentalAuxRT,
 		TransformMatrix<float> &transMat_tr, TransformMatrix<float> &transMat_rt, float *max_vector_tr, float *max_vector_rt,
 		MetaData &SFexp, int available_images_proj, bool mirror, int maxShift,
-		mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar,
-		mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB, mycufftHandle &myhandlePolarB,
-		StructuresAux &myStructureAux)
+		mycufftHandle &myhandlePadded_tr, mycufftHandle &myhandleMask_tr, mycufftHandle &myhandlePolar_tr,
+		mycufftHandle &myhandlePaddedB_tr, mycufftHandle &myhandleMaskB_tr, mycufftHandle &myhandlePolarB_tr,
+		mycufftHandle &myhandlePadded_rt, mycufftHandle &myhandleMask_rt, mycufftHandle &myhandlePolar_rt,
+		mycufftHandle &myhandlePaddedB_rt, mycufftHandle &myhandleMaskB_rt, mycufftHandle &myhandlePolarB_rt,
+		StructuresAux &myStructureAux_tr, StructuresAux &myStructureAux_rt,
+		myStreamHandle &myStreamTR, myStreamHandle &myStreamRT,
+		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT)
 {
 
 	bool rotation;
-	TransformMatrix<float> *transMat;
-	float *max_vector;
+	//TransformMatrix<float> *transMat;
+	//float *max_vector;
 
-	for(int firstStep=0; firstStep<2; firstStep++){
+	//for(int firstStep=0; firstStep<2; firstStep++){
 
-		int max_step;
-		if (firstStep==0){
-			rotation = false;
-			max_vector = max_vector_tr;
-			max_step=7;
-		}else{
-			rotation = true;
-			max_vector = max_vector_rt;
-			max_step=6;
-		}
+	////////////////////////
+	//FIRST PART FOR TRTRTRT
 
-		preprocess_images_experimental(SFexp, fnImgExp, available_images_proj, d_referenceAux.d_mask, d_referenceAux.d_maskFFT,
-				d_experimentalAux, rotation, firstStep, mirror, myhandlePadded, myhandleMask, myhandlePolar, myStructureAux);
+	int max_step;
+	rotation = false;
+	//max_vector = max_vector_tr;
+	max_step=7;
 
-		if(!rotation){
-			d_experimentalAux.maskCount=d_referenceAux.maskCount;
-			d_experimentalAux.produceSideInfo(myhandlePaddedB, myhandleMaskB, myStructureAux, d_referenceAux.maskAutocorrelation);
-		}
 
-		if(firstStep==0)
-			transMat = &transMat_tr;
-		else
-			transMat = &transMat_rt;
+	preprocess_images_experimental_two(SFexp, fnImgExp, available_images_proj, d_referenceAux.d_mask,
+			d_referenceAux.d_maskFFT, d_experimentalAuxTR, d_experimentalAuxRT, true, 0, mirror,
+					myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr,
+					myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt,
+					myStructureAux_tr, myStructureAux_rt, myStreamTR, myStreamRT);
 
-		for(int step=0; step<max_step; step++){ //loop over consecutive translations and rotations (TRTRTRT or RTRTRT)
 
+	d_experimentalAuxTR.maskCount=d_referenceAux.maskCount;
+	d_experimentalAuxTR.produceSideInfo(myhandlePaddedB_tr, myhandleMaskB_tr, myStructureAux_tr, d_referenceAux.maskAutocorrelation, myStreamTR);
+
+	d_experimentalAuxTR.d_transform_image.resize(d_experimentalAuxTR.d_original_image);
+	d_experimentalAuxRT.d_transform_image.resize(d_experimentalAuxRT.d_original_image);
+
+	//transMat = &transMat_tr;
+
+	for(int step=0; step<6; step++){
+
+
+		if(step%2==0){
+
+			//FIRST TRANSLATION AND SECOND ROTATION
 			//CORRELATION PART
 			//TRANSFORMATION MATRIX CALCULATION
-			if(!rotation){
-				cuda_calculate_correlation(d_referenceAux, d_experimentalAux, *transMat, max_vector, maxShift, myhandlePaddedB,
-						mirror, myStructureAux);
-			}else{
-				cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, *transMat, max_vector, maxShift, myhandlePolarB,
-						mirror, myStructureAux);
-			}
+			cuda_calculate_correlation_two(d_referenceAux, d_experimentalAuxTR,
+					transMat_tr, max_vector_tr, maxShift,
+					myhandlePaddedB_tr, mirror, myStructureAux_tr,
+					myStreamTR,
+					d_experimentalAuxRT, transMat_rt,
+					max_vector_rt, myhandlePolarB_rt,
+					myStructureAux_rt, myStreamRT,
+					resultTR, resultRT);
 
 			//APPLY TRANSFORMATION
-			if(step<max_step-1){
-				d_experimentalAux.d_transform_image.resize(d_experimentalAux.d_original_image);
-				apply_transform(d_experimentalAux.d_original_image, d_experimentalAux.d_transform_image, *transMat);
-			}
+			apply_transform(d_experimentalAuxTR.d_original_image, d_experimentalAuxTR.d_transform_image, transMat_tr, myStreamTR);
+
+			apply_transform(d_experimentalAuxRT.d_original_image, d_experimentalAuxRT.d_transform_image, transMat_rt, myStreamRT);
 
 			//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
-			if(step<max_step-1){
-				rotation = !rotation;
-				preprocess_images_experimental_transform(d_experimentalAux, d_referenceAux.d_mask, d_referenceAux.d_maskFFT, rotation, step,
-						myhandlePadded, myhandleMask, myhandlePolar, myStructureAux);
+			preprocess_images_experimental_transform_two(SFexp, fnImgExp, available_images_proj, d_referenceAux.d_mask,
+					d_referenceAux.d_maskFFT, d_experimentalAuxRT, d_experimentalAuxTR,	true, 0, mirror,
+					myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt,
+					myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr,
+					myStructureAux_rt, myStructureAux_tr, myStreamRT, myStreamTR, 1);
 
-				if(!rotation){
-					d_experimentalAux.maskCount=d_referenceAux.maskCount;
-					d_experimentalAux.produceSideInfo(myhandlePaddedB, myhandleMaskB, myStructureAux, d_referenceAux.maskAutocorrelation);
-				}
+			d_experimentalAuxRT.maskCount=d_referenceAux.maskCount;
+			d_experimentalAuxRT.produceSideInfo(myhandlePaddedB_rt, myhandleMaskB_rt, myStructureAux_rt, d_referenceAux.maskAutocorrelation, myStreamRT);
+
+		}
+		else{
+
+			//FIRST ROTATION AND SECOND TRANSLATION
+			//CORRELATION PART
+			//TRANSFORMATION MATRIX CALCULATION
+			cuda_calculate_correlation_two(d_referenceAux, d_experimentalAuxRT,
+					transMat_rt, max_vector_rt, maxShift,
+					myhandlePaddedB_rt, mirror, myStructureAux_rt,
+					myStreamRT,
+					d_experimentalAuxTR, transMat_tr,
+					max_vector_tr, myhandlePolarB_tr,
+					myStructureAux_tr, myStreamTR,
+					resultRT, resultTR);
+
+
+			if(step < 5){
+
+				//APPLY TRANSFORMATION
+				apply_transform(d_experimentalAuxRT.d_original_image, d_experimentalAuxRT.d_transform_image, transMat_rt, myStreamRT);
+
+				apply_transform(d_experimentalAuxTR.d_original_image, d_experimentalAuxTR.d_transform_image, transMat_tr, myStreamTR);
+
+				//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
+				preprocess_images_experimental_transform_two(SFexp, fnImgExp, available_images_proj, d_referenceAux.d_mask,
+						d_referenceAux.d_maskFFT, d_experimentalAuxTR, d_experimentalAuxRT,	true, 0, mirror,
+						myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr,
+						myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt,
+						myStructureAux_tr, myStructureAux_rt, myStreamTR, myStreamRT, 2);
+
+				d_experimentalAuxTR.maskCount=d_referenceAux.maskCount;
+				d_experimentalAuxTR.produceSideInfo(myhandlePaddedB_tr, myhandleMaskB_tr, myStructureAux_tr, d_referenceAux.maskAutocorrelation, myStreamTR);
+
+			}else if(step==5){
+
+				//APPLY TRANSFORMATION
+				d_experimentalAuxTR.d_transform_image.resize(d_experimentalAuxTR.d_original_image);
+				apply_transform(d_experimentalAuxTR.d_original_image, d_experimentalAuxTR.d_transform_image, transMat_tr, myStreamTR);
+
+				//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
+				preprocess_images_experimental_transform(d_experimentalAuxTR, d_referenceAux.d_mask, d_referenceAux.d_maskFFT, false, step,
+							myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr, myStructureAux_tr, myStreamTR);
+				d_experimentalAuxTR.maskCount=d_referenceAux.maskCount;
+				d_experimentalAuxTR.produceSideInfo(myhandlePaddedB_tr, myhandleMaskB_tr, myStructureAux_tr, d_referenceAux.maskAutocorrelation, myStreamTR);
+
+				//CORRELATION PART
+				//TRANSFORMATION MATRIX CALCULATION
+				cuda_calculate_correlation(d_referenceAux, d_experimentalAuxTR, transMat_tr, max_vector_tr, maxShift, myhandlePaddedB_tr,
+							mirror, myStructureAux_tr, myStreamTR, resultTR);
 
 			}
 
-		}//end for(int step=0; step<max_step; step++)
+		}
 
-	}//end for(int firstStep=0; firstStep<2; firstStep++)
+
+	}
+
+
+
+
+
+
+/*
+	preprocess_images_experimental(SFexp, fnImgExp, available_images_proj, d_referenceAux.d_mask, d_referenceAux.d_maskFFT,
+		d_experimentalAuxTR, false, 0, mirror, myhandlePadded_tr, myhandleMask_tr,
+		myhandlePolar_tr, myStructureAux_tr, myStreamTR);
+
+	d_experimentalAuxTR.maskCount=d_referenceAux.maskCount;
+	d_experimentalAuxTR.produceSideInfo(myhandlePaddedB_tr, myhandleMaskB_tr, myStructureAux_tr, d_referenceAux.maskAutocorrelation, myStreamTR);
+
+
+	for(int step=0; step<2; step++){ //loop over consecutive translations and rotations (TRTRTRT or RTRTRT)
+
+		//CORRELATION PART
+		//TRANSFORMATION MATRIX CALCULATION
+
+		if(!rotation){
+			cuda_calculate_correlation(d_referenceAux, d_experimentalAuxTR, transMat_tr, max_vector_tr, maxShift, myhandlePaddedB_tr,
+					mirror, myStructureAux_tr, myStreamTR);
+		}else{
+			cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAuxTR, transMat_tr, max_vector_tr, maxShift, myhandlePolarB_tr,
+					mirror, myStructureAux_tr, myStreamTR);
+		}
+
+		//APPLY TRANSFORMATION
+		if(step<max_step){ //-1
+			d_experimentalAuxTR.d_transform_image.resize(d_experimentalAuxTR.d_original_image);
+			apply_transform(d_experimentalAuxTR.d_original_image, d_experimentalAuxTR.d_transform_image, transMat_tr, myStreamTR);
+		}
+
+		//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
+		if(step<max_step){ //-1
+			rotation = !rotation;
+			preprocess_images_experimental_transform(d_experimentalAuxTR, d_referenceAux.d_mask, d_referenceAux.d_maskFFT, rotation, step,
+					myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr, myStructureAux_tr, myStreamTR);
+
+			if(!rotation){
+				d_experimentalAuxTR.maskCount=d_referenceAux.maskCount;
+				d_experimentalAuxTR.produceSideInfo(myhandlePaddedB_tr, myhandleMaskB_tr, myStructureAux_tr, d_referenceAux.maskAutocorrelation, myStreamTR);
+			}
+
+		}
+
+	}//end for(int step=0; step<max_step; step++)
+
+	////////////////////////
+	//SECOND PART FOR RTRTRT
+
+	rotation = true;
+	//max_vector = max_vector_rt;
+	max_step=6;
+
+	preprocess_images_experimental(SFexp, fnImgExp, available_images_proj, d_referenceAux.d_mask, d_referenceAux.d_maskFFT,
+					d_experimentalAuxRT, rotation, 0, mirror, myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt, myStructureAux_rt, myStreamRT);
+
+	//transMat = &transMat_rt;
+
+	for(int step=0; step<2; step++){ //loop over consecutive translations and rotations (TRTRTRT or RTRTRT)
+
+		//CORRELATION PART
+		//TRANSFORMATION MATRIX CALCULATION
+		if(!rotation){
+			cuda_calculate_correlation(d_referenceAux, d_experimentalAuxRT, transMat_rt, max_vector_rt, maxShift, myhandlePaddedB_rt,
+					mirror, myStructureAux_rt, myStreamRT);
+		}else{
+			cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAuxRT, transMat_rt, max_vector_rt, maxShift, myhandlePolarB_rt,
+					mirror, myStructureAux_rt, myStreamRT);
+		}
+
+
+		//APPLY TRANSFORMATION
+		if(step<max_step){ //-1
+			d_experimentalAuxRT.d_transform_image.resize(d_experimentalAuxRT.d_original_image);
+			apply_transform(d_experimentalAuxRT.d_original_image, d_experimentalAuxRT.d_transform_image, transMat_rt, myStreamRT);
+		}
+
+		//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
+		if(step<max_step){ //-1
+			rotation = !rotation;
+			preprocess_images_experimental_transform(d_experimentalAuxRT, d_referenceAux.d_mask, d_referenceAux.d_maskFFT, rotation, step,
+					myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt, myStructureAux_rt, myStreamRT);
+
+			if(!rotation){
+				d_experimentalAuxRT.maskCount=d_referenceAux.maskCount;
+				d_experimentalAuxRT.produceSideInfo(myhandlePaddedB_rt, myhandleMaskB_rt, myStructureAux_rt, d_referenceAux.maskAutocorrelation, myStreamRT);
+			}
+
+		}
+
+	}//end for(int step=0; step<max_step; step++)
+
+*/
+
+	//}//end for(int firstStep=0; firstStep<2; firstStep++)
 
 }
 
@@ -1285,8 +1716,6 @@ void ProgGpuCorrelation::run()
 	struct timeval begin, end;
 	gettimeofday(&begin, NULL);
 
-
-
 	//PROJECTION IMAGES
 	size_t Xdim, Ydim, Zdim, Ndim;
 	SF.read(fn_ref,NULL);
@@ -1343,7 +1772,7 @@ void ProgGpuCorrelation::run()
 
 
 	//AJ check_gpu_memory to know how many images we can copy in the gpu memory
-    float limit=0.877; //0.877; 1.3;
+    float limit=0.4; //0.877; 1.3;
 	int available_images_proj = mdExpSize; //mdInSize
 	int available1 = mdExpSize;
 	int available2 = mdExpSize;
@@ -1383,12 +1812,22 @@ void ProgGpuCorrelation::run()
 	TransformMatrix<float> transMat_tr_mirror;
 	TransformMatrix<float> transMat_rt_mirror;
 
+	TransformMatrix<float> resultTR;
+    TransformMatrix<float> resultRT;
+
+
 
 	int firstIdx=0;
 	bool finish=false;
 
-	mycufftHandle myhandlePadded, myhandleMask, myhandlePolar, myhandleAux;
-	mycufftHandle myhandlePaddedB, myhandleMaskB, myhandlePolarB, myhandleAuxB;
+	mycufftHandle myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr, myhandleAux_tr, myhandlePaddedB_tr, myhandleMaskB_tr, myhandlePolarB_tr, myhandleAuxB_tr;
+	mycufftHandle myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt, myhandleAux_rt, myhandlePaddedB_rt, myhandleMaskB_rt, myhandlePolarB_rt, myhandleAuxB_rt;
+
+
+	myStreamHandle myStreamTR, myStreamRT;
+	myStreamCreate(myStreamTR);
+	myStreamCreate(myStreamRT);
+
 
 	GpuCorrelationAux d_referenceAux;
 
@@ -1428,9 +1867,9 @@ void ProgGpuCorrelation::run()
 	d_referenceAux.XdimPolar=360;
 	d_referenceAux.YdimPolar=(size_t)mask.R1;
 
-	//printf("Xdim %i, Ydim %i \n", pad_Xdim, pad_Ydim);
+	printf("Xdim %i, Ydim %i \n", pad_Xdim, pad_Ydim);
 
-	StructuresAux myStructureAux;
+	StructuresAux myStructureAux_tr, myStructureAux_rt;
 
 	MDIterator *iter = new MDIterator(SFexp); //SF
 
@@ -1443,11 +1882,15 @@ void ProgGpuCorrelation::run()
 		cpuMalloc((void**)&max_vector_tr_mirror, sizeof(float)*available_images_proj);
 		cpuMalloc((void**)&max_vector_rt_mirror, sizeof(float)*available_images_proj);
 
+
 		//Transformation matrix in GPU and CPU
-		transMat_tr.resize(available_images_proj);
-		transMat_rt.resize(available_images_proj);
-		transMat_tr_mirror.resize(available_images_proj);
-		transMat_rt_mirror.resize(available_images_proj);
+		transMat_tr.resize(myStreamTR, available_images_proj);
+		transMat_rt.resize(myStreamRT, available_images_proj);
+		transMat_tr_mirror.resize(myStreamTR, available_images_proj);
+		transMat_rt_mirror.resize(myStreamRT, available_images_proj);
+
+		resultTR.resize(myStreamTR, available_images_proj);
+	    resultRT.resize(myStreamRT, available_images_proj);
 
 		/*//Auxiliar matrix with all the best transformations in CPU
 		MultidimArray<float> matrixTRCpuAux;
@@ -1459,19 +1902,29 @@ void ProgGpuCorrelation::run()
 		MultidimArray<float> matrixRTCpuAux_mirror;
 		matrixRTCpuAux_mirror.coreAllocate(1, available_images_proj, 3, 3);*/
 
-		myStructureAux.padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
-		myStructureAux.padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
-		myStructureAux.padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
-		myStructureAux.polar_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
-		myStructureAux.polar2_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
+		//TODO no repetir a lo loco, pensar que debo duplicar y que no
+		myStructureAux_tr.padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
+		myStructureAux_tr.padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
+		myStructureAux_tr.padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
+		myStructureAux_tr.polar_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
+		myStructureAux_tr.polar2_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
+
+		myStructureAux_rt.padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
+		myStructureAux_rt.padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, available_images_proj);
+		myStructureAux_rt.padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
+		myStructureAux_rt.polar_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
+		myStructureAux_rt.polar2_gpu.resize(d_referenceAux.XdimPolar,d_referenceAux.YdimPolar,1,available_images_proj);
 
 		//SF
 		preprocess_images_reference(SFexp, firstIdx, available_images_proj, mask, d_referenceAux,
-				myhandlePadded, myhandleMask, myhandlePolar, myhandleAux, myStructureAux, iter);
-
+				myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr, myhandleAux_tr, myStructureAux_tr, iter, myStreamTR);
 
 	    d_referenceAux.maskCount=maskCount;
-		d_referenceAux.produceSideInfo(myhandlePaddedB, myhandleMaskB, myStructureAux);
+		d_referenceAux.produceSideInfo(myhandlePaddedB_tr, myhandleMaskB_tr, myStructureAux_tr, myStreamTR);
+
+		//AJ calling a cudaDeviceSyncrhonize to be sure that these images are loaded in gpu memory
+		// and available for all the streams
+		waitGpu(myStreamTR, true);
 
 		//EXPERIMENTAL IMAGES PART
 		size_t expIndex = 0;
@@ -1479,23 +1932,29 @@ void ProgGpuCorrelation::run()
 		FileName fnImgExp;
 		MDIterator *iterExp = new MDIterator(SF); //SFexp
 
-		GpuCorrelationAux d_experimentalAux;
-		d_experimentalAux.XdimOrig=d_referenceAux.XdimOrig;
-		d_experimentalAux.YdimOrig=d_referenceAux.YdimOrig;
-		d_experimentalAux.Xdim=d_referenceAux.Xdim;
-		d_experimentalAux.Ydim=d_referenceAux.Ydim;
-		d_experimentalAux.XdimPolar=d_referenceAux.XdimPolar;
-		d_experimentalAux.YdimPolar=d_referenceAux.YdimPolar;
+		GpuCorrelationAux d_experimentalAuxTR, d_experimentalAuxRT;
+		d_experimentalAuxTR.XdimOrig=d_referenceAux.XdimOrig;
+		d_experimentalAuxTR.YdimOrig=d_referenceAux.YdimOrig;
+		d_experimentalAuxTR.Xdim=d_referenceAux.Xdim;
+		d_experimentalAuxTR.Ydim=d_referenceAux.Ydim;
+		d_experimentalAuxTR.XdimPolar=d_referenceAux.XdimPolar;
+		d_experimentalAuxTR.YdimPolar=d_referenceAux.YdimPolar;
+
+		d_experimentalAuxRT.XdimOrig=d_referenceAux.XdimOrig;
+		d_experimentalAuxRT.YdimOrig=d_referenceAux.YdimOrig;
+		d_experimentalAuxRT.Xdim=d_referenceAux.Xdim;
+		d_experimentalAuxRT.Ydim=d_referenceAux.Ydim;
+		d_experimentalAuxRT.XdimPolar=d_referenceAux.XdimPolar;
+		d_experimentalAuxRT.YdimPolar=d_referenceAux.YdimPolar;
 
 		size_t n=0;
 		int available_images_exp = mdInSize; //mdExpSize
 		while(available_images_exp && iterExp->objId!=0){
 
-			transMat_tr.initialize();
-			transMat_rt.initialize();
-			transMat_tr_mirror.initialize();
-			transMat_rt_mirror.initialize();
-
+			transMat_tr.initialize(myStreamTR);
+			transMat_rt.initialize(myStreamRT);
+			transMat_tr_mirror.initialize(myStreamTR);
+			transMat_rt_mirror.initialize(myStreamRT);
 
 			for(int i=0; i<available_images_proj; i++){
 				max_vector_tr[i]=-1;
@@ -1514,24 +1973,31 @@ void ProgGpuCorrelation::run()
 			//AJ calling the function to align the images
 			bool mirror=false;
 			//SFexp
-			align_experimental_image(fnImgExp, d_referenceAux, d_experimentalAux, transMat_tr, transMat_rt,
+			align_experimental_image(fnImgExp, d_referenceAux, d_experimentalAuxTR, d_experimentalAuxRT, transMat_tr, transMat_rt,
 					max_vector_tr, max_vector_rt, SF, available_images_proj, mirror, maxShift,
-					myhandlePadded, myhandleMask, myhandlePolar, myhandlePaddedB, myhandleMaskB, myhandlePolarB,
-					myStructureAux);
+					myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr, myhandlePaddedB_tr, myhandleMaskB_tr, myhandlePolarB_tr,
+					myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt, myhandlePaddedB_rt, myhandleMaskB_rt, myhandlePolarB_rt,
+					myStructureAux_tr, myStructureAux_rt, myStreamTR, myStreamRT,
+					resultTR, resultRT);
 
 
 			mirror=true;
 			//SFexp
-			align_experimental_image(fnImgExp, d_referenceAux, d_experimentalAux, transMat_tr_mirror, transMat_rt_mirror,
+			align_experimental_image(fnImgExp, d_referenceAux, d_experimentalAuxTR, d_experimentalAuxRT, transMat_tr_mirror, transMat_rt_mirror,
 							max_vector_tr_mirror, max_vector_rt_mirror, SF, available_images_proj, mirror, maxShift,
-							myhandlePadded, myhandleMask, myhandlePolar, myhandlePaddedB, myhandleMaskB, myhandlePolarB,
-							myStructureAux);
+							myhandlePadded_tr, myhandleMask_tr, myhandlePolar_tr, myhandlePaddedB_tr, myhandleMaskB_tr, myhandlePolarB_tr,
+							myhandlePadded_rt, myhandleMask_rt, myhandlePolar_rt, myhandlePaddedB_rt, myhandleMaskB_rt, myhandlePolarB_rt,
+							myStructureAux_tr, myStructureAux_rt, myStreamTR, myStreamRT,
+							resultTR, resultRT);
 
 			//AJ to check the best transformation among all the evaluated
-			transMat_tr.copyMatrixToCpu();
-			transMat_tr_mirror.copyMatrixToCpu();
-			transMat_rt.copyMatrixToCpu();
-			transMat_rt_mirror.copyMatrixToCpu();
+			transMat_tr.copyMatrixToCpu(myStreamTR);
+			transMat_tr_mirror.copyMatrixToCpu(myStreamRT);
+			transMat_rt.copyMatrixToCpu(myStreamTR);
+			transMat_rt_mirror.copyMatrixToCpu(myStreamRT);
+
+			waitGpu(myStreamTR, false);
+			waitGpu(myStreamRT, false);
 
 			MultidimArray<float> out2(3,3);
 			for(int i=0; i<available_images_proj; i++){
@@ -1582,12 +2048,19 @@ void ProgGpuCorrelation::run()
 			finish=true;
 		}
 		if(aux!=available_images_proj){
-			myhandlePadded.clear();
-			myhandleMask.clear();
-			myhandlePolar.clear();
-			myhandlePaddedB.clear();
-			myhandleMaskB.clear();
-			myhandlePolarB.clear();
+			myhandlePadded_tr.clear();
+			myhandleMask_tr.clear();
+			myhandlePolar_tr.clear();
+			myhandlePaddedB_tr.clear();
+			myhandleMaskB_tr.clear();
+			myhandlePolarB_tr.clear();
+
+			myhandlePadded_rt.clear();
+			myhandleMask_rt.clear();
+			myhandlePolar_rt.clear();
+			myhandlePaddedB_rt.clear();
+			myhandleMaskB_rt.clear();
+			myhandlePolarB_rt.clear();
 		}
 
 
@@ -1597,12 +2070,23 @@ void ProgGpuCorrelation::run()
 
 	delete iter;
 
-	myhandlePadded.clear();
-	myhandleMask.clear();
-	myhandlePolar.clear();
-	myhandlePaddedB.clear();
-	myhandleMaskB.clear();
-	myhandlePolarB.clear();
+	myhandlePadded_tr.clear();
+	myhandleMask_tr.clear();
+	myhandlePolar_tr.clear();
+	myhandlePaddedB_tr.clear();
+	myhandleMaskB_tr.clear();
+	myhandlePolarB_tr.clear();
+
+	myhandlePadded_rt.clear();
+	myhandleMask_rt.clear();
+	myhandlePolar_rt.clear();
+	myhandlePaddedB_rt.clear();
+	myhandleMaskB_rt.clear();
+	myhandlePolarB_rt.clear();
+
+	gettimeofday(&end, NULL);
+	double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
+	printf("Total CUDA time %lf \n", elapsed);
 
 	MultidimArray<float> weights(1,1,mdExpSize,2*mdInSize);
 	MultidimArray<float> weightsMax;
@@ -1659,8 +2143,6 @@ void ProgGpuCorrelation::run()
 	cpuFree(max_vector_tr_mirror);
 	cpuFree(max_vector_rt_mirror);
 
-	gettimeofday(&end, NULL);
-	double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
-	printf("Total time %lf \n", elapsed);
+
 
 }

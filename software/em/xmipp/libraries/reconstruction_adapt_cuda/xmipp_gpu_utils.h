@@ -33,7 +33,7 @@ template<typename T>
 class GpuMultidimArrayAtCpu
 {
 public:
-	size_t Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
+	int Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
     T* data;
 
 	GpuMultidimArrayAtCpu()
@@ -42,12 +42,12 @@ public:
 		data=NULL;
     }
 
-	GpuMultidimArrayAtCpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+	GpuMultidimArrayAtCpu(int _Xdim, int _Ydim=1, int _Zdim=1, int _Ndim=1)
     {
 		resize(_Xdim, _Ydim, _Zdim, _Ndim);
     }
 
-	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+	void resize(int _Xdim, int _Ydim=1, int _Zdim=1, int _Ndim=1)
     {
 		Xdim=_Xdim;
 		Ydim=_Ydim;
@@ -63,8 +63,9 @@ public:
         	data=NULL;
     }
 
-	void fillImage(size_t n, const MultidimArray<T> &from)
+	void fillImage(int n, const MultidimArray<T> &from)
 	{
+		//TODO: preguntar esto, en el host puedo usar un memcpy??
 		memcpy(data+n*zyxdim, MULTIDIM_ARRAY(from), MULTIDIM_SIZE(from)*sizeof(T));
 	}
 
@@ -73,28 +74,29 @@ public:
 		return data==NULL;
 	}
 
-	void copyToGpu(GpuMultidimArrayAtGpu<T> &gpuArray)
+	void copyToGpu(GpuMultidimArrayAtGpu<T> &gpuArray, myStreamHandle &myStream)
 	{
-		if (gpuArray.isEmpty())
+		if (gpuArray.isEmpty()){
 			gpuArray.resize(Xdim,Ydim,Zdim,Ndim);
+		}
 
-		gpuCopyFromCPUToGPU(data, gpuArray.d_data, nzyxdim*sizeof(T));
+		gpuCopyFromCPUToGPU(data, gpuArray.d_data, nzyxdim*sizeof(T), myStream);
 	}
 
-	void copyFromGpu(GpuMultidimArrayAtGpu<T> &gpuArray)
+	void copyFromGpu(GpuMultidimArrayAtGpu<T> &gpuArray, myStreamHandle myStream)
 	{
-		gpuCopyFromGPUToCPU(gpuArray.d_data, data, nzyxdim*sizeof(T));
+		gpuCopyFromGPUToCPU(gpuArray.d_data, data, nzyxdim*sizeof(T), myStream);
 
 	}
 
-	void copyToGpuMultiple(GpuMultidimArrayAtGpu<T> &gpuArray, int numCopy)
+	void copyToGpuMultiple(GpuMultidimArrayAtGpu<T> &gpuArray, int numCopy, myStreamHandle myStream)
 	{
 		if (gpuArray.isEmpty())
 			gpuArray.resize(Xdim,Ydim,Zdim,numCopy);
 
 		int index = 0;
 		for(int i=0; i<numCopy; i++){
-			gpuCopyFromCPUToGPU(data, &gpuArray.d_data[index], nzyxdim*sizeof(T));
+			gpuCopyFromCPUToGPU(data, &gpuArray.d_data[index], nzyxdim*sizeof(T), myStream);
 			index=index+nzyxdim;
 		}
 	}
@@ -121,9 +123,9 @@ public:
 };
 
 template<class T>
-void fillImage(GpuMultidimArrayAtGpu<T> &to, const MultidimArray<T> &from, size_t n=0)
+void fillImage(GpuMultidimArrayAtGpu<T> &to, const MultidimArray<T> &from, myStreamHandle myStream, int n=0)
 {
-	gpuCopyFromCPUToGPU(MULTIDIM_ARRAY(from), to.d_data+n*MULTIDIM_SIZE(from), MULTIDIM_SIZE(from)*sizeof(T));
+	gpuCopyFromCPUToGPU(MULTIDIM_ARRAY(from), to.d_data+n*MULTIDIM_SIZE(from), MULTIDIM_SIZE(from)*sizeof(T), myStream);
 }
 
 //@}

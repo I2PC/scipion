@@ -18,43 +18,68 @@
 #define PI 3.14159265
 
 
+//TODO : ask, what happens if one variable is size_t type and I send it to a kernel that has an integer as input?
+// is the cpu responsible for casting the types, or the gpu??
+//change every size_t in the code for int
 
-__global__ void sumRadiusKernel(float *d_in, float *d_out, float *d_out_max, float *d_out_zero, size_t dim, size_t radius, size_t ndim){
 
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	unsigned int numIm = floorf(idx/360);
-	unsigned int angle = idx%360;
+//NOW WE DONT USE THIS KERNEL
+__global__ void calcAbsKernel(cufftComplex *d_in, float *d_out, int dim){
+
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if(idx>=dim)
 		return;
 
-	d_out[idx]=0.0;
-	d_out_max[idx]=-100000;
+	d_out[idx]=d_in[idx].x;
+
+}
+
+__global__ void sumRadiusKernel(float *d_in, float *d_out, float *d_out_max, float *d_out_zero,
+		int dim, int radius, int ndim){
+
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int numIm = floorf(idx/360.0f);
+	int angle = idx%360;
+
+	if(idx>=dim)
+		return;
+
+	float out = 0.0;
+	float out_max = -100000;
+	//d_out[idx]=0.0;
+	//d_out_max[idx]=-100000;
 	int idxRead=360*radius*numIm;
 	for(int i=0; i<radius; i++){
 		if(d_in[idxRead+(360*i)+angle]==-1.0){
 			continue;
 		}
-		d_out[idx] += d_in[idxRead+(360*i)+angle];
-		if(d_in[idxRead+(360*i)+angle]>d_out_max[idx])
-			d_out_max[idx] = d_in[idxRead+(360*i)+angle];
+		//d_out[idx] += d_in[idxRead+(360*i)+angle];
+		out += d_in[idxRead+(360*i)+angle];
+		if(d_in[idxRead+(360*i)+angle]>d_out_max[idx]){
+			//d_out_max[idx] = d_in[idxRead+(360*i)+angle];
+			out_max = d_in[idxRead+(360*i)+angle];
+		}
 
 		if(i==0)
 			d_out_zero[idx] = d_in[idxRead+angle];
 	}
+	d_out[idx] = out;
+	d_out_max[idx] = out_max;
 
 }
 
 
-__global__ void calculateMax(float *d_in, float *d_out, float *position, size_t yxdim, int Ndim, bool firstCall){
+//NOW WE DONT USE THIS KERNEL
+__global__ void calculateMax(float *d_in, float *d_out, float *position, int yxdim, int Ndim, bool firstCall){
 
 	extern __shared__ float sdata[];
 
-	unsigned int idx = threadIdx.x;
-	unsigned int blockSize = blockDim.x;
+	int idx = threadIdx.x;
+	int blockSize = blockDim.x;
 
 	//Version 6
-	unsigned int i = blockIdx.x * blockSize*2 + idx;
+	int i = blockIdx.x * blockSize*2 + idx;
 	int index = 0;
 	for(int imN=0; imN<Ndim; imN++){
 
@@ -159,16 +184,16 @@ __global__ void calculateMax(float *d_in, float *d_out, float *position, size_t 
 
 
 
-__global__ void calculateMax2(float *d_in, float *d_out, float *position, size_t yxdim, int Ndim, bool firstCall){
+__global__ void calculateMax2(float *d_in, float *d_out, float *position, int yxdim, int Ndim, bool firstCall){
 
 	extern __shared__ float sdata[];
 
-	unsigned int idx = threadIdx.x;
-	unsigned int blockSize = blockDim.x;
+	int idx = threadIdx.x;
+	int blockSize = blockDim.x;
 
 
 	//Version 6
-	unsigned int i = blockIdx.x * blockSize + idx;
+	int i = blockIdx.x * blockSize + idx;
 
 	//printf("d_in[%i] %f \n", i, d_in[i]);
 
@@ -276,14 +301,14 @@ __global__ void calculateMax2(float *d_in, float *d_out, float *position, size_t
 
 }
 
-__global__ void matrixMultiplication (float* newMat, float* lastMat, float* result, size_t n, double maxShift,
-		float *maxGpu, float *NCC, size_t NCC_yxdim){
+//NOW WE DONT USE THIS KERNEL
+__global__ void matrixMultiplication (float* newMat, float* lastMat, float* result, int n, double maxShift2,
+		float *maxGpu, float *NCC, int NCC_yxdim){
 
-	unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	if(idx>=n)
 		return;
 
-	double maxShift2 = maxShift*maxShift;
 
 	int idx9 = idx*9;
 	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2]*lastMat[idx9+8];
@@ -309,26 +334,47 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 }
 
 __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftComplex *M, cufftComplex *manyF, cufftComplex *MmanyF,
-		size_t nzyxdim, size_t yxdim)
+		int nzyxdim, int yxdim, bool power2)
 {
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	unsigned long int idxLow = idx%yxdim;
+
+	//extern __shared__ float sdata[];
+
+	//change size_t to int
+	//change unsigned.... to int but check it before
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idxLow;
+	if (power2==true)
+		idxLow = idx & (yxdim-1);
+	else
+		idxLow = idx%yxdim;
+
+	//check if yxdim is power of 2 in cpu and put here some flag to avoid the % operation and change it to bitwise operation
 
 	if (idx>=nzyxdim)
 		return;
 
-	float normFactor = (1.0/yxdim);
+	float normFactor = (1.0f/yxdim);
 
 	cuComplex mulOut = cuCmulf(manyF[idx], M[idxLow]);
+	//more operations for one thread and lower number of threads???
+	//every th working with N images
+	//in this way we are able to use registers memory for M, but no shared
+	//to use shared memory has sense when the whole block th will read several times the same memory positions
+	//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
 
 	MmanyF[idx] = mulOut*normFactor;
 }
 
-__global__ void calculateDenomFunctionKernel(float *MFrealSpace, float *MF2realSpace, float *maskAutocorrelation, float *out,
-		size_t nzyxdim, size_t yxdim)
+//NOW WE DONT USE THIS KERNEL
+__global__ void calculateDenomFunctionKernel(float *MFrealSpace, float *MF2realSpace, float *maskAutocorrelation,
+		float *out, int nzyxdim, int yxdim, bool power2)
 {
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	unsigned long int idxLow = idx%yxdim;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idxLow;
+	if (power2==true)
+		idxLow = idx & (yxdim-1);
+	else
+		idxLow = idx%yxdim;
 
 	if (idx>=nzyxdim)
 		return;
@@ -340,16 +386,26 @@ __global__ void calculateDenomFunctionKernel(float *MFrealSpace, float *MF2realS
 
 __global__ void calculateNccKernel(float *RefExpRealSpace, float *MFrealSpaceRef, float *MFrealSpaceExp,
 		float *MF2realSpaceRef, float *MF2realSpaceExp, float *mask, float *NCC,
-		size_t nzyxdim, size_t yxdim, size_t xdim, size_t ydim, size_t maskCount, int max_shift)
+		int nzyxdim, int yxdim, int xdim, int ydim, int maskCount, int max_shift, bool power2yx, bool power2x)
 {
 
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	unsigned long int idxLow = idx % yxdim;
+	//change unsigned... and size_t
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idxLow;
+	if (power2yx==true)
+		idxLow = idx & (yxdim-1);
+	else
+		idxLow = idx%yxdim;
 
 	if(idx>=nzyxdim)
 		return;
 
-	int idx_x = idxLow%xdim;
+	int idx_x;
+	if (power2x==true)
+		idx_x = idxLow & (xdim-1);
+	else
+		idx_x = idxLow%xdim;
+
 	int idx_y=idxLow/xdim;
 	if(idx_x>=max_shift && idx_x<xdim-max_shift){
 		NCC[idx] = -1;
@@ -360,18 +416,26 @@ __global__ void calculateNccKernel(float *RefExpRealSpace, float *MFrealSpaceRef
 		return;
 	}
 
-	float den1 = sqrt(MF2realSpaceRef[idx] - (MFrealSpaceRef[idx]*MFrealSpaceRef[idx]/mask[idxLow]));
-	float den2 = sqrt(MF2realSpaceExp[idx] - (MFrealSpaceExp[idx]*MFrealSpaceExp[idx]/mask[idxLow]));
+	float maskTh = mask[idxLow];
+	float MF2realSpaceRefTh = MF2realSpaceRef[idx];
+	float MFrealSpaceRefTh = MFrealSpaceRef[idx];
+	float MF2realSpaceExpTh = MF2realSpaceExp[idx];
+	float MFrealSpaceExpTh = MFrealSpaceExp[idx];
+	float RefExpRealSpaceTh = RefExpRealSpace[idx];
 
-	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && mask[idxLow]>maskCount*0.9){
-		float num = (RefExpRealSpace[idx] - ((MFrealSpaceRef[idx]*MFrealSpaceExp[idx])/(mask[idxLow])) );
+	float den1 = sqrt(MF2realSpaceRefTh - (MFrealSpaceRefTh*MFrealSpaceRefTh/maskTh));
+	float den2 = sqrt(MF2realSpaceExpTh - (MFrealSpaceExpTh*MFrealSpaceExpTh/maskTh));
+
+	float num;
+	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && maskTh>maskCount*0.9){
+		num = (RefExpRealSpaceTh - ((MFrealSpaceRefTh*MFrealSpaceExpTh)/(maskTh)) );
 		NCC[idx] = num/(den1*den2);
 	}else
 		NCC[idx] = -1;
 
 }
 
-__device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim){
+__device__ void wrapping (int &x, int &y, int xdim, int ydim){
 		//mirror wrapping
 		if(x<0)
 			x=-x;
@@ -383,31 +447,54 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim){
 			y=ydim-(y-ydim)-1;
 }
 
-__global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat, size_t nzyxdim, size_t yxdim,
-		size_t xdim, size_t ydim)
+__global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat, int nzyxdim, int yxdim,
+		int xdim, int ydim, bool power2yx, bool power2x)
 {
 
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	unsigned int idxIm = idx%yxdim;
-	unsigned int numIm = idx/yxdim;
+	extern __shared__ float transMatSD[];
 
+	//change size_t for int
+	//module operation: change it as in OneMany kernel
+	int idxIm = blockDim.x * blockIdx.x + threadIdx.x;
+	int idxTh = threadIdx.x;
+	int numIm = blockIdx.y;
 
-	if(idx>=nzyxdim)
+/*	int idxIm;
+	if (power2yx==true)
+		idxIm = idx & (yxdim-1);
+	else
+		idxIm = idx%yxdim;
+*/
+	//int numIm = idx/yxdim;
+
+	if(idxIm>=yxdim)
 		return;
 
-	float x = idxIm%xdim;
+	if(idxTh<9)
+		transMatSD[idxTh] = transMat[idxTh+(numIm*9)];
+	__syncthreads();
+
+	float x;
+	if (power2x==true)
+		x = idxIm & (xdim-1);
+	else
+		x = idxIm%xdim;
+
 	float y = idxIm/xdim;
 	float x_orig = 0;
 	float y_orig = 0;
 
-	x -= transMat[2+(numIm*9)];
-	y -= transMat[5+(numIm*9)];
+	//transMat into shared memory
+	x -= transMatSD[2]; //transMat[2+(numIm*9)];
+	y -= transMatSD[5]; //transMat[5+(numIm*9)];
 
-	x = x - xdim/2;
-	y = y - ydim/2;
+	x = x - xdim/2.0f;
+	y = y - ydim/2.0f;
 
-	x_orig += transMat[(numIm*9)]*x - transMat[1+(numIm*9)]*y + xdim/2;
-	y_orig += -transMat[3+(numIm*9)]*x + transMat[4+(numIm*9)]*y + ydim/2;
+	x_orig += transMatSD[0]*x - transMatSD[1]*y + xdim/2.0f;
+	y_orig += -transMatSD[3]*x + transMatSD[4]*y + xdim/2.0f;
+	// x_orig += transMat[(numIm*9)]*x - transMat[1+(numIm*9)]*y + xdim/2.0f;
+	//y_orig += -transMat[3+(numIm*9)]*x + transMat[4+(numIm*9)]*y + ydim/2.0f;
 
 	int x_orig00 = (int)floorf(x_orig);
 	int y_orig00 = (int)floorf(y_orig);
@@ -444,7 +531,7 @@ __global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat,
 	float I11 = d_in[imgIdx11+imgOffset];
 	float imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
 
-	d_out[idx] = imVal;
+	d_out[idxIm+(numIm*yxdim)] = imVal;
 
 }
 
@@ -452,19 +539,21 @@ __global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat,
 
 __global__ void calculateNccRotationKernel(float *RefExpRealSpace, cufftComplex *polarFFTRef, cufftComplex *polarFFTExp,
 		cufftComplex *polarSquaredFFTRef, cufftComplex *polarSquaredFFTExp,	float maskFFTPolarReal, float *NCC,
-		size_t yxdimFFT, size_t nzyxdim, size_t yxdim)
+		int yxdimFFT, int nzyxdim, int yxdim)
 {
 
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	unsigned long int idxLow = (idx/(int)yxdim)*(int)yxdimFFT;
+	//change unsigned lont int for int and all the size_t
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idxLow = (idx/yxdim)*yxdimFFT;
 
 	if(idx>=nzyxdim)
 		return;
 
-	float normValue = 1.0/yxdimFFT;
+	float normValue = 1.0f/yxdimFFT;
 	float maskNorm = maskFFTPolarReal*normValue;
 
 
+	//check shared memory for these vector also ¿?¿? NO
 	float M1M2Polar = maskFFTPolarReal*maskNorm;
 	float polarValRef = cuCrealf(polarFFTRef[idxLow])*maskNorm;
 	float polarSqValRef = cuCrealf(polarSquaredFFTRef[idxLow])*maskNorm;
@@ -485,59 +574,76 @@ __global__ void calculateNccRotationKernel(float *RefExpRealSpace, cufftComplex 
 
 
 __global__ void pointwiseMultiplicationComplexKernel(cufftComplex *reference, cufftComplex *experimental,
-		cufftComplex *RefExpFourier, size_t nzyxdim, size_t yxdim)
+		cufftComplex *RefExpFourier, int nzyxdim, int yxdim)
 {
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if(idx>=nzyxdim)
 		return;
 
-	float normFactor = (1.0/yxdim);
+	float normFactor = (1.0f/yxdim);
 
 	cuComplex mulOut = cuCmulf(reference[idx], experimental[idx]);
 	RefExpFourier[idx] = mulOut*normFactor;
 }
 
+//TODO: try this instead with blockIdx.y being the number of images maybe with a subset,
+//i.e., every thread processing a bunch of images, instead of just one
 __global__ void maskingPaddingKernel(float *d_in, float *mask, float *padded_image_gpu,
-		float *padded_image2_gpu, float *padded_mask_gpu, size_t xdim, size_t ydim, size_t yxdim,
-		size_t numImag, size_t pad_xdim, size_t pad_ydim, size_t pad_yxdim, bool experimental){
+		float *padded_image2_gpu, float *padded_mask_gpu, int xdim, int ydim, int yxdim,
+		int numImag, int pad_xdim, int pad_ydim, int pad_yxdim, bool experimental, bool power2x){
 
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int numIm = blockIdx.y;
 
 	if(idx>=yxdim)
 		return;
 
-	unsigned int x_idx1 = idx%(int)xdim;
-	unsigned int y_idx1 = idx/(int)xdim;
-	unsigned int idxWriteToMask;
+	int x_idx1;
+	if (power2x==true)
+		x_idx1 = idx & (xdim-1);
+	else
+		x_idx1 = idx%xdim;
+
+	int y_idx1 = idx/xdim;
+	int idxWriteToMask;
 	if(experimental)
 		idxWriteToMask = (ydim-1 - y_idx1)*xdim + (xdim-1 - x_idx1);
 	else
 		idxWriteToMask = y_idx1*xdim + x_idx1;
 
-	int xdim2Im = (int)floorf((pad_xdim-xdim)/2);
-	int ydim2Im = (int)floorf((pad_ydim-ydim)/2);
+	int xdim2Im = (int)floorf((pad_xdim-xdim)/2.0f);
+	int ydim2Im = (int)floorf((pad_ydim-ydim)/2.0f);
 	int xdim2Mask = xdim2Im;
 	int ydim2Mask = ydim2Im;
-	if(experimental && xdim%2==0){
+	if(experimental && (xdim&1)==0){
 		xdim2Im+=1;
 		ydim2Im+=1;
 	}
 
-	unsigned int x_idx = idxWriteToMask%(int)xdim;
-	unsigned int y_idx = idxWriteToMask/(int)xdim;
-	unsigned int idxWrite;
-	unsigned int idxWriteMask;
+	int x_idx;
+	if (power2x==true)
+		x_idx = idxWriteToMask & (xdim-1);
+	else
+		x_idx = idxWriteToMask%xdim;
+
+	int y_idx = idxWriteToMask/xdim;
+	int idxWrite;
+	int idxWriteMask;
 	float d_out, d_out2;
 
 	int offset=0;
-	for(int j=0; j<numImag; j++){
+	//for(int j=0; j<numImag; j++){
+
+	int j = numIm;
+
+		offset=j*yxdim;
 
 		d_out = d_in[idx+offset]*mask[idx];
 		d_out2 = d_out*d_out;
 
 		idxWrite = (pad_yxdim*j) + (ydim2Im*pad_xdim) + (y_idx*pad_xdim) + xdim2Im + x_idx;
-		if(xdim%2==0)
+		if((xdim&1)==0)
 			idxWriteMask = (pad_yxdim*j) + (ydim2Mask*pad_xdim) + (y_idx*pad_xdim) + xdim2Mask + x_idx;
 		else
 			idxWriteMask = idxWrite;
@@ -545,26 +651,31 @@ __global__ void maskingPaddingKernel(float *d_in, float *mask, float *padded_ima
 		padded_image2_gpu[idxWrite] = d_out2;
 		if(j==0 && padded_mask_gpu!=NULL)
 			padded_mask_gpu[idxWriteMask] = mask[idx];
-		offset += yxdim;
-	}
+
+	//}
 }
 
 
-__global__ void buildTranslationMatrix (float *d_pos, float *newMat, float* lastMat, float* result,
-		float *maxGpu, float *NCC, size_t Xdim, size_t Ydim, size_t Ndim, size_t NCC_yxdim,
-		int fixPadding, double maxShift){
+__global__ void buildTranslationMatrix (float *d_pos, float* lastMat, float* result,
+		float *maxGpu, float *NCC, int Xdim, int Ydim, int Ndim, int NCC_yxdim,
+		int fixPadding, double maxShift2, bool power2x){
 
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if(idx>=Ndim)
 		return;
 
 	int position = (int)d_pos[idx];
 
-	float posX_aux = (float)(position%Xdim);
+	float posX_aux;
+	if (power2x==true)
+		posX_aux = position & (Xdim-1);
+	else
+		posX_aux = position%Xdim;
+
 	float posY_aux = (float)(position/Xdim);
-	float Xdim2 = (float)(Xdim/2);
-	float Ydim2 = (float)(Ydim/2);
+	float Xdim2 = (Xdim/2.0f);
+	float Ydim2 = (Ydim/2.0f);
 	float posX, posY;
 
 	if(posX_aux>=Xdim2 && posY_aux>=Ydim2){
@@ -588,35 +699,55 @@ __global__ void buildTranslationMatrix (float *d_pos, float *newMat, float* last
 	posY+=fixPadding;
 
 	int idx9 = idx*9;
-	newMat[idx9]=1;
-	newMat[idx9+1]=0;
+
+	/*newMat[idx9]=1.0f;
+	newMat[idx9+1]=0.0f;
 	newMat[idx9+2]=-posX;
-	newMat[idx9+3]=0;
-	newMat[idx9+4]=1;
+	newMat[idx9+3]=0.0f;
+	newMat[idx9+4]=1.0f;
 	newMat[idx9+5]=-posY;
-	newMat[idx9+6]=0;
-	newMat[idx9+7]=0;
-	newMat[idx9+8]=1;
+	newMat[idx9+6]=0.0f;
+	newMat[idx9+7]=0.0f;
+	newMat[idx9+8]=1.0f;*/
 
-	double maxShift2 = maxShift*maxShift;
+	//double maxShift2 = maxShift*maxShift;
+	float new0 = 1.0f;
+	float new1 = 0.0f;
+	float new2 = -posX;
+	float new3 = 0.0f;
+	float new4 = 1.0f;
+	float new5 = -posY;
+	float new6 = 0.0f;
+	float new7 = 0.0f;
+	float new8 = 1.0f;
 
-	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2]*lastMat[idx9+8];
-	float shifty = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5]*lastMat[idx9+8];
+	float last0 = lastMat[idx9];
+	float last1 = lastMat[idx9+1];
+	float last2 = lastMat[idx9+2];
+	float last3 = lastMat[idx9+3];
+	float last4 = lastMat[idx9+4];
+	float last5 = lastMat[idx9+5];
+	float last6 = lastMat[idx9+6];
+	float last7 = lastMat[idx9+7];
+	float last8 = lastMat[idx9+8];
+
+	float shiftx = new0*last2 + new1*last5 + new2*last8;
+	float shifty = new3*last2 + new4*last5 + new5*last8;
 	float radShift = shiftx*shiftx + shifty*shifty;
 	if(radShift > maxShift2){
-		result[idx9] = lastMat[idx9];
-		result[idx9+1] = lastMat[idx9+1];
-		result[idx9+2] = lastMat[idx9+2];
-		result[idx9+3] = lastMat[idx9+3];
-		result[idx9+4] = lastMat[idx9+4];
-		result[idx9+5] = lastMat[idx9+5];
+		result[idx9] = last0;
+		result[idx9+1] = last1;
+		result[idx9+2] = last2;
+		result[idx9+3] = last3;
+		result[idx9+4] = last4;
+		result[idx9+5] = last5;
 		maxGpu[idx] = NCC[idx*NCC_yxdim];
 	}else{
-		result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3] + newMat[idx9+2]*lastMat[idx9+6];
+		result[idx9] = new0*last0 + new1*last3 + new2*last6;
 		result[idx9+2] = shiftx;
-		result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4] + newMat[idx9+2]*lastMat[idx9+7];
-		result[idx9+3] = newMat[idx9+3]*lastMat[idx9] + newMat[idx9+4]*lastMat[idx9+3] + newMat[idx9+5]*lastMat[idx9+6];
-		result[idx9+4] = newMat[idx9+3]*lastMat[idx9+1] + newMat[idx9+4]*lastMat[idx9+4] + newMat[idx9+5]*lastMat[idx9+7];
+		result[idx9+1] = new0*last1 + new1*last4 + new2*last7;
+		result[idx9+3] = new3*last0 + new4*last3 + new5*last6;
+		result[idx9+4] = new3*last1 + new4*last4 + new5*last7;
 		result[idx9+5] = shifty;
 	}
 
@@ -624,11 +755,11 @@ __global__ void buildTranslationMatrix (float *d_pos, float *newMat, float* last
 
 
 
-__global__ void buildRotationMatrix (float *d_pos, float *newMat, float* lastMat, float* result,
-		float *maxGpu, float *auxMax, float *NCC, size_t Xdim, size_t Ndim, size_t NCC_yxdim,
-		int fixPadding, double maxShift){
+__global__ void buildRotationMatrix (float *d_pos, float* lastMat, float* result,
+		float *maxGpu, float *auxMax, float *NCC, int Xdim, int Ndim, int NCC_yxdim,
+		int fixPadding, double maxShift2, bool power2x){
 
-	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if(idx>=Ndim)
 		return;
@@ -637,8 +768,13 @@ __global__ void buildRotationMatrix (float *d_pos, float *newMat, float* lastMat
 	int position = (int)d_pos[idx];
 	maxGpu[idx] = auxMax[position+(idx*360)];
 
-	float posX_aux = (float)(position%Xdim);
-	float Xdim2 = (float)(Xdim/2);
+	float posX_aux;
+	if (power2x==true)
+		posX_aux = position & (Xdim-1);
+	else
+		posX_aux = position%Xdim;
+
+	float Xdim2 = (Xdim/2.0f);
 
 
 	if(posX_aux<Xdim2){
@@ -653,74 +789,217 @@ __global__ void buildRotationMatrix (float *d_pos, float *newMat, float* lastMat
 	float rad = (float)(-posX*PI/180);
 
 	int idx9 = idx*9;
-	newMat[idx9]=cosf(rad);
+	/*newMat[idx9]=cosf(rad);
 	newMat[idx9+1]=-sinf(rad);
-	newMat[idx9+2]=0;
+	newMat[idx9+2]=0.0f;
 	newMat[idx9+3]=sinf(rad);
 	newMat[idx9+4]=cosf(rad);
-	newMat[idx9+5]=0;
-	newMat[idx9+6]=0;
-	newMat[idx9+7]=0;
-	newMat[idx9+8]=1;
+	newMat[idx9+5]=0.0f;
+	newMat[idx9+6]=0.0f;
+	newMat[idx9+7]=0.0f;
+	newMat[idx9+8]=1.0f;*/
 
-	double maxShift2 = maxShift*maxShift;
+	//double maxShift2 = maxShift*maxShift;
+	float new0 = cosf(rad);
+	float new1 = -sinf(rad);
+	float new2 = 0.0f;
+	float new3 = sinf(rad);
+	float new4 = cosf(rad);
+	float new5 = 0.0f;
+	float new6 = 0.0f;
+	float new7 = 0.0f;
+	float new8 = 1.0f;
 
-	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2]*lastMat[idx9+8];
-	float shifty = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5]*lastMat[idx9+8];
+	float last0 = lastMat[idx9];
+	float last1 = lastMat[idx9+1];
+	float last2 = lastMat[idx9+2];
+	float last3 = lastMat[idx9+3];
+	float last4 = lastMat[idx9+4];
+	float last5 = lastMat[idx9+5];
+	float last6 = lastMat[idx9+6];
+	float last7 = lastMat[idx9+7];
+	float last8 = lastMat[idx9+8];
+
+	float shiftx = new0*last2 + new1*last5 + new2*last8;
+	float shifty = new3*last2 + new4*last5 + new5*last8;
 	float radShift = shiftx*shiftx + shifty*shifty;
 	if(radShift > maxShift2){
-		result[idx9] = lastMat[idx9];
-		result[idx9+1] = lastMat[idx9+1];
-		result[idx9+2] = lastMat[idx9+2];
-		result[idx9+3] = lastMat[idx9+3];
-		result[idx9+4] = lastMat[idx9+4];
-		result[idx9+5] = lastMat[idx9+5];
+		result[idx9] = last0;
+		result[idx9+1] = last1;
+		result[idx9+2] = last2;
+		result[idx9+3] = last3;
+		result[idx9+4] = last4;
+		result[idx9+5] = last5;
 		maxGpu[idx] = NCC[idx*NCC_yxdim];
 	}else{
-		result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3] + newMat[idx9+2]*lastMat[idx9+6];
+		result[idx9] = new0*last0 + new1*last3 + new2*last6;
 		result[idx9+2] = shiftx;
-		result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4] + newMat[idx9+2]*lastMat[idx9+7];
-		result[idx9+3] = newMat[idx9+3]*lastMat[idx9] + newMat[idx9+4]*lastMat[idx9+3] + newMat[idx9+5]*lastMat[idx9+6];
-		result[idx9+4] = newMat[idx9+3]*lastMat[idx9+1] + newMat[idx9+4]*lastMat[idx9+4] + newMat[idx9+5]*lastMat[idx9+7];
+		result[idx9+1] = new0*last1 + new1*last4 + new2*last7;
+		result[idx9+3] = new3*last0 + new4*last3 + new5*last6;
+		result[idx9+4] = new3*last1 + new4*last4 + new5*last7;
 		result[idx9+5] = shifty;
 	}
 
 }
 
 
-void padding_masking(GpuMultidimArrayAtGpu<float> &d_orig_image, GpuMultidimArrayAtGpu<float> &mask, GpuMultidimArrayAtGpu<float> &padded_image_gpu,
-		GpuMultidimArrayAtGpu<float> &padded_image2_gpu, GpuMultidimArrayAtGpu<float> &padded_mask_gpu, bool experimental){
+
+__global__ void cart2polar(float *image, float *polar, float *polar2, int maxRadius, int maxAng,
+		int Nimgs, int Ydim, int Xdim, bool rotate)
+{
+	int angle = blockDim.x * blockIdx.x + threadIdx.x;
+	int radius = blockDim.y * blockIdx.y + threadIdx.y;
+
+	int numIm = blockIdx.z;
+
+	if (radius>=maxRadius || angle>=maxAng)
+		return;
+
+	float x = (float)(radius*cosf((float)(angle*PI/180))) + Xdim/2;
+	float y = (float)(radius*sinf((float)(angle*PI/180))) + Ydim/2;
+
+	float dx_low = floorf(x);
+	float dy_low = floorf(y);
+	int x_low = (int)dx_low;
+	int y_low = (int)dy_low;
+	float x_x_low=x-dx_low;
+	float y_y_low=y-dy_low;
+	float one_x=1.0-x_x_low;
+	float one_y=1.0-y_y_low;
+	float w00=one_y*one_x;
+	float w01=one_y*x_x_low;
+	float w10=y_y_low*one_x;
+	float w11=y_y_low*x_x_low;
+
+	int NXY=Xdim*Ydim;
+	int NXYpolar=maxAng*maxRadius;
+	int imgIdx00=y_low * Xdim + x_low;
+	int imgIdx01=imgIdx00+1;
+	int imgIdx10=imgIdx00+Xdim;
+	int imgIdx11=imgIdx10+1;
+	int imgOffset=0;
+	int polarOffset=0;
+	int polarIdx;
+	if(!rotate)
+		polarIdx=angle+(radius*maxAng);
+	else
+		polarIdx = (maxAng-angle-1)+((maxRadius-radius-1)*maxAng);
+
+	//change this loop: every th dedicated to lower amount of images, having another dimension of blocks dedicated to manage several images at the same time
+	//for (int n=0; n<Nimgs; n++)
+	//{
+		int n=numIm;
+
+		imgOffset = n*NXY;
+		polarOffset = n*NXYpolar;
+		float I00 = image[imgIdx00+imgOffset];
+		float I01 = image[imgIdx01+imgOffset];
+		float I10 = image[imgIdx10+imgOffset];
+		float I11 = image[imgIdx11+imgOffset];
+		float imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
+		int finalPolarIndex=polarIdx+polarOffset;
+		polar[finalPolarIndex] = imVal;
+		polar2[finalPolarIndex] = imVal*imVal;
+
+		//imgOffset+=NXY;
+		//polarOffset+=NXYpolar;
+	//}
+
+
+}
+
+
+
+__global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
+		int yxdim, int Ndim){
+
+	int idx = threadIdx.x;
+	int nIm = blockIdx.x;
+	int blockSize = blockDim.x;
+
+	int posTh = nIm*yxdim + idx;
+	int n = ceilf(((float)yxdim/(float)blockSize));
+
+	//printf("n %i\n", n);
+	float tmp, tmpPos;
+
+	if(idx>=yxdim){
+		tmp = -1.0f;
+		tmpPos = -1.0f;
+	}else{
+		tmp = d_in[posTh];
+		tmpPos = idx;
+		for (int i=1; i<n; i++){
+			//printf("posTh+i*blockSize %i, yxdim*(nIm+1) %i\n", posTh+i*blockSize, yxdim*(nIm+1));
+			if (posTh+i*blockSize < yxdim*(nIm+1)){
+
+					//printf("i %i posTh %i tmp %f posTh+i*blockSize %i d_in[posTh+i*blockSize] %f \n", i, posTh, tmp, posTh+i*blockSize, d_in[posTh+i*blockSize]);
+
+				tmp = fmaxf(tmp, d_in[posTh+i*blockSize]);
+				tmpPos = (tmp==d_in[posTh+i*blockSize]) ? idx+i*blockSize : tmpPos;
+			}
+		}
+	}
+	int posOut = nIm*blockSize + idx;
+	d_out[posOut] = tmp;
+	position[posOut] = tmpPos;
+	//if(nIm==0){
+		//printf("posOut %i d_out[posOut] %f position[posOut] %f \n", posOut, d_out[posOut], position[posOut]);
+	//}
+
+}
+
+
+void padding_masking(GpuMultidimArrayAtGpu<float> &d_orig_image, GpuMultidimArrayAtGpu<float> &mask,
+		GpuMultidimArrayAtGpu<float> &padded_image_gpu, GpuMultidimArrayAtGpu<float> &padded_image2_gpu,
+		GpuMultidimArrayAtGpu<float> &padded_mask_gpu, bool experimental, myStreamHandle &myStream){
 
     int numTh = 1024;
 	int numBlk = d_orig_image.yxdim/numTh;
 	if(d_orig_image.yxdim%numTh > 0)
 		numBlk++;
 
-	gpuErrchk(cudaMemsetAsync(padded_image_gpu.d_data, 0, padded_image_gpu.nzyxdim*sizeof(float)));
-	gpuErrchk(cudaMemsetAsync(padded_image2_gpu.d_data, 0, padded_image2_gpu.nzyxdim*sizeof(float)));
-	if(padded_mask_gpu.d_data!=NULL)
-		gpuErrchk(cudaMemsetAsync(padded_mask_gpu.d_data, 0, padded_mask_gpu.nzyxdim*sizeof(float)));
+	dim3 blockSize(numTh,1,1);
+	dim3 gridSize(numBlk, d_orig_image.Ndim, 1);
 
-	maskingPaddingKernel<<< numBlk, numTh >>>(d_orig_image.d_data, mask.d_data,
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
+	gpuErrchk(cudaMemsetAsync(padded_image_gpu.d_data, 0, padded_image_gpu.nzyxdim*sizeof(float), *stream));
+	gpuErrchk(cudaMemsetAsync(padded_image2_gpu.d_data, 0, padded_image2_gpu.nzyxdim*sizeof(float), *stream));
+	if(padded_mask_gpu.d_data!=NULL)
+		gpuErrchk(cudaMemsetAsync(padded_mask_gpu.d_data, 0, padded_mask_gpu.nzyxdim*sizeof(float), *stream));
+
+	bool power2;
+	if (d_orig_image.Xdim & (d_orig_image.Xdim-1))
+		power2 = false;
+	else
+		power2 = true;
+	maskingPaddingKernel<<< gridSize, blockSize, 0, *stream>>>(d_orig_image.d_data, mask.d_data,
 			padded_image_gpu.d_data, padded_image2_gpu.d_data, padded_mask_gpu.d_data,
 			d_orig_image.Xdim, d_orig_image.Ydim, d_orig_image.yxdim, d_orig_image.Ndim,
-			padded_image_gpu.Xdim, padded_image_gpu.Ydim, padded_image_gpu.yxdim, experimental);
+			padded_image_gpu.Xdim, padded_image_gpu.Ydim, padded_image_gpu.yxdim, experimental, power2);
 
 }
 
 
 void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<float> > &M, const GpuMultidimArrayAtGpu < std::complex<float> >& manyF,
-		GpuMultidimArrayAtGpu< std::complex<float> > &MmanyF)
+		GpuMultidimArrayAtGpu< std::complex<float> > &MmanyF, myStreamHandle &myStream)
 {
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
     int numTh = 1024;
     XmippDim3 blockSize(numTh, 1, 1), gridSize;
     manyF.calculateGridSizeVectorized(blockSize, gridSize);
 
-    pointwiseMultiplicationComplexOneManyKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-			((cufftComplex*)M.d_data, (cufftComplex*)manyF.d_data, (cufftComplex*) MmanyF.d_data, manyF.nzyxdim, manyF.yxdim);
+    bool power2;
+    if (manyF.yxdim & (manyF.yxdim-1))
+    	power2 = false;
+    else
+    	power2 = true;
+    pointwiseMultiplicationComplexOneManyKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize), 0, *stream >>>
+			((cufftComplex*)M.d_data, (cufftComplex*)manyF.d_data, (cufftComplex*) MmanyF.d_data, manyF.nzyxdim, manyF.yxdim, power2);
 
 }
 
+/*
 void calculateDenomFunction(const GpuMultidimArrayAtGpu< float > &MFrealSpace, const GpuMultidimArrayAtGpu < float >& MF2realSpace,
 		const GpuMultidimArrayAtGpu < float >& maskAutocorrelation, GpuMultidimArrayAtGpu< float > &out)
 {
@@ -728,58 +1007,67 @@ void calculateDenomFunction(const GpuMultidimArrayAtGpu< float > &MFrealSpace, c
     XmippDim3 blockSize(numTh, 1, 1), gridSize;
     MFrealSpace.calculateGridSizeVectorized(blockSize, gridSize);
 
+    bool power2;
+    if (MFrealSpace.yxdim & (MFrealSpace.yxdim-1))
+    	power2 = false;
+    else
+    	power2 = true;
     calculateDenomFunctionKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
 			(MFrealSpace.d_data, MF2realSpace.d_data, maskAutocorrelation.d_data, out.d_data, MFrealSpace.nzyxdim, MFrealSpace.yxdim);
 
 }
+*/
 
 
 
-void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB, StructuresAux &myStructureAux)
+void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB,
+		StructuresAux &myStructureAux, myStreamHandle &myStream)
 {
 	myStructureAux.MF.resize(d_projFFT);
 	myStructureAux.MF2.resize(d_projSquaredFFT);
 
-	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF);
-	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2);
+	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
+	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
 
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 
-	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB);
-	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB);
+	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream);
+	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream);
 
 	GpuMultidimArrayAtGpu< std::complex<float> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
-	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux);
+	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux, myStream);
 	maskAutocorrelation.resize(Xdim, Ydim);
-	maskAux.ifft(maskAutocorrelation, myhandleMaskB);
+	maskAux.ifft(maskAutocorrelation, myhandleMaskB, myStream);
 	maskAux.clear();
 
 }
 
 
 
-void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB, StructuresAux &myStructureAux,
-		GpuMultidimArrayAtGpu<float> &maskAutocorr)
+void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB,
+		StructuresAux &myStructureAux, GpuMultidimArrayAtGpu<float> &maskAutocorr, myStreamHandle &myStream)
 {
+
 	myStructureAux.MF.resize(d_projFFT);
 	myStructureAux.MF2.resize(d_projSquaredFFT);
 
-	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF);
-	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2);
+	//TODO everything managed by just one kernel??
+	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
+	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
 
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 
-	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB);
-	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB);
+	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream);
+	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream);
 
-	maskAutocorr.copyGpuToGpu(maskAutocorrelation);
+	maskAutocorr.copyGpuToGpu(maskAutocorrelation, myStream);
 
 }
 
 
-
+/*
 void calculateMaxNew1D(int xdim, int Ndim, float *d_data,
 		GpuMultidimArrayAtGpu<float> &d_out, GpuMultidimArrayAtGpu<float> &d_pos){
 
@@ -819,7 +1107,7 @@ void calculateMaxNew1D(int xdim, int Ndim, float *d_data,
 			break;
    }
 
-/*	float *h_pos = new float[Ndim];
+///*	float *h_pos = new float[Ndim];
 	cudaMemcpy(h_pos, d_pos.d_data, Ndim*sizeof(float), cudaMemcpyDeviceToHost);
 	float *h_auxMax = new float[xdim*Ndim];
 	cudaMemcpy(h_auxMax, auxMax, xdim*Ndim*sizeof(float), cudaMemcpyDeviceToHost);
@@ -842,52 +1130,17 @@ void calculateMaxNew1D(int xdim, int Ndim, float *d_data,
 		//Fixing padding problem
 		posX[i]+=fixPadding;
 
-	}*/
+	}///*
 
 }
+*/
 
 
-__global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
-		size_t yxdim, int Ndim){
-
-	unsigned int idx = threadIdx.x;
-	unsigned int nIm = blockIdx.x;
-	unsigned int blockSize = blockDim.x;
-
-	unsigned int posTh = nIm*yxdim + idx;
-	int n = ceilf(((float)yxdim/(float)blockSize));
-
-	//printf("n %i\n", n);
-	float tmp, tmpPos;
-
-	if(idx>=yxdim){
-		tmp = -1.0;
-		tmpPos = -1.0;
-	}else{
-		tmp = d_in[posTh];
-		tmpPos = idx;
-		for (int i=1; i<n; i++){
-			//printf("posTh+i*blockSize %i, yxdim*(nIm+1) %i\n", posTh+i*blockSize, yxdim*(nIm+1));
-			if (posTh+i*blockSize < yxdim*(nIm+1)){
-
-					//printf("i %i posTh %i tmp %f posTh+i*blockSize %i d_in[posTh+i*blockSize] %f \n", i, posTh, tmp, posTh+i*blockSize, d_in[posTh+i*blockSize]);
-
-				tmp = fmaxf(tmp, d_in[posTh+i*blockSize]);
-				tmpPos = (tmp==d_in[posTh+i*blockSize]) ? idx+i*blockSize : tmpPos;
-			}
-		}
-	}
-	unsigned int posOut = nIm*blockSize + idx;
-	d_out[posOut] = tmp;
-	position[posOut] = tmpPos;
-	//if(nIm==0){
-		//printf("posOut %i d_out[posOut] %f position[posOut] %f \n", posOut, d_out[posOut], position[posOut]);
-	//}
-
-}
 
 void calculateMaxNew2DNew(int yxdim, int Ndim, float *d_data,
-		GpuMultidimArrayAtGpu<float> &d_out, GpuMultidimArrayAtGpu<float> &d_pos){
+		GpuMultidimArrayAtGpu<float> &d_out, GpuMultidimArrayAtGpu<float> &d_pos, myStreamHandle &myStream){
+
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 
     int numTh = 1024;
     int numBlk = Ndim;
@@ -895,15 +1148,15 @@ void calculateMaxNew2DNew(int yxdim, int Ndim, float *d_data,
     d_out.resize(numTh * numBlk);
     d_pos.resize(numTh * numBlk);
 
-    calculateMaxThreads<<<numBlk, numTh>>>(d_data, d_out.d_data, d_pos.d_data, yxdim, Ndim);
-    cudaDeviceSynchronize();
+    calculateMaxThreads<<<numBlk, numTh, 0, *stream>>>(d_data, d_out.d_data, d_pos.d_data, yxdim, Ndim);
+    //cudaStreamSynchronize(*stream);
 
-    calculateMax2<<<numBlk, numTh, 2*numTh * sizeof(float)>>> (d_out.d_data, d_out.d_data, d_pos.d_data, numTh, 1, false);
-    cudaDeviceSynchronize();
+    calculateMax2<<<numBlk, numTh, 2*numTh * sizeof(float), *stream>>> (d_out.d_data, d_out.d_data, d_pos.d_data, numTh, 1, false);
+    //cudaStreamSynchronize(*stream);
 
 }
 
-
+/*
 void calculateMaxNew2D(int yxdim, int Ndim, float *d_data,
 		GpuMultidimArrayAtGpu<float> &d_out, GpuMultidimArrayAtGpu<float> &d_pos){
 
@@ -943,7 +1196,7 @@ void calculateMaxNew2D(int yxdim, int Ndim, float *d_data,
 			break;
    }
 
-	/*float *h_pos = new float[Ndim];
+	///*float *h_pos = new float[Ndim];
 	cudaMemcpy(h_pos, d_pos.d_data, Ndim*sizeof(float), cudaMemcpyDeviceToHost);
 	//cudaMemcpy(max_values, d_out.d_data, Ndim*sizeof(float), cudaMemcpyDeviceToHost);
 
@@ -974,14 +1227,19 @@ void calculateMaxNew2D(int yxdim, int Ndim, float *d_data,
 		posX[i]+=fixPadding;
 		posY[i]+=fixPadding;
 
-	}*/
+	}///*
 
 }
-
+*/
 
 void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror, StructuresAux &myStructureAux)
+		float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror,
+		StructuresAux &myStructureAux, myStreamHandle &myStream, TransformMatrix<float> &resultRT)
 {
+
+
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
+
 	myStructureAux.RefExpFourierPolar.resize(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
 			referenceAux.d_projPolarFFT.Zdim, referenceAux.d_projPolarFFT.Ndim);
 
@@ -989,14 +1247,14 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
     XmippDim3 blockSize(numTh, 1, 1), gridSize;
     referenceAux.d_projPolarFFT.calculateGridSizeVectorized(blockSize, gridSize);
 
-    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize), 0, *stream >>>
 			((cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAux.d_projPolarFFT.d_data,
 					(cufftComplex*)myStructureAux.RefExpFourierPolar.d_data, referenceAux.d_projPolarFFT.nzyxdim,
 					referenceAux.d_projPolarFFT.yxdim);
 
     myStructureAux.RefExpRealSpacePolar.resize(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
     		referenceAux.d_projPolarFFT.Ndim);
-    myStructureAux.RefExpFourierPolar.ifft(myStructureAux.RefExpRealSpacePolar, myhandlePadded);
+    myStructureAux.RefExpFourierPolar.ifft(myStructureAux.RefExpRealSpacePolar, myhandlePadded, myStream);
 
     XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
     myStructureAux.RefExpRealSpacePolar.calculateGridSizeVectorized(blockSize2, gridSize2);
@@ -1005,7 +1263,7 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 				referenceAux.d_projPolarFFT.Ndim);
 
 	double maskFFTPolar = (referenceAux.XdimPolar*referenceAux.YdimPolar);
-	calculateNccRotationKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
+	calculateNccRotationKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2), 0, *stream >>>
 			(myStructureAux.RefExpRealSpacePolar.d_data, (cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAux.d_projPolarFFT.d_data,
 					(cufftComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftComplex*)experimentalAux.d_projPolarSquaredFFT.d_data,
 					maskFFTPolar, myStructureAux.d_NCCPolar.d_data, referenceAux.d_projPolarFFT.yxdim, myStructureAux.RefExpRealSpacePolar.nzyxdim,
@@ -1020,7 +1278,7 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
     myStructureAux.d_NCCPolar1D.resize(myStructureAux.d_NCCPolar.Xdim,1,1,myStructureAux.d_NCCPolar.Ndim);
     myStructureAux.auxMax.resize(myStructureAux.d_NCCPolar.Xdim,1,1,myStructureAux.d_NCCPolar.Ndim);
     myStructureAux.auxZero.resize(myStructureAux.d_NCCPolar.Xdim,1,1,myStructureAux.d_NCCPolar.Ndim);
-    sumRadiusKernel<<< numBlk, numTh >>>(myStructureAux.d_NCCPolar.d_data, myStructureAux.d_NCCPolar1D.d_data, myStructureAux.auxMax.d_data,
+    sumRadiusKernel<<< numBlk, numTh, 0, *stream >>>(myStructureAux.d_NCCPolar.d_data, myStructureAux.d_NCCPolar1D.d_data, myStructureAux.auxMax.d_data,
     		myStructureAux.auxZero.d_data, myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim, myStructureAux.d_NCCPolar.Ydim,
 			myStructureAux.d_NCCPolar.Ndim);
 
@@ -1037,15 +1295,15 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 	//gettimeofday(&begin, NULL);
 
 	calculateMaxNew2DNew(myStructureAux.d_NCCPolar1D.Xdim, myStructureAux.d_NCCPolar1D.Ndim, myStructureAux.d_NCCPolar1D.d_data,
-			myStructureAux.d_out_polar_max, myStructureAux.d_pos_polar_max);
+			myStructureAux.d_out_polar_max, myStructureAux.d_pos_polar_max, myStream);
 
 	//gettimeofday(&end, NULL);
 	//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
 	//printf("Calculate Max 1D time %lf \n", elapsed);
 
 
-    TransformMatrix<float> result(transMat.Ndim);
-	TransformMatrix<float> newMat(transMat.Ndim);
+    //TransformMatrix<float> result(myStream, transMat.Ndim);
+	//TransformMatrix<float> newMat(myStream, transMat.Ndim);
 	//newMat.setRotation(posX);
 
 	numTh = 1024;
@@ -1053,11 +1311,17 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 	if(transMat.Ndim%numTh > 0)
 		numBlk++;
 
-	GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCCPolar1D.Ndim);
-	buildRotationMatrix<<<numBlk, numTh>>> (myStructureAux.d_pos_polar_max.d_data, newMat.d_data, transMat.d_data,
-			result.d_data, maxGpu.d_data, myStructureAux.auxMax.d_data, myStructureAux.auxZero.d_data,
+	bool _power2x;
+	if (myStructureAux.d_NCCPolar1D.Xdim & (myStructureAux.d_NCCPolar1D.Xdim-1))
+		_power2x = false;
+	else
+		_power2x = true;
+	double maxShift2 = (2*maxShift)*(2*maxShift);
+	myStructureAux.maxGpu.resize(myStructureAux.d_NCCPolar1D.Ndim);
+	buildRotationMatrix<<<numBlk, numTh, 0, *stream>>> (myStructureAux.d_pos_polar_max.d_data, transMat.d_data,
+			resultRT.d_data, myStructureAux.maxGpu.d_data, myStructureAux.auxMax.d_data, myStructureAux.auxZero.d_data,
 			myStructureAux.d_NCCPolar1D.Xdim, myStructureAux.d_NCCPolar1D.Ndim,
-			myStructureAux.d_NCCPolar1D.yxdim, 0, 2*maxShift);
+			myStructureAux.d_NCCPolar1D.yxdim, 0, maxShift2, _power2x);
 
 	/*numTh = 1024;
 		numBlk = transMat.Ndim/numTh;
@@ -1066,11 +1330,13 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 	GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCCPolar1D.Ndim);
 	gpuErrchk(cudaMemcpy(maxGpu.d_data, max_values, myStructureAux.d_NCCPolar1D.Ndim*sizeof(float), cudaMemcpyHostToDevice));
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, 2*maxShift,
+	double maxShift2 = (2*maxShift)*(2*maxShift);
+	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift2,
 			maxGpu.d_data, myStructureAux.auxZero.d_data, myStructureAux.d_NCCPolar1D.yxdim);*/
-	result.copyMatrix(transMat);
+	resultRT.copyMatrix(transMat, myStream);
 
-	gpuErrchk(cudaMemcpyAsync(max_vector, maxGpu.d_data, myStructureAux.d_NCCPolar1D.Ndim*sizeof(float), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyAsync(max_vector, myStructureAux.maxGpu.d_data, myStructureAux.maxGpu.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *stream));
+
 
 	//delete[] max_values;
 	//delete[] posX;
@@ -1080,8 +1346,11 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 
 void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror, StructuresAux &myStructureAux)
+		float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror,
+		StructuresAux &myStructureAux, myStreamHandle &myStream, TransformMatrix<float> &resultTR)
 {
+
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 
     myStructureAux.RefExpFourier.resize(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
 			referenceAux.d_projFFT.Zdim, referenceAux.d_projFFT.Ndim);
@@ -1090,7 +1359,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
     XmippDim3 blockSize(numTh, 1, 1), gridSize;
     referenceAux.d_projFFT.calculateGridSizeVectorized(blockSize, gridSize);
 
-    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize), 0, *stream >>>
 			((cufftComplex*)referenceAux.d_projFFT.d_data, (cufftComplex*)experimentalAux.d_projFFT.d_data, (cufftComplex*)myStructureAux.RefExpFourier.d_data,
 					referenceAux.d_projFFT.nzyxdim, referenceAux.d_projFFT.yxdim);
 
@@ -1098,7 +1367,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
     myStructureAux.RefExpRealSpace.resize(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
     		referenceAux.d_projFFT.Ndim);
 
-    myStructureAux.RefExpFourier.ifft(myStructureAux.RefExpRealSpace, myhandlePadded);
+    myStructureAux.RefExpFourier.ifft(myStructureAux.RefExpRealSpace, myhandlePadded, myStream);
 
 
  	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
@@ -1107,10 +1376,19 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
     myStructureAux.d_NCC.resize(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
 			referenceAux.d_projFFT.Ndim);
 
-	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
+    bool power2yx, power2x;
+	if (referenceAux.MFrealSpace.yxdim & (referenceAux.MFrealSpace.yxdim-1))
+		power2yx = false;
+	else
+		power2yx = true;
+	if (referenceAux.MFrealSpace.Xdim & (referenceAux.MFrealSpace.Xdim-1))
+		power2x = false;
+	else
+		power2x = true;
+	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2), 0, *stream >>>
 			(myStructureAux.RefExpRealSpace.d_data, referenceAux.MFrealSpace.d_data, experimentalAux.MFrealSpace.d_data, referenceAux.MF2realSpace.d_data,
 					experimentalAux.MF2realSpace.d_data, referenceAux.maskAutocorrelation.d_data, myStructureAux.d_NCC.d_data, referenceAux.MFrealSpace.nzyxdim,
-					referenceAux.MFrealSpace.yxdim, referenceAux.MFrealSpace.Xdim, referenceAux.MFrealSpace.Ydim, referenceAux.maskCount, maxShift);
+					referenceAux.MFrealSpace.yxdim, referenceAux.MFrealSpace.Xdim, referenceAux.MFrealSpace.Ydim, referenceAux.maskCount, maxShift, power2yx, power2x);
 
 	int fixPadding=0;
 	if(referenceAux.XdimOrig%2==0 && referenceAux.Xdim%2==0)
@@ -1143,7 +1421,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	//gettimeofday(&begin, NULL);
 
 	calculateMaxNew2DNew(myStructureAux.d_NCC.yxdim, myStructureAux.d_NCC.Ndim,
-			myStructureAux.d_NCC.d_data, myStructureAux.d_out_max, myStructureAux.d_pos_max);
+			myStructureAux.d_NCC.d_data, myStructureAux.d_out_max, myStructureAux.d_pos_max, myStream);
 
 	//gettimeofday(&end, NULL);
 	//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
@@ -1151,8 +1429,8 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 
 
 
-	TransformMatrix<float> result(transMat.Ndim);
-	TransformMatrix<float> newMat(transMat.Ndim);
+	//TransformMatrix<float> result(myStream, transMat.Ndim);
+	//TransformMatrix<float> newMat(myStream, transMat.Ndim);
 	/*newMat.setTranslation(posX, posY, myStructureAux.d_out_max.d_data);
 
 	numTh = 1024;
@@ -1162,21 +1440,30 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 
 	//GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCC.Ndim);
 	//gpuErrchk(cudaMemcpy(maxGpu.d_data, max_values, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyHostToDevice));
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, 2*maxShift,
+	double maxShift2 = (2*maxShift)*(2*maxShift);
+	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift2,
 			myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.d_data, myStructureAux.d_NCC.yxdim);
 	result.copyMatrix(transMat);*/
 
 	numTh = 1024;
-		int numBlk = transMat.Ndim/numTh;
-		if(transMat.Ndim%numTh > 0)
-			numBlk++;
+	int numBlk = transMat.Ndim/numTh;
+	if(transMat.Ndim%numTh > 0)
+		numBlk++;
 
-	buildTranslationMatrix<<<numBlk, numTh>>> (myStructureAux.d_pos_max.d_data, newMat.d_data, transMat.d_data, result.d_data,
+	bool _power2x;
+		if (myStructureAux.d_NCC.Xdim & (myStructureAux.d_NCC.Xdim-1))
+			_power2x = false;
+		else
+			_power2x = true;
+	double maxShift2 = (2*maxShift)*(2*maxShift);
+	buildTranslationMatrix<<<numBlk, numTh, 0, *stream>>> (myStructureAux.d_pos_max.d_data, transMat.d_data, resultTR.d_data,
 			myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.d_data, myStructureAux.d_NCC.Xdim, myStructureAux.d_NCC.Ydim,
-			myStructureAux.d_NCC.Ndim, myStructureAux.d_NCC.yxdim, fixPadding, 2*maxShift);
-	result.copyMatrix(transMat);
+			myStructureAux.d_NCC.Ndim, myStructureAux.d_NCC.yxdim, fixPadding, maxShift2, _power2x);
 
-	gpuErrchk(cudaMemcpyAsync(max_vector, myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost));
+	resultTR.copyMatrix(transMat, myStream);
+
+	gpuErrchk(cudaMemcpyAsync(max_vector, myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *stream));
+
 
 	//delete[] max_values;
 	//delete[] posX;
@@ -1184,81 +1471,241 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 
 }
 
-void apply_transform(GpuMultidimArrayAtGpu<float> &d_original_image, GpuMultidimArrayAtGpu<float> &d_transform_image, TransformMatrix<float> &transMat){
+
+void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAuxTR,
+		TransformMatrix<float> &transMatTR, float *max_vectorTR, int maxShift,
+		mycufftHandle &myhandlePaddedTR, bool mirror, StructuresAux &myStructureAuxTR,
+		myStreamHandle &myStreamTR,
+		GpuCorrelationAux &experimentalAuxRT, TransformMatrix<float> &transMatRT,
+		float *max_vectorRT, mycufftHandle &myhandlePaddedRT,
+		StructuresAux &myStructureAuxRT, myStreamHandle &myStreamRT,
+		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT)
+{
+
+	cudaStream_t *streamTR = (cudaStream_t*) myStreamTR.ptr;
+	cudaStream_t *streamRT = (cudaStream_t*) myStreamRT.ptr;
+
+
+    myStructureAuxTR.RefExpFourier.resize(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
+			referenceAux.d_projFFT.Zdim, referenceAux.d_projFFT.Ndim);
+    myStructureAuxTR.RefExpRealSpace.resize(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
+    		referenceAux.d_projFFT.Ndim);
+    myStructureAuxTR.d_NCC.resize(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
+			referenceAux.d_projFFT.Ndim);
+
+	myStructureAuxRT.RefExpFourierPolar.resize(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
+			referenceAux.d_projPolarFFT.Zdim, referenceAux.d_projPolarFFT.Ndim);
+    myStructureAuxRT.RefExpRealSpacePolar.resize(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
+    		referenceAux.d_projPolarFFT.Ndim);
+    myStructureAuxRT.d_NCCPolar.resize(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
+				referenceAux.d_projPolarFFT.Ndim);
+    myStructureAuxRT.d_NCCPolar1D.resize(myStructureAuxRT.d_NCCPolar.Xdim,1,1,myStructureAuxRT.d_NCCPolar.Ndim);
+    myStructureAuxRT.auxMax.resize(myStructureAuxRT.d_NCCPolar.Xdim,1,1,myStructureAuxRT.d_NCCPolar.Ndim);
+    myStructureAuxRT.auxZero.resize(myStructureAuxRT.d_NCCPolar.Xdim,1,1,myStructureAuxRT.d_NCCPolar.Ndim);
+    myStructureAuxRT.maxGpu.resize(myStructureAuxRT.d_NCCPolar1D.Ndim);
+
+
+
+    int numTh = 1024;
+    XmippDim3 blockSize(numTh, 1, 1), gridSize;
+    referenceAux.d_projFFT.calculateGridSizeVectorized(blockSize, gridSize);
+
+
+    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize), 0, *streamTR >>>
+			((cufftComplex*)referenceAux.d_projFFT.d_data, (cufftComplex*)experimentalAuxTR.d_projFFT.d_data,
+					(cufftComplex*)myStructureAuxTR.RefExpFourier.d_data,
+					referenceAux.d_projFFT.nzyxdim, referenceAux.d_projFFT.yxdim);
+
+    XmippDim3 blockSize3(numTh, 1, 1), gridSize3;
+    referenceAux.d_projPolarFFT.calculateGridSizeVectorized(blockSize3, gridSize3);
+
+
+    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize3), CONVERT2DIM3(blockSize3), 0, *streamRT >>>
+			((cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAuxRT.d_projPolarFFT.d_data,
+					(cufftComplex*)myStructureAuxRT.RefExpFourierPolar.d_data, referenceAux.d_projPolarFFT.nzyxdim,
+					referenceAux.d_projPolarFFT.yxdim);
+
+
+
+    myStructureAuxTR.RefExpFourier.ifft(myStructureAuxTR.RefExpRealSpace, myhandlePaddedTR, myStreamTR);
+
+    myStructureAuxRT.RefExpFourierPolar.ifft(myStructureAuxRT.RefExpRealSpacePolar, myhandlePaddedRT, myStreamRT);
+
+
+
+ 	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
+ 	myStructureAuxTR.RefExpRealSpace.calculateGridSizeVectorized(blockSize2, gridSize2);
+
+ 	bool power2yx, power2x;
+	if (referenceAux.MFrealSpace.yxdim & (referenceAux.MFrealSpace.yxdim-1))
+		power2yx = false;
+	else
+		power2yx = true;
+	if (referenceAux.MFrealSpace.Xdim & (referenceAux.MFrealSpace.Xdim-1))
+		power2x = false;
+	else
+		power2x = true;
+	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2), 0, *streamTR >>>
+			(myStructureAuxTR.RefExpRealSpace.d_data, referenceAux.MFrealSpace.d_data, experimentalAuxTR.MFrealSpace.d_data, referenceAux.MF2realSpace.d_data,
+					experimentalAuxTR.MF2realSpace.d_data, referenceAux.maskAutocorrelation.d_data, myStructureAuxTR.d_NCC.d_data, referenceAux.MFrealSpace.nzyxdim,
+					referenceAux.MFrealSpace.yxdim, referenceAux.MFrealSpace.Xdim, referenceAux.MFrealSpace.Ydim, referenceAux.maskCount, maxShift, power2yx, power2x);
+
+
+	int fixPadding=0;
+	if(referenceAux.XdimOrig%2==0 && referenceAux.Xdim%2==0)
+		fixPadding=1;
+	if(referenceAux.XdimOrig%2==0 && referenceAux.Xdim%2!=0)
+		fixPadding=0;
+	if(referenceAux.XdimOrig%2!=0 && referenceAux.Xdim%2==0)
+		fixPadding=-1;
+	if(referenceAux.XdimOrig%2!=0 && referenceAux.Xdim%2!=0)
+		fixPadding=0;
+
+    XmippDim3 blockSize4(numTh, 1, 1), gridSize4;
+    myStructureAuxRT.RefExpRealSpacePolar.calculateGridSizeVectorized(blockSize4, gridSize4);
+
+	double maskFFTPolar = (referenceAux.XdimPolar*referenceAux.YdimPolar);
+	calculateNccRotationKernel<<< CONVERT2DIM3(gridSize4), CONVERT2DIM3(blockSize4), 0, *streamRT >>>
+			(myStructureAuxRT.RefExpRealSpacePolar.d_data, (cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAuxRT.d_projPolarFFT.d_data,
+					(cufftComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftComplex*)experimentalAuxRT.d_projPolarSquaredFFT.d_data,
+					maskFFTPolar, myStructureAuxRT.d_NCCPolar.d_data, referenceAux.d_projPolarFFT.yxdim, myStructureAuxRT.RefExpRealSpacePolar.nzyxdim,
+					myStructureAuxRT.RefExpRealSpacePolar.yxdim);
+
+	//AJ sum along the radius
+    numTh = 1024;
+    int numBlk = (myStructureAuxRT.d_NCCPolar.Xdim*myStructureAuxRT.d_NCCPolar.Ndim)/numTh;
+    if((myStructureAuxRT.d_NCCPolar.Xdim*myStructureAuxRT.d_NCCPolar.Ndim)%numTh!=0)
+    	numBlk++;
+
+    sumRadiusKernel<<< numBlk, numTh, 0, *streamRT >>>(myStructureAuxRT.d_NCCPolar.d_data, myStructureAuxRT.d_NCCPolar1D.d_data, myStructureAuxRT.auxMax.d_data,
+    		myStructureAuxRT.auxZero.d_data, myStructureAuxRT.d_NCCPolar.Xdim*myStructureAuxRT.d_NCCPolar.Ndim, myStructureAuxRT.d_NCCPolar.Ydim,
+			myStructureAuxRT.d_NCCPolar.Ndim);
+
+
+
+
+	calculateMaxNew2DNew(myStructureAuxTR.d_NCC.yxdim, myStructureAuxTR.d_NCC.Ndim,
+			myStructureAuxTR.d_NCC.d_data, myStructureAuxTR.d_out_max, myStructureAuxTR.d_pos_max, myStreamTR);
+
+	calculateMaxNew2DNew(myStructureAuxRT.d_NCCPolar1D.Xdim, myStructureAuxRT.d_NCCPolar1D.Ndim, myStructureAuxRT.d_NCCPolar1D.d_data,
+			myStructureAuxRT.d_out_polar_max, myStructureAuxRT.d_pos_polar_max, myStreamRT);
+
+
+
+	numTh = 1024;
+	numBlk = transMatTR.Ndim/numTh;
+	if(transMatTR.Ndim%numTh > 0)
+		numBlk++;
+
+	bool _power2x;
+		if (myStructureAuxTR.d_NCC.Xdim & (myStructureAuxTR.d_NCC.Xdim-1))
+			_power2x = false;
+		else
+			_power2x = true;
+	double maxShift2 = (2*maxShift)*(2*maxShift);
+	buildTranslationMatrix<<<numBlk, numTh, 0, *streamTR>>> (myStructureAuxTR.d_pos_max.d_data, transMatTR.d_data, resultTR.d_data,
+			myStructureAuxTR.d_out_max.d_data, myStructureAuxTR.d_NCC.d_data, myStructureAuxTR.d_NCC.Xdim, myStructureAuxTR.d_NCC.Ydim,
+			myStructureAuxTR.d_NCC.Ndim, myStructureAuxTR.d_NCC.yxdim, fixPadding, maxShift2, _power2x);
+
+	numBlk = transMatRT.Ndim/numTh;
+	if(transMatRT.Ndim%numTh > 0)
+		numBlk++;
+
+	bool __power2x;
+		if (myStructureAuxRT.d_NCCPolar1D.Xdim & (myStructureAuxRT.d_NCCPolar1D.Xdim-1))
+			__power2x = false;
+		else
+			__power2x = true;
+	buildRotationMatrix<<<numBlk, numTh, 0, *streamRT>>> (myStructureAuxRT.d_pos_polar_max.d_data, transMatRT.d_data,
+			resultRT.d_data, myStructureAuxRT.maxGpu.d_data, myStructureAuxRT.auxMax.d_data, myStructureAuxRT.auxZero.d_data,
+			myStructureAuxRT.d_NCCPolar1D.Xdim, myStructureAuxRT.d_NCCPolar1D.Ndim,
+			myStructureAuxRT.d_NCCPolar1D.yxdim, 0, maxShift2, __power2x);
+
+
+	resultTR.copyMatrix(transMatTR, myStreamTR);
+
+	resultRT.copyMatrix(transMatRT, myStreamRT);
+
+	gpuErrchk(cudaMemcpyAsync(max_vectorTR, myStructureAuxTR.d_out_max.d_data, myStructureAuxTR.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *streamTR));
+
+	gpuErrchk(cudaMemcpyAsync(max_vectorRT, myStructureAuxRT.maxGpu.d_data, myStructureAuxRT.maxGpu.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *streamRT));
+
+
+}
+
+
+
+
+void apply_transform(GpuMultidimArrayAtGpu<float> &d_original_image, GpuMultidimArrayAtGpu<float> &d_transform_image,
+		TransformMatrix<float> &transMat, myStreamHandle &myStream){
+
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 
 	int numTh = 1024;
-	XmippDim3 blockSize(numTh, 1, 1), gridSize;
-	d_original_image.calculateGridSizeVectorized(blockSize, gridSize);
+	//XmippDim3 blockSize(numTh, 1, 1), gridSize;
+	//d_original_image.calculateGridSizeVectorized(blockSize, gridSize);
 
-	applyTransformKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-			(d_original_image.d_data, d_transform_image.d_data, transMat.d_data,
-					d_original_image.nzyxdim, d_original_image.yxdim, d_original_image.Xdim, d_original_image.Ydim);
+	int numBlk = d_transform_image.yxdim/numTh;
+	if(d_transform_image.yxdim%numTh > 0)
+		numBlk++;
+	dim3 blockSize(numTh, 1, 1);
+	dim3 gridSize(numBlk, d_transform_image.Ndim, 1);
 
-}
-
-
-__global__ void cart2polar(float *image, float *polar, float *polar2, int maxRadius, int maxAng,
-		int Nimgs, int Ydim, int Xdim, bool rotate)
-{
-	int angle = blockDim.x * blockIdx.x + threadIdx.x;
-	int radius = blockDim.y * blockIdx.y + threadIdx.y;
-
-	if (radius>=maxRadius || angle>=maxAng)
-		return;
-
-	float x = (float)(radius*cosf((float)(angle*PI/180))) + Xdim/2;
-	float y = (float)(radius*sinf((float)(angle*PI/180))) + Ydim/2;
-
-	float dx_low = floor(x);
-	float dy_low = floor(y);
-	int x_low = (int)dx_low;
-	int y_low = (int)dy_low;
-	float x_x_low=x-dx_low;
-	float y_y_low=y-dy_low;
-	float one_x=1.0-x_x_low;
-	float one_y=1.0-y_y_low;
-	float w00=one_y*one_x;
-	float w01=one_y*x_x_low;
-	float w10=y_y_low*one_x;
-	float w11=y_y_low*x_x_low;
-
-	int NXY=Xdim*Ydim;
-	int NXYpolar=maxAng*maxRadius;
-	int imgIdx00=y_low * Xdim + x_low;
-	int imgIdx01=imgIdx00+1;
-	int imgIdx10=imgIdx00+Xdim;
-	int imgIdx11=imgIdx10+1;
-	int imgOffset=0;
-	int polarOffset=0;
-	int polarIdx;
-	if(!rotate)
-		polarIdx=angle+(radius*maxAng);
+	bool power2yx, power2x;
+	if (d_original_image.yxdim & (d_original_image.yxdim-1))
+		power2yx = false;
 	else
-		polarIdx = (maxAng-angle-1)+((maxRadius-radius-1)*maxAng);
-
-	for (int n=0; n<Nimgs; n++)
-	{
-		float I00 = image[imgIdx00+imgOffset];
-		float I01 = image[imgIdx01+imgOffset];
-		float I10 = image[imgIdx10+imgOffset];
-		float I11 = image[imgIdx11+imgOffset];
-		float imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
-		int finalPolarIndex=polarIdx+polarOffset;
-		polar[finalPolarIndex] = imVal;
-		polar2[finalPolarIndex] = imVal*imVal;
-
-		imgOffset+=NXY;
-		polarOffset+=NXYpolar;
-	}
+		power2yx = true;
+	if (d_original_image.Xdim & (d_original_image.Xdim-1))
+		power2x = false;
+	else
+		power2x = true;
+	applyTransformKernel<<< gridSize, blockSize, 9*sizeof(float), *stream >>>
+			(d_original_image.d_data, d_transform_image.d_data, transMat.d_data,
+					d_original_image.nzyxdim, d_original_image.yxdim, d_original_image.Xdim,
+					d_original_image.Ydim, power2yx, power2x);
 
 }
 
-void cuda_cart2polar(GpuMultidimArrayAtGpu<float> &image, GpuMultidimArrayAtGpu<float> &polar_image, GpuMultidimArrayAtGpu<float> &polar2_image, bool rotate)
+
+
+void cuda_cart2polar(GpuMultidimArrayAtGpu<float> &image, GpuMultidimArrayAtGpu<float> &polar_image,
+		GpuMultidimArrayAtGpu<float> &polar2_image, bool rotate, myStreamHandle &myStream)
 {
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
     int numTh = 32;
-    XmippDim3 blockSize(numTh, numTh, 1), gridSize;
-    polar_image.calculateGridSize(blockSize, gridSize);
-    cart2polar <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+    int numBlkx = polar_image.Xdim/numTh;
+    	if(polar_image.Xdim%numTh > 0)
+    		numBlkx++;
+	int numBlky = polar_image.Ydim/numTh;
+		if(polar_image.Ydim%numTh > 0)
+			numBlky++;
+
+    //XmippDim3 blockSize(numTh, numTh, 1), gridSize;
+    //polar_image.calculateGridSize(blockSize, gridSize);
+    dim3 blockSize(numTh, numTh, 1);
+    dim3 gridSize(numBlkx, numBlky, polar_image.Ndim);
+
+    cart2polar <<< gridSize, blockSize, 0, *stream>>>
     		(image.d_data, polar_image.d_data, polar2_image.d_data, polar_image.Ydim, polar_image.Xdim, polar_image.Ndim, image.Ydim, image.Xdim, rotate);
 }
 
+void waitGpu (myStreamHandle &myStream, bool allStreams){
+	if(!allStreams){
+		cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
+		gpuErrchk(cudaStreamSynchronize(*stream));
+	}else
+		gpuErrchk(cudaDeviceSynchronize());
+}
+
+void calculateAbs (std::complex<float> *data, float *out, int size, myStreamHandle &myStream){
+
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
+	int numTh = 1024;
+	int	numBlk = size/numTh;
+	if(size%numTh > 0)
+		numBlk++;
+	calcAbsKernel <<< numBlk, numTh, 0, *stream>>> ((cufftComplex*)data, out, size);
+
+
+}

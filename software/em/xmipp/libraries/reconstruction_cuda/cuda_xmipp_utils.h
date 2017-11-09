@@ -4,17 +4,21 @@
 
 #include <stdio.h>
 
+class myStreamHandle;
+
 void mycufftDestroy(void *ptr);
-void gpuMalloc(void** d_data, size_t Nbytes);
+void myStreamDestroy(void *ptr);
+void myStreamCreate(myStreamHandle &myStream);
+void gpuMalloc(void** d_data, int Nbytes);
 void gpuFree(void* d_data);
-void cpuMalloc(void** h_data, size_t Nbytes);
+void cpuMalloc(void** h_data, int Nbytes);
 void cpuFree(void* h_data);
-void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, size_t Nbytes);
-void initializeIdentity(float* d_data, float *h_data, size_t Ndim);
-void setTranslationMatrix(float* d_data, float* posX, float* posY, int Ndim);
-void setRotationMatrix(float* d_data, float *ang, int Ndim);
-void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes);
-void gpuCopyFromGPUToCPU(void* d_data, void* data, size_t Nbytes);
+void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, int Nbytes, myStreamHandle &myStream);
+void initializeIdentity(float* d_data, float *h_data, int Ndim, myStreamHandle &myStream);
+void setTranslationMatrix(float* d_data, float* posX, float* posY, int Ndim, myStreamHandle &myStream);
+void setRotationMatrix(float* d_data, float *ang, int Ndim, myStreamHandle &myStream);
+void gpuCopyFromCPUToGPU(void* data, void* d_data, int Nbytes, myStreamHandle &myStream);
+void gpuCopyFromGPUToCPU(void* d_data, void* data, int Nbytes, myStreamHandle &myStream);
 int gridFromBlock(int tasks, int Nthreads);
 
 
@@ -71,6 +75,22 @@ public:
 
 };
 
+class myStreamHandle {
+public:
+	void *ptr;
+
+	myStreamHandle(){
+		ptr=NULL;
+	}
+
+	void clear()
+	{
+		if(ptr!=NULL)
+			myStreamDestroy(ptr);
+	}
+
+};
+
 class XmippDim3 {
 public:
 	int x;
@@ -97,7 +117,7 @@ template<typename T>
 class TransformMatrix
 {
 public:
-	size_t Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
+	int Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
     T* d_data;
 	T* h_data;
 
@@ -108,22 +128,22 @@ public:
 		h_data=NULL;
     }
 
-    TransformMatrix(size_t _Ndim, size_t _Xdim=3, size_t _Ydim=3, size_t _Zdim=1)
+    TransformMatrix(myStreamHandle &myStream, int _Ndim, int _Xdim=3, int _Ydim=3, int _Zdim=1)
     {
 		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
 		d_data=NULL;
 		h_data=NULL;
-		resize(_Ndim, _Xdim, _Ydim, _Zdim);
+		resize(myStream,_Ndim, _Xdim, _Ydim, _Zdim);
     }
 
 	template<typename T1>
-	void resize(const TransformMatrix<T1>& array)
+	void resize(const TransformMatrix<T1>& array, myStreamHandle &myStream)
 	{
 
-		resize(array.Ndim, array.Xdim, array.Ydim, array.Zdim);
+		resize(myStream, array.Ndim, array.Xdim, array.Ydim, array.Zdim);
 	}
 
-	void resize(size_t _Ndim, size_t _Xdim=3, size_t _Ydim=3, size_t _Zdim=1)
+	void resize(myStreamHandle &myStream, int _Ndim, int _Xdim=3, int _Ydim=3, int _Zdim=1)
     {
 		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim)
 			return;
@@ -134,12 +154,12 @@ public:
 		Ydim=_Ydim;
 		Zdim=_Zdim;
 		Ndim=_Ndim;
-        yxdim=(size_t)_Ydim*_Xdim;
+        yxdim=_Ydim*_Xdim;
         zyxdim=yxdim*_Zdim;
         nzyxdim=zyxdim*_Ndim;
         gpuMalloc((void**) &d_data,nzyxdim*sizeof(T));
         cpuMalloc((void**) &h_data,nzyxdim*sizeof(T));
-        initializeIdentity(d_data, h_data, Ndim);
+        initializeIdentity(d_data, h_data, Ndim, myStream);
     }
 
 	bool isEmpty()
@@ -163,41 +183,41 @@ public:
 		clear();
 	}
 
-	void initialize()
+	void initialize(myStreamHandle &myStream)
 	{
-		initializeIdentity(d_data, h_data, Ndim);
+		initializeIdentity(d_data, h_data, Ndim, myStream);
 	}
 
-	void setTranslation(float* posX, float* posY, float *d_out_max)
+	void setTranslation(float* posX, float* posY, float *d_out_max, myStreamHandle &myStream)
 	{
 		/*for(int i=0; i<Ndim; i++)
 			setTranslationMatrix(d_data, -posX[i], -posY[i], i);*/
-		setTranslationMatrix(d_data, posX, posY, Ndim);
+		setTranslationMatrix(d_data, posX, posY, Ndim, myStream);
 	}
 
-	void setRotation(float* ang)
+	void setRotation(float* ang, myStreamHandle &myStream)
 	{
 		/*for(int i=0; i<Ndim; i++)
 			setRotationMatrix(d_data, -ang[i], i);*/
-		setRotationMatrix(d_data, ang, Ndim);
+		setRotationMatrix(d_data, ang, Ndim, myStream);
 	}
 
-	void copyMatrix(TransformMatrix<float> &lastMatrix)
+	void copyMatrix(TransformMatrix<float> &lastMatrix, myStreamHandle &myStream)
 	{
 		if (lastMatrix.isEmpty())
-			lastMatrix.resize(Ndim);
+			lastMatrix.resize(myStream, Ndim, 3, 3, 1);
 
-		gpuCopyFromGPUToGPU(d_data, lastMatrix.d_data, nzyxdim*sizeof(float));
+		gpuCopyFromGPUToGPU(d_data, lastMatrix.d_data, nzyxdim*sizeof(float), myStream);
 	}
 
-	void copyMatrixToCpu()
+	void copyMatrixToCpu(myStreamHandle &myStream)
 	{
-		gpuCopyFromGPUToCPU(d_data, h_data, nzyxdim*sizeof(float));
+		gpuCopyFromGPUToCPU(d_data, h_data, nzyxdim*sizeof(float), myStream);
 	}
 
-	void copyOneMatrixToCpu(float* &matrixCpu, int idxCpu, int idxGpu)
+	void copyOneMatrixToCpu(float* &matrixCpu, int idxCpu, int idxGpu, myStreamHandle &myStream)
 	{
-		gpuCopyFromGPUToCPU(&d_data[9*idxGpu], &matrixCpu[9*idxCpu], 9*sizeof(float));
+		gpuCopyFromGPUToCPU(&d_data[9*idxGpu], &matrixCpu[9*idxCpu], 9*sizeof(float), myStream);
 	}
 
 
@@ -208,7 +228,7 @@ template<typename T>
 class GpuMultidimArrayAtGpu
 {
 public:
-	size_t Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
+	int Xdim, Ydim, Zdim, Ndim, yxdim, zyxdim, nzyxdim;
     T* d_data;
 
 	GpuMultidimArrayAtGpu()
@@ -217,7 +237,7 @@ public:
 		d_data=NULL;
     }
 
-	GpuMultidimArrayAtGpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+	GpuMultidimArrayAtGpu(int _Xdim, int _Ydim=1, int _Zdim=1, int _Ndim=1)
     {
 		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
 		d_data=NULL;
@@ -231,7 +251,7 @@ public:
 		resize(array.Xdim, array.Ydim, array.Zdim, array.Ndim);
 	}
 
-	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+	void resize(int _Xdim, int _Ydim=1, int _Zdim=1, int _Ndim=1)
     {
 
 		//FIXME what happens if x and y swaps?
@@ -273,22 +293,22 @@ public:
 		clear();
 	}
 
-	void copyToGpu(T* data)
+	void copyToGpu(T* data, myStreamHandle &myStream)
 	{
-		gpuCopyFromCPUToGPU((void *)data, (void *)d_data, nzyxdim*sizeof(T));
+		gpuCopyFromCPUToGPU((void *)data, (void *)d_data, nzyxdim*sizeof(T), myStream);
 	}
 
-	void fillImageToGpu(T* data, size_t n=0)
+	void fillImageToGpu(T* data, myStreamHandle &myStream, int n=0)
 	{
-		gpuCopyFromCPUToGPU((void *)data, (void *)&d_data[n*zyxdim], zyxdim*sizeof(T));
+		gpuCopyFromCPUToGPU((void *)data, (void *)&d_data[n*zyxdim], zyxdim*sizeof(T), myStream);
 	}
 
-	void copyGpuToGpu(GpuMultidimArrayAtGpu<T> &gpuArray)
+	void copyGpuToGpu(GpuMultidimArrayAtGpu<T> &gpuArray, myStreamHandle &myStream)
 	{
 		if (gpuArray.isEmpty())
 			gpuArray.resize(Xdim,Ydim,Zdim,Ndim);
 
-		gpuCopyFromGPUToGPU(d_data, gpuArray.d_data, nzyxdim*sizeof(T));
+		gpuCopyFromGPUToGPU(d_data, gpuArray.d_data, nzyxdim*sizeof(T), myStream);
 	}
 
 	void calculateGridSize(const XmippDim3 &blockSize, XmippDim3 &gridSize) const
@@ -306,18 +326,18 @@ public:
 	}
 
 	template <typename T1>
-	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle);
+	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle, myStreamHandle &myStream);
 
 	// RealSpace must already be resized
 	template <typename T1>
-	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle);
+	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle, myStreamHandle &myStream);
 
 	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
 
 };
 
 
-
+/*
 template<typename T>
 class GpuMultidimArray //for both sides, GPU and CPU
 {
@@ -430,6 +450,6 @@ public:
 
 
 };
-
+*/
 
 #endif
