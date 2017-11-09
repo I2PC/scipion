@@ -41,6 +41,8 @@ from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMic
 from pyworkflow.gui import getPILImage
 from pyworkflow.protocol.constants import STATUS_RUNNING
 
+from sys import float_info
+
 class ProtMonitorISPyB(ProtMonitor):
     """ Monitor to communicated with ISPyB system at Diamond.
     """
@@ -90,6 +92,7 @@ class MonitorISPyB(Monitor):
         self.dataCollection = OrderedDict()
         self.movies = OrderedDict()
         self.motion_corrections = OrderedDict()
+        self.motion_correction_drift = OrderedDict()
         self.ctfs = OrderedDict()
         self.numberOfFrames = None
         self.imageGenerator = None
@@ -175,6 +178,17 @@ class MonitorISPyB(Monitor):
             self.info("wrote motion correction: %s" + str(motionCorrectionId))
             self.motion_corrections[itemId]['motionCorrectionId'] = motionCorrectionId
 
+            drift = self.motion_correction_drift[itemId]
+            xs = drift['xs']
+            ys = drift['ys']
+            for (i, (x, y)) in enumerate(zip(xs, ys)):
+                drift_params = self.ispybDb.get_motion_correction_drift_params()
+                drift_params['motionCorrectionId'] = motionCorrectionId
+                drift_params['frameNumber'] = i + 1
+                drift_params['deltaX'] = x
+                drift_params['deltaY'] = y
+                self.ispybDb.update_motion_correction_drift(drift_params)
+
         for itemId in set(updateCTFIds):
             if 'autoProcProgramId' not in self.ctfs[itemId]:
                 program = self.ispybDb.get_program_params()
@@ -197,6 +211,8 @@ class MonitorISPyB(Monitor):
             self.ispybDb.disconnect()
 
         return all(finished)
+
+
 
     def now(self):
         return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
@@ -294,12 +310,21 @@ class MonitorISPyB(Monitor):
                     'micrographFullPath': micFn,
                     'driftPlotFullPath': getattr(prot, '_getPlotGlobal', lambda x: None)(mic),
                     'totalMotion': totalMotion,
-                    'averageMotionPerFrame': abs(totalMotion / (prot.alignFrameN.get() - prot.alignFrame0.get())),
+                    'averageMotionPerFrame': abs(totalMotion / max(len(xs), 1)),
                     'comments': 'aligned',
                     'patchesUsed': (prot.patchX.get() + prot.patchY.get())/2,
                     'programs': getattr(prot, '_label', lambda x: None),
                     'status': 1
                 })
+
+                if micId not in self.motion_correction_drift:
+                    self.motion_correction_drift[micId] = {}
+
+                self.motion_correction_drift[micId].update({
+                    'xs': xs,
+                    'ys': ys
+                })
+
                 self.dataCollection['xtal_snapshot1'] = renderable_image
                 print('%d has new align info' % micId)
                 updateIds.append(micId)
@@ -444,7 +469,8 @@ class ISPyBdb:
         self.visit_id = self.core.retrieve_visit_id(self.cursor, self.experimentParams['visit'])
         params = self.mxacquisition.get_data_collection_group_params()
         params['parentid'] = self.visit_id
-        self.group_id = self.mxacquisition.insert_data_collection_group(self.cursor, params.values())
+        self.group_id = self.mxacquisition.insert_data_collection_group(self.cursor,
+                                                                        self.convert_float_types(params).values())
 
     def get_data_collection_params(self):
         params = self.mxacquisition.get_data_collection_params()
@@ -453,31 +479,49 @@ class ISPyBdb:
         return params
 
     def update_data_collection(self, params):
-        return self.mxacquisition.insert_data_collection(self.cursor, params.values())
+        return self.mxacquisition.insert_data_collection(self.cursor, self.convert_float_types(params).values())
 
     def get_image_params(self):
         return self.mxacquisition.get_image_params()
 
     def update_image(self, params):
-        return self.mxacquisition.update_image(self.cursor, params.values())
+        return self.mxacquisition.update_image(self.cursor, self.convert_float_types(params).values())
 
     def get_motion_correction_params(self):
         return self.emacquisition.get_motion_correction_params()
 
     def update_motion_correction(self, params):
-        return self.emacquisition.insert_motion_correction(self.cursor, params.values())
+        return self.emacquisition.insert_motion_correction(self.cursor, self.convert_float_types(params).values())
+
+    def get_motion_correction_drift_params(self):
+        return self.get_motion_correction_drift_params()
+
+    def update_motion_correction_drift(self, params):
+        raise self.update_motion_correction_drift(self.convert_float_types(params).values())
 
     def get_ctf_params(self):
         return self.emacquisition.get_ctf_params()
 
     def update_ctf(self, params):
-        return self.emacquisition.insert_ctf(self.cursor, params.values())
+        return self.emacquisition.insert_ctf(self.cursor, self.convert_float_types(params).values())
 
     def get_program_params(self):
         return self.mxdatareduction.get_program_params()
 
     def update_program(self, params):
-        return self.mxdatareduction.insert_program(self.cursor, params.values())
+        return self.mxdatareduction.insert_program(self.cursor, self.convert_float_types(params).values())
+
+    def convert_float_types(self, params):
+        for k in params:
+            try:
+                v = params[k]
+                if math.isnan(v):
+                    params[k] = None
+                elif math.isinf(v):
+                    params[k] = math.copysign(float_info.max, v)
+            except TypeError:
+                pass
+        return params
 
     def disconnect(self):
         if self.dbconnection:
