@@ -29,7 +29,7 @@
 import json
 import os
 from os.path import join, exists, abspath, basename
-from numpy import histogram, array, insert
+import numpy as np
 import multiprocessing
 
 from pyworkflow.protocol import getUpdatedProtocol
@@ -51,6 +51,8 @@ MIC_THUMBS = 'imgMicThumbs'
 PSD_THUMBS = 'imgPsdThumbs'
 SHIFT_THUMBS = 'imgShiftThumbs'
 MIC_ID = 'micId'
+DEFOCUS_HIST_BIN_WIDTH = 2500
+RESOLUTION_HIST_BIN_WIDTH = 0.5
 
 
 class ReportHtml:
@@ -244,9 +246,9 @@ class ReportHtml:
     def processDefocusValues(self, defocusList):
         maxDefocus = self.protocol.maxDefocus.get()
         minDefocus = self.protocol.minDefocus.get()
-        edges = array(range(0, int(maxDefocus)+1, 2500))
-        edges = insert(edges[edges > minDefocus], 0, minDefocus)
-        values, binEdges = histogram(defocusList, bins=edges, range=(minDefocus, maxDefocus))
+        edges = np.array(range(0, int(maxDefocus)+1, DEFOCUS_HIST_BIN_WIDTH))
+        edges = np.insert(edges[edges > minDefocus], 0, minDefocus)
+        values, binEdges = np.histogram(defocusList, bins=edges, range=(minDefocus, maxDefocus))
         belowThresh = 0
         aboveThresh = 0
         labels = ["%d-%d" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
@@ -260,6 +262,14 @@ class ReportHtml:
         zipped.append((aboveThresh, "> %d" % maxDefocus))
 
         return zipped
+
+    def getResolutionHistogram(self, resolutionValues):
+        if len(resolutionValues) == 0:
+            return []
+        maxValue = int(np.ceil(max(resolutionValues)))
+        edges = np.append(np.arange(0, maxValue, RESOLUTION_HIST_BIN_WIDTH), maxValue)
+        values, binEdges = np.histogram(resolutionValues, bins=edges, range=(0, maxValue))
+        return zip(values, binEdges)
 
     def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
@@ -314,6 +324,8 @@ class ReportHtml:
             else:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'][:-50])
                 data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
+
+            data['resolutionHistogram'] = self.getResolutionHistogram(data['resolution'])
         else:
             numCtfsDone = 0
             numCtfsToDo = 0
@@ -366,7 +378,7 @@ class ReportHtml:
                 'ctfData': ctfData,
                 'movieGainData': movieGainData,
                 'systemData': systemData,
-                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else '',
+                'refresh': self.refreshSecs
                 }
 
         self.info("Writing report html to: %s" % abspath(self.reportPath))
