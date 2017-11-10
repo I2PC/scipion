@@ -71,7 +71,7 @@ class ProtMotionCorr(ProtAlignMovies):
         return getVersion('MOTIONCOR2').startswith('1.0.')
 
     def isLatestVersion(self):
-        return getVersion('MOTIONCOR2') == '1.0.1'
+        return getVersion('MOTIONCOR2') == '1.0.2'
 
     def _getConvertExtension(self, filename):
         """ Check wether it is needed to convert to .mrc or not """
@@ -351,7 +351,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 if self.defectFile.get():
                     argsDict['-DefectFile'] = self.defectFile.get()
 
-                # Currently only version 1.0.1
+                # From version 1.0.1
                 if self.isLatestVersion():
                     patchOverlap = self.getAttributeValue('patchOverlap', None)
                     if patchOverlap: # 0 or None is False
