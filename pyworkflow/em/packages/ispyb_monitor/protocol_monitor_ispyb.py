@@ -181,7 +181,7 @@ class MonitorISPyB(Monitor):
             ys = drift['ys']
             for (i, (x, y)) in enumerate(zip(xs, ys)):
                 drift_params = self.ispybDb.get_motion_correction_drift_params()
-                drift_params['motionCorrectionId'] = motionCorrectionId
+                drift_params['motionCorrectionId'] = self.motion_corrections[itemId]['motionCorrectionId']
                 drift_params['frameNumber'] = i + 1
                 drift_params['deltaX'] = x
                 drift_params['deltaY'] = y
@@ -483,7 +483,7 @@ class ISPyBdb:
         return self.emacquisition.get_motion_correction_drift_params()
 
     def update_motion_correction_drift(self, params):
-        raise self.emacquisition.insert_motion_correction_drift(self.convert_float_types(params).values())
+        return self.emacquisition.insert_motion_correction_drift(self.convert_float_types(params).values())
 
     def get_ctf_params(self):
         return self.emacquisition.get_ctf_params()
