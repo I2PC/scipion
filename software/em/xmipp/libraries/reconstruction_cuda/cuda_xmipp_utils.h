@@ -3,6 +3,7 @@
 #define CUDA_XMIPP_UTILS_H
 
 #include <stdio.h>
+#include <complex>
 
 class myStreamHandle;
 
@@ -330,7 +331,8 @@ public:
 
 	// RealSpace must already be resized
 	template <typename T1>
-	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle, myStreamHandle &myStream);
+	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle, myStreamHandle &myStream,
+			bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &data);
 
 	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
 

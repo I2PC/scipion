@@ -69,5 +69,6 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 		GpuCorrelationAux &experimentalAuxRT, TransformMatrix<float> &transMatRT,
 		float *max_vectorRT, mycufftHandle &myhandlePaddedRT,
 		StructuresAux &myStructureAuxRT, myStreamHandle &myStreamRT,
-		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT);
+		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT,
+		mycufftHandle &ifftcb);
 #endif

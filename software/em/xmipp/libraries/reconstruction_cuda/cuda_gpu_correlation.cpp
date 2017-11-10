@@ -47,17 +47,13 @@ __global__ void sumRadiusKernel(float *d_in, float *d_out, float *d_out_max, flo
 
 	float out = 0.0;
 	float out_max = -100000;
-	//d_out[idx]=0.0;
-	//d_out_max[idx]=-100000;
 	int idxRead=360*radius*numIm;
 	for(int i=0; i<radius; i++){
 		if(d_in[idxRead+(360*i)+angle]==-1.0){
 			continue;
 		}
-		//d_out[idx] += d_in[idxRead+(360*i)+angle];
 		out += d_in[idxRead+(360*i)+angle];
 		if(d_in[idxRead+(360*i)+angle]>d_out_max[idx]){
-			//d_out_max[idx] = d_in[idxRead+(360*i)+angle];
 			out_max = d_in[idxRead+(360*i)+angle];
 		}
 
@@ -333,6 +329,46 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 
 }
 
+
+
+
+__global__ void pointwiseMultiplicationComplexOneManyKernel_two(cufftComplex *M,
+		cufftComplex *manyF, cufftComplex *MmanyF, cufftComplex *manyF_sq, cufftComplex *MmanyF_sq,
+		int nzyxdim, int yxdim, bool power2)
+{
+
+	//extern __shared__ float sdata[];
+
+	//change size_t to int
+	//change unsigned.... to int but check it before
+	int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	int idxLow;
+	if (power2==true)
+		idxLow = idx & (yxdim-1);
+	else
+		idxLow = idx%yxdim;
+
+	//check if yxdim is power of 2 in cpu and put here some flag to avoid the % operation and change it to bitwise operation
+
+	if (idx>=nzyxdim)
+		return;
+
+	float normFactor = (1.0f/yxdim);
+
+	cuComplex mulOut = cuCmulf(manyF[idx], M[idxLow]);
+	cuComplex mulOut_sq = cuCmulf(manyF_sq[idx], M[idxLow]);
+	//more operations for one thread and lower number of threads???
+	//every th working with N images
+	//in this way we are able to use registers memory for M, but no shared
+	//to use shared memory has sense when the whole block th will read several times the same memory positions
+	//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
+
+	MmanyF[idx] = mulOut*normFactor;
+	MmanyF_sq[idx] = mulOut_sq*normFactor;
+}
+
+
+
 __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftComplex *M, cufftComplex *manyF, cufftComplex *MmanyF,
 		int nzyxdim, int yxdim, bool power2)
 {
@@ -552,8 +588,6 @@ __global__ void calculateNccRotationKernel(float *RefExpRealSpace, cufftComplex 
 	float normValue = 1.0f/yxdimFFT;
 	float maskNorm = maskFFTPolarReal*normValue;
 
-
-	//check shared memory for these vector also ¿?¿? NO
 	float M1M2Polar = maskFFTPolarReal*maskNorm;
 	float polarValRef = cuCrealf(polarFFTRef[idxLow])*maskNorm;
 	float polarSqValRef = cuCrealf(polarSquaredFFTRef[idxLow])*maskNorm;
@@ -911,7 +945,7 @@ __global__ void cart2polar(float *image, float *polar, float *polar2, int maxRad
 
 
 __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
-		int yxdim, int Ndim){
+		int yxdim, int Ndim, int yxdim2, int Ndim2){
 
 	int idx = threadIdx.x;
 	int nIm = blockIdx.x;
@@ -946,6 +980,115 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 	//if(nIm==0){
 		//printf("posOut %i d_out[posOut] %f position[posOut] %f \n", posOut, d_out[posOut], position[posOut]);
 	//}
+
+	__syncthreads();
+
+
+	extern __shared__ float sdata[];
+
+
+	//Version 6
+	int i = blockIdx.x * blockSize + idx;
+
+	//printf("d_in[%i] %f \n", i, d_in[i]);
+
+	int index = 0;
+	for(int imN=0; imN<Ndim2; imN++){
+
+		if(i<yxdim2*gridDim.x){
+			sdata[idx]=d_out[i+index];
+			sdata[idx+blockSize] = position[i+index];
+		}
+		//if (idx==0)
+			//printf("i %i, sdata %f \n", i, sdata[idx]);
+
+		__syncthreads();
+
+		if(i>=yxdim2*gridDim.x)
+			sdata[idx]=-1.0;
+		__syncthreads();
+
+
+		if(blockSize >= 1024){
+			if(idx<512){
+				sdata[idx] = fmaxf(sdata[idx], sdata[idx+512]);
+				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+512]) ? sdata[idx+blockSize+512] : sdata[idx+blockSize];
+			}
+			__syncthreads();
+		}
+		if(blockSize >= 512){
+			if(idx<256){
+				sdata[idx] = fmaxf(sdata[idx], sdata[idx+256]);
+				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+256]) ? sdata[idx+blockSize+256] : sdata[idx+blockSize];
+			}
+			__syncthreads();
+		}
+		if(blockSize >= 256){
+			if(idx<128){
+				sdata[idx] = fmaxf(sdata[idx], sdata[idx+128]);
+				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+128]) ? sdata[idx+blockSize+128] : sdata[idx+blockSize];
+			}
+			__syncthreads();
+		}
+		if(blockSize >= 128){
+			if(idx<64){
+				sdata[idx] = fmaxf(sdata[idx], sdata[idx+64]);
+				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+64]) ? sdata[idx+blockSize+64] : sdata[idx+blockSize];
+			}
+			__syncthreads();
+		}
+		if(idx<32){
+			if(blockSize>=64){
+				if(idx<32){
+					sdata[idx] = fmaxf(sdata[idx], sdata[idx+32]);
+					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+32]) ? sdata[idx+blockSize+32] : sdata[idx+blockSize];
+				}
+			}
+			if(blockSize>=32){
+				if(idx<16){
+					sdata[idx] = fmaxf(sdata[idx], sdata[idx+16]);
+					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+16]) ? sdata[idx+blockSize+16] : sdata[idx+blockSize];
+				}
+			}
+			if(blockSize>=16){
+				if(idx<8){
+					sdata[idx] = fmaxf(sdata[idx], sdata[idx+8]);
+					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+8]) ? sdata[idx+blockSize+8] : sdata[idx+blockSize];
+				}
+			}
+			if(blockSize>=8){
+				if(idx<4){
+					sdata[idx] = fmaxf(sdata[idx], sdata[idx+4]);
+					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+4]) ? sdata[idx+blockSize+4] : sdata[idx+blockSize];
+				}
+			}
+			if(blockSize>=4){
+				if(idx<2){
+					sdata[idx] = fmaxf(sdata[idx], sdata[idx+2]);
+					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+2]) ? sdata[idx+blockSize+2] : sdata[idx+blockSize];
+				}
+			}
+			if(blockSize>=2){
+				if(idx<1){
+					sdata[idx] = fmaxf(sdata[idx], sdata[idx+1]);
+					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+1]) ? sdata[idx+blockSize+1] : sdata[idx+blockSize];
+				}
+			}
+		}
+
+		if(idx==0){
+			//printf("idx %i sdata[0] %f sdata[blockSize] %f \n", blockIdx.x+(gridDim.x*imN), sdata[0], sdata[blockSize]);
+			d_out[blockIdx.x+(gridDim.x*imN)] = sdata[0];
+			position[blockIdx.x+(gridDim.x*imN)] = sdata[blockSize];
+		}
+
+		__syncthreads();
+
+		index = index+(int)yxdim2;
+
+	}
+	//printf("d_out0 %f, position0 %f \n", d_out[0], position[0]);
+	//printf("d_out1 %f, position1 %f \n", d_out[1], position[1]);
 
 }
 
@@ -999,6 +1142,7 @@ void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<fl
 
 }
 
+
 /*
 void calculateDenomFunction(const GpuMultidimArrayAtGpu< float > &MFrealSpace, const GpuMultidimArrayAtGpu < float >& MF2realSpace,
 		const GpuMultidimArrayAtGpu < float >& maskAutocorrelation, GpuMultidimArrayAtGpu< float > &out)
@@ -1032,13 +1176,15 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 
-	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream);
-	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream);
+	GpuMultidimArrayAtGpu< std::complex<float> > dull;
+
+	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream, false, dull);
+	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream, false, dull);
 
 	GpuMultidimArrayAtGpu< std::complex<float> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
 	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux, myStream);
 	maskAutocorrelation.resize(Xdim, Ydim);
-	maskAux.ifft(maskAutocorrelation, myhandleMaskB, myStream);
+	maskAux.ifft(maskAutocorrelation, myhandleMaskB, myStream, false, dull);
 	maskAux.clear();
 
 }
@@ -1056,11 +1202,13 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
 	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
 
+	GpuMultidimArrayAtGpu< std::complex<float> > dull;
+
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 
-	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream);
-	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream);
+	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream, false, dull);
+	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream, false, dull);
 
 	maskAutocorr.copyGpuToGpu(maskAutocorrelation, myStream);
 
@@ -1148,10 +1296,10 @@ void calculateMaxNew2DNew(int yxdim, int Ndim, float *d_data,
     d_out.resize(numTh * numBlk);
     d_pos.resize(numTh * numBlk);
 
-    calculateMaxThreads<<<numBlk, numTh, 0, *stream>>>(d_data, d_out.d_data, d_pos.d_data, yxdim, Ndim);
+    calculateMaxThreads<<<numBlk, numTh, 2*numTh * sizeof(float), *stream>>>(d_data, d_out.d_data, d_pos.d_data, yxdim, Ndim, numTh, 1);
     //cudaStreamSynchronize(*stream);
 
-    calculateMax2<<<numBlk, numTh, 2*numTh * sizeof(float), *stream>>> (d_out.d_data, d_out.d_data, d_pos.d_data, numTh, 1, false);
+    //calculateMax2<<<numBlk, numTh, 2*numTh * sizeof(float), *stream>>> (d_out.d_data, d_out.d_data, d_pos.d_data, numTh, 1, false);
     //cudaStreamSynchronize(*stream);
 
 }
@@ -1252,9 +1400,10 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 					(cufftComplex*)myStructureAux.RefExpFourierPolar.d_data, referenceAux.d_projPolarFFT.nzyxdim,
 					referenceAux.d_projPolarFFT.yxdim);
 
+    GpuMultidimArrayAtGpu< std::complex<float> > dull;
     myStructureAux.RefExpRealSpacePolar.resize(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
     		referenceAux.d_projPolarFFT.Ndim);
-    myStructureAux.RefExpFourierPolar.ifft(myStructureAux.RefExpRealSpacePolar, myhandlePadded, myStream);
+    myStructureAux.RefExpFourierPolar.ifft(myStructureAux.RefExpRealSpacePolar, myhandlePadded, myStream, false, dull);
 
     XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
     myStructureAux.RefExpRealSpacePolar.calculateGridSizeVectorized(blockSize2, gridSize2);
@@ -1367,7 +1516,8 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
     myStructureAux.RefExpRealSpace.resize(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
     		referenceAux.d_projFFT.Ndim);
 
-    myStructureAux.RefExpFourier.ifft(myStructureAux.RefExpRealSpace, myhandlePadded, myStream);
+    GpuMultidimArrayAtGpu< std::complex<float> > dull;
+    myStructureAux.RefExpFourier.ifft(myStructureAux.RefExpRealSpace, myhandlePadded, myStream, false, dull);
 
 
  	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
@@ -1479,7 +1629,8 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 		GpuCorrelationAux &experimentalAuxRT, TransformMatrix<float> &transMatRT,
 		float *max_vectorRT, mycufftHandle &myhandlePaddedRT,
 		StructuresAux &myStructureAuxRT, myStreamHandle &myStreamRT,
-		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT)
+		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT,
+		mycufftHandle &ifftcb)
 {
 
 	cudaStream_t *streamTR = (cudaStream_t*) myStreamTR.ptr;
@@ -1521,15 +1672,15 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 
 
     pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize3), CONVERT2DIM3(blockSize3), 0, *streamRT >>>
-			((cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAuxRT.d_projPolarFFT.d_data,
+		((cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAuxRT.d_projPolarFFT.d_data,
 					(cufftComplex*)myStructureAuxRT.RefExpFourierPolar.d_data, referenceAux.d_projPolarFFT.nzyxdim,
 					referenceAux.d_projPolarFFT.yxdim);
 
 
+    GpuMultidimArrayAtGpu< std::complex<float> > dull;
+    myStructureAuxTR.RefExpFourier.ifft(myStructureAuxTR.RefExpRealSpace, myhandlePaddedTR, myStreamTR, false, dull);
 
-    myStructureAuxTR.RefExpFourier.ifft(myStructureAuxTR.RefExpRealSpace, myhandlePaddedTR, myStreamTR);
-
-    myStructureAuxRT.RefExpFourierPolar.ifft(myStructureAuxRT.RefExpRealSpacePolar, myhandlePaddedRT, myStreamRT);
+    myStructureAuxRT.RefExpFourierPolar.ifft(myStructureAuxRT.RefExpRealSpacePolar, myhandlePaddedRT, myStreamRT, false, dull);
 
 
 
@@ -1561,6 +1712,7 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 	if(referenceAux.XdimOrig%2!=0 && referenceAux.Xdim%2!=0)
 		fixPadding=0;
 
+	numTh = 1024;
     XmippDim3 blockSize4(numTh, 1, 1), gridSize4;
     myStructureAuxRT.RefExpRealSpacePolar.calculateGridSizeVectorized(blockSize4, gridSize4);
 

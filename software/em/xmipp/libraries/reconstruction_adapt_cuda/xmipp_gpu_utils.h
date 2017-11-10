@@ -44,11 +44,21 @@ public:
 
 	GpuMultidimArrayAtCpu(int _Xdim, int _Ydim=1, int _Zdim=1, int _Ndim=1)
     {
+		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
+		data=NULL;
 		resize(_Xdim, _Ydim, _Zdim, _Ndim);
     }
 
 	void resize(int _Xdim, int _Ydim=1, int _Zdim=1, int _Ndim=1)
     {
+		//FIXME what happens if x and y swaps?
+		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim){
+
+			return;
+		}
+
+		clear();
+
 		Xdim=_Xdim;
 		Ydim=_Ydim;
 		Zdim=_Zdim;
@@ -113,7 +123,11 @@ public:
 
 	void clear()
 	{
-		cpuFree(data);
+		if (data!=NULL){;
+			cpuFree(data);
+		}
+		data=NULL;
+
 	}
 
 	~GpuMultidimArrayAtCpu()

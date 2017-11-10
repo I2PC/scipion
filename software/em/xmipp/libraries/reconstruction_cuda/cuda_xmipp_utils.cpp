@@ -4,6 +4,7 @@
 #include "cuda_utils.h"
 
 #include <cufft.h>
+#include <cufftXt.h>
 #include <cuComplex.h>
 
 #include <time.h>
@@ -12,6 +13,11 @@
 #define PI 3.14159265
 
 struct ioTime *mytimes;
+
+struct pointwiseMult{
+	float normFactor;
+	cufftComplex *experimental;
+};
 
 void mycufftDestroy(void *ptr)
 {
@@ -220,6 +226,30 @@ void cuda_check_gpu_properties(int* grid)
 	grid[2] = prop.maxGridSize[2];
 }
 
+
+__device__ cufftComplex CB_pointwiseMultiplicationComplexKernel(void *dataIn, size_t offset,
+		void *callerInfo, void *sharedPtr)
+{
+
+	cufftComplex reference = ((cufftComplex*)dataIn)[offset];
+
+	pointwiseMult *data = (pointwiseMult*)callerInfo;
+	cufftComplex *experimental = (cufftComplex*)data->experimental;
+
+	float normFactor = data->normFactor;
+	cufftComplex nF;
+	nF.x = normFactor;
+	nF.y = 0.0;
+
+	cufftComplex mulOut = cuCmulf((cuComplex)reference, (cuComplex)experimental[offset]);
+	cufftComplex out = cuCmulf((cuComplex)mulOut, (cuComplex)nF);
+	return out;
+}
+
+__device__ cufftCallbackLoadC d_pointwiseMultiplicationComplexKernel = CB_pointwiseMultiplicationComplexKernel;
+
+
+
 template<>
 template<>
 void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float> > &fourierTransform,
@@ -307,7 +337,7 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 template<>
 template<>
 void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<float> &realSpace,
-		mycufftHandle &myhandle, myStreamHandle &myStream)
+		mycufftHandle &myhandle, myStreamHandle &myStream, bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &data)
 {
 
 	int Xfdim=(realSpace.Xdim/2)+1;
@@ -348,6 +378,24 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 				planBptr=(cufftHandle *)myhandle.ptr;
 			}
 		}
+
+		//AJ using callbacks
+		if(useCallback){
+			pointwiseMult dataCB;
+			dataCB.normFactor = data.yxdim;
+			dataCB.experimental = (cufftComplex*)data.d_data;
+
+			cufftCallbackLoadR h_pointwiseMultiplicationComplexKernel;
+			gpuErrchk(cudaMemcpyFromSymbol(&h_pointwiseMultiplicationComplexKernel,
+												d_pointwiseMultiplicationComplexKernel,
+												sizeof(h_pointwiseMultiplicationComplexKernel)));
+
+			cufftResult status = cufftXtSetCallback(*planBptr,
+									(void **)&h_pointwiseMultiplicationComplexKernel,
+									CUFFT_CB_LD_COMPLEX,
+									(void **)&dataCB);
+		}
+		//END AJ
 
 		if(auxNdim==NdimNew){
 			if(NdimNew!=Ndim){
