@@ -483,7 +483,7 @@ class ISPyBdb:
         return self.emacquisition.get_motion_correction_drift_params()
 
     def update_motion_correction_drift(self, params):
-        raise self.emacquisition.update_motion_correction_drift(self.convert_float_types(params).values())
+        raise self.emacquisition.insert_motion_correction_drift(self.convert_float_types(params).values())
 
     def get_ctf_params(self):
         return self.emacquisition.get_ctf_params()
