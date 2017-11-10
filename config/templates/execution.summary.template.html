@@ -427,7 +427,7 @@
             Highcharts.chart('resolutionHistogram', {
                 chart: {
                     type: 'bar',
-                    alignTicks: false,
+                    alignTicks: false
                 },
                 title: {
                     text: 'Resolution'
@@ -439,13 +439,17 @@
                     }
                 },
                 yAxis:{
-                    allowDecimals: false,
+                    title:{
+                        text: 'Micrographs',
+                        align: 'high'
+                    },
+                    allowDecimals: false
                 },
                 tooltip: {
                     valueSuffix: ' micrographs'
                 },
                 series: [{
-                                name: 'Defocus Coverage',
+                                name: 'Resolution',
                                 data: values
                             }]
             })
@@ -544,7 +548,7 @@
                                                                                         return value[0]; }));
             var yAxis = [{
                             title: {
-                                text: 'Mic counts',
+                                text: 'Micrographs',
                                 align: 'high'
                             },
                             max: maxValue,
