@@ -27,6 +27,8 @@
 
 import sys
 import os
+import re
+
 from os.path import basename, exists, isdir
 import time
 from datetime import timedelta, datetime
@@ -135,7 +137,8 @@ class ProtImportImages(ProtImportFiles):
         alreadyWarned = False # Use this flag to warn only once
 
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
-            dst = self._getExtraPath(basename(fileName))
+            uniqueFn = self._getUniqueFileName(fileName)
+            dst = self._getExtraPath(uniqueFn)
             if ' ' in dst:
                 if not alreadyWarned:
                     self.warning('Warning: your file names have white spaces!')
@@ -159,8 +162,8 @@ class ProtImportImages(ProtImportFiles):
             else:
                 img.setObjId(fileId)
                 img.setFileName(dst)
-                # Fill the micName if img is a Micrograph.
-                self._fillMicName(img, fileName)
+                # Fill the micName if img is either Micrograph or Movie
+                self._fillMicName(img, uniqueFn)
                 self._addImageToSet(img, imgSet)
 
             outFiles.append(dst)
@@ -177,28 +180,7 @@ class ProtImportImages(ProtImportFiles):
         
         return outFiles
 
-    def _addImageToSet(self, img, imgSet):
-        """ Add an image to a set, check if the first image to handle
-         some special condition to read dimensions such as .txt or compressed
-         movie files.
-        """
-        if imgSet.isEmpty():
-            self._setupFirstImage(img, imgSet)
-        imgSet.append(img)
-
-    def _setupFirstImage(self, img, imgSet):
-        pass
-
-    def iterNewInputFiles(self):
-        """ Iterate over input files that have not been imported.
-        This function uses the self.importedFiles dict.
-        """
-        for fileName, fileId in self.iterFiles():
-            # If file already imported, skip it
-            if fileName not in self.importedFiles:
-                yield fileName, fileId
-
-    def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
+    def importImagesStreamStep(self, pattern, voltage, sphericalAberration,
                          amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
         Register other parameters.
@@ -206,12 +188,14 @@ class ProtImportImages(ProtImportFiles):
         self.info("Using pattern: '%s'" % pattern)
 
         imgSet = self._getOutputSet() if self.isContinued() else None
-
+        
+        self.importedFiles = set()
         if imgSet is None:
             createSetFunc = getattr(self, '_create' + self._outputClassName)
             imgSet = createSetFunc()
         elif imgSet.getSize() > 0: # in case of continue
             imgSet.loadAllProperties()
+            self._fillImportedFiles(imgSet)
             imgSet.enableAppend()
 
         imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
@@ -228,7 +212,6 @@ class ProtImportImages(ProtImportFiles):
         outputName = self._getOutputName()
 
         finished = False
-        self.importedFiles = set()
         # this is only used when creating stacks from frame files
         self.createdStacks = set()
 
@@ -248,16 +231,18 @@ class ProtImportImages(ProtImportFiles):
             someNew = False
             someAdded = False
 
-            for fileName, fileId in self.iterNewInputFiles():
+            for fileName, uniqueFn, fileId in self.iterNewInputFiles():
                 someNew = True
-
                 if self.fileModified(fileName, fileTimeout):
                     continue
-
-                self.info('Importing file: %s' % fileName)
-                self.importedFiles.add(fileName)
-                dst = self._getExtraPath(basename(fileName))
+                
+                dst = self._getExtraPath(uniqueFn)
+                self.importedFiles.add(uniqueFn)
                 copyOrLink(fileName, dst)
+
+                self.debug('Importing file: %s' % fileName)
+                self.debug("uniqueFn: %s" % uniqueFn)
+                self.debug("dst Fn: %s" % dst)
 
                 if self._checkStacks:
                     _, _, _, n = imgh.getDimensions(dst)
@@ -277,8 +262,9 @@ class ProtImportImages(ProtImportFiles):
                 else:
                     img.setObjId(fileId)
                     img.setFileName(dst)
-                    # Fill the micName if img is a Micrograph.
-                    self._fillMicName(img, fileName)
+                    # Fill the micName if img is either a Micrograph or a Movie
+                    self.debug("FILENAME TO fillMicName: %s" % uniqueFn)
+                    self._fillMicName(img, uniqueFn)
                     self._addImageToSet(img, imgSet)
 
                 outFiles.append(dst)
@@ -329,7 +315,7 @@ class ProtImportImages(ProtImportFiles):
             errors.append('  %s' % " ".join(badChars))
         return errors
 
-        #--------------------------- INFO functions --------------------------------
+        #--------------------------- INFO functions ----------------------------
     def _validateImages(self):
         errors = []
         ih = ImageHandler()
@@ -375,15 +361,17 @@ class ProtImportImages(ProtImportFiles):
         if outputSet is None:
             summary.append("Output " + self._outputClassName + " not ready yet.") 
             if self.copyFiles:
-                summary.append("*Warning*: You select to copy files into your project.\n"
-                               "This will make another copy of your data and may take \n"
-                               "more time to import. ")
+                summary.append("*Warning*: You select to copy files into your "
+                               "project.\n This will make another copy of "
+                               "your data and may take more time to import.")
         else:
             summary.append("*%d* %s imported from %s" % (outputSet.getSize(),
                                                          self._getOutputItemName(),
                                                          self.getPattern()))
-            summary.append("Is the data phase flipped : %s" % outputSet.isPhaseFlipped())
-            summary.append("Sampling rate : *%0.2f* Å/px" % outputSet.getSamplingRate())
+            summary.append("Is the data phase flipped : %s"
+                           % outputSet.isPhaseFlipped())
+            summary.append("Sampling rate : *%0.2f* Å/px"
+                           % outputSet.getSamplingRate())
         
         return summary
     
@@ -399,7 +387,6 @@ class ProtImportImages(ProtImportFiles):
                               round(self.voltage.get()),
                               round(self.magnification.get()),
                               self.getObjectTag(self._getOutputName())))
-            
         return methods
     
     #--------------------------- UTILS functions -------------------------------
@@ -461,15 +448,47 @@ class ProtImportImages(ProtImportFiles):
                     result = acq
 
         return result
+    
+    def _addImageToSet(self, img, imgSet):
+        """ Add an image to a set, check if the first image to handle
+         some special condition to read dimensions such as .txt or compressed
+         movie files.
+        """
+        if imgSet.isEmpty():
+            self._setupFirstImage(img, imgSet)
+        imgSet.append(img)
 
-    def _fillMicName(self, img, filename):
+    def _setupFirstImage(self, img, imgSet):
+        pass
+
+    def iterNewInputFiles(self):
+        """ Iterate over input files that have not been imported.
+        This function uses the self.importedFiles dict.
+        """
+        for fileName, fileId in self.iterFiles():
+            # If file already imported, skip it
+            uniqueFn = self._getUniqueFileName(fileName)
+            if uniqueFn not in self.importedFiles:
+                yield fileName, uniqueFn, fileId
+
+    def _fillImportedFiles(self, imgSet):
+        from pyworkflow.em import SetOfMicrographsBase
+        if isinstance(imgSet, SetOfMicrographsBase):
+            for img in imgSet:
+                self.importedFiles.add(img.getMicName())
+
+    def _fillMicName(self, img, uniqueFn):
         from pyworkflow.em import Micrograph
         if isinstance(img, Micrograph):
-            filePaths = self.getMatchFiles()
-            commPath = pwutils.commonPath(filePaths)
-            micName = filename.replace(commPath + "/", "").replace("/", "_")
-            img.setMicName(micName)
+            img.setMicName(uniqueFn)
             
+    def _getUniqueFileName(self, filename, filePaths=None):
+        if filePaths is None:
+            filePaths = [re.split(r'[$*]', self.getPattern())[0]]
+
+        commPath = pwutils.commonPath(filePaths)
+        return filename.replace(commPath + "/", "").replace("/", "_")
+
     def handleImgHed(self, copyOrLink, src, dst):
         """ Check the special case of Imagic files format
         composed by two files: .hed and .img.

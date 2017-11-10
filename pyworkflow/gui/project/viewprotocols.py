@@ -26,7 +26,6 @@
 # **************************************************************************
 from __future__ import print_function
 
-import time
 
 INIT_REFRESH_SECONDS = 3
 
@@ -1149,7 +1148,6 @@ class ProtocolsView(tk.Frame):
 
             return boxColor
         except Exception as e:
-            print("Can't calculate box color:" + str(e))
             return DEFAULT_BOX_COLOR
 
     @staticmethod
