@@ -136,7 +136,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                     """)
 
         form.addSection(label="Motioncor2")
-        form.addParam('useMotioncor2', params.BooleanParam, default=False,
+        form.addParam('useMotioncor2', params.BooleanParam, default=True,
                       label='Use motioncor2',
                       help='Use new *motioncor2* program with local '
                            'patch-based motion correction and dose weighting.')
