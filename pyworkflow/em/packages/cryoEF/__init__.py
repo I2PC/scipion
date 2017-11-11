@@ -31,8 +31,21 @@ _logo = "cryoEF_logo.png"
 _references = ['naydenova2017']
 
 from protocol_cryoef import ProtCryoEF
+from convert import *
 from viewer_cryoef import CryoEFViewer
 from wizard import cryoEFMaskDiameterWizard
 
 
 _environ = getEnviron()
+
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed. """
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in [CRYOEF_HOME_VAR]
+                    if not os.path.exists(_environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return []  # No errors

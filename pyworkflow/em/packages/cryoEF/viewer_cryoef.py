@@ -152,7 +152,7 @@ class CryoEFViewer(ProtocolViewer):
         numberOfBins = 10
         plotter = EmPlotter()
         plotter.createSubPlot("PSF Resolution histogram",
-                              "Resolution (A)", "%")
+                              "Resolution (A)", "Ang (str)")
         resolution = [float(line.strip()) for line in f]
         f.close()
         plotter.plotHist(resolution, nbins=numberOfBins)

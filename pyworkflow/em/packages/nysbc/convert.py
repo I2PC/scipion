@@ -44,6 +44,10 @@ def getEnviron():
     environ.update({
         'PATH': join(NYSBC_3DFSC_HOME, 'ThreeDFSC'),
     }, position=Environ.BEGIN)
+
+    if 'PYTHONPATH' in environ:
+        # this is required for python virtual env to work
+        environ.set('PYTHONPATH', '', position=Environ.BEGIN)
     return environ
 
 
@@ -58,18 +62,6 @@ def getVersion():
         if v in path:
             return v
     return ''
-
-
-def validateInstallation():
-    """ This function will be used to check if package is properly installed. """
-    missingPaths = ["%s: %s" % (var, _environ[var])
-                    for var in [NYSBC_3DFSC_HOME_VAR]
-                    if not os.path.exists(_environ[var])]
-
-    if missingPaths:
-        return ["Missing variables:"] + missingPaths
-    else:
-        return []  # No errors
 
 
 def findSphericity(fn):

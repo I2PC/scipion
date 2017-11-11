@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from bibtex import _bibtex # Load bibtex dict with references
-from convert import getEnviron
+from convert import *
 
 _logo = "nysbc_logo.png"
 _references = ['tan2017']
@@ -35,3 +35,15 @@ from viewer_3dfsc import ThreedFscViewer
 
 
 _environ = getEnviron()
+
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed. """
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in [NYSBC_3DFSC_HOME_VAR]
+                    if not os.path.exists(_environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return []  # No errors

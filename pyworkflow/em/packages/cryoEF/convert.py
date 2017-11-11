@@ -63,18 +63,6 @@ def getVersion():
     return ''
 
 
-def validateInstallation():
-    """ This function will be used to check if package is properly installed. """
-    missingPaths = ["%s: %s" % (var, _environ[var])
-                    for var in [CRYOEF_HOME_VAR]
-                    if not os.path.exists(_environ[var])]
-
-    if missingPaths:
-        return ["Missing variables:"] + missingPaths
-    else:
-        return []  # No errors
-
-
 def parseOutput(filename):
     """ Retrieve efficiency, mean PSF res, stdev, worst and best PSF res
     from the output log file of the cryoEF execution.
