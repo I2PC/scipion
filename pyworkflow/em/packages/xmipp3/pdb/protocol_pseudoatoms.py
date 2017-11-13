@@ -57,17 +57,19 @@ class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         inputVol = self.inputStructure.get()
-        pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
-        self.createChimeraScript(inputVol, pdb)
-        self._defineOutputs(outputPdb=pdb)
-        self._defineSourceRelation(self.inputStructure, pdb)
 
         volume=Volume()
         volume.setFileName(self._getExtraPath("pseudoatoms_approximation.vol"))
         volume.setSamplingRate(inputVol.getSamplingRate())
         self._defineOutputs(outputVolume=volume)
         self._defineSourceRelation(self.inputStructure.get(),volume)
-        
+
+        pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
+        pdb.setVolume(volume)
+        self.createChimeraScript(inputVol, pdb)
+        self._defineOutputs(outputPdb=pdb)
+        self._defineSourceRelation(self.inputStructure, pdb)
+
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
