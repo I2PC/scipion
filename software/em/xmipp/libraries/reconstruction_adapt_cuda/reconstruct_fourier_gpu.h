@@ -342,7 +342,7 @@ private:
     		float maxX, float maxY, float maxZ);
 
     /** Method returns vectors defining the plane */
-    static void getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v);
+    static void getVectors(const Point3D<float>* plane, float& uX, float& uY, float& uZ, float& vX, float& vY, float& vZ);
 
     /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
     static void printAABB(Point3D<float> AABB[]);
@@ -370,11 +370,11 @@ private:
      * Method calculates a (normalized) normal vector to the vector u and v
      */
     template<typename T>
-    static Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
+    static Point3D<T> getNormal(RecFourierProjectionTraverseSpace* space, bool normalize=false) {
     	Point3D<T> result;
-    	result.x = u.y*v.z - u.z*v.y;
-    	result.y = u.z*v.x - u.x*v.z;
-    	result.z = u.x*v.y - u.y*v.x;
+    	result.x = space->uY*space->vZ - space->uZ*space->vY;
+    	result.y = space->uZ*space->vX - space->uX*space->vZ;
+    	result.z = space->uX*space->vY - space->uY*space->vX;
     	if (normalize) {
     		float length = getLength(result);
     		result.x /= length;

@@ -231,16 +231,16 @@ void ProgRecFourierGPU::produceSideinfo()
 	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
-inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v) {
+inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, float& uX, float& uY, float& uZ, float& vX, float& vY, float& vZ) {
 	float x0 = plane[0].x;
 	float y0 = plane[0].y;
 	float z0 = plane[0].z;
-	u.x = plane[1].x - x0;
-	u.y = plane[1].y - y0;
-	u.z = plane[1].z - z0;
-	v.x = plane[3].x - x0;
-	v.y = plane[3].y - y0;
-	v.z = plane[3].z - z0;
+	uX = plane[1].x - x0;
+	uY = plane[1].y - y0;
+	uZ = plane[1].z - z0;
+	vX = plane[3].x - x0;
+	vY = plane[3].y - y0;
+	vZ = plane[3].z - z0;
 }
 
 void ProgRecFourierGPU::cropAndShift(
@@ -735,25 +735,36 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 
 	// store data
 	space->projectionIndex = projectionIndex;
-	getVectors(cuboid, space->u, space->v);
+	getVectors(cuboid, space->uX, space->uY, space->uZ, space->vX, space->vY, space->vZ);
 	space->minZ = floor(AABB[0].z);
 	space->minY = floor(AABB[0].y);
 	space->minX = floor(AABB[0].x);
 	space->maxZ = ceil(AABB[1].z);
 	space->maxY = ceil(AABB[1].y);
 	space->maxX = ceil(AABB[1].x);
-	space->topOrigin = cuboid[4];
-	space->bottomOrigin = cuboid[0];
+	space->topOriginX = cuboid[4].x;
+	space->topOriginY = cuboid[4].y;
+	space->topOriginZ = cuboid[4].z;
+	space->bottomOriginX = cuboid[0].x;
+	space->bottomOriginY = cuboid[0].y;
+	space->bottomOriginZ = cuboid[0].z;
 	space->maxDistanceSqr = (imgSizeX+(useFast ? 0.f : blob.radius))
 			* (imgSizeX+(useFast ? 0.f : blob.radius));
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			space->transformInv[i][j] = transformInv[i][j];
-		}
-	}
+
+	space->transformInv00 = transformInv[0][0];
+	space->transformInv01 = transformInv[0][1];
+	space->transformInv02 = transformInv[0][2];
+
+	space->transformInv10 = transformInv[1][0];
+	space->transformInv11 = transformInv[1][1];
+	space->transformInv12 = transformInv[1][2];
+
+	space->transformInv20 = transformInv[2][0];
+	space->transformInv21 = transformInv[2][1];
+	space->transformInv22 = transformInv[2][2];
 
 	// calculate best traverse direction
-	Point3D<float> unitNormal = getNormal(space->u, space->v, true);
+	Point3D<float> unitNormal = getNormal<float>(space, true);
 	float nX = std::abs(unitNormal.x);
 	float nY = std::abs(unitNormal.y);
 	float nZ = std::abs(unitNormal.z);

@@ -44,7 +44,7 @@ enum Direction { XY, XZ, YZ } dir; // optimal plane for traversing (i.e. you pro
  * Projection itself is a plane (with/without some thickness) somehow oriented in the AABB.
  * These variables hold directional vectors of the plane
  */
-Point3D<float> u, v;
+float uX, uY, uZ, vX, vY, vZ;
 /**
  * Projection can have some thickness due to the blob radius.
  * These variables hold the origin of the lower/upper plane.
@@ -52,9 +52,11 @@ Point3D<float> u, v;
  * specific rotation, so it can happen that 'topOrigin' is lower than 'bottomOrigin'.
  * In case the blob radius is zero, these variables hold the same point
  */
-Point3D<float> topOrigin, bottomOrigin;
+float topOriginX, topOriginY, topOriginZ, bottomOriginX, bottomOriginY, bottomOriginZ;
 int projectionIndex; // index to array of projections, which holds appropriate (visual) data
-float transformInv[3][3]; // rotation matrix, describing transformation to default position
+float transformInv00, transformInv01, transformInv02,
+transformInv10, transformInv11, transformInv12,
+transformInv20, transformInv21,transformInv22; // rotation matrix, describing transformation to default position
 float weight; // of the projection
 };
 
