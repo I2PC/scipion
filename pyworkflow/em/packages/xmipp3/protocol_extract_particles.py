@@ -454,12 +454,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             # We need to make this dict because there is no ID in the .xmd file
             coordDict = {}
             for coord in self.coordDict[mic.getObjId()]:
-                coordDict[self._getPos(coord)] = coord
-            
+                pos = self._getPos(coord)
+                if pos in coordDict:
+                    print("WARNING: Ignoring duplicated coordinate: %s, id=%s" %
+                          (coord.getObjId(), pos))
+                coordDict[pos] = coord
+
+            added = set() # Keep track of added coords to avoid duplicates
             for row in md.iterRows(self._getMicXmd(mic)):
                 pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
                 coord = coordDict.get(pos, None)
-                if coord is not None:
+                if coord is not None and coord.getObjId() not in added:
                     # scale the coordinates according to particles dimension.
                     coord.scale(self.getBoxScale())
                     p.copyObjId(coord)
@@ -471,6 +476,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     # final set
                     if row.getValue(md.MDL_ENABLED) > 0:
                         outputParts.append(p)
+                        added.add(coord.getObjId())
 
             # Release the list of coordinates for this micrograph since it
             # will not be longer needed
