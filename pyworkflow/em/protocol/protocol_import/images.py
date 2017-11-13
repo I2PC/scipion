@@ -484,7 +484,7 @@ class ProtImportImages(ProtImportFiles):
             
     def _getUniqueFileName(self, filename, filePaths=None):
         if filePaths is None:
-            filePaths = [re.split(r'[$*]', self.getPattern())[0]]
+            filePaths = [re.split(r'[$*#]', self.getPattern())[0]]
 
         commPath = pwutils.commonPath(filePaths)
         return filename.replace(commPath + "/", "").replace("/", "_")
