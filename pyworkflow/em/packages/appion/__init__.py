@@ -26,15 +26,28 @@
 """
 This package contains the protocols and data for APPION
 """
+import os
 
 _logo = "ncbi_logo.png"
 
 from bibtex import _bibtex
-from convert import getEnviron
-from protocol_picking import DogPickerProtPicking
+from convert import getEnviron, DOGPICKER_HOME
+from protocol_dogpicker import DogPickerProtPicking
 from wizard import DogPickerWizard
 
 
 #_references = ['Voss2009']
 
 _environ = getEnviron()
+
+
+def validateInstallation():
+    """ This function will be used to check if RELION is properly installed. """
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in [DOGPICKER_HOME]
+                    if not os.path.exists(_environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors

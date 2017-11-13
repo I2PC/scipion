@@ -195,6 +195,11 @@ void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m,bool
 void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
                    bool homogeneous=true);
 
+/** Creates a rotation matrix (R) to change the orientation from
+ * one standard orientation (icoFrom) to another one (icoTo)
+ */
+void rotation3DMatrixFromIcoOrientations(const char* icoFrom, const char* icoTo, Matrix2D<double> &R);
+
 #define NEAREST 0
 #define LINEAR 1
 #define BSPLINE2 2

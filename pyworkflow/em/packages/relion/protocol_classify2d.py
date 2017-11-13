@@ -57,8 +57,8 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         # Sampling stuff
         if self.doImageAlignment:
             args['--offset_range'] = self.offsetSearchRangePix.get()
-            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
-            args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * 2
+            args['--offset_step']  = self.offsetSearchStepPix.get() * self._getSamplingFactor()
+            args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * self._getSamplingFactor()
         else:
             args['--skip_align'] = ''
 

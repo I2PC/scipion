@@ -25,6 +25,7 @@
 # *
 # **************************************************************************
 
+import sys
 from os.path import join, exists, getmtime
 from datetime import datetime
 
@@ -216,6 +217,8 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
     # --------------------------- STEPS functions ------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run the estimate CTF program """
+        doneFile = join(micDir, 'done.txt')
+
         localParams = self.__params.copy()
         if self.doInitialCTF:
             if self.ctfDict[micName] > 0:
@@ -269,53 +272,20 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                 self.runJob(self._program,
                             self._args % localParams +
                             " --downSamplingPerformed %f" % downFactor)
-            except Exception:
-                break
+            except Exception, ex:
+                print >> sys.stderr, "xmipp_ctf_estimate_from_micrograph has " \
+                                     "failed with micrograph %s" % finalName
 
-            toWrite=False
             # Check the quality of the estimation and reject it necessary
             if self.evaluateSingleMicrograph(micFn, micDir):
-                toWrite=True
                 break
+
+        # Let's notify that this micrograph have been processed
+        # just creating an empty file at the end (after success or failure)
+        open(doneFile, 'w')
 
         if deleteTmp != "":
             pwutils.path.cleanPath(deleteTmp)
-
-        fnCTF = self._getFileName('ctf', micDir=micDir)
-        if exists(fnCTF) and toWrite:
-            fn = self._getCtfEstimationFile()
-            with open(fn, 'a') as f:
-                f.write('%s\n' % micName)
-
-
-    def createOutputStep(self):
-        if self.recalculate:
-            ctfSet = self._createSetOfCTF("_recalculated")
-            prot = self.continueRun.get() or self
-            micSet = prot.outputCTF.getMicrographs()
-            # We suppose this is reading the ctf selection
-            # (with enabled/disabled) to only consider the enabled ones
-            # in the final SetOfCTF
-            #TODO: maybe we can remove the need of the extra text file
-            # with the recalculate parameters
-            newCount = 0
-            for ctfModel in self.recalculateSet:
-                if ctfModel.isEnabled() and ctfModel.getObjComment():
-                    mic = ctfModel.getMicrograph()
-                    # Update the CTF models that where recalculated and append
-                    # later to the set, we don't want to copy the id here since
-                    # it is already correct
-                    newCtf = self._createCtfModel(mic)
-                    ctfModel.copy(newCtf, copyId=False)
-                    ctfModel.setEnabled(True)
-                    newCount += 1
-                ctfSet.append(ctfModel)
-            ctfSet.setMicrographs(micSet)
-            self._defineOutputs(outputCTF=ctfSet)
-            self._defineCtfRelation(micSet, ctfSet)
-            self._computeDefocusRange(ctfSet)
-            self.summaryVar.set("CTF Re-estimation of "
-                                "%d micrographs" % newCount)
 
     def _restimateCTF(self, micId):
         """ Run the estimate CTF program """
@@ -327,6 +297,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         mic = ctfModel.getMicrograph()
         micDir = self._getMicrographDir(mic)
         self.evaluateSingleMicrograph(mic.getFileName(), micDir)
+
+    def _createOutputStep(self):
+        pass
 
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
@@ -508,88 +481,13 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
         return retval
 
-    def _readDoneList(self):
-        """ Read from a text file the id's of the items that have been done. """
-        doneFile = self._getAllDone()
-        doneList = []
-        # Check what items have been previously done
-        if exists(doneFile):
-            with open(doneFile) as f:
-                doneList += [line.strip() for line in f]
+    def _createCtfModel(self, mic, updateSampling=True):
+        if updateSampling:
+            newSampling = mic.getSamplingRate() * self.ctfDownFactor.get()
+            mic.setSamplingRate(newSampling)
 
-        return doneList
-
-    def _writeDoneList(self, ctfNameList):
-        """ Write to a text file the items that have been done. """
-        doneFile = self._getAllDone()
-        with open(doneFile, 'a') as f:
-            for ctfName in ctfNameList:
-                f.write('%s\n' % ctfName)
-
-    def _getAllDone(self):
-        return self._getExtraPath('DONE_all.TXT')
-
-    def _getCtfEstimationFile(self):
-        return self._getExtraPath('estimation-ctf.txt')
-
-    def _readtCtfName(self):
-        fn = self._getCtfEstimationFile()
-        ctfList = []
-        # Check what items have been previously done
-        if exists(fn):
-            with open(fn) as f:
-                ctfList += [line.strip() for line in f]
-        return ctfList
-
-    def _loadInputList(self):
-        """ Load the input set of micrographs and create a list. """
-        micSet = self._loadInputMicSet()
-        self.isStreamClosed = micSet.getStreamState()
-        self.listOfMic = [m.clone() for m in micSet]
-        micSet.close()
-        self.debug("Closed db.")
-
-    def _loadInputMicSet(self):
-        micFile = self.inputMicrographs().get().getFileName()
-        self.debug("Loading input db: %s" % micFile)
-        micSet = em.SetOfMicrographs(filename=micFile)
-        micSet.loadAllProperties()
-        return micSet
-
-    def _loadOutputSet(self, SetClass, setFile):
-        """
-        Load the output set if it exists or create a new one.
-        """
-        #setFile = self._getPath(baseName)
-
-        if exists(setFile):
-            outputSet = SetClass(filename=setFile)
-            if outputSet.getSize()>0:
-                outputSet.loadAllProperties()
-            outputSet.enableAppend()
-        else:
-            outputSet = SetClass(filename=setFile)
-            outputSet.setStreamState(outputSet.STREAM_OPEN)
-
-        micSet = self.inputMicrographs.get()
-
-        if isinstance(outputSet, em.SetOfMicrographs):
-            outputSet.copyInfo(micSet)
-        elif isinstance(outputSet, em.SetOfCTF):
-            outputSet.setMicrographs(micSet)
-
-        return outputSet
-
-    def _loadInputMicSet(self):
-        micFile = self.inputMicrographs.get().getFileName()
-        self.debug("Loading input db: %s" % micFile)
-        micSet = em.SetOfMicrographs(filename=micFile)
-        micSet.loadAllProperties()
-        return micSet
-
-    def _createCtfModel(self, mic):
         micDir = self._getMicrographDir(mic)
-        ctfparam = self._getFileName('ctfparam', micDir=micDir)
+        ctfparam = self._getFileName('ctf', micDir=micDir)
         ctfModel2 = readCTFModel(ctfparam, mic)
         self._setPsdFiles(ctfModel2, micDir)
         return ctfModel2

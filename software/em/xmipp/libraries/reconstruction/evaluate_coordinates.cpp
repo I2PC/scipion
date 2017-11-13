@@ -24,24 +24,16 @@
  ***************************************************************************/
 
 #include "evaluate_coordinates.h"
-
 #include <data/xmipp_funcs.h>
-#include <data/mask.h>
-#include <data/filters.h>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <algorithm>
-
 
 // Read arguments ==========================================================
 void ProgEvaluateCoordinates::readParams()
 {
     fnGt = getParam("-g");
     fnEval = getParam("-e");
+    numMic = getIntParam("-n");
     errMargin = getIntParam("-t");
+    rootName = getParam("--root");
 }
 
 // Show ====================================================================
@@ -52,17 +44,21 @@ void ProgEvaluateCoordinates::show()
     std::cerr
     << "Ground truth coordinates:          " << fnGt         << std::endl
     << "Coordinates to evaluate:           " << fnEval       << std::endl
+    << "Number of micrographs:             " << numMic       << std::endl
     << "Tolerance of center misplacement:  " << errMargin    << std::endl
+    << "Root name:                         " << rootName     << std::endl
     ;
 }
 
 // Usage ===================================================================
 void ProgEvaluateCoordinates::defineParams()
 {
-    addUsageLine("Clusters a set of images");
-    addParamsLine("  -g <selfile>     : Selfile containing ground truth coordinates");
-    addParamsLine("  -e <selfile>     : Selfile containing coordinates to evaluate");
-    addParamsLine("  [-t <int=10>]    : Tolerance of center misplacement");
+    addUsageLine("Evaluates the set of coordinates against the ground truth");
+    addParamsLine("  -g <selfile>      : Selfile containing ground truth coordinates");
+    addParamsLine("  -e <selfile>      : Selfile containing coordinates to evaluate");
+    addParamsLine("  -n <int>          : Number of micrographs");
+    addParamsLine("  [-t <int=10>]     : Tolerance of center misplacement");
+    addParamsLine("  --root <rootName> : Root name of the micrographs");
 }
 
 void ProgEvaluateCoordinates::run()
@@ -71,10 +67,13 @@ void ProgEvaluateCoordinates::run()
     int evalXCoor, evalYCoor, gtXCoor, gtYCoor;
     int truePosivites = 0, totalEval = 0, totalGT = 0;
 
-    for (int m = 1; m < 51; m++)
+    for (int m = 1; m <= numMic; m++)
     {
-        FileName micGT=formatString("mic_KLH_Dataset_I_Blind_Test_%04d@%s", m, fnGt.c_str());
-        FileName micEval=formatString("mic_KLH_Dataset_I_Blind_Test_%04d@%s", m, fnEval.c_str());
+        // Here you need to change the identifiers based on datasets
+        // TODO: loading names and counts of mics automatically?
+        FileName micGT = formatString("%s_%04d@%s", rootName.c_str(), m, fnGt.c_str());
+        FileName micEval = formatString("%s_%04d@%s", rootName.c_str(), m, fnEval.c_str());
+
         GT.read(micGT);
         Eval.read(micEval);
 
@@ -92,8 +91,10 @@ void ProgEvaluateCoordinates::run()
                 row.getValue(MDL_XCOOR, gtXCoor);
                 row.getValue(MDL_YCOOR, gtYCoor);
 
-                if ((evalXCoor > (gtXCoor-errMargin-1)) && (evalXCoor < (gtXCoor+errMargin+1)) &&
-                    (evalYCoor > (gtYCoor-errMargin-1)) && (evalYCoor < (gtYCoor+errMargin+1)))
+                if ((evalXCoor > (gtXCoor-errMargin-1)) &&
+                    (evalXCoor < (gtXCoor+errMargin+1)) &&
+                    (evalYCoor > (gtYCoor-errMargin-1)) &&
+                    (evalYCoor < (gtYCoor+errMargin+1)))
                     truePosivites++;
 
                 iterG++;
@@ -105,14 +106,20 @@ void ProgEvaluateCoordinates::run()
     }
 
     std::cout << std::endl;
-    std::cout << "True positives (correctly picked particles): " << truePosivites << std::endl;
-    std::cout << "False positives (incorrectly picked particles): " << totalEval - truePosivites << std::endl;
-    std::cout << "False negatives (missed particles): " << totalGT - truePosivites << std::endl << std::endl;
+    std::cout << "True positives (correctly picked particles): ";
+    std::cout << truePosivites << std::endl;
+    std::cout << "False positives (incorrectly picked particles): ";
+    std::cout << totalEval - truePosivites << std::endl;
+    std::cout << "False negatives (missed particles): ";
+    std::cout << totalGT - truePosivites << std::endl << std::endl;
 
     std::cout << "How many relevant particles are picked:" << std::endl;
-    std::cout << "True positive rate: " << (double) truePosivites / totalGT << std::endl << std::endl;
+    std::cout << "True positive rate: ";
+    std::cout << (double) truePosivites / totalGT << std::endl << std::endl;
 
-    std::cout << "Ratio between wrongly picked particles and all picked particles:" << std::endl;
-    std::cout << "False positive rate: " << (double) (totalEval - truePosivites) / totalEval << std::endl;
+    std::cout << "Ratio of wrongly picked particles and all picked particles:";
     std::cout << std::endl;
+    std::cout << "False positive rate: ";
+    std::cout << (double) (totalEval - truePosivites) / totalEval;
+    std::cout << std::endl << std::endl;
 }
