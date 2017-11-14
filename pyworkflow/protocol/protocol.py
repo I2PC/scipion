@@ -1481,7 +1481,7 @@ class Protocol(Step):
         List of warnings checked:
         1. If the folder for this protocol run exists.
         """
-        if not os.path.exists(self.workingDir.get()):
+        if not self.isSaved() and not os.path.exists(self.workingDir.get()):
             self.addSummaryWarning((
                                    "*Missing run data*: The directory for this run is missing, so it won't be"
                                    "possible to use its outputs in other protocols."))
