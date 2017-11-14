@@ -134,7 +134,7 @@ class TestVolumeHomogenizer(BaseTest):
         self.launchProtocol(protVolumeHomogenizer)
         
         self.assertIsNotNone(protVolumeHomogenizer.outputParticles.getFileName(),
-                              "There was a problem with the homoNoGoldStandard")
+                              "There was a problem with the homoNoGoldStandardNoAlign")
         
         return protVolumeHomogenizer
     
@@ -151,7 +151,7 @@ class TestVolumeHomogenizer(BaseTest):
         self.launchProtocol(protVolumeHomogenizer)
         
         self.assertIsNotNone(protVolumeHomogenizer.outputParticles.getFileName(),
-                              "There was a problem with the homoNoGoldStandard")
+                              "There was a problem with the homoNoGoldStandardAlign")
         
         return protVolumeHomogenizer
     
@@ -170,10 +170,32 @@ class TestVolumeHomogenizer(BaseTest):
           
         self.launchProtocol(protVolumeHomogenizer)        
         self.assertIsNotNone(protVolumeHomogenizer.outputParticles01.getFileName(),
-                              "There was a problem with the homoNoGoldStandard")
+                              "There was a problem with the homoGoldStandardNoAlign")
         
         self.assertIsNotNone(protVolumeHomogenizer.outputParticles02.getFileName(),
-                              "There was a problem with the homoNoGoldStandard")
+                              "There was a problem with the homoGoldStandardNoAlign")
+        
+        return protVolumeHomogenizer
+    
+    def homoGoldStandardAlign(self,relion1,relion2):
+        '''test without Goldstandard with alignment'''
+        protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
+                                objLabel='volume homogenizer4',
+                                doGoldStandard = True)
+                
+        protVolumeHomogenizer.referenceVolume1.set(relion1.outputVolume)
+        protVolumeHomogenizer.inputVolume1.set(relion2.outputVolume)
+        protVolumeHomogenizer.referenceVolume2.set(relion1.outputVolume)
+        protVolumeHomogenizer.inputVolume2.set(relion2.outputVolume)
+        protVolumeHomogenizer.inputParticles.set(relion2.outputParticles)
+        protVolumeHomogenizer.doAlignment.set(True)
+          
+        self.launchProtocol(protVolumeHomogenizer)        
+        self.assertIsNotNone(protVolumeHomogenizer.outputParticles01.getFileName(),
+                              "There was a problem with the homoGoldStandardAlign")
+        
+        self.assertIsNotNone(protVolumeHomogenizer.outputParticles02.getFileName(),
+                              "There was a problem with the homoGoldStandardAlign")
         
         return protVolumeHomogenizer
             
@@ -196,8 +218,10 @@ class TestVolumeHomogenizer(BaseTest):
         relion2 = self.relionRefine(protSubSetClass2,vol2,classid=2)
                 
         homo1 = self.homoNoGoldStandardNoAlign(relion1,relion2)
-        #homo2 = self.homoNoGoldStandardAlign(relion1,relion2) #FAILS
+        homo2 = self.homoNoGoldStandardAlign(relion1,relion2)
         homo3 = self.homoGoldStandardNoAlign(relion1,relion2)
+        homo4 = self.homoGoldStandardAlign(relion1,relion2)
+
 
         
 
