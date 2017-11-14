@@ -33,6 +33,9 @@
 #define OUTSIDE_AVG 1
 #define OUTSIDE_VALUE 2
 
+using std::isnan;
+using std::isinf;
+
 // Read arguments ==========================================================
 void ProgMovieAlignmentCorrelation::readParams()
 {

@@ -227,6 +227,8 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
+    _libs.append(['ktt'])
+
     mpiArgs = {}
     if mpi:
         _libpath.append(env['MPI_LIBDIR'])
@@ -326,6 +328,7 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
+    _libs.append(['ktt'])
     mpiArgs = {}
     if mpi:
         _libpath.append(env['MPI_LIBDIR'])
@@ -356,6 +359,9 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
     _incs.append(env['CPPPATH'])
     _incs.append('#software/include')
 
+    tmpMoje = env['CXXFLAGS']
+    tmpMoje = ["" if x =="-std=c++14" else x for x in tmpMoje]
+
     library = env2.Library(
         target=targetName,
         # source=lastTarget,
@@ -365,7 +371,7 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
         LIBS=_libs,
         SHLIBPREFIX=prefix,
         SHLIBSUFFIX=suffix,
-        CXXFLAGS=env['CXXFLAGS'],
+        CXXFLAGS=tmpMoje,
         LINKFLAGS=env['LINKFLAGS'],
         **mpiArgs)
     SideEffect('dummy', library)
@@ -553,6 +559,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     libs = libs or []
     libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incsCopy = list(incs) or []
+    libs.append(['ktt'])
     if cuda or nvcc:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt']
         incsCopy += [env['NVCC_INCLUDE']]

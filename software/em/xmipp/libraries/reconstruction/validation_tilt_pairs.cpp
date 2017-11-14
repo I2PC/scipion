@@ -32,6 +32,8 @@
  * xmipp_validation_tilt_pairs --tilt /home/vilas/ScipionUserData/projects/rct/Runs/001623_XmippProtValidateTilt/extra/tilted/angles_iter001_00.xmd --untilt /home/vilas/ScipionUserData/projects/rct/Runs/001623_XmippProtValidateTilt/extra/untilted/angles_iter001_00.xmd -o caca
  * */
 
+using std::complex_literals::operator""i;
+
 //Define Program parameters
 void ProgValidationTiltPairs::defineParams()
 {

@@ -797,6 +797,9 @@ void ProgRecFourierGPU::logProgress(int increment) {
 
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
+
+	test();
+
 	// initialize GPU
     if (NULL == tempVolumeGPU) {
     	allocateTempVolumeGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
