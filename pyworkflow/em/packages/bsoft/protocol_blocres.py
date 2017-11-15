@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.L. Vilas (jlvilas@cnb.csic.es)
@@ -32,6 +33,7 @@ import pyworkflow.protocol.params as params
 # from pyworkflow.utils import getExt
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
 from pyworkflow.em import ImageHandler
+from pyworkflow.object import Float
 # from collections import OrderedDict
 from pyworkflow.em.data import Volume
 import numpy as np
@@ -56,6 +58,8 @@ class BsoftProtBlocres(ProtAnalysis3D):
 
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)
+        self.min_res_init = Float() 
+        self.max_res_init = Float()
         self.halfVolumes = True
         
     #--------------------------- DEFINE param functions -----------------------
@@ -225,6 +229,8 @@ class BsoftProtBlocres(ProtAnalysis3D):
         min_, max_ = self.getMinMax(imageFile)
         self.min_res_init.set(round(min_*100)/100)
         self.max_res_init.set(round(max_*100)/100)
+        self._store(self.min_res_init)
+        self._store(self.max_res_init)
     
     def getMinMax(self, imageFile):
         img = ImageHandler().read(imageFile)
