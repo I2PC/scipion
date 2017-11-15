@@ -38,6 +38,8 @@ from convert import (getProgram, runChimeraProgram,
 from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 
+from pyworkflow.em.packages.ccp4.convert import adaptBinFileToCCP4
+
 #todo add function scipion_change_scale
 #TODO:tests coherence betweem metadata and header
 #convert to mrc if needed
@@ -82,6 +84,13 @@ class ChimeraProtRigidFit(EMProtocol):
         """
         """
         #convert to mrc
+        vol = self.inputVolume.get()
+        fnVol = self._getExtraPath('volume.mrc')
+        adaptBinFileToCCP4(vol.getFileName(), fnVol,
+                           vol.getOrigin(returnInitIfNone=True).getShifts(),
+                           vol.getSamplingRate())
+
+
         #create coherent header
         createScriptFile(0,  #model id pdb
                          1,  #model id 3D map
@@ -94,7 +103,7 @@ class ChimeraProtRigidFit(EMProtocol):
         args = ""
         args +=  " --script " + self._getTmpPath(chimeraScriptFileName) + " "
         args += self.pdbFileToBeRefined.get().getFileName() + " "
-        args += self.inputVolume.get().getFileName() + " "
+        args += self._getExtraPath('volume.mrc') + " "
         for pdb in self.inputPdbFiles:
             args += " " + pdb.get().getFileName() # other pdb files
         self._log.info('Launching: ' + getProgram() + ' ' + args)
@@ -117,7 +126,7 @@ class ChimeraProtRigidFit(EMProtocol):
             vol.setLocation(volFileName)
             #TODO: this sampling rate needs to be modified
             #HORROR: this way of changing sampling is wrong
-            #develope a central one
+            #develope a CONVERT FUNCTION
             #the only nice thing is that I know that the file is MRC
             #since it is output and I did create it
             import struct
@@ -127,7 +136,7 @@ class ChimeraProtRigidFit(EMProtocol):
             chain = "< 3i i 3i 3i 3f"
             a = struct.unpack(chain, s)
             sampling = a[12]/a[9]
-            #end of the HORROR
+            #end of the HORROR #mETER EL SAMPLING rATE  DEL VOLUMEN DE SALIDA
             #vol.setSamplingRate(self.inputVolume.get().getSamplingRate())
             vol.setSamplingRate(sampling)
             self._defineOutputs(output3Dmap=vol)
