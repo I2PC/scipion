@@ -658,7 +658,7 @@ class Project(object):
                 stringSuffix = m.groupdict()['number'].strip('(').strip(')')
                 maxSuffix = max(int(stringSuffix),maxSuffix)
             elif otherProtLabel == defaultLabel: # When only we have the prefix,
-                maxSuffix = 1                    # this REGEX don't match.
+                maxSuffix = max(1,maxSuffix)     # this REGEX don't match.
 
         if maxSuffix:
             protLabel = '%s (%d)' % (defaultLabel, maxSuffix+1)
