@@ -68,3 +68,22 @@ def getProgram(progName="chimera"):
         return None
     return os.path.join(os.environ['CHIMERA_HOME'], 'bin',
                         os.path.basename(progName))
+
+def createCoordinateAxisFile(dim, bildFileName = "/tmp/axis.bild", sampling =
+1):
+    ff = open(bildFileName, "w")
+    arrowDict = {}
+    arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
+        sampling * dim * 3. / 4.
+    arrowDict["r1"] = 0.1  # sampling * dim / 600.
+    arrowDict["r2"] = 4 * arrowDict["r1"]
+    arrowDict["rho"] = 0.75  # sampling * dim / 150.
+
+    ff.write(".color 1 0 0\n"
+             ".arrow 0 0 0 %(x)d 0 0 %(r1)f %(r2)f %(rho)f\n"
+             ".color 1 1 0\n"
+             ".arrow 0 0 0 0 %(y)d 0 %(r1)f %(r2)f %(rho)f\n"
+             ".color 0 0 1\n"
+             ".arrow 0 0 0 0 0 %(z)d %(r1)f %(r2)f %(rho)f\n" %
+             arrowDict)
+    ff.close()
