@@ -493,7 +493,7 @@ class TestProtModelBuilding(BaseTest):
             outputFile = outputFile1
 
         ccp4header.setSampling(_samplingRate)
-        ccp4header.setOffset(t)
+        ccp4header.setOffset(t.getShifts())
         ccp4header.writeHeader()
 
         # import volume
