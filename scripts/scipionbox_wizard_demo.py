@@ -446,6 +446,21 @@ def getTemplate():
         "socketPort": 5000
     },
     {
+        "object.className": "XmippProtMovieGain",
+        "object.id": "313",
+        "object.label": "xmipp3 - movie gain",
+        "object.comment": "",
+        "runName": null,
+        "runMode": 0,
+        "frameStep": 30,
+        "movieStep": ~Gain estimation movie step|1|4~,
+        "useExistingGainImage": false,
+        "hostName": "localhost",
+        "numberOfThreads": 1,
+        "numberOfMpi": 1,
+        "inputMovies": "2.outputMovies"
+    },
+    {
         "object.className": "ProtMotionCorr",
         "object.id": "56",
         "object.label": "Motioncorr",
@@ -582,21 +597,6 @@ def getTemplate():
         "numberOfMpi": 1,
         "ctfRelations": "118.outputCTF",
         "inputCoordinates": "284.outputCoordinates"
-    },
-    {
-        "object.className": "XmippProtMovieGain",
-        "object.id": "313",
-        "object.label": "xmipp3 - movie gain",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "frameStep": 30,
-        "movieStep": ~Gain estimation movie step|1|4~,
-        "useExistingGainImage": false,
-        "hostName": "localhost",
-        "numberOfThreads": 1,
-        "numberOfMpi": 1,
-        "inputMovies": "2.outputMovies"
     }
 ]"""
     # Replace environment variables
