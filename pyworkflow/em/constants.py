@@ -26,10 +26,9 @@
 """
 This modules contains constants related to EM
 """
-#------------------ Constants values --------------------------------------
+# ------------------ Constants values --------------------------------------
 
 NO_INDEX = 0  # This is the index value for single images
-    
 
 # Sampling rate input modes
 SAMPLING_FROM_IMAGE = 0
@@ -55,12 +54,11 @@ FILTER_NO_DECAY = 5
 
 # Transform
 ALIGN_NONE = 'None'
-ALIGN_2D   = '2D'         # 2D image alignment
-ALIGN_3D   = '3D'         # 3D map alignment
-ALIGN_PROJ = 'Projection' # relate projections with 3d map
+ALIGN_2D = '2D'            # 2D image alignment
+ALIGN_3D = '3D'            # 3D map alignment
+ALIGN_PROJ = 'Projection'  # relate projections with 3d map
 
 ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
-
 
 #Constants related with colormaps for viewers
 # Color maps
@@ -78,4 +76,38 @@ COLOR_CHOICES = ['jet', 'terrain',  'gist_earth', 'gist_ncar', 'gnuplot', 'gnupl
 AX_X = 0
 AX_Y = 1
 AX_Z = 2
+
+
+# SYMMETRY, follows chimera conventions https://www.cgl.ucsf.edu/chimera/docs/
+# UsersGuide/midas/sym.html
+SYM_CYCLIC = 0  # CN
+SYM_DIHEDRAL = 1  # DN
+SYM_TETRAHEDRAL = 2  # T
+SYM_OCTAHEDRAL = 3  # O
+
+# icosahedric IXXX
+# (no crowther 222 and standard in heyman et al 2005 article).
+# 2-fold axes on x,y,z axes. With the positive z-axis pointing at the viewer,
+# the front-most 5-fold vertices are in yz plane, and the front-most 3-fold
+# axes are in the xz plane.
+SYM_I222 = 4
+# (crowther) 2-fold axes on x,y,z axes. With the positive z-axis pointing at
+# the viewer, the front-most 5-fold vertices are in xz plane,
+# and the front-most 3-fold axes are in the yz plane.
+SYM_I222r = 5
+# '2-fold symmetry along y and 5-fold along z
+SYM_In25 = 6
+# 'n25' with 180 degree rotation about x
+SYM_In25r = 7
+
+# Symmetry dictionary
+SCIPION_SYM_NAME = {}
+SCIPION_SYM_NAME[SYM_CYCLIC] = 'Cn'
+SCIPION_SYM_NAME[SYM_DIHEDRAL] = 'Dn'
+SCIPION_SYM_NAME[SYM_TETRAHEDRAL] = 'T'
+SCIPION_SYM_NAME[SYM_OCTAHEDRAL] = 'O'
+SCIPION_SYM_NAME[SYM_I222] = 'I222'
+SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
+SCIPION_SYM_NAME[SYM_In25] = 'In25'
+SCIPION_SYM_NAME[SYM_In25r] = 'In25r'
 
