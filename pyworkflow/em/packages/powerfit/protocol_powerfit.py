@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es), May 2013
+#              Marta Martinez (mmmtnez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -44,45 +45,59 @@ class PowerfitProtRigidFit(ProtFitting3D):
     """
     _label = 'rigid fit'
     
-    #--------------------------- DEFINE param functions ------------------------
+    #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputPDB', PointerParam, pointerClass='PdbFile',
                       label="Input PDB", important=True)
         form.addParam('inputVol', PointerParam, pointerClass='Volume',
-                      label="Input volume", important=True)
+                      label="Input volume", important=True, allowsNull=True)
         form.addParam('resolution', FloatParam, default=6,
-                      label="Resolution (A)", important=True, help="Resolution for the fitting. The PDB is filtered to this frequency.")
-        form.addParam('angleStep',FloatParam, label="Angular step", default=10.0, expertLevel=LEVEL_ADVANCED,
+                      label="Resolution (A)", important=True,
+                      help="Resolution for the fitting. "
+                           "The PDB is filtered to this frequency.")
+        form.addParam('angleStep',FloatParam, label="Angular step",
+                      default=10.0, expertLevel=LEVEL_ADVANCED,
                       help='Angular step for the alignment search')
-        form.addParam('nModels',IntParam, label="Number of models", default=10, expertLevel=LEVEL_ADVANCED,
+        form.addParam('nModels',IntParam, label="Number of models",
+                      default=10, expertLevel=LEVEL_ADVANCED,
                       help='Number of models to estimate')
-        form.addParam('doLaplacian',BooleanParam, label="Apply Laplacian", default=False, expertLevel=LEVEL_ADVANCED,
-                      help='Apply a Laplacian to the volume to highlight borders')
-        form.addParam('doCoreWeight',BooleanParam, label="Apply core weight", default=False, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doLaplacian',BooleanParam, label="Apply Laplacian",
+                      default=False, expertLevel=LEVEL_ADVANCED,
+                      help=
+                      'Apply a Laplacian to the volume to highlight borders')
+        form.addParam('doCoreWeight',BooleanParam, label="Apply core weight",
+                      default=False, expertLevel=LEVEL_ADVANCED,
                       help='Apply core weights')
-        form.addParam('otherPowerfit', StringParam, default='', expertLevel=LEVEL_ADVANCED,
+        form.addParam('otherPowerfit', StringParam, default='',
+                      expertLevel=LEVEL_ADVANCED,
                       label='Other parameters for Powerfit',
                       help='See http://www.bonvinlab.org/education/powerfit') 
         form.addParallelSection(threads=4, mpi=0)
     
-    #--------------------------- INSERT steps functions ------------------------
+    #--------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('powerfitWrapper')
         self._insertFunctionStep('createOutputStep')
         
-    #--------------------------- STEPS functions -------------------------------
+    #--------------------------- STEPS functions -----------------------------
     def powerfitWrapper(self):
         localInputVol = self._getExtraPath("volume.mrc")
-        sampling = self.inputVol.get().getSamplingRate()
-        adaptBinFileToCCP4(self.inputVol.get().getFileName(), localInputVol,
-                           self.inputVol.get().getOrigin(
+        fnVol = self.inputVol.get()
+        if fnVol is None:
+            fnVol = self.inputPDB.get().getVolume().get()
+            print "Volume: Volume associated to pdb %s\n" % fnVol
+        else:
+            print "Volume: Input volume %s\n" % fnVol
+        sampling = fnVol.getSamplingRate()
+        adaptBinFileToCCP4(fnVol.getFileName(), localInputVol,
+                           fnVol.getOrigin(
                                returnInitIfNone=True).getShifts(),
                            sampling)
-
         args = "%s %f %s -d %s -p %d -a %f -n %d"%(localInputVol,
                                                    self.resolution,
-                                                   self.inputPDB.get().getFileName(),
+                                                   self.inputPDB.get().
+                                                   getFileName(),
                                                    self._getExtraPath(),
                                                    self.numberOfThreads,
                                                    self.angleStep,
@@ -94,13 +109,13 @@ class PowerfitProtRigidFit(ProtFitting3D):
         self.runJob("powerfit",args)
         
         # Construct the chimera viewers
-        dim = self.inputVol.get().getDim()[0]
+        dim = fnVol.getDim()[0]
         bildFileName = os.path.abspath(self._getExtraPath("axis.bild"))
         createCoordinateAxisFile(dim,
                                  bildFileName=bildFileName,
                                  sampling=sampling)
 
-        for n in range(self.nModels.get()):
+        for n in range(1,self.nModels.get()+1):
             fnPdb = self._getExtraPath("fit_%d.pdb"%n)
             if exists(fnPdb):
                 fnCmd = self._getExtraPath("chimera_%d.cmd"%n)
@@ -116,9 +131,16 @@ class PowerfitProtRigidFit(ProtFitting3D):
     def createOutputStep(self):
         volume=Volume()
         volume.setFileName(self._getExtraPath('volume.mrc'))
-        volume.setSamplingRate(self.inputVol.get().getSamplingRate())
+        if self.inputVol.get() is None:
+            self.inputPDB.get().getVolume().get().setSamplingRate(
+                self.inputPDB.get().getVolume().get().getSamplingRate())
+        else:
+            volume.setSamplingRate(self.inputVol.get().getSamplingRate())
         self._defineOutputs(outputVolume=volume)
-        self._defineSourceRelation(self.inputVol,volume)
+        if self.inputVol.get() is None:
+            self._defineSourceRelation(self.inputPDB.get().getVolume(),volume)
+        else:
+            self._defineSourceRelation(self.inputVol,volume)
         
         fnOutput = self._getExtraPath("solutions.out")
         qualifiers = {}
@@ -128,7 +150,8 @@ class PowerfitProtRigidFit(ProtFitting3D):
                 if lineCounter>0:
                     tokens = line.split()
                     fnPdb = self._getExtraPath("fit_%d.pdb"%int(tokens[0]))
-                    qualifiers[fnPdb] = (Float(tokens[1]),Float(tokens[2]),Float(tokens[3]))
+                    qualifiers[fnPdb] = (Float(tokens[1]),Float(tokens[2]),
+                                         Float(tokens[3]))
                 lineCounter += 1
         
         setOfPDBs = self._createSetOfPDBs()
@@ -144,8 +167,11 @@ class PowerfitProtRigidFit(ProtFitting3D):
         
                 
         self._defineOutputs(outputPDBs=setOfPDBs)
-        self._defineSourceRelation(self.inputVol, setOfPDBs)
-        self._defineSourceRelation(self.inputPDB, setOfPDBs)
+        if self.inputVol.get() is None:
+            self._defineSourceRelation(self.inputPDB.get().getVolume(),
+                                       setOfPDBs)
+        else:
+            self._defineSourceRelation(self.inputVol, setOfPDBs)
         
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -156,13 +182,17 @@ class PowerfitProtRigidFit(ProtFitting3D):
         if self.doLaplacian:
             summary.append("Apply core weights")
         if not self.otherPowerfit.empty():
-            summary.append('Other powerfit parameters: %s' % self.otherPowerfit)
+            summary.append('Other powerfit parameters: %s' %
+                           self.otherPowerfit)
         return summary
 
     def _methods(self):
         summary = []
-        summary.append('We rigidly fitted the structure %s into the volume with an angular step of %f using Powerfit [vanZundert2015].'
-                       % (self.inputPDB.get().getNameId(),self.inputVol.get().getNameId(),self.angleStep))
+        summary.append('We rigidly fitted the structure %s into the volume '
+                       'with an angular step of %f using Powerfit '
+                       '[vanZundert2015].'
+                       % (self.inputPDB.get().getNameId(),self.inputVol.get().
+                          getNameId(),self.angleStep))
         if self.doLaplacian:
             summary.append("We applied a Laplacian filter to the input volume.")
         if self.doLaplacian:
@@ -171,10 +201,17 @@ class PowerfitProtRigidFit(ProtFitting3D):
 
     def _citations(self):
         return ['vanZundert2015']
-    
+
     def _validate(self):
         errors = []
         if which('powerfit') is '':
             errors.append('You should have the program powerfit in the PATH')
+        # Check that the input volume exist
+        if (not self.inputPDB.get().hasVolume()) and (self.inputVol.get() is \
+                None):
+            errors.append("Error: You should provide a volume.\n")
         return errors
+
+
+
         
