@@ -26,7 +26,7 @@
 #ifndef XMIPP_LIBRARIES_DATA_RECONSTRUCT_FOURIER_PROJECTION_TRAVERSE_SPACE_H_
 #define XMIPP_LIBRARIES_DATA_RECONSTRUCT_FOURIER_PROJECTION_TRAVERSE_SPACE_H_
 
-#include "data/point3D.h"
+//#include "data/point3D.h"
 
 /**
  * Struct describing a how to best traverse a single projection

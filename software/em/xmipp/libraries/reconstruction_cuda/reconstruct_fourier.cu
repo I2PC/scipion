@@ -1,3 +1,6 @@
+#include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/reconstruct_fourier_projection_traverse_space.h"
+#include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/point3D.h"
+
 #if SHARED_BLOB_TABLE
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
@@ -7,23 +10,21 @@ __shared__ Point3D<float> SHARED_AABB[2];
 extern __shared__ float2 IMG[];
 #endif
 
+
 // FIELDS
 
-// Holding streams used for calculation. Present on CPU
-cudaStream_t* streams;
 
-// Wrapper to hold pointers to GPU memory (and have it also accessible from CPU)
-std::map<int,FRecBufferDataGPUWrapper*> wrappers;
 
 // Holding blob coefficient table. Present on GPU
-float* devBlobTableSqrt = NULL;
+//float* devBlobTableSqrt = NULL;
 
-__device__ __constant__ int cMaxVolumeIndexX = 0;
-__device__ __constant__ int cMaxVolumeIndexYZ = 0;
-__device__ __constant__ float cBlobRadius = 0.f;
-__device__ __constant__ float cBlobAlpha = 0.f;
-__device__ __constant__ float cIw0 = 0.f;
-__device__ __constant__ float cIDeltaSqrt = 0.f;
+//__device__ __constant__ int cMaxVolumeIndexX = 0;
+//__device__ __constant__ int cMaxVolumeIndexYZ = 0;
+__device__ __constant__ float cBlobRadius = 1.900000f;
+__device__ __constant__ float cBlobAlpha = 15.000000f;
+__device__ __constant__ float cIw0 = 0.581191f;
+__device__ __constant__ float cIDeltaSqrt = 2769.806152f;
+
 
 
 __device__
@@ -91,7 +92,7 @@ float bessi4(float x)
 }
 
 
-template<int order>
+
 __device__
 float kaiserValue(float r, float a, float alpha)
 {
@@ -102,40 +103,40 @@ float kaiserValue(float r, float a, float alpha)
     {
         rdas = rda * rda;
         arg = alpha * sqrtf(1.f - rdas);
-        if (order == 0)
+//        if (order == 0)
         {
             w = bessi0(arg) / bessi0(alpha);
         }
-        else if (order == 1)
-        {
-            w = sqrtf (1.f - rdas);
-            if (alpha != 0.f)
-                w *= bessi1(arg) / bessi1(alpha);
-        }
-        else if (order == 2)
-        {
-            w = sqrtf (1.f - rdas);
-            w = w * w;
-            if (alpha != 0.f)
-                w *= bessi2(arg) / bessi2(alpha);
-        }
-        else if (order == 3)
-        {
-            w = sqrtf (1.f - rdas);
-            w = w * w * w;
-            if (alpha != 0.f)
-                w *= bessi3(arg) / bessi3(alpha);
-        }
-        else if (order == 4)
-        {
-            w = sqrtf (1.f - rdas);
-            w = w * w * w *w;
-            if (alpha != 0.f)
-                w *= bessi4(arg) / bessi4(alpha);
-        }
-        else {
-        	printf("order (%d) out of range in kaiser_value(): %s, %d\n", order, __FILE__, __LINE__);
-        }
+//        else if (order == 1)
+//        {
+//            w = sqrtf (1.f - rdas);
+//            if (alpha != 0.f)
+//                w *= bessi1(arg) / bessi1(alpha);
+//        }
+//        else if (order == 2)
+//        {
+//            w = sqrtf (1.f - rdas);
+//            w = w * w;
+//            if (alpha != 0.f)
+//                w *= bessi2(arg) / bessi2(alpha);
+//        }
+//        else if (order == 3)
+//        {
+//            w = sqrtf (1.f - rdas);
+//            w = w * w * w;
+//            if (alpha != 0.f)
+//                w *= bessi3(arg) / bessi3(alpha);
+//        }
+//        else if (order == 4)
+//        {
+//            w = sqrtf (1.f - rdas);
+//            w = w * w * w *w;
+//            if (alpha != 0.f)
+//                w *= bessi4(arg) / bessi4(alpha);
+//        }
+//        else {
+//        	printf("order (%d) out of range in kaiser_value(): %s, %d\n", order, __FILE__, __LINE__);
+//        }
     }
     else
         w = 0.f;
@@ -257,8 +258,8 @@ void rotate(Point3D<float>* box, const RecFourierProjectionTraverseSpace* tSpace
 /** Compute Axis Aligned Bounding Box of given cuboid */
 __device__
 void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
-	AABB[0].x = AABB[0].y = AABB[0].z = INFINITY;
-	AABB[1].x = AABB[1].y = AABB[1].z = -INFINITY;
+	AABB[0].x = AABB[0].y = AABB[0].z = 0x7f800000;
+	AABB[1].x = AABB[1].y = AABB[1].z = 0xff800000;
 	Point3D<float> tmp;
 	for (int i = 0; i < 8; i++) {
 		tmp = cuboid[i];
@@ -283,7 +284,6 @@ void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
  * spaces to the given projection and update temporal spaces
  * using the pixel value of the projection.
  */
-template<bool hasCTF>
 __device__
 void processVoxel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
@@ -318,7 +318,7 @@ void processVoxel(
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
 	int index2D = imgY * fftSizeX + imgX;
 
-	if (hasCTF) {
+	if (false) {
 		const float* __restrict__ CTF = getNthItem(CTFs, space->projectionIndex, fftSizeX, fftSizeY, false);
 		const float* __restrict__ modulator = getNthItem(modulators, space->projectionIndex, fftSizeX, fftSizeY, false);
 		wCTF = CTF[index2D];
@@ -338,7 +338,6 @@ void processVoxel(
  * spaces to the given projection and update temporal spaces
  * using the pixel values of the projection withing the blob distance.
  */
-template<bool hasCTF, int blobOrder>
 __device__
 void processVoxelBlob(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -386,7 +385,7 @@ void processVoxelBlob(
 	float dataWeight = space->weight;
 
 	// ugly spaghetti code, but improves performance by app. 10%
-	if (hasCTF) {
+	if (false) {
 		const float* __restrict__ CTF = getNthItem(CTFs, space->projectionIndex, fftSizeX, fftSizeY, false);
 		const float* __restrict__ modulator = getNthItem(modulators, space->projectionIndex, fftSizeX, fftSizeY, false);
 
@@ -416,7 +415,7 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 	#endif
 #else
-				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
+				float wBlob = kaiserValue(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
 #endif
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
@@ -454,7 +453,7 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 #endif
 #else
-				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
+				float wBlob = kaiserValue(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
 #endif
 				float weight = wBlob * dataWeight;
 				w += weight;
@@ -478,7 +477,6 @@ void processVoxelBlob(
   * Method will process one projection image and add result to temporal
   * spaces.
   */
-template<bool useFast, bool hasCTF, int blobOrder>
 __device__
 void processProjection(
 	float* tempVolumeGPU, float *tempWeightsGPU,
@@ -495,11 +493,11 @@ void processProjection(
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		if (idy >= tSpace->minY && idy <= tSpace->maxY) {
 			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
-				if (useFast) {
+				if (false) {
 					float hitZ;
 					if (getZ(idx, idy, hitZ, tSpace, tSpace->bottomOriginX, tSpace->bottomOriginY, tSpace->bottomOriginZ)) {
 						int z = (int)(hitZ + 0.5f); // rounding
-						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, idy, z, tSpace);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, idy, z, tSpace);
 					}
 				} else {
 					float z1, z2;
@@ -511,7 +509,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, idy, z, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, idy, z, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -520,11 +518,11 @@ void processProjection(
 	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
 		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
 			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
-				if (useFast) {
+				if (false) {
 					float hitY;
 					if (getY(idx, hitY, idy, tSpace, tSpace->bottomOriginX, tSpace->bottomOriginY, tSpace->bottomOriginZ)) {
 						int y = (int)(hitY + 0.5f); // rounding
-						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, y, idy, tSpace);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, y, idy, tSpace);
 					}
 				} else {
 					float y1, y2;
@@ -536,7 +534,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, y, idy, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, idx, y, idy, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -545,11 +543,11 @@ void processProjection(
 	} else { // iterate YZ plane
 		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
 			if (idx >= tSpace->minY && idx <= tSpace->maxY) { // map y > x
-				if (useFast) {
+				if (false) {
 					float hitX;
 					if (getX(hitX, idx, idy, tSpace, tSpace->bottomOriginX, tSpace->bottomOriginY, tSpace->bottomOriginZ)) {
 						int x = (int)(hitX + 0.5f); // rounding
-						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, x, idx, idy, tSpace);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, x, idx, idy, tSpace);
 					}
 				} else {
 					float x1, x2;
@@ -561,7 +559,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, x, idx, idy, tSpace, devBlobTableSqrt, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, FFTs, CTFs, modulators, fftSizeX, fftSizeY, x, idx, idy, tSpace, devBlobTableSqrt, imgCacheDim);
 						}
 					}
 				}
@@ -703,17 +701,16 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
  */
-template<bool useFast, bool hasCTF, int blobOrder>
-__global__
+extern "C" __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		RecFourierProjectionTraverseSpace* spaces, int noOfSpaces,
-		const float* FFTs, const float* CTFs, const float* modulators,
+		const float* FFTs,
 		int fftSizeX, int fftSizeY,
 		float* devBlobTableSqrt,
 		int imgCacheDim) {
 #if SHARED_BLOB_TABLE
-	if ( ! useFast) {
+	if ( ! false) {
 		// copy blob table to shared memory
 		volatile int id = threadIdx.y*blockDim.x + threadIdx.x;
 		volatile int blockSize = blockDim.x * blockDim.y;
@@ -727,7 +724,7 @@ void processBufferKernel(
 		RecFourierProjectionTraverseSpace* space = &spaces[i];
 
 #if SHARED_IMG
-		if ( ! useFast) {
+		if ( ! false) {
 			// make sure that all threads start at the same time
 			// as they can come from previous iteration
 			__syncthreads();
@@ -749,9 +746,9 @@ void processBufferKernel(
 		}
 #endif
 
-		processProjection<useFast, hasCTF, blobOrder>(
+		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
-			FFTs, CTFs, modulators, fftSizeX, fftSizeY,
+			FFTs, NULL, NULL, fftSizeX, fftSizeY,
 			space,
 			devBlobTableSqrt,
 			imgCacheDim);

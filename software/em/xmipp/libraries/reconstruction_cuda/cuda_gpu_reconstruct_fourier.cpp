@@ -26,10 +26,22 @@
 #include <cuda_runtime_api.h>
 #include "reconstruction_cuda/cuda_utils.h" // cannot be in header as it includes cuda headers
 #include "cuda_gpu_reconstruct_fourier.h"
-#include "reconstruct_fourier.cu"
+//#include "reconstruct_fourier.cu"
 
+__device__ __constant__ int cMaxVolumeIndexX = 0;
+__device__ __constant__ int cMaxVolumeIndexYZ = 0;
+__device__ __constant__ float cBlobRadius = 0.f;
+__device__ __constant__ float cBlobAlpha = 0.f;
+__device__ __constant__ float cIw0 = 0.f;
+__device__ __constant__ float cIDeltaSqrt = 0.f;
 
+float* devBlobTableSqrt = NULL;
 
+// Holding streams used for calculation. Present on CPU
+cudaStream_t* streams;
+
+// Wrapper to hold pointers to GPU memory (and have it also accessible from CPU)
+std::map<int,FRecBufferDataGPUWrapper*> wrappers;
 /**
  * Structure for buffer data on GPU
  * Adds some utility methods for copying data to GPU and device specific code.
@@ -318,9 +330,9 @@ void allocateWrapper(RecFourierBufferData* buffer, int streamIndex) {
 }
 
 void copyBlobTable(float* blobTableSqrt, int blobTableSize) {
-	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
-	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
+//	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
+//	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
+//	gpuErrchk( cudaPeekAtLastError() );
 }
 
 void releaseBlobTable() {
@@ -345,13 +357,21 @@ void copyConstants(
 	gpuErrchk( cudaPeekAtLastError() );
 }
 
+
+
+
+
+
+
+
+
 /**
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
  * Acuall calculation is done asynchronously, but 'buffer' can be reused
  * once the method returns.
  */
-template<int blobOrder>
+template<int>
 void processBufferGPU_(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ, bool useFast,
@@ -377,55 +397,34 @@ void processBufferGPU_(float* tempVolumeGPU, float* tempWeightsGPU,
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid(ceil(size2D/(float)dimBlock.x),ceil(size2D/(float)dimBlock.y));
 
+
+//	test(size2D,
+//			std::pow(size2D, 3), wrapper->cpuCopy->noOfImages,
+//			tempVolumeGPU, tempWeightsGPU,
+//			wrapper->cpuCopy->spaces, wrapper->cpuCopy->getNoOfSpaces(),
+//			wrapper->cpuCopy->FFTs, wrapper->cpuCopy->CTFs, wrapper->cpuCopy->modulators,
+//			wrapper->cpuCopy->fftSizeX, wrapper->cpuCopy->fftSizeY,
+//			devBlobTableSqrt,
+//			imgCacheDim);
+
+
 	// by using templates, we can save some registers, especially for 'fast' version
-	if (useFast && buffer->hasCTFs) {
-		processBufferKernel<true, true, blobOrder><<<dimGrid, dimBlock, 0, stream>>>(
-			tempVolumeGPU, tempWeightsGPU,
-			wrapper->cpuCopy->spaces, wrapper->cpuCopy->getNoOfSpaces(),
-			wrapper->cpuCopy->FFTs, wrapper->cpuCopy->CTFs, wrapper->cpuCopy->modulators,
-			wrapper->cpuCopy->fftSizeX, wrapper->cpuCopy->fftSizeY,
-			devBlobTableSqrt,
-			imgCacheDim);
-		   return;
-   }
-   if (useFast && !buffer->hasCTFs) {
-	   processBufferKernel<true, false, blobOrder><<<dimGrid, dimBlock, 0, stream>>>(
-				tempVolumeGPU, tempWeightsGPU,
-				wrapper->cpuCopy->spaces, wrapper->cpuCopy->getNoOfSpaces(),
-				wrapper->cpuCopy->FFTs, wrapper->cpuCopy->CTFs, wrapper->cpuCopy->modulators,
-				wrapper->cpuCopy->fftSizeX, wrapper->cpuCopy->fftSizeY,
-				devBlobTableSqrt,
-				imgCacheDim);
-	   return;
-   }
-   // if making copy of the image in shared memory, allocate enough space
-   int sharedMemSize = SHARED_IMG ? (imgCacheDim*imgCacheDim*sizeof(float2)) : 0;
-   if (!useFast && buffer->hasCTFs) {
-	   processBufferKernel<false, true, blobOrder><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
-			tempVolumeGPU, tempWeightsGPU,
-			wrapper->cpuCopy->spaces, wrapper->cpuCopy->getNoOfSpaces(),
-			wrapper->cpuCopy->FFTs, wrapper->cpuCopy->CTFs, wrapper->cpuCopy->modulators,
-			wrapper->cpuCopy->fftSizeX, wrapper->cpuCopy->fftSizeY,
-			devBlobTableSqrt,
-			imgCacheDim);
-	   return;
-   }
-   if (!useFast && !buffer->hasCTFs) {
-	   processBufferKernel<false, false, blobOrder><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
-			tempVolumeGPU, tempWeightsGPU,
-			wrapper->cpuCopy->spaces, wrapper->cpuCopy->getNoOfSpaces(),
-			wrapper->cpuCopy->FFTs, wrapper->cpuCopy->CTFs, wrapper->cpuCopy->modulators,
-			wrapper->cpuCopy->fftSizeX, wrapper->cpuCopy->fftSizeY,
-			devBlobTableSqrt,
-			imgCacheDim);
-	   return;
-   }
+//		processBufferKernel<<<dimGrid, dimBlock, 0, stream>>>(
+//			tempVolumeGPU, tempWeightsGPU,
+//			wrapper->cpuCopy->spaces, wrapper->cpuCopy->getNoOfSpaces(),
+//			wrapper->cpuCopy->FFTs, wrapper->cpuCopy->CTFs, wrapper->cpuCopy->modulators,
+//			wrapper->cpuCopy->fftSizeX, wrapper->cpuCopy->fftSizeY,
+//			devBlobTableSqrt,
+//			imgCacheDim);
 }
+
+
 
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ, bool useFast,
-		float maxResolutionSqr, int streamIndex, int blobOrder) {
+		float maxResolutionSqr, int stream, int blobOrder){
+	int streamIndex = 0;
 	switch ((int)(blobOrder)) {
 	case 0:
 		processBufferGPU_<0>(tempVolumeGPU, tempWeightsGPU,

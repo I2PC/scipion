@@ -228,7 +228,7 @@ void ProgRecFourierGPU::produceSideinfo()
     }
 
     // query the system on the number of cores
-	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
+	noOfCores = 1;//std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
 inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, float& uX, float& uY, float& uZ, float& vX, float& vY, float& vZ) {
@@ -369,6 +369,7 @@ void ProgRecFourierGPU::prepareBuffer(RecFourierWorkThread* threadParams,
 	}
 }
 
+
 void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	XMIPP_TRY // in case some method throws a xmipp exception
 
@@ -389,29 +390,85 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     // allocate GPU
     allocateWrapper(threadParams->buffer, threadParams->gpuStream);
 
-    // main work routine
-    int firstImageIndex = threadParams->startImageIndex;
-    int lastImageIndex = threadParams->endImageIndex;
-    for(int startLoadIndex = firstImageIndex;
-    		startLoadIndex <= lastImageIndex;
-    		startLoadIndex += parent->bufferSize) {
-    	// load data
-    	threadParams->startImageIndex = startLoadIndex;
-    	threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
-    	prepareBuffer(threadParams, parent, hasCTF, objId);
 
-    	// send them for processing
-		if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
-			processBufferGPU(parent->tempVolumeGPU, parent->tempWeightsGPU,
-				threadParams->buffer,
-				parent->blob.radius, parent->maxVolumeIndexYZ, parent->useFast,
-				parent->maxResolutionSqr,
-				threadParams->gpuStream,
-				parent->blob.order);
-			parent->logProgress(threadParams->buffer->noOfImages);
-		}
-		// once the processing finished, buffer can be reused
-	}
+
+    size_t deviceIndex = 0;
+	std::string kernelFile = "/home/david/GIT/Scipion/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier.cu";
+
+	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
+	ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
+
+	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
+	ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "processBufferKernel", ktt::DimensionVector(1), ktt::DimensionVector(1));
+
+	int volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
+	parent->tempVolumeGPU = new float[volumeSize * 2];
+	parent->tempWeightsGPU = new float[volumeSize];
+	RecFourierProjectionTraverseSpace dummy;
+
+	// Add new arguments to tuner, argument data is copied from std::vector containers
+	ktt::ArgumentId volId = tuner.addArgumentVector(std::vector<float>(parent->tempVolumeGPU, parent->tempVolumeGPU+volumeSize*2), ktt::ArgumentAccessType::ReadWrite);
+	ktt::ArgumentId weightId = tuner.addArgumentVector(std::vector<float>(parent->tempWeightsGPU, parent->tempWeightsGPU +volumeSize), ktt::ArgumentAccessType::ReadWrite);
+ktt::ArgumentId spaceId = tuner.addArgumentVector(std::vector<RecFourierProjectionTraverseSpace>{dummy}, ktt::ArgumentAccessType::ReadOnly);
+ktt::ArgumentId spaceNoId = tuner.addArgumentScalar(0);
+ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>{0.0f}, ktt::ArgumentAccessType::ReadOnly);
+	ktt::ArgumentId fftSizeXId = tuner.addArgumentScalar(threadParams->buffer->fftSizeX);
+	ktt::ArgumentId fftSizeYId = tuner.addArgumentScalar(threadParams->buffer->fftSizeY);
+	ktt::ArgumentId blobTableId = tuner.addArgumentVector(std::vector<float>((float*)parent->blobTableSqrt, (float*)parent->blobTableSqrt+BLOB_TABLE_SIZE_SQRT), ktt::ArgumentAccessType::ReadOnly);
+	ktt::ArgumentId imgCacheId = tuner.addArgumentScalar(0);
+
+	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,16,32,64}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
+	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,16,32,64}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
+
+	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
+	tuner.addParameter(kernelId, "SHARED_IMG", {0,1});
+	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {1});
+	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
+	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
+//	tuner.addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
+//	tuner.addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});
+//	tuner.addParameter(kernelId, "cIw0", {parent->iw0});
+//	tuner.addParameter(kernelId, "cIDeltaSqrt", {parent->iDeltaSqrt});
+
+	printf("\niw0 %f idelta %f radius %f alpha %f\n", parent->iw0, parent->iDeltaSqrt, parent->blob.radius, parent->blob.alpha );
+
+
+	auto blocksDimEqConstr = [](std::vector<size_t> vector) {return vector.at(0)== vector.at(1);};
+	tuner.addConstraint(kernelId, blocksDimEqConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y"});
+
+	auto tooMuchSharedMemConstr = [](std::vector<size_t> vector) {return !(vector.at(0)==1 && vector.at(1)==1);};
+	tuner.addConstraint(kernelId, tooMuchSharedMemConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "SHARED_IMG"});
+
+	auto blobTableConstr = [](std::vector<size_t> vector) {return vector.at(0)==0 || (vector.at(0)==1 && vector.at(1)==1);};
+	tuner.addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
+
+	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams,
+			imgCacheId,spaceId,spaceNoId,FFTsId));
+
+	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
+	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
+		spaceId, spaceNoId,
+		FFTsId,
+	fftSizeXId, fftSizeYId, blobTableId, imgCacheId});
+
+        // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
+        // provide list of arguments which will be validated
+    //    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(data, dataId), std::vector<ktt::ArgumentId>{dataId});
+
+
+
+    //    tuner.setArgumentComparator(dataId, compareData);
+
+	// Launch kernel tuning
+	tuner.tuneKernelByStep(kernelId, {
+			ktt::ArgumentOutputDescriptor(volId, parent->tempVolumeGPU),
+			ktt::ArgumentOutputDescriptor(weightId, parent->tempWeightsGPU)});
+
+	// Print tuning results to standard output and to output.csv file
+	tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+
+	// TODO prekopirovat pamet z CPU na CPU
+
 
     // clean after itself
     releaseWrapper(threadParams->gpuStream);
@@ -642,9 +699,19 @@ void ProgRecFourierGPU::getGPUData() {
 		allocate(tempWeights, maxVolumeIndexYZ + 1, maxVolumeIndexYZ + 1,
 				maxVolumeIndexYZ + 1);
 	}
-	copyTempVolumes(tempVolume, tempWeights, tempVolumeGPU, tempWeightsGPU, maxVolumeIndexYZ + 1);
-	releaseTempVolumeGPU(tempVolumeGPU);
-	releaseTempVolumeGPU(tempWeightsGPU);
+	int size =  maxVolumeIndexYZ + 1;
+	for (int z = 0; z < size; z++) {
+		for (int y = 0; y < size; y++) {
+			int index = (z * size * size) + (y * size);
+			memcpy(tempVolume[z][y], &tempVolumeGPU[2 * index], 2 * size * sizeof(float));
+			memcpy(tempWeights[z][y] , &tempWeightsGPU[index], size * sizeof(float));
+		}
+	}
+
+
+
+	delete[] tempVolumeGPU;
+	delete[] tempWeightsGPU;
 }
 
 void ProgRecFourierGPU::mirrorAndCropTempSpaces() {
@@ -702,6 +769,18 @@ void ProgRecFourierGPU::forceHermitianSymmetry() {
 }
 
 void ProgRecFourierGPU::processWeights() {
+
+	Image<double> Vout;
+	Vout().initZeros(maxVolumeIndexYZ+1,maxVolumeIndexYZ+1,maxVolumeIndexX);
+	for (int z = 0; z <= maxVolumeIndexYZ; z++ ) {
+		for (int y = 0; y <= maxVolumeIndexYZ; y++ ) {
+			for (int x = 0; x <= maxVolumeIndexX; x++ ) {
+				DIRECT_A3D_ELEM(Vout.data, z, y, x) = tempVolume[z][y][x].real();
+			}
+		}
+	}
+	Vout.write("test_objemu.vol");
+
     // Get a first approximation of the reconstruction
     float corr2D_3D=pow(padding_factor_proj,2.)/
                      (imgSize* pow(padding_factor_vol,3.));
@@ -798,18 +877,17 @@ void ProgRecFourierGPU::logProgress(int increment) {
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
 
-	test();
 
 	// initialize GPU
-    if (NULL == tempVolumeGPU) {
-    	allocateTempVolumeGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
-    }
-    if (NULL == tempWeightsGPU) {
-    	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
-    }
+//    if (NULL == tempVolumeGPU) {
+//    	allocateTempVolumeGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
+//    }
+//    if (NULL == tempWeightsGPU) {
+//    	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
+//    }
     createStreams(noOfCores);
-    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
-    		blob.radius, blob.alpha, iDeltaSqrt, iw0);
+//    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
+//    		blob.radius, blob.alpha, iDeltaSqrt, iw0);
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }

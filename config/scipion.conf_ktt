@@ -1,0 +1,41 @@
+[DIRS_GLOBAL]
+SCIPION_TESTS = data/tests
+SCIPION_SOFTWARE = software
+
+[REMOTE]
+SCIPION_URL = http://scipion.cnb.csic.es/downloads/scipion
+SCIPION_URL_SOFTWARE = %(SCIPION_URL)s/software
+SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
+
+[BUILD]
+CC = gcc
+CXX = g++
+LINKERFORPROGRAMS = g++
+CCFLAGS = -std=c99 -O3 -g
+CXXFLAGS = -O3 -g -I/home/david/GIT/KTT/source -std=c++14
+LINKFLAGS = -L/home/david/GIT/KTT/build/x86_64_Release/
+MPI_CC = mpicc
+MPI_CXX = mpiCC
+MPI_LINKERFORPROGRAMS = mpiCC
+MPI_LIB = mpi
+MPI_LIBDIR = /usr/lib/openmpi/lib
+MPI_INCLUDE = /usr/lib/openmpi/include
+MPI_BINDIR = /usr/bin
+CUDA_LIB = /usr/local/cuda-8.0/lib64
+CUDA_BIN = /usr/local/cuda-8.0/bin
+NVCC = nvcc --x cu -D_FORCE_INLINES -Xcompiler -fPIC -Wno-deprecated-gpu-targets -use_fast_math
+NVCC_INCLUDE = /usr/local/cuda/include
+NVCC_LIBDIR = CUDA_LIB
+MATLAB_DIR = /usr/local/MATLAB/R2011a
+JAVA_HOME = /usr/lib/jvm/java-8-openjdk-amd64
+JAVA_BINDIR = %(JAVA_HOME)s/bin
+JAVAC = %(JAVA_BINDIR)s/javac
+JAR = %(JAVA_BINDIR)s/jar
+JNI_CPPPATH = %(JAVA_HOME)s/include:%(JAVA_HOME)s/include/linux
+GTEST = False
+CUDA = True
+DEBUG = False
+MATLAB = False
+OPENCV = True
+REMOTE_MESA_LIB = /services/guacamole/usr/mesa/lib/
+

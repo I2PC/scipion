@@ -123,84 +123,75 @@ class ProgRecFourierGPU : public ProgReconsBase
 public:
 
 
+	class Manipulator : public ktt::TuningManipulator
+	{
+	public:
+	    Manipulator(
+		ProgRecFourierGPU* parent,
+	    std::vector<size_t> objId,
+	    RecFourierWorkThread* threadParams,
+	    ktt::ArgumentId imgCacheId,
+	    ktt::ArgumentId spaceId,
+	    ktt::ArgumentId spaceNoId,
+	    ktt::ArgumentId FFTsId) : parent(parent), objId(objId), threadParams(threadParams),
+	    imgCacheId(imgCacheId),spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId){}
+
+	    // LaunchComputation is responsible for actual execution of tuned kernel
+	    void launchComputation(const ktt::KernelId kernelId) override
+	    {
+	        // Get kernel data
+	        ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
+	        ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
+	        std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
+
+	        int size2D = parent->maxVolumeIndexX + 1;
+	        int targetSizeX = ceil(size2D/(float)localSize.getSizeX());
+	        std::cout << "size2D " << size2D << " localsize " << localSize.getSizeX() << " target " << targetSizeX << std::endl;
+
+	        globalSize.setSizeX(targetSizeX);
+	        globalSize.setSizeY(ceil(size2D/(float)localSize.getSizeY()));
+	        int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(localSize.getSizeX() + 2*parent->blob.radius));
+	        updateArgumentScalar(imgCacheId, &imgCacheDim);
+
+
+			// main work routine
+			int firstImageIndex = threadParams->startImageIndex;
+			int lastImageIndex = threadParams->endImageIndex;
+			for(int startLoadIndex = firstImageIndex;
+				startLoadIndex <= lastImageIndex;
+				startLoadIndex += parent->bufferSize) {
+				// load data
+				threadParams->startImageIndex = startLoadIndex;
+				threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
+				prepareBuffer(threadParams, parent, false, objId);
+
+				// send them for processing
+				if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
+					int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
+					updateArgumentVector(spaceId, threadParams->buffer->spaces, noOfSpaces);
+					updateArgumentVector(FFTsId, threadParams->buffer->FFTs, threadParams->buffer->getNoOfElements(threadParams->buffer->FFTs));
+					updateArgumentScalar(spaceNoId, &noOfSpaces);
+
+					runKernel(kernelId, globalSize, localSize);
+					parent->logProgress(threadParams->buffer->noOfImages);
+				}
+				// once the processing finished, buffer can be reused
+			}
 
 
 
-static bool compareData(const void* result, const void* reference)
-{
-    Data* first = (Data*)result;
-    Data* second = (Data*)reference;
-    return std::abs(first->result - second->result) <= 1e-4;
-}
+	    }
 
-int test(
-//		int argc, char** argv
-		)
-{
+	private:
+	    ProgRecFourierGPU* parent;
+	    std::vector<size_t> objId;
+	    RecFourierWorkThread* threadParams;
+	    ktt::ArgumentId imgCacheId;
+	    ktt::ArgumentId spaceId;
+	    ktt::ArgumentId spaceNoId;
+	    ktt::ArgumentId FFTsId;
+	};
 
-	std::cout << "test called" << std::endl;
-
-    // Initialize device index and path to kernel
-    size_t deviceIndex = 0;
-    std::string kernelFile = "/home/david/GIT/KTT/examples/structs/struct_kernel.cu";
-
-//    if (argc >= 2)
-//    {
-//        deviceIndex = std::stoul(std::string(argv[1]));
-//        if (argc >= 3)
-//        {
-//            kernelFile = std::string(argv[2]);
-//        }
-//    }
-
-    // Declare kernel parameters
-    const size_t numberOfElements = 1024 * 1024;
-    const ktt::DimensionVector blockDimensions(256);
-    const ktt::DimensionVector gridDimensions(numberOfElements / blockDimensions.getSizeX());
-
-    // Declare data variables
-    std::vector<Data> data;
-
-    // Initialize data
-    for (size_t i = 0; i < numberOfElements; i++)
-    {
-        Data item;
-        item.x = static_cast<float>(i);
-        item.y = static_cast<float>(i + 1);
-        item.result = 0.0f;
-        data.push_back(item);
-    }
-
-    // Create tuner object for specified device, platform index is ignored in case of CUDA API usage
-    ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
-
-    // Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
-    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "structKernel", gridDimensions, blockDimensions);
-
-    // Add new arguments to tuner, argument data is copied from std::vector containers
-    ktt::ArgumentId dataId = tuner.addArgumentVector(data, ktt::ArgumentAccessType::ReadWrite);
-
-    // Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
-    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{dataId});
-
-    // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
-    // provide list of arguments which will be validated
-    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(data, dataId), std::vector<ktt::ArgumentId>{dataId});
-
-
-
-    tuner.setArgumentComparator(dataId, compareData);
-
-    // Launch kernel tuning
-    tuner.tuneKernel(kernelId);
-
-    // Print tuning results to standard output and to output.csv file
-    tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-
-    std::cout << "success" << std::endl;
-
-    return 0;
-}
 
 
 
