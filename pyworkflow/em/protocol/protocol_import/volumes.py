@@ -190,7 +190,7 @@ class ProtImportPdb(ProtImportFiles):
         form.addParam('inputVolume', params.PointerParam, label="Input Volume",
                       pointerClass='Volume',
                       allowsNull=True,
-                      help='Asociate this volume to the PDB file.')
+                      help='Associate this volume to the PDB file.')
 
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
@@ -216,6 +216,7 @@ class ProtImportPdb(ProtImportFiles):
         pdb = PdbFile()
         if self.inputVolume.get() is not None:
             pdb.setVolume(self.inputVolume)
+
         pdb.setFileName(localPath)
         self._defineOutputs(outputPdb=pdb)
 
