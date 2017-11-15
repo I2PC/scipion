@@ -714,10 +714,17 @@ class EMFile(EMObject):
 
 class PdbFile(EMFile):
     """Represents an PDB file. """
+
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
         self._volume = None
+        # origin stores a matrix that using as input the point (0,0,0)
+        # provides  the position of the actual origin in the system of
+        # coordinates of the default origin.
+        # _origin is an object of the class Transformor shifts
+        # units are angstrom (in Image units are px)
+        self._origin = None
 
     def getPseudoAtoms(self):
         return self._pseudoatoms.get()
@@ -738,6 +745,23 @@ class PdbFile(EMFile):
         return "%s (pseudoatoms=%s, volume=%s)" % \
                (self.getClassName(), self.getPseudoAtoms(),
                 self.hasVolume())
+
+    def hasOrigin(self):
+        return self._origin is not None
+
+    def getOrigin(self, returnInitIfNone=False):
+        if self.hasOrigin():
+            return self._origin
+        else:
+            if returnInitIfNone:
+                t = Transform()
+                t.setShifts(0., 0., 0.)
+                return t  # The identity matrix
+            else:
+                return None
+
+    def setOrigin(self, newOrigin):
+        self._origin = newOrigin
 
 
 class EMSet(Set, EMObject):
