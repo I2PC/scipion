@@ -278,3 +278,7 @@ DataSet(name='10010',  folder='10010',
         files={'initialVolume': 'initialVolume.vol',
                'particles': 'particles.sqlite',
                })
+
+DataSet(name = 'model_building_tutorial', folder = 'model_building_tutorial',
+        files = {'vol1': 'volumes/1ake_4-5A.mrc',
+                 'pdb1': 'PDBs/1ake_start.pdb'})
