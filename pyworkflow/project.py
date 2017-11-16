@@ -412,7 +412,7 @@ class Project(object):
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition:
+        3. Call the launch method in protocol.job to handle submission:
            mpi, thread, queue,
         and also take care if the execution is remotely."""
 
