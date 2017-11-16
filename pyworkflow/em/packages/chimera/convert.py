@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# *              Marta Martinez (mmmtnez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -69,8 +70,9 @@ def getProgram(progName="chimera"):
     return os.path.join(os.environ['CHIMERA_HOME'], 'bin',
                         os.path.basename(progName))
 
-def createCoordinateAxisFile(dim, bildFileName = "/tmp/axis.bild", sampling =
-1):
+
+def createCoordinateAxisFile(dim, bildFileName="/tmp/axis.bild",
+                             sampling=1):
     ff = open(bildFileName, "w")
     arrowDict = {}
     arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
