@@ -181,13 +181,12 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 	Matrix1D<double> vp_1 = vectorProduct(planeVector, _centre_to_2fp);
 	vp_1.selfNormalize();
 	vectExpansion.push_back(expanded * vp_1 * rmax / 2);
+	
+	//vectExpansion of the _centre of coordinates
+	double mod_vector = (expanded * rmax / 2) / sin(0.5 * (TWOPI / order));
+	Matrix1D<double> vp_2 = vectorR3(mod_vector * cos((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), mod_vector * sin((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), 0.);
 
 	//computation of coordinates for expandedUnitCell vertices
-	Matrix1D<double> d_2f = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2fp;
-	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2f;
-
 	if (expanded == 0) {
 		expandedUnitCell.push_back(_centre);
 		expandedUnitCell.push_back(_2f);
@@ -195,9 +194,10 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 	} else if (expanded >= 0) {
 		//_centre expands to expandedUnitCell[0], which is equivalent to newOriginAfterExpansion
 		if (order == 2) {
-			expandedUnitCell.push_back(_centre + vectExpansion[0]);
+			expandedUnitCell.push_back(_centre + vectExpansion[0]); 
 		} else if (order > 2) {
-			expandedUnitCell.push_back(_centre + d_2f + d_2fp);
+			//expandedUnitCell.push_back(_centre + vp_2);
+			expandedUnitCell.push_back(_centre + vp_2);
 		}
 		//_2f expands to expandedUnitCell[1]
 		expandedUnitCell.push_back(_2f + vectExpansion[0]);
@@ -205,7 +205,7 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 		expandedUnitCell.push_back(_2fp + vectExpansion[1]);
 	}
 	newOriginAfterExpansion = expandedUnitCell[0];
-
+	
 	//computation of coordinates from expandedUnitCells regarding to the newOriginAfterExpansion
 	Matrix1D<double> new_centre_to_new_2f = expandedUnitCell[1]
 			- newOriginAfterExpansion;
@@ -254,12 +254,12 @@ void UnitCell::dihedralSymmetry(const Matrix1D<double> & _centre,
 	vectExpansion.push_back(expanded * vp_1 * rmax / 2);
 	Matrix1D<double> vp_2 = planeVector_down;
 	vectExpansion.push_back(expanded * vp_2 * rmax / 2);
+	
+	//vectExpansion of the _centre of coordinates
+	double mod_vector = (expanded * rmax / 2) / sin(0.5 * (TWOPI / order));
+	Matrix1D<double> vp_3 = vectorR3(mod_vector * cos((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), mod_vector * sin((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), 0.);
 
 	//computation of coordinates for expandedUnitCell vertices
-	Matrix1D<double> d_2f = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2fp;
-	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2f;
 
 	if (expanded == 0) {
 		expandedUnitCell.push_back(_centre);
@@ -272,7 +272,7 @@ void UnitCell::dihedralSymmetry(const Matrix1D<double> & _centre,
 					_centre + vectExpansion[0] + vectExpansion[2]);
 		} else if (order > 2) {
 			expandedUnitCell.push_back(
-					_centre + d_2f + d_2fp + vectExpansion[2]);
+					_centre + vp_3 + vectExpansion[2]);
 		}
 		//_2f expands to expandedUnitCell[1]
 		expandedUnitCell.push_back(_2f + vectExpansion[0] + vectExpansion[2]);
@@ -596,11 +596,18 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 			 maxY;
 			if (symmetry == pg_CN || symmetry == pg_DN) {
 				maxY = rmax;
+				if (sym_order == 2){
+					minX = - rmax;
+					minY = - rmax;
+					minZ = - rmax;
+					maxX = rmax;
+					maxY = rmax;
+					maxZ = rmax;
+				}
 			} else if (symmetry != pg_CN && symmetry != pg_DN) {
 				maxY = rmin;
 			}
 			 maxZ = _maxZ;
-
 			Matrix1D<double> minVector, maxVector;
 			for (std::vector<Matrix1D<double> >::iterator it =
 					expandedUnitCell.begin(); it != expandedUnitCell.end();
