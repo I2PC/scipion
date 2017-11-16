@@ -61,14 +61,13 @@ void ProgVolumeHomogenizer::defineParams()
     addParamsLine("                           		: NOTE: you do not need to define any extension for the output root name. ");
     addParamsLine("                           		: This program will automatically create one .stk and one .xmd");
     addParamsLine(" [--cutFreq <cutFreq=0.5>] 		: cut-off frequency to use for low-pass filtering of input and reference volumes. This is digital frequency");
-
-    addParamsLine(" [--pyr_scale <pyr_scale=0.5>] 	: parameter, specifying the image scale (<1) to build pyramids for each image."
-    			  "									: pyr_scale=0.5 means a classical pyramid, where each next layer is twice smaller than the previous one.");
-    addParamsLine(" [--levels <levels=2>] 			: number of pyramid layers including the initial image; levels=1 means"
-    			  "							  		: that no extra layers are created and only the original images are used.");
-    addParamsLine(" [--winSize <winSize=50>] 		: averaging window size; larger values increase the algorithm robustness to image noise and give more chances"
-    			  "							  		: for fast motion detection, but yield more blurred motion field.");
-    addParamsLine(" [--iterations <iterations=15>] 	: number of iterations the algorithm does at each pyramid level.");
+    addParamsLine(" [--pyr_scale <pyr_scale=0.5>] 	: parameter, specifying the image scale (<1) to build pyramids for each image.");
+    addParamsLine("									: pyr_scale=0.5 means a classical pyramid, where each next layer is twice smaller than the previous one.");
+    addParamsLine(" [--levels <levels=2>] 			: number of pyramid layers including the initial image; levels=1 means");
+    addParamsLine("							  		: that no extra layers are created and only the original images are used.");
+    addParamsLine(" [--winSize <winSize=50>] 		: averaging window size; larger values increase the algorithm robustness to image noise and give more chances");
+    addParamsLine("							  		: for fast motion detection, but yield more blurred motion field.");
+    addParamsLine(" [--iterations <iterations=10>] 	: number of iterations the algorithm does at each pyramid level.");
     addParamsLine(" [--auto] 						: Automatic determination of pyr_scale, levels and iterations");
 
     addExampleLine("xmipp_volume_homogenizer  -i volume1.vol -ref volume2.vol -img particlesOfVolume1.xmd -o outputParticles");
