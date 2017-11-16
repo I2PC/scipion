@@ -767,13 +767,13 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize)
     kernel.resize(kernelSize,kernelSize);
     kernel.setXmippOrigin();
 
-    MultidimArray<double> aux(XSIZE(I),YSIZE(I));
-    aux.setXmippOrigin();
+    MultidimArray<double> mVar(YSIZE(I),XSIZE(I));
+    mVar.setXmippOrigin();
     double stdKernel, varKernel, avgKernel, min_val, max_val;
     int x0, y0, xF, yF;
     
-    for (int i=kernelSize_2; i<(int)YSIZE(I); i+=kernelSize_2)
-        for (int j=kernelSize_2; j<(int)XSIZE(I); j+=kernelSize_2)
+    for (int i=kernelSize_2; i<=(int)YSIZE(I)-kernelSize_2; i+=kernelSize_2)
+        for (int j=kernelSize_2; j<=(int)XSIZE(I)-kernelSize_2; j+=kernelSize_2)
             {
                 x0 = j-kernelSize_2;
                 y0 = i-kernelSize_2;
@@ -793,17 +793,28 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize)
                 kernel.computeStats(avgKernel, stdKernel, min_val, max_val);
                 varKernel = stdKernel*stdKernel;
 
-                DIRECT_A2D_ELEM(aux, i, j) = varKernel;
-
+                DIRECT_A2D_ELEM(mVar, i, j) = varKernel;
             }
 
-    I=aux;
     // filtering to fill the matrices
     FourierFilter filter;
     filter.FilterShape = REALGAUSSIAN;
     filter.FilterBand = LOWPASS;
     filter.w1 = kernelSize_2;
-    filter.applyMaskSpace(I);
+    filter.applyMaskSpace(mVar);
+
+
+    // Working in a auxilary windows to avoid borders bad defined
+    MultidimArray<double> mVarAux(YSIZE(I)-kernelSize,XSIZE(I)-kernelSize);
+    mVarAux.setXmippOrigin();
+    mVar.window(mVarAux,STARTINGY(mVar)+kernelSize_2, STARTINGX(mVar)+kernelSize_2,
+                       FINISHINGY(mVar)-kernelSize_2, FINISHINGX(mVar)-kernelSize_2);
+
+    // Returning to the previous windows size
+    I = mVar*0;
+    mVarAux.window(I, STARTINGY(mVar), STARTINGX(mVar),
+                     FINISHINGY(mVar), FINISHINGX(mVar));
+
 }
 
 
@@ -880,7 +891,7 @@ void noisyZonesFilter(MultidimArray<double> &I, int kernelSize)
     MultidimArray<double> mAvgAuxBin = mAvgAux, mVarAuxBin = mVarAux;
     EntropySegmentation(mVarAuxBin);
     // EntropySegmentation(mAvgAuxBin);
-    float th = EntropyOtsuSegmentation(mAvgAuxBin,0.05,false);
+    float th = EntropySegmentation(mAvgAuxBin);
     mAvgAuxBin.binarize(th*0.92);
     mAvgAuxBin = 1-mAvgAuxBin;
     // std::cout << "binarize threshold = " << th << std::endl;
@@ -1031,7 +1042,7 @@ double grainFilter(MultidimArray<double> &I, int kernelSize, double giniThreshol
 double giniCoeff(MultidimArray<double> &I, int varKernelSize)
 {
     MultidimArray<double> im = I;
-    
+
     FourierFilter filter;
     filter.FilterShape = REALGAUSSIAN;
     filter.FilterBand = LOWPASS;
@@ -1041,7 +1052,11 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize)
     // Image<double> imG(im);
     // imG.write("I_Gauss.mrc");
 
-    varianceFilter(im, varKernelSize);
+    varianceFilter(I, varKernelSize);
+    im = I;
+
+    // filter.w1 = varKernelSize/4;
+    // filter.applyMaskSpace(I);
 
     // Image<double> imGV(im);
     // imGV.write("I_Gauss_Var.mrc");
@@ -1067,11 +1082,13 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize)
         
     double fair_area = height*XSIZE(hist)/2.0;
 
-    return (fair_area-area)/fair_area;
+    double giniValue = (fair_area-area)/fair_area;
+
+    return giniValue;
 }
 
 /* Otsu Segmentation ------------------------------------------------------- */
-void OtsuSegmentation(MultidimArray<double> &V)
+double OtsuSegmentation(MultidimArray<double> &V)
 {
     // V.checkDimension(3);
 
@@ -1115,10 +1132,12 @@ void OtsuSegmentation(MultidimArray<double> &V)
 
     hist.index2val(ibestSigma2B, x);
     V.binarize(x);
+
+    return x;
 }
 
 /* Entropy Segmentation ---------------------------------------------------- */
-void EntropySegmentation(MultidimArray<double> &V)
+double EntropySegmentation(MultidimArray<double> &V)
 {
     // V.checkDimension(3);
 
@@ -1179,6 +1198,8 @@ void EntropySegmentation(MultidimArray<double> &V)
 
     hist.index2val(iHmax, x);
     V.binarize(x);
+
+    return x;
 }
 
 /* Otsu+Entropy Segmentation ----------------------------------------------- */

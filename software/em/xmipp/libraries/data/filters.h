@@ -223,7 +223,7 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize = 100);
  *
  * http://www.biomecardio.com/matlab/otsu.html
  */
-void OtsuSegmentation(MultidimArray<double> &V);
+double OtsuSegmentation(MultidimArray<double> &V);
 
 /** Segment an object using Entropy method
  * @ingroup Filters
@@ -233,7 +233,7 @@ void OtsuSegmentation(MultidimArray<double> &V);
  *
  * http://rsbweb.nih.gov/ij/plugins/download/Entropy_Threshold.java
  */
-void EntropySegmentation(MultidimArray<double> &V);
+double EntropySegmentation(MultidimArray<double> &V);
 
 /** Segment an object using a combination of Otsu and Entropy method
  * @ingroup Filters
