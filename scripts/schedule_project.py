@@ -24,6 +24,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+# IMPORTANT: this file is used by scipion facilities project EMadmin
+# please do not modify or contact first with rmarabini
 
 import sys, os
 from pyworkflow.manager import Manager
