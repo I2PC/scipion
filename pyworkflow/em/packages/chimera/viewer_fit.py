@@ -31,26 +31,29 @@ from pyworkflow.em.packages.chimera.convert import runChimeraProgram, \
 from protocol_fit import ChimeraProtRigidFit
 import os
 
-#TODO: very likely this should inherit from ProtocolViewer
+# TODO: very likely this should inherit from ProtocolViewer
 # not from XmippViewer. But then I get an empty form :-(
+
+
 class viewerChimeraProtRigidFit(XmippViewer):
     """ Visualize the output of protocol volume strain """
     _label = 'viewer fit'
     _targets = [ChimeraProtRigidFit]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    
+
     def __init__(self, **args):
         XmippViewer.__init__(self, **args)
 
-#"""ROB: I know that there is a nice chimera interface
+# ROB: I know that there is a nice chimera interface
 # but it does not work in this case since I am interested
 # in reading the MRC header. So I will use chimera as
-# an external program"""
+# an external program
 
     def _visualize(self, obj, **args):
-        #TODO if input volume is not mrc this will not work.
-        inputVol  = self.protocol.inputVolume.get().getFileName().replace(':mrc', '')
-        outputPDB = self.protocol._getExtraPath(chimeraPdbTemplateFileName)%1
+        # TODO if input volume is not mrc this will not work.
+        inputVol = self.protocol.inputVolume.get().getFileName().\
+            replace(':mrc', '')
+        outputPDB = self.protocol._getExtraPath(chimeraPdbTemplateFileName) % 1
         args = " "
         if os.path.exists(outputPDB):
             args += outputPDB + " "
