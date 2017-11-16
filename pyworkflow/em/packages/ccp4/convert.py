@@ -78,22 +78,12 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
         ccp4header = Ccp4Header(inFileName, readHeader=True)
         ccp4Origin = ccp4header.getOffset()
         if compareFloatTuples(ccp4Origin, scipionOriginShifts):
-            # print "shifts OK", ccp4Origin, scipionOriginShifts
             if compareFloatTuples(ccp4header.getGridSampling(), (x, y, z)):
-                # print "sampling OK OK"
                 if compareFloatTuples(ccp4header.getCellDimensions(),
                                       (x*sampling, y*sampling, z*sampling)):
-                    # print "cell dim OK"
                     pwutils.createLink(inFileName, outFileName)
                     return
-                # else:
-                    # print "wrong celldim", ccp4header.getCellDimensions(),\
-                    #                  (x*sampling, y*sampling, z*sampling)
-            # else:
-                # print "wrong getGridSampling", ccp4header.getGridSampling(),
-                    #  (x, y, z)
-        # else:
-            # print "wrong ccp4Origin", ccp4Origin, scipionOriginShifts
+
     else:
         print "FILE %s does not end with mrc" % inFileName
     if z == 1:
