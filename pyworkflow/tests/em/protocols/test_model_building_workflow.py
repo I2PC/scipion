@@ -34,11 +34,13 @@ from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
 from pyworkflow.em.packages.powerfit.protocol_powerfit import \
     PowerfitProtRigidFit
 
+
 class TestImportBase(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
+
 
 class TestPowerFit(TestImportBase):
     """ Test the rigid fit of power fit protocol
@@ -116,8 +118,8 @@ class TestPowerFit(TestImportBase):
     def testPowerFitFromPDBWithoutVol(self):
         print "Run powerfit from imported pdb without imported or " \
               "pdb-associated volume"
-        #This test corroborates that prowerfit does not run unless a volume
-        #is provided (directly as inputVol or associated to the imputPDB)
+        # This test corroborates that prowerfit does not run unless a volume
+        # is provided (directly as inputVol or associated to the imputPDB)
 
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile('PDBs/1ake_start.pdb')
@@ -136,11 +138,3 @@ class TestPowerFit(TestImportBase):
         protPower = self.newProtocol(PowerfitProtRigidFit, **args)
         protPower.inputPDB.set(pdb)
         self.launchProtocol(protPower)
-
-
-
-
-
-
-
-
