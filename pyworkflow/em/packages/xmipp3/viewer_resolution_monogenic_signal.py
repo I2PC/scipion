@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.L. Vilas (jlvilas@cnb.csic.es)
@@ -27,13 +28,16 @@
 
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.viewer import LocalResolutionViewer
-from pyworkflow.em.constants import *
+from pyworkflow.em.constants import (COLOR_JET, COLOR_TERRAIN,
+ COLOR_GIST_EARTH, COLOR_GIST_NCAR, COLOR_GNU_PLOT, COLOR_GNU_PLOT2,
+ COLOR_OTHER, COLOR_CHOICES, AX_X, AX_Y, AX_Z)
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from protocol_resolution_monogenic_signal import (XmippProtMonoRes,
-                                                  OUTPUT_RESOLUTION_FILE,
-                                                  OUTPUT_RESOLUTION_FILE_CHIMERA) 
+                                                OUTPUT_RESOLUTION_FILE,
+                                                 OUTPUT_RESOLUTION_FILE_CHIMERA,
+                                                 FN_METADATA_HISTOGRAM) 
 from pyworkflow.em.viewer import ChimeraView, DataView
 from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
@@ -147,12 +151,12 @@ class XmippMonoResViewer(LocalResolutionViewer):
                                        cmap=self.getColorMap(),
                                        interpolation="nearest")
         xplotter.getColorBar(plot)
-        return [xplotter]
+        return [Plotter(figure1 = xplotter)]
 
 
     def _plotHistogram(self, param=None):
         md = MetaData()
-        md.read(self.protocol._getPath('extra/hist.xmd'))
+        md.read(self.protocol._getFileName(FN_METADATA_HISTOGRAM))
         x_axis = []
         y_axis = []
 
@@ -176,7 +180,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
         plt.ylabel("Counts")
         
         
-        return [Plotter(figure = fig)]
+        return [Plotter(figure2 = fig)]
 
     def _getAxis(self):
         return self.getEnumText('sliceAxis')

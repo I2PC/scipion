@@ -478,8 +478,6 @@ void ProgMonogenicSignalRes::resolution2eval(int &count_res, double step,
 
 	freq = aux_frequency;
 
-	std::cout << "freq = " << freq << "   new freq = " << aux_frequency << std::endl;
-
 	if (fourier_idx == last_fourier_idx)
 	{
 //		std::cout << "entro en el if"  << std::endl;
@@ -586,7 +584,7 @@ void ProgMonogenicSignalRes::run()
 		if (breakIter)
 			break;
 
-		std::cout << "resolution = " << resolution << "  resolutionL = " << sampling/(freqL) << std::endl;
+		std::cout << "resolution = " << resolution << std::endl;
 
 
 		list.push_back(resolution);

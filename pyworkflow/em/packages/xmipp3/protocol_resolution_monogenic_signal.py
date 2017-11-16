@@ -101,7 +101,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'for a description of the symmetry groups format,' 
                       'If no symmetry is present, give c1.')
 
-        line = group.addLine('Resolution Range (A)',
+        line = group.addLine('Resolution Range (Å)',
                             help="If the user knows the range of resolutions or"
                                 " only a range of frequency needs to be analysed")
         
