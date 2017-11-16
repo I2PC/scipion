@@ -170,15 +170,16 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         # Conversion step is part of processMovieStep.
         movieSteps = self._insertNewMoviesSteps(self.insertedDict,
                                                 self.inputMovies.get())
-        finalSteps = self._insertFinalSteps(movieSteps)
+        # Do not use the extract particles finalStep method: wait = true.
+        # finalSteps = self._insertFinalSteps(movieSteps)
         self._insertFunctionStep('createOutputStep',
-                                 prerequisites=finalSteps, wait=False)
+                                 prerequisites=movieSteps, wait=False)
 
     def _insertMovieStep(self, movie):
         # Redefine this function to add the shifts and factor to the
         # processMovieStep function and run properly in parallel with threads
 
-        # retrive shifts here so there is no conflict
+        # retrieve shifts here so there is no conflict
         # if the object is accessed inside at the same time by multiple threads
         movieDict = movie.getObjDict(includeBasic=True)
         movieStepId = self._insertFunctionStep('processMovieStep',
@@ -187,8 +188,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                                                prerequisites=[])
         
         return movieStepId 
-    
-    #--------------------------- STEPS functions -------------------------------
+
+    # -------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         movId = movie.getObjId()
         x, y, n = movie.getDim()

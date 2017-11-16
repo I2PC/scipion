@@ -377,7 +377,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.
     """
-    pass
+    def _defineParams(self, form):
+        ProtExtractParticles._defineParams(self, form)
+        ProtProcessMovies._defineParams(self, form)
 
 
 class ProtMovieAssignGain(ProtPreprocessMicrographs):
