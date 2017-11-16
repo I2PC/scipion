@@ -576,7 +576,6 @@ void ProgMonogenicSignalRes::run()
 						resolution, last_resolution,
 						freq, freqL,
 						last_fourier_idx, continueIter, breakIter, doNextIteration);
-		std::cout << count_res << std::endl;
 
 		if (continueIter)
 			continue;
@@ -774,7 +773,9 @@ void ProgMonogenicSignalRes::run()
 			thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
 
 		#ifdef DEBUG
-		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
+		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution <<
+				  ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = "
+				  << thresholdNoise <<std::endl;
 		#endif
 
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
