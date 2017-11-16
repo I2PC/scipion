@@ -174,7 +174,7 @@ class XmippProtExtractUnit(EMProtocol):
     def _methods(self):
         return []
 
-    # --------------------------- UuTILS functions -----------------------------
+    # --------------------------- UTILS functions -----------------------------
 
     def _getOutputVol(self):
         return self._getExtraPath("output_volume.mrc")
