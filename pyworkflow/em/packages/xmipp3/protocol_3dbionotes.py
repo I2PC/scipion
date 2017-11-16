@@ -59,7 +59,7 @@ class XmippProt3DBionotes(ProtAnalysis3D):
         img.convert(vol,fnVol)
 
         ccp4header = Ccp4Header(fnVol, readHeader= True)
-        ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True))
+        ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True).getShifts())
         ccp4header.setSampling(vol.getSamplingRate())
         ccp4header.writeHeader()
 
