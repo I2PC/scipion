@@ -51,7 +51,7 @@ MIC_THUMBS = 'imgMicThumbs'
 PSD_THUMBS = 'imgPsdThumbs'
 SHIFT_THUMBS = 'imgShiftThumbs'
 MIC_ID = 'micId'
-DEFOCUS_HIST_BIN_WIDTH = 2500
+DEFOCUS_HIST_BIN_WIDTH = 0.25
 RESOLUTION_HIST_BIN_WIDTH = 0.5
 
 
@@ -244,22 +244,24 @@ class ReportHtml:
         return
 
     def processDefocusValues(self, defocusList):
-        maxDefocus = self.protocol.maxDefocus.get()
-        minDefocus = self.protocol.minDefocus.get()
-        edges = np.array(range(0, int(maxDefocus)+1, DEFOCUS_HIST_BIN_WIDTH))
+        maxDefocus = self.protocol.maxDefocus.get()*1e-4
+        minDefocus = self.protocol.minDefocus.get()*1e-4
+        # Convert defocus values to microns
+        defocusList = [i*1e-4 for i in defocusList]
+        edges = np.arange(0, maxDefocus+DEFOCUS_HIST_BIN_WIDTH, DEFOCUS_HIST_BIN_WIDTH)
         edges = np.insert(edges[edges > minDefocus], 0, minDefocus)
         values, binEdges = np.histogram(defocusList, bins=edges, range=(minDefocus, maxDefocus))
         belowThresh = 0
         aboveThresh = 0
-        labels = ["%d-%d" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
+        labels = ["%0.2f-%0.2f" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
         for v in defocusList:
             if v < minDefocus:
                 belowThresh += 1
             elif v > maxDefocus:
                 aboveThresh += 1
         zipped = zip(values, labels)
-        zipped[:0] = [(belowThresh, "0-%d" % minDefocus)]
-        zipped.append((aboveThresh, "> %d" % maxDefocus))
+        zipped[:0] = [(belowThresh, "0-%0.2f" % (minDefocus))]
+        zipped.append((aboveThresh, "> %0.2f" % (maxDefocus)))
 
         return zipped
 

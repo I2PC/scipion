@@ -20,7 +20,8 @@
     <STYLE>
         /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
         .scrolledTable{
-            overflow-y: auto; clear:both;
+            overflow-y: auto;
+            clear:both;
         }
 
         #refreshBtn{
@@ -253,7 +254,7 @@
             </SECTION>
             <SECTION id="mics">
                 <H2>Micrographs</H2>
-                <TABLE id="micTable" class="display"></TABLE>
+                <TABLE id="micTable" class="display" width="100%%"></TABLE>
                 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -414,7 +415,7 @@
 
             // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
             // we force it
-            var movieGainChart = $('#movieGainChart').highcharts()
+            var movieGainChart = $('#movieGainChart').highcharts();
             movieGainChart.showResetZoom();
         };
 
@@ -435,7 +436,7 @@
                 xAxis: {
                     categories: labels,
                     title: {
-                        text: 'Resolution(Å)'
+                        text: 'Resolution (Å)'
                     }
                 },
                 yAxis:{
@@ -596,7 +597,7 @@
                 xAxis: {
                     categories: labels,
                     title: {
-                        text: 'Defocus U(Å)'
+                        text: 'Defocus U (μm)'
                     }
                 },
                 yAxis: yAxis,
@@ -613,6 +614,8 @@
             colors = ["#000000", "#0000FF", "#FF0000", "#00FF00", "#FFFF00", "#00FFFF", "#FF00FF"];
             systemSeries = [];
             colorIndex = 0;
+            yAxes = getSystemYAxes(Object.keys(report.systemData));
+
 
             for (var key in report.systemData) {
                 serie = report.systemData[key];
@@ -625,7 +628,7 @@
                     }else {
                         enabled = isChartSerieVisible(key);
                         color = colors[colorIndex];
-                        hchSerie = systemSerie2HighChartSerie(key, serie, color, enabled);
+                        hchSerie = systemSerie2HighChartSerie(key, serie, color, enabled, yAxes);
                         colorIndex = (colorIndex +1)%%colors.length;
                         systemSeries.push(hchSerie);
                     }
@@ -635,33 +638,46 @@
             return systemSeries;
         }
         
-        function isMBSerie(name){
-            var rightAxisKeys = ['send', 'recv', 'read', 'write'];
-            for (var k in rightAxisKeys){
-                if (name.endsWith(rightAxisKeys[k])){
-                    return true
+        function getSeriesYAxis(name, yAxes){
+            var mbKeys = /send|recv|read|write|gpuMem/;
+            var tempKeys = /gpuTem/;
+            if (mbKeys.test(name)){
+                return {'yAxis' : 1,
+                        'tooltip':{
+                            'valueSuffix': ' MB'
+                            }
+                        }
+            }else if (tempKeys.test(name)){
+                if (yAxes.length==3){
+                    var axisIndex = 2
+                }else{
+                    var axisIndex = 1
                 }
+                return {'yAxis' : axisIndex,
+                        'tooltip':{
+                            'valueSuffix': ' °C'
+                            }
+                        }
+            }else{
+                return {'yAxis' : 0,
+                        'tooltip':{
+                            'valueSuffix': ' %%'
+                            }
+                        }
             }
-            return false
         }
 
-        function systemSerie2HighChartSerie(name, serie, color, enabled){
+        function systemSerie2HighChartSerie(name, serie, color, enabled, yAxes){
 
-            if (isMBSerie(name)){
-                var yAxis = 1;
-                var tooltip = { valueSuffix: ' MB'}
-            }else{
-                var yAxis = 0;
-                var tooltip = { valueSuffix: ' %%'}
-            }
+            var yAxis =  getSeriesYAxis(name, yAxes);
 
             hchSerie = {
                 name: name,
                 data: serie,
                 color: color,
                 visible: enabled,
-                yAxis : yAxis,
-                tooltip: tooltip
+                yAxis : yAxis['yAxis'],
+                tooltip:  yAxis['tooltip']
             };
 
             return hchSerie;
@@ -721,6 +737,8 @@
         }
 
         function getSystemYAxes(seriesKeys){
+            var mbKeys = /send|recv|read|write|gpuMem/;
+            var tempKeys = /gpuTem/;
             var yAxis =[{
                     title: {
                         text: 'Percentage (%%)'
@@ -731,19 +749,34 @@
                         color: '#D14242'
                     }]
                 }];
-            for (var k in seriesKeys){
-                if (isMBSerie(seriesKeys[k])){
-                    yAxis.push({
-                        title:{
-                            text: 'I/O, Network (MB)'
-                        },
-                        opposite: true
-                    });
+            var hasMbSeries = false;
+            var hasTempSeries = false;
+            for (var k in seriesKeys) {
+                if (mbKeys.test(seriesKeys[k])) {
+                    hasMbSeries = true;
+                } else if (tempKeys.test(seriesKeys[k])) {
+                    hasTempSeries = true;
+                }
+                if (hasMbSeries && hasTempSeries) {
                     break
                 }
             }
-            return yAxis
+            if (hasMbSeries){
+                yAxis.push({title:{
+                                text: 'I/O, Network (MB)'
+                                },
+                            opposite: true
+                            })
+            }
 
+            if (hasTempSeries){
+                yAxis.push({title:{
+                                text: 'Temperature (°C)'
+                                },
+                            opposite: true
+                            })
+            }
+            return yAxis
         }
 
         function addSystemChart () {
@@ -754,6 +787,7 @@
             }
 
             // Fill the system series
+            var yAxes = getSystemYAxes();
             systemSeries = getSystemSeries();
             var xAxisLabels = getSystemSeriesTimeLabels(systemSeries[0]['data'].length);
 
@@ -791,9 +825,6 @@
                     range:50
                 },
                 yAxis: getSystemYAxes(Object.keys(report.systemData)),
-                tooltip: {
-                    valueSuffix: '%%'
-                },
                 legend: {
                     layout: 'vertical',
                     align: 'right',
@@ -832,8 +863,14 @@
                 cols.push({"title":"PsdFile"})
             }
             if ('defocusU' in report.ctfData){
-                cols.push({"title": "DefocusU"}, {"title": "Ratio"},
-                          {"title": "Resolution"}, {"title": "Astigmatism"});
+                cols.push({"title": "DefocusU",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'μm' )},
+                           {"title": "Ratio",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2 )},
+                          {"title": "Resolution",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'Å' )},
+                          {"title": "Astigmatism",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '°' )});
             }
             var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="{0}"></a></div>';
             var imgWidth = Math.floor($('#content').width() * 0.2);
@@ -851,7 +888,7 @@
                 }
 
                 if ('defocusU' in report.ctfData){
-                    rowValues.push(report.ctfData.defocusU[index], report.ctfData.ratio[index],
+                    rowValues.push(report.ctfData.defocusU[index]*1e-4, report.ctfData.ratio[index],
                                    report.ctfData.resolution[index], report.ctfData.astigmatism[index]);
                 }
 
@@ -896,6 +933,16 @@
             $('#modal').on('show.bs.modal', function (e) {
                 var $invoker = $(e.relatedTarget);
                 $('.imagepreview').attr('src', $invoker.find('img').attr('src'));
+                var titleMaxLen = 55;
+                var title = $invoker.find('img').attr('alt');
+                if (title.length > titleMaxLen){
+                    // if long path, remove middle characters to keep title inside modal
+                    var titleRmChars = (title.length - titleMaxLen)/2;
+                    title = title.slice(0, title.length/2 - titleRmChars) +
+                            ' ... ' +
+                            title.slice(title.length/2 + titleRmChars, title.length)
+
+                }
                 $('.modal-title').text($invoker.find('img').attr('alt'));
                 if ($("#refreshBtn").hasClass('btn-info')) {
                     refreshPaused = true
