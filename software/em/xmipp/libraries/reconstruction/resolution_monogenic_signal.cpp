@@ -440,10 +440,10 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 				DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
 			}
 		}
-		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) >= trimming_value)
+		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) > trimming_value)
 		{
 		  DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
-		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = filling_value;
+		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
 		  DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
 		}
 	}
