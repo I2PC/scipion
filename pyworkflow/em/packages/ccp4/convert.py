@@ -36,7 +36,6 @@ import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 import struct
 
-#
 cootPdbTemplateFileName = "scipionOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
 
@@ -60,6 +59,7 @@ def runCCP4Program(program, args="", extraEnvDict=None):
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
 
+
 def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
                        sampling=1.0):
     """ Check input file format.
@@ -70,7 +70,7 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
     def compareFloatTuples(t1, t2, error=0.001):
         return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
 
-    #scipion origin follows different conventions from ccp4
+    # scipion origin follows different conventions from ccp4
     scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
     x, y, z, ndim = em.ImageHandler().getDimensions(inFileName)
     if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
@@ -78,25 +78,25 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
         ccp4header = Ccp4Header(inFileName, readHeader=True)
         ccp4Origin = ccp4header.getOffset()
         if compareFloatTuples(ccp4Origin, scipionOriginShifts):
-            #print "shifts OK", ccp4Origin, scipionOriginShifts
+            # print "shifts OK", ccp4Origin, scipionOriginShifts
             if compareFloatTuples(ccp4header.getGridSampling(), (x, y, z)):
-                #print "sampling OK OK"
+                # print "sampling OK OK"
                 if compareFloatTuples(ccp4header.getCellDimensions(),
                                       (x*sampling, y*sampling, z*sampling)):
-                    #print "cell dim OK"
+                    # print "cell dim OK"
                     pwutils.createLink(inFileName, outFileName)
                     return
-                #else:
-                    #print "wrong celldim", ccp4header.getCellDimensions(),\
+                # else:
+                    # print "wrong celldim", ccp4header.getCellDimensions(),\
                     #                  (x*sampling, y*sampling, z*sampling)
-            #else:
-                #print "wrong getGridSampling", ccp4header.getGridSampling(),
+            # else:
+                # print "wrong getGridSampling", ccp4header.getGridSampling(),
                     #  (x, y, z)
-        #else:
-            #print "wrong ccp4Origin", ccp4Origin, scipionOriginShifts
+        # else:
+            # print "wrong ccp4Origin", ccp4Origin, scipionOriginShifts
     else:
-        print "FILE %s does not end with mrc"%inFileName
-    if z ==1:
+        print "FILE %s does not end with mrc" % inFileName
+    if z == 1:
         z = ndim
     em.ImageHandler().convert(inFileName, outFileName)
     ccp4header = Ccp4Header(outFileName, readHeader=True)
@@ -106,6 +106,7 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
     ccp4header.setOffset(scipionOriginShifts, sampling)
     ccp4header.writeHeader()
     print "header-out", ccp4header
+
 
 def getProgram(progName):
     """ Return the program binary that will be used. """
@@ -136,8 +137,8 @@ class Ccp4Header():
                                 4 = Transform stored as Complex Reals
                                 5 == 0
                                 Note: Mode 2 is the normal mode used in
-the CCP4 programs. Other modes than 2 and 0
-                                      may NOT WORK
+                                the CCP4 programs. Other modes than 2 and 0
+                                may NOT WORK
        5      NCSTART         Number of first COLUMN  in map
        6      NRSTART         Number of first ROW     in map
        7      NSSTART         Number of first SECTION in map
@@ -152,23 +153,25 @@ the CCP4 programs. Other modes than 2 and 0
       16      Gamma                        "
       17      MAPC            Which axis corresponds to Cols. (1,2,3 for X,Y,Z)
       18      MAPR            Which axis corresponds to Rows. (1,2,3 for X,Y,Z)
-      19      MAPS            Which axis corresponds to Sects. (1,2,3 for X,Y,Z)
+      19      MAPS            Which axis corresponds to Sects.
+                              (1,2,3 for X,Y,Z)
       20      AMIN            Minimum density value
       21      AMAX            Maximum density value
       22      AMEAN           Mean    density value    (Average)
       23      ISPG            Space group number
-24      NSYMBT          Number of bytes used for storing symmetry operators
+      24      NSYMBT          Number of bytes used for storing symmetry
+                              operators
       25      LSKFLG          Flag for skew transformation, =0 none, =1 if foll
-      26-34   SKWMAT          Skew matrix S (in order S11, S12, S13, S21 etc) if
-                              LSKFLG .ne. 0.
+      26-34   SKWMAT          Skew matrix S (in order S11, S12, S13, S21 etc)
+                              if LSKFLG .ne. 0.
       35-37   SKWTRN          Skew translation t if LSKFLG .ne. 0.
                               Skew transformation is from standard orthogonal
-                              coordinate frame (as used for atoms) to orthogonal
-                              map frame, as
+                              coordinate frame (as used for atoms) to
+                              orthogonal map frame, as
                                       Xo(map) = S * (Xo(atoms) - t)
-      38      future use       (some of these are used by the MSUBSX routines
-       .          "              in MAPBRICK, MAPCONT and FRODO)
-       .          "   (all set to zero by default)
+      38      future use      (some of these are used by the MSUBSX routines
+       .          "           in MAPBRICK, MAPCONT and FRODO)
+       .          "           (all set to zero by default)
        .          "
       52          "
       53    MAP             Character string 'MAP ' to identify file type
@@ -282,5 +285,5 @@ the CCP4 programs. Other modes than 2 and 0
     def __str__(self):
         s = ""
         for k, v in self._header.iteritems():
-            s += "%s: %s\n"%(str(k), str(v))
+            s += "%s: %s\n" % (str(k), str(v))
         return s
