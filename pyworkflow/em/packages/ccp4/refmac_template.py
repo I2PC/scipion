@@ -83,9 +83,6 @@ PATHMRCENV=$PATHCCP4/setup-scripts/ccp4.setup-sh
 PATHMRCBIN=$PATHCCP4/bin
 . $PATHMRCENV
 
-#TODO: SI PONEMS \\ SE CONSEFVA \ No se conserva, aparece \ en el script
-#todo: PASAR LOD FILE NAME
-#todo: EL 3 EN SFCALC SERIA UN PARAMETRO EXPERTO CON VALOR 3D
 #create a mask by calculating complex structure factors around a given radius taken from the input model 
 pdb_in=${PDBDIR}/${PDBFILE}
 if [ "$generateMaskedVolume" = True ] ; then
@@ -104,13 +101,10 @@ if [ "$generateMaskedVolume" = True ] ; then
 eof
 fi
 
-
 #transform the mask (originally in fourier space) so we can see it (in real space)
 #this step is not needed but allow users to check that the PDB file and the 3Dmap are
 #in the same coordinate system
-#todo: PASAR LOD FILE NAME
-#todo pasar x,y,z a GRID
-#TODO: pass masked_fs AQUI TENGO DUDAS
+
 
 fft HKLIN ${OUTPUTDIR}_masked_fs.mtz MAPOUT ${OUTPUTDIR}masked_fs.map << END-fft > ${OUTPUTDIR}ifft.log
     LABIN F1=Fout0 PHI=Pout0 
