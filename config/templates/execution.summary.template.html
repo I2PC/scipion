@@ -423,11 +423,11 @@
             if (!('resolutionHistogram' in report.ctfData)) {
                 return
                 }
-            var labels = report.ctfData.resolutionHistogram.map(function(value) { return value[1]; }).reverse();
-            var values = report.ctfData.resolutionHistogram.map(function(value) { return value[0]; }).reverse();
+            var labels = report.ctfData.resolutionHistogram.map(function(value) { return value[1]; });
+            var values = report.ctfData.resolutionHistogram.map(function(value) { return value[0]; });
             Highcharts.chart('resolutionHistogram', {
                 chart: {
-                    type: 'bar',
+                    type: 'column',
                     alignTicks: false
                 },
                 title: {
@@ -539,11 +539,11 @@
                 var numValues = defocusValues.length;
                 var firstItem = {y:defocusValues[0], color:red}; // change color for item with defocus out of range
                 var lastItem = {y:defocusValues[numValues-1], color:red}; // same as firstItem
-                var defocusChartData = [lastItem].concat(defocusValues.slice(1,numValues-1).reverse());
-                defocusChartData.push(firstItem);
+                var defocusChartData = [firstItem].concat(defocusValues.slice(1,numValues-1));
+                defocusChartData.push(lastItem);
                 return defocusChartData;
             }
-            var labels = report.ctfData.defocusCoverage.map(function(value) { return value[1]; }).reverse();
+            var labels = report.ctfData.defocusCoverage.map(function(value) { return value[1]; });
             var defocusData = processDefocusValues(report.ctfData.defocusCoverage);
             var maxValue = Math.max.apply(Math, report.ctfData.defocusCoverage.map(function(value) {
                                                                                         return value[0]; }));
@@ -588,7 +588,7 @@
 
             Highcharts.chart('defocusHistogram', {
                 chart: {
-                    type: 'bar',
+                    type: 'column',
                     alignTicks: false,
                 },
                 title: {
