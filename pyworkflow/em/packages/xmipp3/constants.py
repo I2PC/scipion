@@ -27,7 +27,7 @@
 This modules contains constants related to Xmipp3 protocols
 """
 
-#------------------ Constants values --------------------------------------
+# ------------------ Constants values --------------------------------------
 
 MASK_FILL_VALUE = 0
 MASK_FILL_MIN = 1
@@ -68,8 +68,8 @@ MASK3D_RAISED_COSINE = 5
 MASK3D_RAISED_CROWN = 6
 
 # Mask Choice
-SOURCE_GEOMETRY=0
-SOURCE_MASK=1
+SOURCE_GEOMETRY = 0
+SOURCE_MASK = 1
 
 # 2D Geometrical Mask
 MASK2D_CIRCULAR = 0
@@ -92,4 +92,18 @@ RECONSTRUCT_WSLART = 1
 SAME_AS_PICKING = 0
 OTHER = 1
 
-SYM_URL = "[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"
+SYM_URL = \
+    "[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"
+
+# symmetry dictionary
+from pyworkflow.em.constants import SYM_CYCLIC, SYM_DIHEDRAL, \
+    SYM_TETRAHEDRAL, SYM_OCTAHEDRAL, SYM_I222, SYM_I222r, SYM_In25, SYM_In25r
+XMIPP_SYM_NAME = {}
+XMIPP_SYM_NAME[SYM_CYCLIC] = 'Cn'
+XMIPP_SYM_NAME[SYM_DIHEDRAL] = 'Dn'
+XMIPP_SYM_NAME[SYM_TETRAHEDRAL] = 'T'
+XMIPP_SYM_NAME[SYM_OCTAHEDRAL] = 'O'
+XMIPP_SYM_NAME[SYM_I222] = 'I1'
+XMIPP_SYM_NAME[SYM_I222r] = 'I2'
+XMIPP_SYM_NAME[SYM_In25] = 'I3'
+XMIPP_SYM_NAME[SYM_In25r] = 'I4'
