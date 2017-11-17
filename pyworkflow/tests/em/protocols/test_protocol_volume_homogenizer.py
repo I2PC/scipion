@@ -218,9 +218,9 @@ class TestVolumeHomogenizer(BaseTest):
         relion2 = self.relionRefine(protSubSetClass2,vol2,classid=2)
                 
         homo1 = self.homoNoGoldStandardNoAlign(relion1,relion2)
-        homo2 = self.homoNoGoldStandardAlign(relion1,relion2)
+        #homo2 = self.homoNoGoldStandardAlign(relion1,relion2)
         homo3 = self.homoGoldStandardNoAlign(relion1,relion2)
-        homo4 = self.homoGoldStandardAlign(relion1,relion2)
+        #homo4 = self.homoGoldStandardAlign(relion1,relion2)
 
 
         
