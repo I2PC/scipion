@@ -865,12 +865,14 @@
             if ('defocusU' in report.ctfData){
                 cols.push({"title": "DefocusU",
                            "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'μm' )},
-                           {"title": "Ratio",
+                           {"title": "Defocus ratio",
                            "render": $.fn.dataTable.render.number( ',', '.', 2 )},
+                           {"title": "Astigmatism",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'Å' )},
                           {"title": "Resolution",
                            "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'Å' )},
-                          {"title": "Astigmatism",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '°' )});
+                          {"title": "CC value",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2 )});
             }
             var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="{0}"></a></div>';
             var imgWidth = Math.floor($('#content').width() * 0.2);
@@ -889,7 +891,8 @@
 
                 if ('defocusU' in report.ctfData){
                     rowValues.push(report.ctfData.defocusU[index]*1e-4, report.ctfData.ratio[index],
-                                   report.ctfData.resolution[index], report.ctfData.astigmatism[index]);
+				   report.ctfData.astigmatism[index], report.ctfData.resolution[index],
+				   report.ctfData.fitQuality[index]);
                 }
 
                 dataset.unshift(rowValues);
