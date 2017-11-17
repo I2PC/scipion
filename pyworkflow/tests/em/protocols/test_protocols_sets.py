@@ -40,7 +40,10 @@ from pyworkflow.em.protocol.protocol_import import (
     ProtImportParticles, ProtImportCoordinates)
 
 from pyworkflow.em.protocol.protocol_sets import (
-    ProtSplitSet, ProtSubSet, ProtUnionSet)
+    ProtSplitSet, ProtSubSet, ProtUnionSet, ProtSubSetByMic)
+
+from pyworkflow.em.packages.xmipp3.protocol_extract_particles import (
+    XmippProtExtractParticles )
 
 # Used by Roberto's test, where he creates the particles "by hand"
 from pyworkflow.em.data import Particle, SetOfParticles, Acquisition
@@ -103,7 +106,13 @@ class TestSets(BaseTest):
         cls.particles = p_imp_particles.outputParticles
 
         # Coordinates
-        # Oh, I don't know of any example of coordinates imported :(
+        print magentaStr("\n==> Importing data - coordinates")
+        p_imp_coords = new(ProtImportCoordinates,
+                           filesPath=cls.dataset_xmipp.getFile('pickingXmipp'),
+                           inputMicrographs=p_imp_micros.outputMicrographs,
+                           boxSize=60, filesPattern='*.pos')
+        launch(p_imp_coords, wait=True)
+        cls.coords = p_imp_coords.outputCoordinates
 
 
     #
@@ -191,7 +200,8 @@ class TestSets(BaseTest):
                 for elem in output:
                     self.assertTrue(elem.getObjId() in setFullIds)
                     self.assertTrue(elem.getObjId() in setSubIds,
-                                    'object id %s not in set: %s' % (elem.getObjId(), setSubIds))
+                                    'object id %s not in set: %s' 
+                                    % (elem.getObjId(), setSubIds))
                 
             # Check difference
             outputs = [o for o in self.outputs(p_subset_diff)]
@@ -214,6 +224,42 @@ class TestSets(BaseTest):
         check(self.movies)
         check(self.particles)
         check(self.particles, n1=3, n2=5)
+
+    def testSubsetByMic(self):
+        """Test that the subset by Mic operation works as expected."""
+
+        print "\n", greenStr(" Test Subset by Mic".center(75, '-'))
+
+        def check(setMics, setCoords):
+            "Simple checks on subsets, coming from split sets of setMics."
+            print magentaStr("\n==> Check subset by Mic of %s"
+                                                     % type(setCoords).__name__)
+
+            # Exrtact particles from whole setMics following coords
+            p_extractParticles = self.newProtocol(XmippProtExtractParticles)
+            p_extractParticles.inputCoordinates.set(setCoords)
+            p_extractParticles.inputMicrographs.set(setMics)
+            p_extractParticles.boxSize.set(60)
+            p_extractParticles.doInvert.set(False)
+            p_extractParticles.doFlip.set(False)
+            self.launchProtocol(p_extractParticles)
+            setParticlesFull = list(self.outputs(p_extractParticles))[0]
+            
+            # Create a subset of Mics from where apply the subset from mic prot.
+            p_split = self.split(setMics, n=3, randomize=False)
+            subSetMics = list(self.outputs(p_split))[0]
+
+            # Launch subset by mics protocol
+            p_subsetbyMic = self.newProtocol(ProtSubSetByMic)
+            p_subsetbyMic.inputParticles.set(setParticlesFull)
+            p_subsetbyMic.inputMicrographs.set(subSetMics)
+            self.launchProtocol(p_subsetbyMic)
+
+            # Check if the number of Particles in the subset of Mics are correct       
+            subSetParticles = list(self.outputs(p_subsetbyMic))[0]
+            self.assertEqual(len(subSetParticles), 81)
+
+        check(self.micros, self.coords)
 
     def testMerge(self):
         """Test that the union operation works as expected."""
@@ -445,7 +491,8 @@ class TestSets(BaseTest):
         self.launchProtocol(prot1)
 
         if prot1.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % inFileNameMetadata)
+            raise Exception('Import of images: %s, failed. outputParticles is None.' 
+                                                % inFileNameMetadata)
         
         protSplitSet   = self.newProtocol(ProtSplitSet,
                                           inputSet=prot1.outputParticles,
