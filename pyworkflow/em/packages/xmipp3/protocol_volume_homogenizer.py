@@ -120,13 +120,27 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                            "input and reference map(s)."
                            "Based on previous experimental results, a good value "
                            "for  seems to be 20A ")
-        
+                
+        form.addSection(label='OF')
         form.addParam('winSize', params.IntParam, default=50,
                        label="Window size",
-                       expertLevel=params.LEVEL_ADVANCED,
                        help="Size of the search window at each pyramid level "
-                            "(shifts are assumed to be constant "
-                            "within this window).")
+                            "(shifts are assumed to be constant within this window).")
+                   
+        form.addParam('pyrScale', params.FloatParam, default=0.5,
+                       label="pyramid Scale",
+                       expertLevel=params.LEVEL_ADVANCED,
+                       help="Parameter, specifying the image scale (<1) to build pyramids for each image."
+                            "pyrScale=0.5 means a classical pyramid, where each next layer is twice smaller than the previous one.")        
+        form.addParam('levels', params.IntParam, default=2,
+                       label="Number of Levels",
+                       expertLevel=params.LEVEL_ADVANCED,
+                       help="Number of pyramid layers including the initial image; levels=1 means"
+                            "that no extra layers are created and only the original images are used.")
+        form.addParam('iterations', params.IntParam, default=10,
+                       label="Iterations",
+                       expertLevel=params.LEVEL_ADVANCED,
+                       help="Number of iterations the algorithm does at each pyramid level.")
                       
         form.addParallelSection(threads=1, mpi=2)
         
@@ -134,21 +148,20 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
 
     def _insertAllSteps(self):              
         #If doGoldStandard then we have two halves
+        inputPart = self.inputParticles.get()        
         if self.doGoldStandard.get():            
             inputParticlesMd1 = self._getExtraPath('input_particles_half1.xmd')
-            inputParticles = self.inputParticles.get()        
             
             inputParticlesHalf1 = self._createSetOfParticles()            
-            inputParticlesHalf1.copyInfo(inputParticles)
-            inputParticlesHalf1.copyItems(inputParticles,
+            inputParticlesHalf1.copyInfo(inputPart)
+            inputParticlesHalf1.copyItems(inputPart,
                                  updateItemCallback=self._setHalf1)                                
             writeSetOfParticles(inputParticlesHalf1, inputParticlesMd1)
     
             inputParticlesMd2 = self._getExtraPath('input_particles_half2.xmd')
-            inputParticles = self.inputParticles.get()        
             inputParticlesHalf2 = self._createSetOfParticles()            
-            inputParticlesHalf2.copyInfo(inputParticles)
-            inputParticlesHalf2.copyItems(inputParticles,
+            inputParticlesHalf2.copyInfo(inputPart)
+            inputParticlesHalf2.copyItems(inputPart,
                                  updateItemCallback=self._setHalf2)                                
             writeSetOfParticles(inputParticlesHalf2, inputParticlesMd2)
             
@@ -192,7 +205,6 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         else:
             
             inputParticlesMd = self._getExtraPath('input_particles.xmd')
-            inputPart = self.inputParticles.get()                
             writeSetOfParticles(inputPart, inputParticlesMd)
             
             inputVol = self.changeExtension(self.inputVolume.get().getFileName())
@@ -312,6 +324,9 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         
     def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd, fnOutput):
         winSize = self.winSize.get()
+        pyrScale = self.pyrScale.get()
+        levels = self.levels.get()
+        iterations = self.iterations.get()
         
         sampling_rate = self.inputParticles.get().getSamplingRate()
         resLimitDig = sampling_rate/self.resLimit.get()
@@ -320,14 +335,17 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         nT=self.numberOfThreads.get()
         
         self.runJob("xmipp_volume_homogenizer", 
-                    "-i %s -ref %s -img %s -o %s --winSize %d --cutFreq %f" % (
+                    "-i %s -ref %s -img %s -o %s --winSize %d --cutFreq %f --pyr_scale %f --levels %d --iterations %d" % (
                     inputVol, referenceVol, inputParticlesMd, 
-                    fnOutput, winSize, resLimitDig), 
+                    fnOutput, winSize, resLimitDig,
+                    pyrScale, levels, iterations), 
                     numberOfMpi=nproc,numberOfThreads=nT)
             
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()        
         inputClassName = str(inputParticles.getClassName())
+        key = 'output' + inputClassName.replace('SetOf', '') + '%02d'  
+
         
         if not self.doGoldStandard.get():            
             fnDeformedParticles = self._getExtraPath('deformed_particles.xmd')
@@ -337,17 +355,29 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             self._defineOutputs(outputParticles=outputSetOfParticles)              
         else:
             fnDeformedParticlesHalf1 = self._getExtraPath('deformed_particles_half1.xmd')
-            outputSetOfParticlesHalf1 = self._createSetOfParticles()            
+            outputSetOfParticlesHalf1 = self._createSetOfParticles(suffix="1")            
             readSetOfParticles(fnDeformedParticlesHalf1, outputSetOfParticlesHalf1)                                
-            outputSetOfParticlesHalf1.copyInfo(inputParticles)                      
-            key = 'output' + inputClassName.replace('SetOf', '') + '%02d'  
-            self._defineOutputs(**{key % 1: outputSetOfParticlesHalf1})
+            outputSetOfParticlesHalf1.copyInfo(inputParticles)                     
+ 
+            print outputSetOfParticlesHalf1
+            self._defineOutputs(**{key % 1: outputSetOfParticlesHalf1})            
+            self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf1)
+            #outputSetOfParticlesHalf1.close()
             
             fnDeformedParticlesHalf2 = self._getExtraPath('deformed_particles_half2.xmd')
-            outputSetOfParticlesHalf2 = self._createSetOfParticles()                                  
+            outputSetOfParticlesHalf2 = self._createSetOfParticles(suffix="2")                                  
             readSetOfParticles(fnDeformedParticlesHalf2, outputSetOfParticlesHalf2)
             outputSetOfParticlesHalf2.copyInfo(inputParticles)            
-            self._defineOutputs(**{key % 2: outputSetOfParticlesHalf2})        
+
+            self._defineOutputs(**{key % 2: outputSetOfParticlesHalf2})  
+            self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf2)
+            print outputSetOfParticlesHalf2
+
+            #outputSetOfParticlesHalf1.close()
+            
+            print {key % 1: outputSetOfParticlesHalf1}
+            print {key % 2: outputSetOfParticlesHalf2}
+      
             
     #--------------------------- INFO functions -------------------------------------------- 
     
