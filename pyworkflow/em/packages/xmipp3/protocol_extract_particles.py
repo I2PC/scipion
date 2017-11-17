@@ -31,6 +31,7 @@
 from glob import glob
 from os.path import exists, basename
 
+from pyworkflow.object import Float
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER
@@ -579,6 +580,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             added = set() # Keep track of added coords to avoid duplicates
             for row in md.iterRows(self._getMicXmd(mic)):
                 pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
+
                 coord = coordDict.get(pos, None)
                 if coord is not None and coord.getObjId() not in added:
                     # scale the coordinates according to particles dimension.
@@ -588,6 +590,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
+                    
+                    # p._xmipp_VAR_score = Float(xmippToLocation(row.getValue(md.MDL_SCORE_BY_VAR)))
+                    
                     # disabled particles (in metadata) should not add to the
                     # final set
                     if row.getValue(md.MDL_ENABLED) > 0:
