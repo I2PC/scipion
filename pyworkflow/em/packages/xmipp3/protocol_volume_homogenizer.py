@@ -113,7 +113,13 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                       help="Input and reference volumes must be aligned. "
                            "If you have not aligned them before choose this "
                            "option, so protocol will handle it internally.")
-
+        
+        form.addParam('dofrm', params.BooleanParam, default=True,
+                      condition='doAlignment',
+                      label='Use Fast Rotational Matching.',
+                      help="Use Fast Rotational Matching. Before use it you have to install it by scipion install frm"
+                           "This method for volume alignment is much more fast than exhaustive search")
+        
         form.addParam('resLimit', params.FloatParam, default = 20,
                       label="Resolution Limit (A)",
                       help="Resolution limit used to low pass filter both "
@@ -152,14 +158,14 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         if self.doGoldStandard.get():            
             inputParticlesMd1 = self._getExtraPath('input_particles_half1.xmd')
             
-            inputParticlesHalf1 = self._createSetOfParticles()            
+            inputParticlesHalf1 = SetOfParticles(filename=':memory:')            
             inputParticlesHalf1.copyInfo(inputPart)
             inputParticlesHalf1.copyItems(inputPart,
                                  updateItemCallback=self._setHalf1)                                
             writeSetOfParticles(inputParticlesHalf1, inputParticlesMd1)
     
             inputParticlesMd2 = self._getExtraPath('input_particles_half2.xmd')
-            inputParticlesHalf2 = self._createSetOfParticles()            
+            inputParticlesHalf2 = SetOfParticles(filename=':memory:')          
             inputParticlesHalf2.copyInfo(inputPart)
             inputParticlesHalf2.copyItems(inputPart,
                                  updateItemCallback=self._setHalf2)                                
@@ -242,10 +248,13 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         
         fnTransformMatGlobal = self._getExtraPath('transformation-matrix-Global.txt')
         fnTransformMatLocal = self._getExtraPath('transformation-matrix-Local.txt')
-
-        alignArgsGlobal = "--i1 %s --i2 %s --dontScale  --frm --show_fit --copyGeo %s" % (referenceVol,       
-                                                                                        inputVol,                                                                                                                                                                                                                               
-                                                                                        fnTransformMatGlobal)
+        alignArgsGlobal = "--i1 %s --i2 %s --dontScale  --copyGeo %s" % (referenceVol,       
+                                                                                            inputVol,                                                                                                                                                                                                                               
+                                                                                            fnTransformMatGlobal)
+        if (self.dofrm):
+            alignArgsGlobal += " --frm --show_fit "                        
+        else:
+            alignArgsGlobal += " --rot 0.000000 360.000000 5.000000 --tilt 0.000000 180.000000 5.000000 --psi 0.000000 360.000000 5.000000 -x 0.000000 0.000000 1.000000 -y 0.000000 0.000000 1.000000 -z 0.000000 0.000000 1.000000"
                                        
         self.runJob('xmipp_volume_align', alignArgsGlobal, numberOfMpi=1, numberOfThreads=1)
         transMatFromFileFF = np.loadtxt(fnTransformMatGlobal)
@@ -313,7 +322,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         inputParts.copyInfo(self.inputParticles.get())
         readSetOfParticles(inputPartsMD, inputParts)
 
-        outputSet = self._createSetOfParticles()
+        outputSet = SetOfParticles(filename=':memory:')
                                           
         for part in inputParts.iterItems():
             part.getTransform().composeTransform(np.matrix(transformMatrixLocal))
@@ -359,10 +368,8 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             readSetOfParticles(fnDeformedParticlesHalf1, outputSetOfParticlesHalf1)                                
             outputSetOfParticlesHalf1.copyInfo(inputParticles)                     
  
-            print outputSetOfParticlesHalf1
             self._defineOutputs(**{key % 1: outputSetOfParticlesHalf1})            
             self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf1)
-            #outputSetOfParticlesHalf1.close()
             
             fnDeformedParticlesHalf2 = self._getExtraPath('deformed_particles_half2.xmd')
             outputSetOfParticlesHalf2 = self._createSetOfParticles(suffix="2")                                  
@@ -371,13 +378,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
 
             self._defineOutputs(**{key % 2: outputSetOfParticlesHalf2})  
             self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf2)
-            print outputSetOfParticlesHalf2
-
-            #outputSetOfParticlesHalf1.close()
-            
-            print {key % 1: outputSetOfParticlesHalf1}
-            print {key % 2: outputSetOfParticlesHalf2}
-      
+     
             
     #--------------------------- INFO functions -------------------------------------------- 
     
