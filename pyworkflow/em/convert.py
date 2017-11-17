@@ -410,30 +410,7 @@ class ImageHandler(object):
         self.__runEman2Program('e2proc2d.py', args)
 
         return outputFn
-    
-    def correctGain(self, movieFn, gainImg=None, darkImg=None):
-        """correct a movie with both gain and dark images"""
-        
-        _, _, _, n = self.getDimensions(movieFn)
-        
-        self.convert(movieFn, movieFn, DT_FLOAT)
 
-        def convertDT(imgToApply):
-            # self.convert(imgToApply, imgToApply, DT_FLOAT)
-            img = self.read(imgToApply)
-            return img
-
-        for i in range(1, n+1):
-            img = self.read((i, movieFn))
-            if darkImg:
-                dark = convertDT(darkImg)
-                img.inplaceSubtract(dark)
-            if gainImg:
-                gain = convertDT(gainImg)
-                img.inplaceMultiply(gain)
-            self.write(img, (i, movieFn))
-            print "image wrote"
-        print "image correction has been finished"
 
     @staticmethod
     def getThumbnailFn(inputFn):

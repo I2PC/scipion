@@ -526,7 +526,7 @@ class ProtAlignMovies(ProtProcessMovies):
             args += ' --gain ' + gain
 
         if splineOrder is not None:
-            args += '--Bspline %d ' % splineOrder
+            args += ' --Bspline %d ' % splineOrder
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
@@ -585,6 +585,35 @@ class ProtAlignMovies(ProtProcessMovies):
         self.__runEman2Program('e2proc2d.py', args)
 
         return outputFn
+
+    def correctGain(self, movieFn, outputFn, gainFn=None, darkFn=None):
+        """correct a movie with both gain and dark images"""
+        ih = ImageHandler()
+        _, _, z, n = ih.getDimensions(movieFn)
+        numberOfFrames = max(z, n) # in case of wrong mrc stacks as volumes
+
+        def _readImgFloat(fn):
+            img = None
+            if fn:
+                img = ih.read(fn)
+                img.convert2DataType(ih.DT_FLOAT)
+            return img
+
+        gainImg = _readImgFloat(gainFn)
+        darkImg = _readImgFloat(darkFn)
+
+        img = ih.createImage()
+
+        for i in range(1, numberOfFrames + 1):
+            img.read((i, movieFn))
+            img.convert2DataType(ih.DT_FLOAT)
+
+            if darkImg:
+                img.inplaceSubtract(darkImg)
+            if gainImg:
+                img.inplaceMultiply(gainImg)
+
+            img.write((i, outputFn))
 
     def getThumbnailFn(self, inputFn):
         """ Returns the default name for a thumbnail image"""

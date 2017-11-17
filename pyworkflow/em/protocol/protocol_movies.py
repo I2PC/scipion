@@ -55,6 +55,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     # Redefine this in subclasses if want to convert the movies to mrc
     # the value should be either 'mrc' or 'mrcs'
     CONVERT_TO_MRC = None
+    CORRECT_GAIN = False
 
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
@@ -77,6 +78,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             return self.CONVERT_TO_MRC
 
         return None
+
+    def getGainAndDark(self):
+        inputMovs = self.inputMovies.get()
+        return inputMovs.getGain(), inputMovs.getDark()
+
+    def _doCorrectGain(self):
+        gain, dark = self.getGainAndDark()
+        return (getattr(self, 'CORRECT_GAIN', False) and (gain or dark))
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -256,15 +265,36 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 newMovieName = movieName
 
             convertExt = self._getConvertExtension(newMovieName)
-            if convertExt:
+            correctGain = self._doCorrectGain()
+
+            if convertExt or correctGain:
                 inputMovieFn = os.path.join(movieFolder, newMovieName)
                 if inputMovieFn.endswith('.em'):
                     inputMovieFn += ":ems"
-                newMovieName = pwutils.replaceExt(newMovieName, convertExt)
+
+                if convertExt:
+                    newMovieName = pwutils.replaceExt(newMovieName, convertExt)
+                else:
+                    newMovieName = '%s_corrected.%s' % os.path.splitext(newMovieName)
+
                 outputMovieFn = os.path.join(movieFolder, newMovieName)
-                self.info("Converting movie '%s' -> '%s'" % (inputMovieFn,
-                                                             outputMovieFn))
-                ImageHandler().convertStack(inputMovieFn, outputMovieFn)
+
+                # If the protocols wants Scipion to apply the gain, then
+                # there is no reason to convert, since we can produce the
+                # output in the format expected by the program. In some cases,
+                # the alignment programs can directly deal with gain and dark
+                # correction images, so we don't need to apply it
+                if self._doCorrectGain():
+                    self.info("Correcting gain and dark '%s' -> '%s'"
+                              % (inputMovieFn, outputMovieFn))
+                    gain, dark = self.getGainAndDark()
+                    self.correctGain(inputMovieFn, outputMovieFn,
+                                     gainFn=gain, darkFn=dark)
+                else:
+                    self.info("Converting movie '%s' -> '%s'"
+                              % (inputMovieFn, outputMovieFn))
+
+                    ImageHandler().convertStack(inputMovieFn, outputMovieFn)
 
             # Just store the original name in case it is needed in _processMovie
             movie._originalFileName = pwobj.String(objDoStore=False)

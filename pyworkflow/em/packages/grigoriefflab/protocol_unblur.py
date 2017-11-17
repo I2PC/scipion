@@ -39,6 +39,7 @@ class ProtUnblur(ProtAlignMovies):
     """
     _label = 'unblur'
     CONVERT_TO_MRC = 'mrc'
+    CORRECT_GAIN = True
 
     @classmethod
     def validateInstallation(cls):
@@ -181,20 +182,6 @@ class ProtUnblur(ProtAlignMovies):
             pwutils.moveFile(movieConverted, movie.getFileName())
         
         movieSet = self.inputMovies.get()
-        
-        if movieSet.getGain():
-            from pyworkflow.em import ImageHandler
-            ih = ImageHandler()
-            movieFn = movie.getFileName()
-            if os.path.islink(movieFn):
-                origFn = os.path.realpath(movieFn)
-                
-                os.remove(movieFn)
-                pwutils.copyFile(origFn, movieFn)
-            
-            ih.correctGain(movieFn, gainImg=movieSet.getGain(),
-                           darkImg=movieSet.getDark())
-        
         self._createLink(movie)
         range = aN - a0 + 1
         self._argsUnblur(movie, range)
