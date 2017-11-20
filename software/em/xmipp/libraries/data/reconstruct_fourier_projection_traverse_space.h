@@ -38,13 +38,13 @@ struct RecFourierProjectionTraverseSpace {
 
 int minY, minX, minZ; // coordinates of bottom left front corner of the AABB
 int maxY, maxX, maxZ; // coordinates of upper right back corner of the AABB
-float maxDistanceSqr; // max squared distance from projection to still count it as part of the projection
+float maxDistanceSqr; // max squared distance from the center of the Fourier Space which should be processed (i.e. 'max frequency to process')
 enum Direction { XY, XZ, YZ } dir; // optimal plane for traversing (i.e. you process this plane and iterate in last direction)
 /**
  * Projection itself is a plane (with/without some thickness) somehow oriented in the AABB.
- * These variables hold directional vectors of the plane
+ * These variables hold normal to the plane
  */
-Point3D<float> u, v;
+Point3D<float> unitNormal;
 /**
  * Projection can have some thickness due to the blob radius.
  * These variables hold the origin of the lower/upper plane.

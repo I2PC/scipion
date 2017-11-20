@@ -231,18 +231,6 @@ void ProgRecFourierGPU::produceSideinfo()
 	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
-inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v) {
-	float x0 = plane[0].x;
-	float y0 = plane[0].y;
-	float z0 = plane[0].z;
-	u.x = plane[1].x - x0;
-	u.y = plane[1].y - y0;
-	u.z = plane[1].z - z0;
-	v.x = plane[3].x - x0;
-	v.y = plane[3].y - y0;
-	v.z = plane[3].z - z0;
-}
-
 void ProgRecFourierGPU::cropAndShift(
 		MultidimArray<std::complex<double> >& paddedFourier,
 		ProgRecFourierGPU* parent,
@@ -436,14 +424,14 @@ inline void ProgRecFourierGPU::multiply(const float transform[3][3], Point3D<flo
 void ProgRecFourierGPU::createProjectionCuboid(Point3D<float>* cuboid, float sizeX, float sizeY, float blobSize)
 {
 	float halfY = sizeY / 2.0f;
-	cuboid[0].x = cuboid[3].x = cuboid[4].x = cuboid[7].x = 0.f - blobSize;
-	cuboid[1].x = cuboid[2].x = cuboid[5].x = cuboid[6].x = sizeX + blobSize;
+	cuboid[3].x = cuboid[2].x = cuboid[7].x = cuboid[6].x = 0.f - blobSize;
+	cuboid[0].x = cuboid[1].x = cuboid[4].x = cuboid[5].x = sizeX + blobSize;
 
-	cuboid[0].y = cuboid[1].y = cuboid[4].y = cuboid[5].y = -(halfY + blobSize);
-	cuboid[2].y = cuboid[3].y = cuboid[6].y = cuboid[7].y = halfY + blobSize;
+	cuboid[3].y = cuboid[0].y = cuboid[7].y = cuboid[4].y = -(halfY + blobSize);
+	cuboid[1].y = cuboid[2].y = cuboid[5].y = cuboid[6].y = halfY + blobSize;
 
-	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
-	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
+	cuboid[3].z = cuboid[0].z = cuboid[1].z = cuboid[2].z = 0.f + blobSize;
+	cuboid[7].z = cuboid[4].z = cuboid[5].z = cuboid[6].z = 0.f - blobSize;
 }
 
 inline void ProgRecFourierGPU::translateCuboid(Point3D<float>* cuboid, Point3D<float> vector) {
@@ -735,7 +723,6 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 
 	// store data
 	space->projectionIndex = projectionIndex;
-	getVectors(cuboid, space->u, space->v);
 	space->minZ = floor(AABB[0].z);
 	space->minY = floor(AABB[0].y);
 	space->minX = floor(AABB[0].x);
@@ -753,10 +740,12 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	}
 
 	// calculate best traverse direction
-	Point3D<float> unitNormal = getNormal(space->u, space->v, true);
-	float nX = std::abs(unitNormal.x);
-	float nY = std::abs(unitNormal.y);
-	float nZ = std::abs(unitNormal.z);
+	space->unitNormal.x = space->unitNormal.y = 0.f;
+	space->unitNormal.z = 1.f;
+	multiply(transform, space->unitNormal);
+	float nX = std::abs(space->unitNormal.x);
+	float nY = std::abs(space->unitNormal.y);
+	float nZ = std::abs(space->unitNormal.z);
 
 	// biggest vector indicates ideal direction
 	if (nX >= nY  && nX >= nZ) { // iterate YZ plane

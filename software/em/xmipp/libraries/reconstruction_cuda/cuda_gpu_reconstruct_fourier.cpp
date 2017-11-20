@@ -363,45 +363,31 @@ static U clamp(U val, T min, T max) {
 }
 
 /**
- * Calculates Z coordinate of the point [x, y] on the plane defined by p0 (origin) and two vectors
- * Returns 'true' if the in point lies within parallelogram
+ * Calculates Z coordinate of the point [x, y] on the plane defined by p0 (origin) and normal
  */
 __device__
-bool getZ(float x, float y, float& z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
-	// from parametric eq. of the plane
-	float u = ((y-p0.y)*a.x + (p0.x-x)*a.y) / (a.x * b.y - b.x * a.y);
-	float t = (-p0.x + x - u*b.x) / (a.x);
-
-	z = p0.z + t*a.z + u*b.z;
-	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+float getZ(float x, float y, const Point3D<float>& n, const Point3D<float>& p0) {
+	// from a(x-x0)+b(y-y0)+c(z-z0)=0
+	return (-n.x*(x-p0.x)-n.y*(y-p0.y))/n.z + p0.z;
 }
 
 /**
- * Calculates Y coordinate of the point [x, z] on the plane defined by p0 (origin) and two vectors
- * Returns 'true' if the in point lies within parallelogram
+ * Calculates Y coordinate of the point [x, z] on the plane defined by p0 (origin) and normal
  */
 __device__
-bool getY(float x, float& y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
-	// from parametric eq. of the plane
-	float u = ((z-p0.z)*a.x + (p0.x-x)*a.z) / (a.x * b.z - b.x * a.z);
-	float t = (-p0.x + x - u*b.x) / (a.x);
-
-	y = p0.y + t*a.y + u*b.y;
-	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+float getY(float x, float z, const Point3D<float>& n, const Point3D<float>& p0){
+	// from a(x-x0)+b(y-y0)+c(z-z0)=0
+	return (-n.x*(x-p0.x)-n.z*(z-p0.z))/n.y + p0.y;
 }
 
+
 /**
- * Calculates X coordinate of the point [y, z] on the plane defined by p0 (origin) and two vectors
- * Returns 'true' if the in point lies within parallelogram
+ * Calculates X coordinate of the point [y, z] on the plane defined by p0 (origin) and normal
  */
 __device__
-bool getX(float& x, float y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
-	// from parametric eq. of the plane
-	float u = ((z-p0.z)*a.y + (p0.y-y)*a.z) / (a.y * b.z - b.y * a.z);
-	float t = (-p0.y + y - u*b.y) / (a.y);
-
-	x = p0.x + t*a.x + u*b.x;
-	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+float getX(float y, float z, const Point3D<float>& n, const Point3D<float>& p0){
+	// from a(x-x0)+b(y-y0)+c(z-z0)=0
+	return (-n.y*(y-p0.y)-n.z*(z-p0.z))/n.x + p0.x;
 }
 
 /** Do 3x3 x 1x3 matrix-vector multiplication */
@@ -472,6 +458,8 @@ void processVoxel(
 	}
 	// rotate around center
 	multiply(space->transformInv, imgPos);
+	if (imgPos.x < 0.f) return; // reading outside of the image boundary. Z is always correct and Y is checked by the condition above
+
 	// transform back and round
 	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
 	int imgX = clamp((int)(imgPos.x + 0.5f), 0, xSize - 1);
@@ -522,6 +510,7 @@ void processVoxelBlob(
 	}
 	// rotate around center
 	multiply(space->transformInv, imgPos);
+	if (imgPos.x < -cBlobRadius) return; // reading outside of the image boundary. Z is always correct and Y is checked by the condition above
 	// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
 	imgPos.y += cMaxVolumeIndexYZ / 2;
 
@@ -658,23 +647,18 @@ void processProjection(
 		if (idy >= tSpace->minY && idy <= tSpace->maxY) {
 			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
 				if (useFast) {
-					float hitZ;
-					if (getZ(idx, idy, hitZ, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
-						int z = (int)(hitZ + 0.5f); // rounding
-						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace);
-					}
+					float hitZ = getZ(idx, idy, tSpace->unitNormal, tSpace->bottomOrigin);
+					int z = (int)(hitZ + 0.5f); // rounding
+					processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace);
 				} else {
-					float z1, z2;
-					bool hit1 = getZ(idx, idy, z1, tSpace->u, tSpace->v, tSpace->bottomOrigin); // lower plane
-					bool hit2 = getZ(idx, idy, z2, tSpace->u, tSpace->v, tSpace->topOrigin); // upper plane
-					if (hit1 || hit2) {
-						z1 = clamp(z1, 0, cMaxVolumeIndexYZ);
-						z2 = clamp(z2, 0, cMaxVolumeIndexYZ);
-						int lower = floorf(fminf(z1, z2));
-						int upper = ceilf(fmaxf(z1, z2));
-						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace, devBlobTableSqrt, imgCacheDim);
-						}
+					float z1 = getZ(idx, idy, tSpace->unitNormal, tSpace->bottomOrigin); // lower plane
+					float z2 = getZ(idx, idy, tSpace->unitNormal, tSpace->topOrigin); // upper plane
+					z1 = clamp(z1, 0, cMaxVolumeIndexYZ);
+					z2 = clamp(z2, 0, cMaxVolumeIndexYZ);
+					int lower = floorf(fminf(z1, z2));
+					int upper = ceilf(fmaxf(z1, z2));
+					for (int z = lower; z <= upper; z++) {
+						processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, idx, idy, z, data, tSpace, devBlobTableSqrt, imgCacheDim);
 					}
 				}
 			}
@@ -683,23 +667,18 @@ void processProjection(
 		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
 			if (idx >= tSpace->minX && idx <= tSpace->maxX) {
 				if (useFast) {
-					float hitY;
-					if (getY(idx, hitY, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
-						int y = (int)(hitY + 0.5f); // rounding
-						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace);
-					}
+					float hitY =getY(idx, idy, tSpace->unitNormal, tSpace->bottomOrigin);
+					int y = (int)(hitY + 0.5f); // rounding
+					processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace);
 				} else {
-					float y1, y2;
-					bool hit1 = getY(idx, y1, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin); // lower plane
-					bool hit2 = getY(idx, y2, idy, tSpace->u, tSpace->v, tSpace->topOrigin); // upper plane
-					if (hit1 || hit2) {
-						y1 = clamp(y1, 0, cMaxVolumeIndexYZ);
-						y2 = clamp(y2, 0, cMaxVolumeIndexYZ);
-						int lower = floorf(fminf(y1, y2));
-						int upper = ceilf(fmaxf(y1, y2));
-						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
-						}
+					float y1 = getY(idx, idy, tSpace->unitNormal, tSpace->bottomOrigin); // lower plane
+					float y2 = getY(idx, idy, tSpace->unitNormal, tSpace->topOrigin); // upper plane
+					y1 = clamp(y1, 0, cMaxVolumeIndexYZ);
+					y2 = clamp(y2, 0, cMaxVolumeIndexYZ);
+					int lower = floorf(fminf(y1, y2));
+					int upper = ceilf(fmaxf(y1, y2));
+					for (int y = lower; y <= upper; y++) {
+						processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, idx, y, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 					}
 				}
 			}
@@ -708,23 +687,18 @@ void processProjection(
 		if (idy >= tSpace->minZ && idy <= tSpace->maxZ) { // map z -> y
 			if (idx >= tSpace->minY && idx <= tSpace->maxY) { // map y > x
 				if (useFast) {
-					float hitX;
-					if (getX(hitX, idx, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin)) {
-						int x = (int)(hitX + 0.5f); // rounding
-						processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace);
-					}
+					float hitX = getX(idx, idy, tSpace->unitNormal, tSpace->bottomOrigin);
+					int x = (int)(hitX + 0.5f); // rounding
+					processVoxel<hasCTF>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace);
 				} else {
-					float x1, x2;
-					bool hit1 = getX(x1, idx, idy, tSpace->u, tSpace->v, tSpace->bottomOrigin); // lower plane
-					bool hit2 = getX(x2, idx, idy, tSpace->u, tSpace->v, tSpace->topOrigin); // upper plane
-					if (hit1 || hit2) {
-						x1 = clamp(x1, 0, cMaxVolumeIndexX);
-						x2 = clamp(x2, 0, cMaxVolumeIndexX);
-						int lower = floorf(fminf(x1, x2));
-						int upper = ceilf(fmaxf(x1, x2));
-						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
-						}
+					float x1 = getX(idx, idy, tSpace->unitNormal, tSpace->bottomOrigin); // lower plane
+					float x2 = getX(idx, idy, tSpace->unitNormal, tSpace->topOrigin); // upper plane
+					x1 = clamp(x1, 0, cMaxVolumeIndexX);
+					x2 = clamp(x2, 0, cMaxVolumeIndexX);
+					int lower = floorf(fminf(x1, x2));
+					int upper = ceilf(fmaxf(x1, x2));
+					for (int x = lower; x <= upper; x++) {
+						processVoxelBlob<hasCTF, blobOrder>(tempVolumeGPU, tempWeightsGPU, x, idx, idy, data, tSpace, devBlobTableSqrt, imgCacheDim);
 					}
 				}
 			}
@@ -770,17 +744,17 @@ void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const RecFou
 		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getZ(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[0].z = getZ(box[0].x, box[0].y, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[4].z = getZ(box[4].x, box[4].y, tSpace->unitNormal, tSpace->topOrigin);
 
-		getZ(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[3].z = getZ(box[3].x, box[3].y, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[7].z = getZ(box[7].x, box[7].y, tSpace->unitNormal, tSpace->topOrigin);
 
-		getZ(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[2].z = getZ(box[2].x, box[2].y, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[6].z = getZ(box[6].x, box[6].y, tSpace->unitNormal, tSpace->topOrigin);
 
-		getZ(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getZ(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[1].z = getZ(box[1].x, box[1].y, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[5].z = getZ(box[5].x, box[5].y, tSpace->unitNormal, tSpace->topOrigin);
 	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
 		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
@@ -788,17 +762,17 @@ void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const RecFou
 		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getY(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[0].y = getY(box[0].x, box[0].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[4].y = getY(box[4].x, box[4].z, tSpace->unitNormal, tSpace->topOrigin);
 
-		getY(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[3].y = getY(box[3].x, box[3].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[7].y = getY(box[7].x, box[7].z, tSpace->unitNormal, tSpace->topOrigin);
 
-		getY(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[2].y = getY(box[2].x, box[2].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[6].y = getY(box[6].x, box[6].z, tSpace->unitNormal, tSpace->topOrigin);
 
-		getY(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getY(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[1].y = getY(box[1].x, box[1].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[5].y = getY(box[5].x, box[5].z, tSpace->unitNormal, tSpace->topOrigin);
 	} else { // iterate YZ plane
 		box[0].y = box[3].y = box[4].y = box[7].y = blockIdx.x*blockDim.x - cBlobRadius;
 		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
@@ -806,17 +780,17 @@ void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const RecFou
 		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getX(box[0].x, box[0].y, box[0].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[4].x, box[4].y, box[4].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[0].x = getX(box[0].y, box[0].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[4].x = getX(box[4].y, box[4].z, tSpace->unitNormal, tSpace->topOrigin);
 
-		getX(box[3].x, box[3].y, box[3].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[7].x, box[7].y, box[7].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[3].x = getX(box[3].y, box[3].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[7].x = getX(box[7].y, box[7].z, tSpace->unitNormal, tSpace->topOrigin);
 
-		getX(box[2].x, box[2].y, box[2].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[6].x, box[6].y, box[6].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[2].x = getX(box[2].y, box[2].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[6].x = getX(box[6].y, box[6].z, tSpace->unitNormal, tSpace->topOrigin);
 
-		getX(box[1].x, box[1].y, box[1].z, tSpace->u, tSpace->v, tSpace->bottomOrigin);
-		getX(box[5].x, box[5].y, box[5].z, tSpace->u, tSpace->v, tSpace->topOrigin);
+		box[1].x = getX(box[1].y, box[1].z, tSpace->unitNormal, tSpace->bottomOrigin);
+		box[5].x = getX(box[5].y, box[5].z, tSpace->unitNormal, tSpace->topOrigin);
 	}
 	// transform AABB to the image domain
 	rotate(box, tSpace->transformInv);
