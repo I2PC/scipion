@@ -26,6 +26,7 @@
 import os
 
 import pyworkflow.utils as pwutils
+import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
 from grigoriefflab import UNBLUR_PATH, getVersion, UNBLUR_HOME
@@ -71,6 +72,24 @@ class ProtUnblur(ProtAlignMovies):
                       help='Apply a dose-dependent filter to frames before '
                            'summing them. Pre-exposure and dose per frame were '
                            'specified during movies import.')
+
+        form.addParam('doComputeMicThumbnail', params.BooleanParam,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      default=False,
+                      label='Compute micrograph thumbnail?',
+                      help='When using this option, we will compute a '
+                           'micrograph thumbnail and keep it with the '
+                           'micrograph object for visualization purposes. ')
+
+        form.addParam('openmpThreads', params.IntParam,
+                      default=1, expertLevel=params.LEVEL_ADVANCED,
+                      label='OpenMP threads',
+                      help='The number of processors (using OpenMP threads) '
+                           'that will work on each movie. Take into account '
+                           'that you will be using a total of '
+                           'openmpThreads * numberOfThreads (or MPIs) '
+                           'processors. ')
+
         #group = form.addGroup('Expert Options')
         form.addParam('minShiftInitSearch', params.FloatParam,
                       default=2.,
@@ -188,6 +207,16 @@ class ProtUnblur(ProtAlignMovies):
         
         try:
             self.runJob(self._program, self._args)
+
+            outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            if not os.path.exists(outMicFn):
+                # if only DW mic is saved
+                outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+
+            if self._doComputeMicThumbnail():
+                self.computeThumbnail(outMicFn,
+                                      outputFn=self._getOutputMicThumbnail(
+                                          movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getFileName())
 
@@ -244,7 +273,7 @@ class ProtUnblur(ProtAlignMovies):
 
         # Avoid threads multiplication
         # self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
-        self._program = 'export OMP_NUM_THREADS=1; '
+        self._program = 'export OMP_NUM_THREADS=%d; ' % self.openmpThreads
         self._program += UNBLUR_PATH
 
         if getVersion('UNBLUR') != '1.0_150529':
@@ -362,3 +391,13 @@ eof
 
     def _isNewUnblur(self):
         return True if getVersion('UNBLUR') != '1.0.150529' else False
+
+    def _doComputeMicThumbnail(self):
+        return self.doComputeMicThumbnail.get()
+
+    def _preprocessOutputMicrograph(self, mic, movie):
+        # if self.doComputePSD:
+        #     mic.psdCorr = em.Image(location=self._getPsdCorr(movie))
+        #     mic.psdJpeg = em.Image(location=self._getPsdJpeg(movie))
+        if self._doComputeMicThumbnail():
+            mic.thumbnail = em.Image(location=self._getOutputMicThumbnail(movie))
