@@ -706,17 +706,40 @@ class Project(object):
         """
         newProt = self.newProtocol(protocol.getClass())
         oldProtName = protocol.getRunName()
+        maxSuffix = 0
 
-        m = REGEX_NUMBER_ENDING_CP.match(oldProtName)
-        if m:
-            newProtLabel = m.groupdict()['prefix']
-            if m.groupdict()['number'] == '':
+        # if '(copy...' suffix is not in the old name, we add it in the new name
+        # and seting the newnumber 
+        mOld = REGEX_NUMBER_ENDING_CP.match(oldProtName)
+        if mOld:
+            newProtPrefix = mOld.groupdict()['prefix']
+            if mOld.groupdict()['number'] == '':
                 oldNumber = 1
             else:
-                oldNumber = int(m.groupdict()['number'])
-            newProtLabel = '%s %s)' %(m.groupdict()['prefix'], str(oldNumber+1))
+                oldNumber = int(mOld.groupdict()['number'])
         else:
-            newProtLabel = oldProtName + ' (copy)'
+            newProtPrefix = oldProtName + ' (copy'
+            oldNumber = 0
+        newNumber = oldNumber + 1
+
+        # looking for "<old name> (copy" prefixes in the project and
+        # seting the newNumber as the maximum+1
+        for prot in self.getRuns(iterate=True, refresh=False):
+            otherProtLabel = prot.getObjLabel()
+            mOther = REGEX_NUMBER_ENDING_CP.match(otherProtLabel)
+            if mOther and mOther.groupdict()['prefix'] == newProtPrefix:
+                stringSuffix = mOther.groupdict()['number']
+                if stringSuffix == '':
+                    stringSuffix = 1
+                maxSuffix = max(maxSuffix, int(stringSuffix))
+                if newNumber <= maxSuffix:
+                    newNumber = maxSuffix + 1
+
+        # building the new name
+        if newNumber == 1:
+            newProtLabel = newProtPrefix + ')'
+        else:
+            newProtLabel = '%s %d)' % (newProtPrefix, newNumber)
 
         newProt.setObjLabel(newProtLabel)
         newProt.copyDefinitionAttributes(protocol)
