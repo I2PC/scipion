@@ -34,7 +34,7 @@ from pyworkflow.em.wizard import EmWizard
 from pyworkflow.em import CoordinatesObjectView
 from pyworkflow.utils import makePath, cleanPath, readProperties
 
-from protocol_picking import DogPickerProtPicking
+from protocol_dogpicker import DogPickerProtPicking
 
 
 #===============================================================================

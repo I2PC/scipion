@@ -25,13 +25,4 @@
 
 #include <reconstruction/evaluate_coordinates.h>
 
-int main(int argc, char **argv)
-{
-    ProgEvaluateCoordinates prm;
-    prm.read(argc, argv);
-    return prm.tryRun();
-}
-
-
-
-
+RUN_XMIPP_PROGRAM(ProgEvaluateCoordinates)

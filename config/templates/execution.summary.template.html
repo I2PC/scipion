@@ -2,6 +2,8 @@
     <HEAD>
         <!-- jquery-->
         <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
+        <!-- JQuery plugins-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js"></script>
         <!--highcharts-->
         <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
         <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
@@ -18,6 +20,9 @@
     </HEAD>
     <STYLE>
         /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
+        .scrolledTable{
+            overflow-y: auto; clear:both;
+        }
         BODY {
           text-align: center;
           margin: 0px;
@@ -322,6 +327,7 @@
 
             if (report.movieGainData.length == 0) {
                 $('#movieGain').hide();
+                return;
             }
 
             $('#movieGainChart').highcharts({
@@ -399,8 +405,9 @@
 
         function addCTFChart () {
 
-            if (report.ctfData.length == 0) {
+            if (!('defocusU' in report.ctfData)) {
                 $('#ctf').hide();
+                return;
             }
 
 
@@ -465,6 +472,9 @@
         };
 
         function addDefocusCoverage(){
+            if (!('defocusCoverage' in report.ctfData)) {
+                return
+                }
             function processDefocusValues(defocusCoverageList, darkRed){
                 var red = '#f45b5b';
                 if (darkRed===true){
@@ -543,10 +553,89 @@
 
         }
 
+
+
+        function getSystemSeries() {
+
+            colors = ["#000000", "#0000FF", "#FF0000", "#00FF00", "#FFFF00", "#00FFFF", "#FF00FF"];
+            systemSeries = [];
+            colorIndex = 0;
+
+            for (var key in report.systemData) {
+                serie = report.systemData[key];
+
+                if (!Array.isArray(serie)){
+                    continue;
+                } else {
+                    if (key == "idValues"){
+                        continue;
+                    }else {
+                        enabled = isChartSerieVisible(key);
+                        color = colors[colorIndex];
+                        hchSerie = systemSerie2HighChartSerie(key, serie, color, enabled);
+                        colorIndex = (colorIndex +1)%%colors.length;
+                        systemSeries.push(hchSerie);
+                    }
+                }
+            }
+
+            return systemSeries;
+        }
+
+        function systemSerie2HighChartSerie(name, serie, color, enabled){
+
+            hchSerie = {
+                name: name,
+                data: serie,
+                color: color,
+                visible: enabled
+            };
+
+            return hchSerie;
+
+        }
+
+        function storeChartSeriesVisibility(chart){
+
+            for (var serieId in chart.series) {
+
+                var serie = chart.series[serieId];
+                Cookies.set(serie.name, serie.visible);
+            }
+        };
+
+        function isChartSerieVisible(serieName){
+
+            var visible = Cookies.get(serieName);
+
+            if (visible == undefined)
+                visible = String(true);
+
+            return visible == String(true);
+        }
+
         function addSystemChart () {
 
             if (report.systemData.length == 0) {
                 $('#system').hide();
+                return;
+            }
+
+            // Fill the system series
+            systemSeries = getSystemSeries();
+
+            // Listen to series hide/show events
+            plotOptions  = {series:
+                {events:
+                    {
+                        hide: function () {
+                            storeChartSeriesVisibility(this.chart)
+                        },
+                        show: function () {
+                            storeChartSeriesVisibility(this.chart)
+                        }
+                    }
+                }
             }
 
 
@@ -588,24 +677,13 @@
                     verticalAlign: 'middle',
                     borderWidth: 0
                 },
-                series: [{
-                    name: 'Memory',
-                    data: report.systemData.mem,
-                    color: '#FF0000'
-                }, {
-                    name: 'Cpu',
-                    data: report.systemData.cpu,
-                    color: '#00FF00'
-                }, {
-                    name: 'Swap',
-                    data: report.systemData.swap,
-                    color: '#0000FF'
-                }],
+                series: systemSeries,
                 chart:{
                     zoomType: 'x',
                     panning: true,
                     panKey:'shift'
-                } 
+                },
+                plotOptions: plotOptions
             });
 
             // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
@@ -616,41 +694,58 @@
         };
 
         function addMicTable(){
+            if (!('imgMicThumbs') in report.ctfData){
+                return
+            }
             var dataset = [];
-
+            var cols = [
+                    {"title": "ID"},
+                    {"title": "Micrograph"}
+                    ];
+            if('imgShiftThumbs' in report.ctfData){
+                cols.push({"title":"ShiftPlot"})
+            }
+            if('imgPsdThumbs' in report.ctfData){
+                cols.push({"title":"PsdFile"})
+            }
+            if ('defocusU' in report.ctfData){
+                cols.push({"title": "DefocusU"}, {"title": "DefocusV"},
+                          {"title": "Ratio"}, {"title": "Astigmatism"});
+            }
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
-                var psdPath = report.ctfData.imgPsdThumbs[index];
                 var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp"><img width={1} src={0} alt="{0}"></a></div>';
                 var imgWidth = Math.floor($('#content').width() * 0.2);
-                var rowValues = [report.ctfData.idValues[index], imgHtml.format(imgMicPath, imgWidth),
-                                 imgHtml.format(psdPath,imgWidth),report.ctfData.defocusU[index],
-                                 report.ctfData.defocusV[index], report.ctfData.ratio[index],
-                                 report.ctfData.astigmatism[index]
-                                ];
-                if('imgShiftCopyPath' in report.ctfData){
-                    var shiftPlotPath = report.ctfData.imgShiftCopyPath[index];
-                    rowValues.splice(3, 0, imgHtml.format(shiftPlotPath,imgWidth));
+                var rowValues = [report.ctfData.micId[index], imgHtml.format(imgMicPath, imgWidth)];
+
+                if('imgShiftThumbs' in report.ctfData){
+                    var shiftPlotPath = report.ctfData.imgShiftThumbs[index];
+                    rowValues.push(imgHtml.format(shiftPlotPath,imgWidth));
                 }
+
+                if('imgPsdThumbs' in report.ctfData){
+                    var psdThumbPath = report.ctfData.imgPsdThumbs[index];
+                    rowValues.push(imgHtml.format(psdThumbPath,imgWidth));
+                }
+
+                if ('defocusU' in report.ctfData){
+                    rowValues.push(report.ctfData.defocusU[index], report.ctfData.defocusV[index],
+                                   report.ctfData.ratio[index], report.ctfData.astigmatism[index]);
+                }
+
                 dataset.unshift(rowValues);
             });
-            var cols = [
-                    {title: "ID"},
-                    {title: "Micrograph"},
-                    {title: "PsdFile"},
-                    {title: "DefocusU"},
-                    {title: "DefocusV"},
-                    {title: "Ratio"},
-                    {title: "Astigmatism"}
-                ];
-            if ('imgShiftCopyPath' in report.ctfData){
-                cols.splice(3,0,{title: "ShiftPlot"})
-            }
-            $('#micTable').DataTable( {
+            var dataTable = {
                 data: dataset,
-                "scrollX": true,
                  "order": [[ 0, "desc" ]],
                 columns: cols
-            });
+            };
+            if (cols.length <= 4){
+                $('#micTable').wrap("<div class='scrolledTable'></div>");
+            }else{
+                dataTable['scrollX'] = true
+            }
+
+            $('#micTable').DataTable( dataTable);
 
         };
 

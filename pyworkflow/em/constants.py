@@ -82,7 +82,7 @@ SYM_In25 = 6
 # 'n25' with 180 degree rotation about x
 SYM_In25r = 7
 
-# Diccionario sym
+# Symmetry dictionary
 SCIPION_SYM_NAME = {}
 SCIPION_SYM_NAME[SYM_CYCLIC] = 'Cn'
 SCIPION_SYM_NAME[SYM_DIHEDRAL] = 'Dn'

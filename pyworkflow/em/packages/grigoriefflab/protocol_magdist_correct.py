@@ -35,7 +35,7 @@ import pyworkflow.utils.path as pwutils
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.em.data import SetOfMovies
 
-from grigoriefflab import MAGDISTCORR_PATH
+from grigoriefflab import MAGDISTCORR_PATH, validateMagDistorsionInstallation
 from convert import parseMagCorrInput
 
 
@@ -49,6 +49,16 @@ class ProtMagDistCorr(ProtProcessMovies):
     _lastUpdateVersion = VERSION_1_1
     doSaveAveMic = False
     doSaveMovie = True
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        Can't rely on package function since this is a "multi package" package
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        return validateMagDistorsionInstallation()
 
     # --------------------------- DEFINE params functions ----------------------
 

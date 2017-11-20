@@ -132,10 +132,21 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        ctfStr = "defocus(U,V,a) = (%0.2f,%0.2f,%0.2f)" % \
-                 (self._defocusU.get(),
-                  self._defocusV.get(),
-                  self._defocusAngle.get())
+        if self._resolution.hasValue():
+            ctfStr = "defocus(U,V,a,re,fit) = " \
+                     "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
+                     (self._defocusU.get(),
+                      self._defocusV.get(),
+                      self._defocusAngle.get(),
+                      self._resolution.get(),
+                      self._fitQuality.get()
+                      )
+        else:   # TODO; remove eventually,
+                # compatibility with old ctfmodel
+            ctfStr = "defocus(U,V,a) = " \
+                     "(%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
+                                              self._defocusV.get(),
+                                              self._defocusAngle.get())
 
         if self._micObj:
             ctfStr + " mic=%s" % self._micObj
@@ -156,11 +167,14 @@ class CTFModel(EMObject):
         else:
             return self._resolution.get()
 
+    def hasResolution(self):
+        return self._resolution.hasValue()
+
     def setResolution(self, value):
         self._resolution.set(value)
 
     def getFitQuality(self):
-        # this is an awful hack to read freq either from ctffid/gctf or xmipp
+        # this is an awful hack to read freq either from ctffind/gctf or xmipp
         # labels assigned to max resolution used to be different
         # It should be eventually removed
         if self._fitQuality.hasValue():
@@ -1141,7 +1155,14 @@ class SetOfCTF(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        self._micrographsPointer.set(micrographs)
+        """ Set the micrographs from which this CTFs were estimated.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
 
 
 class SetOfDefocusGroup(EMSet):
@@ -1325,11 +1346,15 @@ class SetOfCoordinates(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        """ Set the SetOfMicrograph associates with
-        this set of coordinates.
-         """
-        self._micrographsPointer.set(micrographs)
-
+        """ Set the micrographs associated with this set of coordinates.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
+        
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())

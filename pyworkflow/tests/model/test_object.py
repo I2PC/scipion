@@ -169,7 +169,13 @@ class TestObject(BaseTest):
         # Same as ptr2, but setting extended in constructor
         ptr3 = Pointer(value=o2, extended='outputImages.7')
         self.assertEqual(imgSet[7], ptr3.get())
-    
+
+        # Test copy between pointer objects
+        ptr4 = Pointer()
+        ptr4.copy(ptr3)
+        self.assertEqual(imgSet[7], ptr4.get())
+        self.assertEqual(ptr4.getExtended(), 'outputImages.7')
+
     
     def test_copyAttributes(self):
         """ Check that after copyAttributes, the values
