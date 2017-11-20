@@ -42,9 +42,6 @@ from pyworkflow.em.protocol.protocol_import import (
 from pyworkflow.em.protocol.protocol_sets import (
     ProtSplitSet, ProtSubSet, ProtUnionSet, ProtSubSetByMic)
 
-from pyworkflow.em.packages.xmipp3.protocol_extract_particles import (
-    XmippProtExtractParticles )
-
 # Used by Roberto's test, where he creates the particles "by hand"
 from pyworkflow.em.data import Particle, SetOfParticles, Acquisition
 from pyworkflow.utils.utils import prettyDict
@@ -66,6 +63,7 @@ class TestSets(BaseTest):
         cls.dataset_xmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dataset_mda = DataSet.getDataSet('mda')
         cls.dataset_ribo = DataSet.getDataSet('ribo_movies')
+        cls.dataset_relion =  DataSet.getDataSet('relion_tutorial')
 
         #
         # Imports
@@ -105,14 +103,14 @@ class TestSets(BaseTest):
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles
 
-        # Coordinates
-        print magentaStr("\n==> Importing data - coordinates")
-        p_imp_coords = new(ProtImportCoordinates,
-                           filesPath=cls.dataset_xmipp.getFile('pickingXmipp'),
-                           inputMicrographs=p_imp_micros.outputMicrographs,
-                           boxSize=60, filesPattern='*.pos')
-        launch(p_imp_coords, wait=True)
-        cls.coords = p_imp_coords.outputCoordinates
+        # # Coordinates
+        # print magentaStr("\n==> Importing data - coordinates")
+        # p_imp_coords = new(ProtImportCoordinates,
+        #                    filesPath=cls.dataset_xmipp.getFile('pickingXmipp'),
+        #                    inputMicrographs=p_imp_micros.outputMicrographs,
+        #                    boxSize=60, filesPattern='*.pos')
+        # launch(p_imp_coords, wait=True)
+        # cls.coords = p_imp_coords.outputCoordinates
 
 
     #
@@ -230,36 +228,58 @@ class TestSets(BaseTest):
 
         print "\n", greenStr(" Test Subset by Mic".center(75, '-'))
 
-        def check(setMics, setCoords):
+        def check(setMics, setParticles):
             "Simple checks on subsets, coming from split sets of setMics."
             print magentaStr("\n==> Check subset by Mic of %s"
-                                                     % type(setCoords).__name__)
+                                                  % type(setParticles).__name__)
 
-            # Exrtact particles from whole setMics following coords
-            p_extractParticles = self.newProtocol(XmippProtExtractParticles)
-            p_extractParticles.inputCoordinates.set(setCoords)
-            p_extractParticles.inputMicrographs.set(setMics)
-            p_extractParticles.boxSize.set(60)
-            p_extractParticles.doInvert.set(False)
-            p_extractParticles.doFlip.set(False)
-            self.launchProtocol(p_extractParticles)
-            setParticlesFull = list(self.outputs(p_extractParticles))[0]
-            
+            # create a set of particles with three micIDs (1, 2, 3)
+            inFileNameMetadata = self.proj.getTmpPath('partWithMicId.sqlite')
+            imgSet = SetOfParticles(filename=inFileNameMetadata)
+
+            inFileNameData = self.proj.getTmpPath('partWithMicId.stk')
+            img = Particle()
+            for i in range(1, 9):
+                img.cleanObjId()
+                img.setLocation(i, inFileNameData)
+                img.setSamplingRate(3.5)
+                img.setMicId(i%3+1)
+                imgSet.append(img)
+            imgSet.write()
+
+            # Importing the particles with several micIDs
+            p_imp_partSQ = self.newProtocol(ProtImportParticles,
+                            importFrom = ProtImportParticles.IMPORT_FROM_SCIPION,
+                            sqliteFile = inFileNameMetadata,
+                            samplingRate = 3.5)
+            self.launchProtocol(p_imp_partSQ)
+            partWithMicId = p_imp_partSQ.outputParticles
+
             # Create a subset of Mics from where apply the subset from mic prot.
-            p_split = self.split(setMics, n=3, randomize=False)
-            subSetMics = list(self.outputs(p_split))[0]
+            p_split = self.split(setMics, n=2, randomize=False)
+            setMultipleMic = list(self.outputs(p_split))[0]
+            setSingleMic = list(self.outputs(p_split))[1]
 
-            # Launch subset by mics protocol
-            p_subsetbyMic = self.newProtocol(ProtSubSetByMic)
-            p_subsetbyMic.inputParticles.set(setParticlesFull)
-            p_subsetbyMic.inputMicrographs.set(subSetMics)
-            self.launchProtocol(p_subsetbyMic)
+            # Launch subset by mics protocol with a single Mic input
+            p_subsetbyMic1 = self.newProtocol(ProtSubSetByMic)
+            p_subsetbyMic1.inputParticles.set(partWithMicId)
+            p_subsetbyMic1.inputMicrographs.set(setSingleMic)
+            self.launchProtocol(p_subsetbyMic1)
+            # Check if the number of the final Particles is correct
+            subSetParticles = list(self.outputs(p_subsetbyMic1))[0]
+            self.assertEqual(subSetParticles.getSize(), 3)
 
-            # Check if the number of Particles in the subset of Mics are correct       
-            subSetParticles = list(self.outputs(p_subsetbyMic))[0]
-            self.assertEqual(len(subSetParticles), 81)
+            # Launch subset by mics protocol with multiple Mics input
+            p_subsetbyMic2 = self.newProtocol(ProtSubSetByMic)
+            p_subsetbyMic2.inputParticles.set(partWithMicId)
+            p_subsetbyMic2.inputMicrographs.set(setMultipleMic)
+            self.launchProtocol(p_subsetbyMic2)
+            # Check if the number of the final Particles is correct
+            subSetParticles = list(self.outputs(p_subsetbyMic2))[0]
+            self.assertEqual(subSetParticles.getSize(), 5)
 
-        check(self.micros, self.coords)
+
+        check(self.micros, self.particles)
 
     def testMerge(self):
         """Test that the union operation works as expected."""
