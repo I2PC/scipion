@@ -63,7 +63,6 @@ class TestSets(BaseTest):
         cls.dataset_xmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dataset_mda = DataSet.getDataSet('mda')
         cls.dataset_ribo = DataSet.getDataSet('ribo_movies')
-        cls.dataset_relion =  DataSet.getDataSet('relion_tutorial')
 
         #
         # Imports
@@ -103,7 +102,7 @@ class TestSets(BaseTest):
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles
 
-        # # Coordinates
+        # Coordinates  -  Oh, I don't know of any example of coord. import :(
         # print magentaStr("\n==> Importing data - coordinates")
         # p_imp_coords = new(ProtImportCoordinates,
         #                    filesPath=cls.dataset_xmipp.getFile('pickingXmipp'),
