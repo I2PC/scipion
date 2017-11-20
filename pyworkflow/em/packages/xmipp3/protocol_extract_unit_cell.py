@@ -146,35 +146,11 @@ class XmippProtExtractUnit(EMProtocol):
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader=True)
         t = Transform()
         x, y, z = ccp4header.getOffset()  # origin output vol coordinates
-        print "x_header: ", x
-        print "y_header: ", y
-        print "z_header: ", z
         x /= sampling
         y /= sampling
         z /= sampling
-        _inputVol = self.inputVolumes.get()
-        # x, y, z origin input vol coordinates
-        x_origin = _inputVol.getOrigin().getShifts()[0]
-        print "x_origin: ", x_origin
-        y_origin = _inputVol.getOrigin().getShifts()[1]
-        print "y_origin: ", y_origin
-        z_origin = _inputVol.getOrigin().getShifts()[2]
-        print "z_origin: ", z_origin
-        # x, y, z origin output vol coordinates
-        print "_inputVol.getDim()[0]: ", _inputVol.getDim()[0]
-        #x +=  _inputVol.getDim()[0] / 2. - x_origin
-        print "x_output: ", x
-        print "_inputVol.getDim()[1]: ", _inputVol.getDim()[1]
-        #y += _inputVol.getDim()[1] / 2. - y_origin
-        print "y_output: ", y
-        print "_inputVol.getDim()[2]: ", _inputVol.getDim()[2]
-        #z += _inputVol.getDim()[2] / 2. - z_origin
-        print "z_output: ", z
-        print "t: ", t
         t.setShifts(x, y, z)  # we follow chimera convention no MRC
-        print "t_2: ", t
         vol.setOrigin(t)
-        print "vol.getOrigin: ", vol.getOrigin()
         #
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputVolumes, self.outputVolume)
