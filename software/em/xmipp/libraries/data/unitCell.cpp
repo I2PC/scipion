@@ -554,11 +554,8 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 	size_t xDim, yDim, zDim;
 	in3Dmap.getDimensions(xDim, yDim, zDim);
 	double x_offset = x_origin - xDim/2.; //difference between default and user introduced x_origin coordinate
-	std::cout << "x_offset " << x_offset << std::endl;
 	double y_offset = y_origin - yDim/2.; //difference between default and user introduced y_origin coordinate
-	std::cout << "y_offset " << y_offset << std::endl;
 	double z_offset = z_origin - zDim/2; //difference between default and user introduced z_origin coordinate
-	std::cout << "z_offset " << z_offset << std::endl;
 	
 	if (rmax == 0)
 		rmax = (double) xDim / 2.;
@@ -881,28 +878,19 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 				}
 		if (x_offset != 0.0 || y_offset != 0.0 || z_offset != 0.0){
 			iMinZ = iMinZ + z_offset;
-			std::cout << "iMinZ " << iMinZ << std::endl;
 			iMinY = iMinY + y_offset;
-			std::cout << "iMinY " << iMinY << std::endl;
 			iMinX = iMinX + x_offset;
-			std::cout << "iMinX " << iMinX << std::endl;
 			iMaxZ = iMaxZ + z_offset;
-			std::cout << "iMaxZ " << iMaxZ << std::endl;
 			iMaxY = iMaxY + y_offset;
-			std::cout << "iMaxY " << iMaxY << std::endl;
 			iMaxX = iMaxX + x_offset;
-			std::cout << "iMaxX " << iMaxX << std::endl;
 		}
 		imageMap2->selfWindow(iMinZ, iMinY, iMinX, iMaxZ, iMaxY, iMaxX, 0.);
 		MDRow MD;
 		out3DDmap.setDataMode(_DATA_ALL);
 		//CCP save routine multiplies by sampling rate
 		MD.setValue(MDL_ORIGIN_X, -(double) (iMinX - x_offset) );
-		std::cout << "(iMinX - x_offset) * sampling " << (iMinX - x_offset)  << std::endl;
 		MD.setValue(MDL_ORIGIN_Y, -(double) (iMinY - y_offset) );
-		std::cout << "(iMinY - y_offset) * sampling " << (iMinY - y_offset)  << std::endl;
 		MD.setValue(MDL_ORIGIN_Z, -(double) (iMinZ - z_offset) );
-		std::cout << "(iMinZ - z_offset) * sampling " << (iMinZ - z_offset)  << std::endl;
 
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
 
