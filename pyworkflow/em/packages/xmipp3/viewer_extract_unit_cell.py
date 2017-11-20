@@ -135,34 +135,24 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
                  arrowDict)
         ff.close()
         _inputVol = self.protocol.inputVolumes.get()
-        print type(_inputVol)
         _outputVol = self.protocol.outputVolume
-        print type(_outputVol)
         inputVolFileName = os.path.abspath(self._getVolumeName(_inputVol))
-        print "inputVolFileName: ", inputVolFileName
         # input vol origin coordinates
         x_input, y_input, z_input = self. _getOrigin(_inputVol)
         x_input *= -sampling
-        print "x_input: ", x_input
         y_input *= -sampling
-        print "y_input: ", y_input
         z_input *= -sampling
-        print "z_input: ", z_input
         f.write("open %s\n" % inputVolFileName)
         f.write("volume #1 style mesh level 0.001 voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n"
                 % (_inputVol.getSamplingRate(), x_input, y_input, z_input))
 
         outputVolFileName = os.path.abspath(self._getVolumeName(_outputVol))
-        print "outputVolFileName: ", outputVolFileName
         # output vol origin coordinates
         x_output, y_output, z_output = self. _getOrigin(_outputVol)
         x_output *= -sampling
-        print "x_output: ", x_output
         y_output *= -sampling
-        print "y_output: ", y_output
         z_output *= -sampling
-        print "z_output: ", z_output
         f.write("open %s\n" % outputVolFileName)
         f.write("volume #2 style surface level 0.001 voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n"
