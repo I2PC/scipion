@@ -128,12 +128,13 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f " % self.expandFactor.get()
         args += " %f " % self.offset.get()
         args += " %f " % self.inputVolumes.get().getSamplingRate()
+        origin = self.inputVolumes.get().getOrigin().getShifts()
         # x origin coordinate
-        args += " %f " % self.inputVolumes.get().getOrigin().getShifts()[0]
+        args += " %f " % origin[0]
         # y origin coordinate
-        args += " %f " % self.inputVolumes.get().getOrigin().getShifts()[1]
+        args += " %f " % origin[1]
         # z origin coordinate
-        args += " %f " % self.inputVolumes.get().getOrigin().getShifts()[2]
+        args += " %f " % origin[2]
 
         self.runJob("xmipp_transform_window", args)
 

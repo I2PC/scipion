@@ -27,11 +27,23 @@
 This sub-package contains data and protocol classes
 wrapping ATSAS programs http://www.embl-hamburg.de/biosaxs/software.html
 """
+from pyworkflow.utils import commandExists
 
 _logo = "atsas_logo.gif"
-
+CRYSOL = "crysol"
 from bibtex import _bibtex # Load bibtex dict with references
 from atsas import *
 from protocol_pdb_to_saxs import AtsasProtConvertPdbToSAXS
 from viewer import AtsasViewer
 
+def validateInstallation():
+    """ This function will be used to check if ATSAS is properly installed. """
+    missingPaths = []
+
+    if not (commandExists(CRYSOL)):
+        missingPaths.append("%s not found in the system" % CRYSOL)
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors

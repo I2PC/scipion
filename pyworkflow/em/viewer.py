@@ -57,13 +57,15 @@ from convert import ImageHandler
 
 import xmipp
 
+# TODO: ROB I think all this imports are not needed. First step toward removing
+# TODO: comment them
 # from viewer_fsc import FscViewer
 # from viewer_pdf import PDFReportViewer
 # from viewer_monitor_summary import ViewerMonitorSummary
 # from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
 # from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
+# from protocol.monitors.protocol_monitor_movie_gain import ProtMonitorMovieGainViewer
 
-# ------------------------ Some common Views ------------------
 
 
 class DataView(View):
@@ -109,38 +111,28 @@ class DataView(View):
 
     def getShowJWebParams(self):
 
-        """
-        ===========OLD SHOWJ WEB DOCUMENTATION=======================
-        Extra parameters can be used to configure table layout and set render
-        function for a column
-        Default layout configuration is set in ColumnLayoutProperties method in
-        layout_configuration.py
-
-        Parameters are formed by: [label]___[property]: [value].
-        E.g.: id___visible:True or micrograph___renderFunc:"get_image_psd"
-        Properties to be configured are:
-            visible: Defines if this column is displayed
-            allowSetVisible: Defines if user can change visible property
-            (show/hide this column).
-            editable: Defines if this column is editable, ie user can change
-            field value.
-            allowSetEditable: Defines if user can change editable property
-            (allow editing this column).
-            renderable: Defines if this column is renderizable, ie it renders
-            data column using renderFunc
-            allowSetRenderable: Defines if user can change renderable property.
-            renderFunc: Function to be used when this field is rendered.
-            (it has to be inserted in render_column method)
-            extraRenderFunc: Any extra parameters needed for rendering.
-            Parameters are passed like in a url ie downsample = 2 &
-            lowPass = 3.5
-
-        Example:
-        extraParameters["id___visible"]=True
-        extraParameters["micrograph___renderFunc"]="get_image_psd"
-        extraParameters["micrograph___extraRenderFunc"]="downsample=2"
-        ========================================================================
-        """
+    # FIXME: Maybe it is time to remove this old commented lines
+    #=OLD SHOWJ WEB DOCUMENTATION===============================================
+    # Extra parameters can be used to configure table layout and set render function for a column
+    # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
+    # 
+    # Parameters are formed by: [label]___[property]: [value]. E.g.: id___visible:True or micrograph___renderFunc:"get_image_psd"
+    # Properties to be configured are:
+    #    visible: Defines if this column is displayed
+    #    allowSetVisible: Defines if user can change visible property (show/hide this column).
+    #    editable: Defines if this column is editable, ie user can change field value.
+    #    allowSetEditable: Defines if user can change editable property (allow editing this column).
+    #    renderable: Defines if this column is renderizable, ie it renders data column using renderFunc
+    #    allowSetRenderable: Defines if user can change renderable property.
+    #    renderFunc: Function to be used when this field is rendered. (it has to be inserted in render_column method)
+    #    extraRenderFunc: Any extra parameters needed for rendering. Parameters are passed like in a url ie downsample=2&lowPass=3.5
+    # 
+    # Example:
+    # extraParameters["id___visible"]=True
+    # extraParameters["micrograph___renderFunc"]="get_image_psd"
+    # extraParameters["micrograph___extraRenderFunc"]="downsample=2"
+    #===========================================================================
+    
         parameters = {
             showj.MODE,  # FOR MODE TABLE OR GALLERY
             showj.VISIBLE,
@@ -226,11 +218,17 @@ class CtfView(ObjectView):
     # All extra labels that we want to show if present in the CTF results
     PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile',
                   '_xmipp_enhanced_psd', '_xmipp_ctfmodel_quadrant',
-                  '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename']
-    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_xmipp_ctfCritFirstZero',
-                    ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
-                    '_xmipp_ctfCritNonAstigmaticValidity',
-                    '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq']
+                  '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
+                 ]
+    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
+                    '_ctffind4_ctfPhaseShift',
+                    '_xmipp_ctfCritFirstZero',
+                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
+                    '_xmipp_ctfCritNonAstigmaticValidty',
+                    '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq',
+                    '_xmipp_ctfCritPsdCorr90'
+                   ]
+
 
     def __init__(self, project, ctfSet, other='', **kwargs):
         first = ctfSet.getFirstItem()
@@ -247,7 +245,8 @@ class CtfView(ObjectView):
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
-                      showj.ZOOM: 50}
+                      showj.ZOOM: 50
+                     }
 
         if psdLabels:
             viewParams[showj.RENDER] = psdLabels

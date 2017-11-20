@@ -25,15 +25,7 @@
 #ifndef _PROG_EVALUATECOORDINATES
 #define _PROG_EVALUATECOORDINATES
 
-#include <data/xmipp_fftw.h>
-#include <data/args.h>
-#include <data/xmipp_funcs.h>
-#include <data/metadata_extension.h>
-#include <data/metadata.h>
-#include <data/xmipp_image.h>
 #include <data/xmipp_program.h>
-#include <vector>
-
 
 class ProgEvaluateCoordinates: public XmippProgram
 {
@@ -49,6 +41,12 @@ public:
 
     /**  Filename of evaluated file with coordinates */
     FileName fnEval;
+    
+    /** Rootname */
+    FileName rootName;
+
+    /**  Number of micrographs */
+    int numMic;
 
     /**  Error margin (toleration of misplacement of object center) */
     int errMargin;
