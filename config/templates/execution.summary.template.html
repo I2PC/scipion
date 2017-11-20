@@ -436,7 +436,7 @@
                 xAxis: {
                     categories: labels,
                     title: {
-                        text: 'Resolution (Å)'
+                        text: 'Resolution (\u212B)'
                     }
                 },
                 yAxis:{
@@ -484,7 +484,7 @@
 //                },
 //                yAxis: {
 //                    title: {
-//                        text: 'Defocus(Å)'
+//                        text: 'Defocus(\u212B)'
 //                    },
 //                    plotLines: [{
 //                        value: 0,
@@ -597,7 +597,7 @@
                 xAxis: {
                     categories: labels,
                     title: {
-                        text: 'Defocus U (μm)'
+                        text: 'Defocus U (\u00B5m)'
                     }
                 },
                 yAxis: yAxis,
@@ -655,7 +655,7 @@
                 }
                 return {'yAxis' : axisIndex,
                         'tooltip':{
-                            'valueSuffix': ' °C'
+                            'valueSuffix': ' \u00B0C'
                             }
                         }
             }else{
@@ -771,7 +771,7 @@
 
             if (hasTempSeries){
                 yAxis.push({title:{
-                                text: 'Temperature (°C)'
+                                text: 'Temperature (\u00B0C)'
                                 },
                             opposite: true
                             })
@@ -864,13 +864,13 @@
             }
             if ('defocusU' in report.ctfData){
                 cols.push({"title": "DefocusU",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'μm' )},
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u00B5m' )},
                            {"title": "Defocus ratio",
                            "render": $.fn.dataTable.render.number( ',', '.', 2 )},
                            {"title": "Astigmatism",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'Å' )},
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u212B' )},
                           {"title": "Resolution",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'Å' )},
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u212B' )},
                           {"title": "CC value",
                            "render": $.fn.dataTable.render.number( ',', '.', 2 )});
             }
