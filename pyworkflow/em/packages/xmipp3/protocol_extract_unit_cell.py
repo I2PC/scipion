@@ -174,4 +174,4 @@ class XmippProtExtractUnit(EMProtocol):
         return self._getExtraPath("output_volume.mrc")
 
     def replace_at_index(self, tup, ix, val):
-        return tup[:ix] + (val,) + tup[ix+1:]
+        return tup[:ix] + (val,) + tup[ix + 1:]
