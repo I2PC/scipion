@@ -137,4 +137,14 @@ class TestPowerFit(TestImportBase):
                 }
         protPower = self.newProtocol(PowerfitProtRigidFit, **args)
         protPower.inputPDB.set(pdb)
-        self.launchProtocol(protPower)
+
+        import traceback
+        try:
+            self.launchProtocol(protPower)
+        except Exception as e:
+            self.assertTrue(True)
+            print "This test should return a error message as '" \
+                  " ERROR running protocol scipion - rigid fit"
+
+            return
+        self.assertTrue(False)

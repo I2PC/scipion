@@ -887,9 +887,10 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 		imageMap2->selfWindow(iMinZ, iMinY, iMinX, iMaxZ, iMaxY, iMaxX, 0.);
 		MDRow MD;
 		out3DDmap.setDataMode(_DATA_ALL);
-		MD.setValue(MDL_SHIFT_X, -(double) iMinX);
-		MD.setValue(MDL_SHIFT_Y, -(double) iMinY);
-		MD.setValue(MDL_SHIFT_Z, -(double) iMinZ);
+		//CCP save routine multiplies by sampling rate
+		MD.setValue(MDL_ORIGIN_X, -(double) (iMinX - x_offset) );
+		MD.setValue(MDL_ORIGIN_Y, -(double) (iMinY - y_offset) );
+		MD.setValue(MDL_ORIGIN_Z, -(double) (iMinZ - z_offset) );
 
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
 

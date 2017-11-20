@@ -139,17 +139,23 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         inputVolFileName = os.path.abspath(self._getVolumeName(_inputVol))
         # input vol origin coordinates
         x_input, y_input, z_input = self. _getOrigin(_inputVol)
+        x_input *= -sampling
+        y_input *= -sampling
+        z_input *= -sampling
         f.write("open %s\n" % inputVolFileName)
-        f.write("volume #1 style mesh level 0.001 voxelSize %f originIndex "
-                "%d,%d,%d\n"
+        f.write("volume #1 style mesh level 0.001 voxelSize %f origin "
+                "%0.2f,%0.2f,%0.2f\n"
                 % (_inputVol.getSamplingRate(), x_input, y_input, z_input))
 
         outputVolFileName = os.path.abspath(self._getVolumeName(_outputVol))
         # output vol origin coordinates
         x_output, y_output, z_output = self. _getOrigin(_outputVol)
+        x_output *= -sampling
+        y_output *= -sampling
+        z_output *= -sampling
         f.write("open %s\n" % outputVolFileName)
-        f.write("volume #2 style surface level 0.001 voxelSize %f originIndex "
-                "%d,%d,%d\n"
+        f.write("volume #2 style surface level 0.001 voxelSize %f origin "
+                "%0.2f,%0.2f,%0.2f\n"
                 % (_outputVol.getSamplingRate(), x_output, y_output, z_output))
 
         cMap = ['red', 'yellow', 'green', 'cyan', 'blue']
