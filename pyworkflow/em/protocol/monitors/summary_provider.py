@@ -88,7 +88,7 @@ class SummaryProvider(TreeProvider):
                                          prot.sphericalAberration.get()),
                                         ("Magnification: ",
                                          prot.magnification.get()),
-                                        ("Pixel Size (\u212B/px): ",
+                                        ("Pixel Size (Å/px): ",
                                          outSet.getSamplingRate())
                                         ]
 
