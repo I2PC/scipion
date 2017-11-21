@@ -967,8 +967,8 @@ __global__ void cart2polar(float *image, float *polar, float *polar2, int maxRad
 	if (radius>=maxRadius || angle>=maxAng)
 		return;
 
-	float x = (float)(radius*cosf((float)(angle*PI/180))) + Xdim/2;
-	float y = (float)(radius*sinf((float)(angle*PI/180))) + Ydim/2;
+	float x = (float)(radius)*cosf((float)angle*(float)PI/180.0f) + (float)Xdim/2.0f;
+	float y = (float)(radius)*sinf((float)angle*(float)PI/180.0f) + (float)Ydim/2.0f;
 
 	float dx_low = floorf(x);
 	float dy_low = floorf(y);
