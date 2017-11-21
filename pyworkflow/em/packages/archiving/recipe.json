@@ -1,0 +1,23 @@
+{
+  "1": [
+    "This a recipe to archive all collected files"
+  ],
+  "1": { "service": "DLS file watcher",
+         "queue": "filewatcher",
+         "parameters": { "files": ["{filePaths}"] },
+         "output": { "finally": 2 }
+       },
+  "2": { "service": "DLS Archiver",
+         "queue": "archive.pattern",
+         "transport-delay": 300,
+         "parameters": { "files": ["{filePaths}"],
+                         "limit-files": 1000,
+                         "dropfile": "{dropfile_override}",
+                         "dropfile-dir": "/dls/tmp/kevin/",
+                         "dropfile-filename": "{ispyb_dcid}-{beamline}-{visit_id}-{timestamp}{multipart}.xml"
+                       }
+       },
+  "start": [
+     [1, []]
+  ]
+}
