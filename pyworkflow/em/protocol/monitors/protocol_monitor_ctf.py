@@ -156,8 +156,8 @@ class MonitorCTF(Monitor):
             defocusV = ctf.getDefocusV()
             #defocusAngle = ctf.getDefocusAngle()
             astig = abs(defocusU - defocusV)
-	    resolution = ctf.getResolution()
-	    fitQuality = ctf.getFitQuality()
+            resolution = ctf.getResolution()
+            fitQuality = ctf.getFitQuality()
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
             shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
@@ -239,7 +239,7 @@ class MonitorCTF(Monitor):
             'ratio': get('ratio'),
             'idValues': get('id'),
             'resolution': get('resolution'),
-	    'fitQuality': get('fitQuality'),
+            'fitQuality': get('fitQuality'),
             'imgMicPath': get('micPath'),
             'imgPsdPath': get('psdPath'),
             'imgShiftPath': get('shiftPlotPath')

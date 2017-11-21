@@ -30,6 +30,20 @@
             left: 30px;
         }
 
+        #modalFooter{
+            font-size: small;
+            color: grey;
+        }
+
+        .sectionTitle{
+            cursor: pointer;
+        }
+
+        .glyphicon {
+            right: 5px;
+            font-size: 20px;
+        }
+
         BODY {
           text-align: center;
           margin: 0px;
@@ -39,7 +53,8 @@
           text-align: left;
           width: 70%%;
           margin: 0 auto;
-        }        
+        }
+
         H1 {
             border-bottom: 2px solid firebrick;
             color: #6E6E6E;
@@ -237,25 +252,26 @@
             </DIV>
 
             <SECTION id="ctf">
-                <H2>CTF monitor</H2>
-                <div class="row">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>CTF monitor</H2>
+                <div class="row sectionContent" id="ctfHistograms">
                     <!--<DIV id="ctfChart" class="column column-7"></DIV>-->
                     <DIV id="resolutionHistogram" class="column column-6"></DIV>
                     <DIV id="defocusHistogram" class="column column-6"></DIV>
                 </div>
             </SECTION>
             <SECTION id="movieGain">
-                <H2>Movie gain monitor</H2>
-                <DIV id="movieGainChart"></DIV>
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>Movie gain monitor</H2>
+                <DIV id="movieGainChart" class="sectionContent"></DIV>
             </SECTION>
             <SECTION id="system">
-                <H2>System monitor</H2>
-                <DIV id="systemChart"></DIV>
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>System monitor</H2>
+                <DIV id="systemChart" class="sectionContent"></DIV>
             </SECTION>
             <SECTION id="mics">
-                <H2>Micrographs</H2>
-                <TABLE id="micTable" class="display" width="100%%"></TABLE>
-                <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>Micrographs</H2>
+                <div class="sectionContent" id="micTableContainer">
+                    <TABLE id="micTable" class="display" width="100%%"></TABLE>
+                    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -264,11 +280,12 @@
                             </div>
                             <div class="modal-body">
                                 <img src="" class="imagepreview" style="width: 100%%;" >
+                                <p id="modalFooter"></p>
                             </div>
                         </div>
                     </div>
                 </div>
-
+                </div>
             </SECTION>
         </DIV>
         
@@ -689,14 +706,15 @@
             for (var serieId in chart.series) {
 
                 var serie = chart.series[serieId];
-                Cookies.set(serie.name, serie.visible);
+//                Cookies.set(serie.name, serie.visible);
+                sessionStorage[serie.name] = serie.visible
             }
         };
 
         function isChartSerieVisible(serieName){
 
-            var visible = Cookies.get(serieName);
-
+//            var visible = Cookies.get(serieName);
+            var visible = sessionStorage[serieName];
             if (visible == undefined)
                 visible = String(true);
 
@@ -863,30 +881,25 @@
                 cols.push({"title":"PsdFile"})
             }
             if ('defocusU' in report.ctfData){
-                cols.push({"title": "DefocusU",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u00B5m' )},
-                           {"title": "Defocus ratio",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2 )},
-                           {"title": "Astigmatism",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u212B' )},
-                          {"title": "Resolution",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u212B' )},
-                          {"title": "CC value",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2 )});
+                cols.push({"title": "DefocusU (\u00B5m)"},
+                          {"title": "Defocus ratio"},
+                          {"title": "Astigmatism (\u212B) "},
+                          {"title": "Resolution (\u212B)"},
+                          {"title": "CC value "});
             }
-            var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="{0}"></a></div>';
+            var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
             var imgWidth = Math.floor($('#content').width() * 0.2);
 
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
-                var rowValues = [report.ctfData.micId[index], imgHtml.format(imgMicPath, imgWidth)];
+                var rowValues = [report.ctfData.micId[index], imgHtml.format(imgMicPath, imgWidth, report.ctfData.micId[index])];
                 if('imgShiftThumbs' in report.ctfData){
                     var shiftPlotPath = report.ctfData.imgShiftThumbs[index];
-                    rowValues.push(imgHtml.format(shiftPlotPath,imgWidth));
+                    rowValues.push(imgHtml.format(shiftPlotPath,imgWidth, report.ctfData.micId[index]));
                 }
 
                 if('imgPsdThumbs' in report.ctfData){
                     var psdThumbPath = report.ctfData.imgPsdThumbs[index];
-                    rowValues.push(imgHtml.format(psdThumbPath,imgWidth));
+                    rowValues.push(imgHtml.format(psdThumbPath,imgWidth, report.ctfData.micId[index]));
                 }
 
                 if ('defocusU' in report.ctfData){
@@ -936,16 +949,10 @@
             $('#modal').on('show.bs.modal', function (e) {
                 var $invoker = $(e.relatedTarget);
                 $('.imagepreview').attr('src', $invoker.find('img').attr('src'));
-                var titleMaxLen = 55;
                 var title = $invoker.find('img').attr('alt');
-                if (title.length > titleMaxLen){
-                    // if long path, remove middle characters to keep title inside modal
-                    var titleRmChars = (title.length - titleMaxLen)/2;
-                    title = title.slice(0, title.length/2 - titleRmChars) +
-                            ' ... ' +
-                            title.slice(title.length/2 + titleRmChars, title.length)
-
-                }
+                var footer = $invoker.find('img').attr('src');
+                footer = footer.slice(footer.indexOf('/')+1, footer.length);
+                $('#modalFooter').text(footer);
                 $('.modal-title').text(title);
                 if ($("#refreshBtn").hasClass('btn-info')) {
                     refreshPaused = true
@@ -981,15 +988,38 @@
             $(window).scroll(function() {
                 sessionStorage.scrollTop = $(this).scrollTop();
             });
-            if (sessionStorage.scrollTop != "undefined") {
+            if (sessionStorage.scrollTop != undefined) {
               $(window).scrollTop(sessionStorage.scrollTop);
             }
         }
 
+        function handleSectionToggle(){
+            // toggle visibility when clicking on section title
+            $('.sectionTitle').click(function(){
+                $(this).children('.glyphicon').toggleClass('glyphicon-triangle-right glyphicon-triangle-bottom');
+                var $sectionContent = $(this).siblings('.sectionContent');
+                var divId = $sectionContent.attr('id');
+                $sectionContent.slideToggle('fast', function(){
+                   sessionStorage[divId] = $sectionContent.css('display');
+                });
+            });
+            // get stored section visibilities to keep user choice after refresh
+            $('.sectionContent').each(function(){
+                var sectionId = $(this).attr('id');
+                if (sectionId in sessionStorage){
+                    $(this).css('display', sessionStorage[sectionId])
+                    if ($(this).is(':hidden')){
+                        var $glyph = $(this).siblings().find('.glyphicon');
+                        $glyph.toggleClass('glyphicon-triangle-right glyphicon-triangle-bottom');
+                    }
+                }
+            })
+        }
 
         $(document).ready(function() {
             registerModalEvents();
             handleRefresh();
+            handleSectionToggle();
         })
 
 
