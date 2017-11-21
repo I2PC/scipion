@@ -327,12 +327,13 @@ public:
 	}
 
 	template <typename T1>
-	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle, myStreamHandle &myStream);
+	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle, myStreamHandle &myStream,
+			bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &dataRef);
 
 	// RealSpace must already be resized
 	template <typename T1>
 	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle, myStreamHandle &myStream,
-			bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &data);
+			bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &dataExp);
 
 	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
 

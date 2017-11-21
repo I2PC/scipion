@@ -3,6 +3,7 @@
 #include "cuda_xmipp_utils.h"
 #include "cuda_utils.h"
 
+#include <cuda_runtime.h>
 #include <cufft.h>
 #include <cufftXt.h>
 #include <cuComplex.h>
@@ -15,8 +16,8 @@
 struct ioTime *mytimes;
 
 struct pointwiseMult{
-	float normFactor;
-	cufftComplex *experimental;
+	int normFactor;
+	cufftComplex *data;
 };
 
 void mycufftDestroy(void *ptr)
@@ -227,33 +228,62 @@ void cuda_check_gpu_properties(int* grid)
 }
 
 
-__device__ cufftComplex CB_pointwiseMultiplicationComplexKernel(void *dataIn, size_t offset,
+__device__ cufftComplex CB_pointwiseMultiplicationComplexKernelLoad(void *dataIn, size_t offset,
 		void *callerInfo, void *sharedPtr)
 {
 
+	//printf("INSIDEEEE IFFT\n");
+	pointwiseMult *myData = (pointwiseMult*)callerInfo;
+
 	cufftComplex reference = ((cufftComplex*)dataIn)[offset];
+	cufftComplex *mask = (cufftComplex*)myData->data;
 
-	pointwiseMult *data = (pointwiseMult*)callerInfo;
-	cufftComplex *experimental = (cufftComplex*)data->experimental;
+	int normFactor = myData->normFactor;
+	int indexM = offset%normFactor;
 
-	float normFactor = data->normFactor;
-	cufftComplex nF;
-	nF.x = normFactor;
-	nF.y = 0.0;
+	float factor = 1.0f / normFactor;
 
-	cufftComplex mulOut = cuCmulf((cuComplex)reference, (cuComplex)experimental[offset]);
-	cufftComplex out = cuCmulf((cuComplex)mulOut, (cuComplex)nF);
+	cufftComplex mulOut = cuCmulf((cuComplex)reference, (cuComplex)mask[indexM]);
+	cufftComplex out;
+	out.x = mulOut.x*factor;
+	out.y = mulOut.y*factor;
+
+	//if(offset>9000 && offset<9100)
+	//	printf("offset %i, mask %f, data %f, mul %f, factor %f\n", offset, mask[indexM].x, reference.x, out.x, factor);
+
 	return out;
 }
+__device__ cufftCallbackLoadC d_pointwiseMultiplicationComplexKernelLoad = CB_pointwiseMultiplicationComplexKernelLoad;
 
-__device__ cufftCallbackLoadC d_pointwiseMultiplicationComplexKernel = CB_pointwiseMultiplicationComplexKernel;
 
+
+__device__ void CB_pointwiseMultiplicationComplexKernelStore(void *dataOut, size_t offset, cufftComplex element,
+		void *callerInfo, void *sharedPtr)
+{
+
+	pointwiseMult *myData = (pointwiseMult*)callerInfo;
+
+	cufftComplex *mask = myData->data;
+	int normFactor = myData->normFactor;
+	int indexM = offset%normFactor;
+
+	float factor = 1.0f / normFactor;
+
+	cufftComplex mulOut = cuCmulf((cuComplex)element, (cuComplex)mask[indexM]);
+	cufftComplex out;
+	out.x = mulOut.x*factor;
+	out.y = mulOut.y*factor;
+	((cufftComplex*)dataOut)[offset] = out;
+
+}
+__device__ cufftCallbackStoreC d_pointwiseMultiplicationComplexKernelStore = CB_pointwiseMultiplicationComplexKernelStore;
 
 
 template<>
 template<>
 void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float> > &fourierTransform,
-		mycufftHandle &myhandle, myStreamHandle &myStream)
+		mycufftHandle &myhandle, myStreamHandle &myStream, bool useCallback,
+		GpuMultidimArrayAtGpu< std::complex<float> > &dataMask)
 {
 
 	int Xfdim=(Xdim/2)+1;
@@ -268,6 +298,8 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 	int aux=Ndim;
 
 	auxNdim=Ndim;
+
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 
 	if(myhandle.ptr!=NULL)
 		NdimNew = Ndim;
@@ -288,6 +320,7 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr, myStream);
 		}else{
 			if(myhandle.ptr == NULL){
+				printf("Creating plan FFT\n");
 				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr, myStream);
 				myhandle.ptr = (void *)planFptr;
 				planFptr=(cufftHandle *)myhandle.ptr;
@@ -295,6 +328,36 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 				planFptr=(cufftHandle *)myhandle.ptr;
 			}
 		}
+
+		//AJ using callbacks
+		if(useCallback){
+
+			pointwiseMult *dataCB;
+			gpuErrchk(cudaMallocHost((void **)&dataCB, sizeof(pointwiseMult)));
+			dataCB->normFactor = fourierTransform.yxdim;
+			dataCB->data = (cufftComplex*)dataMask.d_data;
+
+			printf("Using callbacks %i \n", dataCB->normFactor);
+			fflush(stdout);
+
+			// Allocate device memory for parameters
+			pointwiseMult *d_params;
+			gpuErrchk(cudaMalloc((void **)&d_params, sizeof(pointwiseMult)));
+
+			// Copy host memory to device
+			gpuErrchk(cudaMemcpyAsync(d_params, dataCB, sizeof(pointwiseMult), cudaMemcpyHostToDevice, *stream));
+
+			cufftCallbackStoreC h_pointwiseMultiplicationComplexKernel;
+			gpuErrchk(cudaMemcpyFromSymbolAsync(&h_pointwiseMultiplicationComplexKernel,
+												d_pointwiseMultiplicationComplexKernelStore,
+												sizeof(h_pointwiseMultiplicationComplexKernel), 0, cudaMemcpyDeviceToHost, *stream));
+
+			cufftResult status = cufftXtSetCallback(*planFptr,
+									(void **)&h_pointwiseMultiplicationComplexKernel,
+									CUFFT_CB_ST_COMPLEX,
+									(void **)&d_params);
+		}
+		//END AJ
 
 		if(auxNdim==NdimNew){
 			if(NdimNew!=Ndim){
@@ -310,8 +373,6 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			}
 		}
 
-		cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
-		gpuErrchk(cudaStreamSynchronize(*stream));
 
 		if(NdimNew!=Ndim){
 			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftComplex), myStream);
@@ -330,6 +391,9 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 		if(auxNdim!=NdimNew && NdimNew!=0)
 			cufftDestroy(*planAuxFptr);
 
+
+		gpuErrchk(cudaStreamSynchronize(*stream));
+
 	}//AJ end while
 
 }
@@ -337,7 +401,8 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 template<>
 template<>
 void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<float> &realSpace,
-		mycufftHandle &myhandle, myStreamHandle &myStream, bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &data)
+		mycufftHandle &myhandle, myStreamHandle &myStream, bool useCallback,
+		GpuMultidimArrayAtGpu< std::complex<float> > &dataMask)
 {
 
 	int Xfdim=(realSpace.Xdim/2)+1;
@@ -351,6 +416,8 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 	int aux=realSpace.Ndim;
 
 	auxNdim=realSpace.Ndim;
+
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 
 	if(myhandle.ptr!=NULL)
 		NdimNew = Ndim;
@@ -371,6 +438,7 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, false, planAuxBptr, myStream);
 		}else{
 			if(myhandle.ptr == NULL){
+				printf("Creating plan IFFT\n");
 				createPlanFFT(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr, myStream);
 				myhandle.ptr = (void *)planBptr;
 				planBptr=(cufftHandle *)myhandle.ptr;
@@ -381,19 +449,29 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 
 		//AJ using callbacks
 		if(useCallback){
-			pointwiseMult dataCB;
-			dataCB.normFactor = data.yxdim;
-			dataCB.experimental = (cufftComplex*)data.d_data;
+			printf("Using callbacks\n");
+			pointwiseMult *dataCB;
+			gpuErrchk(cudaMallocHost((void **)&dataCB, sizeof(pointwiseMult)));
+			dataCB->normFactor = dataMask.yxdim;
+			dataCB->data = (cufftComplex*)dataMask.d_data;
 
-			cufftCallbackLoadR h_pointwiseMultiplicationComplexKernel;
-			gpuErrchk(cudaMemcpyFromSymbol(&h_pointwiseMultiplicationComplexKernel,
-												d_pointwiseMultiplicationComplexKernel,
-												sizeof(h_pointwiseMultiplicationComplexKernel)));
+			// Allocate device memory for parameters
+			pointwiseMult *d_params;
+			gpuErrchk(cudaMalloc((void **)&d_params, sizeof(pointwiseMult)));
+
+			// Copy host memory to device
+			gpuErrchk(cudaMemcpyAsync(d_params, dataCB, sizeof(pointwiseMult), cudaMemcpyHostToDevice, *stream));
+
+
+			cufftCallbackLoadC h_pointwiseMultiplicationComplexKernel;
+			gpuErrchk(cudaMemcpyFromSymbolAsync(&h_pointwiseMultiplicationComplexKernel,
+												d_pointwiseMultiplicationComplexKernelLoad,
+												sizeof(h_pointwiseMultiplicationComplexKernel), 0, cudaMemcpyDeviceToHost, *stream));
 
 			cufftResult status = cufftXtSetCallback(*planBptr,
 									(void **)&h_pointwiseMultiplicationComplexKernel,
 									CUFFT_CB_LD_COMPLEX,
-									(void **)&dataCB);
+									(void **)&d_params);
 		}
 		//END AJ
 
@@ -411,7 +489,6 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 			}
 		}
 
-		cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 		gpuErrchk(cudaStreamSynchronize(*stream));
 
 		if(NdimNew!=Ndim){

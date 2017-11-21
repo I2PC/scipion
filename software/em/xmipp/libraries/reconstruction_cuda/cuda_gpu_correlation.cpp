@@ -329,42 +329,119 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 
 }
 
+__global__ void pointwiseMultiplicationComplexOneManyKernel_three(cufftComplex *M,
+		cufftComplex *manyF, cufftComplex *MmanyF, cufftComplex *manyF_sq, cufftComplex *MmanyF_sq,
+		cufftComplex *maskAux, int nzyxdim, int yxdim, int ndim, bool power2)
+{
 
+	//change size_t to int
+	//change unsigned.... to int but check it before
+	int idx = threadIdx.x;
+	int nIm = blockIdx.x;
+	int blockSize = blockDim.x;
+
+	int posTh = nIm*yxdim + idx;
+	int n = ceilf(((float)yxdim/(float)blockSize));
+
+	if (idx>=yxdim)
+		return;
+
+	float normFactor = 1.0f/yxdim;
+
+	int myIdx = posTh;
+	int myIdxMask = idx;
+
+	cufftComplex myM = M[myIdxMask];
+	cuComplex mulOut = cuCmulf(manyF[myIdx], myM);
+	cuComplex mulOut_sq = cuCmulf(manyF_sq[myIdx], myM);
+
+	MmanyF[myIdx] = mulOut*normFactor;
+	MmanyF_sq[myIdx] = mulOut_sq*normFactor;
+	if(nIm==0)
+		maskAux[myIdx] = cuCmulf(myM, myM)*normFactor;
+
+	myIdx+=blockSize;
+	myIdxMask+=blockSize;
+
+	for (int i=1; i<n; i++){
+
+		if (posTh+i*blockSize < yxdim*(nIm+1)){
+
+			myM = M[myIdxMask];
+			mulOut = cuCmulf(manyF[myIdx], myM);
+			mulOut_sq = cuCmulf(manyF_sq[myIdx], myM);
+			//more operations for one thread and lower number of threads???
+			//every th working with N images
+			//in this way we are able to use registers memory for M, but no shared
+			//to use shared memory has sense when the whole block th will read several times the same memory positions
+			//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
+
+			MmanyF[myIdx] = mulOut*normFactor;
+			MmanyF_sq[myIdx] = mulOut_sq*normFactor;
+			if(nIm==0)
+				maskAux[myIdx] = cuCmulf(myM, myM)*normFactor;
+
+			myIdx+=blockSize;
+			myIdxMask+=blockSize;
+
+		}
+	}
+}
 
 
 __global__ void pointwiseMultiplicationComplexOneManyKernel_two(cufftComplex *M,
 		cufftComplex *manyF, cufftComplex *MmanyF, cufftComplex *manyF_sq, cufftComplex *MmanyF_sq,
-		int nzyxdim, int yxdim, bool power2)
+		int nzyxdim, int yxdim, int ndim, bool power2)
 {
-
-	//extern __shared__ float sdata[];
 
 	//change size_t to int
 	//change unsigned.... to int but check it before
-	int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	int idxLow;
-	if (power2==true)
-		idxLow = idx & (yxdim-1);
-	else
-		idxLow = idx%yxdim;
+	int idx = threadIdx.x;
+	int nIm = blockIdx.x;
+	int blockSize = blockDim.x;
 
-	//check if yxdim is power of 2 in cpu and put here some flag to avoid the % operation and change it to bitwise operation
+	int posTh = nIm*yxdim + idx;
+	int n = ceilf(((float)yxdim/(float)blockSize));
 
-	if (idx>=nzyxdim)
+	if (idx>=yxdim)
 		return;
 
-	float normFactor = (1.0f/yxdim);
+	float normFactor = 1.0f/yxdim;
 
-	cuComplex mulOut = cuCmulf(manyF[idx], M[idxLow]);
-	cuComplex mulOut_sq = cuCmulf(manyF_sq[idx], M[idxLow]);
-	//more operations for one thread and lower number of threads???
-	//every th working with N images
-	//in this way we are able to use registers memory for M, but no shared
-	//to use shared memory has sense when the whole block th will read several times the same memory positions
-	//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
+	int myIdx = posTh;
+	int myIdxMask = idx;
 
-	MmanyF[idx] = mulOut*normFactor;
-	MmanyF_sq[idx] = mulOut_sq*normFactor;
+	cufftComplex myM = M[myIdxMask];
+	cuComplex mulOut = cuCmulf(manyF[myIdx], myM);
+	cuComplex mulOut_sq = cuCmulf(manyF_sq[myIdx], myM);
+
+	MmanyF[myIdx] = mulOut*normFactor;
+	MmanyF_sq[myIdx] = mulOut_sq*normFactor;
+
+	myIdx+=blockSize;
+	myIdxMask+=blockSize;
+
+	for (int i=1; i<n; i++){
+
+		if (posTh+i*blockSize < yxdim*(nIm+1)){
+
+			myM = M[myIdxMask];
+			mulOut = cuCmulf(manyF[myIdx], myM);
+			mulOut_sq = cuCmulf(manyF_sq[myIdx], myM);
+			//more operations for one thread and lower number of threads???
+			//every th working with N images
+			//in this way we are able to use registers memory for M, but no shared
+			//to use shared memory has sense when the whole block th will read several times the same memory positions
+			//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
+
+			MmanyF[myIdx] = mulOut*normFactor;
+			MmanyF_sq[myIdx] = mulOut_sq*normFactor;
+
+			myIdx+=blockSize;
+			myIdxMask+=blockSize;
+
+		}
+	}
 }
 
 
@@ -399,6 +476,7 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftComplex *M, cuf
 	//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
 
 	MmanyF[idx] = mulOut*normFactor;
+
 }
 
 //NOW WE DONT USE THIS KERNEL
@@ -1142,6 +1220,55 @@ void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<fl
 
 }
 
+void pointwiseMultiplicationFourier_two(const GpuMultidimArrayAtGpu< std::complex<float> > &M,
+		const GpuMultidimArrayAtGpu < std::complex<float> >& manyF,
+		GpuMultidimArrayAtGpu< std::complex<float> > &MmanyF,
+		const GpuMultidimArrayAtGpu < std::complex<float> >& manyF_sq,
+		GpuMultidimArrayAtGpu< std::complex<float> > &MmanyF_sq,
+		myStreamHandle &myStream)
+{
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
+    int numTh = 1024;
+    int numBlk = manyF.Ndim;
+
+    bool power2;
+    if (manyF.yxdim & (manyF.yxdim-1))
+    	power2 = false;
+    else
+    	power2 = true;
+
+    pointwiseMultiplicationComplexOneManyKernel_two <<< numBlk, numTh, 0, *stream >>>
+			((cufftComplex*)M.d_data, (cufftComplex*)manyF.d_data, (cufftComplex*) MmanyF.d_data,
+					(cufftComplex*)manyF_sq.d_data, (cufftComplex*) MmanyF_sq.d_data,
+					manyF.nzyxdim, manyF.yxdim, manyF.Ndim, power2);
+
+}
+
+void pointwiseMultiplicationFourier_three(const GpuMultidimArrayAtGpu< std::complex<float> > &M,
+		const GpuMultidimArrayAtGpu < std::complex<float> >& manyF,
+		GpuMultidimArrayAtGpu< std::complex<float> > &MmanyF,
+		const GpuMultidimArrayAtGpu < std::complex<float> >& manyF_sq,
+		GpuMultidimArrayAtGpu< std::complex<float> > &MmanyF_sq,
+		myStreamHandle &myStream,
+		GpuMultidimArrayAtGpu< std::complex<float> > &maskAux)
+{
+	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
+    int numTh = 1024;
+    int numBlk = manyF.Ndim;
+
+    bool power2;
+    if (manyF.yxdim & (manyF.yxdim-1))
+    	power2 = false;
+    else
+    	power2 = true;
+
+    pointwiseMultiplicationComplexOneManyKernel_three <<< numBlk, numTh, 0, *stream >>>
+			((cufftComplex*)M.d_data, (cufftComplex*)manyF.d_data, (cufftComplex*) MmanyF.d_data,
+					(cufftComplex*)manyF_sq.d_data, (cufftComplex*) MmanyF_sq.d_data,
+					(cufftComplex*) maskAux.d_data,
+					manyF.nzyxdim, manyF.yxdim, manyF.Ndim, power2);
+
+}
 
 /*
 void calculateDenomFunction(const GpuMultidimArrayAtGpu< float > &MFrealSpace, const GpuMultidimArrayAtGpu < float >& MF2realSpace,
@@ -1169,9 +1296,13 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 {
 	myStructureAux.MF.resize(d_projFFT);
 	myStructureAux.MF2.resize(d_projSquaredFFT);
+	GpuMultidimArrayAtGpu< std::complex<float> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
 
-	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
-	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
+	//pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
+	//pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
+
+	pointwiseMultiplicationFourier_three(d_maskFFT, d_projFFT, myStructureAux.MF, d_projSquaredFFT,
+			myStructureAux.MF2, myStream, maskAux);
 
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
@@ -1181,8 +1312,7 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream, false, dull);
 	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream, false, dull);
 
-	GpuMultidimArrayAtGpu< std::complex<float> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
-	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux, myStream);
+	//pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux, myStream);
 	maskAutocorrelation.resize(Xdim, Ydim);
 	maskAux.ifft(maskAutocorrelation, myhandleMaskB, myStream, false, dull);
 	maskAux.clear();
@@ -1199,8 +1329,11 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	myStructureAux.MF2.resize(d_projSquaredFFT);
 
 	//TODO everything managed by just one kernel??
-	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
-	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
+	//pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
+	//pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
+
+	pointwiseMultiplicationFourier_two(d_maskFFT, d_projFFT, myStructureAux.MF, d_projSquaredFFT,
+			myStructureAux.MF2, myStream);
 
 	GpuMultidimArrayAtGpu< std::complex<float> > dull;
 
@@ -1211,6 +1344,33 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream, false, dull);
 
 	maskAutocorr.copyGpuToGpu(maskAutocorrelation, myStream);
+
+}
+
+
+void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB,
+		StructuresAux &myStructureAux, GpuMultidimArrayAtGpu<float> &maskAutocorr, myStreamHandle &myStream,
+		bool skip, mycufftHandle &ifftcb)
+{
+
+	//myStructureAux.MF.resize(d_projFFT);
+	//myStructureAux.MF2.resize(d_projSquaredFFT);
+
+	//TODO everything managed by just one kernel??
+	//pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
+	//d_projFFT.copyGpuToGpu(myStructureAux.MF, myStream);
+	//pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
+
+	GpuMultidimArrayAtGpu< std::complex<float> > dull;
+
+	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+
+	d_projFFT.ifft(MFrealSpace, ifftcb, myStream, true, d_maskFFT);
+	d_projSquaredFFT.ifft(MF2realSpace, ifftcb, myStream, true, d_maskFFT);
+
+	maskAutocorr.copyGpuToGpu(maskAutocorrelation, myStream);
+
 
 }
 
@@ -1681,6 +1841,7 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
     myStructureAuxTR.RefExpFourier.ifft(myStructureAuxTR.RefExpRealSpace, myhandlePaddedTR, myStreamTR, false, dull);
 
     myStructureAuxRT.RefExpFourierPolar.ifft(myStructureAuxRT.RefExpRealSpacePolar, myhandlePaddedRT, myStreamRT, false, dull);
+    //referenceAux.d_projPolarFFT.ifft(myStructureAuxRT.RefExpRealSpacePolar, ifftcb, myStreamRT, true, experimentalAuxRT.d_projPolarFFT);
 
 
 

@@ -48,6 +48,7 @@ public:
 
 	void produceSideInfo(mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, StructuresAux &myStructureAux, myStreamHandle &myStream);
 	void produceSideInfo(mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, StructuresAux &myStructureAux, GpuMultidimArrayAtGpu<float> &maskAutocorr, myStreamHandle &myStream);
+	void produceSideInfo(mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, StructuresAux &myStructureAux, GpuMultidimArrayAtGpu<float> &maskAutocorr, myStreamHandle &myStream, bool skip, mycufftHandle &ifftcb);
 };
 
 
