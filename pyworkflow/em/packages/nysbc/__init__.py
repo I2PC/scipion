@@ -31,7 +31,7 @@ _logo = "nysbc_logo.png"
 _references = ['tan2017']
 
 from protocol_3dfsc import Prot3DFSC
-from viewer_3dfsc import ThreedFscViewer
+from viewer import ThreedFscViewer
 
 
 _environ = getEnviron()

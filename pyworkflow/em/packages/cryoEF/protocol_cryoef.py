@@ -96,7 +96,7 @@ class ProtCryoEF(ProtAnalysis3D):
                       expertLevel=LEVEL_ADVANCED,
                       help='B-factor estimate for your data, if one was '
                            'estimated for the 3D reconstruction.')
-        form.addParam('FSCres', params.IntParam, default=-1,
+        form.addParam('FSCres', params.FloatParam, default=-1,
                       label='FSC resolution (A)',
                       expertLevel=LEVEL_ADVANCED,
                       help='FSC resolution using 0.143 criterion. '

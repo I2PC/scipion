@@ -32,7 +32,7 @@ _references = ['naydenova2017']
 
 from protocol_cryoef import ProtCryoEF
 from convert import *
-from viewer_cryoef import CryoEFViewer
+from viewer import CryoEFViewer
 from wizard import cryoEFMaskDiameterWizard
 
 
