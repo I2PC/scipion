@@ -44,6 +44,8 @@ import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import MODE_RESTART
 
+OBJECT_PARENT_ID = 'object_parent_id'
+
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
@@ -409,7 +411,7 @@ class Project(object):
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition:
+        3. Call the launch method in protocol.job to handle submission:
            mpi, thread, queue,
         and also take care if the execution is remotely."""
 
@@ -867,7 +869,10 @@ class Project(object):
                         # This case is similar to Pointer, but the values
                         # is a list and we will setup a pointer for each value
                         elif isinstance(attr, pwobj.PointerList):
-                            for value in protDict[paramName]:
+                            attribute = protDict[paramName]
+                            if attribute is None:
+                                continue
+                            for value in attribute:
                                 p = pwobj.Pointer()
                                 _setPointer(p, value)
                                 attr.append(p)
@@ -1119,7 +1124,14 @@ class Project(object):
                 g.aliasNode(node, p2.getUniqueId())
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            # Duplicated ...
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
+
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
 
@@ -1215,7 +1227,12 @@ class Project(object):
         objectsDict = {}
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
 

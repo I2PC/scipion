@@ -26,6 +26,8 @@
 
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
+from pyworkflow.em.packages.grigoriefflab import \
+    validateMagDistorsionInstallation
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.protocol import EMProtocol
 from convert import parseMagCorrInput, unDistortCoord
@@ -38,6 +40,17 @@ class ProtMagDistCorrCoord(EMProtocol):
     """
     _label = 'mag distortion correction (coords)'
     _lastUpdateVersion = VERSION_1_1
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        Can't rely on package function since this is a "multi package" package
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        return validateMagDistorsionInstallation()
+
     # --------------------------- DEFINE params functions ----------------------
 
     def _defineParams(self, form):

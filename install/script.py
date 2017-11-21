@@ -465,17 +465,14 @@ env.addPackage('spider', version='21.13',
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
 
-env.addPackage('motioncor2', version='16.03.16',
-               tar='motioncor2_03162016.tgz')
-
-env.addPackage('motioncor2', version='16.10.19',
-               tar='motioncor2_10192016.tgz')
-
 env.addPackage('motioncor2', version='17.01.30',
                tar='motioncor2_01302017.tgz')
 
 env.addPackage('motioncor2', version='1.0.0',
                tar='motioncor2_1.0.0.tgz')
+
+env.addPackage('motioncor2', version='1.0.2',
+               tar='motioncor2-1.0.2.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')

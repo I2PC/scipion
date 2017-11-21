@@ -186,6 +186,7 @@ class ProtMonitorSummary(ProtMonitor):
                 htmlFinished = reportHtml.generate(finished)
                 if sysMonitorFinished and htmlFinished:
                     finished = True
+                    reportHtml.generate(finished)
 
             except Exception as ex:
                 print("An error happened: %s" % ex)

@@ -64,6 +64,21 @@ class ProtMotionCorr(ProtAlignMovies):
         ProtAlignMovies.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
 
+    def isSemVersion(self):
+        """ Return True if it is a semantic version of motioncor2.
+        It started with release 1.0.0.
+        """
+        return getVersion('MOTIONCOR2').startswith('1.0.')
+
+    def isLatestVersion(self):
+        return getVersion('MOTIONCOR2') == '1.0.2'
+
+    def _getConvertExtension(self, filename):
+        """ Check wether it is needed to convert to .mrc or not """
+        ext = pwutils.getExt(filename).lower()
+        print "_getConvertExtension: ", ext
+        return None if ext in ['.mrc', '.mrcs', '.tiff', '.tif'] else 'mrc'
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         form.addParam('gpuMsg', params.LabelParam, default=True,
@@ -121,7 +136,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                     """)
 
         form.addSection(label="Motioncor2")
-        form.addParam('useMotioncor2', params.BooleanParam, default=False,
+        form.addParam('useMotioncor2', params.BooleanParam, default=True,
                       label='Use motioncor2',
                       help='Use new *motioncor2* program with local '
                            'patch-based motion correction and dose weighting.')
@@ -138,6 +153,15 @@ class ProtMotionCorr(ProtAlignMovies):
                                  'correction.')
         line.addParam('patchX', params.IntParam, default=5, label='X')
         line.addParam('patchY', params.IntParam, default=5, label='Y')
+
+        if self.isLatestVersion():
+            form.addParam('patchOverlap', params.IntParam, default=0,
+                          label='Patches overlap (%)',
+                          help="Specify the overlapping between adjacent "
+                               "patches. \nFor example, overlap=20 means that "
+                               "each patch will have a 20% overlapping with "
+                               "its neighboring patches in each dimension. \n"
+                               "Note: NEW in version 1.0.1")
 
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
@@ -191,7 +215,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                 'Also, make sure MOTIONCOR2_CUDA_LIB or '
                                 'CUDA_LIB point to cuda-8.0/lib path')
 
-        if getVersion('MOTIONCOR2') in ['1.0.0']:
+        if self.isSemVersion():
             form.addParam('defectFile', params.FileParam, allowsNull=True,
                           expertLevel=cons.LEVEL_ADVANCED,
                           condition='useMotioncor2',
@@ -204,7 +228,8 @@ class ProtMotionCorr(ProtAlignMovies):
                                'coordinates, width, and height, respectively.')
 
         form.addParam('extraParams2', params.StringParam, default='',
-                      expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      condition='useMotioncor2',
                       label='Additional parameters',
                       help="""Extra parameters for motioncor2\n
         -Bft       100        BFactor for alignment, in px^2.
@@ -236,7 +261,7 @@ class ProtMotionCorr(ProtAlignMovies):
         # Since only runs on GPU, do not allow neither threads nor mpi
         form.addParallelSection(threads=1, mpi=1)
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
         movieFolder = self._getOutputMovieFolder(movie)
@@ -245,7 +270,7 @@ class ProtMotionCorr(ProtAlignMovies):
         outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
                                          movieFolder)
         movieBaseName = pwutils.removeExt(movie.getFileName())
-        aveMicFn =  movieBaseName + '_uncorrected_avg.mrc'
+        aveMicFn = movieBaseName + '_uncorrected_avg.mrc'
         logFile = self._getRelPath(self._getMovieLogFile(movie),
                                    movieFolder)
 
@@ -270,7 +295,8 @@ class ProtMotionCorr(ProtAlignMovies):
                         }
 
             args = '"%s" ' % movie.getBaseName()
-            args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
+            args += ' '.join(
+                ['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
                 args += ' -fgr "%s"' % inputMovies.getGain()
@@ -321,9 +347,15 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
-            if getVersion('MOTIONCOR2') in ['1.0.0']:
+            if self.isSemVersion():
                 if self.defectFile.get():
                     argsDict['-DefectFile'] = self.defectFile.get()
+
+                # From version 1.0.1
+                if self.isLatestVersion():
+                    patchOverlap = self.getAttributeValue('patchOverlap', None)
+                    if patchOverlap: # 0 or None is False
+                        argsDict['-Patch'] += " %d" % patchOverlap
 
             if self._supportsMagCorrection() and self.doMagCor:
                 if self.useEst:
@@ -332,22 +364,33 @@ class ProtMotionCorr(ProtAlignMovies):
                         input_params = parseMagCorrInput(inputEst)
                         # this version uses stretch parameters as following:
                         # 1/maj, 1/min, -angle
-                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (1.0 / input_params[1],
-                                                                  1.0 / input_params[2],
-                                                                  -1 * input_params[0])
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (
+                            1.0 / input_params[1],
+                            1.0 / input_params[2],
+                            -1 * input_params[0])
                     else:
                         # While motioncor2 >=1.0.0 uses estimation params AS IS
                         input_params = parseMagEstOutput(inputEst)
-                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (input_params[1],
-                                                                  input_params[2],
-                                                                  input_params[0])
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (
+                            input_params[1],
+                            input_params[2],
+                            input_params[0])
                 else:
                     argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj,
                                                               self.scaleMin,
                                                               self.angDist)
 
-            args = ' -InMrc "%s" ' % movie.getBaseName()
-            args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
+            ext = pwutils.getExt(movie.getFileName()).lower()
+
+            if ext in ['.mrc', '.mrcs']:
+                args = ' -InMrc "%s" ' % movie.getBaseName()
+            elif ext in ['.tif', '.tiff']:
+                args = ' -InTiff "%s" ' % movie.getBaseName()
+            else:
+                raise Exception("Unsupported format: %s" % ext)
+
+            args += ' '.join(['%s %s' % (k, v)
+                              for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
                 args += ' -Gain "%s" ' % inputMovies.getGain()
@@ -383,11 +426,12 @@ class ProtMotionCorr(ProtAlignMovies):
 
             if self._doComputeMicThumbnail():
                 self.computeThumbnail(outMicFn,
-                                      outputFn=self._getOutputMicThumbnail(movie))
+                                      outputFn=self._getOutputMicThumbnail(
+                                          movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getName())
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
         return summary
@@ -405,7 +449,7 @@ class ProtMotionCorr(ProtAlignMovies):
         cudaLib = getCudaLib(useMC2=self.useMotioncor2)
         cudaConst = (MOTIONCOR2_CUDA_LIB if self.useMotioncor2 else
                      MOTIONCORR_CUDA_LIB)
-        
+
         if cudaLib is None:
             errors.append("Do not know where to find CUDA lib path. "
                           " %s or %s variables have None value or are not"
@@ -459,7 +503,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         return errors
 
-    #--------------------------- UTILS functions ------------------------------
+    # --------------------------- UTILS functions ------------------------------
     def _getMovieLogFile(self, movie):
         if not self.useMotioncor2:
             return 'micrograph_%06d_Log.txt' % movie.getObjId()
@@ -512,7 +556,8 @@ class ProtMotionCorr(ProtAlignMovies):
             mic.psdCorr = em.Image(location=self._getPsdCorr(movie))
             mic.psdJpeg = em.Image(location=self._getPsdJpeg(movie))
         if self._doComputeMicThumbnail():
-            mic.thumbnail = em.Image(location=self._getOutputMicThumbnail(movie))
+            mic.thumbnail = em.Image(
+                location=self._getOutputMicThumbnail(movie))
 
     def _saveAlignmentPlots(self, movie):
         """ Compute alignment shift plots and save to file as png images. """
@@ -593,7 +638,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _doComputeMicThumbnail(self):
         return (self.doSaveAveMic and self.doComputeMicThumbnail)
-    
+
     def _supportsMagCorrection(self):
         return getVersion('MOTIONCOR2') not in ['03162016', '10192016']
 
@@ -622,7 +667,7 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
         preY += y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
-        ax.text(preX-0.02, preY+0.02, str(i))
+        ax.text(preX - 0.02, preY + 0.02, str(i))
         i += 1
 
     ax.plot(sumMeanX, sumMeanY, color='b')

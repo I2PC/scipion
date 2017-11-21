@@ -59,7 +59,25 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
-    
+
+    def _getConvertExtension(self, filename):
+        """ This method will be used to check whether a movie needs to be
+        converted to be used in a given program.
+         Returns:
+            If return None, it means that not conversion is required. If not
+            None, the return value should be the extension that it should
+            be converted.
+
+        NOTE: Now by default this function use the CONVERT_TO_MRC property
+        for backward compatiblity reasons, but this method could be implemented
+        in any subclass of ProtProcessMovies.
+        """
+        if (self.CONVERT_TO_MRC and not (filename.endswith("mrc") or
+                                         filename.endswith("mrcs"))):
+            return self.CONVERT_TO_MRC
+
+        return None
+
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
@@ -220,14 +238,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 if not exists(newMovieName):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
 
-            elif movieName.endswith('.tif'):
-                #FIXME: It seems that we have some flip problem with compressed
-                # tif files, we need to check that
-                newMovieName = movieName.replace('.tif', '.mrc')
-                # we assume that if compressed the name ends with .tbz
-                if not exists(newMovieName):
-                    self.runJob('tif2mrc', '%s %s' % (movieName, newMovieName),
-                                                      cwd=movieFolder)
             elif movieName.endswith('.txt'):
                 # Support a list of frame as a simple .txt file containing
                 # all the frames in a raw list, we could use a xmd as well,
@@ -244,14 +254,13 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                                        (i+1, os.path.join(movieFolder, newMovieName)))
             else:
                 newMovieName = movieName
-            
-            if (self.CONVERT_TO_MRC and not (newMovieName.endswith("mrc") or
-                                             newMovieName.endswith("mrcs"))):
+
+            convertExt = self._getConvertExtension(newMovieName)
+            if convertExt:
                 inputMovieFn = os.path.join(movieFolder, newMovieName)
                 if inputMovieFn.endswith('.em'):
                     inputMovieFn += ":ems"
-                newMovieName = pwutils.replaceExt(newMovieName,
-                                                  self.CONVERT_TO_MRC)
+                newMovieName = pwutils.replaceExt(newMovieName, convertExt)
                 outputMovieFn = os.path.join(movieFolder, newMovieName)
                 self.info("Converting movie '%s' -> '%s'" % (inputMovieFn,
                                                              outputMovieFn))
