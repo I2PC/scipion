@@ -441,14 +441,15 @@ private:
 			float* dest);
 
     /**
-    *          7____6
-    *         3/___2/
+	*          6____5
+	*         2/___1/
     *    +    | |  ||   y
-    * [0,0,0] |*|4 ||5
+	* [0,0,0] |*|7 ||4
     *    -    |/___|/  z  sizes are padded with blob-radius
-    *        0   x  1
-    * [0,0] is in the middle of the left side (point [0] and [3]), provided the blobSize is 0
+	*         3  x  0
+	* [0,0] is in the middle of the left side (point [2] and [3]), provided the blobSize is 0
     * otherwise the values can go to negative values
+	* origin(point[0]) in in 'high' frequencies so that possible numerical instabilities are moved to high frequencies
     */
     static void createProjectionCuboid(Point3D<float>* cuboid, float sizeX, float sizeY, float blobSize);
 
@@ -473,9 +474,6 @@ private:
     		float minX, float minY, float minZ,
     		float maxX, float maxY, float maxZ);
 
-    /** Method returns vectors defining the plane */
-    static void getVectors(const Point3D<float>* plane, float& uX, float& uY, float& uZ, float& vX, float& vY, float& vZ);
-
     /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
     static void printAABB(Point3D<float> AABB[]);
 
@@ -497,32 +495,6 @@ private:
 			ProgRecFourierGPU* parent,
 			RecFourierBufferData* buffer,
     		int storeIndex);
-
-    /**
-     * Method calculates a (normalized) normal vector to the vector u and v
-     */
-    template<typename T>
-    static Point3D<T> getNormal(RecFourierProjectionTraverseSpace* space, bool normalize=false) {
-    	Point3D<T> result;
-    	result.x = space->uY*space->vZ - space->uZ*space->vY;
-    	result.y = space->uZ*space->vX - space->uX*space->vZ;
-    	result.z = space->uX*space->vY - space->uY*space->vX;
-    	if (normalize) {
-    		float length = getLength(result);
-    		result.x /= length;
-    		result.y /= length;
-    		result.z /= length;
-    	}
-    	return result;
-    }
-
-    /**
-     * Returns length of the vector
-     */
-    template<typename T>
-    static T getLength(const Point3D<T>& v) {
-    	return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-    }
 
 // METHODS
 
