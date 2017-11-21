@@ -155,6 +155,7 @@ class MonitorCTF(Monitor):
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
             defocusAngle = ctf.getDefocusAngle()
+            resolution = ctf.getResolution()
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
             shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
@@ -174,9 +175,12 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
-                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
-                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
+#            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
+#                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
+#                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
+            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio, resolution, micPath,psdPath,shiftPlotPath )
+                     VALUES(%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, defocusU,
+                     defocusV, defocusAngle, defocusU / defocusV, resolution, micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
@@ -209,8 +213,11 @@ class MonitorCTF(Monitor):
                                 defocusV FLOAT,
                                 defocus FLOAT,
                                 astigmatism FLOAT,
-                                ratio FLOAT, 
-                                psdPath STRING)
+                                ratio FLOAT,
+                                resolution FLOAT,
+                                micPath STRING,
+                                psdPath STRING,
+                                shiftPlotPath STRING)
                                 """ % self._tableName)
 
     def getData(self):
@@ -228,8 +235,11 @@ class MonitorCTF(Monitor):
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
             'idValues': get('id'),
-            PSD_PATH: get('psdPath'),
-        }
+            'resolution': get('resolution'),
+            'imgMicPath': get('micPath'),
+            'imgPsdPath': get('psdPath'),
+            'imgShiftPath': get('shiftPlotPath')
+         }
         # conn.close()
         return data
 
