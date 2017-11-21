@@ -134,8 +134,9 @@ public:
 	    ktt::ArgumentId spaceId,
 	    ktt::ArgumentId spaceNoId,
 	    ktt::ArgumentId FFTsId,
+	    ktt::ArgumentId sharedMemId,
 	    int firstImgIndex, int lastImgIndex) : parent(parent), objId(objId), threadParams(threadParams),
-	    imgCacheId(imgCacheId),spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId),
+	    imgCacheId(imgCacheId),spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId), sharedMemId(sharedMemId),
 	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
 
 	    // LaunchComputation is responsible for actual execution of tuned kernel
@@ -148,16 +149,16 @@ public:
 
 	        int size2D = parent->maxVolumeIndexX + 1;
 	        int targetSizeX = ceil(size2D/(float)localSize.getSizeX());
-	        std::cout << "size2D " << size2D << " localsize " << localSize.getSizeX() << " target " << targetSizeX << std::endl;
 
 	        globalSize.setSizeX(targetSizeX);
 	        globalSize.setSizeY(ceil(size2D/(float)localSize.getSizeY()));
 	        int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(localSize.getSizeX() + 2*parent->blob.radius));
 	        updateArgumentScalar(imgCacheId, &imgCacheDim);
+	        size_t useSharedMem = getParameterValue("SHARED_IMG", getCurrentConfiguration());
+	        updateArgumentLocal(sharedMemId, useSharedMem ? imgCacheDim*imgCacheDim : 1);
 
 	        parent->initProgress();
 	        parent->logProgress(0, true);
-
 
 			// main work routine
 			int firstImageIndex = firstImgIndex;
@@ -195,6 +196,7 @@ public:
 	    ktt::ArgumentId spaceId;
 	    ktt::ArgumentId spaceNoId;
 	    ktt::ArgumentId FFTsId;
+	    ktt::ArgumentId sharedMemId;
 	    int firstImgIndex;
 	    int lastImgIndex;
 	};
