@@ -133,8 +133,10 @@ public:
 	    ktt::ArgumentId imgCacheId,
 	    ktt::ArgumentId spaceId,
 	    ktt::ArgumentId spaceNoId,
-	    ktt::ArgumentId FFTsId) : parent(parent), objId(objId), threadParams(threadParams),
-	    imgCacheId(imgCacheId),spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId){}
+	    ktt::ArgumentId FFTsId,
+	    int firstImgIndex, int lastImgIndex) : parent(parent), objId(objId), threadParams(threadParams),
+	    imgCacheId(imgCacheId),spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId),
+	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
 
 	    // LaunchComputation is responsible for actual execution of tuned kernel
 	    void launchComputation(const ktt::KernelId kernelId) override
@@ -153,10 +155,13 @@ public:
 	        int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(localSize.getSizeX() + 2*parent->blob.radius));
 	        updateArgumentScalar(imgCacheId, &imgCacheDim);
 
+	        parent->initProgress();
+	        parent->logProgress(0, true);
+
 
 			// main work routine
-			int firstImageIndex = threadParams->startImageIndex;
-			int lastImageIndex = threadParams->endImageIndex;
+			int firstImageIndex = firstImgIndex;
+			int lastImageIndex = lastImgIndex;
 			for(int startLoadIndex = firstImageIndex;
 				startLoadIndex <= lastImageIndex;
 				startLoadIndex += parent->bufferSize) {
@@ -190,6 +195,8 @@ public:
 	    ktt::ArgumentId spaceId;
 	    ktt::ArgumentId spaceNoId;
 	    ktt::ArgumentId FFTsId;
+	    int firstImgIndex;
+	    int lastImgIndex;
 	};
 
 
@@ -567,7 +574,13 @@ private:
      * Method logs than 'increment' more pictures were processed
      * Thread safe
      */
-    void logProgress(int increment);
+    void logProgress(int increment, bool reset=false);
+
+    void initProgress() {
+    	if (verbose) {
+			init_progress_bar(SF.size());
+		}
+    }
 };
 //@}
 #endif

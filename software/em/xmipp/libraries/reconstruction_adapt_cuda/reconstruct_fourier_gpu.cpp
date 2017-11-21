@@ -121,9 +121,7 @@ void ProgRecFourierGPU::run()
 {
     show();
     produceSideinfo();
-    if (verbose) {
-		init_progress_bar(SF.size());
-    }
+    initProgress();
     //Computing interpolated volume
     processImages(0, SF.size() - 1);
     // Get data from GPU
@@ -421,7 +419,8 @@ ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>{0.0f}, ktt::
 	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,16,32,64}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
 
 	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
-	tuner.addParameter(kernelId, "SHARED_IMG", {0,1});
+	tuner.addParameter(kernelId, "SHARED_IMG", {0});
+	tuner.addParameter(kernelId, "BLOB_TABLE_SIZE_SQRT", {BLOB_TABLE_SIZE_SQRT});
 	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {1});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
@@ -443,7 +442,7 @@ ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>{0.0f}, ktt::
 	tuner.addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
 
 	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams,
-			imgCacheId,spaceId,spaceNoId,FFTsId));
+			imgCacheId,spaceId,spaceNoId,FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
 
 	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
 	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
@@ -459,12 +458,16 @@ ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>{0.0f}, ktt::
 
     //    tuner.setArgumentComparator(dataId, compareData);
 
-	// Launch kernel tuning
-	tuner.tuneKernelByStep(kernelId, {
-			ktt::ArgumentOutputDescriptor(volId, parent->tempVolumeGPU),
-			ktt::ArgumentOutputDescriptor(weightId, parent->tempWeightsGPU)});
 
 	// Print tuning results to standard output and to output.csv file
+	// Launch kernel tuning
+//	for (auto i = 0; i < 2; i++) {
+//		std::cout << "run no " << i << std::endl;
+//	tuner.tuneKernelByStep(kernelId, {
+//			ktt::ArgumentOutputDescriptor(volId, parent->tempVolumeGPU),
+//			ktt::ArgumentOutputDescriptor(weightId, parent->tempWeightsGPU)});
+//	}
+	tuner.tuneKernel(kernelId);
 	tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
 
 	// TODO prekopirovat pamet z CPU na CPU
@@ -858,11 +861,14 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	}
 }
 
-void ProgRecFourierGPU::logProgress(int increment) {
+void ProgRecFourierGPU::logProgress(int increment, bool reset) {
 	static int repaintAfter = (int)ceil((double)SF.size()/60);
 	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	static int noOfDone = 0;
 	static int noOfLogs = 0;
+	if (reset) {
+		noOfDone = noOfLogs = 0;
+	}
 	if (verbose) {
 		pthread_mutex_lock(&mutex);
 		noOfDone += increment;
