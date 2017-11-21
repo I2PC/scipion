@@ -436,7 +436,7 @@
                 xAxis: {
                     categories: labels,
                     title: {
-                        text: 'Resolution (Å)'
+                        text: 'Resolution (\u212B)'
                     }
                 },
                 yAxis:{
@@ -484,7 +484,7 @@
 //                },
 //                yAxis: {
 //                    title: {
-//                        text: 'Defocus(Å)'
+//                        text: 'Defocus(\u212B)'
 //                    },
 //                    plotLines: [{
 //                        value: 0,
@@ -597,7 +597,7 @@
                 xAxis: {
                     categories: labels,
                     title: {
-                        text: 'Defocus U (μm)'
+                        text: 'Defocus U (\u00B5m)'
                     }
                 },
                 yAxis: yAxis,
@@ -655,7 +655,7 @@
                 }
                 return {'yAxis' : axisIndex,
                         'tooltip':{
-                            'valueSuffix': ' °C'
+                            'valueSuffix': ' \u00B0C'
                             }
                         }
             }else{
@@ -771,7 +771,7 @@
 
             if (hasTempSeries){
                 yAxis.push({title:{
-                                text: 'Temperature (°C)'
+                                text: 'Temperature (\u00B0C)'
                                 },
                             opposite: true
                             })
@@ -864,13 +864,15 @@
             }
             if ('defocusU' in report.ctfData){
                 cols.push({"title": "DefocusU",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'μm' )},
-                           {"title": "Ratio",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u00B5m' )},
+                           {"title": "Defocus ratio",
                            "render": $.fn.dataTable.render.number( ',', '.', 2 )},
+                           {"title": "Astigmatism",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u212B' )},
                           {"title": "Resolution",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', 'Å' )},
-                          {"title": "Astigmatism",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '°' )});
+                           "render": $.fn.dataTable.render.number( ',', '.', 2, '', '\u212B' )},
+                          {"title": "CC value",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2 )});
             }
             var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="{0}"></a></div>';
             var imgWidth = Math.floor($('#content').width() * 0.2);
@@ -889,7 +891,8 @@
 
                 if ('defocusU' in report.ctfData){
                     rowValues.push(report.ctfData.defocusU[index]*1e-4, report.ctfData.ratio[index],
-                                   report.ctfData.resolution[index], report.ctfData.astigmatism[index]);
+				   report.ctfData.astigmatism[index], report.ctfData.resolution[index],
+				   report.ctfData.fitQuality[index]);
                 }
 
                 dataset.unshift(rowValues);
@@ -943,7 +946,7 @@
                             title.slice(title.length/2 + titleRmChars, title.length)
 
                 }
-                $('.modal-title').text($invoker.find('img').attr('alt'));
+                $('.modal-title').text(title);
                 if ($("#refreshBtn").hasClass('btn-info')) {
                     refreshPaused = true
                 }
