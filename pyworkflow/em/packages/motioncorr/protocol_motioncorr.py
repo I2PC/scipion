@@ -541,14 +541,18 @@ class ProtMotionCorr(ProtAlignMovies):
         In case of a binning greater than 1, the shifts should be scaled.
         """
         logPath = self._getExtraPath(self._getMovieLogFile(movie))
+        print "logPath", logPath
         binning = self.binFactor.get()
         if not self.useMotioncor2:
             xShifts, yShifts = parseMovieAlignment(logPath)
         else:
             xShifts, yShifts = parseMovieAlignment2(logPath)
-        xSfhtsCorr = [x * binning for x in xShifts]
-        ySfhtsCorr = [y * binning for y in yShifts]
-        return xSfhtsCorr, ySfhtsCorr
+        # ROB: this is wrong, shifts are given in "original pixels"
+        # even if bin is requested
+        # xSfhtsCorr = [x * binning for x in xShifts]
+        # ySfhtsCorr = [y * binning for y in yShifts]
+        # return xSfhtsCorr, ySfhtsCorr
+        return xShifts, yShifts
 
     def _setPlotInfo(self, movie, mic):
         mic.plotGlobal = em.Image(location=self._getPlotGlobal(movie))
@@ -655,16 +659,23 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     figure = plotter.getFigure()
     ax = figure.add_subplot(111)
     ax.grid()
-    ax.set_title('Global frame shift (cumulative)')
+    ax.set_title('Alignment based upon full frames (cumulative)')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
     if meanX[0] != 0 or meanY[0] != 0:
         raise Exception("First frame shift must be (0,0)!")
 
     i = first
+    # ROB meanX and meanY are given with respect to the first frame, no accumulation is needed
+    # see Motioncor2 user manual: "The output and log files list the shifts relative to the first frame."
+
+    # ROB unit seems to be pixels since samplingrate is only asked by the program if
+    # dose filtering is required
     for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
+        #preX += x
+        #preY += y
+        preX = x
+        preY = y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
         ax.text(preX - 0.02, preY + 0.02, str(i))
