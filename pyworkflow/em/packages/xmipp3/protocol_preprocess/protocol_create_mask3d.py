@@ -201,6 +201,9 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         if self.doSymmetrize:
             if self.symmetry!='c1':
                 self.runJob("xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"%(self.maskFile,self.symmetry.get()))
+                if self.volumeOperation==OPERATION_THRESHOLD or self.volumeOperation==OPERATION_SEGMENT:
+                    self.runJob("xmipp_transform_threshold",
+                                "-i %s --select below 0.5 --substitute binarize" % self.maskFile)
         
         if self.doMorphological:
             self.runJob("xmipp_transform_morphology","-i %s --binaryOperation %s --size %d"
@@ -212,6 +215,8 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         
         if self.doSmooth:
             self.runJob("xmipp_transform_filter","-i %s --fourier real_gaussian %f"%(self.maskFile,self.sigmaConvolution.get()))
+            self.runJob("xmipp_transform_threshold",
+                        "-i %s --select below 0 --substitute value 0" % self.maskFile)
 
     def createOutputStep(self):
         volMask = VolumeMask()

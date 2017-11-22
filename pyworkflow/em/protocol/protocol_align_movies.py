@@ -28,6 +28,7 @@
 
 import os
 from itertools import izip
+from math import ceil
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
@@ -639,13 +640,15 @@ def createAlignmentPlot(meanX, meanY):
     ax.set_ylabel('Drift y (pixels)')
     ax.plot(0, 0, 'yo-')
     i = 1
+    skipLabels = ceil(len(meanX) / 10.0)
     for x, y in izip(meanX, meanY):
         preX += x
         preY += y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
         #ax.plot(preX, preY, 'yo-')
-        ax.text(preX-0.02, preY+0.02, str(i))
+        if i % skipLabels == 0:
+            ax.text(preX-0.02, preY+0.02, str(i))
         i += 1
 
     ax.plot(sumMeanX, sumMeanY, color='b')
