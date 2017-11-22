@@ -568,7 +568,7 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 	#endif
 #else
-				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
+				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha) * cIw0;
 #endif
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
@@ -606,7 +606,7 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 #endif
 #else
-				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
+				float wBlob = kaiserValue<blobOrder>(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha) * cIw0;
 #endif
 				float weight = wBlob * dataWeight;
 				w += weight;
