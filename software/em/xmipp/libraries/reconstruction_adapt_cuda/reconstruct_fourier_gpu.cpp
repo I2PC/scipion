@@ -380,12 +380,17 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
     size_t deviceIndex = 0;
 	std::string kernelFile = "/home/david/GIT/Scipion/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier.cu";
+	std::string referenceKernelFile = "/home/david/GIT/Scipion/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier_ref.cu";
 
 	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
 	ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
 
 	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
 	ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "processBufferKernel", ktt::DimensionVector(1), ktt::DimensionVector(1));
+	int localSize = 32;
+	int size2D = parent->maxVolumeIndexX + 1;
+	int globalSize = ceil(size2D/(float)localSize);
+	ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "processBufferKernel", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
 
 	int volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
 	parent->tempVolumeGPU = new float[volumeSize * 2];
@@ -414,13 +419,11 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {1});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
+
 //	tuner.addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
 //	tuner.addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});
 //	tuner.addParameter(kernelId, "cIw0", {parent->iw0});
 //	tuner.addParameter(kernelId, "cIDeltaSqrt", {parent->iDeltaSqrt});
-
-	printf("\niw0 %f idelta %f radius %f alpha %f\n", parent->iw0, parent->iDeltaSqrt, parent->blob.radius, parent->blob.alpha );
-
 
 	auto blocksDimEqConstr = [](std::vector<size_t> vector) {return vector.at(0)== vector.at(1);};
 	tuner.addConstraint(kernelId, blocksDimEqConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y"});
@@ -438,7 +441,18 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
 		spaceId, spaceNoId,
 		FFTsId,
-	fftSizeXId, fftSizeYId, blobTableId, imgCacheId, sharedMemId});
+		fftSizeXId, fftSizeYId, blobTableId, imgCacheId, sharedMemId});
+	tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{volId, weightId,
+		spaceId, spaceNoId,
+		FFTsId,
+		fftSizeXId, fftSizeYId, blobTableId});
+
+
+	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
+	tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001f);
+    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{volId,
+        weightId});
+
 
         // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
         // provide list of arguments which will be validated
