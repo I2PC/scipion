@@ -661,12 +661,14 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     ax.set_title('Alignment based upon full frames (cumulative)')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
-    if meanX[0] != 0 or meanY[0] != 0:
-        raise Exception("First frame shift must be (0,0)!")
+    # morioncor2 (1.0.2) values refer to the middle frame, so first frame is no longer 0,0
+    #if meanX[0] != 0 or meanY[0] != 0:
+    #    raise Exception("First frame shift must be (0,0)!")
 
     i = first
-    # ROB meanX and meanY are given with respect to the first frame, no accumulation is needed
+    # ROB no accumulation is needed
     # see Motioncor2 user manual: "The output and log files list the shifts relative to the first frame."
+    # or middle frame for motioncor2 1.0.2
 
     # ROB unit seems to be pixels since samplingrate is only asked by the program if
     # dose filtering is required
