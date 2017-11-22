@@ -215,9 +215,11 @@ class BoxWizardView(tk.Frame):
             self.vars[key] = var
             widget.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
 
-        def _addCheckPair(key, r, lf, col=1):
+        def _addCheckPair(key, r, lf, col=1, value=None):
             t = LABELS.get(key, key)
             var = tk.IntVar()
+            if value is not None:
+                var.set(value)
 
             cb = tk.Checkbutton(lf, text=t, font=self.bigFont, bg='white',
                                 variable=var)
@@ -262,7 +264,7 @@ class BoxWizardView(tk.Frame):
         _addPair(SAMPLING_RATE, 4, labelFrame2, value=1.3)
         _addPair(WINDOW_SIZE, 5, labelFrame2, value=512)
         _addPair(NUMBER_OF_FRAMES, 6, labelFrame2, traceCallback=self._onInputChange)
-        _addCheckPair(PHASEPLATE, 7, labelFrame2)
+        _addCheckPair(PHASEPLATE, 7, labelFrame2, )
 
         frame.columnconfigure(0, weight=1)
 
