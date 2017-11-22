@@ -146,7 +146,7 @@ class ReportHtml:
             self.thumbPaths[PSD_THUMBS].append(psdThumb)
             self.thumbPaths[PSD_PATH].append(psdPath)
 
-    def getAlignThumbPaths(self, alignThumbsDone=0, ext="png"):
+    def getAlignThumbPaths(self, alignThumbsDone=0, ext="png", micIdSet=None):
         """Adds to self.thumbPaths the paths to the report thumbnails
         that come from the alignment protocol.
 
@@ -154,16 +154,20 @@ class ReportHtml:
         - alignThumbsDone: how many thumbnails have already been generated.
                            we will get paths starting from this index
         - ext: extension of the thumbnail images. Defaults to png.
+        - micIdSet: list of ids to use instead of the whole set of
+                    aligned micrographs. Default None.
 
         """
 
         if self.alignProtocol is not None:
             updatedAlignProt = getUpdatedProtocol(self.alignProtocol)
-            if hasattr(updatedAlignProt, 'outputMicrographs'):
-                alignedMicSet = list(updatedAlignProt.outputMicrographs.getIdSet())
-            else:
-                alignedMicSet = []
-            for micId in alignedMicSet[alignThumbsDone:]:
+            if micIdSet is None:
+                if hasattr(updatedAlignProt, 'outputMicrographs'):
+                    micIdSet = list(updatedAlignProt.outputMicrographs.getIdSet())
+                else:
+                    micIdSet = []
+
+            for micId in micIdSet[alignThumbsDone:]:
                 mic = updatedAlignProt.outputMicrographs[micId]
                 if hasattr(mic, 'thumbnail'):
                     srcMicFn = abspath(mic.thumbnail.getFileName())
@@ -319,7 +323,11 @@ class ReportHtml:
             numCtfsDone = len(self.thumbPaths[PSD_THUMBS])
             numCtfs = len(data[PSD_PATH])
             numCtfsToDo = numCtfs - numCtfsDone
+            numMicsToDo = numCtfsToDo
+            numMicsDone = numCtfsDone
+            numMics = numCtfs
             self.getCtfThumbPaths(data, ctfThumbsDone=numCtfsDone)
+            self.getAlignThumbPaths(alignThumbsDone=numCtfsDone, micIdSet=data['idValues'])
 
             if len(data['defocusU']) < 100:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
@@ -332,12 +340,11 @@ class ReportHtml:
             numCtfsDone = 0
             numCtfsToDo = 0
             numCtfs = 0
-
-        # Thumbnails for Micrograph Table
-        numMicsDone = len(self.thumbPaths[MIC_THUMBS])
-        self.getAlignThumbPaths(alignThumbsDone=numMicsDone)
-        numMics = len(self.thumbPaths[MIC_PATH])
-        numMicsToDo = numMics - numMicsDone
+            # Thumbnails for Micrograph Table
+            numMicsDone = len(self.thumbPaths[MIC_THUMBS])
+            self.getAlignThumbPaths(alignThumbsDone=numMicsDone)
+            numMics = len(self.thumbPaths[MIC_PATH])
+            numMicsToDo = numMics - numMicsDone
 
         if numMicsToDo <= 10 and numCtfsToDo <= 10:
             # we have few new images, eg streaming mode, generate thumbnails now
@@ -355,8 +362,11 @@ class ReportHtml:
         data[MIC_ID] = self.thumbPaths[MIC_ID][:self.thumbsReady]
         if PSD_THUMBS in self.thumbPaths:
             data[PSD_THUMBS] = self.thumbPaths[PSD_THUMBS][:self.thumbsReady]
-        if self.thumbsReady < numMics or self.thumbsReady < numCtfs:
-            reportFinished = False
+
+        if self.ctfMonitor is None:
+            reportFinished = self.thumbsReady == numMics
+        else:
+            reportFinished = self.thumbsReady == numCtfs
 
         ctfData = json.dumps(data)
 

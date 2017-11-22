@@ -180,8 +180,8 @@ class MonitorCTF(Monitor):
 #            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
 #                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
 #                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
-            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, micPath,psdPath,shiftPlotPath )
-                     VALUES(%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, defocusU,
+            sql = """INSERT INTO %s(ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, micPath,psdPath,shiftPlotPath )
+                     VALUES(%d,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfID, defocusU,
                      defocusV, astig, defocusU / defocusV, resolution, fitQuality, micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
@@ -211,6 +211,7 @@ class MonitorCTF(Monitor):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS  %s(
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 timestamp DATE DEFAULT (datetime('now','localtime')),
+                                ctfID INTEGER,
                                 defocusU FLOAT,
                                 defocusV FLOAT,
                                 defocus FLOAT,
@@ -237,7 +238,7 @@ class MonitorCTF(Monitor):
             'defocusV': get('defocusV'),
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
-            'idValues': get('id'),
+            'idValues': get('ctfID'),
             'resolution': get('resolution'),
             'fitQuality': get('fitQuality'),
             'imgMicPath': get('micPath'),

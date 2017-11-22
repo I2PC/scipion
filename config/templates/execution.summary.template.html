@@ -2,8 +2,6 @@
     <HEAD>
         <!-- jquery-->
         <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
-        <!-- JQuery plugins-->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js"></script>
         <!--highcharts-->
         <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
         <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
@@ -39,7 +37,7 @@
             cursor: pointer;
         }
 
-        .glyphicon {
+        .glyphExpand {
             right: 5px;
             font-size: 20px;
         }
@@ -252,7 +250,7 @@
             </DIV>
 
             <SECTION id="ctf">
-                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>CTF monitor</H2>
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>CTF monitor</H2>
                 <div class="row sectionContent" id="ctfHistograms">
                     <!--<DIV id="ctfChart" class="column column-7"></DIV>-->
                     <DIV id="resolutionHistogram" class="column column-6"></DIV>
@@ -260,15 +258,15 @@
                 </div>
             </SECTION>
             <SECTION id="movieGain">
-                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>Movie gain monitor</H2>
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>Movie gain monitor</H2>
                 <DIV id="movieGainChart" class="sectionContent"></DIV>
             </SECTION>
             <SECTION id="system">
-                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>System monitor</H2>
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>System monitor</H2>
                 <DIV id="systemChart" class="sectionContent"></DIV>
             </SECTION>
             <SECTION id="mics">
-                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>Micrographs</H2>
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>Micrographs</H2>
                 <div class="sectionContent" id="micTableContainer">
                     <TABLE id="micTable" class="display" width="100%%"></TABLE>
                     <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
