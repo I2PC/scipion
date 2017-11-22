@@ -377,6 +377,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     allocateWrapper(threadParams->buffer, threadParams->gpuStream);
 
 
+	threadParams->endImageIndex = std::min(threadParams->endImageIndex+1, threadParams->startImageIndex+parent->bufferSize);
+	prepareBuffer(threadParams, parent, false, objId);
+	int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
 
     size_t deviceIndex = 0;
 	std::string kernelFile = "/home/david/GIT/Scipion/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier.cu";
@@ -387,7 +390,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
 	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
 	ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "processBufferKernel", ktt::DimensionVector(1), ktt::DimensionVector(1));
-	int localSize = 32;
+	int localSize = 16;
 	int size2D = parent->maxVolumeIndexX + 1;
 	int globalSize = ceil(size2D/(float)localSize);
 	ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "processBufferKernel", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
@@ -395,14 +398,13 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	int volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
 	parent->tempVolumeGPU = new float[volumeSize * 2];
 	parent->tempWeightsGPU = new float[volumeSize];
-	RecFourierProjectionTraverseSpace dummy;
 
 	// Add new arguments to tuner, argument data is copied from std::vector containers
 	ktt::ArgumentId volId = tuner.addArgumentVector(std::vector<float>(parent->tempVolumeGPU, parent->tempVolumeGPU+volumeSize*2), ktt::ArgumentAccessType::ReadWrite);
 	ktt::ArgumentId weightId = tuner.addArgumentVector(std::vector<float>(parent->tempWeightsGPU, parent->tempWeightsGPU +volumeSize), ktt::ArgumentAccessType::ReadWrite);
-	ktt::ArgumentId spaceId = tuner.addArgumentVector(std::vector<RecFourierProjectionTraverseSpace>{dummy}, ktt::ArgumentAccessType::ReadOnly);
-	ktt::ArgumentId spaceNoId = tuner.addArgumentScalar(0);
-	ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>{0.0f}, ktt::ArgumentAccessType::ReadOnly);
+	ktt::ArgumentId spaceId = tuner.addArgumentVector(std::vector<RecFourierProjectionTraverseSpace>(threadParams->buffer->spaces, threadParams->buffer->spaces + noOfSpaces), ktt::ArgumentAccessType::ReadOnly);
+	ktt::ArgumentId spaceNoId = tuner.addArgumentScalar(noOfSpaces);
+	ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>(threadParams->buffer->FFTs, threadParams->buffer->FFTs+threadParams->buffer->getNoOfElements(threadParams->buffer->FFTs)), ktt::ArgumentAccessType::ReadOnly);
 	ktt::ArgumentId fftSizeXId = tuner.addArgumentScalar(threadParams->buffer->fftSizeX);
 	ktt::ArgumentId fftSizeYId = tuner.addArgumentScalar(threadParams->buffer->fftSizeY);
 	ktt::ArgumentId blobTableId = tuner.addArgumentVector(std::vector<float>((float*)parent->blobTableSqrt, (float*)parent->blobTableSqrt+BLOB_TABLE_SIZE_SQRT), ktt::ArgumentAccessType::ReadOnly);
@@ -412,15 +414,16 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	ktt::ArgumentId maxVolIndexYZId = tuner.addArgumentScalar(parent->maxVolumeIndexYZ);
 
 
-	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,16,32,64}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
-	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,16,32,64}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
+	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
+	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
 
 	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
 	tuner.addParameter(kernelId, "SHARED_IMG", {0, 1});
 	tuner.addParameter(kernelId, "BLOB_TABLE_SIZE_SQRT", {BLOB_TABLE_SIZE_SQRT});
-	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {1});
+	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {0,1});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
+	tuner.addParameter(kernelId, "blobOrder", {parent->blob.order});
 
 //	tuner.addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
 //	tuner.addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});
@@ -439,9 +442,6 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams,
 			imgCacheId,spaceId,spaceNoId,FFTsId, sharedMemId, threadParams->startImageIndex, threadParams->endImageIndex));
 
-	tuner.setTuningManipulator(referenceKernelId, std::make_unique<RefManipulator>(parent,objId,threadParams,
-				spaceId,spaceNoId,FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
-
 	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
 	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
 		spaceId, spaceNoId,
@@ -454,8 +454,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
 
 	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-	tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001f);
-    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{volId,
+	tuner.setValidationMethod(ktt::ValidationMethod::SideBySideRelativeComparison, 0.01f);
+    tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<ktt::ArgumentId>{volId,
         weightId});
 
 
@@ -478,6 +478,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 //	}
 	tuner.tuneKernel(kernelId);
 	tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+	tuner.printResult(kernelId, parent->fn_out.getString() + "_tunning.csv", ktt::PrintFormat::CSV);
 
 	// TODO prekopirovat pamet z CPU na CPU
 

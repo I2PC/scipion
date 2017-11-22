@@ -92,7 +92,6 @@ float bessi4(float x)
 }
 
 
-
 __device__
 float kaiserValue(float r, float a, float alpha)
 {
@@ -103,40 +102,40 @@ float kaiserValue(float r, float a, float alpha)
     {
         rdas = rda * rda;
         arg = alpha * sqrtf(1.f - rdas);
-//        if (order == 0)
+        if (blobOrder == 0)
         {
             w = bessi0(arg) / bessi0(alpha);
         }
-//        else if (order == 1)
-//        {
-//            w = sqrtf (1.f - rdas);
-//            if (alpha != 0.f)
-//                w *= bessi1(arg) / bessi1(alpha);
-//        }
-//        else if (order == 2)
-//        {
-//            w = sqrtf (1.f - rdas);
-//            w = w * w;
-//            if (alpha != 0.f)
-//                w *= bessi2(arg) / bessi2(alpha);
-//        }
-//        else if (order == 3)
-//        {
-//            w = sqrtf (1.f - rdas);
-//            w = w * w * w;
-//            if (alpha != 0.f)
-//                w *= bessi3(arg) / bessi3(alpha);
-//        }
-//        else if (order == 4)
-//        {
-//            w = sqrtf (1.f - rdas);
-//            w = w * w * w *w;
-//            if (alpha != 0.f)
-//                w *= bessi4(arg) / bessi4(alpha);
-//        }
-//        else {
-//        	printf("order (%d) out of range in kaiser_value(): %s, %d\n", order, __FILE__, __LINE__);
-//        }
+        else if (blobOrder == 1)
+        {
+            w = sqrtf (1.f - rdas);
+            if (alpha != 0.f)
+                w *= bessi1(arg) / bessi1(alpha);
+        }
+        else if (blobOrder == 2)
+        {
+            w = sqrtf (1.f - rdas);
+            w = w * w;
+            if (alpha != 0.f)
+                w *= bessi2(arg) / bessi2(alpha);
+        }
+        else if (blobOrder == 3)
+        {
+            w = sqrtf (1.f - rdas);
+            w = w * w * w;
+            if (alpha != 0.f)
+                w *= bessi3(arg) / bessi3(alpha);
+        }
+        else if (blobOrder == 4)
+        {
+            w = sqrtf (1.f - rdas);
+            w = w * w * w *w;
+            if (alpha != 0.f)
+                w *= bessi4(arg) / bessi4(alpha);
+        }
+        else {
+        	printf("order (%d) out of range in kaiser_value(): %s, %d\n", blobOrder, __FILE__, __LINE__);
+        }
     }
     else
         w = 0.f;
@@ -441,7 +440,7 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 #endif
 #else
-				float wBlob = kaiserValue(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
+				float wBlob = kaiserValue(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha) * cIw0;
 #endif
 				float weight = wBlob * dataWeight;
 				w += weight;
