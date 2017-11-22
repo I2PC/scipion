@@ -879,11 +879,17 @@
                 cols.push({"title":"PsdFile"})
             }
             if ('defocusU' in report.ctfData){
-                cols.push({"title": "DefocusU (\u00B5m)"},
-                          {"title": "Defocus ratio"},
-                          {"title": "Astigmatism (\u212B) "},
-                          {"title": "Resolution (\u212B)"},
-                          {"title": "CC value "});
+                cols.push({"title": "DefocusU (\u00B5m)",
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "Defocus ratio",
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "Astigmatism (\u212B)",
+                           "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "Resolution (\u212B)",
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "CC value ",
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)});
+
             }
             var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
             var imgWidth = Math.floor($('#content').width() * 0.2);
