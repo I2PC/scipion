@@ -648,7 +648,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
-    """ Create a plotter with the cumulative shift per frame. """
+    """ Create a plotter with the shift per frame. """
     sumMeanX = []
     sumMeanY = []
     preX = 0.0
@@ -659,7 +659,7 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     figure = plotter.getFigure()
     ax = figure.add_subplot(111)
     ax.grid()
-    ax.set_title('Alignment based upon full frames (cumulative)')
+    ax.set_title('Alignment based upon full frames')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
     # morioncor2 (1.0.2) values refer to the middle frame, so first frame is no longer 0,0
