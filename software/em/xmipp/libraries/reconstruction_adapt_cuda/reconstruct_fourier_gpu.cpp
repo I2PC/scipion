@@ -408,6 +408,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	ktt::ArgumentId blobTableId = tuner.addArgumentVector(std::vector<float>((float*)parent->blobTableSqrt, (float*)parent->blobTableSqrt+BLOB_TABLE_SIZE_SQRT), ktt::ArgumentAccessType::ReadOnly);
 	ktt::ArgumentId imgCacheId = tuner.addArgumentScalar(0);
 	ktt::ArgumentId sharedMemId = tuner.addArgumentLocal<std::complex<float> >(1); // will be set eventually
+	ktt::ArgumentId maxVolIndexXId = tuner.addArgumentScalar(parent->maxVolumeIndexX);
+	ktt::ArgumentId maxVolIndexYZId = tuner.addArgumentScalar(parent->maxVolumeIndexYZ);
 
 
 	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,16,32,64}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
@@ -437,6 +439,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams,
 			imgCacheId,spaceId,spaceNoId,FFTsId, sharedMemId, threadParams->startImageIndex, threadParams->endImageIndex));
 
+	tuner.setTuningManipulator(referenceKernelId, std::make_unique<RefManipulator>(parent,objId,threadParams,
+				spaceId,spaceNoId,FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
+
 	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
 	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
 		spaceId, spaceNoId,
@@ -445,7 +450,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{volId, weightId,
 		spaceId, spaceNoId,
 		FFTsId,
-		fftSizeXId, fftSizeYId, blobTableId});
+		fftSizeXId, fftSizeYId, blobTableId, maxVolIndexXId, maxVolIndexYZId});
 
 
 	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.

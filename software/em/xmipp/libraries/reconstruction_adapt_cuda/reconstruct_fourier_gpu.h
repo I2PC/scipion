@@ -202,6 +202,69 @@ public:
 	};
 
 
+	class RefManipulator : public ktt::TuningManipulator
+		{
+		public:
+		    RefManipulator(
+			ProgRecFourierGPU* parent,
+		    std::vector<size_t> objId,
+		    RecFourierWorkThread* threadParams,
+		    ktt::ArgumentId spaceId,
+		    ktt::ArgumentId spaceNoId,
+		    ktt::ArgumentId FFTsId,
+		    int firstImgIndex, int lastImgIndex) : parent(parent), objId(objId), threadParams(threadParams),
+		    spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId),
+		    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
+
+		    // LaunchComputation is responsible for actual execution of tuned kernel
+		    void launchComputation(const ktt::KernelId kernelId) override
+		    {
+		    	ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
+				ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
+
+		        parent->initProgress();
+		        parent->logProgress(0, true);
+
+				// main work routine
+				int firstImageIndex = firstImgIndex;
+				int lastImageIndex = lastImgIndex;
+				for(int startLoadIndex = firstImageIndex;
+					startLoadIndex <= lastImageIndex;
+					startLoadIndex += parent->bufferSize) {
+					// load data
+					threadParams->startImageIndex = startLoadIndex;
+					threadParams->endImageIndex = std::min(lastImageIndex+1, startLoadIndex+parent->bufferSize);
+					prepareBuffer(threadParams, parent, false, objId);
+
+					// send them for processing
+					if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
+						int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
+						updateArgumentVector(spaceId, threadParams->buffer->spaces, noOfSpaces);
+						updateArgumentVector(FFTsId, threadParams->buffer->FFTs, threadParams->buffer->getNoOfElements(threadParams->buffer->FFTs));
+						updateArgumentScalar(spaceNoId, &noOfSpaces);
+
+						runKernel(kernelId, globalSize, localSize);
+						parent->logProgress(threadParams->buffer->noOfImages);
+					}
+					// once the processing finished, buffer can be reused
+				}
+
+
+
+		    }
+
+		private:
+		    ProgRecFourierGPU* parent;
+		    std::vector<size_t> objId;
+		    RecFourierWorkThread* threadParams;
+		    ktt::ArgumentId spaceId;
+		    ktt::ArgumentId spaceNoId;
+		    ktt::ArgumentId FFTsId;
+		    int firstImgIndex;
+		    int lastImgIndex;
+		};
+
+
 
 
 
