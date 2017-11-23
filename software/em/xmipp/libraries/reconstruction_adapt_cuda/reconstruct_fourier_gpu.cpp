@@ -416,6 +416,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
 	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
 	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
+	tuner.addParameter(kernelId, "GRID_DIM_Z", {1,2,4,8,12,16,20}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Z);
 
 	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
 	tuner.addParameter(kernelId, "SHARED_IMG", {0, 1});

@@ -692,7 +692,7 @@ void processBufferKernel(
 	}
 #endif
 
-	for (int i = 0; i < noOfSpaces; i++) {
+	for (int i = blockIdx.z; i < noOfSpaces; i += gridDim.z) {
 		RecFourierProjectionTraverseSpace* space = &spaces[i];
 
 #if SHARED_IMG
