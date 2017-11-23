@@ -25,7 +25,8 @@
 # *
 # **************************************************************************
 
-from pyworkflow.protocol.params import IntParam, EnumParam, FloatParam, BooleanParam
+from pyworkflow.protocol.params import (IntParam, EnumParam, FloatParam,
+                                        BooleanParam)
 from ..constants import *
 
 
@@ -41,25 +42,30 @@ class XmippGeometricalMask3D:
                                'will be size x size x size voxels')
 
         form.addParam('geo', EnumParam, label='Mask type', default=MASK3D_SPHERE, 
-                      choices = ['Sphere', 'Box', 'Crown', 'Cylinder', 'Gaussian', 
-                                 'Raised cosine', 'Raised crown'],
+                      choices = ['Sphere', 'Box', 'Crown', 'Cylinder',
+                                 'Gaussian', 'Raised cosine', 'Raised crown'],
                       condition=isGeometry)
         # TODO add wizard
         form.addParam('radius', IntParam, default=-1, 
-                      condition='(geo==%d or geo==%d) and %s' % (MASK3D_SPHERE, MASK3D_CYLINDER, isGeometry),
-                      label="Radius (px)", help="Mask radius, if -1, the radius will be MaskSize/2")
+                      condition='(geo==%d or geo==%d) and %s'
+                                % (MASK3D_SPHERE, MASK3D_CYLINDER, isGeometry),
+                      label="Radius (px)",
+                      help="Mask radius, if -1, the radius will be MaskSize/2")
         form.addParam('shiftCenter', BooleanParam, default=False, 
-                      label='Shift Center', help='Shift Mask Center to a new origin.')
+                      label='Shift Center',
+                      help='Shift Mask Center to a new origin.')
         form.addParam('centerX', IntParam, default=0, label='X center offset', 
                       condition='shiftCenter', help='New x center coordinate')
         form.addParam('centerY', IntParam, default=0, label='Y center offset', 
                       condition='shiftCenter', help='New y center coordinate')
         form.addParam('centerZ', IntParam, default=0, label='Z center offset', 
                       condition='shiftCenter', help='New z center coordinate')
-        form.addParam('boxSize', IntParam, default=-1, condition='geo==%d and %s' 
-                      % (MASK3D_BOX,isGeometry), label="Box size", 
-                      help="Mask box size, if -1, the box size will be MaskSize/2")
-        radiusCondition = '(geo==%d or geo==%d or geo==%d) and %s' % (MASK3D_CROWN, 
+        form.addParam('boxSize', IntParam, default=-1,
+                      condition='geo==%d and %s' % (MASK3D_BOX,isGeometry),
+                      label="Box size",
+                      help="Mask box size, if -1, the box size will be "
+                           "MaskSize/2")
+        radiusCondition = '(geo==%d or geo==%d or geo==%d) and %s' % (MASK3D_CROWN,
                            MASK3D_RAISED_COSINE, MASK3D_RAISED_CROWN, isGeometry)
         # TODO add wizard
         form.addParam('innerRadius', IntParam, default=0, 
@@ -68,15 +74,19 @@ class XmippGeometricalMask3D:
         # TODO add wizard
         form.addParam('outerRadius', IntParam, default=-1, 
                       condition=radiusCondition, label="Outer radius (px)",
-                      help="Outer radius in pixels, if -1, the outer radius will be MaskSize/2")
+                      help="Outer radius in pixels, if -1, the outer radius "
+                           "will be MaskSize/2")
         form.addParam('height', IntParam, default=-1,
                       condition='geo==%d and %s' % (MASK3D_CYLINDER,isGeometry), 
                       label="Height (px)", 
-                      help="Cylinder height in pixels. If -1, height will be MaskSize")
+                      help="Cylinder height in pixels. If -1, height will be "
+                           "MaskSize")
         form.addParam('sigma', FloatParam, default=-1, label="Sigma (px)",
                       condition='geo==%d and %s' % (MASK3D_GAUSSIAN,isGeometry),
-                      help="Gaussian sigma in pixels. If -1, sigma will be MaskSize/6")                
-        form.addParam('borderDecay', IntParam, default=0, label="Border decay (px)",
+                      help="Gaussian sigma in pixels. If -1, sigma will be "
+                           "MaskSize/6")
+        form.addParam('borderDecay', IntParam, default=0,
+                      label="Border decay (px)",
                       condition='geo==%d and %s' % (MASK3D_RAISED_CROWN,isGeometry),
                       help="This is the fall-off of the two borders of the crown")        
 
