@@ -451,11 +451,12 @@ Examples:
 
         for classId in sorted(classInfo.keys()):
             values = classInfo[classId][l]
-            ax.bar(ind, values, width, bottom=bottomValues, color=cmap(classId))
+            ax.bar(ind, values, width, label='class %s' % classId, bottom=bottomValues, color=cmap(classId))
             bottomValues = [a+b for a, b in zip(bottomValues, values)]
 
         ax.get_xaxis().set_ticks([i + 0.25 for i in ind])
         ax.get_xaxis().set_ticklabels([str(i) for i in ind])
+        ax.legend(loc='upper left')
 
         return [xplotter]
     
