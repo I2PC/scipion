@@ -51,15 +51,16 @@ class XmippGeometricalMask3D:
                                 % (MASK3D_SPHERE, MASK3D_CYLINDER, isGeometry),
                       label="Radius (px)",
                       help="Mask radius, if -1, the radius will be MaskSize/2")
-        form.addParam('shiftCenter', BooleanParam, default=False, 
-                      label='Shift Center',
-                      help='Shift Mask Center to a new origin.')
-        form.addParam('centerX', IntParam, default=0, label='X center offset', 
-                      condition='shiftCenter', help='New x center coordinate')
-        form.addParam('centerY', IntParam, default=0, label='Y center offset', 
-                      condition='shiftCenter', help='New y center coordinate')
-        form.addParam('centerZ', IntParam, default=0, label='Z center offset', 
-                      condition='shiftCenter', help='New z center coordinate')
+        
+        form.addParam('shiftCenter', BooleanParam, default=False,
+                      label='Shift center of the mask?')
+        
+        line = form.addLine('Shift Center (px) :', condition='shiftCenter',
+                            help='Shift Mask Center to a new origin.')
+        line.addParam('centerX', IntParam, default=0, label='X')
+        line.addParam('centerY', IntParam, default=0, label='Y')
+        line.addParam('centerZ', IntParam, default=0, label='Z')
+        
         form.addParam('boxSize', IntParam, default=-1,
                       condition='geo==%d and %s' % (MASK3D_BOX,isGeometry),
                       label="Box size",
@@ -173,18 +174,21 @@ class XmippGeometricalMask3D:
             messages.append("The mask represented a crown between %d and %d. "
                              % (self.innerRadius.get(), self.outerRadius.get()))
         elif geo == MASK3D_CYLINDER:
-            messages.append("The mask represented a cylinder of radius %f and height %f. "
-                             % (self.radius.get(), self.height.get()))
+            messages.append("The mask represented a cylinder of radius %f "
+                            "and height %f. " % (self.radius.get(),
+                                                 self.height.get()))
         elif geo == MASK3D_GAUSSIAN:
             messages.append("The mask represented a Gaussian of sigma %f. "
                              % (self.sigma.get()))
         elif geo == MASK3D_RAISED_COSINE:
-            messages.append("The mask represented a raised cosine between %f and %f. "
-                             % (self.innerRadius.get(), self.outerRadius.get()))
+            messages.append("The mask represented a raised cosine between %f "
+                            "and %f. " % (self.innerRadius.get(),
+                                          self.outerRadius.get()))
         elif geo == MASK3D_RAISED_CROWN:
-            messages.append("The mask represented a raised crown between %f and %f (decay=%f)"
-                             % (self.innerRadius.get(), self.outerRadius.get(),
-                                self.borderDecay.get()))
+            messages.append("The mask represented a raised crown between %f "
+                            "and %f (decay=%f)" % (self.innerRadius.get(),
+                                                   self.outerRadius.get(),
+                                                   self.borderDecay.get()))
         return messages
 
 
