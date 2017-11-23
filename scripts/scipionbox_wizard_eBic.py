@@ -80,8 +80,9 @@ SAMPLING_RATE= 'samplingRate'
 WINDOW_SIZE= 'windowSize'
 PHASEPLATE = 'doPhShEst'
 NUMBER_OF_FRAMES = 'numberOfIndividualFrames'
+FILES_PATH = 'filesPath'
 
-vars2Use = [DOSE_PER_FRAME, MAGNIFICATION, PHASEPLATE, NUMBER_OF_FRAMES, SAMPLING_RATE, WINDOW_SIZE]
+vars2Use = [DOSE_PER_FRAME, MAGNIFICATION, PHASEPLATE, NUMBER_OF_FRAMES, SAMPLING_RATE, WINDOW_SIZE, FILES_PATH]
 
 # Define some string constants
 LABELS = {
@@ -91,7 +92,8 @@ LABELS = {
     SAMPLING_RATE: "Sampling Rate",
     WINDOW_SIZE: "Window Size",
     PHASEPLATE: "Use phase shift estimation",
-    NUMBER_OF_FRAMES: "Number of frames per movie"
+    NUMBER_OF_FRAMES: "Number of frames per movie",
+    FILES_PATH: "Pattern for directory structure"
 }
 
 MICROSCOPE = "Microscope"
@@ -244,9 +246,9 @@ class BoxWizardView(tk.Frame):
 
             return combo
 
-        self.micCombo = _addComboPair(MICROSCOPE, 0, labelFrame,
+        _addPair(PROJECT_NAME, 0, labelFrame, traceCallback=self._onInputChange)
+        self.micCombo = _addComboPair(MICROSCOPE, 1, labelFrame,
                                       traceCallback=self._onMicroscopeChanged)
-        _addPair(PROJECT_NAME, 1, labelFrame, traceCallback=self._onInputChange)
         _addPair(MESSAGE, 4, labelFrame, widget='label')
 
         labelFrame.columnconfigure(0, weight=1)
@@ -264,7 +266,8 @@ class BoxWizardView(tk.Frame):
         _addPair(SAMPLING_RATE, 4, labelFrame2, value=1.3)
         _addPair(WINDOW_SIZE, 5, labelFrame2, value=512)
         _addPair(NUMBER_OF_FRAMES, 6, labelFrame2, traceCallback=self._onInputChange)
-        _addCheckPair(PHASEPLATE, 7, labelFrame2, )
+        _addCheckPair(PHASEPLATE, 7, labelFrame2, value=False)
+        _addPair(FILES_PATH, 8, labelFrame2)
 
         frame.columnconfigure(0, weight=1)
 
@@ -310,10 +313,9 @@ class BoxWizardView(tk.Frame):
         try:
             # Compose the destination using the session id (
             destination = self._getConfValue(JSON_DESTINATION)
-            source = self._getConfValue(MRC_SOURCE)
             sessionId = self._getValue(PROJECT_NAME)
-            destination = destination.format(sessionId)
-            source = source.format(sessionId)
+            filesPath = self._getValue('filesPath')
+            destination = destination.format(sessionId, self._hashStr(filesPath, 6))
 
             if not self._validateDestination(destination): return False
 
@@ -321,7 +323,6 @@ class BoxWizardView(tk.Frame):
             replacementDict = self._vars2Dict()
 
             replacementDict['visit'] = sessionId
-            replacementDict['filesPath'] = source
             replacementDict['findPhaseShift'] = self._getValue(PHASEPLATE)
 
             # Get the template and open it
@@ -346,6 +347,9 @@ class BoxWizardView(tk.Frame):
             return False
 
         return True
+
+    def _hashStr(self, string, length):
+        return ''.join([ch for ch in string if ch.isalnum()][0:length])
 
     def replaceValues(self, replacementDict, templateStr):
 
@@ -407,6 +411,11 @@ class BoxWizardView(tk.Frame):
         self._setValue(DOSE_PER_FRAME, self._getConfValue(DOSE_PER_FRAME))
         self._setValue(MAGNIFICATION, self._getConfValue(MAGNIFICATION))
         self._setValue(PHASEPLATE, self._getConfValue(PHASEPLATE))
+
+        sessionId = self._getValue(PROJECT_NAME)
+        if sessionId:
+            source = self._getConfValue(MRC_SOURCE)
+            self._setValue(FILES_PATH, source.format(sessionId))
 
         self._onInputChange()
 
