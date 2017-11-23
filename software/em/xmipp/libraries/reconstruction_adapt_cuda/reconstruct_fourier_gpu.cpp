@@ -478,7 +478,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 //	}
 	tuner.tuneKernel(kernelId);
 	tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-	tuner.printResult(kernelId, parent->fn_out.getString() + "_tunning.csv", ktt::PrintFormat::CSV);
+	size_t lastindex = parent->fn_out.getString().find_last_of(".");
+	std::string rawname = parent->fn_out.getString().substr(0, lastindex);
+	tuner.printResult(kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
 
 	// TODO prekopirovat pamet z CPU na CPU
 
@@ -783,16 +785,16 @@ void ProgRecFourierGPU::forceHermitianSymmetry() {
 
 void ProgRecFourierGPU::processWeights() {
 
-	Image<double> Vout;
-	Vout().initZeros(maxVolumeIndexYZ+1,maxVolumeIndexYZ+1,maxVolumeIndexX);
-	for (int z = 0; z <= maxVolumeIndexYZ; z++ ) {
-		for (int y = 0; y <= maxVolumeIndexYZ; y++ ) {
-			for (int x = 0; x <= maxVolumeIndexX; x++ ) {
-				DIRECT_A3D_ELEM(Vout.data, z, y, x) = tempVolume[z][y][x].real();
-			}
-		}
-	}
-	Vout.write("test_objemu.vol");
+//	Image<double> Vout;
+//	Vout().initZeros(maxVolumeIndexYZ+1,maxVolumeIndexYZ+1,maxVolumeIndexX);
+//	for (int z = 0; z <= maxVolumeIndexYZ; z++ ) {
+//		for (int y = 0; y <= maxVolumeIndexYZ; y++ ) {
+//			for (int x = 0; x <= maxVolumeIndexX; x++ ) {
+//				DIRECT_A3D_ELEM(Vout.data, z, y, x) = tempVolume[z][y][x].real();
+//			}
+//		}
+//	}
+//	Vout.write("test_objemu.vol");
 
     // Get a first approximation of the reconstruction
     float corr2D_3D=pow(padding_factor_proj,2.)/
