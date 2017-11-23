@@ -411,6 +411,7 @@ class ImageHandler(object):
 
         return outputFn
 
+
     @staticmethod
     def getThumbnailFn(inputFn):
         """Replace the extension in inputFn with thumb.png"""

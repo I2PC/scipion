@@ -52,7 +52,7 @@ MORPHOLOGY_OPENING=3
 
 class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
     """ Create a 3D mask.
-    The mask can be created with a given geometrical shape (Sphere, Box, 
+    The mask can be created with a given geometrical shape (Sphere, Box,
     Cylinder...) or it can be obtained from operating on a 3d volume or a
     previuous mask.
     """
@@ -66,15 +66,15 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
                       label='Mask source')
         # For volume sources
         isVolume = 'source==%d' % SOURCE_VOLUME
-        form.addParam('inputVolume', PointerParam, pointerClass="Volume", 
+        form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label="Input volume",  condition=isVolume,
                       help="Select the volume that will be used to create the mask")
-        form.addParam('volumeOperation', EnumParam, default=OPERATION_THRESHOLD,  
+        form.addParam('volumeOperation', EnumParam, default=OPERATION_THRESHOLD,
                       choices=['Threshold','Segment','Only postprocess'],
                       label='Operation', condition=isVolume)
         #TODO: add wizard
         form.addParam('threshold', FloatParam, default=0.0,
-                      condition='volumeOperation==%d and %s' 
+                      condition='volumeOperation==%d and %s'
                       % (OPERATION_THRESHOLD, isVolume),
                       label='Threshold')
         isSegmentation = 'volumeOperation==%d and %s' % (OPERATION_SEGMENT, isVolume)
@@ -84,15 +84,15 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
                       choices=['Number of voxels','Number of aminoacids',
                                'Dalton mass','Automatic'])
         form.addParam('nvoxels', IntParam, 
-                      condition='%s and segmentationType==%d' 
+                      condition='%s and segmentationType==%d'
                       % (isSegmentation, SEGMENTATION_VOXELS),
                       label='Number of voxels')
         form.addParam('naminoacids', IntParam,
-                      condition='%s and segmentationType==%d' 
+                      condition='%s and segmentationType==%d'
                       % (isSegmentation, SEGMENTATION_AMINOACIDS),
                       label='Number of aminoacids')
         form.addParam('dalton', FloatParam, 
-                      condition='%s and segmentationType==%d' 
+                      condition='%s and segmentationType==%d'
                       % (isSegmentation, SEGMENTATION_DALTON),
                       label='Mass (Da)')
         
@@ -101,8 +101,8 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
                       condition='source==%d' % SOURCE_GEOMETRY, 
                       label="Sampling Rate (Å/px)")
         XmippGeometricalMask3D.defineParams(self, form, 
-                                            isGeometry='source==%d' 
-                                            % SOURCE_GEOMETRY, 
+                                            isGeometry='source==%d'
+                                            % SOURCE_GEOMETRY,
                                             addSize=True)
 
         # Postprocessing
@@ -167,7 +167,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         
         if self.volumeOperation == OPERATION_THRESHOLD:
             self.runJob("xmipp_transform_threshold",
-                        "-i %s -o %s --select below %f --substitute binarize" 
+                        "-i %s -o %s --select below %f --substitute binarize"
                         % (fnVol, self.maskFile, self.threshold.get()))
         elif self.volumeOperation == OPERATION_SEGMENT:
             args="-i %s -o %s --method " % (fnVol, self.maskFile)
@@ -210,8 +210,10 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         
         if self.doSymmetrize:
             if self.symmetry!='c1':
-                self.runJob("xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"
-                            % (self.maskFile, self.symmetry.get()))
+                self.runJob("xmipp_transform_symmetrize","-i %s --sym %s --dont_wrap"%(self.maskFile,self.symmetry.get()))
+                if self.volumeOperation==OPERATION_THRESHOLD or self.volumeOperation==OPERATION_SEGMENT:
+                    self.runJob("xmipp_transform_threshold",
+                                "-i %s --select below 0.5 --substitute binarize" % self.maskFile)
         
         if self.doMorphological:
             self.runJob("xmipp_transform_morphology","-i %s --binaryOperation %s --size %d"
@@ -223,8 +225,9 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
             self.runJob("xmipp_image_operate","-i %s --plus  1"%self.maskFile)
         
         if self.doSmooth:
-            self.runJob("xmipp_transform_filter","-i %s --fourier real_gaussian %f"
-                        % (self.maskFile, self.sigmaConvolution.get()))
+            self.runJob("xmipp_transform_filter","-i %s --fourier real_gaussian %f"%(self.maskFile,self.sigmaConvolution.get()))
+            self.runJob("xmipp_transform_threshold",
+                        "-i %s --select below 0 --substitute value 0" % self.maskFile)
 
     def createOutputStep(self):
         volMask = VolumeMask()
@@ -272,7 +275,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         if self.doSymmetrize:
             messages.append("   Symmetrized %s" % self.symmetry.get())
         if self.doMorphological:
-            messages.append("   Morphological operation: %s" 
+            messages.append("   Morphological operation: %s"
                             % self.getEnumText('morphologicalOperation'))
         if self.doInvert:
             messages.append("   Inverted")
@@ -319,7 +322,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
             messages += XmippGeometricalMask3D.methods(self)
 
         if self.doSmall:
-            messages.append("We removed components smaller than %d voxels." 
+            messages.append("We removed components smaller than %d voxels."
                             % (self.smallSize.get()))
         if self.doBig:
             messages.append("We kept the largest component. ")
@@ -331,10 +334,10 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         if self.doInvert:
             messages.append("We inverted the mask. ")
         if self.doSmooth:
-            messages.append("And, we smoothed it (sigma=%f voxels)." 
+            messages.append("And, we smoothed it (sigma=%f voxels)."
                             % self.sigmaConvolution.get())
         if self.hasAttribute('outputMask'):
-            messages.append('We refer to the output mask as %s.' 
+            messages.append('We refer to the output mask as %s.'
                             % self.outputMask.getNameId())
         return messages
     

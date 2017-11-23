@@ -29,6 +29,7 @@
 
 import os
 from itertools import izip
+from math import ceil
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
@@ -662,12 +663,18 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
         raise Exception("First frame shift must be (0,0)!")
 
     i = first
+    skipLabels = ceil(len(meanX)/10.0)
+    labelTick = 1
     for x, y in izip(meanX, meanY):
         preX += x
         preY += y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
-        ax.text(preX - 0.02, preY + 0.02, str(i))
+        if labelTick == 1:
+            ax.text(preX - 0.02, preY + 0.02, str(i))
+            labelTick = skipLabels
+        else:
+            labelTick -= 1
         i += 1
 
     ax.plot(sumMeanX, sumMeanY, color='b')
