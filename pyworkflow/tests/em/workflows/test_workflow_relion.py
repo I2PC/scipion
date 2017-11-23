@@ -226,7 +226,5 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         self.launchProtocol(protExtract3)
         
         # The number of particles is different than the imported coordinates
-        # due to the subSet done. Ho
-        partSize = protExtract3.outputParticles.getSize()
-        self._checkOutput(protExtract3, size=partSize)
-
+        # due to the subSet done.
+        self._checkOutput(protExtract3, size=1716)
