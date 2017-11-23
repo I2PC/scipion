@@ -232,10 +232,11 @@ Examples:
                       label=changesLabel,
                       help='Visualize changes in orientation, offset and\n '
                            'number images assigned to each class')
-        form.addParam('plotClassDistribution', params.LabelParam, default=True,
-                      label='Prot class distribution over iterations',
-                      help='Plot each class distribution over iterations as '
-                           'bar plots.')
+        if self.protocol.IS_CLASSIFY:
+          form.addParam('plotClassDistribution', params.LabelParam, default=True,
+                        label='Prot class distribution over iterations',
+                        help='Plot each class distribution over iterations as '
+                             'bar plots.')
                                               
     def _getVisualizeDict(self):
         self._load()
