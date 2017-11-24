@@ -84,9 +84,9 @@ class ProtMonitorSummary(ProtMonitor):
                       label="Raise Alarm if minimum defocus (A) <",
                       help="Raise alarm if defocus is smaller than given "
                            "value")
-        form.addParam('astigmatism', params.FloatParam, default=0.2,
+        form.addParam('astigmatism', params.FloatParam, default=1000,
                       label="Raise Alarm if astigmatism >",
-                      help="Raise alarm if astigmatism is greater than given "
+                      help="Raise alarm if astigmatism (defocusU-defocusV)is greater than given "
                            "value")
 
         form.addParam('monitorTime', params.FloatParam, default=30000,
@@ -186,6 +186,7 @@ class ProtMonitorSummary(ProtMonitor):
                 htmlFinished = reportHtml.generate(finished)
                 if sysMonitorFinished and htmlFinished:
                     finished = True
+                    reportHtml.generate(finished)
 
             except Exception as ex:
                 print("An error happened: %s" % ex)
