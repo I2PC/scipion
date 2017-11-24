@@ -473,9 +473,24 @@ void processProjection(
 	const float* devBlobTableSqrt,
 	int imgCacheDim)
 {
+
+
+#if TILE > 1
+	int id = threadIdx.y * blockDim.x + threadIdx.x;
+	int tidX = threadIdx.x % TILE + (id / (blockDim.y * TILE)) * TILE;
+	int tidY = (id / TILE) % blockDim.y;
+	int idx = blockIdx.x*blockDim.x + tidX;
+	int idy = blockIdx.y*blockDim.y + tidY;
+//	printf("%d,%d (%d) -> %d,%d\n", threadIdx.x, threadIdx.y, id, idx, idy);
+#else
 	// map thread to each (2D) voxel
 	volatile int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	volatile int idy = blockIdx.y*blockDim.y + threadIdx.y;
+#endif
+
+
+
+
 
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		if (idy >= tSpace->minY && idy <= tSpace->maxY) {

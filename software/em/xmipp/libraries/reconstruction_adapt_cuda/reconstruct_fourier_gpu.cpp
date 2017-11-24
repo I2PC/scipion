@@ -416,6 +416,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
 	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
 	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
+	tuner.addParameter(kernelId, "TILE", {1,2,4,8,16});
+
 	tuner.addParameter(kernelId, "GRID_DIM_Z", {1,2,4,8,12,16,20}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Z);
 
 	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
@@ -433,6 +435,15 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
 	auto blocksDimEqConstr = [](std::vector<size_t> vector) {return vector.at(0)== vector.at(1);};
 	tuner.addConstraint(kernelId, blocksDimEqConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y"});
+
+	auto tileMultXConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
+	tuner.addConstraint(kernelId, tileMultXConstr, std::vector<std::string>{"BLOCK_DIM_X", "TILE"});
+
+	auto tileMultYConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
+	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"BLOCK_DIM_Y", "TILE"});
+
+	auto tileSharedImgConstr = [](std::vector<size_t> vector) {return vector.at(0) == 0;};
+	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"SHARED_IMG", "TILE"});
 
 	auto tooMuchSharedMemConstr = [](std::vector<size_t> vector) {return !(vector.at(0)==1 && vector.at(1)==1);};
 	tuner.addConstraint(kernelId, tooMuchSharedMemConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "SHARED_IMG"});
