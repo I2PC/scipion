@@ -411,7 +411,7 @@ class Project(object):
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition:
+        3. Call the launch method in protocol.job to handle submission:
            mpi, thread, queue,
         and also take care if the execution is remotely."""
 
@@ -869,7 +869,10 @@ class Project(object):
                         # This case is similar to Pointer, but the values
                         # is a list and we will setup a pointer for each value
                         elif isinstance(attr, pwobj.PointerList):
-                            for value in protDict[paramName]:
+                            attribute = protDict[paramName]
+                            if attribute is None:
+                                continue
+                            for value in attribute:
                                 p = pwobj.Pointer()
                                 _setPointer(p, value)
                                 attr.append(p)

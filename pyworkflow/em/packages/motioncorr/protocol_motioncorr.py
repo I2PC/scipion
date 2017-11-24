@@ -29,6 +29,7 @@
 
 import os
 from itertools import izip
+from math import ceil
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
@@ -71,7 +72,7 @@ class ProtMotionCorr(ProtAlignMovies):
         return getVersion('MOTIONCOR2').startswith('1.0.')
 
     def isLatestVersion(self):
-        return getVersion('MOTIONCOR2') == '1.0.1'
+        return getVersion('MOTIONCOR2') == '1.0.2'
 
     def _getConvertExtension(self, filename):
         """ Check wether it is needed to convert to .mrc or not """
@@ -136,7 +137,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                     """)
 
         form.addSection(label="Motioncor2")
-        form.addParam('useMotioncor2', params.BooleanParam, default=False,
+        form.addParam('useMotioncor2', params.BooleanParam, default=True,
                       label='Use motioncor2',
                       help='Use new *motioncor2* program with local '
                            'patch-based motion correction and dose weighting.')
@@ -228,7 +229,8 @@ class ProtMotionCorr(ProtAlignMovies):
                                'coordinates, width, and height, respectively.')
 
         form.addParam('extraParams2', params.StringParam, default='',
-                      expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      condition='useMotioncor2',
                       label='Additional parameters',
                       help="""Extra parameters for motioncor2\n
         -Bft       100        BFactor for alignment, in px^2.
@@ -260,7 +262,7 @@ class ProtMotionCorr(ProtAlignMovies):
         # Since only runs on GPU, do not allow neither threads nor mpi
         form.addParallelSection(threads=1, mpi=1)
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
         movieFolder = self._getOutputMovieFolder(movie)
@@ -269,7 +271,7 @@ class ProtMotionCorr(ProtAlignMovies):
         outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
                                          movieFolder)
         movieBaseName = pwutils.removeExt(movie.getFileName())
-        aveMicFn =  movieBaseName + '_uncorrected_avg.mrc'
+        aveMicFn = movieBaseName + '_uncorrected_avg.mrc'
         logFile = self._getRelPath(self._getMovieLogFile(movie),
                                    movieFolder)
 
@@ -294,7 +296,8 @@ class ProtMotionCorr(ProtAlignMovies):
                         }
 
             args = '"%s" ' % movie.getBaseName()
-            args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
+            args += ' '.join(
+                ['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
                 args += ' -fgr "%s"' % inputMovies.getGain()
@@ -349,7 +352,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 if self.defectFile.get():
                     argsDict['-DefectFile'] = self.defectFile.get()
 
-                # Currently only version 1.0.1
+                # From version 1.0.1
                 if self.isLatestVersion():
                     patchOverlap = self.getAttributeValue('patchOverlap', None)
                     if patchOverlap: # 0 or None is False
@@ -362,15 +365,17 @@ class ProtMotionCorr(ProtAlignMovies):
                         input_params = parseMagCorrInput(inputEst)
                         # this version uses stretch parameters as following:
                         # 1/maj, 1/min, -angle
-                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (1.0 / input_params[1],
-                                                                  1.0 / input_params[2],
-                                                                  -1 * input_params[0])
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (
+                            1.0 / input_params[1],
+                            1.0 / input_params[2],
+                            -1 * input_params[0])
                     else:
                         # While motioncor2 >=1.0.0 uses estimation params AS IS
                         input_params = parseMagEstOutput(inputEst)
-                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (input_params[1],
-                                                                  input_params[2],
-                                                                  input_params[0])
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (
+                            input_params[1],
+                            input_params[2],
+                            input_params[0])
                 else:
                     argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj,
                                                               self.scaleMin,
@@ -385,7 +390,8 @@ class ProtMotionCorr(ProtAlignMovies):
             else:
                 raise Exception("Unsupported format: %s" % ext)
 
-            args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
+            args += ' '.join(['%s %s' % (k, v)
+                              for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
                 args += ' -Gain "%s" ' % inputMovies.getGain()
@@ -421,11 +427,12 @@ class ProtMotionCorr(ProtAlignMovies):
 
             if self._doComputeMicThumbnail():
                 self.computeThumbnail(outMicFn,
-                                      outputFn=self._getOutputMicThumbnail(movie))
+                                      outputFn=self._getOutputMicThumbnail(
+                                          movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getName())
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
         return summary
@@ -443,7 +450,7 @@ class ProtMotionCorr(ProtAlignMovies):
         cudaLib = getCudaLib(useMC2=self.useMotioncor2)
         cudaConst = (MOTIONCOR2_CUDA_LIB if self.useMotioncor2 else
                      MOTIONCORR_CUDA_LIB)
-        
+
         if cudaLib is None:
             errors.append("Do not know where to find CUDA lib path. "
                           " %s or %s variables have None value or are not"
@@ -497,7 +504,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         return errors
 
-    #--------------------------- UTILS functions ------------------------------
+    # --------------------------- UTILS functions ------------------------------
     def _getMovieLogFile(self, movie):
         if not self.useMotioncor2:
             return 'micrograph_%06d_Log.txt' % movie.getObjId()
@@ -550,7 +557,8 @@ class ProtMotionCorr(ProtAlignMovies):
             mic.psdCorr = em.Image(location=self._getPsdCorr(movie))
             mic.psdJpeg = em.Image(location=self._getPsdJpeg(movie))
         if self._doComputeMicThumbnail():
-            mic.thumbnail = em.Image(location=self._getOutputMicThumbnail(movie))
+            mic.thumbnail = em.Image(
+                location=self._getOutputMicThumbnail(movie))
 
     def _saveAlignmentPlots(self, movie):
         """ Compute alignment shift plots and save to file as png images. """
@@ -631,7 +639,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _doComputeMicThumbnail(self):
         return (self.doSaveAveMic and self.doComputeMicThumbnail)
-    
+
     def _supportsMagCorrection(self):
         return getVersion('MOTIONCOR2') not in ['03162016', '10192016']
 
@@ -655,12 +663,18 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
         raise Exception("First frame shift must be (0,0)!")
 
     i = first
+    skipLabels = ceil(len(meanX)/10.0)
+    labelTick = 1
     for x, y in izip(meanX, meanY):
         preX += x
         preY += y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
-        ax.text(preX-0.02, preY+0.02, str(i))
+        if labelTick == 1:
+            ax.text(preX - 0.02, preY + 0.02, str(i))
+            labelTick = skipLabels
+        else:
+            labelTick -= 1
         i += 1
 
     ax.plot(sumMeanX, sumMeanY, color='b')
