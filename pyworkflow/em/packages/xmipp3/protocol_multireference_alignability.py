@@ -199,7 +199,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             
         params +=  '  -o %s' % self._getExtraPath('scaled_particles.stk')
         params +=  '  --save_metadata_stack %s' % self._getExtraPath('scaled_particles.xmd')
-        params +=  '  --dim %d' % newXdim
+        params +=  '  --fourier %d' % newXdim
         
         self.runJob('xmipp_image_resize',params)
         
