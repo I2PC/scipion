@@ -46,7 +46,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
     closer than 90 degrees. The reported resolution is the resolution at
     which the two CTF phases differ in 90 degrees.
     """
-    _label = 'ctf discrepancy'
+    _label = 'ctf consensus'
 
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
