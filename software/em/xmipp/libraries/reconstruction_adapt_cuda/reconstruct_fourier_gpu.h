@@ -129,13 +129,13 @@ public:
 	    Manipulator(
 		ProgRecFourierGPU* parent,
 	    std::vector<size_t> objId,
-	    RecFourierWorkThread* threadParams,
+	    RecFourierBufferData* buffer,
 	    ktt::ArgumentId imgCacheId,
 	    ktt::ArgumentId spaceId,
 	    ktt::ArgumentId spaceNoId,
 	    ktt::ArgumentId FFTsId,
 	    ktt::ArgumentId sharedMemId,
-	    int firstImgIndex, int lastImgIndex) : parent(parent), objId(objId), threadParams(threadParams),
+	    int firstImgIndex, int lastImgIndex) : parent(parent), objId(objId), buffer(buffer),
 	    imgCacheId(imgCacheId),spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId), sharedMemId(sharedMemId),
 	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
 
@@ -154,11 +154,16 @@ public:
 	        globalSize.setSizeY(ceil(size2D/(float)localSize.getSizeY()));
 	        int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(localSize.getSizeX() + 2*parent->blob.radius));
 	        updateArgumentScalar(imgCacheId, &imgCacheDim);
-	        size_t useSharedMem = getParameterValue("SHARED_IMG", getCurrentConfiguration());
+
+	        size_t useSharedMem = getParameterValue("SHARED_IMG", parameterValues);
 	        updateArgumentLocal(sharedMemId, useSharedMem ? imgCacheDim*imgCacheDim : 1);
+
+	        size_t useAtomics = getParameterValue("USE_ATOMICS", parameterValues);
 
 	        parent->initProgress();
 	        parent->logProgress(0, true);
+
+
 
 			// main work routine
 //			int startLoadIndex = firstImgIndex;
@@ -172,14 +177,27 @@ public:
 //				prepareBuffer(threadParams, parent, false, objId);
 
 				// send them for processing
-				if (threadParams->buffer->noOfImages > 0) { // it can happen that all images are skipped
-//					int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
-//					updateArgumentVector(spaceId, threadParams->buffer->spaces, noOfSpaces);
-//					updateArgumentVector(FFTsId, threadParams->buffer->FFTs, threadParams->buffer->getNoOfElements(threadParams->buffer->FFTs));
-//					updateArgumentScalar(spaceNoId, &noOfSpaces);
+				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
 
-					runKernel(kernelId, globalSize, localSize);
-					parent->logProgress(threadParams->buffer->noOfImages);
+					if (useAtomics == 1) {
+						runKernel(kernelId, globalSize, localSize);
+						parent->logProgress(buffer->noOfImages);
+					} else {
+						int noOfSpaces = buffer->getNoOfElements(buffer->spaces);
+						for (int i = 0; i < noOfSpaces; i++) {
+							int one = 1;
+							RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
+							updateArgumentVector(spaceId, space, 1);
+							updateArgumentVector(FFTsId, buffer->getNthItem(buffer->FFTs, space->projectionIndex), buffer->getNoOfElements(buffer->FFTs) / buffer->noOfImages);
+							updateArgumentScalar(spaceNoId, &one);
+
+							runKernel(kernelId, globalSize, localSize);
+							parent->logProgress(buffer->noOfImages);
+						}
+					}
+
+
+
 				}
 				// once the processing finished, buffer can be reused
 //			}
@@ -191,7 +209,7 @@ public:
 	private:
 	    ProgRecFourierGPU* parent;
 	    std::vector<size_t> objId;
-	    RecFourierWorkThread* threadParams;
+	    RecFourierBufferData* buffer;
 	    ktt::ArgumentId imgCacheId;
 	    ktt::ArgumentId spaceId;
 	    ktt::ArgumentId spaceNoId;

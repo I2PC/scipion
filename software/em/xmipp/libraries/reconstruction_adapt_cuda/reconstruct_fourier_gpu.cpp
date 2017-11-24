@@ -422,6 +422,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
 	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
 	tuner.addParameter(kernelId, "SHARED_IMG", {0, 1});
+	tuner.addParameter(kernelId, "USE_ATOMICS", {0, 1});
 	tuner.addParameter(kernelId, "BLOB_TABLE_SIZE_SQRT", {BLOB_TABLE_SIZE_SQRT});
 	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {0,1});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
@@ -445,6 +446,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	auto tileSharedImgConstr = [](std::vector<size_t> vector) {return vector.at(0) == 0 || vector.at(1) == 1;};
 	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"SHARED_IMG", "TILE"});
 
+	auto useAtomicsZDimConstr = [](std::vector<size_t> vector) {return !(vector.at(0) == 0 && vector.at(1) != 1);};
+	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"USE_ATOMICS", "GRID_DIM_Z"});
+
 	auto tileSmallerThanBlockConstr = [](std::vector<size_t> vector) {return vector.at(0) > vector.at(2) && vector.at(1) > vector.at(2);};
 	tuner.addConstraint(kernelId, tileSmallerThanBlockConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y", "TILE"});
 
@@ -454,7 +458,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	auto blobTableConstr = [](std::vector<size_t> vector) {return vector.at(0)==0 || (vector.at(0)==1 && vector.at(1)==1);};
 	tuner.addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
 
-	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams,
+	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams->buffer,
 			imgCacheId,spaceId,spaceNoId,FFTsId, sharedMemId, threadParams->startImageIndex, threadParams->endImageIndex));
 
 	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important

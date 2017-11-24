@@ -454,10 +454,17 @@ void processVoxelBlob(
 			}
 		}
 	}
+
+#if USE_ATOMICS
 	// use atomic as two blocks can write to same voxel
 	atomicAdd(&tempVolumeGPU[2*index3D], volReal);
 	atomicAdd(&tempVolumeGPU[2*index3D + 1], volImag);
 	atomicAdd(&tempWeightsGPU[index3D], w);
+#else
+	tempVolumeGPU[2*index3D] += volReal;
+	tempVolumeGPU[2*index3D + 1] += volImag;
+	tempWeightsGPU[index3D] += w;
+#endif
 }
 
 /**
