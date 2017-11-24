@@ -356,7 +356,7 @@
 
         function addMovieGainChart () {
 
-            if (report.movieGainData.length == 0) {
+            if (report.movieGainData.length == 0 || report.movieGainData.idValues.length == 0) {
                 $('#movieGain').hide();
                 return;
             }
@@ -473,13 +473,14 @@
         };
 
 
-//        function addCTFChart () {
-//
-//            if (!('defocusU' in report.ctfData)) {
-//                $('#ctf').hide();
-//                return;
-//            }
-//
+        function addCTFChart () {
+
+            if (!('defocusU' in report.ctfData)) {
+                $('#ctf').hide();
+                return;
+            }
+            addResolutionHistogram();
+            addDefocusCoverage();
 //
 //            $('#ctfChart').highcharts({
 //                title: {
@@ -540,7 +541,7 @@
 //            ctfChart.showResetZoom();
 //
 //
-//        };
+        };
 
         function addDefocusCoverage(){
             if (!('defocusCoverage' in report.ctfData)) {
@@ -934,9 +935,7 @@
         function populateReport(){
             addAcquisition();
             addRuns();
-//            addCTFChart();
-            addResolutionHistogram();
-            addDefocusCoverage();
+            addCTFChart();
             addMovieGainChart();
             addSystemChart();
             addMicTable();

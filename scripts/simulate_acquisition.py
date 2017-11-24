@@ -21,27 +21,33 @@ def usage(error):
     Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER
         INPUT_PATTERN: input pattern matching input files.
         OUTPUT_FOLDER: where to create the output links.
+        [DELAY, dafult 30]: delay in seconds between file appearance
     """ % error
     sys.exit(1)    
 
 
-if len(sys.argv) != 3:
+if not len(sys.argv) in (3,4):
     usage("Incorrect number of input parameters")
 
 inputPattern = sys.argv[1]
 outputDir = sys.argv[2]
+if len(sys.argv) == 4:
+    delay = sys.argv[3]
+else:
+    delay = 30
 
 inputFiles = glob(pwutils.expandPattern(inputPattern))
 inputFiles.sort()
 
 print "Input pattern: ", inputPattern
 print "Input files: ", inputFiles
+print "Delay: ", str(delay), " seconds."
 
 print "Cleaning output directory: ", outputDir
 pwutils.cleanPath(outputDir)
 pwutils.makePath(outputDir)
 
-aTime = 30
+aTime = int(delay)
 n = 5
 t = aTime / n
 print "t=%s" % t
