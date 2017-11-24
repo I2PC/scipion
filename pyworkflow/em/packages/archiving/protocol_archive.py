@@ -1,8 +1,8 @@
 from pyworkflow.em import ProtProcessMovies
 import json
 import os.path
-from stomp import Connection
 import pyworkflow.protocol.params as params
+
 
 class ProtArchive(ProtProcessMovies):
     """
@@ -31,7 +31,7 @@ class ProtArchive(ProtProcessMovies):
 
         self._setValues(recipe_data, 'files', [real_path ])
         json_data = json.dumps(recipe_data)
-        print json_data
+        self._sendMessage(json_data)
 
     def _setValues(self, data, key, value):
         for k in data:
@@ -43,12 +43,16 @@ class ProtArchive(ProtProcessMovies):
     def _sendMessage(self, json_data):
         # type: (str) -> void
         try:
+            try:
+                from stomp import Connection
+            except ImportError as ex:
+                print "You need stomp to run the archiver, run 'scipion run pip stomp.py' first"
+                raise ex
             self.connection.send(self.queue_name, json_data)
         except AttributeError:
             self.connection = Connection([(self.queueHost, self.queuePort)])
             self.connection.connect(wait=True)
             self._sendMessage(json_data)
-
 
     def createOutputStep(self):
         pass
