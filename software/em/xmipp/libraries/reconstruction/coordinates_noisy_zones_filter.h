@@ -47,8 +47,8 @@ public:
     /** Input Micrograph */
     FileName fnInMic;
 
-    /** Root path for output */
-    FileName fnRoot;
+    /** Output coordinates*/
+    FileName fnOut;
 
     /** Patch is of size: size x size */
     int patchSize;

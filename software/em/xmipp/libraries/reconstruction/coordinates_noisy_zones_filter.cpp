@@ -30,15 +30,17 @@ void ProgCoordinatesNoisyZonesFilter::defineParams()
     // Parameters
     addParamsLine(" --pos <coordinates> : Input coordinates");
     addParamsLine(" --mic <micrograph> : Reference volume");
-    addParamsLine(" [--patchSize <n=10>] : Patch size for the variance/mean filter");
-    addParamsLine(" --oroot <fnRoot> : Rootname for the output coordinates");
+    addParamsLine(" [--patchSize <n=10>] : Patch size for the variance filter");
+    addParamsLine(" [-o <coordinates=pos>] : Output coordinates, if not passed the input is sustituted");
 }
 
 void ProgCoordinatesNoisyZonesFilter::readParams()
 {
 	fnInCoord = getParam("--pos");
 	fnInMic = getParam("--mic");
-	fnRoot = getParam("--oroot");
+    fnOut = getParam("-o");
+    if (fnOut=="pos")
+        fnOut = fnInCoord;
 	patchSize = getIntParam("--patchSize");
 }
 
@@ -48,7 +50,7 @@ void ProgCoordinatesNoisyZonesFilter::show()
 		std::cout
 		<< "Input Coordinates:     " << fnInCoord  << std::endl
 		<< "Input Micrograph:      " << fnInMic  << std::endl
-		<< "Output rootname:       " << fnRoot << std::endl
+		<< "Output coordinates:    " << fnOut << std::endl
 		<< "Patch size:            " << patchSize << std::endl
 		;
 }
@@ -87,8 +89,11 @@ void ProgCoordinatesNoisyZonesFilter::run()
     //               << "   > > >   G I N I   Coef : " 
     //               << giniV << "   > > >   To Process!!" << std::endl;
     // }
-    Image<double> imVar(matrixMic);
-    imVar.write(fnRoot+"_varianceFilter.mrc");
+    if (verbose)
+    {
+        Image<double> imVar(matrixMic);
+        imVar.write(fnInCoord.withoutExtension()+"_varianceFilter.mrc");
+    }
     
 
     std::vector<Particle_coords> goodCoords;
@@ -102,7 +107,7 @@ void ProgCoordinatesNoisyZonesFilter::run()
     	// 	goodCoords.push_back(coord);
     	// else
     	// 	badCoords.push_back(coord);
-        varValue.push_back(giniV*DIRECT_A2D_ELEM(matrixMic,coord.Y,coord.X));
+        varValue.push_back(DIRECT_A2D_ELEM(matrixMic,coord.Y,coord.X));
     }
     // if (goodCoords.size()>0)
     // {
@@ -117,7 +122,7 @@ void ProgCoordinatesNoisyZonesFilter::run()
     // std::cout << "Discarted " << badCoords.size() << "/" << nPart << 
     //              " particles by the noisy zone filter." << std::endl;
 
-    std::cout << " Gini Coeff: " << giniV << std::endl;
+    std::cout << " >>> Gini Coeff: " << giniV << std::endl;
 
     MetaData MD;
 
@@ -135,7 +140,8 @@ void ProgCoordinatesNoisyZonesFilter::run()
             MD.setValue(MDL_SCORE_BY_GINI, giniV, id);            
         }
     }
-    MD.write((String)"particles@"+fnRoot+"VarAndGiniScore.pos");
+    
+    MD.write((String)"particles@"+fnOut);
 
 
 }

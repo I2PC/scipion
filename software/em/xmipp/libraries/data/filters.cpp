@@ -1055,8 +1055,8 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize)
     varianceFilter(I, varKernelSize);
     im = I;
 
-    // filter.w1 = varKernelSize/4;
-    // filter.applyMaskSpace(I);
+    filter.w1 = varKernelSize/8;
+    filter.applyMaskSpace(I);
 
     // Image<double> imGV(im);
     // imGV.write("I_Gauss_Var.mrc");

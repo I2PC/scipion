@@ -146,7 +146,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       label='Filter noisy zones',
                       help='To reject particles from grained zones of the '
                            'micrograph. Often, the grained areas correspond '
-                           'to the carbon substrate or ice blocks and impurities.')
+                           'to the carbon substrate, ice blocks or impurities.')
 
         form.addParallelSection(threads=4, mpi=1)
     
@@ -175,21 +175,19 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         fnPosFile = self._getMicPos(mic)
         boxSize = self.boxSize.get()
 
-        # get the coordinates of the particles (discarting the noisy zone, if so)
-        if self.doGrainFilter:
-            args  =  '--pos %s' % fnPosFile
-            args += ' --mic %s' % mic.getFileName()
-            args += ' --oroot %s' % outputRoot
-            args += ' --patchSize %d' % boxSize
-            self.runJob('xmipp_coordinates_noisy_zones_filter', args)
-            fnPosFile = outputRoot + 'VarAndGiniScore.pos'
-
         particlesMd = 'particles@%s' % fnPosFile
         # If it has coordinates extract the particles
         if exists(fnPosFile):
             # Create a list with micrographs operations (programs in xmipp) and
             # the required command line parameters (except input/ouput files)
             micOps = []
+
+            # Discart particles in the grained zones of the mic (if so)
+            if self.doGrainFilter:
+                args  =  '--pos %s' % fnPosFile
+                args += ' --mic %s' % mic.getFileName()
+                args += ' --patchSize %d' % int(boxSize*1.5)
+                self.runJob('xmipp_coordinates_noisy_zones_filter', args)
 
             # Check if it is required to downsample your micrographs
             downFactor = self.downFactor.get()
@@ -591,7 +589,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
                     
-                    # p._xmipp_VAR_score = Float(xmippToLocation(row.getValue(md.MDL_SCORE_BY_VAR)))
+                    p._xmipp_VAR_score = Float(row.getValue(md.MDL_SCORE_BY_VAR))
                     
                     # disabled particles (in metadata) should not add to the
                     # final set
