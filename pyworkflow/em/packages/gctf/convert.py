@@ -30,11 +30,20 @@ This module contains converter functions that will serve to:
 """
 
 import os
-import re
+from collections import OrderedDict
 
 from pyworkflow.em.packages.gctf import GCTF_HOME
-from pyworkflow.object import Float
+from pyworkflow.object import Float, ObjectWrap
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
+
+
+CTF_DICT = OrderedDict([
+       ("_defocusU", md.RLN_CTF_DEFOCUSU),
+       ("_defocusV", md.RLN_CTF_DEFOCUSV),
+       ("_defocusAngle", md.RLN_CTF_DEFOCUS_ANGLE)
+       ])
 
 
 def getVersion():
@@ -91,9 +100,9 @@ def setWrongDefocus(ctfModel):
     ctfModel.setDefocusU(-999)
     ctfModel.setDefocusV(-1)
     ctfModel.setDefocusAngle(-999)
-    
 
-def readCtfModel(ctfModel, filename, ctf4=False):        
+
+def readCtfModel(ctfModel, filename, ctf4=False):
     result = parseGctfOutput(filename)
     if result is None:
         setWrongDefocus(ctfModel)
@@ -116,3 +125,50 @@ def getEnviron():
 
     return environ
 
+def writeSetOfCoordinates(coordDir, coordSet, micsSet):
+    """ Write a star file on metadata format for each micrograph
+    on the coordSet.
+    Params:
+        coordDir: the directory where the .star files will be written.
+        coordSet: the SetOfCoordinates that will be read.
+        micsSet: the SetOfMicrographs that will be read.
+    """
+    header = """
+data_
+
+loop_
+_rlnCoordinateX #1
+_rlnCoordinateY #2
+"""
+
+    # Create a dictionary with the star filenames for each micrograph
+    for mic in micsSet:
+        micId = mic.getObjId()
+        micBase = pwutils.removeBaseExt(mic.getFileName())
+        fnCoords = pwutils.join(coordDir, micBase, micBase + '_coords.star')
+        f = open(fnCoords, 'w')
+        f.write(header)
+        for coord in coordSet:
+            if coord.getMicId() == micId:
+                x = coord.getX()
+                y = coord.getY()
+                f.write("%d %d\n" % (x, y))
+        f.close()
+
+
+def rowToCtfModel(ctfRow):
+    """ Create a CTFModel from a row of a meta """
+    if ctfRow.containsAll(CTF_DICT):
+        ctfModel = em.CTFModel()
+        for attr, label in CTF_DICT.iteritems():
+            value = ctfRow.getValue(label)
+            if not hasattr(ctfModel, attr):
+                setattr(ctfModel, attr, ObjectWrap(value))
+            else:
+                getattr(ctfModel, attr).set(value)
+
+        ctfModel.standardize()
+    else:
+        ctfModel = None
+
+    return ctfModel

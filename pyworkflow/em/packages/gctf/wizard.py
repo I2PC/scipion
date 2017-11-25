@@ -33,6 +33,7 @@ import ttk
 from pyworkflow.em.constants import *
 
 from protocol_gctf import ProtGctf
+from protocol_gctf_refine import ProtGctfRefine
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 
@@ -43,7 +44,8 @@ from pyworkflow import findResource
 #===============================================================================
 
 class GctfCTFWizard(CtfWizard):
-    _targets = [(ProtGctf, ['ctfDownFactor', 'lowRes', 'highRes'])]
+    _targets = [(ProtGctf, ['ctfDownFactor', 'lowRes', 'highRes']),
+                (ProtGctfRefine, ['ctfDownFactor', 'lowRes', 'highRes'])]
     
     def _getParameters(self, protocol):
         
