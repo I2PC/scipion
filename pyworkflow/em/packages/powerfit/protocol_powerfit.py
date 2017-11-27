@@ -39,7 +39,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
     See documentation at:
        http://www.bonvinlab.org/education/powerfit
     """
-    _label = 'rigid fit'
+    _label = 'powerfit'
 
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -125,18 +125,10 @@ class PowerfitProtRigidFit(ProtFitting3D):
                 fhCmd.close()
 
     def createOutputStep(self):
-        volume = Volume()
-        volume.setFileName(self._getExtraPath('volume.mrc'))
         if self.inputVol.get() is None:
-            self.inputPDB.get().getVolume().get().setSamplingRate(
-                self.inputPDB.get().getVolume().get().getSamplingRate())
+            volume = self.inputPDB.get().getVolume().get()
         else:
-            volume.setSamplingRate(self.inputVol.get().getSamplingRate())
-        self._defineOutputs(outputVolume=volume)
-        if self.inputVol.get() is None:
-            self._defineSourceRelation(self.inputPDB.get().getVolume(), volume)
-        else:
-            self._defineSourceRelation(self.inputVol, volume)
+            volume = self.inputVol.get()
 
         fnOutput = self._getExtraPath("solutions.out")
         qualifiers = {}
