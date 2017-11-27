@@ -96,9 +96,9 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 	this->offset = offset; //rotate unit cell this degrees
 	this->expanded = expanded; //coefficient of expansion
 	this->sampling = sampling; // Angstrom/pixels relation 
-	this->x_origin = x_origin; // origin x coordinate introduced with the input volume
-	this->y_origin = y_origin; // origin y coordinate introduced with the input volume
-	this->z_origin = z_origin; // origin z coordinate introduced with the input volume
+	this->x_origin = x_origin; // origin x coordinate introduced with the input volume (in pixels)
+	this->y_origin = y_origin; // origin y coordinate introduced with the input volume (in pixels)
+	this->z_origin = z_origin; // origin z coordinate introduced with the input volume (in pixels)
 	this->newOriginAfterExpansion = vectorR3(0., 0., 0.);
 	SL.isSymmetryGroup(sym, symmetry, sym_order); //parse symmetry string
 	std::cerr << "symmetry: " << symmetry << std::endl;
@@ -555,7 +555,7 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 	in3Dmap.getDimensions(xDim, yDim, zDim);
 	double x_offset = x_origin - xDim/2.; //difference between default and user introduced x_origin coordinate
 	double y_offset = y_origin - yDim/2.; //difference between default and user introduced y_origin coordinate
-	double z_offset = z_origin - zDim/2; //difference between default and user introduced z_origin coordinate
+	double z_offset = z_origin - zDim/2.; //difference between default and user introduced z_origin coordinate
 	
 	if (rmax == 0)
 		rmax = (double) xDim / 2.;
