@@ -158,7 +158,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
             newTs = max(Ts, newTs)
             newXdim = Xdim * Ts / newTs
             self.runJob("xmipp_image_resize",
-                        "-i %s -o %s --save_metadata_stack %s --dim %d" %
+                        "-i %s -o %s --save_metadata_stack %s --fourier %d" %
                         (self._getExpParticlesFn(),
                          self._getTmpPath('scaled_particles.stk'),
                          self._getTmpPath('scaled_particles.xmd'),
