@@ -1050,12 +1050,13 @@ class ProtRelionBase(EMProtocol):
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
             args['--iter'] = self._getnumberOfIters()
+
+            if not self.doContinue and isVersion2() and getVersion() != V2_0:
+                self._setSubsetArgs(args)
     
         self._setSamplingArgs(args)
         self._setMaskArgs(args)
 
-        if not self.doContinue and isVersion2() and getVersion() != V2_0:
-            self._setSubsetArgs(args)
 
     def _setCTFArgs(self, args):
         # CTF stuff
