@@ -95,12 +95,13 @@ class viewerProtImportVolumes(ProtocolViewer):
             return volName
 
     def _getVolOrigin(self, vol):
-        """chimera only handles integer shifts"""
         origin = vol.getOrigin(returnInitIfNone=True).getShifts()
-        x = int(origin[0])  # * sampling
-        y = int(origin[1])  # * sampling
-        z = int(origin[2])  # * sampling
+        x = origin[0]
+        y = origin[1]
+        z = origin[2]
         return x, y, z
+        # x, y, z are floats in Angstroms
+        # Chimera shows (x, y, z) divided by the samplingRate in pixels
 
     def _createSetOfVolumes(self):
         try:
@@ -122,51 +123,43 @@ class viewerProtImportVolumes(ProtocolViewer):
 
         if len(_setOfVolumes) == 1:
             count = 1  # first model in chimera is the bild file
-            dim = self.protocol.outputVolume.getDim()[0]
             # if we have a single volume then create axis
             # as bild file. Chimera must read the bild file first
             # otherwise system of coordinates will not
             # be in the center of the window
-            tmpFileNameBILD = self.protocol._getTmpPath("axis.bild")
-            tmpFileNameBILD = os.path.abspath(tmpFileNameBILD)
+            from pyworkflow.em.packages.chimera.convert import \
+                createCoordinateAxisFile
+            dim = self.protocol.outputVolume.getDim()[0]
+            tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
+                "axis.bild"))
+            createCoordinateAxisFile(dim,
+                                     bildFileName=tmpFileNameBILD,
+                                     sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
-            ff = open(tmpFileNameBILD, "w+")
-            arrowDict = {}
-            arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
-                sampling * dim * 3. / 4.
-            arrowDict["r1"] = 0.1
-            arrowDict["r2"] = 4 * arrowDict["r1"]
-            arrowDict["rho"] = 0.75
-            ff.write(".color 1 0 0\n"
-                     ".arrow 0 0 0 %(x)d 0 0 %(r1)f %(r2)f %(rho)f\n"
-                     ".color 1 1 0\n"
-                     ".arrow 0 0 0 0 %(y)d 0 %(r1)f %(r2)f %(rho)f\n"
-                     ".color 0 0 1\n"
-                     ".arrow 0 0 0 0 0 %(z)d %(r1)f %(r2)f %(rho)f\n" %
-                     arrowDict)
-            ff.close()
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
             localVol = os.path.abspath(self._getVolumeName(vol))
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")
-            x, y, z = self._getVolOrigin(vol)
             f.write("open %s\n" % localVol)
             f.write("volume#%d style surface voxelSize %f\n" %
                     (count, sampling))
             count += 1
+
         if len(_setOfVolumes) > 1:
             f.write('tile\n')
         else:
-            f.write("volume#1 originIndex %d,%d,%d\n" % (x, y, z))
+            from pyworkflow.em.packages.chimera.convert import \
+                adaptOriginFromCCP4ToChimera
+            x, y, z = adaptOriginFromCCP4ToChimera(self._getVolOrigin(vol))
+            f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
         f.close()
         import pyworkflow.em as em
         return [em.ChimeraView(tmpFileNameCMD)]
 
     def _showVolumesSlices(self):
         # Write an sqlite with all volumes selected for visualization.
-
         sampling, setOfVolumes = self._createSetOfVolumes()
 
         if len(setOfVolumes) == 1:
