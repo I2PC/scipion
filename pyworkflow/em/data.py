@@ -430,13 +430,14 @@ class Image(EMObject):
         # this matrix can be used for 2D/3D alignment or
         # to represent projection directions
         self._transform = None
-        # default orign by default is box center =
-        # (Xdim/2, Ydim/2,Zdim/2)
+        # default origin by default is box center =
+        # (Xdim/2, Ydim/2,Zdim/2)*sampling
         # origin stores a matrix that using as input the point (0,0,0)
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
-        # _origin is an object of the class Transformor shifts
-        # units are pixels
+        # _origin is an object of the class Transform shifts
+        # units are A.
+        # Origin coordinates follow the MRC convention
         self._origin = None
         if location:
             self.setLocation(location)
@@ -559,20 +560,23 @@ class Image(EMObject):
         return self._origin is not None
 
     def getOrigin(self, returnInitIfNone=False):
+        """shifts in A"""
         if self.hasOrigin():
             return self._origin
         else:
             if returnInitIfNone:
+                sampling = self.getSamplingRate()
                 t = Transform()
                 x, y, z = self.getDim()
                 if z > 1:
-                    z = z/2
-                t.setShifts(x/2, y/2, z)
+                    z = z/2.
+                t.setShifts(x/2. * sampling, y/2. * sampling, z * sampling)
                 return t  # The identity matrix
             else:
                 return None
 
     def setOrigin(self, newOrigin):
+        """shifts in A"""
         self._origin = newOrigin
 
     def __str__(self):
@@ -737,7 +741,7 @@ class PdbFile(EMFile):
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
         # _origin is an object of the class Transformor shifts
-        # units are angstrom (in Image units are px)
+        # units are Angstroms (in Image units are A)
         self._origin = None
 
     def getPseudoAtoms(self):
