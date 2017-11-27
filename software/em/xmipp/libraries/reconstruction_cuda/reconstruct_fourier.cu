@@ -1,6 +1,8 @@
 #include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/reconstruct_fourier_projection_traverse_space.h"
 #include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/point3D.h"
 
+
+
 #if SHARED_BLOB_TABLE
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
@@ -26,6 +28,22 @@ __device__ __constant__ float cIw0 = 0.581191f;
 __device__ __constant__ float cIDeltaSqrt = 2769.806152f;
 
 
+__device__ void operator+=(float2 &a, float2 b)
+{
+    a.x += b.x;
+    a.y += b.y;
+}
+
+__device__ void operator*=(float2 &a, float2 b)
+{
+    a.x *= b.x;
+    a.y *= b.y;
+}
+
+__device__ float2 operator*(float2 a, float b)
+{
+    return make_float2(a.x * b, a.y * b);
+}
 
 __device__
 float bessi0(float x)
@@ -271,7 +289,7 @@ void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
  */
 __device__
 void processVoxel(
-	float* tempVolumeGPU, float* tempWeightsGPU,
+	float2* tempVolumeGPU, float* tempWeightsGPU,
 	const float* FFTs, const float* CTFs, const float* modulators,
 	int fftSizeX, int fftSizeY,
 	int x, int y, int z,
@@ -313,10 +331,13 @@ void processVoxel(
 
 	float weight = wBlob * wModulator * dataWeight;
 
+
+	/* FIXME
 	 // use atomic as two blocks can write to same voxel
 	atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight * wCTF);
 	atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight * wCTF);
 	atomicAdd(&tempWeightsGPU[index3D], weight);
+	*/
 }
 
 /**
@@ -326,8 +347,9 @@ void processVoxel(
  */
 __device__
 void processVoxelBlob(
-	float* tempVolumeGPU, float *tempWeightsGPU,
-	const float* FFTs, const float* CTFs, const float* modulators,
+	float2* tempVolumeGPU, float *tempWeightsGPU,
+	const float* FFTs,
+	const float* CTFs, const float* modulators,
 	int fftSizeX, int fftSizeY,
 	int x, int y, int z,
 	const RecFourierProjectionTraverseSpace* const space,
@@ -364,10 +386,13 @@ void processVoxelBlob(
 	maxY = fminf(maxY, fftSizeY-1);
 
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
-	float volReal, volImag, w;
-	volReal = volImag = w = 0.f;
+
+	float w;
+	float2 vol;
+	vol.x = vol.y = w = 0.f;
+
 #if !SHARED_IMG
-	const float* __restrict__ img = getNthItem(FFTs, space->projectionIndex, fftSizeX, fftSizeY, true);
+	const float2* __restrict__ img = (const float2*)getNthItem(FFTs, space->projectionIndex, fftSizeX, fftSizeY, true);
 #endif
 	float dataWeight = space->weight;
 
@@ -406,12 +431,11 @@ void processVoxelBlob(
 #endif
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
+
 #if SHARED_IMG
-				volReal += IMG[index2D].x * weight * wCTF;
-				volImag += IMG[index2D].y * weight * wCTF;
+				vol += IMG[index2D] * weight * wCTF;
 #else
-				volReal += img[2*index2D] * weight * wCTF;
-				volImag += img[2*index2D + 1] * weight * wCTF;
+				vol += img[index2D] * weight * wCTF;
 #endif
 			}
 		}
@@ -445,24 +469,20 @@ void processVoxelBlob(
 				float weight = wBlob * dataWeight;
 				w += weight;
 #if SHARED_IMG
-				volReal += IMG[index2D].x * weight;
-				volImag += IMG[index2D].y * weight;
+				vol += IMG[index2D] * weight;
 #else
-				volReal += img[2*index2D] * weight;
-				volImag += img[2*index2D + 1] * weight;
+				vol += img[index2D] * weight;
 #endif
 			}
 		}
 	}
-
 #if USE_ATOMICS
 	// use atomic as two blocks can write to same voxel
-	atomicAdd(&tempVolumeGPU[2*index3D], volReal);
-	atomicAdd(&tempVolumeGPU[2*index3D + 1], volImag);
+	atomicAdd(&tempVolumeGPU[index3D].x, vol.x);
+	atomicAdd(&tempVolumeGPU[index3D].y, vol.y);
 	atomicAdd(&tempWeightsGPU[index3D], w);
 #else
-	tempVolumeGPU[2*index3D] += volReal;
-	tempVolumeGPU[2*index3D + 1] += volImag;
+	tempVolumeGPU[index3D] += vol;
 	tempWeightsGPU[index3D] += w;
 #endif
 }
@@ -473,8 +493,9 @@ void processVoxelBlob(
   */
 __device__
 void processProjection(
-	float* tempVolumeGPU, float *tempWeightsGPU,
-	const float* FFTs, const float* CTFs, const float* modulators,
+	float2* tempVolumeGPU, float *tempWeightsGPU,
+	const float* FFTs,
+	const float* CTFs, const float* modulators,
 	int fftSizeX, int fftSizeY,
 	const RecFourierProjectionTraverseSpace* const tSpace,
 	const float* devBlobTableSqrt,
@@ -697,7 +718,7 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
  */
 extern "C" __global__
 void processBufferKernel(
-		float* tempVolumeGPU, float *tempWeightsGPU,
+		float2* tempVolumeGPU, float *tempWeightsGPU,
 		RecFourierProjectionTraverseSpace* spaces, int noOfSpaces,
 		const float* FFTs,
 		int fftSizeX, int fftSizeY,
@@ -742,7 +763,8 @@ void processBufferKernel(
 
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
-			FFTs, NULL, NULL, fftSizeX, fftSizeY,
+			FFTs,
+			NULL, NULL, fftSizeX, fftSizeY,
 			space,
 			devBlobTableSqrt,
 			imgCacheDim);

@@ -192,7 +192,7 @@ public:
 							updateArgumentScalar(spaceNoId, &one);
 
 							runKernel(kernelId, globalSize, localSize);
-							parent->logProgress(buffer->noOfImages);
+							parent->logProgress(1);
 						}
 					}
 
