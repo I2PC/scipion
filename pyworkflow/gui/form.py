@@ -375,7 +375,8 @@ class SubclassesTreeProvider(TreeProvider):
                         # JMRT: The inclusion of subitems as possible inputs
                         # is causing a performance penalty. So for the moment
                         # we will restrict that to SetOfVolumes only
-                        if isinstance(attr, em.SetOfVolumes):
+                        if isinstance(attr, em.SetOfVolumes) or \
+                                isinstance(attr, em.SetOfPDBs):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
