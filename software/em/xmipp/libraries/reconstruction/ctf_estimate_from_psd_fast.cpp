@@ -1394,7 +1394,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		<< std::endl;
 		prm.saveIntermediateResults_fast("step04b_best_fit_with_gaussian2_fast", true);
 	}
-
 	/************************************************************************/
 	/* STEP 12: 2D estimation parameters          							*/
 	/************************************************************************/
@@ -1440,7 +1439,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best fit with 2D parameters:\n" << prm2D->current_ctfmodel << std::endl;
 		prm2D->saveIntermediateResults("step05b_estimate_2D_parameters", true);
 	}
-
 	/************************************************************************/
 	/* STEP 13: Produce output                                              */
 	/************************************************************************/

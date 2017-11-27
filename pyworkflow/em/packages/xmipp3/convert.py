@@ -130,7 +130,9 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_Q0,
     xmipp.MDL_CTF_CS,
     xmipp.MDL_CTF_VOLTAGE,
-    xmipp.MDL_CTF_SAMPLING_RATE
+    xmipp.MDL_CTF_SAMPLING_RATE,
+    xmipp.MDL_CTF_PHASE_SHIFT,
+    xmipp.MDL_CTF_VPP_RADIUS,
     ]
 
 # Some extra labels to take into account the zscore

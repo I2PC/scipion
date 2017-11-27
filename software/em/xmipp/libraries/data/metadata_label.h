@@ -192,6 +192,7 @@ enum MDLabel
     MDL_CTF_XRAY_OUTER_ZONE_WIDTH, /// Outermost zone width of the X-ray Fresnel lens (nm)
     MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
 	MDL_CTF_PHASE_SHIFT,	//Volta Phase Plate phase shift
+	MDL_CTF_VPP_RADIUS,    //Phase Plate radius
     MDL_CUMULATIVE_SSNR, ///<Cumulative SSNR (double)
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
@@ -1483,6 +1484,7 @@ private:
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN_SIGMAU, LABEL_DOUBLE, "ctfBgGaussianSigmaU");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN_SIGMAV, LABEL_DOUBLE, "ctfBgGaussianSigmaV");
         MDL::addLabel(MDL_CTF_PHASE_SHIFT, LABEL_DOUBLE, "ctfVPPphaseshift");
+        MDL::addLabel(MDL_CTF_VPP_RADIUS, LABEL_DOUBLE, "ctfVPPRadius");
 
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_CU, "CTFBG_Gaussian2_CU");//3.0
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_CV, "CTFBG_Gaussian2_CV");//3.0

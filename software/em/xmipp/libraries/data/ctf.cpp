@@ -1138,22 +1138,10 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
     {
     	if (row.containsLabel(MDL_CTF_DEFOCUSU))
     	{
-			//row.getValueOrDefault(MDL_CTF_VOLTAGE, kV, 100);
 			row.getValueOrDefault(MDL_CTF_DEFOCUSU, DeltafU, 0);
 			row.getValueOrDefault(MDL_CTF_DEFOCUSV, DeltafV, DeltafU);
 			row.getValueOrDefault(MDL_CTF_DEFOCUS_ANGLE, azimuthal_angle, 0);
-			/*row.getValueOrDefault(MDL_CTF_CS, Cs, 0);
-			row.getValueOrDefault(MDL_CTF_CA, Ca, 0);
-			row.getValueOrDefault(MDL_CTF_ENERGY_LOSS, espr, 0);
-			row.getValueOrDefault(MDL_CTF_LENS_STABILITY, ispr, 0);
-			row.getValueOrDefault(MDL_CTF_CONVERGENCE_CONE, alpha, 0);
-			row.getValueOrDefault(MDL_CTF_LONGITUDINAL_DISPLACEMENT, DeltaF, 0);
-			row.getValueOrDefault(MDL_CTF_TRANSVERSAL_DISPLACEMENT, DeltaR, 0);
-			row.getValueOrDefault(MDL_CTF_Q0, Q0, 0);
-			row.getValueOrDefault(MDL_CTF_K, K, 1);
-	        row.getValueOrDefault(MDL_CTF_ENV_R0, envR0, 0);
-	        row.getValueOrDefault(MDL_CTF_ENV_R1, envR1, 0);
-	        row.getValueOrDefault(MDL_CTF_ENV_R2, envR2, 0);*/
+
     	}
     	else if (row.containsLabel(MDL_CTF_MODEL))
     	{
@@ -1187,6 +1175,7 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_CV, cV2, cU2);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2, 0);
         row.getValueOrDefault(MDL_CTF_PHASE_SHIFT, phase_shift, 0);
+        row.getValueOrDefault(MDL_CTF_VPP_RADIUS, VPP_radius, 0);
         //row.getValueOrDefault(MDL_CTF_BG_R1, bgR1, 0);
         //row.getValueOrDefault(MDL_CTF_BG_R2, bgR2, 0);
         //row.getValueOrDefault(MDL_CTF_BG_R3, bgR3, 0);
@@ -1242,6 +1231,7 @@ void CTFDescription::setRow(MDRow &row) const
         row.setValue(MDL_CTF_BG_GAUSSIAN2_CV, cV2);
         row.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2);
         row.setValue(MDL_CTF_PHASE_SHIFT, phase_shift);
+        row.setValue(MDL_CTF_VPP_RADIUS, VPP_radius);
 
     }
     if (isLocalCTF)

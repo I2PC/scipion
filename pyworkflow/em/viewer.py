@@ -216,7 +216,7 @@ class CtfView(ObjectView):
                     '_xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
                     '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq',
-                    '_xmipp_ctfCritPsdCorr90'
+                    '_xmipp_ctfCritPsdCorr90', '_xmipp_ctfVPPphaseshift'
                    ]
 
     def __init__(self, project, ctfSet, other='', **kwargs):
