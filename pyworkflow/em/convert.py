@@ -441,9 +441,9 @@ def __downloadPdb(pdbId, pdbGz, log):
         log.info("File to download and unzip: %s" % pdbGz)
     
     pdborgHostname = "ftp.wwpdb.org"
-    pdborgDirectory = "/pub/pdb/data/structures/all/pdb/"
-    prefix = "pdb"
-    suffix = ".ent.gz"
+    pdborgDirectory = "/pub/pdb/data/structures/all/mmCIF/"
+    prefix = ""  # use pdb for PDB and null for mmcif
+    suffix = ".cif.gz"
     success = True
     # Log into serverhttp://www.rcsb.org/pdb/files/2MP1.pdb.gz
     ftp = ftplib.FTP()
