@@ -906,13 +906,6 @@ class ProtRelionBase(EMProtocol):
         
             errors += self._validateNormal()
 
-        if self.IS_CLASSIFY:
-            if self.doSubsets:
-                total = self._getInputParticles().getSize()
-                if total <= self.subsetSize.get():
-                    errors.append('Subset size is bigger than the total number of '
-                                  'particles!')
-
         return errors
     
     def _validateNormal(self):
