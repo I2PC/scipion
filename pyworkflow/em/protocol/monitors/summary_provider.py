@@ -89,7 +89,7 @@ class SummaryProvider(TreeProvider):
                                         ("Magnification: ",
                                          prot.magnification.get()),
                                         (u"Pixel Size (Å/px): ",
-                                         outSet.getSamplingRate())
+                                         round(outSet.getSamplingRate(),2))
                                         ]
 
         self._objects = objects

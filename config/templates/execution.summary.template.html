@@ -1,5 +1,6 @@
 <HTML>
     <HEAD>
+        <meta charset="UTF-8">
         <!-- jquery-->
         <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
         <!--highcharts-->
@@ -355,7 +356,7 @@
 
         function addMovieGainChart () {
 
-            if (report.movieGainData.length == 0) {
+            if (report.movieGainData.length == 0 || report.movieGainData.idValues.length == 0) {
                 $('#movieGain').hide();
                 return;
             }
@@ -472,13 +473,14 @@
         };
 
 
-//        function addCTFChart () {
-//
-//            if (!('defocusU' in report.ctfData)) {
-//                $('#ctf').hide();
-//                return;
-//            }
-//
+        function addCTFChart () {
+
+            if (!('defocusU' in report.ctfData)) {
+                $('#ctf').hide();
+                return;
+            }
+            addResolutionHistogram();
+            addDefocusCoverage();
 //
 //            $('#ctfChart').highcharts({
 //                title: {
@@ -539,7 +541,7 @@
 //            ctfChart.showResetZoom();
 //
 //
-//        };
+        };
 
         function addDefocusCoverage(){
             if (!('defocusCoverage' in report.ctfData)) {
@@ -879,13 +881,13 @@
                 cols.push({"title":"PsdFile"})
             }
             if ('defocusU' in report.ctfData){
-                cols.push({"title": "DefocusU (\u00B5m)",
+                cols.push({"title": "DefocusU (µm)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "Defocus ratio",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Astigmatism (\u212B)",
+                          {"title": "Astigmatism (µm)",
                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Resolution (\u212B)",
+                          {"title": "Resolution (Å)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "CC value ",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)});
@@ -908,7 +910,7 @@
 
                 if ('defocusU' in report.ctfData){
                     rowValues.push(report.ctfData.defocusU[index]*1e-4, report.ctfData.ratio[index],
-				   report.ctfData.astigmatism[index], report.ctfData.resolution[index],
+				   report.ctfData.astigmatism[index]*1e-4, report.ctfData.resolution[index],
 				   report.ctfData.fitQuality[index]);
                 }
 
@@ -933,9 +935,7 @@
         function populateReport(){
             addAcquisition();
             addRuns();
-//            addCTFChart();
-            addResolutionHistogram();
-            addDefocusCoverage();
+            addCTFChart();
             addMovieGainChart();
             addSystemChart();
             addMicTable();
