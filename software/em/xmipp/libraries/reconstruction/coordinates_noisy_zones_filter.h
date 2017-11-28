@@ -27,17 +27,14 @@
 #define _PROG_COORDINATES_NOISY_ZONES_FILTER_HH
 
 #include <data/xmipp_program.h>
-/*#include <data/xmipp_image.h>
-#include <data/filters.h>*/
 #include <data/micrograph.h>
 #include <data/morphology.h>
-// #include <reconstruction/fourier_filter.h>
 
 
 /**@defgroup CoordinatesMicrographFilters Coordinates Micrograph Filter
    @ingroup ReconsLibrary */
 //@{
-/** Generic class to filtrate the coordinates in the carbon zone */
+/** Generic class to filtrate the coordinates in noisy zones */
 class ProgCoordinatesNoisyZonesFilter: public XmippProgram
 {
 public:

@@ -192,28 +192,18 @@ void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
  */
 void varianceFilter(MultidimArray<double> &I, int kernelSize = 10);
 
-/** Transforms I to a binary mask with 0 where both, variance and mean are high.
+/** Transforms I to a binary mask with 0 where both variance and mean are high.
  * @ingroup Filters
  *
- * consider to rename this filter to grainFilter
  */
 void noisyZonesFilter(MultidimArray<double> &I, int kernelSize = 10);
 
-/** Transforms I to a binary mask with 0 where the images is grained. 
- * In addition, returns the Gini coefficient of the image.
- * @ingroup Filters
- *
- * If the Gini coefficient of the image is above of the threshold a variance filter
- * with kernelSize is applied and binarized (if not all-0 image is returned)
- */
-double grainFilter(MultidimArray<double> &I,
-                                   int kernelSize=80, double giniThreshold=0.3);
-
-/** Returns the Gini coefficient of an image. This is related to the Entropy 
+/** Returns the Gini coefficient of an image. This is related to the Entropy.
+ * It also applies a variance filter to the input Image
  * @ingroup Filters
  *
  */
-double giniCoeff(MultidimArray<double> &I, int varKernelSize = 100);
+double giniCoeff(MultidimArray<double> &I, int varKernelSize = 50);
 
 /** Segment an object using Otsu's method
  * @ingroup Filters
