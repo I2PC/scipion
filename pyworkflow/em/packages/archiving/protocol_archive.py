@@ -22,6 +22,9 @@ class ProtArchive(ProtProcessMovies):
         group.addParam('queueName', params.StringParam,
                        label='Queue Name',
                        help='The name of the queue within the broker')
+        group.addParam('dropFileDir', params.FolderParam,
+                       label='Dropfile dir',
+                       help='The location of the dropfile dir')
 
     def processMovieStep(self, movieDict, hasAlignment):
         SCIPION_HOME = os.environ['SCIPION_HOME']
@@ -32,6 +35,8 @@ class ProtArchive(ProtProcessMovies):
         real_path = os.path.realpath(movieDict['_filename'])
 
         self._setValues(recipe_data, 'files', [real_path ])
+        self._setValues(recipe_data, 'dropfile-dir', dropFileDir)
+
         json_data = json.dumps(recipe_data)
         self._sendMessage(json_data)
 

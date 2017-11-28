@@ -13,7 +13,7 @@
          "parameters": { "files": ["{filePaths}"],
                          "limit-files": 1000,
                          "dropfile": "{dropfile_override}",
-                         "dropfile-dir": "/dls/tmp/kevin/",
+                         "dropfile-dir": "{dropFileDir}",
                          "dropfile-filename": "{ispyb_dcid}-{beamline}-{visit_id}-{timestamp}{multipart}.xml"
                        }
        },
