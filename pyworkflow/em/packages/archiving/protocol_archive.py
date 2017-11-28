@@ -1,6 +1,6 @@
 from pyworkflow.em import ProtProcessMovies
 import json
-import os.path
+import os
 import pyworkflow.protocol.params as params
 
 
@@ -24,7 +24,9 @@ class ProtArchive(ProtProcessMovies):
                        help='The name of the queue within the broker')
 
     def processMovieStep(self, movieDict, hasAlignment):
-        with open('/scratch/scipion/pyworkflow/em/packages/archiving/recipe.json') as recipe:
+        SCIPION_HOME = os.environ['SCIPION_HOME']
+        LOGFILE = os.path.join(SCIPION_HOME, 'pyworkflow', 'em', 'packages','archiving','recipe.json')
+        with open(LOGFILE) as recipe:
             recipe_data = json.load(recipe)
 
         real_path = os.path.realpath(movieDict['_filename'])
