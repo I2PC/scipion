@@ -211,7 +211,7 @@ class CtfView(ObjectView):
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
-                    '_ctffind4_ctfPhaseShift',
+                    '_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
                     '_xmipp_ctfCritFirstZero',
                     ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidity',
@@ -227,7 +227,8 @@ class CtfView(ObjectView):
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
         labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio _resolution _fitQuality %s ' % extraLabels
+        labels += '_defocusAngle _defocusRatio '
+        labels += '_phaseShift _resolution _fitQuality %s ' % extraLabels
         labels += '  _micObj._filename'
 
         viewParams = {showj.MODE: showj.MODE_MD,
