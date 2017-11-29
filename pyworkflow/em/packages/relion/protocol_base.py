@@ -906,6 +906,13 @@ class ProtRelionBase(EMProtocol):
         
             errors += self._validateNormal()
 
+        if self.IS_CLASSIFY:
+            if self._doSubsets():
+                total = self._getInputParticles().getSize()
+                if total <= self.subsetSize.get():
+                    errors.append('Subset size is bigger than the total number '
+                                  'of particles!')
+
         return errors
     
     def _validateNormal(self):
@@ -1082,11 +1089,12 @@ class ProtRelionBase(EMProtocol):
             solventMask = convertMask(self.solventMask, self._getTmpPath())
             args['--solvent_mask2'] = solventMask
 
-        if isVersion2() and self.IS_3D and self.referenceMask.hasValue() and self.solventFscMask:
+        if (isVersion2() and self.IS_3D and self.referenceMask.hasValue() and
+            self.solventFscMask):
             args['--solvent_correct_fsc'] = ''
 
     def _setSubsetArgs(self, args):
-        if self.doSubsets:
+        if self._doSubsets():
             args['--write_subsets'] = 1
             args['--subset_size'] = self.subsetSize.get()
             args['--max_subsets'] = self.subsetUpdates.get()
@@ -1199,3 +1207,8 @@ class ProtRelionBase(EMProtocol):
         else:
             partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
                              '%s' % part.getMicId())
+
+    def _doSubsets(self):
+        # Since 'doSubsets' property is only valid for 2.1+ protocols
+        # we need provide a default value for backward compatibility
+        return self.getAttributeValue('doSubsets', False)
