@@ -192,7 +192,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     private void recalculateCTF() {
         if(getLowFreq() == 0)
         {
-            XmippDialog.showError(null, "Low freq must be above cero");
+            XmippDialog.showError(null, "Low freq must be above zero");
             return;
         }
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
