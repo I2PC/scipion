@@ -757,7 +757,11 @@ class PdbFile(EMFile):
         return self._volume is not None
 
     def setVolume(self, volume):
-        self._volume = volume
+        if type(volume) is Volume:
+            self._volume = volume
+        else:
+            raise Exception('TypeError', 'ERROR: Setvolume, This is not a '
+                                         'volume')
 
     def __str__(self):
         return "%s (pseudoatoms=%s, volume=%s)" % \
