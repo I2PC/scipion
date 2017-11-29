@@ -197,6 +197,31 @@ class ProtImportPdb(ProtImportFiles):
                       pointerClass='Volume',
                       allowsNull=True,
                       help='Associate this volume to the mmCIF file.')
+        #
+        # form.addParam('setDefaultOrigin', params.BooleanParam,
+        #               label="setDefaultOrigin",
+        #               help="Set origin of coordinates in the center of the "
+        #                    "atomic structure by default (True) or provide it. "
+        #                    "Only Modeling related programs support this "
+        #                    "feature so far",
+        #               default=True)
+        # line = form.addLine('Offset',
+        #                     help= "You have to provide the atomic structure "
+        #                           "center coordinates in Angstroms (pixels x "
+        #                           "sampling)"
+        #                     "We follow the same convention than CCP4. Chimera"
+        #                     " considers the same magnitude and opposite sign "
+        #                     "than CCP4.", condition='not setDefaultOrigin',
+        #                     expertLevel=const.LEVEL_ADVANCED)
+        # line.addParam('x', params.FloatParam, condition='not setDefaultOrigin',
+        #               label="x", help="offset along x axis (A)",
+        #               expertLevel=const.LEVEL_ADVANCED)
+        # line.addParam('y', params.FloatParam, condition='not setDefaultOrigin',
+        #               label="y", help="offset along y axis (A)",
+        #               expertLevel=const.LEVEL_ADVANCED)
+        # line.addParam('z', params.FloatParam, condition='not setDefaultOrigin',
+        #               label="z", help="offset along z axis (A)",
+        #               expertLevel=const.LEVEL_ADVANCED)
 
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
@@ -220,8 +245,9 @@ class ProtImportPdb(ProtImportFiles):
         localPath = self._getExtraPath(baseName)
         copyFile(pdbPath, localPath)
         pdb = PdbFile()
-        if self.inputVolume.get() is not None:
-            pdb.setVolume(self.inputVolume)
+        vol = self.inputVolume.get()
+        if vol is not None:
+            pdb.setVolume(vol)
 
         pdb.setFileName(localPath)
         self._defineOutputs(outputPdb=pdb)
