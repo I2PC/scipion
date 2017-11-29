@@ -1414,11 +1414,6 @@ class Protocol(Step):
         """
         queueName, queueParams = self.getQueueParams()
         hc = self.getHostConfig()
-
-        # LMB config
-        coresPerNode = self.numberOfMpi.get() * self.numberOfThreads.get() / 24
-        if coresPerNode == 0:
-            coresPerNode = 1
         
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
@@ -1426,7 +1421,6 @@ class Protocol(Step):
              'JOB_NAME': self.strId(),
              'JOB_QUEUE': queueName,
              'JOB_NODES': self.numberOfMpi.get(),
-             'JOB_NODES2': coresPerNode,
              'JOB_THREADS': self.numberOfThreads.get(),
              'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
              'JOB_HOURS': 72,
