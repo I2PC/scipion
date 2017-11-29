@@ -1199,3 +1199,11 @@ class ProtRelionBase(EMProtocol):
         else:
             partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
                              '%s' % part.getMicId())
+        if part.hasCTF():
+            # add phaseShift to particle Row
+            attrs = ['_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
+                     '_phaseShift']
+            for a in attrs:
+                if part.getCTF().hasAttribute(a):
+                    partRow.setValue(md.RLN_CTF_PHASESHIFT,
+                                     part.getCTF().getPhaseShift())
