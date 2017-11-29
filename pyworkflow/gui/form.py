@@ -1055,12 +1055,7 @@ class ParamWidget():
             
     def _browsePath(self, e=None):
         def onSelect(obj):
-            path = obj.getPath()
-            # if the parent folder is selected (..) when the button is pressed, 
-            # we understand that user wants to explore the current folder.
-            if path.endswith('/..'):
-                path = path.strip('/..')
-            self.set(path)
+            self.set(obj.getPath())
 
         v = self.get().strip()
         path = None
