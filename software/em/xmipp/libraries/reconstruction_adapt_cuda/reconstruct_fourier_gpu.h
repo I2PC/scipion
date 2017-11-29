@@ -127,6 +127,7 @@ public:
 	{
 	public:
 	    Manipulator(
+		RecFourierWorkThread* threadParams,
 		ProgRecFourierGPU* parent,
 	    std::vector<size_t> objId,
 	    RecFourierBufferData* buffer,
@@ -134,8 +135,12 @@ public:
 	    ktt::ArgumentId startSpaceIndexId,
 	    ktt::ArgumentId spaceNoId,
 	    ktt::ArgumentId sharedMemId,
-	    int firstImgIndex, int lastImgIndex) : parent(parent), objId(objId), buffer(buffer),
+	    ktt::ArgumentId spaceId,
+		ktt::ArgumentId FFTsId,
+	    int firstImgIndex, int lastImgIndex) :
+		threadParams(threadParams), parent(parent), objId(objId), buffer(buffer),
 	    imgCacheId(imgCacheId),startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId), sharedMemId(sharedMemId),
+	    spaceId(spaceId),FFTsId(FFTsId),
 	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
 
 	    // LaunchComputation is responsible for actual execution of tuned kernel
@@ -165,18 +170,21 @@ public:
 
 
 			// main work routine
-//			int startLoadIndex = firstImgIndex;
-//			int lastImageIndex = lastImgIndex;
-//			for(int startLoadIndex = firstImageIndex;
-//				startLoadIndex <= lastImageIndex;
-//				startLoadIndex += parent->bufferSize) {
+			int startLoadIndex = firstImgIndex;
+			int lastLoadIndex = lastImgIndex;
+			for(int bIndex = startLoadIndex;
+				bIndex <= lastLoadIndex;
+				bIndex += parent->bufferSize) {
 				// load data
-//				threadParams->startImageIndex = firstImgIndex;
-//				threadParams->endImageIndex = std::min(lastImgIndex+1, firstImgIndex+parent->bufferSize);
-//				prepareBuffer(threadParams, parent, false, objId);
-
+				threadParams->startImageIndex = bIndex;
+				threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
+				prepareBuffer(threadParams, parent, false, objId, bIndex == startLoadIndex);
 				// send them for processing
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
+						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
+						updateArgumentVector(spaceId, buffer->spaces, noOfSpaces);
+						updateArgumentVector(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs));
+						updateArgumentScalar(spaceNoId, &noOfSpaces);
 
 					if (useAtomics == 1) {
 						runKernel(kernelId, globalSize, localSize);
@@ -201,7 +209,7 @@ public:
 
 				}
 				// once the processing finished, buffer can be reused
-//			}
+			}
 
 
 
@@ -209,12 +217,95 @@ public:
 
 	private:
 	    ProgRecFourierGPU* parent;
+	    RecFourierWorkThread* threadParams;
 	    std::vector<size_t> objId;
 	    RecFourierBufferData* buffer;
 	    ktt::ArgumentId imgCacheId;
 	    ktt::ArgumentId startSpaceIndexId;
 	    ktt::ArgumentId spaceNoId;
 	    ktt::ArgumentId sharedMemId;
+	    ktt::ArgumentId spaceId;
+	    ktt::ArgumentId FFTsId;
+
+	    int firstImgIndex;
+	    int lastImgIndex;
+	};
+
+	class ReferenceManipulator : public ktt::TuningManipulator
+	{
+	public:
+		ReferenceManipulator(
+		RecFourierWorkThread* threadParams,
+		ProgRecFourierGPU* parent,
+	    std::vector<size_t> objId,
+	    RecFourierBufferData* buffer,
+	    ktt::ArgumentId imgCacheId,
+	    ktt::ArgumentId startSpaceIndexId,
+	    ktt::ArgumentId spaceNoId,
+	    ktt::ArgumentId sharedMemId,
+	    ktt::ArgumentId spaceId,
+		ktt::ArgumentId FFTsId,
+	    int firstImgIndex, int lastImgIndex) :
+		threadParams(threadParams), parent(parent), objId(objId), buffer(buffer),
+	    imgCacheId(imgCacheId),startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId), sharedMemId(sharedMemId),
+	    spaceId(spaceId),FFTsId(FFTsId),
+	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
+
+	    // LaunchComputation is responsible for actual execution of tuned kernel
+	    void launchComputation(const ktt::KernelId kernelId) override
+	    {
+	        // Get kernel data
+	        ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
+	        ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
+	        std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
+
+	        int size2D = parent->maxVolumeIndexX + 1;
+	        int targetSizeX = ceil(size2D/(float)localSize.getSizeX());
+
+	        globalSize.setSizeX(targetSizeX);
+	        globalSize.setSizeY(ceil(size2D/(float)localSize.getSizeY()));
+
+	        parent->initProgress();
+	        parent->logProgress(0, true);
+
+
+
+			// main work routine
+			int startLoadIndex = firstImgIndex;
+			int lastLoadIndex = lastImgIndex;
+			for(int bIndex = startLoadIndex;
+				bIndex <= lastLoadIndex;
+				bIndex += parent->bufferSize) {
+				// load data
+				threadParams->startImageIndex = bIndex;
+				threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
+				prepareBuffer(threadParams, parent, false, objId);
+				// send them for processing
+				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
+						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
+						updateArgumentVector(spaceId, buffer->spaces, noOfSpaces);
+						updateArgumentVector(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs));
+						updateArgumentScalar(spaceNoId, &noOfSpaces);
+
+
+						runKernel(kernelId, globalSize, localSize);
+						parent->logProgress(buffer->noOfImages);
+				}
+				// once the processing finished, buffer can be reused
+			}
+	    }
+
+	private:
+	    RecFourierWorkThread* threadParams;
+	    ProgRecFourierGPU* parent;
+	    std::vector<size_t> objId;
+	    RecFourierBufferData* buffer;
+	    ktt::ArgumentId imgCacheId;
+	    ktt::ArgumentId startSpaceIndexId;
+	    ktt::ArgumentId spaceNoId;
+	    ktt::ArgumentId sharedMemId;
+	    ktt::ArgumentId spaceId;
+	    ktt::ArgumentId FFTsId;
 
 	    int firstImgIndex;
 	    int lastImgIndex;

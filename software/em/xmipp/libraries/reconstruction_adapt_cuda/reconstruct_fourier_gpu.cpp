@@ -377,9 +377,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     allocateWrapper(threadParams->buffer, threadParams->gpuStream);
 
 
-	threadParams->endImageIndex = std::min(threadParams->endImageIndex+1, threadParams->startImageIndex+parent->bufferSize);
-	prepareBuffer(threadParams, parent, false, objId);
-	int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
+//	threadParams->endImageIndex = std::min(threadParams->endImageIndex+1, threadParams->startImageIndex+parent->bufferSize);
+//	prepareBuffer(threadParams, parent, false, objId);
+//	int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
 
     size_t deviceIndex = 0;
 	std::string kernelFile = "/home/david/GIT/Scipion/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier.cu";
@@ -398,13 +398,14 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	int volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
 	parent->tempVolumeGPU = new float[volumeSize * 2];
 	parent->tempWeightsGPU = new float[volumeSize];
+	RecFourierProjectionTraverseSpace dummy;
 
 	// Add new arguments to tuner, argument data is copied from std::vector containers
 	ktt::ArgumentId volId = tuner.addArgumentVector(std::vector<float>(parent->tempVolumeGPU, parent->tempVolumeGPU+volumeSize*2), ktt::ArgumentAccessType::ReadWrite);
 	ktt::ArgumentId weightId = tuner.addArgumentVector(std::vector<float>(parent->tempWeightsGPU, parent->tempWeightsGPU +volumeSize), ktt::ArgumentAccessType::ReadWrite);
-	ktt::ArgumentId spaceId = tuner.addArgumentVector(std::vector<RecFourierProjectionTraverseSpace>(threadParams->buffer->spaces, threadParams->buffer->spaces + noOfSpaces), ktt::ArgumentAccessType::ReadOnly);
-	ktt::ArgumentId spaceNoId = tuner.addArgumentScalar(noOfSpaces);
-	ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>(threadParams->buffer->FFTs, threadParams->buffer->FFTs+threadParams->buffer->getNoOfElements(threadParams->buffer->FFTs)), ktt::ArgumentAccessType::ReadOnly);
+	ktt::ArgumentId spaceId = tuner.addArgumentVector(std::vector<RecFourierProjectionTraverseSpace>{dummy}, ktt::ArgumentAccessType::ReadOnly);
+	ktt::ArgumentId spaceNoId = tuner.addArgumentScalar(0);
+	ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>{0.0f}, ktt::ArgumentAccessType::ReadOnly);
 	ktt::ArgumentId fftSizeXId = tuner.addArgumentScalar(threadParams->buffer->fftSizeX);
 	ktt::ArgumentId fftSizeYId = tuner.addArgumentScalar(threadParams->buffer->fftSizeY);
 	ktt::ArgumentId blobTableId = tuner.addArgumentVector(std::vector<float>((float*)parent->blobTableSqrt, (float*)parent->blobTableSqrt+BLOB_TABLE_SIZE_SQRT), ktt::ArgumentAccessType::ReadOnly);
@@ -461,8 +462,11 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	auto blobTableConstr = [](std::vector<size_t> vector) {return vector.at(0)==0 || (vector.at(0)==1 && vector.at(1)==1);};
 	tuner.addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
 
-	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams->buffer,
-			imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, threadParams->startImageIndex, threadParams->endImageIndex));
+	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(threadParams, parent,objId,threadParams->buffer,
+			imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
+	tuner.setTuningManipulator(referenceKernelId, std::make_unique<ReferenceManipulator>(threadParams, parent,objId,threadParams->buffer,
+				imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
+
 
 	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
 	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
@@ -503,9 +507,6 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	size_t lastindex = parent->fn_out.getString().find_last_of(".");
 	std::string rawname = parent->fn_out.getString().substr(0, lastindex);
 	tuner.printResult(kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
-
-	// TODO prekopirovat pamet z CPU na CPU
-
 
     // clean after itself
     releaseWrapper(threadParams->gpuStream);
