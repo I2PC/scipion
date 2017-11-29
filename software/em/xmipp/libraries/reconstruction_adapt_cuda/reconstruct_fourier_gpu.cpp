@@ -395,7 +395,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	int globalSize = ceil(size2D/(float)localSize);
 	ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "processBufferKernelReference", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
 
-	int volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
+	size_t volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
 	parent->tempVolumeGPU = new float[volumeSize * 2];
 	parent->tempWeightsGPU = new float[volumeSize];
 	RecFourierProjectionTraverseSpace dummy;
