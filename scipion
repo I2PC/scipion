@@ -1,4 +1,4 @@
-#!/lmb/home/gsharov/soft/scipion/software/bin/python
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
