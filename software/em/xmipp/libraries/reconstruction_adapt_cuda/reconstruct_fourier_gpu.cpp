@@ -393,7 +393,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	int localSize = 16;
 	int size2D = parent->maxVolumeIndexX + 1;
 	int globalSize = ceil(size2D/(float)localSize);
-	ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "processBufferKernel", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
+	ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "processBufferKernelReference", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
 
 	int volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
 	parent->tempVolumeGPU = new float[volumeSize * 2];
@@ -428,6 +428,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
 	tuner.addParameter(kernelId, "blobOrder", {parent->blob.order});
+
+	tuner.setCompilerOptions("-lineinfo");
 
 //	tuner.addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
 //	tuner.addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});

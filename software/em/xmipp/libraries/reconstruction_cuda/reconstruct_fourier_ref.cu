@@ -209,7 +209,7 @@ void processProjection(
  * storages appropriately.
  */
 extern "C" __global__
-void processBufferKernel(
+void processBufferKernelReference(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		RecFourierProjectionTraverseSpace* spaces, int noOfSpaces,
 		const float* FFTs,

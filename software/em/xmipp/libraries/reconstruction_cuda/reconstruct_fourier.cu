@@ -46,26 +46,116 @@ __device__ float2 operator*(float2 a, float b)
 }
 
 __device__
-float bessi0(float x)
+float bessi0(float x) // only positive values expected
 {
     float y, ax, ans;
-    if ((ax = fabsf(x)) < 3.75f)
+    if (x < 3.75f)
     {
-        y = x / 3.75f;
-        y *= y;
-        ans = 1.f + y * (3.5156229f + y * (3.0899424f + y * (1.2067492f
-                                          + y * (0.2659732f + y * (0.360768e-1f + y * 0.45813e-2f)))));
+        y = x * x * 0.0711111f; // (x/3.75)^2
+        ans = (y*(y*(y*(y*((0.0045813f*y + 0.0360768f)*y + 0.265973f) + 1.20675f) + 3.08994f) + 3.51562f) + 1.f);
+
     }
     else
     {
-        y = 3.75f / ax;
-        ans = (expf(ax) / sqrtf(ax)) * (0.39894228f + y * (0.1328592e-1f
-                                      + y * (0.225319e-2f + y * (-0.157565e-2f + y * (0.916281e-2f
-                                                                + y * (-0.2057706e-1f + y * (0.2635537e-1f + y * (-0.1647633e-1f
-                                                                                            + y * 0.392377e-2f))))))));
+        y = 3.75f/x;
+        ans = (expf(x)*(y*(y*(y*(y*(y*(y*((0.00392377f*y - 0.0164763f)*y + 0.0263554f) - 0.0205771f)
+        		+ 0.009162f) - 0.001575f) + 0.002253f) + 0.013285f) + 0.398942f)) * rsqrtf(x);
     }
     return ans;
 }
+
+
+__device__ float bessi00(float x)
+{
+// -- See paper
+// J.M. Blair, "Rational Chebyshev approximations for the modified Bessel functions I_0(x) and I_1(x)", Math. Comput., vol. 28, n. 126, pp. 581-583, Apr. 1974.
+
+   float num, den, x2;
+
+   x2 = x*x;
+
+//   x=abs(x);
+//
+//   if (x > 15.0)
+//   {
+//        den = 1.0 / x;
+//        num =              -4.4979236558557991E+006;
+//        num = fma (num, den,  2.7472555659426521E+006);
+//        num = fma (num, den, -6.4572046640793153E+005);
+//        num = fma (num, den,  8.5476214845610564E+004);
+//        num = fma (num, den, -7.1127665397362362E+003);
+//        num = fma (num, den,  4.1710918140001479E+002);
+//        num = fma (num, den, -1.3787683843558749E+001);
+//        num = fma (num, den,  1.1452802345029696E+000);
+//        num = fma (num, den,  2.1935487807470277E-001);
+//        num = fma (num, den,  9.0727240339987830E-002);
+//        num = fma (num, den,  4.4741066428061006E-002);
+//        num = fma (num, den,  2.9219412078729436E-002);
+//        num = fma (num, den,  2.8050629067165909E-002);
+//        num = fma (num, den,  4.9867785050221047E-002);
+//        num = fma (num, den,  3.9894228040143265E-001);
+//        num = num * den;
+//        den = sqrt (x);
+//        num = num * den;
+//        den = exp (0.5 * x);  /* prevent premature overflow */
+//        num = num * den;
+//        num = num * den;
+//		return num;
+//   }
+//   else
+//   {
+	  num = -0.28840544803647313855232E-028f;
+	  num = fmaf (num, x2, -0.72585406935875957424755E-025f);
+	  num = fmaf (num, x2, -0.1247819710175804058844059E-021f);
+	  num = fmaf (num, x2, -0.15795544211478823152992269E-018f);
+	  num = fmaf (num, x2, -0.15587387207852991014838679E-015f);
+	  num = fmaf (num, x2, -0.121992831543841162565677055E-012f);
+	  num = fmaf (num, x2, -0.760147559624348256501094832E-010f);
+	  num = fmaf (num, x2, -0.375114023744978945259642850E-007f);
+	  num = fmaf (num, x2, -0.1447896113298369009581404138E-004f);
+	  num = fmaf (num, x2, -0.4287350374762007105516581810E-002f);
+	  num = fmaf (num, x2, -0.947449149975326604416967031E+000f);
+	  num = fmaf (num, x2, -0.1503841142335444405893518061E+003f);
+	  num = fmaf (num, x2, -0.1624100026427837007503320319E+005f);
+	  num = fmaf (num, x2, -0.11016595146164611763171787004E+007f);
+	  num = fmaf (num, x2, -0.4130296432630476829274339869E+008f);
+	  num = fmaf (num, x2, -0.6768549084673824894340380223E+009f);
+	  num = fmaf (num, x2, -0.27288446572737951578789523409E+010f);
+
+	  den = 0.1E+001;
+	  den = fmaf (den, x2, -0.38305191682802536272760E+004f);
+	  den = fmaf (den, x2, 0.5356255851066290475987259E+007f);
+	  den = fmaf (den, x2, -0.2728844657273795156746641315E+010f);
+
+	  return num/den;
+//   }
+}
+
+__device__
+float bessi0_moje(float x) {
+	// stable rational minimax approximations to the modified bessel functions, blair, edwards
+	// from table 5
+	float x2 = x*x;
+	float num = -0.8436825781374849e-19f; // p11
+	num = fmaf(num, x2, -0.93466495199548700e-17f); // -p4*2*22.567 (from inner bracket)
+	num = fmaf(num, x2, -0.15716375332511895e-13f); // p4*22.567^2 + p2
+	num = fmaf(num, x2, -0.42520971595532318e-11f); // p1
+	num = fmaf(num, x2, -0.13704363824102120e-8f); //p0
+	num = fmaf(num, x2, -0.28508770483148419e-6f); // -p4*2*22.567 (from inner bracket)
+	num = fmaf(num, x2, -0.44322160233346062e-4f); // -p4*2*22.567 (from inner bracket)
+	num = fmaf(num, x2, -0.46703811755736946e-2f); // -p4*2*22.567 (from inner bracket)
+	num = fmaf(num, x2, -0.31112484643702141e-0f); // -p4*2*22.567 (from inner bracket)
+	num = fmaf(num, x2, -0.11512633616429962e+2f); // -p4*2*22.567 (from inner bracket)
+	num = fmaf(num, x2, -0.18720283332732112e+3f); // -p4*2*22.567 (from inner bracket)
+	num = fmaf(num, x2, -0.75281108169006924e+3f); // -p4*2*22.567 (from inner bracket)
+
+
+	float den = 1.f; //q1
+	den = fmaf(den, x2, -0.75281109410939403e+3f); // q00
+
+	return num/den;
+}
+
 
 __device__
 float bessi1(float x)
@@ -111,45 +201,41 @@ float bessi4(float x)
 
 
 __device__
-float kaiserValue(float r, float a, float alpha)
+float kaiserValue(float r)
 {
     float rda, rdas, arg, w;
 
-    rda = r / a;
+    rda = r / cBlobRadius;
     if (rda <= 1.f)
     {
         rdas = rda * rda;
-        arg = alpha * sqrtf(1.f - rdas);
+        arg = cBlobAlpha * sqrtf(1.f - rdas);
         if (blobOrder == 0)
         {
-            w = bessi0(arg) / bessi0(alpha);
+            w = bessi0(arg) * 0.000002944f;
         }
         else if (blobOrder == 1)
         {
             w = sqrtf (1.f - rdas);
-            if (alpha != 0.f)
-                w *= bessi1(arg) / bessi1(alpha);
+                w *= bessi1(arg) / bessi1(cBlobAlpha);
         }
         else if (blobOrder == 2)
         {
             w = sqrtf (1.f - rdas);
             w = w * w;
-            if (alpha != 0.f)
-                w *= bessi2(arg) / bessi2(alpha);
+                w *= bessi2(arg) / bessi2(cBlobAlpha);
         }
         else if (blobOrder == 3)
         {
             w = sqrtf (1.f - rdas);
             w = w * w * w;
-            if (alpha != 0.f)
-                w *= bessi3(arg) / bessi3(alpha);
+                w *= bessi3(arg) / bessi3(cBlobAlpha);
         }
         else if (blobOrder == 4)
         {
             w = sqrtf (1.f - rdas);
             w = w * w * w *w;
-            if (alpha != 0.f)
-                w *= bessi4(arg) / bessi4(alpha);
+			w *= bessi4(arg) / bessi4(cBlobAlpha);
         }
         else {
         	printf("order (%d) out of range in kaiser_value(): %s, %d\n", blobOrder, __FILE__, __LINE__);
@@ -159,6 +245,14 @@ float kaiserValue(float r, float a, float alpha)
         w = 0.f;
 
     return w;
+}
+
+__device__
+float kaiserValue2(float dist) {
+	float arg = cBlobAlpha * sqrtf(1.f - (dist * 0.27700831f)); // alpha * sqrt(1-(dist/blobRadius^2))
+//	return bessi0(arg) * 0.000002944f;
+//	 return cyl_bessel_i0f (arg ) *  0.000002944f;
+	return bessi0_moje(arg) * 0.000002944f;
 }
 
 
@@ -427,7 +521,7 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 	#endif
 #else
-				float wBlob = kaiserValue(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha);
+				float wBlob = kaiserValue(sqrtf(distanceSqr));
 #endif
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
@@ -464,7 +558,7 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 #endif
 #else
-				float wBlob = kaiserValue(sqrtf(distanceSqr),cBlobRadius, cBlobAlpha) * cIw0;
+				float wBlob = kaiserValue2(distanceSqr) * cIw0;
 #endif
 				float weight = wBlob * dataWeight;
 				w += weight;
