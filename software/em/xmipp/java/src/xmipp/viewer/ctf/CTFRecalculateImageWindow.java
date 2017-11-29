@@ -124,7 +124,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         panel.add(new JLabel("Draw an ellipse to fit the first zero"),XmippWindowUtil.getConstraints(gbc, 0, 0, 4));
         
         panel.add(new JLabel("Low freq"), XmippWindowUtil.getConstraints(gbc, 0, 1));
-        spinnerLowFreq = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 0.5, 0.01));
+        spinnerLowFreq = new JSpinner(new SpinnerNumberModel(0.05, 0.0, 0.5, 0.01));
         panel.add(spinnerLowFreq, XmippWindowUtil.getConstraints(gbc, 1, 1));
         panel.add(new JLabel("High freq"), XmippWindowUtil.getConstraints(gbc, 2, 1));
         spinnerLowFreq.addChangeListener(this);        
