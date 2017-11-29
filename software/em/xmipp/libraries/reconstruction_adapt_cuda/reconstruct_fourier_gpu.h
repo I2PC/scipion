@@ -178,7 +178,7 @@ public:
 				// load data
 				threadParams->startImageIndex = bIndex;
 				threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
-				prepareBuffer(threadParams, parent, false, objId, bIndex == startLoadIndex);
+				prepareBuffer(threadParams, parent, false, objId);
 				// send them for processing
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
 						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);

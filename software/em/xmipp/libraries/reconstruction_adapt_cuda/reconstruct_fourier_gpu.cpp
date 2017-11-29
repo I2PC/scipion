@@ -448,10 +448,10 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"BLOCK_DIM_Y", "TILE"});
 
 	auto tileSharedImgConstr = [](std::vector<size_t> vector) {return vector.at(0) == 0 || vector.at(1) == 1;};
-	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"SHARED_IMG", "TILE"});
+	tuner.addConstraint(kernelId, tileSharedImgConstr, std::vector<std::string>{"SHARED_IMG", "TILE"});
 
 	auto useAtomicsZDimConstr = [](std::vector<size_t> vector) {return !(vector.at(0) == 0 && vector.at(1) != 1);};
-	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"USE_ATOMICS", "GRID_DIM_Z"});
+	tuner.addConstraint(kernelId, useAtomicsZDimConstr, std::vector<std::string>{"USE_ATOMICS", "GRID_DIM_Z"});
 
 	auto tileSmallerThanBlockConstr = [](std::vector<size_t> vector) {return vector.at(0) > vector.at(2) && vector.at(1) > vector.at(2);};
 	tuner.addConstraint(kernelId, tileSmallerThanBlockConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y", "TILE"});
@@ -506,6 +506,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
 	size_t lastindex = parent->fn_out.getString().find_last_of(".");
 	std::string rawname = parent->fn_out.getString().substr(0, lastindex);
+	tuner.setInvalidResultPrinting(true);
 	tuner.printResult(kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
 
     // clean after itself
