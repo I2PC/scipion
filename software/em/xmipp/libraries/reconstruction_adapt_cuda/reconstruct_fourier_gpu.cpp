@@ -412,6 +412,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	ktt::ArgumentId sharedMemId = tuner.addArgumentLocal<std::complex<float> >(1); // will be set eventually
 	ktt::ArgumentId maxVolIndexXId = tuner.addArgumentScalar(parent->maxVolumeIndexX);
 	ktt::ArgumentId maxVolIndexYZId = tuner.addArgumentScalar(parent->maxVolumeIndexYZ);
+	ktt::ArgumentId startSpaceIndexId = tuner.addArgumentScalar(0);
 
 
 	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
@@ -461,11 +462,11 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
 
 	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(parent,objId,threadParams->buffer,
-			imgCacheId,spaceId,spaceNoId,FFTsId, sharedMemId, threadParams->startImageIndex, threadParams->endImageIndex));
+			imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, threadParams->startImageIndex, threadParams->endImageIndex));
 
 	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
 	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
-		spaceId, spaceNoId,
+		spaceId, startSpaceIndexId, spaceNoId,
 		FFTsId,
 		fftSizeXId, fftSizeYId, blobTableId, imgCacheId, sharedMemId});
 	tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{volId, weightId,

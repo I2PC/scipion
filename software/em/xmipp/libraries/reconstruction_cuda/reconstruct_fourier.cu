@@ -813,7 +813,7 @@ void copyImgToCache(float2* dest, Point3D<float>* AABB,
 extern "C" __global__
 void processBufferKernel(
 		float2* tempVolumeGPU, float *tempWeightsGPU,
-		RecFourierProjectionTraverseSpace* spaces, int noOfSpaces,
+		RecFourierProjectionTraverseSpace* spaces, int startSpaceIndex, int noOfSpaces,
 		const float* FFTs,
 		int fftSizeX, int fftSizeY,
 		float* devBlobTableSqrt,
@@ -829,9 +829,10 @@ void processBufferKernel(
 	}
 #endif
 
-	for (int i = blockIdx.z; i < noOfSpaces; i += gridDim.z) {
-		RecFourierProjectionTraverseSpace* space = &spaces[i];
 
+
+	for (int i = blockIdx.z + startSpaceIndex; i < (startSpaceIndex + noOfSpaces); i += gridDim.z) {
+		RecFourierProjectionTraverseSpace* space = &spaces[i];
 #if SHARED_IMG
 		if ( ! false) {
 			// make sure that all threads start at the same time

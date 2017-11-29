@@ -131,12 +131,11 @@ public:
 	    std::vector<size_t> objId,
 	    RecFourierBufferData* buffer,
 	    ktt::ArgumentId imgCacheId,
-	    ktt::ArgumentId spaceId,
+	    ktt::ArgumentId startSpaceIndexId,
 	    ktt::ArgumentId spaceNoId,
-	    ktt::ArgumentId FFTsId,
 	    ktt::ArgumentId sharedMemId,
 	    int firstImgIndex, int lastImgIndex) : parent(parent), objId(objId), buffer(buffer),
-	    imgCacheId(imgCacheId),spaceId(spaceId), spaceNoId(spaceNoId), FFTsId(FFTsId), sharedMemId(sharedMemId),
+	    imgCacheId(imgCacheId),startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId), sharedMemId(sharedMemId),
 	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
 
 	    // LaunchComputation is responsible for actual execution of tuned kernel
@@ -186,9 +185,11 @@ public:
 						int noOfSpaces = buffer->getNoOfElements(buffer->spaces);
 						for (int i = 0; i < noOfSpaces; i++) {
 							int one = 1;
-							RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
-							updateArgumentVector(spaceId, space, 1);
-							updateArgumentVector(FFTsId, buffer->getNthItem(buffer->FFTs, space->projectionIndex), buffer->getNoOfElements(buffer->FFTs) / buffer->noOfImages);
+//							RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
+//							std::cout << "space index " << i << " FFT " << space->projectionIndex << std::endl;
+							updateArgumentScalar(startSpaceIndexId, &i);
+//							updateArgumentScalar(startFFTIndexId, &space->projectionIndex);
+//							updateArgumentVector(FFTsId, buffer->getNthItem(buffer->FFTs, space->projectionIndex), buffer->getNoOfElements(buffer->FFTs) / buffer->noOfImages);
 							updateArgumentScalar(spaceNoId, &one);
 
 							runKernel(kernelId, globalSize, localSize);
@@ -211,10 +212,10 @@ public:
 	    std::vector<size_t> objId;
 	    RecFourierBufferData* buffer;
 	    ktt::ArgumentId imgCacheId;
-	    ktt::ArgumentId spaceId;
+	    ktt::ArgumentId startSpaceIndexId;
 	    ktt::ArgumentId spaceNoId;
-	    ktt::ArgumentId FFTsId;
 	    ktt::ArgumentId sharedMemId;
+
 	    int firstImgIndex;
 	    int lastImgIndex;
 	};
