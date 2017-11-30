@@ -26,24 +26,15 @@
 
 #   -+-+-+- C H A N G E   T H I S   S T R I N G -+-+-+-
 _bibtexStr = """
-@article{Tang2007,
-title = "EMAN2: An extensible image processing suite for electron microscopy ",
-journal = "JSB",
-volume = "157",
-number = "1",
-pages = "38 - 46",
-year = "2007",
-note = "Software tools for macromolecular microscopy ",
-issn = "1047-8477",
-doi = "http://dx.doi.org/10.1016/j.jsb.2006.05.009",
-url = "http://www.sciencedirect.com/science/article/pii/S1047847706001894",
-author = "Guang Tang and Liwei Peng and Philip R. Baldwin and Deepinder S. Mann and Wen Jiang and Ian Rees and Steven J. Ludtke",
-keywords = "EMAN, Single particle analysis , cryoEMTEM, Software, Image processing, Electron microscopy}
-
-
+@article{jakobi2017iterative,
+  title={Iterative model-based density improvement yields better atomic structures from cryo-EM maps},
+  author={Jakobi, Arjen J and Wilmanns, Matthias and Sachse, Carsten},
+  journal={bioRxiv},
+  pages={121913},
+  year={2017},
+  publisher={Cold Spring Harbor Labs Journals}
+}
 """
-
-
 
 
 from pyworkflow.utils import parseBibTex

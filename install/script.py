@@ -449,8 +449,7 @@ env.addPackage('localrec', version='1.2.0',
                tar='localrec-1.2.0.tgz')
 
 env.addPackage('locscale', version='0',
-               tar='LocScale-0.tgz',
-               deps='eman')
+               tar='LocScale-0.tgz')
 
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
