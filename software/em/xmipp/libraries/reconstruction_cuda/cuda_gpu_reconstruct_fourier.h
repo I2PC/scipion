@@ -130,6 +130,10 @@ void copyBlobTable(float* blobTableSqrt, int size);
  */
 void releaseBlobTable();
 
+void pinMemory(RecFourierBufferData* buffer);
+
+void unpinMemory(RecFourierBufferData* buffer);
+
 /**
  * Method will copy constants used for calculation to GPU memory
  * Blocking operation

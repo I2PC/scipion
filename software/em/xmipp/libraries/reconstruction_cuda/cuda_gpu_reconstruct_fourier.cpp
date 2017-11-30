@@ -253,9 +253,7 @@ private:
 	void copy(T* srcArray, T*& dstArray, RecFourierBufferData* orig, int stream) {
 		if (NULL != srcArray) {
 			size_t bytes = sizeof(T) * orig->getNoOfElements(srcArray);
-			cudaHostRegister(srcArray, bytes, 0);
 			cudaMemcpyAsync(dstArray, srcArray, bytes, cudaMemcpyHostToDevice, streams[stream]);
-			cudaHostUnregister(srcArray);
 			gpuErrchk( cudaPeekAtLastError() );
 		}
 	}
@@ -1024,6 +1022,42 @@ void deleteStreams(int count) {
 	}
 	delete[] streams;
 }
+
+
+template<typename T>
+void hostRegister(T* srcArray, size_t bytes, unsigned int flags=0) {
+	if (NULL != srcArray && (0 != bytes)) {
+		cudaHostRegister(srcArray, bytes, flags);
+		gpuErrchk( cudaPeekAtLastError() );
+	}
+}
+
+template<typename T>
+void hostUnregister(T* srcArray) {
+	if (NULL != srcArray) {
+		cudaHostUnregister(srcArray);
+		gpuErrchk( cudaPeekAtLastError() );
+	}
+}
+
+void pinMemory(RecFourierBufferData* buffer) {
+	hostRegister(buffer->CTFs, buffer->getMaxByteSize(buffer->CTFs));
+	hostRegister(buffer->FFTs, buffer->getMaxByteSize(buffer->FFTs));
+	hostRegister(buffer->paddedImages, buffer->getMaxByteSize(buffer->paddedImages));
+	hostRegister(buffer->modulators, buffer->getMaxByteSize(buffer->modulators));
+	hostRegister(buffer->spaces, buffer->getMaxByteSize(buffer->spaces));
+	hostRegister(buffer, sizeof(*buffer));
+}
+
+void unpinMemory(RecFourierBufferData* buffer) {
+	hostUnregister(buffer->CTFs);
+	hostUnregister(buffer->FFTs);
+	hostUnregister(buffer->paddedImages);
+	hostUnregister(buffer->modulators);
+	hostUnregister(buffer->spaces);
+	hostUnregister(buffer);
+}
+
 
 void allocateWrapper(RecFourierBufferData* buffer, int streamIndex) {
 	wrappers[streamIndex] = new FRecBufferDataGPUWrapper(buffer);

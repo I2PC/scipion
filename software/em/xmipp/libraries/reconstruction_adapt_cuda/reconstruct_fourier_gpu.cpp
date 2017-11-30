@@ -374,6 +374,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     threadParams->buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
     		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
 			parent->bufferSize, (int)parent->R_repository.size());
+    pinMemory(threadParams->buffer);
     // allocate GPU
     allocateWrapper(threadParams->buffer, threadParams->gpuStream);
 
@@ -403,6 +404,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
     // clean after itself
     releaseWrapper(threadParams->gpuStream);
+    unpinMemory(threadParams->buffer);
     delete threadParams->buffer;
     threadParams->buffer = NULL;
     threadParams->selFile = NULL;
