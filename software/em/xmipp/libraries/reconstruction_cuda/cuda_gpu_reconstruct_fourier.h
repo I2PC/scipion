@@ -58,7 +58,7 @@ struct FRecBufferDataGPUWrapper {
 	 */
 	void copyToDevice(int stream);
 
-	// object in CPU memory space
+	// object in CPU memory space (page-locked)
 	RecFourierBufferDataGPU* cpuCopy;
 
 	// object in GPU memory space

@@ -179,8 +179,12 @@ float kaiserValue(float r, float a, float alpha)
  * pointers point to the GPU memory
  */
 struct RecFourierBufferDataGPU : public RecFourierBufferData {
+private: // private to prevent unintended initialization
+	RecFourierBufferDataGPU(RecFourierBufferData* orig) {};
+	~RecFourierBufferDataGPU() {};
+public:
 
-	RecFourierBufferDataGPU(RecFourierBufferData* orig) {
+	void create(RecFourierBufferData* orig) {
 		copyMetadata(orig);
 		FFTs = CTFs = paddedImages = modulators = NULL;
 
@@ -196,7 +200,7 @@ struct RecFourierBufferDataGPU : public RecFourierBufferData {
 		}
 	}
 
-	~RecFourierBufferDataGPU() {
+	void destroy() {
 		cudaFree(FFTs);
 		cudaFree(CTFs);
 		cudaFree(paddedImages);
@@ -285,14 +289,18 @@ private:
 
 
 FRecBufferDataGPUWrapper::FRecBufferDataGPUWrapper(RecFourierBufferData* orig) {
-	cpuCopy = new RecFourierBufferDataGPU(orig);
+	void* ptr;
+	cudaMallocHost(&ptr, sizeof(RecFourierBufferDataGPU)); // allocate page-locked
+	cpuCopy = (RecFourierBufferDataGPU*)ptr;
+	cpuCopy->create(orig);
 	gpuCopy = NULL;
 }
 
 FRecBufferDataGPUWrapper::~FRecBufferDataGPUWrapper() {
 	cudaFree(gpuCopy);
 	gpuErrchk( cudaPeekAtLastError() );
-	delete cpuCopy;
+	cpuCopy->destroy();
+	cudaFreeHost(cpuCopy);
 }
 
 void FRecBufferDataGPUWrapper::copyFrom(RecFourierBufferData* orig, int stream) {
