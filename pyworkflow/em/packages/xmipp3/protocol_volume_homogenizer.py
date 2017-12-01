@@ -55,49 +55,43 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                       label='do Gold Standard?',
                       help="If YES provide half1 and half2 maps for reference"
                            "and for input volumes.")
-        
         form.addParam('referenceVolume', params.PointerParam,
-                 condition='not doGoldStandard',
-                 pointerClass='Volume',
-                 label='Reference volume', 
-                 help="This is the volume that will be used as the reference "
-                      "in OF algorithm. If you want to use Gold-Standard "
-                      "provide here half1 map")
-        
-        form.addParam('referenceVolume1', params.PointerParam, 
-                 condition='doGoldStandard',
-                 pointerClass='Volume',
-                 label='Reference volume half1', 
-                 help="This is the half1 volume that will be used as the reference"
-                      "for half1 in OF algorithm.")
-        
+                      condition='not doGoldStandard',
+                      pointerClass='Volume',
+                      label='Reference volume',
+                      help="This is the volume that will be used as the "
+                           "reference in OF algorithm. If you want to "
+                           "use Gold-Standard provide here half1 map")
+        form.addParam('referenceVolume1', params.PointerParam,
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Reference volume half1',
+                      help="This is the half1 volume that will be used as the "
+                           "reference for half1 in OF algorithm.")
         form.addParam('referenceVolume2', params.PointerParam,
-                 condition='doGoldStandard',
-                 pointerClass='Volume',
-                 label='Reference volume half2', 
-                 help="This is half2 volume that will be used as the reference"
-                      "for half2 in OF algorithm.")
-        
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Reference volume half2',
+                      help="This is half2 volume that will be used as the "
+                           "reference for half2 in OF algorithm.")
         form.addParam('inputVolume', params.PointerParam,
-                 condition='not doGoldStandard',
-                 pointerClass='Volume',
-                 label='Input volume', 
-                 help="Volume that we want to process its related particles.")
-
+                      condition='not doGoldStandard',
+                      pointerClass='Volume',
+                      label='Input volume',
+                      help="Volume that we want to process its related "
+                           "particles.")
         form.addParam('inputVolume1', params.PointerParam,
-                 condition='doGoldStandard',
-                 pointerClass='Volume',
-                 label='Input volume half1', 
-                 help="Volume that we want to process its related particles."
-                       "It should represent half1 map.")
-
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Input volume half1', 
+                      help="Volume that we want to process its related"
+                           " particles. It should represent half1 map.")
         form.addParam('inputVolume2', params.PointerParam,
-                 condition='doGoldStandard',
-                 pointerClass='Volume',
-                 label='Input volume half2', 
-                 help="Volume that we want to process its related particles."
-                       "It should represent half2 map.")
-                
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Input volume half2', 
+                      help="Volume that we want to process its related "
+                           "particles. It should represent half2 map.")                
         form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
                       pointerCondition='hasAlignmentProj',
@@ -105,49 +99,51 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                       help="Aligned particles related to the input volume. "
                            "These particles will be processed (deformed) "
                            "based on the reference volume using OF algorithm."
-                           "If selected doGoldStandard True the particles have to have"
-                           "information about the halfId they belong.")
-        
+                           "If selected doGoldStandard True the particles have"
+                           " to have  information about the halfId they "
+                           "belong.")        
         form.addParam('doAlignment', params.BooleanParam, default=False,
                       label='Reference and input volumes need to be aligned?',
                       help="Input and reference volumes must be aligned. "
                            "If you have not aligned them before choose this "
-                           "option, so protocol will handle it internally.")
-        
+                           "option, so protocol will handle it internally.")        
         form.addParam('dofrm', params.BooleanParam, default=True,
                       condition='doAlignment',
                       label='Use Fast Rotational Matching.',
-                      help="Use Fast Rotational Matching. Before use it you have to install it by scipion install frm"
-                           "This method for volume alignment is much more fast than exhaustive search")
-        
-        form.addParam('resLimit', params.FloatParam, default = 20,
+                      help="Use Fast Rotational Matching. Before use it you "
+                           "have to install it by scipion install frm"
+                           "This method for volume alignment is much more "
+                           "fast than exhaustive search")        
+        form.addParam('resLimit', params.FloatParam, default=20,
                       label="Resolution Limit (A)",
                       help="Resolution limit used to low pass filter both "
                            "input and reference map(s)."
-                           "Based on previous experimental results, a good value "
-                           "for  seems to be 20A ")
-                
+                           "Based on previous experimental results, a good "
+                           "value for  seems to be 20A ")                
         form.addSection(label='OF')
         form.addParam('winSize', params.IntParam, default=50,
-                       label="Window size",
-                       help="Size of the search window at each pyramid level "
-                            "(shifts are assumed to be constant within this window).")
-                   
+                      label="Window size",
+                      help="Size of the search window at each pyramid level "
+                            "(shifts are assumed to be constant within this "
+                            "window).")                   
         form.addParam('pyrScale', params.FloatParam, default=0.5,
-                       label="pyramid Scale",
-                       expertLevel=params.LEVEL_ADVANCED,
-                       help="Parameter, specifying the image scale (<1) to build pyramids for each image."
-                            "pyrScale=0.5 means a classical pyramid, where each next layer is twice smaller than the previous one.")        
+                      label="pyramid Scale",
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help="Parameter, specifying the image scale (<1) to "
+                           "build pyramids for each image. pyrScale=0.5 " 
+                            "means a classical pyramid, where each next layer" 
+                            " is twice smaller than the previous one.")        
         form.addParam('levels', params.IntParam, default=2,
-                       label="Number of Levels",
-                       expertLevel=params.LEVEL_ADVANCED,
-                       help="Number of pyramid layers including the initial image; levels=1 means"
-                            "that no extra layers are created and only the original images are used.")
+                      label="Number of Levels",
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help="Number of pyramid layers including the initial "
+                           "image; levels=1 means that no extra layers are "
+                           "created and only the original images are used.")
         form.addParam('iterations', params.IntParam, default=10,
-                       label="Iterations",
-                       expertLevel=params.LEVEL_ADVANCED,
-                       help="Number of iterations the algorithm does at each pyramid level.")
-                      
+                      label="Iterations",
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help="Number of iterations the algorithm does at "                             
+                           "each pyramid level.")                      
         form.addParallelSection(threads=1, mpi=2)
         
     #--------------------------- INSERT steps functions --------------------------------------------
