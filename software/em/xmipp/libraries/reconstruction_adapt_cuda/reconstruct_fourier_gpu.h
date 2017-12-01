@@ -142,6 +142,12 @@ protected:
 //	METHODS
 
 	/**
+	 * Method checks that there is no logical problem in the defines used by
+	 * program. If found, error is thrown.
+	 */
+	void checkDefines();
+
+	/**
 	 * Method will take temp spaces (containing complex conjugate values
 	 * in the 'right X side'), transfer them to 'left X side' and remove
 	 * the 'right X side'. As a result, the X dimension of the temp spaces

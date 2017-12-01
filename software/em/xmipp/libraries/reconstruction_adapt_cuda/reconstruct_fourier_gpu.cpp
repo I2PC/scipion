@@ -116,10 +116,26 @@ void ProgRecFourierGPU::show()
     }
 }
 
+void ProgRecFourierGPU::checkDefines() {
+	if (!((TILE == 1) || (BLOCK_DIM % TILE == 0))) { //
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"TILE has to be set to 1(one) or BLOCK_DIM has to be a multiple of TILE");
+	}
+	if ((SHARED_IMG == 1) && (TILE != 1)) {
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"TILE cannot be used while SHARED_IMG is active");
+	}
+	if (TILE >= BLOCK_DIM) {
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"TILE must be smaller than BLOCK_DIM");
+	}
+	if ((SHARED_BLOB_TABLE == 1) && (PRECOMPUTE_BLOB_VAL == 0)) {
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"PRECOMPUTE_BLOB_VAL must be set to 1(one) when SHARED_BLOB_TABLE is active");
+	}
+}
+
 // Main routine ------------------------------------------------------------
 void ProgRecFourierGPU::run()
 {
     show();
+    checkDefines(); // check that there is not a logical error in defines
     produceSideinfo();
     if (verbose) {
 		init_progress_bar(SF.size());
