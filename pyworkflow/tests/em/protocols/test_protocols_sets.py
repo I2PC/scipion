@@ -63,6 +63,7 @@ class TestSets(BaseTest):
         cls.dataset_xmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dataset_mda = DataSet.getDataSet('mda')
         cls.dataset_ribo = DataSet.getDataSet('ribo_movies')
+        cls.dataset_relion = DataSet.getDataSet('relion_tutorial')
 
         #
         # Imports
@@ -101,6 +102,20 @@ class TestSets(BaseTest):
                               samplingRate=3.5)
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles
+
+        # Particles with micID
+        print magentaStr("\n==> Importing data - particles with micID")
+        relionFile = 'import/case2/relion_it015_data.star'
+        p_imp_part_micID = new(ProtImportParticles,
+                               objLabel='from relion (auto-refine 3d)',
+                               importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                               starFile=cls.dataset_relion.getFile(relionFile),
+                               magnification=10000,
+                               samplingRate=7.08,
+                               haveDataBeenPhaseFlipped=True)
+        launch(p_imp_part_micID, wait=True)
+        cls.partMicID = p_imp_part_micID.outputParticles
+        cls.micsMicID = p_imp_part_micID.outputMicrographs
 
         # Coordinates  -  Oh, I don't know of any example of coord. import :(
         # print magentaStr("\n==> Importing data - coordinates")
@@ -224,61 +239,44 @@ class TestSets(BaseTest):
 
     def testSubsetByMic(self):
         """Test that the subset by Mic operation works as expected."""
-
         print "\n", greenStr(" Test Subset by Mic".center(75, '-'))
+        "Simple checks on subsets, coming from split sets of setMics."
+        print magentaStr("\n==> Check subset of %s by %s"
+               % (type(self.partMicID).__name__, type(self.micsMicID).__name__))
 
-        def check(setMics, setParticles):
-            "Simple checks on subsets, coming from split sets of setMics."
-            print magentaStr("\n==> Check subset by Mic of %s"
-                                                  % type(setParticles).__name__)
+        # launch the protocol for a certain mics input
+        def launchSubsetByMic(micsSubset):
+            p_subsetbyMic = self.newProtocol(ProtSubSetByMic)
+            p_subsetbyMic.inputParticles.set(self.partMicID)
+            p_subsetbyMic.inputMicrographs.set(micsSubset)
+            self.launchProtocol(p_subsetbyMic)
+            return p_subsetbyMic.outputParticles
 
-            # create a set of particles with three micIDs (1, 2, 3)
-            inFileNameMetadata = self.proj.getTmpPath('partWithMicId.sqlite')
-            imgSet = SetOfParticles(filename=inFileNameMetadata)
+        # Check if the final set size and the first micID are correct
+        def checkNumbers(setPart, size, firstMicId):
+            self.assertEqual(setPart.getSize(), size)
+            self.assertEqual(int(setPart.getFirstItem()._micId), firstMicId)
+        
+        # Whole set of micrographs
+        setMics = self.micsMicID
+        # Create a subsets of Mics to apply the protocol
+        p_split = self.split(setMics, n=2, randomize=False)
+        setMics2 = p_split.outputMicrographs02
+        # Create a subset of a single micrograph to apply the protocol
+        p_split = self.split(setMics, n=20, randomize=False)
+        setMics3 = p_split.outputMicrographs03
 
-            inFileNameData = self.proj.getTmpPath('partWithMicId.stk')
-            img = Particle()
-            for i in range(1, 9):
-                img.cleanObjId()
-                img.setLocation(i, inFileNameData)
-                img.setSamplingRate(3.5)
-                img.setMicId(i%3+1)
-                imgSet.append(img)
-            imgSet.write()
+        # Launch subset by mics protocol with the whole set of Mics
+        partByMic1 = launchSubsetByMic(setMics)
+        # Launch subset by mics protocol with a subset of Mics
+        partByMic2 = launchSubsetByMic(setMics2)
+        # Launch subset by mics protocol with a single SetOfMics
+        partByMic3 = launchSubsetByMic(setMics3)
 
-            # Importing the particles with several micIDs
-            p_imp_partSQ = self.newProtocol(ProtImportParticles,
-                            importFrom = ProtImportParticles.IMPORT_FROM_SCIPION,
-                            sqliteFile = inFileNameMetadata,
-                            samplingRate = 3.5)
-            self.launchProtocol(p_imp_partSQ)
-            partWithMicId = p_imp_partSQ.outputParticles
-
-            # Create a subset of Mics from where apply the subset from mic prot.
-            p_split = self.split(setMics, n=2, randomize=False)
-            setMultipleMic = list(self.outputs(p_split))[0]
-            setSingleMic = list(self.outputs(p_split))[1]
-
-            # Launch subset by mics protocol with a single Mic input
-            p_subsetbyMic1 = self.newProtocol(ProtSubSetByMic)
-            p_subsetbyMic1.inputParticles.set(partWithMicId)
-            p_subsetbyMic1.inputMicrographs.set(setSingleMic)
-            self.launchProtocol(p_subsetbyMic1)
-            # Check if the number of the final Particles is correct
-            subSetParticles = list(self.outputs(p_subsetbyMic1))[0]
-            self.assertEqual(subSetParticles.getSize(), 3)
-
-            # Launch subset by mics protocol with multiple Mics input
-            p_subsetbyMic2 = self.newProtocol(ProtSubSetByMic)
-            p_subsetbyMic2.inputParticles.set(partWithMicId)
-            p_subsetbyMic2.inputMicrographs.set(setMultipleMic)
-            self.launchProtocol(p_subsetbyMic2)
-            # Check if the number of the final Particles is correct
-            subSetParticles = list(self.outputs(p_subsetbyMic2))[0]
-            self.assertEqual(subSetParticles.getSize(), 5)
-
-
-        check(self.micros, self.particles)
+        # Assertions for the three sets
+        checkNumbers(partByMic1, self.partMicID.getSize(), 1)
+        checkNumbers(partByMic2, 2638, 11)
+        checkNumbers(partByMic3, 270, 3)
 
     def testMerge(self):
         """Test that the union operation works as expected."""
