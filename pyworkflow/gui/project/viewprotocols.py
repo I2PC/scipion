@@ -26,7 +26,6 @@
 # **************************************************************************
 from __future__ import print_function
 
-import time
 
 INIT_REFRESH_SECONDS = 3
 
@@ -180,7 +179,8 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
         else:
             status = None
 
-        stoppable = status in [pwprot.STATUS_RUNNING, pwprot.STATUS_SCHEDULED]
+        stoppable = status in [pwprot.STATUS_RUNNING, pwprot.STATUS_SCHEDULED, 
+                               pwprot.STATUS_LAUNCHED] 
 
         return [(ACTION_EDIT, single),
                 (ACTION_COPY, True),
@@ -1149,7 +1149,6 @@ class ProtocolsView(tk.Frame):
 
             return boxColor
         except Exception as e:
-            print("Can't calculate box color:" + str(e))
             return DEFAULT_BOX_COLOR
 
     @staticmethod
