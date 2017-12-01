@@ -293,6 +293,17 @@ private:
 	template<typename T>
 	static std::complex<T> conjugate(std::complex<T> f) { return conj(f);};
 
+	static float getBessiOrderAlpha(blobtype blob) {
+		switch (blob.order) {
+		case 0: return bessi0(blob.alpha);
+		case 1: return bessi1(blob.alpha);
+		case 2: return bessi2(blob.alpha);
+		case 3: return bessi3(blob.alpha);
+		case 4: return bessi4(blob.alpha);
+		REPORT_ERROR(ERR_VALUE_INCORRECT,"Order must be in interval [0..4]");
+		}
+	}
+
     /**
      * Method will process the 'paddedFourier' (not shifted, i.e. low frequencies are in corners)
      * in the following way:

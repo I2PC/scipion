@@ -396,7 +396,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 				parent->blob.radius, parent->maxVolumeIndexYZ, parent->useFast,
 				parent->maxResolutionSqr,
 				threadParams->gpuStream,
-				parent->blob.order);
+				parent->blob.order, parent->blob.alpha);
 			parent->logProgress(threadParams->buffer->noOfImages);
 		}
 		// once the processing finished, buffer can be reused
@@ -786,7 +786,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     }
     createStreams(noOfCores);
     copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
-    		blob.radius, blob.alpha, iDeltaSqrt, iw0);
+    		blob.radius, blob.alpha, iDeltaSqrt, iw0, 1.f/getBessiOrderAlpha(blob));
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }

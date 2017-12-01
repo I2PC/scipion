@@ -141,7 +141,7 @@ void unpinMemory(RecFourierBufferData* buffer);
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
 		float blobRadius, float blobAlpha,
-		float iDeltaSqrt, float iw0);
+		float iDeltaSqrt, float iw0, float oneOverBessiOrderAlpha);
 
 /**
  * Method will copy content of the 'buffer' to GPU and
@@ -152,6 +152,6 @@ void copyConstants(
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ, bool useFast,
-		float maxResolutionSqr, int stream, int blobOrder);
+		float maxResolutionSqr, int stream, int blobOrder, float blobAlpha);
 
 #endif /* XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_ */
