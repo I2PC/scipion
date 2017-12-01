@@ -25,6 +25,10 @@
 # **************************************************************************
 from __future__ import print_function
 
+import traceback
+
+from pyworkflow.utils import printTraceBack
+
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -1481,7 +1485,7 @@ class Protocol(Step):
         List of warnings checked:
         1. If the folder for this protocol run exists.
         """
-        if not os.path.exists(self.workingDir.get()):
+        if not self.isSaved() and not os.path.exists(self.workingDir.get()):
             self.addSummaryWarning((
                                    "*Missing run data*: The directory for this run is missing, so it won't be"
                                    "possible to use its outputs in other protocols."))
@@ -1515,7 +1519,15 @@ class Protocol(Step):
         """
         validateFunc = getattr(cls.getClassPackage(),
                                'validateInstallation', None)
-        return validateFunc() if validateFunc is not None else []
+        try:
+            return validateFunc() if validateFunc is not None else []
+        except Exception as e:
+
+            msg = "%s installation couldn't be validated. Possible cause could" \
+                  " be a configuration issue. Try to run scipion config." \
+                  % cls.__name__
+            print(msg)
+            return [msg]
 
     def validate(self):
         """ Check that input parameters are correct.
