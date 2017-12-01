@@ -1,6 +1,6 @@
 # ***************************************************************************
-# * Authors:     Javier Vargas (jvargas@cnb.csic.es) (2016)
-#                J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     David Maluenda (dmaluenda@cnb.csic.es) (2017)
+#                Carlos Oscar S. Sorzano   (coss@cnb.csic.es)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify
