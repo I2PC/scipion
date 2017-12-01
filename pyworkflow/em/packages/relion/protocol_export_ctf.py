@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -153,10 +153,23 @@ class ProtRelionExportCtf(EMProtocol):
     
     #--------------------------- UTILS functions -------------------------------
     def preprocessMicrograph(self, mic, micRow):
+        mag = mic.getAcquisition().getMagnification()
+
         micRow.setValue('rlnSamplingRate', self.samplingRate)
+        micRow.setValue('rlnMagnification', mag)
         micRow.setValue('rlnDetectorPixelSize', self.detectorPixelSize)
         micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
+
         ctf = mic.getCTF()
-        if ctf.hasAttribute('_ctffind4_ctfPhaseShift'):
-            micRow.setValue('rlnPhaseShift',
-                            ctf._ctffind4_ctfPhaseShift.get())
+
+        def _setIf(label, attributes):
+            for a in attributes:
+                if ctf.hasAttribute(a):
+                    micRow.setValue(label, ctf.getAttributeValue(a))
+
+        # Check if there is maximum resolution information
+        _setIf('rlnCtfMaxResolution', ['_ctffind4_ctfResolution',
+                                       '_gctf_ctfResolution'])
+        _setIf('rlnCtfFigureOfMerit', ['_ctffind4_crossCorrelation',
+                                       '_gctf_crossCorrelation'])
+
