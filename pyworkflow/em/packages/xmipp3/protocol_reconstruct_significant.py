@@ -85,6 +85,10 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         form.addParam('keepIntermediate', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Keep intermediate volumes',
                       help='Keep all volumes and angular assignments along iterations')
+        form.addParam('maxResolution', FloatParam,
+                      label="Target resolution", default=12,
+                      help='Target resolution (A).',
+                      expertLevel=LEVEL_ADVANCED)
 
         form.addSection(label='Criteria')
         form.addParam('alpha0', FloatParam, default=80,
@@ -182,15 +186,19 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             self.runJob("xmipp_angular_project_library ",args)
 
             # Align
-            print("self.trueSymsNo", self.trueSymsNo)
-            if self.trueSymsNo!=0: #AJ REVISAR ESTO PARA C1 - EL ALPHA NO PARECE ESTAR BIEN EN C1
-                alphaApply = alpha*self.trueSymsNo
+            #TODO check the alpha values
+            if self.trueSymsNo!=0: #AJ REVISAR ESTO PARA C1 - EL ALPHA NO PARECE ESTAR BIEN EN C1 - Fixed??
+                alphaApply = (alpha*self.trueSymsNo)/2 #????
             else:
-                alphaApply = alpha
+                alphaApply = alpha/2 #AJ REVISAR ESTO PARA C1 - EL ALPHA NO PARECE ESTAR BIEN EN C1 - Fixed??
+            if self.maximumShift==-1:
+                maxShift = 10
+            else:
+                maxShift = self.maximumShift
             args = '-i_ref %s.doc -i_exp %s -o %s --significance %f '\
                    '--maxShift %f'%\
                    (fnGalleryRoot,self.imgsFn,anglesFn,alphaApply,
-                    self.maximumShift)
+                    maxShift)
             self.runJob("xmipp_cuda_correlation", args, numberOfMpi=1)
             cleanPattern(fnGalleryRoot+"*")
         else:
@@ -218,16 +226,17 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         t.tic()
         self.runJob("xmipp_reconstruct_fourier", reconsArgs)
         t.toc('Reconstruct fourier took: ')
-        
+
+        #To mask the volume
         xdim = self.inputSet.get().getDimensions()[0]
         maskArgs = "-i %s --mask circular %d -v 0" % (volFn, -xdim/2)
         self.runJob('xmipp_transform_mask', maskArgs, numberOfMpi=1)
+        #TODO mask the final volume in some smart way...
 
-#        self.runJob('xmipp_transform_filter',
-#                    '-i %s --fourier low_pass %f --sampling %f' % \
-#                    (fnReferenceVol,
-#                     targetResolution + self.nextResolutionOffset.get(),
-#                     TsCurrent), numberOfMpi=1)
+        #To filter the volume
+        self.runJob('xmipp_transform_filter',
+                    '-i %s --fourier low_pass %f --sampling %f' % \
+                    (volFn, self.maxResolution, self.TsCurrent), numberOfMpi=1)
 
         if not self.keepIntermediate:
             cleanPath(prevVolFn, iterDir)
@@ -250,17 +259,24 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             row.writeToMd(md, md.addObject())
             md.write(fnVolumes)
 
-    # TsCurrent = max(self.TsOrig, targetResolution / 3)
-#        Xdim=self.inputParticles.get().getDimensions()[0]
-#        newXdim=long(round(Xdim*self.TsOrig/TsCurrent))
-#        if newXdim<40:
-#            newXdim=long(40)
-#            TsCurrent=Xdim*(self.TsOrig/newXdim)
-#        if newXdim!=Xdim:
-#            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"%(self.imgsFn,fnNewParticles,newXdim),numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-#        else:
-#            self.runJob("xmipp_image_convert","-i %s -o %s --save_metadata_stack %s"%(self.imgsFn,fnNewParticles,join(fnDir,"images.xmd")),
-#                        numberOfMpi=1)
+        #To re-sample input images
+        fnDir = self._getExtraPath()
+        fnNewParticles = join(fnDir,"input_classes.stk")
+        TsOrig = self.inputSet.get().getSamplingRate()
+        self.TsCurrent = max(TsOrig, self.maxResolution.get())
+        Xdim=self.inputSet.get().getDimensions()[0]
+        newXdim=long(round(Xdim*TsOrig/self.TsCurrent))
+        if newXdim<40:
+            newXdim=long(40)
+        if newXdim!=Xdim:
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"
+                        %(self.imgsFn,fnNewParticles,newXdim),
+                        numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+        else:
+            self.runJob("xmipp_image_convert","-i %s -o %s --save_metadata_stack %s"
+                        %(self.imgsFn,fnNewParticles,join(fnDir,"input_classes.xmd")),
+                        numberOfMpi=1)
+
 
     def createOutputStep(self):
         lastIter = self.getLastIteration(1)
@@ -348,3 +364,4 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             else:
                 break
         return lastIter
+

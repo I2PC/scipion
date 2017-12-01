@@ -31,16 +31,18 @@
 #include <data/transformations.h>
 #include <data/metadata_extension.h>
 #include <data/filters.h>
-
 #include <data/xmipp_funcs.h>
+//#include <data/xmipp_threads.h>
 
-#include <algorithm>
 #include "xmipp_gpu_utils.h"
 #include <reconstruction_cuda/cuda_gpu_correlation.h>
 
+#include <algorithm>
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
+
+
 
 
 // A function to print all prime factors of a given number n
@@ -1991,6 +1993,7 @@ void ProgGpuCorrelation::run()
 		d_experimentalAuxRT.XdimPolar=d_referenceAux.XdimPolar;
 		d_experimentalAuxRT.YdimPolar=d_referenceAux.YdimPolar;
 
+		//TODO: here we can use threads to carry out the alignment of different images in different threads
 		size_t n=0;
 		int available_images_exp = mdInSize; //mdExpSize
 		while(available_images_exp && iterExp->objId!=0){
