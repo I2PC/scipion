@@ -701,8 +701,17 @@ void processProjection(
 	int imgCacheDim)
 {
 	// map thread to each (2D) voxel
+#if TILE > 1
+	int id = threadIdx.y * blockDim.x + threadIdx.x;
+	int tidX = threadIdx.x % TILE + (id / (blockDim.y * TILE)) * TILE;
+	int tidY = (id / TILE) % blockDim.y;
+	int idx = blockIdx.x*blockDim.x + tidX;
+	int idy = blockIdx.y*blockDim.y + tidY;
+#else
+	// map thread to each (2D) voxel
 	volatile int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	volatile int idy = blockIdx.y*blockDim.y + threadIdx.y;
+#endif
 
 	if (tSpace->XY == tSpace->dir) { // iterate XY plane
 		if (idy >= tSpace->minY && idy <= tSpace->maxY) {
@@ -937,7 +946,7 @@ void processBufferKernel(
 	}
 #endif
 
-	for (int i = 0; i < buffer->getNoOfSpaces(); i++) {
+	for (int i = blockIdx.z; i < buffer->getNoOfSpaces(); i += gridDim.z) {
 		RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
 
 #if SHARED_IMG
@@ -1152,7 +1161,7 @@ void copyConstants(
 /**
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
- * Acuall calculation is done asynchronously, but 'buffer' can be reused
+ * Actual calculation is done asynchronously, but 'buffer' can be reused
  * once the method returns.
  */
 template<int blobOrder, bool useFastKaiser>
@@ -1179,7 +1188,7 @@ void processBufferGPU_(float* tempVolumeGPU, float* tempWeightsGPU,
 	int size2D = maxVolIndexYZ + 1;
 	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
-	dim3 dimGrid(ceil(size2D/(float)dimBlock.x),ceil(size2D/(float)dimBlock.y));
+	dim3 dimGrid(ceil(size2D/(float)dimBlock.x),ceil(size2D/(float)dimBlock.y), GRID_DIM_Z);
 
 	// by using templates, we can save some registers, especially for 'fast' version
 	if (useFast && buffer->hasCTFs) {

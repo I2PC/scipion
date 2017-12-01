@@ -35,5 +35,7 @@ typedef float MATRIX[3][3];
 #define SHARED_BLOB_TABLE 0
 #define SHARED_IMG 0
 #define PRECOMPUTE_BLOB_VAL 1
+#define TILE 4
+#define GRID_DIM_Z 1
 
 #endif /* XMIPP_LIBRARIES_DATA_RECONSTRUCT_FOURIER_DEFINES_H_ */
