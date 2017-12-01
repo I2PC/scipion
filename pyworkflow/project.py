@@ -59,7 +59,8 @@ PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 PROJECT_CREATION_TIME = 'CreationTime'
 
 # Regex to get numbering suffix and automatically propose runName
-REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
+REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+)(?P<number>\(\d*\))\s*$')
+REGEX_NUMBER_ENDING_CP=re.compile('(?P<prefix>.+\s\(copy)(?P<number>.*)\)\s*$')
 
 class Project(object):
     """This class will handle all information 
@@ -411,7 +412,7 @@ class Project(object):
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition:
+        3. Call the launch method in protocol.job to handle submission:
            mpi, thread, queue,
         and also take care if the execution is remotely."""
 
@@ -644,25 +645,25 @@ class Project(object):
 
     def __setProtocolLabel(self, newProt):
         """ Set a readable label to a newly created protocol.
-        We will try to find another existing protocol of the 
-        same class and set the label from it.
+        We will try to find another existing protocol with the default label
+        and then use an incremental labeling in parethesis (<number>++)
         """
-        prevLabel = None  # protocol with same class as newProt
-        newProtClass = newProt.getClass()
+        defaultLabel = newProt.getClassLabel()
+        maxSuffix = 0
 
         for prot in self.getRuns(iterate=True, refresh=False):
-            if newProtClass == prot.getClass():
-                prevLabel = prot.getObjLabel().strip()
+            otherProtLabel = prot.getObjLabel()
+            m = REGEX_NUMBER_ENDING.match(otherProtLabel)
+            if m and m.groupdict()['prefix'].strip() == defaultLabel:
+                stringSuffix = m.groupdict()['number'].strip('(').strip(')')
+                maxSuffix = max(int(stringSuffix),maxSuffix)
+            elif otherProtLabel == defaultLabel: # When only we have the prefix,
+                maxSuffix = max(1,maxSuffix)     # this REGEX don't match.
 
-        if prevLabel:
-            numberSuffix = 2
-            m = REGEX_NUMBER_ENDING.match(prevLabel)
-            if m and m.groupdict()['number']:
-                numberSuffix = int(m.groupdict()['number']) + 1
-                prevLabel = m.groupdict()['prefix'].strip()
-            protLabel = prevLabel + ' %s' % numberSuffix
+        if maxSuffix:
+            protLabel = '%s (%d)' % (defaultLabel, maxSuffix+1)
         else:
-            protLabel = newProt.getClassLabel()
+            protLabel = defaultLabel
 
         newProt.setObjLabel(protLabel)
 
@@ -699,12 +700,51 @@ class Project(object):
         return matches
 
     def __cloneProtocol(self, protocol):
-        """ Make a copy of the protocol parameters, not outputs. """
+        """ Make a copy of the protocol parameters, not outputs. 
+            We will label the new protocol with the same name adding the 
+            parenthesis as follow -> (copy) -> (copy 2) -> (copy 3)
+        """
         newProt = self.newProtocol(protocol.getClass())
-        newProt.setObjLabel(protocol.getRunName() + ' (copy)')
+        oldProtName = protocol.getRunName()
+        maxSuffix = 0
+
+        # if '(copy...' suffix is not in the old name, we add it in the new name
+        # and seting the newnumber 
+        mOld = REGEX_NUMBER_ENDING_CP.match(oldProtName)
+        if mOld:
+            newProtPrefix = mOld.groupdict()['prefix']
+            if mOld.groupdict()['number'] == '':
+                oldNumber = 1
+            else:
+                oldNumber = int(mOld.groupdict()['number'])
+        else:
+            newProtPrefix = oldProtName + ' (copy'
+            oldNumber = 0
+        newNumber = oldNumber + 1
+
+        # looking for "<old name> (copy" prefixes in the project and
+        # seting the newNumber as the maximum+1
+        for prot in self.getRuns(iterate=True, refresh=False):
+            otherProtLabel = prot.getObjLabel()
+            mOther = REGEX_NUMBER_ENDING_CP.match(otherProtLabel)
+            if mOther and mOther.groupdict()['prefix'] == newProtPrefix:
+                stringSuffix = mOther.groupdict()['number']
+                if stringSuffix == '':
+                    stringSuffix = 1
+                maxSuffix = max(maxSuffix, int(stringSuffix))
+                if newNumber <= maxSuffix:
+                    newNumber = maxSuffix + 1
+
+        # building the new name
+        if newNumber == 1:
+            newProtLabel = newProtPrefix + ')'
+        else:
+            newProtLabel = '%s %d)' % (newProtPrefix, newNumber)
+
+        newProt.setObjLabel(newProtLabel)
         newProt.copyDefinitionAttributes(protocol)
-        newProt.copyAttributes(protocol, 'hostName', '_useQueue',
-                               '_queueParams')
+        newProt.copyAttributes(protocol, 'hostName', '_useQueue','_queueParams')
+        
         return newProt
 
     def copyProtocol(self, protocol):
@@ -869,7 +909,10 @@ class Project(object):
                         # This case is similar to Pointer, but the values
                         # is a list and we will setup a pointer for each value
                         elif isinstance(attr, pwobj.PointerList):
-                            for value in protDict[paramName]:
+                            attribute = protDict[paramName]
+                            if attribute is None:
+                                continue
+                            for value in attribute:
                                 p = pwobj.Pointer()
                                 _setPointer(p, value)
                                 attr.append(p)

@@ -29,7 +29,7 @@
 import json
 import os
 from os.path import join, exists, abspath, basename
-from numpy import histogram, array, insert
+import numpy as np
 import multiprocessing
 
 from pyworkflow.protocol import getUpdatedProtocol
@@ -51,6 +51,8 @@ MIC_THUMBS = 'imgMicThumbs'
 PSD_THUMBS = 'imgPsdThumbs'
 SHIFT_THUMBS = 'imgShiftThumbs'
 MIC_ID = 'micId'
+DEFOCUS_HIST_BIN_WIDTH = 0.5
+RESOLUTION_HIST_BIN_WIDTH = 0.5
 
 
 class ReportHtml:
@@ -144,7 +146,7 @@ class ReportHtml:
             self.thumbPaths[PSD_THUMBS].append(psdThumb)
             self.thumbPaths[PSD_PATH].append(psdPath)
 
-    def getAlignThumbPaths(self, alignThumbsDone=0, ext="png"):
+    def getAlignThumbPaths(self, alignThumbsDone=0, ext="png", micIdSet=None):
         """Adds to self.thumbPaths the paths to the report thumbnails
         that come from the alignment protocol.
 
@@ -152,16 +154,20 @@ class ReportHtml:
         - alignThumbsDone: how many thumbnails have already been generated.
                            we will get paths starting from this index
         - ext: extension of the thumbnail images. Defaults to png.
+        - micIdSet: list of ids to use instead of the whole set of
+                    aligned micrographs. Default None.
 
         """
 
         if self.alignProtocol is not None:
             updatedAlignProt = getUpdatedProtocol(self.alignProtocol)
-            if hasattr(updatedAlignProt, 'outputMicrographs'):
-                alignedMicSet = list(updatedAlignProt.outputMicrographs.getIdSet())
-            else:
-                alignedMicSet = []
-            for micId in alignedMicSet[alignThumbsDone:]:
+            if micIdSet is None:
+                if hasattr(updatedAlignProt, 'outputMicrographs'):
+                    micIdSet = list(updatedAlignProt.outputMicrographs.getIdSet())
+                else:
+                    micIdSet = []
+
+            for micId in micIdSet[alignThumbsDone:]:
                 mic = updatedAlignProt.outputMicrographs[micId]
                 if hasattr(mic, 'thumbnail'):
                     srcMicFn = abspath(mic.thumbnail.getFileName())
@@ -242,24 +248,34 @@ class ReportHtml:
         return
 
     def processDefocusValues(self, defocusList):
-        maxDefocus = self.protocol.maxDefocus.get()
-        minDefocus = self.protocol.minDefocus.get()
-        edges = array(range(0, int(maxDefocus)+1, 2500))
-        edges = insert(edges[edges > minDefocus], 0, minDefocus)
-        values, binEdges = histogram(defocusList, bins=edges, range=(minDefocus, maxDefocus))
+        maxDefocus = self.protocol.maxDefocus.get()*1e-4
+        minDefocus = self.protocol.minDefocus.get()*1e-4
+        # Convert defocus values to microns
+        defocusList = [i*1e-4 for i in defocusList]
+        edges = np.arange(0, maxDefocus+DEFOCUS_HIST_BIN_WIDTH, DEFOCUS_HIST_BIN_WIDTH)
+        edges = np.insert(edges[edges > minDefocus], 0, minDefocus)
+        values, binEdges = np.histogram(defocusList, bins=edges, range=(minDefocus, maxDefocus))
         belowThresh = 0
         aboveThresh = 0
-        labels = ["%d-%d" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
+        labels = ["%0.2f-%0.2f" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
         for v in defocusList:
             if v < minDefocus:
                 belowThresh += 1
             elif v > maxDefocus:
                 aboveThresh += 1
         zipped = zip(values, labels)
-        zipped[:0] = [(belowThresh, "0-%d" % minDefocus)]
-        zipped.append((aboveThresh, "> %d" % maxDefocus))
+        zipped[:0] = [(belowThresh, "0-%0.2f" % (minDefocus))]
+        zipped.append((aboveThresh, "> %0.2f" % (maxDefocus)))
 
         return zipped
+
+    def getResolutionHistogram(self, resolutionValues):
+        if len(resolutionValues) == 0:
+            return []
+        maxValue = int(np.ceil(max(resolutionValues)))
+        edges = np.append(np.arange(0, maxValue, RESOLUTION_HIST_BIN_WIDTH), maxValue)
+        values, binEdges = np.histogram(resolutionValues, bins=edges, range=(0, maxValue))
+        return zip(values, binEdges)
 
     def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
@@ -307,23 +323,28 @@ class ReportHtml:
             numCtfsDone = len(self.thumbPaths[PSD_THUMBS])
             numCtfs = len(data[PSD_PATH])
             numCtfsToDo = numCtfs - numCtfsDone
+            numMicsToDo = numCtfsToDo
+            numMicsDone = numCtfsDone
+            numMics = numCtfs
             self.getCtfThumbPaths(data, ctfThumbsDone=numCtfsDone)
+            self.getAlignThumbPaths(alignThumbsDone=numCtfsDone, micIdSet=data['idValues'])
 
             if len(data['defocusU']) < 100:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
             else:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'][:-50])
                 data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
+
+            data['resolutionHistogram'] = self.getResolutionHistogram(data['resolution'])
         else:
             numCtfsDone = 0
             numCtfsToDo = 0
             numCtfs = 0
-
-        # Thumbnails for Micrograph Table
-        numMicsDone = len(self.thumbPaths[MIC_THUMBS])
-        self.getAlignThumbPaths(alignThumbsDone=numMicsDone)
-        numMics = len(self.thumbPaths[MIC_PATH])
-        numMicsToDo = numMics - numMicsDone
+            # Thumbnails for Micrograph Table
+            numMicsDone = len(self.thumbPaths[MIC_THUMBS])
+            self.getAlignThumbPaths(alignThumbsDone=numMicsDone)
+            numMics = len(self.thumbPaths[MIC_PATH])
+            numMicsToDo = numMics - numMicsDone
 
         if numMicsToDo <= 10 and numCtfsToDo <= 10:
             # we have few new images, eg streaming mode, generate thumbnails now
@@ -341,8 +362,11 @@ class ReportHtml:
         data[MIC_ID] = self.thumbPaths[MIC_ID][:self.thumbsReady]
         if PSD_THUMBS in self.thumbPaths:
             data[PSD_THUMBS] = self.thumbPaths[PSD_THUMBS][:self.thumbsReady]
-        if self.thumbsReady < numMics or self.thumbsReady < numCtfs:
-            reportFinished = False
+
+        if self.ctfMonitor is None:
+            reportFinished = self.thumbsReady == numMics
+        else:
+            reportFinished = self.thumbsReady == numCtfs
 
         ctfData = json.dumps(data)
 
@@ -366,7 +390,7 @@ class ReportHtml:
                 'ctfData': ctfData,
                 'movieGainData': movieGainData,
                 'systemData': systemData,
-                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else '',
+                'refresh': self.refreshSecs
                 }
 
         self.info("Writing report html to: %s" % abspath(self.reportPath))
