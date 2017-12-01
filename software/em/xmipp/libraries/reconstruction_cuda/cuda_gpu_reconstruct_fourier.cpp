@@ -56,6 +56,24 @@ __device__ __constant__ float cIw0 = 0.f;
 __device__ __constant__ float cIDeltaSqrt = 0.f;
 __device__ __constant__ float cOneOverBessiOrderAlpha = 0.f;
 
+
+__device__ void operator+=(float2 &a, float2 b)
+{
+    a.x += b.x;
+    a.y += b.y;
+}
+
+__device__ void operator*=(float2 &a, float2 b)
+{
+    a.x *= b.x;
+    a.y *= b.y;
+}
+
+__device__ float2 operator*(float2 a, float b)
+{
+    return make_float2(a.x * b, a.y * b);
+}
+
 __device__
 float bessi0Fast(float x) { // X must be <= 15
 	// stable rational minimax approximations to the modified bessel functions, blair, edwards
@@ -467,7 +485,7 @@ void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
 template<bool hasCTF>
 __device__
 void processVoxel(
-	float* tempVolumeGPU, float* tempWeightsGPU,
+	float2* tempVolumeGPU, float* tempWeightsGPU,
 	int x, int y, int z,
 	RecFourierBufferDataGPU* const data,
 	const RecFourierProjectionTraverseSpace* const space)
@@ -476,7 +494,7 @@ void processVoxel(
 	float wBlob = 1.f;
 	float wCTF = 1.f;
 	float wModulator = 1.f;
-	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
+	const float2* __restrict__ img = (float2*)data->getNthItem(data->FFTs, space->projectionIndex);
 
 
 	float dataWeight = space->weight;
@@ -512,8 +530,8 @@ void processVoxel(
 	float weight = wBlob * wModulator * dataWeight;
 
 	 // use atomic as two blocks can write to same voxel
-	atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight * wCTF);
-	atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight * wCTF);
+	atomicAdd(&tempVolumeGPU[index3D].x, img[index2D].x * weight * wCTF);
+	atomicAdd(&tempVolumeGPU[index3D].y, img[index2D].y * weight * wCTF);
 	atomicAdd(&tempWeightsGPU[index3D], weight);
 }
 
@@ -525,7 +543,7 @@ void processVoxel(
 template<bool hasCTF, int blobOrder, bool useFastKaiser>
 __device__
 void processVoxelBlob(
-	float* tempVolumeGPU, float *tempWeightsGPU,
+	float2* tempVolumeGPU, float *tempWeightsGPU,
 	int x, int y, int z,
 	RecFourierBufferDataGPU* const data,
 	const RecFourierProjectionTraverseSpace* const space,
@@ -564,10 +582,11 @@ void processVoxelBlob(
 	maxY = fminf(maxY, ySize-1);
 
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
-	float volReal, volImag, w;
-	volReal = volImag = w = 0.f;
+	float2 vol;
+	float w;
+	vol.x = vol.y = w = 0.f;
 #if !SHARED_IMG
-	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
+	const float2* __restrict__ img = (float2*)data->getNthItem(data->FFTs, space->projectionIndex);
 #endif
 	float dataWeight = space->weight;
 
@@ -613,11 +632,9 @@ void processVoxelBlob(
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
 #if SHARED_IMG
-				volReal += IMG[index2D].x * weight * wCTF;
-				volImag += IMG[index2D].y * weight * wCTF;
+				vol += IMG[index2D] * weight * wCTF;
 #else
-				volReal += img[2*index2D] * weight * wCTF;
-				volImag += img[2*index2D + 1] * weight * wCTF;
+				vol += img[index2D] * weight * wCTF;
 #endif
 			}
 		}
@@ -657,18 +674,16 @@ void processVoxelBlob(
 				float weight = wBlob * dataWeight;
 				w += weight;
 #if SHARED_IMG
-				volReal += IMG[index2D].x * weight;
-				volImag += IMG[index2D].y * weight;
+				vol += IMG[index2D] * weight;
 #else
-				volReal += img[2*index2D] * weight;
-				volImag += img[2*index2D + 1] * weight;
+				vol += img[index2D] * weight;
 #endif
 			}
 		}
 	}
 	// use atomic as two blocks can write to same voxel
-	atomicAdd(&tempVolumeGPU[2*index3D], volReal);
-	atomicAdd(&tempVolumeGPU[2*index3D + 1], volImag);
+	atomicAdd(&tempVolumeGPU[index3D].x, vol.x);
+	atomicAdd(&tempVolumeGPU[index3D].y, vol.y);
 	atomicAdd(&tempWeightsGPU[index3D], w);
 }
 
@@ -679,7 +694,7 @@ void processVoxelBlob(
 template<bool useFast, bool hasCTF, int blobOrder, bool useFastKaiser>
 __device__
 void processProjection(
-	float* tempVolumeGPU, float *tempWeightsGPU,
+	float2* tempVolumeGPU, float *tempWeightsGPU,
 	RecFourierBufferDataGPU* const data,
 	const RecFourierProjectionTraverseSpace* const tSpace,
 	const float* devBlobTableSqrt,
@@ -947,7 +962,7 @@ void processBufferKernel(
 #endif
 
 		processProjection<useFast, hasCTF, blobOrder, useFastKaiser>(
-			tempVolumeGPU, tempWeightsGPU,
+			(float2*)tempVolumeGPU, tempWeightsGPU,
 			buffer, space,
 			devBlobTableSqrt,
 			imgCacheDim);
