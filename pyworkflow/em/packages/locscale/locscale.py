@@ -25,14 +25,48 @@
 # **************************************************************************
 
 import os
-from os.path import join
+import sys
+from os.path import join#, exist
 from pyworkflow.utils import Environ
 
+def getVersion():
+    path = os.environ['LOCSCALE_HOME']
+    for v in getSupportedVersions():
+        if v in path:
+            return v
+    return ''
 
-def getEnviron():
+
+def getSupportedVersions():
+    return ['0.1']
+
+
+def getSupportedEmanVersions():
+    return ['2.12']
+
+
+def getEmanVersion():
+    path = os.environ['LOCSCALE_EMAN_HOME']
+    for v in getSupportedEmanVersions():
+        if v in path:
+            return v
+    return ''
+
+def validateEmanVersion(protocol, errors):
+    """ Validate if eman version is set properly according
+     to installed version and the one set in the config file.
+     Params:
+        protocol: the input protocol calling to validate
+        errors: a list that will be used to add the error message.
+    """
+    if getEmanVersion == '':
+        errors.append('Eman%s is needed to execute this protocol'
+                      % getSupportedEmanVersions())
+
+def getEmanEnviron():
     """ Setup the environment variables needed to launch Eman. """
     environ = Environ(os.environ)
-    EMAN2DIR = os.environ['EMAN2DIR']
+    EMAN2DIR = os.environ['LOCSCALE_EMAN_HOME']
     pathList = [os.path.join(EMAN2DIR, d)
                 for d in ['lib', 'bin', 'extlib/site-packages']]
 
@@ -48,3 +82,20 @@ def getEnviron():
             'EMAN_PYTHON': os.path.join(EMAN2DIR, 'Python/bin/python')
             }, position=Environ.REPLACE)
     return environ
+
+def setEnviron():
+    """ Setup the environment variables needed to import localrec classes. """
+    os.environ.update(getEmanEnviron())
+    sys.path.append(os.path.join(os.environ["LOCSCALE_HOME"], "source"))
+    if not 'EMAN_PYTHON' in os.environ:
+        os.environ['EMAN_PYTHON'] = os.path.join(os.environ['LOCSCALE_EMAN_HOME'],
+                                                 'Python/bin/python')
+
+def getProgram(program):
+    # For localscale python scripts, join the path to source
+    if not 'EMAN_PYTHON' in os.environ:
+        setEnviron()
+    program = os.path.join(os.environ['LOCSCALE_HOME'], 'source', program)
+    #raise Exception('EMAN_PYTHON is not load in environment')
+    python = os.environ['EMAN_PYTHON']
+    return '%(python)s %(program)s ' % locals()

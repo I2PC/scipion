@@ -26,12 +26,9 @@
 """
 This package contains the protocols and data for LocScale
 """
-from locscale import *
+from convert import *
 from bibtex import _bibtex # Load bibtex dict with references
 
 # _logo = "locsacle_logo.png"
-# _references = ['Tang2007']
-
-_environ = getEnviron()
 
 from protocol_locscale import ProtLocScale

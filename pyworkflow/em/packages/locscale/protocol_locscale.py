@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:    C.O.S. Sorzano (coss@cnb.csic.es)
-# *             David Maluenda (dmaluenda@cnb.csic.es)
-# *
+# * Authors:    David Maluenda (dmaluenda@cnb.csic.es)
+# *             
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -26,21 +25,13 @@
 # **************************************************************************
 
 import os
-import re
-from os.path import exists
-from glob import glob
-import pyworkflow.em as em
-from pyworkflow.em.packages.eman2.eman2 import getEmanProgram, validateVersion
-from pyworkflow.em.packages.eman2.convert import createEmanProcess
-from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
-                                        StringParam, BooleanParam)
-from pyworkflow.utils.path import cleanPattern, makePath, createLink
+from pyworkflow.em import ProtRefine3D
+from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.data import Volume
-
-# from convert import rowToAlignment
+from locscale import *
 
                                
-class ProtLocScale(em.ProtRefine3D):
+class ProtLocScale(ProtRefine3D):
     """ This Protocol refine volume using a PDB model previously prepared."""
     _label = 'local scale'
 
@@ -60,7 +51,7 @@ class ProtLocScale(em.ProtRefine3D):
                     label='3D mask', help='Binary mask: where 0 ignore voxels'
                           'and 1 let process it.')
 
-        form.addParallelSection(mpi=2)
+        form.addParallelSection(mpi=1)
     
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):        
@@ -69,33 +60,9 @@ class ProtLocScale(em.ProtRefine3D):
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions -------------------------------    
-    # def convertImagesStep(self):
-    #     from pyworkflow.em.packages.eman2.convert import writeSetOfParticles
-    #     partSet = self._getInputParticles()
-    #     partAlign = partSet.getAlignment()
-    #     storePath = self._getExtraPath("particles")
-    #     makePath(storePath)
-    #     writeSetOfParticles(partSet, storePath, alignType=partAlign)
-    #     if partSet.hasCTF():
-    #         program = getEmanProgram('e2ctf.py')
-    #         acq = partSet.getAcquisition()
-            
-    #         args = " --voltage %3d" % acq.getVoltage()
-    #         args += " --cs %f" % acq.getSphericalAberration()
-    #         args += " --ac %f" % (100 * acq.getAmplitudeContrast())
-    #         if not partSet.isPhaseFlipped():
-    #             args += " --phaseflip"
-    #         args += " --computesf --apix %f --allparticles --autofit --curdefocusfix --storeparm -v 8" % (partSet.getSamplingRate())
-    #         self.runJob(program, args, cwd=self._getExtraPath())
-        
-    #     program = getEmanProgram('e2buildsets.py')
-    #     args = " --setname=inputSet --allparticles --minhisnr=-1"
-    #     self.runJob(program, args, cwd=self._getExtraPath())
-    
     def refineStep(self, args):
         """ Run the EMAN program to refine a volume. """
-        cleanPattern(self._getExtraPath('refine_01'))
-        program = getEmanProgram('e2refine_easy.py')
+        program = getProgram('locscale_mpi.py')
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
@@ -122,21 +89,11 @@ class ProtLocScale(em.ProtRefine3D):
         self._defineTransformRelation(self._getInputParticlesPointer(), newPartSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
-    # def _validate(self):
-    #     errors = []
-    #     validateVersion(self, errors)
+    def _validate(self):
+        errors = []
+        validateEmanVersion(self, errors)
 
-    #     particles = self._getInputParticles()
-    #     samplingRate = particles.getSamplingRate()
-
-    #     if self.resol <  2 * samplingRate:
-    #         errors.append("\nTarget resolution is smaller than nyquist limit.")
-        
-    #     if not self.doContinue:
-    #         self._validateDim(particles, self.input3DReference.get(), errors,
-    #                           'Input particles', 'Reference volume')
-
-    #     return errors
+        return errors
     
     # def _summary(self):
     #     summary = []
@@ -150,6 +107,9 @@ class ProtLocScale(em.ProtRefine3D):
     #             summary.append("Warning!!! There are %d particles "
     #                            "belonging to empty classes." % diff)
     #     return summary
+
+    def _citations(self):
+        return ['Jakobi2017']
     
     #--------------------------- UTILS functions --------------------------------------------
     def _prepareParams(self):
@@ -161,176 +121,23 @@ class ProtLocScale(em.ProtRefine3D):
         # '-o', '--outfile', required=True, help='Output filename')
         # '-mpi', '--mpi', action='store_true', default=False,
         #                  help='MPI version call by: \"{0}\"'.format(mpi_cmd))
+        def getAbsPath(fileName):
+            return os.path.abspath(fileName).replace(":mrc","")
 
-        volumeFn = os.path.abspath(self.inputVolume.get().getFileName()).replace(":mrc","")
-
-        args = '--em_map %s' % volumeFn
-
-        modelFn = os.path.abspath(self.input3DReference.get().getFileName()).replace(":mrc","")
-        
-        args += ' --model_map %s' % modelFn
+        volumeFn = getAbsPath(self.inputVolume.get().getFileName())
+        args  = ' --em_map %s' % volumeFn
         args += ' --apix %s' % self.inputVolume.get().getSamplingRate()
-
-        maskFn = '';
+        
+        modelFn = getAbsPath(self.input3DReference.get().getFileName())
+        args += ' --model_map %s' % modelFn
+        
         if self.binaryMask.hasValue():
-            maskFn = os.path.abspath(self.binaryMask.get().getFileName()).replace(":mrc","")
+            maskFn = getAbsPath(self.binaryMask.get().getFileName())
+            args += ' --mask %s' % maskFn
 
-        args += ' --mask %s' % maskFn
+        # if self.numberOfMpi>1:
+        #     args += ' --mpi True'# % self.numberOfMpi
 
+        args += ' -o %s' %self._getExtraPath('result.vol')
 
-        # maskPath = os.path.relpath(self.binaryMask.get().getFileName(), 
-        #                          self._getExtraPath()).replace(":mrc","")
-
-        program = getProgram('locscale_mpi.py')
-        self.runJob(program, args, cwd=self._getExtraPath())
-
-        # print(args)
-
-
-
-        args = "--em_map=%(volumeFn)s --model_map=%(refVolFn)s"
-        args += "--apix=%(samplingRate)d"
-        
-        volume = os.path.relpath(self.input3DReference.get().getFileName(), 
-                                 self._getExtraPath()).replace(":mrc","")
-        params = {'imgsFn': self._getParticlesStack(),
-                  'volume': volume,
-                  }
-        
-        args = args1 % params + args2
         return args
-
-    
-    # def _prepareContinueParams(self):
-    #     args1 = "--startfrom=refine_%02d" % (self._getRun() - 1)
-    #     args2 = self._commonParams()
-    #     args = args1 + args2
-    #     return args
-    
-    # def _commonParams(self):
-    #     args = " --targetres=%(resol)f --speed=%(speed)d --sym=%(sym)s --iter=%(numberOfIterations)d"
-    #     args += " --mass=%(molMass)f --apix=%(samplingRate)f --classkeep=%(classKeep)f"
-    #     args += " --m3dkeep=%(m3dKeep)f --parallel=thread:%(threads)d --threads=%(threads)d"
-        
-    #     samplingRate = self._getInputParticles().getSamplingRate()
-    #     params = {'resol': self.resol.get(),
-    #               'speed': int(self.getEnumText('speed')),
-    #               'numberOfIterations': self.numberOfIterations.get(),
-    #               'sym': self.symmetry.get(),
-    #               'molMass': self.molMass.get(),
-    #               'samplingRate': samplingRate,
-    #               'classKeep': self.classKeep.get(),
-    #               'm3dKeep': self.m3dKeep.get(),
-    #               'threads': self.numberOfThreads.get()
-    #               }
-    #     args = args % params
-         
-    #     if self.doBreaksym:
-    #         args += " --breaksym"
-    #     if self.useE2make3d:
-    #         args += " --m3dold"
-    #     if self.useSetsfref:
-    #         args += " --classrefsf"
-    #     if self.doAutomask:
-    #         args += " --classautomask"
-    #     if self.doThreshold:
-    #         args += " --prethreshold"
-    #     if self.m3dPostProcess.get() > FILTER_NONE:
-    #         args += " --m3dpostprocess=%s" % self.getEnumText('m3dPostProcess')
-    #     return args
-    
-    # def _getRun(self):
-    #     if not self.doContinue:
-    #         return 1
-    #     else:
-    #         files = sorted(glob(self.continueRun.get()._getExtraPath("refine*")))
-    #         if files:
-    #             f = files[-1]
-    #             refineNumber = int(f.split("_")[-1]) + 1
-    #         return refineNumber
-    
-    # def _getBaseName(self, key, **args):
-    #     """ Remove the folders and return the file from the filename. """
-    #     return os.path.basename(self._getFileName(key, **args))
-    
-    # def _getParticlesStack(self):
-    #     if (not self._getInputParticles().isPhaseFlipped() and 
-    #            self._getInputParticles().hasCTF()):
-    #         return self._getFileName("partFlipSet")
-    #     else:
-    #         return self._getFileName("partSet")
-    
-    # def _iterTextFile(self, iterN):
-    #     f = open(self._getFileName('angles', iter=iterN))
-        
-    #     for line in f:
-    #         yield map(float, line.split())
-            
-    #     f.close()
-    
-    # def _createItemMatrix(self, item, rowList):
-    #     if rowList[1] == 1:
-    #         item.setTransform(rowToAlignment(rowList[2:], alignType=em.ALIGN_PROJ))
-    #     else:
-    #         setattr(item, "_appendItem", False)
-    
-    # def _getIterNumber(self, index):
-    #     """ Return the list of iteration files, give the iterTemplate. """
-    #     result = None
-    #     files = sorted(glob(self._iterTemplate))
-    #     if files:
-    #         f = files[index]
-    #         s = self._iterRegex.search(f)
-    #         if s:
-    #             result = int(s.group(1)) # group 1 is 3 digits iteration number
-                
-    #     return result
-    
-    # def _lastIter(self):
-    #     return self._getIterNumber(-1)
-
-    # def _firstIter(self):
-    #     return self._getIterNumber(0) or 1
-    
-    # def _getIterData(self, it):
-    #     data_sqlite = self._getFileName('data_scipion', iter=it)
-    #     if not exists(data_sqlite):
-    #         iterImgSet = em.SetOfParticles(filename=data_sqlite)
-    #         iterImgSet.copyInfo(self._getInputParticles())
-    #         self._fillDataFromIter(iterImgSet, it)
-    #         iterImgSet.write()
-    #         iterImgSet.close()
-        
-    #     return data_sqlite
-    
-    # def _getInputParticlesPointer(self):
-    #     if self.doContinue:
-    #         self.inputParticles.set(self.continueRun.get().inputParticles.get())
-    #     return self.inputParticles
-    
-    # def _getInputParticles(self):
-    #     return self._getInputParticlesPointer().get()
-    
-    # def _fillDataFromIter(self, imgSet, iterN):
-    #     numRun = self._getRun()
-    #     self._execEmanProcess(numRun, iterN)
-    #     initPartSet = self._getInputParticles()
-    #     imgSet.setAlignmentProj()
-    #     partIter = iter(initPartSet.iterItems(orderBy=['_micId', 'id'],
-    #                                           direction='ASC'))
-        
-    #     imgSet.copyItems(partIter,
-    #                      updateItemCallback=self._createItemMatrix,
-    #                      itemDataIterator=self._iterTextFile(iterN))
-    
-    # def _execEmanProcess(self, numRun, iterN):
-    #     clsFn = self._getFileName("cls", run=numRun, iter=iterN)
-    #     classesFn = self._getFileName("classes", run=numRun, iter=iterN)
-    #     angles = self._getFileName('angles', iter=iterN)
-        
-    #     if not exists(angles) and exists(self._getFileName('clsEven', run=numRun, iter=iterN)):
-    #         proc = createEmanProcess(args='read %s %s %s %s'
-    #                                  % (self._getParticlesStack(), clsFn, classesFn,
-    #                                     self._getBaseName('angles', iter=iterN)),
-    #                                     direc=self._getExtraPath())
-    #         proc.wait()

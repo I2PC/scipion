@@ -26,13 +26,23 @@
 
 #   -+-+-+- C H A N G E   T H I S   S T R I N G -+-+-+-
 _bibtexStr = """
-@article{jakobi2017iterative,
-  title={Iterative model-based density improvement yields better atomic structures from cryo-EM maps},
-  author={Jakobi, Arjen J and Wilmanns, Matthias and Sachse, Carsten},
-  journal={bioRxiv},
-  pages={121913},
-  year={2017},
-  publisher={Cold Spring Harbor Labs Journals}
+@article {Jakobi2017,
+article_type 	= {journal},
+title 			= {Model-based local density sharpening of cryo-EM maps},
+author 			= {Jakobi, Arjen J and Wilmanns, Matthias and Sachse, Carsten},
+editor 			= {Brunger, Axel T},
+volume 			= 6,
+year 			= 2017,
+month 			= {oct},
+pub_date 		= {2017-10-23},
+pages 			= {e27131},
+citation 		= {eLife 2017;6:e27131},
+doi 			= {10.7554/eLife.27131},
+url 			= {https://doi.org/10.7554/eLife.27131},
+keywords 		= {cryo-EM, model building, B-factor sharpening, contrast improvement, amplitude scaling},
+journal 		= {eLife},
+issn 			= {2050-084X},
+publisher 		= {eLife Sciences Publications, Ltd},
 }
 """
 
@@ -40,3 +50,5 @@ _bibtexStr = """
 from pyworkflow.utils import parseBibTex
 
 _bibtex = parseBibTex(_bibtexStr)  
+
+
