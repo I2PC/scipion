@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -125,6 +125,11 @@ class ProtRelionExportCtf(EMProtocol):
         print "Writing set: %s" % inputCTF
         print " to: %s" % starFile
 
+        acq = ctfMicSet.getAcquisition()
+        self.samplingRate = ctfMicSet.getSamplingRate()
+        mag = acq.getMagnification()
+        self.detectorPixelSize = 1e-4 * self.samplingRate * mag
+
         writeSetOfMicrographs(micSet, starFile,
                               preprocessImageRow=self.preprocessMicrograph)
 
@@ -137,7 +142,7 @@ class ProtRelionExportCtf(EMProtocol):
 
     def _summary(self):
         summary = []
-        ctfStarFn = self._getPath(self.CTF_STAR_FILE)
+        ctfStarFn = self._getPath(self.CTF_STAR_FILE % self.getObjId())
 
         if os.path.exists(ctfStarFn):
             summary.append("Output CTF STAR file written to: \n%s" % ctfStarFn)
@@ -148,5 +153,23 @@ class ProtRelionExportCtf(EMProtocol):
     
     #--------------------------- UTILS functions -------------------------------
     def preprocessMicrograph(self, mic, micRow):
-        micRow.setValue('rlnSamplingRate', mic.getSamplingRate())
+        mag = mic.getAcquisition().getMagnification()
+
+        micRow.setValue('rlnSamplingRate', self.samplingRate)
+        micRow.setValue('rlnMagnification', mag)
+        micRow.setValue('rlnDetectorPixelSize', self.detectorPixelSize)
         micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
+
+        ctf = mic.getCTF()
+
+        def _setIf(label, attributes):
+            for a in attributes:
+                if ctf.hasAttribute(a):
+                    micRow.setValue(label, ctf.getAttributeValue(a))
+
+        # Check if there is maximum resolution information
+        _setIf('rlnCtfMaxResolution', ['_ctffind4_ctfResolution',
+                                       '_gctf_ctfResolution'])
+        _setIf('rlnCtfFigureOfMerit', ['_ctffind4_crossCorrelation',
+                                       '_gctf_crossCorrelation'])
+

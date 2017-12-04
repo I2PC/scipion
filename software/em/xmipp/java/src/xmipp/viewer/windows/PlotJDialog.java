@@ -271,7 +271,7 @@ public class PlotJDialog extends XmippDialog
                 {
                 	String scipion = System.getenv("SCIPION_HOME");
                 	String pwplot = Filename.join(scipion, "pyworkflow", "apps", "pw_plot.py");
-                	String cmd = String.format("%s --file %s --type %s --columns %s --orderColumn %s --orderDir %s --colors %s --styles %s --markers %s"
+                	String cmd = String.format("%s --file %s --type %s --columns \"%s\" --orderColumn %s --orderDir %s --colors \"%s\" --styles \"%s\" --markers \"%s\""
                 			, pwplot, data.getFileName(), plotTypecb.getSelectedItem(), labels, orderColumn, orderDirection, colors, styles, markers);
                 	if(!data.getPreffix().isEmpty())
                 		cmd += " --block " + data.getPreffix();

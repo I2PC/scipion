@@ -26,10 +26,23 @@
 """
 This EM module contains gEMpicker protocol developed at IGBMC, Strasbourg.
 """
+import os
 
 from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "igbmc_logo.png"
+GEMPICKER_HOME = 'GEMPICKER_HOME'
 
 from protocol_gempicker import ProtGemPicker
 from wizard import GemPickerMaskWizard, GemPickerWizard
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, os.environ[var])
+                    for var in [GEMPICKER_HOME]
+                    if not os.path.exists(os.environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors

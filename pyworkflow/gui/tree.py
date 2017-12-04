@@ -103,8 +103,56 @@ class Tree(ttk.Treeview, Scrollable):
         
     def selectChild(self, child):
         self.selection_set(child)
-            
-            
+
+    def search(self, initial, fromSelected=True):
+        """ Search the first item starting with "start"
+        Implemented for Flat tree like FileBrowser...TODO: consider
+        a proper tree with branches and leaves..
+
+        Parameters
+        ----------
+        initial: String - text to look for in the items. Usually the first initial letter
+        fromSelected : Boolean, start looking from the selected item"""
+
+        # Validate search string, do not allow empty chars
+        if len(initial) == 0:
+            return False
+
+        # Get all
+        children = self.get_children('')
+
+        # Get the selected item
+        searchAfter = self.getFirst() if fromSelected else None
+
+        # Loop ...
+        for child in children:
+
+            text = self.item(child, 'text')
+
+            if searchAfter is not None and searchAfter == text:
+                searchAfter = None
+                continue
+
+            if searchAfter is None:
+
+                # Do a lower case search
+                text = text.lower()
+
+                if text.startswith(initial.lower()):
+
+                    # Enclose text in "" due to bug
+                    # https://stackoverflow.com/questions/10691257/ttk-treeview-selection-set-cant-accept-spaces
+                    searchText = '"' + child + '"'
+                    self.focus(child)
+                    self.selection_set(searchText)
+                    return True
+                else:
+                    continue
+
+        # If we started from a selected item...start again without selection
+        if fromSelected:
+            return self.search(initial, False)
+
 class TreeProvider():
     """ Class class will serve to separate the logic of feed data
     from the graphical Tree build. Subclasses should implement 
@@ -224,8 +272,8 @@ class BoundTree(Tree):
         self.bind("<Button-3>", self._onRightClick)
         # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
-        self.bind("<Key>", self._unpostMenu)
-        self.bind('<Button-1>', self._onClick())
+        self.bind("<Key>", self._onKeyPress)
+        self.bind('<Button-1>', self._onClick)
         self.bind('<Double-1>', self._onDoubleClick)
         self.bind('<<TreeviewSelect>>', self._onSelect)
 
@@ -235,8 +283,17 @@ class BoundTree(Tree):
         self.update()
 
     def _onClick(self, e=None):
-
         self._unpostMenu()
+
+    def _onKeyPress(self, e=None):
+        self._unpostMenu()
+
+        if hasattr(self, 'itemKeyPressed'):
+            selected = self.getFirst()
+            if selected:
+                obj = self._objDict[selected]
+                self.itemKeyPressed(obj, e)
+
 
     def _unpostMenu(self, e=None):
 

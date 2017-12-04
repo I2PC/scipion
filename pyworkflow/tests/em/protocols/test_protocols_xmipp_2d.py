@@ -736,7 +736,7 @@ class TestXmippDenoiseParticles(TestXmippBase):
     """Check protocol Denoise Particles"""
     @classmethod
     def setUpClass(cls):
-        from pyworkflow.em.packages.relion import ProtRelionClassify2D, ProtRelionPreprocessParticles, getVersion
+        from pyworkflow.em.packages.relion import ProtRelionClassify2D, ProtRelionPreprocessParticles, isVersion2
         # To denoise particles we need to import the particles and the
         # classes, and particles must be aligned with classes. As this
         # is the usual situation after a CL2D, we just run that protocol.
@@ -763,7 +763,7 @@ class TestXmippDenoiseParticles(TestXmippBase):
         cls.protRelion2DClass.numberOfIterations.set(3)
         cls.protRelion2DClass.inputParticles.set(cls.protNormalize.outputParticles)
 
-        if getVersion() == "2.0":
+        if isVersion2():
             cls.protRelion2DClass.doGpu.set(False)
 
         cls.launchProtocol(cls.protRelion2DClass)

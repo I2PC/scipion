@@ -41,7 +41,11 @@ import pyworkflow.hosts as pwhosts
 from pyworkflow import em
 from pyworkflow.mapper import SqliteMapper
 
+ALL_PROTOCOLS = "All"
+
 PATH = os.path.dirname(__file__)
+PROTOCOL_DISABLED_TAG = 'protocol-disabled'
+PROTOCOL_TAG = 'protocol'
 
 
 def loadSettings(dbPath):
@@ -216,7 +220,7 @@ def addAllProtocols(protocols):
     # Sort the dictionary
     allProtsSorted = OrderedDict(sorted(allProts.items(), key= lambda e: e[1].getClassLabel()))
 
-    allProtMenu = ProtocolConfig("All")
+    allProtMenu = ProtocolConfig(ALL_PROTOCOLS)
     packages = {}
     # Group protocols by package name
     for k, v in allProtsSorted.iteritems():
@@ -232,23 +236,31 @@ def addAllProtocols(protocols):
             if packageMenu is None:
 
                 # Add it to the menu ...
-                packageLine = {"tag": "package", "value": packageName, "text": packageName}
+                packageLine = {"tag": "package", "value": packageName,
+                               "text": packageName}
                 packageMenu = addToTree(allProtMenu, packageLine)
 
                 # Store it in the dict
                 packages[packageName] = packageMenu
 
             # Add the protocol
-            protLine = {"tag": "protocol", "value": k, "text": v.getClassLabel(prependPackageName=False)}
+            tag = getProtocolTag(v.isInstalled())
+
+            protLine = {"tag": tag, "value": k,
+                        "text": v.getClassLabel(prependPackageName=False)}
 
             # If it's a new protocol
-            if v.isNew():
+            if v.isNew() and v.isInstalled():
                 # add the new icon
                 protLine["icon"] = "newProt.png"
 
             addToTree(packageMenu, protLine)
 
-    protocols["All"] = allProtMenu
+    protocols[ALL_PROTOCOLS] = allProtMenu
+
+
+def getProtocolTag(isInstalled):
+    return PROTOCOL_TAG if isInstalled else PROTOCOL_DISABLED_TAG
 
 
 def loadWebConf():

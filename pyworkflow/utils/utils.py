@@ -337,6 +337,9 @@ def getColorStr(text, color, bold=False):
         attr.append('1')
     return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), text)
 
+def yellowStr(text):
+    return getColorStr(text, color='yellow')
+
 def greenStr(text):
     return getColorStr(text, color='green')
 
@@ -593,7 +596,6 @@ class Environ(dict):
             self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
         else:
             print "Some paths do not exist in: % s" % libraryPath
-
 
 def existsVariablePaths(variableValue):
     """ Check if the path (or paths) in variableValue exists.

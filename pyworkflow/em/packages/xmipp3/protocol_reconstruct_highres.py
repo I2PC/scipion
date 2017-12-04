@@ -249,7 +249,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                            '/home/joe/myScript %(volume)s sampling=%(sampling)s dim=%(dim)s')
         form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising Real space", expertLevel=LEVEL_ADVANCED, default=True)
         form.addParam('postFilterBank', BooleanParam, label="Significant denoising Fourier space", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postLaplacian', BooleanParam, label="Laplacian denoising", expertLevel=LEVEL_ADVANCED, default=True,
+                      help="It can only be used if there is a mask")
         form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postDifference', BooleanParam, label="Evaluate difference", expertLevel=LEVEL_ADVANCED, default=True)
 
         form.addParallelSection(threads=1, mpi=8)
     
@@ -458,18 +461,19 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnVolFSC2=join(fnDirCurrent,"volumeFSC%02d.vol"%2)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",xmipp.MDL_SAMPLINGRATE)
         
+        if not exists(fnVolFSC1):
+            copyFile(fnVol1,fnVolFSC1)
+            copyFile(fnVol2,fnVolFSC2)
+        
         # Apply mask if available
         if self.postAdHocMask.hasValue():
             fnMask=join(fnDirCurrent,"mask.vol")
             if not exists(fnMask):
                 volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
-            self.runJob("xmipp_image_operate","-i %s -o %s --mult %s"%(fnVol1,fnVolFSC1,fnMask),numberOfMpi=1)
-            self.runJob("xmipp_image_operate","-i %s -o %s --mult %s"%(fnVol2,fnVolFSC2,fnMask),numberOfMpi=1)
+            self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolFSC1,fnMask),numberOfMpi=1)
+            self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolFSC2,fnMask),numberOfMpi=1)
             cleanPath(fnMask)
-        else:
-            copyFile(fnVol1,fnVolFSC1)
-            copyFile(fnVol2,fnVolFSC2)
 
         # Threshold
         self.runJob('xmipp_transform_threshold','-i %s --select below 0 --substitute value 0 '%fnVolFSC1,numberOfMpi=1)
@@ -1240,7 +1244,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         for i in range(1,3):
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
             fnBeforeVol=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%i)
-            copyFile(fnVol,fnBeforeVol)
             volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
             
             if self.postSymmetryWithinMask:
@@ -1317,6 +1320,15 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
             cleanPath("%s_filterBank.vol"%fnRootRestored)
      
+        # Laplacian Denoising
+        if self.postLaplacian:
+            fnRootRestored=join(fnDirCurrent,"volumeRestored")
+            args = "-i %s --retinex 0.95 "
+            if fnMask!="":
+                args+=fnMask
+            self.runJob('xmipp_transform_filter',args%fnVol1,numberOfMpi=1)
+            self.runJob('xmipp_transform_filter',args%fnVol2,numberOfMpi=1)
+
         # Blind deconvolution
         if self.postDeconvolve:
             fnRootRestored=join(fnDirCurrent,"volumeRestored")
@@ -1329,6 +1341,21 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.runJob("xmipp_image_convert","-i %s_convolved.vol -o %s -t vol"%(fnRootRestored,fnVolAvg),numberOfMpi=1)
             cleanPath("%s_convolved.vol"%fnRootRestored)
             cleanPath("%s_deconvolved.vol"%fnRootRestored)
+
+        fnForFSC=join(fnDirCurrent,"volumeFSC%02d.vol"%i)
+        copyFile(fnVol,fnForFSC) # From this point, the two half volumes may be modified
+
+        # Difference evaluation and production of a consensus average
+        if self.postDifference:
+            fnRootRestored=join(fnDirCurrent,"volumeRestored")
+            args='--i1 %s --i2 %s --oroot %s --difference 2 2'%(fnVol1,fnVol2,fnRootRestored)
+            if fnMask!="":
+                args+=" --mask binary_file %s"%fnMask
+            self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
+            self.runJob("xmipp_image_convert","-i %s_avgDiff.vol -o %s -t vol"%(fnRootRestored,fnVolAvg),numberOfMpi=1)
+            cleanPath("%s_avgDiff.vol"%fnRootRestored)
+            cleanPath("%s_restored1.vol"%fnRootRestored)
+            cleanPath("%s_restored2.vol"%fnRootRestored)
 
         # Recalculate the average after alignment and denoising
         if not exists(fnVolAvg):

@@ -461,10 +461,8 @@ class TestEstimateGain(BaseTest):
     def test_estimate(self):
         protGain = self.newProtocol(XmippProtMovieGain,
                                     objLabel='estimate gain')
-
-        p = Pointer(self.protImport.outputMovies, extended=1)
-        protGain.inputMovies.append(p)
-
+        protGain.inputMovies.set(self.protImport.outputMovies)
+        protGain.useExistingGainImage.set(False)
         self.launchProtocol(protGain)
 
 
@@ -551,7 +549,7 @@ class TestExtractMovieParticles(BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractMovieParticles,
                                        boxSize=320,frame0=2,frameN=6,
-                                       applyAlignment=True)
+                                       applyAlignment=True, doInvert=True)
         protExtract.inputMovies.set(movAliProt.outputMovies)
         protExtract.inputCoordinates.set(importPick.outputCoordinates)
         protExtract.setObjLabel('extract with alignment')
@@ -587,7 +585,7 @@ class TestExtractMovieParticles(BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractMovieParticles,
                                        boxSize=320, frame0=3, frameN=6,
-                                       applyAlignment=False)
+                                       applyAlignment=False, doInvert=True)
         protExtract.inputMovies.set(movAliProt.outputMovies)
         protExtract.inputCoordinates.set(importPick.outputCoordinates)
         protExtract.setObjLabel('extract without alignment')

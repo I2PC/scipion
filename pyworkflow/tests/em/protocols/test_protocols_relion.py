@@ -58,6 +58,24 @@ class TestRelionBase(BaseTest):
             raise Exception('Import of images: %s, failed. outputParticles '
                             'is None.' % pattern)
         return protImport
+
+    @classmethod
+    def runImportParticlesStar(cls, partStar, mag, samplingRate):
+        """ Import particles from Relion star file. """
+        protImport = cls.newProtocol(ProtImportParticles,
+                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                     starFile=partStar,
+                                     magnification=mag,
+                                     samplingRate=samplingRate,
+                                     haveDataBeenPhaseFlipped=True
+                                     )
+        cls.launchProtocol(protImport)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles '
+                            'is None.' % partStar)
+        return protImport
+        return protImport
     
     @classmethod
     def runNormalizeParticles(cls, particles):
@@ -87,8 +105,6 @@ class TestRelionClassify2D(TestRelionBase):
         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
     
     def testRelion2D(self):
-        from pyworkflow.em.packages.relion.convert import getVersion
-
         def _runRelionClassify2D(doGpu=False, label=''):
             prot2D = self.newProtocol(ProtRelionClassify2D,
                                       doCTF=False, maskDiameterA=340,
@@ -98,27 +114,26 @@ class TestRelionClassify2D(TestRelionBase):
             prot2D.inputParticles.set(self.protNormalize.outputParticles)
             prot2D.setObjLabel(label)
 
-            if getVersion() == "2.0":
+            if isVersion2():
                 prot2D.doGpu.set(doGpu)
 
             self.launchProtocol(prot2D)
             return prot2D
 
-
         def _checkAsserts(relionProt):
 
             self.assertIsNotNone(relionProt.outputClasses, "There was a problem with "
-                                                   "Relion 2D classify")
+                                                           "Relion 2D classify")
         
             partsPixSize = self.protNormalize.outputParticles.getSamplingRate()
             classsesPixSize = relionProt.outputClasses.getImages().getSamplingRate()
             self.assertAlmostEquals(partsPixSize,classsesPixSize,
-                                "There was a problem with the sampling rate "
-                                "of the particles")
+                                    "There was a problem with the sampling rate "
+                                    "of the particles")
             for class2D in relionProt.outputClasses:
                 self.assertTrue(class2D.hasAlignment2D())
 
-        if getVersion() == "2.0":
+        if isVersion2():
             relionNoGpu = _runRelionClassify2D(False, "Relion classify2D No GPU")
             _checkAsserts(relionNoGpu)
 
@@ -142,8 +157,6 @@ class TestRelionClassify3D(TestRelionBase):
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
     
     def testProtRelionClassify3D(self):
-        from pyworkflow.em.packages.relion.convert import getVersion
-
         relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
         relionNormalize.inputParticles.set(self.protImport.outputParticles)
         relionNormalize.doNormalize.set(True)
@@ -164,7 +177,7 @@ class TestRelionClassify3D(TestRelionBase):
             relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
 
 
-            if getVersion() == "2.0":
+            if isVersion2():
                 relion3DClass.doGpu.set(doGpu)
 
             self.launchProtocol(relion3DClass)
@@ -172,13 +185,13 @@ class TestRelionClassify3D(TestRelionBase):
 
         def _checkAsserts(relionProt):
             self.assertIsNotNone(relionProt.outputClasses, "There was a "
-                                                              "problem with "
-                                                              "Relion 3D classify")
+                                                           "problem with "
+                                                           "Relion 3D classify")
 
             for class3D in relionProt.outputClasses:
                 self.assertTrue(class3D.hasAlignmentProj())
 
-        if getVersion() == "2.0":
+        if isVersion2():
             relionNoGpu = _runRelionClassify3D(False, "Relion classify3D No GPU")
             _checkAsserts(relionNoGpu)
 
@@ -202,8 +215,6 @@ class TestRelionRefine(TestRelionBase):
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
     
     def testProtRelionRefine(self):
-        from pyworkflow.em.packages.relion.convert import getVersion
-        
         relNorm = self.newProtocol(ProtRelionPreprocessParticles)
         relNorm.inputParticles.set(self.protImport.outputParticles)
         relNorm.doNormalize.set(True)
@@ -222,7 +233,7 @@ class TestRelionRefine(TestRelionBase):
             relionRefine.inputParticles.set(relNorm.outputParticles)
             relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
             
-            if getVersion() == "2.0":
+            if isVersion2():
                 relionRefine.doGpu.set(doGpu)
             
             self.launchProtocol(relionRefine)
@@ -243,7 +254,7 @@ class TestRelionRefine(TestRelionBase):
                                    relNorm.outputParticles[1].getFileName(),
                                    "The particles filenames are wrong")
         
-        if getVersion() == "2.0":
+        if isVersion2():
             relionNoGpu = _runRelionRefine(False, "Relion auto-refine No GPU")
             _checkAsserts(relionNoGpu)
 
@@ -256,11 +267,60 @@ class TestRelionRefine(TestRelionBase):
         else:
             relionProt = _runRelionRefine(label="Run Relion auto-refine")
             _checkAsserts(relionProt)
-        
+
+# Commenting this test as it needs relion 2.1. Uncommment when relion 2.1 fully supported
+# class TestRelionInitialModel(TestRelionBase):
+#     @classmethod
+#     def setUpClass(cls):
+#         setupTestProject(cls)
+#         cls.dataset = DataSet.getDataSet('relion_tutorial')
+#         cls.partFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
+#         cls.protImport = cls.runImportParticlesStar(cls.partFn, 50000, 7.08)
+#
+#     def testProtRelionIniModel(self):
+#         if getVersion() in [V1_3, V1_4, V2_0]:
+#             raise Exception('Initial model protocol exists only for Relion v2.1 or higher!')
+#
+#         def _runRelionIniModel(doGpu=True, label=''):
+#             print label
+#             relionIniModel = self.newProtocol(ProtRelionInitialModel,
+#                                               doCTF=False, doGpu=doGpu,
+#                                               maskDiameterA=340,
+#                                               numberOfIterations=2,
+#                                               symmetryGroup="C1",
+#                                               numberOfMpi=3, numberOfThreads=2)
+#             relionIniModel.setObjLabel(label)
+#             relionIniModel.inputParticles.set(self.protImport.outputParticles)
+#             self.launchProtocol(relionIniModel)
+#
+#             return relionIniModel
+#
+#         def _checkAsserts(relionProt):
+#             relionProt._initialize()  # Load filename templates
+#             dataSqlite = relionProt._getIterData(2)
+#             outImgSet = em.SetOfParticles(filename=dataSqlite)
+#
+#             self.assertIsNotNone(relionProt.outputVolume,
+#                                  "There was a problem with Relion initial model")
+#             self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
+#                                    self.protImport.outputParticles[1].getSamplingRate(),
+#                                    "The sampling rate is wrong", delta=0.00001)
+#
+#         environ = Environ(os.environ)
+#         cudaPath = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
+#
+#         if cudaPath is not None and os.path.exists(cudaPath):
+#             relionGpu = _runRelionIniModel(doGpu=True, label="Relion initial model GPU")
+#             _checkAsserts(relionGpu)
+#         else:
+#             print "Warning: running this test on CPU might take a lot of time!"
+#             relion = _runRelionIniModel(doGpu=False, label="Relion initial model CPU")
+#             _checkAsserts(relion)
+
         
 class TestRelionPreprocess(TestRelionBase):
     """ This class helps to test all different preprocessing particles options
-    on RElion. """
+    on Relion. """
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -347,15 +407,12 @@ class TestRelionSortParticles(TestRelionBase):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('relion_tutorial')
 
-        # FIXME
         cls.dataset = DataSet.getDataSet('relion_tutorial')
         cls.partFn = cls.dataset.getFile('import/particles.sqlite')
         cls.partAvg = cls.dataset.getFile('import/averages.mrcs')
         cls.partCl2dFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
         cls.partCl3dFn = cls.dataset.getFile('import/classify3d/extra/relion_it015_data.star')
-        #FIXME: import from completed relion 3d refine run is not working
-        #cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_data.star')
-        cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_it025_data.star')
+        cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_data.star')
         cls.volFn = cls.dataset.getFile('import/refine3d/extra/relion_class001.mrc')
 
     def importParticles(self, partStar):
@@ -426,10 +483,7 @@ class TestRelionSortParticles(TestRelionBase):
     def test_after3DRefinement(self):
         prot = self.newProtocol(ProtRelionSortParticles)
         prot.setObjLabel('relion - sort after ref3d')
-        # FIXME: import from completed relion 3d refine run is not working
-        # partRef3dFn = self.ds.getFile('import/refine3d/extra/relion_data.star')
-        partRef3dFn = self.ds.getFile(
-            'import/refine3d/extra/relion_it025_data.star')
+        partRef3dFn = self.ds.getFile('import/refine3d/extra/relion_data.star')
         importRun = self.importParticles(partRef3dFn)
         prot.inputSet.set(importRun.outputParticles)
         prot.referenceVolume.set(self.importVolume().outputVolume)
@@ -444,8 +498,7 @@ class TestRelionSortParticles(TestRelionBase):
 
 
 class TestRelionPostprocess(TestRelionBase):
-    """ This class helps to test sort particles protocol from Relion. """
-    
+    """ This class helps to test postprocess protocol from Relion. """
 
     @classmethod
     def setUpClass(cls):
@@ -510,7 +563,6 @@ class TestRelionPostprocess(TestRelionBase):
         prot.setStatus(STATUS_FINISHED)
         project._storeProtocol(prot)
         return prot
-    
     
     def _validations(self, vol, dims, pxSize, prot=""):
         self.assertIsNotNone(vol, "There was a problem with postprocess "
@@ -609,9 +661,9 @@ class TestRelionPostprocess(TestRelionBase):
 
         postProt = self.newProtocol(ProtRelionPostprocess,
                                     protRefine=protRef)
-        postProt.setObjLabel('post process Xmipp Projection Matchings')
+        postProt.setObjLabel('post process Xmipp Projection Matching')
         self.launchProtocol(postProt)
-        self._validations(postProt.outputVolume, 60, 3, "Projection Matchings")
+        self._validations(postProt.outputVolume, 60, 3, "Projection Matching")
     
     def test_postProcess_from_eman_refineEasy(self):
         from pyworkflow.em.packages.eman2 import EmanProtRefine
@@ -631,7 +683,7 @@ class TestRelionPostprocess(TestRelionBase):
         protRef._createFilenameTemplates()
         protRef._createFilenameTemplates()
 
-        volEman = protRef._getFileName("mapFull",run=1, iter=2)
+        volEman = protRef._getFileName("mapFull", run=1, iter=2)
         half1Eman = protRef._getFileName("mapEvenUnmasked", run=1)
         half2Eman = protRef._getFileName("mapOddUnmasked", run=1)
         
@@ -643,4 +695,124 @@ class TestRelionPostprocess(TestRelionBase):
                                     protRefine=protRef)
         postProt.setObjLabel('post process Eman2 refine-easy')
         self.launchProtocol(postProt)
-        self._validations(postProt.outputVolume, 60, 3, "Eman refine Easy")
+        self._validations(postProt.outputVolume, 60, 3, "Eman refine easy")
+
+
+class TestRelionLocalRes(TestRelionBase):
+    """ This class helps to test local resolution protocol from Relion. """
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+        cls.partFn = cls.ds.getFile('import/refine3d/extra/relion_it025_data.star')
+        cls.protImport = cls.runImportParticlesStar(cls.partFn, 50000, 7.08)
+        cls.volFn = cls.ds.getFile('import/refine3d/extra/relion_class001.mrc')
+
+    def importVolume(self):
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   objLabel='import volume',
+                                   filesPath=self.volFn,
+                                   samplingRate=7.08)
+        self.launchProtocol(protVol)
+        return protVol
+
+    def _createRef3DProtBox(self, label):
+        from pyworkflow.protocol.constants import STATUS_FINISHED
+
+        prot = self.newProtocol(ProtRelionRefine3D)
+        self.saveProtocol(prot)
+        prot.setObjLabel(label)
+        project = prot.getProject()
+        makePath(prot._getPath())
+        makePath(prot._getExtraPath())
+        makePath(prot._getTmpPath())
+
+        prot.inputParticles.set(self.protImport.outputParticles)
+        prot.referenceVolume.set(self.importVolume().outputVolume)
+
+        volume = em.Volume()
+        volume.setFileName(prot._getExtraPath("relion_class001.mrc"))
+        pxSize = prot.inputParticles.get().getSamplingRate()
+        volume.setSamplingRate(pxSize)
+
+        prot._defineOutputs(outputVolume=volume)
+        prot.setStatus(STATUS_FINISHED)
+        project._storeProtocol(prot)
+        return prot
+
+    def _validations(self, vol, dims, pxSize):
+        self.assertIsNotNone(vol, "There was a problem with localres protocol ")
+        xDim = vol.getXDim()
+        sr = vol.getSamplingRate()
+        self.assertEqual(xDim, dims, "The dimension of your volume is (%d)^3 "
+                                     "and must be (%d)^3" % (xDim, dims))
+        self.assertAlmostEqual(sr, pxSize, 0.0001,
+                               "Pixel size of your volume is %0.2f and"
+                               " must be %0.2f" % (sr, pxSize))
+
+    def test_runRelionLocalRes(self):
+        if not isVersion2():
+            raise Exception('Local resolution protocol exists only for Relion v2.0 or higher!')
+
+        pathFns = 'import/refine3d/extra'
+        vol = self.ds.getFile(join(pathFns, 'relion_class001.mrc'))
+        half1 = self.ds.getFile(join(pathFns, 'relion_it025_half1_class001.mrc'))
+        half2 = self.ds.getFile(join(pathFns, 'relion_it025_half2_class001.mrc'))
+        volPatt = 'relion_class001.mrc'
+        modelFn = self.ds.getFile(join(pathFns, 'relion_model.star'))
+        protRef = self._createRef3DProtBox("auto-refine")
+
+        copyFile(vol, protRef._getExtraPath(volPatt))
+        copyFile(half1,
+                 protRef._getExtraPath('relion_half1_class001_unfil.mrc'))
+        copyFile(half2,
+                 protRef._getExtraPath('relion_half2_class001_unfil.mrc'))
+        copyFile(modelFn, protRef._getExtraPath('relion_model.star'))
+
+        postProt = self.newProtocol(ProtRelionLocalRes, protRefine=protRef)
+        postProt.setObjLabel('Relion local resolution')
+
+        self.launchProtocol(postProt)
+        self._validations(postProt.outputVolume, 60, 7.08)
+
+
+class TestRelionExpandSymmetry(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('relion_tutorial')
+        cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_data.star')
+
+    def importParticles(self, partStar):
+        """ Import particles from Relion star file. """
+        protPart = self.newProtocol(ProtImportParticles,
+                                    importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                    starFile=partStar,
+                                    magnification=10000,
+                                    samplingRate=7.08,
+                                    haveDataBeenPhaseFlipped=True
+                                    )
+        self.launchProtocol(protPart)
+        return protPart
+
+    def test_ExpandSymmetry(self):
+        if not isVersion2():
+            raise Exception('Expand symmetry protocol exists only for Relion v2.0 or higher!')
+
+        prot = self.newProtocol(ProtRelionExpandSymmetry)
+        print "Import particles"
+        importRun = self.importParticles(self.partRef3dFn)
+        prot.inputParticles.set(importRun.outputParticles)
+        prot.symmetryGroup.set("D2")
+        print "Run expand symmetry"
+        self.launchProtocol(prot)
+
+        self.assertIsNotNone(prot.outputParticles,
+                             "There was a problem with expand symmetry protocol")
+        sizeIn = importRun.outputParticles.getSize()
+        sizeOut = prot.outputParticles.getSize()
+        self.assertAlmostEqual(sizeIn * 4, sizeOut, 0.0001,
+                               "Number of output particles is %d and"
+                               " must be %d" % (sizeOut, sizeIn * 4))
+

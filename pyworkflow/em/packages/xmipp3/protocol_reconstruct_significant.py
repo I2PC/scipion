@@ -28,7 +28,7 @@ import math
 
 from pyworkflow.utils import Timer
 from pyworkflow.utils.path import cleanPattern, cleanPath
-from pyworkflow.em import *  
+from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import volumeToRow
 from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 from convert import writeSetOfClasses2D, writeSetOfParticles
@@ -226,6 +226,15 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         t.tic()
         self.runJob("xmipp_reconstruct_fourier", reconsArgs)
         t.toc('Reconstruct fourier took: ')
+
+        # Center the volume
+        fnSym = self._getExtraPath('volumeSym_%03d.vol' % iterNumber)
+        self.runJob("xmipp_transform_mirror", "-i %s -o %s --flipX"%(volFn,fnSym),numberOfMpi=1)
+        self.runJob("xmipp_transform_mirror", "-i %s --flipY"%fnSym,numberOfMpi=1)
+        self.runJob("xmipp_transform_mirror", "-i %s --flipZ"%fnSym,numberOfMpi=1)
+        self.runJob("xmipp_image_operate", "-i %s --plus %s"%(fnSym,volFn),numberOfMpi=1)
+        self.runJob("xmipp_volume_align",'--i1 %s --i2 %s --local --apply'%(fnSym,volFn),numberOfMpi=1)
+        cleanPath(fnSym)
 
         #To mask the volume
         xdim = self.inputSet.get().getDimensions()[0]
