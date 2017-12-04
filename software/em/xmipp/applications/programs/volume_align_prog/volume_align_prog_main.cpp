@@ -431,12 +431,21 @@ public:
         YY(r)            = best_align(7);
         ZZ(r)            = best_align(6);
         Matrix2D<double> A,Aaux;
+
         Euler_angles2matrix(best_align(2), best_align(3), best_align(4),
                             A, true);
+
         translation3DMatrix(r,Aaux);
-        A = A * Aaux;
+
+        A = A + Aaux;
+        A(0,0) -= 1;
+        A(1,1) -= 1;
+        A(2,2) -= 1;
+        A(3,3) -= 1;
+
         scale3DMatrix(vectorR3(best_align(5), best_align(5), best_align(5)),Aaux);
         A = A * Aaux;
+
         if (verbose!=0)
 			std::cout << "xmipp_transform_geometry will require the following values"
 					  << "\n   Angles: " << best_align(2) << " "

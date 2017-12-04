@@ -368,7 +368,6 @@ class MonitorSystem(Monitor):
         # remove last comma and new line
         sqlCommand = sqlCommand[:-2]
         sqlCommand += ")"
-        print("sqlCommand", sqlCommand)
         self.cur.execute(sqlCommand)
 
     def getLabels(self):
