@@ -29,6 +29,7 @@
 # **************************************************************************
 
 from glob import glob
+import random
 from os.path import exists, basename
 
 from pyworkflow.object import Float
@@ -179,9 +180,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         outputRoot = str(self._getExtraPath(baseMicName))
         fnPosFile = self._getMicPos(mic)
         boxSize = self.boxSize.get()
-        patchSize = self.patchSize.get()
-        if patchSize < 0:
-            patchSize = int(boxSize*1.5)
+        patchSize = self.patchSize.get() if self.patchSize.get() > 0 \
+                    else int(boxSize*1.5)
 
         particlesMd = 'particles@%s' % fnPosFile
         # If it has coordinates extract the particles
@@ -190,14 +190,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             # the required command line parameters (except input/ouput files)
             micOps = []
 
-            # Discart particles in the grained zones of the mic (if so)
-            if self.doGrainFilter:
-                args  =  '--pos %s' % fnPosFile
-                args += ' --mic %s' % mic.getFileName()
-                args += ' --patchSize %d' % patchSize
-                self.runJob('xmipp_coordinates_noisy_zones_filter', args)
+            # Compute the variance and Gini coeff. of the part and mic, resp.
+            args  =  '--pos %s' % fnPosFile
+            args += ' --mic %s' % mic.getFileName()
+            args += ' --patchSize %d' % patchSize
+            self.runJob('xmipp_coordinates_noisy_zones_filter', args)
 
-            # Check if it is required to downsample your micrographs
+            # Check if it is required to downsample our micrographs
             downFactor = self.downFactor.get()
 
             def getMicTmp(suffix):
@@ -470,6 +469,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Read the particles extract for the given list of micrographs
         and update the outputParts set with new items.
         """
+        if outputParts.getSize() == 0:
+            self._setMinMaxVarGini(micList)
         p = Particle()
         for mic in micList:
             # We need to make this dict because there is no ID in the .xmd file
@@ -495,8 +496,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
                     
-                    p._xmipp_VAR_score = Float(row.getValue(md.MDL_SCORE_BY_VAR))
-                    p._xmipp_GINI_score = Float(row.getValue(md.MDL_SCORE_BY_GINI))
+                    varValue = row.getValue(md.MDL_SCORE_BY_VAR)
+                    giniValue = row.getValue(md.MDL_SCORE_BY_VAR)
+                    varValue, giniValue = self._normalizeVarGini(varValue,
+                                                                 giniValue,
+                                                            self.stimatedMinMax)
+                    # try setXmippAttributes(item,row,label)
+                    p._xmipp_VAR_score = Float(varValue)
+                    p._xmipp_GINI_score = Float(giniValue)
 
                     # disabled particles (in metadata) should not add to the
                     # final set
@@ -519,3 +526,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         for this micrograph. """
         micBase = pwutils.removeBaseExt(mic.getFileName())
         return self._getExtraPath(micBase + ".xmd")
+
+    def _setMinMaxVarGini(self, micList):
+        print('   > > >   Min/Max stimation over %d mics   < < <   - - - ' 
+                                                 % len(micList))
+        varMIN, varMAX, giniMIN, giniMAX = 0, 0, 0, 0
+        for mic in micList:
+            for row in md.iterRows(self._getMicXmd(mic)):
+                varMIN = min(varMIN, row.getValue(md.MDL_SCORE_BY_VAR))
+                varMAX = max(varMAX, row.getValue(md.MDL_SCORE_BY_VAR))
+                giniMIN = min(giniMIN, row.getValue(md.MDL_SCORE_BY_GINI))
+                giniMAX = max(giniMAX, row.getValue(md.MDL_SCORE_BY_GINI))
+        self.stimatedMinMax = (varMIN, varMAX, giniMIN, giniMAX)
+
+    def _normalizeVarGini(self, varValue, giniValue, stimatedMinMax):
+        varValue -= stimatedMinMax[0]
+        varValue /= stimatedMinMax[1]
+        giniValue -= stimatedMinMax[2]
+        giniValue /= stimatedMinMax[3]
+
+        return varValue, giniValue
