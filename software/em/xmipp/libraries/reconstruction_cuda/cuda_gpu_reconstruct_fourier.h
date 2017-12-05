@@ -65,6 +65,9 @@ struct FRecBufferDataGPUWrapper {
 	RecFourierBufferDataGPU* gpuCopy;
 };
 
+/** set device to use for calculation (has to be done by each thread) */
+void setDevice(int device);
+
 /**
  * Method will allocate buffer wrapper for given stream
  * 'buffer' is used for size references, i.e. it has to have the same

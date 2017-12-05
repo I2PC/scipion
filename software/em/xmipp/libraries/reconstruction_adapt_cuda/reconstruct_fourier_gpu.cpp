@@ -44,6 +44,8 @@ void ProgRecFourierGPU::defineParams()
     addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
     addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
+    addParamsLine("  [--thr <threads=all>]                  : Number of concurrent threads (and GPU streams). All threads are used by default");
+    addParamsLine("  [--device <dev=0>]                 : GPU device to use. 0th by default");
     addParamsLine("  [--fast]                       : Do the blobing at the end of the computation.");
     addParamsLine("                                 : Gives slightly different results, but is faster.");
     addParamsLine("  [--fftOnGPU]                   : Perform the FFT conversion of the input images on GPU.");
@@ -74,6 +76,8 @@ void ProgRecFourierGPU::readParams()
     blob.order    = getIntParam("--blob", 1);
     blob.alpha    = getDoubleParam("--blob", 2);
     useFast		  = checkParam("--fast");
+    parseNoOfThreads();
+    device = getIntParam("--device");
     fftOnGPU	  = checkParam("--fftOnGPU");
     maxResolution = getDoubleParam("--max_resolution");
     useCTF = checkParam("--useCTF");
@@ -114,6 +118,21 @@ void ProgRecFourierGPU::show()
         << "\n max_resolution          : "  << maxResolution
         << "\n -----------------------------------------------------------------" << std::endl;
     }
+}
+
+void ProgRecFourierGPU::parseNoOfThreads() {
+	std::cout << "parseNoOfThreads()" << std::endl;
+
+	const char* threadsStr = progDef->getParam("--thr");
+	noOfThreads = strtol(threadsStr, NULL, 10); // get from cmd
+	if (noOfThreads <= 0) {
+		std::cerr << "'" << threadsStr << "' is invalid int. Using default value instead." << std::endl;
+		noOfThreads = sysconf(_SC_NPROCESSORS_ONLN); // all by default
+	}
+	if (noOfThreads <= 0) {
+		std::cerr << "Cannot obtain number of cores. Using 1 (one) instead." << std::endl;
+		noOfThreads = 1; // one core on error
+	}
 }
 
 void ProgRecFourierGPU::checkDefines() {
@@ -242,9 +261,6 @@ void ProgRecFourierGPU::produceSideinfo()
             R_repository.push_back(R);
         }
     }
-
-    // query the system on the number of cores
-	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
 void ProgRecFourierGPU::cropAndShift(
@@ -385,6 +401,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     bool hasCTF = parent->useCTF
     		&& (threadParams->selFile->containsLabel(MDL_CTF_MODEL)
     				|| threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU));
+
+
+    setDevice(parent->device);
 
     // allocate buffer
     threadParams->buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
@@ -800,7 +819,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     if (NULL == tempWeightsGPU) {
     	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
-    createStreams(noOfCores);
+    createStreams(noOfThreads);
     copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
     		blob.radius, blob.alpha, iDeltaSqrt, iw0, 1.f/getBessiOrderAlpha(blob));
     if ( ! useFast) {
@@ -808,10 +827,10 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     }
 
 	// create threads
-	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
-	workThreads = new RecFourierWorkThread[noOfCores];
-	barrier_init( &barrier, noOfCores + 1 ); // + main thread
-	for (int i = 0; i < noOfCores; i++) {
+	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfThreads);
+	workThreads = new RecFourierWorkThread[noOfThreads];
+	barrier_init( &barrier, noOfThreads + 1 ); // + main thread
+	for (int i = 0; i < noOfThreads; i++) {
 		int sIndex = firstImageIndex + i*imgPerThread;
 		int eIndex = std::min(lastImageIndex, sIndex + imgPerThread-1);
 		createWorkThread(i, sIndex, eIndex, workThreads[i]);
@@ -821,13 +840,13 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	barrier_wait( &barrier );
 
 	// clean threads and GPU
-	for (int i = 0; i < noOfCores; i++) {
+	for (int i = 0; i < noOfThreads; i++) {
 		pthread_join(workThreads[i].id, NULL);
 	}
 	barrier_destroy( &barrier );
 	delete[] workThreads;
 	releaseBlobTable();
-	deleteStreams(noOfCores);
+	deleteStreams(noOfThreads);
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {
@@ -854,7 +873,7 @@ void ProgRecFourierGPU::finishComputations( const FileName &out_name )
     Image<double> Vout;
     Vout().initZeros(paddedImgSize,paddedImgSize,paddedImgSize);
     FourierTransformer transformerVol;
-    transformerVol.setThreadsNumber(noOfCores);
+    transformerVol.setThreadsNumber(noOfThreads);
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();

@@ -209,6 +209,9 @@ protected:
 private:
 //    FIELDS
 
+    /** CUDA device to use */
+    int device;
+
     /** variable used for blob table values calculation */
     double iw0;
 
@@ -276,7 +279,7 @@ private:
     bool fftOnGPU;
 
     /** Holds number of cores available at the host system */
-    int noOfCores;
+    int noOfThreads;
 
 // STATIC METHODS
 
@@ -382,6 +385,11 @@ private:
     		int storeIndex);
 
 // METHODS
+
+    /** method will parse number of threads from CMD and set accordingly
+     *  or default value will be used (all available threads)
+     */
+    void parseNoOfThreads();
 
     /**
 	 * Method will take input array (of size
