@@ -126,7 +126,9 @@ void ProgRecFourierGPU::parseNoOfThreads() {
 	const char* threadsStr = progDef->getParam("--thr");
 	noOfThreads = strtol(threadsStr, NULL, 10); // get from cmd
 	if (noOfThreads <= 0) {
-		std::cerr << "'" << threadsStr << "' is invalid int. Using default value instead." << std::endl;
+		if (strcmp(threadsStr, "all")) {
+			std::cerr << "'" << threadsStr << "' is invalid int. Using default value instead." << std::endl;
+		}
 		noOfThreads = sysconf(_SC_NPROCESSORS_ONLN); // all by default
 	}
 	if (noOfThreads <= 0) {

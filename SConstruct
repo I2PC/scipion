@@ -206,6 +206,14 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     """
     _libs = list(libs)
     _libpath = list(libpath)
+    if name == "XmippReconsAdaptCuda":
+        _libs.append("XmippReconsCuda")
+        _libs.append("cudart")
+        _libs.append("cuda")
+        _libs.append("cufft")
+        _libpath.append("/usr/local/cuda-8.0/lib64")
+    if name == "XmippParallel":
+        _libs.append("XmippReconsAdaptCuda")
     _incs = list(incs)
     lastTarget = deps
     prefix = 'lib' if prefix is None else prefix

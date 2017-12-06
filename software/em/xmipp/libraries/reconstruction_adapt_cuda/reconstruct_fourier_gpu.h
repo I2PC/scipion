@@ -139,6 +139,13 @@ protected:
 	 */
 	float* tempWeightsGPU = NULL;
 
+
+    /** Holds number of cores available at the host system */
+    int noOfThreads;
+
+    /** CUDA device to use */
+    int device;
+
 //	METHODS
 
 	/**
@@ -209,9 +216,6 @@ protected:
 private:
 //    FIELDS
 
-    /** CUDA device to use */
-    int device;
-
     /** variable used for blob table values calculation */
     double iw0;
 
@@ -277,9 +281,6 @@ private:
 
     /** If set to true, FFT of the input projections shall be done on GPU */
     bool fftOnGPU;
-
-    /** Holds number of cores available at the host system */
-    int noOfThreads;
 
 // STATIC METHODS
 
