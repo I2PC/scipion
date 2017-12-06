@@ -480,12 +480,12 @@ def addProg(progName, **kwargs):
                                      join(XMIPP_PATH, 'libraries')]
     kwargs['incs'] = incs
 
-    if progName.startswith('mpi_'):
+    if progName.find('mpi_') is not -1:
         kwargs['mpi'] = True
         kwargs['libs'] += ['mpi', 'mpi_cxx', 'XmippParallel']
 
     #AJ
-    if progName.startswith('cuda_'):
+    if progName.find('cuda_') is not -1:
         kwargs['cuda'] = True
         #kwargs['nvcc'] = True
         kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda']
