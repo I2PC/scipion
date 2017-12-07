@@ -253,6 +253,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help="It can only be used if there is a mask")
         form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", expertLevel=LEVEL_ADVANCED, default=True)
         form.addParam('postDifference', BooleanParam, label="Evaluate difference", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postSoftNeg', BooleanParam, label="Attenuate undershooting", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postSoftNegK', FloatParam, label="Attenuate undershooting (K)", expertLevel=LEVEL_ADVANCED, default=3,
+                      help="Values below K*sigma are attenuated")
 
         form.addParallelSection(threads=1, mpi=8)
     
@@ -466,14 +469,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             copyFile(fnVol2,fnVolFSC2)
         
         # Apply mask if available
+        fnMask=""
+        volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
         if self.postAdHocMask.hasValue():
             fnMask=join(fnDirCurrent,"mask.vol")
             if not exists(fnMask):
-                volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolFSC1,fnMask),numberOfMpi=1)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolFSC2,fnMask),numberOfMpi=1)
-            cleanPath(fnMask)
 
         # Threshold
         self.runJob('xmipp_transform_threshold','-i %s --select below 0 --substitute value 0 '%fnVolFSC1,numberOfMpi=1)
@@ -483,8 +486,20 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnFsc=join(fnDirCurrent,"fsc.xmd")
         self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'\
                     %(fnVolFSC1,fnVolFSC2,fnFsc,TsCurrent),numberOfMpi=1)
+
+        # Attenuate undershooting
+        if self.postSoftNeg:
+            if fnMask=="":
+                fnMask=join(fnDirCurrent,"mask.vol")
+                self.runJob("xmipp_transform_mask","-i %s --mask circular %d --create_mask %s"%(fnVolFSC1,-volXdim/2,fnMask),numberOfMpi=1)
+            self.runJob("xmipp_transform_filter","-i %s --softnegative %s %s %f %f"%(fnVolFSC1,fnMask,fnFsc,TsCurrent,self.postSoftNegK),numberOfMpi=1)
+            self.runJob("xmipp_transform_filter","-i %s --softnegative %s %s %f %f"%(fnVolFSC2,fnMask,fnFsc,TsCurrent,self.postSoftNegK),numberOfMpi=1)
+            self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'\
+                        %(fnVolFSC1,fnVolFSC2,fnFsc,TsCurrent),numberOfMpi=1)
         cleanPath(fnVolFSC1)
         cleanPath(fnVolFSC2)
+        if fnMask!="":
+            cleanPath(fnMask)
         
         # Estimate resolution before postprocessing
         fnBeforeVol1=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%1)
