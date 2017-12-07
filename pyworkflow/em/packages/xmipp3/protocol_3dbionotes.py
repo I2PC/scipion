@@ -29,6 +29,8 @@ from pyworkflow.utils import *
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
+#import requests
+import json
 
 class XmippProt3DBionotes(ProtAnalysis3D):
     """ Protocol for checking annotations
@@ -43,9 +45,9 @@ class XmippProt3DBionotes(ProtAnalysis3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputPDB', PointerParam, pointerClass='PdbFile',
-                      label="Input PDB", important=True)
-        form.addParam('inputVol', PointerParam, pointerClass='Volume',
-                      label="Input volume", important=True)
+                      label="Input PDB")
+#         form.addParam('inputVol', PointerParam, pointerClass='Volume',
+#                       label="Input volume", important=True)
     
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
@@ -53,16 +55,21 @@ class XmippProt3DBionotes(ProtAnalysis3D):
         
     #--------------------------- STEPS functions -------------------------------
     def bionotesWrapper(self):
-        img = ImageHandler()
-        fnVol = self._getExtraPath('volume.mrc')
-        vol = self.inputVol.get()
-        img.convert(vol,fnVol)
-
-        ccp4header = Ccp4Header(fnVol, readHeader= True)
-        ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True).getShifts())
-        ccp4header.setSampling(vol.getSamplingRate())
-        ccp4header.writeHeader()
-
-       
+#         img = ImageHandler()
+#         fnVol = self._getExtraPath('volume.mrc')
+#         vol = self.inputVol.get()
+#         img.convert(vol,fnVol)
+# 
+#         ccp4header = Ccp4Header(fnVol, readHeader= True)
+#         ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True).getShifts())
+#         ccp4header.setSampling(vol.getSamplingRate())
+#         ccp4header.writeHeader()
+        data = {'title':'PDB structure'}
+        files = {'structure_file': open(self.inputPDB.get().getFileName(), 'rb')}
+        
+#         response = requests.post('http://3dbionotes.cnb.csic.es/programmatic/upload',data=data, files=files)
+#         json_data = json.loads(response.text)
+#         print(json_data)
+          
     #--------------------------- INFO functions --------------------------------
             
