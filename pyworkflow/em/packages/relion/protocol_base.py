@@ -1086,7 +1086,7 @@ class ProtRelionBase(EMProtocol):
             args['--solvent_mask'] = mask
     
         if self.IS_3D and self.solventMask.hasValue():
-            solventMask = convertMask(self.solventMask, self._getTmpPath())
+            solventMask = convertMask(self.solventMask.get(), self._getTmpPath())
             args['--solvent_mask2'] = solventMask
 
         if (isVersion2() and self.IS_3D and self.referenceMask.hasValue() and
