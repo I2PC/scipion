@@ -103,117 +103,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
 
-    # --------------------------- INSERT steps functions -----------------------
-    def _stepsCheck(self):
-        # The streaming is not allowed for recalculate CTF
-        if self.recalculate:
-            return
-
-        # check if there are new micrographs and process them
-        self._checkNewInput()
-        self._checkNewOutput()
-        return
-
-    def _checkNewInput(self):
-        """ Check if there are new ctf to be processed and add the necessary
-        steps."""
-        micFile = self.inputMicrographs.get().getFileName()
-
-        now = datetime.now()
-        self.lastCheck = getattr(self, 'lastCheck', now)
-        mTime = datetime.fromtimestamp(getmtime(micFile))
-        self.debug('Last check: %s, modification: %s'
-                   % (pwutils.prettyTime(self.lastCheck),
-                      pwutils.prettyTime(mTime)))
-
-        # Open input micrographs.sqlite and close it as soon as possible
-        self._loadInputList()
-        # If the input micrographs.sqlite have not changed since our last check,
-        # it does not make sense to check for new input data
-        if self.lastCheck > mTime and hasattr(self, 'listOfMic'):
-            return None
-
-        self.lastCheck = now
-        newMic = any(mic.getMicName() not in self.insertedDict
-                     for mic in self.listOfMic)
-        outputStep = self._getFirstJoinStep()
-
-        if newMic:
-            fDeps = self._insertEstimationSteps(self.insertedDict,
-                                                  self.listOfMic)
-            if outputStep is not None:
-                outputStep.addPrerequisites(*fDeps)
-            self.updateSteps()
-
-
-
-    def _checkNewOutput(self):
-        """ Check for already estimated CTF and update the output set. """
-
-        # Load previously done items (from text file)
-        doneList = self._readDoneList()
-
-        # Check for newly done items
-        ctfListName = self._readtCtfName()
-
-        newDone = [ctfName for ctfName in ctfListName
-                   if ctfName not in doneList]
-        firstTime = len(doneList) == 0
-        allDone = len(doneList) + len(newDone)
-
-        # We have finished when there is not more input ctf (stream closed)
-        # and the number of processed ctf is equal to the number of inputs
-        self.finished = (self.isStreamClosed == Set.STREAM_CLOSED
-                         and allDone == len(self.listOfMic))
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-
-        # reading the outputs
-        fnOut = self._getPath('ctfs.sqlite')
-        ctfSet = self._loadOutputSet(em.SetOfCTF, fnOut)
-
-        if newDone:
-            for micName in newDone:
-                for m in self.listOfMic:
-                    if m.getMicName() == micName:
-                        self.mic = m
-                        break
-                micDir = self._getMicrographDir(self.mic)
-                fnCTF = self._getFileName('ctf', micDir=micDir)
-                if not exists(fnCTF):
-                    fnError = self._getFileName('ctfErrorParam', micDir=micDir)
-                    if not exists(fnError):
-                        self._createErrorCtfParam(micDir)
-                    mdCTF = md.MetaData(fnError)
-                else:
-                    mdCTF = md.MetaData(fnCTF)
-
-                ctfModel = mdToCTFModel(mdCTF, self.mic)
-                self._setPsdFiles(ctfModel, micDir)
-                ctfSet.append(ctfModel)
-
-            self._writeDoneList(newDone)
-
-        elif not self.finished:
-            # If we are not finished and no new output have been produced
-            # it does not make sense to proceed and updated the outputs
-            # so we exit from the function here
-            return
-
-        self._updateOutputSet('outputCTF', ctfSet, streamMode)
-
-        if firstTime:
-            # define relation just once
-            self._defineSourceRelation(self.inputMicrographs.get(), ctfSet)
-        else:
-            ctfSet.close()
-
-        if self.finished:  # Unlock createOutputStep if finished all jobs
-            outputStep = self._getFirstJoinStep()
-            if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(pwconst.STATUS_NEW)
-
-        ctfSet.close()
-
     # --------------------------- STEPS functions ------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run the estimate CTF program """
@@ -248,7 +137,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                     downsampleList.append((ctfDownFactor + 1) / 2)
 
         deleteTmp = ""
-        
+
         for downFactor in downsampleList:
             # Downsample if necessary
             if downFactor != 1:
