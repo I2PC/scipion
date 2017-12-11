@@ -156,6 +156,15 @@ class MonitorISPyB(Monitor):
 
         self.previousParams = dcParams
 
+        for imageId in set(updateImageIds):
+            movieParams = self.ispybDb.get_movie_params()
+            self.movies[imageId]['dataCollectionId'] = self.dcId
+            if 'movieNumber' not in self.movies[imageId]:
+                self.movies[imageId]['movieNumber'] = self.imageNumber
+                self.imageNumber += 1
+            self.safe_update(movieParams, self.movies[imageId])
+            self.movies[imageId]['movieId'] = self.ispybDb.update_movie(movieParams)
+
         for itemId in set(updateAlignIds):
             if 'autoProcProgramId' not in self.motion_corrections[itemId]:
                 program = self.ispybDb.get_program_params()
@@ -164,13 +173,10 @@ class MonitorISPyB(Monitor):
                 program_id = self.ispybDb.update_program(program)
                 self.motion_corrections[itemId]['autoProcProgramId'] = program_id
 
-            if 'imageNumber' not in self.motion_corrections[itemId]:
-                self.motion_corrections[itemId]['imageNumber'] = self.imageNumber
-                self.imageNumber += 1
-
             motionParams = self.ispybDb.get_motion_correction_params()
             self.safe_update(motionParams, self.motion_corrections[itemId])
             motionParams['dataCollectionId'] = self.dcId
+            motionParams['movieId'] = self.movie[imageId]['movieId']
             self.info("writing motion correction: %s" + str(motionParams))
             motionCorrectionId = self.ispybDb.update_motion_correction(motionParams)
             self.info("wrote motion correction: %s" + str(motionCorrectionId))
@@ -472,6 +478,12 @@ class ISPyBdb:
 
     def update_image(self, params):
         return self.mxacquisition.update_image(self.convert_float_types(params).values())
+
+    def get_movie_params(self):
+        return self.emacquisition.get_movie_params()
+
+    def update_movie(self):
+        return self.emacquisition.get_movie_params(self.convert_float_types(params).values())
 
     def get_motion_correction_params(self):
         return self.emacquisition.get_motion_correction_params()
