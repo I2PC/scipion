@@ -68,7 +68,11 @@ class DataView(View):
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
-            
+
+    def getViewParams(self):
+        """ Give access to the viewParams dict. """
+        return self._viewParams
+
     def _loadPath(self, path):
         self._tableName = None
 
@@ -243,11 +247,18 @@ class CtfView(ObjectView):
         if ctfSet.isStreamOpen():
             viewParams['dont_recalc_ctf'] = ''
 
-        if first.hasAttribute('_ctffind4_ctfResolution'):
+        def _anyAttrStartsBy(obj, prefix):
+            """ Return True if any of the attributes of this object starts
+            by the provided prefix.
+            """
+            return any(attrName.startswith(prefix)
+                       for attrName, _ in obj.getAttributesToStore())
+
+        if _anyAttrStartsBy(first, '_ctffind'):
             import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
-        elif first.hasAttribute('_gctf_ctfResolution'):
+        elif _anyAttrStartsBy(first, '_gctf'):
             from pyworkflow.em.packages.gctf.viewer import OBJCMD_GCTF
             viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 

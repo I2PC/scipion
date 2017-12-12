@@ -26,8 +26,12 @@
 
 from pyworkflow.gui.project import ProjectWindow
 import pyworkflow.utils as pwutils
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO, MessageView
 from pyworkflow.em.plotter import EmPlotter
+from pyworkflow.em.viewer import CtfView
+import pyworkflow.em.showj as showj
 
+from protocol_gctf import ProtGctf
 
 
 def createCtfPlot(ctfSet, ctfId):
@@ -73,3 +77,20 @@ def _getValues(fn, col):
     f.close()
     return values
 
+
+class GctfViewer(Viewer):
+    """ Specific way to visualize SetOfCtf after Gctf. """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtGctf]
+
+    def _visualize(self, prot, **kwargs):
+        outputCTF = getattr(prot, 'outputCTF', None)
+
+        if outputCTF is not None:
+            ctfView = CtfView(self._project, outputCTF)
+            viewParams = ctfView.getViewParams()
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
+            return [ctfView]
+        else:
+            return [self.infoMessage("The output SetOfCTFs has not been "
+                                     "produced", "Missing output")]
