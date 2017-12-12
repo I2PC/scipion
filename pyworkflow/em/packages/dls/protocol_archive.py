@@ -12,7 +12,7 @@ class ProtArchive(ProtProcessMovies):
 
     def _defineParams(self, form):
         form.addSection(label='Params')
-        group = form.addGroup(label='Message Queue')
+        group = form.addGroup('Message Queue')
         group.addParam('queueHost', params.StringParam,
                        label="Host", important=True,
                        help='The host name for a queue broker (e.g. activemq)')

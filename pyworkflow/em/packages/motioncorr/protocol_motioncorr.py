@@ -327,6 +327,13 @@ class ProtMotionCorr(ProtAlignMovies):
                 preExp, dose = self._getCorrectedDose(inputMovies)
             else:
                 preExp, dose = 0.0, 0.0
+            
+            # reset values = 1 to 0 (motioncor2 does it automatically,
+            # but we need to keep this for consistency)
+            if self.patchX.get() == 1:
+                self.patchX.set(0)
+            if self.patchY.get() == 1:
+                self.patchY.set(0)
 
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': '%d %d' % (self.patchX, self.patchY),
