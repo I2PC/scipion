@@ -8,7 +8,7 @@ class ProtArchive(ProtProcessMovies):
     """
     Sends a message to the dials archiving queue
     """
-    _label = 'Archive'
+    _label = 'DLS Archive'
 
     def _defineParams(self, form):
         form.addSection(label='Params')
@@ -28,7 +28,7 @@ class ProtArchive(ProtProcessMovies):
 
     def processMovieStep(self, movieDict, hasAlignment):
         SCIPION_HOME = os.environ['SCIPION_HOME']
-        LOGFILE = os.path.join(SCIPION_HOME, 'pyworkflow', 'em', 'packages','archiving','recipe.json')
+        LOGFILE = os.path.join(SCIPION_HOME, 'pyworkflow', 'em', 'packages','dls','archive_recipe.json')
         with open(LOGFILE) as recipe:
             recipe_data = json.load(recipe)
 
