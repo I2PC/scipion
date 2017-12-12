@@ -457,7 +457,7 @@ Examples:
 
         ax.get_xaxis().set_ticks([i + 0.25 for i in ind])
         ax.get_xaxis().set_ticklabels([str(i) for i in ind])
-        ax.legend(loc='upper left')
+        ax.legend(loc='upper left', fontsize='xx-small')
 
         return [xplotter]
     

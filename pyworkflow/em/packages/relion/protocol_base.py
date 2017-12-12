@@ -906,6 +906,13 @@ class ProtRelionBase(EMProtocol):
         
             errors += self._validateNormal()
 
+        if self.IS_CLASSIFY:
+            if self._doSubsets():
+                total = self._getInputParticles().getSize()
+                if total <= self.subsetSize.get():
+                    errors.append('Subset size is bigger than the total number '
+                                  'of particles!')
+
         return errors
     
     def _validateNormal(self):
@@ -1079,14 +1086,15 @@ class ProtRelionBase(EMProtocol):
             args['--solvent_mask'] = mask
     
         if self.IS_3D and self.solventMask.hasValue():
-            solventMask = convertMask(self.solventMask, self._getTmpPath())
+            solventMask = convertMask(self.solventMask.get(), self._getTmpPath())
             args['--solvent_mask2'] = solventMask
 
-        if isVersion2() and self.IS_3D and self.referenceMask.hasValue() and self.solventFscMask:
+        if (isVersion2() and self.IS_3D and self.referenceMask.hasValue() and
+            self.solventFscMask):
             args['--solvent_correct_fsc'] = ''
 
     def _setSubsetArgs(self, args):
-        if self.doSubsets:
+        if self._doSubsets():
             args['--write_subsets'] = 1
             args['--subset_size'] = self.subsetSize.get()
             args['--max_subsets'] = self.subsetUpdates.get()
@@ -1199,11 +1207,13 @@ class ProtRelionBase(EMProtocol):
         else:
             partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
                              '%s' % part.getMicId())
-        if part.hasCTF():
-            # add phaseShift to particle Row
-            attrs = ['_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
-                     '_phaseShift']
-            for a in attrs:
-                if part.getCTF().hasAttribute(a):
-                    partRow.setValue(md.RLN_CTF_PHASESHIFT,
-                                     part.getCTF().getPhaseShift())
+
+        ctf = part.getCTF()
+
+        if ctf is not None:
+            partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
+
+    def _doSubsets(self):
+        # Since 'doSubsets' property is only valid for 2.1+ protocols
+        # we need provide a default value for backward compatibility
+        return self.getAttributeValue('doSubsets', False)
