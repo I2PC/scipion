@@ -276,7 +276,6 @@ class XmippViewer(Viewer):
 
             fn = obj._getPath('images.xmd')
             if os.path.exists(fn): # it doesnt unless cls is Xmipp
-                print('images.xmd exists in %s' % fn)
                 md = xmipp.MetaData(fn)
                 # If Zscore on output images plot Zscore particle sorting
                 if md.containsLabel(xmipp.MDL_ZSCORE):
@@ -289,8 +288,8 @@ class XmippViewer(Viewer):
                 if md.containsLabel(xmipp.MDL_SCORE_BY_VAR):
                     from plotter import XmippPlotter
                     xplotter = XmippPlotter(windowTitle="Variance particles sorting")
-                    xplotter.createSubPlot("Particle sorting", "Particle number", "Variance")
-                    xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_SCORE_BY_VAR)
+                    xplotter.createSubPlot("Variance Histogram", "Variance", "Number of particles")
+                    xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_SCORE_BY_VAR, nbins=100)
                     self._views.append(xplotter)
 
 

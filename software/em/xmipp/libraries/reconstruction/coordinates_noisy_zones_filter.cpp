@@ -75,11 +75,12 @@ void ProgCoordinatesNoisyZonesFilter::run()
     // variance filter to the matrixMic (and filtered to smooth the result) 
     double giniV = giniCoeff(matrixMic, patchSize);
 
-    if (verbose)
+    if (verbose>1)
     {
         Image<double> imVar(matrixMic);
         imVar.write(fnInCoord.withoutExtension()+"_varianceFilter.mrc");
-        std::cout << " >>> Gini Coeff: " << giniV << std::endl;
+        std::cout << " Gini Coeff: " << giniV << std::endl
+                  << "(" << fnInMic << ")" << std::endl;
     }
     
     // adding the variance value of the zone to every coordinate

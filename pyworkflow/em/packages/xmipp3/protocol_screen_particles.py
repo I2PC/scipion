@@ -44,6 +44,8 @@ class XmippProtScreenParticles(ProtProcessParticles):
     REJ_MAXZSCORE = 1
     REJ_PERCENTAGE =2
     REJ_PERCENTAGE_SSNR =1
+    REJ_VARIANCE = 1
+    REJ_VARGINI = 2
     #--------------------------- DEFINE param functions ------------------------
     def _defineProcessParams(self, form):
         
@@ -82,7 +84,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                       help='How to automatically reject particles based on '
                            'SSNR. It can be:\n'
                            '  None (no rejection)\n'
-                           'Percentage (reject a given percentage of the '
+                           '  Percentage (reject a given percentage of the '
                            'lowest SSNRs).')
         form.addParam('percentageSSNR', IntParam, default=5,
                       condition='autoParRejectionSSNR==1',
@@ -91,6 +93,15 @@ class XmippProtScreenParticles(ProtProcessParticles):
                            'SSNR are automatically disabled.',
                       validators=[Range(0, 100, error="Percentage must be "
                                                       "between 0 and 100.")])
+        form.addParam('autoParRejectionVar', EnumParam, default=self.REJ_NONE,
+                      choices=['None', 'Variance', 'Var. and Gini'],
+                      label='Automatic particle rejection based on Variance',
+                      expertLevel=LEVEL_ADVANCED,
+                      help='How to automatically reject particles based on '
+                           'Variance. It can be:\n'
+                           '  None (no rejection)\n'
+                           '  Variance (taking into account only the variance)\n'
+                           '  Var. and Gini (taking into account also the Gini coeff.)')
         form.addParam('addFeatures', BooleanParam, default=False,
                       label='Add features', expertLevel=LEVEL_ADVANCED,
                       help='Add features used for the ranking to each one of the input particles')
@@ -107,6 +118,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
         partSetId = self.inputParticles.getObjId()
         self._insertFunctionStep('sortImages', partSetId)
         self._insertFunctionStep('sortImagesSSNR', partSetId)
+        self._insertFunctionStep('rejectByVariance', partSetId)
         self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions -------------------------------
@@ -136,6 +148,37 @@ class XmippProtScreenParticles(ProtProcessParticles):
             args += "--ssnrpercent " + str(self.percentageSSNR.get())
 
         self.runJob("xmipp_image_ssnr", args)
+
+    def rejectByVariance(self, inputId):
+        if self.autoParRejectionVar != self.REJ_NONE:
+            import numpy as np
+            from scipy import signal
+
+            imagesMd = self._getPath('images.xmd')
+            mdata = md.xmipp.MetaData(imagesMd)
+            varList = []
+            giniList = []
+            for objId in mdata:
+                varList.append(mdata.getValue(md.MDL_SCORE_BY_VAR, objId))
+                giniList.append(mdata.getValue(md.MDL_SCORE_BY_GINI, objId))
+
+            if self.autoParRejectionVar == self.REJ_VARIANCE:
+                hist, bin_edges = np.histogram(varList, bins=50)
+            else:
+                vargini = [var*(1-gini) for var, gini in zip(varList, giniList)]
+                hist, bin_edges = np.histogram(vargini, bins=50)
+
+            peakind = signal.find_peaks_cwt(hist, np.arange(1,10))
+
+            idx = (np.abs(hist[peakind[-1]:]-hist.max()/3)).argmin() + peakind[-1]
+            threshold = bin_edges[idx]
+            print('Variance threshold = %f' % threshold)
+            for objId in mdata:
+                if mdata.getValue(md.MDL_SCORE_BY_VAR, objId)>threshold:
+                    mdata.setValue(md.MDL_ENABLED, -1, objId)
+
+            mdata.write(imagesMd)
+
         
     def createOutputStep(self):
         imgSet = self.inputParticles.get()

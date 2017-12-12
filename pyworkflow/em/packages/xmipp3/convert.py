@@ -189,6 +189,8 @@ IMAGE_EXTRA_LABELS = [
     xmipp.MDL_CUMULATIVE_SSNR,
     xmipp.MDL_PARTICLE_ID,
     xmipp.MDL_FRAME_ID,
+    xmipp.MDL_SCORE_BY_VAR,
+    xmipp.MDL_SCORE_BY_GINI,
     ]
 
 ANGLES_DICT = OrderedDict([
@@ -271,9 +273,14 @@ def setXmippAttributes(obj, objRow, *labels):
     and the datatype will be set correctly.
     """
     for label in labels:
-        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label),
-                objRow.getValueAsObject(label))
+        setSingleXmippAttribute(obj,label, objRow.getValueAsObject(label))
+        #        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label),
+        #        objRow.getValueAsObject(label))
 
+def setSingleXmippAttribute(obj, label, value):
+    """ Set an attribute of an object following an Xmipp label pattern
+    """
+    setattr(obj, '_xmipp_%s' % xmipp.label2Str(label), value)
 
 def rowFromMd(md, objId):
     row = XmippMdRow()

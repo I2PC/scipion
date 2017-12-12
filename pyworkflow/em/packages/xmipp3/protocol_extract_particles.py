@@ -43,7 +43,8 @@ from pyworkflow.em.protocol import ProtExtractParticles
 from pyworkflow.em.data import Particle
 from pyworkflow.em.constants import RELATION_CTF
 
-from convert import (micrographToCTFParam, writeMicCoordinates, xmippToLocation)
+from convert import (micrographToCTFParam, writeMicCoordinates, xmippToLocation,
+                     setSingleXmippAttribute)
 from xmipp3 import XmippProtocol
 
 
@@ -143,16 +144,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
                            'value is 0, then half the box size is used.')
-        form.addParam('doGrainFilter', params.BooleanParam, default=False,
-                      label='Filter noisy zones',
-                      help='To reject particles from grained zones of the '
-                           'micrograph. Often, the grained areas correspond '
-                           'to the carbon substrate, ice blocks or impurities.')
-        form.addParam('patchSize', params.IntParam, condition='doGrainFilter',
-                      label='Patch size (px)', default=-1, 
-                      expertLevel=LEVEL_ADVANCED, help='Windows size to make '
-                      'the variance filtter. A twice  of the particle size is '
-                      'recommended.\n[-1] Default: 1.5*BoxSize')
+        form.addParam('patchSize', params.IntParam, default=-1, 
+                      label='Patch size (px)', expertLevel=LEVEL_ADVANCED,
+                      help='Windows size to make the variance filtter and '
+                           'compute the Gini coeff. A twice of the particle '
+                           'size is recommended.\n [-1] Default: 1.5*BoxSize')
 
         form.addParallelSection(threads=4, mpi=1)
     
@@ -497,13 +493,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setCTF(mic.getCTF())
                     
                     varValue = row.getValue(md.MDL_SCORE_BY_VAR)
-                    giniValue = row.getValue(md.MDL_SCORE_BY_VAR)
+                    giniValue = row.getValue(md.MDL_SCORE_BY_GINI)
                     varValue, giniValue = self._normalizeVarGini(varValue,
                                                                  giniValue,
                                                             self.stimatedMinMax)
-                    # try setXmippAttributes(item,row,label)
-                    p._xmipp_VAR_score = Float(varValue)
-                    p._xmipp_GINI_score = Float(giniValue)
+                    setSingleXmippAttribute(p, md.MDL_SCORE_BY_VAR, Float(varValue))
+                    setSingleXmippAttribute(p, md.MDL_SCORE_BY_GINI, Float(giniValue))
 
                     # disabled particles (in metadata) should not add to the
                     # final set
@@ -528,8 +523,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return self._getExtraPath(micBase + ".xmd")
 
     def _setMinMaxVarGini(self, micList):
-        print('   > > >   Min/Max stimation over %d mics   < < <   - - - ' 
-                                                 % len(micList))
         varMIN, varMAX, giniMIN, giniMAX = 0, 0, 0, 0
         for mic in micList:
             for row in md.iterRows(self._getMicXmd(mic)):
