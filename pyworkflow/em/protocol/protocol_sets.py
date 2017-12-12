@@ -516,11 +516,9 @@ class ProtSubSetByMic(ProtSets):
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        """Make sure the input data make sense."""
-
-        randomParticle = random.choice(list(self.inputParticles.get()))
-        # Make sure that the particles hasMicId, thus they come from some Mic
-        if not randomParticle.hasMicId():
+        """Make sure the input data make sense, i.e. hasMicId.
+        Thus they come from some Mic"""
+        if not self.inputParticles.get().getFirstItem().hasMicId():
             return ['The _Input Particles_ must come from some Micrographs '
                     'of the workflow.\n(particles must have micID)']
 
