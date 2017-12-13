@@ -175,7 +175,6 @@ class MonitorISPyB(Monitor):
 
             motionParams = self.ispybDb.get_motion_correction_params()
             self.safe_update(motionParams, self.motion_corrections[itemId])
-            motionParams['dataCollectionId'] = self.dcId
             motionParams['movieId'] = self.movie[imageId]['movieId']
             self.info("writing motion correction: %s" + str(motionParams))
             motionCorrectionId = self.ispybDb.update_motion_correction(motionParams)
