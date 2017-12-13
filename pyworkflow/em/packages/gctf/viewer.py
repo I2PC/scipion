@@ -26,7 +26,7 @@
 
 from pyworkflow.gui.project import ProjectWindow
 import pyworkflow.utils as pwutils
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO, MessageView
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.em.viewer import CtfView
 import pyworkflow.em.showj as showj
