@@ -1,3 +1,4 @@
+
 # **************************************************************************
 # *
 # * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es), May 2013
@@ -29,8 +30,8 @@ from pyworkflow.utils import *
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
-#import requests
-import json
+import requests
+import webbrowser
 
 class XmippProt3DBionotes(ProtAnalysis3D):
     """ Protocol for checking annotations
@@ -67,9 +68,9 @@ class XmippProt3DBionotes(ProtAnalysis3D):
         data = {'title':'PDB structure'}
         files = {'structure_file': open(self.inputPDB.get().getFileName(), 'rb')}
         
-#         response = requests.post('http://3dbionotes.cnb.csic.es/programmatic/upload',data=data, files=files)
-#         json_data = json.loads(response.text)
-#         print(json_data)
+        response = requests.post('http://3dbionotes.cnb.csic.es/programmatic/upload',data=data, files=files)
+        json_data = json.loads(response.text)
+        webbrowser.open_new(json_data["url"])
           
     #--------------------------- INFO functions --------------------------------
             
