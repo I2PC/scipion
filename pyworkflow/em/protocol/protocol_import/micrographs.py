@@ -149,7 +149,6 @@ class ProtImportMicBase(ProtImportImages):
 
         return acq
 
-
     
 class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
@@ -190,7 +189,7 @@ class ProtImportMicrographs(ProtImportMicBase):
                       label='Micrographs sqlite file',
                       help="Select the micrographs sqlite file.\n")
     
-    #--------------------------- INSERT functions ---------------------------------------------------
+    #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         ci = self.getImportClass()
@@ -201,7 +200,7 @@ class ProtImportMicrographs(ProtImportMicBase):
             self._insertFunctionStep('importMicrographsStep', importFrom,
                                      self.importFilePath)
     
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def importMicrographsStep(self, importFrom, *args):
         ci = self.getImportClass()
         ci.importMicrographs()
@@ -222,11 +221,12 @@ class ProtImportMicrographs(ProtImportMicBase):
             summary += '   Micrographs: *%d* \n' % (self.outputMicrographs.getSize())
         
         if self.copyFiles:
-            summary += '\n_WARNING_: Binary files copied into project (extra disk space)'
+            summary += ('\n_WARNING_: Binary files copied into project '
+                        '(extra disk space)')
             
         self.summaryVar.set(summary)
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         from pyworkflow.em.convert import ImageHandler
         ci = self.getImportClass()
@@ -237,10 +237,13 @@ class ProtImportMicrographs(ProtImportMicBase):
                 if imgh.isImageFile(micFn):
                     _, _, z, n = imgh.getDimensions(micFn)
                     if n > 1 or z > 1:
-                        errors.append("The protocol not support micrographs stored in stacks. "
-                                      "If you want to obtain your micrographs individually, "
+                        errors.append("The protocol not support micrographs "
+                                      "stored in stacks. If you want to "
+                                      "obtain your micrographs individually, "
                                       "you can run the following command:\n"
-                                      "scipion run scipion_directory/scripts/split_stacks.py --files *your files* --ext *extension*")
+                                      "scipion run scipion_directory/scripts/"
+                                      "split_stacks.py --files *your files* "
+                                      "--ext *extension*")
                 # JMRT: only check the first image, for large dataset
                 # even reading the header can take a while
                 break 
@@ -337,14 +340,13 @@ class ProtImportMovies(ProtImportMicBase):
 
         # This is not working so for now its hidden
         form.addParam('writeMoviesInProject', params.BooleanParam,
-                      default=False, condition=framesCondition + " and stackFrames",
+                      default=False,
+                      condition=framesCondition + " and stackFrames",
                       label="Write stacks in the project folder?",
                       help="If Yes, the created stack files will be written "
                            "in the project folder. By default the movies will "
-                           "be written in the same place where input frames are.")
-        # form.addParam('writeMoviesInProject', params.HiddenBooleanParam,
-        #               default=False, condition=framesCondition + " and stackFrames")
-
+                           "be written in the same place where input frames "
+                           "are.")
 
         form.addParam('movieSuffix', params.StringParam,
                       default='_frames.mrcs',
@@ -362,20 +364,22 @@ class ProtImportMovies(ProtImportMicBase):
                            "frame files after creating the movie stack. ")
 
         streamingSection = form.getSection('Streaming')
-        streamingSection.addParam('streamingSocket', params.BooleanParam, default=False,
+        streamingSection.addParam('streamingSocket', params.BooleanParam,
+                                  default=False,
                                   condition=streamingConditioned,
                                   expertLevel=params.LEVEL_ADVANCED,
                                   label="Use streaming socket",
-                                  help="Use a socket to discover new files instead of polling\n"
-                                       "your directory.\n")
+                                  help="Use a socket to discover new files "
+                                       "instead of polling your directory.")
 
         streamingSection.addParam('socketPort', params.IntParam, default=5000,
-                                  condition=streamingConditioned + ' and streamingSocket',
+                                  condition=streamingConditioned +
+                                            ' and streamingSocket',
                                   expertLevel=params.LEVEL_ADVANCED,
                                   label="Socket port",
-                                  help="Port to use for the streaming socket.\n")
+                                  help="Port to use for the streaming socket.")
 
-    # --------------------------- INSERT functions ---------------------------------------------------
+    # --------------------------- INSERT functions -----------------------------
     def _insertAllSteps(self):
         # Only the import movies has property 'inputIndividualFrames'
         # so let's query in a non-intrusive manner
@@ -394,16 +398,20 @@ class ProtImportMovies(ProtImportMicBase):
                                  self.amplitudeContrast.get(),
                                  self.magnification.get())
 
-    # --------------------------- INFO functions ----------------------------------------------------
+    # --------------------------- INFO functions -------------------------------
     def _validate(self):
         """Overwriting to skip file validation if streaming with socket"""
         if self.streamingSocket:
             errors = []
         else:
             errors = ProtImportMicBase._validate(self)
+            if self.inputIndividualFrames and not self.stackFrames:
+                errors.append("Scipion does not support individual frames. "
+                              "You must set to Yes *Create movie stacks?* "
+                              "parameter.")
         return errors
 
-    # --------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions ------------------------------
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
@@ -433,6 +441,7 @@ class ProtImportMovies(ProtImportMicBase):
             decompress('tar', 'jxf %s', '.tbz', '.mrc')
 
         dim = dimMovie.getDim()
+        print "Dim: ", dim
         range = [1, dim[2], 1]
 
         movie.setFramesRange(range)
@@ -473,19 +482,24 @@ class ProtImportMovies(ProtImportMicBase):
                         self.debug("Data received in socket:")
                         self.debug(files)
                         for fileName in files:
-                            if os.path.exists(fileName):
-                                if fileName in self.importedFiles:
-                                    self._spreadMessage('WARNING: Not importing, already imported file %s \n' % fileName,
-                                                        sock)
-                                    continue
-                                else:
-                                    self._spreadMessage('OK: Importing file %s \n' % fileName, sock)
-                                    fileId = None
-                                    yield fileName, fileId
-                            else:
-                                self._spreadMessage('WARNING: Not importing, path does not exist %s \n' % fileName,
-                                                    sock)
+                            uniqueFn = self._getUniqueFileName(fileName, files)
+                            if uniqueFn in self.importedFiles:
+                                self._spreadMessage('WARNING: Not importing,'
+                                                    ' already imported file %s '
+                                                    '\n' % fileName, sock)
                                 continue
+                            else:
+                                if os.path.exists(fileName):
+                                    self._spreadMessage('OK: Importing file %s '
+                                                        '\n' % fileName, sock)
+                                    fileId = None
+                                    yield fileName, uniqueFn, fileId
+                                else:
+                                    self._spreadMessage('WARNING: Not '
+                                                        'importing , path does '
+                                                        'not exist %s '
+                                                        '\n' % fileName, sock)
+                                    continue
                     else:
                         continue
                 # client disconnected, remove from socket list
@@ -516,19 +530,20 @@ class ProtImportMovies(ProtImportMicBase):
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
             if self.streamingSocket:
-                for fileName, fileId in self.iterFilenamesFromSocket():
-                    yield fileName, fileId
+                iterInputFiles = self.iterFilenamesFromSocket()
             else:
-                for fileName, fileId in ProtImportMicBase.iterNewInputFiles(self):
-                    yield fileName, fileId
+                iterInputFiles = ProtImportMicBase.iterNewInputFiles(self)
+                
+            for fileName, uniqueFn, fileId in iterInputFiles:
+                yield fileName, uniqueFn, fileId
             return
 
         if self.dataStreaming:
             if self.streamingSocket:
                 filePaths = [f[0] for f in self.iterFilenamesFromSocket()]
             else:
-                # Consider only the files that are not changed in the fileTime delta
-                # if processing data in streaming
+                # Consider only the files that are not changed in the fileTime
+                # delta if processing data in streaming
                 fileTimeout = timedelta(seconds=self.fileTimeout.get())
                 filePaths = [f for f in self.getMatchFiles()
                              if not self.fileModified(f, fileTimeout)]
@@ -543,7 +558,7 @@ class ProtImportMovies(ProtImportMicBase):
 
         for fileName in filePaths:
             fnNoExt = pwutils.removeExt(fileName)
-
+            
             match = frameRegex.match(fnNoExt)
 
             if match is None:
@@ -562,16 +577,19 @@ class ProtImportMovies(ProtImportMicBase):
         ih = ImageHandler()
 
         for movieFn in self.createdStacks:
-            if movieFn not in self.importedFiles:
-                yield movieFn, None
+            uniqueFn = basename(movieFn)
+            if uniqueFn not in self.importedFiles:
+                yield movieFn, uniqueFn, None
 
         def checkMovie():
             for k, v in frameDict.iteritems():
-                movieFn = k + suffix
+                moviePath = os.path.dirname(k)
+                movieFn = join(moviePath + "/", self._getUniqueFileName(k) +
+                               suffix)
 
                 if self.writeMoviesInProject:
                     movieFn = self._getExtraPath(os.path.basename(movieFn))
-
+                
                 if (movieFn not in self.importedFiles and
                     movieFn not in self.createdStacks and
                     len(v) == self.numberOfIndividualFrames):
