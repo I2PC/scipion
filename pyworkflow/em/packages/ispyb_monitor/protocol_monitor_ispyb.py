@@ -483,7 +483,7 @@ class ISPyBdb:
         return self.emacquisition.get_movie_params()
 
     def update_movie(self, params):
-        return self.emacquisition.get_movie_params(self.convert_float_types(params).values())
+        return self.emacquisition.insert_movie(self.convert_float_types(params).values())
 
     def get_motion_correction_params(self):
         return self.emacquisition.get_motion_correction_params()
