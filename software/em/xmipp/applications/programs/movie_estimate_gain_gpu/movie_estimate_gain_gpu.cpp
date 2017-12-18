@@ -99,7 +99,8 @@ public:
 	float** d_listOfWeights;	//vector of pointers
 	float* d_listOfSigmas;		//vector
 	float* d_weights;                 	// vector
-	int** Iframe_vecGPU;			// vector of images
+//	int** Iframe_vecGPU;			// vector of images
+	int* d_Iframe;
 	std::vector<float *> listOfWeightsGPU; 	// it was double
 	double* d_avgTVcol, *d_avgTVrow;	// vector (d_avgTV[0] is eq. to avgTV)
 	double* avgTVcolTmp, *avgTVrowTmp;	// temporal vector used for reduction
@@ -286,22 +287,24 @@ void ProgMovieEstimateGainGPU::run()
 
 	// Copy all int images onto GPU
 	int im=0;
-	size_t sz_Iframe_vec=sizeof(int*)*mdIn.size();
+//	size_t sz_Iframe=sizeof(int*)*mdIn.size();
 	size_t px_img=Xdim*Ydim;
 
-	Iframe_vecGPU = (int**)malloc(sz_Iframe_vec);
+//	Iframe_vecGPU = (int**)malloc(sz_Iframe_vec);
+//	Iframe = (int*)malloc(sz_Iframe_vec);
  
-	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+/*	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
 		Iframe.read(fnFrame);
 
-		gpuErrchk(cudaMalloc(&Iframe_vecGPU[im], sz_imgINT));
+		gpuErrchk(cudaMalloc(&d_Iframe_vecGPU[im], sz_imgINT));
 		gpuErrchk(cudaMemcpy(Iframe_vecGPU[im++], &Iframe(0,0), sz_imgINT, cudaMemcpyHostToDevice)); 
 	}
-
+*/
  
 	// Malloc several data
+	gpuErrchk(cudaMalloc(&d_Iframe, sz_imgINT));
 	gpuErrchk(cudaMalloc(&d_IframeIdeal, sz_imgINT));
 	gpuErrchk(cudaMalloc(&d_IframeTransformed, sz_imgINT));
 	
@@ -318,10 +321,13 @@ void ProgMovieEstimateGainGPU::run()
 		{
 			mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
 			std::cout << "   Frame " << fnFrame << std::endl;
+			Iframe.read(fnFrame);
+			gpuErrchk(cudaMemcpy(d_Iframe, &Iframe(0,0), sz_imgINT, cudaMemcpyHostToDevice)); 
 			
 			dim3 block1(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+(TILE_DIMH-1))/(TILE_DIMH)),1);
 			dim3 thread1( TILE_DIM, TILE_DIMH);
-			Kmult<<< block1, thread1 >>>(Iframe_vecGPU[im++], d_ICorrection, d_IframeIdeal, Xdim, Ydim);
+//			Kmult<<< block1, thread1 >>>(Iframe_vecGPU[im++], d_ICorrection, d_IframeIdeal, Xdim, Ydim);
+			Kmult<<< block1, thread1 >>>(d_Iframe, d_ICorrection, d_IframeIdeal, Xdim, Ydim);
 			cudaThreadSynchronize();
 			gpuErrchk(cudaGetLastError());
 			
@@ -368,10 +374,10 @@ void ProgMovieEstimateGainGPU::run()
 	ICorrection.write(fnRoot+"_gain.xmp");
 
 	// Free memory
-	for (int i=0; i< mdIn.size(); i++){
+/*	for (int i=0; i< mdIn.size(); i++){
 		cudaFree(Iframe_vecGPU[i]);
 	}
-
+*/
 	for (int i=0; i< listOfWeightsGPU.size(); i++){
 		cudaFree(listOfWeightsGPU[i]);
 	}
@@ -385,6 +391,7 @@ void ProgMovieEstimateGainGPU::run()
 	cudaFree(d_sumObs);
 	cudaFree(d_sumIdeal);
 	cudaFree(d_ICorrection);
+	cudaFree(d_Iframe);
 	cudaFree(d_IframeIdeal);
 	cudaFree(d_IframeTransformed);
 	cudaFree(d_Iframet1);
