@@ -1380,4 +1380,4 @@ def printTree(obj,ind):
                 printTree(value,ind)
 
 
-    print(WSlog.get_string(sortby="Name"))
+    # print(WSlog.get_string(sortby="Name"))
