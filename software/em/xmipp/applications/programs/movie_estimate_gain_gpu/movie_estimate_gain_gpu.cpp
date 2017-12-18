@@ -398,7 +398,7 @@ void ProgMovieEstimateGainGPU::run()
 	cudaFree(d_Iframet2);
 	cudaFree(d_avgTVcol);
 	cudaFree(d_avgTVrow);
-	free(Iframe_vecGPU);
+	//free(Iframe_vecGPU);
     	cudaFree(d_avgCorr);
     	free(avgCorrTmp);
     	free(avgTVcolTmp);
