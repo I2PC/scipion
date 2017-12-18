@@ -65,9 +65,9 @@ class ProtExtractCoords(ProtParticlePicking):
 
         form.addParam('applyShifts', BooleanParam, default=False,
                       label='Apply particle shifts?',
-                      help='Apply particle shifts from 2D alignment to'
+                      help='Apply particle shifts from 2D alignment to '
                            'recalculate new coordinates. This can be useful '
-                           'for re-centering of particle coordinates.')
+                           'for re-centering particle coordinates.')
         
         form.addParallelSection(threads=0, mpi=0)
 

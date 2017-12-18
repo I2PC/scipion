@@ -31,10 +31,10 @@ import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from grigoriefflab import (CTFFIND_PATH, CTFFINDMP_PATH,
-                           CTFFIND4_PATH, getVersion)
+                           CTFFIND4_PATH, getVersion,
+                           CTFFIND4_HOME, CTFFIND_HOME)
 from convert import (readCtfModel, parseCtffindOutput,
                      parseCtffind4Output)
-
 
 
 class ProtCTFFind(em.ProtCTFMicrographs):
@@ -46,6 +46,23 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     http://grigoriefflab.janelia.org/ctffind4
     """
     _label = 'ctffind'
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        Can't rely on package function since this is a "multi package" package
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        missingPaths = []
+
+        if not os.path.exists(CTFFIND4_PATH) \
+                and not os.path.exists(CTFFIND_PATH):
+            missingPaths.append("%s, %s : ctffind installation not found"
+                                " - %s or %s" % (CTFFIND_HOME, CTFFIND4_HOME,
+                                                 CTFFIND_PATH, CTFFIND4_PATH))
+        return missingPaths
 
     def _defineProcessParams(self, form):
         form.addParam('useCtffind4', params.BooleanParam, default=True,
@@ -223,7 +240,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     def _methods(self):
         if self.inputMicrographs.get() is None:
             return ['Input micrographs not available yet.']
-        methods = "We calculated the CTF of %s using CTFFind [Midell2003]. " % self.getObjectTag('inputMicrographs')
+        methods = "We calculated the CTF of %s using CTFFind. " % self.getObjectTag('inputMicrographs')
         methods += self.methodsVar.get('')
         methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')
 

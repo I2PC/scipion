@@ -335,8 +335,11 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False, c
             cf._sections['PACKAGES'] = collections.OrderedDict(
                 sorted(cf._sections['PACKAGES'].items(), key=lambda t: t[0]))
 
-        with open(fpath, 'wb') as f:
-            cf.write(f)
+        try:
+            with open(fpath, 'wb') as f:
+                cf.write(f)
+        except Exception as e:
+            print("Could not update the config: ", e)
 
 
 def compareConfig(cf, ct,fPath, fTemplate):
