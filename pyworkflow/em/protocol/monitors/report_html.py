@@ -46,7 +46,8 @@ PSD_PATH = 'imgPsdPath'
 SHIFT_PATH = 'imgShiftPath'
 # These constants are the name of the folders where thumbnails
 # for the html report will be stored. They are also the keys to
-# the attribute thumbPaths.
+# used in the execution.summary.template.html to read data (where
+# they will need to be changed if they're changed here)
 MIC_THUMBS = 'imgMicThumbs'
 PSD_THUMBS = 'imgPsdThumbs'
 SHIFT_THUMBS = 'imgShiftThumbs'
@@ -357,11 +358,12 @@ class ReportHtml:
 
         # send over only thumbnails of the mics that have been fully processed
         self.thumbsReady = self.checkNewThumbsReady()
-        data[MIC_THUMBS] = self.thumbPaths[MIC_THUMBS][:self.thumbsReady]
-        data[SHIFT_THUMBS] = self.thumbPaths[SHIFT_THUMBS][:self.thumbsReady]
-        data[MIC_ID] = self.thumbPaths[MIC_ID][:self.thumbsReady]
+        thumbsLoading = numMics - self.thumbsReady
+        data[MIC_THUMBS] = self.thumbPaths[MIC_THUMBS][:self.thumbsReady] + ['']*thumbsLoading
+        data[SHIFT_THUMBS] = self.thumbPaths[SHIFT_THUMBS][:self.thumbsReady] + ['']*thumbsLoading
+        data[MIC_ID] = self.thumbPaths[MIC_ID]
         if PSD_THUMBS in self.thumbPaths:
-            data[PSD_THUMBS] = self.thumbPaths[PSD_THUMBS][:self.thumbsReady]
+            data[PSD_THUMBS] = self.thumbPaths[PSD_THUMBS][:self.thumbsReady] + ['']*thumbsLoading
 
         if self.ctfMonitor is None:
             reportFinished = self.thumbsReady == numMics

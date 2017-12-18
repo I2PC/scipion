@@ -706,14 +706,12 @@
             for (var serieId in chart.series) {
 
                 var serie = chart.series[serieId];
-//                Cookies.set(serie.name, serie.visible);
                 sessionStorage[serie.name] = serie.visible
             }
         };
 
         function isChartSerieVisible(serieName){
 
-//            var visible = Cookies.get(serieName);
             var visible = sessionStorage[serieName];
             if (visible == undefined)
                 visible = String(true);
@@ -883,35 +881,41 @@
             if ('defocusU' in report.ctfData){
                 cols.push({"title": "DefocusU (µm)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Defocus ratio",
-                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "Astigmatism (µm)",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Resolution (Å)",
+                           "render": $.fn.dataTable.render.number( ',', '.', 3)},
+                          {"title": "Max. Res (Å)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "CC value ",
-                            "render": $.fn.dataTable.render.number( ',', '.', 2)});
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "Defocus ratio",
+                            "render": $.fn.dataTable.render.number( ',', '.', 3)});
 
             }
             var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
+            var imgLoadingIcon = '<span class="glyphicon glyphicon-hourglass" title="Loading thumbnail..."></span>';
             var imgWidth = Math.floor($('#content').width() * 0.2);
+            var imgPathKeys = ['imgMicThumbs', 'imgShiftThumbs', 'imgPsdThumbs'];
 
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
-                var rowValues = [report.ctfData.micId[index], imgHtml.format(imgMicPath, imgWidth, report.ctfData.micId[index])];
-                if('imgShiftThumbs' in report.ctfData){
-                    var shiftPlotPath = report.ctfData.imgShiftThumbs[index];
-                    rowValues.push(imgHtml.format(shiftPlotPath,imgWidth, report.ctfData.micId[index]));
-                }
-
-                if('imgPsdThumbs' in report.ctfData){
-                    var psdThumbPath = report.ctfData.imgPsdThumbs[index];
-                    rowValues.push(imgHtml.format(psdThumbPath,imgWidth, report.ctfData.micId[index]));
+                var rowValues = [report.ctfData.micId[index]]
+                for (var i in imgPathKeys){
+                    if(imgPathKeys[i] in report.ctfData){
+                        imgThumbPath = report.ctfData[imgPathKeys[i]][index];
+                        if(imgThumbPath==''){
+                            rowValues.push(imgLoadingIcon)
+                        }else{
+                            rowValues.push(imgHtml.format(imgThumbPath, imgWidth,
+                                                        report.ctfData.micId[index]))
+                        }
+                    }
                 }
 
                 if ('defocusU' in report.ctfData){
-                    rowValues.push(report.ctfData.defocusU[index]*1e-4, report.ctfData.ratio[index],
-				   report.ctfData.astigmatism[index]*1e-4, report.ctfData.resolution[index],
-				   report.ctfData.fitQuality[index]);
+                    rowValues.push(report.ctfData.defocusU[index]*1e-4,
+				                   report.ctfData.astigmatism[index]*1e-4,
+                                   report.ctfData.resolution[index],
+	                               report.ctfData.fitQuality[index],
+                                   report.ctfData.ratio[index]);
                 }
 
                 dataset.unshift(rowValues);
@@ -1033,4 +1037,3 @@
 
     </SCRIPT>
 <HTML>
-
