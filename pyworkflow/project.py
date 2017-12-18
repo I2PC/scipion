@@ -34,6 +34,9 @@ import traceback
 import time
 from collections import OrderedDict
 import datetime as dt
+import pprint
+import prettytable
+import types
 
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
@@ -745,6 +748,8 @@ class Project(object):
         newProt.copyDefinitionAttributes(protocol)
         newProt.copyAttributes(protocol, 'hostName', '_useQueue','_queueParams')
         
+        printTree(self,0)
+
         return newProt
 
     def copyProtocol(self, protocol):
@@ -1346,3 +1351,33 @@ class Project(object):
                                 print "  Found file %s, creating link..." % newFile
                                 print pwutils.green("   %s -> %s" % (f, newFile))
                                 pwutils.createAbsLink(newFile, f)
+
+
+
+def printTree(obj,ind):
+    WSlog = prettytable.PrettyTable(["Name", "Type", "Memory Address", "Value"])
+    obj_dict = obj.__dict__
+
+    for key, value in obj_dict.items():
+        
+        if key=='_attributes':
+            WSlog.add_row([key, str(type(value)), str(hex(id(value))), ''])
+            # print(key + ' \t : \t ' + str(type(value)) + ' >>>' + str(hex(id(value))) + '<<<')
+            for i in range(0,len(key)):
+                WSlog.add_row(['_attributes > ' + str(value[i]), str(type(getattr(obj,value[i]))), str(hex(id(value[i]))), str(getattr(obj,value[i]))])
+                # print('   +-> ' + value[i] + ' \t : \t ' + str(getattr(obj,value[i])) + ' >>>' + str(hex(id(value[i]))) + '<<<')           
+        else:
+            # print(key + ' \t : \t ' + str((value)) + ' >>>' + str(hex(id(value))) + '<<<')
+            valueSTR = str(value)
+            if len(valueSTR) > 30:
+                valueSTR='>>> too long value <<<'            
+            WSlog.add_row([key, str(type(value)), str(hex(id(value))), valueSTR])
+            
+            if len(str(type(value)))>2 and str(type(value))[1]=='c':
+                print ' '
+                ind += 1
+                print(str(ind) + '\t'  + key + '   > > >   ' + str(type(value)))
+                printTree(value,ind)
+
+
+    print(WSlog.get_string(sortby="Name"))
