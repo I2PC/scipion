@@ -503,7 +503,14 @@ class Project(object):
 
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
-            protocol.copy(prot2, copyId=False)
+
+            # Get all the input attributes, to be ignored at copy():
+            inputAttributes = []
+            for key, attr in protocol.iterInputAttributes():
+                inputAttributes.append(key)
+                print inputAttributes
+
+            protocol.copy(prot2, copyId=False, ignoreAttrs=inputAttributes)
             # Restore backup values
             protocol.setJobId(jobId)
             protocol.setObjLabel(label)

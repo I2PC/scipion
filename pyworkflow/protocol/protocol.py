@@ -1017,11 +1017,11 @@ class Protocol(Step):
         """ This will copy relations from protocol other to self """
         pass
 
-    def copy(self, other, copyId=True):
+    def copy(self, other, copyId=True, ignoreAttrs=[]):
 
         from pyworkflow.project import OBJECT_PARENT_ID
 
-        copyDict = Object.copy(self, other, copyId)
+        copyDict = Object.copy(self, other, copyId, ignoreAttrs)
         self._store()
         self.mapper.deleteRelations(self)
 
