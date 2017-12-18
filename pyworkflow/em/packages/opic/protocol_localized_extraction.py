@@ -38,7 +38,7 @@ class ProtLocalizedExtraction(ProtParticles):
     """
     
     _label = 'localized extraction'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')

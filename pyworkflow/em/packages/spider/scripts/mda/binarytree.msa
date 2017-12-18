@@ -32,7 +32,7 @@ fr g
 ; --------------- END BATCH HEADER ---------------
 
 vm
-echo "if(! -d [binary_dir]) mkdir [binary_dir]"|csh
+echo "[ ! -d [binary_dir] ] && mkdir [binary_dir]"|sh
 
 fr g
 [temp_lut][node_lut]_unrenum

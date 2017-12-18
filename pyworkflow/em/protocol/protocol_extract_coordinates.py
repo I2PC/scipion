@@ -65,9 +65,9 @@ class ProtExtractCoords(ProtParticlePicking):
 
         form.addParam('applyShifts', BooleanParam, default=False,
                       label='Apply particle shifts?',
-                      help='Apply particle shifts from 2D alignment to'
+                      help='Apply particle shifts from 2D alignment to '
                            'recalculate new coordinates. This can be useful '
-                           'for re-centering of particle coordinates.')
+                           'for re-centering particle coordinates.')
         
         form.addParallelSection(threads=0, mpi=0)
 
@@ -133,8 +133,8 @@ class ProtExtractCoords(ProtParticlePicking):
         summary = []
         ps1 = self.inputParticles.get().getSamplingRate()
         ps2 = self.inputMicrographs.get().getSamplingRate()
-        summary.append('Input particles pixel size: *%0.3f* (Å/px)' % ps1)
-        summary.append('Input micrographs pixel size: *%0.3f* (Å/px)' % ps2)
+        summary.append(u'Input particles pixel size: *%0.3f* (Å/px)' % ps1)
+        summary.append(u'Input micrographs pixel size: *%0.3f* (Å/px)' % ps2)
         summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1/ps2))
         if self.applyShifts:
             summary.append('Applied 2D shifts from particles')

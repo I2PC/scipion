@@ -94,7 +94,7 @@ class GemPickerWizard(emwiz.EmWizard):
 
         pickScript = pw.join('em', 'packages', 'igbmc', 'run_gempicker.py')
 
-        pickCmd = prot.getArgs(threshold=False, workingDir=coordsDir)
+        pickCmd = prot._getPickArgs(threshold=False, workingDir=coordsDir)[0]
         convertCmd = pw.join('apps', 'pw_convert.py')
 
         args = {
@@ -126,5 +126,7 @@ class GemPickerWizard(emwiz.EmWizard):
                                         pickerProps=pickerConfig).show()
         process.wait()
         myprops = pwutils.readProperties(pickerConfig)
-        form.setVar('thresholdLow', myprops['thresholdLow.value'])
-        form.setVar('thresholdHigh', myprops['thresholdHigh.value'])
+
+        if myprops['applyChanges'] == 'true':
+            form.setVar('thresholdLow', myprops['thresholdLow.value'])
+            form.setVar('thresholdHigh', myprops['thresholdHigh.value'])

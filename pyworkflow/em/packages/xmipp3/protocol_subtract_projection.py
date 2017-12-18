@@ -47,7 +47,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         refine only the genetic material.
         """
     _label = 'subtract projection'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     CORRECT_NONE = 0
     CORRECT_FULL_CTF = 1

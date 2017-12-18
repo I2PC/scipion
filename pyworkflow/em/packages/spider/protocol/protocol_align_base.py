@@ -42,6 +42,8 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
     def __init__(self, script, alignDir, **args):
         ProtAlign2D.__init__(self, **args)
         SpiderProtocol.__init__(self, **args)
+        # To avoid showing MPI box due to duplicated init
+        self.allowMpi = False
         self._script = script
         self._alignDir = alignDir
         

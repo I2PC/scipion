@@ -98,6 +98,7 @@ class Message():
     LABEL_OBJLABEL = 'Label'
     
     LABEL_METHODS = 'Methods'
+    LABEL_BIB_BTN = 'Export references'
     LABEL_LOGS = 'Output Logs'
     LABEL_LOGS_OUTPUT = 'Output Log'
     LABEL_LOGS_ERROR = 'Error Log'
@@ -110,7 +111,7 @@ class Message():
     NO_INFO_SUMMARY = 'No summary information.'
     NO_INFO_METHODS = 'No methods information.'
     NO_INFO_LOGS = 'No logs information.'
-    NO_SAVE_SETTINGS = 'Error try to save settings.'
+    NO_SAVE_SETTINGS = 'Error trying to save settings.'
     
     #-------- Protocol Form messages ----------
     LABEL_CITE = 'Cite'
@@ -300,9 +301,9 @@ Do you really want to continue?'
     
     LABEL_ENABLE = 'Enable'
     LABEL_DISABLE = 'Disable'
-    LABEL_SELECT_ALL = 'Select All'
-    LABEL_SELECT_FROM = 'Select From Here'
-    LABEL_SELECT_TO = 'Select To Here'
+    LABEL_SELECT_ALL = 'Select all'
+    LABEL_SELECT_FROM = 'Select from here'
+    LABEL_SELECT_TO = 'Select to here'
     
     LABEL_DISPLAY_TABLE_CONFIG = 'Display Table Configuration'
     
@@ -333,6 +334,7 @@ class Icon():
     RUNS_LIST = 'fa-bars.png'
     ACTION_NEW = 'fa-plus-circle.png'
     ACTION_EDIT = 'fa-pencil.png'
+    ACTION_SELECT_TO = 'fa-arrow-up.png'
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
@@ -372,11 +374,11 @@ class Icon():
     LIGHTBULB = 'fa-lightbulb-o.png'
     PLUS_CIRCLE = 'fa-plus-circle.png'
     LINK = 'fa-iconmoon-link.png'
-
+    ROOT = 'root.png'
+    ROCKET = 'fa-rocket.png'
 
 class Color():
-    RED_COLOR = 'Firebrick' # Red color for background label
-#    RED_COLOR = '#B22222'
+    RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
     LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
     LIGHT_BLUE_COLOR = '#EAEBFF' # Very light blue for even rows
     LIGHT_GREY_COLOR = '#EAEBEC' # Light grey for background color in form, protocol, table header and west container
@@ -407,3 +409,9 @@ class colorText:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
+class KEYSYM:
+    """ Keysym values for evaluating key pressed within events
+    as reported at http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/key-names.html
+    """
+    DELETE = 'Delete'
+    RETURN = 'Return'

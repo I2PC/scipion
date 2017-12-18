@@ -35,7 +35,7 @@ class XmippProtWriteTestC(ProtProcessParticles):
     using mpi write data to a large file (C++ level)
     """
     _label = None
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     
     def __init__(self, *args, **kwargs):

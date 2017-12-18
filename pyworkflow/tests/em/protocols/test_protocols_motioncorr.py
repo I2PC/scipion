@@ -25,10 +25,10 @@
 # *
 # **************************************************************************
 
-import unittest, sys
 from pyworkflow.em import ProtImportMovies
 from pyworkflow.tests import *
-from pyworkflow.em.packages.motioncorr import ProtMotionCorr, MOTIONCORR
+from pyworkflow.em.packages.motioncorr import ProtMotionCorr
+from pyworkflow.em.packages.motioncorr.convert import MOTIONCORR
 
 
 # Some utility functions to import movies that are used
@@ -41,7 +41,8 @@ class TestMotioncorrAlignMovies(BaseTest):
     @classmethod
     def runImportMovies(cls, pattern, **kwargs):
         """ Run an Import micrograph protocol. """
-        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        # We have two options: passe the SamplingRate or the
+        # ScannedPixelSize + microscope magnification
         params = {'samplingRate': 1.14,
                   'voltage': 300,
                   'sphericalAberration': 2.7,
@@ -95,7 +96,8 @@ class TestMotioncorrAlignMovies(BaseTest):
 
     def test_qbeta(self):
         prot = self.newProtocol(ProtMotionCorr,
-                                objLabel='qbeta - motioncorr test1')
+                                objLabel='qbeta - motioncorr test1',
+                                useMotioncor2=False,)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
@@ -108,6 +110,7 @@ class TestMotioncorrAlignMovies(BaseTest):
     def test_cct(self):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='cct - motioncorr test',
+                                useMotioncor2=False,
                                 doSaveMovie=True)
         prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
@@ -120,6 +123,7 @@ class TestMotioncorrAlignMovies(BaseTest):
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='qbeta - motioncorr test2',
+                                useMotioncor2=False,
                                 alignFrame0=3, alignFrameN=5,
                                 cropOffsetX=10, cropOffsetY=10)
         prot.inputMovies.set(self.protImport1.outputMovies)
@@ -128,7 +132,6 @@ class TestMotioncorrAlignMovies(BaseTest):
         self._checkMicrographs(prot)
 
         expected = ([0.0, 0.3646, 0.2604], [0.0, -0.1354, -0.3958])
-
 
         if "7.5" in MOTIONCORR:
             expected = ([0.0, 0.3333, 0.2292], [0.0, -0.2187, -0.4688])

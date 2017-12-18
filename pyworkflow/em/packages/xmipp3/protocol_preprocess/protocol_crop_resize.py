@@ -116,21 +116,16 @@ class XmippResizeHelper():
         isFirstStep = True
         
         if protocol.doResize:
-            isFirstStep = False
             args = protocol._resizeArgs()
-            protocol._insertFunctionStep("resizeStep", args)
+            if protocol.samplingRate>protocol.samplingRateOld:
+                protocol._insertFunctionStep("filterStep", isFirstStep, protocol._filterArgs())
+                isFirstStep = False
+            protocol._insertFunctionStep("resizeStep", isFirstStep, args)
+            isFirstStep = False
             
         if protocol.doWindow:
-            args = protocol._windowArgs(isFirstStep)
-            protocol._insertFunctionStep("windowStep", args)
+            protocol._insertFunctionStep("windowStep", isFirstStep, protocol._windowArgs())
     
-    #--------------------------- STEPS functions -------------------------------
-    def resizeStep(self, args):
-        self.runJob("xmipp_image_resize", args)
-    
-    def windowStep(self, args):
-        self.runJob("xmipp_transform_window", args, numberOfMpi=1)
-        
     #--------------------------- INFO functions --------------------------------
     @classmethod
     def _validate(cls, protocol):
@@ -145,16 +140,34 @@ class XmippResizeHelper():
                 
         return errors
     
+    #--------------------------- STEP functions --------------------------------
+    @classmethod
+    def filterStep(cls, protocol, args):
+        protocol.runJob("xmipp_transform_filter", args)
+    
+    @classmethod
+    def resizeStep(cls, protocol, args):
+        protocol.runJob("xmipp_image_resize", args)
+    
+    @classmethod
+    def windowStep(cls, protocol, args):
+        protocol.runJob("xmipp_transform_window", args, numberOfMpi=1)
+        
+
     #--------------------------- UTILS functions -------------------------------
+    @classmethod
+    def _filterCommonArgs(cls, protocol):
+        return "--fourier low_pass %f"%\
+            (protocol.samplingRateOld/(2*protocol.samplingRate))
+
     @classmethod
     def _resizeCommonArgs(cls, protocol):
         samplingRate = protocol._getSetSampling()
-        inputFn = protocol.inputFn
         
         if protocol.resizeOption == cls.RESIZE_SAMPLINGRATE:
             newSamplingRate = protocol.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
-            args = protocol._args + " --factor %(factor)f"
+            args = " --factor %(factor)f"
         elif protocol.resizeOption == cls.RESIZE_DIMENSIONS:
             size = protocol.resizeDim.get()
             dim = protocol._getSetSize()
@@ -162,20 +175,21 @@ class XmippResizeHelper():
             newSamplingRate = samplingRate / factor
             
             if protocol.doFourier:
-                args = protocol._args + " --fourier %(size)d"
+                args = " --fourier %(size)d"
             else:
-                args = protocol._args + " --dim %(size)d"
+                args = " --dim %(size)d"
         elif protocol.resizeOption == cls.RESIZE_FACTOR:
             factor = protocol.resizeFactor.get()
             newSamplingRate = samplingRate / factor
-            args = protocol._args + " --factor %(factor)f"
+            args = " --factor %(factor)f"
         elif protocol.resizeOption == cls.RESIZE_PYRAMID:
             level = protocol.resizeLevel.get()
             factor = 2**level
             newSamplingRate = samplingRate / factor
-            args = protocol._args + " --pyramid %(level)d"
+            args = " --pyramid %(level)d"
             
         protocol.samplingRate = newSamplingRate
+        protocol.samplingRateOld = samplingRate
         protocol.factor = factor
         
         return args % locals()
@@ -224,11 +238,14 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         XmippResizeHelper._insertProcessStep(self)
      
     #--------------------------- STEPS functions ---------------------------------------------------
-    def resizeStep(self, args):
-        self.runJob("xmipp_image_resize", args)
+    def filterStep(self, isFirstStep, args):
+        XmippResizeHelper.filterStep(self, self._ioArgs(isFirstStep)+args)
     
-    def windowStep(self, args):
-        self.runJob("xmipp_transform_window", args, numberOfMpi=1)
+    def resizeStep(self, isFirstStep, args):
+        XmippResizeHelper.resizeStep(self, self._ioArgs(isFirstStep)+args)
+    
+    def windowStep(self, isFirstStep, args):
+        XmippResizeHelper.windowStep(self, self._ioArgs(isFirstStep)+args)
         
     def _preprocessOutput(self, output):
         """ We need to update the sampling rate of the 
@@ -261,8 +278,8 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             sampling = _getSampling(self.outputParticles)
             size = _getSize(self.outputParticles)
             if self.doResize:
-                summary.append("Output particles have a different sampling "
-                               "rate (pixel size): *%0.3f* Å/px" % sampling)
+                summary.append(u"Output particles have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow:
@@ -274,6 +291,10 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         return summary
 
     def _methods(self):
+
+        if not hasattr(self, 'outputParticles'):
+            return []
+
         methods = ["We took input particles %s of size %d " % (self.getObjectTag('inputParticles'), len(self.inputParticles.get()))]
         if self.doWindow:
             if self.getEnumText('windowOperation') == "crop":
@@ -298,30 +319,30 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         return XmippResizeHelper._validate(self)
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _resizeArgs(self):
-        args = XmippResizeHelper._resizeCommonArgs(self)
-        args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
-        return args
-    
-    def _windowArgs(self, isFirstStep):
+    def _ioArgs(self, isFirstStep):
         if isFirstStep:
-            args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+            return "-i %s -o %s --save_metadata_stack %s --keep_input_columns " % (self.inputFn, self.outputStk, self.outputMd)
         else:
-            args = "-i %s" % self.outputStk
-        args += XmippResizeHelper._windowCommonArgs(self)
-        return args
+            return "-i %s " % self.outputStk
+
+    def _filterArgs(self):
+        return XmippResizeHelper._filterCommonArgs(self)
+
+    def _resizeArgs(self):
+        return XmippResizeHelper._resizeCommonArgs(self)
+    
+    def _windowArgs(self):
+        return XmippResizeHelper._windowCommonArgs(self)
     
     def _getSetSize(self):
         """ get the size of SetOfParticles object"""
         imgSet = self.inputParticles.get()
-        size = _getSize(imgSet)
-        return size
+        return _getSize(imgSet)
     
     def _getSetSampling(self):
         """ get the sampling rate of SetOfParticles object"""
         imgSet = self.inputParticles.get()
-        samplingRate = _getSampling(imgSet)
-        return samplingRate
+        return _getSampling(imgSet)
     
     def _getDefaultParallel(self):
         """ Return the default value for thread and MPI
@@ -347,11 +368,14 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         XmippResizeHelper._insertProcessStep(self)
         
     #--------------------------- STEPS functions ---------------------------------------------------
-    def resizeStep(self, args):
-        self.runJob("xmipp_image_resize", args)
+    def filterStep(self, isFirstStep, args):
+        XmippResizeHelper.filterStep(self, self._ioArgs(isFirstStep)+args)
     
-    def windowStep(self, args):
-        self.runJob("xmipp_transform_window", args, numberOfMpi=1)
+    def resizeStep(self, isFirstStep, args):
+        XmippResizeHelper.resizeStep(self, self._ioArgs(isFirstStep)+args)
+    
+    def windowStep(self, isFirstStep, args):
+        XmippResizeHelper.windowStep(self, self._ioArgs(isFirstStep)+args)
         
     def _preprocessOutput(self, volumes):
         # We use the preprocess only whne input is a set
@@ -377,8 +401,8 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             sampling = _getSampling(self.outputVol)
             size = _getSize(self.outputVol)
             if self.doResize:
-                summary.append("Output volume(s) have a different sampling "
-                               "rate (pixel size): *%0.3f* Å/px" % sampling)
+                summary.append(u"Output volume(s) have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow.get():
@@ -390,6 +414,9 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         return summary
 
     def _methods(self):
+        if not hasattr(self, 'outputVol'):
+            return []
+
         if self._isSingleInput():
             methods = ["We took one volume"]
             pronoun = "it"
@@ -419,24 +446,23 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         return XmippResizeHelper._validate(self)
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _resizeArgs(self):
-        args = XmippResizeHelper._resizeCommonArgs(self)
-        if self._isSingleInput():
-            args += " -o %s" % self.outputStk
-        else:
-            args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
-        return args
-    
-    def _windowArgs(self, isFirstStep):
+    def _ioArgs(self, isFirstStep):
         if isFirstStep:
             if self._isSingleInput():
-                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+                return "-i %s -o %s " % (self.inputFn, self.outputStk)
             else:
-                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+                return "-i %s -o %s --save_metadata_stack %s --keep_input_columns " % (self.inputFn, self.outputStk, self.outputMd)
         else:
-            args = "-i %s" % self.outputStk
-        args += XmippResizeHelper._windowCommonArgs(self)
-        return args
+            return "-i %s" % self.outputStk
+
+    def _filterArgs(self):
+        return XmippResizeHelper._filterCommonArgs(self)
+
+    def _resizeArgs(self):
+        return XmippResizeHelper._resizeCommonArgs(self)
+    
+    def _windowArgs(self):
+        return XmippResizeHelper._windowCommonArgs(self)
     
     def _getSetSize(self):
         """ get the size of either Volume or SetOfVolumes objects"""

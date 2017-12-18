@@ -28,13 +28,16 @@ import math
 from glob import glob
 import numpy
 
-from pyworkflow.em import *  
+from pyworkflow.em import *
+from pyworkflow.em.packages.atsas import CRYSOL
 from pyworkflow.utils import * 
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import atsas
 from pyworkflow.utils.path import createLink
 
 # TODO: Move to 3D Tools
+
+
 class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
     """ Protocol for converting a PDB file (true atoms or pseudoatoms) into a
     SAXS curve.
@@ -87,9 +90,9 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
             createLink(experimentalSAXS,'experimental_SAXS_curve.dat')
             experimentalSAXS='experimental_SAXS_curve.dat'
         createLink(inputStructure,'pseudoatoms.pdb')
-        self.runJob("crysol",
+        self.runJob(CRYSOL,
                     "pseudoatoms.pdb %s /lm %d /sm %f /ns %d %s"
-                    %(experimentalSAXS, self.numberOfHarmonics,
+                    % (experimentalSAXS, self.numberOfHarmonics,
                       self.maximumFrequency, self.numberOfSamples,
                       self.otherCrysol))
         self.runJob("mv","*log *txt extra")

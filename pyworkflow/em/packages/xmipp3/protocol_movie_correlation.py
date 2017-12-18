@@ -54,7 +54,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
     INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
 
     _label = 'correlation alignment'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------
 
@@ -115,8 +115,8 @@ class XmippProtMovieCorr(ProtAlignMovies):
         inputMd = os.path.join(movieFolder, 'input_movie.xmd')
         writeMovieMd(movie, inputMd, a0, aN, useAlignment=False)
 
-        args  = '-i %s ' % inputMd
-        args += '-o %s ' % self._getShiftsFile(movie)
+        args  = '-i "%s" ' % inputMd
+        args += '-o "%s" ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--max_freq %f ' % self.maxFreq
         args += '--Bspline %d ' % self.INTERP_MAP[self.splineOrder.get()]
@@ -157,10 +157,10 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
         if self.doSaveAveMic or self.doComputePSD:
             fnAvg = self._getExtraPath(self._getOutputMicName(movie))
-            args += ' --oavg %s' % fnAvg
+            args += ' --oavg "%s"' % fnAvg
 
         if self.doComputePSD:
-            fnInitial = os.path.join(movieFolder,"initialMic.mrc")
+            fnInitial = os.path.join(movieFolder, "initialMic.mrc")
             args  += ' --oavgInitial %s' % fnInitial
 
         if self.doSaveMovie:
@@ -175,13 +175,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
         self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
 
         if self.doComputePSD:
-            uncorrectedPSD = os.path.join(movieFolder,"uncorrected")
-            correctedPSD = os.path.join(movieFolder,"corrected")
-            self.computePSD(fnInitial, uncorrectedPSD)
-            self.computePSD(fnAvg, correctedPSD)
-            self.composePSD(uncorrectedPSD + ".psd",
-                            correctedPSD + ".psd",
-                            self._getPsdCorr(movie))
+            self.computePSDs(movie, fnInitial, fnAvg)
             # If the micrograph was only saved for computing the PSD
             # we can remove it
             pwutils.cleanPath(fnInitial)

@@ -67,41 +67,41 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [                  
-                CoordinatesTiltPair, 
-                Image, 
-                MicrographsTiltPair, 
-                ParticlesTiltPair, 
-                ProtExtractParticles, 
-                SetOfClasses2D, 
-                SetOfClasses3D, 
-                SetOfCoordinates, 
-                SetOfCTF, 
-                SetOfImages, 
-                SetOfMovies, 
-                SetOfNormalModes, 
-                XmippProtCompareReprojections, 
-                XmippParticlePickingAutomatic, 
-                XmippProtExtractParticlesPairs, 
-                XmippProtKerdensom, 
-                ProtParticlePicking, 
+    _targets = [
+                CoordinatesTiltPair,
+                Image,
+                MicrographsTiltPair,
+                ParticlesTiltPair,
+                SetOfClasses2D,
+                SetOfClasses3D,
+                SetOfCoordinates,
+                SetOfCTF,
+                SetOfImages,
+                SetOfMovies,
+                SetOfNormalModes,
+                XmippProtCompareReprojections,
+                XmippParticlePickingAutomatic,
+                XmippProtExtractParticles,
+                XmippProtExtractParticlesPairs,
+                XmippProtKerdensom,
+                ProtParticlePicking,
                 XmippProtParticlePickingPairs,
-                XmippProtRotSpectra, 
+                XmippProtRotSpectra,
                 XmippProtScreenParticles,
-                XmippProtCTFMicrographs, 
+                XmippProtCTFMicrographs,
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair,
                 XmippProtMultiRefAlignability
                 ]
-    
+
     def __init__(self, **kwargs):
         Viewer.__init__(self, **kwargs)
-        self._views = []   
+        self._views = []
 
     # FIXME: JMRT: I think this function is not necessary, we should remove it
     def visualize(self, obj, **kwargs):
         self._visualize(obj, **kwargs)
-        
+
         for v in self._views:
             v.show()
 
@@ -135,11 +135,11 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={RENDER: 'image',
                                                       SAMPLINGRATE: obj.getSamplingRate()}))
-                 
+
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
             self._views.append(ObjectView(self._project, obj.strId(), fn))
-            
+
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
             from nma.viewer_nma import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD
@@ -154,25 +154,25 @@ class XmippViewer(Viewer):
             # Enabled for the future has to be available
             labels = 'id _filename _samplingRate  '
             self._views.append(ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={ORDER: labels, 
-                                                      VISIBLE: labels, 
+                                          viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
                                                       MODE: MODE_MD, RENDER: "no"}))
 
-        elif issubclass(cls, SetOfMicrographs):            
+        elif issubclass(cls, SetOfMicrographs):
             self._views.append(MicrographsView(self._project, obj, **kwargs))
-            
+
         elif issubclass(cls, MicrographsTiltPair):
             labels = 'id enabled _untilted._filename _tilted._filename'
             self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
-                                          viewParams={ORDER: labels, 
-                                                      VISIBLE: labels, 
+                                          viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
                                                       MODE: MODE_MD,
                                                       RENDER: '_untilted._filename _tilted._filename'}))
-            
-        elif issubclass(cls, ParticlesTiltPair):          
+
+        elif issubclass(cls, ParticlesTiltPair):
             labels = 'id enabled _untilted._filename _tilted._filename'
             self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
-                                          viewParams={ORDER: labels, 
+                                          viewParams={ORDER: labels,
                                                       VISIBLE: labels,
                                                       RENDER:'_untilted._filename _tilted._filename',
                                                       MODE: MODE_MD}))
@@ -181,7 +181,7 @@ class XmippViewer(Viewer):
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
             if micSet is None:
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
-            
+
             mdFn = getattr(micSet, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
@@ -208,11 +208,11 @@ class XmippViewer(Viewer):
             labels = 'id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR _sampling '
             labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
             self._views.append(ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={ORDER: labels, 
-                                                      VISIBLE: labels, 
+                                          viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
                                                       'sortby': '_xmipp_zScore asc',
                                                       RENDER:'_filename'}))
-               
+
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
             labels = 'id enabled comment _filename '
@@ -225,7 +225,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
             self._views.append(ClassesView(self._project, obj.strId(), fn, **kwargs))
-            
+
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
             self._views.append(Classes3DView(self._project, obj.strId(), fn))
@@ -234,7 +234,7 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             self._views.append(
                 ObjectView(self._project, obj.strId(), fn, **kwargs))
-        
+
         if issubclass(cls, XmippProtCTFMicrographs):
             if obj.hasAttribute('outputCTF'):
                 ctfSet = obj.outputCTF
@@ -251,38 +251,40 @@ class XmippViewer(Viewer):
             self._views.append(CtfView(self._project, obj))
 
         elif issubclass(cls, CoordinatesTiltPair):
-            tmpDir = self._getTmpPath(obj.getName()) 
+            tmpDir = self._getTmpPath(obj.getName())
             makePath(tmpDir)
 
             mdFn = join(tmpDir, 'input_micrographs.xmd')
             writeSetOfMicrographsPairs(obj.getUntilted().getMicrographs(),
-                                        obj.getTilted().getMicrographs(), 
-                                        mdFn) 
+                                        obj.getTilted().getMicrographs(),
+                                        mdFn)
             parentProtId = obj.getObjParentId()
             parentProt = self.getProject().mapper.selectById(parentProtId)
             extraDir = parentProt._getExtraPath()
-            
+
  #           extraDir = parentProt._getExtraPath()
             #TODO: Review this if ever a non Xmipp CoordinatesTiltPair is available
-            writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
-            writeSetOfCoordinates(tmpDir, obj.getTilted()) 
+            writeSetOfCoordinates(tmpDir, obj.getUntilted())
+            writeSetOfCoordinates(tmpDir, obj.getTilted())
             launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
 
 
-        elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
+        elif (issubclass(cls, XmippProtExtractParticles) or
+              issubclass(cls, XmippProtScreenParticles)):
             particles = obj.outputParticles
             self._visualize(particles)
-            
+
             fn = obj._getPath('images.xmd')
-            md = xmipp.MetaData(fn) 
-            # If Zscore on output images plot Zscore particle sorting
-            if md.containsLabel(xmipp.MDL_ZSCORE):
-                from plotter import XmippPlotter
-                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-                self._views.append(xplotter)
-    
+            if os.path.exists(fn): # it doesnt unless cls is Xmipp
+                md = xmipp.MetaData(fn)
+                # If Zscore on output images plot Zscore particle sorting
+                if md.containsLabel(xmipp.MDL_ZSCORE):
+                    from plotter import XmippPlotter
+                    xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
+                    xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                    xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
+                    self._views.append(xplotter)
+
         elif issubclass(cls, XmippProtRotSpectra):
             self._visualize(obj.outputClasses,
                             viewParams={'columns': obj.SomXdim.get(),
@@ -291,26 +293,26 @@ class XmippViewer(Viewer):
                                         VISIBLE:  'enabled id _size average._filename spectraPlot._filename',
                                         'labels': 'id _size',
                                         SORT_BY: 'id'})
-        
+
         elif issubclass(cls, XmippProtKerdensom):
             self._visualize(obj.outputClasses,
                             viewParams={'columns': obj.SomXdim.get(),
                                        'render': 'average._filename _representative._filename',
                                        'labels': '_size',
                                        'sortby': 'id'})
-        
 
-        
+
+
         elif issubclass(cls, XmippProtCompareReprojections):
                 fn = obj.outputParticles.getFileName()
                 labels = 'id enabled _index _xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename _xmipp_cost _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _xmipp_continuousA _xmipp_continuousB _xmipp_continuousX _xmipp_continuousY'
                 labelRender = "_xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename"
                 self._views.append(ObjectView(self._project, obj.outputParticles.strId(), fn,
-                                              viewParams={ORDER: labels, 
-                                                      VISIBLE: labels, 
+                                              viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
                                                       SORT_BY: '_xmipp_cost asc', RENDER:labelRender,
                                                       MODE: MODE_MD}))
-            
+
         elif issubclass(cls, XmippParticlePickingAutomatic):
             micSet = obj.getInputMicrographs()
             mdFn = getattr(micSet, '_xmippMd', None)
@@ -321,45 +323,45 @@ class XmippViewer(Viewer):
                 micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, micsfn)
                 inTmpFolder = True
-                
-            posDir = obj._getExtraPath()  
-            memory = '%dg'%obj.memory.get(), 
+
+            posDir = obj._getExtraPath()
+            memory = '%dg'%obj.memory.get(),
             launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory, inTmpFolder=inTmpFolder)
 
          # We need this case to happens before the ProtParticlePicking one
         elif issubclass(cls, XmippProtAssignmentTiltPair):
             if obj.getOutputsSize() >= 1:
                 coordsSet = obj.getCoordsTiltPair()
-                self._visualize(coordsSet)  
-                
+                self._visualize(coordsSet)
+
         elif issubclass(cls, ProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 coordsSet = obj.getCoords()
                 self._visualize(coordsSet)
-            
+
         elif issubclass(cls, XmippProtValidateNonTilt):
             outputVols = obj.outputVolumes
             labels = 'id enabled comment _filename weight'
             self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(),
                                           viewParams={MODE: MODE_MD, VISIBLE:labels, ORDER: labels,
                                                       SORT_BY: 'weight desc', RENDER: '_filename'}))
-        
+
         elif issubclass(cls, XmippProtMultiRefAlignability):
             outputVols = obj.outputVolumes
             labels = 'id enabled comment _filename weightAlignabilityPrecision weightAlignabilityAccuracy'
             self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(),
                                           viewParams={MODE: MODE_MD, VISIBLE:labels, ORDER: labels,
                                                       SORT_BY: 'weightAlignabilityAccuracy desc', RENDER: '_filename'}))
-            
+
             fn = obj.outputParticles.getFileName()
             labels = 'id enabled _index _filename _xmipp_scoreAlignabilityAccuracy _xmipp_scoreAlignabilityPrecision'
             labelRender = "_filename"
             self._views.append(ObjectView(self._project, obj.outputParticles.strId(), fn,
-                                            viewParams={ORDER: labels, 
-                                                      VISIBLE: labels, 
+                                            viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
                                                       SORT_BY: '_xmipp_scoreAlignabilityAccuracy desc', RENDER:labelRender,
                                                       MODE: MODE_MD}))
-            
+
             fn = obj._getExtraPath('vol001_pruned_particles_alignability.xmd')
             md = xmipp.MetaData(fn)
             from plotter import XmippPlotter
@@ -375,7 +377,7 @@ class XmippViewer(Viewer):
             self._visualize(obj.outputParticlesTiltPair)
 
         return self._views
-    
-    
 
-        
+
+
+

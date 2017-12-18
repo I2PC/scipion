@@ -42,7 +42,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     Protocol to average movies
     """
     _label = 'movie average'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
 

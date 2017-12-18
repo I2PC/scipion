@@ -47,7 +47,7 @@ class ProtRelionSortParticles(ProtParticles):
 
     """
     _label = 'sort particles'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -84,6 +84,7 @@ class ProtRelionSortParticles(ProtParticles):
                            'spherical mask of the reference structures if no '
                            'user-provided mask is specified.')
         form.addParam('doLowPass', IntParam, default=-1,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Low pass filter references to (A):',
                       help='Lowpass filter in Angstroms for the references '
                            '(prevent Einstein-from-noise!)')
@@ -257,9 +258,9 @@ class ProtRelionSortParticles(ProtParticles):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            summary.append("Input %s particles: %s were sorted by Z-score" %
+            summary.append("Input %s particles were sorted by Z-score: %s" %
                            (self.inputSet.get().getSize(),
-                            self.inputSet.get().getNameId()))
+                            self.getObjectTag('outputParticles')))
         return summary
     
     #--------------------------- UTILS functions -------------------------------
@@ -292,7 +293,7 @@ class ProtRelionSortParticles(ProtParticles):
             return self.inputSet.get()
 
     def _setArgs(self, args):
-        from pyworkflow.em.packages.relion.convert import getVersion
+        from pyworkflow.em.packages.relion.convert import isVersion2
         particles = self._sampleParticles()
 
         if self.maskDiameterA <= 0:
@@ -306,7 +307,7 @@ class ProtRelionSortParticles(ProtParticles):
                      '--min_z': self.minZ.get()
                      })
         
-        if getVersion() == "2.0":
+        if isVersion2():
             args['--o'] = self._getFileName('output_star')
         else:
             args['--o'] = 'sorted'
@@ -334,8 +335,15 @@ class ProtRelionSortParticles(ProtParticles):
 
     def _postProcessImageRow(self, img, imgRow):
         if self.classDict:
-            classId = img.getClassId() or imgRow.getValue(md.RLN_PARTICLE_CLASS)
-            newClassId = self.classDict[classId]
+            classId = img.getClassId()
+
+            if classId is not None:
+                if not classId in self.classDict:
+                    raise Exception("Class Id %s from particle %s is not found"
+                                    % (classId, img.getObjId()))
+                newClassId = self.classDict[classId]
+            else:
+                newClassId = imgRow.getValue(md.RLN_PARTICLE_CLASS)
         else:
             newClassId = 1
 

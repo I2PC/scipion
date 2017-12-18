@@ -53,6 +53,9 @@ class SpiderProtFilter(ProtFilterParticles, SpiderProtocol):
     def __init__(self, **kwargs):
         ProtFilterParticles.__init__(self, **kwargs)
         SpiderProtocol.__init__(self, **kwargs)
+        # To avoid showing MPI box due to duplicated init
+        self.allowMpi = False
+
         self._op = "FQ"
         self._params = {'ext': 'stk', 
                         'particles': 'particles_filtered',

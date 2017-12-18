@@ -49,7 +49,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
     """
 
     _label = 'solid angles'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
@@ -158,7 +158,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
             newTs = max(Ts, newTs)
             newXdim = Xdim * Ts / newTs
             self.runJob("xmipp_image_resize",
-                        "-i %s -o %s --save_metadata_stack %s --dim %d" %
+                        "-i %s -o %s --save_metadata_stack %s --fourier %d" %
                         (self._getExpParticlesFn(),
                          self._getTmpPath('scaled_particles.stk'),
                          self._getTmpPath('scaled_particles.xmd'),
@@ -218,7 +218,10 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         args += "--ref0 %s --iter 1 --nref %d " % (projRef, Nclasses)
         args += "--distance correlation --classicalMultiref "
         args += "--maxShift %f " % self.maxShift
-        self.runJob("xmipp_classify_CL2D", args)
+	try:
+            self.runJob("xmipp_classify_CL2D", args)
+	except:
+	    return 
 
         # After CL2D the stk and xmd files should be produced
         classesXmd = join(fnDir, "level_%02d/class_classes.xmd" % Nlevels)

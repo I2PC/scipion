@@ -44,12 +44,16 @@ _bibtexStr = """
   doi = "http://dx.doi.org/10.1038/nmeth.2727"
 }
 
-@article{Zheng2016,
-  title="Anisotropic Correction of Beam-induced Motion for Improved Single-particle Electron Cryo-microscopy",
-  author="Zheng, Shawn and Palovcak, Eugene and Armache, Jean-Paule and Cheng, Yifan and Agard, David",
-  year="2016",
-  journal="submitted",
-  doi = "http://dx.doi.org/10.1101/061960"
+@article{Zheng2017,
+  title="MotionCor2: anisotropic correction of beam-induced motion for improved cryo-electron microscopy",
+  author="Zheng, Shawn and Palovcak, Eugene and Armache, Jean-Paule and Verba, Kliment and Cheng, Yifan and Agard, David",
+  journal="Nature methods",
+  volume="14",
+  number="4",
+  pages="331-332",
+  year="2017",
+  publisher="Nature Publishing Group",
+  doi = "http://dx.doi.org/10.1038/nmeth.4193"
 }
 
 """

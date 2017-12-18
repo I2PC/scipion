@@ -19,7 +19,7 @@ public class Particle implements Comparable<Particle> {
 	{
 		this.x = x;
 		this.y = y;
-                this.cost = cost;
+		this.cost = cost;
 	}
 	
 	
@@ -61,9 +61,6 @@ public class Particle implements Comparable<Particle> {
 				return false;
 			return true;
 	}
-
-	
-	
 
 	public void setPosition(int x, int y) {
 		this.x = x;

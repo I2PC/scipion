@@ -40,7 +40,7 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
     """
     
     _label = 'apply transformation matrix'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------------------
     
     def _defineParams(self, form):

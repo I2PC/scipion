@@ -48,7 +48,7 @@ class ProtPDFReport(EMProtocol):
     when these files are sorted, they will be sorted by the number in front.
     """    
     _label = 'pdf report'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------
     
     def _defineParams(self, form):

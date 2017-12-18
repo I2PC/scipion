@@ -21,7 +21,7 @@ fr l
 ; --------- END BATCH HEADER ----------
 
 vm
-echo "if(! -d [class_dir]) mkdir [class_dir]"|csh
+echo "[ ! -d [class_dir] ] && mkdir [class_dir]"|sh
 
 ; clean up
 

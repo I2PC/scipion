@@ -371,7 +371,14 @@ enum MDLabel
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP, ///< score by alignability experimental particles (double)
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, ///< score by alignability references (double)
     MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
+    MDL_SCORE_BY_ENTROPY,  ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_GRANULO,  ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_LBP,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_MIRROR, ///< score by mirror (double)
+    MDL_SCORE_BY_RAMP,  ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_SCREENING, ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_VARIANCE,  ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_ZERNIKE,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
@@ -518,6 +525,7 @@ enum MDLabel
     RLN_MICROGRAPH_ID,
     RLN_MICROGRAPH_MOVIE_NAME,
     RLN_MICROGRAPH_NAME,
+    RLN_MICROGRAPH_NAME_WODOSE,
     RLN_MICROGRAPH_TILT_ANGLE,
     RLN_MICROGRAPH_TILT_AXIS_DIRECTION,
     RLN_MICROGRAPH_TILT_AXIS_OUTOFPLANE,
@@ -531,6 +539,9 @@ enum MDLabel
     RLN_MLMODEL_DIMENSIONALITY,
     RLN_MLMODEL_DIMENSIONALITY_DATA,
     RLN_MLMODEL_DIFF2_HALVES_REF,
+    RLN_MLMODEL_ESTIM_RESOL_REF,
+    RLN_MLMODEL_FOURIER_COVERAGE_REF,
+    RLN_MLMODEL_FOURIER_COVERAGE_TOTAL_REF,
     RLN_MLMODEL_FSC_HALVES_REF,
     RLN_MLMODEL_GROUP_NAME,
     RLN_MLMODEL_GROUP_NO,
@@ -563,6 +574,7 @@ enum MDLabel
     RLN_MLMODEL_PIXEL_SIZE,
     RLN_MLMODEL_POWER_REF,
     RLN_MLMODEL_PRIOR_MODE,
+    RLN_MLMODEL_SGD_GRADIENT_IMAGE,
     RLN_MLMODEL_SIGMA_OFFSET,
     RLN_MLMODEL_SIGMA_ROT,
     RLN_MLMODEL_SIGMA_TILT,
@@ -597,6 +609,7 @@ enum MDLabel
     RLN_OPTIMISER_DO_HELICAL_REFINE,
     RLN_OPTIMISER_DO_REALIGN_MOVIES,
     RLN_OPTIMISER_DO_MAP,
+    RLN_OPTIMISER_DO_SGD,
     RLN_OPTIMISER_DO_SOLVENT_FLATTEN,
     RLN_OPTIMISER_DO_SKIP_ALIGN,
     RLN_OPTIMISER_DO_SKIP_ROTATE,
@@ -615,10 +628,14 @@ enum MDLabel
     RLN_OPTIMISER_HELICAL_TUBE_OUTER_DIAMETER,
     RLN_OPTIMISER_HELICAL_SYMMETRY_LOCAL_REFINEMENT,
     RLN_OPTIMISER_HELICAL_SIGMA_DISTANCE,
+    RLN_OPTIMISER_HIGHRES_LIMIT_SGD,
+    RLN_OPTIMISER_IGNORE_HELICAL_SYMMETRY,
+    RLN_OPTIMISER_HELICAL_KEEP_TILT_PRIOR_FIXED,
     RLN_OPTIMISER_HIGHRES_LIMIT_EXP,
     RLN_OPTIMISER_IGNORE_CTF_UNTIL_FIRST_PEAK,
     RLN_OPTIMISER_INCR_SIZE,
     RLN_OPTIMISER_ITERATION_NO,
+    RLN_OPTIMISER_LOCAL_SYMMETRY_FILENAME,
     RLN_OPTIMISER_LOWRES_JOIN_RANDOM_HALVES,
     RLN_OPTIMISER_MAGNIFICATION_RANGE,
     RLN_OPTIMISER_MAGNIFICATION_STEP,
@@ -636,6 +653,14 @@ enum MDLabel
     RLN_OPTIMISER_RANDOM_SEED,
     RLN_OPTIMISER_REFS_ARE_CTF_CORRECTED,
     RLN_OPTIMISER_SAMPLING_STARFILE,
+    RLN_OPTIMISER_SGD_MU,
+    RLN_OPTIMISER_SGD_SIGMA2FUDGE_INI,
+    RLN_OPTIMISER_SGD_SIGMA2FUDGE_HALFLIFE,
+    RLN_OPTIMISER_SGD_SUBSET_START,
+    RLN_OPTIMISER_SGD_SUBSET_SIZE,
+    RLN_OPTIMISER_SGD_WRITE_EVERY_SUBSET,
+    RLN_OPTIMISER_SGD_MAX_SUBSETS,
+    RLN_OPTIMISER_SGD_STEPSIZE,
     RLN_OPTIMISER_SMALLEST_CHANGES_OPT_CLASSES,
     RLN_OPTIMISER_SMALLEST_CHANGES_OPT_OFFSETS,
     RLN_OPTIMISER_SMALLEST_CHANGES_OPT_ORIENTS,
@@ -698,6 +723,7 @@ enum MDLabel
     RLN_POSTPROCESS_DPR_MASKED,
     RLN_POSTPROCESS_DPR_UNMASKED,
     RLN_POSTPROCESS_FINAL_RESOLUTION,
+    RLN_POSTPROCESS_FSC_GENERAL,
     RLN_POSTPROCESS_FSC_TRUE,
     RLN_POSTPROCESS_FSC_MASKED,
     RLN_POSTPROCESS_FSC_UNMASKED,
@@ -1790,8 +1816,15 @@ private:
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, LABEL_DOUBLE, "scoreByAlignabilityAccuracyRef");
 
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
+        MDL::addLabel(MDL_SCORE_BY_ENTROPY, LABEL_VECTOR_DOUBLE, "entropyFeatures");
+        MDL::addLabel(MDL_SCORE_BY_GRANULO, LABEL_VECTOR_DOUBLE, "granuloFeatures");
+        MDL::addLabel(MDL_SCORE_BY_LBP, LABEL_VECTOR_DOUBLE, "lbpFeatures");
         MDL::addLabel(MDL_SCORE_BY_MIRROR, LABEL_DOUBLE, "scoreByMirror");
-        MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
+        MDL::addLabel(MDL_SCORE_BY_RAMP, LABEL_VECTOR_DOUBLE, "rampCoefficients");
+        MDL::addLabel(MDL_SCORE_BY_SCREENING, LABEL_VECTOR_DOUBLE, "screenFeatures");
+        MDL::addLabel(MDL_SCORE_BY_VARIANCE, LABEL_VECTOR_DOUBLE, "varianceFeatures");
+        MDL::addLabel(MDL_SCORE_BY_ZERNIKE, LABEL_VECTOR_DOUBLE, "zernikeMoments");
+		MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 
         MDL::addLabelAlias(MDL_SCALE, "Scale");
         MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
@@ -1965,6 +1998,7 @@ private:
         MDL::addLabel(RLN_MICROGRAPH_ID, LABEL_SIZET, "rlnMicrographId");
         MDL::addLabel(RLN_MICROGRAPH_MOVIE_NAME, LABEL_STRING, "rlnMicrographMovieName", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_MICROGRAPH_NAME, LABEL_STRING, "rlnMicrographName", TAGLABEL_IMAGE);
+        MDL::addLabel(RLN_MICROGRAPH_NAME_WODOSE, LABEL_STRING, "rlnMicrographNameNoDW", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_MICROGRAPH_TILT_ANGLE, LABEL_DOUBLE, "rlnMicrographTiltAngle");
         MDL::addLabel(RLN_MICROGRAPH_TILT_AXIS_DIRECTION, LABEL_DOUBLE, "rlnMicrographTiltAxisDirection");
         MDL::addLabel(RLN_MICROGRAPH_TILT_AXIS_OUTOFPLANE, LABEL_DOUBLE, "rlnMicrographTiltAxisOutOfPlane");
@@ -1978,6 +2012,9 @@ private:
         MDL::addLabel(RLN_MLMODEL_DIMENSIONALITY, LABEL_INT, "rlnReferenceDimensionality");
         MDL::addLabel(RLN_MLMODEL_DIMENSIONALITY_DATA, LABEL_INT, "rlnDataDimensionality");
         MDL::addLabel(RLN_MLMODEL_DIFF2_HALVES_REF, LABEL_DOUBLE, "rlnDiff2RandomHalves");
+        MDL::addLabel(RLN_MLMODEL_ESTIM_RESOL_REF, LABEL_DOUBLE, "rlnEstimatedResolution");
+        MDL::addLabel(RLN_MLMODEL_FOURIER_COVERAGE_REF, LABEL_DOUBLE, "rlnFourierCompleteness");
+        MDL::addLabel(RLN_MLMODEL_FOURIER_COVERAGE_TOTAL_REF, LABEL_DOUBLE, "rlnOverallFourierCompleteness");
         MDL::addLabel(RLN_MLMODEL_FSC_HALVES_REF, LABEL_DOUBLE, "rlnGoldStandardFsc");
         MDL::addLabel(RLN_MLMODEL_GROUP_NAME, LABEL_STRING, "rlnGroupName");
         MDL::addLabel(RLN_MLMODEL_GROUP_NO, LABEL_SIZET, "rlnGroupNumber");
@@ -2011,6 +2048,7 @@ private:
         MDL::addLabel(RLN_MLMODEL_POWER_REF, LABEL_DOUBLE, "rlnReferenceSpectralPower");
         MDL::addLabel(RLN_MLMODEL_PRIOR_MODE, LABEL_INT, "rlnOrientationalPriorMode");
         MDL::addLabel(RLN_MLMODEL_REF_IMAGE, LABEL_STRING, "rlnReferenceImage", TAGLABEL_IMAGE);
+        MDL::addLabel(RLN_MLMODEL_SGD_GRADIENT_IMAGE, LABEL_STRING, "rlnSGDGradientImage");
         MDL::addLabel(RLN_MLMODEL_SIGMA_OFFSET, LABEL_DOUBLE, "rlnSigmaOffsets");
         MDL::addLabel(RLN_MLMODEL_SIGMA2_NOISE, LABEL_DOUBLE, "rlnSigma2Noise");
         MDL::addLabel(RLN_MLMODEL_SIGMA2_REF, LABEL_DOUBLE, "rlnReferenceSigma2");
@@ -2044,6 +2082,7 @@ private:
         MDL::addLabel(RLN_OPTIMISER_DO_MAP, LABEL_BOOL, "rlnDoMapEstimation");
         MDL::addLabel(RLN_OPTIMISER_DO_ONLY_FLIP_CTF_PHASES, LABEL_BOOL, "rlnDoOnlyFlipCtfPhases");
         MDL::addLabel(RLN_OPTIMISER_DO_REALIGN_MOVIES, LABEL_BOOL, "rlnDoRealignMovies");
+        MDL::addLabel(RLN_OPTIMISER_DO_SGD, LABEL_BOOL, "rlnDoStochasticGradientDescent");
         MDL::addLabel(RLN_OPTIMISER_DO_SOLVENT_FLATTEN, LABEL_BOOL, "rlnDoSolventFlattening");
         MDL::addLabel(RLN_OPTIMISER_DO_SKIP_ALIGN, LABEL_BOOL, "rlnDoSkipAlign");
         MDL::addLabel(RLN_OPTIMISER_DO_SKIP_ROTATE, LABEL_BOOL, "rlnDoSkipRotate");
@@ -2062,10 +2101,14 @@ private:
         MDL::addLabel(RLN_OPTIMISER_HELICAL_TUBE_OUTER_DIAMETER, LABEL_DOUBLE, "rlnHelicalMaskTubeOuterDiameter");
         MDL::addLabel(RLN_OPTIMISER_HELICAL_SYMMETRY_LOCAL_REFINEMENT, LABEL_BOOL, "rlnHelicalSymmetryLocalRefinement");
         MDL::addLabel(RLN_OPTIMISER_HELICAL_SIGMA_DISTANCE, LABEL_DOUBLE, "rlnHelicalSigmaDistance");
+        MDL::addLabel(RLN_OPTIMISER_IGNORE_HELICAL_SYMMETRY, LABEL_BOOL, "rlnIgnoreHelicalSymmetry");
+        MDL::addLabel(RLN_OPTIMISER_HELICAL_KEEP_TILT_PRIOR_FIXED, LABEL_BOOL, "rlnHelicalKeepTiltPriorFixed");
         MDL::addLabel(RLN_OPTIMISER_HIGHRES_LIMIT_EXP, LABEL_DOUBLE, "rlnHighresLimitExpectation");
+        MDL::addLabel(RLN_OPTIMISER_HIGHRES_LIMIT_SGD, LABEL_DOUBLE, "rlnHighresLimitSGD");
         MDL::addLabel(RLN_OPTIMISER_IGNORE_CTF_UNTIL_FIRST_PEAK, LABEL_BOOL, "rlnDoIgnoreCtfUntilFirstPeak");
         MDL::addLabel(RLN_OPTIMISER_INCR_SIZE, LABEL_INT, "rlnIncrementImageSize");
         MDL::addLabel(RLN_OPTIMISER_ITERATION_NO, LABEL_INT, "rlnCurrentIteration");
+        MDL::addLabel(RLN_OPTIMISER_LOCAL_SYMMETRY_FILENAME, LABEL_STRING, "rlnLocalSymmetryFile");
         MDL::addLabel(RLN_OPTIMISER_LOWRES_JOIN_RANDOM_HALVES, LABEL_DOUBLE, "rlnJoinHalvesUntilThisResolution");
         MDL::addLabel(RLN_OPTIMISER_MAGNIFICATION_RANGE, LABEL_DOUBLE, "rlnMagnificationSearchRange");
         MDL::addLabel(RLN_OPTIMISER_MAGNIFICATION_STEP, LABEL_DOUBLE, "rlnMagnificationSearchStep");
@@ -2082,6 +2125,16 @@ private:
         MDL::addLabel(RLN_OPTIMISER_RADIUS_MASK_EXP_PARTICLES, LABEL_INT, "rlnRadiusMaskExpImages");
         MDL::addLabel(RLN_OPTIMISER_RANDOM_SEED, LABEL_INT, "rlnRandomSeed");
         MDL::addLabel(RLN_OPTIMISER_REFS_ARE_CTF_CORRECTED, LABEL_BOOL, "rlnRefsAreCtfCorrected");
+        MDL::addLabel(RLN_OPTIMISER_SGD_MU, LABEL_DOUBLE, "rlnSgdMuFactor");
+        MDL::addLabel(RLN_OPTIMISER_SGD_SIGMA2FUDGE_INI, LABEL_DOUBLE, "rlnSgdSigma2FudgeInitial");
+        MDL::addLabel(RLN_OPTIMISER_SGD_SIGMA2FUDGE_HALFLIFE, LABEL_SIZET, "rlnSgdSigma2FudgeHalflife");
+        MDL::addLabel(RLN_OPTIMISER_SGD_SUBSET_START, LABEL_INT, "rlnSgdNextSubset");
+        MDL::addLabel(RLN_OPTIMISER_SGD_SUBSET_SIZE, LABEL_SIZET, "rlnSgdSubsetSize");
+        MDL::addLabel(RLN_OPTIMISER_SGD_WRITE_EVERY_SUBSET, LABEL_INT, "rlnSgdWriteEverySubset");
+        MDL::addLabel(RLN_OPTIMISER_SGD_MAX_SUBSETS, LABEL_SIZET, "rlnSgdMaxSubsets");
+        MDL::addLabel(RLN_OPTIMISER_SGD_STEPSIZE, LABEL_DOUBLE, "rlnSgdStepsize");
+
+
         MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_CLASSES, LABEL_INT, "rlnSmallestChangesClasses");
         MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_OFFSETS, LABEL_DOUBLE, "rlnSmallestChangesOffsets");
         MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_ORIENTS, LABEL_DOUBLE, "rlnSmallestChangesOrientations");
@@ -2143,6 +2196,7 @@ private:
         MDL::addLabel(RLN_POSTPROCESS_DPR_MASKED, LABEL_DOUBLE, "rlnDifferentialPhaseResidualMaskedMaps");
         MDL::addLabel(RLN_POSTPROCESS_DPR_UNMASKED,  LABEL_DOUBLE, "rlnDifferentialPhaseResidualUnmaskedMaps");
         MDL::addLabel(RLN_POSTPROCESS_FINAL_RESOLUTION, LABEL_DOUBLE, "rlnFinalResolution");
+        MDL::addLabel(RLN_POSTPROCESS_FSC_GENERAL, LABEL_DOUBLE, "rlnFourierShellCorrelation");
         MDL::addLabel(RLN_POSTPROCESS_FSC_TRUE, LABEL_DOUBLE, "rlnFourierShellCorrelationCorrected");
         MDL::addLabel(RLN_POSTPROCESS_FSC_MASKED, LABEL_DOUBLE, "rlnFourierShellCorrelationMaskedMaps");
         MDL::addLabel(RLN_POSTPROCESS_FSC_UNMASKED, LABEL_DOUBLE, "rlnFourierShellCorrelationUnmaskedMaps");

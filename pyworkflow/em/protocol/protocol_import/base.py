@@ -75,17 +75,26 @@ class ProtImportFiles(ProtImport):
                       label="Files directory",
                       help="Directory with the files you want to import.\n\n"
                            "The path can also contain wildcards to select\n"
-                           "from several folders.\n\n"
-                           "For example:\n"
-                           "  ~/Particles/\n"
-                           "  data/day??_micrographs/")
+                           "from several folders. \n\n"
+                           "Examples:\n"
+                           "  ~/Particles/data/day??_micrographs/\n"
+                           "Each '?' represents one unknown character\n\n"
+                           "  ~/Particles/data/day*_micrographs/\n"
+                           "'*' represents any number of unknown characters\n\n"
+                           "  ~/Particles/data/day#_micrographs/\n"
+                           "'#' represents one digit that will be used as micrograph ID\n\n"
+                           "NOTE: wildcard characters ('*', '?', '#') "
+                           "cannot appear in the actual path.")
         form.addParam('filesPattern', params.StringParam,
                       label='Pattern', 
                       condition=filesCondition,
                       help="Pattern of the files to be imported.\n\n"
                            "The pattern can contain standard wildcards such as\n"
                            "*, ?, etc, or special ones like ### to mark some\n"
-                           "digits in the filename as ID.")
+                           "digits in the filename as ID.\n\n"
+                           "NOTE: wildcards and special characters ('*', '?', '#', ':', '%') "
+                           "cannot appear in the actual path."
+                      )
 
         form.addParam('copyFiles', params.BooleanParam, default=False, 
                       expertLevel=params.LEVEL_ADVANCED, 
@@ -110,26 +119,23 @@ class ProtImportFiles(ProtImport):
                    "In this case the protocol will keep running to check \n"
                    "new files and will update the output Set, which can \n"
                    "be used right away by next steps.\n")
-        
+
         form.addParam('timeout', params.IntParam, default=7200,
               condition='dataStreaming',
               label="Timeout (secs)",
               help="Interval of time (in seconds) after which, if no new \n"
-                   "file is detected, the protocol will ends.\n"
+                   "file is detected, the protocol will end.\n"
                    "When finished, the output Set will be closed and\n"
-                   "not more data will be added to it. \n")
+                   "no more data will be added to it. \n"
+                   "Note: If you're using individual frames when importing\n"
+                   "movies, the timeout won't be refreshed until a whole \n"
+                   "movie is stacked. \n")
 
         form.addParam('fileTimeout', params.IntParam, default=30,
               condition='dataStreaming',
               label="File timeout (secs)",
               help="Interval of time (in seconds) after which, if a file \n"
-                   "have not changed, we consider as a new file. \n")
-        
-        form.addParam('endTokenFile', params.StringParam, default=None,
-              condition='dataStreaming',
-              label="End token file",
-              help="Specify an ending file if you want to have more control\n"
-                   "about when to stop the import of files.")
+                   "has not changed, we consider it as a new file. \n")
 
     def _defineImportParams(self, form):
         """ Override to add options related to the different types
@@ -189,14 +195,17 @@ class ProtImportFiles(ProtImport):
         else:
             fullPattern = filesPath
 
-
         pattern = expandPattern(fullPattern.replace("$", ""))
         match = re.match('[^#]*(#+)[^#]*', pattern)
         
         if match is not None:
             g = match.group(1)
             n = len(g)
-            self._idRegex = re.compile(pattern.replace(g, '(%s)' % ('\d'*n)))
+            # prepare regex pattern - place ids, handle *, handle ?
+            idregex = pattern.replace(g, '(%s)' % ('[0-9]'*n))
+            idregex = idregex.replace('*','.*')
+            idregex = idregex.replace('?', '.')
+            self._idRegex = re.compile(idregex)
             pattern = pattern.replace(g, '[0-9]'*n)
         
         return pattern   
@@ -207,6 +216,7 @@ class ProtImportFiles(ProtImport):
         """
         if pattern is None:
             pattern = self.getPattern()
+
         filePaths = glob(pattern)
         filePaths.sort()
         self.numberOfFiles = len(filePaths)
@@ -249,7 +259,9 @@ class ProtImportFiles(ProtImport):
                 if match is None:
                     raise Exception("File '%s' doesn't match the pattern '%s'"
                                     % (fileName, self.getPattern()))
+
                 fileId = int(match.group(1))
+
             else:
                 fileId = None
                 

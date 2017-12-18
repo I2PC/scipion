@@ -187,6 +187,15 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         self.runJob("xmipp_reconstruct_fourier", reconsArgs)
         t.toc('Reconstruct fourier took: ')
         
+        # Center the volume
+        fnSym = self._getExtraPath('volumeSym_%03d.vol' % iterNumber)
+        self.runJob("xmipp_transform_mirror", "-i %s -o %s --flipX"%(volFn,fnSym),numberOfMpi=1)
+        self.runJob("xmipp_transform_mirror", "-i %s --flipY"%fnSym,numberOfMpi=1)
+        self.runJob("xmipp_transform_mirror", "-i %s --flipZ"%fnSym,numberOfMpi=1)
+        self.runJob("xmipp_image_operate", "-i %s --plus %s"%(fnSym,volFn),numberOfMpi=1)
+        self.runJob("xmipp_volume_align",'--i1 %s --i2 %s --local --apply'%(fnSym,volFn),numberOfMpi=1)
+        cleanPath(fnSym)
+        
         xdim = self.inputSet.get().getDimensions()[0]
         maskArgs = "-i %s --mask circular %d -v 0" % (volFn, -xdim/2)
         self.runJob('xmipp_transform_mask', maskArgs, numberOfMpi=1)
@@ -273,11 +282,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 retval += " IMED weighting was used."
             if self.strictDir:
                 retval += " The strict direction criterion was employed." 
-        
-        if self.getNumberOfVolumes() > 1:
-            if self.hasAttribute('outputVolumes'):
-                retval += " The set of reconstructed volumes was %s." % self.getObjectTag('outputVolumes')
-        else:
+
             if self.hasAttribute('outputVolume'):
                 retval+=" The reconstructed volume was %s." % self.getObjectTag('outputVolume')
         return [retval]

@@ -150,6 +150,80 @@ class TestOFAlignment(TestXmippBase):
                              "SetOfMovies has not been created.")
 
 
+class TestOFAlignment2(TestXmippBase):
+    """This class check if the optical flow protocol in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsMovies = DataSet.getDataSet('movies')
+
+    def getArgs(self, filesPath, pattern=''):
+        return {'importFrom': ProtImportMovies.IMPORT_FROM_FILES,
+                'filesPath': self.dsMovies.getFile(filesPath),
+                'filesPattern': pattern,
+                'amplitudConstrast': 0.1,
+                'sphericalAberration': 2.,
+                'voltage': 300,
+                'samplingRate': 3.54,
+                'dosePerFrame' : 2.0,
+                }
+
+    def _checkOutput(self, prot, args, moviesId=[], size=None, dim=None):
+        movies = getattr(prot, 'outputMovies', None)
+        self.assertIsNotNone(movies)
+        self.assertEqual(movies.getSize(), size)
+
+        for i, m in enumerate(movies):
+            if moviesId:
+                self.assertEqual(m.getObjId(), moviesId[i])
+            self.assertAlmostEqual(m.getSamplingRate(),
+                                   args['samplingRate'])
+            a = m.getAcquisition()
+            self.assertAlmostEqual(a.getVoltage(), args['voltage'])
+
+            if dim is not None: # Check if dimensions are the expected ones
+                x, y, n = m.getDim()
+                self.assertEqual(dim, (x, y, n))
+
+    def _importMovies(self):
+        args = self.getArgs('ribo/', pattern='*movie.mrcs')
+
+        # Id's should be set increasing from 1 if ### is not in the pattern
+        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        protMovieImport.setObjLabel('from files')
+        self.launchProtocol(protMovieImport)
+
+        self._checkOutput(protMovieImport, args, [1, 2, 3], size=3,
+                          dim=(1950, 1950, 16))
+        return protMovieImport
+
+    def test_OpticalFlow(self):
+        protMovieImport = self._importMovies()
+
+        mc1 = self.newProtocol(XmippProtMovieCorr,
+                               objLabel='CC (no-write)',
+                               alignFrame0=2, alignFrameN=10,
+                               useAlignToSum=True,
+                               splineOrder=XmippProtMovieCorr.INTERP_CUBIC,
+                               numberOfThreads=1)
+        mc1.inputMovies.set(protMovieImport.outputMovies)
+        self.launchProtocol(mc1)
+
+        of1 = self.newProtocol(XmippProtOFAlignment,
+                               objLabel='OF DW',
+                               alignFrame0=2, alignFrameN=10,
+                               useAlignment=True,
+                               doApplyDoseFilter=True,
+                               doSaveUnweightedMic=True,
+                               numberOfThreads=1)
+        of1.inputMovies.set(mc1.outputMovies)
+        self.launchProtocol(of1)
+        self.assertIsNotNone(of1.outputMicrographs,
+                             "SetOfMicrographs has not been created.")
+        self.assertIsNotNone(of1.outputMicrographsDoseWeighted,
+                             "SetOfMicrographs with dose correction has not "
+                             "been created.")
+
 
 class TestCorrelationAlignment(BaseTest):
     @classmethod
@@ -387,10 +461,8 @@ class TestEstimateGain(BaseTest):
     def test_estimate(self):
         protGain = self.newProtocol(XmippProtMovieGain,
                                     objLabel='estimate gain')
-
-        p = Pointer(self.protImport.outputMovies, extended=1)
-        protGain.inputMovies.append(p)
-
+        protGain.inputMovies.set(self.protImport.outputMovies)
+        protGain.useExistingGainImage.set(False)
         self.launchProtocol(protGain)
 
 
@@ -477,7 +549,7 @@ class TestExtractMovieParticles(BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractMovieParticles,
                                        boxSize=320,frame0=2,frameN=6,
-                                       applyAlignment=True)
+                                       applyAlignment=True, doInvert=True)
         protExtract.inputMovies.set(movAliProt.outputMovies)
         protExtract.inputCoordinates.set(importPick.outputCoordinates)
         protExtract.setObjLabel('extract with alignment')
@@ -513,7 +585,7 @@ class TestExtractMovieParticles(BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractMovieParticles,
                                        boxSize=320, frame0=3, frameN=6,
-                                       applyAlignment=False)
+                                       applyAlignment=False, doInvert=True)
         protExtract.inputMovies.set(movAliProt.outputMovies)
         protExtract.inputCoordinates.set(importPick.outputCoordinates)
         protExtract.setObjLabel('extract without alignment')

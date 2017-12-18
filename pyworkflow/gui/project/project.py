@@ -38,6 +38,7 @@ import shlex
 import subprocess
 import uuid
 import SocketServer
+import tempfile
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
@@ -63,9 +64,9 @@ class ProjectWindow(ProjectBaseWindow):
 
     def __init__(self, path, master=None):
         # Load global configuration
-        self.projName = Message.LABEL_PROJECT + os.path.basename(path)
+        self.projName = os.path.basename(path)
         try:
-            projTitle = '%s (%s on %s)' % (self.projName, 
+            projTitle = '%s (%s on %s)' % (self.projName,
                                            pwutils.getLocalUserName(),
                                            pwutils.getLocalHostName())
         except Exception:
@@ -90,13 +91,13 @@ class ProjectWindow(ProjectBaseWindow):
                             shortCut="Ctrl+a")
         projMenu.addSubMenu('Find protocol to add', 'find protocol',
                             shortCut="Ctrl+f")
-        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow',
                             icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
-        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
-        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
@@ -110,19 +111,26 @@ class ProjectWindow(ProjectBaseWindow):
         self.menuCfg = menu
         # TODO: up to here
 
+        if self.project.openedAsReadOnly():
+            self.projName += "<READ ONLY>"
+
+        # Notify about the workflow in this project
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
         ProjectBaseWindow.__init__(self, projTitle, master,
-                                   icon=self.icon, minsize=(900,500))
+                                   icon=self.icon, minsize=(90,50))
+        self.root.attributes("-zoomed", True)
+
         self.switchView(VIEW_PROTOCOLS)
 
-        self.initProjectTCPServer()#Socket thread to communicate with clients
+        self.initProjectTCPServer()  # Socket thread to communicate with clients
 
-        # Notify about the workflow in this project
         from notifier import ProjectNotifier
+
         ProjectNotifier(self.project).notifyWorkflow()
+
 
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
@@ -138,19 +146,27 @@ class ProjectWindow(ProjectBaseWindow):
         
     def _onClosing(self):
         try:
-            self.saveSettings()
-        except Exception, ex:
-            print Message.NO_SAVE_SETTINGS + str(ex) 
+            if not self.project.openedAsReadOnly():
+                self.saveSettings()
+        except Exception as ex:
+            print("%s %s" %(Message.NO_SAVE_SETTINGS, str(ex)) )
         ProjectBaseWindow._onClosing(self)
      
     def loadProject(self):
         self.project = Project(self.projPath)
         self.project.load()
-        self.settings = self.project.getSettings()
+
+        # Check if we have settings.sqlite, generate if not
+        settingsPath = os.path.join(self.project.path, self.project.settingsPath)
+        if os.path.exists(settingsPath):
+            self.settings = self.project.getSettings()
+        else:
+            print('Warning: settings.sqlite not found! Creating default settings..')
+            self.settings = self.project.createSettings()
+
         self.generalCfg = self.settings.getConfig()
         self.protCfg = self.project.getCurrentProtocolView()
 
-    #
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
@@ -215,7 +231,12 @@ class ProjectWindow(ProjectBaseWindow):
     def onExportTreeGraph(self):
         runsGraph = self.project.getRunsGraph(refresh=True)
         useId = not pwutils.envVarOn('SCIPION_TREE_NAME')
-        runsGraph.printDot(useId=useId)
+        dotStr = runsGraph.printDot(useId=useId)
+        with tempfile.NamedTemporaryFile(suffix='.gv') as dotFile:
+            dotFile.write(dotStr)
+            dotFile.flush()
+            openTextFileEditor(dotFile.name)
+
         if useId:
             print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
         else:
@@ -424,7 +445,8 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             else:
                 answer = 'no answer available'
                 self.request.sendall(answer + '\n')
-        except:
+        except Exception as e:
+            print e
             import traceback
             traceback.print_stack()
 

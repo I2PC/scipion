@@ -46,7 +46,7 @@ class ImagicProtMSA(ImagicProtocol):
 
     """
     _label = 'msa'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     MSA_DIR = 'MSA'
 
     def __init__(self, **kwargs):

@@ -38,7 +38,9 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.gui.plotter import Plotter
+from pyworkflow.utils import exists
 
+RESMAP_HOME = 'RESMAP_HOME'
 
 
 class ProtResMap(ProtAnalysis3D):
@@ -62,7 +64,19 @@ class ProtResMap(ProtAnalysis3D):
            While a similar effect is often obtained by B-factor sharpening,
            please make sure that the spectrum does not blow up near Nyquist.
     """
-    
+
+    @classmethod
+    def validateInstallation(cls):
+        """ This function will be used to check if package is properly installed."""
+        missingPaths = ["%s: %s" % (var, os.environ[var])
+                        for var in [RESMAP_HOME]
+                        if not os.path.exists(os.environ[var])]
+
+        if missingPaths:
+            return ["Missing variables:"] + missingPaths
+        else:
+            return []  # No errors
+
     def __init__(self, **kwargs):
         ProtAnalysis3D.__init__(self, **kwargs)
         self.histogramData = String()
@@ -74,7 +88,7 @@ class ProtResMap(ProtAnalysis3D):
         form.addSection(label='Input')
         form.addParam('useSplitVolume', params.BooleanParam, default=False,
                       label="Use half volumes?",
-                      help='Use to split volumes for gold-standard FSC.')
+                      help='Use split volumes for gold-standard FSC.')
         form.addParam('inputVolume', params.PointerParam,
                       pointerClass='Volume', condition="not useSplitVolume",
                       label="Input volume", important=True,
@@ -205,6 +219,14 @@ class ProtResMap(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
+
+        if exists(self._getExtraPath('histogram.png')):
+            results = self._parseOutput()
+            summary.append('Mean resolution: %0.2f A' % results[0])
+            summary.append('Median resolution: %0.2f A' % results[1])
+        else:
+            summary.append("Output is not ready yet.")
+
         return summary
     
     def _validate(self):
@@ -235,7 +257,7 @@ class ProtResMap(ProtAnalysis3D):
         volumes = ['volume1.map', 'volume2.map']
         
         # Add resmap libraries to the path
-        sys.path.append(os.environ['RESMAP_HOME'])
+        sys.path.append(os.environ[RESMAP_HOME])
         from ResMap_algorithm import ResMap_algorithm
         from ResMap_fileIO import MRC_Data
         
@@ -308,3 +330,14 @@ class ProtResMap(ProtAnalysis3D):
         fig = plotResolutionHistogram(histogramData)
         return Plotter(figure=fig)    
 
+    def _parseOutput(self):
+        meanRes, medianRes = 0, 0
+        f = open(self.getLogPaths()[0], 'r')
+        for line in f.readlines():
+            if 'MEAN RESOLUTION in MASK' in line:
+                meanRes = line.strip().split('=')[1]
+            elif 'MEDIAN RESOLUTION in MASK' in line:
+                medianRes = line.strip().split('=')[1]
+        f.close()
+
+        return tuple(map(float, (meanRes, medianRes)))

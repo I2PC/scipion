@@ -218,11 +218,11 @@ class Text(tk.Text, Scrollable):
         "Try to open the selected path"
         path = expandPattern(path)
 
-        # If the path is a dir, open it with   scipion browser dir <path>
+        # If the path is a dir, open it with scipion browser dir <path>
         if os.path.isdir(path):
             dpath = (path if os.path.isabs(path)
                      else os.path.join(os.getcwd(), path))
-            subprocess.Popen(pw.getScipionScript(), ['browser', 'dir', dpath])
+            subprocess.Popen([pw.getScipionScript(), 'view', dpath])
             return
 
         # If it is a file, interpret it correctly and open it with DataView

@@ -192,12 +192,14 @@ class TestConvertBase(BaseTest):
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
                 m2 = img.getTransform().getMatrix()
-                print "-"*5
-                print img.getFileName(), img.getIndex()
-                print 'm1:\n', m1, geometryFromMatrix(m1, False)
-
-                print 'm2:\n', m2, geometryFromMatrix(m2, False)
-                #self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
+                print 'm1:\n', m1
+                print 'm2:\n', m2
+                
+                # # if Det|m1| <1, it means matrix has flip.
+                # if bool(numpy.linalg.det(m1[0:3, 0:3]) < 0):
+                #     m1[0:3, 1:4] *= -1
+                #     print  "AASAS ", alignType, "\n",m1
+                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
 
         # Launch apply transformation and check result images
         runXmippProgram(self.CMD % locals())
@@ -648,12 +650,11 @@ class TestReconstruct(TestConvertBase):
                 #same two rows
                 self.assertAlmostEqual(auxBtilt, auxAtilt, places=3, msg=None, delta=None)
 
-            rowa.setValue(MDL_FLIP,True)
+            rowa.setValue(xmipp.MDL_FLIP,True)
             b=rowToAlignment(rowa, ALIGN_PROJ)
             alignmentToRow(b, rowb, ALIGN_PROJ)
             aMatrix = a.getMatrix()
-            aMatrix[0,:] *= -1; aMatrix[2,:] *= -1;
-            #same two matrices with flip
+            aMatrix[0:3,1:4] *= -1 #same two matrices with flip
             self.assertTrue(np.allclose(aMatrix, b.getMatrix(), rtol=1e-2))
 
  #* newrot = rot;
@@ -766,7 +767,7 @@ class TestReconstruct(TestConvertBase):
         a3 -> flip(a2) with equivalent euler angles
         a4 -> flip a1 matrix. a3 and a4 matrix are equivalent
         """
-        # COSS: This test is incorrect
+        # in practice this is irrelevant since no converson with |mat|==-1
         mList = [
                  [[1., 0., 0., 0.],#a1
                   [0., 1., 0., 0.],
@@ -776,16 +777,16 @@ class TestReconstruct(TestConvertBase):
                   [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
                   [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
                   [  0.,          0.,          0.,          1.        ]],
-                 [[ -0.04341204,   0.82959837,  -0.5566704,   -7.42774284],#a3
-                  [  0.90961589,   0.26325835,   0.3213938,   -20.82490128],
-                  [  0.41317591,  -0.49240388,  -0.76604444,  -3.33947946],
-                  [  0.,           0.,           0.,           1.        ]],
-  #               [[  -0.04341204, 0.82959837,  -0.5566704,   -7.42774284],#a4
-  #                [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
-  #                [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
-  #                [  0.,          0.,          0.,           1.        ]],
+                 # [[ -0.04341204,   0.82959837,  -0.5566704,   -7.42774284],#a3
+                 #  [  0.90961589,   0.26325835,   0.3213938,   -20.82490128],
+                 #  [  -0.41317591,  0.49240388,  0.76604444,   3.33947946],
+                 #  [  0.,           0.,           0.,           1.        ]],
+                 [[0.04341203,   0.82959837, - 0.5566704, - 7.42774315],
+                  [0.90961589, - 0.26325834, - 0.3213938,   20.8249012],
+                  [-0.4131759, - 0.49240388, - 0.76604444, - 3.33947923],
+                  [0.,           0.,           0.,           1.]]
                 ]
-
+        
         self.launchTest('reconstRotandShiftFlip', mList, alignType=ALIGN_PROJ)
 
     
@@ -991,7 +992,7 @@ class TestSetConvert(BaseTest):
             xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
             xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
             xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
-            xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+            #xmipp.MDL_CTF_CRIT_FITTINGSCORE,
             xmipp.MDL_CTF_CRIT_FITTINGCORR13,
             xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
             xmipp.MDL_CTF_CRIT_PSDVARIANCE,
@@ -1007,7 +1008,8 @@ class TestSetConvert(BaseTest):
 
         for label in ALL_CTF_LABELS:
             attrName = '_xmipp_%s' % xmipp.label2Str(label)
-            self.assertAlmostEquals(mdCtf.getValue(label, objId), ctf.getAttributeValue(attrName))
+            self.assertAlmostEquals(mdCtf.getValue(label, objId),
+                                    ctf.getAttributeValue(attrName))
         
     def test_writeSetOfDefocusGroups(self):
         #TODO: FIX THIS test according to the new SetOfDefocusGroup

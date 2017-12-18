@@ -42,7 +42,7 @@ set mp
 (0)
 
 vm
-echo "if(! -d [filtered_dir]) mkdir -p [filtered_dir]"|csh
+echo "[ ! -d [filtered_dir] ] && mkdir -p [filtered_dir]"|sh
 de
 [filtered_stack]@
 de

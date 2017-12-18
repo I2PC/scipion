@@ -50,7 +50,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
     Wrapper protocol to Xmipp Movie Alignment by Optical Flow
     """
     _label = 'optical alignment'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
 
 
@@ -82,7 +82,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                         label="Group Size",
                         help="The number of frames in each group at the "
                              "last step")
-        group.addParam('useAlignment', params.BooleanParam, default=None,
+        group.addParam('useAlignment', params.BooleanParam, default=True,
                        label="Use previous movie alignment to SUM frames?",
                        help="Input movies could have alignment information from"
                             "a previous protocol. If you select *Yes*, the "
@@ -121,11 +121,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
         
-        outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
         if self.doApplyDoseFilter:
             outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+            outMovieFn = self._getExtraPath(self._getOutputMovieWtName(movie))
         else:
             outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
         
         aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
         dark = inputMovies.getDark()
@@ -139,7 +140,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         writeMovieMd(movie, inputMd, a0, aN, useAlignment=self.useAlignment)
         
         args = '-i %s ' % inputMd
-        args += '-o %s ' % self._getOutputShifts(movie)
+        args += '-o "%s" ' % self._getOutputShifts(movie)
         args += ' --frameRange %d %d ' % (0, aN - a0)
 
         if dark:
@@ -160,7 +161,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         # We should save the movie either if the user selected it (default)
         # or if the PSD is going to be computed
         if self.doSaveAveMic or self.doComputePSD:
-            args += '--oavg %s ' % outMicFn
+            args += '--oavg "%s" ' % outMicFn
 
         if self.doComputePSD:
             args  += '--oavgInitial %s ' % aveMic
@@ -178,6 +179,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         if self.memory:
             args += ' --inmemory'
         
+        toDelete=[]
         if self.doApplyDoseFilter:
             pxSize = movie.getSamplingRate()
             vol = movie.getAcquisition().getVoltage()
@@ -190,9 +192,10 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 args += ' post'
             
             if self.doSaveUnweightedMic:
-                outUnwtMicFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_mic.mrc')
-                outUnwtMovieFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_movie.mrcs')            
+                outUnwtMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                outUnwtMovieFn = self._getExtraPath(self._getOutputMovieName(movie))            
                 args += ' --oUnc %s %s' % (outUnwtMicFn, outUnwtMovieFn)
+                toDelete.append(outUnwtMovieFn)
             
         try:
             self.runJob(program, args)
@@ -208,18 +211,14 @@ class XmippProtOFAlignment(ProtAlignMovies):
                                     % (outMovieFn, program))
 
             if self.doComputePSD:
-                uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
-                correctedPSD = self._getFnInMovieFolder(movie, "corrected")
-                # TODO: Compute the PSD inside the OF program?
-                self.computePSD(aveMic, uncorrectedPSD)
-                self.computePSD(outMicFn, correctedPSD)
-                self.composePSD(uncorrectedPSD + ".psd",
-                                correctedPSD + ".psd",
-                                self._getPsdCorr(movie))
+                self.computePSDs(movie, aveMic, outMicFn,
+                                 outputFnCorrected=outMicFn+'psd.png')
                 # If the micrograph was only saved for computing the PSD
                 # we can remove it
                 if not self.doSaveAveMic:
                     pwutils.cleanPath(outMicFn)
+                for fn in toDelete:
+                    pwutils.cleanPath(fn)
             
             self._saveAlignmentPlots(movie)
 
@@ -238,7 +237,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             inputSet = self.inputMovies.get()
             movie = inputSet.getFirstItem()
             if (not movie.hasAlignment()) and self.useAlignment:
-                errors.append("Your movies has not alignment. Please, set *No* "
+                errors.append("Your movies have no alignment. Please, set *No* "
                               "the parameter _Use previous movie alignment to SUM"
                               " frames?_")
 
@@ -365,6 +364,13 @@ class XmippProtOFAlignment(ProtAlignMovies):
     
     def _createOutputWeightedMicrographs(self):
         return (self.doSaveAveMic and self.doApplyDoseFilter)
+    
+    def _getOutputMovieWtName(self, movie):
+        """ Returns the name of the output dose-weighted movie.
+        (relative to micFolder)
+        """
+        return self._getMovieRoot(movie) + '_aligned_movie_DW.mrcs'
+
 
 
 def showCartesianShiftsPlot(inputSet, itemId):
@@ -375,7 +381,7 @@ def showCartesianShiftsPlot(inputSet, itemId):
         plotter = createAlignmentPlot(meanX, meanY)
         plotter.show()
     else:
-        print "This items does not have OF alignment set. "
+        print "These items do not have OF alignment set. "
 
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNCARTESIAN,

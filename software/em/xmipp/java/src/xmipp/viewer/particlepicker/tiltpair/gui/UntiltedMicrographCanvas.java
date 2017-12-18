@@ -227,7 +227,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		if (frame.isPickingAvailable(e))
 		{
 
-            if (frame.isEraserMode())
+            if (frame.isEraserMode(e))
             {
                 erase(e);
                 getFrame().getTiltedCanvas().repaint();
@@ -283,7 +283,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 
         if (frame.isPickingAvailable(e)){
 
-            if (frame.isEraserMode())
+            if (frame.isEraserMode(e))
 			{
                 erase(e);
                 return;

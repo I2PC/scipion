@@ -27,12 +27,24 @@
 This EM module contains Gautomatch auto-picking protocol 
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
-from convert import getEnviron
-
 _logo = "gautomatch_logo.png"
+GAUTOMATCH_HOME = 'GAUTOMATCH_HOME'
+
+from convert import getEnviron
+from bibtex import _bibtex # Load bibtex dict with references
 
 from protocol_gautomatch import ProtGautomatch
 from viewer import GautomatchViewer
 from wizard import *
 _environ = getEnviron()
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in [GAUTOMATCH_HOME]
+                    if not os.path.exists(_environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors

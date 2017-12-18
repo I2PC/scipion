@@ -15,7 +15,8 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
 			{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
 			{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
-			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}
+			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
+			{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
 		]}
 	]},
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [
@@ -39,7 +40,8 @@ Protocols SPA = [
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
 				{"tag": "protocol", "value": "XmippProtCTFDiscrepancy", "text": "default"},
-				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"}
+				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtCTFSelection", "text": "default"}
 			]}
 		]}
 	]},
@@ -52,6 +54,7 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "XmippProtAssignmentTiltPair",   "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionAutopickFom",   "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionAutopick",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelion2Autopick",   "text": "default"},
 			{"tag": "protocol", "value": "BsoftProtParticlePicking",   "text": "default"},
 			{"tag": "protocol", "value": "DogPickerProtPicking",   "text": "default"},
 		    {"tag": "protocol", "value": "ProtGemPicker", "text": "default"},
@@ -61,6 +64,7 @@ Protocols SPA = [
 		]},
 		{"tag": "protocol_group", "text": "Extract", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "XmippProtExtractParticles",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelionExtractParticles",   "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "XmippProtExtractMovieParticles", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"},
@@ -118,8 +122,10 @@ Protocols SPA = [
 	{"tag": "section", "text": "3D", "children": [
 		{"tag": "protocol_group", "text": "Initial volume", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "EmanProtInitModel",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelionInitialModel",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtRansac",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSignificant",  "text": "default"},
+			{"tag": "protocol", "value": "XmippProtReconstructSwarm",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtConvertPdb",  "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtPrime", "text": "default"},
@@ -180,6 +186,7 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
     			{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},
+    			{"tag": "protocol", "value": "ProtRelionLocalRes",   "text": "default"},
                 {"tag": "protocol", "value": "BsoftProtBfilter", "text": "default"}
 			]},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
