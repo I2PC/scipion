@@ -58,7 +58,7 @@
             border-bottom: 2px solid firebrick;
             color: #6E6E6E;
         }
-        
+
         H2 {
 /*            background: grey;*/
             color: firebrick;
@@ -82,7 +82,7 @@
             font-style: italic;
             font-size: small;
             margin: 20px 0px;
-                
+
         }
         .icon {
             margin-left: 6px;
@@ -125,11 +125,11 @@
         }
         /* Grid layout classes */
         /* Taken from https://www.sitepoint.com/understanding-css-grid-systems/ */
-        .row, 
+        .row,
         .column {
             box-sizing: border-box;
         }
-        
+
         .row:before,
         .row:after {
             content: " ";
@@ -139,7 +139,7 @@
         .row:after {
             clear: both;
         }
-        
+
         .column {
             position: relative;
             float: left;
@@ -195,17 +195,17 @@
             width: 100%%;
         }
         @media only screen and (max-width: 550px) {
-            .column-1, 
-            .column-2, 
-            .column-3, 
-            .column-4, 
-            .column-5, 
-            .column-6, 
-            .column-7, 
-            .column-8, 
-            .column-9, 
-            .column-10, 
-            .column-11, 
+            .column-1,
+            .column-2,
+            .column-3,
+            .column-4,
+            .column-5,
+            .column-6,
+            .column-7,
+            .column-8,
+            .column-9,
+            .column-10,
+            .column-11,
             .column-12 {
                 width: auto;
                 float: none;
@@ -287,19 +287,19 @@
                 </div>
             </SECTION>
         </DIV>
-        
+
         <FOOTER>
             Powered by <a href="http://scipion.cnb.csic.es">Scipion</a><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
         </FOOTER>
     </BODY>
     <SCRIPT>
-    
+
         var report ={
             date:"%(dateStr)s",
             project:"%(projectName)s",
             scipionVersion:"%(scipionVersion)s",
             acquisition:[
-                %(acquisitionLines)s    
+                %(acquisitionLines)s
             ],
             runs:[
                 %(runLines)s
@@ -328,15 +328,15 @@
 
             // Get the acquisition section
             var acquisitionSection = $('#acquisition');
-            
+
             // For each acquisition property
             $.each(report.acquisition, function(index, value){
                 var line = "<P class='propertyline'><label>" + value.propertyName + "</label> " + value.propertyValue + '</P>';
                 $(acquisitionSection).append(line);
             });
-            
+
         };
-        
+
         function addRuns(){
             // Get the runs table
             var runsTable = $('#runsTable');
@@ -345,11 +345,11 @@
             $.each(report.runs, function(index, value){
                 var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='2'></TD></TR>";
                 $(runsTable).append(line);
-            
+
                 $.each(value.output, function(index, value){
                     var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD></TR>";
                     $(runsTable).append(outputLine);
-                
+
                 });
             });
         };
@@ -654,7 +654,7 @@
 
             return systemSeries;
         }
-        
+
         function getSeriesYAxis(name, yAxes){
             var mbKeys = /send|recv|read|write|gpuMem/;
             var tempKeys = /gpuTem/;
@@ -926,12 +926,8 @@
                 columns: cols,
                 stateSave: true
             };
-            if (cols.length <= 4){
-                $('#micTable').wrap("<div class='scrolledTable'></div>");
-            }else{
-                dataTable['scrollX'] = true
-            }
 
+            $('#micTable').wrap("<div class='scrolledTable'></div>");
             $('#micTable').DataTable( dataTable);
 
         };
@@ -944,7 +940,7 @@
             addSystemChart();
             addMicTable();
         };
-        
+
         populateReport();
 
         function registerModalEvents(){
