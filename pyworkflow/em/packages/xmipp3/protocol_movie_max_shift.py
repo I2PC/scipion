@@ -34,6 +34,7 @@ from pyworkflow.em.protocol.protocol_movies import ProtProcessMovies
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
+from pyworkflow.mapper import Mapper
 from pyworkflow.object import Set
 from pyworkflow.protocol.constants import (STATUS_NEW)
 from pyworkflow.protocol.params import PointerParam
@@ -56,7 +57,13 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-        ProtProcessMovies._defineParams(self, form)
+        # ProtProcessMovies._defineParams(self, form)
+        form.addSection(label=Message.LABEL_INPUT)
+        form.addParam('inputMovies', PointerParam, important=True,
+                      label=Message.LABEL_INPUT_MOVS,
+                      pointerClass='SetOfMovies', 
+                      help='Select a set of previously aligned Movies '
+                           'or Micrographs.')
 
         form.addParam('maxFrameShift', params.FloatParam, default=10, 
                        label='Max. frame shift (A)')
@@ -65,7 +72,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         
     #--------------------------- INSERT steps functions ------------------------
     def _processMovie(self, movie):
-        """ Create movie only if the alignment is less than the thresshold. """
+        """ Fill either the accepted or the rejected list with the movieID """
         movieId = movie.getObjId()
         alignment = movie.getAlignment()
 
@@ -73,28 +80,23 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             shiftListX, shiftListY = alignment.getShifts()
             shiftArrayX = np.asarray(shiftListX)
             shiftArrayY = np.asarray(shiftListY)
-            samRate = self.samplingRate
-            rejectedByFrame = ( np.max(np.abs(shiftArrayX)) * samRate > 
+            sampling = self.samplingRate
+            rejectedByFrame = ( np.max(np.abs(shiftArrayX)) * sampling > 
                                 self.maxFrameShift.get()              or
-                                np.max(np.abs(shiftArrayY)) * samRate > 
+                                np.max(np.abs(shiftArrayY)) * sampling > 
                                 self.maxFrameShift.get() )
 
             cumsumX = np.cumsum(shiftArrayX)
             cumsumY = np.cumsum(shiftArrayY)
-            rejectedByMovie = ( np.max(np.abs(cumsumX)) * samRate > 
+            rejectedByMovie = ( np.max(np.abs(cumsumX)) * sampling > 
                                 self.maxMovieShift.get()          or
-                                np.max(np.abs(cumsumY)) * samRate >
+                                np.max(np.abs(cumsumY)) * sampling >
                                 self.maxMovieShift.get() )
 
             if not rejectedByFrame and not rejectedByMovie:
-                self._updateLists(movieId,True)
+                self.acceptedIdMoviesList.append(movieId)
             else:
-                self._updateLists(movieId,False)
-
-        else:
-            # a no aligned movie is DISCARTED
-            # (maybe change this or add a param to control that) 
-            self._updateLists(movieId,False)
+                self.discartedIdMoviesList.append(movieId)
 
     def _checkNewOutput(self):
         """ Check for already selected Movies and update the output set. """
@@ -105,13 +107,13 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         doneList = self._readDoneList()
 
         # Check for newly done items
-        movieListIdAccepted = self._getLists(True)
-        movieListIdDiscarted = self._getLists(False)
+        newDoneAccepted = [m.clone() for m in self.listOfMovies
+                           if int(m.getObjId()) not in doneList and 
+                              int(m.getObjId()) in self.acceptedIdMoviesList]
 
-        newDoneAccepted = [movieId for movieId in movieListIdAccepted
-                             if movieId not in doneList]
-        newDoneDiscarted = [movieId for movieId in movieListIdDiscarted
-                             if movieId not in doneList]
+        newDoneDiscarted = [m.clone() for m in self.listOfMovies
+                            if int(m.getObjId()) not in doneList and 
+                               int(m.getObjId()) in self.discartedIdMoviesList]
 
         # Update the file with the newly done movies
         # or exit from the function if no new done movies
@@ -121,8 +123,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         self.debug('   newDoneAccepted: %d.' %len(newDoneAccepted))
         self.debug('   newDoneDiscarted: %d,' %len(newDoneDiscarted))
 
-        firstTime = len(doneList) == 0
-        # firstTimeDiscarted = len(doneListDiscarted) == 0
         allDone = len(doneList) + len(newDoneAccepted) + len(newDoneDiscarted)
     
         # We have finished when there is not more input movies (stream closed)
@@ -134,25 +134,22 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         if (len(doneList)>0 or len(newDoneAccepted)>0):
             movieSetAccepted = self._loadOutputSet(SetOfMovies, 'movies.sqlite')
 
-        #AJ new subsets with discarted movies
+        # new output subset of discarted movies
         if (len(doneList)>0 or len(newDoneDiscarted)>0):
             movieSetDiscarted = self._loadOutputSet(SetOfMovies,
                                                        'moviesDiscarted.sqlite')
+
         if newDoneAccepted:
-            inputMovieSet = self._loadInputMovieSet()
-            for movieId in newDoneAccepted:
-                movieAccepted = inputMovieSet[movieId].clone()
-                movieAccepted.setEnabled(True)
-                movieSetAccepted.append(movieAccepted)
-            inputMovieSet.close()
+            for movie in newDoneAccepted:
+                movie.setEnabled(True)
+                movieSetAccepted.append(movie)
+            self._writeDoneList(newDoneAccepted)
 
         if newDoneDiscarted:
-            inputMovieSet = self._loadInputMovieSet()
-            for movieId in newDoneDiscarted:
-                movieDiscarted = inputMovieSet[movieId].clone()
-                movieDiscarted.setEnabled(False)
-                movieSetDiscarted.append(movieDiscarted)
-            inputMovieSet.close()
+            for movie in newDoneDiscarted:
+                movie.setEnabled(False)
+                movieSetDiscarted.append(movie)
+            self._writeDoneList(newDoneDiscarted)
 
         if not self.finished and not newDoneDiscarted and not newDoneAccepted:
             # If we are not finished and no new output have been produced
@@ -161,12 +158,26 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             return
 
         if (exists(self._getPath('movies.sqlite'))):
+            firstTime = not self.hasAttribute('outputMovies')
             self._updateOutputSet('outputMovies', movieSetAccepted, streamMode)
+            if firstTime:
+                # define relation just once
+                self._defineSourceRelation(self.inputMovies.get(),
+                                           movieSetAccepted)
+            else:
+                movieSetAccepted.close()
 
         # AJ new subsets with discarted movies
         if (exists(self._getPath('moviesDiscarted.sqlite'))):
+            firstTime = not self.hasAttribute('outputMoviesDiscarted')
             self._updateOutputSet('outputMoviesDiscarted',
                                   movieSetDiscarted, streamMode)
+            if firstTime:
+                # define relation just once
+                self._defineSourceRelation(self.inputMovies.get(),
+                                           movieSetDiscarted)
+            else:
+                movieSetDiscarted.close()
             
         # Unlock createOutputStep if finished all jobs
         if self.finished:  
@@ -187,7 +198,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         pass
 
     #--------------------------- UTILS functions -------------------------------
-
     def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
         The most common case is to always generate output movies,
@@ -196,6 +206,13 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         """
         return True
 
+    def _loadInputMovieSet(self):
+        movieFile = self.inputMovies.get().getFileName()
+        self.debug("Loading input db: %s" % movieFile)
+        movieSet = SetOfMovies(filename=movieFile)
+        movieSet.loadAllProperties()
+        return movieSet
+        
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """ Load the output set if it exists or create a new one.
         fixSampling: correct the output sampling rate if binning was used,
@@ -211,8 +228,9 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        inputMovies = self.inputMovies.get()
-        outputSet.copyInfo(inputMovies)
+        if isinstance(self.inputMovies.get(), SetOfMovies):
+            inputMovies = self.inputMovies.get()
+            outputSet.copyInfo(inputMovies)
 
         if fixSampling:
             newSampling = inputMovies.getSamplingRate()
@@ -220,21 +238,21 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
 
         return outputSet
 
-    def _loadInputMovieSet(self):
-        movieFile = self.inputMovies.get().getFileName()
-        self.debug("Loading input db: %s" % movieFile)
-        movieSet = SetOfMovies(filename=movieFile)
-        movieSet.loadAllProperties()
-        return movieSet
+    # ---------------------- INFO functions ------------------------------------
+    def _validate(self):
+        errors = []
+        if not self.inputMovies.get().getFirstItem().hasAlignment():
+            errors.append('The _Input Movies_ must come from an alignment '
+                          'protocol.')
+        return errors
 
-    def _getLists(self, accepted):
-        if accepted:
-            return self.acceptedIdMoviesList
+    def _summary(self):
+        summary = ['Movies processed: %d' % len(self._readDoneList()) ]
+        
+        if self.hasAttribute('outputMoviesDiscarted'):
+            rejectedMovies = self.outputMoviesDiscarted.getSize()
         else:
-            return self.discartedIdMoviesList
+            rejectedMovies = 0
+        summary.append('Movies rejected: *%d*' % rejectedMovies)
 
-    def _updateLists(self, movieId, accepted):
-        if accepted:
-            return self.acceptedIdMoviesList.append(movieId)
-        else:
-            return self.discartedIdMoviesList.append(movieId)
+        return summary
