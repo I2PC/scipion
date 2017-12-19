@@ -197,6 +197,11 @@ class ProtImportImages(ProtImportFiles):
             imgSet.loadAllProperties()
             self._fillImportedFiles(imgSet)
             imgSet.enableAppend()
+        
+        pointerExcludedMovs = getattr(self, 'moviesToExclude', None)
+        if pointerExcludedMovs is not None:
+            excludedMovs = pointerExcludedMovs.get()
+            self._fillImportedFiles(excludedMovs)
 
         imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
         acquisition = imgSet.getAcquisition()
@@ -473,8 +478,10 @@ class ProtImportImages(ProtImportFiles):
 
     def _fillImportedFiles(self, imgSet):
         from pyworkflow.em import SetOfMicrographsBase
+        print "imported files: ", isinstance(imgSet, SetOfMicrographsBase)
         if isinstance(imgSet, SetOfMicrographsBase):
             for img in imgSet:
+                print "MicName: ", img.getMicName()
                 self.importedFiles.add(img.getMicName())
 
     def _fillMicName(self, img, uniqueFn):
