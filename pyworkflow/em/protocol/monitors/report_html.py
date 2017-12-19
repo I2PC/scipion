@@ -31,6 +31,7 @@ import os
 from os.path import join, exists, abspath, basename
 import numpy as np
 import multiprocessing
+from datetime import datetime
 
 from pyworkflow.protocol import getUpdatedProtocol
 from pyworkflow import getTemplatePath
@@ -380,11 +381,11 @@ class ReportHtml:
         # system monitor chart data
         data = self.sysMonitor.getData()
         systemData = json.dumps(data)
-
+        tnow = datetime.now()
         args = {'projectName': projName,
                 'startTime': pwutils.dateStr(project.getCreationTime(), secs=True),
-                'dateStr': pwutils.prettyTime(secs=True),
-                'projectDuration': pwutils.prettyDelta(project.getElapsedTime()),
+                'dateStr': pwutils.prettyTime(dt=tnow, secs=True),
+                'projectDuration': pwutils.prettyDelta(tnow-project.getCreationTime()),
                 'projectStatus': "FINISHED" if finished else "RUNNING",
                 'scipionVersion': os.environ['SCIPION_VERSION'],
                 'acquisitionLines': acquisitionLines,

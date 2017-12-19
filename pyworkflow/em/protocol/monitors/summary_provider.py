@@ -82,9 +82,9 @@ class SummaryProvider(TreeProvider):
                 # NOTE by Yaiza: we force the string containing the Å to be unicode
                 # because this is the encoding used when generating report in report_html.py
                 if isinstance(prot, ProtImportImages):
-                    self.acquisition = [("Microscope Voltage: ",
+                    self.acquisition = [("Microscope Voltage (kV): ",
                                          prot.voltage.get()),
-                                        ("Spherical aberration: ",
+                                        ("Spherical aberration (mm): ",
                                          prot.sphericalAberration.get()),
                                         ("Magnification: ",
                                          prot.magnification.get()),
