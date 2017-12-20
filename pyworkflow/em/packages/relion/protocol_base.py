@@ -42,7 +42,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
-from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V1_3
+from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V1_3, V2_0
 from convert import (convertBinaryVol, writeSetOfParticles, isVersion2,
                      getVersion, getImageLocation, convertMask)
 
@@ -331,7 +331,53 @@ class ProtRelionBase(EMProtocol):
                                'refinements, values of 1-2 for 2D refinements. '
                                'Too small values yield too-low resolution '
                                'structures; too high values result in '
-                               'over-estimated resolutions and overfitting.') 
+                               'over-estimated resolutions and overfitting.')
+            if isVersion2() and getVersion() != V2_0:  # version 2.1+ only
+                form.addParam('doSubsets', BooleanParam, default=False,
+                              condition='not doContinue',
+                              expertLevel=LEVEL_ADVANCED,
+                              label='Use subsets for initial updates?',
+                              help='If set to True, multiple maximization updates '
+                                   '(as many as defined by the _Number of subset '
+                                   'updates_) will be performed during the first '
+                                   'iteration(s): each time after the number of '
+                                   'particles in a subset has been processed. By '
+                                   'using subsets with much fewer particles than '
+                                   'the entire data set, the initial updates '
+                                   'will be much faster, while the very low '
+                                   'resolution class averages will not be '
+                                   'notably worse than with the entire data set. '
+                                   '\nThis will greatly speed up 2D '
+                                   'classifications with very many (hundreds of '
+                                   'thousands or more) particles. A useful '
+                                   'subset size is probably in the order of ten '
+                                   'thousand particles. If the data set only '
+                                   'comprises (tens of) thousands of particles, '
+                                   'this option may be less useful.')
+                form.addParam('subsetSize', IntParam, default=10000,
+                              condition='doSubsets and not doContinue',
+                              expertLevel=LEVEL_ADVANCED,
+                              label='Initial subset size',
+                              help='Number of individual particles after which one '
+                                   'will perform a maximization update in the first '
+                                   'iteration(s). A useful subset size is probably '
+                                   'in the order of ten thousand particles.')
+                form.addParam('subsetUpdates', IntParam, default=3,
+                              condition='doSubsets and not doContinue',
+                              expertLevel=LEVEL_ADVANCED,
+                              label='Number of subset updates',
+                              help='This option is only used when a positive '
+                                   'number is given for the _Initial subset size_. '
+                                   'In that case, in the first iteration, '
+                                   'maximization updates are performed over '
+                                   'a smaller subset of the particles to speed '
+                                   'up calculations.Useful values are probably in '
+                                   'the range of 2-5 subset updates. Using more '
+                                   'might speed up further, but with the risk of '
+                                   'affecting the results. If the number of subsets '
+                                   'times the subset size is larger than the number '
+                                   'of particles in the data set, then more than 1 '
+                                   'iteration will be split into subsets.')
         form.addParam('maskZero', EnumParam, default=0,
                       choices=['Yes, fill with zeros',
                                'No, fill with random noise'],
@@ -859,6 +905,14 @@ class ProtRelionBase(EMProtocol):
                               "image dimensions!")
         
             errors += self._validateNormal()
+
+        if self.IS_CLASSIFY:
+            if self._doSubsets():
+                total = self._getInputParticles().getSize()
+                if total <= self.subsetSize.get():
+                    errors.append('Subset size is bigger than the total number '
+                                  'of particles!')
+
         return errors
     
     def _validateNormal(self):
@@ -1003,9 +1057,13 @@ class ProtRelionBase(EMProtocol):
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
             args['--iter'] = self._getnumberOfIters()
+
+            if not self.doContinue and isVersion2() and getVersion() != V2_0:
+                self._setSubsetArgs(args)
     
         self._setSamplingArgs(args)
         self._setMaskArgs(args)
+
 
     def _setCTFArgs(self, args):
         # CTF stuff
@@ -1028,11 +1086,18 @@ class ProtRelionBase(EMProtocol):
             args['--solvent_mask'] = mask
     
         if self.IS_3D and self.solventMask.hasValue():
-            solventMask = convertMask(self.solventMask, self._getTmpPath())
+            solventMask = convertMask(self.solventMask.get(), self._getTmpPath())
             args['--solvent_mask2'] = solventMask
 
-        if isVersion2() and self.IS_3D and self.referenceMask.hasValue() and self.solventFscMask:
+        if (isVersion2() and self.IS_3D and self.referenceMask.hasValue() and
+            self.solventFscMask):
             args['--solvent_correct_fsc'] = ''
+
+    def _setSubsetArgs(self, args):
+        if self._doSubsets():
+            args['--write_subsets'] = 1
+            args['--subset_size'] = self.subsetSize.get()
+            args['--max_subsets'] = self.subsetUpdates.get()
 
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
@@ -1142,3 +1207,8 @@ class ProtRelionBase(EMProtocol):
         else:
             partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
                              '%s' % part.getMicId())
+
+    def _doSubsets(self):
+        # Since 'doSubsets' property is only valid for 2.1+ protocols
+        # we need provide a default value for backward compatibility
+        return self.getAttributeValue('doSubsets', False)
