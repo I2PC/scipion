@@ -430,6 +430,14 @@ class Image(EMObject):
         # this matrix can be used for 2D/3D alignment or
         # to represent projection directions
         self._transform = None
+        # default orign by default is box center =
+        # (Xdim/2, Ydim/2,Zdim/2)
+        # origin stores a matrix that using as input the point (0,0,0)
+        # provides  the position of the actual origin in the system of
+        # coordinates of the default origin.
+        # _origin is an object of the class Transformor shifts
+        # units are pixels
+        self._origin = None
         if location:
             self.setLocation(location)
 
@@ -546,6 +554,26 @@ class Image(EMObject):
 
     def setTransform(self, newTransform):
         self._transform = newTransform
+
+    def hasOrigin(self):
+        return self._origin is not None
+
+    def getOrigin(self, returnInitIfNone=False):
+        if self.hasOrigin():
+            return self._origin
+        else:
+            if returnInitIfNone:
+                t = Transform()
+                x, y, z = self.getDim()
+                if z > 1:
+                    z = z/2
+                t.setShifts(x/2, y/2, z)
+                return t  # The identity matrix
+            else:
+                return None
+
+    def setOrigin(self, newOrigin):
+        self._origin = newOrigin
 
     def __str__(self):
         """ String representation of an Image. """
@@ -703,12 +731,19 @@ class PdbFile(EMFile):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
+        self._volume = None
 
     def getPseudoAtoms(self):
         return self._pseudoatoms.get()
 
     def setPseudoAtoms(self, value):
         self._pseudoatoms.set(value)
+
+    def getVolume(self):
+        return self._volume
+
+    def setVolume(self, volume):
+        self._volume = volume
 
     def __str__(self):
         return "%s (pseudoatoms=%s)" % \
@@ -1134,6 +1169,11 @@ class SetOfDefocusGroup(EMSet):
         self._avgSet.set(value)
 
 
+class SetOfPDBs(EMSet):
+    """ Set containing PDB items. """
+    ITEM_TYPE = PdbFile
+
+
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
@@ -1378,6 +1418,20 @@ class Transform(EMObject):
         m[1, 3] *= factor
         m[2, 3] *= factor
 
+    def getShifts(self):
+        m = self.getMatrix()
+        return m[0, 3], m[1, 3], m[2, 3]
+
+    def setShifts(self, x, y, z):
+        m = self.getMatrix()
+        m[0, 3] = x
+        m[1, 3] = y
+        m[2, 3] = z
+                
+    def composeTransform(self, matrix):
+        '''Apply a transformation matrix to the current matrix '''            
+        new_matrix = matrix * self.getMatrix()
+        self._matrix.setMatrix(new_matrix)
 
 class Class2D(SetOfParticles):
     """ Represent a Class that groups Particles objects.

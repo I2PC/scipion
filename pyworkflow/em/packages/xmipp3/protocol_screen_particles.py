@@ -29,14 +29,14 @@
 import pyworkflow.em.metadata as md
 from pyworkflow.object import String
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_ADVANCED, FloatParam)
+                                        LEVEL_ADVANCED, FloatParam, BooleanParam)
 from pyworkflow.em.protocol import ProtProcessParticles
 from convert import writeSetOfParticles, setXmippAttributes
 
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order
     to detect outliers. """
-    
+
     _label = 'screen particles'
 
     # Automatic Particle rejection enum
@@ -91,9 +91,16 @@ class XmippProtScreenParticles(ProtProcessParticles):
                            'SSNR are automatically disabled.',
                       validators=[Range(0, 100, error="Percentage must be "
                                                       "between 0 and 100.")])
+        form.addParam('addFeatures', BooleanParam, default=False,
+                      label='Add features', expertLevel=LEVEL_ADVANCED,
+                      help='Add features used for the ranking to each one of the input particles')
         form.addParallelSection(threads=0, mpi=0)
-
-    #--------------------------- INSERT steps functions ------------------------
+        
+    def _getDefaultParallel(self):
+        """This protocol doesn't have mpi version"""
+        return (0, 0)
+     
+    #--------------------------- INSERT steps functions --------------------------------------------            
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call the program"""
         # Convert input images if necessary
@@ -113,6 +120,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
         
         elif self.autoParRejection == self.REJ_PERCENTAGE:
             args += "--percent " + str(self.percentage.get())
+
+        if self.addFeatures:
+            args += "--addFeatures "
 
         self.runJob("xmipp_image_sort_by_statistics", args)
         
@@ -147,11 +157,21 @@ class XmippProtScreenParticles(ProtProcessParticles):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
-            summary.append("The minimum ZScore is %.2f" % min(zscores))
-            summary.append("The maximum ZScore is %.2f" % max(zscores))
-            summary.append("The mean ZScore is %.2f"
-                           % (sum(zscores)*1.0/len(self.outputParticles)))
+            fnSummary = self._getExtraPath("summary.txt")
+            if not os.path.exists(fnSummary):
+                zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
+                if len(zscores)>0:
+                    fhSummary = open(fnSummary,"w")
+                    fhSummary.write("The minimum ZScore is %.2f\n" % min(zscores))
+                    fhSummary.write("The maximum ZScore is %.2f\n" % max(zscores))
+                    fhSummary.write("The mean ZScore is %.2f\n"
+                                    % (sum(zscores)*1.0/len(self.outputParticles)))
+                fhSummary.close()
+            if os.path.exists(fnSummary):
+                fhSummary = open(fnSummary)
+                for line in fhSummary.readlines():
+                    summary.append(line.strip())
+                fhSummary.close()
         return summary
     
     def _validate(self):
@@ -192,6 +212,8 @@ class XmippProtScreenParticles(ProtProcessParticles):
         setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1,
                            md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1,
                            md.MDL_ZSCORE_SNR2, md.MDL_CUMULATIVE_SSNR)
+        if self.addFeatures:
+            setXmippAttributes(item, row, md.MDL_SCORE_BY_SCREENING)
         if row.getValue(md.MDL_ENABLED) <= 0:
             item._appendItem = False
         else:

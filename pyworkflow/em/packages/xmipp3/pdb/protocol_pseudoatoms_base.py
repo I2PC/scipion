@@ -91,7 +91,7 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         outputFn = self._getPath(pseudoatoms)
         sigma = sampling * self.pseudoAtomRadius.get() 
         targetErr = self.pseudoAtomTarget.get()
-        nthreads = self.numberOfThreads.get()
+        nthreads = self.numberOfThreads.get()*self.numberOfMpi.get()
         params = "-i %(inputFn)s -o %(outputFn)s --sigma %(sigma)f --thr %(nthreads)d "
         params += "--targetError %(targetErr)f --sampling_rate %(sampling)f -v 2 --intensityColumn Bfactor"
         if fnMask:
@@ -116,7 +116,9 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         radius = sampling * self.pseudoAtomRadius.get() 
         fnIn = volume.getFileName()
         localInputFn = self._getExtraPath("input.mrc")
+        #I think this is not needed
         self.runJob("xmipp_image_convert","-i %s -o %s -t vol"%(fnIn,localInputFn))
+        #remove next line, origin does not go in the header but in the database
         self.runJob("xmipp_image_header","-i %s --sampling_rate %f"%(localInputFn,sampling))
         fhCmd = open(scriptFile, 'w')
         fhCmd.write("open %s\n" % basename(pseudoatoms))
@@ -130,6 +132,7 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
             self.maskThreshold.get()
         xdim = volume.getDim()[0]
         origin = xdim / 2
+        #set orign y sampling
         fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, sampling, origin))
         fhCmd.close()
      

@@ -50,4 +50,5 @@ from parallel import ProtTestParallel
 from protocol_picking_difference import ProtPickingDifference
 
 from monitors import *
-
+#from protocol_export import *
+from protocol_export.protocol_export_emdb import ProtExportEMDB
