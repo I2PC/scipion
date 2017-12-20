@@ -1,5 +1,6 @@
 <HTML>
     <HEAD>
+        <meta charset="UTF-8">
         <!-- jquery-->
         <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
         <!--highcharts-->
@@ -12,8 +13,9 @@
         <!--data tables-->
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-print-1.3.1/r-2.1.1/sc-1.4.2/datatables.min.css"/>
         <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-print-1.3.1/r-2.1.1/sc-1.4.2/datatables.min.js"></script>
-
-        <TITLE>Scipion execution summary for %(projectName)s </TITLE>
+        <link rel="shortcut icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
+        <link rel="apple-touch-icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
+        <TITLE>Scipion - %(projectName)s </TITLE>
     </HEAD>
     <STYLE>
         /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
@@ -57,7 +59,7 @@
             border-bottom: 2px solid firebrick;
             color: #6E6E6E;
         }
-        
+
         H2 {
 /*            background: grey;*/
             color: firebrick;
@@ -81,7 +83,7 @@
             font-style: italic;
             font-size: small;
             margin: 20px 0px;
-                
+
         }
         .icon {
             margin-left: 6px;
@@ -124,11 +126,11 @@
         }
         /* Grid layout classes */
         /* Taken from https://www.sitepoint.com/understanding-css-grid-systems/ */
-        .row, 
+        .row,
         .column {
             box-sizing: border-box;
         }
-        
+
         .row:before,
         .row:after {
             content: " ";
@@ -138,7 +140,7 @@
         .row:after {
             clear: both;
         }
-        
+
         .column {
             position: relative;
             float: left;
@@ -194,17 +196,17 @@
             width: 100%%;
         }
         @media only screen and (max-width: 550px) {
-            .column-1, 
-            .column-2, 
-            .column-3, 
-            .column-4, 
-            .column-5, 
-            .column-6, 
-            .column-7, 
-            .column-8, 
-            .column-9, 
-            .column-10, 
-            .column-11, 
+            .column-1,
+            .column-2,
+            .column-3,
+            .column-4,
+            .column-5,
+            .column-6,
+            .column-7,
+            .column-8,
+            .column-9,
+            .column-10,
+            .column-11,
             .column-12 {
                 width: auto;
                 float: none;
@@ -286,19 +288,19 @@
                 </div>
             </SECTION>
         </DIV>
-        
+
         <FOOTER>
             Powered by <a href="http://scipion.cnb.csic.es">Scipion</a><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
         </FOOTER>
     </BODY>
     <SCRIPT>
-    
+
         var report ={
             date:"%(dateStr)s",
             project:"%(projectName)s",
             scipionVersion:"%(scipionVersion)s",
             acquisition:[
-                %(acquisitionLines)s    
+                %(acquisitionLines)s
             ],
             runs:[
                 %(runLines)s
@@ -327,15 +329,15 @@
 
             // Get the acquisition section
             var acquisitionSection = $('#acquisition');
-            
+
             // For each acquisition property
             $.each(report.acquisition, function(index, value){
                 var line = "<P class='propertyline'><label>" + value.propertyName + "</label> " + value.propertyValue + '</P>';
                 $(acquisitionSection).append(line);
             });
-            
+
         };
-        
+
         function addRuns(){
             // Get the runs table
             var runsTable = $('#runsTable');
@@ -344,18 +346,18 @@
             $.each(report.runs, function(index, value){
                 var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='2'></TD></TR>";
                 $(runsTable).append(line);
-            
+
                 $.each(value.output, function(index, value){
                     var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD></TR>";
                     $(runsTable).append(outputLine);
-                
+
                 });
             });
         };
 
         function addMovieGainChart () {
 
-            if (report.movieGainData.length == 0) {
+            if (report.movieGainData.length == 0 || report.movieGainData.idValues.length == 0) {
                 $('#movieGain').hide();
                 return;
             }
@@ -446,7 +448,7 @@
                     alignTicks: false
                 },
                 title: {
-                    text: 'Resolution'
+                    text: 'Max. Resolution'
                 },
                 xAxis: {
                     categories: labels,
@@ -472,13 +474,14 @@
         };
 
 
-//        function addCTFChart () {
-//
-//            if (!('defocusU' in report.ctfData)) {
-//                $('#ctf').hide();
-//                return;
-//            }
-//
+        function addCTFChart () {
+
+            if (!('defocusU' in report.ctfData)) {
+                $('#ctf').hide();
+                return;
+            }
+            addResolutionHistogram();
+            addDefocusCoverage();
 //
 //            $('#ctfChart').highcharts({
 //                title: {
@@ -539,7 +542,7 @@
 //            ctfChart.showResetZoom();
 //
 //
-//        };
+        };
 
         function addDefocusCoverage(){
             if (!('defocusCoverage' in report.ctfData)) {
@@ -652,7 +655,7 @@
 
             return systemSeries;
         }
-        
+
         function getSeriesYAxis(name, yAxes){
             var mbKeys = /send|recv|read|write|gpuMem/;
             var tempKeys = /gpuTem/;
@@ -704,14 +707,12 @@
             for (var serieId in chart.series) {
 
                 var serie = chart.series[serieId];
-//                Cookies.set(serie.name, serie.visible);
                 sessionStorage[serie.name] = serie.visible
             }
         };
 
         function isChartSerieVisible(serieName){
 
-//            var visible = Cookies.get(serieName);
             var visible = sessionStorage[serieName];
             if (visible == undefined)
                 visible = String(true);
@@ -879,37 +880,43 @@
                 cols.push({"title":"PsdFile"})
             }
             if ('defocusU' in report.ctfData){
-                cols.push({"title": "DefocusU (\u00B5m)",
+                cols.push({"title": "DefocusU (µm)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Defocus ratio",
-                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Astigmatism (\u212B)",
-                           "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Resolution (\u212B)",
+                          {"title": "Astigmatism (µm)",
+                           "render": $.fn.dataTable.render.number( ',', '.', 3)},
+                          {"title": "Max. Res (Å)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "CC value ",
-                            "render": $.fn.dataTable.render.number( ',', '.', 2)});
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "Defocus ratio",
+                            "render": $.fn.dataTable.render.number( ',', '.', 3)});
 
             }
             var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
+            var imgLoadingIcon = '<span class="glyphicon glyphicon-hourglass" title="Loading thumbnail..."></span>';
             var imgWidth = Math.floor($('#content').width() * 0.2);
+            var imgPathKeys = ['imgMicThumbs', 'imgShiftThumbs', 'imgPsdThumbs'];
 
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
-                var rowValues = [report.ctfData.micId[index], imgHtml.format(imgMicPath, imgWidth, report.ctfData.micId[index])];
-                if('imgShiftThumbs' in report.ctfData){
-                    var shiftPlotPath = report.ctfData.imgShiftThumbs[index];
-                    rowValues.push(imgHtml.format(shiftPlotPath,imgWidth, report.ctfData.micId[index]));
-                }
-
-                if('imgPsdThumbs' in report.ctfData){
-                    var psdThumbPath = report.ctfData.imgPsdThumbs[index];
-                    rowValues.push(imgHtml.format(psdThumbPath,imgWidth, report.ctfData.micId[index]));
+                var rowValues = [report.ctfData.micId[index]]
+                for (var i in imgPathKeys){
+                    if(imgPathKeys[i] in report.ctfData){
+                        imgThumbPath = report.ctfData[imgPathKeys[i]][index];
+                        if(imgThumbPath==''){
+                            rowValues.push(imgLoadingIcon)
+                        }else{
+                            rowValues.push(imgHtml.format(imgThumbPath, imgWidth,
+                                                        report.ctfData.micId[index]))
+                        }
+                    }
                 }
 
                 if ('defocusU' in report.ctfData){
-                    rowValues.push(report.ctfData.defocusU[index]*1e-4, report.ctfData.ratio[index],
-				   report.ctfData.astigmatism[index], report.ctfData.resolution[index],
-				   report.ctfData.fitQuality[index]);
+                    rowValues.push(report.ctfData.defocusU[index]*1e-4,
+				                   report.ctfData.astigmatism[index]*1e-4,
+                                   report.ctfData.resolution[index],
+	                               report.ctfData.fitQuality[index],
+                                   report.ctfData.ratio[index]);
                 }
 
                 dataset.unshift(rowValues);
@@ -920,12 +927,8 @@
                 columns: cols,
                 stateSave: true
             };
-            if (cols.length <= 4){
-                $('#micTable').wrap("<div class='scrolledTable'></div>");
-            }else{
-                dataTable['scrollX'] = true
-            }
 
+            $('#micTable').wrap("<div class='scrolledTable'></div>");
             $('#micTable').DataTable( dataTable);
 
         };
@@ -933,14 +936,12 @@
         function populateReport(){
             addAcquisition();
             addRuns();
-//            addCTFChart();
-            addResolutionHistogram();
-            addDefocusCoverage();
+            addCTFChart();
             addMovieGainChart();
             addSystemChart();
             addMicTable();
         };
-        
+
         populateReport();
 
         function registerModalEvents(){
@@ -1033,4 +1034,3 @@
 
     </SCRIPT>
 <HTML>
-
