@@ -234,10 +234,11 @@ Examples:
                       label=changesLabel,
                       help='Visualize changes in orientation, offset and\n '
                            'number images assigned to each class')
-        form.addParam('plotClassDistribution', params.LabelParam, default=True,
-                      label='Prot class distribution over iterations',
-                      help='Plot each class distribution over iterations as '
-                           'bar plots.')
+        if self.protocol.IS_CLASSIFY:
+          form.addParam('plotClassDistribution', params.LabelParam, default=True,
+                        label='Prot class distribution over iterations',
+                        help='Plot each class distribution over iterations as '
+                             'bar plots.')
                                               
     def _getVisualizeDict(self):
         self._load()
@@ -453,11 +454,12 @@ Examples:
 
         for classId in sorted(classInfo.keys()):
             values = classInfo[classId][l]
-            ax.bar(ind, values, width, bottom=bottomValues, color=cmap(classId))
+            ax.bar(ind, values, width, label='class %s' % classId, bottom=bottomValues, color=cmap(classId))
             bottomValues = [a+b for a, b in zip(bottomValues, values)]
 
         ax.get_xaxis().set_ticks([i + 0.25 for i in ind])
         ax.get_xaxis().set_ticklabels([str(i) for i in ind])
+        ax.legend(loc='upper left', fontsize='xx-small')
 
         return [xplotter]
     
