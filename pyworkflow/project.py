@@ -503,7 +503,8 @@ class Project(object):
 
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
-            protocol.copy(prot2, copyId=False)
+
+            protocol.copy(prot2, copyId=False, excludeInputs=True)
             # Restore backup values
             protocol.setJobId(jobId)
             protocol.setObjLabel(label)
