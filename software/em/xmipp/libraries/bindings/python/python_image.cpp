@@ -1476,7 +1476,7 @@ Image_divide(PyObject *obj1, PyObject *obj2)
     return (PyObject *)result;
 }//operator /
 
-/** Image inplace multiply, equivalent to *= operator
+/** Image division
  * NOTE (JM): For efficiency reasons, we break the Python convention
  * and return None instead of a new reference of Image
  * just to avoid creating a new Image object.
@@ -1512,18 +1512,25 @@ Image_inplaceDivide(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *other = NULL;
     if (PyArg_ParseTuple(args, "O", &other))
     {
-      double value = PyFloat_AsDouble(other);
-      Image_Value(self).divide(value);
+      if (Image_Check(other))
+      {
+        Image_Value(self).divide(Image_Value(other));
+      }
+      else
+      {
+        Image_Value(self).divide(PyFloat_AsDouble(other));
+      }
       Py_RETURN_NONE;
     }
     else
-      PyErr_SetString(PyXmippError, "Expecting Number as second argument");
+      PyErr_SetString(PyXmippError, "Expecting Number or Image as second argument");
   }
   catch (XmippError &xe)
   {
       PyErr_SetString(PyXmippError, xe.msg.c_str());
   }
   return NULL;
+
 }// similar to /=
 
 /** Image inplace subtraction, equivalent to -= operator */
