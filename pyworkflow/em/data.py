@@ -125,6 +125,7 @@ class CTFModel(EMObject):
         self._defocusV = Float(kwargs.get('defocusV', None))
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
+        self._phaseShift = Float()
         self._psdFile = String()
 #         self._micFile = String()
         self._micObj = None
@@ -133,11 +134,12 @@ class CTFModel(EMObject):
 
     def __str__(self):
         if self._resolution.hasValue():
-            ctfStr = "defocus(U,V,a,re,fit) = " \
-                     "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
+            ctfStr = "defocus(U,V,a,psh,re,fit) = " \
+                     "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
                      (self._defocusU.get(),
                       self._defocusV.get(),
                       self._defocusAngle.get(),
+                      self._phaseShift.get(),
                       self._resolution.get(),
                       self._fitQuality.get()
                       )
@@ -151,6 +153,21 @@ class CTFModel(EMObject):
         if self._micObj:
             ctfStr + " mic=%s" % self._micObj
         return ctfStr
+
+    def getPhaseShift(self):
+        # this is an awful hack to read phase shift from ctffind or gctf
+        # It should be eventually removed
+        if self._phaseShift.hasValue():
+            return self._phaseShift.get()
+        elif hasattr(self, '_ctffind4_ctfPhaseShift'):
+            return self._ctffind4_ctfPhaseShift.get()
+        elif hasattr(self, '_gctf_ctfPhaseShift'):
+            return self._gctf_ctfPhaseShift.get()
+        else:
+            return self._phaseShift.get()
+
+    def setPhaseShift(self, value):
+        self._phaseShift.set(value)
 
     def getResolution(self):
         # this is an awful hack to read freq either from ctffid/gctf or xmipp
@@ -215,7 +232,7 @@ class CTFModel(EMObject):
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV', '_defocusAngle',
                                    '_defocusRatio', '_psdFile', '_micFile',
-                                   '_resolution', '_fitQuality')
+                                   '_resolution', '_fitQuality', '_phaseShift')
 
     def getPsdFile(self):
         return self._psdFile.get()
