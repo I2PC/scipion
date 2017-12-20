@@ -78,7 +78,8 @@ class BrandeisCTFWizard(CtfWizard):
             args = {'unit': UNIT_PIXEL,
                     'downsample': _value[0],
                     'lf': _value[1],
-                    'hf': _value[2]
+                    'hf': _value[2],
+                    'showInAngstroms': True
                     }
             d = CtfDownsampleDialog(form.root, provider, **args)
 
