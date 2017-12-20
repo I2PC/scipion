@@ -1115,7 +1115,7 @@ _rlnDefocusU #2
         #if you do not fill buffers first meassurements will be muchfaster
         print "fill buffers so comparisons are fair"
         tmpFn="/tmp/deleteme.xmd"
-        timestamp1 = time()
+        timestamp1 = time.time()
         if exists(tmpFn):
             os.remove(tmpFn)
         for met in range(1, numberMetadatas):
@@ -1128,11 +1128,11 @@ _rlnDefocusU #2
                 md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
             md.write(outFileName,MD_APPEND)
             md.clear()
-        timestamp2 = time()
+        timestamp2 = time.time()
         print "\nBUFFER FILLING took %.2f seconds" % (timestamp2 - timestamp1)
 
         #write sqlite lineal
-        timestamp1 = time()
+        timestamp1 = time.time()
         for met in range(1, numberMetadatas):
             outFileName = "b%06d@%s" % (met,fnSqlite)
             for lin in range(1, numberLines):
@@ -1143,10 +1143,10 @@ _rlnDefocusU #2
                 md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
             md.write(outFileName,MD_APPEND)
             md.clear()
-        timestamp2 = time()
+        timestamp2 = time.time()
         print "\nwrite(append) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
         #write star lineal
-        timestamp1 = time()
+        timestamp1 = time.time()
         for met in range(1, numberMetadatas):
             outFileName = "b%06d@%s" % (met,fnStar)
             for lin in range(1, numberLines):
@@ -1157,25 +1157,25 @@ _rlnDefocusU #2
                 md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
             md.write(outFileName,MD_APPEND)
             md.clear()
-        timestamp2 = time()
+        timestamp2 = time.time()
         print "\nwrite(append) star took %.2f seconds" % (timestamp2 - timestamp1)
         self.assertEqual(1, 1)
 
         #read random ///////////////////////////////////////////////////7
-        timestamp1 = time()
+        timestamp1 = time.time()
         for met in range(1, numberMetadatas):
             outFileName = "b%06d@%s" % (met,fnSqlite)
             md.read(outFileName)
             md.clear()
-        timestamp2 = time()
+        timestamp2 = time.time()
         print "\nread(secuential) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
 
-        timestamp1 = time()
+        timestamp1 = time.time()
         for met in range(1, numberMetadatas):
             outFileName = "b%06d@%s" % (met,fnStar)
             md.read(outFileName)
             md.clear()
-        timestamp2 = time()
+        timestamp2 = time.time()
         print "\nread(secuential) star took %.2f seconds" % (timestamp2 - timestamp1)
 
     def test_SymList_readSymmetryFile(self):
