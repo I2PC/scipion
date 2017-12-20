@@ -13,8 +13,8 @@ def usage(error):
     ERROR: %s
 
     Usage: scripts/tar.py TARNAME
-        TARNAME: the name of the tarfile that will be generated from
-        the scipion folder. For example: scipion_v1.0.0_20150115.tgz
+        TARNAME: the type of tar that is going to be generated from 
+        the scipion folder. Must be 'source' or 'linux64'.
     """ % error
     sys.exit(1)
 
@@ -43,8 +43,11 @@ version, date = _parseVersionDate()
 label = sys.argv[1]
 if label == 'source':
     excludeTgz = ''
+elif label == 'linux64':
+    excludeTgz = "--exclude='*.tgz' --exclude='*.h' --exclude='*.cpp' --exclude='*.java'"
+
 else:
-    excludeTgz = "--exclude='*.tgz'"
+    usage("incorrect TARNAME'")
 
 args = {'label': label,
         'version': version,
