@@ -24,7 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import os
 
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.viewer import LocalResolutionViewer
@@ -35,9 +35,9 @@ from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from protocol_resolution_monogenic_signal import (XmippProtMonoRes,
-                                                OUTPUT_RESOLUTION_FILE,
-                                                 OUTPUT_RESOLUTION_FILE_CHIMERA,
-                                                 FN_METADATA_HISTOGRAM) 
+                                                  OUTPUT_RESOLUTION_FILE,
+                                                  OUTPUT_RESOLUTION_FILE_CHIMERA,
+                                                  FN_METADATA_HISTOGRAM, CHIMERA_RESOLUTION_VOL)
 from pyworkflow.em.viewer import ChimeraView, DataView
 from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
@@ -151,7 +151,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
                                        cmap=self.getColorMap(),
                                        interpolation="nearest")
         xplotter.getColorBar(plot)
-        return [Plotter(figure1 = xplotter)]
+        return [xplotter]
 
 
     def _plotHistogram(self, param=None):
@@ -203,7 +203,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
         fnRoot = "extra/"
         scriptFile = self.protocol._getPath('Chimera_resolution.cmd')
         fhCmd = open(scriptFile, 'w')
-        imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
+        imageFile = self.protocol._getFileName(OUTPUT_RESOLUTION_FILE_CHIMERA)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         min_Res = round(np.amin(imgData)*100)/100
@@ -225,7 +225,8 @@ class XmippMonoResViewer(LocalResolutionViewer):
             ext = getExt(self.protocol.inputVolumes.get().getFileName())
             fninput = abspath(fnbase + ext[0:4])
             fhCmd.write("open %s\n" % fninput)
-        fhCmd.write("open %s\n" % (fnRoot + OUTPUT_RESOLUTION_FILE_CHIMERA))
+
+        fhCmd.write("open %s\n" % (fnRoot + CHIMERA_RESOLUTION_VOL))
         if self.protocol.halfVolumes.get() is True:
             smprt = self.protocol.inputVolume.get().getSamplingRate()
         else:

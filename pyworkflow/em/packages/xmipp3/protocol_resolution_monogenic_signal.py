@@ -35,6 +35,7 @@ from pyworkflow.em.data import Volume
 import numpy as np
 import pyworkflow.em.metadata as md
 
+CHIMERA_RESOLUTION_VOL = 'MG_Chimera_resolution.vol'
 
 MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoRes'
 
@@ -161,9 +162,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
         myDict = {
                  FN_MEAN_VOL: self._getExtraPath('mean_volume.vol'),
                  OUTPUT_MASK_FILE: self._getExtraPath("output_Mask.vol"),
-                 OUTPUT_RESOLUTION_FILE_CHIMERA: self._getExtraPath('MG_Chimera_resolution.vol'),
+                 OUTPUT_RESOLUTION_FILE_CHIMERA: self._getExtraPath(CHIMERA_RESOLUTION_VOL),
                  FN_FILTERED_MAP: self._getExtraPath('filteredMap.vol'),
-                 OUTPUT_RESOLUTION_FILE: self._getExtraPath('resolutionMap.vol'),
+                 OUTPUT_RESOLUTION_FILE: self._getExtraPath('mgresolution.vol'),
                  METADATA_MASK_FILE: self._getExtraPath('mask_data.xmd'),
                  FN_METADATA_HISTOGRAM: self._getExtraPath('hist.xmd')
                  }

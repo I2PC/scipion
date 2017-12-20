@@ -100,24 +100,3 @@ class TestBsoftBlocres(TestBsoftBlocresBase):
         self.launchProtocol(blocres)
         self.assertIsNotNone(blocres.resolution_Volume,
                         "blocres has failed")
-
-
-    def testBlocres2(self):
-        blocres = self.newProtocol(BsoftProtBlocres,
-                                   objLabel='blocres',
-                                   inputVolume=self.protImportHalf1.outputVolume,
-                                   inputVolume2=self.protImportHalf2.outputVolume,
-                                   mask=self.protCreateMask.outputMask,
-                                   method=False,
-                                   shell=20,
-                                   resolutionCriterion=0,
-                                   cutoff=0.5,
-                                   step=1,
-                                   maxresolution=2,
-                                   fill=0,
-                                   pad=1,
-                                   symmetry='',
-                                   smooth=True)
-        self.launchProtocol(blocres)
-        self.assertIsNotNone(blocres.resolution_Volume,
-                        "blocres has failed")

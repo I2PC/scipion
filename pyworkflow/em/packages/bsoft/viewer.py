@@ -34,7 +34,7 @@ from pyworkflow.em.constants import (COLOR_CHOICES, COLOR_OTHER, COLOR_JET,
                                       COLOR_GNU_PLOT2, AX_X, AX_Y, AX_Z)
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.plotter import EmPlotter
-#from pyworkflow.em import ImageHandler
+from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import Volume
 #import numpy as np
 #import matplotlib.pyplot as plt
@@ -135,7 +135,7 @@ class BsoftViewerBlocres(LocalResolutionViewer):
                 }
        
     def _showVolumeSlices(self, param=None):
-        out_cm = DataView(self.protocol.outputVolume.getFileName())
+        out_cm = DataView(self.protocol._getFileName(FN_RESOLMAP))
         
         return [out_cm]
     
@@ -166,36 +166,16 @@ class BsoftViewerBlocres(LocalResolutionViewer):
 
     def _plotHistogram(self, param=None):
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
-        nbins = 30;
-        fig = self.plotHist(imageFile, nbins)
-        return [Plotter(figure = fig)]
+        img = ImageHandler().read(imageFile)
+        imgData = img.getData()
+        print imgData
+        nbins = 30
+        plotter = EmPlotter(x=1,y=1,mainTitle="  ")
+        plotter.createSubPlot("Resolution histogram",
+                              "Resolution (A)", "# of Counts")
+        fig = plotter.plotHist(imgData, nbins)
+        return [plotter]
         
-#         imageFile = self.protocol._getFileName(FN_RESOLMAP)
-#         img = ImageHandler().read(imageFile)
-#         imgData = img.getData()
-#         Res = imgData[imgData!=self.protocol.fill.get()]
-#         minres = np.amin(Res)
-#         maxres = np.amax(Res)
-#         steps = 30
-#         stepSize = (maxres - minres)/steps
-#         x_axis = []
-#         y_axis = []
-#     
-#         for idx in range(0,steps):
-#             x_axis_aux = minres + idx*stepSize
-#             x_axis.append(x_axis_aux)
-#             auxRes = Res[Res<(minres+(idx+1)*stepSize)]
-#             auxRes2 = auxRes[auxRes>=(minres+(idx*stepSize))]
-#             length = len(auxRes2)
-#             y_axis_aux = int(length)
-#             y_axis.append(y_axis_aux)
-#         fig = plt.figure()        
-#         plt.bar(x_axis, y_axis, width = stepSize)    
-#         plt.title("Resolutions Histogram")
-#         plt.xlabel("Resolution (A)")
-#         plt.ylabel("Counts")    
-
-#         return [Plotter(figure = fig)]
 
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
