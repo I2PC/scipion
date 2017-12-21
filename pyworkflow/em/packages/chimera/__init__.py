@@ -26,11 +26,10 @@
 This EM module contains Gautomatch auto-picking protocol 
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
-from convert import getEnviron
+from pyworkflow.em.utils.chimera_utilities.convert import getEnviron
 
 _logo = "ChimeraLogoSmall.png"
 
 from protocol_fit import ChimeraProtRigidFit
-from viewer_fit import viewerChimeraProtRigidFit
+from viewer import ChimeraProtRigidFitViewer
 _environ = getEnviron()
