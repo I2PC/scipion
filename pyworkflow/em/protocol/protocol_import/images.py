@@ -478,10 +478,8 @@ class ProtImportImages(ProtImportFiles):
 
     def _fillImportedFiles(self, imgSet):
         from pyworkflow.em import SetOfMicrographsBase
-        print "imported files: ", isinstance(imgSet, SetOfMicrographsBase)
         if isinstance(imgSet, SetOfMicrographsBase):
             for img in imgSet:
-                print "MicName: ", img.getMicName()
                 self.importedFiles.add(img.getMicName())
 
     def _fillMicName(self, img, uniqueFn):
@@ -491,9 +489,10 @@ class ProtImportImages(ProtImportFiles):
             
     def _getUniqueFileName(self, filename, filePaths=None):
         if filePaths is None:
-            filePaths = [re.split(r'[$*#]', self.getPattern())[0]]
-
+            filePaths = [re.split(r'[$*#?]', self.getPattern())[0]]
+        
         commPath = pwutils.commonPath(filePaths)
+        print "filePaths, commPath: ", filePaths, commPath
         return filename.replace(commPath + "/", "").replace("/", "_")
 
     def handleImgHed(self, copyOrLink, src, dst):
