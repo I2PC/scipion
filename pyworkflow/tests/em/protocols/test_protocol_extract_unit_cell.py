@@ -28,26 +28,26 @@
 # cell from a specific volume
 
 import os
-import math
 from tempfile import mkstemp
-from pyworkflow.utils import runJob
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.packages.xmipp3 import getEnviron
-from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
-from pyworkflow.em.protocol import ProtImportVolumes
-from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell \
-    import XmippProtExtractUnit
+
+from icosahedron import *
 from pyworkflow.em.constants import SYM_I222r, SYM_I222, SCIPION_SYM_NAME, \
     SYM_In25, SYM_In25r, SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, \
     SYM_OCTAHEDRAL
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base \
-    import NMA_MASK_THRE
+from pyworkflow.em.data import Transform
+from pyworkflow.em.utils.ccp4_utilities.convert import Ccp4Header
+from pyworkflow.em.packages.xmipp3 import getEnviron
+from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms \
     import XmippProtConvertToPseudoAtoms
-from icosahedron import *
-from pyworkflow.em.packages.ccp4.convert import Ccp4Header
-from pyworkflow.em.data import Transform
+from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base \
+    import NMA_MASK_THRE
+from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell \
+    import XmippProtExtractUnit
+from pyworkflow.em.protocol import ProtImportVolumes
+from pyworkflow.tests import BaseTest, setupTestProject
+from pyworkflow.utils import runJob
 
 OFFSET = 22.5
 
@@ -342,7 +342,7 @@ class TestProtModelBuilding(BaseTest):
     def setUpClass(cls):
         cls.mode = 'xmipp'
         # Cyclic
-        cls.symOrder = 8  # phantom symmetry order for CN and similars
+        cls.symOrder = 8  # phantom symmetry order for Cn and similars
 
         # general
         cls.innerRadius = None
@@ -453,7 +453,7 @@ class TestProtModelBuilding(BaseTest):
         self.outerRadius = 79.
         self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r],
                                             'xmipp', XMIPP_SYM_NAME[SYM_I222r])
-        self.box[SYM_I222r] = (91, 70, 53)
+        self.box[SYM_I222r] = (91, 70, 52)
 
         self.extractunitCell(SYM_I222r, cropZ=True)  # crowther 222
 
@@ -478,16 +478,17 @@ class TestProtModelBuilding(BaseTest):
             _, outputFile2 = mkstemp(suffix=".mrc")
             args = "-i %s -o %s" % (outputFile1, outputFile2)
             args += " --corners "
-            args += " %d " % (- x / 2)
-            args += " %d " % (- y / 2)
-            args += " %d " % (0)
-            args += " %d " % (+ x / 2)
-            args += " %d " % (+ y / 2)
-            args += " %d " % (+ z / 2)
+            args += " %d " % (- x / 2.)
+            args += " %d " % (- y / 2.)
+            args += " %d " % (0.)
+            args += " %d " % (+ x / 2.)
+            args += " %d " % (+ y / 2.)
+            args += " %d " % (+ z / 2.)
             runJob(None, "xmipp_transform_window", args, env=getEnviron())
             t.setShifts(0, 0, 0)
             outputFile = outputFile2
             ccp4header = Ccp4Header(outputFile2, readHeader=True)
+
         else:
             t.setShifts(0, 0, 0)
             outputFile = outputFile1
@@ -503,9 +504,10 @@ class TestProtModelBuilding(BaseTest):
                     'samplingRate': _samplingRate,
                     'copyFiles': True,
                     'setDefaultOrigin': False,
-                    'x': 90,
-                    'y': 90,
+                    'x': 90. * _samplingRate,
+                    'y': 90. * _samplingRate,
                     'z': 0.
+                    # x, y, z in Angstroms
                     }
         else:
             args = {'filesPath': outputFile,
