@@ -24,21 +24,22 @@
 # *
 # **************************************************************************
 
-from pyworkflow import VERSION_1_2
-from pyworkflow.em.protocol import EMProtocol
+import os
+import stat
+
 import pyworkflow.protocol.constants as const
-from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, BooleanParam
+from pyworkflow import VERSION_1_2
 from pyworkflow.em import Volume, PdbFile
-from pyworkflow.em.packages.ccp4.refmac_template_mask import template_mask
 from pyworkflow.em.packages.ccp4.refmac_template_ifft import template_ifft
+from pyworkflow.em.packages.ccp4.refmac_template_mask import \
+    template_mask
 from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
 from pyworkflow.em.pdb_handler import fixCRYSrecordToPDBFile
-import os
-from convert import (adaptBinFileToCCP4, runCCP4Program)
-import stat
-from tempfile import mkdtemp
-from pyworkflow.em.packages.ccp4.convert import Ccp4Header
-from pyworkflow.em.data import Transform
+from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.utils.ccp4_utilities.convert import (
+    adaptBinFileToCCP4, runCCP4Program)
+from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
+    BooleanParam
 
 
 class CCP4ProtRunRefmac(EMProtocol):
