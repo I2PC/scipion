@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers aroung Powerfit
+This module implement the wrappers around Powerfit
 visualization program.
 """
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -36,7 +36,7 @@ import glob
 
 from protocol_powerfit import PowerfitProtRigidFit
 
-import powerfit
+
 
 class PowerfitViewer(Viewer):
     """ Wrapper to visualize rigid fittings. """
@@ -57,7 +57,8 @@ class PowerfitViewer(Viewer):
             import numpy
             x=numpy.loadtxt(fnInt,skiprows=1)
             xplotter = Plotter(windowTitle="SAXS Curves")
-            a = xplotter.createSubPlot('SAXS curves', 'Angstrongs^-1', 'log(SAXS)', yformat=False)
+            a = xplotter.createSubPlot('SAXS curves', 'Angstrongs^-1',
+                                       'log(SAXS)', yformat=False)
             a.plot(x[:,0], numpy.log(x[:,1]))
             a.plot(x[:,0], numpy.log(x[:,2]))
             if obj.experimentalSAXS.empty():
@@ -65,4 +66,3 @@ class PowerfitViewer(Viewer):
             else:
                 xplotter.showLegend(['Experimental SAXS','SAXS from volume'])
             xplotter.show()
-        
