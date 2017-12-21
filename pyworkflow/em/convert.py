@@ -424,6 +424,12 @@ class ImageHandler(object):
         
         return fn
 
+    @classmethod
+    def removeFileType(cls, fileName):
+        # Remove filename format specification such as :mrc, :mrcs or :ems
+        if ':' in fileName:
+            fileName = fileName.split(':')[0]
+        return fileName
 
 DT_FLOAT = ImageHandler.DT_FLOAT
 
