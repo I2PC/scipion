@@ -132,10 +132,21 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        ctfStr = "defocus(U,V,a) = (%0.2f,%0.2f,%0.2f)" % \
-                 (self._defocusU.get(),
-                  self._defocusV.get(),
-                  self._defocusAngle.get())
+        if self._resolution.hasValue():
+            ctfStr = "defocus(U,V,a,re,fit) = " \
+                     "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
+                     (self._defocusU.get(),
+                      self._defocusV.get(),
+                      self._defocusAngle.get(),
+                      self._resolution.get(),
+                      self._fitQuality.get()
+                      )
+        else:   # TODO; remove eventually,
+                # compatibility with old ctfmodel
+            ctfStr = "defocus(U,V,a) = " \
+                     "(%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
+                                              self._defocusV.get(),
+                                              self._defocusAngle.get())
 
         if self._micObj:
             ctfStr + " mic=%s" % self._micObj
@@ -156,11 +167,14 @@ class CTFModel(EMObject):
         else:
             return self._resolution.get()
 
+    def hasResolution(self):
+        return self._resolution.hasValue()
+
     def setResolution(self, value):
         self._resolution.set(value)
 
     def getFitQuality(self):
-        # this is an awful hack to read freq either from ctffid/gctf or xmipp
+        # this is an awful hack to read freq either from ctffind/gctf or xmipp
         # labels assigned to max resolution used to be different
         # It should be eventually removed
         if self._fitQuality.hasValue():
@@ -416,13 +430,14 @@ class Image(EMObject):
         # this matrix can be used for 2D/3D alignment or
         # to represent projection directions
         self._transform = None
-        # default orign by default is box center =
-        # (Xdim/2, Ydim/2,Zdim/2)
+        # default origin by default is box center =
+        # (Xdim/2, Ydim/2,Zdim/2)*sampling
         # origin stores a matrix that using as input the point (0,0,0)
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
-        # _origin is an object of the class Transformor shifts
-        # units are pixels
+        # _origin is an object of the class Transform shifts
+        # units are A.
+        # Origin coordinates follow the MRC convention
         self._origin = None
         if location:
             self.setLocation(location)
@@ -545,20 +560,31 @@ class Image(EMObject):
         return self._origin is not None
 
     def getOrigin(self, returnInitIfNone=False):
+        """shifts in A"""
         if self.hasOrigin():
             return self._origin
         else:
             if returnInitIfNone:
+                sampling = self.getSamplingRate()
                 t = Transform()
                 x, y, z = self.getDim()
                 if z > 1:
-                    z = z/2
-                t.setShifts(x/2, y/2, z)
+                    z = z/2.
+                t.setShifts(x/2. * sampling, y/2. * sampling, z * sampling)
                 return t  # The identity matrix
             else:
                 return None
 
+    def getVolOriginAsTuple(self):
+        origin = self.getOrigin(returnInitIfNone=True).getShifts()
+        x = origin[0]
+        y = origin[1]
+        z = origin[2]
+        return x, y, z
+        # x, y, z are floats in Angstroms
+
     def setOrigin(self, newOrigin):
+        """shifts in A"""
         self._origin = newOrigin
 
     def __str__(self):
@@ -723,7 +749,7 @@ class PdbFile(EMFile):
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
         # _origin is an object of the class Transformor shifts
-        # units are angstrom (in Image units are px)
+        # units are Angstroms (in Image units are A)
         self._origin = None
 
     def getPseudoAtoms(self):
@@ -739,7 +765,11 @@ class PdbFile(EMFile):
         return self._volume is not None
 
     def setVolume(self, volume):
-        self._volume = volume
+        if type(volume) is Volume:
+            self._volume = volume
+        else:
+            raise Exception('TypeError', 'ERROR: SetVolume, This is not a '
+                                         'volume')
 
     def __str__(self):
         return "%s (pseudoatoms=%s, volume=%s)" % \
@@ -1141,7 +1171,14 @@ class SetOfCTF(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        self._micrographsPointer.set(micrographs)
+        """ Set the micrographs from which this CTFs were estimated.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
 
 
 class SetOfDefocusGroup(EMSet):
@@ -1325,11 +1362,15 @@ class SetOfCoordinates(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        """ Set the SetOfMicrograph associates with
-        this set of coordinates.
-         """
-        self._micrographsPointer.set(micrographs)
-
+        """ Set the micrographs associated with this set of coordinates.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
+        
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())
@@ -1430,7 +1471,11 @@ class Transform(EMObject):
         m[0, 3] = x
         m[1, 3] = y
         m[2, 3] = z
-
+                
+    def composeTransform(self, matrix):
+        '''Apply a transformation matrix to the current matrix '''            
+        new_matrix = matrix * self.getMatrix()
+        self._matrix.setMatrix(new_matrix)
 
 class Class2D(SetOfParticles):
     """ Represent a Class that groups Particles objects.
