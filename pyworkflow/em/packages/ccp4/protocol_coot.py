@@ -27,19 +27,24 @@ import os
 
 import pyworkflow.utils as pwutils
 from pyworkflow import VERSION_1_2
-from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import MultiPointerParam, PointerParam, BooleanParam
-from pyworkflow.em.protocol import EMProtocol
-from convert import (getProgram, adaptBinFileToCCP4, runCCP4Program,
-                     cootPdbTemplateFileName, cootScriptFileName)
-from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em import PdbFile
-from pyworkflow.em.data import EMObject
 from pyworkflow.em import Volume
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.data import EMObject
+from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.utils.ccp4_utilities.convert import (getProgram,
+                                                        copyMRCHeader,
+                                                        runCCP4Program,
+                                                        cootPdbTemplateFileName,
+                                                        cootScriptFileName,
+                                                        Ccp4Header)
+from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
+    BooleanParam
+from pyworkflow.utils.properties import Message
+from pyworkflow.em.data import Transform
 
 
-#TODO:
-# 1) Visualize user as guide pyworkflow/em/packages/xmipp3/nma/viewer_nma.py
+#TODO: viewer
 
 class CCP4ProtCoot(EMProtocol):
     """Coot is an interactive graphical application for
@@ -54,7 +59,7 @@ the pdb file from coot  to scipion '
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputVolumes', MultiPointerParam, pointerClass="Volume",
-                      label='Input Volume/s',
+                      label='Input Volume/s', allowsNull=True,
                       help="Set of volumes to process")
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize', important=True,
@@ -66,7 +71,8 @@ the pdb file from coot  to scipion '
                       help="PDB file to be refined. This PDB object, after refinement, will be saved")
         form.addParam('inputPdbFiles', MultiPointerParam, pointerClass="PdbFile",
                       label='Other referece PDBs',
-                      help="Other PDB files used as reference. This PDB objects will not be saved")
+                      help="Other PDB files used as reference. These PDB "
+                           "objects will not be saved")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot  to scipion')
         form.addLine("You may also excute (from script -> python) the command scipion_write(imol)")
@@ -75,55 +81,65 @@ the pdb file from coot  to scipion '
 
     def _insertAllSteps(self):
         #test loop over inputVol
+        inVolumes = []
+        norVolumesNames = []
+        if self.inputVolumes.get() is None:
+            vol = self.pdbFileToBeRefined.get().getVolume()
+            inFileName = vol.getFileName()
+            inVolumes.append(vol)
+            norVolumesNames.append(self._getVolumeFileName(inFileName))
+        else:
+            for vol in self.inputVolumes.get():
+                inFileName = vol.getFileName()
+                inVolumes.append(vol)
+                norVolumesNames.append(self._getVolumeFileName(inFileName))
 
-        convertId = self._insertFunctionStep('convertInputStep')
-        runCootId = self._insertFunctionStep('runCootStep', prerequisites=[convertId],
-                                             interactive=True)
+        convertId = self._insertFunctionStep('convertInputStep', inVolumes,
+                                             norVolumesNames)
+        self._insertFunctionStep('runCootStep', inVolumes, norVolumesNames,
+                                 prerequisites=[convertId],
+                                 interactive=True)
+        #self._insertFunctionStep('createOutputStep', inVolumes,
+        #                         norVolumesNames)
 
     # --------------------------- STEPS functions ---------------------------------------------------
 
-    def convertInputStep(self):
-        """ convert 3Dmaps to MRC '.mrc' format
+    def convertInputStep(self, inVolumes, norVolumesNames):
+        """ convert 3D maps to MRC '.mrc' format
         """
-        for vol in self.inputVolumes:
-            inFileName  = vol.get().getFileName()
-            if inFileName.endswith('.mrc'):
-                inFileName = inFileName + ":mrc"
-            outFileName = self._getVolumeFileName(inFileName)
-            if self.doNormalize:
-                img = ImageHandler()._img
-                img.read(inFileName)
-                mean, dev, min, max = img.computeStats()
-                img.inplaceMultiply(1./max)
-                img.write(outFileName)
-                #TODO: HORROR
-                import struct
-                f = open(inFileName.replace(':mrc', ''),'rb')
-                s = f.read(13*4)#read header up to angles incluse word 6
-                f.close()
-                chain = "< 3i i 3i 3i 3f"
-                a = struct.unpack(chain, s)
-                ss=struct.Struct(chain)
-                packed_data = ss.pack(*a)
-                f = open(outFileName.replace(':mrc', ''), 'r+')
-                f.write(packed_data)
 
-                #END HORROR
-            else:
-                adaptBinFileToCCP4(inFileName, outFileName)
+        for inVol, norVolName in zip(inVolumes, norVolumesNames):
+            inVolName  = inVol.getFileName()
+            print "involname", inVolName, norVolName
+            print "BEFORE0", inVol.printAll()
+            if inVolName.endswith("mrc"): inVolName += ":mrc"
+            if norVolName.endswith("mrc"): norVolName += ":mrc"
+            if not os.path.exists(norVolName):
+                if self.doNormalize:
+                    img = ImageHandler()._img
+                    img.read(inVolName)
+                    mean, dev, min, max = img.computeStats()
+                    img.inplaceMultiply(1./max)
+                    img.write(norVolName)
+                else:
+                    ImageHandler().convert(inVolName, norVolName)
+                print "BEFORE1", inVol.printAll()
+                copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
+                returnInitIfNone=True).getShifts(),
+                              inVol.getSamplingRate())
 
         createScriptFile(0,#imol
                          self._getTmpPath(cootScriptFileName),
                          self._getExtraPath(cootPdbTemplateFileName))
 
-    def runCootStep(self):
+    def runCootStep(self, inVolumes, norVolumesNames):
         #find last created PDB output file
         template = self._getExtraPath(cootPdbTemplateFileName)
         counter=1
         while os.path.isfile(template%counter):
             counter += 1
 
-        #if there is not previous output use pdb file form form
+        #if there is not previous output use pdb file form
         #otherwise use last created pdb file
         if counter == 1:
             pdbFileToBeRefined = self.pdbFileToBeRefined.get().getFileName()
@@ -135,20 +151,22 @@ the pdb file from coot  to scipion '
         for pdb in self.inputPdbFiles:
             args += " --pdb " + pdb.get().getFileName() # other pdb files
         args +=  " --script " + self._getTmpPath(cootScriptFileName) # script wit auxiliary files
-        for vol in self.inputVolumes:
-            inFileName  = vol.get().getFileName()
-            args += " --map " + self._getVolumeFileName(inFileName)
+        for volName in norVolumesNames:
+            print "vol passsed to coot", volName
+            args += " --map " + volName
         #_envDict['COOT_PDB_TEMPLATE_FILE_NAME'] = self._getExtraPath(cootPdbTemplateFileName)
         self._log.info('Launching: ' + getProgram(os.environ['COOT']) + ' ' + args)
 
         #run in the background
         runCCP4Program(getProgram(os.environ['COOT']), args)
 
-        # while creating files
-        #if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
-        self.createOutput(counter)
+        self.createOutputStep(   inVolumes,
+                                 norVolumesNames,
+                                 counter)
 
-    def createOutput(self, init_counter=1):
+    def createOutputStep(self, inVolumes,
+                                 norVolumesNames,
+                                 init_counter=1):
         """ Copy the PDB structure and register the output object.
         """
         template = self._getExtraPath(cootPdbTemplateFileName)
@@ -164,23 +182,27 @@ the pdb file from coot  to scipion '
             #self._defineOutputs(outputPdb=pdb)
             self._defineSourceRelation(self.inputPdbFiles, pdb)
             #self._defineSourceRelation(self.inputVolumes, self.outputPdb)
-            self._defineSourceRelation(self.inputVolumes, pdb)
+
+            for vol in inVolumes:
+                self._defineSourceRelation(vol, pdb)
             counter += 1
 
         if self.doNormalize:
             counter=init_counter
-            for vol in self.inputVolumes:
+            for inVol, norVolName in zip(inVolumes,norVolumesNames):
+                if os.path.exists(norVolName):
+                    break
                 outVol = Volume()
-                outVol.setSamplingRate(vol.get().getSamplingRate())
+                outVol.setSamplingRate(norVolName)
 #
-                inFileName  = vol.get().getFileName()
+                inFileName  = vol.getFileName()
                 if inFileName.endswith('.mrc'):
                     inFileName = inFileName + ":mrc"
                 outFileName = self._getVolumeFileName(inFileName)
                 outVol.setFileName(outFileName)
                 outputs = {"output3DMap_%04d"%counter: outVol}
                 self._defineOutputs(**outputs)
-                self._defineSourceRelation(self.inputVolumes, outVol)
+                self._defineSourceRelation(vol, outVol)
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -200,6 +222,11 @@ the pdb file from coot  to scipion '
                 errors.append("Current values:")
                 errors.append("CCP4_HOME = %s" % os.environ['CCP4_HOME'])
                 errors.append("COOT = %s" % os.environ['COOT'])
+
+        # Check that the input volume exist
+        if (not self.pdbFileToBeRefined.get().hasVolume()) \
+                and (self.inputVolumes.get() is None):
+            errors.append("Error: You should provide a volume.\n")
 
         return errors
 
