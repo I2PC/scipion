@@ -65,9 +65,9 @@ from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
 from viewer_monitor_summary import ViewerMonitorSummary
 from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
-from protocol.monitors.protocol_monitor_system import 
+from protocol.monitors.protocol_monitor_system import \
      ProtMonitorSystemViewer
-from protocol.monitors.protocol_monitor_movie_gain import 
+from protocol.monitors.protocol_monitor_movie_gain import \
      ProtMonitorMovieGainViewer
 
 
