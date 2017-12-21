@@ -1208,6 +1208,11 @@ class ProtRelionBase(EMProtocol):
             partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
                              '%s' % part.getMicId())
 
+        ctf = part.getCTF()
+
+        if ctf is not None:
+            partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
+
     def _doSubsets(self):
         # Since 'doSubsets' property is only valid for 2.1+ protocols
         # we need provide a default value for backward compatibility
