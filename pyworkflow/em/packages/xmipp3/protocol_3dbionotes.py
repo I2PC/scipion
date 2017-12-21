@@ -1,3 +1,4 @@
+
 # **************************************************************************
 # *
 # * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es), May 2013
@@ -26,6 +27,10 @@
 
 from pyworkflow.em import *
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.em.packages.ccp4.convert import Ccp4Header
+import requests
+import webbrowser
 from pyworkflow.em.packages.ccp4 import Ccp4Header
 
 class XmippProt3DBionotes(ProtAnalysis3D):
@@ -41,9 +46,9 @@ class XmippProt3DBionotes(ProtAnalysis3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputPDB', PointerParam, pointerClass='PdbFile',
-                      label="Input PDB", important=True)
-        form.addParam('inputVol', PointerParam, pointerClass='Volume',
-                      label="Input volume", important=True)
+                      label="Input PDB")
+#         form.addParam('inputVol', PointerParam, pointerClass='Volume',
+#                       label="Input volume", important=True)
     
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
@@ -51,16 +56,21 @@ class XmippProt3DBionotes(ProtAnalysis3D):
         
     #--------------------------- STEPS functions -------------------------------
     def bionotesWrapper(self):
-        img = ImageHandler()
-        fnVol = self._getExtraPath('volume.mrc')
-        vol = self.inputVol.get()
-        img.convert(vol,fnVol)
+#         img = ImageHandler()
+#         fnVol = self._getExtraPath('volume.mrc')
+#         vol = self.inputVol.get()
+#         img.convert(vol,fnVol)
+#
+#         ccp4header = Ccp4Header(fnVol, readHeader= True)
+#         ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True).getShifts())
+#         ccp4header.setSampling(vol.getSamplingRate())
+#         ccp4header.writeHeader()
+        data = {'title':'PDB structure'}
+        files = {'structure_file': open(self.inputPDB.get().getFileName(), 'rb')}
 
-        ccp4header = Ccp4Header(fnVol, readHeader= True)
-        ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True).getShifts())
-        ccp4header.setSampling(vol.getSamplingRate())
-        ccp4header.writeHeader()
+        response = requests.post('http://3dbionotes.cnb.csic.es/programmatic/upload',data=data, files=files)
+        json_data = json.loads(response.text)
+        webbrowser.open_new(json_data["url"])
 
-       
     #--------------------------- INFO functions --------------------------------
             

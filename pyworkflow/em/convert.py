@@ -185,8 +185,9 @@ class ImageHandler(object):
         over the whole stack. If the input format is ".dm4" or  ".img" only is
         allowed the conversion of the whole stack.
         """
-        if (inputFn.lower().endswith('.dm4') or
-            outputFn.lower().endswith('.img')):
+        inputLower = inputFn.lower()
+        outputLower = outputFn.lower()
+        if inputLower.endswith('.dm4') or outputLower.endswith('.img'):
             if (firstImg and lastImg) is None:
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
@@ -197,6 +198,14 @@ class ImageHandler(object):
                 ext = os.path.splitext(outputFn)[1]
                 raise Exception("if convert from %s, firstImg and lastImg "
                                 "must be None" % ext)
+        # elif inputLower.endswith('.tif'):
+        #     # FIXME: It seems that we have some flip problem with compressed
+        #     # tif files, we need to check that
+        #     if outputLower.endswith('.mrc'):
+        #         self.runJob('tif2mrc', '%s %s' % (inputFn, outputFn))
+        #     else:
+        #         raise Exception("Conversion from tif to %s is not "
+        #                         "implemented yet. " % pwutils.getExt(outputFn))
         else:
             # get input dim
             (x, y, z, n) = xmipp.getImageSize(inputFn)
@@ -401,6 +410,7 @@ class ImageHandler(object):
         self.__runEman2Program('e2proc2d.py', args)
 
         return outputFn
+
 
     @staticmethod
     def getThumbnailFn(inputFn):

@@ -58,7 +58,7 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 
 # Some pw_*.py scripts under 'apps' folder change the current working
 # directory to the SCIPION_HOME, so let's keep the current working
-# direcotry in case we need it
+# directory in case we need it
 SCIPION_CWD = os.path.abspath(os.getcwd())
 
 #
@@ -304,6 +304,7 @@ MODE_RUN = 'run'
 MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
 MODE_DEPENDENCIES = 'deps'
+MODE_DEMO = 'demo'
 
 
 def main():
@@ -544,6 +545,9 @@ Example: scipion install eman-2.12
 
     elif mode == MODE_TUTORIAL:
         runApp('pw_tutorial.py', sys.argv[2:])
+
+    elif mode == MODE_DEMO:
+        runScript('scripts/scipionbox_wizard_demo.py')
 
     elif mode == MODE_DEPENDENCIES:
         runScript('scripts/find_deps.py software/bin software/lib %s'
