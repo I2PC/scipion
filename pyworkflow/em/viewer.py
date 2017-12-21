@@ -26,14 +26,16 @@
 # **************************************************************************
 
 from __future__ import print_function
-import os
-import sys
-import shlex
+
 import ast
-from threading import Thread
+import os
+import shlex
+import socket
+import sys
 from multiprocessing.connection import Client
 from numpy import flipud
-import socket
+from threading import Thread
+
 try:  # python 2
     import Tkinter as tk
     import tkFont
@@ -54,6 +56,8 @@ import showj
 import metadata as md
 from data import PdbFile
 from convert import ImageHandler
+from pyworkflow.em.utils.chimera_utilities.convert import \
+    adaptOriginFromCCP4ToChimera, getChimeraEnviron,  createCoordinateAxisFile
 
 import xmipp
 
@@ -471,20 +475,6 @@ class TableView(View):
 # ------------------------ Some views and  viewers ------------------------
 
 
-def getChimeraEnviron():
-    """ Return the proper environ to launch chimera.
-    CHIMERA_HOME variable is read from the ~/.config/scipion.conf file.
-    """
-    environ = Environ(os.environ)
-    environ.set('PATH', os.path.join(os.environ['CHIMERA_HOME'], 'bin'),
-                position=Environ.BEGIN)
-
-    if "REMOTE_MESA_LIB" in os.environ:
-        environ.set('LD_LIBRARY_PATH', os.environ['REMOTE_MESA_LIB'],
-                    position=Environ.BEGIN)
-    return environ
-
-
 class ChimeraView(CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, **kwargs):
@@ -532,17 +522,49 @@ class ChimeraViewer(Viewer):
         Viewer.__init__(self, **kwargs)
 
     def visualize(self, obj, **kwargs):
+        f = open("/tmp/kk","w")
+        f.write("2222222222222222222222:")
+        f.close()
         cls = type(obj)
         if issubclass(cls, PdbFile):
-            fn = obj.getFileName()
-            if obj.getPseudoAtoms():
-                if hasattr(obj, '_chimeraScript'):
-                    fn = obj._chimeraScript.get()
-            elif obj.hasVolume():
-                pass
-                #print "YES"
-                #print "obj.hasVolume(): ", obj.hasVolume()
-            ChimeraView(fn).show()
+            # if attribute _chimeraScript exists then protocol
+            # has create a script file USE IT
+            if hasattr(obj, '_chimeraScript'):
+                fn = obj._chimeraScript.get()
+                ChimeraView(fn).show()
+                return
+            # if not create a script file with: coordinates axis, PDB and
+            # volume (if available)
+            else:
+                fn = obj.getFileName()
+                fnCmd = self.protocol._getTmpPath("chimera.cmd")
+                f = open(fnCmd, 'w')
+                if obj.hasVolume():
+                    volID = 0
+                    volumeObject = obj.getVolume()
+                    dim = volumeObject.getDim()[0]
+                    sampling = volumeObject.getSamplingRate()
+                    f.write("open %s\n" % os.path.abspath(
+                        ImageHandler.removeFileType(volumeObject.getFileName())))
+                    f.write("volume #%d style surface\n"%volID)
+                    x, y, z = adaptOriginFromCCP4ToChimera(
+                        volumeObject.getVolOriginAsTuple())
+                    f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" % (volID, x,
+                                                                     y, z))
+                else:
+                    dim = 150  # eventually we will create a PDB library that
+                               # computes PDB dim
+                    sampling = 1.
+                # Construct the coordinate file
+                bildFileName = os.path.abspath(
+                    self.protocol._getTmpPath("axis.bild"))
+                createCoordinateAxisFile(dim,
+                                         bildFileName=bildFileName,
+                                         sampling=sampling)
+                f.write("open %s\n" % bildFileName)
+                f.write("open %s\n" % os.path.abspath(fn))
+                f.close()
+                ChimeraView(fnCmd).show()
             # FIXME: there is an asymmetry between ProtocolViewer and Viewer
             # for the first, the visualize method return a list of View's
             # (that are shown)
