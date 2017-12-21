@@ -575,6 +575,14 @@ class Image(EMObject):
             else:
                 return None
 
+    def getVolOriginAsTuple(self):
+        origin = self.getOrigin(returnInitIfNone=True).getShifts()
+        x = origin[0]
+        y = origin[1]
+        z = origin[2]
+        return x, y, z
+        # x, y, z are floats in Angstroms
+
     def setOrigin(self, newOrigin):
         """shifts in A"""
         self._origin = newOrigin
@@ -760,7 +768,7 @@ class PdbFile(EMFile):
         if type(volume) is Volume:
             self._volume = volume
         else:
-            raise Exception('TypeError', 'ERROR: Setvolume, This is not a '
+            raise Exception('TypeError', 'ERROR: SetVolume, This is not a '
                                          'volume')
 
     def __str__(self):
