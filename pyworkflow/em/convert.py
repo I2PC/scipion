@@ -185,8 +185,9 @@ class ImageHandler(object):
         over the whole stack. If the input format is ".dm4" or  ".img" only is
         allowed the conversion of the whole stack.
         """
-        if (inputFn.lower().endswith('.dm4') or
-            outputFn.lower().endswith('.img')):
+        inputLower = inputFn.lower()
+        outputLower = outputFn.lower()
+        if inputLower.endswith('.dm4') or outputLower.endswith('.img'):
             if (firstImg and lastImg) is None:
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
@@ -197,6 +198,14 @@ class ImageHandler(object):
                 ext = os.path.splitext(outputFn)[1]
                 raise Exception("if convert from %s, firstImg and lastImg "
                                 "must be None" % ext)
+        # elif inputLower.endswith('.tif'):
+        #     # FIXME: It seems that we have some flip problem with compressed
+        #     # tif files, we need to check that
+        #     if outputLower.endswith('.mrc'):
+        #         self.runJob('tif2mrc', '%s %s' % (inputFn, outputFn))
+        #     else:
+        #         raise Exception("Conversion from tif to %s is not "
+        #                         "implemented yet. " % pwutils.getExt(outputFn))
         else:
             # get input dim
             (x, y, z, n) = xmipp.getImageSize(inputFn)
@@ -402,6 +411,7 @@ class ImageHandler(object):
 
         return outputFn
 
+
     @staticmethod
     def getThumbnailFn(inputFn):
         """Replace the extension in inputFn with thumb.png"""
@@ -424,6 +434,12 @@ class ImageHandler(object):
         
         return fn
 
+    @classmethod
+    def removeFileType(cls, fileName):
+        # Remove filename format specification such as :mrc, :mrcs or :ems
+        if ':' in fileName:
+            fileName = fileName.split(':')[0]
+        return fileName
 
 DT_FLOAT = ImageHandler.DT_FLOAT
 
@@ -441,9 +457,9 @@ def __downloadPdb(pdbId, pdbGz, log):
         log.info("File to download and unzip: %s" % pdbGz)
     
     pdborgHostname = "ftp.wwpdb.org"
-    pdborgDirectory = "/pub/pdb/data/structures/all/pdb/"
-    prefix = "pdb"
-    suffix = ".ent.gz"
+    pdborgDirectory = "/pub/pdb/data/structures/all/mmCIF/"
+    prefix = ""  # use pdb for PDB and null for mmcif
+    suffix = ".cif.gz"
     success = True
     # Log into serverhttp://www.rcsb.org/pdb/files/2MP1.pdb.gz
     ftp = ftplib.FTP()
