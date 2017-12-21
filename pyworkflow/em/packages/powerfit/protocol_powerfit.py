@@ -26,10 +26,11 @@
 # **************************************************************************
 
 from pyworkflow.em import *
-from pyworkflow.utils import *
+from pyworkflow.em.utils.ccp4_utilities.convert import adaptBinFileToCCP4
+from pyworkflow.em.utils.chimera_utilities.convert import \
+    createCoordinateAxisFile
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.em.packages.ccp4.convert import adaptBinFileToCCP4
-from pyworkflow.em.packages.chimera.convert import createCoordinateAxisFile
+from pyworkflow.utils import *
 
 
 class PowerfitProtRigidFit(ProtFitting3D):
@@ -39,19 +40,19 @@ class PowerfitProtRigidFit(ProtFitting3D):
     See documentation at:
        http://www.bonvinlab.org/education/powerfit
     """
-    _label = 'rigid fit'
+    _label = 'powerfit'
 
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputPDB', PointerParam, pointerClass='PdbFile',
-                      label="Input PDB", important=True)
+                      label="Input PDBx/mmCIF", important=True)
         form.addParam('inputVol', PointerParam, pointerClass='Volume',
                       label="Input volume", important=True, allowsNull=True)
         form.addParam('resolution', FloatParam, default=6,
                       label="Resolution (A)", important=True,
                       help="Resolution for the fitting. "
-                           "The PDB is filtered to this frequency.")
+                           "The PDBx/mmCIF is filtered to this frequency.")
         form.addParam('angleStep', FloatParam, label="Angular step",
                       default=10.0, expertLevel=LEVEL_ADVANCED,
                       help='Angular step for the alignment search')
@@ -79,15 +80,15 @@ class PowerfitProtRigidFit(ProtFitting3D):
     # --------------------------- STEPS functions -----------------------------
     def powerfitWrapper(self):
         localInputVol = self._getExtraPath("volume.mrc")
-        fnVol = self.inputVol.get()
-        if fnVol is None:
-            fnVol = self.inputPDB.get().getVolume().get()
-            print "Volume: Volume associated to pdb %s\n" % fnVol
+        if self.inputVol.get() is None:
+            volume = self.inputPDB.get().getVolume()
+            print "Volume: Volume associated to atomic structure %s\n" % volume
         else:
-            print "Volume: Input volume %s\n" % fnVol
-        sampling = fnVol.getSamplingRate()
-        adaptBinFileToCCP4(fnVol.getFileName(), localInputVol,
-                           fnVol.getOrigin(
+            volume = self.inputVol.get()
+            print "Volume: Input volume %s\n" % volume
+        sampling = volume.getSamplingRate()
+        adaptBinFileToCCP4(volume.getFileName(), localInputVol,
+                           volume.getOrigin(
                                returnInitIfNone=True).getShifts(),
                            sampling)
         args = "%s %f %s -d %s -p %d -a %f -n %d" % (localInputVol,
@@ -105,7 +106,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
         self.runJob("powerfit", args)
 
         # Construct the chimera viewers
-        dim = fnVol.getDim()[0]
+        dim = volume.getDim()[0]
         bildFileName = os.path.abspath(self._getExtraPath("axis.bild"))
         createCoordinateAxisFile(dim,
                                  bildFileName=bildFileName,
@@ -125,18 +126,10 @@ class PowerfitProtRigidFit(ProtFitting3D):
                 fhCmd.close()
 
     def createOutputStep(self):
-        volume = Volume()
-        volume.setFileName(self._getExtraPath('volume.mrc'))
         if self.inputVol.get() is None:
-            self.inputPDB.get().getVolume().get().setSamplingRate(
-                self.inputPDB.get().getVolume().get().getSamplingRate())
+            volume = self.inputPDB.get().getVolume()
         else:
-            volume.setSamplingRate(self.inputVol.get().getSamplingRate())
-        self._defineOutputs(outputVolume=volume)
-        if self.inputVol.get() is None:
-            self._defineSourceRelation(self.inputPDB.get().getVolume(), volume)
-        else:
-            self._defineSourceRelation(self.inputVol, volume)
+            volume = self.inputVol.get()
 
         fnOutput = self._getExtraPath("solutions.out")
         qualifiers = {}
@@ -152,6 +145,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
                 lineCounter += 1
 
         setOfPDBs = self._createSetOfPDBs()
+
         for n in range(self.nModels.get()):
             fnPdb = self._getExtraPath("fit_%d.pdb" % (n+1))
             if exists(fnPdb):
@@ -163,11 +157,9 @@ class PowerfitProtRigidFit(ProtFitting3D):
                 setOfPDBs.append(pdb)
 
         self._defineOutputs(outputPDBs=setOfPDBs)
-        if self.inputVol.get() is None:
-            self._defineSourceRelation(self.inputPDB.get().getVolume(),
-                                       setOfPDBs)
-        else:
-            self._defineSourceRelation(self.inputVol, setOfPDBs)
+        self._defineSourceRelation(self.inputPDB.get(), setOfPDBs)
+        self._defineSourceRelation(volume, setOfPDBs)
+
 
     # --------------------------- INFO functions ------------------------------
     def _summary(self):
