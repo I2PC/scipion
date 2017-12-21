@@ -36,7 +36,7 @@ class PowerfitProtRigidFitViewer(ProtocolViewer):
     """ Wrapper to visualize powerfit results
     """
     
-    _label = 'viewer validate_overfitting'
+    _label = 'viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [PowerfitProtRigidFit]
         
