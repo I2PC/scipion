@@ -32,17 +32,17 @@ for input volumes.
 """
 
 import os
-from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
-import pyworkflow.protocol.params as params
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from distutils.spawn import find_executable
-from os.path import exists
 from tkMessageBox import showerror
 
-
+import pyworkflow.protocol.params as params
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
+from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
+from pyworkflow.em.utils.chimera_utilities.convert import \
+    createCoordinateAxisFile,  adaptOriginFromCCP4ToChimera
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
-
 
 class viewerProtImportVolumes(ProtocolViewer):
     """ Wrapper to visualize different type of objects
@@ -87,22 +87,6 @@ class viewerProtImportVolumes(ProtocolViewer):
         elif self.displayVol == VOLUME_SLICES:
             return self._showVolumesSlices()
 
-    def _getVolumeName(self, vol):
-        volName = vol.getFileName().split(":")[0]
-        if not exists(volName):
-            print "Volume %s does not exist" % volName
-        else:
-            return volName
-
-    def _getVolOrigin(self, vol):
-        origin = vol.getOrigin(returnInitIfNone=True).getShifts()
-        x = origin[0]
-        y = origin[1]
-        z = origin[2]
-        return x, y, z
-        # x, y, z are floats in Angstroms
-        # Chimera shows (x, y, z) divided by the samplingRate in pixels
-
     def _createSetOfVolumes(self):
         try:
             setOfVolumes = self.protocol.outputVolumes
@@ -127,8 +111,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             # as bild file. Chimera must read the bild file first
             # otherwise system of coordinates will not
             # be in the center of the window
-            from pyworkflow.em.packages.chimera.convert import \
-                createCoordinateAxisFile
+
             dim = self.protocol.outputVolume.getDim()[0]
             tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
                 "axis.bild"))
@@ -139,7 +122,8 @@ class viewerProtImportVolumes(ProtocolViewer):
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
-            localVol = os.path.abspath(self._getVolumeName(vol))
+            localVol = os.path.abspath(ImageHandler.removeFileType(
+                vol.getFileName()))
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")
             f.write("open %s\n" % localVol)
@@ -150,9 +134,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         if len(_setOfVolumes) > 1:
             f.write('tile\n')
         else:
-            from pyworkflow.em.packages.chimera.convert import \
-                adaptOriginFromCCP4ToChimera
-            x, y, z = adaptOriginFromCCP4ToChimera(self._getVolOrigin(vol))
+            x, y, z = adaptOriginFromCCP4ToChimera(vol.getVolOriginAsTuple())
             f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
         f.close()
         import pyworkflow.em as em
