@@ -40,10 +40,11 @@ from datetime import datetime
 from pyworkflow.utils import prettyTime, cleanPath
 from pyworkflow.object import Set
 from pyworkflow.protocol.constants import STATUS_NEW
-import sys
 from random import randint
 from pyworkflow.em.metadata.classes import Row
 from time import time
+from math import floor
+import pyworkflow.utils as pwutils
 
 
 class XmippProtStrGpuCrrCL2D(ProtAlign2D):
@@ -76,12 +77,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                       label='Number of iterations in classify stage:',
                       help='Maximum number of iterations when the classification '
                            'of the whole image set is carried out')
-        form.addParam('useAttraction', params.BooleanParam, default=True,
-                      label='Allow attraction ?',
-                      help='If you set to *Yes*, you allow to generate classes '
-                           'with low number of images associated.\n'
-                           'If *No*, all the generated classes will be '
-                           'balanced.')
         form.addParallelSection(threads=0, mpi=4)
 
 
@@ -90,56 +85,68 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         """" Mainly prepare the command line for calling cuda corrrelation program"""
 
         self.lastIdProcessed = 0
-        self.p = 0.2
         self.percentStopClassify = 5
 
         self.listContinueClass=[]
         self.iterReturnSplit = 0
         self.iterReturnClass = 0
-        self.numRefs = []
-        self.depthSplit = 0
-        self.depth = 0
         self.imgsExp = self._getExtraPath('imagesExp.xmd')
-        self.exp = self.imgsExp
         self.level=0
-        self.countStep = 0
+        #self.countStep = 0
         self.listNumImgs = []
         self.listNameImgs = []
         self.listRefImgs = []
+        self.blockToProc=300
+        self.listToProc=[]
+        self.totalInList=0
 
-        self.insertedList = []
         self.insertedListFlag = {}
 
         self._loadInputList()
-        self.newParticles=range(self.listOfParticles[0],
-                                self.listOfParticles[len(self.listOfParticles)-1]+1)
-        fDeps = self._insertProcessingStep(self.insertedList, self.insertedListFlag,
-                                           self.newParticles, True, False)
+        #AJ before
+        #self.newParticles=range(self.listOfParticles[0],
+        #                        self.listOfParticles[len(self.listOfParticles)-1]+1)
+        numOfImages = len(self.listOfParticles) - self.totalInList
+        print("new", numOfImages, len(self.listOfParticles), self.totalInList)
+        numOfBlk = floor(numOfImages/self.blockToProc)
+        lastBlk = numOfImages%self.blockToProc
+        self.listToProc += [self.blockToProc]*int(numOfBlk)
+        self.listToProc.append(lastBlk)
+        self.totalInList += self.blockToProc*numOfBlk + lastBlk
+        fDeps=[]
+        for i in range(int(numOfBlk + 1)):
+            if i==0:
+                fDeps += self._insertProcessingStep(self.insertedListFlag,
+                                           self.listOfParticles, True, False) #AJ before self.newParticles
+            else:
+                fDeps += self._insertProcessingStep(self.insertedListFlag,
+                                                    self.listOfParticles, False, True)
 
         self._insertFunctionStep('createOutputStep', prerequisities=fDeps, wait=True)
 
 
-    def _insertProcessingStep(self, insertedList, insertedListFlag,
+    def _insertProcessingStep(self, insertedListFlag,
                               inputParticles, flagSplit, reclassification):
-
+        # AJ before
         #flagNewParticles = False
-        self.imgsExp = self._getExtraPath('imagesExp.xmd')
+        #self.imgsExp = self._getExtraPath('imagesExp.xmd')
 
-        print("insertedList", insertedList)
-        print("newParticles", inputParticles)
-        for expImgsId in inputParticles:
-            #if expImgsId not in insertedList: #############
-            #AJ cambiar if anterior por if expImgsId>self.lastIdProcessed
-            #AJ otra posibilidad es quitar el if porque suponemos que las nuevas no deben estar insertadas en la insertedList
-                #flagNewParticles = True
-            insertedList.append(expImgsId)
-            insertedListFlag[expImgsId]=self.countStep
+        #for expImgsId in inputParticles:
+        #    if expImgsId not in insertedListFlag: #############
+        #        #AJ cambiar if anterior por if expImgsId>self.lastIdProcessed
+        #        #AJ otra posibilidad es quitar el if porque suponemos que las nuevas no deben estar insertadas en la insertedList
+        #        flagNewParticles = True
+        #        #insertedList.append(expImgsId)
+        #        insertedListFlag[expImgsId]=self.countStep
 
         #stepId = []
         #if flagNewParticles:
+        #    stepId = self._insertStepsForParticles(flagSplit, reclassification)
+
+        #self.countStep+=1
+
         stepId = self._insertStepsForParticles(flagSplit, reclassification)
 
-        self.countStep+=1
         return stepId
 
     def levelUp(self, expImgMd):
@@ -211,9 +218,10 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         self.lastCheck = now
         #newParticles = any(particle.getObjId() not in self.insertedList
         #             for particle in self.listOfParticles)
-        firstIdx = self.listOfParticles[self.listOfParticles.index(self.lastIdProcessed)]+1
-        lastIdx = self.listOfParticles[len(self.listOfParticles)-1]+1
-        self.newParticles = range(firstIdx, lastIdx)
+        #AJ antes: firstIdx = self.listOfParticles[self.listOfParticles.index(self.lastIdProcessed)]+1
+        #firstIdx = self.listOfParticles[0]
+        #lastIdx = self.listOfParticles[len(self.listOfParticles)-1]+1
+        #self.newParticles = range(firstIdx, lastIdx)
 
         #for particleId in range(self.lastIdProcessed, self.listOfParticles[len(self.listOfParticles)-1]+1):
         ##for particleId in self.listOfParticles:
@@ -221,11 +229,27 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         #        newParticles.append(particleId)
         outputStep = self._getFirstJoinStep()
 
-        if len(self.newParticles)>0 and self.newParticles[0]==self.lastIdProcessed+1:
+        print("listOfParticles", self.listOfParticles[0], self.listOfParticles[len(self.listOfParticles)-1])
+        #print("insertedList", self.insertedList[0], self.insertedList[len(self.insertedList)-1])
+        #print("newParticles", self.newParticles[0], self.newParticles[len(self.newParticles)-1])
+        print("self.lastIdProcessed", self.lastIdProcessed)
+        print("self.listToProc", self.listToProc)
+
+        #AJ before:
+        #if len(self.newParticles)>0 and self.newParticles[0]==self.lastIdProcessed+1:
+        if len(self.listOfParticles) > 0 and self.listOfParticles[0] == self.lastIdProcessed + 1:
             reclassification = True
-            fDeps = self._insertProcessingStep(self.insertedList,
-                                               self.insertedListFlag,
-                                               self.newParticles, False,
+            numOfImages = len(self.listOfParticles) - self.totalInList
+            print("new", numOfImages, len(self.listOfParticles), self.totalInList)
+            numOfBlk = floor(numOfImages / self.blockToProc)
+            lastBlk = numOfImages % self.blockToProc
+            self.listToProc += [self.blockToProc]*int(numOfBlk)
+            self.listToProc.append(lastBlk)
+            self.totalInList += self.blockToProc * numOfBlk + lastBlk
+            fDeps=[]
+            for i in range(int(numOfBlk+1)):
+                fDeps += self._insertProcessingStep(self.insertedListFlag,
+                                                self.listOfParticles, False, #AJ before: self.newParticles
                                                reclassification)
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
@@ -244,20 +268,39 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         # Check for newly done items
         particlesListId = self._readParticlesId()
-        newDone = [particlesId for particlesId in particlesListId
-                           if particlesId not in doneList]
+        #AJ antes:
+        #newDone = [particlesId for particlesId in particlesListId
+        #                   if particlesId not in doneList]
+        if len(doneList)==0:
+            newDone = range(0, particlesListId[0] + 1)
+        else:
+            newDone = range(doneList[0], particlesListId[0]+1)
         #firstTime = len(doneList) == 0
-        allDone = len(doneList) + len(newDone)
+        #AJ antes:
+        # allDone = len(doneList) + len(newDone)
+        if len(doneList) == 0:
+            allDone = len(newDone)
+        else:
+            allDone = doneList[0] + len(newDone)
+
+        if len(doneList) == 0:
+            print("En _checkNewOutput", 0, particlesListId[0], newDone[0], newDone[len(newDone) - 1])
+        else:
+            print("En _checkNewOutput", doneList[0], particlesListId[0], newDone[0], newDone[len(newDone)-1])
 
         # We have finished when there is not more inputs (stream closed)
         # and the number of processed particles is equal to the number of inputs
         self.finished = (self.isStreamClosed == Set.STREAM_CLOSED
-                         and allDone == len(self.listOfParticles))
+                         and len(self.listOfParticles)==0)
+                         #and allDone == self.listOfParticles[len(self.listOfParticles)-1])
+        #AJ antes: and allDone == len(self.listOfParticles)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
-        if newDone:
-            for particleId in newDone:
-                self._writeDoneList(particleId)
+        if len(newDone)>1:
+            #AJ before
+            #for particleId in newDone:
+            #    self._writeDoneList(particleId)
+            self._writeDoneList(newDone[len(newDone)-1])
         elif not self.finished:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
@@ -269,7 +312,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         if (exists(self._getPath('classes2D.sqlite'))):
             if(exists(self._getExtraPath('last_classes.xmd'))
                and exists(self._getExtraPath('last_images.xmd'))):
-                self._updateOutputSet('outputParticles', outSet, streamMode)
+                self._updateOutputSet('outputClasses', outSet, streamMode)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -287,43 +330,53 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
     def _generateInputMd(self, reclassification):
         doneList = self._readDoneList()
         metadataItem = md.MetaData(self.imgsExp)
+        mdSize = md.getSize(self.imgsExp)
+        print("Len metadataItem", mdSize)
         metadataInput = md.MetaData()
 
-        #rows = iterRows(metadataItem)
+        # AJ before
+        #aux=1
+        #fn = self._getExtraPath('particles.txt')
+        #row = Row()
         #prevObjId = -1
-        #for row in rows:
-        #    objId = row.getValue(md.MDL_ITEM_ID)
-        #    print("objId",objId)
-        #    if objId in self.insertedList:
+        #for objId in self.newParticles:
+        #    if objId in self.insertedListFlag:
         #        if objId not in doneList:
+        #            if aux==1:
+        #                print("En _generateInputMd, First. ", objId)
+        #                aux+=1
         #            if prevObjId != -1:
         #                if self.insertedListFlag[objId]!=self.insertedListFlag[prevObjId]:
         #                    break
         #            prevObjId = objId
+        #            row.readFromMd(metadataItem, objId)
         #            row.addToMd(metadataInput)
+        #            self.lastIdProcessed = objId
+        #            with open(fn, 'w') as f: #AJ antes: 'a'
+        #                f.write('%d\n' % row.getValue(md.MDL_ITEM_ID))
 
         fn = self._getExtraPath('particles.txt')
         row = Row()
-        prevObjId = -1
-        for objId in self.newParticles:
-            if objId not in doneList:
-                if prevObjId != -1:
-                    if self.insertedListFlag[objId]!=self.insertedListFlag[prevObjId]:
-                        break
-                prevObjId = objId
+        count=0
+        print("self.listToProc",self.listToProc)
+        for i in range(int(self.listToProc[0])):
+            objId = self.listOfParticles[0]
+            if len(doneList)==0 or objId>doneList[0]:
+                if count==0:
+                    print("En _generateInputMd, First. ", objId)
                 row.readFromMd(metadataItem, objId)
                 row.addToMd(metadataInput)
                 self.lastIdProcessed = objId
-                with open(fn, 'a') as f:
-                    f.write('%d\n' % row.getValue(md.MDL_ITEM_ID))
+                with open(fn, 'w') as f:  # AJ antes: 'a'
+                    f.write('%d\n' % objId)
+                count+=1
+                self.listOfParticles.pop(0)
+
+        self.totalInList -= self.listToProc[0]
+        self.listToProc.pop(0)
+        print("En _generateInputMd, Last. ", objId)
 
         metadataInput.write(self._getExtraPath('inputImagesExp.xmd'), MD_APPEND)
-
-        #fn = self._getExtraPath('particles.txt')
-        #rows = iterRows(metadataInput)
-        #for row in rows:
-        #    with open(fn, 'a') as f:
-        #        f.write('%d\n' % row.getValue(md.MDL_ITEM_ID))
 
         if reclassification:
             lenRefs = len(self.listNumImgs)
@@ -470,10 +523,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         level = self.level
         iterReturnSplit = self.splitStep(expImgMd, level, iterReturnSplit,
                                          flag_attraction)
-        #############################################################
-        if not self.useAttraction:
-            self.attractionSplitStep(level, iterReturnSplit)
-        ##############################################################
         self.generateMetadata(self.listNameImgs, self.listNumImgs,
                               self.listRefImgs, level)
         copy(self._getExtraPath(join('level%03d' % level,
@@ -493,16 +542,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         refImgMd = self._getExtraPath('last_classes.xmd')
         iterReturnClass = self.classifyWholeSetStep(refImgMd, expImgMd,
                                                     level, iterReturnClass)
-        ###################################################################
-        if not self.useAttraction:
-            change = True
-            while change:
-                change = self.attractionGeneralStep(level)
-                if change:
-                    level = level + 1
-                    self._splitStep(expImgMd, level, 0, False)
-                    self._classifyStep(expImgMd, level, iterReturnClass)
-        ###################################################################
         self.generateOutputClasses(level)
 
 
@@ -543,8 +582,11 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         for i in range(len(listLastClasses)):
             listToMultiply = []
             total.append(listLastClasses[i] + listNewClasses[i])
-            listToMultiply.append(float(listLastClasses[i]) / float(total[i]))
-            listToMultiply.append(float(listNewClasses[i]) / float(total[i]))
+            if total[i]==0: #AJ to avoid to divide by zero
+                listToMultiply = [0, 0]
+            else:
+                listToMultiply.append(float(listLastClasses[i]) / float(total[i]))
+                listToMultiply.append(float(listNewClasses[i]) / float(total[i]))
 
             if listNewClasses[i]==0:
                 im1 = xmipp.Image(listFnLastClasses[i])
@@ -647,11 +689,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             if length == 1:
                 i = 0
 
-            if not self.useAttraction:
-                if self.fastCheckingAtt(level, True):
-                    iterReturnSplit=i
-                    return iterReturnSplit
-
         return iterReturnSplit
 
 
@@ -689,43 +726,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                 self.averageClasses(finalMetadata, lastMetadata, newMetadata, True)
             i += 1
 
-            # AJ check attraction
-            if not self.useAttraction:
-                if self.fastCheckingAtt(level, False):
-                    iterReturnClass=i
-                    return iterReturnClass
         return iterReturnClass
-
-
-    # AJ check attraction
-    def fastCheckingAtt(self, level, flag_split):
-
-        if flag_split:
-            metadata = md.MetaData(self._getExtraPath(
-                join('level%03d' % level, 'level%03d' % level + '_classes.xmd')))
-            total = getSize(self._getExtraPath(
-                join('level%03d' % level, 'images_level%03d' % level + '.xmd')))
-            th = (self.p * total / 2)
-            for item in metadata:
-                numImgs = metadata.getValue(md.MDL_CLASS_COUNT, item)
-                if numImgs < th:
-                    return True
-            return False
-        else:
-            listAuxNum = []
-            metadata = md.MetaData(self._getExtraPath(
-                join('level%03d' % level, 'general_level%03d' % level +
-                     '_classes.xmd')))
-            for item in metadata:
-                numImgs = metadata.getValue(md.MDL_CLASS_COUNT, item)
-                listAuxNum.append(numImgs)
-            total = sum(listAuxNum)
-            th = (self.p * total / len(listAuxNum))
-            aux = [i for i in listAuxNum if i<th]
-            if len(aux)>0:
-                return True
-            else:
-                return False
 
     def checkContinueClassification(self, level, iter):
 
@@ -867,135 +868,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         #         self._getExtraPath(join('level%03d' % level, 'general_level%03d' % level + '_classes.xmd')))
         #    copy(self._getExtraPath(join('level%03d' % level, "images.xmd")),
         #         self._getExtraPath(join('level%03d' % level, 'general_images_level%03d' % level + '.xmd')))
-
-
-    def attractionSplitStep(self, level, iterReturnSplit):
-
-        change, labelMaxClass, labelMinClass, mdToReduce, \
-        self.listNumImgs, self.listNameImgs = self.checkAttraction(level, True)
-
-        while change:
-            self.depthSplit += 1
-            self._params = {'input': mdToReduce,
-                            'numRef': labelMaxClass,
-                            'outputMd': mdToReduce[0:-4]+'_NoAtt.xmd'}
-            args = ('-i %(input)s --query select "ref==%(numRef)d" -o %(outputMd)s')
-            self.runJob("xmipp_metadata_utilities", args % self._params, numberOfMpi=1)
-
-            self.imgsExp = self._getExtraPath(
-                join('level%03d' % level,'images_level%03d' % level + '_NoAtt.xmd'))
-
-            i = 0
-            while i < self.numberOfSplitIterations:
-                self.iterationStep(self.refSet, self.imgsExp, i, True, True, level)
-                self.refSet = self._getExtraPath(
-                    join('level%03d' % level,'level%03d' % level + '_classes.xmd'))
-                i+=1
-
-                length = getSize(self._getExtraPath(
-                    join('level%03d' % level,'level%03d' % level + '_classes.xmd')))
-                if length == 1:
-                    i = 0
-
-                if self.fastCheckingAtt(level, True):
-                    break
-
-            self.attractionSplitStep(level)
-
-            if self.depthSplit>1:
-                self.depthSplit-=1
-                return
-            if self.depthSplit==1:
-                self.depthSplit=0
-
-            if (level - 1) >= 0:
-                self.imgsExp = self._getExtraPath(
-                    join('level%03d' % (level-1),'images_level%03d' % (level-1)
-                         + '_major.xmd'))
-            else:
-                self.imgsExp = self._getExtraPath('imagesExp.xmd')
-
-            i = iterReturnSplit
-            if i==self.numberOfSplitIterations:
-                i-=1
-            while i < self.numberOfSplitIterations:
-                self.iterationStep(self.refSet, self.imgsExp, i, True, False, level)
-                self.refSet = self._getExtraPath(
-                    join('level%03d' % level,'level%03d' % level + '_classes.xmd'))
-                i+=1
-
-                length = getSize(self._getExtraPath(
-                    join('level%03d' % level,'level%03d' % level + '_classes.xmd')))
-                if length == 1:
-                    i = 0
-
-                if self.fastCheckingAtt(level, True):
-                    break
-
-            change, labelMaxClass, __, mdToReduce, __, __ = \
-                self.checkAttraction(level, True)
-
-
-
-    def attractionGeneralStep(self, level):
-
-        change, labelMaxClass, labelMinClass, mdToReduce, \
-        self.listNumImgs, self.listNameImgs = self.checkAttraction(level, False)
-
-        if change:
-            self.depth+=1
-            self._params = {'input': mdToReduce,
-                            'numRef': labelMaxClass,
-                            'outputMd': mdToReduce[0:-25] +
-                                        'images_level%03d' % level + '_major.xmd'}
-            args = ('-i %(input)s --query select "ref==%(numRef)d" -o %(outputMd)s')
-            self.runJob("xmipp_metadata_utilities", args % self._params, numberOfMpi=1)
-
-        return change
-
-
-    def checkAttraction(self, level, flag_split):
-
-        if flag_split:
-            mdToCheck = self._getExtraPath(
-                join('level%03d' % level,'level%03d' % level+'_classes.xmd'))
-            mdToReduce = self._getExtraPath(
-                join('level%03d' % level,'images_level%03d' % level+'.xmd'))
-        else:
-            mdToCheck = self._getExtraPath(
-                join('level%03d' % level,'general_level%03d' % level + '_classes.xmd'))
-            mdToReduce = self._getExtraPath(
-                join('level%03d' % level,'general_images_level%03d' % level + '.xmd'))
-
-        listAuxNum=[]
-        listAuxName = []
-        listAuxRef = []
-        metadataItem = md.MetaData(mdToCheck)
-        for item in metadataItem:
-            numImgs = metadataItem.getValue(md.MDL_CLASS_COUNT, item)
-            name = metadataItem.getValue(md.MDL_IMAGE, item)
-            ref = metadataItem.getValue(md.MDL_REF, item)
-            listAuxNum.append(numImgs)
-            listAuxName.append(name)
-            listAuxRef.append(ref)
-        total = sum(listAuxNum)
-
-        th = (self.p*total/len(listAuxNum))
-        labelMinClass=[]
-        for i in range(len(listAuxNum)):
-            if listAuxNum[i]<th:
-                labelMinClass.append(listAuxRef[i])
-                listAuxNum[i] = -1
-
-        labelMaxClass = listAuxRef[listAuxNum.index(max(listAuxNum))]
-        listAuxNum[labelMaxClass-1] = -1
-
-        if len(labelMinClass)>0:
-            change = True
-        else:
-            change = False
-
-        return change, labelMaxClass, labelMinClass, mdToReduce, listAuxNum, listAuxName
 
 
     def checkSplit(self, expImgMd):
@@ -1147,16 +1019,21 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         if setOfImg is None:
             return
         writeSetOfParticles(setOfImg, imgsFileName, alignType=ALIGN_NONE)
+                            #firstId=self.lastIdProcessed)
 
     def _loadInputList(self):
         """ Load the input set of ctfs and create a list. """
         particlesSet = self._loadInputParticleSet()
         self.isStreamClosed = particlesSet.getStreamState()
-        self.listOfParticles = [m.getObjId() for m in particlesSet]
+        self.listOfParticles = [m.getObjId() for m in
+                                particlesSet.iterItems(where="id>%d"
+                                                    %self.lastIdProcessed)]
+        #AJ antes: m.getObjId() for m in particlesSet]
         particlesSet.close()
         self.debug("Closed db.")
         ############
         #AJ probar en vez de leer la lista entera
+        # particlesSet.iterItems(where="id>")
 
     def _loadInputParticleSet(self):
         particlesFile = self.inputParticles.get().getFileName()
@@ -1184,7 +1061,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
     def _writeDoneList(self, particleId):
         """ Write to a text file the items that have been done. """
         AcceptedFile = self._getExtraPath('DONE.TXT')
-        with open(AcceptedFile, 'a') as f:
+        with open(AcceptedFile, 'w') as f: #AJ antes: 'a'
             f.write('%d\n' % particleId)
 
     def _readParticlesId(self):
@@ -1198,13 +1075,17 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
     def _loadOutputSet(self, SetClass, baseName):
         setFile = self._getPath(baseName)
+
         if exists(setFile):
-            outputSet = SetClass(filename=setFile)
-            outputSet.loadAllProperties()
-            outputSet.enableAppend()
-        else:
-            outputSet = SetClass(filename=setFile)
-            outputSet.setStreamState(outputSet.STREAM_OPEN)
+            pwutils.path.cleanPath(setFile)
+
+        #if exists(setFile):
+        #    outputSet = SetClass(filename=setFile)
+        #    outputSet.loadAllProperties()
+        #    outputSet.enableAppend()
+        #else:
+        outputSet = SetClass(filename=setFile)
+        outputSet.setStreamState(outputSet.STREAM_OPEN)
 
         inputs = self.inputParticles.get()
         outputSet.copyInfo(inputs)
@@ -1215,22 +1096,25 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
 
         outputSet.setStreamState(state)
-        if self.hasAttribute(outputName):
-            self._fillClassesFromLevel(outputSet)
-            outputSet.write()  # Write to commit changes
-            outputAttr = getattr(self, outputName)
-            # Copy the properties to the object contained in the protocol
-            outputAttr.copy(outputSet, copyId=False)
-            # Persist changes
-            self._store(outputAttr)
-        else:
-            inputs = self.inputParticles.get()
-            # Here the defineOutputs function will call the write() method
-            outputSet = self._createSetOfClasses2D(inputs)
-            self._fillClassesFromLevel(outputSet)
-            self._defineOutputs(**{'outputClasses': outputSet})
-            self._defineSourceRelation(self.inputParticles, outputSet)
-            self._store(outputSet)
+        #if self.hasAttribute(outputName):
+        #    print("En el if")
+        #    self._fillClassesFromLevel(outputSet)
+        #    outputSet.write()  # Write to commit changes
+        #    outputAttr = getattr(self, outputName)
+        #    # Copy the properties to the object contained in the protocol
+        #    outputAttr.copy(outputSet, copyId=False)
+        #    # Persist changes
+        #    self._store(outputAttr)
+        #else:
+        print("En el else")
+        inputs = self.inputParticles.get()
+        # Here the defineOutputs function will call the write() method
+        outputSet = self._createSetOfClasses2D(inputs)
+        self._fillClassesFromLevel(outputSet)
+        self._defineOutputs(**{outputName: outputSet})
+        self._defineSourceRelation(self.inputParticles, outputSet)
+        self._store(outputSet)
+
         # Close set databaset to avoid locking it
         outputSet.close()
 

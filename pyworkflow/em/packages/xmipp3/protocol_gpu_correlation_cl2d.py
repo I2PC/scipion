@@ -226,7 +226,8 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                         continue
                 ##############################################################################
                 copy(self._getExtraPath(join('level%03d' % level,'general_level%03d' % level + '_classes.xmd')), self._getExtraPath('last_classes.xmd'), )
-                copy(self._getExtraPath(join('level%03d' % level, 'general_images_level%03d' % level + '.xmd')), self._getExtraPath('last_images.xmd'), )
+                if exists(self._getExtraPath(join('level%03d' % level, 'general_images_level%03d' % level + '.xmd'))):
+                    copy(self._getExtraPath(join('level%03d' % level, 'general_images_level%03d' % level + '.xmd')), self._getExtraPath('last_images.xmd'), )
                 return
 
             listNumImgs, listNameImgs = self.checkOutput(level)
@@ -275,7 +276,10 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
         i=self.iterReturnClass
         if i == self.numberOfClassifyIterations:
-            i -= 1
+        #    i -= 1
+            copy(self._getExtraPath(join('level%03d' % level, 'intermediate_classes.xmd')),
+                 self._getExtraPath(join('level%03d' % level, 'general_level%03d_classes' % level + '.xmd')))
+
         while i <self.numberOfClassifyIterations:
             print("ITER",i)
             flag_error = self.iterationStep(self.ref, self.exp, i, boolReferenceImages, level, False, False)
@@ -433,7 +437,7 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                             'outputClassesFile': filename,
                             }
         Nrefs = getSize(refSet)
-        if Nrefs>2:
+        if True: #Nrefs>2:
             try:
                 args = '-i_ref %(imgsRef)s -i_exp %(imgsExp)s -o %(outputFile)s '\
                        '--odir %(tmpDir)s --keep_best %(keepBest)d '\
@@ -686,8 +690,8 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
         if exists(self._getExtraPath(join('level%03d' % level,"images.xmd"))):
             remove(self._getExtraPath(join('level%03d' % level,"images.xmd")))
             level_1=level-1
-        if level>0 and exists(self._getExtraPath(join('level%03d' % level_1,"images_level%03d_major.xmd" %level_1))):
-            remove(self._getExtraPath(join('level%03d' % level_1,"images_level%03d_major.xmd" %level_1)))
+            if level>0 and exists(self._getExtraPath(join('level%03d' % level_1,"images_level%03d_major.xmd" %level_1))):
+                remove(self._getExtraPath(join('level%03d' % level_1,"images_level%03d_major.xmd" %level_1)))
         for f in listdir(join(join(self._getExtraPath(),'level%03d'%level))):
             if not f.find('average')==-1 or not f.find('stddev')==-1 or not f.find('NoAtt')==-1:
                 remove(join(join(self._getExtraPath(),'level%03d'%level,f)))
