@@ -28,12 +28,10 @@
 # flexible fitting (coot and refmac), as well as validation programs such as
 # emringer and molprobity
 
-from pyworkflow.em.packages.chimera.protocol_fit import \
-    ChimeraProtRigidFit
-from pyworkflow.em.packages.powerfit.protocol_powerfit import \
-    PowerfitProtRigidFit
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
-    ProtImportVolumes
+from pyworkflow.em.packages.chimera.protocol_fit import ChimeraProtRigidFit 
+from pyworkflow.em.packages.powerfit.protocol_powerfit import PowerfitProtRigidFit 
+from pyworkflow.em.protocol.protocol_import import ProtImportPdb
+from pyworkflow.em.protocol.protocol_import import ProtImportVolumes
 from pyworkflow.tests import *
 import os.path
 
