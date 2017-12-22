@@ -492,7 +492,6 @@ class ProtImportImages(ProtImportFiles):
             filePaths = [re.split(r'[$*#?]', self.getPattern())[0]]
         
         commPath = pwutils.commonPath(filePaths)
-        print "filePaths, commPath: ", filePaths, commPath
         return filename.replace(commPath + "/", "").replace("/", "_")
 
     def handleImgHed(self, copyOrLink, src, dst):
