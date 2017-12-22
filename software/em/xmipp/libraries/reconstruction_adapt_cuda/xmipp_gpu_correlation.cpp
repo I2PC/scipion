@@ -656,6 +656,9 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 
 	for(int step=0; step<6; step++){
 
+		bool saveMaxVector = false;
+		if(step==5)
+			saveMaxVector = true;
 
 		if(step%2==0){
 
@@ -669,7 +672,7 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 					d_experimentalAuxRT, transMat_rt,
 					max_vector_rt, myhandlePolarB_rt,
 					myStructureAux_rt, myStreamRT,
-					resultTR, resultRT, ifftcb);
+					resultTR, resultRT, ifftcb, saveMaxVector);
 
 			//APPLY TRANSFORMATION
 			apply_transform(d_experimentalAuxTR.d_original_image, d_experimentalAuxTR.d_transform_image, transMat_tr, myStreamTR);
@@ -700,7 +703,7 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 					d_experimentalAuxTR, transMat_tr,
 					max_vector_tr, myhandlePolarB_tr,
 					myStructureAux_tr, myStreamTR,
-					resultRT, resultTR, ifftcb);
+					resultRT, resultTR, ifftcb, saveMaxVector);
 
 
 			if(step < 5){
@@ -737,7 +740,7 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 				//CORRELATION PART
 				//TRANSFORMATION MATRIX CALCULATION
 				cuda_calculate_correlation(d_referenceAux, d_experimentalAuxTR, transMat_tr, max_vector_tr, maxShift, myhandlePaddedB_tr,
-							mirror, myStructureAux_tr, myStreamTR, resultTR);
+							mirror, myStructureAux_tr, myStreamTR, resultTR, saveMaxVector);
 
 			}
 
@@ -1158,8 +1161,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 	MDRow row;
 
 	for(int i=0; i<mdExpSize; i++){
-		SFexp.getRow(rowExp, iterExp->objId);
-		rowExp.getValue(MDL_IMAGE, nameImg);
+
 		iter->init(SF);
 		for(int j=0; j<2*mdInSize; j++){
 
@@ -1180,6 +1182,8 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				//END AJ
 
 				size_t itemId;
+				SFexp.getRow(rowExp, iterExp->objId);
+				rowExp.getValue(MDL_IMAGE, nameImg);
 				rowExp.getValue(MDL_ITEM_ID, itemId);
 				rowOut.setValue(MDL_ITEM_ID, itemId);
 				rowOut.setValue(MDL_IMAGE,nameImg);
@@ -1196,22 +1200,22 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				}
 
 				//AJ NEW
-				MAT_ELEM(out2Matrix,0,0) = DIRECT_A2D_ELEM(out2,0,0);
-				MAT_ELEM(out2Matrix,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-				MAT_ELEM(out2Matrix,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+				MAT_ELEM(bestM,0,0) = DIRECT_A2D_ELEM(out2,0,0);
+				MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+				MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
 
-				MAT_ELEM(out2Matrix,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-				MAT_ELEM(out2Matrix,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-				MAT_ELEM(out2Matrix,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+				MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+				MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+				MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
 
-				MAT_ELEM(out2Matrix,2,0)=0.0;
-				MAT_ELEM(out2Matrix,2,1)=0.0;
-				MAT_ELEM(out2Matrix,2,2)=1.0;
-				out2Matrix.selfInverse();
+				MAT_ELEM(bestM,2,0)=0.0;
+				MAT_ELEM(bestM,2,1)=0.0;
+				MAT_ELEM(bestM,2,2)=1.0;
+				bestM = bestM.inv();
 				//FIN AJ NEW
 
-				double shiftX = MAT_ELEM(out2Matrix,0,2);//(double)DIRECT_A2D_ELEM(out2,0,2);
-				double shiftY = MAT_ELEM(out2Matrix,1,2);//(double)DIRECT_A2D_ELEM(out2,1,2);
+				double shiftX = MAT_ELEM(bestM,0,2);//(double)DIRECT_A2D_ELEM(out2,0,2);
+				double shiftY = MAT_ELEM(bestM,1,2);//(double)DIRECT_A2D_ELEM(out2,1,2);
 				if (shiftX*shiftX + shiftY*shiftY > maxShift2){
 					if(iter->hasNext())
 						iter->moveNext();
@@ -1221,13 +1225,14 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				rowOut.setValue(MDL_FLIP, flip);
 
 				double scale;
-				MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
+				/*MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
 				MAT_ELEM(bestM,0,1)=MAT_ELEM(out2Matrix,0,1);//DIRECT_A2D_ELEM(out2,0,1);
 				MAT_ELEM(bestM,0,2)=MAT_ELEM(out2Matrix,0,2);//DIRECT_A2D_ELEM(out2,0,2);
 
 				MAT_ELEM(bestM,1,0)=MAT_ELEM(out2Matrix,1,0);//DIRECT_A2D_ELEM(out2,1,0);
 				MAT_ELEM(bestM,1,1)=MAT_ELEM(out2Matrix,1,1);//DIRECT_A2D_ELEM(out2,1,1);
 				MAT_ELEM(bestM,1,2)=MAT_ELEM(out2Matrix,1,2);//DIRECT_A2D_ELEM(out2,1,2);
+				*/
 
 				MAT_ELEM(bestM,2,0)=0.0;
 				MAT_ELEM(bestM,2,1)=0.0;
@@ -1296,6 +1301,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	MultidimArray<double> refSum(1, 1, yAux, xAux);
 	bool firstTime=true;
 	int refNum;
+	MultidimArray<double> zeros(1, 1, yAux, xAux);
 
 	// Generate mask
 	Mask mask;
@@ -1323,6 +1329,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	Timer timer;
 	size_t myTime1 = timer.tic();
 
+	bool read = false;
 	int countingClasses=1;
 	bool skip_image;
 	NexpVector = new int[mdInSize];
@@ -1332,7 +1339,6 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		double normWeight=0;
 
 		SF.getRow(rowSF, iterSF->objId);
-		rowSF.getValue(MDL_IMAGE, fnImgNew);
 		if(rowSF.containsLabel(MDL_REF))
 			rowSF.getValue(MDL_REF, refNum);
 		else
@@ -1342,7 +1348,6 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		refSum.initZeros();
 
-		//fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
 		fnRoot=fn_classes_out.withoutExtension();
 		fnStackOut=formatString("%s/%s.stk",fnDir.c_str(),fnRoot.c_str());
 		if(fnStackOut.exists() && firstTime)
@@ -1351,16 +1356,13 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		firstTime=false;
 		for(int j=0; j<mdExpSize; j++){
 
+			read = false;
 			skip_image=false;
-			SFexp.getRow(rowSFexp, iterSFexp->objId);
-			rowSFexp.getValue(MDL_IMAGE, fnExpNew);
 
 			long int pointer1=i*xAux*yAux;
 			long int pointer2=i*xAux*yAux;
 
 			if(DIRECT_A2D_ELEM(weights,j,i)!=0){
-
-				Iexp_aux.read(fnExpNew);
 
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
@@ -1369,37 +1371,48 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 				}
 				//END AJ
 
-				matrixTransCpu[i].getSlice(j, auxtr); //matrixTransCpu[j].getSlice(i, auxtr);
-				//AJ NEW
-				MAT_ELEM(auxtrMatrix,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
-				MAT_ELEM(auxtrMatrix,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
-				MAT_ELEM(auxtrMatrix,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
+				if(!skip_image){
+					matrixTransCpu[i].getSlice(j, auxtr); //matrixTransCpu[j].getSlice(i, auxtr);
+					//AJ NEW
+					MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
+					MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
+					MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
 
-				MAT_ELEM(auxtrMatrix,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
-				MAT_ELEM(auxtrMatrix,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
-				MAT_ELEM(auxtrMatrix,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+					MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
+					MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
+					MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
 
-				MAT_ELEM(auxtrMatrix,2,0)=0.0;
-				MAT_ELEM(auxtrMatrix,2,1)=0.0;
-				MAT_ELEM(auxtrMatrix,2,2)=1.0;
-				auxtrMatrix.selfInverse();
-				//FIN AJ NEW
+					MAT_ELEM(E,2,0)=0.0;
+					MAT_ELEM(E,2,1)=0.0;
+					MAT_ELEM(E,2,2)=1.0;
+					E = E.inv();
+					//FIN AJ NEW
 
-				double shiftX = MAT_ELEM(auxtrMatrix,0,2);//(double)DIRECT_A2D_ELEM(auxtr,0,2);
-				double shiftY = MAT_ELEM(auxtrMatrix,1,2);//(double)DIRECT_A2D_ELEM(auxtr,1,2);
-				if (shiftX*shiftX + shiftY*shiftY > maxShift2)
-					skip_image=true;
+					double shiftX = MAT_ELEM(E,0,2);//(double)DIRECT_A2D_ELEM(auxtr,0,2);
+					double shiftY = MAT_ELEM(E,1,2);//(double)DIRECT_A2D_ELEM(auxtr,1,2);
+					if (shiftX*shiftX + shiftY*shiftY > maxShift2)
+						skip_image=true;
+				}
 
 				if(!skip_image){
+
+					if(!read){
+						SFexp.getRow(rowSFexp, iterSFexp->objId);
+						rowSFexp.getValue(MDL_IMAGE, fnExpNew);
+						Iexp_aux.read(fnExpNew);
+						read = true;
+					}
+
 					NexpVector[i]++;
 
-					MAT_ELEM(E,0,0)=MAT_ELEM(auxtrMatrix,0,0);//DIRECT_A2D_ELEM(auxtr,0,0);
+					/*MAT_ELEM(E,0,0)=MAT_ELEM(auxtrMatrix,0,0);//DIRECT_A2D_ELEM(auxtr,0,0);
 					MAT_ELEM(E,0,1)=MAT_ELEM(auxtrMatrix,0,1);//DIRECT_A2D_ELEM(auxtr,0,1);
 					MAT_ELEM(E,0,2)=MAT_ELEM(auxtrMatrix,0,2);//DIRECT_A2D_ELEM(auxtr,0,2);
 
 					MAT_ELEM(E,1,0)=MAT_ELEM(auxtrMatrix,1,0);//DIRECT_A2D_ELEM(auxtr,1,0);
 					MAT_ELEM(E,1,1)=MAT_ELEM(auxtrMatrix,1,1);//DIRECT_A2D_ELEM(auxtr,1,1);
 					MAT_ELEM(E,1,2)=MAT_ELEM(auxtrMatrix,1,2);//DIRECT_A2D_ELEM(auxtr,1,2);
+					*/
 
 					MAT_ELEM(E,2,0)=0.0;
 					MAT_ELEM(E,2,1)=0.0;
@@ -1418,8 +1431,6 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			skip_image=false;
 			if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
 
-				Iexp_aux.read(fnExpNew);
-
 				//AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j))
@@ -1427,39 +1438,49 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 				}
 				//END AJ
 
-				matrixTransCpu_mirror[i].getSlice(j, auxtr); //matrixTransCpu_mirror[j].getSlice(i, auxtr);
-				//AJ NEW
-				MAT_ELEM(auxtrMatrix,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
-				MAT_ELEM(auxtrMatrix,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
-				MAT_ELEM(auxtrMatrix,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
+				if(!skip_image){
+					matrixTransCpu_mirror[i].getSlice(j, auxtr); //matrixTransCpu_mirror[j].getSlice(i, auxtr);
+					//AJ NEW
+					MAT_ELEM(E,0,0)=DIRECT_A2D_ELEM(auxtr,0,0);
+					MAT_ELEM(E,0,1)=DIRECT_A2D_ELEM(auxtr,0,1);
+					MAT_ELEM(E,0,2)=DIRECT_A2D_ELEM(auxtr,0,2);
 
-				MAT_ELEM(auxtrMatrix,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
-				MAT_ELEM(auxtrMatrix,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
-				MAT_ELEM(auxtrMatrix,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
+					MAT_ELEM(E,1,0)=DIRECT_A2D_ELEM(auxtr,1,0);
+					MAT_ELEM(E,1,1)=DIRECT_A2D_ELEM(auxtr,1,1);
+					MAT_ELEM(E,1,2)=DIRECT_A2D_ELEM(auxtr,1,2);
 
-				MAT_ELEM(auxtrMatrix,2,0)=0.0;
-				MAT_ELEM(auxtrMatrix,2,1)=0.0;
-				MAT_ELEM(auxtrMatrix,2,2)=1.0;
-				auxtrMatrix.selfInverse();
-				//FIN AJ NEW
+					MAT_ELEM(E,2,0)=0.0;
+					MAT_ELEM(E,2,1)=0.0;
+					MAT_ELEM(E,2,2)=1.0;
+					E = E.inv();
+					//FIN AJ NEW
 
-				double shiftX = MAT_ELEM(auxtrMatrix,0,2);//(double)DIRECT_A2D_ELEM(auxtr,0,2);
-				double shiftY = MAT_ELEM(auxtrMatrix,1,2);//(double)DIRECT_A2D_ELEM(auxtr,1,2);
-				if (shiftX*shiftX + shiftY*shiftY > maxShift2)
-					skip_image=true;
+					double shiftX = MAT_ELEM(E,0,2);//(double)DIRECT_A2D_ELEM(auxtr,0,2);
+					double shiftY = MAT_ELEM(E,1,2);//(double)DIRECT_A2D_ELEM(auxtr,1,2);
+					if (shiftX*shiftX + shiftY*shiftY > maxShift2)
+						skip_image=true;
+				}
 
 				if(!skip_image){
+
+					if(!read){
+						SFexp.getRow(rowSFexp, iterSFexp->objId);
+						rowSFexp.getValue(MDL_IMAGE, fnExpNew);
+						Iexp_aux.read(fnExpNew);
+						read = true;
+					}
 
 					NexpVector[i]++;
 					Iexp_aux().selfReverseX();
 
-					MAT_ELEM(E,0,0)=MAT_ELEM(auxtrMatrix,0,0);//DIRECT_A2D_ELEM(auxtr,0,0);
+					/*MAT_ELEM(E,0,0)=MAT_ELEM(auxtrMatrix,0,0);//DIRECT_A2D_ELEM(auxtr,0,0);
 					MAT_ELEM(E,0,1)=MAT_ELEM(auxtrMatrix,0,1);//DIRECT_A2D_ELEM(auxtr,0,1);
 					MAT_ELEM(E,0,2)=MAT_ELEM(auxtrMatrix,0,2);//DIRECT_A2D_ELEM(auxtr,0,2);
 
 					MAT_ELEM(E,1,0)=MAT_ELEM(auxtrMatrix,1,0);//DIRECT_A2D_ELEM(auxtr,1,0);
 					MAT_ELEM(E,1,1)=MAT_ELEM(auxtrMatrix,1,1);//DIRECT_A2D_ELEM(auxtr,1,1);
 					MAT_ELEM(E,1,2)=MAT_ELEM(auxtrMatrix,1,2);//DIRECT_A2D_ELEM(auxtr,1,2);
+					*/
 
 					MAT_ELEM(E,2,0)=0.0;
 					MAT_ELEM(E,2,1)=0.0;
@@ -1495,7 +1516,6 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			Inew2().resetOrigin();
 			Inew2.write(fnStackNo,i,true,WRITE_APPEND);
 		}else{
-			MultidimArray<double> zeros(1, 1, yAux, xAux);
 			Inew2() = zeros;
 			Inew2.write(fnStackNo,i,true,WRITE_APPEND);
 		}
@@ -1541,12 +1561,6 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			fnStackMD.deleteFile();
 
 		firstTime=false;
-		/*if(NexpVector[i]==0){
-			if(iterSF->hasNext())
-				iterSF->moveNext();
-			continue;
-		}*/
-
 		size_t id = SFout.addObject();
 		SFout.setValue(MDL_REF, refNum, id);
 		SFout.setValue(MDL_IMAGE, fnClass, id);
@@ -1573,17 +1587,13 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		SF.getRow(rowSF, iterSF->objId);
 		rowSF.getValue(MDL_REF, refNum);
 		iterSFexp->init(SFexp);
-		/*if(NexpVector[i]==0){
-			if(iterSF->hasNext())
-				iterSF->moveNext();
-			continue;
-		}*/
 
 		MetaData SFq;
 		for(int j=0; j<mdExpSize; j++){
+			read = false;
 			skip_image=false;
-			SFexp.getRow(rowSFexp, iterSFexp->objId);
-			rowSFexp.getValue(MDL_IMAGE, fnExpIm);
+			//SFexp.getRow(rowSFexp, iterSFexp->objId);
+			//rowSFexp.getValue(MDL_IMAGE, fnExpIm);
 
 			if(DIRECT_A2D_ELEM(weights,j,i)!=0){
 
@@ -1594,31 +1604,38 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 				}
 				//END AJ
 
-				matrixTransCpu[i].getSlice(j, out2); //matrixTransCpu[j].getSlice(i, out2);
-				//AJ NEW
-				MAT_ELEM(out2Matrix,0,0)=DIRECT_A2D_ELEM(out2,0,0);
-				MAT_ELEM(out2Matrix,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-				MAT_ELEM(out2Matrix,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+				if(!skip_image){
+					matrixTransCpu[i].getSlice(j, out2); //matrixTransCpu[j].getSlice(i, out2);
+					//AJ NEW
+					MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
+					MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+					MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
 
-				MAT_ELEM(out2Matrix,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-				MAT_ELEM(out2Matrix,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-				MAT_ELEM(out2Matrix,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+					MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+					MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+					MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
 
-				MAT_ELEM(out2Matrix,2,0)=0.0;
-				MAT_ELEM(out2Matrix,2,1)=0.0;
-				MAT_ELEM(out2Matrix,2,2)=1.0;
-				out2Matrix.selfInverse();
-				//FIN AJ NEW
+					MAT_ELEM(bestM,2,0)=0.0;
+					MAT_ELEM(bestM,2,1)=0.0;
+					MAT_ELEM(bestM,2,2)=1.0;
+					bestM = bestM.inv();
+					//FIN AJ NEW
 
-				double sx = MAT_ELEM(out2Matrix,0,2); //(double)DIRECT_A2D_ELEM(out2,0,2);
-				double sy = MAT_ELEM(out2Matrix,1,2); //(double)DIRECT_A2D_ELEM(out2,1,2);
-				if (sx*sx + sy*sy > maxShift2)
-					skip_image=true;
+					double sx = MAT_ELEM(bestM,0,2); //(double)DIRECT_A2D_ELEM(out2,0,2);
+					double sy = MAT_ELEM(bestM,1,2); //(double)DIRECT_A2D_ELEM(out2,1,2);
+					if (sx*sx + sy*sy > maxShift2)
+						skip_image=true;
+				}
 
 				if(!skip_image){
 
 					size_t itemId;
-					rowSFexp.getValue(MDL_ITEM_ID, itemId);
+					if(!read){
+						SFexp.getRow(rowSFexp, iterSFexp->objId);
+						rowSFexp.getValue(MDL_IMAGE, fnExpIm);
+						rowSFexp.getValue(MDL_ITEM_ID, itemId);
+						read = true;
+					}
 					row.setValue(MDL_ITEM_ID, itemId);
 					row.setValue(MDL_IMAGE, fnExpIm);
 					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i));
@@ -1626,13 +1643,14 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 					double scale, shiftX, shiftY, psi;
 					bool flip;
-					MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
+					/*MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
 					MAT_ELEM(bestM,0,1)=MAT_ELEM(out2Matrix,0,1);//DIRECT_A2D_ELEM(out2,0,1);
 					MAT_ELEM(bestM,0,2)=MAT_ELEM(out2Matrix,0,2);//DIRECT_A2D_ELEM(out2,0,2);
 
 					MAT_ELEM(bestM,1,0)=MAT_ELEM(out2Matrix,1,0);//DIRECT_A2D_ELEM(out2,1,0);
 					MAT_ELEM(bestM,1,1)=MAT_ELEM(out2Matrix,1,1);//DIRECT_A2D_ELEM(out2,1,1);
 					MAT_ELEM(bestM,1,2)=MAT_ELEM(out2Matrix,1,2);//DIRECT_A2D_ELEM(out2,1,2);
+					*/
 
 					MAT_ELEM(bestM,2,0)=0.0;
 					MAT_ELEM(bestM,2,1)=0.0;
@@ -1663,31 +1681,38 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 				}
 				//END AJ
 
-				matrixTransCpu_mirror[i].getSlice(j, out2); //matrixTransCpu_mirror[j].getSlice(i, out2);
-				//AJ NEW
-				MAT_ELEM(out2Matrix,0,0)=DIRECT_A2D_ELEM(out2,0,0);
-				MAT_ELEM(out2Matrix,0,1)=DIRECT_A2D_ELEM(out2,0,1);
-				MAT_ELEM(out2Matrix,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+				if(!skip_image){
+					matrixTransCpu_mirror[i].getSlice(j, out2); //matrixTransCpu_mirror[j].getSlice(i, out2);
+					//AJ NEW
+					MAT_ELEM(bestM,0,0)=DIRECT_A2D_ELEM(out2,0,0);
+					MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+					MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
 
-				MAT_ELEM(out2Matrix,1,0)=DIRECT_A2D_ELEM(out2,1,0);
-				MAT_ELEM(out2Matrix,1,1)=DIRECT_A2D_ELEM(out2,1,1);
-				MAT_ELEM(out2Matrix,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+					MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+					MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+					MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
 
-				MAT_ELEM(out2Matrix,2,0)=0.0;
-				MAT_ELEM(out2Matrix,2,1)=0.0;
-				MAT_ELEM(out2Matrix,2,2)=1.0;
-				out2Matrix.selfInverse();
-				//FIN AJ NEW
+					MAT_ELEM(bestM,2,0)=0.0;
+					MAT_ELEM(bestM,2,1)=0.0;
+					MAT_ELEM(bestM,2,2)=1.0;
+					bestM = bestM.inv();
+					//FIN AJ NEW
 
-				double sx = MAT_ELEM(out2Matrix,0,2); //(double)DIRECT_A2D_ELEM(out2,0,2);
-				double sy = MAT_ELEM(out2Matrix,1,2); //(double)DIRECT_A2D_ELEM(out2,1,2);
-				if (sx*sx + sy*sy > maxShift2)
-					skip_image=true;
+					double sx = MAT_ELEM(bestM,0,2); //(double)DIRECT_A2D_ELEM(out2,0,2);
+					double sy = MAT_ELEM(bestM,1,2); //(double)DIRECT_A2D_ELEM(out2,1,2);
+					if (sx*sx + sy*sy > maxShift2)
+						skip_image=true;
+				}
 
 				if(!skip_image){
 
 					size_t itemId;
-					rowSFexp.getValue(MDL_ITEM_ID, itemId);
+					if(!read){
+						SFexp.getRow(rowSFexp, iterSFexp->objId);
+						rowSFexp.getValue(MDL_IMAGE, fnExpIm);
+						rowSFexp.getValue(MDL_ITEM_ID, itemId);
+						read = true;
+					}
 					row.setValue(MDL_ITEM_ID, itemId);
 					row.setValue(MDL_IMAGE, fnExpIm);
 					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i+mdInSize));
@@ -1695,13 +1720,14 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 					double scale, shiftX, shiftY, psi;
 					bool flip;
-					MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
+					/*MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
 					MAT_ELEM(bestM,0,1)=MAT_ELEM(out2Matrix,0,1);//DIRECT_A2D_ELEM(out2,0,1);
 					MAT_ELEM(bestM,0,2)=MAT_ELEM(out2Matrix,0,2);//DIRECT_A2D_ELEM(out2,0,2);
 
 					MAT_ELEM(bestM,1,0)=MAT_ELEM(out2Matrix,1,0);//DIRECT_A2D_ELEM(out2,1,0);
 					MAT_ELEM(bestM,1,1)=MAT_ELEM(out2Matrix,1,1);//DIRECT_A2D_ELEM(out2,1,1);
 					MAT_ELEM(bestM,1,2)=MAT_ELEM(out2Matrix,1,2);//DIRECT_A2D_ELEM(out2,1,2);
+					*/
 
 					MAT_ELEM(bestM,2,0)=0.0;
 					MAT_ELEM(bestM,2,1)=0.0;

@@ -1656,7 +1656,8 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
 		float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror,
-		StructuresAux &myStructureAux, myStreamHandle &myStream, TransformMatrix<float> &resultTR)
+		StructuresAux &myStructureAux, myStreamHandle &myStream, TransformMatrix<float> &resultTR,
+		bool saveMaxVector)
 {
 
 	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
@@ -1772,7 +1773,8 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 
 	resultTR.copyMatrix(transMat, myStream);
 
-	gpuErrchk(cudaMemcpyAsync(max_vector, myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *stream));
+	if(saveMaxVector)
+		gpuErrchk(cudaMemcpyAsync(max_vector, myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *stream));
 
 
 	//delete[] max_values;
@@ -1790,7 +1792,7 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 		float *max_vectorRT, mycufftHandle &myhandlePaddedRT,
 		StructuresAux &myStructureAuxRT, myStreamHandle &myStreamRT,
 		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT,
-		mycufftHandle &ifftcb)
+		mycufftHandle &ifftcb, bool saveMaxVector)
 {
 
 	cudaStream_t *streamTR = (cudaStream_t*) myStreamTR.ptr;
@@ -1939,10 +1941,10 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 
 	resultRT.copyMatrix(transMatRT, myStreamRT);
 
-	gpuErrchk(cudaMemcpyAsync(max_vectorTR, myStructureAuxTR.d_out_max.d_data, myStructureAuxTR.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *streamTR));
-
-	gpuErrchk(cudaMemcpyAsync(max_vectorRT, myStructureAuxRT.maxGpu.d_data, myStructureAuxRT.maxGpu.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *streamRT));
-
+	if(saveMaxVector){
+		gpuErrchk(cudaMemcpyAsync(max_vectorTR, myStructureAuxTR.d_out_max.d_data, myStructureAuxTR.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *streamTR));
+		gpuErrchk(cudaMemcpyAsync(max_vectorRT, myStructureAuxRT.maxGpu.d_data, myStructureAuxRT.maxGpu.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *streamRT));
+	}
 
 }
 

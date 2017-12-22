@@ -52,7 +52,7 @@ public:
 };
 
 
-void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat, float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror, StructuresAux &myStructureAux, myStreamHandle &myStream, TransformMatrix<float> &resultTR);
+void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat, float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror, StructuresAux &myStructureAux, myStreamHandle &myStream, TransformMatrix<float> &resultTR, bool saveMaxVector);
 void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat, float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror, StructuresAux &myStructureAux, myStreamHandle &myStream, TransformMatrix<float> &resultRT);
 void apply_transform(GpuMultidimArrayAtGpu<float> &d_original_image, GpuMultidimArrayAtGpu<float> &d_transform_image, TransformMatrix<float> &transMat, myStreamHandle &myStream);
 void padding_masking(GpuMultidimArrayAtGpu<float> &d_orig_image, GpuMultidimArrayAtGpu<float> &mask, GpuMultidimArrayAtGpu<float> &padded_image_gpu, GpuMultidimArrayAtGpu<float> &padded_image2_gpu, GpuMultidimArrayAtGpu<float> &padded_mask_gpu, bool experimental, myStreamHandle &myStream);
@@ -71,5 +71,5 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 		float *max_vectorRT, mycufftHandle &myhandlePaddedRT,
 		StructuresAux &myStructureAuxRT, myStreamHandle &myStreamRT,
 		TransformMatrix<float> &resultTR, TransformMatrix<float> &resultRT,
-		mycufftHandle &ifftcb);
+		mycufftHandle &ifftcb, bool saveMaxVector);
 #endif
