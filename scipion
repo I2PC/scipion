@@ -39,7 +39,7 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = '1.2.beta'
+__version__ = 'V1.2.beta'
 __nickname__ = 'Caligula'
 __releasedate__ = '26-12-2017'
 
