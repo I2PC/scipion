@@ -162,7 +162,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 
 	MultidimArray<double> imgcc(Nvols*Ndirs), imgimed(Nvols*Ndirs);
 	MultidimArray<double> cdfcc, cdfimed;
-	double one_alpha=1-currentAlpha;
+	double one_alpha=1-currentAlpha-deltaAlpha2;
 
 	FileName fnImg;
 	size_t nImg=0;
@@ -308,7 +308,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //					if (!condition && cc>ccl)
 //						std::cout << "Image " << nImg << " " << fnImg << " does not qualify by imed percentile to " << nDir << " -> " << cdfimedthis << " " << currentAlpha<< std::endl;
 					bool condition=true;
-					condition=condition && ((applyFisher && cc>ccl) || !applyFisher);
+					condition=condition && ((applyFisher && cc>=ccl) || !applyFisher);
 					condition=condition && cdfccthis>=one_alpha;
 					if (condition)
 					{
