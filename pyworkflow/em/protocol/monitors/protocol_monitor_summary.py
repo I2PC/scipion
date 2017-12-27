@@ -114,8 +114,8 @@ class ProtMonitorSummary(ProtMonitor):
                        help="Set to true if you want to monitor the GPU")
         group.addParam('gpusToUse', params.StringParam, default='0',
                        label='Which GPUs to use:', condition='doGpu',
-                       help='Providing a list of which GPUs '
-                            '(0,1,2,3, etc). Default is monitor GPU 0 only')
+                       help='Provide a list of GPUs '
+                            '(e.g. "0 1 2 3"). Default is to monitor GPU 0 only')
         group = form.addGroup('NETWORK')
         group.addParam('doNetwork', params.BooleanParam, default=False,
                        label="Check Network",
