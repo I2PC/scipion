@@ -32,6 +32,8 @@ from pyworkflow.protocol.params import PathParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.utils.path import moveFile, copyFile
 
+PDFLATEX = "pdflatex"
+
 
 class ProtPDFReport(EMProtocol):
     """ 
@@ -112,7 +114,7 @@ class ProtPDFReport(EMProtocol):
         fhTex.close()
 
         args = "-interaction=nonstopmode " + fnTex
-        self.runJob("pdflatex", args, cwd=self._getExtraPath())
+        self.runJob(PDFLATEX, args, cwd=self._getExtraPath())
 
         fnPDF = self._getExtraPath("report.pdf")
 
@@ -127,5 +129,18 @@ class ProtPDFReport(EMProtocol):
         summary.append("Input directory: %s" % self.filesPath.get())
         summary.append("Output report: %s" % self._getPath("report.pdf"))
         return summary
-    
+
+    @classmethod
+    def validateInstallation(cls):
+        """ This function will be used to check if PDFto latex is available. """
+        missingPaths = []
+
+        from pyworkflow.utils import commandExists
+        if not (commandExists(PDFLATEX)):
+            missingPaths.append("%s not found in the system" % PDFLATEX)
+
+        if missingPaths:
+            return ["Missing variables:"] + missingPaths
+        else:
+            return [] # No errors
 
