@@ -59,12 +59,9 @@ import xmipp
 
 # TODO: ROB I think all this imports are not needed. First step toward removing
 # TODO: comment them
-# from viewer_fsc import FscViewer
-# from viewer_pdf import PDFReportViewer
-# from viewer_monitor_summary import ViewerMonitorSummary
-# from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
-# from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
-# from protocol.monitors.protocol_monitor_movie_gain import ProtMonitorMovieGainViewer
+from viewer_fsc import FscViewer
+from viewer_pdf import PDFReportViewer
+from viewer_monitor_summary import ViewerMonitorSummary
 
 
 
