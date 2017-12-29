@@ -211,7 +211,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
         _libs.append("cudart")
         _libs.append("cuda")
         _libs.append("cufft")
-        _libpath.append("/usr/local/cuda-8.0/lib64")
+        _libpath.append(env['CUDA_LIB'])
     if name == "XmippParallel":
         _libs.append("XmippReconsAdaptCuda")
     _incs = list(incs)
@@ -719,6 +719,7 @@ env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
 env['NVCC'] = os.environ.get('NVCC')
 env['NVCC_INCLUDE'] = os.environ.get('NVCC_INCLUDE')
 env['NVCC_LIBDIR'] = os.environ.get('NVCC_LIBDIR')
+env['CUDA_LIB'] = os.environ.get('CUDA_LIB')
 
 # Java related environment variables, probably the main one
 # that need to be modified is JAVA_HOME
