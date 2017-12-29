@@ -1,10 +1,12 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     J.M. de la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
+# *              Grigory Sharov (sharov@igbmc.fr) [2]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# *
+# * [1] Science for Life Laboratory, Stockholm University
+# * [2] L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# *
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -41,7 +43,7 @@ MASK_CIRCULAR = 0
 MASK_OBJECT = 1
 
 
-class ProtGemPicker(em.ProtParticlePicking):
+class ProtGemPicker(em.ProtParticlePickingAuto):
     """
     gEMpicker is a template-based cryo-EM particle picking program that use
     cross-correlation approach. The user may define a template particle in 
@@ -53,32 +55,35 @@ class ProtGemPicker(em.ProtParticlePicking):
     processors (GPUs).
     """
     _label = 'auto-picking'
-        
-    #--------------------------- DEFINE param functions --------------------------------------------
+    
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
-        em.ProtParticlePicking._defineParams(self, form)
-        form.addParam('inputReferences', params.PointerParam, 
+        em.ProtParticlePickingAuto._defineParams(self, form)
+        form.addParam('inputReferences', params.PointerParam,
                       pointerClass='SetOfAverages',
                       label='Input References', important=True,
                       help="Template images (2D class averages or reprojections "
                            "from a reference volume) to be used in picking.")
-        form.addParam('refsHaveInvertedContrast', params.BooleanParam, default=False,
+        form.addParam('refsHaveInvertedContrast', params.BooleanParam,
+                      default=False,
                       label='References have inverted contrast',
-                      help='Set to Yes to indicate that the reference have inverted \n'
-                           'contrast with respect to the particles in the micrographs.')
+                      help='Set to Yes to indicate that the reference have '
+                           'inverted contrast with respect to the particles '
+                           'in the micrographs.')
         form.addParam('rotAngle', params.IntParam, default=5,
                       label='Rotational angle search',
-                      help='In-plane rotating angle in degrees (0 = no rotation)')
+                      help='In-plane rotating angle in degrees '
+                           '(0 = no rotation)')
         
-        line = form.addLine('Threshold in the range [0-1]', 
-                            help="Threshold value for picking, select low and high "
-                                 "values for cut-off.")
+        line = form.addLine('Threshold in the range [0-1]',
+                            help="Threshold value for picking, select low and "
+                                 "high values for cut-off.")
         line.addParam('thresholdLow', params.FloatParam, default=0.1,
                       label='Low')
         line.addParam('thresholdHigh', params.FloatParam, default=0.5,
                       label='High')
-
+        
         form.addParam('maxPeaks', params.IntParam, default=0,
                       label='Max particles per micrograph',
                       expertLevel=LEVEL_ADVANCED,
@@ -96,11 +101,11 @@ class ProtGemPicker(em.ProtParticlePicking):
                       label='Min distance from micrograph border (pix)',
                       expertLevel=LEVEL_ADVANCED,
                       help="Minimal distance between box edge and "
-                           "micrograph border")                           
-        form.addParam('maskType', params.EnumParam, 
-                      choices=['circular', 'object'], default=0, 
+                           "micrograph border")
+        form.addParam('maskType', params.EnumParam,
+                      choices=['circular', 'object'], default=0,
                       display=params.EnumParam.DISPLAY_HLIST,
-                      label='Mask type', 
+                      label='Mask type',
                       help='Select which type of mask do you want to apply. '
                            'Only the pixels beneath this mask will be analyzed. '
                            'In the simplest case, a circular mask can be used. '
@@ -109,70 +114,60 @@ class ProtGemPicker(em.ProtParticlePicking):
                            '(but not too tightly).')
         form.addParam('maskRadius', params.IntParam, default=-1,
                       condition='maskType==%d' % MASK_CIRCULAR,
-                      label='Mask radius (px)', 
-                      help='If -1, the entire image (in pixels) will be considered.')
-        form.addParam('inputMasks', params.MultiPointerParam, pointerClass='Mask', 
-                      condition='maskType==%d' % MASK_OBJECT, 
-                      label="Mask objects", 
+                      label='Mask radius (px)',
+                      help='If -1, the entire image (in pixels) will be '
+                           'considered.')
+        form.addParam('inputMasks', params.MultiPointerParam,
+                      pointerClass='Mask',
+                      condition='maskType==%d' % MASK_OBJECT,
+                      label="Mask objects",
                       help="Select a mask file")
         form.addParam('useGPU', params.BooleanParam, default=True,
                       label='Use GPU',
                       help='Set to Yes to use GPU as well as CPU')
         form.addParam('numberOfGPUs', params.IntParam, default=1,
                       label='GPUs per process', condition='useGPU',
-                      help='Select number of GPUs per process')               
+                      help='Select number of GPUs per process')
         form.addParallelSection(threads=1, mpi=0)
-        
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
+    
+    #--------------------------- INSERT steps functions ------------------------
+    def _insertInitialSteps(self):
         convId = self._insertFunctionStep('convertInputStep',
                                           self.getInputMicrographs().strId(),
                                           self.inputReferences.get().strId())
-        deps = []
-        # Insert one picking step per Micrograph
-        for mic in self.inputMicrographs.get():
-            micName = mic.getFileName()
-            pickId = self._insertFunctionStep('runGempickerStep',
-                                              micName,
-                                              self.getArgs(),
-                                              prerequisites=[convId])
-            deps.append(pickId)
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
-    #--------------------------- STEPS functions ---------------------------------------------------
-
+        return [convId]
+    
+    #--------------------------- STEPS functions -------------------------------
+    
     def convertInputStep(self, micsId, refsId):
         """ This step will take of the conversions from the inputs.
-        Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
+        Micrographs: they will be linked if are in '.mrc' format, converted
+        otherwise.
         References: will always be converted to '.mrc' format
         Mask: either converted (to '.tif' format) or generated a circular one
         """
+        
         self.convertInputs(self._getExtraPath())
-
-    def runGempickerStep(self, micName, args):
-        runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args)
-
+    
+    def _pickMicrograph(self, mic, *args):
+        micName = mic.getFileName()
+        runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args[0],
+                     log=self._log)
+    
     def createOutputStep(self):
-        micSet = self.getInputMicrographs()
-        coordSet = self._createSetOfCoordinates(micSet)
-        if self.boxSize and self.boxSize > 0:
-            coordSet.setBoxSize(self.boxSize.get())
-        else:
-            coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
-
-        self.readSetOfCoordinates(self._getExtraPath(), coordSet)
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(micSet, coordSet)
-
-    #--------------------------- INFO functions --------------------------------------------
+        pass
+    
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
         useGPU = self.useGPU.get()
         if not exists(getProgram(useGPU)):
             errors.append("Binary '%s' does not exits. \n"
-                          "Check configuration file: ~/.config/scipion/scipion.conf\n"
-                          "and set GEMPICKER variables properly." % getProgram(useGPU))
+                          "Check configuration file: "
+                          "~/.config/scipion/scipion.conf\n"
+                          "and set GEMPICKER variablesproperly."
+                          % getProgram(useGPU))
             print "os.environ['GEMPICKER_HOME']", os.environ['GEMPICKER_HOME']
             print "os.environ['GEMPICKER']", os.environ['GEMPICKER']
         # Check that the number of input masks (in case of non-circular mask)
@@ -180,58 +175,66 @@ class ProtGemPicker(em.ProtParticlePicking):
         if self.maskType == MASK_OBJECT:
             n = len(self.inputMasks)
             if n > 1 and n != self.inputReferences.get().getSize():
-                errors.append('If the number of input masks is greater than one, \n'
-                              'it should be equal to the number of references.')
-
+                errors.append('If the number of input masks is greater than '
+                              'one, it should be equal to the number of '
+                              'references.')
+        
         value1 = round(self.thresholdLow,1)
         value2 = round(self.thresholdHigh,1)
         
-        if (self.thresholdLow < self.thresholdHigh and 
+        if (self.thresholdLow < self.thresholdHigh and
                         0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0):
             pass
         else:
             errors.append('Wrong threshold values!')
-
-        return errors
         
+        return errors
+    
     def _summary(self):
         summary = []
-        summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+        summary.append("Number of input micrographs: %d"
+                       % self.getInputMicrographs().getSize())
         if(self.getOutputsSize() > 0):
-            summary.append("Number of particles picked: %d" % self.getCoords().getSize())
-            summary.append("Particle size: %d px" % self.getCoords().getBoxSize())
-            summary.append("Threshold range: %0.3f - " % self.thresholdLow + "%0.3f" % self.thresholdHigh)
+            summary.append("Number of particles picked: %d"
+                           % self.getCoords().getSize())
+            summary.append("Particle size: %d px"
+                           % self.getCoords().getBoxSize())
+            summary.append("Threshold range: %0.3f - " % self.thresholdLow +
+                           "%0.3f" % self.thresholdHigh)
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
-
+    
     def _methods(self):
         methodsMsgs = []
         if self.getInputMicrographs() is None:
             return ['Input micrographs not available yet.']
-        methodsMsgs.append("Input micrographs %s." % (self.getObjectTag(self.getInputMicrographs())))
-
+        methodsMsgs.append("Input micrographs %s."
+                           % (self.getObjectTag(self.getInputMicrographs())))
+        
         if self.getOutputsSize() > 0:
             output = self.getCoords()
-            methodsMsgs.append("%s: User picked %d particles with a particle size of %d px and threshold range %0.3f - %0.3f."
-                               % (self.getObjectTag(output), output.getSize(), output.getBoxSize(),
-                                 self.thresholdLow.get(), self.thresholdHigh.get()))
+            methodsMsgs.append("%s: User picked %d particles with a particle "
+                               "size of %d px and threshold range %0.3f - %0.3f."
+                               % (self.getObjectTag(output), output.getSize(),
+                                  output.getBoxSize(), self.thresholdLow.get(),
+                                  self.thresholdHigh.get()))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
-
+        
         return methodsMsgs
     
     def _citations(self):
         return ['Hoang2013']
     
-    #--------------------------- UTILS functions --------------------------------------------------
-    def getArgs(self, threshold=True, workingDir=None):
+    #--------------------------- UTILS functions -------------------------------
+    def _getPickArgs(self, threshold=True, workingDir=None):
         """ Return the Gempicker parameters for picking one micrograph.
          The command line will depends on the protocol selected parameters.
         """
         nGPUs = self.numberOfGPUs.get() if self.useGPU else 0
         nThreads = self.numberOfThreads.get()
-
+        
         args = ' --nGPU=%d' % nGPUs
         args += ' --nCPU=%d' % nThreads
         # Put the output in the extra dir by default
@@ -245,9 +248,9 @@ class ProtGemPicker(em.ProtParticlePicking):
         args += ' --boxSize=%d' % self.boxSize
         args += ' --boxDist=%d' % self.boxDist
         args += ' --boxBorder=%d' % self.boxBorder
-
-        return args
-
+        
+        return [args]
+    
     def convertInputs(self, workingDir):
         """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
@@ -260,25 +263,25 @@ class ProtGemPicker(em.ProtParticlePicking):
             pwutils.cleanPath(p)
             pwutils.makePath(p)
             return p
-
+        
         makePath('micrographs')
-
+        
         refDir = makePath('templates')
         inputRefs = self.inputReferences.get()
         for i, ref in enumerate(inputRefs):
             outRef = join(refDir, 'ref%02d.mrc' % (i + 1))
             em.ImageHandler().convert(ref, outRef)
-
+        
         maskSchDir = makePath('maskSch')
         self.createInputMasks(inputRefs, maskSchDir)
-
+    
     def createInputMasks(self, inputRefs, maskSchDir):
         """ Create the needed mask for picking.
         We should either generate a circular mask,
         or convert the inputs (one or just one per reference 2d)
         """
         ih = em.ImageHandler()
-
+        
         if self.maskType == MASK_CIRCULAR:
             if self.maskRadius < 0:  # usually -1
                 radius = inputRefs.getDim()[0] / 2  # use half of input dim
@@ -291,5 +294,15 @@ class ProtGemPicker(em.ProtParticlePicking):
                 outMask = join(maskSchDir, 'ref%02d.tif' % (i + 1))
                 ih.convert(mask.get(), outMask)
 
-    def readSetOfCoordinates(self, workingDir, coordSet):
-        readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
+    def readCoordsFromMics(self, workingDir, micDoneList,
+                           outputCoords):
+        if self.boxSize and self.boxSize > 0:
+            outputCoords.setBoxSize(self.boxSize.get())
+        else:
+            outputCoords.setBoxSize(
+                self.inputReferences.get().getDim()[0])
+
+        readSetOfCoordinates(workingDir, micDoneList, outputCoords)
+
+    def getCoordsDir(self):
+        return self._getExtraPath()

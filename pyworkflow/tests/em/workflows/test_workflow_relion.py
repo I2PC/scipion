@@ -42,6 +42,21 @@ class TestWorkflowRelionPick(TestWorkflow):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('relion_tutorial')
 
+    def _launchPick(self, pickProt, validate=True):
+        """ Simple wrapper to launch a pickig protocol.
+        If validate=True, the output will be validated to exist and
+        with non-zero elements.
+        """
+        self.launchProtocol(pickProt)
+
+        if validate:
+            # Check the output coordinates is not None and has some items
+            outputCoords = getattr(pickProt, 'outputCoordinates', None)
+            self.assertIsNotNone(outputCoords)
+            self.assertTrue(outputCoords.getSize() > 0,
+                            msg="Output set is empty for protocol '%s'" %
+                            pickProt.getRunName())
+
     def _runPickWorkflow(self):
         #First, import a set of micrographs
         print "Importing a set of micrographs..."
@@ -115,7 +130,7 @@ class TestWorkflowRelionPick(TestWorkflow):
         protPick1.ctfRelations.set(protCTF.outputCTF)
         protPick1.inputReferences.set(protAvgs.outputAverages)
 
-        self.launchProtocol(protPick1)
+        self._launchPick(protPick1)
 
         return protPick1
 
@@ -126,20 +141,20 @@ class TestWorkflowRelionPick(TestWorkflow):
         protPick2 = self.proj.copyProtocol(protPick1)
         protPick2.setObjLabel('autopick refs (all)')
         protPick2.runType.set(RUN_COMPUTE)
-        self.launchProtocol(protPick2)
+        self._launchPick(protPick2)
 
         # Launch now using the Gaussian as references
         protPick3 = self.proj.copyProtocol(protPick1)
         protPick3.setObjLabel('autopick gauss (optimize)')
         protPick3.referencesType.set(REF_BLOBS)
         protPick3.inputReferences.set(None)
-        self.launchProtocol(protPick3)
+        self._launchPick(protPick3)
 
         # Launch the same picking run but now in 1 GPU.
         protPick4 = self.proj.copyProtocol(protPick1)
         protPick4.setObjLabel('autopick refs (optimize) 1 GPU')
         protPick4.gpusToUse.set('0:0:0:0')
-        self.launchProtocol(protPick4)
+        self._launchPick(protPick4)
 
 
 class TestWorkflowRelionExtract(TestWorkflowRelionPick):
@@ -190,25 +205,26 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         protExtract2.setObjLabel('extract - rescale 32')
         protExtract2.doRescale.set(True)
         protExtract2.rescaledSize.set(32)
-        self.launchProtocol(protExtract2)
 
+        self.launchProtocol(protExtract2)
         self._checkOutput(protExtract2, size=size, dim=32, sampling=14.16)
         
         # Now test changing micrographs source option
-        subsetProt = self.newProtocol(em.ProtSubSet,
-                                      chooseAtRandom=True,
-                                      nElements=10)
-        subsetProt.inputFullSet.set(self.protCropMics.outputMicrographs)
-        self.launchProtocol(subsetProt)
+        splitSetsProt = self.newProtocol(em.ProtSplitSet,
+                                      randomize=False,
+                                      numberOfSets=2)
+        splitSetsProt.inputSet.set(self.protCropMics.outputMicrographs)
+        self.launchProtocol(splitSetsProt)
+
+        # We choose the first output to keep the assertation procedure 
+        otherSetMics = splitSetsProt.outputMicrographs01
 
         protExtract3 = self.proj.copyProtocol(protExtract)
         protExtract3.setObjLabel('extract - Other')
         protExtract3.downsampleType.set(1)
-        protExtract3.inputMicrographs.set(subsetProt.outputMicrographs)
+        protExtract3.inputMicrographs.set(otherSetMics)
         self.launchProtocol(protExtract3)
         
-        # The size of the set is different every time is executed the test
-        # due to the seleccion of the micrographs is random.
-        
-        partSize = protExtract3.outputParticles.getSize()
-        self._checkOutput(protExtract3, size=partSize)
+        # The number of particles is different than the imported coordinates
+        # due to the subSet done.
+        self._checkOutput(protExtract3, size=1716)

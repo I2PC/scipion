@@ -37,8 +37,9 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles,\
-     xmippToLocation, getImageLocation, setXmippAttributes
+     xmippToLocation, getImageLocation, createItemMatrix, setXmippAttributes
 from pyworkflow.protocol.params import NumericRangeParam
+import pyworkflow.em as em
 
 from convert import modeToRow
 
@@ -203,6 +204,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         pdbPointer = self.inputModes.get()._pdbPointer
         
         partSet.copyInfo(inputSet)
+        partSet.setAlignmentProj()
         partSet.copyItems(inputSet,
                           updateItemCallback=self._updateParticle,
                           itemDataIterator=md.iterRows(self.imgsFn, sortByLabel=md.MDL_ITEM_ID))
@@ -224,7 +226,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         return errors
     
     def _citations(self):
-        return ['Jonic2005', 'Sorzano2004b']
+        return ['Jonic2005', 'Sorzano2004b','Jin2014']
     
     def _methods(self):
         pass
@@ -243,4 +245,5 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         return self._getBasePath(modesFn)
     
     def _updateParticle(self, item, row):
-        setXmippAttributes(item, row, md.MDL_NMA, md.MDL_COST)
+        setXmippAttributes(item, row, md.MDL_ANGLE_ROT, md.MDL_ANGLE_TILT, md.MDL_ANGLE_PSI, md.MDL_SHIFT_X, md.MDL_SHIFT_Y, md.MDL_FLIP, md.MDL_NMA, md.MDL_COST)
+        createItemMatrix(item, row, align=em.ALIGN_PROJ)

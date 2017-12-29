@@ -15,6 +15,7 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
 			{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
 			{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
+			{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "import micrograph pairs"},
 			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
 			{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
 		]}
@@ -60,16 +61,19 @@ Protocols SPA = [
 		    {"tag": "protocol", "value": "ProtGemPicker", "text": "default"},
 		    {"tag": "protocol", "value": "ProtGautomatch", "text": "default"},
 			{"tag": "protocol", "value": "XmippProtConsensusPicking",   "text": "default"},
-			{"tag": "protocol", "value": "ProtExtractCoords",   "text": "default"}
+			{"tag": "protocol", "value": "ProtExtractCoords",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtParticlePickingPairs",  "text": "default"},
+			{"tag": "protocol", "value": "ProtLocalizedRecons", "text": "default"}
 		]},
 		{"tag": "protocol_group", "text": "Extract", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "XmippProtExtractParticles",   "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionExtractParticles",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtScreenParticles", "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "XmippProtExtractMovieParticles", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"},
-				{"tag": "protocol", "value": "XmippProtScreenParticles", "text": "default"},
-                {"tag": "protocol", "value": "ProtRelionSortParticles", "text": "default"}
+                                {"tag": "protocol", "value": "ProtRelionSortParticles", "text": "default"},
+				{"tag": "protocol", "value": "ProtLocalizedExtraction",  "text": "default"}
 			]}
 		]},
 		{"tag": "protocol_group", "text": "Preprocess", "openItem": "False", "children": [
@@ -122,6 +126,7 @@ Protocols SPA = [
 	{"tag": "section", "text": "3D", "children": [
 		{"tag": "protocol_group", "text": "Initial volume", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "EmanProtInitModel",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelionInitialModel",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtRansac",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSignificant",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSwarm",  "text": "default"},
@@ -168,6 +173,7 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtVolumeHomogenizer", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtVolumeStrain", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtNormalizeStrain", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtNMA", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtDimredNMA", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCLTomo", "text": "default"}
@@ -185,10 +191,12 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
     			{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},
+    			{"tag": "protocol", "value": "ProtRelionLocalRes",   "text": "default"},
                 {"tag": "protocol", "value": "BsoftProtBfilter", "text": "default"}
 			]},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtSubtractProjection", "text": "default"},
+				{"tag": "protocol", "value": "ProtRelionSubtract",  "text": "default"},
 				{"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
 				{"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCombinePdb", "text": "default"}

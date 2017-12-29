@@ -35,18 +35,21 @@ from pyworkflow.em.metadata import MetaData, MDL_XCOOR, MDL_YCOOR
 from pyworkflow.utils import Environ
 from pyworkflow.utils.path import replaceBaseExt, join, exists
 
+DOGPICKER_HOME = 'DOGPICKER_HOME'
+
 
 def getEnviron():
     """ Setup the environment variables needed to launch Appion. """
     environ = Environ(os.environ)
-    if 'DOGPICKER_HOME' in environ:
+    if ('%s' % DOGPICKER_HOME) in environ:
         environ.update({
-                'PATH': os.environ['DOGPICKER_HOME'],
-                'LD_LIBRARY_PATH': join(os.environ['DOGPICKER_HOME'], 'appionlib') + ":" + os.environ['DOGPICKER_HOME'],
+                'PATH': os.environ[DOGPICKER_HOME],
+                'LD_LIBRARY_PATH': join(os.environ[DOGPICKER_HOME], 'appionlib') + ":" + os.environ[
+                    DOGPICKER_HOME],
                 }, position=Environ.BEGIN)
     else:
         #TODO: Find a generic way to warn of this situation
-        print "DOGPICKER_HOME variable not set on environment."
+        print "%s variable not set on environment." % DOGPICKER_HOME
     return environ
 
 

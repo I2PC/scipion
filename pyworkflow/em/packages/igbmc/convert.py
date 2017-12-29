@@ -35,7 +35,7 @@ from os.path import join
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
-
+from pyworkflow.em.packages.igbmc import GEMPICKER_HOME
 
 
 def readSetOfCoordinates(workingDir, micSet, coordSet):
@@ -70,11 +70,22 @@ def getProgram(useGPU):
     else:
         binary = os.environ['GEMPICKER']
 
-    program = join(os.environ['GEMPICKER_HOME'], os.path.basename(binary))
+    program = join(os.environ[GEMPICKER_HOME], os.path.basename(binary))
     return program
 
 
-def runGempicker(micName, workingDir, useGPU, args):
+def getEnviron():
+    """ Return the environ settings to run gEMpicker program. """
+    environ = pwutils.Environ(os.environ)
+
+    # Take Scipion CUDA library path
+    cudaLib = environ.getFirst(('GEMPICKER_CUDA_LIB', 'CUDA_LIB'))
+    environ.addLibrary(cudaLib)
+
+    return environ
+
+
+def runGempicker(micName, workingDir, useGPU, args, log=None):
     # We convert the input micrograph on demand if not in .mrc
     outMic = os.path.join(workingDir, pwutils.replaceBaseExt(micName, 'mrc'))
     if micName.endswith('.mrc'):
@@ -88,6 +99,7 @@ def runGempicker(micName, workingDir, useGPU, args):
                                                           refDir, maskSchDir)
     # Run Gempicker:
     for mode in [0, 1]:
-        pwutils.runJob(None, getProgram(useGPU), args + ' --mode=%d' % mode)
+        pwutils.runJob(log, getProgram(useGPU), args + ' --mode=%d' % mode,
+                       env=getEnviron())
     # After picking we can remove the temporary file.
     pwutils.cleanPath(outMic)

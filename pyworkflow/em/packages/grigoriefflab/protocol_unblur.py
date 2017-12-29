@@ -24,11 +24,17 @@
 # **************************************************************************
 
 import os
+from itertools import izip
+from math import ceil
 
 import pyworkflow.utils as pwutils
+import pyworkflow.em as em
+from pyworkflow.em.data import MovieAlignment
+from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
-from grigoriefflab import UNBLUR_PATH, getVersion
+from pyworkflow.gui.plotter import Plotter
+from grigoriefflab import UNBLUR_PATH, getVersion, UNBLUR_HOME
 from convert import readShiftsMovieAlignment
 
 
@@ -39,6 +45,21 @@ class ProtUnblur(ProtAlignMovies):
     """
     _label = 'unblur'
     CONVERT_TO_MRC = 'mrc'
+    CORRECT_GAIN = True
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        Can't rely on package function since this is a "multi package" package
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        missingPaths = []
+
+        if not os.path.exists(UNBLUR_PATH):
+            missingPaths.append("%s : %s" % (UNBLUR_HOME, UNBLUR_PATH))
+        return missingPaths
 
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Alignment')
@@ -56,6 +77,31 @@ class ProtUnblur(ProtAlignMovies):
                       help='Apply a dose-dependent filter to frames before '
                            'summing them. Pre-exposure and dose per frame were '
                            'specified during movies import.')
+
+        form.addParam('doComputePSD', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Compute PSD (before/after)?",
+                      help="If Yes, the protocol will compute for each movie "
+                           "the average PSD before and after alignment, "
+                           "for comparison")
+
+        form.addParam('doComputeMicThumbnail', params.BooleanParam,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      default=False,
+                      label='Compute micrograph thumbnail?',
+                      help='When using this option, we will compute a '
+                           'micrograph thumbnail and keep it with the '
+                           'micrograph object for visualization purposes. ')
+
+        form.addParam('openmpThreads', params.IntParam,
+                      default=1, expertLevel=params.LEVEL_ADVANCED,
+                      label='OpenMP threads',
+                      help='The number of processors (using OpenMP threads) '
+                           'that will work on each movie. Take into account '
+                           'that you will be using a total of '
+                           'openmpThreads * numberOfThreads (or MPIs) '
+                           'processors. ')
+
         #group = form.addGroup('Expert Options')
         form.addParam('minShiftInitSearch', params.FloatParam,
                       default=2.,
@@ -148,6 +194,9 @@ class ProtUnblur(ProtAlignMovies):
         
         a0, aN = self._getRange(movie, 'align')
         _, lstFrame, _ = movie.getFramesRange()
+
+        movieBaseName = pwutils.removeExt(movie.getFileName())
+        aveMicFn = movieBaseName + '_uncorrected_avg.mrc'
         
         if a0 > 1 or aN < lstFrame:
             from pyworkflow.em import ImageHandler
@@ -165,20 +214,44 @@ class ProtUnblur(ProtAlignMovies):
             # original data.
             os.remove(movie.getFileName())
             pwutils.moveFile(movieConverted, movie.getFileName())
-
+        
+        movieSet = self.inputMovies.get()
         self._createLink(movie)
         range = aN - a0 + 1
         self._argsUnblur(movie, range)
         
         try:
             self.runJob(self._program, self._args)
+
+            outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            if not os.path.exists(outMicFn):
+                # if only DW mic is saved
+                outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+
+            if self.doComputePSD:
+                # Compute uncorrected avg mic
+                roi = [0, 0, 0, 0]
+                fakeShiftsFn = self.writeZeroShifts(movie)
+                self.averageMovie(movie, fakeShiftsFn, aveMicFn,
+                                  binFactor=1,
+                                  roi=roi, dark=None,
+                                  gain=movieSet.getGain())
+
+                self.computePSDs(movie, aveMicFn, outMicFn,
+                                 outputFnCorrected=self._getPsdJpeg(movie))
+
+            self._saveAlignmentPlots(movie)
+
+            if self._doComputeMicThumbnail():
+                self.computeThumbnail(outMicFn,
+                                      outputFn=self._getOutputMicThumbnail(
+                                          movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getFileName())
 
     # --------------------------- INFO functions -------------------------------
     def _citations(self):
-
-        return ["Grant2015.2"]
+        return ['Campbell2012', 'Grant2015b']
 
     def _summary(self):
         return []
@@ -229,7 +302,7 @@ class ProtUnblur(ProtAlignMovies):
 
         # Avoid threads multiplication
         # self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
-        self._program = 'export OMP_NUM_THREADS=1; '
+        self._program = 'export OMP_NUM_THREADS=%d; ' % self.openmpThreads
         self._program += UNBLUR_PATH
 
         if getVersion('UNBLUR') != '1.0_150529':
@@ -334,6 +407,21 @@ eof
         else:
             return movie.getNumberOfFrames()
 
+    def writeZeroShifts(self, movie):
+        # TODO: find another way to do this
+        shiftsMd = self._getTmpPath('zero_shifts.xmd')
+        pwutils.cleanPath(shiftsMd)
+        xshifts = [0] * movie.getNumberOfFrames()
+        yshifts = xshifts
+        alignment = MovieAlignment(first=1, last=movie.getNumberOfFrames(),
+                                   xshifts=xshifts, yshifts=yshifts)
+        roiList = [0, 0, 0, 0]
+        alignment.setRoi(roiList)
+        movie.setAlignment(alignment)
+        writeShiftsMovieAlignment(movie, shiftsMd,
+                                  1, movie.getNumberOfFrames())
+        return shiftsMd
+
     def _getRange(self, movie, prefix):
         n = self._getNumberOfFrames(movie)
         iniFrame, _, indxFrame = movie.getFramesRange()
@@ -347,3 +435,74 @@ eof
 
     def _isNewUnblur(self):
         return True if getVersion('UNBLUR') != '1.0.150529' else False
+
+    def _doComputeMicThumbnail(self):
+        return self.doComputeMicThumbnail.get()
+
+    def _preprocessOutputMicrograph(self, mic, movie):
+        if self.doComputePSD:
+            mic.psdCorr = em.Image(location=self._getPsdCorr(movie))
+            mic.psdJpeg = em.Image(location=self._getPsdJpeg(movie))
+        mic.plotGlobal = em.Image(location=self._getPlotGlobal(movie))
+        if self._doComputeMicThumbnail():
+            mic.thumbnail = em.Image(location=self._getOutputMicThumbnail(movie))
+
+    def _getNameExt(self, movie, postFix, ext, extra=False):
+        fn = self._getMovieRoot(movie) + postFix + '.' + ext
+        return self._getExtraPath(fn) if extra else fn
+
+    def _getPlotGlobal(self, movie):
+        return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
+
+    def _getPsdCorr(self, movie):
+        return self._getNameExt(movie, '_psd_comparison', 'psd', extra=True)
+
+    def _getPsdJpeg(self, movie):
+        return self._getNameExt(movie, '_psd', 'jpeg', extra=True)
+
+    def _saveAlignmentPlots(self, movie):
+        """ Compute alignment shift plots and save to file as png images. """
+        shiftsX, shiftsY = self._getMovieShifts(movie)
+        first, _ = self._getFrameRange(movie.getNumberOfFrames(), 'align')
+        plotter = createGlobalAlignmentPlot(shiftsX, shiftsY, first)
+        plotter.savefig(self._getPlotGlobal(movie))
+
+def createGlobalAlignmentPlot(meanX, meanY, first):
+    """ Create a plotter with the shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
+    preX = 0.0
+    preY = 0.0
+
+    figureSize = (6, 4)
+    plotter = Plotter(*figureSize)
+    figure = plotter.getFigure()
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Alignment based upon full frames')
+    ax.set_xlabel('Shift x (pixels)')
+    ax.set_ylabel('Shift y (pixels)')
+    
+    i = first
+    skipLabels = ceil(len(meanX)/10.0)
+    labelTick = 1
+
+    for x, y in izip(meanX, meanY):
+        preX = x
+        preY = y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        if labelTick == 1:
+            ax.text(preX - 0.02, preY + 0.02, str(i))
+            labelTick = skipLabels
+        else:
+            labelTick -= 1
+        i += 1
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
+
+    return plotter
+

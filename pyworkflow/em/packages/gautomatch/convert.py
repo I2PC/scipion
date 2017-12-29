@@ -35,9 +35,9 @@ from collections import OrderedDict
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
+from pyworkflow.em.packages.gautomatch import GAUTOMATCH_HOME
 from pyworkflow.object import ObjectWrap
 import pyworkflow.utils as pwutils
-
 
 
 COOR_DICT = OrderedDict([
@@ -187,11 +187,11 @@ def getEnviron():
 def getProgram():
     """ Return the program binary that will be used. """
     if (not 'GAUTOMATCH' in os.environ or
-        not 'GAUTOMATCH_HOME' in os.environ):
+        not GAUTOMATCH_HOME in os.environ):
         return None
 
-    return os.path.join(os.environ['GAUTOMATCH_HOME'], 'bin',
-                           os.path.basename(os.environ['GAUTOMATCH']))
+    return os.path.join(os.environ[GAUTOMATCH_HOME], 'bin',
+                        os.path.basename(os.environ['GAUTOMATCH']))
 
 
 def runGautomatch(micName, refStack, workDir, args, env=None):

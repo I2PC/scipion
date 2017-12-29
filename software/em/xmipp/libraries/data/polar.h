@@ -661,12 +661,48 @@ public:
             nsam = XMIPP_MAX(1, nsam);
             dphi = twopi / (double)nsam;
             Mring.resizeNoCopy(nsam);
-            for (int iphi = 0; iphi < nsam; iphi++)
+            int iphi = 0;
+#define VEC_LEN 8
+            double axp[VEC_LEN];
+            double ayp[VEC_LEN];
+            for (iphi = 0; iphi < nsam-VEC_LEN; iphi+=VEC_LEN)
+            {
+                for (int jphi = 0; jphi < VEC_LEN; jphi++) {
+                    // from polar to original cartesian coordinates
+                    phi = (iphi+jphi) * dphi;
+                    double sine=sin(phi); // Faster depending on the compiler
+   	                double cosine=cos(phi);
+                    axp[jphi] = sine * radius;
+                    ayp[jphi] = cosine * radius;
+
+                    // Origin offsets
+                    axp[jphi] += xoff;
+                    ayp[jphi] += yoff;
+                }
+
+                for (int jphi = 0; jphi < VEC_LEN; jphi++) {
+                    // Wrap coordinates
+   	                axp[jphi] = realWRAP(axp[jphi], minxp - 0.5, maxxp + 0.5);
+   	                ayp[jphi] = realWRAP(ayp[jphi], minyp - 0.5, maxyp + 0.5);
+                }
+
+                // Perform the convolution interpolation
+                if (BsplineOrder==1) {
+                    #pragma simd
+                    for (int jphi = 0; jphi < VEC_LEN; jphi++) {
+                        DIRECT_A1D_ELEM(Mring,iphi+jphi) = M1.interpolatedElement2DOutsideZero(axp[jphi],ayp[jphi]);
+                    }
+                }
+                else {
+                    for (int jphi = 0; jphi < VEC_LEN; jphi++) {
+                        DIRECT_A1D_ELEM(Mring,iphi+jphi) = M1.interpolatedElementBSpline2D(axp[jphi],ayp[jphi],BsplineOrder);
+                    }
+                }
+            }
+            for (; iphi < nsam; iphi++)
             {
                 // from polar to original cartesian coordinates
                 phi = iphi * dphi;
-//                double sine, cosine;
-//                sincos(phi,&sine,&cosine);
                 double sine=sin(phi); // Faster depending on the compiler
                 double cosine=cos(phi);
                 xp = sine * radius;

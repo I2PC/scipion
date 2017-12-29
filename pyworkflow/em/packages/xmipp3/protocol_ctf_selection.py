@@ -43,11 +43,11 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     values, the astigmatism, and the resolution.
     """
     _label = 'ctf selection'
-    
+
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         # Read a ctf estimation
@@ -61,24 +61,25 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                       help='Use this button to decide if carry out the '
                            'selection taking into account or not the defocus '
                            'values.')
-        
+
         line = form.addLine('Defocus (A)', condition="useDefocus",
                             help='Minimum and maximum values for defocus in '
                                  'Angstroms')
         line.addParam('minDefocus', params.FloatParam, default=0, label='Min')
         line.addParam('maxDefocus', params.FloatParam,
                       default=40000, label='Max')
-        
+
         form.addParam('useAstigmatism', params.BooleanParam, default=True,
-                      label = 'Use Astigmatism for selection',
-                      help = 'Use this button to decide if carry out the '
+                      label='Use Astigmatism for selection',
+                      help='Use this button to decide if carry out the '
                            'selection taking into account or not the '
                            'astigmatism value.')
         form.addParam('astigmatism', params.FloatParam, default=1000,
-                      label = 'Astigmatism (A)', condition="useAstigmatism",
-                      help = 'Maximum value allowed for astigmatism in '
-                             'Angstroms. If the evaluated CTF does not fulfill '
-                             'this requirement, it will be discarded.')
+                      label='Astigmatism (A)', condition="useAstigmatism",
+                      help='Maximum value allowed for astigmatism in '
+                           'Angstroms. If the evaluated CTF does'
+                           ' not fulfill '
+                           'this requirement, it will be discarded.')
         form.addParam('useResolution', params.BooleanParam, default=True,
                       label='Use Resolution for selection',
                       help='Use this button to decide if carry out the '
@@ -96,7 +97,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                       help='Use this button to decide if carrying out the '
                            'selection taking into account the Xmipp '
                            'Crit parameters. \n'
-                           'Only available when Xmipp CTF estimation was used.')
+                           'Only available when Xmipp CTF'
+                           ' estimation was used.')
         form.addParam('critFirstZero', params.FloatParam, default=5,
                       condition="useCritXmipp", label='CritFirstZero',
                       help='Minimun value of CritFirstZero')
@@ -122,9 +124,9 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         line.addParam('maxCritNonAstigmaticValidity', params.FloatParam,
                       default=25, label='Max')
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ------------------
     def _insertAllSteps(self):
-    
+
         fDeps = []
         self.insertedDict = {}
 
@@ -137,7 +139,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         # (when the input micrographs stream is closed)
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps,
                                  wait=True)
-    
+
     def _insertNewSelectionSteps(self, insertedDict, inputCtfs):
         """ Insert steps to process new ctfs (from streaming)
         Params:
@@ -153,7 +155,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                 deps.append(stepId)
                 insertedDict[ctfId] = stepId
         return deps
-    
+
     def _insertCtfSelectionStep(self, ctfId):
         """ Insert the processMovieStep for a given movie. """
         # Note1: At this point is safe to pass the movie, since this
@@ -165,18 +167,18 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                                           prerequisites=[])
         return stepId
 
-    # --------------------------- STEPS functions ------------------------------
+    # --------------------------- STEPS functions ------------------------
     def _stepsCheck(self):
-        
-        #check if there are new ctfs and process them
+
+        # check if there are new ctfs and process them
         self._checkNewInput()
         self._checkNewOutput()
-        
+
     def _checkNewInput(self):
         """ Check if there are new ctf to be processed and add the necessary
         steps."""
         ctfFile = self.inputCTF.get().getFileName()
-        
+
         now = datetime.now()
         self.lastCheck = getattr(self, 'lastCheck', now)
         mTime = datetime.fromtimestamp(getmtime(ctfFile))
@@ -192,8 +194,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             return None
 
         self.lastCheck = now
-        newCtf = any(ctf.getObjId() not in self.insertedDict
-                        for ctf in self.listOfCtf)
+        newCtf = any(ctf.getObjId() not in
+                     self.insertedDict for ctf in self.listOfCtf)
         outputStep = self._getFirstJoinStep()
 
         if newCtf:
@@ -202,7 +204,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
-
 
     def _checkNewOutput(self):
         """ Check for already selected CTF and update the output set. """
@@ -214,37 +215,35 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         # Check for newly done items
         ctfListIdAccepted = self._readtCtfId(True)
         ctfListIdDiscarded = self._readtCtfId(False)
-    
+
         newDoneAccepted = [ctfId for ctfId in ctfListIdAccepted
-                   if ctfId not in doneListAccepted]
+                           if ctfId not in doneListAccepted]
         newDoneDiscarded = [ctfId for ctfId in ctfListIdDiscarded
-                           if ctfId not in doneListDiscarded]
+                            if ctfId not in doneListDiscarded]
         firstTimeAccepted = len(doneListAccepted) == 0
         firstTimeDiscarded = len(doneListDiscarded) == 0
-        allDone = len(doneListAccepted) + len(doneListDiscarded) + \
+        allDone = len(doneListAccepted) + len(doneListDiscarded) +\
                   len(newDoneAccepted) + len(newDoneDiscarded)
-    
+
         # We have finished when there is not more input ctf (stream closed)
         # and the number of processed ctf is equal to the number of inputs
-        self.finished = (self.isStreamClosed == Set.STREAM_CLOSED
-                         and allDone == len(self.listOfCtf))
+        self.finished = (self.isStreamClosed == Set.STREAM_CLOSED and
+                         allDone == len(self.listOfCtf))
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
-
         # reading the outputs
-        if (len(doneListAccepted)>0 or len(newDoneAccepted)>0):
+        if (len(doneListAccepted) > 0 or len(newDoneAccepted) > 0):
             ctfSet = self._loadOutputSet(em.SetOfCTF, 'ctfs.sqlite')
             micSet = self._loadOutputSet(em.SetOfMicrographs,
                                          'micrographs.sqlite')
 
-
-        #AJ new subsets with discarded ctfs
-        if (len(doneListDiscarded)>0 or len(newDoneDiscarded)>0):
-            ctfSetDiscarded = self._loadOutputSet(em.SetOfCTF,
-                                                  'ctfsDiscarded.sqlite')
-            micSetDiscarded = self._loadOutputSet(em.SetOfMicrographs,
-                                                  'micrographsDiscarded.sqlite')
-
+        # AJ new subsets with discarded ctfs
+        if (len(doneListDiscarded) > 0 or len(newDoneDiscarded) > 0):
+            ctfSetDiscarded = \
+                self._loadOutputSet(em.SetOfCTF, 'ctfsDiscarded.sqlite')
+            micSetDiscarded = \
+                self._loadOutputSet(em.SetOfMicrographs,
+                                    'micrographsDiscarded.sqlite')
 
         if newDoneAccepted:
             inputCtfSet = self._loadInputCtfSet()
@@ -272,14 +271,11 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
             inputCtfSet.close()
 
-
-
         if not self.finished and not newDoneDiscarded and not newDoneAccepted:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
             return
-
 
         if (exists(self._getPath('ctfs.sqlite'))):
             self._updateOutputSet('outputCTF', ctfSet, streamMode)
@@ -294,8 +290,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         if (exists(self._getPath('ctfs.sqlite'))):
             if firstTimeAccepted:
                 # define relation just once
-                self._defineSourceRelation(self.inputCTF.get().getMicrographs(),
-                                           micSet)
+                self._defineSourceRelation(
+                    self.inputCTF.get().getMicrographs(), micSet)
                 self._defineSourceRelation(ctfSet, micSet)
                 self._defineSourceRelation(self.inputCTF, ctfSet)
                 self._defineCtfRelation(micSet, ctfSet)
@@ -306,8 +302,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         # AJ new subsets with discarded ctfs
         if (exists(self._getPath('ctfsDiscarded.sqlite'))):
             if firstTimeDiscarded:
-                self._defineSourceRelation(self.inputCTF.get().getMicrographs(),
-                                           micSetDiscarded)
+                self._defineSourceRelation(
+                    self.inputCTF.get().getMicrographs(), micSetDiscarded)
                 self._defineSourceRelation(ctfSetDiscarded, micSetDiscarded)
                 self._defineSourceRelation(self.inputCTF, ctfSetDiscarded)
                 self._defineCtfRelation(micSetDiscarded, ctfSetDiscarded)
@@ -315,7 +311,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                 micSetDiscarded.close()
                 ctfSetDiscarded.close()
 
-    
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
@@ -329,30 +324,30 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             micSetDiscarded.close()
             ctfSetDiscarded.close()
 
-
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
         pass
-    
+
     def _selectCTF(self, ctfId):
         # Depending on the flags selected by the user, we set the values of
         # the params to compare with
-        
+
         minDef, maxDef = self._getDefociValues()
         maxAstig = self._getMaxAstisgmatism()
         minResol = self._getMinResol()
 
         # TODO: Change this way to get the ctf.
         ctf = self.inputCTF.get()[ctfId]
-        
+
         defocusU = ctf.getDefocusU()
         defocusV = ctf.getDefocusV()
         astigm = defocusU - defocusV
-        resol, usingXmipp = self._getCtfResol(ctf)
+        resol = self._getCtfResol(ctf)
+        usingXmipp = self.usingXmipp(ctf)
 
         firstCondition = ((defocusU < minDef) or (defocusU > maxDef) or
-                (defocusV < minDef) or (defocusV > maxDef) or
-                (astigm > maxAstig) or (resol > minResol))
+                          (defocusV < minDef) or (defocusV > maxDef) or
+                          (astigm > maxAstig) or (resol > minResol))
 
         secondCondition = False
         if (self.useCritXmipp and usingXmipp):
@@ -363,13 +358,16 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             minNonAstigmatic, maxNonAstigmatic = \
                 self._getCritNonAstigmaticValidity()
 
-            secondCondition =((ctf._xmipp_ctfCritFirstZero.get() < firstZero) or
+            secondCondition = (
+                (ctf._xmipp_ctfCritFirstZero.get() < firstZero) or
                 (ctf._xmipp_ctfCritfirstZeroRatio.get() < minFirstZero) or
                 (ctf._xmipp_ctfCritfirstZeroRatio.get() > maxFirstZero) or
                 (ctf._xmipp_ctfCritCorr13.get() < corr) or
                 (ctf._xmipp_ctfCritCtfMargin.get() < ctfMargin) or
-                (ctf._xmipp_ctfCritNonAstigmaticValidty.get()<minNonAstigmatic) or
-                (ctf._xmipp_ctfCritNonAstigmaticValidty.get()>maxNonAstigmatic))
+                (ctf._xmipp_ctfCritNonAstigmaticValidty.get() <
+                 minNonAstigmatic) or
+                (ctf._xmipp_ctfCritNonAstigmaticValidty.get() >
+                 maxNonAstigmatic))
 
         """ Write to a text file the items that have been done. """
         if firstCondition or secondCondition:
@@ -386,40 +384,47 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                 with open(fn, 'a') as f:
                     f.write('%d F\n' % ctf.getObjId())
 
-
-
-        
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions --------------------------
     def _summary(self):
         message = []
         return message
-    
+
     def _methods(self):
-        #nothing here
+        # nothing here
         pass
-    
+
     def _validate(self):
         """ The function of this hook is to add some validation before the
         protocol is launched to be executed. It should return a list of
         errors. If the list is empty the protocol can be executed.
         """
-        message = [ ]
+        message = []
         return message
 
-    #--------------------------- UTILS functions --------------------------------
+    # --------------------------- UTILS functions ---------------------
+
+    def usingXmipp(self, ctf):
+        return ctf.hasAttribute('_xmipp_ctfCritfirstZeroRatio')
+
     def _getCtfResol(self, ctf):
-        if ctf.hasAttribute('_ctffind4_ctfResolution'):
-            return ctf._ctffind4_ctfResolution.get(), False
-        elif ctf.hasAttribute('_gctf_ctfResolution'):
-            return ctf._gctf_ctfResolution.get(), False
-        elif ctf.hasAttribute('_xmipp_ctfCritMaxFreq'):
-            return ctf._xmipp_ctfCritMaxFreq.get(), True
+        resolution = ctf.getResolution()
+        if resolution is not None:
+            return resolution
         else:
-            # if 0, the protocol does not select by ctf resolution.
             return 0
-    
+        # if ctf.hasAttribute('_ctffind4_ctfResolution'):
+        #     return ctf._ctffind4_ctfResolution.get(), False
+        # elif ctf.hasAttribute('_gctf_ctfResolution'):
+        #     return ctf._gctf_ctfResolution.get(), False
+        # elif ctf.hasAttribute('_xmipp_ctfCritMaxFreq'):
+        #     return ctf._xmipp_ctfCritMaxFreq.get(), True
+        # else:
+        #     # if 0, the protocol does not select by ctf resolution.
+        #     return 0
+
     def _readDoneListDiscarded(self):
-        """ Read from a text file the id's of the items that have been done. """
+        """ Read from a text file the id's of the items
+        that have been done. """
         DiscardedFile = self._getDiscardedDone()
         DiscardedList = []
         # Check what items have been previously done
@@ -430,7 +435,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         return DiscardedList
 
     def _readDoneListAccepted(self):
-        """ Read from a text file the id's of the items that have been done. """
+        """ Read from a text file the id's of the items
+        that have been done. """
         AcceptedFile = self._getAcceptedDone()
         AcceptedList = []
         # Check what items have been previously done
@@ -471,7 +477,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         self.listOfCtf = [m.clone() for m in ctfSet]
         ctfSet.close()
         self.debug("Closed db.")
-        
+
     def _loadOutputSet(self, SetClass, baseName):
         """
         Load the output set if it exists or create a new one.
@@ -497,9 +503,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             outputSet.copyInfo(micSet)
         elif isinstance(outputSet, em.SetOfCTF):
             outputSet.setMicrographs(micSet)
-        
-        return outputSet
 
+        return outputSet
 
     def _readtCtfId(self, accepted):
         if accepted:
@@ -525,26 +530,26 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                             return True
                         else:
                             return False
-    
+
     def _loadInputCtfSet(self):
         ctfFile = self.inputCTF.get().getFileName()
         self.debug("Loading input db: %s" % ctfFile)
         ctfSet = em.SetOfCTF(filename=ctfFile)
         ctfSet.loadAllProperties()
         return ctfSet
-    
+
     def _getDefociValues(self):
         if not self.useDefocus:
             return 0, 1000000
         else:
             return self.minDefocus.get(), self.maxDefocus.get()
-    
+
     def _getMaxAstisgmatism(self):
         if not self.useAstigmatism:
             return 10000000
         else:
             return self.astigmatism.get()
-        
+
     def _getMinResol(self):
         if not self.useResolution:
             return 1000000

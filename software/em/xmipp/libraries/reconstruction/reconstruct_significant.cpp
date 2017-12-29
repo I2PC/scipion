@@ -517,7 +517,7 @@ void ProgReconstructSignificant::run()
 				}
 
 				MetaData &mdPM=mdReconstructionProjectionMatching[nVolume];
-				if (mdPM.size()>0)
+				if (mdPM.size()>0 && fileExists(fnAngles.c_str()))
 				{
 					String fnImages=formatString("%s/images_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					mdPM.write(fnImages);

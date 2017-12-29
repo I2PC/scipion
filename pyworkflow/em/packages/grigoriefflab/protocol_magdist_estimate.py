@@ -32,7 +32,7 @@ import pyworkflow.utils.path as pwutils
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtPreprocessMicrographs
 
-from grigoriefflab import MAGDISTEST_PATH
+from grigoriefflab import MAGDISTEST_PATH, validateMagDistorsionInstallation
 from convert import parseMagEstOutput
 
 
@@ -43,6 +43,17 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     """    
     _label = 'magnification distortion estimation'
     _lastUpdateVersion = VERSION_1_1
+
+    @classmethod
+    def validateInstallation(cls):
+        """ Check if the installation of this protocol is correct.
+        Can't rely on package function since this is a "multi package" package
+        Returning an empty list means that the installation is correct
+        and there are not errors. If some errors are found, a list with
+        the error messages will be returned.
+        """
+        return validateMagDistorsionInstallation()
+
 
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)
