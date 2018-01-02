@@ -1024,3 +1024,9 @@ class ProtExtractParticles(ProtParticles):
     def createOutputStep(self):
         pass # Nothing to do now
         #self._createOutput(self._getExtraPath())
+
+
+class ProtExtractParticlesPair(ProtParticles):
+    """ Base class for all extract-particles pairs protocols. Until now,
+    this protcols is not in streaming mode.
+     """
