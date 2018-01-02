@@ -25,6 +25,7 @@
 # *
 # **************************************************************************
 
+from __future__ import print_function
 import os
 import sys
 import platform
@@ -197,9 +198,11 @@ class XmippMdRow():
                 
             try:
                 md.setValue(label, value, objId)
-            except Exception, ex:
-                print >> sys.stderr, "XmippMdRow.writeToMd: Error writting value to metadata."
-                print >> sys.stderr, "                     label: %s, value: %s, type(value): %s" % (label2Str(label), value, type(value))
+            except Exception as ex:
+                print("XmippMdRow.writeToMd: Error writting value to metadata.",
+                      file=sys.stderr)
+                print("                     label: %s, value: %s, type(value): %s"
+                      % (label2Str(label), value, type(value)), file=sys.stderr)
                 raise ex
             
     def readFromFile(self, fn):
@@ -221,7 +224,7 @@ class XmippMdRow():
             
     def printDict(self):
         """ Fancy printing of the row, mainly for debugging. """
-        print str(self)
+        print (str(self))
     
     
 class RowMetaData():
@@ -706,7 +709,7 @@ class ScriptIJBase(XmippScript):
                 missingFiles.append(f)
         self.inputFiles = files
         if len(missingFiles):
-            print "Missing files: \n %s" % '  \n'.join(missingFiles)
+            print ("Missing files: \n %s" % '  \n'.join(missingFiles))
         
         self.args = "-i %s" % ' '.join(self.inputFiles)
         self.readOtherParams()
@@ -728,13 +731,13 @@ class ScriptAppIJ(ScriptIJBase):
         if len(self.inputFiles) > 0:
             runJavaIJapp(self.memory, self.name, self.args, batchMode=False)
         else:
-            print "No input files. Exiting..."
+            print ("No input files. Exiting...")
             
     
 def getImageJPluginCmd(memory, macro, args, batchMode=False):
     if len(memory) == 0:
         memory = "1g"
-        print "No memory size provided. Using default: " + memory
+        print ("No memory size provided. Using default: " + memory)
     imagej_home = getXmippPath('external', 'imagej')
     plugins_dir = os.path.join(imagej_home, "plugins")
     macro = os.path.join(imagej_home, "macros", macro)
@@ -760,7 +763,7 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     '''Launch an Java application based on ImageJ '''
     if len(memory) == 0:
         memory = "2g"
-        print "No memory size provided. Using default: " + memory
+        print ("No memory size provided. Using default: " + memory)
     imagej_home = getXmippPath("external", "imagej")
     lib = getXmippPath("lib")
     javaLib = getXmippPath('java', 'lib')
@@ -773,7 +776,7 @@ def getJavaIJappCmd(memory, appName, args, batchMode=False):
     
 def runJavaIJapp(memory, appName, args, batchMode=True):
     cmd = getJavaIJappCmd(memory, appName, args, batchMode)
-    print cmd
+    print (cmd)
     os.system(cmd)
     
 def runJavaJar(memory, jarName, args, batchMode=True):

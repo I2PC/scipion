@@ -74,6 +74,7 @@ CTF_PSD_DICT = OrderedDict([
 
 CTF_EXTRA_LABELS = [   
     md.RLN_CTF_FOM,
+    md.RLN_CTF_PHASESHIFT,
     # In Relion the ctf also contains acquisition information
     md.RLN_CTF_Q0,
     md.RLN_CTF_CS,
