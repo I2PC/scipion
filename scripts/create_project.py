@@ -53,12 +53,9 @@ projName = sys.argv[1]
 jsonFile = None if n < 3 else os.path.abspath(sys.argv[2])
 location = None if n < 4 else sys.argv[3]
 
-<<<<<<< HEAD
 path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'gui', 'no-tkinter')
 sys.path.insert(1, path)
 
-=======
->>>>>>> 4df85d8... matplotlib conf file removed. create_project script and eBic scipion box wizard
 # Create a new project
 manager = Manager()
 
