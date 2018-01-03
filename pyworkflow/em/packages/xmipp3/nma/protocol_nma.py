@@ -90,9 +90,9 @@ class XmippProtNMA(XmippProtNMABase):
         # Some steps will differ if the input is a volume or a pdb file
         self.structureEM = self.inputStructure.get().getPseudoAtoms()
         n = self.numberOfModes.get()
-        
         # Link the input
         inputFn = self.inputStructure.get().getFileName()
+        #print inputFn
         localFn = self._getPath(basename(inputFn))
         self._insertFunctionStep('copyPdbStep', inputFn, localFn, self.structureEM)
         
@@ -106,17 +106,17 @@ class XmippProtNMA(XmippProtNMABase):
 
         # Compute modes
         self.pseudoAtomRadius=1
+        if self.cutoffMode == NMA_CUTOFF_REL:
+            params = '-i %s --operation distance_histogram %s' % (localFn, self._getExtraPath('atoms_distance.hist'))
+            self._insertRunJobStep("xmipp_pdb_analysis", params)
         if self.structureEM:
             with open(inputFn, 'r') as fh:
                 first_line = fh.readline()
                 second_line = fh.readline()
                 self.pseudoAtomRadius = float(second_line.split()[2])
-            self._insertFunctionStep('computeModesStep', self.inputStructure.get().getFileName(), n, cutoffStr)
+            self._insertFunctionStep('computeModesStep', localFn, n, cutoffStr) #self.inputStructure.get().getFileName()
             self._insertFunctionStep('reformatOutputStep',"pseudoatoms.pdb")
         else:
-            if self.cutoffMode == NMA_CUTOFF_REL:
-                params = '-i %s --operation distance_histogram %s' % (localFn, self._getExtraPath('atoms_distance.hist'))
-                self._insertRunJobStep("xmipp_pdb_analysis", params)
             self._insertFunctionStep('computePdbModesStep', n, self.rtbBlockSize.get(), self.rtbForceConstant.get(), cutoffStr)
             self._insertFunctionStep('reformatPdbOutputStep', n)
             self.PseudoAtomThreshold=0.0
