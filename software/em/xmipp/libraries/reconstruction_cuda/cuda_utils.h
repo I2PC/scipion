@@ -52,7 +52,21 @@ static const char *_cudaGetErrorEnum(cufftResult error)
 #define gpuErrchkFFT(ans) { gpuAssertFFT((ans), __FILE__, __LINE__); }
 void gpuAssertFFT(cufftResult_t code, const char *file, int line, bool abort=true);
 
-cudaPitchedPtr CopyVolumeHostToDevice(const float* host, uint width, uint height, uint depth);
-void CopyVolumeDeviceToHost(float* host, const cudaPitchedPtr device, uint width, uint height, uint depth);
+
+template<typename T>
+void hostRegister(T* srcArray, size_t bytes, unsigned int flags=0) {
+	if (NULL != srcArray && (0 != bytes)) {
+		cudaHostRegister(srcArray, bytes, flags);
+		gpuErrchk( cudaPeekAtLastError() );
+	}
+}
+
+template<typename T>
+void hostUnregister(T* srcArray) {
+	if (NULL != srcArray) {
+		cudaHostUnregister(srcArray);
+		gpuErrchk( cudaPeekAtLastError() );
+	}
+}
 
 #endif

@@ -542,9 +542,6 @@ for p in ['angular_break_symmetry',
           'ctf_sort_psds',
 
           'cuda_reconstruct_fourier',
-          'cuda_rotate_image',
-          'cuda_rotate_image_parallel',
-          'cuda_rotate_image_threads',
 
           'idr_xray_tomo',
 

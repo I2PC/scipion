@@ -26,6 +26,7 @@
 #include <cuda_runtime_api.h>
 #include "reconstruction_cuda/cuda_utils.h" // cannot be in header as it includes cuda headers
 #include "cuda_gpu_reconstruct_fourier.h"
+#include "reconstruction_cuda/cuda_basic_math.h"
 
 #if SHARED_BLOB_TABLE
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
@@ -55,24 +56,6 @@ __device__ __constant__ float cBlobAlpha = 0.f;
 __device__ __constant__ float cIw0 = 0.f;
 __device__ __constant__ float cIDeltaSqrt = 0.f;
 __device__ __constant__ float cOneOverBessiOrderAlpha = 0.f;
-
-
-__device__ void operator+=(float2 &a, float2 b)
-{
-    a.x += b.x;
-    a.y += b.y;
-}
-
-__device__ void operator*=(float2 &a, float2 b)
-{
-    a.x *= b.x;
-    a.y *= b.y;
-}
-
-__device__ float2 operator*(float2 a, float b)
-{
-    return make_float2(a.x * b, a.y * b);
-}
 
 __device__
 float bessi0Fast(float x) { // X must be <= 15
@@ -397,21 +380,6 @@ __device__
 float FFT_IDX2DIGFREQ(int idx, int size) {
 	if (size <= 1) return 0;
 	return ((idx <= (size / 2)) ? idx : (-size + idx)) / (float)size;
-}
-
-/** Returns true if x is in (min, max), i.e. opened, interval */
-template <typename T>
-__device__
-static bool inRange(T x, T min, T max) {
-	return (x > min) && (x < max);
-}
-
-/** Returns value within the range (included) */
-template<typename T, typename U>
-__device__
-static U clamp(U val, T min, T max) {
-	U res = (val > max) ? max : val;
-	return (res < min) ? min : res;
 }
 
 /**
@@ -1088,22 +1056,6 @@ void deleteStreams(int count) {
 	delete[] streams;
 }
 
-
-template<typename T>
-void hostRegister(T* srcArray, size_t bytes, unsigned int flags=0) {
-	if (NULL != srcArray && (0 != bytes)) {
-		cudaHostRegister(srcArray, bytes, flags);
-		gpuErrchk( cudaPeekAtLastError() );
-	}
-}
-
-template<typename T>
-void hostUnregister(T* srcArray) {
-	if (NULL != srcArray) {
-		cudaHostUnregister(srcArray);
-		gpuErrchk( cudaPeekAtLastError() );
-	}
-}
 
 void pinMemory(RecFourierBufferData* buffer) {
 	hostRegister(buffer->CTFs, buffer->getMaxByteSize(buffer->CTFs));
