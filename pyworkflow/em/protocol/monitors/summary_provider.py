@@ -61,8 +61,7 @@ class SummaryProvider(TreeProvider):
             else:
                 return None
 
-        inputProts = self.protocol.getInputProtocols()
-        runs = [getUpdatedProtocol(p) for p in inputProts]
+        runs = self.protocol.getInputProtocols()
         g = self.protocol.getProject().getGraphFromRuns(runs)
 
         nodes = g.getRoot().iterChildsBreadth()
