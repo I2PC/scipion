@@ -54,9 +54,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
     _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
-                  "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR "
-                  "ctfCritCtfMargin>0 OR ctfCritNonAstigmaticValidty<0 OR "
-                  "ctfCritNonAstigmaticValidty>25")
+                  "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13==0 OR "
+                  "ctfCritNonAstigmaticValidty<=0 OR " 
+                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>70000") #ctfCritCtfMargin>0
 
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
@@ -379,7 +379,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                        #'angle': line[2],
                        }
             self._params = dict(self._params.items() + params2.items())
-            print self._params
             # Mapping between base protocol parameters and the package specific
             # command options
             self.__params = {'sampling_rate': self._params['samplingRate']
@@ -423,7 +422,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                 mdCTFParam = md.MetaData(fnCTFparam)
                 phase_shift = mdCTFParam.getValue(md.MDL_CTF_PHASE_SHIFT,
                                                   mdCTFParam.firstObject())
-                print phase_shift
                 self.__params['VPP_radius'] = 0.005
                 self.__params['phase_shift'] = phase_shift
 

@@ -465,8 +465,6 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 			dist = fabs(ctf2 - bg);
 			if (penalize && bg > ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
 				dist *= current_penalty;
-			if (penalize && bg < ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
-				dist *= 5;
 			break;
 		case 2:
 			dist = fabs(ctf2 - ctf2_th);
@@ -978,7 +976,7 @@ void ProgCTFEstimateFromPSDFast::estimate_background_gauss_parameters_fast()
 
     if ( (A(0, 0)== 0) && (A(1, 0)== 0) && (A(1, 1)== 0))
     {
-        std::cout << "Matriz A es zero" << std::endl;
+        std::cout << "Matrix A is zeros" << std::endl;
     }
     else
     {
@@ -1103,6 +1101,7 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 		std::cout << "First defocus Fit:\n" << ctfmodel_defoci << std::endl;
 		saveIntermediateResults_fast("step03a_first_defocus_fit_fast", true);
 	}
+	//saveIntermediateResults_fast("/home/javiermota/scipion/step03a_first_defocus_fit_fast", true);
 
 }
 
@@ -1329,6 +1328,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best background Fit:\n" << prm.current_ctfmodel << std::endl;
 		prm.saveIntermediateResults_fast("step01d_best_background_fit_fast", true);
 	}
+	//prm.saveIntermediateResults_fast("/home/javiermota/scipion/step01d_best_background_fit_fast", true);
 	DEBUG_TEXTFILE(formatString("Step 4: CTF_fitness=%f",CTF_fitness_fast));
 	DEBUG_MODEL_TEXTFILE;
 
@@ -1353,6 +1353,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best envelope Fit:\n" << prm.current_ctfmodel << std::endl;
 		prm.saveIntermediateResults_fast("step02b_best_penalized_envelope_fit_fast", true);
 	}
+	//prm.saveIntermediateResults_fast("/home/javiermota/scipion/step02b_best_penalized_envelope_fit_fast", true);
 	DEBUG_TEXTFILE(formatString("Step 6: espr=%f",prm.current_ctfmodel.espr));
 	DEBUG_MODEL_TEXTFILE;
 
@@ -1394,6 +1395,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		<< std::endl;
 		prm.saveIntermediateResults_fast("step04b_best_fit_with_gaussian2_fast", true);
 	}
+	//prm.saveIntermediateResults_fast("/home/javiermota/scipion/step04b_best_fit_with_gaussian2_fast", true);
 	/************************************************************************/
 	/* STEP 12: 2D estimation parameters          							*/
 	/************************************************************************/
@@ -1439,6 +1441,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best fit with 2D parameters:\n" << prm2D->current_ctfmodel << std::endl;
 		prm2D->saveIntermediateResults("step05b_estimate_2D_parameters", true);
 	}
+	//prm2D->saveIntermediateResults("/home/javiermota/scipion/step05b_estimate_2D_parameters", true);
 	/************************************************************************/
 	/* STEP 13: Produce output                                              */
 	/************************************************************************/
