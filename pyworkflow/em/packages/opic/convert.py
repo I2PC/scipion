@@ -39,6 +39,7 @@ from collections import OrderedDict
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
+from pyworkflow.em.packages.opic import LOCALREC_HOME, LOCALREC_RELION_HOME
 
 from pyworkflow.object import ObjectWrap, String
 from pyworkflow.utils import Environ
@@ -46,7 +47,7 @@ from pyworkflow.utils.path import replaceBaseExt
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
-ACQUISITION_DICT = OrderedDict([ 
+ACQUISITION_DICT = OrderedDict([
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
        ("_voltage", md.RLN_CTF_VOLTAGE),
@@ -99,8 +100,9 @@ ALIGNMENT_DICT = OrderedDict([
        ("_rlnAnglePsi", md.RLN_ORIENT_PSI),
        ])
 
+
 def getVersion():
-    path = os.environ['LOCALREC_HOME']
+    path = os.environ[LOCALREC_HOME]
     for v in getSupportedVersions():
         if v in path:
             return v
@@ -116,7 +118,7 @@ def getSupportedRelionVersions():
 
 
 def getRelionVersion():
-    path = os.environ['LOCALREC_RELION_HOME']
+    path = os.environ[LOCALREC_RELION_HOME]
     for v in getSupportedRelionVersions():
         if v in path:
             return v
@@ -127,7 +129,7 @@ def getRelionEnviron():
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
     
-    relionHome = os.environ['LOCALREC_RELION_HOME']
+    relionHome = os.environ[LOCALREC_RELION_HOME]
     
     binPath = join(relionHome, 'bin')
     libPath = join(relionHome, 'lib') + ":" + join(relionHome, 'lib64')
@@ -145,7 +147,7 @@ def getRelionEnviron():
 def setEnviron():
     """ Setup the environment variables needed to import localrec classes. """
     os.environ.update(getRelionEnviron())
-    sys.path.append(os.path.join(os.environ["LOCALREC_HOME"], "lib"))
+    sys.path.append(os.path.join(os.environ[LOCALREC_HOME], "lib"))
 
 
 def locationToRelion(index, filename):

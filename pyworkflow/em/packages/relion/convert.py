@@ -42,6 +42,7 @@ from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
+RELION_HOME = 'RELION_HOME'
 ACQUISITION_DICT = OrderedDict([ 
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
@@ -128,7 +129,7 @@ def getEnviron():
     
     environ = Environ(os.environ)
 
-    relionHome = os.environ['RELION_HOME']
+    relionHome = os.environ[RELION_HOME]
     
     binPath = join(relionHome, 'bin')
     libPath = join(relionHome, 'lib') + ":" + join(relionHome, 'lib64')
@@ -144,7 +145,6 @@ def getEnviron():
     environ.addLibrary(cudaLib)
 
     return environ
-
 
 def getVersion():
     path = os.environ['RELION_HOME']
@@ -351,6 +351,9 @@ def alignmentToRow(alignment, alignmentRow, alignType):
 
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X, shifts[0])
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y, shifts[1])
+    # Also set the priors
+    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X_PRIOR, shifts[0])
+    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y_PRIOR, shifts[1])
     
     if is2D:
         angle = angles[0] + angles[2]
@@ -370,6 +373,10 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
         alignmentRow.setValue(md.RLN_ORIENT_TILT, angles[1])
         alignmentRow.setValue(md.RLN_ORIENT_PSI,  angles[2])
+        # Also set the priors
+        alignmentRow.setValue(md.RLN_ORIENT_ROT_PRIOR, angles[0])
+        alignmentRow.setValue(md.RLN_ORIENT_TILT_PRIOR, angles[1])
+        alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, angles[2])
         
 
 def rowToAlignment(alignmentRow, alignType):
@@ -545,6 +552,10 @@ def rowToParticle(partRow, **kwargs):
     # copy particleId if available from row to particle
     if partRow.hasLabel(md.RLN_PARTICLE_ID):
         img._rlnParticleId = Integer(partRow.getValue(md.RLN_PARTICLE_ID))
+    
+    # copy particleId if available from row to particle
+    if partRow.hasLabel(md.RLN_PARTICLE_RANDOM_SUBSET):
+        img._rln_halfId = Integer(partRow.getValue(md.RLN_PARTICLE_RANDOM_SUBSET))
     
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
@@ -887,16 +898,17 @@ def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 
 
-def readSetOfCoordinates(coordSet, coordFiles):
+def readSetOfCoordinates(coordSet, coordFiles, micList=None):
     """ Read a set of coordinates from given coordinate files
     associated to some SetOfMicrographs.
     Params:
         micSet and coordFiles should have same length and same order.
         coordSet: empty SetOfCoordinates to be populated.
     """
-    micSet = coordSet.getMicrographs()
-    
-    for mic, coordFn in izip(micSet, coordFiles):
+    if micList is None:
+        micList = coordSet.getMicrographs()
+
+    for mic, coordFn in izip(micList, coordFiles):
 
         if not os.path.exists(coordFn):
             print "WARNING: Missing coordinates star file: ", coordFn
@@ -964,7 +976,6 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
 
     f = None
     lastMicId = None
-    c = 0
 
     extraLabels = coordSet.getFirstItem().hasAttribute('_rlnClassNumber')
     doScale = abs(scale - 1) > 0.001
@@ -979,10 +990,8 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
             # we need to close previous opened file
             if f:
                 f.close()
-                c = 0
             f = openStar(posDict[micId], extraLabels)
             lastMicId = micId
-        c += 1
 
         if doScale:
             x = coord.getX() * scale
@@ -1004,3 +1013,34 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
         f.close()
 
     return posDict.values()
+
+
+def writeMicCoordinates(mic, coordList, outputFn, getPosFunc=None):
+    """ Write the pos file as expected by Xmipp with the coordinates
+    of a given micrograph.
+    Params:
+        mic: input micrograph.
+        coordList: list of (x, y) pairs of the mic coordinates.
+        outputFn: output filename for the pos file .
+        isManual: if the coordinates are 'Manual' or 'Supervised'
+        getPosFunc: a function to get the positions from the coordinate,
+            it can be useful for scaling the coordinates if needed.
+    """
+    if getPosFunc is None:
+        getPosFunc = lambda coord: coord.getPostion()
+   
+    extraLabels = coordList[0].hasAttribute('_rlnClassNumber')
+    f = openStar(outputFn, extraLabels)
+
+    for coord in coordList:
+        x, y = getPosFunc(coord)
+        if not extraLabels:
+            f.write("%d %d \n" % (x, y))
+        else:
+            f.write("%d %d %d %0.6f %0.6f\n"
+                    % (x, y,
+                       coord._rlnClassNumber,
+                       coord._rlnAutopickFigureOfMerit,
+                       coord._rlnAnglePsi))
+
+    f.close()

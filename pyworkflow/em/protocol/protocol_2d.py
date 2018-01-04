@@ -36,10 +36,11 @@ class Prot2D(EMProtocol):
 
 
 class ProtAlign2D(Prot2D):
-    """ This class will serve as a base for all protocols that align a set of 2D images.
-    All Align protocols receive as input:
+    """ This class will serve as a base for all protocols that align a set of 
+        2D images.
+        All Align protocols receive as input:
         A set of partices
-    and will allow the option to generate the aligned particles.
+        and will allow the option to generate the aligned particles.
     """
     def _defineParams(self, form):
         form.addSection(label='Input')

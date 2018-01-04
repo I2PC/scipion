@@ -597,7 +597,6 @@ class Environ(dict):
         else:
             print "Some paths do not exist in: % s" % libraryPath
 
-
 def existsVariablePaths(variableValue):
     """ Check if the path (or paths) in variableValue exists.
     Multiple paths are allowed if separated by os."""

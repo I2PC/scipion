@@ -23,6 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.object import Integer
 """
 This module contains the protocol for 3d refinement with Relion.
 """
@@ -70,7 +71,8 @@ leads to objective and high-quality results.
         if not self.doContinue:
             args['--healpix_order'] = self.angularSamplingDeg.get()
             args['--offset_range'] = self.offsetSearchRangePix.get()
-            args['--offset_step'] = self.offsetSearchStepPix.get() * 2
+
+            args['--offset_step'] = self.offsetSearchStepPix.get() * self._getSamplingFactor()
             args['--auto_refine'] = ''
             args['--split_random_halves'] = ''
             
@@ -229,6 +231,8 @@ leads to objective and high-quality results.
     
     def _createItemMatrix(self, item, row):
         createItemMatrix(item, row, align=ALIGN_PROJ)
+        item._rln_halfId = Integer(row.getValue(md.RLN_PARTICLE_RANDOM_SUBSET))
 
     def _updateParticle(self, particle, row):
         particle._coordinate._micName = em.String(row.getValue('rlnMicrographName'))
+

@@ -41,14 +41,3 @@ STATUS_COLORS = {
                STATUS_SCHEDULED: '#F3F5CB'
                }
 
-# Based on: http://paletton.com/palette.php?uid=75C1d0kleqtbzEKgVuIpcmGtdhZ
-# STATUS_COLORS = {
-#     STATUS_SAVED: '#424093',
-#     STATUS_LAUNCHED: '#424093',
-#     STATUS_RUNNING: '#d3b147',
-#     STATUS_FINISHED: '#3fab3a',
-#     STATUS_FAILED: '#d1464a',
-#     STATUS_INTERACTIVE: '#f5d573',
-#     STATUS_ABORTED: '#d1464a',
-#     # STATUS_SAVED: '#124EB0',
-# }

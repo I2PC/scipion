@@ -55,11 +55,38 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     # Redefine this in subclasses if want to convert the movies to mrc
     # the value should be either 'mrc' or 'mrcs'
     CONVERT_TO_MRC = None
+    CORRECT_GAIN = False
 
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
-    
+
+    def _getConvertExtension(self, filename):
+        """ This method will be used to check whether a movie needs to be
+        converted to be used in a given program.
+         Returns:
+            If return None, it means that not conversion is required. If not
+            None, the return value should be the extension that it should
+            be converted.
+
+        NOTE: Now by default this function use the CONVERT_TO_MRC property
+        for backward compatiblity reasons, but this method could be implemented
+        in any subclass of ProtProcessMovies.
+        """
+        if (self.CONVERT_TO_MRC and not (filename.endswith("mrc") or
+                                         filename.endswith("mrcs"))):
+            return self.CONVERT_TO_MRC
+
+        return None
+
+    def getGainAndDark(self):
+        inputMovs = self.inputMovies.get()
+        return inputMovs.getGain(), inputMovs.getDark()
+
+    def _doCorrectGain(self):
+        gain, dark = self.getGainAndDark()
+        return (getattr(self, 'CORRECT_GAIN', False) and (gain or dark))
+
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
@@ -195,13 +222,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieFolder = self._getOutputMovieFolder(movie)
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
+        movieDoneFn = self._getMovieDone(movie)
 
-        if (self.isContinued() and os.path.exists(self._getMovieDone(movie))):
+        if (self.isContinued() and os.path.exists(movieDoneFn)):
             self.info("Skipping movie: %s, seems to be done" % movieFn)
             return
 
         # Clean old finished files
-        pwutils.cleanPath(self._getMovieDone(movie))
+        pwutils.cleanPath(movieDoneFn)
 
         if self._filterMovie(movie):
             pwutils.makePath(movieFolder)
@@ -219,14 +247,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 if not exists(newMovieName):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
 
-            elif movieName.endswith('.tif'):
-                #FIXME: It seems that we have some flip problem with compressed
-                # tif files, we need to check that
-                newMovieName = movieName.replace('.tif', '.mrc')
-                # we assume that if compressed the name ends with .tbz
-                if not exists(newMovieName):
-                    self.runJob('tif2mrc', '%s %s' % (movieName, newMovieName),
-                                                      cwd=movieFolder)
             elif movieName.endswith('.txt'):
                 # Support a list of frame as a simple .txt file containing
                 # all the frames in a raw list, we could use a xmd as well,
@@ -243,18 +263,38 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                                        (i+1, os.path.join(movieFolder, newMovieName)))
             else:
                 newMovieName = movieName
-            
-            if (self.CONVERT_TO_MRC and not (newMovieName.endswith("mrc") or
-                                             newMovieName.endswith("mrcs"))):
+
+            convertExt = self._getConvertExtension(newMovieName)
+            correctGain = self._doCorrectGain()
+
+            if convertExt or correctGain:
                 inputMovieFn = os.path.join(movieFolder, newMovieName)
                 if inputMovieFn.endswith('.em'):
                     inputMovieFn += ":ems"
-                newMovieName = pwutils.replaceExt(newMovieName,
-                                                  self.CONVERT_TO_MRC)
+
+                if convertExt:
+                    newMovieName = pwutils.replaceExt(newMovieName, convertExt)
+                else:
+                    newMovieName = '%s_corrected.%s' % os.path.splitext(newMovieName)
+
                 outputMovieFn = os.path.join(movieFolder, newMovieName)
-                self.info("Converting movie '%s' -> '%s'" % (inputMovieFn,
-                                                             outputMovieFn))
-                ImageHandler().convertStack(inputMovieFn, outputMovieFn)
+
+                # If the protocols wants Scipion to apply the gain, then
+                # there is no reason to convert, since we can produce the
+                # output in the format expected by the program. In some cases,
+                # the alignment programs can directly deal with gain and dark
+                # correction images, so we don't need to apply it
+                if self._doCorrectGain():
+                    self.info("Correcting gain and dark '%s' -> '%s'"
+                              % (inputMovieFn, outputMovieFn))
+                    gain, dark = self.getGainAndDark()
+                    self.correctGain(inputMovieFn, outputMovieFn,
+                                     gainFn=gain, darkFn=dark)
+                else:
+                    self.info("Converting movie '%s' -> '%s'"
+                              % (inputMovieFn, outputMovieFn))
+
+                    ImageHandler().convertStack(inputMovieFn, outputMovieFn)
 
             # Just store the original name in case it is needed in _processMovie
             movie._originalFileName = pwobj.String(objDoStore=False)
@@ -274,7 +314,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 # cleanPath(movieFolder)
 
         # Mark this movie as finished
-        open(self._getMovieDone(movie), 'w').close()
+        open(movieDoneFn, 'w').close()
         
     #--------------------------- UTILS functions ----------------------------
     def _getOutputMovieFolder(self, movie):
@@ -367,7 +407,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.
     """
-    pass
+    def _defineParams(self, form):
+        ProtExtractParticles._defineParams(self, form)
+        ProtProcessMovies._defineParams(self, form)
 
 
 class ProtMovieAssignGain(ProtPreprocessMicrographs):

@@ -493,13 +493,14 @@ class ImagePreviewDialog(PreviewDialog):
     def _itemSelected(self, obj):
         
         index = obj.getIndex()
-        filename = obj.getFileName()
+        filename = ImageHandler.fixXmippVolumeFileName(obj)
         if index:
             filename = "%03d@%s" % (index, filename)
         
 #        self.image = xmipp.Image()
         self.image = ImageHandler()._img
-        
+
+
         try:
             self.image.readPreview(filename, self.dim)
             if filename.endswith('.psd'):

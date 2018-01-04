@@ -60,6 +60,7 @@ from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
+#ROB no file protocol_3dbionotes in devel
 #from protocol_3dbionotes import XmippProt3DBionotes
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
@@ -78,6 +79,7 @@ from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
 from protocol_subtract_projection import XmippProtSubtractProjection
 from protocol_denoise_particles import XmippProtDenoiseParticles
+from protocol_eliminate_empty_particles import XmippProtEliminateEmptyParticles
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_movies import XmippProtExtractMovieParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
@@ -103,6 +105,7 @@ from protocol_ransac import XmippProtRansac
 from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_reconstruct_highres import XmippProtReconstructHighRes
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
+from protocol_reconstruct_swarm import XmippProtReconstructSwarm
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from protocol_rotational_spectra import XmippProtRotSpectra 
