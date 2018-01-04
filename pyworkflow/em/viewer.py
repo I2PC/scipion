@@ -110,31 +110,6 @@ class DataView(View):
         return params
 
     def getShowJWebParams(self):
-<<<<<<< HEAD
-=======
-
-    # FIXME: Maybe it is time to remove this old commented lines
-    #=OLD SHOWJ WEB DOCUMENTATION===============================================
-    # Extra parameters can be used to configure table layout and set render function for a column
-    # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
-    # 
-    # Parameters are formed by: [label]___[property]: [value]. E.g.: id___visible:True or micrograph___renderFunc:"get_image_psd"
-    # Properties to be configured are:
-    #    visible: Defines if this column is displayed
-    #    allowSetVisible: Defines if user can change visible property (show/hide this column).
-    #    editable: Defines if this column is editable, ie user can change field value.
-    #    allowSetEditable: Defines if user can change editable property (allow editing this column).
-    #    renderable: Defines if this column is renderizable, ie it renders data column using renderFunc
-    #    allowSetRenderable: Defines if user can change renderable property.
-    #    renderFunc: Function to be used when this field is rendered. (it has to be inserted in render_column method)
-    #    extraRenderFunc: Any extra parameters needed for rendering. Parameters are passed like in a url ie downsample=2&lowPass=3.5
-    # 
-    # Example:
-    # extraParameters["id___visible"]=True
-    # extraParameters["micrograph___renderFunc"]="get_image_psd"
-    # extraParameters["micrograph___extraRenderFunc"]="downsample=2"
-    #===========================================================================
->>>>>>> devel
     
         parameters = {
             showj.MODE,  # FOR MODE TABLE OR GALLERY
