@@ -148,23 +148,8 @@ class XmippProtExtractUnit(EMProtocol):
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader=True)
         t = Transform()
         x, y, z = ccp4header.getOffset()  # origin output vol coordinates
-<<<<<<< HEAD
 
         t.setShifts(x, y, z)
-=======
-        #_inputVol = self.inputVolumes.get()
-        origin = self.inputVolumes.get().getOrigin().getShifts()
-        # x, y, z origin input vol coordinates
-        x_origin = origin[0]
-        y_origin = origin[1]
-        z_origin = origin[2]
-        # x, y, z origin output vol coordinates
-        dim = self.inputVolumes.get().getDim()
-        x += dim[0] / 2. - x_origin
-        y += dim[1] / 2. - y_origin
-        z += dim[2] / 2. - z_origin
-        t.setShifts(-x, -y, -z)  # we follow chimera convention no MRC
->>>>>>> devel
         vol.setOrigin(t)
         #
         self._defineOutputs(outputVolume=vol)
