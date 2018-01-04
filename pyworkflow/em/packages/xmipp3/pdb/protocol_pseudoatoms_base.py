@@ -27,7 +27,7 @@
 # *
 # **************************************************************************
 
-from os.path import basename, join
+from os.path import basename, join, abspath
 
 from pyworkflow.object import String
 from pyworkflow.utils.path import cleanPattern, createLink, moveFile
@@ -35,7 +35,10 @@ from pyworkflow.protocol.params import EnumParam, PointerParam, FloatParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.protocol import Prot3D
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-
+from pyworkflow.em.utils.ccp4_utilities.convert import adaptBinFileToCCP4
+from pyworkflow.em.data import Transform
+from pyworkflow.em.utils.chimera_utilities.convert import \
+    createCoordinateAxisFile,   adaptOriginFromCCP4ToChimera
 #from xmipp3 import XmippProtocol
 NMA_MASK_NONE = 0
 NMA_MASK_THRE = 1
@@ -115,24 +118,26 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         sampling = volume.getSamplingRate()
         radius = sampling * self.pseudoAtomRadius.get()
         fnIn = getImageLocation(volume)
-        if fnIn.endswith(".mrc"):
-            fnIn += ":mrc"
-        localInputFn = self._getExtraPath("input.mrc")
-        self.runJob("xmipp_image_convert","-i %s -o %s -t vol"%(fnIn,localInputFn))
-        self.runJob("xmipp_image_header","-i %s --sampling_rate %f"%(localInputFn,sampling))
+        if fnIn.endswith(":mrc"):
+            fnIn = fnIn[:-4]
+        x, y, z = volume.getDim()
+        x /= (-2. / sampling)
+        y /= (-2. / sampling)
+        z /= (-2. / sampling)
+
         fhCmd = open(scriptFile, 'w')
         fhCmd.write("open %s\n" % basename(pseudoatoms))
         fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
         fhCmd.write("setattr a radius %f\n" % radius)
         fhCmd.write("represent sphere\n")
-        fhCmd.write("open %s\n" % join("extra",basename(localInputFn)))
-         
+
+        fhCmd.write("open %s\n" % abspath(fnIn))
         threshold = 0.01
         if self.maskMode == NMA_MASK_THRE:
             self.maskThreshold.get()
-        xdim = volume.getDim()[0]
-        origin = xdim / 2
-        #set orign y sampling
-        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, sampling, origin))
+        #set sampling
+        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f origin "
+                     "%0.2f,%0.2f,%0.2f\n"
+                    % (threshold, sampling, x, y, z))
         fhCmd.close()
      
