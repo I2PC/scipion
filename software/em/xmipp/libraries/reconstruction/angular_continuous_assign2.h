@@ -27,6 +27,7 @@
 #define _PROG_ANGULAR_PREDICT_CONTINUOUS2
 
 #include <data/xmipp_program.h>
+#include <data/xmipp_fft.h>
 #include <data/ctf.h>
 #include "fourier_projection.h"
 #include "fourier_filter.h"
@@ -84,6 +85,8 @@ public:
     bool phaseFlipped;
     // Penalization for the average
     double penalization;
+    // SSNR
+    bool doSSNR;
 public:
     // 2D mask in real space
     MultidimArray<int> mask2D;
@@ -125,6 +128,16 @@ public:
 	double currentDefocusU, currentDefocusV, currentAngle;
 	// CTF image
 	MultidimArray<double> *ctfImage;
+	// Transformer
+	FourierTransformer transformer;
+	// Fourier transform
+	MultidimArray< std::complex<double> > FP, FE;
+	// Fourier magnitude
+	MultidimArray<double> FPmag, FEmag;
+	// SSNR and count
+	MultidimArray<double> ssnr;
+	MultidimArray<int> ssnrCount;
+	std::vector<double> vssnr;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign2();

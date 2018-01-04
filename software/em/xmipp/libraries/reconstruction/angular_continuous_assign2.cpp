@@ -27,6 +27,7 @@
 #include "program_image_residuals.h"
 #include <data/mask.h>
 #include <data/numerical_tools.h>
+#include <data/transformations.h>
 
 // Empty constructor =======================================================
 ProgAngularContinuousAssign2::ProgAngularContinuousAssign2()
@@ -68,6 +69,7 @@ void ProgAngularContinuousAssign2::readParams()
     penalization = getDoubleParam("--penalization");
     fnResiduals = getParam("--oresiduals");
     fnProjections = getParam("--oprojections");
+    doSSNR = checkParam("--ssnr");
 }
 
 // Show ====================================================================
@@ -98,6 +100,7 @@ void ProgAngularContinuousAssign2::show()
     << "Penalization:        " << penalization       << std::endl
     << "Output residuals:    " << fnResiduals        << std::endl
     << "Output projections:  " << fnProjections      << std::endl
+	<< "SSNR:                " << doSSNR             << std::endl
     ;
 }
 
@@ -131,6 +134,7 @@ void ProgAngularContinuousAssign2::defineParams()
     addParamsLine("  [--penalization <l=100>]     : Penalization for the average term");
     addParamsLine("  [--oresiduals <stack=\"\">]  : Output stack for the residuals");
     addParamsLine("  [--oprojections <stack=\"\">] : Output stack for the projections");
+    addParamsLine("  [--ssnr]                     : Computes the SSNR1D and add it to the output metadata");
     addExampleLine("A typical use is:",false);
     addExampleLine("xmipp_angular_continuous_assign2 -i anglesFromDiscreteAssignment.xmd --ref reference.vol -o assigned_angles.stk");
 }
@@ -433,6 +437,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     p(6)=old_scaleAngle;
 
     // Optimize
+	ssnr.initZeros(XSIZE(I())/2);
 	double cost=-1;
 	if (fabs(old_scaleX)>maxScale || fabs(old_scaleY)>maxScale)
     	rowOut.setValue(MDL_ENABLED,-1);
@@ -487,6 +492,19 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 					fnProjection.compose(fnImgOut.getPrefixNumber(),fnProjections);
 					P.write(fnProjection);
 					rowOut.setValue(MDL_IMAGE_REF,fnProjection);
+				}
+				if (doSSNR)
+				{
+					Matrix1D<int> center(2);
+					center.initZeros();
+					transformer.completeFourierTransform(E(),FE);
+					transformer.completeFourierTransform(P(),FP);
+					FFT_magnitude(FE,FEmag);
+					FFT_magnitude(FP,FPmag);
+					FEmag.setXmippOrigin();
+					FPmag/=FEmag;
+					CenterFFT(FPmag,true);
+					radialAverage(FPmag,center,ssnr,ssnrCount);
 				}
 			}
 			if (contCost==CONTCOST_CORR)
@@ -574,6 +592,13 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     	rowOut.setValue(MDL_CTF_DEFOCUS_ANGLE,old_defocusAngle+p(12));
     	if (old_defocusU+p(10)<0 || old_defocusU+p(11)<0)
     		rowOut.setValue(MDL_ENABLED,-1);
+    }
+    if (doSSNR)
+    {
+    	vssnr.clear();
+    	for (size_t i=0; i<XSIZE(I())/2; i++)
+    		vssnr.push_back(A1D_ELEM(ssnr,i));
+    	rowOut.setValue(MDL_SSNR1D,vssnr);
     }
 
 #ifdef DEBUG

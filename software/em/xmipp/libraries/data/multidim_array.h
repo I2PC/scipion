@@ -2500,6 +2500,15 @@ public:
         i_log = i_phys + STARTINGX(*this);
     }
 
+    /** To vector */
+    void toVector(std::vector<T> &v) const
+    {
+    	v.clear();
+    	v.reserve(MULTIDIM_SIZE(*this));
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
+    		v.push_back(DIRECT_MULTIDIM_ELEM(*this,n));
+    }
+
     /** Interpolates the value of the nth 3D matrix M at the point (x,y,z).
     *
     * (x,y,z) are in logical coordinates.

@@ -25,10 +25,11 @@
 # **************************************************************************
 
 from math import floor
+import numpy as np
 import os
 
 from pyworkflow import VERSION_1_1
-from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
+from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.constants import ALIGN_PROJ
 from pyworkflow.utils.path import cleanPath
@@ -75,6 +76,11 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
                       label='Angular sampling rate',
                       help='In degrees.'
                       ' This sampling defines how fine the projection gallery from the volume is explored.')
+        form.addParam('maxGrayScale', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
+                      label='Maximum gray scale change',
+                      help='Typically the gray scale should be 1, but it might change within the range (1-maxGray,1+maxGray).')
+        form.addParam('ssnrGroups', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
+                      label='Number of SSNR groups')
         form.addParallelSection(threads=0, mpi=8)
     
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -92,6 +98,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         else:
             anglesFn=self.imgsFn
         self._insertFunctionStep("produceResiduals", vol.getFileName(), anglesFn, vol.getSamplingRate())
+        self._insertFunctionStep("evaluateSSNR",self.ssnrGroups.get())
         self._insertFunctionStep("evaluateResiduals")
         self._insertFunctionStep("createOutputStep")
 
@@ -118,11 +125,25 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
         xdim=self.inputVolume.get().getDim()[0]
-        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
-                    (fnAngles,anglesOutFn,fnVol,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
+        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --max_gray_scale %f --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f --ssnr" %\
+                    (fnAngles,anglesOutFn,fnVol,self.maxGrayScale.get(),floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
         fnNewParticles=self._getExtraPath("images.stk")
         if os.path.exists(fnNewParticles):
             cleanPath(fnNewParticles)
+    
+    def evaluateSSNR(self, ssnrGroups):
+        fnCont = self._getExtraPath("anglesCont.xmd")
+        mdCont = xmipp.MetaData(fnCont)
+        ssnrs = mdCont.getColumnValues(xmipp.MDL_SSNR1D)
+        from sklearn.cluster import KMeans
+        kmeans = KMeans(n_clusters=ssnrGroups, random_state=0).fit(ssnrs)
+        i = 0
+        for objId in mdCont:
+            mdCont.setValue(xmipp.MDL_SSNR1D_GROUP,int(kmeans.labels_[i]+1),objId)
+            i+=1
+        mdCont.write(fnCont)
+        np.savetxt(self._getExtraPath("ssnrClusters.txt"),kmeans.cluster_centers_)
+        print(kmeans.cluster_centers_)
     
     def evaluateResiduals(self):
         # Evaluate each image
@@ -165,7 +186,8 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
     def _processRow(self, particle, row):
         setXmippAttributes(particle, row,
                            xmipp.MDL_ZSCORE_RESVAR, xmipp.MDL_ZSCORE_RESMEAN, xmipp.MDL_ZSCORE_RESCOV, xmipp.MDL_IMAGE_ORIGINAL,
-                           xmipp.MDL_COST, xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y)
+                           xmipp.MDL_COST, xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B, xmipp.MDL_CONTINUOUS_X, xmipp.MDL_CONTINUOUS_Y,
+                           xmipp.MDL_SSNR1D_GROUP)
         def __setXmippImage(label):
             attr = '_xmipp_' + xmipp.label2Str(label)
             if not hasattr(particle, attr):
