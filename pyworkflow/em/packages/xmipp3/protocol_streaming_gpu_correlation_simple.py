@@ -124,8 +124,10 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         expImgMd = self._getExtraPath('inputImagesExp.xmd')
         stepIdClassify = self._insertFunctionStep\
             ('_classifyStep', expImgMd, 0, prerequisites=[stepIdInputmd])
+        stepIdLevelUp = self._insertFunctionStep\
+            ('levelUp', expImgMd, prerequisites=[stepIdClassify])
 
-        deps.append(stepIdClassify)
+        deps.append(stepIdLevelUp)
 
         return deps
 
@@ -239,24 +241,34 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             # so we exit from the function here
             return
 
-        outSet = self._loadOutputSet(SetOfParticles, 'outputParticles.sqlite')
+        outSet = self._loadOutputSet(SetOfClasses2D, 'classes2D.sqlite')
 
-        if self.classesDone<2:
-            outSetClasses = self._loadOutputSet(SetOfClasses2D, 'outputClasses.sqlite')
-            outSetClasses.copyItems(self.inputClasses.get())
-            self._updateOutputSetClasses('outputClasses', outSetClasses, streamMode)
-            outSetClasses.close()
-            self.classesDone+=1
+        if (exists(self._getPath('classes2D.sqlite'))):
+            if(exists(self._getExtraPath('last_classes.xmd'))
+               and exists(self._getExtraPath('last_images.xmd'))):
+                self._updateOutputSetOfClasses('outputClasses', outSet, streamMode)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+        if (exists(self._getPath('classes2D.sqlite'))):
+            outSet.close()
+
+
+
+        outSetImg = self._loadOutputSet(SetOfParticles, 'outputParticles.sqlite')
 
         if exists(self._getExtraPath('last_images.xmd')):
             #newOutSet = SetOfParticles(filename=self._getExtraPath('last_images.sqlite'))
-            readSetOfParticles(self._getExtraPath('last_images.xmd'), outSet)
+            readSetOfParticles(self._getExtraPath('last_images.xmd'), outSetImg)
             #copy(self._getExtraPath('last_images.sqlite'), self._getPath('outputParticles.sqlite'))
             #remove(self._getExtraPath('last_images.sqlite'))
 
         if (exists(self._getPath('outputParticles.sqlite'))):
             if exists(self._getExtraPath('last_images.xmd')):
-                self._updateOutputSet('outputParticles', outSet, streamMode)
+                self._updateOutputSet('outputParticles', outSetImg, streamMode)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -264,7 +276,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                 outputStep.setStatus(STATUS_NEW)
 
         if (exists(self._getPath('outputParticles.sqlite'))):
-            outSet.close()
+            outSetImg.close()
 
         final_time = time()
         exec_time = final_time - initial_time
@@ -313,10 +325,65 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         iterReturnClass = self.classifyWholeSetStep(refImgMd, expImgMd,
                                                     level, iterReturnClass)
         self.generateOutputMD(level)
+        self.generateOutputClasses(level)
 
+
+
+    def generateOutputClasses(self, level):
+
+        if not exists(self._getExtraPath('last_classes.xmd')):
+            copy(self._getExtraPath(join('level%03d' % level,
+                                         'general_level%03d' % level +
+                                         '_classes.xmd')),
+                 self._getExtraPath('last_classes.xmd'))
+            return
+
+        finalMetadata = self._getExtraPath('final_classes.xmd')
+        lastMetadata = self._getExtraPath('last_classes.xmd')
+        newMetadata = self._getExtraPath(join('level%03d' % level,
+                                              'general_level%03d' % level +
+                                              '_classes.xmd'))
+
+        mdNew = md.MetaData('classes@'+newMetadata)
+        mdLast = md.MetaData('classes@'+lastMetadata)
+        mdRef = md.MetaData('classes@'+self.imgsRef)
+        numList=[]
+        mdAll = md.MetaData()
+        for item, itemNew, itemRef in zip(mdNew, mdLast, mdRef):
+            particles_total = mdLast.getValue(md.MDL_CLASS_COUNT, item) + \
+                              mdNew.getValue(md.MDL_CLASS_COUNT, itemNew)
+            print("particles_total", mdLast.getValue(md.MDL_CLASS_COUNT, item))
+            print("particles_total", mdNew.getValue(md.MDL_CLASS_COUNT, itemNew))
+            print("particles_total",particles_total)
+            imageAux = mdRef.getValue(md.MDL_IMAGE, itemRef)
+            numAux=mdRef.getValue(md.MDL_REF, itemRef)
+            numList.append(numAux)
+            row = md.Row()
+            row.setValue(md.MDL_REF, numAux)
+            row.setValue(md.MDL_IMAGE, imageAux)
+            row.setValue(md.MDL_CLASS_COUNT, particles_total)
+            row.addToMd(mdAll)
+        mdAll.write('classes@' + finalMetadata, MD_APPEND)
+
+        total = self.num_classes
+        for i in range(total):
+            self._params = {'lastMd': 'class%06d_images@' % numList[i] +
+                                      lastMetadata,
+                            'newMd': 'class%06d_images@' % numList[i] +
+                                     newMetadata,
+                            'outMd': 'class%06d_images@' % numList[i] +
+                                     finalMetadata}
+            args = ('-i %(lastMd)s --set union_all %(newMd)s '
+                    '-o %(outMd)s --mode append')
+            self.runJob("xmipp_metadata_utilities",
+                        args % self._params, numberOfMpi=1)
+
+        copy(self._getExtraPath('final_classes.xmd'),
+             self._getExtraPath('last_classes.xmd'))
 
 
     def generateOutputMD(self, level):
+
         if not exists(self._getExtraPath('last_images.xmd')):
             copy(self._getExtraPath(join('level%03d' % level,
                                          'general_images_level%03d' % level +
@@ -484,7 +551,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         if not flag_split:
             args = '-i_ref %(imgsRef)s -i_exp %(imgsExp)s -o %(outputFile)s '\
                    '--odir %(tmpDir)s --keep_best %(keepBest)d '\
-                   '--maxShift %(maxshift)d --simplifiedMd'
+                   '--maxShift %(maxshift)d --simplifiedMd ' \
+                   '--classify %(outputClassesFile)s'
             self.runJob("xmipp_cuda_correlation", args % self._params, numberOfMpi=1)
         else:
             Nrefs = getSize(refSet)
@@ -513,9 +581,10 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         if setOfImg is None:
             return
         if isinstance(setOfImg.get(), SetOfClasses2D):
+            self.num_classes=setOfImg.get().__len__()
             writeSetOfClasses2D(setOfImg.get(),
                                 imgsFileName,
-                                writeParticles=False)
+                                writeParticles=True)
         else:
             writeSetOfParticles(setOfImg.get(), imgsFileName, alignType=ALIGN_NONE)
                                 #firstId=self.lastIdProcessed)
@@ -591,6 +660,33 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         if SetClass is SetOfClasses2D:
             outputSet.setImages(inputs)
         return outputSet
+
+
+    def _updateOutputSetOfClasses(self, outputName, outputSet, state=Set.STREAM_OPEN):
+
+        outputSet.setStreamState(state)
+        # if self.hasAttribute(outputName):
+        #    print("En el if")
+        #    self._fillClassesFromLevel(outputSet)
+        #    outputSet.write()  # Write to commit changes
+        #    outputAttr = getattr(self, outputName)
+        #    # Copy the properties to the object contained in the protocol
+        #    outputAttr.copy(outputSet, copyId=False)
+        #    # Persist changes
+        #    self._store(outputAttr)
+        # else:
+        print("En el else")
+        inputs = self.inputParticles.get()
+        # Here the defineOutputs function will call the write() method
+        outputSet = self._createSetOfClasses2D(inputs)
+        self._fillClassesFromLevel(outputSet)
+        self._defineOutputs(**{outputName: outputSet})
+        self._defineSourceRelation(self.inputParticles, outputSet)
+        self._store(outputSet)
+
+        # Close set databaset to avoid locking it
+        outputSet.close()
+
 
 
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
@@ -692,6 +788,11 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         # contain all the information about the metadata
         clsSet.classifyItems(updateItemCallback=iterator.updateItem,
                              updateClassCallback=self._updateClass)
+
+    def levelUp(self, expImgMd):
+        if getSize(expImgMd) == 0:
+            return
+        self.level += 1
 
 
     # --------------------------- INFO functions -------------------------------
