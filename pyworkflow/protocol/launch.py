@@ -225,7 +225,13 @@ def _submit(hostConfig, submitDict, cwd=None, env=None):
     gcmd = greenStr(command)
     print("** Submiting to queue: '%s'" % gcmd)
 
-    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd, env=env)
+    try:
+        modified_env = env.copy()
+        modified_env['S_LD_LIBRARY_PATH'] = env['LD_LIBRARY_PATH']
+    except Exception as e:
+        modified_env = None
+
+    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd, env=modified_env)
     out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
     s = re.search('(\d+)', out)
