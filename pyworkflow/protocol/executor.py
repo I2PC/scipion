@@ -263,7 +263,7 @@ class QueueStepExecutor(ThreadStepExecutor):
         jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
         submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
-        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd))
+        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd, env))
         return self._runWithTimeout(lambda: self._waitForJob(self.hostConfig, job))
 
     @retry(stop_max_attempt_number=10, wait_exponential_multiplier=1000, wait_exponential_max=120000, retry_on_result=(lambda r: r is None))

@@ -204,10 +204,10 @@ def _copyFiles(protocol, rpath):
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict, cwd=None):
+def _submit(hostConfig, submitDict, cwd=None, env=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
-    # Create forst the submission script to be launched
+    # Create first the submission script to be launched
     # formatting using the template
     template = hostConfig.getSubmitTemplate() % submitDict
     # FIXME: CREATE THE PATH FIRST
@@ -225,7 +225,7 @@ def _submit(hostConfig, submitDict, cwd=None):
     gcmd = greenStr(command)
     print("** Submiting to queue: '%s'" % gcmd)
 
-    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
+    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd, env=env)
     out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
     s = re.search('(\d+)', out)
