@@ -23,12 +23,10 @@
 # *
 # **************************************************************************
 
-from bibtex import _bibtex # Load bibtex dict with references
-from convert import getEnviron
+from pyworkflow.em.utils.ccp4_utilities.convert import getEnviron
 
 _logo = "ccp4_200.png"
 
-from protocol_coot import CCP4ProtCoot
-#from protocol_refmac import CCP4ProtRunRefmac
-#from viewer_refmac import CCP4ProtRunRefmacViewer
+from pyworkflow.em.packages.ccp4.protocol_coot import CCP4ProtCoot
+
 _environ = getEnviron()
