@@ -66,17 +66,13 @@ class ProtImportVolumes(ProtImportImages):
                             "coordinates in Angstroms (pixels x sampling)"
                             "We follow the same convention than CCP4. Chimera"
                             " considers the same magnitude and opposite sign "
-                            "than CCP4.", condition='not setDefaultOrigin',
-                            expertLevel=const.LEVEL_ADVANCED)
+                            "than CCP4.", condition='not setDefaultOrigin')
         line.addParam('x', params.FloatParam, condition='not setDefaultOrigin',
-                      label="x", help="offset along x axis (A)",
-                      expertLevel=const.LEVEL_ADVANCED)
+                      label="x", help="offset along x axis (A)")
         line.addParam('y', params.FloatParam, condition='not setDefaultOrigin',
-                      label="y", help="offset along y axis (A)",
-                      expertLevel=const.LEVEL_ADVANCED)
+                      label="y", help="offset along y axis (A)")
         line.addParam('z', params.FloatParam, condition='not setDefaultOrigin',
-                      label="z", help="offset along z axis (A)",
-                      expertLevel=const.LEVEL_ADVANCED)
+                      label="z", help="offset along z axis (A)")
 
     def _insertAllSteps(self):
         self._insertFunctionStep('importVolumesStep', self.getPattern(),
