@@ -32,7 +32,7 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.constants import ALIGN_PROJ
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, cleanPattern, moveFile
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages, SetOfParticles, Class2D
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
@@ -44,7 +44,7 @@ from xmipp3 import ProjMatcher
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 
         
-class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
+class XmippProtCompareReprojections(ProtAnalysis3D):
     """Compares a set of classes or averages with the corresponding projections of a reference volume.
     The set of images must have a 3D angular assignment and the protocol computes the residues
     (the difference between the experimental images and the reprojections). The zscore of the mean
@@ -103,6 +103,24 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         self._insertFunctionStep("createOutputStep")
 
     #--------------------------- STEPS functions ---------------------------------------------------
+    def projMatchStep(self, volume, angularSampling, symmetryGroup, images, fnAngles, Xdim):
+        # Generate gallery of projections        
+        fnGallery = self._getExtraPath('gallery.stk')
+        fnGalleryMd = self._getExtraPath('gallery.doc')
+        if volume.endswith('.mrc'):
+            volume+=":mrc"
+        
+        self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+                   % (volume, fnGallery, angularSampling, symmetryGroup, images))
+    
+        # Assign angles
+        self.runJob("xmipp_reconstruct_significant", "-i %s --odir %s --initgallery %s --maxShift %d --dontReconstruct --useForValidation 0"\
+                   % (images, self._getExtraPath(), fnGalleryMd, Xdim/2))
+        moveFile(self._getExtraPath("angles_iter001_00.xmd"),fnAngles)
+        
+        cleanPattern(self._getExtraPath('gallery*'))
+        cleanPattern(self._getExtraPath('images_*iter001_00.xmd'))
+    
     def convertStep(self, imgsFn):
         from convert import writeSetOfClasses2D, writeSetOfParticles
         imgSet = self.inputSet.get()
