@@ -6,12 +6,7 @@
 #include <cufft.h>
 #include <cuComplex.h>
 
-#include <time.h>
-#include <sys/time.h>
-
 #define PI 3.14159265
-
-struct ioTime *mytimes;
 
 void mycufftDestroy(void* ptr)
 {
@@ -83,27 +78,6 @@ void gpuMalloc(void** d_data, size_t Nbytes)
 void gpuFree(void* d_data)
 {
 	gpuErrchk(cudaFree(d_data));
-}
-
-
-void initializeIdentity(float* d_data, size_t Ndim)
-{
-	float identity[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-	for(int i=0; i<Ndim; i++)
-		gpuErrchk(cudaMemcpy((void*)&d_data[i*9], &identity[0], 9*sizeof(float), cudaMemcpyHostToDevice));
-}
-
-void setTranslationMatrix(float* d_data, float posX, float posY, int n)
-{
-	float matrix[9] = {1, 0, posX, 0, 1, posY, 0, 0, 1};
-	gpuErrchk(cudaMemcpy((void*)&d_data[n*9], &matrix[0], 9*sizeof(float), cudaMemcpyHostToDevice));
-}
-
-void setRotationMatrix(float* d_data, float ang, int n)
-{
-	float rad = (float)(ang*PI/180);
-	float matrix[9] = {cosf(rad), -sinf(rad), 0, sinf(rad), cosf(rad), 0, 0, 0, 1};
-	gpuErrchk(cudaMemcpy((void*)&d_data[n*9], &matrix[0], 9*sizeof(float), cudaMemcpyHostToDevice));
 }
 
 void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes)

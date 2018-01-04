@@ -850,7 +850,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	}
 	barrier_destroy( &barrier );
 	delete[] workThreads;
-	releaseBlobTable();
+	releaseBlobTable(); // this also ensures that all work on GPU is done (synchronous call)
 	deleteStreams(noOfThreads);
 }
 

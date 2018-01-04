@@ -31,10 +31,9 @@
 #include "data/reconstruct_fourier_projection_traverse_space.h"
 #include "data/reconstruct_fourier_buffer_data.h"
 #include "data/reconstruct_fourier_defines.h"
+#include "data/xmipp_error.h"
 
 #include "reconstruction_cuda/cuda_xmipp_utils.h"
-#include "reconstruction_adapt_cuda/xmipp_gpu_utils.h"
-
 
 struct RecFourierBufferDataGPU;
 
