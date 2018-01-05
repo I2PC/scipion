@@ -26,7 +26,6 @@
 # **************************************************************************
 from __future__ import print_function
 
-import time
 
 INIT_REFRESH_SECONDS = 3
 
@@ -47,7 +46,8 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
-from pyworkflow.config import isAFinalProtocol
+from pyworkflow.config import isAFinalProtocol, getProtocolTag, \
+    PROTOCOL_DISABLED_TAG, PROTOCOL_TAG
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
@@ -179,7 +179,8 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
         else:
             status = None
 
-        stoppable = status in [pwprot.STATUS_RUNNING, pwprot.STATUS_SCHEDULED]
+        stoppable = status in [pwprot.STATUS_RUNNING, pwprot.STATUS_SCHEDULED, 
+                               pwprot.STATUS_LAUNCHED] 
 
         return [(ACTION_EDIT, single),
                 (ACTION_COPY, True),
@@ -351,12 +352,18 @@ class SearchProtocolWindow(pwgui.Window):
             if isAFinalProtocol(prot, key):
                 label = prot.getClassLabel().lower()
                 if keyword in label:
-                    protList.append((key, label))
+                    protList.append((key,
+                                     label,
+                                     prot.isInstalled()))
 
+        # Sort by label
         protList.sort(key=lambda x: x[1])  # sort by label
-        for key, label in protList:
+
+        for key, label, installed in protList:
+            tag = getProtocolTag(installed)
+            if not installed: label += " (not installed)"
             self._resultsTree.insert('', 'end', key,
-                                     text=label, tags=('protocol'))
+                                     text=label, tags=(tag))
 
 
 class RunIOTreeProvider(pwgui.tree.TreeProvider):
@@ -913,9 +920,17 @@ class ProtocolsView(tk.Frame):
                              fieldbackground=background)
         t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
         t.column('#0', minwidth=300)
-        t.tag_configure('protocol', image=self.getImage('python_file.gif'))
-        t.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
-        t.tag_bind('protocol', '<Return>', self._protocolItemClick)
+        # Protocol nodes
+        t.tag_configure(PROTOCOL_TAG, image=self.getImage('python_file.gif'))
+        t.tag_bind(PROTOCOL_TAG, '<Double-1>', self._protocolItemClick)
+        t.tag_bind(PROTOCOL_TAG, '<Return>', self._protocolItemClick)
+
+        # Disable protocols (not installed) are allowed to be added.
+        t.tag_configure(PROTOCOL_DISABLED_TAG, image=self.getImage('prot_disabled.gif'))
+        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Double-1>', self._protocolItemClick)
+        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Return>', self._protocolItemClick)
+
+
         t.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         t.tag_configure('protocol_group', image=self.getImage('class_obj.gif'))
         t.tag_configure('section', font=self.windows.fontBold)
@@ -1134,7 +1149,6 @@ class ProtocolsView(tk.Frame):
 
             return boxColor
         except Exception as e:
-            print("Can't calculate box color:" + str(e))
             return DEFAULT_BOX_COLOR
 
     @staticmethod

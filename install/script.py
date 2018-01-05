@@ -332,6 +332,16 @@ lxml = env.addModule(
     deps=[], # libxml2, libxslt],
     incs=['/usr/include/libxml2'],
     default=False)
+
+pip = env.addTarget('pip')
+pip.addCommand('python scripts/get-pip.py', targets='software/lib/python2.7/site-packages/pip', default=False, final=True)
+scpSoftware = os.environ['SCIPION_SOFTWARE']
+
+requests = env.addTarget('requests')
+requests.addCommand('python %s/lib/python2.7/site-packages/pip install requests'%scpSoftware,
+                      targets='software/lib/python2.7/site-packages/requests', default=False, final=True,
+                      deps=[pip])
+
 # libxml2 and libxslt are checked instead of compiled because
 # they are so hard to compile right.
 
@@ -465,17 +475,14 @@ env.addPackage('spider', version='21.13',
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
 
-env.addPackage('motioncor2', version='16.03.16',
-               tar='motioncor2_03162016.tgz')
-
-env.addPackage('motioncor2', version='16.10.19',
-               tar='motioncor2_10192016.tgz')
-
 env.addPackage('motioncor2', version='17.01.30',
                tar='motioncor2_01302017.tgz')
 
 env.addPackage('motioncor2', version='1.0.0',
                tar='motioncor2_1.0.0.tgz')
+
+env.addPackage('motioncor2', version='1.0.2',
+               tar='motioncor2-1.0.2.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')

@@ -139,6 +139,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                       help='Automatically reject micrographs whose CTF looks '
                            'suspicious.')
 
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
+
     # --------------------------- STEPS functions ------------------------------
     def _calculateDownsampleList(self, samplingRate):
         if self.AutoDownsampling:
@@ -234,7 +237,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         # Let's notify that this micrograph have been processed
         # just creating an empty file at the end (after success or failure)
         open(doneFile, 'w')
-        
+
         if deleteTmp != "":
             pwutils.path.cleanPath(deleteTmp)
 
@@ -250,7 +253,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
     def _createOutputStep(self):
         pass
-    
+
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
         validateMsgs = []

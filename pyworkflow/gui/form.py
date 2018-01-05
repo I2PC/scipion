@@ -1056,6 +1056,7 @@ class ParamWidget():
     def _browsePath(self, e=None):
         def onSelect(obj):
             self.set(obj.getPath())
+
         v = self.get().strip()
         path = None
         if v:
@@ -1602,7 +1603,9 @@ class FormWindow(Window):
             not self._isLegacyProtocol()):
 
             # Check editable or not:
-            btnState = tk.DISABLED if self.protocol.isActive() else tk.NORMAL
+            btnState = tk.DISABLED if (self.protocol.isActive()
+                                       and not self.protocol.isInteractive()) \
+                                   else tk.NORMAL
 
             self.btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN,
                                   Icon.ACTION_SAVE, command=self.save,
@@ -1725,7 +1728,7 @@ class FormWindow(Window):
         errors = self.protocol.validate()
         
         if errors:
-            self.showError(errors)
+            self.showInfo(errors)
         else:
             warns = self.protocol.warnings()
             if warns and not self.askYesNo("There are some warnings",
