@@ -35,7 +35,7 @@ from pyworkflow.em import SetOfCoordinates
 from pyworkflow.em.packages.xmipp3.convert import (readSetOfMovieParticles,
                                                    xmippToLocation)
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.protocol import ProtExtractMovieParticles
+from pyworkflow.em.protocol import ProtExtractMovieParticles, ProtProcessMovies
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, STEPS_PARALLEL
 from pyworkflow.protocol.params import (PointerParam, IntParam, BooleanParam,
                                         Positive, FloatParam, EnumParam)
@@ -71,7 +71,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-        ProtExtractMovieParticles._defineParams(self, form)
+        ProtProcessMovies._defineParams(self, form)
         form.addParam('inputCoordinates', PointerParam,
                       pointerClass='SetOfCoordinates',
                       important=True,

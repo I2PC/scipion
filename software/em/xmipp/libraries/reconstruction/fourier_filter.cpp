@@ -773,3 +773,58 @@ void realGaussianFilter(MultidimArray<double> &img, double sigma)
     Filter.generateMask(img);
     Filter.applyMaskSpace(img);
 }
+
+/** Define the parameters for use inside an Xmipp program */
+void SoftNegativeFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Soft negative pixels ==");
+    program->addParamsLine(
+        "  [ --softnegative <mask_file> <fsc> <Ts=1> <K=2>] : Removes strong negative values inside the mask");
+    program->addParamsLine(" : Ts is the sampling rate in A/pix");
+}
+
+/** Read from program command line */
+void SoftNegativeFilter::readParams(XmippProgram * program)
+{
+	mask.read(program->getParam("--softnegative",0));
+	fnFSC=program->getParam("--softnegative",1);
+    Ts = program->getDoubleParam("--softnegative",2);
+    K = program->getDoubleParam("--softnegative",3);
+}
+
+/** Apply the filter to an image or volume*/
+void SoftNegativeFilter::apply(MultidimArray<double> &img)
+{
+	// Invert the mask
+	MultidimArray<int> &mMask=mask();
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
+		DIRECT_MULTIDIM_ELEM(mMask,n)=1-DIRECT_MULTIDIM_ELEM(mMask,n);
+
+	// Measure the stddev outside the structure
+	double avg, stddev;
+	img.computeAvgStdev_within_binary_mask(mMask,avg,stddev);
+
+	// Find the too negative values
+	double threshold=-K*stddev;
+	MultidimArray<double> softMask, imgThresholded;
+	softMask.initZeros(mMask);
+	imgThresholded.initZeros(mMask);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
+		if (DIRECT_MULTIDIM_ELEM(img,n)<threshold)
+			DIRECT_MULTIDIM_ELEM(softMask,n)=1;
+		else
+			DIRECT_MULTIDIM_ELEM(imgThresholded,n)=DIRECT_MULTIDIM_ELEM(img,n);
+	mask.clear(); // Free memory
+
+    FourierFilter filter;
+    filter.FilterBand=filter.FilterShape=FSCPROFILE;
+    filter.fnFSC=fnFSC;
+    filter.sampling_rate=Ts;
+    filter.generateMask(softMask);
+    filter.applyMaskSpace(softMask);
+    filter.applyMaskSpace(imgThresholded);
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+		DIRECT_MULTIDIM_ELEM(img,n)=(1-DIRECT_MULTIDIM_ELEM(softMask,n))*DIRECT_MULTIDIM_ELEM(img,n)+
+		   DIRECT_MULTIDIM_ELEM(softMask,n)*DIRECT_MULTIDIM_ELEM(imgThresholded,n);
+}

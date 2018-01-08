@@ -161,5 +161,5 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
         if version != '2.8.2':
             warnings.append('Warning: Crysol was tested with version 2.8.2 and '
                             'your version is different.')
+
         return warnings
-        

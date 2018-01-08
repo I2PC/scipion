@@ -113,10 +113,10 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         scriptFile = pseudoatoms + '_chimera.cmd'
         pdb._chimeraScript = String(scriptFile)
         sampling = volume.getSamplingRate()
-        radius = sampling * self.pseudoAtomRadius.get() 
+        radius = sampling * self.pseudoAtomRadius.get()
         fnIn = getImageLocation(volume)
         if fnIn.endswith(".mrc"):
-            fnIn+=":mrc"
+            fnIn += ":mrc"
         localInputFn = self._getExtraPath("input.mrc")
         self.runJob("xmipp_image_convert","-i %s -o %s -t vol"%(fnIn,localInputFn))
         self.runJob("xmipp_image_header","-i %s --sampling_rate %f"%(localInputFn,sampling))

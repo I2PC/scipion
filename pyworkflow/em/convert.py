@@ -386,7 +386,7 @@ class ImageHandler(object):
         """
         self.__runXmippProgram('xmipp_transform_threshold',
                                '-i %s -o %s --select below 0 --substitute '
-                               'value 1' % (inputFile, outputFile))
+                               'value 0' % (inputFile, outputFile))
         
         self.__runXmippProgram('xmipp_transform_threshold',
                                '-i %s --select above 1 --substitute '

@@ -332,6 +332,16 @@ lxml = env.addModule(
     deps=[], # libxml2, libxslt],
     incs=['/usr/include/libxml2'],
     default=False)
+
+pip = env.addTarget('pip')
+pip.addCommand('python scripts/get-pip.py', targets='software/lib/python2.7/site-packages/pip', default=False, final=True)
+scpSoftware = os.environ['SCIPION_SOFTWARE']
+
+requests = env.addTarget('requests')
+requests.addCommand('python %s/lib/python2.7/site-packages/pip install requests'%scpSoftware,
+                      targets='software/lib/python2.7/site-packages/requests', default=False, final=True,
+                      deps=[pip])
+
 # libxml2 and libxslt are checked instead of compiled because
 # they are so hard to compile right.
 
