@@ -59,6 +59,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                   "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>70000") #ctfCritCtfMargin>0
 
     def __init__(self, **args):
+
         em.ProtCTFMicrographs.__init__(self, **args)
 
     def _createFilenameTemplates(self):
@@ -144,6 +145,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
     # --------------------------- STEPS functions ------------------------------
     def _calculateDownsampleList(self, samplingRate):
+        
         if self.AutoDownsampling:
             ctfDownFactor = em.calculateAutodownsampling(samplingRate)
         else:
@@ -321,6 +323,28 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         if self.doFastDefocus and not self.doInitialCTF:
             self._args += " --fastDefocus"
 
+    def _insertInitialSteps(self):
+        return [self._insertFunctionStep('getPreviousPhaseShiftsStep')]
+    
+    def getPreviousPhaseShiftsStep(self):
+        if self.ctfRelations.hasValue():
+            self.ctfDict = {}
+            for ctf in self.ctfRelations.get():
+                ctfName = ctf.getMicrograph().getMicName()
+                phaseShift0 = 0
+                if self.findPhaseShift:
+                    if hasattr(ctf,"_gctf_ctfPhaseShift"):
+                        phaseShift0=ctf._gctf_ctfPhaseShift
+                    elif hasattr(ctf,"_ctffind4_ctfPhaseShift"):
+                        phaseShift0=ctf._ctffind4_ctfPhaseShift
+                    else:
+                        phaseShift0 = 1.57079 # pi/2
+                    self.ctfDict[ctfName] = (ctf.getDefocusU(),phaseShift0.get())
+                else:
+                    self.ctfDict[ctfName] = (ctf.getDefocusU(), phaseShift0)
+        if self.findPhaseShift and not self.ctfRelations.hasValue():
+            self._params['phaseShift0'] = 1.57079
+
     def _prepareCommand(self):
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'
@@ -335,24 +359,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                          'max_freq': self._params['highRes'],
                          'pieceDim': self._params['windowSize']
                          }
-
-        if self.ctfRelations.hasValue():
-            self.ctfDict = {}
-            for ctf in self.ctfRelations.get():
-                ctfName = ctf.getMicrograph().getMicName()
-                phaseShift0 = 0
-                if self.findPhaseShift:
-                    if hasattr(ctf,"_gctf_ctfPhaseShift"):
-                        phaseShift0=ctf._gctf_ctfPhaseShift
-                    elif hasattr(ctf,"_ctffind4_ctfPhaseShift"):
-                        phaseShift0=ctf._ctffind4_ctfPhaseShift
-                    else:
-                        phaseShift0 = 1.6 # pi/2
-                    self.ctfDict[ctfName] = (ctf.getDefocusU(),phaseShift0.get())
-                else:
-                    self.ctfDict[ctfName] = (ctf.getDefocusU(), phaseShift0)
-        if self.findPhaseShift and not self.ctfRelations.hasValue():
-            self._params['phaseShift0'] = 1.6
 
         self._prepareArgs(self.__params)
 
