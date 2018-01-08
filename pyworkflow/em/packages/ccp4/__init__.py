@@ -27,6 +27,7 @@ from pyworkflow.em.utils.ccp4_utilities.convert import getEnviron
 
 _logo = "ccp4_200.png"
 
-from pyworkflow.em.packages.ccp4.protocol_coot import CCP4ProtCoot
+from protocol_coot import CootRefine
+from viewer_coot import CootRefineViewer
 
 _environ = getEnviron()
