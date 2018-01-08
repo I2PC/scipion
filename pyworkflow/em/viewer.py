@@ -61,14 +61,9 @@ from pyworkflow.em.utils.chimera_utilities.convert import \
 
 import xmipp
 
-# TODO: ROB I think all this imports are not needed. First step toward removing
-# TODO: comment them
-# from viewer_fsc import FscViewer
-# from viewer_pdf import PDFReportViewer
-# from viewer_monitor_summary import ViewerMonitorSummary
-# from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
-# from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
-# from protocol.monitors.protocol_monitor_movie_gain import ProtMonitorMovieGainViewer
+from viewer_fsc import FscViewer
+from viewer_pdf import PDFReportViewer
+from viewer_monitor_summary import ViewerMonitorSummary
 
 
 
@@ -102,7 +97,8 @@ class DataView(View):
                             "should be 'string' or 'tuple'")
 
     def show(self):
-        showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
+        showj.runJavaIJapp(self._memory,
+                           'xmipp.viewer.scipion.ScipionViewer',
                            self.getShowJParams(), env=self._env)
 
     def getShowJParams(self):
@@ -114,28 +110,6 @@ class DataView(View):
         return params
 
     def getShowJWebParams(self):
-
-    # FIXME: Maybe it is time to remove this old commented lines
-    #=OLD SHOWJ WEB DOCUMENTATION===============================================
-    # Extra parameters can be used to configure table layout and set render function for a column
-    # Default layout configuration is set in ColumnLayoutProperties method in layout_configuration.py
-    # 
-    # Parameters are formed by: [label]___[property]: [value]. E.g.: id___visible:True or micrograph___renderFunc:"get_image_psd"
-    # Properties to be configured are:
-    #    visible: Defines if this column is displayed
-    #    allowSetVisible: Defines if user can change visible property (show/hide this column).
-    #    editable: Defines if this column is editable, ie user can change field value.
-    #    allowSetEditable: Defines if user can change editable property (allow editing this column).
-    #    renderable: Defines if this column is renderizable, ie it renders data column using renderFunc
-    #    allowSetRenderable: Defines if user can change renderable property.
-    #    renderFunc: Function to be used when this field is rendered. (it has to be inserted in render_column method)
-    #    extraRenderFunc: Any extra parameters needed for rendering. Parameters are passed like in a url ie downsample=2&lowPass=3.5
-    # 
-    # Example:
-    # extraParameters["id___visible"]=True
-    # extraParameters["micrograph___renderFunc"]="get_image_psd"
-    # extraParameters["micrograph___extraRenderFunc"]="downsample=2"
-    #===========================================================================
     
         parameters = {
             showj.MODE,  # FOR MODE TABLE OR GALLERY
@@ -522,9 +496,6 @@ class ChimeraViewer(Viewer):
         Viewer.__init__(self, **kwargs)
 
     def visualize(self, obj, **kwargs):
-        f = open("/tmp/kk","w")
-        f.write("2222222222222222222222:")
-        f.close()
         cls = type(obj)
         if issubclass(cls, PdbFile):
             # if attribute _chimeraScript exists then protocol
