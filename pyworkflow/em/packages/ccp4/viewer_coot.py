@@ -34,7 +34,7 @@ from pyworkflow.em.utils.chimera_utilities.convert import \
     getProgram, chimeraPdbTemplateFileName
 from pyworkflow.em.utils.ccp4_utilities.convert import cootPdbTemplateFileName
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-from protocol_coot import CCP4ProtCoot
+from protocol_coot import CootRefine
 
 # TODO: very likely this should inherit from ProtocolViewer
 # not from XmippViewer. But then I get an empty form :-(
@@ -43,15 +43,13 @@ from protocol_coot import CCP4ProtCoot
 class CootRefineViewer(Viewer):
     """ Visualize the output of protocol volume strain """
     _label = 'coot viewer'
-    _targets = [CCP4ProtCoot]
+    _targets = [CootRefine]
     _environments = [DESKTOP_TKINTER]
 
     def _visualize(self, obj, **args):
-        print "11111111111111111111111111:"
             # TODO if input volume is not mrc this will not work.
         # Construct the coordinate file and visualization
-        bildFileName = os.path.abspath(self.protocol._getTmpPath(
-            "axis.bild"))
+        bildFileName = os.path.abspath(self.protocol._getTmpPath("axis.bild"))
         dims = []
         samplings = []
         if self.protocol.inputVolumes.get() is None:
@@ -59,15 +57,11 @@ class CootRefineViewer(Viewer):
             sampling = self.protocol.pdbFileToBeRefined.get().getVolume().getSamplingRate()
             dims.append(dim)
             samplings.append(sampling)
-            print "AAAAAAAAAAAAAAAA:" \
-                  "dim and sampling from volume associated " \
-                  "to pdb"
         else:
             dim = self.protocol.inputVolumes.get().getDim()[0]
             sampling = self.protocol.inputVolumes.get().getSamplingRate()
             dims.append(dim)
             samplings.append(sampling)
-            print "BBBBBBBBBBBBBB: dim and sampling from the input volume"
         createCoordinateAxisFile(max(dims),
                                  bildFileName=bildFileName,
                                  sampling=max(samplings))
@@ -76,27 +70,24 @@ class CootRefineViewer(Viewer):
         f.write("open %s\n" % bildFileName)
 
         try:
-            outputsVol = self.protocol.outputs
+            outputsVol = self.protocol.norVolumesNames
             count = 1
             for outputVol in outputsVol:
                 outputVolFileName = os.path.abspath(outputVol.getFileName())
                 f.write("open %s\n" % outputVolFileName)
                 f.write("volume #%d style surface\n" % count)
                 count =+ 1
-                print "CCCCCCCCCCC: Saved the volume generated"
         except:
             outputsVol = []
             if self.protocol.inputVolumes.get() is None:
                 outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
                 outputsVol.append(outputVol)
-                print "DDDDDDDDDDD: Saved the starting volume"
-
             else:
                 for outputVol in self.protocol.inputVolumes.get():
                     outputsVol.append(outputVol)
-                    print "EEEEEEEEEEEEEEEEEEE: Saved the starting volume"
             count = 1
             for outputVol in outputsVol:
+
                 outputVolFileName = os.path.abspath(
                         ImageHandler.removeFileType(outputVol.getFileName()))
                 x, y, z = adaptOriginFromCCP4ToChimera(
@@ -105,24 +96,16 @@ class CootRefineViewer(Viewer):
                 f.write("volume #%d  style surface voxelSize %f origin "
                         "%0.2f,%0.2f,%0.2f\n"
                         % (count, outputVol.getSamplingRate(),x, y, z))
-                count =+ 1
+                count += 1
 
-        outputsPDB = self.protocol.outputs
         counter = 1
-        for outputPDB in outputsPDB:
-            template = self.protocol._getExtraPath(cootPdbTemplateFileName)
-            outputPDB = os.path.abspath(template%counter)
-            if os.path.exists(outputPDB):
-                f.write("open %s\n" % outputPDB)
-                counter =+ 1
+        template = self.protocol._getExtraPath(cootPdbTemplateFileName)
+        while os.path.isfile(template%counter):
+            pdbFileName = os.path.abspath(template%counter)
+            counter += 1
+        f.write("open %s\n" % pdbFileName)
 
         f.close()
-        #return [em.ChimeraView(fnCmd)]
-
-        #args = ""
-        #args += fnCmd + " "
-        #self.protocol._log.info('Launching: ' + getProgram() + ' ' + args)
-
         # run in the background
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []
