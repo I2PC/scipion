@@ -61,10 +61,10 @@ class XmippProtMovieGain(ProtProcessMovies):
                            'be calculated for each one of them.')
         form.addParam('frameStep', IntParam, default=5,
                       label="Frame step", expertLevel=LEVEL_ADVANCED,
-                      help='By default, every frame (frameStep=1) is used to '
-                           'compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then only every 2nd, '
-                           '3rd, ... frame will be used.')
+                      help='By default, every 5th frame is used to compute '
+                           'the movie gain. If you set this parameter to '
+                           '2, 3, ..., then only every 2nd, 3rd, ... '
+                           'frame will be used.')
         form.addParam('movieStep', IntParam, default=250,
                       label="Movie step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every movie (movieStep=1) is used to '
@@ -84,20 +84,17 @@ class XmippProtMovieGain(ProtProcessMovies):
     #--------------------------- STEPS functions -------------------------------
 
     def createOutputStep(self):
-        movieGainProt = self.getProject().newProtocol(XmippProtMovieGain)
-        movieGainProt.setProject(self.getProject())
-        movieGainMonitor = MonitorMovieGain(
-            movieGainProt,
-            workingDir=self.workingDir.get(),
-            samplingInterval=60,
-            monitorTime=300,
-            stddevValue=0.04,
-            ratio1Value=1.15,
-            ratio2Value=4.5)
+        movieGainMonitor = MonitorMovieGain(self,
+                                            workingDir=self.workingDir.get(),
+                                            samplingInterval=60,
+                                            monitorTime=300,
+                                            stddevValue=0.04,
+                                            ratio1Value=1.15,
+                                            ratio2Value=4.5)
 
-        print("------------------------------------------------------------")
+        print("BEFORE")
         MovieGainMonitorPlotter(movieGainMonitor).show()
-
+        print("AFTER")
 
     def _insertNewMoviesSteps(self, insertedDict, inputMovies):
         """ Insert steps to process new movies (from streaming)
