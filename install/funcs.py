@@ -254,14 +254,47 @@ class Environment:
     def getProcessors(self):
         return self._processors
     
-    def getLib(self, name):
-        return 'software/lib/lib%s.%s' % (name, self._libSuffix)
+    @staticmethod
+    def getSoftware():
 
-    def getBin(self, name):
-        return 'software/bin/%s' % name
-    
-    def getEm(self, name):
-        return 'software/em/%s' % name
+        scipionSoftware = os.environ['SCIPION_SOFTWARE']
+
+        if scipionSoftware is None:
+            scipionSoftware = 'software'
+
+        return scipionSoftware
+
+    @staticmethod
+    def getLibFolder():
+        return '%s/lib' % (Environment.getSoftware())
+
+    @staticmethod
+    def getIncludeFolder():
+        return '%s/include' % (Environment.getSoftware())
+
+    def getLib(self, name):
+        return '%s/lib%s.%s' % (Environment.getLibFolder(),
+                                name, self._libSuffix)
+
+    @staticmethod
+    def getBinFolder():
+        return '%s/bin' % Environment.getSoftware()
+
+    @staticmethod
+    def getBin(name):
+        return '%s/%s' % (Environment.getBinFolder(), name)
+
+    @staticmethod
+    def getTmpFolder():
+        return '%s/tmp' % Environment.getSoftware()
+
+    @staticmethod
+    def getEmFolder():
+        return '%s/em' % Environment.getSoftware()
+
+    @staticmethod
+    def getEm(name):
+        return '%s/%s' % (Environment.getEmFolder(), name)
 
     def addTarget(self, name, *commands, **kwargs):
 
@@ -320,7 +353,7 @@ class Environment:
         tar = kwargs.get('tar', '%s.tgz' % name)
         urlSuffix = kwargs.get('urlSuffix', 'external')
         url = kwargs.get('url', '%s/%s/%s' % (SCIPION_URL_SOFTWARE, urlSuffix, tar))
-        downloadDir = kwargs.get('downloadDir', join('software', 'tmp'))
+        downloadDir = kwargs.get('downloadDir', self.getTmpFolder())
         buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
@@ -389,9 +422,9 @@ class Environment:
         t = self._addDownloadUntar(name, **kwargs)
         configDir = kwargs.get('configDir', t.buildDir)
 
-        configPath = join('software', 'tmp', configDir)
+        configPath = join(self.getTmpFolder(), configDir)
         makeFile = '%s/%s' % (configPath, configTarget)
-        prefix = abspath('software')
+        prefix = abspath(Environment.getSoftware())
 
         # If we specified the commands to run to obtain the target,
         # that's the only thing we will do.
@@ -472,7 +505,7 @@ class Environment:
         deps = kwargs.get('deps', [])
         deps.append('python')
 
-        prefix = abspath('software')
+        prefix = self.getSoftware()
         flags.append('--prefix=%s' % prefix)
 
         modArgs = {'urlSuffix': 'python'}
@@ -484,7 +517,8 @@ class Environment:
             if '/' in x:
                 return x
             else:
-                return 'software/lib/python2.7/site-packages/%s' % x
+                return '%s/python2.7/site-packages/%s' \
+                       % (self.getLibFolder(), x)
 
         environ = {
             'PYTHONHOME': prefix,
@@ -557,7 +591,7 @@ class Environment:
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
   
-        libArgs = {'downloadDir': join('software', 'em'),
+        libArgs = {'downloadDir': self.getEmFolder(),
                    'urlSuffix': 'em',
                    'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
@@ -642,9 +676,9 @@ class Environment:
 
     def _isInstalled(self, name, version):
         """ Return true if the package-version seems to be installed. """
-        pydir = join('software', 'lib', 'python2.7', 'site-packages')
+        pydir = join(self.getLibFolder(), 'python2.7', 'site-packages')
         extName = self._getExtName(name, version)
-        return (exists(join('software', 'em', extName)) or
+        return (exists(join(self.getEmFolder(), extName)) or
                 extName in [x[:len(extName)] for x in os.listdir(pydir)])
 
     def execute(self):
