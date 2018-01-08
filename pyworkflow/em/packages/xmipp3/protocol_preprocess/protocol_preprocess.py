@@ -815,7 +815,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             for part in partSet.iterItems(orderBy='RANDOM()', direction='ASC'):
                 if counter < numOfParts:
                     newPartSet.append(part)
-                    counter =+ 1
+                    counter += 1
                 else:
                     break
         else:
