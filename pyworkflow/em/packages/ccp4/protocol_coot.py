@@ -46,13 +46,14 @@ from pyworkflow.em.data import Transform
 
 #TODO: viewer
 
-class CCP4ProtCoot(EMProtocol):
+class CootRefine(EMProtocol):
     """Coot is an interactive graphical application for
 macromolecular model building, model completion
 and validation. IMPORTANT: press "w" in coot to transfer
 the pdb file from coot  to scipion '
 """
     _label = 'coot refinement'
+    _program = ""
     _version = VERSION_1_2
 
     # --------------------------- DEFINE param functions --------------------------------------------
@@ -81,22 +82,22 @@ the pdb file from coot  to scipion '
 
     def _insertAllSteps(self):
         #test loop over inputVol
-        inVolumes = []
-        norVolumesNames = []
+        self.inVolumes = []
+        self.norVolumesNames = []
         if self.inputVolumes.get() is None:
             vol = self.pdbFileToBeRefined.get().getVolume()
             inFileName = vol.getFileName()
-            inVolumes.append(vol)
-            norVolumesNames.append(self._getVolumeFileName(inFileName))
+            self.inVolumes.append(vol)
+            self.norVolumesNames.append(self._getVolumeFileName(inFileName))
         else:
             for vol in self.inputVolumes.get():
                 inFileName = vol.getFileName()
-                inVolumes.append(vol)
-                norVolumesNames.append(self._getVolumeFileName(inFileName))
+                self.inVolumes.append(vol)
+                self.norVolumesNames.append(self._getVolumeFileName(inFileName))
 
-        convertId = self._insertFunctionStep('convertInputStep', inVolumes,
-                                             norVolumesNames)
-        self._insertFunctionStep('runCootStep', inVolumes, norVolumesNames,
+        convertId = self._insertFunctionStep('convertInputStep', self.inVolumes,
+                                             self.norVolumesNames)
+        self._insertFunctionStep('runCootStep', self.inVolumes, self.norVolumesNames,
                                  prerequisites=[convertId],
                                  interactive=True)
         #self._insertFunctionStep('createOutputStep', inVolumes,
@@ -110,8 +111,6 @@ the pdb file from coot  to scipion '
 
         for inVol, norVolName in zip(inVolumes, norVolumesNames):
             inVolName  = inVol.getFileName()
-            print "involname", inVolName, norVolName
-            print "BEFORE0", inVol.printAll()
             if inVolName.endswith("mrc"): inVolName += ":mrc"
             if norVolName.endswith("mrc"): norVolName += ":mrc"
             if not os.path.exists(norVolName):
@@ -123,7 +122,6 @@ the pdb file from coot  to scipion '
                     img.write(norVolName)
                 else:
                     ImageHandler().convert(inVolName, norVolName)
-                print "BEFORE1", inVol.printAll()
                 copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
                 returnInitIfNone=True).getShifts(),
                               inVol.getSamplingRate())
@@ -152,7 +150,6 @@ the pdb file from coot  to scipion '
             args += " --pdb " + pdb.get().getFileName() # other pdb files
         args +=  " --script " + self._getTmpPath(cootScriptFileName) # script wit auxiliary files
         for volName in norVolumesNames:
-            print "vol passsed to coot", volName
             args += " --map " + volName
         #_envDict['COOT_PDB_TEMPLATE_FILE_NAME'] = self._getExtraPath(cootPdbTemplateFileName)
         self._log.info('Launching: ' + getProgram(os.environ['COOT']) + ' ' + args)
@@ -191,10 +188,14 @@ the pdb file from coot  to scipion '
             counter=init_counter
             for inVol, norVolName in zip(inVolumes,norVolumesNames):
                 if os.path.exists(norVolName):
-                    break
-                outVol = Volume()
-                outVol.setSamplingRate(norVolName)
-#
+                    #break
+                    outVol = Volume()
+                    sampling = inVol.getSamplingRate()
+                    origin = inVol.getOrigin(
+                        returnInitIfNone=True).getShifts()
+                    outVol.setSamplingRate(sampling)
+                    outVol.setOrigin(origin)
+
                 inFileName  = vol.getFileName()
                 if inFileName.endswith('.mrc'):
                     inFileName = inFileName + ":mrc"
