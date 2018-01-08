@@ -42,7 +42,6 @@ from pdb import *
 from protocol_preprocess import *
 from viewer import XmippViewer
 
-
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
@@ -61,7 +60,8 @@ from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
-from protocol_3dbionotes import XmippProt3DBionotes
+#ROB no file protocol_3dbionotes in devel
+#from protocol_3dbionotes import XmippProt3DBionotes
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
@@ -105,6 +105,7 @@ from protocol_ransac import XmippProtRansac
 from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_reconstruct_highres import XmippProtReconstructHighRes
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
+from protocol_reconstruct_swarm import XmippProtReconstructSwarm
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from protocol_rotational_spectra import XmippProtRotSpectra 
