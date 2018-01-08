@@ -121,16 +121,20 @@ class ProtImportFiles(ProtImport):
                    "new files and will update the output Set, which can \n"
                    "be used right away by next steps.\n")
 
-        form.addParam('timeout', params.IntParam, default=7200,
+        form.addParam('timeout', params.IntParam, default=43200,
               condition='dataStreaming',
               label="Timeout (secs)",
               help="Interval of time (in seconds) after which, if no new \n"
                    "file is detected, the protocol will end.\n"
                    "When finished, the output Set will be closed and\n"
                    "no more data will be added to it. \n"
-                   "Note: If you're using individual frames when importing\n"
-                   "movies, the timeout won't be refreshed until a whole \n"
-                   "movie is stacked. \n")
+                    "Note 1:  The default value is  high (12 hours) to avoid "
+                   "the protocol finishes during the aqcuisition of the "
+                   "microscpe. You can also stop it from right click and press "
+                   "STOP_STREAMING.\n"
+                   "Note 2: If you're using individual frames when importing "
+                   "movies, the timeout won't be refreshed until a whole "
+                   "movie is stacked.")
 
         form.addParam('fileTimeout', params.IntParam, default=30,
               condition='dataStreaming',

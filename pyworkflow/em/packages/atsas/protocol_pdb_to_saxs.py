@@ -25,15 +25,14 @@
 # **************************************************************************
 
 import math
-from glob import glob
 import numpy
 
 from pyworkflow.em import *
 from pyworkflow.em.packages.atsas import CRYSOL
 from pyworkflow.utils import * 
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-import atsas
 from pyworkflow.utils.path import createLink
+import commands
 
 # TODO: Move to 3D Tools
 
@@ -91,7 +90,7 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
             experimentalSAXS='experimental_SAXS_curve.dat'
         createLink(inputStructure,'pseudoatoms.pdb')
         self.runJob(CRYSOL,
-                    "pseudoatoms.pdb %s /lm %d /sm %f /ns %d %s"
+                    "pseudoatoms.pdb %s -lm %d -sm %f -ns %d %s"
                     % (experimentalSAXS, self.numberOfHarmonics,
                       self.maximumFrequency, self.numberOfSamples,
                       self.otherCrysol))
@@ -118,10 +117,21 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
 
         if exists(fnInt):
             x = numpy.loadtxt(fnInt,skiprows=1)
-            diff = numpy.log(x[:,1])-numpy.log(x[:,2])
+            diff = numpy.log(x[:,1])-numpy.log(x[:,3])
             idx = numpy.isfinite(diff)
             RMS = math.sqrt(1.0/numpy.sum(idx)*numpy.dot(diff[idx],diff[idx]))
             summary.append("RMS=%f" % RMS)
+
+        # Goodness of fit
+        fnChi = self._getExtraPath("crysol_summary.txt")
+        if exists(fnChi):
+            fnChiTxt = open(fnChi, 'rt')
+            text = fnChiTxt.read()
+            fnChiTxt.close()
+            position=text.find('Chi^2:')
+            chiValue = float(text[position+6:])
+            summary.append("Chi^2=%f" %chiValue)
+
         return summary
 
     def _methods(self):
@@ -143,4 +153,12 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
         if which('crysol') is '':
             errors.append('You should have the program crysol in the PATH')
         return errors
-        
+
+    def _warnings(self):
+        warnings = []
+        text = commands.getoutput("crysol --version")
+        version = text[14:19]
+        if version != '2.8.2':
+            warnings.append('Warning: Crysol was tested with version 2.8.2 and '
+                            'your version is different.')
+        return warnings
