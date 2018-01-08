@@ -153,6 +153,8 @@ class ProtUnionSet(ProtSets):
                 if self.ignoreExtraAttributes:
                     newObj = itemSet.get().ITEM_TYPE()
                     newObj.copyAttributes(obj, *commonAttrs)
+                    if not cleanIds:
+                        newObj.setObjId(obj.getObjId())
                 else:
                     newObj = obj
 

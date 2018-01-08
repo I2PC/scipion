@@ -33,15 +33,18 @@ import os
 from os.path import join, exists, dirname
 import subprocess
 
+DEVEL = 'devel'
+
 try:
     from ConfigParser import ConfigParser, ParsingError
 except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'V1.2.beta'
-__nickname__ = 'Caligula'
-__releasedate__ = '26-12-2017'
+# Update this values before any new release
+__version__ = DEVEL
+__nickname__ = DEVEL
+__releasedate__ = ''
 
 
 
@@ -104,7 +107,7 @@ any doubt.
 # Check the version if in devel mode
 #
 
-if __version__ == 'devel':
+if __version__ == DEVEL:
     # Find out if the is a .git directory
     if exists(join(SCIPION_HOME, '.git')):
         def call(cmd):
