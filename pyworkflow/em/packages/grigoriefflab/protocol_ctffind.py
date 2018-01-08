@@ -356,7 +356,7 @@ eof
             if self.findPhaseShift:
                 self._args += """
 no
-no
+yes
 yes
 %(astigmatism)f
 %(phaseShift)s
@@ -370,7 +370,7 @@ eof
             else:
                 self._args += """
 no
-no
+yes
 yes
 %(astigmatism)f
 %(phaseShift)s
@@ -424,3 +424,4 @@ eof
                            " but returns an error code. Disregard error messages until this is fixed."
                            "http://grigoriefflab.janelia.org/node/5421")
         return summary
+
