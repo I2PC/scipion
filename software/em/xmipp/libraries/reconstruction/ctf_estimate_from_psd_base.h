@@ -145,4 +145,6 @@ public:
 
 };
 
+double evaluateIceness(MultidimArray<double> &psd, double Tm);
+
 #endif

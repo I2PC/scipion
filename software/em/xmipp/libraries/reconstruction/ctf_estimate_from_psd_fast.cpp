@@ -1507,6 +1507,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		MD.setValue(MDL_CTF_YF, (double)output_ctfmodel.yF*prm2D->Tm, id);
 		MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
 		MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, prm2D->corr13, id);
+        MD.setValue(MDL_CTF_CRIT_ICENESS, evaluateIceness(prm.ctftomodel(), prm.Tm), id);
 		MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm2D->downsampleFactor, id);
 		MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
 		fn_rootCTFPARAM = fn_rootCTFPARAM + ".ctfparam_tmp";

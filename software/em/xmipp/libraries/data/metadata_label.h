@@ -185,6 +185,7 @@ enum MDLabel
     MDL_CTF_CRIT_PSDPCA1VARIANCE, ///< Variance in the first principal component of the PSDs
     MDL_CTF_CRIT_PSDPCARUNSTEST, ///< Runs test on the projection of the PSD on the first principal component
     MDL_CTF_CRIT_NORMALITY, ///< Normality test between histogram of micrography and gaussian distribution
+    MDL_CTF_CRIT_ICENESS, ///< Iceness of the micrograph
     MDL_CTF_DOWNSAMPLE_PERFORMED, ///< Downsampling performed to estimate the CTF
     MDL_CTF_DIMENSIONS, // Size in pixels of the 3D PSF to be created (Xdim, Ydim, Zdim)
     MDL_CTF_LAMBDA, /// Wavelength (nm)
@@ -1527,6 +1528,7 @@ private:
         MDL::addLabel(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO, LABEL_DOUBLE, "ctfCritCtfMargin");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGCORR13, LABEL_DOUBLE, "ctfCritCorr13");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGSCORE, LABEL_DOUBLE, "ctfCritFitting");
+        MDL::addLabel(MDL_CTF_CRIT_ICENESS, LABEL_DOUBLE, "ctfCritIceness");
         MDL::addLabel(MDL_CTF_CRIT_NORMALITY, LABEL_DOUBLE, "ctfCritNormality");
         MDL::addLabel(MDL_CTF_CRIT_PSDCORRELATION90, LABEL_DOUBLE, "ctfCritPsdCorr90");
         MDL::addLabel(MDL_CTF_CRIT_PSDPCA1VARIANCE, LABEL_DOUBLE, "ctfCritPsdPCA1");

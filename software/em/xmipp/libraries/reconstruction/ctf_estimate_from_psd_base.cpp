@@ -329,3 +329,38 @@ void ProgCTFBasicParams::produceSideInfo()
 	}
 
 }
+
+double evaluateIceness(MultidimArray<double> &psd, double Tm)
+{
+	double R4_4=floor(XSIZE(psd)*Tm/4.4);
+	double R4_0=floor(XSIZE(psd)*Tm/4.0);
+	double R3_6=floor(XSIZE(psd)*Tm/3.6);
+	R4_4*=R4_4;
+	R4_0*=R4_0;
+	R3_6*=R3_6;
+	double N1=0, N2=0, avg1=0, avg2=0;
+	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(psd)
+	{
+		double R2=i*i+j*j;
+		if (R2>R4_4)
+		{
+			if (R2<R4_0)
+			{
+				avg1+=A2D_ELEM(psd,i,j);
+				N1+=1;
+			}
+			else if (R2<R3_6)
+			{
+				avg2+=A2D_ELEM(psd,i,j);
+				N2+=1;
+			}
+		}
+	}
+	if (N1>0 && N2>0)
+	{
+		avg1/=N1;
+		avg2/=N2;
+		return avg2/avg1;
+	}
+	return -1;
+}

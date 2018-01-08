@@ -552,6 +552,7 @@ data_fullMicrograph
  _ctfYF -999
  _ctfCritFitting -999
  _ctfCritCorr13 -999
+ _ctfCritIceness -999
  _CtfDownsampleFactor -999
  _ctfCritPsdStdQ -999
  _ctfCritPsdPCA1 -999

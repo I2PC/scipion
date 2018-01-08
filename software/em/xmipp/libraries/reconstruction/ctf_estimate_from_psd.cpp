@@ -2438,6 +2438,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmo
         MD.setValue(MDL_CTF_YF, (double)output_ctfmodel.yF*prm.Tm, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGSCORE, fitness, id);
         MD.setValue(MDL_CTF_CRIT_FITTINGCORR13, prm.corr13, id);
+        MD.setValue(MDL_CTF_CRIT_ICENESS, evaluateIceness(prm.psd_exp_radial, prm.Tm), id);
         MD.setValue(MDL_CTF_DOWNSAMPLE_PERFORMED, prm.downsampleFactor, id);
         MD.write(fn_rootCTFPARAM + ".ctfparam",MD_APPEND);
         fn_rootCTFPARAM = fn_rootCTFPARAM + ".ctfparam_tmp";

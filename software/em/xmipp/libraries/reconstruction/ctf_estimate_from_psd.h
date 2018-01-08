@@ -173,6 +173,8 @@ public:
     void estimate_defoci_Zernike();
 };
 
+double evaluateIceness(MultidimArray<double> &enhanced_ctftomodel, double Tm);
+
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error
     committed in the best fit.*/
