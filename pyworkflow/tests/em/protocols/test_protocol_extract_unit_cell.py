@@ -453,7 +453,7 @@ class TestProtModelBuilding(BaseTest):
         self.outerRadius = 79.
         self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r],
                                             'xmipp', XMIPP_SYM_NAME[SYM_I222r])
-        self.box[SYM_I222r] = (91, 70, 52)
+        self.box[SYM_I222r] = (91, 70, 53)
 
         self.extractunitCell(SYM_I222r, cropZ=True)  # crowther 222
 
