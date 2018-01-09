@@ -110,7 +110,7 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 	for(int i=firstIdx; i<firstIdx+numImages; i++){
 
 		SF.getValue(MDL_IMAGE,fnImg,iter->objId);
-		std::cerr << iter->objId << ". Image: " << fnImg << std::endl;
+		//std::cerr << iter->objId << ". Image: " << fnImg << std::endl;
 		Iref.read(fnImg);
 		original_image_stack_ref.fillImage(n,Iref()/8);
 
@@ -1183,12 +1183,13 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 
 				size_t itemId;
 				SFexp.getRow(rowExp, iterExp->objId);
-				rowExp.getValue(MDL_IMAGE, nameImg);
-				rowExp.getValue(MDL_ITEM_ID, itemId);
-				rowOut.setValue(MDL_ITEM_ID, itemId);
-				rowOut.setValue(MDL_IMAGE,nameImg);
-				rowOut.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, i, j));
-				rowOut.setValue(MDL_MAXCC, (double)DIRECT_A2D_ELEM(corrTotalRow, i, j));
+				//rowExp.getValue(MDL_IMAGE, nameImg);
+				//rowExp.getValue(MDL_ITEM_ID, itemId);
+				//rowOut
+				//rowExp.setValue(MDL_ITEM_ID, itemId);
+				//rowExp.setValue(MDL_IMAGE,nameImg);
+				rowExp.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, i, j));
+				rowExp.setValue(MDL_MAXCC, (double)DIRECT_A2D_ELEM(corrTotalRow, i, j));
 				if(j<mdInSize){
 					flip = false;
 					matrixTransCpu[j].getSlice(i, out2); //matrixTransCpu[i].getSlice(j, out2);
@@ -1222,7 +1223,8 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 					continue;
 				}
 
-				rowOut.setValue(MDL_FLIP, flip);
+				//rowOut
+				rowExp.setValue(MDL_FLIP, flip);
 
 				double scale;
 				/*MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
@@ -1255,16 +1257,18 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				}
 				//FIN AJ NEW
 
-				rowOut.setValue(MDL_SHIFT_X, -shiftX);
-				rowOut.setValue(MDL_SHIFT_Y, -shiftY);
+				//rowOut
+				rowExp.setValue(MDL_SHIFT_X, -shiftX);
+				rowExp.setValue(MDL_SHIFT_Y, -shiftY);
+				rowExp.setValue(MDL_SHIFT_Z, 0.0);
 				row.getValue(MDL_ANGLE_ROT, rot);
-				rowOut.setValue(MDL_ANGLE_ROT, rot);
+				rowExp.setValue(MDL_ANGLE_ROT, rot);
 				row.getValue(MDL_ANGLE_TILT, tilt);
-				rowOut.setValue(MDL_ANGLE_TILT, tilt);
-				rowOut.setValue(MDL_ANGLE_PSI, psi);
-
-				rowOut.setValue(MDL_REF, idxJ+1);
-				mdOut.addRow(rowOut);
+				rowExp.setValue(MDL_ANGLE_TILT, tilt);
+				rowExp.setValue(MDL_ANGLE_PSI, psi);
+				//rowOut
+				rowExp.setValue(MDL_REF, idxJ+1);
+				mdOut.addRow(rowExp);
 			}
 			if(iter->hasNext())
 				iter->moveNext();
@@ -1632,14 +1636,15 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					size_t itemId;
 					if(!read){
 						SFexp.getRow(rowSFexp, iterSFexp->objId);
-						rowSFexp.getValue(MDL_IMAGE, fnExpIm);
-						rowSFexp.getValue(MDL_ITEM_ID, itemId);
+						//rowSFexp.getValue(MDL_IMAGE, fnExpIm);
+						//rowSFexp.getValue(MDL_ITEM_ID, itemId);
 						read = true;
 					}
-					row.setValue(MDL_ITEM_ID, itemId);
-					row.setValue(MDL_IMAGE, fnExpIm);
-					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i));
-					row.setValue(MDL_FLIP, false);
+					//row
+					//row.setValue(MDL_ITEM_ID, itemId);
+					//row.setValue(MDL_IMAGE, fnExpIm);
+					rowSFexp.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i));
+					rowSFexp.setValue(MDL_FLIP, false);
 
 					double scale, shiftX, shiftY, psi;
 					bool flip;
@@ -1659,15 +1664,17 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 					transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,psi); //bestM
 
-					row.setValue(MDL_SHIFT_X, -shiftX);
-					row.setValue(MDL_SHIFT_Y, -shiftY);
+					//row
+					rowSFexp.setValue(MDL_SHIFT_X, -shiftX);
+					rowSFexp.setValue(MDL_SHIFT_Y, -shiftY);
+					rowSFexp.setValue(MDL_SHIFT_Z, 0.0);
 					rowSF.getValue(MDL_ANGLE_ROT, rot);
-					row.setValue(MDL_ANGLE_ROT, rot);
+					rowSFexp.setValue(MDL_ANGLE_ROT, rot);
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
-					row.setValue(MDL_ANGLE_TILT, tilt);
-					row.setValue(MDL_ANGLE_PSI, psi);
-					row.setValue(MDL_REF,refNum);
-					SFq.addRow(row);
+					rowSFexp.setValue(MDL_ANGLE_TILT, tilt);
+					rowSFexp.setValue(MDL_ANGLE_PSI, psi);
+					rowSFexp.setValue(MDL_REF,refNum);
+					SFq.addRow(rowSFexp);
 				}
 			}
 
@@ -1709,14 +1716,15 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					size_t itemId;
 					if(!read){
 						SFexp.getRow(rowSFexp, iterSFexp->objId);
-						rowSFexp.getValue(MDL_IMAGE, fnExpIm);
-						rowSFexp.getValue(MDL_ITEM_ID, itemId);
+						//rowSFexp.getValue(MDL_IMAGE, fnExpIm);
+						//rowSFexp.getValue(MDL_ITEM_ID, itemId);
 						read = true;
 					}
-					row.setValue(MDL_ITEM_ID, itemId);
-					row.setValue(MDL_IMAGE, fnExpIm);
-					row.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i+mdInSize));
-					row.setValue(MDL_FLIP, true);
+					//row
+					//row.setValue(MDL_ITEM_ID, itemId);
+					//row.setValue(MDL_IMAGE, fnExpIm);
+					rowSFexp.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, j, i+mdInSize));
+					rowSFexp.setValue(MDL_FLIP, true);
 
 					double scale, shiftX, shiftY, psi;
 					bool flip;
@@ -1745,15 +1753,16 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					//FIN AJ NEW
 
 					shiftX*=-1;
-					row.setValue(MDL_SHIFT_X, -shiftX);
-					row.setValue(MDL_SHIFT_Y, -shiftY);
+					//row
+					rowSFexp.setValue(MDL_SHIFT_X, -shiftX);
+					rowSFexp.setValue(MDL_SHIFT_Y, -shiftY);
 					rowSF.getValue(MDL_ANGLE_ROT, rot);
-					row.setValue(MDL_ANGLE_ROT, rot);
+					rowSFexp.setValue(MDL_ANGLE_ROT, rot);
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
-					row.setValue(MDL_ANGLE_TILT, tilt);
-					row.setValue(MDL_ANGLE_PSI, psi);
-					row.setValue(MDL_REF,refNum);
-					SFq.addRow(row);
+					rowSFexp.setValue(MDL_ANGLE_TILT, tilt);
+					rowSFexp.setValue(MDL_ANGLE_PSI, psi);
+					rowSFexp.setValue(MDL_REF,refNum);
+					SFq.addRow(rowSFexp);
 				}
 			}
 			if(iterSFexp->hasNext())
@@ -1935,7 +1944,7 @@ void ProgGpuCorrelation::run()
 	d_referenceAux.XdimPolar=360;
 	d_referenceAux.YdimPolar=(size_t)mask.R1;
 
-	printf("Xdim %i, Ydim %i \n", pad_Xdim, pad_Ydim);
+	//printf("Xdim %i, Ydim %i \n", pad_Xdim, pad_Ydim);
 
 	StructuresAux myStructureAux_tr, myStructureAux_rt;
 
@@ -2041,7 +2050,7 @@ void ProgGpuCorrelation::run()
 
 			SF.getRow(rowExp, expIndex); //SFexp
 			rowExp.getValue(MDL_IMAGE, fnImgExp);
-			std::cerr << expIndex << ". Image: " << fnImgExp << std::endl;
+			//std::cerr << expIndex << ". Image: " << fnImgExp << std::endl;
 
 			//AJ calling the function to align the images
 			bool mirror=false;

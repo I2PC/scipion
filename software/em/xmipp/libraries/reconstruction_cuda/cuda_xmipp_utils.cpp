@@ -37,8 +37,8 @@ void myStreamCreate(myStreamHandle &myStream)
 	cudaStream_t *streamPtr = new cudaStream_t;
 	gpuErrchk(cudaStreamCreate(streamPtr));
 	myStream.ptr = (void*)streamPtr;
-	printf("ptr %p\n", myStream.ptr);
-	printf("streamPtr %p\n", streamPtr);
+	//printf("ptr %p\n", myStream.ptr);
+	//printf("streamPtr %p\n", streamPtr);
 }
 
 
@@ -320,7 +320,7 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr, myStream);
 		}else{
 			if(myhandle.ptr == NULL){
-				printf("Creating plan FFT\n");
+				//printf("Creating plan FFT\n");
 				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr, myStream);
 				myhandle.ptr = (void *)planFptr;
 				planFptr=(cufftHandle *)myhandle.ptr;
@@ -337,8 +337,8 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			dataCB->normFactor = fourierTransform.yxdim;
 			dataCB->data = (cufftComplex*)dataMask.d_data;
 
-			printf("Using callbacks %i \n", dataCB->normFactor);
-			fflush(stdout);
+			//printf("Using callbacks %i \n", dataCB->normFactor);
+			//fflush(stdout);
 
 			// Allocate device memory for parameters
 			pointwiseMult *d_params;
@@ -438,7 +438,7 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, false, planAuxBptr, myStream);
 		}else{
 			if(myhandle.ptr == NULL){
-				printf("Creating plan IFFT\n");
+				//printf("Creating plan IFFT\n");
 				createPlanFFT(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr, myStream);
 				myhandle.ptr = (void *)planBptr;
 				planBptr=(cufftHandle *)myhandle.ptr;
@@ -449,7 +449,7 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 
 		//AJ using callbacks
 		if(useCallback){
-			printf("Using callbacks\n");
+			//printf("Using callbacks\n");
 			pointwiseMult *dataCB;
 			gpuErrchk(cudaMallocHost((void **)&dataCB, sizeof(pointwiseMult)));
 			dataCB->normFactor = dataMask.yxdim;
