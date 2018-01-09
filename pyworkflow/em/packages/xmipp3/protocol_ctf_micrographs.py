@@ -472,11 +472,14 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
         retval = True
         if not isMdEmpty(fnRejected):
+            retval = False
             mdCTFparam = md.MetaData(fnEval)
+            Iceness = mdCTFparam.getValue(md.MDL_CTF_CRIT_ICENESS, 1)
             mdCTFparam.setValue(md.MDL_ENABLED, -1, mdCTFparam.firstObject())
             mdCTFparam.write(fnEval)
-            retval = False
-            
+            if Iceness > 1:
+                retval = True
+             
         pwutils.path.cleanPath(fnRejected)
         return retval
 
