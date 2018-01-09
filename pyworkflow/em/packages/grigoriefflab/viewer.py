@@ -27,10 +27,11 @@
 import os
 from os.path import exists, relpath
 from pyworkflow.utils.path import cleanPath, removeExt
-from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
-from pyworkflow.em.viewer import DataView
-import pyworkflow.em as em
+from pyworkflow.viewer import (Viewer, ProtocolViewer,
+                               DESKTOP_TKINTER, WEB_DJANGO)
+from pyworkflow.em.viewer import DataView, CtfView
 import pyworkflow.em.showj as showj
+import pyworkflow.em as em
 
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.plotter import EmPlotter
@@ -40,6 +41,7 @@ from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
 from protocol_magdist_estimate import ProtMagDistEst
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
+from protocol_ctffind import ProtCTFFind
 
 
 LAST_ITER = 0
@@ -565,6 +567,24 @@ def createCtfPlot(ctfSet, ctfId):
 OBJCMD_CTFFIND4 = "Display Ctf Fitting"
 
 ProjectWindow.registerObjectCommand(OBJCMD_CTFFIND4, createCtfPlot)
+
+
+class CtffindViewer(Viewer):
+    """ Specific way to visualize SetOfCtf after Gctf. """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtCTFFind]
+
+    def _visualize(self, prot, **kwargs):
+        outputCTF = getattr(prot, 'outputCTF', None)
+
+        if outputCTF is not None:
+            ctfView = CtfView(self._project, outputCTF)
+            viewParams = ctfView.getViewParams()
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_CTFFIND4
+            return [ctfView]
+        else:
+            return [self.infoMessage("The output SetOfCTFs has not been "
+                                     "produced", "Missing output")]
 
 
 def _plotCurve(a, i, fn):
