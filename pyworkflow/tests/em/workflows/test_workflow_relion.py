@@ -185,6 +185,8 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
     def test_ribo(self):
         """ Reimplement this test to run several extract cases. """
         protPick1 = self._runPickWorkflow()
+        protPick1.runType.set(RUN_COMPUTE)
+        self._launchPick(protPick1)
         proj = protPick1.getProject()
         size = protPick1.outputCoordinates.getSize()
 
