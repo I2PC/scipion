@@ -100,6 +100,8 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         self.listToProc=[]
         self.totalInList=0
 
+        self.last_time = time()
+
         self.insertedListFlag = {}
 
         self._loadInputList()
@@ -157,10 +159,13 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
     def _insertStepsForParticles(self, flagSplit, reclassification):
 
         deps = []
-        inputParticles = self.inputParticles.get()
-        self.convertSet(self.imgsExp, inputParticles)
+
+        stepIdConvert = self._insertFunctionStep('_convertSet', self.imgsExp,
+                                                 prerequisites=[])
+        deps.append(stepIdConvert)
+
         stepIdInputmd = self._insertFunctionStep\
-            ('_generateInputMd', reclassification, prerequisites=[])
+            ('_generateInputMd', reclassification, prerequisites=[stepIdConvert])
         deps.append(stepIdInputmd)
 
         expImgMd = self._getExtraPath('inputImagesExp.xmd')
@@ -170,17 +175,21 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             deps.append(stepIdSplit)
             stepIdLevelUp = self._insertFunctionStep\
                 ('levelUp', expImgMd, prerequisites=[stepIdSplit])
+            deps.append(stepIdLevelUp)
             stepIdClassify = self._insertFunctionStep\
                 ('_classifyStep', expImgMd, 0, prerequisites=[stepIdLevelUp])
+            deps.append(stepIdClassify)
         else:
             stepIdClassify = self._insertFunctionStep\
                 ('_classifyStep', expImgMd, 0, prerequisites=[stepIdInputmd])
+            deps.append(stepIdClassify)
 
         stepIdCheckSplit = self._insertFunctionStep\
             ('checkSplit', expImgMd, prerequisites=[stepIdClassify])
+        deps.append(stepIdCheckSplit)
+
         stepIdLevelUp = self._insertFunctionStep\
             ('levelUp', expImgMd, prerequisites=[stepIdCheckSplit])
-
         deps.append(stepIdLevelUp)
 
         return deps
@@ -206,10 +215,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                    % (prettyTime(self.lastCheck),
                       prettyTime(mTime)))
 
-        # Open input and close it as soon as possible
-        self._loadInputList()
-        #self.isStreamClosed = self.inputParticles.get().getStreamState()
-        #self.listOfParticles = self.inputParticles.get()
         # If the input have not changed since our last check,
         # it does not make sense to check for new input data
         if self.lastCheck > mTime and hasattr(self, 'listOfParticles'):
@@ -229,14 +234,15 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         #        newParticles.append(particleId)
         outputStep = self._getFirstJoinStep()
 
+        # Open input and close it as soon as possible
+        self._loadInputList()
+        #self.isStreamClosed = self.inputParticles.get().getStreamState()
+        #self.listOfParticles = self.inputParticles.get()
+
         print("listOfParticles", self.listOfParticles[0], self.listOfParticles[len(self.listOfParticles)-1])
-        #print("insertedList", self.insertedList[0], self.insertedList[len(self.insertedList)-1])
-        #print("newParticles", self.newParticles[0], self.newParticles[len(self.newParticles)-1])
         print("self.lastIdProcessed", self.lastIdProcessed)
         print("self.listToProc", self.listToProc)
 
-        #AJ before:
-        #if len(self.newParticles)>0 and self.newParticles[0]==self.lastIdProcessed+1:
         if len(self.listOfParticles) > 0 and self.listOfParticles[0] == self.lastIdProcessed + 1:
             reclassification = True
             numOfImages = len(self.listOfParticles) - self.totalInList
@@ -244,12 +250,16 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             numOfBlk = floor(numOfImages / self.blockToProc)
             lastBlk = numOfImages % self.blockToProc
             self.listToProc += [self.blockToProc]*int(numOfBlk)
-            self.listToProc.append(lastBlk)
+            if lastBlk!=0:
+                self.listToProc.append(lastBlk)
+                stepsToAppend = int(numOfBlk+1)
+            else:
+                stepsToAppend = int(numOfBlk)
             self.totalInList += self.blockToProc * numOfBlk + lastBlk
             fDeps=[]
-            for i in range(int(numOfBlk+1)):
+            for i in range(stepsToAppend):
                 fDeps += self._insertProcessingStep(self.insertedListFlag,
-                                                self.listOfParticles, False, #AJ before: self.newParticles
+                                                self.listOfParticles, False,
                                                reclassification)
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
@@ -264,6 +274,16 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         """ Check for already done files and update the output set. """
         # Load previously done items (from text file)
         initial_time = time()
+        print("last_time", self.last_time)
+        if initial_time<self.last_time+180.0:
+            print("salgo")
+            return
+        else:
+            self.last_time = initial_time
+            print("last_time",self.last_time)
+
+        print("hago cosas")
+
         doneList = self._readDoneList()
 
         # Check for newly done items
@@ -326,6 +346,13 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         exec_time = final_time - initial_time
         print("_checkNewOutput exec_time", exec_time)
 
+
+    def _convertSet(self, imgsFileName):
+        setOfImg = self.inputParticles.get()
+        if setOfImg is None:
+            return
+        writeSetOfParticles(setOfImg, imgsFileName, alignType=ALIGN_NONE)
+                            #firstId=self.lastIdProcessed)
 
     def _generateInputMd(self, reclassification):
         doneList = self._readDoneList()
@@ -1010,16 +1037,25 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
 
     def createOutputStep(self):
-        pass
+
+        outSet = self._loadOutputSet(SetOfClasses2D, 'classes2D.sqlite')
+
+        if (exists(self._getPath('classes2D.sqlite'))):
+            if (exists(self._getExtraPath('last_classes.xmd'))
+                    and exists(self._getExtraPath('last_images.xmd'))):
+                self._updateOutputSet('outputClasses', outSet,
+                                      Set.STREAM_CLOSED)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+        if (exists(self._getPath('classes2D.sqlite'))):
+            outSet.close()
 
 
     # --------------------------- UTILS functions -------------------------------
-
-    def convertSet(self, imgsFileName, setOfImg):
-        if setOfImg is None:
-            return
-        writeSetOfParticles(setOfImg, imgsFileName, alignType=ALIGN_NONE)
-                            #firstId=self.lastIdProcessed)
 
     def _loadInputList(self):
         """ Load the input set of ctfs and create a list. """
