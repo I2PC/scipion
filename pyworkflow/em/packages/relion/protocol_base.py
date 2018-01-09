@@ -1210,7 +1210,7 @@ class ProtRelionBase(EMProtocol):
 
         ctf = part.getCTF()
 
-        if ctf is not None:
+        if ctf is not None and ctf.getPhaseShift():
             partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
 
     def _doSubsets(self):
