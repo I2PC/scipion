@@ -59,7 +59,7 @@ class AtsasViewer(Viewer):
             xplotter = Plotter(windowTitle="SAXS Curves")
             a = xplotter.createSubPlot('SAXS curves', 'Angstroms^-1', 'log(SAXS)', yformat=False)
             a.plot(x[:,0], numpy.log(x[:,1]))
-            a.plot(x[:,0], numpy.log(x[:,2]))
+            a.plot(x[:,0], numpy.log(x[:,3]))
             if obj.experimentalSAXS.empty():
                 xplotter.showLegend(['SAXS in solution','SAXS in vacuo'])
             else:

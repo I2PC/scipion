@@ -179,7 +179,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
         form.addParam('numberOfPerturbations', IntParam, label="Number of Perturbations", default=1, condition='alignmentMethod!=1',
                   expertLevel=LEVEL_ADVANCED, help="The gallery of reprojections is randomly perturbed this number of times")
-        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod!=1',
+        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=1, condition='alignmentMethod!=1',
                   expertLevel=LEVEL_ADVANCED, help="Significant alignment is allowed to replicate each image up to this number of times")
 
         form.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True, condition='alignmentMethod==1',
@@ -252,6 +252,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('postLaplacian', BooleanParam, label="Laplacian denoising", expertLevel=LEVEL_ADVANCED, default=True,
                       help="It can only be used if there is a mask")
         form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postSoftNeg', BooleanParam, label="Attenuate undershooting", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postSoftNegK', FloatParam, label="Attenuate undershooting (K)", expertLevel=LEVEL_ADVANCED, default=3,
+                      help="Values below K*sigma are attenuated")
         form.addParam('postDifference', BooleanParam, label="Evaluate difference", expertLevel=LEVEL_ADVANCED, default=True)
 
         form.addParallelSection(threads=1, mpi=8)
@@ -466,14 +469,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             copyFile(fnVol2,fnVolFSC2)
         
         # Apply mask if available
+        fnMask=""
+        volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
         if self.postAdHocMask.hasValue():
             fnMask=join(fnDirCurrent,"mask.vol")
             if not exists(fnMask):
-                volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolFSC1,fnMask),numberOfMpi=1)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolFSC2,fnMask),numberOfMpi=1)
-            cleanPath(fnMask)
 
         # Threshold
         self.runJob('xmipp_transform_threshold','-i %s --select below 0 --substitute value 0 '%fnVolFSC1,numberOfMpi=1)
@@ -483,8 +486,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         fnFsc=join(fnDirCurrent,"fsc.xmd")
         self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'\
                     %(fnVolFSC1,fnVolFSC2,fnFsc,TsCurrent),numberOfMpi=1)
+
         cleanPath(fnVolFSC1)
         cleanPath(fnVolFSC2)
+        if fnMask!="":
+            cleanPath(fnMask)
         
         # Estimate resolution before postprocessing
         fnBeforeVol1=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%1)
@@ -1198,7 +1204,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                          (fnAnglesToUse,fnGrayRoot,TsCurrent,R,self.contPadding.get(),fnRefVol,previousResolution,fnGrayRoot)
                     args+=" --max_gray_scale %f --max_gray_shift %f --Nsimultaneous %d"%\
                          (self.contMaxGrayScale.get(),self.contMaxGrayShift.get(),self.contSimultaneous.get())
-                    self.runJob("xmipp_transform_adjust_image_grey_levels",args)
+                    self.runJob("xmipp_transform_adjust_image_grey_levels",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                     fnAnglesToUse = fnGrayRoot+".xmd"
                     if deleteStack:
                         cleanPath(deletePattern)
@@ -1344,6 +1350,21 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
         fnForFSC=join(fnDirCurrent,"volumeFSC%02d.vol"%i)
         copyFile(fnVol,fnForFSC) # From this point, the two half volumes may be modified
+
+        # Attenuate undershooting
+        if self.postSoftNeg:
+            removeMask=False
+            if fnMask=="":
+                fnMask=join(fnDirCurrent,"mask.vol")
+                self.runJob("xmipp_transform_mask","-i %s --mask circular %d --create_mask %s"%(fnVol1,-volXdim/2,fnMask),numberOfMpi=1)
+                removeMask=True
+            fnFsc=join(fnDirCurrent,"fscSoft.xmd")
+            self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'%(fnVol1,fnVol2,fnFsc,TsCurrent),numberOfMpi=1)
+            self.runJob("xmipp_transform_filter","-i %s --softnegative %s %s %f %f"%(fnVol1,fnMask,fnFsc,TsCurrent,self.postSoftNegK),numberOfMpi=1)
+            self.runJob("xmipp_transform_filter","-i %s --softnegative %s %s %f %f"%(fnVol2,fnMask,fnFsc,TsCurrent,self.postSoftNegK),numberOfMpi=1)
+            cleanPath(fnFsc)
+            if removeMask:
+                cleanPath(fnMask)
 
         # Difference evaluation and production of a consensus average
         if self.postDifference:
