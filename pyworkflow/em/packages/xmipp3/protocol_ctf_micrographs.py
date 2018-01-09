@@ -50,13 +50,15 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
                   "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR "
                   "ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0 OR "
-                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>50000 OR ctfBgGaussianSigmaU<1000")
+                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>50000 OR ctfBgGaussianSigmaU<1000 OR "
+                  "ctfCritIceness>1")
 
     _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
                   "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13==0 OR "
                   "ctfCritNonAstigmaticValidty<=0 OR " 
-                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>70000") #ctfCritCtfMargin>0
+                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>70000 OR "
+                  "ctfCritIceness>1") #ctfCritCtfMargin>0
 
     def __init__(self, **args):
 
@@ -323,10 +325,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         if self.doFastDefocus and not self.doInitialCTF:
             self._args += " --fastDefocus"
 
-    def _insertInitialSteps(self):
-        return [self._insertFunctionStep('getPreviousPhaseShiftsStep')]
-    
-    def getPreviousPhaseShiftsStep(self):
+    def getPreviousParameters(self):
         if self.ctfRelations.hasValue():
             self.ctfDict = {}
             for ctf in self.ctfRelations.get():
@@ -346,6 +345,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             self._params['phaseShift0'] = 1.57079
 
     def _prepareCommand(self):
+        if not hasattr(self, "ctfDict") and self.ctfRelations.hasValue():
+            self.getPreviousParameters()
+            
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'
 
@@ -404,27 +406,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                              'defocus_range': 5000,
                              'ctfmodelSize': size
                              }
-
-            '''if self.ctfRelations.hasValue():
-                self.ctfDict = {}
-                for ctf in self.ctfRelations.get():
-                    ctfName = ctf.getMicrograph().getMicName()
-                    phaseShift0 = 0
-                    if self.findPhaseShift:
-                        if hasattr(ctf, "_gctf_ctfPhaseShift"):
-                            phaseShift0 = ctf._gctf_ctfPhaseShift
-                        elif hasattr(ctf, "_ctffind4_ctfPhaseShift"):
-                            phaseShift0 = ctf._ctffind4_ctfPhaseShift
-                        else:
-                            phaseShift0 = 1.6  # pi/2
-                        self.ctfDict[ctfName] = (
-                        ctf.getDefocusU(), phaseShift0.get())
-                    else:
-                        self.ctfDict[ctfName] = (
-                        ctf.getDefocusU(), phaseShift0)
-
-            if self.findPhaseShift and not self.ctfRelations.hasValue():
-                self._params['phaseShift0'] = 1.6'''
 
             if self.findPhaseShift:
                 fnCTFparam = self._getFileName('ctfparam', micDir=micDir)
