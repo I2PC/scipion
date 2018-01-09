@@ -932,13 +932,11 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
 
     if 'firstId' in kwargs:
         firstId = kwargs['firstId']
-        count=0
         for img in imgSet.iterItems(where="id>%d"% firstId):
             objId = md.addObject()
             imgRow = XmippMdRow()
             imgToFunc(img, imgRow, **kwargs)
             imgRow.writeToMd(md, objId)
-            count+=1
     else:
         for img in imgSet:
             objId = md.addObject()
