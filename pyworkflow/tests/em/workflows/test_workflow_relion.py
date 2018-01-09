@@ -165,7 +165,7 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
 
     def _checkOutput(self, prot, **kwargs):
         # Read expected parameters
-        size = kwargs.get('size', 2618)
+        size = kwargs.get('size', 5828)
         sampling = kwargs.get('sampling', 7.08)
         dim = kwargs.get('dim', 64)
 
@@ -179,8 +179,8 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         
         self.assertEqual(first.getDim(), (dim, dim, 1))
         self.assertAlmostEqual(first.getSamplingRate(), sampling, delta=0.001)
-        self.assertAlmostEqual(ctfModel.getDefocusU(), 23467, delta=10)
-        self.assertAlmostEqual(ctfModel.getDefocusV(), 23308, delta=10)
+        self.assertAlmostEqual(ctfModel.getDefocusU(), 25000, delta=10)
+        self.assertAlmostEqual(ctfModel.getDefocusV(), 24779, delta=10)
 
     def test_ribo(self):
         """ Reimplement this test to run several extract cases. """
