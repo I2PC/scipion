@@ -229,4 +229,4 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         
         # The number of particles is different than the imported coordinates
         # due to the subSet done.
-        self._checkOutput(protExtract3, size=1716)
+        self._checkOutput(protExtract3, size=2884)
