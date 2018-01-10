@@ -371,7 +371,7 @@ enum MDLabel
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP, ///< score by alignability experimental particles (double)
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, ///< score by alignability references (double)
     MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
-	MDL_SCORE_BY_EMPTINESS, ///< Small values represent worse particles. Much larger than 1 for good particles
+    MDL_SCORE_BY_EMPTINESS, ///< Small values represent worse particles. Much larger than 1 for good particles
     MDL_SCORE_BY_ENTROPY,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_GRANULO,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_LBP,  ///< Feature vectors used to classify particles (vector double)

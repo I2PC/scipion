@@ -31,9 +31,10 @@ import pyworkflow.protocol.constants as cons
 import pyworkflow.protocol.params as param
 from pyworkflow.em.protocol import ProtClassify2D
 from pyworkflow.em.data import SetOfParticles
-from pyworkflow.object import Set
+from pyworkflow.object import Set, String
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles, setXmippAttributes
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, \
+    readSetOfParticles, setXmippAttributes
 
 
 class XmippProtEliminateEmptyParticles(ProtClassify2D):
@@ -59,7 +60,8 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         form.addParam('threshold', param.FloatParam, default=1.5,
                       label='Threshold used in elimination:',
                       help='Higher threshold => '
-                           'more particles will be eliminated. Set to -1 for no elimination.')
+                           'more particles will be eliminated. '
+                           'Set to -1 for no elimination.')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -120,13 +122,11 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if os.path.exists(fnOutputMd):
             outSet = self._loadOutputSet(SetOfParticles,
-                                         'outputParticles.sqlite')
-            readSetOfParticles(fnOutputMd, outSet)
+                                         'outputParticles.sqlite', fnInputMd)
             self._updateOutputSet('outputParticles', outSet, streamMode)
         if os.path.exists(fnElimMd):
             outSet = self._loadOutputSet(SetOfParticles,
-                                     'eliminatedParticles.sqlite')
-            readSetOfParticles(fnElimMd, outSet)
+                                     'eliminatedParticles.sqlite', fnInputMd)
             self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
     def _stepsCheck(self):
@@ -178,7 +178,7 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    def _loadOutputSet(self, SetClass, baseName):
+    def _loadOutputSet(self, SetClass, baseName, fnInputMd):
         setFile = self._getPath(baseName)
         if os.path.exists(setFile):
             outputSet = SetClass(filename=setFile)
@@ -188,12 +188,15 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(fnInputMd, partsSet)
         inputs = self.inputParticles.get()
         outputSet.copyInfo(inputs)
-        outputSet.copyItems(inputs,
+        outputSet.copyItems(partsSet,
                             updateItemCallback=self._updateParticle,
-                            itemDataIterator=md.iterRows(outputSet.get(),
-                                                         sortByLabel=md.MDL_ITEM_ID))
+                            itemDataIterator=md.iterRows(
+                                String(fnInputMd).get(),
+                                sortByLabel=md.MDL_ITEM_ID))
         
         return outputSet
 
