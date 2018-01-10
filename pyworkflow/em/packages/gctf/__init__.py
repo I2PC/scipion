@@ -41,6 +41,11 @@ from protocol_gctf import ProtGctf
 from wizard import GctfCTFWizard
 _environ = getEnviron()
 
+# We need this import to register the specific viewing command
+# when visualizing Gctf results
+from viewer import GctfViewer
+
+
 def validateInstallation():
     """ This function will be used to check if package is properly installed."""
     missingPaths = ["%s: %s" % (var, _environ[var])
