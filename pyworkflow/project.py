@@ -35,7 +35,6 @@ import time
 from collections import OrderedDict
 import datetime as dt
 import pprint
-import prettytable
 import types
 
 import pyworkflow.em as em
@@ -748,7 +747,8 @@ class Project(object):
         newProt.copyDefinitionAttributes(protocol)
         newProt.copyAttributes(protocol, 'hostName', '_useQueue','_queueParams')
         
-        printTree(self,0)
+        self.indIND = 0
+        self.printTree()
 
         return newProt
 
@@ -1354,30 +1354,129 @@ class Project(object):
 
 
 
-def printTree(obj,ind):
-    WSlog = prettytable.PrettyTable(["Name", "Type", "Memory Address", "Value"])
-    obj_dict = obj.__dict__
 
-    for key, value in obj_dict.items():
-        
-        if key=='_attributes':
-            WSlog.add_row([key, str(type(value)), str(hex(id(value))), ''])
-            # print(key + ' \t : \t ' + str(type(value)) + ' >>>' + str(hex(id(value))) + '<<<')
-            for i in range(0,len(key)):
-                WSlog.add_row(['_attributes > ' + str(value[i]), str(type(getattr(obj,value[i]))), str(hex(id(value[i]))), str(getattr(obj,value[i]))])
-                # print('   +-> ' + value[i] + ' \t : \t ' + str(getattr(obj,value[i])) + ' >>>' + str(hex(id(value[i]))) + '<<<')           
+    def printTree(self, obj=None, prefix=''):
+        endl = '\n'
+        # delim = '\t' 
+        filename = 'INSPECTOR_LOG.csv'
+
+        sepBar   = '    | \t'
+        sepVoid  = '      \t'
+        endChild = '        -- \t'*4 + endl
+
+        firstColumn = ' '*4 + '- Name - \t'
+        thirdColumn = ' '*4 + '- Value - \t'
+
+        if prefix=='':
+            obj_dict = self.__dict__
+            self.memoryDict = {}
+            iAmClass = True
+            if os.path.exists(self.getPath(filename)):
+                os.remove(self.getPath(filename))
+            file = open(self.getPath(filename), 'a')
+            self.writeRow('PROJECT', self, prefix)
+            file.close()
+            prefix = sepBar
         else:
-            # print(key + ' \t : \t ' + str((value)) + ' >>>' + str(hex(id(value))) + '<<<')
-            valueSTR = str(value)
-            if len(valueSTR) > 30:
-                valueSTR='>>> too long value <<<'            
-            WSlog.add_row([key, str(type(value)), str(hex(id(value))), valueSTR])
-            
-            if len(str(type(value)))>2 and str(type(value))[1]=='c':
-                print ' '
-                ind += 1
-                print(str(ind) + '\t'  + key + '   > > >   ' + str(type(value)))
-                printTree(value,ind)
+            iAmClass = str(type(obj))[1]=='c'
+            if iAmClass:
+                obj_dict = obj.__dict__
+            elif (type(obj)==type(tuple()) or
+                  type(obj)==type(list())):
+                thirdColumn = ' '*2 +'- Pos./Len. - \t'
+            elif type(obj)==type(dict()):
+                firstColumn = ' '*4 + '- Key - \t'
+                obj_dict = obj
+            else:
+                return
 
 
-    # print(WSlog.get_string(sortby="Name"))
+        headerSTR = (firstColumn +
+                     ' '*4 + '- Type - \t' +
+                     thirdColumn +
+                     ' '*2 + '- Memory Address -' + endl)
+
+        file = open(self.getPath(filename), 'a')
+        file.write(prefix + headerSTR)
+        file.close()
+
+        def recursivePrint(value,prefix,isLast):
+            if isLast:
+                prefixList = prefix.split('\t')
+                prefixList[-2] = '  ' 
+                prefix = '\t'.join(prefixList)
+
+            self.printTree(value,prefix+sepBar)
+            writeEndClass(prefix)
+
+        def isClassListTupleDict(value):
+            return ( ( ( type(value)==type(tuple()) or 
+                         type(value)==type(list()) ) 
+                       and len(value)>1)
+                     or str(type(value))[1]=='c'
+                     or type(value)==type(dict()) )
+
+        def writeEndClass(prefix):
+            file = open(self.getPath(filename), 'a')
+            file.write(prefix +  sepVoid + endChild)
+            file.write(prefix + headerSTR)
+            file.close()
+
+        if len(prefix)<2:
+            prefix2write = prefix
+        else:
+            prefixList = prefix.split('\t')
+            prefixList[-2] = '    |~~~~~> ' 
+            prefix2write = '\t'.join(prefixList)
+
+        count = 0
+        if iAmClass or type(obj)==type(dict()):
+            for key, value in obj_dict.items():
+                count+=1
+                # write the variable
+                isNew = self.writeRow(key, value, prefix2write)
+                
+                isLast = count==len(obj_dict)
+                # show attributes for objects and items for lists and tuples 
+                if isNew and isClassListTupleDict(value):
+                    recursivePrint(value, prefix, isLast)
+        else:
+            for i in range(0,len(obj)): 
+                count+=1
+                # write the variable
+                isNew = self.writeRow(obj[i], obj[i], prefix2write, str(count)+'/'+str(len(obj)))
+
+                isLast = count==len(obj)
+                # show attributes for objects and items for lists and tuples 
+                if isNew and isClassListTupleDict(obj[i]):
+                    recursivePrint(obj[i],prefix,isLast)
+
+
+
+    def writeRow(self, name, val, prefix, posList=False):
+        endl = '\n'
+        if str(hex(id(val))) in self.memoryDict:
+            memorySTR = self.memoryDict[str(hex(id(val)))]
+            isNew = False
+        else:
+            memorySTR = str(hex(id(val)))
+            file = open(self.getPath('INSPECTOR_LOG.csv'), 'r')
+            lineNum = len(file.readlines())+1
+            file.close()
+            nameDict = str(name)[0:10]+' ...' if len(str(name))>25 else str(name)#str(name)#
+            self.memoryDict[str(hex(id(val)))] = '*' + str(nameDict) + ' - L:' + str(lineNum)
+            isNew = True
+        
+        if posList:
+            thirdCol = posList
+        else:
+            thirdCol = str(val)
+        file = open(self.getPath('INSPECTOR_LOG.csv'), 'a')
+        file.write( prefix +
+                    str(name) + ' \t ' + 
+                    str(type(val)) + ' \t ' + 
+                    thirdCol +' \t ' + 
+                    memorySTR + endl)
+        file.close()
+
+return isNew
