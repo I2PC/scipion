@@ -38,7 +38,7 @@ import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
-from pyworkflow.object import PointerList
+from pyworkflow.object import PointerList, Pointer
 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.constants import (UNIT_PIXEL, 
@@ -386,6 +386,19 @@ class ImportAcquisitionWizard(EmWizard):
                     comment += "%s = %s\n" % (k, v)
             if comment:
                 prot.setObjComment(comment)
+
+class PDBVolumeWizard(EmWizard):
+    def show(self, form):
+        if form.protocol.inputPDB.hasValue():
+            pdb = form.protocol.inputPDB.get()
+            print("pdb ",pdb._volume, str(pdb._volume))
+            if pdb._volume:
+                print("Setting ",str(pdb.getVolume()))
+                ptr = Pointer()
+                ptr.copy(form.protocol.inputPDB)
+                ptr.setExtended(ptr.getExtended()+"._volume")
+#                 ptr.set(pdb.getVolume())
+                form.setVar('inputVol', ptr)
 
 #===============================================================================
 #  Dialogs used by wizards

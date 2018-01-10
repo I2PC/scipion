@@ -1,7 +1,9 @@
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,14 +25,24 @@
 # *
 # **************************************************************************
 """
-This EM module contains Gautomatch auto-picking protocol 
+Bibtex string file for Gautomatch package.
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
-from convert import getEnviron
+_bibtexStr = """
+@Article{Emsley_2004,
+Author="Emsley, P.  and Cowtan, K. ",
+Title="{{C}oot: model-building tools for molecular graphics}",
+Journal="Acta Crystallogr. D Biol. Crystallogr.",
+Year="2004",
+Volume="60",
+Number="Pt 12 Pt 1",
+Pages="2126--2132",
+Month="Dec",
+doi = "http://doi.org/10.1107/S0907444904019158",
+url = "http://scripts.iucr.org/cgi-bin/paper?S0907444904019158"
+}
+"""
 
-_logo = "ChimeraLogoSmall.png"
+from pyworkflow.utils import parseBibTex
 
-from protocol_fit import ChimeraProtRigidFit
-from viewer_fit import viewerChimeraProtRigidFit
-_environ = getEnviron()
+_bibtex = parseBibTex(_bibtexStr)  
