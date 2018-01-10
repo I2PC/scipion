@@ -260,12 +260,13 @@ def addPipModule(name, version, target=None, default=True, deps=[]):
 
     return t
 
+
 # Scons has a different pattern: it is expected to be in bin..TODO
 scons = env.addModule(
      'scons',
      targets=[env.getBin('scons')],
      tar='scons-2.3.4.tgz')
-
+#addPipModule('scons','2.3.6', target='scons-2.3.6')
 
 # Required python modules
 addPipModule('setuptools', '38.2.5')

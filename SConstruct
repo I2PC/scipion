@@ -31,18 +31,12 @@
 
 
 import os
-from os.path import join, abspath, splitext
-import sys
+from os.path import join
 from itertools import izip
-
-from subprocess import STDOUT, check_call, CalledProcessError
 from glob import glob
-import tarfile
 import fnmatch
 import platform
-import SCons.Script
 import SCons.SConf
-
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
@@ -67,7 +61,7 @@ else:
 env = Environment(ENV=os.environ,
                   BUILDERS=Environment()['BUILDERS'],
                   tools=['Make', 'AutoConfig'],
-                  toolpath=[join(SCIPION_SW, 'install', 'scons-tools')])
+                  toolpath=[join('software', 'install', 'scons-tools')])
 # TODO: BUILDERS var added from the tricky creation of a new environment.
 # If not, they lose default builders like "Program", which are needed later
 # (by CheckLib and so on). See http://www.scons.org/doc/2.0.1/HTML/scons-user/x3516.html
