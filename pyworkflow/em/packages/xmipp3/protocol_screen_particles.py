@@ -3,6 +3,7 @@
 # * Authors:     Laura del Cano (laura.cano@cnb.csic.es)
 # *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *              I. Foche (ifoche@cnb.csic.es)
+# *              Tomas Majtner (tmajtner@cnb.csic.es)   -- streaming version
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -26,12 +27,16 @@
 # *
 # **************************************************************************
 
+import os
+import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.object import String
+import pyworkflow.protocol.constants as cons
+from pyworkflow.em.data import SetOfParticles
+from pyworkflow.em.protocol import ProtProcessParticles
+from pyworkflow.object import String, Set
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
                                         LEVEL_ADVANCED, FloatParam, BooleanParam)
-from pyworkflow.em.protocol import ProtProcessParticles
-from convert import writeSetOfParticles, setXmippAttributes
+from convert import readSetOfParticles, writeSetOfParticles, setXmippAttributes
 
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order
@@ -44,7 +49,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
     REJ_MAXZSCORE = 1
     REJ_PERCENTAGE =2
     REJ_PERCENTAGE_SSNR =1
-    #--------------------------- DEFINE param functions ------------------------
+    #--------------------------- DEFINE param functions ----------------------
     def _defineProcessParams(self, form):
         
         form.addParam('autoParRejection', EnumParam,
@@ -93,27 +98,152 @@ class XmippProtScreenParticles(ProtProcessParticles):
                                                       "between 0 and 100.")])
         form.addParam('addFeatures', BooleanParam, default=False,
                       label='Add features', expertLevel=LEVEL_ADVANCED,
-                      help='Add features used for the ranking to each one of the input particles')
+                      help='Add features used for the ranking to each one '
+                           'of the input particles')
         form.addParallelSection(threads=0, mpi=0)
         
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""
         return (0, 0)
      
-    #--------------------------- INSERT steps functions --------------------------------------------            
+    #--------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
-        """ Mainly prepare the command line for call the program"""
-        # Convert input images if necessary
-        partSetId = self.inputParticles.getObjId()
-        self._insertFunctionStep('sortImages', partSetId)
-        self._insertFunctionStep('sortImagesSSNR', partSetId)
-        self._insertFunctionStep('createOutputStep')
+        self.insertedDict = {}
+        self.finished = False
+        self.SetOfParticles = [m.clone() for m in self.inputParticles.get()]
+        partsSteps = self._insertNewPartsSteps(self.insertedDict,
+                                               self.SetOfParticles)
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=partsSteps, wait=True)
 
-    #--------------------------- STEPS functions -------------------------------
-    def sortImages(self, inputId):
-        imagesMd = self._getPath('images.xmd')
-        writeSetOfParticles(self.inputParticles.get(), imagesMd)
-        args = "-i Particles@%s --addToInput " % imagesMd
+    def createOutputStep(self):
+        pass
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+    def _insertNewPartsSteps(self, insertedDict, inputParts):
+        deps = []
+        writeSetOfParticles([p.clone() for p in inputParts],
+                            self._getExtraPath("allDone.xmd"),
+                            alignType=em.ALIGN_NONE)
+        writeSetOfParticles([p.clone() for p in inputParts
+                             if int(p.getObjId()) not in insertedDict],
+                            self._getPath('images.xmd'),
+                            alignType=em.ALIGN_NONE)
+        stepId = self._insertFunctionStep('sortImages',
+                                          self._getPath('images.xmd'),
+                                          prerequisites=[])
+
+        deps.append(stepId)
+        for p in inputParts:
+            if int(p.getObjId()) not in insertedDict:
+                insertedDict[p.getObjId()] = stepId
+        return deps
+
+    def _stepsCheck(self):
+        # Input particles set can be loaded or None when checked for new inputs
+        # If None, we load it
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _checkNewInput(self):
+        # Check if there are new particles to process from the input set
+        partsFile = self.inputParticles.get().getFileName()
+        partsSet = SetOfParticles(filename=partsFile)
+        partsSet.loadAllProperties()
+        self.SetOfParticles = [m.clone() for m in partsSet]
+        self.streamClosed = partsSet.isStreamClosed()
+        partsSet.close()
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
+        newParts = any(m.getObjId() not in partsSet
+                       for m in self.SetOfParticles)
+        outputStep = self._getFirstJoinStep()
+        if newParts:
+            fDeps = self._insertNewPartsSteps(self.insertedDict,
+                                              self.SetOfParticles)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+
+    def _checkNewOutput(self):
+        if getattr(self, 'finished', False):
+            return
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+        # Check for newly done items
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
+        newDone = [m.clone() for m in self.SetOfParticles
+                   if m.getObjId() not in doneList]
+        self.finished = self.streamClosed and (len(doneList) == len(partsSet))
+        if newDone:
+            self._writeDoneList(newDone)
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(cons.STATUS_NEW)
+
+    def _loadOutputSet(self, SetClass, baseName, fnInputMd):
+
+        setFile = self._getPath(baseName)
+        if os.path.exists(setFile):
+            outputSet = SetClass(filename=setFile)
+            outputSet.loadAllProperties()
+            outputSet.enableAppend()
+        else:
+            outputSet = SetClass(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(fnInputMd, partsSet)
+        inputs = self.inputParticles.get()
+        outputSet.copyInfo(inputs)
+        outputSet.copyItems(partsSet,
+                            updateItemCallback=self._updateParticle,
+                            itemDataIterator=md.iterRows(
+                                self.outputMd.get(),
+                                sortByLabel=md.MDL_ITEM_ID))
+        return outputSet
+
+
+    def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
+        outputSet.setStreamState(state)
+        if self.hasAttribute(outputName):
+            outputSet.write()  # Write to commit changes
+            outputAttr = getattr(self, outputName)
+            # Copy the properties to the object contained in the protocol
+            outputAttr.copy(outputSet, copyId=False)
+            # Persist changes
+            self._store(outputAttr)
+        else:
+            self._defineOutputs(**{outputName: outputSet})
+            self._store(outputSet)
+
+        # Close set databaset to avoid locking it
+        outputSet.close()
+
+    #--------------------------- STEPS functions -----------------------------
+    def sortImages(self, fnInputMd):
+
+        args = "-i Particles@%s --addToInput " % fnInputMd
         
         if self.autoParRejection == self.REJ_MAXZSCORE:
             args += "--zcut " + str(self.maxZscore.get())
@@ -125,33 +255,23 @@ class XmippProtScreenParticles(ProtProcessParticles):
             args += "--addFeatures "
 
         self.runJob("xmipp_image_sort_by_statistics", args)
-        
-        self.outputMd = String(imagesMd)
 
-    def sortImagesSSNR(self, inputId):
-        imagesMd = self._getPath('images.xmd')
-        args = "-i Particles@%s " % imagesMd
+        self.outputMd = String(fnInputMd)
+
+        args = "-i Particles@%s " % fnInputMd
         
         if self.autoParRejectionSSNR == self.REJ_PERCENTAGE_SSNR:
             args += "--ssnrpercent " + str(self.percentageSSNR.get())
 
         self.runJob("xmipp_image_ssnr", args)
-        
-    def createOutputStep(self):
-        imgSet = self.inputParticles.get()
-        partSet = self._createSetOfParticles()
-        partSet.copyInfo(imgSet)
-        partSet.copyItems(imgSet,
-                            updateItemCallback=self._updateParticle,
-                            itemDataIterator=md.iterRows(self.outputMd.get(),
-                                                         sortByLabel=md.MDL_ITEM_ID))
-        
-        self._defineOutputs(outputParticles=partSet)
-        self._defineSourceRelation(imgSet, partSet)
 
-    #--------------------------- INFO functions --------------------------------------------                
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        outSet = self._loadOutputSet(SetOfParticles, 'outputParticles.sqlite',
+                                     fnInputMd)
+        self._updateOutputSet('outputParticles', outSet, streamMode)
+
+    #--------------------------- INFO functions ------------------------------
     def _summary(self):
-        import os
         summary = []
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
@@ -206,7 +326,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                            % self.getObjectTag('outputParticles'))
         return methods
     
-    #--------------------------- UTILS functions -------------------------------------------- 
+    #--------------------------- UTILS functions -----------------------------
     def _updateParticle(self, item, row):
         setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1,
                            md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1,
@@ -217,3 +337,22 @@ class XmippProtScreenParticles(ProtProcessParticles):
             item._appendItem = False
         else:
             item._appendItem = True
+
+    def _readDoneList(self):
+        """ Read from a file the id's of the items that have been done. """
+        doneFile = self._getAllDone()
+        doneList = []
+        # Check what items have been previously done
+        if os.path.exists(doneFile):
+            with open(doneFile) as f:
+                doneList += [int(line.strip()) for line in f]
+        return doneList
+
+    def _getAllDone(self):
+        return self._getExtraPath('DONE_all.TXT')
+
+    def _writeDoneList(self, partList):
+        """ Write to a file the items that have been done. """
+        with open(self._getAllDone(), 'a') as f:
+            for part in partList:
+                f.write('%d\n' % part.getObjId())
