@@ -26,13 +26,14 @@
 
 import os
 import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 import pyworkflow.protocol.constants as cons
 import pyworkflow.protocol.params as param
 from pyworkflow.em.protocol import ProtClassify2D
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.object import Set
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles, setXmippAttributes
 
 
 class XmippProtEliminateEmptyParticles(ProtClassify2D):
@@ -58,9 +59,7 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         form.addParam('threshold', param.FloatParam, default=1.5,
                       label='Threshold used in elimination:',
                       help='Higher threshold => '
-                           'more particles will be eliminated.')
-
-        form.addParallelSection(threads=1, mpi=1)
+                           'more particles will be eliminated. Set to -1 for no elimination.')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -191,6 +190,11 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
 
         inputs = self.inputParticles.get()
         outputSet.copyInfo(inputs)
+        outputSet.copyItems(inputs,
+                            updateItemCallback=self._updateParticle,
+                            itemDataIterator=md.iterRows(outputSet.get(),
+                                                         sortByLabel=md.MDL_ITEM_ID))
+        
         return outputSet
 
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
@@ -228,3 +232,10 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         with open(self._getAllDone(), 'a') as f:
             for part in partList:
                 f.write('%d\n' % part.getObjId())
+
+    def _updateParticle(self, item, row):
+        setXmippAttributes(item, row, md.MDL_SCORE_BY_EMPTINESS)
+        if row.getValue(md.MDL_ENABLED) <= 0:
+            item._appendItem = False
+        else:
+            item._appendItem = True
