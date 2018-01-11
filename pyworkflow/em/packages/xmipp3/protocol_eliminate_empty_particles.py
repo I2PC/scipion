@@ -62,6 +62,9 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
                       help='Higher threshold => '
                            'more particles will be eliminated. '
                            'Set to -1 for no elimination.')
+        form.addParam('addFeatures', param.BooleanParam, default=False,
+                      label='Add features', expertLevel=param.LEVEL_ADVANCED,
+                      help='Add features used for the ranking to each one of the input particles')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -118,6 +121,8 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
     def eliminationStep(self, fnInputMd, fnOutputMd, fnElimMd):
         args = "-i %s -o %s -e %s -t %f" % (
         fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
+        if self.addFeatures:
+            args+=" --addFeatures"
         self.runJob("xmipp_image_eliminate_empty_particles", args)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if os.path.exists(fnOutputMd):

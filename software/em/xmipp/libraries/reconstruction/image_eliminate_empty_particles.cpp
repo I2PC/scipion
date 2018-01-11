@@ -35,6 +35,7 @@ void ProgEliminateEmptyParticles::readParams()
     fnOut = getParam("-o");
     fnElim = getParam("-e");
     threshold = getDoubleParam("-t");
+    addFeatures = checkParam("--addFeatures");
 }
 
 // Show ====================================================================
@@ -47,6 +48,7 @@ void ProgEliminateEmptyParticles::show()
     << "Output selfile:          " << fnOut      << std::endl
     << "Eliminated selfile:      " << fnElim     << std::endl
     << "Threshold:               " << threshold  << std::endl
+	<< "Add features:            " << addFeatures << std::endl
     ;
 }
 
@@ -58,6 +60,7 @@ void ProgEliminateEmptyParticles::defineParams()
     addParamsLine("  [-o <selfile=\"output.xmd\">]      : Output selfile");
     addParamsLine("  [-e <selfile=\"eliminated.xmd\">]  : Eliminated particles selfile");
     addParamsLine("  [-t <float=-1>]                    : Threshold used by algorithm. Set to -1 for no elimination.");
+    addParamsLine("  [--addFeatures]                    : Add the emptiness features to the input particles");
 }
 
 void ProgEliminateEmptyParticles::run()
@@ -89,7 +92,8 @@ void ProgEliminateEmptyParticles::run()
 
         double ratio=fv.back();
         row.setValue(MDL_SCORE_BY_EMPTINESS,ratio);
-        row.setValue(MDL_SCORE_BY_VARIANCE, fv);
+        if (addFeatures)
+        	row.setValue(MDL_SCORE_BY_VARIANCE, fv);
         if (threshold<0 || ratio > threshold)
             MDclass.addRow(row);
         else
