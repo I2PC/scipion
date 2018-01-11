@@ -61,30 +61,26 @@ class SummaryProvider(TreeProvider):
             else:
                 return None
 
-        inputProts = self.protocol.getInputProtocols()
-        runs = [getUpdatedProtocol(p) for p in inputProts]
-        g = self.protocol.getProject().getGraphFromRuns(runs)
+        prots = [getUpdatedProtocol(p) for p in self.protocol.getInputProtocols()]
 
-        nodes = g.getRoot().iterChildsBreadth()
-
-        for n in nodes:
-            prot = n.run
+        for prot in prots:
             pobj = addObj(prot.getObjId(),
                           '%s (id=%s)' % (prot.getRunName(), prot.strId()))
-
             for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
                 outSet.load()
                 outSet.loadAllProperties()
-                addObj(outSet.getObjId(), '', outName, outSet.getSize(), pobj)
+                # outSetId needs to be compound id to avoid duplicate ids
+                outSetId = '%s.%s' % (outSet.getObjId(), prot.getObjId())
+                addObj(outSetId, '', outName, outSet.getSize(), pobj)
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
                 from pyworkflow.em import ProtImportImages
                 # NOTE by Yaiza: we force the string containing the Å to be unicode
                 # because this is the encoding used when generating report in report_html.py
                 if isinstance(prot, ProtImportImages):
-                    self.acquisition = [("Microscope Voltage: ",
+                    self.acquisition = [("Microscope Voltage (kV): ",
                                          prot.voltage.get()),
-                                        ("Spherical aberration: ",
+                                        ("Spherical aberration (mm): ",
                                          prot.sphericalAberration.get()),
                                         ("Magnification: ",
                                          prot.magnification.get()),
