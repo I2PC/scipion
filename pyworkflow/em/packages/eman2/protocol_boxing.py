@@ -112,18 +112,6 @@ class EmanProtBoxing(ProtParticlePicking):
         eman2.validateVersion(self, errors)
         return errors
 
-    def _warnings(self):
-        warnings = []
-        firstMic = self.inputMicrographs.get().getFirstItem()
-        fnLower = firstMic.getFileName().lower()
-        
-        if '.tif' in fnLower:
-            warnings.append('Micrographs in .tif format are displayed upside down in EMAN2!!!')
-            warnings.append('The generated coordinates will not be valid in Scipion.')
-            warnings.append('TIP: a workaround could be importing the coordinates inverted')
-            warnings.append('     in Xmipp particle picking GUI.')
-        return warnings
-    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path
