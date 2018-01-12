@@ -64,7 +64,8 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
                            'Set to -1 for no elimination.')
         form.addParam('addFeatures', param.BooleanParam, default=False,
                       label='Add features', expertLevel=param.LEVEL_ADVANCED,
-                      help='Add features used for the ranking to each one of the input particles')
+                      help='Add features used for the ranking to each '
+                           'one of the input particles')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -127,11 +128,11 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if os.path.exists(fnOutputMd):
             outSet = self._loadOutputSet(SetOfParticles,
-                                         'outputParticles.sqlite', fnInputMd)
+                                         'outputParticles.sqlite', fnOutputMd)
             self._updateOutputSet('outputParticles', outSet, streamMode)
         if os.path.exists(fnElimMd):
             outSet = self._loadOutputSet(SetOfParticles,
-                                     'eliminatedParticles.sqlite', fnInputMd)
+                                     'eliminatedParticles.sqlite', fnElimMd)
             self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
     def _stepsCheck(self):
@@ -183,7 +184,7 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    def _loadOutputSet(self, SetClass, baseName, fnInputMd):
+    def _loadOutputSet(self, SetClass, baseName, fnMd):
         setFile = self._getPath(baseName)
         if os.path.exists(setFile):
             outputSet = SetClass(filename=setFile)
@@ -193,16 +194,14 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        partsSet = self._createSetOfParticles()
-        readSetOfParticles(fnInputMd, partsSet)
         inputs = self.inputParticles.get()
         outputSet.copyInfo(inputs)
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(fnMd, partsSet)
         outputSet.copyItems(partsSet,
-                            updateItemCallback=self._updateParticle,
-                            itemDataIterator=md.iterRows(
-                                String(fnInputMd).get(),
-                                sortByLabel=md.MDL_ITEM_ID))
-        
+                          updateItemCallback=self._updateParticle,
+                          itemDataIterator=
+                            md.iterRows(fnMd, sortByLabel=md.MDL_ITEM_ID))
         return outputSet
 
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
