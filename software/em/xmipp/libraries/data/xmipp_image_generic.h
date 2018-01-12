@@ -448,6 +448,10 @@ public:
     */
     void multiply(const ImageGeneric &img);
 
+    /** Division of the internal image by another image
+    */
+    void divide(const ImageGeneric &img);
+
     /** Division if the internal image by a constant
     */
     void divide(const double value);

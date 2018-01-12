@@ -205,25 +205,26 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         protExtract2.setObjLabel('extract - rescale 32')
         protExtract2.doRescale.set(True)
         protExtract2.rescaledSize.set(32)
-        self.launchProtocol(protExtract2)
 
+        self.launchProtocol(protExtract2)
         self._checkOutput(protExtract2, size=size, dim=32, sampling=14.16)
         
         # Now test changing micrographs source option
-        subsetProt = self.newProtocol(em.ProtSubSet,
-                                      chooseAtRandom=True,
-                                      nElements=10)
-        subsetProt.inputFullSet.set(self.protCropMics.outputMicrographs)
-        self.launchProtocol(subsetProt)
+        splitSetsProt = self.newProtocol(em.ProtSplitSet,
+                                      randomize=False,
+                                      numberOfSets=2)
+        splitSetsProt.inputSet.set(self.protCropMics.outputMicrographs)
+        self.launchProtocol(splitSetsProt)
+
+        # We choose the first output to keep the assertation procedure 
+        otherSetMics = splitSetsProt.outputMicrographs01
 
         protExtract3 = self.proj.copyProtocol(protExtract)
         protExtract3.setObjLabel('extract - Other')
         protExtract3.downsampleType.set(1)
-        protExtract3.inputMicrographs.set(subsetProt.outputMicrographs)
+        protExtract3.inputMicrographs.set(otherSetMics)
         self.launchProtocol(protExtract3)
         
-        # The size of the set is different every time is executed the test
-        # due to the seleccion of the micrographs is random.
-        
-        partSize = protExtract3.outputParticles.getSize()
-        self._checkOutput(protExtract3, size=partSize)
+        # The number of particles is different than the imported coordinates
+        # due to the subSet done.
+        self._checkOutput(protExtract3, size=1716)
