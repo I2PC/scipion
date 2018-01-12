@@ -474,9 +474,9 @@ class ProtSubSet(ProtSets):
 
 class ProtSubSetByMic(ProtSets):
     """    
-    Create a subset of those particles coming from a particular set of micrographs 
+    Create a subset of those particles comes from a particular set of micrographs 
     """
-    _label = 'subset by micrograph'
+    _label = 'particles subset by micrograph'
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):    
@@ -492,10 +492,12 @@ class ProtSubSetByMic(ProtSets):
 
     #--------------------------- INSERT steps functions ------------------------  
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep('createOutputStep', 
+                                 self.inputParticles.getObjId(),
+                                 self.inputMicrographs.getObjId())
 
     #--------------------------- STEPS functions -------------------------------
-    def createOutputStep(self):
+    def createOutputStep(self, partsId, micsId):
         inputParticles = self.inputParticles.get()
         inputMicrographs = self.inputMicrographs.get()
 
@@ -520,7 +522,7 @@ class ProtSubSetByMic(ProtSets):
         Thus they come from some Mic"""
         if not self.inputParticles.get().getFirstItem().hasMicId():
             return ['The _Input Particles_ must come from some Micrographs '
-                    'of the workflow.\n(particles must have micID)']
+                    'of the workflow, i.e. particles must have micId.']
 
     def _summary(self):
         if not hasattr(self, 'outputParticles'):

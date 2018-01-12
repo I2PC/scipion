@@ -63,7 +63,7 @@ class TestSets(BaseTest):
         cls.dataset_xmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dataset_mda = DataSet.getDataSet('mda')
         cls.dataset_ribo = DataSet.getDataSet('ribo_movies')
-        cls.dataset_relion = DataSet.getDataSet('relion_tutorial')
+        cls.datasetRelion = DataSet.getDataSet('relion_tutorial')
 
         #
         # Imports
@@ -103,29 +103,21 @@ class TestSets(BaseTest):
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles
 
-        # Particles with micID
-        print magentaStr("\n==> Importing data - particles with micID")
+        # Particles with micId
+        print magentaStr("\n==> Importing data - particles with micId")
         relionFile = 'import/case2/relion_it015_data.star'
-        p_imp_part_micID = new(ProtImportParticles,
+        pImpPartMicId = new(ProtImportParticles,
                                objLabel='from relion (auto-refine 3d)',
                                importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                               starFile=cls.dataset_relion.getFile(relionFile),
+                               starFile=cls.datasetRelion.getFile(relionFile),
                                magnification=10000,
                                samplingRate=7.08,
                                haveDataBeenPhaseFlipped=True)
-        launch(p_imp_part_micID, wait=True)
-        cls.partMicID = p_imp_part_micID.outputParticles
-        cls.micsMicID = p_imp_part_micID.outputMicrographs
+        launch(pImpPartMicId, wait=True)
+        cls.partMicId = pImpPartMicId.outputParticles
+        cls.micsMicId = pImpPartMicId.outputMicrographs
 
         # Coordinates  -  Oh, I don't know of any example of coord. import :(
-        # print magentaStr("\n==> Importing data - coordinates")
-        # p_imp_coords = new(ProtImportCoordinates,
-        #                    filesPath=cls.dataset_xmipp.getFile('pickingXmipp'),
-        #                    inputMicrographs=p_imp_micros.outputMicrographs,
-        #                    boxSize=60, filesPattern='*.pos')
-        # launch(p_imp_coords, wait=True)
-        # cls.coords = p_imp_coords.outputCoordinates
-
 
     #
     # Helper functions
@@ -242,29 +234,31 @@ class TestSets(BaseTest):
         print "\n", greenStr(" Test Subset by Mic".center(75, '-'))
         "Simple checks on subsets, coming from split sets of setMics."
         print magentaStr("\n==> Check subset of %s by %s"
-               % (type(self.partMicID).__name__, type(self.micsMicID).__name__))
+               % (type(self.partMicId).__name__, type(self.micsMicId).__name__))
 
         # launch the protocol for a certain mics input
         def launchSubsetByMic(micsSubset):
-            p_subsetbyMic = self.newProtocol(ProtSubSetByMic)
-            p_subsetbyMic.inputParticles.set(self.partMicID)
-            p_subsetbyMic.inputMicrographs.set(micsSubset)
-            self.launchProtocol(p_subsetbyMic)
-            return p_subsetbyMic.outputParticles
+            pSubsetbyMic = self.newProtocol(ProtSubSetByMic)
+            pSubsetbyMic.inputParticles.set(self.partMicId)
+            pSubsetbyMic.inputMicrographs.set(micsSubset)
+            self.launchProtocol(pSubsetbyMic)
+            return pSubsetbyMic.outputParticles
 
-        # Check if the final set size and the first micID are correct
-        def checkNumbers(setPart, size, firstMicId):
-            self.assertEqual(setPart.getSize(), size)
-            self.assertEqual(int(setPart.getFirstItem()._micId), firstMicId)
+        # Check if the final set size and the first micId are correct
+        def checkAsserts(setParts, size, partId, micId):
+            self.assertIsNotNone(setParts)
+            self.assertEqual(setParts.getSize(), size)
+            p = setParts[partId]
+            self.assertEqual(p.getMicId(), micId)
         
         # Whole set of micrographs
-        setMics = self.micsMicID
+        setMics = self.micsMicId
         # Create a subsets of Mics to apply the protocol
-        p_split = self.split(setMics, n=2, randomize=False)
-        setMics2 = p_split.outputMicrographs02
+        pSplit = self.split(setMics, n=2, randomize=False)
+        setMics2 = pSplit.outputMicrographs02
         # Create a subset of a single micrograph to apply the protocol
-        p_split = self.split(setMics, n=20, randomize=False)
-        setMics3 = p_split.outputMicrographs03
+        pSplit = self.split(setMics, n=20, randomize=False)
+        setMics3 = pSplit.outputMicrographs03
 
         # Launch subset by mics protocol with the whole set of Mics
         partByMic1 = launchSubsetByMic(setMics)
@@ -274,9 +268,9 @@ class TestSets(BaseTest):
         partByMic3 = launchSubsetByMic(setMics3)
 
         # Assertions for the three sets
-        checkNumbers(partByMic1, self.partMicID.getSize(), 1)
-        checkNumbers(partByMic2, 2638, 11)
-        checkNumbers(partByMic3, 270, 3)
+        checkAsserts(partByMic1, self.partMicId.getSize(), 1885, 7)
+        checkAsserts(partByMic2, 2638, 4330, 16)
+        checkAsserts(partByMic3, 270, 725, 3)
 
     def testMerge(self):
         """Test that the union operation works as expected."""
