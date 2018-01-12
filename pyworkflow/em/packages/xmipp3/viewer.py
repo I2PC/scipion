@@ -205,7 +205,7 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
-            labels = 'id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR _sampling '
+            labels = 'id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR _sampling _xmipp_scoreEmptiness '
             labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={ORDER: labels,
