@@ -48,6 +48,15 @@ public:
 
     size_t rank, Nprocessors;
 
+    double pyr_scale;
+
+    int levels;
+
+    int iterations;
+
+    bool addToInput;
+
+
 public:
 
     ProgVolumeHomogenizer();
@@ -69,6 +78,9 @@ public:
     //to the another one as a reference, using optical flow algorithm. This is to later merging the corrected images
     //to the images of the reference map to reconstruct a volume with improved resolution
     void run();
+
+    //Method to obtain an array of possible input parameters for OF
+    void parameterList(size_t imgSize,  int maxParamsTrial, float* paramList);
 
 private:
 
