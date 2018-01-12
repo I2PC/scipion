@@ -33,7 +33,6 @@ searching them.
 
 import os
 import sys
-import glob
 
 from os.path import basename
 import argparse
@@ -44,11 +43,11 @@ import pyworkflow.tests as pwtests
 
 from pyworkflow.tests import *
 
-PATH_PATTERN = {'model': ('tests/em/data', 'test*.py'),
-                'xmipp': ('em/workflows', 'test*xmipp*.py'),
-                'mixed': ('em/workflows', 'test*mixed*.py'),
-                'protocols': ('em/packages/*/tests', 'test_protocol*.py'),
-                'programs': ('tests/em/programs', 'test_program*py')}
+PATH_PATTERN = {'model': ('tests/model tests/em/data', 'test*.py'),
+                'convert': ('em/packages', 'test_convert*.py'),
+                'scipionprot': ('tests/em/protocols', 'test_protocol*.py'),
+                'protocols': ('em/packages', 'test_protocol*.py'),
+                'mixed': ('em/workflows', 'test*mixed*.py')}
 
 MODULE = 0
 CLASS = 1
@@ -65,7 +64,8 @@ class Tester():
     
         add = parser.add_argument  # shortcut
     
-        add('--case', choices=['model', 'xmipp', 'mixed', 'protocols'],
+        add('--case', choices=['model', 'convert', 'protocols',
+                               'scipionprot', 'mixed'],
             help='get pre-defined paths and patterns for the specified case')
         add('--paths', default='.',
             help='space-separated list of paths where the tests are searched')
@@ -103,10 +103,7 @@ class Tester():
                     print 'Cannot find test %s -- skipping' % t
                     print 'error: ', e
         else:
-            for argCase in ['model', 'protocols', 'mixed', 'programs']:
-                args.paths, args.pattern = PATH_PATTERN[argCase]
-                paths = glob.glob(join('pyworkflow', args.paths))
-                self.discoverTests(tests, paths, args.pattern)
+            self.discoverTests(tests, args.paths.split(), args.pattern)
     
         self.grep = args.grep
         self.skip = args.skip
@@ -125,7 +122,7 @@ class Tester():
 
     def discoverTests(self, tests, paths, pattern):
         """ Return tests discovered in paths that follow the given pattern """
-        for path in [x for x in paths]:
+        for path in [join('pyworkflow', x) for x in paths]:
             tests.addTests(unittest.defaultTestLoader.discover(
                 path, pattern=pattern, top_level_dir=pw.HOME))
 
