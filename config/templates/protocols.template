@@ -80,6 +80,7 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "XmippProtCropResizeParticles",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtCTFCorrectWiener2D",    "text": "default"},
 			{"tag": "protocol", "value": "XmippProtPreprocessParticles",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtEliminateEmptyParticles",  "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionPreprocessParticles",  "text": "default"}
 		]},
 		{"tag": "protocol_group", "text": "Filter", "openItem": "False", "children": [
