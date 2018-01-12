@@ -62,6 +62,10 @@ PROJECT_CREATION_TIME = 'CreationTime'
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+)(?P<number>\(\d*\))\s*$')
 REGEX_NUMBER_ENDING_CP=re.compile('(?P<prefix>.+\s\(copy)(?P<number>.*)\)\s*$')
 
+
+INSPECTOR_FILE_NAME = ''
+memoryDict = {}
+
 class Project(object):
     """This class will handle all information 
     related with a Project"""
@@ -746,7 +750,7 @@ class Project(object):
         newProt.copyAttributes(protocol, 'hostName', '_useQueue','_queueParams')
         
         self.indIND = 0
-        self.printTree()
+        printTree(protocol)
 
         return newProt
 
@@ -1352,162 +1356,169 @@ class Project(object):
 
 
 
+def printTree(obj, prefix='', sameIndention=True, maxDeep=5):
+    global INSPECTOR_FILE_NAME
+    global memoryDict
+    if prefix=='':
+        INSPECTOR_FILE_NAME = obj.getProject().getPath('INSPECTOR_LOG.csv')
 
-    def printTree(self, obj=None, prefix='', sameIndention = True):
-        filePath = self.getPath('INSPECTOR_LOG.csv')
+    endl = '\n'
+    delim = '\t'
+    delimP = '  '
 
-        endl = '\n'
-        delim = '\t'
-        delimP = '  '
+    sepBar   = '    | ' + delim
+    sepVoid  = '      '
+    endChild = ('        -- '+delim)*4 + endl
 
-        sepBar   = '    | ' + delim
-        sepVoid  = '      '
-        endChild = ('        -- '+delim)*4 + endl
+    def recursivePrint(value, prefix, isLast, isFirst):
+        if isLast:
+            prefixList = prefix.split(delim)
+            prefixList[-2] = '  ' 
+            prefix = delim.join(prefixList)
 
-        def recursivePrint(value,prefix,isLast):
-            if isLast:
-                prefixList = prefix.split(delim)
-                prefixList[-2] = '  ' 
-                prefix = delim.join(prefixList)
-
-            self.printTree(value,prefix+sepBar)
-            writeEndClass(prefix, isLast)
-
-        def isClassListTupleDict(value):
-            return ( ( ( type(value)==type(tuple()) or 
-                         type(value)==type(list()) ) 
-                       and len(value)>1)
-                     or str(type(value))[1]=='c'
-                     or type(value)==type(dict()) )
-
-        def writeEndClass(prefix, isLast):
-            if sameIndention:
-                indentionDeep = str(len(prefix.split(delim))) + delim
-                prefix = prefix.replace(delim,delimP)
-                delimAux = '\t'
+        printTree(value, prefix+sepBar, sameIndention, maxDeep)
+        if sameIndention:
+            if isFirst:
+                deepStr = str(indentionDeep) + delim
             else:
-                delimAux = ''
-                indentionDeep = ''
-
-            file = open(filePath, 'a')
-            file.write(indentionDeep + prefix + sepVoid + delim + endChild)
-            if not isLast:
-                file.write(indentionDeep + prefix + delimAux + 
-                           headerSTR(firstColumn, thirdColumn))
-            file.close()
-
-        def writeRow(name, val, prefix, posList=False):
-            if str(hex(id(val))) in self.memoryDict:
-                memorySTR = self.memoryDict[str(hex(id(val)))]
-                isNew = False
-            else:
-                memorySTR = str(hex(id(val)))
-                file = open(filePath, 'r')
-                lineNum = len(file.readlines())+1
-                file.close()
-                nameDict = str(name)[0:15]+' ...' if len(str(name))>25 else str(name)#str(name)#
-                self.memoryDict[str(hex(id(val)))] = '>>> ' + str(nameDict) + ' - L:' + str(lineNum)
-                isNew = True
-            
-            if posList:
-                thirdCol = posList
-            else:
-                thirdCol = str(val).replace(endl,' // ')
-
-            indentionDeep = str(len(prefix.split(delim))-1) + delim if sameIndention \
-                            else ''
-
-            prefix = '-'*20 + 'R-O-O-T' + '-'*20 if prefix=='' else prefix
-            
-            prefix = prefix.replace(delim,delimP) + delim if sameIndention \
-                     else prefix
-            
-            file = open(filePath, 'a')   
-            file.write( indentionDeep + prefix + 
-                        str(name).replace(endl,' // ') + delim + 
-                        str(type(val)).replace(endl,' // ') + delim + 
-                        thirdCol + delim + 
-                        memorySTR + endl)
-            file.close()
-
-            return isNew
-
-        def headerSTR(firstColumn, thirdColumn):
-            return (firstColumn + ' '*4 + '- Type - ' + delim +
-                    thirdColumn + ' '*2 + '- Memory Address -' + endl )
-
-        firstColumn = ' '*4 + '- Name - ' + delim
-        thirdColumn = ' '*4 + '- Value - ' + delim
-
-        if prefix=='':
-            obj_dict = self.__dict__
-            self.memoryDict = {}
-            iAmClass = True
-            prefixHeader = ('-DEEP-' + delim + ' '*4 + ' _tree_ ' + delim
-                          if sameIndention else '' )
-            fColumn = ' '*4 + '- Name - (value for Lists and Tuples)' + delim
-            tColumn = ' '*4 + '- Value - (Pos./Len for Lists and Tuples) ' + delim
-
-            file = open(filePath, 'w')
-            file.write(prefixHeader + headerSTR(fColumn, tColumn))
-            file.close()
-            
-            writeRow(self.__class__.__name__, self, prefix)
-            
-            prefix = sepBar
-
+                deepStr = str(indentionDeep+1) + delim
+            prefix = prefix.replace(delim,delimP)
+            delimAux = '\t'
         else:
-            iAmClass = str(type(obj))[1]=='c'
-            if iAmClass:
-                obj_dict = obj.__dict__
-            elif (type(obj)==type(tuple()) or
-                  type(obj)==type(list())):
-                firstColumn = ' '*4 + '- Value - ' + delim
-                thirdColumn = ' '*2 + '- Pos./Len. - ' + delim
-            elif type(obj)==type(dict()):
-                firstColumn = ' '*4 + '- Key - ' + delim
-                obj_dict = obj
-            else:
-                return
+            delimAux = ''
 
-        indentionDeep = str(len(prefix.split(delim))) + delim \
-                            if sameIndention else '' 
-        prefixAUX = prefix.replace(delim,delimP) + delim
-        prefixSTR = prefixAUX if sameIndention else prefix
-
-        file = open(filePath, 'a')
-        file.write(indentionDeep + prefixSTR + headerSTR(firstColumn, thirdColumn))
+        file = open(INSPECTOR_FILE_NAME, 'a')
+        file.write(deepStr + prefix + sepVoid + delim + endChild)
+        if not isLast:
+            file.write(deepStr + prefix + delimAux + 
+                       headerSTR(firstColumn, thirdColumn))
         file.close()
 
-        if len(prefix)<2:
-            prefix2write = prefix
+    def isClassListTupleDict(value):
+        isTupleListDict = ( type(value)==type(tuple()) or 
+                            type(value)==type(dict())  or
+                            type(value)==type(list()) ) and len(value)>1
+
+        return isTupleListDict or str(type(value))[1]=='c'
+
+    def writeRow(name, val, prefix, posList=False):
+        if str(hex(id(val))) in memoryDict:
+            memorySTR = memoryDict[str(hex(id(val)))]
+            isNew = False
         else:
-            prefixList = prefix.split(delim)
-            prefixList[-2] = '    |~~~~~> ' 
-            prefix2write = delim.join(prefixList)
-
-        count = 0
-        if iAmClass or type(obj)==type(dict()):
-            for key, value in obj_dict.items():
-                count+=1
-
-                # write the variable
-                isNew = writeRow(key, value, prefix2write)
-                
-                isLast = count==len(obj_dict)
-                # show attributes for objects and items for lists and tuples 
-                if isNew and isClassListTupleDict(value):
-                    recursivePrint(value, prefix, isLast)
-
+            memorySTR = str(hex(id(val)))
+            file = open(INSPECTOR_FILE_NAME, 'r')
+            lineNum = len(file.readlines())+1
+            file.close()
+            nameDict = str(name)[0:15]+' ...' if len(str(name))>25 else str(name)#str(name)#
+            memoryDict[str(hex(id(val)))] = '>>> ' + str(nameDict) + ' - L:' + str(lineNum)
+            isNew = True
+        
+        if posList:
+            thirdCol = posList
         else:
-            for i in range(0,len(obj)): 
-                count+=1
-                # write the variable
-                isNew = writeRow(obj[i], obj[i], prefix2write, str(count)+'/'+str(len(obj)))
+            thirdCol = str(val).replace(endl,' // ')
 
-                isLast = count==len(obj)
-                # show attributes for objects and items for lists and tuples 
-                if isNew and isClassListTupleDict(obj[i]):
-                    recursivePrint(obj[i],prefix,isLast)
+        deepStr = str(indentionDeep) + delim if sameIndention else ''
+
+        prefix = '-'*20 + 'R-O-O-T' + '-'*20 if prefix=='' else prefix
+        
+        prefix = prefix.replace(delim,delimP) + delim if sameIndention \
+                 else prefix
+        
+        file = open(INSPECTOR_FILE_NAME, 'a')   
+        file.write( deepStr + prefix + 
+                    str(name).replace(endl,' // ') + delim + 
+                    str(type(val)).replace(endl,' // ') + delim + 
+                    thirdCol + delim + 
+                    memorySTR + endl)
+        file.close()
+
+        return isNew
+
+    def headerSTR(firstColumn, thirdColumn):
+        return (firstColumn + ' '*4 + '- Type - ' + delim +
+                thirdColumn + ' '*2 + '- Memory Address -' + endl )
+
+
+    firstColumn = ' '*4 + '- Name - ' + delim
+    thirdColumn = ' '*4 + '- Value - ' + delim
+
+    indentionDeep = len(prefix.split(delim))-1
+
+    if prefix=='':
+        obj_dict = obj.__dict__
+        # obj.memoryDict = {}
+        iAmClass = True
+        prefixHeader = ('-DEEP-' + delim + ' '*4 + ' _tree_ ' + delim
+                      if sameIndention else '' )
+        fColumn = ' '*4 + '- Name - (value for Lists and Tuples)' + delim
+        tColumn = ' '*4 + '- Value - (Pos./Len for Lists and Tuples) ' + delim
+
+        file = open(INSPECTOR_FILE_NAME, 'w')
+        file.write(prefixHeader + headerSTR(fColumn, tColumn))
+        file.close()
+        
+        writeRow(obj.__class__.__name__, obj, prefix)
+        
+        prefix = sepBar
+
+    else:
+        iAmClass = str(type(obj))[1]=='c'
+        if iAmClass:
+            obj_dict = obj.__dict__
+        elif (type(obj)==type(tuple()) or
+              type(obj)==type(list())):
+            firstColumn = ' '*4 + '- Value - ' + delim
+            thirdColumn = ' '*2 + '- Pos./Len. - ' + delim
+        elif type(obj)==type(dict()):
+            firstColumn = ' '*4 + '- Key - ' + delim
+            obj_dict = obj
+        else:
+            return
+
+    deepStr = str(indentionDeep) + delim
+    belowMaxDeep = True if maxDeep == -1 else indentionDeep < maxDeep
+
+    prefixAUX = prefix.replace(delim,delimP) + delim
+    prefixSTR = prefixAUX if sameIndention else prefix
+
+    file = open(INSPECTOR_FILE_NAME, 'a')
+    file.write(deepStr + prefixSTR + 
+               headerSTR(firstColumn, thirdColumn))
+    file.close()
+
+    if len(prefix)<2:
+        prefix2write = prefix
+    else:
+        prefixList = prefix.split(delim)
+        prefixList[-2] = '    |~~~~~> ' 
+        prefix2write = delim.join(prefixList)
+
+    count = 0
+    if iAmClass or type(obj)==type(dict()):
+        for key, value in obj_dict.items():
+            count+=1
+
+            # write the variable
+            isNew = writeRow(key, value, prefix2write)
+            
+            isLast = count==len(obj_dict)
+            isFirst = count==1
+            # show attributes for objects and items for lists and tuples 
+            if belowMaxDeep and isNew and isClassListTupleDict(value):
+                recursivePrint(value, prefix, isLast, isFirst)
+
+    else:
+        for i in range(0,len(obj)): 
+            # write the variable
+            isNew = writeRow(obj[i], obj[i], prefix2write,
+                             str(i)+'/'+str(len(obj)))
+
+            isLast = i==len(obj)
+            isFirst = i==1
+            # show attributes for objects and items for lists and tuples 
+            if belowMaxDeep and isNew and isClassListTupleDict(obj[i]):
+                recursivePrint(obj[i], prefix, isLast, isFirst)
 
 
