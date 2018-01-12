@@ -129,7 +129,7 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
         if self.addFeatures:
             args+=" --addFeatures"
-        if self.addFeatures:
+        if self.noDenoising:
             args += " --noDenoising"
         self.runJob("xmipp_image_eliminate_empty_particles", args)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
