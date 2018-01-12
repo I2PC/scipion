@@ -268,54 +268,54 @@ class TestRelionRefine(TestRelionBase):
             relionProt = _runRelionRefine(label="Run Relion auto-refine")
             _checkAsserts(relionProt)
 
-# Commenting this test as it needs relion 2.1. Uncommment when relion 2.1 fully supported
-# class TestRelionInitialModel(TestRelionBase):
-#     @classmethod
-#     def setUpClass(cls):
-#         setupTestProject(cls)
-#         cls.dataset = DataSet.getDataSet('relion_tutorial')
-#         cls.partFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
-#         cls.protImport = cls.runImportParticlesStar(cls.partFn, 50000, 7.08)
-#
-#     def testProtRelionIniModel(self):
-#         if getVersion() in [V1_3, V1_4, V2_0]:
-#             raise Exception('Initial model protocol exists only for Relion v2.1 or higher!')
-#
-#         def _runRelionIniModel(doGpu=True, label=''):
-#             print label
-#             relionIniModel = self.newProtocol(ProtRelionInitialModel,
-#                                               doCTF=False, doGpu=doGpu,
-#                                               maskDiameterA=340,
-#                                               numberOfIterations=2,
-#                                               symmetryGroup="C1",
-#                                               numberOfMpi=3, numberOfThreads=2)
-#             relionIniModel.setObjLabel(label)
-#             relionIniModel.inputParticles.set(self.protImport.outputParticles)
-#             self.launchProtocol(relionIniModel)
-#
-#             return relionIniModel
-#
-#         def _checkAsserts(relionProt):
-#             relionProt._initialize()  # Load filename templates
-#             dataSqlite = relionProt._getIterData(2)
-#             outImgSet = em.SetOfParticles(filename=dataSqlite)
-#
-#             self.assertIsNotNone(relionProt.outputVolume,
-#                                  "There was a problem with Relion initial model")
-#             self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
-#                                    self.protImport.outputParticles[1].getSamplingRate(),
-#                                    "The sampling rate is wrong", delta=0.00001)
-#
-#         environ = Environ(os.environ)
-#         cudaPath = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
-#
-#         if cudaPath is not None and os.path.exists(cudaPath):
-#             relionGpu = _runRelionIniModel(doGpu=True, label="Relion initial model GPU")
-#             _checkAsserts(relionGpu)
-#         else:
-#             print "Warning: running this test on CPU might take a lot of time!"
-#             relion = _runRelionIniModel(doGpu=False, label="Relion initial model CPU")
-#             _checkAsserts(relion)
+
+class TestRelionInitialModel(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('relion_tutorial')
+        cls.partFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
+        cls.protImport = cls.runImportParticlesStar(cls.partFn, 50000, 7.08)
+
+    def testProtRelionIniModel(self):
+        if getVersion() in [V1_3, V1_4, V2_0]:
+            raise Exception('Initial model protocol exists only for Relion v2.1 or higher!')
+
+        def _runRelionIniModel(doGpu=True, label=''):
+            print label
+            relionIniModel = self.newProtocol(ProtRelionInitialModel,
+                                              doCTF=False, doGpu=doGpu,
+                                              maskDiameterA=340,
+                                              numberOfIterations=2,
+                                              symmetryGroup="C1",
+                                              numberOfMpi=3, numberOfThreads=2)
+            relionIniModel.setObjLabel(label)
+            relionIniModel.inputParticles.set(self.protImport.outputParticles)
+            self.launchProtocol(relionIniModel)
+
+            return relionIniModel
+
+        def _checkAsserts(relionProt):
+            relionProt._initialize()  # Load filename templates
+            dataSqlite = relionProt._getIterData(2)
+            outImgSet = em.SetOfParticles(filename=dataSqlite)
+
+            self.assertIsNotNone(relionProt.outputVolume,
+                                 "There was a problem with Relion initial model")
+            self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
+                                   self.protImport.outputParticles[1].getSamplingRate(),
+                                   "The sampling rate is wrong", delta=0.00001)
+
+        environ = Environ(os.environ)
+        cudaPath = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
+
+        if cudaPath is not None and os.path.exists(cudaPath):
+            relionGpu = _runRelionIniModel(doGpu=True, label="Relion initial model GPU")
+            _checkAsserts(relionGpu)
+        else:
+            print "Warning: running this test on CPU might take a lot of time!"
+            relion = _runRelionIniModel(doGpu=False, label="Relion initial model CPU")
+            _checkAsserts(relion)
 
         
 class TestRelionPreprocess(TestRelionBase):

@@ -169,7 +169,8 @@ class ProtRelionExportCtf(EMProtocol):
 
         # Check if there is maximum resolution information
         _setIf('rlnCtfMaxResolution', ['_ctffind4_ctfResolution',
-                                       '_gctf_ctfResolution'])
+                                       '_gctf_ctfResolution', '_resolution'])
         _setIf('rlnCtfFigureOfMerit', ['_ctffind4_crossCorrelation',
-                                       '_gctf_crossCorrelation'])
-
+                                       '_gctf_crossCorrelation', '_fitQuality'])
+        _setIf('rlnPhaseShift', ['_ctffind4_ctfPhaseShift',
+                                 '_gctf_ctfPhaseShift', '_phaseShift'])
