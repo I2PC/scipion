@@ -66,6 +66,11 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
                       label='Add features', expertLevel=param.LEVEL_ADVANCED,
                       help='Add features used for the ranking to each '
                            'one of the input particles')
+        form.addParam('noDenoising', param.BooleanParam, default=False,
+                      label='Turning off denoising',
+                      expertLevel=param.LEVEL_ADVANCED,
+                      help='Option for turning of denoising method '
+                           'while computing emptiness feature')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -124,6 +129,8 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
         if self.addFeatures:
             args+=" --addFeatures"
+        if self.addFeatures:
+            args += " --noDenoising"
         self.runJob("xmipp_image_eliminate_empty_particles", args)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if os.path.exists(fnOutputMd):

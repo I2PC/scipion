@@ -36,6 +36,7 @@ void ProgEliminateEmptyParticles::readParams()
     fnElim = getParam("-e");
     threshold = getDoubleParam("-t");
     addFeatures = checkParam("--addFeatures");
+    noDenoising = checkParam("--noDenoising");
 }
 
 // Show ====================================================================
@@ -44,11 +45,12 @@ void ProgEliminateEmptyParticles::show()
     if (verbose==0)
         return;
     std::cerr
-    << "Input selfile:           " << fnIn       << std::endl
-    << "Output selfile:          " << fnOut      << std::endl
-    << "Eliminated selfile:      " << fnElim     << std::endl
-    << "Threshold:               " << threshold  << std::endl
+    << "Input selfile:           " << fnIn        << std::endl
+    << "Output selfile:          " << fnOut       << std::endl
+    << "Eliminated selfile:      " << fnElim      << std::endl
+    << "Threshold:               " << threshold   << std::endl
 	<< "Add features:            " << addFeatures << std::endl
+	<< "Turn off denoising:      " << noDenoising << std::endl
     ;
 }
 
@@ -61,6 +63,7 @@ void ProgEliminateEmptyParticles::defineParams()
     addParamsLine("  [-e <selfile=\"eliminated.xmd\">]  : Eliminated particles selfile");
     addParamsLine("  [-t <float=-1>]                    : Threshold used by algorithm. Set to -1 for no elimination.");
     addParamsLine("  [--addFeatures]                    : Add the emptiness features to the input particles");
+    addParamsLine("  [--noDenoising]                    : Option for turning of denoising method while computing emptiness feature");
 }
 
 void ProgEliminateEmptyParticles::run()
@@ -87,7 +90,9 @@ void ProgEliminateEmptyParticles::run()
     	I().setXmippOrigin();
     	centerImageTranslationally(I(), aux);
 
-    	denoiseTVFilter(I(), 50);
+        if (!noDenoising)
+    	    denoiseTVFilter(I(), 50);
+
         ef.extractVariance(I(), fv);
 
         double ratio=fv.back();

@@ -44,6 +44,9 @@ public:
 
     /// Add features
     bool addFeatures;
+
+    /// Turning off denoising
+    bool noDenoising;
 public:
     /// Read input parameters
     void readParams();
