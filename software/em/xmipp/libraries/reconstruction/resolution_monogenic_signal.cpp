@@ -204,7 +204,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	int size_fourier = ZSIZE(fftV);
 	freq_fourier.initZeros(size_fourier);
 
-	int size = ZSIZE(inputVol);
+	int size = ZSIZE(pMask);
 
 	for(size_t k=0; k<size_fourier; ++k)
 	{
@@ -535,6 +535,7 @@ void ProgMonogenicSignalRes::resolution2eval(int &count_res, double step,
 			freqL = sampling/(resolution + step);
 		}
 	}
+
 }
 
 
