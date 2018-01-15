@@ -61,12 +61,9 @@ import xmipp
 
 # TODO: ROB I think all this imports are not needed. First step toward removing
 # TODO: comment them
-# from viewer_fsc import FscViewer
-# from viewer_pdf import PDFReportViewer
-# from viewer_monitor_summary import ViewerMonitorSummary
-# from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
-# from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
-# from protocol.monitors.protocol_monitor_movie_gain import ProtMonitorMovieGainViewer
+from viewer_fsc import FscViewer
+from viewer_pdf import PDFReportViewer
+from viewer_monitor_summary import ViewerMonitorSummary
 
 
 
@@ -78,6 +75,10 @@ class DataView(View):
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
+
+    def getViewParams(self):
+        """ Give access to the viewParams dict. """
+        return self._viewParams
 
     def _loadPath(self, path):
         self._tableName = None
@@ -223,7 +224,7 @@ class CtfView(ObjectView):
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
-                    '_ctffind4_ctfPhaseShift',
+                    '_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
                     '_xmipp_ctfCritFirstZero',
                     '_xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
@@ -240,9 +241,10 @@ class CtfView(ObjectView):
 
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
-        labels = 'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio %s  _micObj._filename' % \
-                  extraLabels
+        labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
+        labels += '_defocusAngle _defocusRatio '
+        labels += '_phaseShift _resolution _fitQuality %s ' % extraLabels
+        labels += ' _micObj._filename'
 
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
@@ -256,9 +258,20 @@ class CtfView(ObjectView):
         if ctfSet.isStreamOpen():
             viewParams['dont_recalc_ctf'] = ''
 
-        if first.hasAttribute('_ctffind4_ctfResolution'):
+        def _anyAttrStartsBy(obj, prefix):
+            """ Return True if any of the attributes of this object starts
+            by the provided prefix.
+            """
+            return any(attrName.startswith(prefix)
+                       for attrName, _ in obj.getAttributesToStore())
+
+        if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
             import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
+
+        elif _anyAttrStartsBy(first, '_gctf'):
+            from pyworkflow.em.packages.gctf.viewer import OBJCMD_GCTF
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,
