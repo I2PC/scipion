@@ -70,7 +70,11 @@ void ProgCoordinatesNoisyZonesFilter::run()
 	im.read(fnInMic);
 
     MultidimArray<double> &matrixMic = im();
-    
+
+    matrixMic.selfNormalizeInterval();
+    Image<double> normMic(matrixMic);
+    normMic.write(fnInCoord.withoutExtension()+"_normalized.mrc");
+
     // getting the gini coefficient of the Micrograph whereas applaying a 
     // variance filter to the matrixMic (and filtered to smooth the result) 
     double giniV = giniCoeff(matrixMic, patchSize);

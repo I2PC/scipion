@@ -760,7 +760,7 @@ void fillBinaryObject(MultidimArray<double> &I, int neighbourhood)
 }
 
 /* Variance filter ----------------------------------------------------------*/
-void varianceFilter(MultidimArray<double> &I, int kernelSize)
+void varianceFilter(MultidimArray<double> &I, int kernelSize, bool relative)
 {
     int kernelSize_2 = kernelSize/2;
     MultidimArray<double> kernel;
@@ -770,7 +770,10 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize)
     MultidimArray<double> mVar(YSIZE(I),XSIZE(I));
     mVar.setXmippOrigin();
     double stdKernel, varKernel, avgKernel, min_val, max_val;
+    double stdImg, avgImg, min_im, max_im;
     int x0, y0, xF, yF;
+
+    I.computeStats(avgImg, stdImg, min_im, max_im);    
     
     for (int i=kernelSize_2; i<=(int)YSIZE(I)-kernelSize_2; i+=kernelSize_2)
         for (int j=kernelSize_2; j<=(int)XSIZE(I)-kernelSize_2; j+=kernelSize_2)
@@ -791,8 +794,14 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize)
 
                 I.window(kernel, y0, x0, yF, xF);
                 kernel.computeStats(avgKernel, stdKernel, min_val, max_val);
-                varKernel = stdKernel*stdKernel;
-
+                if(relative)
+                    if(avgImg!=0)
+                        varKernel = stdKernel/avgImg;
+                    else
+                        varKernel = stdKernel/0.00000000000000000000001;
+                else
+                    varKernel = stdKernel*stdKernel;
+                
                 DIRECT_A2D_ELEM(mVar, i, j) = varKernel;
             }
 
@@ -810,7 +819,7 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize)
                        FINISHINGY(mVar)-kernelSize_2, FINISHINGX(mVar)-kernelSize_2);
 
     // Returning to the previous windows size
-    I = mVar*0;
+    I.initZeros(mVar);
     mVarAux.window(I, STARTINGY(mVar), STARTINGX(mVar),
                      FINISHINGY(mVar), FINISHINGX(mVar));
 }
@@ -919,7 +928,7 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize)
     // Image<double> imG(im);
     // imG.write("I_Gauss.mrc");
 
-    varianceFilter(I, varKernelSize);
+    varianceFilter(I, varKernelSize, false);
     im = I;
 
     filter.w1 = varKernelSize/8;

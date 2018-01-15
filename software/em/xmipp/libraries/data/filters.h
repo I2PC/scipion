@@ -189,8 +189,9 @@ void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
 /** Applays a variance filter to an image
  * @ingroup Filters
  *
+ * If relative=True, the filter is normalized to the mean (coeficient of variation) 
  */
-void varianceFilter(MultidimArray<double> &I, int kernelSize = 10);
+void varianceFilter(MultidimArray<double> &I, int kernelSize = 10, bool relative=false);
 
 /** Transforms I to a binary mask with 0 where both variance and mean are high.
  * @ingroup Filters
