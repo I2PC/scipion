@@ -168,12 +168,16 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
-        print imgData
+        imgList = imgData.flatten()
+        imgListNoZero = filter(lambda x: x > 0, imgList)
+#         for value in imgList:
+#             if (value > 0):
+#                 imgListNoZero.append(value)
         nbins = 30
         plotter = EmPlotter(x=1,y=1,mainTitle="  ")
         plotter.createSubPlot("Resolution histogram",
                               "Resolution (A)", "# of Counts")
-        fig = plotter.plotHist(imgData, nbins)
+        fig = plotter.plotHist(imgListNoZero, nbins)
         return [plotter]
         
 
