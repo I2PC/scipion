@@ -1017,11 +1017,20 @@ class Protocol(Step):
         """ This will copy relations from protocol other to self """
         pass
 
-    def copy(self, other, copyId=True):
+    def copy(self, other, copyId=True, excludeInputs=False):
 
         from pyworkflow.project import OBJECT_PARENT_ID
 
-        copyDict = Object.copy(self, other, copyId)
+        # Input attributes list
+        inputAttributes = []
+
+        # If need to exclude input attributes
+        if excludeInputs:
+            # Get all the input attributes, to be ignored at copy():
+            for key, attr in self.iterInputAttributes():
+                inputAttributes.append(key)
+
+        copyDict = Object.copy(self, other, copyId, inputAttributes)
         self._store()
         self.mapper.deleteRelations(self)
 
@@ -1414,7 +1423,7 @@ class Protocol(Step):
         """
         queueName, queueParams = self.getQueueParams()
         hc = self.getHostConfig()
-
+        
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),

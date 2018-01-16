@@ -74,6 +74,7 @@ CTF_PSD_DICT = OrderedDict([
 
 CTF_EXTRA_LABELS = [   
     md.RLN_CTF_FOM,
+    md.RLN_CTF_PHASESHIFT,
     # In Relion the ctf also contains acquisition information
     md.RLN_CTF_Q0,
     md.RLN_CTF_CS,
@@ -552,6 +553,10 @@ def rowToParticle(partRow, **kwargs):
     # copy particleId if available from row to particle
     if partRow.hasLabel(md.RLN_PARTICLE_ID):
         img._rlnParticleId = Integer(partRow.getValue(md.RLN_PARTICLE_ID))
+    
+    # copy particleId if available from row to particle
+    if partRow.hasLabel(md.RLN_PARTICLE_RANDOM_SUBSET):
+        img._rln_halfId = Integer(partRow.getValue(md.RLN_PARTICLE_RANDOM_SUBSET))
     
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row

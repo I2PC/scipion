@@ -545,7 +545,7 @@ def getTemplate():
         "ratio2Value": 4.5,
         "maxDefocus": 40000.0,
         "minDefocus": 1000.0,
-        "astigmatism": 0.2,
+        "astigmatism": 2000.0,
         "monitorTime": 30000.0,
         "cpuAlert": 101.0,
         "memAlert": 101.0,
