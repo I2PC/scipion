@@ -186,11 +186,11 @@ class BsoftViewerBlocres(LocalResolutionViewer):
                                                      %self._getAxis())
         sliceNumber = self.sliceNumber.get()
         if sliceNumber < 0:
-            x ,_ ,_ ,_ = ImageHandler.getDimensions(imageFile)
+            x ,_ ,_ ,_ = ImageHandler().getDimensions(imageFile)
             sliceNumber = x/2
         else:
             sliceNumber -= 1
-        a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+        a = xplotter.createSubPlot("Slice %s" % (sliceNumber+1), '', '')
         matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
         plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
                                        cmap=self.getColorMap(),
