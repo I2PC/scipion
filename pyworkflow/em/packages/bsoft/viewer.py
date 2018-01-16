@@ -125,11 +125,12 @@ class BsoftViewerBlocres(LocalResolutionViewer):
                        label='Slice axis')
         group.addParam('doShowVolumeColorSlices', LabelParam,
                        label="Show colored slices")
-        group.addParam('sliceNumber', IntParam, allowsNull=True, 
+        group.addParam('doShowOneColorslice', LabelParam, 
+                       expertLevel=LEVEL_ADVANCED, 
+                      label='Show selected slice')
+        group.addParam('sliceNumber', IntParam,
                        expertLevel=LEVEL_ADVANCED, 
                        label='Show slice number')
-        group.addParam('doShowOneColorslice', LabelParam, 
-                       expertLevel=LEVEL_ADVANCED)
         group.addParam('doShowChimera', LabelParam,
                       label="Show Resolution map in Chimera")
 
