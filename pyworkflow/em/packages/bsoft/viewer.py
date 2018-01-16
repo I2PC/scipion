@@ -128,7 +128,7 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         group.addParam('doShowOneColorslice', LabelParam, 
                        expertLevel=LEVEL_ADVANCED, 
                       label='Show selected slice')
-        group.addParam('sliceNumber', IntParam,
+        group.addParam('sliceNumber', IntParam, default=-1,
                        expertLevel=LEVEL_ADVANCED, 
                        label='Show slice number')
         group.addParam('doShowChimera', LabelParam,
@@ -184,7 +184,12 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         xplotter = BsoftPlotter(x=1, y=1, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
-        sliceNumber = self.sliceNumber.get()+1
+        sliceNumber = self.sliceNumber.get()
+        if sliceNumber < 0:
+            x ,_ ,_ ,_ = ImageHandler.getDimensions(imageFile)
+            sliceNumber = x/2
+        else:
+            sliceNumber -= 1
         a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
         matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
         plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
