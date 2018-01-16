@@ -972,20 +972,31 @@ class LocalResolutionViewer(ProtocolViewer):
 
         return imgData2, minRes, maxRes
 
+#     def getSlice(self, index, volumeData):
+#         return int(index*volumeData.shape[0] / 9)
+#         #return int((index+3) * volumeData.shape[0] / 9)
+# 
+#     def getSliceImage(self, volumeData, index, dataAxis):
+#         slice = self.getSlice(index, volumeData)
+#         if dataAxis == 'y':
+#             imgSlice = volumeData[:, slice, :]
+#         elif dataAxis == 'x':
+#             imgSlice = volumeData[:, :, slice]
+#         else:
+#             imgSlice = volumeData[slice, :, :]
+#         return imgSlice
+
     def getSlice(self, index, volumeData):
         return int(index*volumeData.shape[0] / 9)
-        #return int((index+3) * volumeData.shape[0] / 9)
 
-    def getSliceImage(self, volumeData, index, dataAxis):
-        slice = self.getSlice(index, volumeData)
+    def getSliceImage(self, volumeData, sliceNumber, dataAxis):
         if dataAxis == 'y':
-            imgSlice = volumeData[:, slice, :]
+            imgSlice = volumeData[:, sliceNumber, :]
         elif dataAxis == 'x':
-            imgSlice = volumeData[:, :, slice]
+            imgSlice = volumeData[:, :, sliceNumber]
         else:
-            imgSlice = volumeData[slice, :, :]
+            imgSlice = volumeData[sliceNumber, :, :]
         return imgSlice
-
 
 class VmdView(CommandView):
     """ View for calling an external command. """

@@ -1593,6 +1593,11 @@ class RelionLocalResViewer(LocalResolutionViewer):
                        label='Slice axis')
         group.addParam('doShowVolumeSlices', params.LabelParam,
                       label="Show volume slices")
+        group.addParam('sliceNumber', params.IntParam, allowsNull=True, 
+                       expertLevel=LEVEL_ADVANCED, 
+                       label='Show slice number')
+        group.addParam('doShowOneColorslice', params.LabelParam, 
+                       expertLevel=LEVEL_ADVANCED)
         group.addParam('doShowChimera', params.LabelParam,
                        label="Show colored map in Chimera", default=True)
 
@@ -1600,6 +1605,7 @@ class RelionLocalResViewer(LocalResolutionViewer):
         self.protocol._createFilenameTemplates()
         return {
                'doShowVolumeSlices': self._showVolumeSlices,
+               'doShowOneColorslice': self._showOneColorslice,
                'doShowChimera': self._showChimera,
                }
 
@@ -1616,15 +1622,33 @@ class RelionLocalResViewer(LocalResolutionViewer):
         #The slices to be shown are close to the center. Volume size is divided in 
         # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
         for i in xrange(3,7): 
-            slice = self.getSlice(i, imgData)
-            a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
-            matrix = self.getSliceImage(imgData, i, self._getAxis())
+            sliceNumber = self.getSlice(i, imgData)
+            a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+            matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, minRes, maxRes,
                                        cmap=self._getColorName(),
                                        interpolation="nearest")
         xplotter.getColorBar(plot)
         return [xplotter]
 
+
+    def _showOneColorslice(self, param=None):
+        imageFile = self.protocol._getFileName('resolMap')
+        imgData, min_Res, max_Res = self.getImgData(imageFile)
+
+        xplotter = RelionPlotter(x=1, y=1, mainTitle="Local Resolution Slices "
+                                                     "along %s-axis."
+                                                     %self._getAxis())
+        #The slices to be shown are close to the center. Volume size is divided in 
+        # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
+        sliceNumber = self.sliceNumber.get()+1
+        a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+        matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
+        plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
+                                       cmap=self.getColorMap(),
+                                       interpolation="nearest")
+        xplotter.getColorBar(plot)
+        return [xplotter]
 # ==============================================================================
 # showChimera
 # ==============================================================================

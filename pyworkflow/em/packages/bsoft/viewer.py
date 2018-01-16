@@ -26,7 +26,8 @@
 
 
 from pyworkflow.em.viewer import CommandView, Viewer, DESKTOP_TKINTER
-from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
+from pyworkflow.protocol.params import (LabelParam, StringParam, EnumParam,
+                                        IntParam, LEVEL_ADVANCED)
 from pyworkflow.viewer import ProtocolViewer
 from pyworkflow.em.constants import (COLOR_CHOICES, COLOR_OTHER, COLOR_JET, 
                                      COLOR_TERRAIN, COLOR_GIST_EARTH, 
@@ -122,15 +123,21 @@ class BsoftViewerBlocres(LocalResolutionViewer):
                        choices=['x', 'y', 'z'],
                        display=EnumParam.DISPLAY_HLIST,
                        label='Slice axis')
-
         group.addParam('doShowVolumeColorSlices', LabelParam,
-              label="Show colored slices")
+                       label="Show colored slices")
+        group.addParam('sliceNumber', IntParam, allowsNull=True, 
+                       expertLevel=LEVEL_ADVANCED, 
+                       label='Show slice number')
+        group.addParam('doShowOneColorslice', LabelParam, 
+                       expertLevel=LEVEL_ADVANCED)
+
 
     def _getVisualizeDict(self):
         self.protocol._createFilenameTemplates()
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowVolumeSlices': self._showVolumeSlices,
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
+                'doShowOneColorslice': self._showOneColorslice,
                 'doShowResHistogram': self._plotHistogram,
                 }
        
@@ -154,15 +161,32 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         #The slices to be shown are close to the center. Volume size is divided in 
         # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
         for i in xrange(3,7): 
-            slice = self.getSlice(i, imgData)
-            a = xplotter.createSubPlot("Slice %s" % (slice), '', '')
-            matrix = self.getSliceImage(imgData, i, self._getAxis())
+            sliceNumber = self.getSlice(i, imgData)
+            a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+            matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
                                        cmap=self.getColorMap(),
                                        interpolation="nearest")
         xplotter.getColorBar(plot)
         return [xplotter]
 
+    def _showOneColorslice(self, param=None):
+        imageFile = self.protocol._getFileName(FN_RESOLMAP)
+        imgData, min_Res, max_Res = self.getImgData(imageFile)
+
+        xplotter = BsoftPlotter(x=1, y=1, mainTitle="Local Resolution Slices "
+                                                     "along %s-axis."
+                                                     %self._getAxis())
+        #The slices to be shown are close to the center. Volume size is divided in 
+        # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
+        sliceNumber = self.sliceNumber.get()+1
+        a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+        matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
+        plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
+                                       cmap=self.getColorMap(),
+                                       interpolation="nearest")
+        xplotter.getColorBar(plot)
+        return [xplotter]
 
     def _plotHistogram(self, param=None):
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
