@@ -35,14 +35,14 @@ from pyworkflow.em.constants import (COLOR_CHOICES, COLOR_OTHER, COLOR_JET,
                                       COLOR_GNU_PLOT2, AX_X, AX_Y, AX_Z)
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.plotter import EmPlotter
-from pyworkflow.em import ImageHandler
+from pyworkflow.em import ImageHandler, ChimeraView
 from pyworkflow.em.data import Volume
 #import numpy as np
 #import matplotlib.pyplot as plt
 from matplotlib import cm
 from convert import getEnviron
 from pyworkflow.em.viewer import DataView, LocalResolutionViewer
-from protocol_blocres import BsoftProtBlocres, FN_RESOLMAP
+from protocol_blocres import BsoftProtBlocres, FN_RESOLMAP, FN_HALF1
 
 
 #------------------------ Some views and  viewers ------------------------
@@ -130,6 +130,8 @@ class BsoftViewerBlocres(LocalResolutionViewer):
                        label='Show slice number')
         group.addParam('doShowOneColorslice', LabelParam, 
                        expertLevel=LEVEL_ADVANCED)
+        group.addParam('doShowChimera', LabelParam,
+                      label="Show Resolution map in Chimera")
 
 
     def _getVisualizeDict(self):
@@ -139,18 +141,21 @@ class BsoftViewerBlocres(LocalResolutionViewer):
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
                 'doShowOneColorslice': self._showOneColorslice,
                 'doShowResHistogram': self._plotHistogram,
+                'doShowChimera': self._showChimera,
                 }
        
     def _showVolumeSlices(self, param=None):
         out_cm = DataView(self.protocol._getFileName(FN_RESOLMAP))
         
         return [out_cm]
-    
+
+
     def _showOriginalVolumeSlices(self, param=None):
         out_cm = DataView(self.protocol.inputVolume.get().getFileName())
 
         return [out_cm]
-    
+
+
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
         imgData, min_Res, max_Res = self.getImgData(imageFile)
@@ -170,6 +175,7 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         xplotter.getColorBar(plot)
         return [xplotter]
 
+
     def _showOneColorslice(self, param=None):
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
         imgData, min_Res, max_Res = self.getImgData(imageFile)
@@ -177,8 +183,6 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         xplotter = BsoftPlotter(x=1, y=1, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
-        #The slices to be shown are close to the center. Volume size is divided in 
-        # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
         sliceNumber = self.sliceNumber.get()+1
         a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
         matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
@@ -188,21 +192,29 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         xplotter.getColorBar(plot)
         return [xplotter]
 
+
     def _plotHistogram(self, param=None):
         imageFile = self.protocol._getFileName(FN_RESOLMAP)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         imgList = imgData.flatten()
         imgListNoZero = filter(lambda x: x > 0, imgList)
-#         for value in imgList:
-#             if (value > 0):
-#                 imgListNoZero.append(value)
         nbins = 30
         plotter = EmPlotter(x=1,y=1,mainTitle="  ")
         plotter.createSubPlot("Resolution histogram",
                               "Resolution (A)", "# of Counts")
         fig = plotter.plotHist(imgListNoZero, nbins)
         return [plotter]
+    
+    
+    def _showChimera(self, param=None):
+        fnResVol = self.protocol._getFileName(FN_RESOLMAP)
+        fnOrigMap = self.protocol._getFileName(FN_HALF1)
+        cmdFile = self.protocol._getExtraPath('chimera_resolution_map.cmd')
+        sampRate = self.protocol.resolution_Volume.getSamplingRate()
+        self.createChimeraScript(cmdFile, fnResVol, fnOrigMap, sampRate)
+        view = ChimeraView(cmdFile)
+        return [view]
         
 
     def _getAxis(self):

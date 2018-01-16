@@ -1653,8 +1653,11 @@ class RelionLocalResViewer(LocalResolutionViewer):
 # showChimera
 # ==============================================================================
     def _showChimera(self, param=None):
-        cmdFile = self.protocol._getExtraPath('chimera_local_res.cmd')
-        self._createChimeraScript(cmdFile)
+        fnResVol = os.path.abspath(self.protocol._getFileName('resolMap'))
+        fnOrigMap = os.path.abspath(self.protocol._getFileName('finalMap'))
+        cmdFile = self.protocol._getExtraPath('chimera_resolution_map.cmd')
+        sampRate = self.protocol.outputVolume.getSamplingRate()
+        self.createChimeraScript(cmdFile, fnResVol, fnOrigMap, sampRate)
         view = em.ChimeraView(cmdFile)
         return [view]
 
@@ -1663,58 +1666,3 @@ class RelionLocalResViewer(LocalResolutionViewer):
 # ==============================================================================
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
-    
-    def _getColorName(self):
-        if self.colorMap.get() != COLOR_OTHER:
-            return COLOR_CHOICES[self.colorMap.get()]
-        else:
-            return self.otherColorMap.get()
-
-    def _createChimeraScript(self, scriptFile):
-        import pyworkflow.gui.plotter as plotter
-        from itertools import izip
-        fhCmd = open(scriptFile, 'w')
-        imageFile = os.path.abspath(self.protocol._getFileName('resolMap'))
-        
-        _, minRes, maxRes = self.getImgData(imageFile)
-        
-        stepColors = self._getStepColors(minRes, maxRes)
-        colorList = plotter.getHexColorList(stepColors, self._getColorName())
-        
-        fnVol = os.path.abspath(self.protocol._getFileName('finalMap'))
-
-        fhCmd.write("background solid white\n")
-        
-        fhCmd.write("open %s\n" % fnVol)
-        fhCmd.write("open %s\n" % (imageFile))
-        
-        sampRate = self.protocol.outputVolume.getSamplingRate()
-        fhCmd.write("volume #0 voxelSize %s\n" % (str(sampRate)))
-        fhCmd.write("volume #1 voxelSize %s\n" % (str(sampRate)))
-        fhCmd.write("volume #1 hide\n")
-
-        scolorStr = ''
-        for step, color in izip(stepColors, colorList):
-            scolorStr += '%s,%s:' % (step, color)
-        scolorStr = scolorStr[:-1]
-        line = ("scolor #0 volume #1 perPixel false cmap " + scolorStr + "\n")
-        fhCmd.write(line)
-
-        scolorStr2 = ''
-        for step, color in izip(stepColors, colorList):
-            indx = stepColors.index(step)
-            if ((indx % 4) != 0):
-                scolorStr2 += '" " %s ' % color
-            else:
-                scolorStr2 += '%s %s ' % (step, color)
-        line = ("colorkey 0.01,0.05 0.02,0.95 labelColor None "
-                + scolorStr2 + " \n")
-        fhCmd.write(line)
-        fhCmd.close()
-
-    def _getStepColors(self, minRes, maxRes, numberOfColors=13):
-        inter = (maxRes - minRes) / (numberOfColors - 1)
-        rangeList = []
-        for step in range(0, numberOfColors):
-            rangeList.append(round(minRes + step * inter, 2))
-        return rangeList

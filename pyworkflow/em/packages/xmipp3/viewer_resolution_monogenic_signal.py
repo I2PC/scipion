@@ -264,7 +264,8 @@ class XmippMonoResViewer(LocalResolutionViewer):
         scolorStr = '%s,%s:' * numberOfColors
         scolorStr = scolorStr[:-1]
 
-        line = ("scolor #0 volume #1 perPixel false cmap " + scolorStr + "\n") % colorList
+        line = ("scolor #0 volume #1 perPixel false cmap " 
+                + scolorStr + "\n") % colorList
         fhCmd.write(line)
 
         scolorStr = '%s %s ' * numberOfColors

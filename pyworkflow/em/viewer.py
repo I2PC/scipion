@@ -972,20 +972,6 @@ class LocalResolutionViewer(ProtocolViewer):
 
         return imgData2, minRes, maxRes
 
-#     def getSlice(self, index, volumeData):
-#         return int(index*volumeData.shape[0] / 9)
-#         #return int((index+3) * volumeData.shape[0] / 9)
-# 
-#     def getSliceImage(self, volumeData, index, dataAxis):
-#         slice = self.getSlice(index, volumeData)
-#         if dataAxis == 'y':
-#             imgSlice = volumeData[:, slice, :]
-#         elif dataAxis == 'x':
-#             imgSlice = volumeData[:, :, slice]
-#         else:
-#             imgSlice = volumeData[slice, :, :]
-#         return imgSlice
-
     def getSlice(self, index, volumeData):
         return int(index*volumeData.shape[0] / 9)
 
@@ -997,6 +983,62 @@ class LocalResolutionViewer(ProtocolViewer):
         else:
             imgSlice = volumeData[sliceNumber, :, :]
         return imgSlice
+    
+    def createChimeraScript(self, scriptFile, fnResVol, fnOrigMap, sampRate):
+        import pyworkflow.gui.plotter as plotter
+        import os
+        from itertools import izip
+        fhCmd = open(scriptFile, 'w')
+        imageFile = os.path.abspath(fnResVol)
+        
+        _, minRes, maxRes = self.getImgData(imageFile)
+        
+        stepColors = self._getStepColors(minRes, maxRes)
+        colorList = plotter.getHexColorList(stepColors, self._getColorName())
+        
+        fnVol = os.path.abspath(fnOrigMap)
+
+        fhCmd.write("background solid white\n")
+        
+        fhCmd.write("open %s\n" % fnVol)
+        fhCmd.write("open %s\n" % (imageFile))
+        
+        fhCmd.write("volume #0 voxelSize %s\n" % (str(sampRate)))
+        fhCmd.write("volume #1 voxelSize %s\n" % (str(sampRate)))
+        fhCmd.write("volume #1 hide\n")
+
+        scolorStr = ''
+        for step, color in izip(stepColors, colorList):
+            scolorStr += '%s,%s:' % (step, color)
+        scolorStr = scolorStr[:-1]
+        line = ("scolor #0 volume #1 perPixel false cmap " + scolorStr + "\n")
+        fhCmd.write(line)
+
+        scolorStr2 = ''
+        for step, color in izip(stepColors, colorList):
+            indx = stepColors.index(step)
+            if ((indx % 4) != 0):
+                scolorStr2 += '" " %s ' % color
+            else:
+                scolorStr2 += '%s %s ' % (step, color)
+        line = ("colorkey 0.01,0.05 0.02,0.95 labelColor None "
+                + scolorStr2 + " \n")
+        fhCmd.write(line)
+        fhCmd.close()
+        
+    def _getStepColors(self, minRes, maxRes, numberOfColors=13):
+        inter = (maxRes - minRes) / (numberOfColors - 1)
+        rangeList = []
+        for step in range(0, numberOfColors):
+            rangeList.append(round(minRes + step * inter, 2))
+        return rangeList
+    
+    def _getColorName(self):
+        if self.colorMap.get() != COLOR_OTHER:
+            return COLOR_CHOICES[self.colorMap.get()]
+        else:
+            return self.otherColorMap.get()    
+
 
 class VmdView(CommandView):
     """ View for calling an external command. """
