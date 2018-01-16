@@ -168,7 +168,7 @@ class BsoftViewerBlocres(LocalResolutionViewer):
         # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
         for i in xrange(3,7): 
             sliceNumber = self.getSlice(i, imgData)
-            a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+            a = xplotter.createSubPlot("Slice %s" % (sliceNumber+1), '', '')
             matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
                                        cmap=self.getColorMap(),
@@ -190,6 +190,7 @@ class BsoftViewerBlocres(LocalResolutionViewer):
             sliceNumber = x/2
         else:
             sliceNumber -= 1
+        #sliceNumber has no sense to start in zero 
         a = xplotter.createSubPlot("Slice %s" % (sliceNumber+1), '', '')
         matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
         plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,

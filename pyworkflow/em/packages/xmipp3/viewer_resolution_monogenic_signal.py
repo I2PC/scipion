@@ -106,17 +106,16 @@ class XmippMonoResViewer(LocalResolutionViewer):
         group.addParam('doShowVolumeColorSlices', LabelParam,
               label="Show colored slices")
         
-        group.addParam('sliceNumber', IntParam, allowsNull=True, 
+        group.addParam('doShowOneColorslice', LabelParam, 
+                       expertLevel=LEVEL_ADVANCED, 
+                      label='Show selected slice')
+        group.addParam('sliceNumber', IntParam, default=-1,
                        expertLevel=LEVEL_ADVANCED, 
                        label='Show slice number')
-        group.addParam('doShowOneColorslice', LabelParam, 
-                       expertLevel=LEVEL_ADVANCED)
         
         group.addParam('doShowChimera', LabelParam,
                       label="Show Resolution map in Chimera")
 
-
-        
     def _getVisualizeDict(self):
         self.protocol._createFilenameTemplates()
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
@@ -128,7 +127,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
                 }
        
     def _showVolumeSlices(self, param=None):
-        cm = DataView(self.protocol.outputVolume.getFileName())
+        cm = DataView(self.protocol.resolution_Volume.getFileName())
         
         return [cm]
     
@@ -140,7 +139,6 @@ class XmippMonoResViewer(LocalResolutionViewer):
         else:
             cm = DataView(self.protocol.inputVolumes.get().getFileName())
             return [cm]
-        
     
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getFileName(OUTPUT_RESOLUTION_FILE)
@@ -153,14 +151,13 @@ class XmippMonoResViewer(LocalResolutionViewer):
         # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
         for i in xrange(3,7): 
             sliceNumber = self.getSlice(i, imgData)
-            a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+            a = xplotter.createSubPlot("Slice %s" % (sliceNumber+1), '', '')
             matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
             plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
                                        cmap=self.getColorMap(),
                                        interpolation="nearest")
         xplotter.getColorBar(plot)
         return [xplotter]
-
 
     def _showOneColorslice(self, param=None):
         imageFile = self.protocol._getFileName(OUTPUT_RESOLUTION_FILE)
@@ -169,10 +166,14 @@ class XmippMonoResViewer(LocalResolutionViewer):
         xplotter = XmippPlotter(x=1, y=1, mainTitle="Local Resolution Slices "
                                                      "along %s-axis."
                                                      %self._getAxis())
-        #The slices to be shown are close to the center. Volume size is divided in 
-        # 9 segments, the fouth central ones are selected i.e. 3,4,5,6
-        sliceNumber = self.sliceNumber.get()+1
-        a = xplotter.createSubPlot("Slice %s" % (sliceNumber), '', '')
+        sliceNumber = self.sliceNumber.get()
+        if sliceNumber < 0:
+            x ,_ ,_ ,_ = ImageHandler().getDimensions(imageFile)
+            sliceNumber = x/2
+        else:
+            sliceNumber -= 1
+        #sliceNumber has no sense to start in zero 
+        a = xplotter.createSubPlot("Slice %s" % (sliceNumber+1), '', '')
         matrix = self.getSliceImage(imgData, sliceNumber, self._getAxis())
         plot = xplotter.plotMatrix(a, matrix, min_Res, max_Res,
                                        cmap=self.getColorMap(),
@@ -205,7 +206,6 @@ class XmippMonoResViewer(LocalResolutionViewer):
         plt.xlabel("Resolution (A)")
         plt.ylabel("Counts")
         
-        
         return [Plotter(figure2 = fig)]
 
     def _getAxis(self):
@@ -216,7 +216,6 @@ class XmippMonoResViewer(LocalResolutionViewer):
         cmdFile = self.protocol._getPath('Chimera_resolution.cmd')
         view = ChimeraView(cmdFile)
         return [view]
-    
 
     def numberOfColors(self, min_Res, max_Res, numberOfColors):
         inter = (max_Res - min_Res)/(numberOfColors-1)
