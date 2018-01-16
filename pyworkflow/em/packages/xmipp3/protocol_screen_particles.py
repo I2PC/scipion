@@ -140,7 +140,6 @@ class XmippProtScreenParticles(ProtProcessParticles):
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         partSet = self._createSetOfParticles()
-        print "self.outputMd.get(): ", self.outputMd.get()
         partSet.copyInfo(imgSet)
         partSet.copyItems(imgSet,
                             updateItemCallback=self._updateParticle,
