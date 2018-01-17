@@ -540,7 +540,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         if self._useCTF():
             # add phaseShift to micrograph Row
             ctf = img.getCTF()
-            if ctf is not None:
+            if ctf is not None and ctf.getPhaseShift():
                 imgRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
 
     def __getMicFile(self, mic, ext):
