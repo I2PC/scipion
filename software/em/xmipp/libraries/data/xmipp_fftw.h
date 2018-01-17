@@ -217,6 +217,7 @@ public:
         fFourier.alias(V);
         return;
     }
+
     /** Get Fourier coefficients. */
     template <typename T>
     void getFourierCopy(T& V)
