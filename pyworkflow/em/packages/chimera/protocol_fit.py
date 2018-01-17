@@ -137,15 +137,34 @@ class ChimeraProtRigidFit(EMProtocol):
         inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
             _inputVol.getFileName()))
         f.write("runCommand('open %s')\n" % inputVolFileName)
-        f.write("runCommand('volume #1 style surface voxelSize %f origin "
-                "%0.2f,%0.2f,%0.2f')\n"
-                % (_inputVol.getSamplingRate(), x_input, y_input, z_input))
+        f.write("runCommand('volume #1 style surface voxelSize %f')\n"
+                % _inputVol.getSamplingRate())
+        f.write("runCommand('volume #1 origin %0.2f,%0.2f,%0.2f')\n"
+                % (x_input, y_input, z_input))
+        #f.write("runCommand('volume #1 style surface voxelSize %f origin "
+        #        "%0.2f,%0.2f,%0.2f')\n"
+        #        % (_inputVol.getSamplingRate(), x_input, y_input, z_input))
+        pdbFileToBeRefined = self.pdbFileToBeRefined.get()
         f.write("runCommand('open %s')\n" % os.path.abspath(
-            self.pdbFileToBeRefined.get().getFileName()))
+            pdbFileToBeRefined.getFileName()))
+        if pdbFileToBeRefined.hasOrigin():
+            #x, y, z = adaptOriginFromCCP4ToChimera(
+            #    pdbFileToBeRefined.getOrigin().getShifts())
+            x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
+            print "x, y, z: ", x, y, z
+            f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d coord #0')\n"
+                % (x, y, z, 2))
         # other pdb files
+        pdbModelCounter=3
         for pdb in self.inputPdbFiles:
             f.write("runCommand('open %s')\n" % os.path.abspath(pdb.get(
             ).getFileName()))
+            if pdb.get().hasOrigin():
+                # x, y, z = adaptOriginFromCCP4ToChimera(
+                #     pdb.get().getOrigin().getShifts())
+                x, y, z = pdb.get().getOrigin().getShifts()
+                f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d coord #0')\n"
+                        % (x,y,z,pdbModelCounter))
 
         # run the text:
         if len(self.extraCommands.get()) > 2:
@@ -180,6 +199,9 @@ class ChimeraProtRigidFit(EMProtocol):
                 origin = self.inputVolume.get().getOrigin(
                     returnInitIfNone=True)
             vol.setOrigin(origin)
+            ##DELETE THIS
+            ccp4header.setStartAngstrom(origin.getShifts(), sampling)
+            ##
             self._defineOutputs(output3Dmap=vol)
             self._defineSourceRelation(self.inputPdbFiles, vol)
             if self.inputVolume.get() is None:
