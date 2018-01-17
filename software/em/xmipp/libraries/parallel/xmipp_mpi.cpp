@@ -271,7 +271,6 @@ int XmippMpiProgram::tryRun()
     try
     {
         if (doRun){
-        	std::cout << "XmippMpiProgram::tryRun()" << std::endl;
             this->run();
         }
     }

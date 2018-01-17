@@ -121,8 +121,6 @@ void ProgRecFourierGPU::show()
 }
 
 void ProgRecFourierGPU::parseNoOfThreads() {
-	std::cout << "parseNoOfThreads()" << std::endl;
-
 	const char* threadsStr = progDef->getParam("--thr");
 	noOfThreads = strtol(threadsStr, NULL, 10); // get from cmd
 	if (noOfThreads <= 0) {
