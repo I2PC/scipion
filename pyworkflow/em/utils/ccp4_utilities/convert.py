@@ -38,7 +38,8 @@ import struct
 
 cootPdbTemplateFileName = "scipionOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
-
+ORIGIN=0 # save coordinate origin in the mrc header field=Origin (Angstrom)
+START=1 # save coordinate origin in the mrc header field=start (pixel)
 
 def getEnviron(ccp4First=True):
     environ = pwutils.Environ(os.environ)
@@ -54,14 +55,13 @@ def runCCP4Program(program, args="", extraEnvDict=None):
     """ Internal shortcut function to launch a CCP4 program. """
     env = getEnviron()
     # env.update(_envDict)
-    print "extraEnvDict", extraEnvDict
     if extraEnvDict is not None:
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
 
 
 def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
-                       sampling=1.0):
+                       sampling=1.0, originField=START):
     """ Check input file format.
         if mrc, check if header and scipion database agree (regarding origin)
         if header and scipion object have the same origin creates a link to
@@ -76,7 +76,7 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
     if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
             or inFileName.endswith(':mrc'):
         ccp4header = Ccp4Header(inFileName, readHeader=True)
-        ccp4Origin = ccp4header.getOffset()
+        ccp4Origin = ccp4header.getOrigin()
         if compareFloatTuples(ccp4Origin, scipionOriginShifts):
             if compareFloatTuples(ccp4header.getGridSampling(), (x, y, z)):
                 if compareFloatTuples(ccp4header.getCellDimensions(),
@@ -92,18 +92,24 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
     ccp4header = Ccp4Header(outFileName, readHeader=True)
     ccp4header.setGridSampling(x, y, z)
     ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-    ccp4header.setOffset(scipionOriginShifts)
+    if originField == ORIGIN:
+        ccp4header.setOrigin(scipionOriginShifts)
+    else:
+        ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
+
     ccp4header.writeHeader()
 
 def copyMRCHeader(inFileName, outFileName, scipionOriginShifts,
-                  sampling):
+                  sampling, originField=START):
     x, y, z, ndim = ImageHandler().getDimensions(inFileName)
     ccp4header = Ccp4Header(outFileName, readHeader=True)
-    print "HEADER1", ccp4header
     ccp4header.setGridSampling(x, y, z)
     ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-    ccp4header.setOffset(scipionOriginShifts)
-    print "HEADER2", ccp4header
+    scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
+    if originField == ORIGIN:
+        ccp4header.setOrigin(scipionOriginShifts)
+    else:
+        ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
     ccp4header.writeHeader()
 
 def getProgram(progName):
@@ -192,12 +198,7 @@ class Ccp4Header():
         if readHeader:
             self.readHeader()
 
-    def setSampling(self, sampling):
-        self._header['Xlength'] = self._header['NX'] * sampling
-        self._header['Ylength'] = self._header['NY'] * sampling
-        self._header['Zlength'] = self._header['NZ'] * sampling
-
-    def setOffset(self,  originTransformShift):
+    def setOrigin(self, originTransformShift):
         # TODO: should we use originX,Y,Z and set this to 0
         self._header['originX'] = originTransformShift[0]
         self._header['originY'] = originTransformShift[1]
@@ -206,11 +207,39 @@ class Ccp4Header():
         self._header['NRSTART'] = 0.
         self._header['NSSTART'] = 0.
 
-    def getOffset(self):
-        # TODO: should we use originx,y,z?
-        return self._header['originX'],\
-               self._header['originY'],\
+    def getOrigin(self):
+        return self._header['originX'], \
+               self._header['originY'], \
                self._header['originZ']
+
+    def setSampling(self, sampling):
+        self._header['Xlength'] = self._header['NX'] * sampling
+        self._header['Ylength'] = self._header['NY'] * sampling
+        self._header['Zlength'] = self._header['NZ'] * sampling
+
+    def setStartPixel(self,  originTransformShift):#PIXEL
+        """input pixels"""
+        self._header['originX'] = 0.#originTransformShift[0]
+        self._header['originY'] = 0.#originTransformShift[1]
+        self._header['originZ'] = 0.#originTransformShift[2]
+        self._header['NCSTART'] = originTransformShift[0]
+        self._header['NRSTART'] = originTransformShift[1]
+        self._header['NSSTART'] = originTransformShift[2]
+
+    def setStartAngstrom(self,  originTransformShift, sampling):#Angstrom
+        """input Angstrom"""
+        self.setStartPixel(tuple([ int(round(x/sampling)) for x in
+                                    originTransformShift]))
+
+    def getStartPixel(self):#PIXEL
+        """returns pixels"""
+        return self._header['NCSTART'],\
+               self._header['NRSTART'],\
+               self._header['NSSTART']
+
+    def getStartAngstrom(self, sampling):#Angstrom
+        """returns Angstrom"""
+        return tuple([x*sampling for x in self.getStartPixel()])
 
     def getDims(self):
         return self._header['NC'],\
