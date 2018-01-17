@@ -281,8 +281,23 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         else:
             refStack = None
         # We convert the input micrograph on demand if not in .mrc
-        runGautomatch(micName, refStack, self.getMicrographsDir(), args,
-                      env=self._getEnviron())
+        self._runGautomatch(micName, refStack, self.getMicrographsDir(), args, self._getEnviron())
+
+    def _runGautomatch(self, micName, refStack, workDir, args, env):
+        # We convert the input micrograph on demand if not in .mrc
+        outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
+        if micName.endswith('.mrc'):
+            pwutils.createLink(micName, outMic)
+        else:
+            em.ImageHandler().convert(micName, outMic)
+        if refStack is not None:
+            args = ' %s --T %s %s' % (outMic, refStack, args)
+        else:
+            args = ' %s %s' % (outMic, args)
+        self.runJob(getProgram(), args, env=env)
+
+        # After picking we can remove the temporary file.
+        pwutils.cleanPath(outMic)
 
     def createOutputStep(self):
         pass
