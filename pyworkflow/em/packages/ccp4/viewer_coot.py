@@ -52,16 +52,17 @@ class CootRefineViewer(Viewer):
         bildFileName = os.path.abspath(self.protocol._getTmpPath("axis.bild"))
         dims = []
         samplings = []
-        if self.protocol.inputVolumes.get() is None:
+        if len(self.protocol.inputVolumes) is 0:
             dim = self.protocol.pdbFileToBeRefined.get().getVolume().getDim()[0]
             sampling = self.protocol.pdbFileToBeRefined.get().getVolume().getSamplingRate()
             dims.append(dim)
             samplings.append(sampling)
         else:
-            dim = self.protocol.inputVolumes.get().getDim()[0]
-            sampling = self.protocol.inputVolumes.get().getSamplingRate()
-            dims.append(dim)
-            samplings.append(sampling)
+            for i in range(len(self.protocol.inputVolumes)):
+                dim = self.protocol.inputVolumes[i].get().getDim()[0]
+                sampling = self.protocol.inputVolumes[i].get().getSamplingRate()
+                dims.append(dim)
+                samplings.append(sampling)
         createCoordinateAxisFile(max(dims),
                                  bildFileName=bildFileName,
                                  sampling=max(samplings))
@@ -79,23 +80,23 @@ class CootRefineViewer(Viewer):
                 count =+ 1
         except:
             outputsVol = []
-            if self.protocol.inputVolumes.get() is None:
+            if self.protocol.inputVolumes is None:
                 outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
                 outputsVol.append(outputVol)
             else:
-                for outputVol in self.protocol.inputVolumes.get():
+                for outputVol in self.protocol.inputVolumes:
                     outputsVol.append(outputVol)
             count = 1
             for outputVol in outputsVol:
 
                 outputVolFileName = os.path.abspath(
-                        ImageHandler.removeFileType(outputVol.getFileName()))
+                        ImageHandler.removeFileType(outputVol.get().getFileName()))
                 x, y, z = adaptOriginFromCCP4ToChimera(
-                    outputVol.getOrigin().getShifts())
+                    outputVol.get().getOrigin().getShifts())
                 f.write("open %s\n" % outputVolFileName)
                 f.write("volume #%d  style surface voxelSize %f origin "
                         "%0.2f,%0.2f,%0.2f\n"
-                        % (count, outputVol.getSamplingRate(),x, y, z))
+                        % (count, outputVol.get().getSamplingRate(),x, y, z))
                 count += 1
 
         counter = 1
