@@ -50,8 +50,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         ProtParticlePicking._defineParams(self, form)
         form.addParam('memory', FloatParam, default=2,
                       label='Memory to use (In Gb)', expertLevel=2)
-        form.addParam('saveDiscarded', BooleanParam, default=True,
-                      label='Save discarded particles', expertLevel=1,
+        form.addParam('saveDiscarded', BooleanParam, default=False,
+                      label='Save discarded particles',
                       help='Generates an output with '
                            'the manually discarded particles.') 
               
