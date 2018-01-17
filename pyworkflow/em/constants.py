@@ -60,6 +60,24 @@ ALIGN_PROJ = 'Projection'  # relate projections with 3d map
 
 ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
 
+#Constants related with colormaps for viewers
+# Color maps
+COLOR_JET = 0
+COLOR_TERRAIN = 1
+COLOR_GIST_EARTH = 2
+COLOR_GIST_NCAR = 3
+COLOR_GNU_PLOT = 4
+COLOR_GNU_PLOT2 = 5
+COLOR_OTHER = 6
+
+COLOR_CHOICES = ['jet', 'terrain',  'gist_earth', 'gist_ncar', 'gnuplot', 'gnuplot2', 'other']
+
+# Axis code
+AX_X = 0
+AX_Y = 1
+AX_Z = 2
+
+
 # SYMMETRY, follows chimera conventions https://www.cgl.ucsf.edu/chimera/docs/
 # UsersGuide/midas/sym.html
 SYM_CYCLIC = 0  # CN
@@ -92,3 +110,4 @@ SCIPION_SYM_NAME[SYM_I222] = 'I222'
 SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
 SCIPION_SYM_NAME[SYM_In25] = 'In25'
 SCIPION_SYM_NAME[SYM_In25r] = 'In25r'
+
