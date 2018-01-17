@@ -2,6 +2,7 @@
 # *
 # * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
 # *              Amaya Jimenez (ajimenez@cnb.csic.es)
+# *              Javier Mota Garcia (jmota@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -345,8 +346,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             self._params['phaseShift0'] = 1.57079
 
     def _prepareCommand(self):
-        if not hasattr(self, "ctfDict") and self.ctfRelations.hasValue():
-            self.getPreviousParameters()
+        if not hasattr(self, "ctfDict") and self.ctfRelations.hasValue(): #phase_shift0 does not work
+            self.getPreviousParameters()                                  # with self.ctfRelations.hasValue()
+
             
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'

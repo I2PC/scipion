@@ -444,7 +444,8 @@ public:
 	inline double getValuePureAt(bool show = false) const
 	{
 		double VPP;
-		if(VPP_radius != 0)
+		double check_VPP = round(VPP_radius*1000);
+		if(check_VPP != 0)
 			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
@@ -485,7 +486,8 @@ public:
 	inline double getValuePureNoKAt() const
 	{
 		double VPP;
-		if(VPP_radius != 0)
+		double check_VPP = round(VPP_radius*1000);
+		if(check_VPP != 0)
 			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
@@ -546,7 +548,8 @@ public:
 	double getValuePureWithoutDampingAt(bool show = false) const
 	{
 		double VPP;
-		if(VPP_radius != 0)
+		double check_VPP = round(VPP_radius*1000);
+		if(check_VPP != 0)
 			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
@@ -576,7 +579,8 @@ public:
 		double u4 = u2 * u2;
 		double deltaf = Defocus;
 		double VPP;
-		if(VPP_radius != 0)
+		double check_VPP = round(VPP_radius*1000);
+		if(check_VPP != 0)
 			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
@@ -1055,7 +1059,8 @@ public:
         //if (u2>=ua2) return 0;
         double deltaf = getDeltafNoPrecomputed(X, Y);
         double VPP;
-        if(VPP_radius != 0)
+        double check_VPP = round(VPP_radius*1000);
+		if(check_VPP != 0)
 			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
@@ -1100,7 +1105,8 @@ public:
         double u4 = u2 * u2;
         double deltaf = getDeltafNoPrecomputed(X, Y);
         double VPP;
-        if(VPP_radius != 0)
+        double check_VPP = round(VPP_radius*1000);
+		if(check_VPP != 0)
 			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;

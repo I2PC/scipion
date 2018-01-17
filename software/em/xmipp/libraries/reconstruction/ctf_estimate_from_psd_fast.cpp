@@ -713,7 +713,7 @@ void ProgCTFEstimateFromPSDFast::estimate_background_sqrt_parameters_fast()
 
         // Compute error
         current_ctfmodel.precomputeValues(x_contfreq(i));
-        double explained = current_ctfmodel.getValueNoiseAt(); //PSDna: ruido despues del proceso.
+        double explained = current_ctfmodel.getValueNoiseAt();
         double unexplained = psd_exp_radial(i) - explained;
         if (unexplained <= 0)
             continue;
@@ -1328,7 +1328,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best background Fit:\n" << prm.current_ctfmodel << std::endl;
 		prm.saveIntermediateResults_fast("step01d_best_background_fit_fast", true);
 	}
-	//prm.saveIntermediateResults_fast("/home/javiermota/scipion/step01d_best_background_fit_fast", true);
+
 	DEBUG_TEXTFILE(formatString("Step 4: CTF_fitness=%f",CTF_fitness_fast));
 	DEBUG_MODEL_TEXTFILE;
 
@@ -1353,7 +1353,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best envelope Fit:\n" << prm.current_ctfmodel << std::endl;
 		prm.saveIntermediateResults_fast("step02b_best_penalized_envelope_fit_fast", true);
 	}
-	//prm.saveIntermediateResults_fast("/home/javiermota/scipion/step02b_best_penalized_envelope_fit_fast", true);
+
 	DEBUG_TEXTFILE(formatString("Step 6: espr=%f",prm.current_ctfmodel.espr));
 	DEBUG_MODEL_TEXTFILE;
 
@@ -1395,7 +1395,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		<< std::endl;
 		prm.saveIntermediateResults_fast("step04b_best_fit_with_gaussian2_fast", true);
 	}
-	//prm.saveIntermediateResults_fast("/home/javiermota/scipion/step04b_best_fit_with_gaussian2_fast", true);
+
 	/************************************************************************/
 	/* STEP 12: 2D estimation parameters          							*/
 	/************************************************************************/
@@ -1441,7 +1441,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best fit with 2D parameters:\n" << prm2D->current_ctfmodel << std::endl;
 		prm2D->saveIntermediateResults("step05b_estimate_2D_parameters", true);
 	}
-	//prm2D->saveIntermediateResults("/home/javiermota/scipion/step05b_estimate_2D_parameters", true);
+
 	/************************************************************************/
 	/* STEP 13: Produce output                                              */
 	/************************************************************************/
