@@ -244,7 +244,8 @@ class TestSets(BaseTest):
             self.launchProtocol(pSubsetbyMic)
             return pSubsetbyMic.outputParticles
 
-        # Check if the final set size and the first micId are correct
+        # Check if the Output is generated, the subset size is correct and
+        #  the micId of the particle with certain partId is correct.
         def checkAsserts(setParts, size, partId, micId):
             self.assertIsNotNone(setParts, "Output SetOfParticles"
                                            " were not created.")
