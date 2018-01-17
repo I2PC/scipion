@@ -37,11 +37,13 @@ from pyworkflow.em.utils.ccp4_utilities.convert import (getProgram,
                                                         runCCP4Program,
                                                         cootPdbTemplateFileName,
                                                         cootScriptFileName,
-                                                        Ccp4Header)
+                                                        Ccp4Header, START
+                                                        )
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import Transform
+
 
 
 #TODO: viewer
@@ -76,7 +78,8 @@ the pdb file from coot  to scipion '
                            "objects will not be saved")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot  to scipion')
-        form.addLine("You may also excute (from script -> python) the command scipion_write(imol)")
+        form.addLine("You may also execute (from script -> python) the "
+                     "command scipion_write(imol)")
         form.addLine("where imol is the PDB id")
         # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -84,15 +87,16 @@ the pdb file from coot  to scipion '
         #test loop over inputVol
         self.inVolumes = []
         self.norVolumesNames = []
-        if self.inputVolumes.get() is None:
+        #if self.inputVolumes is None:
+        if len(self.inputVolumes) is 0:
             vol = self.pdbFileToBeRefined.get().getVolume()
             inFileName = vol.getFileName()
             self.inVolumes.append(vol)
             self.norVolumesNames.append(self._getVolumeFileName(inFileName))
         else:
-            for vol in self.inputVolumes.get():
-                inFileName = vol.getFileName()
-                self.inVolumes.append(vol)
+            for vol in self.inputVolumes:
+                inFileName = vol.get().getFileName()
+                self.inVolumes.append(vol.get())
                 self.norVolumesNames.append(self._getVolumeFileName(inFileName))
 
         convertId = self._insertFunctionStep('convertInputStep', self.inVolumes,
@@ -111,8 +115,9 @@ the pdb file from coot  to scipion '
 
         for inVol, norVolName in zip(inVolumes, norVolumesNames):
             inVolName  = inVol.getFileName()
-            if inVolName.endswith("mrc"): inVolName += ":mrc"
-            if norVolName.endswith("mrc"): norVolName += ":mrc"
+
+            if inVolName.endswith(".mrc"): inVolName += ":mrc"
+            if norVolName.endswith(".mrc"): norVolName += ":mrc"
             if not os.path.exists(norVolName):
                 if self.doNormalize:
                     img = ImageHandler()._img
@@ -124,7 +129,7 @@ the pdb file from coot  to scipion '
                     ImageHandler().convert(inVolName, norVolName)
                 copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
                 returnInitIfNone=True).getShifts(),
-                              inVol.getSamplingRate())
+                              inVol.getSamplingRate(), originField=START)
 
         createScriptFile(0,#imol
                          self._getTmpPath(cootScriptFileName),
@@ -157,9 +162,9 @@ the pdb file from coot  to scipion '
         #run in the background
         runCCP4Program(getProgram(os.environ['COOT']), args)
 
-        self.createOutputStep(   inVolumes,
-                                 norVolumesNames,
-                                 counter)
+        self.createOutputStep(inVolumes,
+                              norVolumesNames,
+                              counter)
 
     def createOutputStep(self, inVolumes,
                                  norVolumesNames,
@@ -224,9 +229,13 @@ the pdb file from coot  to scipion '
                 errors.append("CCP4_HOME = %s" % os.environ['CCP4_HOME'])
                 errors.append("COOT = %s" % os.environ['COOT'])
 
+        # Check if volume and pdb are properly fitted
+
+
         # Check that the input volume exist
         if (not self.pdbFileToBeRefined.get().hasVolume()) \
-                and (self.inputVolumes.get() is None):
+                and self.inputVolumes is None:
+                #and self.inputVolumes.get() is None:
             errors.append("Error: You should provide a volume.\n")
 
         return errors
