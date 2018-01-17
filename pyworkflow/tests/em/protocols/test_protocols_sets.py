@@ -246,8 +246,10 @@ class TestSets(BaseTest):
 
         # Check if the final set size and the first micId are correct
         def checkAsserts(setParts, size, partId, micId):
-            self.assertIsNotNone(setParts)
-            self.assertEqual(setParts.getSize(), size)
+            self.assertIsNotNone(setParts, "Output SetOfParticles"
+                                           " were not created.")
+            self.assertEqual(setParts.getSize(), size, "The number of created "
+                                                      "particles is incorrect.")
             p = setParts[partId]
             self.assertEqual(p.getMicId(), micId)
         
