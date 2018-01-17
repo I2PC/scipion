@@ -26,13 +26,15 @@
 
 import os
 import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 import pyworkflow.protocol.constants as cons
 import pyworkflow.protocol.params as param
 from pyworkflow.em.protocol import ProtClassify2D
 from pyworkflow.em.data import SetOfParticles
-from pyworkflow.object import Set
+from pyworkflow.object import Set, String
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, \
+    readSetOfParticles, setXmippAttributes
 
 
 class XmippProtEliminateEmptyParticles(ProtClassify2D):
@@ -58,9 +60,17 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         form.addParam('threshold', param.FloatParam, default=1.5,
                       label='Threshold used in elimination:',
                       help='Higher threshold => '
-                           'more particles will be eliminated.')
-
-        form.addParallelSection(threads=1, mpi=1)
+                           'more particles will be eliminated. '
+                           'Set to -1 for no elimination.')
+        form.addParam('addFeatures', param.BooleanParam, default=False,
+                      label='Add features', expertLevel=param.LEVEL_ADVANCED,
+                      help='Add features used for the ranking to each '
+                           'one of the input particles')
+        form.addParam('noDenoising', param.BooleanParam, default=False,
+                      label='Turning off denoising',
+                      expertLevel=param.LEVEL_ADVANCED,
+                      help='Option for turning of denoising method '
+                           'while computing emptiness feature')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -117,17 +127,19 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
     def eliminationStep(self, fnInputMd, fnOutputMd, fnElimMd):
         args = "-i %s -o %s -e %s -t %f" % (
         fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
+        if self.addFeatures:
+            args+=" --addFeatures"
+        if self.noDenoising:
+            args += " --noDenoising"
         self.runJob("xmipp_image_eliminate_empty_particles", args)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         if os.path.exists(fnOutputMd):
             outSet = self._loadOutputSet(SetOfParticles,
-                                         'outputParticles.sqlite')
-            readSetOfParticles(fnOutputMd, outSet)
+                                         'outputParticles.sqlite', fnOutputMd)
             self._updateOutputSet('outputParticles', outSet, streamMode)
         if os.path.exists(fnElimMd):
             outSet = self._loadOutputSet(SetOfParticles,
-                                     'eliminatedParticles.sqlite')
-            readSetOfParticles(fnElimMd, outSet)
+                                     'eliminatedParticles.sqlite', fnElimMd)
             self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
     def _stepsCheck(self):
@@ -179,7 +191,7 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    def _loadOutputSet(self, SetClass, baseName):
+    def _loadOutputSet(self, SetClass, baseName, fnMd):
         setFile = self._getPath(baseName)
         if os.path.exists(setFile):
             outputSet = SetClass(filename=setFile)
@@ -191,6 +203,12 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
 
         inputs = self.inputParticles.get()
         outputSet.copyInfo(inputs)
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(fnMd, partsSet)
+        outputSet.copyItems(partsSet,
+                          updateItemCallback=self._updateParticle,
+                          itemDataIterator=
+                            md.iterRows(fnMd, sortByLabel=md.MDL_ITEM_ID))
         return outputSet
 
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
@@ -228,3 +246,10 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         with open(self._getAllDone(), 'a') as f:
             for part in partList:
                 f.write('%d\n' % part.getObjId())
+
+    def _updateParticle(self, item, row):
+        setXmippAttributes(item, row, md.MDL_SCORE_BY_EMPTINESS)
+        if row.getValue(md.MDL_ENABLED) <= 0:
+            item._appendItem = False
+        else:
+            item._appendItem = True

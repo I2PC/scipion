@@ -80,6 +80,7 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "XmippProtCropResizeParticles",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtCTFCorrectWiener2D",    "text": "default"},
 			{"tag": "protocol", "value": "XmippProtPreprocessParticles",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtEliminateEmptyParticles",  "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionPreprocessParticles",  "text": "default"}
 		]},
 		{"tag": "protocol_group", "text": "Filter", "openItem": "False", "children": [
@@ -183,7 +184,8 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtCreateGallery", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtValidateNonTilt",    "text": "default"},
                 {"tag": "protocol", "value": "XmippProtMultiRefAlignability", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtValidateOverfitting",    "text": "default"}
+                {"tag": "protocol", "value": "XmippProtValidateOverfitting",    "text": "default"},
+                {"tag": "protocol", "value": "XmippProtCompareAngles",    "text": "default"}
 			]},
 			{"tag": "section", "text": "Resolution", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "ProtResMap",   "text": "default"},
