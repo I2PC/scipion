@@ -136,22 +136,12 @@ def readCoordinates(mic, fileName, coordsSet):
 
             for box in boxes:
                 x, y = box[:2]
-
-                if imageFlipped(mic.getFileName()):
-                    y = mic.getXDim() - y
-
                 coord = Coordinate()
                 coord.setPosition(x, y)
                 coord.setMicrograph(mic)
                 coordsSet.append(coord)
         
 
-def imageFlipped (fileName):
-
-    fnLower = fileName.lower()
-
-    return ('.tif' in fnLower
-           or fnLower.endswith('.dm3'))
 
 def writeSetOfCoordinates():
     pass

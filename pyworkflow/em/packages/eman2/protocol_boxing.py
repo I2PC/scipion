@@ -28,7 +28,7 @@ import os
 
 from pyworkflow.object import String
 from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import join
+from pyworkflow.utils.path import join, getExt
 from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.em.protocol import ProtParticlePicking
 
@@ -111,6 +111,23 @@ class EmanProtBoxing(ProtParticlePicking):
         errors = []
         eman2.validateVersion(self, errors)
         return errors
+
+    def _warnings(self):
+        warnings = []
+        firstMic = self.inputMicrographs.get().getFirstItem()
+        fnLower = firstMic.getFileName().lower()
+
+        ext = getExt(fnLower)
+
+        if ext in ['.tif','.dm3'] :
+            warnings.append(
+                'We have seen a flip in Y when using %s files in EMAN2' % ext)
+            warnings.append(
+                'The generated coordinates may or may not be valid in Scipion.')
+            warnings.append(
+                'TIP: a workaround could be importing the coordinates inverted')
+            warnings.append('     in Xmipp particle picking GUI.')
+        return warnings
 
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
