@@ -27,18 +27,4 @@
 
 #include "data/transform_geometry.h"
 
-#include <stdio.h>
-#include <time.h>
-#include <sys/time.h>
-
-//RUN_XMIPP_PROGRAM(ProgTransformGeometry)
-
-int main(int argc, char** argv) {
-
-	ProgTransformGeometry program;
-	program.read(argc, argv);
-    int errorCode = program.tryRun();
-
-    return errorCode;
-
-}
+RUN_XMIPP_PROGRAM(ProgTransformGeometry)

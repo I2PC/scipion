@@ -543,7 +543,6 @@ for p in ['angular_break_symmetry',
           'ctf_sort_psds',
 
           'cuda_reconstruct_fourier',
-
           'evaluate_coordinates',
 
           'idr_xray_tomo',
@@ -632,7 +631,7 @@ for p in ['angular_break_symmetry',
           'transform_randomize_phases',
           'transform_range_adjust',
           'transform_symmetrize',
-	  'transform_threshold',
+          'transform_threshold',
           'transform_window',
           'tomo_align_dual_tilt_series',
           'tomo_align_refinement',
@@ -663,6 +662,7 @@ for p in ['angular_break_symmetry',
           'xray_import',
           'xray_psf_create',
           'xray_project',
+
           # MPI programs, the mpi_ prefix set mpi=True flag.
           'mpi_angular_class_average',
           'mpi_angular_continuous_assign',
@@ -704,7 +704,7 @@ for p in ['angular_break_symmetry',
           'mpi_transform_geometry',
           'mpi_transform_mask',
           'mpi_transform_normalize',
-          #'mpi_transform_threshold',
+          'mpi_transform_threshold',
           'mpi_xray_project',
 	      'mpi_validation_nontilt',	  
           'mpi_write_test',
@@ -878,3 +878,4 @@ XmippAlias = env.Alias('xmipp', ['xmipp-libs',
 
 
 Return('XmippAlias')
+

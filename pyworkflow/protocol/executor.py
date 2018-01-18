@@ -261,4 +261,4 @@ class MPIStepExecutor(ThreadStepExecutor):
         # Send special command 'None' to MPI slaves to notify them
         # that there are no more jobs to do and they can finish.
         for node in range(1, self.numberOfProcs+1):
-		self.comm.send('None', dest=node, tag=(TAG_RUN_JOB+node))
+            self.comm.send('None', dest=node, tag=(TAG_RUN_JOB+node))
