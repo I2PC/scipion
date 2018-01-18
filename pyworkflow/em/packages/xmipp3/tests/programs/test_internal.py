@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     Josue GOmez Blanco (jgomez@cnb.csic.es)
@@ -32,7 +31,7 @@ from base import BaseTest
 import pyworkflow.em.packages.xmipp3 as xmipp3
 
 
-class TestConvertBase(BaseTest):
+class TestXmipp(BaseTest):
     """ Base class to launch both Alignment and Reconstruction tests."""
 
     def discoverXmippTest(self):
