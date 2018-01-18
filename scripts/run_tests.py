@@ -45,8 +45,8 @@ from pyworkflow.tests import *
 
 PATH_PATTERN = {'model': ('tests/model tests/em/data', 'test*.py'),
                 'convert': ('em/packages', 'test_convert*.py'),
-                'scipionprot': ('tests/em/protocols', 'test_protocol*.py'),
-                'protocols': ('em/packages', 'test_protocol*.py'),
+                'protocols': ('em/packages' 'tests/em/protocols',
+                              'test_protocol*.py'),
                 'mixed': ('em/workflows', 'test*mixed*.py')}
 
 MODULE = 0
@@ -64,8 +64,7 @@ class Tester():
     
         add = parser.add_argument  # shortcut
     
-        add('--case', choices=['model', 'convert', 'protocols',
-                               'scipionprot', 'mixed'],
+        add('--case', choices=['model', 'convert', 'protocols', 'mixed'],
             help='get pre-defined paths and patterns for the specified case')
         add('--paths', default='.',
             help='space-separated list of paths where the tests are searched')
@@ -125,26 +124,6 @@ class Tester():
         for path in [join('pyworkflow', x) for x in paths]:
             tests.addTests(unittest.defaultTestLoader.discover(
                 path, pattern=pattern, top_level_dir=pw.HOME))
-
-    def discoverXmippTest(self, newItemCallback):
-        """ Discovers all basic xmipp tests and prints or executes them 
-            depending on newItemCallback argument
-        """
-                
-        # Build base directory.
-        path = "software/em/xmipp/applications/tests/"
-        
-        # Get all folders in current path.
-        for folder in os.listdir(path):
-            
-            # Check if current folder starts with "test_"
-            if folder.startswith("test_"):
-                
-                # Build command to execute/print.
-                command = 'xmipp_%s' % folder
-                
-                # Execute input funcion.
-                newItemCallback(CLASS, command)            
 
     def _match(self, itemName):
         itemLower = itemName.lower()
@@ -208,20 +187,10 @@ class Tester():
                 if mode == 'all':
                     newItemCallback(TEST, "%s.%s.%s" % (moduleName, className, testName))
 
-        # If label is "pull" then add all basic xmipp tests.
-        if (self.labels is not None):
-            if PULL_REQUEST in self.labels:
-                self.discoverXmippTest(newItemCallback)
-        else:
-            self.discoverXmippTest(newItemCallback)
-    
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
-            if (itemName.startswith("xmipp_")):
-                print "%s scipion %s" % (spaces, itemName)
-            else:
-                print "%s scipion test %s" % (spaces, itemName)
+            print "%s scipion test %s" % (spaces, itemName)
             
     def printTests(self, tests):
         self._visitTests(tests, self._printNewItem)
@@ -250,10 +219,7 @@ class Tester():
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
             scipion = join(os.environ['SCIPION_HOME'], 'scipion')
-            if (itemName.startswith("xmipp_")):
-                cmd = "%s %s %s" % (spaces, scipion, itemName)
-            else:
-                cmd = "%s %s test %s" % (spaces, scipion, itemName)
+            cmd = "%s %s test %s" % (spaces, scipion, itemName)
             run = ((itemType == MODULE and self.mode == 'module') or
                    (itemType == CLASS and self.mode == 'classes') or
                    (itemType == TEST and self.mode == 'all'))
