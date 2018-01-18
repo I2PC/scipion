@@ -794,15 +794,8 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize, bool relative)
 
                 I.window(kernel, y0, x0, yF, xF);
                 kernel.computeStats(avgKernel, stdKernel, min_val, max_val);
-                if(relative)
-                    if(avgImg!=0)
-                        varKernel = stdKernel/avgImg;
-                    else
-                        varKernel = stdKernel/0.00000000000000000000001;
-                else
-                    varKernel = stdKernel*stdKernel;
                 
-                DIRECT_A2D_ELEM(mVar, i, j) = varKernel;
+                DIRECT_A2D_ELEM(mVar, i, j) = stdKernel;
             }
 
     // filtering to fill the matrices (convolving with a Gaussian)
@@ -811,6 +804,13 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize, bool relative)
     filter.FilterBand = LOWPASS;
     filter.w1 = kernelSize_2;
     filter.applyMaskSpace(mVar);
+
+    if (relative) // normalize to the mean of the variance
+    {    
+        double avgVar, stdVar, minVar, maxVar;
+        mVar.computeStats(avgVar, stdVar, minVar, maxVar);
+        mVar = mVar/avgVar;
+    }
 
     // Working in a auxilary windows to avoid borders bad defined
     MultidimArray<double> mVarAux(YSIZE(I)-kernelSize,XSIZE(I)-kernelSize);
@@ -928,7 +928,7 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize)
     // Image<double> imG(im);
     // imG.write("I_Gauss.mrc");
 
-    varianceFilter(I, varKernelSize, false);
+    varianceFilter(I, varKernelSize, true);
     im = I;
 
     filter.w1 = varKernelSize/8;

@@ -75,9 +75,13 @@ void ProgCoordinatesNoisyZonesFilter::run()
     Image<double> normMic(matrixMic);
     normMic.write(fnInCoord.withoutExtension()+"_normalized.mrc");
 
+
     // getting the gini coefficient of the Micrograph whereas applaying a 
     // variance filter to the matrixMic (and filtered to smooth the result) 
     double giniV = giniCoeff(matrixMic, patchSize);
+
+    Image<double> varMic(matrixMic);
+    varMic.write(fnInCoord.withoutExtension()+"_variance.mrc");
 
     if (verbose>1)
     {
