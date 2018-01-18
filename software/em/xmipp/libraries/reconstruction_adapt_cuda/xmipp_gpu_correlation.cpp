@@ -110,7 +110,7 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 	for(int i=firstIdx; i<firstIdx+numImages; i++){
 
 		SF.getValue(MDL_IMAGE,fnImg,iter->objId);
-		//std::cerr << iter->objId << ". Image: " << fnImg << std::endl;
+		std::cerr << iter->objId << ". Image: " << fnImg << std::endl;
 		Iref.read(fnImg);
 		original_image_stack_ref.fillImage(n,Iref()/8);
 
@@ -1154,6 +1154,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 	bool flip;
 	double rot, tilt, psi;
 	int idxJ;
+	size_t refNum;
 
 	MDIterator *iterExp = new MDIterator(SFexp);
 	MDRow rowExp;
@@ -1260,14 +1261,18 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				//rowOut
 				rowExp.setValue(MDL_SHIFT_X, -shiftX);
 				rowExp.setValue(MDL_SHIFT_Y, -shiftY);
-				rowExp.setValue(MDL_SHIFT_Z, 0.0);
+				//rowExp.setValue(MDL_SHIFT_Z, 0.0);
 				row.getValue(MDL_ANGLE_ROT, rot);
 				rowExp.setValue(MDL_ANGLE_ROT, rot);
 				row.getValue(MDL_ANGLE_TILT, tilt);
 				rowExp.setValue(MDL_ANGLE_TILT, tilt);
 				rowExp.setValue(MDL_ANGLE_PSI, psi);
 				//rowOut
-				rowExp.setValue(MDL_REF, idxJ+1);
+				if(row.containsLabel(MDL_ITEM_ID))
+					row.getValue(MDL_ITEM_ID, refNum);
+				else
+					refNum = idxJ+1;
+				rowExp.setValue(MDL_REF, (int)refNum);
 				mdOut.addRow(rowExp);
 			}
 			if(iter->hasNext())
@@ -1304,7 +1309,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	Matrix2D<double> auxtrMatrix(3,3);
 	MultidimArray<double> refSum(1, 1, yAux, xAux);
 	bool firstTime=true;
-	int refNum;
+	size_t refNum;
 	MultidimArray<double> zeros(1, 1, yAux, xAux);
 
 	// Generate mask
@@ -1343,8 +1348,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		double normWeight=0;
 
 		SF.getRow(rowSF, iterSF->objId);
-		if(rowSF.containsLabel(MDL_REF))
-			rowSF.getValue(MDL_REF, refNum);
+		if(rowSF.containsLabel(MDL_ITEM_ID))
+			rowSF.getValue(MDL_ITEM_ID, refNum);
 		else
 			refNum=countingClasses;
 
@@ -1510,7 +1515,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		}
 
 		FileName fnStackNo;
-		fnStackNo.compose(refNum, fnStackOut);
+		fnStackNo.compose(countingClasses, fnStackOut); //AJ antes2017 refNum
 		if(change){
 			refSum/=normWeight;
 			Inew()=refSum;
@@ -1552,21 +1557,21 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		//rowSF.getValue(MDL_IMAGE, fnImgNew);
 		//fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
 		SF.getRow(rowSF, iterSF->objId);
-		if(rowSF.containsLabel(MDL_REF))
-			rowSF.getValue(MDL_REF, refNum);
+		if(rowSF.containsLabel(MDL_ITEM_ID))
+			rowSF.getValue(MDL_ITEM_ID, refNum);
 		else
 			refNum = countingClasses;
 
 		fnRoot=fn_classes_out.withoutExtension();
 		fnStackMD=formatString("%s/%s.xmd", fnDir.c_str(), fnRoot.c_str());
-		fnClass.compose(refNum, fnStackOut);
+		fnClass.compose(countingClasses, fnStackOut); //AJ antes2017 refNum
 
 		if(fnStackMD.exists() && firstTime)
 			fnStackMD.deleteFile();
 
 		firstTime=false;
 		size_t id = SFout.addObject();
-		SFout.setValue(MDL_REF, refNum, id);
+		SFout.setValue(MDL_REF, (int)refNum, id);
 		SFout.setValue(MDL_IMAGE, fnClass, id);
 		SFout.setValue(MDL_CLASS_COUNT,(size_t)NexpVector[i], id);
 
@@ -1589,7 +1594,7 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	for(int i=0; i<mdInSize; i++){
 		skip_image=false;
 		SF.getRow(rowSF, iterSF->objId);
-		rowSF.getValue(MDL_REF, refNum);
+		rowSF.getValue(MDL_ITEM_ID, refNum);
 		iterSFexp->init(SFexp);
 
 		MetaData SFq;
@@ -1667,13 +1672,13 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					//row
 					rowSFexp.setValue(MDL_SHIFT_X, -shiftX);
 					rowSFexp.setValue(MDL_SHIFT_Y, -shiftY);
-					rowSFexp.setValue(MDL_SHIFT_Z, 0.0);
+					//rowSFexp.setValue(MDL_SHIFT_Z, 0.0);
 					rowSF.getValue(MDL_ANGLE_ROT, rot);
 					rowSFexp.setValue(MDL_ANGLE_ROT, rot);
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
 					rowSFexp.setValue(MDL_ANGLE_TILT, tilt);
 					rowSFexp.setValue(MDL_ANGLE_PSI, psi);
-					rowSFexp.setValue(MDL_REF,refNum);
+					rowSFexp.setValue(MDL_REF,(int)refNum);
 					SFq.addRow(rowSFexp);
 				}
 			}
@@ -1756,12 +1761,13 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 					//row
 					rowSFexp.setValue(MDL_SHIFT_X, -shiftX);
 					rowSFexp.setValue(MDL_SHIFT_Y, -shiftY);
+					//rowSFexp.setValue(MDL_SHIFT_Z, 0.0);
 					rowSF.getValue(MDL_ANGLE_ROT, rot);
 					rowSFexp.setValue(MDL_ANGLE_ROT, rot);
 					rowSF.getValue(MDL_ANGLE_TILT, tilt);
 					rowSFexp.setValue(MDL_ANGLE_TILT, tilt);
 					rowSFexp.setValue(MDL_ANGLE_PSI, psi);
-					rowSFexp.setValue(MDL_REF,refNum);
+					rowSFexp.setValue(MDL_REF,(int)refNum);
 					SFq.addRow(rowSFexp);
 				}
 			}
@@ -1953,6 +1959,10 @@ void ProgGpuCorrelation::run()
 	GpuMultidimArrayAtCpu<float> original_image_stack;
 
 	//Loop over the reference images
+	size_t totalWork=mdInSize*mdExpSize;
+	size_t workDone=0;
+	init_progress_bar(totalWork);
+	size_t lastProgressShown=0;
 	while(!finish){
 
 		original_image_stack.resize(Xdim,Ydim,1,available_images_proj);
@@ -2050,7 +2060,7 @@ void ProgGpuCorrelation::run()
 
 			SF.getRow(rowExp, expIndex); //SFexp
 			rowExp.getValue(MDL_IMAGE, fnImgExp);
-			//std::cerr << expIndex << ". Image: " << fnImgExp << std::endl;
+			std::cerr << expIndex << ". Image: " << fnImgExp << std::endl;
 
 			//AJ calling the function to align the images
 			bool mirror=false;
@@ -2116,7 +2126,12 @@ void ProgGpuCorrelation::run()
 				iterExp->moveNext();
 
 			n++;
-
+            workDone+=available_images_proj;
+            if (size_t(workDone/100)>lastProgressShown)
+            {
+            	progress_bar(workDone);
+            	lastProgressShown=size_t(workDone/100);
+            }
 		}//end while experimental images
 
 		delete iterExp;
@@ -2149,6 +2164,7 @@ void ProgGpuCorrelation::run()
 
 
 	}//End loop over the reference images while(!finish)
+	progress_bar(totalWork);
 
 	//std::cerr << "matrixCorrCpu: " << matrixCorrCpu << std::endl;
 
