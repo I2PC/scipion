@@ -273,6 +273,20 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     SideEffect('dummy', library)
     env.Depends(library, sources)
     
+    if installDir:
+        install = env.Install(installDir, library)
+        SideEffect('dummy', install)
+        lastTarget = install
+    else:
+        lastTarget = library
+    env.Default(lastTarget)
+
+    for dep in deps:
+        env.Depends(sources, dep)
+
+    env.Alias(name, lastTarget)
+
+    return lastTarget
 
 def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[],
                   libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[],
