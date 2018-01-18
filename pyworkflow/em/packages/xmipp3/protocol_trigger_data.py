@@ -26,17 +26,12 @@
 
 
 import os
-import pyworkflow.em as em
+import time
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.object import Set
-from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_ADVANCED, FloatParam,
-                                        BooleanParam)
-from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles, \
-    writeSetOfParticles, setXmippAttributes
-
+from pyworkflow.protocol.params import (BooleanParam, IntParam)
 
 class XmippProtTriggerData(ProtProcessParticles):
     """ Waits until certain number of particles is prepared and then
@@ -47,7 +42,7 @@ class XmippProtTriggerData(ProtProcessParticles):
     # --------------------------- DEFINE param functions ----------------------
     def _defineProcessParams(self, form):
 
-        form.addParam('outputSize', IntParam, default=10000,
+        form.addParam('outputSize', IntParam, default=60,
                       label='Output size',
                       help='How many particles need to be on input to '
                            'create output set.')
@@ -58,11 +53,15 @@ class XmippProtTriggerData(ProtProcessParticles):
                       label='Send all particles to output?',
                       help='If NO is selected, only subset of "Output size" '
                            'particles will be send to output.')
+        form.addParam('delay', IntParam, default=1,
+                      label="Delay (sec)",
+                      help="Delay in seconds before checking new output")
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
-        self.SetOfParticles = [m.clone() for m in self.inputParticles.get()]
-        partsSteps = self._checkNewPartsSteps()
+        self.finished = False
+        self.AddedParticles = []
+        partsSteps = self.delayStep()
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=partsSteps, wait=True)
 
@@ -82,19 +81,8 @@ class XmippProtTriggerData(ProtProcessParticles):
                 return s
         return None
 
-    def _insertNewPartsSteps(self, insertedDict, inputParts):
-        deps = []
-        writeSetOfParticles([p.clone() for p in inputParts],
-                            self._getExtraPath("allDone.xmd"),
-                            alignType=em.ALIGN_NONE)
-        stepId = self._insertFunctionStep('checkForOutput',
-                                          inputParts,
-                                          prerequisites=[])
-        deps.append(stepId)
-        for p in inputParts:
-            if int(p.getObjId()) not in insertedDict:
-                insertedDict[p.getObjId()] = stepId
-        return deps
+    def delayStep(self):
+        time.sleep(self.delay)
 
     def _stepsCheck(self):
         # Input particles set can be loaded or None when checked for new inputs
@@ -103,50 +91,60 @@ class XmippProtTriggerData(ProtProcessParticles):
         self._checkNewOutput()
 
     def _checkNewInput(self):
-        # Check if there are new particles to process from the input set
         partsFile = self.inputParticles.get().getFileName()
         partsSet = SetOfParticles(filename=partsFile)
         partsSet.loadAllProperties()
-        self.SetOfParticles = [m.clone() for m in partsSet]
+        self.SetOfParticles = [m.clone() for m in partsSet if
+                               int(m.getObjId()) not in self.AddedParticles]
         self.streamClosed = partsSet.isStreamClosed()
+        print(self.streamClosed)
         partsSet.close()
-        partsSet = self._createSetOfParticles()
-        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
-        newParts = any(m.getObjId() not in partsSet
-                       for m in self.SetOfParticles)
-        outputStep = self._getFirstJoinStep()
-        if newParts:
-            fDeps = self._insertNewPartsSteps(self.insertedDict,
-                                              self.SetOfParticles)
-            if outputStep is not None:
-                outputStep.addPrerequisites(*fDeps)
-            self.updateSteps()
+        for m in self.SetOfParticles:
+            if int(m.getObjId()) not in self.AddedParticles:
+                self.AddedParticles.append(m.getObjId())
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        if len(self.AddedParticles) >= self.outputSize:
+            if self.allParticles:
+                if not os.path.exists(self._getPath('particles.sqlite')):
+                    self.SetOfAllParticles = [m.clone() for m in partsSet]
+                    imageSet = self._loadOutputSet(SetOfParticles,
+                                                   'particles.sqlite',
+                                                   self.SetOfAllParticles)
+                else:
+                    imageSet = self._loadOutputSet(SetOfParticles,
+                                                   'particles.sqlite',
+                                                   self.SetOfParticles)
+                self._updateOutputSet('outputMovies', imageSet, streamMode)
+
+            elif not os.path.exists(self._getPath('particles.sqlite')):
+                self.SetOfAllParticles = [m.clone() for m in partsSet]
+                imageSet = self._loadOutputSet(SetOfParticles,
+                                               'particles.sqlite',
+                                               self.SetOfAllParticles)
+                self._updateOutputSet('outputMovies', imageSet, streamMode)
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
             return
-        # Load previously done items (from text file)
-        doneList = self._readDoneList()
-        # Check for newly done items
-        partsSet = self._createSetOfParticles()
-        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
-        newDone = [m.clone() for m in self.SetOfParticles
-                   if m.getObjId() not in doneList]
-        self.finished = (self.streamClosed
-                         and (len(doneList) == len(partsSet))) \
-                        or (len(doneList) > self.outputSize
-                            and self.allParticles == False)
-        if newDone:
-            self._writeDoneList(newDone)
-        elif not self.finished:
-            # If we are not finished and no new output have been produced
-            # it does not make sense to proceed and updated the outputs
-            # so we exit from the function here
-            return
+        self.finished = (self.streamClosed and
+                         ((len(self.AddedParticles) > self.outputSize
+                          and not self.allParticles) or
+                         (self.allParticles
+                          and len(self.AddedParticles) ==
+                          len(self.inputParticles.get()))))
+        outputStep = self._getFirstJoinStep()
+        deps = []
         if self.finished:  # Unlock createOutputStep if finished all jobs
-            outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
+        else:
+            delayId = self._insertFunctionStep('delayStep', prerequisites=[])
+            deps.append(delayId)
+
+        if outputStep is not None:
+            outputStep.addPrerequisites(*deps)
+        self.updateSteps()
 
     def _loadOutputSet(self, SetClass, baseName, newParts):
         setFile = self._getPath(baseName)
@@ -178,17 +176,6 @@ class XmippProtTriggerData(ProtProcessParticles):
 
         # Close set databaset to avoid locking it
         outputSet.close()
-
-    # --------------------------- STEPS functions -----------------------------
-    def checkForOutput(self, newParts):
-
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-        outSet = self._loadOutputSet(SetOfParticles,
-                                     'outputParticles.sqlite',
-                                     newParts)
-        self._updateOutputSet('outputParticles', outSet, streamMode)
-        if (outSet.getSize() >= self.outputSize):
-            self.finished = True
 
     # --------------------------- INFO functions ------------------------------
     def _summary(self):
