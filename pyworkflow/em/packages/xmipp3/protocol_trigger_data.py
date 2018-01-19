@@ -92,13 +92,12 @@ class XmippProtTriggerData(ProtProcessParticles):
 
     def _checkNewInput(self):
         partsFile = self.inputParticles.get().getFileName()
-        partsSet = SetOfParticles(filename=partsFile)
-        partsSet.loadAllProperties()
-        self.SetOfParticles = [m.clone() for m in partsSet if
+        self.partsSet = SetOfParticles(filename=partsFile)
+        self.partsSet.loadAllProperties()
+        self.SetOfParticles = [m.clone() for m in self.partsSet if
                                int(m.getObjId()) not in self.AddedParticles]
-        self.streamClosed = partsSet.isStreamClosed()
-        print(self.streamClosed)
-        partsSet.close()
+        self.streamClosed = self.partsSet.isStreamClosed()
+        self.partsSet.close()
         for m in self.SetOfParticles:
             if int(m.getObjId()) not in self.AddedParticles:
                 self.AddedParticles.append(m.getObjId())
@@ -107,7 +106,7 @@ class XmippProtTriggerData(ProtProcessParticles):
         if len(self.AddedParticles) >= self.outputSize:
             if self.allParticles:
                 if not os.path.exists(self._getPath('particles.sqlite')):
-                    self.SetOfAllParticles = [m.clone() for m in partsSet]
+                    self.SetOfAllParticles = [m.clone() for m in self.partsSet]
                     imageSet = self._loadOutputSet(SetOfParticles,
                                                    'particles.sqlite',
                                                    self.SetOfAllParticles)
@@ -115,24 +114,22 @@ class XmippProtTriggerData(ProtProcessParticles):
                     imageSet = self._loadOutputSet(SetOfParticles,
                                                    'particles.sqlite',
                                                    self.SetOfParticles)
-                self._updateOutputSet('outputMovies', imageSet, streamMode)
+                self._updateOutputSet('outputParticles', imageSet, streamMode)
 
             elif not os.path.exists(self._getPath('particles.sqlite')):
-                self.SetOfAllParticles = [m.clone() for m in partsSet]
+                self.SetOfAllParticles = [m.clone() for m in self.partsSet]
                 imageSet = self._loadOutputSet(SetOfParticles,
                                                'particles.sqlite',
                                                self.SetOfAllParticles)
-                self._updateOutputSet('outputMovies', imageSet, streamMode)
+                self._updateOutputSet('outputParticles', imageSet, streamMode)
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
             return
-        self.finished = (self.streamClosed and
-                         ((len(self.AddedParticles) > self.outputSize
-                          and not self.allParticles) or
-                         (self.allParticles
-                          and len(self.AddedParticles) ==
-                          len(self.inputParticles.get()))))
+        self.finished = (not self.allParticles and
+                         len(self.AddedParticles) > self.outputSize) or \
+                        (self.streamClosed and self.allParticles
+                          and len(self.AddedParticles) == len(self.partsSet))
         outputStep = self._getFirstJoinStep()
         deps = []
         if self.finished:  # Unlock createOutputStep if finished all jobs

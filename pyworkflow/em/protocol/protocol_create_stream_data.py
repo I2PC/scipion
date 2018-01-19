@@ -34,13 +34,10 @@ import xmipp
 import random
 
 from pyworkflow import VERSION_1_1
-from pyworkflow.em.data import \
-    (SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMovies)
 from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMovies, SetOfParticles, Particle
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from os.path import basename, exists
+from os.path import basename
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.utils.path import createLink
 
 SET_OF_MOVIES = 0
 SET_OF_MICROGRAPHS = 1
@@ -228,10 +225,7 @@ class ProtCreateStreamData(EMProtocol):
         newObjSet, newObj = self._checkNewItems(objSet)
 
         # check if end ....
-        if self.setof == SET_OF_PARTICLES:
-            endObjs = newObjSet.getSize() >= self.nDim.get()/self.groups.get()
-        else:
-            endObjs = newObjSet.getSize() == self.nDim.get()
+        endObjs = newObjSet.getSize() == self.nDim.get()
 
         if newObj:
             if endObjs:
