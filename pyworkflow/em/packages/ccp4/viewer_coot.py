@@ -70,34 +70,41 @@ class CootRefineViewer(Viewer):
         f = open(fnCmd, 'w')
         f.write("open %s\n" % bildFileName)
 
-        try:
-            outputsVol = self.protocol.norVolumesNames
-            count = 1
-            for outputVol in outputsVol:
-                outputVolFileName = os.path.abspath(outputVol.getFileName())
-                f.write("open %s\n" % outputVolFileName)
-                f.write("volume #%d style surface\n" % count)
-                count =+ 1
-        except:
-            outputsVol = []
-            if self.protocol.inputVolumes is None:
-                outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+        # try:
+        #     outputsVol = self.protocol.norVolumesNames
+        #     count = 1
+        #     for outputVol in outputsVol:
+        #         outputVolFileName = os.path.abspath(outputVol.getFileName())
+        #         f.write("open %s\n" % outputVolFileName)
+        #         f.write("volume #%d style surface\n" % count)
+        #         count =+ 1
+        # except:
+        outputsVol = []
+        if len(self.protocol.inputVolumes) is 0:
+            outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+            outputsVol.append(outputVol)
+        else:
+            for i in range(len(self.protocol.inputVolumes)):
+                outputVol = self.protocol.inputVolumes[i].get()
                 outputsVol.append(outputVol)
-            else:
-                for outputVol in self.protocol.inputVolumes:
-                    outputsVol.append(outputVol)
-            count = 1
-            for outputVol in outputsVol:
-
-                outputVolFileName = os.path.abspath(
-                        ImageHandler.removeFileType(outputVol.get().getFileName()))
-                x, y, z = adaptOriginFromCCP4ToChimera(
-                    outputVol.get().getOrigin().getShifts())
-                f.write("open %s\n" % outputVolFileName)
-                f.write("volume #%d  style surface voxelSize %f origin "
-                        "%0.2f,%0.2f,%0.2f\n"
-                        % (count, outputVol.get().getSamplingRate(),x, y, z))
-                count += 1
+            # if self.protocol.inputVolumes is None:
+            #     outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+            #     outputsVol.append(outputVol)
+            # else:
+            #     for outputVol in self.protocol.inputVolumes:
+            #         outputsVol.append(outputVol)
+        count = 1
+        for outputVol in outputsVol:
+            print "outputVol: ", outputVol
+            outputVolFileName = os.path.abspath(
+                    ImageHandler.removeFileType(outputVol.getFileName()))
+            x, y, z = adaptOriginFromCCP4ToChimera(
+                outputVol.getOrigin().getShifts())
+            f.write("open %s\n" % outputVolFileName)
+            f.write("volume #%d  style surface voxelSize %f origin "
+                    "%0.2f,%0.2f,%0.2f\n"
+                    % (count, outputVol.getSamplingRate(),x, y, z))
+            count += 1
 
         counter = 1
         template = self.protocol._getExtraPath(cootPdbTemplateFileName)
