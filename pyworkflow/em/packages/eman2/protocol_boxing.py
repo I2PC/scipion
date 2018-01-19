@@ -30,7 +30,7 @@ from pyworkflow.object import String
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import join, getExt
 from pyworkflow.gui.dialog import askYesNo
-from pyworkflow.em.protocol import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePicking, BooleanParam
 
 import eman2
 from pyworkflow.em.packages.eman2.convert import loadJson
@@ -45,7 +45,7 @@ class EmanProtBoxing(ProtParticlePicking):
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
-    
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self.inputMics = self.inputMicrographs.get()
@@ -54,6 +54,15 @@ class EmanProtBoxing(ProtParticlePicking):
         self._params = {'inputMics': ' '.join(micList)}
         # Launch Boxing GUI
         self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
+
+    def _defineParams(self, form):
+        ProtParticlePicking._defineParams(self, form)
+
+        form.addParam('invertY', BooleanParam, default=False,
+                      label='Invert Y coordinates',
+                      help='In some cases, using dm3 or tiff Y coordinates '
+                           'must be flipped. Check output and activate this'
+                           ' if needed.')
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def launchBoxingGUIStep(self):
@@ -119,14 +128,13 @@ class EmanProtBoxing(ProtParticlePicking):
 
         ext = getExt(fnLower)
 
-        if ext in ['.tif','.dm3'] :
+        if ext in ['.tif', '.dm3'] and not self.invertY.get():
             warnings.append(
                 'We have seen a flip in Y when using %s files in EMAN2' % ext)
             warnings.append(
                 'The generated coordinates may or may not be valid in Scipion.')
             warnings.append(
-                'TIP: a workaround could be importing the coordinates inverted')
-            warnings.append('     in Xmipp particle picking GUI.')
+                'TIP: Activate "Invert Y coordinates" if you find it wrong.')
         return warnings
 
     #--------------------------- UTILS functions ---------------------------------------------------
@@ -141,6 +149,4 @@ class EmanProtBoxing(ProtParticlePicking):
         return filePaths
 
     def readSetOfCoordinates(self, workingDir, coordSet):
-        readSetOfCoordinates(workingDir, self.inputMics, coordSet)
-        
-        
+        readSetOfCoordinates(workingDir, self.inputMics, coordSet, self.invertY.get())
