@@ -28,15 +28,16 @@ import unittest, sys
 # import numpy as np
 from pyworkflow.em import exists
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pyworkflow.em.packages.xmipp3 import XmippProtMonoRes, XmippProtCreateMask3D
+from pyworkflow.em.packages.xmipp3 import XmippProtCreateMask3D
+from pyworkflow.em.packages.bsoft.protocol_blocres import BsoftProtBlocres
 from pyworkflow.em.protocol import ProtImportVolumes
 
 
-class TestMonoResBase(BaseTest):
+
+class TestBsoftBlocresBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='resmap'):
         cls.dataset = DataSet.getDataSet(dataProject)
-        cls.map3D = cls.dataset.getFile('betagal')
         cls.half1 = cls.dataset.getFile('betagal_half1')
         cls.half2 = cls.dataset.getFile('betagal_half2')
         cls.mask = cls.dataset.getFile('betagal_mask')
@@ -58,9 +59,8 @@ class TestMonoResBase(BaseTest):
                                   inputVolume=pattern,
                                   volumeOperation=0,  # OPERATION_THRESHOLD,
                                   threshold=thr,
-                                  doSmall=False,
-                                  smallSize=False,
-                                  doBig=False,
+                                  doSmall=True,
+                                  doBig=True,
                                   doSymmetrize=False,
                                   doMorphological=False,
                                   doInvert=False,
@@ -71,64 +71,32 @@ class TestMonoResBase(BaseTest):
         return cls.msk
 
 
-class TestMonoRes(TestMonoResBase):
+class TestBsoftBlocres(TestBsoftBlocresBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        TestMonoResBase.setData()
-        cls.protImportVol = cls.runImportVolumes(cls.map3D, 3.54)
+        TestBsoftBlocresBase.setData()
         cls.protImportHalf1 = cls.runImportVolumes(cls.half1, 3.54)
         cls.protImportHalf2 = cls.runImportVolumes(cls.half2, 3.54)
-        cls.protCreateMask = cls.runCreateMask(cls.protImportVol.outputVolume, 0.02)
+        cls.protCreateMask = cls.runCreateMask(cls.protImportHalf1.outputVolume, 0.02)
 
-    def testMonoRes1(self):
-        MonoRes = self.newProtocol(XmippProtMonoRes,
-                                   objLabel='single volume monores',
-                                   halfVolumes=False,
-                                   inputVolumes=self.protImportVol.outputVolume,
-                                   Mask=self.protCreateMask.outputMask,
-                                   symmetry='d2',
-                                   minRes=1,
-                                   maxRes=25,
-                                   isPremasked = False,
-                                   filterInput=False,
-                                   )
-        self.launchProtocol(MonoRes)
-        self.assertIsNotNone(MonoRes.resolution_Volume,
-                        "MonoRes (no split, no premasked) has failed")
- 
-    def testMonoRes2(self):
-        MonoRes = self.newProtocol(XmippProtMonoRes,
-                                   objLabel='two halves monores',
-                                   halfVolumes=True,
+
+    def testBlocres1(self):
+        blocres = self.newProtocol(BsoftProtBlocres,
+                                   objLabel='blocres',
                                    inputVolume=self.protImportHalf1.outputVolume,
                                    inputVolume2=self.protImportHalf2.outputVolume,
-                                   provideMaskInHalves=True,
-                                   Mask=self.protCreateMask.outputMask,
-                                   symmetry='d2',
-                                   isPremasked = True,
-                                   volumeRadiusHalf = 50,
-                                   minRes=1,
-                                   maxRes=25,
-                                   filterInput=False,
-                                   )
-        self.launchProtocol(MonoRes)
-        self.assertIsNotNone(MonoRes.resolution_Volume,
-                        "MonoRes (split, pre-masked, no filter) has failed")
- 
-    def testMonoRes3(self):
-        MonoRes = self.newProtocol(XmippProtMonoRes,
-                                   objLabel='Single volume monores Filtered',
-                                   halfVolumes=False,
-                                   inputVolumes=self.protImportVol.outputVolume,
-                                   Mask=self.protCreateMask.outputMask,
-                                   symmetry='d2',
-                                   preMasked = True,
-                                   volumeRadius = 50,
-                                   minRes=1,
-                                   maxRes=25,
-                                   filterInput=True,
-                                   )
-        self.launchProtocol(MonoRes)
-        self.assertIsNotNone(MonoRes.outputVolume_Filtered,
-                        "MonoRes filter has failed")
+                                   mask=self.protCreateMask.outputMask,
+                                   method=True,
+                                   box=20,
+                                   resolutionCriterion=0,
+                                   cutoff=0.5,
+                                   step=1,
+                                   maxresolution=2,
+                                   fill=0,
+                                   pad=1,
+                                   symmetry='',
+                                   smooth=True)
+        self.launchProtocol(blocres)
+        self.assertIsNotNone(blocres.resolution_Volume,
+                        "blocres has failed")
