@@ -40,7 +40,7 @@ from pyworkflow.em.protocol.protocol_import import (
     ProtImportParticles, ProtImportCoordinates)
 
 from pyworkflow.em.protocol.protocol_sets import (
-    ProtSplitSet, ProtSubSet, ProtUnionSet)
+    ProtSplitSet, ProtSubSet, ProtUnionSet, ProtSubSetByMic)
 
 # Used by Roberto's test, where he creates the particles "by hand"
 from pyworkflow.em.data import Particle, SetOfParticles, Acquisition
@@ -63,6 +63,7 @@ class TestSets(BaseTest):
         cls.dataset_xmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dataset_mda = DataSet.getDataSet('mda')
         cls.dataset_ribo = DataSet.getDataSet('ribo_movies')
+        cls.datasetRelion = DataSet.getDataSet('relion_tutorial')
 
         #
         # Imports
@@ -102,9 +103,21 @@ class TestSets(BaseTest):
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles
 
-        # Coordinates
-        # Oh, I don't know of any example of coordinates imported :(
+        # Particles with micId
+        print magentaStr("\n==> Importing data - particles with micId")
+        relionFile = 'import/case2/relion_it015_data.star'
+        pImpPartMicId = new(ProtImportParticles,
+                               objLabel='from relion (auto-refine 3d)',
+                               importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                               starFile=cls.datasetRelion.getFile(relionFile),
+                               magnification=10000,
+                               samplingRate=7.08,
+                               haveDataBeenPhaseFlipped=True)
+        launch(pImpPartMicId, wait=True)
+        cls.partMicId = pImpPartMicId.outputParticles
+        cls.micsMicId = pImpPartMicId.outputMicrographs
 
+        # Coordinates  -  Oh, I don't know of any example of coord. import :(
 
     #
     # Helper functions
@@ -191,7 +204,8 @@ class TestSets(BaseTest):
                 for elem in output:
                     self.assertTrue(elem.getObjId() in setFullIds)
                     self.assertTrue(elem.getObjId() in setSubIds,
-                                    'object id %s not in set: %s' % (elem.getObjId(), setSubIds))
+                                    'object id %s not in set: %s' 
+                                    % (elem.getObjId(), setSubIds))
                 
             # Check difference
             outputs = [o for o in self.outputs(p_subset_diff)]
@@ -214,6 +228,52 @@ class TestSets(BaseTest):
         check(self.movies)
         check(self.particles)
         check(self.particles, n1=3, n2=5)
+
+    def testSubsetByMic(self):
+        """Test that the subset by Mic operation works as expected."""
+        print "\n", greenStr(" Test Subset by Mic".center(75, '-'))
+        "Simple checks on subsets, coming from split sets of setMics."
+        print magentaStr("\n==> Check subset of %s by %s"
+               % (type(self.partMicId).__name__, type(self.micsMicId).__name__))
+
+        # launch the protocol for a certain mics input
+        def launchSubsetByMic(micsSubset):
+            pSubsetbyMic = self.newProtocol(ProtSubSetByMic)
+            pSubsetbyMic.inputParticles.set(self.partMicId)
+            pSubsetbyMic.inputMicrographs.set(micsSubset)
+            self.launchProtocol(pSubsetbyMic)
+            return pSubsetbyMic.outputParticles
+
+        # Check if the Output is generated, the subset size is correct and
+        #  the micId of the particle with certain partId is correct.
+        def checkAsserts(setParts, size, partId, micId):
+            self.assertIsNotNone(setParts, "Output SetOfParticles"
+                                           " were not created.")
+            self.assertEqual(setParts.getSize(), size, "The number of created "
+                                                      "particles is incorrect.")
+            p = setParts[partId]
+            self.assertEqual(p.getMicId(), micId)
+        
+        # Whole set of micrographs
+        setMics = self.micsMicId
+        # Create a subsets of Mics to apply the protocol
+        pSplit = self.split(setMics, n=2, randomize=False)
+        setMics2 = pSplit.outputMicrographs02
+        # Create a subset of a single micrograph to apply the protocol
+        pSplit = self.split(setMics, n=20, randomize=False)
+        setMics3 = pSplit.outputMicrographs03
+
+        # Launch subset by mics protocol with the whole set of Mics
+        partByMic1 = launchSubsetByMic(setMics)
+        # Launch subset by mics protocol with a subset of Mics
+        partByMic2 = launchSubsetByMic(setMics2)
+        # Launch subset by mics protocol with a single SetOfMics
+        partByMic3 = launchSubsetByMic(setMics3)
+
+        # Assertions for the three sets
+        checkAsserts(partByMic1, self.partMicId.getSize(), 1885, 7)
+        checkAsserts(partByMic2, 2638, 4330, 16)
+        checkAsserts(partByMic3, 270, 725, 3)
 
     def testMerge(self):
         """Test that the union operation works as expected."""
@@ -445,7 +505,8 @@ class TestSets(BaseTest):
         self.launchProtocol(prot1)
 
         if prot1.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % inFileNameMetadata)
+            raise Exception('Import of images: %s, failed. outputParticles is None.' 
+                                                % inFileNameMetadata)
         
         protSplitSet   = self.newProtocol(ProtSplitSet,
                                           inputSet=prot1.outputParticles,
