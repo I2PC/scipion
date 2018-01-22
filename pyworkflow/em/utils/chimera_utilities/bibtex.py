@@ -1,7 +1,9 @@
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,13 +25,23 @@
 # *
 # **************************************************************************
 """
-This EM module contains Gautomatch auto-picking protocol 
+Bibtex string file for Gautomatch package.
 """
 
-from pyworkflow.em.utils.chimera_utilities.convert import getEnviron
+_bibtexStr = """
+@Article{Pettersen2004,
+   Author="Pettersen, E. F.  and Goddard, T. D.  and Huang, C. C.  and Couch, G. S.  and Greenblatt, D. M.  and Meng, E. C.  and Ferrin, T. E. ",
+   Title="{{U}{C}{S}{F} {C}himera--a visualization system for exploratory research and analysis}",
+   Journal="J Comput Chem",
+   Year="2004",
+   Volume="25",
+   Number="13",
+   Pages="1605--1612",
+   Month="Oct",
+   doi="https://doi.org/10.1002/jcc.20084"
+}
+"""
 
-_logo = "ChimeraLogoSmall.png"
+from pyworkflow.utils import parseBibTex
 
-from protocol_fit import ChimeraProtRigidFit
-from viewer import ChimeraProtRigidFitViewer
-_environ = getEnviron()
+_bibtex = parseBibTex(_bibtexStr)  

@@ -32,11 +32,10 @@ TODO:
 
 import collections
 import os
-import pyworkflow.em as em
+from pyworkflow.em.convert import ImageHandler
 import pyworkflow.utils as pwutils
 import struct
 
-#
 cootPdbTemplateFileName = "scipionOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
 
@@ -61,23 +60,51 @@ def runCCP4Program(program, args="", extraEnvDict=None):
     pwutils.runJob(None, program, args, env=env)
 
 
-def adaptBinFileToCCP4(inFileName, outFileName, scipionOrigin):
+def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
+                       sampling=1.0):
     """ Check input file format.
         if mrc, check if header and scipion database agree (regarding origin)
         if header and scipion object have the same origin creates a link to
         original file. Otherwise copy the file and fix the origin
     """
-    if inFileName.endswith('.mrc') or inFileName.endswith('.map'):
+    def compareFloatTuples(t1, t2, error=0.001):
+        return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
+
+    # scipion origin follows different conventions from ccp4
+    scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
+    x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+    if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
+            or inFileName.endswith(':mrc'):
         ccp4header = Ccp4Header(inFileName, readHeader=True)
         ccp4Origin = ccp4header.getOffset()
-        if ccp4Origin == scipionOrigin:
-            pwutils.createLink(inFileName, outFileName)
-            return
-    em.ImageHandler().convert(inFileName, outFileName)
+        if compareFloatTuples(ccp4Origin, scipionOriginShifts):
+            if compareFloatTuples(ccp4header.getGridSampling(), (x, y, z)):
+                if compareFloatTuples(ccp4header.getCellDimensions(),
+                                      (x*sampling, y*sampling, z*sampling)):
+                    pwutils.createLink(inFileName, outFileName)
+                    return
+
+    else:
+        print "FILE %s does not end with mrc" % inFileName
+    if z == 1:
+        z = ndim
+    ImageHandler().convert(inFileName, outFileName)
     ccp4header = Ccp4Header(outFileName, readHeader=True)
-    ccp4header.setOffset(scipionOrigin)
+    ccp4header.setGridSampling(x, y, z)
+    ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
+    ccp4header.setOffset(scipionOriginShifts)
     ccp4header.writeHeader()
 
+def copyMRCHeader(inFileName, outFileName, scipionOriginShifts,
+                  sampling):
+    x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+    ccp4header = Ccp4Header(outFileName, readHeader=True)
+    print "HEADER1", ccp4header
+    ccp4header.setGridSampling(x, y, z)
+    ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
+    ccp4header.setOffset(scipionOriginShifts)
+    print "HEADER2", ccp4header
+    ccp4header.writeHeader()
 
 def getProgram(progName):
     """ Return the program binary that will be used. """
@@ -108,8 +135,8 @@ class Ccp4Header():
                                 4 = Transform stored as Complex Reals
                                 5 == 0
                                 Note: Mode 2 is the normal mode used in
-                                      the CCP4 programs. Other modes than 2
-                                      and 0 may NOT WORK
+                                the CCP4 programs. Other modes than 2 and 0
+                                may NOT WORK
        5      NCSTART         Number of first COLUMN  in map
        6      NRSTART         Number of first ROW     in map
        7      NSSTART         Number of first SECTION in map
@@ -124,7 +151,8 @@ class Ccp4Header():
       16      Gamma                        "
       17      MAPC            Which axis corresponds to Cols. (1,2,3 for X,Y,Z)
       18      MAPR            Which axis corresponds to Rows. (1,2,3 for X,Y,Z)
-      19      MAPS            Which axis corresponds to Sects. (1,2,3 for X,Y,Z)
+      19      MAPS            Which axis corresponds to Sects.
+                              (1,2,3 for X,Y,Z)
       20      AMIN            Minimum density value
       21      AMAX            Maximum density value
       22      AMEAN           Mean    density value    (Average)
@@ -140,7 +168,7 @@ class Ccp4Header():
                               to orthogonal map frame, as
                               Xo(map) = S * (Xo(atoms) - t)
       38      future use      (some of these are used by the MSUBSX routines
-       .          "              in MAPBRICK, MAPCONT and FRODO)
+       .          "           in MAPBRICK, MAPCONT and FRODO)
        .          "           (all set to zero by default)
        .          "
       52          "
@@ -169,22 +197,45 @@ class Ccp4Header():
         self._header['Ylength'] = self._header['NY'] * sampling
         self._header['Zlength'] = self._header['NZ'] * sampling
 
-    def setOffset(self,  originTransform):
-        originMatrix = originTransform.getMatrix()
-        # TODO: check matrix
-        self._header['NCSTART'] = originMatrix[3][0]
-        self._header['NRSTART'] = originMatrix[3][1]
-        self._header['NSSTART'] = originMatrix[3][2]
+    def setOffset(self,  originTransformShift):
+        # TODO: should we use originX,Y,Z and set this to 0
+        self._header['originX'] = originTransformShift[0]
+        self._header['originY'] = originTransformShift[1]
+        self._header['originZ'] = originTransformShift[2]
+        self._header['NCSTART'] = 0.
+        self._header['NRSTART'] = 0.
+        self._header['NSSTART'] = 0.
 
     def getOffset(self):
-        return self._header['NCSTART'],\
-               self._header['NRSTART'],\
-               self._header['NSSTART']
+        # TODO: should we use originx,y,z?
+        return self._header['originX'],\
+               self._header['originY'],\
+               self._header['originZ']
 
     def getDims(self):
         return self._header['NC'],\
                self._header['NR'],\
                self._header['NS']
+
+    def setGridSampling(self, x, y, z):
+        self._header['NX'] = x
+        self._header['NY'] = y
+        self._header['NZ'] = z
+
+    def getGridSampling(self):
+        return self._header['NX'],\
+               self._header['NY'],\
+               self._header['NZ']
+
+    def setCellDimensions(self, x, y, z):
+        self._header['Xlength'] = x
+        self._header['Ylength'] = y
+        self._header['Zlength'] = z
+
+    def getCellDimensions(self):
+        return self._header['Xlength'],\
+               self._header['Ylength'],\
+               self._header['Zlength']
 
     def readHeader(self):
         # check file exists
@@ -210,7 +261,7 @@ class Ccp4Header():
         self._header['Xlength'] = a[10]
         self._header['Ylength'] = a[11]
         self._header['Zlength'] = a[12]
-        self._header['dummy1'] = a[13]  # "< 3i i 3i 3i 3f 36s 3f"
+        self._header['dummy1'] = a[13] + "\n"  # "< 3i i 3i 3i 3f 36s 3f"
         self._header['originX'] = a[14]
         self._header['originY'] = a[15]
         self._header['originZ'] = a[16]
@@ -228,3 +279,14 @@ class Ccp4Header():
         f = open(self._name, 'r+')
         f.write(packed_data)
         f.close()
+
+    def __str__(self):
+        s = ""
+        for k, v in self._header.iteritems():
+            s += "%s: %s\n" % (str(k), str(v))
+        return s
+
+    def computeSampling(self):
+        return self._header['Zlength'] / self._header['NZ']
+
+

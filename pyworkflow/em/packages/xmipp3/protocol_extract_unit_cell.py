@@ -25,16 +25,16 @@
 
 
 from pyworkflow import VERSION_1_2
-from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.protocol.params import PointerParam, FloatParam, EnumParam, \
-    IntParam
+from pyworkflow.em import Volume
+from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, \
     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL
-from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
-from pyworkflow.em.constants import SCIPION_SYM_NAME
-from pyworkflow.em import Volume
-from pyworkflow.em.packages.ccp4.convert import Ccp4Header
 from pyworkflow.em.data import Transform
+from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
+from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.utils.ccp4_utilities.convert import Ccp4Header
+from pyworkflow.protocol.params import PointerParam, FloatParam, EnumParam, \
+    IntParam
 
 DEBUG = True
 
@@ -127,14 +127,15 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f " % self.outerRadius.get()
         args += " %f " % self.expandFactor.get()
         args += " %f " % self.offset.get()
-        args += " %f " % self.inputVolumes.get().getSamplingRate()
+        sampling = self.inputVolumes.get().getSamplingRate()
+        args += " %f " % sampling
         origin = self.inputVolumes.get().getOrigin().getShifts()
-        # x origin coordinate
-        args += " %f " % origin[0]
-        # y origin coordinate
-        args += " %f " % origin[1]
-        # z origin coordinate
-        args += " %f " % origin[2]
+        # x origin coordinate (from Angstroms to pixels)
+        args += " %f " % (origin[0] / sampling)
+        # y origin coordinate (from Angstroms to pixels)
+        args += " %f " % (origin[1] / sampling)
+        # z origin coordinate (from Angstroms to pixels)
+        args += " %f " % (origin[2] / sampling)
 
         self.runJob("xmipp_transform_window", args)
 
@@ -147,18 +148,8 @@ class XmippProtExtractUnit(EMProtocol):
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader=True)
         t = Transform()
         x, y, z = ccp4header.getOffset()  # origin output vol coordinates
-        #_inputVol = self.inputVolumes.get()
-        origin = self.inputVolumes.get().getOrigin().getShifts()
-        # x, y, z origin input vol coordinates
-        x_origin = origin[0]
-        y_origin = origin[1]
-        z_origin = origin[2]
-        # x, y, z origin output vol coordinates
-        dim = self.inputVolumes.get().getDim()
-        x += dim[0] / 2. - x_origin
-        y += dim[1] / 2. - y_origin
-        z += dim[2] / 2. - z_origin
-        t.setShifts(-x, -y, -z)  # we follow chimera convention no MRC
+
+        t.setShifts(x, y, z)
         vol.setOrigin(t)
         #
         self._defineOutputs(outputVolume=vol)
@@ -183,4 +174,4 @@ class XmippProtExtractUnit(EMProtocol):
         return self._getExtraPath("output_volume.mrc")
 
     def replace_at_index(self, tup, ix, val):
-        return tup[:ix] + (val,) + tup[ix+1:]
+        return tup[:ix] + (val,) + tup[ix + 1:]

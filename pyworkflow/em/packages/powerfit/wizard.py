@@ -1,7 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,13 +24,16 @@
 # *
 # **************************************************************************
 """
-This EM module contains Gautomatch auto-picking protocol 
+This module implement some wizards
 """
 
-from pyworkflow.em.utils.chimera_utilities.convert import getEnviron
 
-_logo = "ChimeraLogoSmall.png"
+from pyworkflow.em.wizard import *
+from pyworkflow.em.packages.powerfit.protocol_powerfit import PowerfitProtRigidFit
 
-from protocol_fit import ChimeraProtRigidFit
-from viewer import ChimeraProtRigidFitViewer
-_environ = getEnviron()
+#===============================================================================
+# DOWNSAMPLING
+#===============================================================================
+
+class PowerFitPDBVolumeWizard(PDBVolumeWizard):
+    _targets = [(PowerfitProtRigidFit, ['inputVol'])]

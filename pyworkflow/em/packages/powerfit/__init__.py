@@ -1,7 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,13 +24,15 @@
 # *
 # **************************************************************************
 """
-This EM module contains Gautomatch auto-picking protocol 
+This sub-package contains data and protocol classes
+wrapping Powerfit programs https://github.com/haddocking/powerfit
 """
 
-from pyworkflow.em.utils.chimera_utilities.convert import getEnviron
+_logo = "powerfit_logo.gif"
 
-_logo = "ChimeraLogoSmall.png"
+from bibtex import _bibtex # Load bibtex dict with references
+##from powerfit import *
+from protocol_powerfit import PowerfitProtRigidFit
+from viewer_powerfit import PowerfitProtRigidFitViewer
 
-from protocol_fit import ChimeraProtRigidFit
-from viewer import ChimeraProtRigidFitViewer
-_environ = getEnviron()
+from wizard import PowerFitPDBVolumeWizard
