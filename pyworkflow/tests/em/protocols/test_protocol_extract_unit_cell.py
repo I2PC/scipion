@@ -494,7 +494,7 @@ class TestProtModelBuilding(BaseTest):
             outputFile = outputFile1
 
         ccp4header.setSampling(_samplingRate)
-        ccp4header.setOffset(t.getShifts())
+        ccp4header.setOrigin(t.getShifts())
         ccp4header.writeHeader()
 
         # import volume
@@ -536,11 +536,11 @@ class TestProtModelBuilding(BaseTest):
         ih = ImageHandler()
         xdim, ydim, zdim, ndim = \
             ih.getDimensions(prot.outputVolume.getFileName())
-        self.assertEqual(xdim, self.box[sym][0])
-        self.assertEqual(ydim, self.box[sym][1])
-        self.assertEqual(zdim, self.box[sym][2])
+        self.assertTrue(abs(xdim - self.box[sym][0])<2)
+        self.assertTrue(abs(ydim - self.box[sym][1])<2)
+        self.assertTrue(abs(zdim - self.box[sym][2])<2)
 
-        # create pdb fileoot
+        # create pdb fileoutput
         args = {'inputStructure': prot.outputVolume,
                 'maskMode': NMA_MASK_THRE,
                 'maskThreshold': 0.5,

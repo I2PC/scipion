@@ -199,9 +199,18 @@ class ChimeraProtRigidFit(EMProtocol):
                 origin = self.inputVolume.get().getOrigin(
                     returnInitIfNone=True)
             vol.setOrigin(origin)
-            ##DELETE THIS
-            ccp4header.setStartAngstrom(origin.getShifts(), sampling)
-            ##
+            print "origin.getShifts: ", origin.getShifts()#origin.getShifts:  (37.5, 37.5, 37.5)
+            print "ccp4header.getStartAngstrom(sampling): ", ccp4header.getStartAngstrom(
+                sampling)#ccp4header.getStartAngstrom(sampling):  (0.0, 0.0, 0.0)
+
+            # ##DELETE THIS
+            # ccp4header.setStartAngstrom(origin.getShifts(), sampling)
+            # # ccp4header.writeHeader()
+            # ###ccp4header.getStartAngstrom(sampling)
+            # print "ccp4header.getStartAngstrom(sampling): ", \
+            #     ccp4header.getStartAngstrom(sampling)#ccp4header.getStartAngstrom(sampling):  (37.5, 37.5, 37.5)
+            # ##
+
             self._defineOutputs(output3Dmap=vol)
             self._defineSourceRelation(self.inputPdbFiles, vol)
             if self.inputVolume.get() is None:

@@ -26,7 +26,8 @@
 # **************************************************************************
 
 from pyworkflow.em import *
-from pyworkflow.em.utils.ccp4_utilities.convert import adaptBinFileToCCP4
+from pyworkflow.em.utils.ccp4_utilities.convert import adaptBinFileToCCP4, \
+    ORIGIN
 from pyworkflow.em.utils.chimera_utilities.convert import \
     createCoordinateAxisFile
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -79,7 +80,8 @@ class PowerfitProtRigidFit(ProtFitting3D):
 
     # --------------------------- STEPS functions -----------------------------
     def powerfitWrapper(self):
-        localInputVol = self._getExtraPath("volume.mrc")
+        _localInputVol = "volume.mrc"
+        localInputVol = self._getExtraPath(_localInputVol)
         if self.inputVol.get() is None:
             volume = self.inputPDB.get().getVolume()
             print "Volume: Volume associated to atomic structure %s\n" % volume
@@ -87,10 +89,11 @@ class PowerfitProtRigidFit(ProtFitting3D):
             volume = self.inputVol.get()
             print "Volume: Input volume %s\n" % volume
         sampling = volume.getSamplingRate()
+        origin = volume.getOrigin(returnInitIfNone=True).getShifts()
+
+        # powerfit needs offset in start
         adaptBinFileToCCP4(volume.getFileName(), localInputVol,
-                           volume.getOrigin(
-                               returnInitIfNone=True).getShifts(),
-                           sampling)
+                           origin, sampling, ORIGIN)
         args = "%s %f %s -d %s -p %d -a %f -n %d" % (localInputVol,
                                                      self.resolution,
                                                      self.inputPDB.get().
@@ -117,7 +120,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
             if exists(fnPdb):
                 fnCmd = self._getExtraPath("chimera_%d.cmd" % n)
                 fhCmd = open(fnCmd, 'w')
-                fhCmd.write("open volume.mrc\n")
+                fhCmd.write("open %s\n"%_localInputVol)
                 fhCmd.write("open lcc.mrc\n")
                 fhCmd.write("open fit_%d.pdb\n" % n)
                 fhCmd.write("vol #1 hide\n")

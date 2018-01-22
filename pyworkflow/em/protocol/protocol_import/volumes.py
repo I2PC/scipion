@@ -39,6 +39,7 @@ from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
 from base import ProtImportFiles
 from images import ProtImportImages
+from pyworkflow.em.utils.ccp4_utilities.convert import Ccp4Header
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -62,8 +63,8 @@ class ProtImportVolumes(ProtImportImages):
                            "related programs support this feature so far",
                       default=True)
         line = form.addLine('Offset',
-                            help= "You have to provide the map center"
-                            "coordinates in Angstroms (pixels x sampling)"
+                            help= "You have to provide the map center "
+                            "coordinates in Angstroms (pixels x sampling). "
                             "We follow the same convention than CCP4. Chimera"
                             " considers the same magnitude and opposite sign "
                             "than CCP4.", condition='not setDefaultOrigin')
@@ -132,6 +133,22 @@ class ProtImportVolumes(ProtImportImages):
                             t.setShifts(self.x, self.y, self.z)
                         vol.setOrigin(t)
                     volSet.append(vol)
+            # ##DELETE THIS
+            #
+            # ccp4header = Ccp4Header(vol.getFileName(), readHeader=True)
+            # sampling = ccp4header.computeSampling()
+            # print "origin.getShifts: ", vol.getOrigin().getShifts()
+            # print "ccp4header.getStartAngstrom(sampling): ", ccp4header.getStartAngstrom(
+            #     sampling)
+            # print "ccp4header: ", ccp4header
+            # ccp4header.setStartAngstrom(vol.getOrigin().getShifts(), sampling)
+            # # ccp4header.writeHeader()
+            # ccp4header.getStartAngstrom(sampling)
+            # print "ccp4header.getStartAngstrom(sampling): ", ccp4header.getStartAngstrom(
+            #         sampling)
+            # print "ccp4header: ", ccp4header
+            # ##
+
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:

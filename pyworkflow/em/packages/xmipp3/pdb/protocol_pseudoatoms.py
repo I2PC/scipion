@@ -32,7 +32,8 @@ from pyworkflow.em.data import PdbFile, Volume
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 from pyworkflow.em.data import Transform
-
+from pyworkflow.em.utils.chimera_utilities.convert import \
+    createCoordinateAxisFile
 
 
 class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
@@ -63,17 +64,19 @@ class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
         volume.setFileName(self._getExtraPath("pseudoatoms_approximation.vol"))
         volume.setSamplingRate(samplingRate)
         x, y, z = volume.getDim()
+        xv,yv,zv=inputVol.getOrigin().getShifts()
         t = Transform()
-        t.setShifts(x / 2. * samplingRate,
-                    y / 2. * samplingRate,
-                    z / 2. * samplingRate)
-        volume.setOrigin(t)
+        t.setShifts((x / 2. * samplingRate) - xv,
+                    (y / 2. * samplingRate) - yv,
+                    (z / 2. * samplingRate) - zv)
+        volume.setOrigin(inputVol.getOrigin())
 
         self._defineOutputs(outputVolume=volume)
         self._defineSourceRelation(self.inputStructure.get(),volume)
 
         pdb = PdbFile(self._getPath('pseudoatoms.pdb'), pseudoatoms=True)
         pdb.setVolume(volume)
+        pdb.setOrigin(t)
         self.createChimeraScript(inputVol, pdb)
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure, pdb)

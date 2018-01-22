@@ -129,7 +129,7 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f " % self.offset.get()
         sampling = self.inputVolumes.get().getSamplingRate()
         args += " %f " % sampling
-        origin = self.inputVolumes.get().getOrigin().getShifts()
+        origin = self.inputVolumes.get().getVolOriginAsTuple()
         # x origin coordinate (from Angstroms to pixels)
         args += " %f " % (origin[0] / sampling)
         # y origin coordinate (from Angstroms to pixels)
@@ -145,9 +145,12 @@ class XmippProtExtractUnit(EMProtocol):
         sampling = self.inputVolumes.get().getSamplingRate()
         vol.setSamplingRate(sampling)
         #
+
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader=True)
         t = Transform()
-        x, y, z = ccp4header.getOffset()  # origin output vol coordinates
+
+        x, y, z = ccp4header.getOrigin()  # origin output vol
+        # coordinates
 
         t.setShifts(x, y, z)
         vol.setOrigin(t)

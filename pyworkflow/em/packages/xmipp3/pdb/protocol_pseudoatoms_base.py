@@ -38,42 +38,46 @@ from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from pyworkflow.em.utils.ccp4_utilities.convert import adaptBinFileToCCP4
 from pyworkflow.em.data import Transform
 from pyworkflow.em.utils.chimera_utilities.convert import \
-    createCoordinateAxisFile,   adaptOriginFromCCP4ToChimera
-#from xmipp3 import XmippProtocol
+    createCoordinateAxisFile, adaptOriginFromCCP4ToChimera
+import os
+
+# from xmipp3 import XmippProtocol
 NMA_MASK_NONE = 0
 NMA_MASK_THRE = 1
 NMA_MASK_FILE = 2
 
 
-
 class XmippProtConvertToPseudoAtomsBase(Prot3D):
-    #--------------------------- DEFINE param functions --------------------------------------------
+    # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        form.addParam('maskMode', EnumParam, choices=['none', 'threshold', 'file'], 
-                      default=NMA_MASK_NONE, 
+        form.addParam('maskMode', EnumParam,
+                      choices=['none', 'threshold', 'file'],
+                      default=NMA_MASK_NONE,
                       label='Mask mode', display=EnumParam.DISPLAY_COMBO,
-                      help='')        
-        form.addParam('maskThreshold', FloatParam, default=0.01, 
+                      help='')
+        form.addParam('maskThreshold', FloatParam, default=0.01,
                       condition='maskMode==%d' % NMA_MASK_THRE,
                       label='Threshold value',
                       help='Gray values below this threshold are set to 0')
         form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask',
-                      label='Mask volume', condition='maskMode==%d' % NMA_MASK_FILE,
-                      )          
-        form.addParam('pseudoAtomRadius', FloatParam, default=1, 
+                      label='Mask volume',
+                      condition='maskMode==%d' % NMA_MASK_FILE,
+                      )
+        form.addParam('pseudoAtomRadius', FloatParam, default=1,
                       label='Pseudoatom radius (vox)',
                       help='Pseudoatoms are defined as Gaussians whose \n'
-                           'standard deviation is this value in voxels') 
+                           'standard deviation is this value in voxels')
         form.addParam('pseudoAtomTarget', FloatParam, default=5,
-                      expertLevel=LEVEL_ADVANCED, 
+                      expertLevel=LEVEL_ADVANCED,
                       label='Volume approximation error(%)',
                       help='This value is a percentage (between 0.001 and 100) \n'
                            'specifying how fine you want to approximate the EM \n'
                            'volume by the pseudoatomic structure. Lower values \n'
                            'imply lower approximation error, and consequently, \n'
-                           'more pseudoatoms.')        
-             
-    #--------------------------- INSERT steps functions --------------------------------------------
+                           'more pseudoatoms.')
+
+        # --------------------------- INSERT steps functions --------------------------------------------
+
     def _insertMaskStep(self, fnVol, prefix=''):
         """ Check the mask selected and insert the necessary steps.
         Return the mask filename if needed.
@@ -81,31 +85,37 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         fnMask = ''
         if self.maskMode == NMA_MASK_THRE:
             fnMask = self._getExtraPath('mask%s.vol' % prefix)
-            maskParams = '-i %s -o %s --select below %f --substitute binarize' % (fnVol, fnMask, self.maskThreshold.get())
+            maskParams = '-i %s -o %s --select below %f --substitute binarize' % (
+            fnVol, fnMask, self.maskThreshold.get())
             self._insertRunJobStep('xmipp_transform_threshold', maskParams)
         elif self.maskMode == NMA_MASK_FILE:
             fnMask = getImageLocation(self.volumeMask.get())
         return fnMask
-        
-        
-    #--------------------------- STEPS functions --------------------------------------------
+
+    # --------------------------- STEPS functions --------------------------------------------
     def convertToPseudoAtomsStep(self, inputFn, fnMask, sampling, prefix=''):
-        pseudoatoms = 'pseudoatoms%s'%prefix
+        pseudoatoms = 'pseudoatoms%s' % prefix
         outputFn = self._getPath(pseudoatoms)
-        sigma = sampling * self.pseudoAtomRadius.get() 
+        sigma = sampling * self.pseudoAtomRadius.get()
         targetErr = self.pseudoAtomTarget.get()
-        nthreads = self.numberOfThreads.get()*self.numberOfMpi.get()
+        nthreads = self.numberOfThreads.get() * self.numberOfMpi.get()
         params = "-i %(inputFn)s -o %(outputFn)s --sigma %(sigma)f --thr %(nthreads)d "
         params += "--targetError %(targetErr)f --sampling_rate %(sampling)f -v 2 --intensityColumn Bfactor"
         if fnMask:
             params += " --mask binary_file %(fnMask)s"
         self.runJob("xmipp_volume_to_pseudoatoms", params % locals())
         for suffix in ["_approximation.vol", "_distance.hist"]:
-            moveFile(self._getPath(pseudoatoms+suffix), self._getExtraPath(pseudoatoms+suffix))
-        self.runJob("xmipp_image_convert","-i %s_approximation.vol -o %s_approximation.mrc -t vol"%(self._getExtraPath(pseudoatoms),self._getExtraPath(pseudoatoms)))
-        self.runJob("xmipp_image_header","-i %s_approximation.mrc --sampling_rate %f"%(self._getExtraPath(pseudoatoms),sampling))
-        cleanPattern(self._getPath(pseudoatoms+'_*'))
-        
+            moveFile(self._getPath(pseudoatoms + suffix),
+                     self._getExtraPath(pseudoatoms + suffix))
+        self.runJob("xmipp_image_convert",
+                    "-i %s_approximation.vol -o %s_approximation.mrc -t vol" % (
+                    self._getExtraPath(pseudoatoms),
+                    self._getExtraPath(pseudoatoms)))
+        self.runJob("xmipp_image_header",
+                    "-i %s_approximation.mrc --sampling_rate %f" % (
+                    self._getExtraPath(pseudoatoms), sampling))
+        cleanPattern(self._getPath(pseudoatoms + '_*'))
+
     def createChimeraScript(self, volume, pdb):
         """ Create a chimera script to visualize a pseudoatoms pdb
         obteined from a given EM 3d volume.
@@ -120,11 +130,21 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         fnIn = getImageLocation(volume)
         if fnIn.endswith(":mrc"):
             fnIn = fnIn[:-4]
-        x, y, z = volume.getDim()
-        x /= (-2. / sampling)
-        y /= (-2. / sampling)
-        z /= (-2. / sampling)
+        # x, y, z = volume.getDim()
+        # x /= (-2. / sampling)#; x = int(round(x))
+        # y /= (-2. / sampling)#; y = int(round(y))
+        # z /= (-2. / sampling)#; z = int(round(z))
 
+        x, y, z = adaptOriginFromCCP4ToChimera(
+            volume.getOrigin().getShifts())
+        xx, yy, zz = volume.getDim()
+        xv,yv,zv=volume.getOrigin().getShifts()
+
+        dim = volume.getDim()[0]
+        bildFileName = os.path.abspath(self._getExtraPath("axis.bild"))
+        createCoordinateAxisFile(dim,
+                                 bildFileName=bildFileName,
+                                 sampling=sampling)
         fhCmd = open(scriptFile, 'w')
         fhCmd.write("open %s\n" % basename(pseudoatoms))
         fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
@@ -135,9 +155,13 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         threshold = 0.01
         if self.maskMode == NMA_MASK_THRE:
             self.maskThreshold.get()
-        #set sampling
+        # set sampling
         fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f origin "
-                     "%0.2f,%0.2f,%0.2f\n"
+                    "%0.2f,%0.2f,%0.2f\n"
                     % (threshold, sampling, x, y, z))
+        fhCmd.write("open %s\n" % bildFileName)
+        fhCmd.write("move %0.2f,%0.2f,%0.2f model #0 coord #2\n"
+                    % ((xx / 2. * sampling) - xv,
+                       (yy / 2. * sampling) - yv,
+                       (zz / 2. * sampling) - zv))
         fhCmd.close()
-     

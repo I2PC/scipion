@@ -334,8 +334,8 @@ class ProtImportImages(ProtImportFiles):
                 #  - Bad characters in path [':' ,'%', '#']
                 if (not self.dataStreaming and
                     not (imgFn.endswith('bz2') or 
-                         imgFn.endswith('tbz') or 
-                         ih.isImageFile(imgFn))):
+                         imgFn.endswith('tbz') or
+			             ih.isImageFile(imgFn))):
                     if not errors:  # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)

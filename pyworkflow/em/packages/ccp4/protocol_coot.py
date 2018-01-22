@@ -348,6 +348,7 @@ def _updateMol():
         pass
     print ("reading:", "/tmp/coot.ini", mydict)
     beep(0.1)
+    print "FIRST SOUND"
 
 def getOutPutFileName(template):
     """get name based on template that does not exists
@@ -369,6 +370,7 @@ def _write():
     command = "write_pdb_file(%(imol)s,'%(outfile)s')"%dic
     doIt(command)
     beep(0.1)
+    print "SECOND SOUND"
 
 def scipion_write(imol=0):
     """scipion utility for writting files
@@ -382,6 +384,7 @@ def doIt(command):
     print "********", command
     eval(command)
     #beep(0.1)
+    print "THIRD SOUND"
 
 def _printEnv():
     for key in os.environ.keys():
