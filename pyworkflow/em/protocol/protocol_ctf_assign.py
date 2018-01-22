@@ -91,6 +91,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
     def _particlesOutputStep(self, inputSet, inputCTF):
         outputParts = self._createSetOfParticles()
         outputParts.copyInfo(inputSet)
+        outputParts.setHasCTF(True)
         ctfDict = {}
         
         firstCoord = inputSet.getFirstItem().getCoordinate()
