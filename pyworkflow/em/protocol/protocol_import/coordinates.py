@@ -83,7 +83,9 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         form.addParam('invertX', BooleanParam, default=False,
                       label='Invert X')
         form.addParam('invertY', BooleanParam, default=False,
-                      label='Invert Y')
+                      label='Invert Y',
+                      help='Invert Y for EMAN coordinates taken on dm3 or'
+                           ' tif micrographs')
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):

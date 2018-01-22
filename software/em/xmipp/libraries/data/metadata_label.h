@@ -371,6 +371,7 @@ enum MDLabel
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP, ///< score by alignability experimental particles (double)
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, ///< score by alignability references (double)
     MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
+    MDL_SCORE_BY_EMPTINESS, ///< Small values represent worse particles. Much larger than 1 for good particles
     MDL_SCORE_BY_ENTROPY,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_GRANULO,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_LBP,  ///< Feature vectors used to classify particles (vector double)
@@ -1816,6 +1817,7 @@ private:
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, LABEL_DOUBLE, "scoreByAlignabilityAccuracyRef");
 
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
+        MDL::addLabel(MDL_SCORE_BY_EMPTINESS, LABEL_DOUBLE, "scoreEmptiness");
         MDL::addLabel(MDL_SCORE_BY_ENTROPY, LABEL_VECTOR_DOUBLE, "entropyFeatures");
         MDL::addLabel(MDL_SCORE_BY_GRANULO, LABEL_VECTOR_DOUBLE, "granuloFeatures");
         MDL::addLabel(MDL_SCORE_BY_LBP, LABEL_VECTOR_DOUBLE, "lbpFeatures");
