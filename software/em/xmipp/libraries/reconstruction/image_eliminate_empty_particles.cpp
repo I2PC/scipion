@@ -35,6 +35,8 @@ void ProgEliminateEmptyParticles::readParams()
     fnOut = getParam("-o");
     fnElim = getParam("-e");
     threshold = getDoubleParam("-t");
+    addFeatures = checkParam("--addFeatures");
+    noDenoising = checkParam("--noDenoising");
 }
 
 // Show ====================================================================
@@ -43,10 +45,12 @@ void ProgEliminateEmptyParticles::show()
     if (verbose==0)
         return;
     std::cerr
-    << "Input selfile:           " << fnIn       << std::endl
-    << "Output selfile:          " << fnOut      << std::endl
-    << "Eliminated selfile:      " << fnElim     << std::endl
-    << "Threshold:               " << threshold  << std::endl
+    << "Input selfile:           " << fnIn        << std::endl
+    << "Output selfile:          " << fnOut       << std::endl
+    << "Eliminated selfile:      " << fnElim      << std::endl
+    << "Threshold:               " << threshold   << std::endl
+	<< "Add features:            " << addFeatures << std::endl
+	<< "Turn off denoising:      " << noDenoising << std::endl
     ;
 }
 
@@ -57,7 +61,9 @@ void ProgEliminateEmptyParticles::defineParams()
     addParamsLine("  -i <selfile>                       : Selfile containing set of input particles");
     addParamsLine("  [-o <selfile=\"output.xmd\">]      : Output selfile");
     addParamsLine("  [-e <selfile=\"eliminated.xmd\">]  : Eliminated particles selfile");
-    addParamsLine("  -t <float>                         : Threshold used by algorithm");
+    addParamsLine("  [-t <float=-1>]                    : Threshold used by algorithm. Set to -1 for no elimination.");
+    addParamsLine("  [--addFeatures]                    : Add the emptiness features to the input particles");
+    addParamsLine("  [--noDenoising]                    : Option for turning of denoising method while computing emptiness feature");
 }
 
 void ProgEliminateEmptyParticles::run()
@@ -73,6 +79,7 @@ void ProgEliminateEmptyParticles::run()
     int countItems = 0;
     std::vector<double> fv;
 
+    init_progress_bar(SF.size());
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         countItems++;
@@ -83,21 +90,26 @@ void ProgEliminateEmptyParticles::run()
     	I().setXmippOrigin();
     	centerImageTranslationally(I(), aux);
 
-    	denoiseTVFilter(I(), 50);
+        if (!noDenoising)
+    	    denoiseTVFilter(I(), 50);
+
         ef.extractVariance(I(), fv);
 
-        if (fv.back() > threshold)
-        {
-            size_t recId = MDclass.addRow(row);
-            MDclass.setValue(MDL_SCORE_BY_VARIANCE, fv, recId);
-            MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
-        }
+        double ratio=fv.back();
+        row.setValue(MDL_SCORE_BY_EMPTINESS,ratio);
+        if (addFeatures)
+        	row.setValue(MDL_SCORE_BY_VARIANCE, fv);
+        if (threshold<0 || ratio > threshold)
+            MDclass.addRow(row);
         else
-        {
-            size_t recId = MDclass_elim.addRow(row);
-            MDclass_elim.setValue(MDL_SCORE_BY_VARIANCE, fv, recId);
-            MDclass_elim.write(formatString("@%s", fnElim.c_str()), MD_APPEND);
-        }
+            MDclass_elim.addRow(row);
         fv.clear();
+        if (countItems%100==0)
+        	progress_bar(countItems);
     }
+    progress_bar(SF.size());
+    if (MDclass.size()>0)
+    	MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
+    if (MDclass_elim.size()>0)
+    	MDclass_elim.write(formatString("@%s", fnElim.c_str()), MD_APPEND);
 }

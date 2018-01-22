@@ -71,6 +71,7 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
+from protocol_compare_angles import XmippProtCompareAngles
 from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
@@ -118,6 +119,7 @@ from protocol_volume_strain import XmippProtVolumeStrain
 from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
+from protocol_ctf_selection import XmippProtCTFSelection
 # Wizards
 from wizard import *
 
