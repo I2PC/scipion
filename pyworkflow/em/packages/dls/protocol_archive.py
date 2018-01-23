@@ -35,7 +35,7 @@ class ProtArchive(ProtProcessMovies):
         real_path = os.path.realpath(movieDict['_filename'])
 
         self._setValues(recipe_data, 'files', [real_path ])
-        self._setValues(recipe_data, 'dropfile-dir', dropFileDir)
+        self._setValues(recipe_data, 'dropfile-dir', self.dropFileDir)
 
         json_data = json.dumps(recipe_data)
         self._sendMessage(json_data)
@@ -55,7 +55,7 @@ class ProtArchive(ProtProcessMovies):
             except ImportError as ex:
                 print "You need stomp to run the archiver, run 'scipion run pip stomp.py' first"
                 raise ex
-            self.connection.send(self.queue_name, json_data)
+            self.connection.send(self.queueName, json_data)
         except AttributeError:
             self.connection = Connection([(self.queueHost, self.queuePort)])
             self.connection.connect(wait=True)
