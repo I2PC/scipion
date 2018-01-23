@@ -28,6 +28,7 @@
 
 import os
 from itertools import izip
+from math import ceil
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
@@ -179,14 +180,30 @@ class ProtAlignMovies(ProtProcessMovies):
                    % (allDone, len(self.listOfMovies)))
         self.debug('   streamMode: %s' % streamMode)
 
+        doneFailed = []
+
         if self._createOutputMovies():
             saveMovie = self.getAttributeValue('doSaveMovie', False)
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
+            doneOK = []
 
             for movie in newDone:
+                # Need to check if the micrograph was actually generated to avoid
+                # discrepancies between movieSet and micSet
+                extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                if not os.path.exists(extraMicFn):
+                    print(yellowStr("WARNING: Micrograph %s was not generated, can't add it to "
+                                    "output set." % extraMicFn))
+                    doneFailed.append(movie)
+                    continue
+
                 newMovie = self._createOutputMovie(movie)
                 movieSet.append(newMovie)
+                doneOK.append(movie)
+
+            # replace newDone with movies that actually have alignment
+            newDone = doneOK
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
 
@@ -204,7 +221,6 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
-            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -526,7 +542,7 @@ class ProtAlignMovies(ProtProcessMovies):
             args += ' --gain ' + gain
 
         if splineOrder is not None:
-            args += '--Bspline %d ' % splineOrder
+            args += ' --Bspline %d ' % splineOrder
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
@@ -586,6 +602,35 @@ class ProtAlignMovies(ProtProcessMovies):
 
         return outputFn
 
+    def correctGain(self, movieFn, outputFn, gainFn=None, darkFn=None):
+        """correct a movie with both gain and dark images"""
+        ih = ImageHandler()
+        _, _, z, n = ih.getDimensions(movieFn)
+        numberOfFrames = max(z, n) # in case of wrong mrc stacks as volumes
+
+        def _readImgFloat(fn):
+            img = None
+            if fn:
+                img = ih.read(fn)
+                img.convert2DataType(ih.DT_FLOAT)
+            return img
+
+        gainImg = _readImgFloat(gainFn)
+        darkImg = _readImgFloat(darkFn)
+
+        img = ih.createImage()
+
+        for i in range(1, numberOfFrames + 1):
+            img.read((i, movieFn))
+            img.convert2DataType(ih.DT_FLOAT)
+
+            if darkImg:
+                img.inplaceSubtract(darkImg)
+            if gainImg:
+                img.inplaceMultiply(gainImg)
+
+            img.write((i, outputFn))
+
     def getThumbnailFn(self, inputFn):
         """ Returns the default name for a thumbnail image"""
         return pwutils.replaceExt(inputFn, "thumb.png")
@@ -610,13 +655,15 @@ def createAlignmentPlot(meanX, meanY):
     ax.set_ylabel('Drift y (pixels)')
     ax.plot(0, 0, 'yo-')
     i = 1
+    skipLabels = ceil(len(meanX) / 10.0)
     for x, y in izip(meanX, meanY):
         preX += x
         preY += y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
         #ax.plot(preX, preY, 'yo-')
-        ax.text(preX-0.02, preY+0.02, str(i))
+        if i % skipLabels == 0:
+            ax.text(preX-0.02, preY+0.02, str(i))
         i += 1
 
     ax.plot(sumMeanX, sumMeanY, color='b')

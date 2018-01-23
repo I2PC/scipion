@@ -27,7 +27,6 @@
 import unittest, sys
 # import numpy as np
 from pyworkflow.em import exists
-from pyworkflow.em.packages.xmipp3.protocol_resolution_monogenic_signal import OUTPUT_RESOLUTION_FILE
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pyworkflow.em.packages.xmipp3 import XmippProtMonoRes, XmippProtCreateMask3D
 from pyworkflow.em.protocol import ProtImportVolumes
@@ -95,7 +94,7 @@ class TestMonoRes(TestMonoResBase):
                                    filterInput=False,
                                    )
         self.launchProtocol(MonoRes)
-        self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
+        self.assertIsNotNone(MonoRes.resolution_Volume,
                         "MonoRes (no split, no premasked) has failed")
  
     def testMonoRes2(self):
@@ -114,7 +113,7 @@ class TestMonoRes(TestMonoResBase):
                                    filterInput=False,
                                    )
         self.launchProtocol(MonoRes)
-        self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
+        self.assertIsNotNone(MonoRes.resolution_Volume,
                         "MonoRes (split, pre-masked, no filter) has failed")
  
     def testMonoRes3(self):
@@ -131,5 +130,5 @@ class TestMonoRes(TestMonoResBase):
                                    filterInput=True,
                                    )
         self.launchProtocol(MonoRes)
-        self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
+        self.assertIsNotNone(MonoRes.outputVolume_Filtered,
                         "MonoRes filter has failed")

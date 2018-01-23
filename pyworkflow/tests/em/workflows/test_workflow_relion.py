@@ -165,7 +165,7 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
 
     def _checkOutput(self, prot, **kwargs):
         # Read expected parameters
-        size = kwargs.get('size', 2618)
+        size = kwargs.get('size', 5828)
         sampling = kwargs.get('sampling', 7.08)
         dim = kwargs.get('dim', 64)
 
@@ -179,12 +179,14 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         
         self.assertEqual(first.getDim(), (dim, dim, 1))
         self.assertAlmostEqual(first.getSamplingRate(), sampling, delta=0.001)
-        self.assertAlmostEqual(ctfModel.getDefocusU(), 23467, delta=10)
-        self.assertAlmostEqual(ctfModel.getDefocusV(), 23308, delta=10)
+        self.assertAlmostEqual(ctfModel.getDefocusU(), 25000, delta=10)
+        self.assertAlmostEqual(ctfModel.getDefocusV(), 24779, delta=10)
 
     def test_ribo(self):
         """ Reimplement this test to run several extract cases. """
         protPick1 = self._runPickWorkflow()
+        protPick1.runType.set(RUN_COMPUTE)
+        self._launchPick(protPick1)
         proj = protPick1.getProject()
         size = protPick1.outputCoordinates.getSize()
 
@@ -205,25 +207,26 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         protExtract2.setObjLabel('extract - rescale 32')
         protExtract2.doRescale.set(True)
         protExtract2.rescaledSize.set(32)
-        self.launchProtocol(protExtract2)
 
+        self.launchProtocol(protExtract2)
         self._checkOutput(protExtract2, size=size, dim=32, sampling=14.16)
         
         # Now test changing micrographs source option
-        subsetProt = self.newProtocol(em.ProtSubSet,
-                                      chooseAtRandom=True,
-                                      nElements=10)
-        subsetProt.inputFullSet.set(self.protCropMics.outputMicrographs)
-        self.launchProtocol(subsetProt)
+        splitSetsProt = self.newProtocol(em.ProtSplitSet,
+                                      randomize=False,
+                                      numberOfSets=2)
+        splitSetsProt.inputSet.set(self.protCropMics.outputMicrographs)
+        self.launchProtocol(splitSetsProt)
+
+        # We choose the first output to keep the assertation procedure 
+        otherSetMics = splitSetsProt.outputMicrographs01
 
         protExtract3 = self.proj.copyProtocol(protExtract)
         protExtract3.setObjLabel('extract - Other')
         protExtract3.downsampleType.set(1)
-        protExtract3.inputMicrographs.set(subsetProt.outputMicrographs)
+        protExtract3.inputMicrographs.set(otherSetMics)
         self.launchProtocol(protExtract3)
         
-        # The size of the set is different every time is executed the test
-        # due to the seleccion of the micrographs is random.
-        
-        partSize = protExtract3.outputParticles.getSize()
-        self._checkOutput(protExtract3, size=partSize)
+        # The number of particles is different than the imported coordinates
+        # due to the subSet done.
+        self._checkOutput(protExtract3, size=2884)
