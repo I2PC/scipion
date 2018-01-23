@@ -306,6 +306,18 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
     G, chemistry/ultrastructure; Protein Structure, Tertiary}
 }
 
+@article{Scheres2009c,
+  author = {Scheres, Sjors H W. and Melero, Roberto and Valle, Mikel and Carazo, José María},
+  title = {Averaging of Electron Subtomograms and Random Conical Tilt Reconstructions through Likelihood Optimization},
+  journal = {Structure},
+  year = {2009},
+  volume = {17},
+  pages = {1563--1572},
+  number = {12},
+  month = {Dec},
+  doi = {http://dx.doi.org/10.1016/j.str.2009.10.009}
+}
+
 @article{Sorzano2004b,
 title = "A multiresolution approach to orientation assignment in 3D electron microscopy of single particles ",
 journal = "JSB ",
