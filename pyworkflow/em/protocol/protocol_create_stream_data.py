@@ -83,8 +83,8 @@ class ProtCreateStreamData(EMProtocol):
                       condition="setof==%d"%SET_OF_MOVIES,
                       label="movie",
                       help='This movie will be copied "number of items" times')
-        form.addParam('inputMic', params.PointerParam,
-                      pointerClass='Micrograph',
+        form.addParam('inputMics', params.PointerParam,
+                      pointerClass='SetOfMicrographs',
                       condition="setof==%d" % SET_OF_MICROGRAPHS,
                       label="micrograph",
                       help='This micrograph will be copied "number of items"'
@@ -106,6 +106,7 @@ class ProtCreateStreamData(EMProtocol):
                       label="number of items",
                       help="setofXX size")
         form.addParam('samplingRate', params.FloatParam, default=4,
+                      condition="setof!=%d" % SET_OF_MICROGRAPHS,
                       label="samplingRate",
                       help="Sampling rate")
         form.addParam('creationInterval', params.IntParam, default=60,
@@ -164,7 +165,10 @@ class ProtCreateStreamData(EMProtocol):
             acquisition.setSphericalAberration(self._sphericalAberration)
             acquisition.setAmplitudeContrast(self._amplitudeContrast)
             objSet.setAcquisition(acquisition)
-            objSet.setSamplingRate(self.samplingRate.get())
+            if self.setof != SET_OF_MICROGRAPHS:
+                objSet.setSamplingRate(self.samplingRate.get())
+            else:
+                objSet.setSamplingRate(self.inputMics.get().getSamplingRate())
 
         if self.setof == SET_OF_MOVIES:
             obj = Movie()
@@ -189,7 +193,7 @@ class ProtCreateStreamData(EMProtocol):
                 objSet.append(obj)
                 newObj = True
 
-        return objSet, newObj  # why a dictionary, a boolean may be enought
+        return objSet, newObj  # why a dictionary, a boolean may be enough
 
     def _updateOutput(self, objSet):
         if self.setof == SET_OF_MOVIES:
@@ -228,15 +232,23 @@ class ProtCreateStreamData(EMProtocol):
 
     def createStep(self, counter):
 
-        if not ProtCreateStreamData.object:
+        if not ProtCreateStreamData.object or self.setof == SET_OF_MICROGRAPHS:
             if self.setof == SET_OF_MOVIES:
                 ProtCreateStreamData.object = \
                     ImageHandler().read(self.inputMovie.get().getLocation())
                 self.name = "movie"
+
             elif self.setof == SET_OF_MICROGRAPHS:
+                setDim = self.inputMics.get().getSize()
+                for idx, mic in enumerate(self.inputMics.get()):
+                    if idx == (counter-1)%setDim:
+                        newMic = mic.clone()
+                        break
                 ProtCreateStreamData.object = \
-                    ImageHandler().read(self.inputMic.get().getLocation())
+                    ImageHandler().read(newMic.getLocation())
                 self.name = "micro"
+
+
             elif self.setof == SET_OF_PARTICLES:
                 for idx, p in enumerate(self.inputParticles.get()):
                     if idx == counter:
