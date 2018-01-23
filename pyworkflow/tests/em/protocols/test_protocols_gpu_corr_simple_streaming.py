@@ -22,78 +22,176 @@
 # ***************************************************************************/
 
 import time
-import os
-
-from pyworkflow.tests import BaseTest, setupTestProject
+from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtCreateStreamData
 from pyworkflow.em.protocol.protocol_create_stream_data import \
-    SET_OF_PARTICLES
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
+    SET_OF_MICROGRAPHS
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.packages.xmipp3 import XmippProtCTFSelection
-from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
-from pyworkflow.em.protocol import ProtImportAverages
-
+from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportAverages
+from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
+from pyworkflow.em.packages.eman2.protocol_autopick import *
+from pyworkflow.em.packages.xmipp3.protocol_extract_particles import *
+from pyworkflow.em.packages.xmipp3.protocol_streaming_gpu_correlation_simple import *
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
-NUM_PART = 100
+NUM_MICS = 20
 
-CTF_SQLITE = "ctfs.sqlite"
-MIC_SQLITE = "micrographs.sqlite"
-MIC_DISCARDED_SQLITE = "micrographsDiscarded.sqlite"
-
+#CTF_SQLITE = "ctfs.sqlite"
+#MIC_SQLITE = "micrographs.sqlite"
+#MIC_DISCARDED_SQLITE = "micrographsDiscarded.sqlite"
 
 class TestGpuCorrSimpleStreaming(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
 
-    def _updateProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
-        # Close DB connections
-        prot2.getProject().closeMapper()
-        prot2.closeMappers()
-        return prot2
+    def importAverages(self):
+        prot = self.newProtocol(ProtImportAverages,
+                                          filesPath=self.dsRelion.getFile('import/averages.mrcs'),
+                                          samplingRate=1.0)
+        self.launchProtocol(prot)
 
-    def test_pattern(self):
-        """ Import several Particles from a given pattern.
-        """
+        return prot
 
-        args = {'importFrom': ProtImportAverages.IMPORT_FROM_FILES,
-                'filesPath': self.dsXmipp.getFile('/home/ajimenez/Desktop/averages/'),
-                'filesPattern': '*stk',
-                'samplingRate': 1.5,
-                }
+    def importMicrographs(self):
+        prot = self.newProtocol(ProtImportMicrographs,
+                                      filesPath=self.dsRelion.getFile('micrographs'),
+                                      filesPattern='*.mrc',
+                                      samplingRateMode=1,
+                                      magnification=79096,
+                                      scannedPixelSize=56, voltage=300,
+                                      sphericalAberration=2.0)
+        self.launchProtocol(prot)
 
-        # Id's should be set increasing from 1 if ### is not in the
-        # pattern
-        protAvgImport = self.newProtocol(ProtImportAverages, **args)
-        protAvgImport.setObjLabel('improt averages')
-        self.launchProtocol(protAvgImport, wait=False)
+        return prot
 
-
-        kwargs = {'xDim': 64,
-                  'yDim': 64,
-                  'nDim': NUM_PART,
-                  'samplingRate': 1.25,
-                  'creationInterval': 15,
-                  'delay': 0,
-                  'setof': SET_OF_PARTICLES  # SetOfParticles
+    def importMicrographsStr(self, fnMics):
+        kwargs = {'inputMics': fnMics,
+                  'nDim': NUM_MICS,
+                  'creationInterval': 30,
+                  'delay': 10,
+                  'setof': SET_OF_MICROGRAPHS  # SetOfMics
                   }
-
-        # create input particles
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
 
+        return protStream
+
+    def calculateCtf(self, inputMics):
+        protCTF = ProtCTFFind(useCftfind4=True)
+        protCTF.inputMicrographs.set(inputMics)
+        protCTF.ctfDownFactor.set(1.0)
+        protCTF.lowRes.set(0.05)
+        protCTF.highRes.set(0.5)
+        self.proj.launchProtocol(protCTF, wait=False)
+
+        return protCTF
+
+
+    def runPicking(self, inputMicrographs):
+        """ Run a particle picking. """
+        protPicking = SparxGaussianProtPicking(boxSize=64)
+        protPicking.inputMicrographs.set(inputMicrographs)
+        self.proj.launchProtocol(protPicking, wait=False)
+
+        return protPicking
+
+    def runExtractParticles(self, inputCoord, setCtfs):
+        protExtract = self.newProtocol(XmippProtExtractParticles,
+                                       boxSize=64,
+                                       doInvert = False,
+                                       doFlip = False)
+
+        protExtract.inputCoordinates.set(inputCoord)
+        protExtract.ctfRelations.set(setCtfs)
+
+        self.proj.launchProtocol(protExtract, wait=False)
+
+        return protExtract
+
+    def runClassify(self, inputParts, inputAvgs):
+        protClassify = self.newProtocol(XmippProtStrGpuCrrSimple,
+                                        useAsRef=REF_AVERAGES)
+
+        protClassify.inputParticles.set(inputParts)
+        protClassify.inputAverages.set(inputAvgs)
+        self.proj.launchProtocol(protClassify, wait=False)
+
+        return protClassify
+
+
+    def _updateProtocol(self, prot):
+            prot2 = getProtocolFromDb(prot.getProject().path,
+                                      prot.getDbPath(),
+                                      prot.getObjId())
+            # Close DB connections
+            prot2.getProject().closeMapper()
+            prot2.closeMappers()
+            return prot2
+
+
+
+    def test_pattern(self):
+
+        protImportAvgs = self.importAverages()
+        if protImportAvgs.isFailed():
+            self.assertTrue(False)
+        protImportMics = self.importMicrographs()
+        if protImportMics.isFailed():
+            self.assertTrue(False)
+
+        protImportMicsStr = self.importMicrographsStr(protImportMics.outputMicrographs)
         counter = 1
-        while not protStream.hasAttribute('outputMicrographs'):
+        while not protImportMicsStr.hasAttribute('outputMicrographs'):
             time.sleep(2)
-            protStream = self._updateProtocol(protStream)
+            protImportMicsStr = self._updateProtocol(protImportMicsStr)
             if counter > 100:
                 break
             counter += 1
+        if protImportMicsStr.isFailed():
+            self.assertTrue(False)
 
+        protCtf = self.calculateCtf(protImportMicsStr.outputMicrographs)
+        counter = 1
+        while not protCtf.hasAttribute('outputCTF'):
+            time.sleep(2)
+            protCtf = self._updateProtocol(protCtf)
+            if counter > 100:
+                break
+            counter += 1
+        if protCtf.isFailed():
+            self.assertTrue(False)
+
+        protPicking = self.runPicking(protImportMicsStr.outputMicrographs)
+        counter = 1
+        while not protPicking.hasAttribute('outputCoordinates'):
+            time.sleep(2)
+            protPicking = self._updateProtocol(protPicking)
+            if counter > 100:
+                break
+            counter += 1
+        if protPicking.isFailed():
+            self.assertTrue(False)
+
+        protExtract = self.runExtractParticles(protPicking.outputCoordinates,
+                                               protCtf.outputCTF)
+        counter = 1
+        while not protExtract.hasAttribute('outputParticles'):
+            time.sleep(2)
+            protExtract = self._updateProtocol(protExtract)
+            if counter > 100:
+                break
+            counter += 1
+        if protExtract.isFailed():
+            self.assertTrue(False)
+
+        protClassify = self.runClassify(protExtract.outputParticles,
+                                        protImportAvgs.outputAverages)
+        while protClassify.getStatus()!=STATUS_FINISHED:
+            protClassify = self._updateProtocol(protClassify)
+            if protClassify.isFailed():
+                self.assertTrue(False)
+                break
