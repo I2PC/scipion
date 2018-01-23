@@ -11,20 +11,15 @@ class ProtArchive(ProtProcessMovies):
     _label = 'DLS Archive'
 
     def _defineParams(self, form):
-        form.addSection(label='Params')
+        ProtProcessMovies._defineParams(self, form)
+
         group = form.addGroup('Message Queue')
-        group.addParam('queueHost', params.StringParam,
-                       label="Host", important=True,
-                       help='The host name for a queue broker (e.g. activemq)')
-        group.addParam('queuePort', params.IntParam,
-                       label="Port", important=True, default=61613,
-                       help='The stomp port for a queue broker (e.g. activemq)')
-        group.addParam('queueName', params.StringParam,
-                       label='Queue Name',
-                       help='The name of the queue within the broker')
+        group.addParam('configuration', params.FileParam,
+                       label="Configuration", important=True,
+                       help='a file path for a StompTransport configuration configuration file')
         group.addParam('dropFileDir', params.FolderParam,
                        label='Dropfile dir',
-                       help='The location of the dropfile dir')
+                       help='The location of the dropfile dir where archive instructions will be sent')
 
     def processMovieStep(self, movieDict, hasAlignment):
         SCIPION_HOME = os.environ['SCIPION_HOME']
@@ -34,11 +29,10 @@ class ProtArchive(ProtProcessMovies):
 
         real_path = os.path.realpath(movieDict['_filename'])
 
-        self._setValues(recipe_data, 'files', [real_path ])
-        self._setValues(recipe_data, 'dropfile-dir', self.dropFileDir)
+        self._setValues(recipe_data, 'filelist', [real_path ])
+        self._setValues(recipe_data, 'dropfile-dir', self.dropFileDir.get())
 
-        json_data = json.dumps(recipe_data)
-        self._sendMessage(json_data)
+        self._sendMessage(recipe_data)
 
     def _setValues(self, data, key, value):
         for k in data:
@@ -47,19 +41,20 @@ class ProtArchive(ProtProcessMovies):
             elif type(data[k]) is dict:
                 self._setValues(data[k], key, value)
 
-    def _sendMessage(self, json_data):
+    def _sendMessage(self, message):
         # type: (str) -> void
         try:
             try:
-                from stomp import Connection
+                from workflows.transport.stomp_transport import StompTransport
             except ImportError as ex:
-                print "You need stomp to run the archiver, run 'scipion run pip stomp.py' first"
+                print "You need stomp transport to run the archiver, run 'scipion run pip install workflows' first"
                 raise ex
-            self.connection.send(self.queueName, json_data)
+            StompTransport.load_configuration_file(self.configuration.get())
+            self.stomp.send('archive.filelist', message, headers={ 'workflows-recipe': True })
         except AttributeError:
-            self.connection = Connection([(self.queueHost, self.queuePort)])
-            self.connection.connect(wait=True)
-            self._sendMessage(json_data)
+            self.stomp = StompTransport()
+            self.stomp.connect()
+            self._sendMessage(message)
 
     def createOutputStep(self):
         pass
