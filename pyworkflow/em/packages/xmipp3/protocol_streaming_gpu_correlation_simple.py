@@ -70,7 +70,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
     # --------------------------- DEFINE param functions -----------------------
     def _defineAlignParams(self, form):
-
         form.addParam('useAsRef', params.EnumParam,
                       choices=['Classes', 'Averages'],
                       default=0, important=True,
@@ -118,156 +117,44 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         self.last_time = time.time()
 
         self._loadInputList()
-        stepsToAppend = self.divideInBlocks()
 
-        fDeps=[]
-        self._insertFunctionStep('_convertSetStep', self.imgsRef)
-        for i in range(stepsToAppend):
-            fDeps += self._insertStepsForParticles()
-
-        self._insertFunctionStep('createOutputStep', prerequisities=fDeps, wait=True)
+        if self.useAsRef.get() == 0:
+            classId = self.inputClasses.get()
+        else:
+            classId = self.inputAverages.get()
 
 
-    def _insertStepsForParticles(self):
         deps = []
+        self._insertFunctionStep('convertAveragesStep', classId)
+        deps = self._insertStepsForParticles(deps)
 
-        stepIdClassify = self._insertFunctionStep('_classifyStep')
+        self._insertFunctionStep('createOutputStep',
+                                 prerrequisites= deps, wait=True)
+
+
+    def _insertStepsForParticles(self, deps):
+        stepIdClassify = self._insertFunctionStep('classifyStep')
         deps.append(stepIdClassify)
 
         return deps
 
 
-    # --------------------------- STEPS functions --------------------------
-
-    def _stepsCheck(self):
-        self._checkNewInput()
-        self._checkNewOutput()
-
-    def _checkNewInput(self):
-        """ Check if there are new particles to be processed and add the necessary
-        steps."""
-        initial_time = time.time()
-        particlesFile = self.inputParticles.get().getFileName()
-
-        now = datetime.now()
-        self.lastCheck = getattr(self, 'lastCheck', now)
-        mTime = datetime.fromtimestamp(getmtime(particlesFile))
-        self.debug('Last check: %s, modification: %s'
-                   % (prettyTime(self.lastCheck),
-                      prettyTime(mTime)))
-
-        # If the input have not changed since our last check,
-        # it does not make sense to check for new input data
-        if self.lastCheck > mTime and hasattr(self, 'listOfParticles'):
-            return None
-
-        self.lastCheck = now
-        outputStep = self._getFirstJoinStep()
-
-        # Open input and close it as soon as possible
-        self._loadInputList()
-
-        if len(self.listOfParticles) > 0:
-            stepsToAppend = self.divideInBlocks()
-            fDeps=[]
-            init2 = time.time()
-            for i in range(stepsToAppend):
-                fDeps += self._insertStepsForParticles()
-            finish2 = time.time()
-            init3 = time.time()
-            if outputStep is not None:
-                outputStep.addPrerequisites(*fDeps)
-            self.updateSteps()
-            finish3=time.time()
-            print("Calculo 1 exec time", finish2-init2)
-            print("Calculo 2 exec time", finish3 - init3)
-
-        final_time = time.time()
-        exec_time = final_time-initial_time
-        print("_checkNewInput exec_time", exec_time)
-
-
-    def _checkNewOutput(self):
-        """ Check for already done files and update the output set. """
-        # Load previously done items (from text file)
-
-        initial_time = time.time()
-        #particlesListId = self._readParticlesId()
-        particlesListId = self.numberProcessed
-
-        #if particlesListId<100000:
-        #    interval = 30.0#180.0
-        #else:
-        #    interval = 300.0
-        #if initial_time<self.last_time+interval:
-        #    return
-        #else:
-        #    self.last_time = initial_time
-        #    print("last_time",self.last_time)
-
-        doneList = self._readDoneList()
-
-        # Check for newly done items
-        if len(doneList)==0:
-            newDone = range(0, particlesListId + 1)
-        else:
-            newDone = range(doneList[0], particlesListId+1)
-
-        # We have finished when there is not more inputs (stream closed)
-        # and the number of processed particles is equal to the number of inputs
-        self.finished = (self.isStreamClosed == Set.STREAM_CLOSED
-                         and len(newDone)==0)
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-
-        if len(newDone)>1:
-            self._writeDoneList(newDone[len(newDone)-1])
-        elif not self.finished:
-            # If we are not finished and no new output have been produced
-            # it does not make sense to proceed and updated the outputs
-            # so we exit from the function here
-            return
-
-        outSet = self._loadOutputSet(SetOfClasses2D, 'classes2D.sqlite')
-        self._updateOutputSetOfClasses('outputClasses', outSet, streamMode)
-
-        if self.finished:  # Unlock createOutputStep if finished all jobs
-            outputStep = self._getFirstJoinStep()
-            if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(STATUS_NEW)
-
-        if (exists(self._getPath('classes2D.sqlite'))):
-            outSet.close()
-
-        if exists(self._getExtraPath('last_images.xmd')):
-            remove(self._getExtraPath('last_images.xmd'))
-        if exists(self._getExtraPath('last_classes.xmd')):
-            remove(self._getExtraPath('last_classes.xmd'))
-
-        final_time = time.time()
-        exec_time = final_time - initial_time
-        print("_checkNewOutput exec_time", exec_time)
-
-
-    def _convertSetStep(self, imgsFileNameClasses):
+    # --------------------------- STEPS functions ------------------------------
+    def convertAveragesStep(self, classId):
 
         if self.useAsRef==REF_CLASSES:
             setOfClasses = self.inputClasses
         else:
             setOfClasses = self.inputAverages
 
-        self.num_classes=setOfClasses.get().__len__()
         if self.useAsRef == REF_CLASSES:
-            writeSetOfClasses2D(setOfClasses.get(),
-                                imgsFileNameClasses,
+            writeSetOfClasses2D(setOfClasses.get(), self.imgsRef,
                                 writeParticles=True)
         else:
-            writeSetOfParticles(setOfClasses.get(), imgsFileNameClasses)
+            writeSetOfParticles(setOfClasses.get(), self.imgsRef)
 
-
-    def _classifyStep(self):
-
+    def classifyStep(self):
         #time.sleep(30)
-
         self._generateInputMd()
 
         expImgMd = self._getExtraPath('inputImagesExp.xmd')
@@ -480,6 +367,116 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                '--classify %(outputClassesFile)s'
         self.runJob("xmipp_cuda_correlation", args % self._params, numberOfMpi=1)
 
+    # ------ Methods for Streaming 2D Classification --------------
+    def _stepsCheck(self):
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _checkNewInput(self):
+        """ Check if there are new particles to be processed and add
+        the necessary steps."""
+        initial_time = time.time()
+        particlesFile = self.inputParticles.get().getFileName()
+
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(getmtime(particlesFile))
+        self.debug('Last check: %s, modification: %s'
+                   % (prettyTime(self.lastCheck),
+                      prettyTime(mTime)))
+
+        # If the input have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'listOfParticles'):
+            return None
+
+        self.lastCheck = now
+        outputStep = self._getFirstJoinStep()
+
+        # Open input and close it as soon as possible
+        self._loadInputList()
+
+        if len(self.listOfParticles) > 0:
+            stepsToAppend = self.divideInBlocks()
+            fDeps=[]
+            init2 = time.time()
+            for i in range(stepsToAppend):
+                fDeps += self._insertStepsForParticles()
+            finish2 = time.time()
+            init3 = time.time()
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+            finish3=time.time()
+            print("Calculo 1 exec time", finish2-init2)
+            print("Calculo 2 exec time", finish3 - init3)
+
+        final_time = time.time()
+        exec_time = final_time-initial_time
+        print("_checkNewInput exec_time", exec_time)
+
+
+    def _checkNewOutput(self):
+        """ Check for already done files and update the output set. """
+        # Load previously done items (from text file)
+
+        initial_time = time.time()
+        #particlesListId = self._readParticlesId()
+        particlesListId = self.numberProcessed
+
+        #if particlesListId<100000:
+        #    interval = 30.0#180.0
+        #else:
+        #    interval = 300.0
+        #if initial_time<self.last_time+interval:
+        #    return
+        #else:
+        #    self.last_time = initial_time
+        #    print("last_time",self.last_time)
+
+        doneList = self._readDoneList()
+
+        # Check for newly done items
+        if len(doneList)==0:
+            newDone = range(0, particlesListId + 1)
+        else:
+            newDone = range(doneList[0], particlesListId+1)
+
+        # We have finished when there is not more inputs (stream closed)
+        # and the number of processed particles is equal to the number of inputs
+        self.finished = (self.isStreamClosed == Set.STREAM_CLOSED
+                         and len(newDone)==0)
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        if len(newDone)>1:
+            self._writeDoneList(newDone[len(newDone)-1])
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+
+        outSet = self._loadOutputSet(SetOfClasses2D, 'classes2D.sqlite')
+        self._updateOutputSetOfClasses('outputClasses', outSet, streamMode)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+        if (exists(self._getPath('classes2D.sqlite'))):
+            outSet.close()
+
+        if exists(self._getExtraPath('last_images.xmd')):
+            remove(self._getExtraPath('last_images.xmd'))
+        if exists(self._getExtraPath('last_classes.xmd')):
+            remove(self._getExtraPath('last_classes.xmd'))
+
+        final_time = time.time()
+        exec_time = final_time - initial_time
+        print("_checkNewOutput exec_time", exec_time)
+
+
 
 
     def createOutputStep(self):
@@ -508,14 +505,11 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         particlesSet = self._loadInputParticleSet()
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
-        for m in particlesSet:
-            #imgRow = XmippMdRow()
-            #particleToRow(m, imgRow)
-            #idx = imgRow.getValue(md.MDL_ITEM_ID)
-            idx = m.getObjId()
+        for p in particlesSet:
+            idx = p.getObjId()
             if not self.htAlreadyProcessed.isItemPresent(idx):
                 #self.listOfParticles.append(idx)
-                newPart = m.clone()  # AJ new to make the list of particles instead of list of ids
+                newPart = p.clone()  # AJ new to make the list of particles instead of list of ids
                 self.listOfParticles.append(newPart)
                 #To create a md with just the new particles
                 #imgRow.writeToMd(imagesMd, imagesMd.addObject())
@@ -529,14 +523,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
 
     def _loadInputParticleSet(self):
-        initial_time = time.time()
-        particlesFile = self.inputParticles.get().getFileName()
-        self.debug("Loading input db: %s" % particlesFile)
-        particlesSet = SetOfParticles(filename=particlesFile)
-        particlesSet.loadAllProperties()
-        final_time = time.time()
-        print("_loadInputParticleSet exec time", final_time - initial_time)
-        return particlesSet
+        partSet = self.inputParticles.get()
+        return partSet
 
 
     def _getFirstJoinStep(self):
