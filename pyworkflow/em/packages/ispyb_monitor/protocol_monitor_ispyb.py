@@ -30,7 +30,12 @@ from os import environ
 from os.path import realpath, join, dirname, exists, basename, abspath
 from collections import OrderedDict
 import math
+import re
 from datetime import datetime
+from pathlib2 import Path
+from errno import ENOENT
+from sys import float_info
+import mrcfile
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -41,7 +46,6 @@ from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMic
 from pyworkflow.gui import getPILImage
 from pyworkflow.protocol.constants import STATUS_RUNNING
 
-from sys import float_info
 
 class ProtMonitorISPyB(ProtMonitor):
     """ Monitor to communicated with ISPyB system at Diamond.
@@ -214,8 +218,6 @@ class MonitorISPyB(Monitor):
 
         return all(finished)
 
-
-
     def now(self):
         return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
 
@@ -266,6 +268,7 @@ class MonitorISPyB(Monitor):
                 'wavelength': self.convert_volts_to_debroglie_wavelength(acquisition.getVoltage())
             }
             self.dataCollection.update(self.movies[movieId])
+            self.update_from_metadata(Path(movieFn), self.movies[movieId])
             updateIds.append(movieId)
 
     def safe_update(self, target, source):
@@ -275,6 +278,42 @@ class MonitorISPyB(Monitor):
                     target[key] = source[key]
                 except KeyError:
                     pass
+
+    def navigate_to_metadata_path(self, data_path):
+        grid_square_regex = r'GridSquare_(\d+)'
+        foil_hole_regex = r'FoilHole_(.*)-\d+.mrc'
+
+        visit = self.find_visit_path(data_path)
+        foil_hole = re.match(foil_hole_regex, data_path.name)
+        grid_square = re.match(grid_square_regex, data_path.parent.parent.name)
+
+        if foil_hole and grid_square:
+            pattern = 'supervisor_*_epu_*/Images-Disc1/GridSquare_{}/Data/FoilHole_{}.mrc'
+            glob_pattern = pattern.format(grid_square.group(1), foil_hole.group(1))
+            files = list(visit.glob(glob_pattern))
+            return files[0] if files else None
+
+    def find_visit_path(self, path, original_path=None):
+        if path == Path('/'):
+            raise IOError(ENOENT, "File doesn't look like it's in a visit", original_path or path)
+        visit_regex = r'^\w{2}\d+-\d+$'
+        if re.match(visit_regex, path.name):
+            return path
+        else:
+            return self.find_visit_path(path.parent, original_path or path)
+
+    def update_from_metadata(self, data_path, to_update):
+        try:
+            metadata_path = self.navigate_to_metadata_path(data_path)
+            with mrcfile.open(metadata_path) as mrc:
+                self.safe_update(to_update,
+                        {'positionX': mrc.header['nxstart'], 'positionY': mrc.header['nystart']}
+                )
+        except Exception as ex:
+            # this can fail for all sorts of reasons which probably don't matter
+            # e.g. the metadata hasn't been written yet.
+            print "failed to get metadata for {}, probably not an issue".format(data_path)
+            print ex
 
     @staticmethod
     def convert_volts_to_debroglie_wavelength(volts):
