@@ -40,7 +40,7 @@ from pyworkflow.em.utils.ccp4_utilities.convert import (getProgram,
                                                         Ccp4Header, START
                                                         )
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
-    BooleanParam
+    BooleanParam, StringParam
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import Transform
 
@@ -76,6 +76,12 @@ the pdb file from coot  to scipion '
                       label='Other referece PDBs',
                       help="Other PDB files used as reference. These PDB "
                            "objects will not be saved")
+        form.addParam('extraCommands', StringParam,
+                      default='',
+                      condition='False',
+                      label='Extra commands for chimera viewer',
+                      help="""Add extra commands in cmd file. Use for testing
+                      """)
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot  to scipion')
         form.addLine("You may also execute (from script -> python) the "
@@ -109,17 +115,18 @@ the pdb file from coot  to scipion '
 
     # --------------------------- STEPS functions ---------------------------------------------------
 
+
     def convertInputStep(self, inVolumes, norVolumesNames):
         """ convert 3D maps to MRC '.mrc' format
         """
-
+        ih = ImageHandler()
         for inVol, norVolName in zip(inVolumes, norVolumesNames):
             inVolName  = inVol.getFileName()
 
             if inVolName.endswith(".mrc"): inVolName += ":mrc"
             if norVolName.endswith(".mrc"): norVolName += ":mrc"
-            if not os.path.exists(norVolName):
-                if self.doNormalize:
+            if not ih.existsLocation(norVolName):
+                if True:#self.doNormalize:
                     img = ImageHandler()._img
                     img.read(inVolName)
                     mean, dev, min, max = img.computeStats()
@@ -131,37 +138,48 @@ the pdb file from coot  to scipion '
                 returnInitIfNone=True).getShifts(),
                               inVol.getSamplingRate(), originField=START)
 
-        createScriptFile(0,#imol
-                         self._getTmpPath(cootScriptFileName),
-                         self._getExtraPath(cootPdbTemplateFileName))
-
     def runCootStep(self, inVolumes, norVolumesNames):
+
+        #PDB
         #find last created PDB output file
+        listOfPDBs = []
+        counter=self.getCounter()
         template = self._getExtraPath(cootPdbTemplateFileName)
-        counter=1
-        while os.path.isfile(template%counter):
-            counter += 1
 
         #if there is not previous output use pdb file form
         #otherwise use last created pdb file
+        print "counter", counter
         if counter == 1:
             pdbFileToBeRefined = self.pdbFileToBeRefined.get().getFileName()
         else:
+            print "SECOND"
             pdbFileToBeRefined = template%(counter-1)
             self._log.info("Using last created PDB file named=%s", pdbFileToBeRefined)
-        args = ""
-        args +=  " --pdb " + pdbFileToBeRefined
+        listOfPDBs.append(pdbFileToBeRefined)
         for pdb in self.inputPdbFiles:
-            args += " --pdb " + pdb.get().getFileName() # other pdb files
+            listOfPDBs.append(pdb.get().getFileName()) # other pdb files
+
+        createScriptFile(0,#imol
+                         self._getTmpPath(cootScriptFileName),
+                         self._getExtraPath(cootPdbTemplateFileName),
+                         norVolumesNames,
+                         listOfPDBs,
+                         self.extraCommands.get()
+                         )
+
+
+
+        args = ""
+        #if len(self.extraCommands.get()) > 2:
+        #    args += " --no-graphics "
         args +=  " --script " + self._getTmpPath(cootScriptFileName) # script wit auxiliary files
-        for volName in norVolumesNames:
-            args += " --map " + volName
-        #_envDict['COOT_PDB_TEMPLATE_FILE_NAME'] = self._getExtraPath(cootPdbTemplateFileName)
+
         self._log.info('Launching: ' + getProgram(os.environ['COOT']) + ' ' + args)
 
         #run in the background
         runCCP4Program(getProgram(os.environ['COOT']), args)
 
+        counter=self.getCounter()
         self.createOutputStep(inVolumes,
                               norVolumesNames,
                               counter)
@@ -173,8 +191,8 @@ the pdb file from coot  to scipion '
         """
         template = self._getExtraPath(cootPdbTemplateFileName)
         counter=init_counter
+        counter -= 1
         while os.path.isfile(template%counter):
-            #counter -=1
             pdb = PdbFile()
             pdb.setFileName(template%counter)
 
@@ -189,26 +207,24 @@ the pdb file from coot  to scipion '
                 self._defineSourceRelation(vol, pdb)
             counter += 1
 
-        if self.doNormalize:
-            counter=init_counter
+        if not os.path.isfile(template%2):#only the first time get inside here
+            counter = 1
             for inVol, norVolName in zip(inVolumes,norVolumesNames):
-                if os.path.exists(norVolName):
-                    #break
-                    outVol = Volume()
-                    sampling = inVol.getSamplingRate()
-                    origin = inVol.getOrigin(
-                        returnInitIfNone=True).getShifts()
-                    outVol.setSamplingRate(sampling)
-                    outVol.setOrigin(origin)
+                outVol = Volume()
+                sampling = inVol.getSamplingRate()
+                origin = inVol.getOrigin(
+                    returnInitIfNone=True).getShifts()
+                outVol.setSamplingRate(sampling)
+                outVol.setOrigin(origin)
 
-                inFileName  = vol.getFileName()
-                if inFileName.endswith('.mrc'):
-                    inFileName = inFileName + ":mrc"
-                outFileName = self._getVolumeFileName(inFileName)
+                if norVolName.endswith('.mrc'):
+                    norVolName = norVolName + ":mrc"
+                outFileName = self._getVolumeFileName(norVolName)
                 outVol.setFileName(outFileName)
                 outputs = {"output3DMap_%04d"%counter: outVol}
+                counter += 1
                 self._defineOutputs(**outputs)
-                self._defineSourceRelation(vol, outVol)
+                self._defineSourceRelation(inVol, outVol)
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -228,9 +244,6 @@ the pdb file from coot  to scipion '
                 errors.append("Current values:")
                 errors.append("CCP4_HOME = %s" % os.environ['CCP4_HOME'])
                 errors.append("COOT = %s" % os.environ['COOT'])
-
-        # Check if volume and pdb are properly fitted
-
 
         # Check that the input volume exist
         if (not self.pdbFileToBeRefined.get().hasVolume()) \
@@ -267,6 +280,13 @@ the pdb file from coot  to scipion '
 
     def replace_at_index(self, tup, ix, val):
        return tup[:ix] + (val,) + tup[ix+1:]
+
+    def getCounter(self):
+        template = self._getExtraPath(cootPdbTemplateFileName)
+        counter=1
+        while os.path.isfile(template%counter):
+            counter += 1
+        return counter # returns next free
 
 cootScriptHeader='''import ConfigParser
 import os
@@ -348,7 +368,6 @@ def _updateMol():
         pass
     print ("reading:", "/tmp/coot.ini", mydict)
     beep(0.1)
-    print "FIRST SOUND"
 
 def getOutPutFileName(template):
     """get name based on template that does not exists
@@ -370,7 +389,6 @@ def _write():
     command = "write_pdb_file(%(imol)s,'%(outfile)s')"%dic
     doIt(command)
     beep(0.1)
-    print "SECOND SOUND"
 
 def scipion_write(imol=0):
     """scipion utility for writting files
@@ -384,7 +402,6 @@ def doIt(command):
     print "********", command
     eval(command)
     #beep(0.1)
-    print "THIRD SOUND"
 
 def _printEnv():
     for key in os.environ.keys():
@@ -409,9 +426,31 @@ add_key_binding("print enviroment","e", lambda: _printEnv())
 
 '''
 
-def createScriptFile(imol, scriptFile, pdbFile):
+def createScriptFile(imol, # problem PDB id
+                     scriptFile, # name of temporary script file
+                                 #loads pdbs, 3dmap and user defined commands
+                     pdbFile, # output PDB file
+                     listOfMaps, # 3Dmaps to be loaded, forst one is the
+                                 # reference
+                     listOfPDBs, # PDS to be loaded, first one
+                                # is the problem PDB
+                     extraCommands = '' # extra commad s to add at the file end
+                                        #mainly used for testing
+                     ):
     f = open(scriptFile,"w")
     f.write(cootScriptHeader%(imol, pdbFile))
     f.write(cootScriptBody)
+    #load PDB and MAP
+    f.write("\n#load Atomic Structures\n") # problem atomic structure must be
+    #  model 0
+    for pdb in listOfPDBs:
+        f.write("read_pdb('%s')\n"%pdb)
+    f.write("\n#load 3D maps\n")
+    for vol in listOfMaps:
+        f.write("handle_read_ccp4_map('%s', 0)\n"%vol)
+    f.write("\n#Extra Commands\n")
+    f.write(extraCommands)
     f.close()
+
+
 
