@@ -268,7 +268,7 @@ class MonitorISPyB(Monitor):
                 'wavelength': self.convert_volts_to_debroglie_wavelength(acquisition.getVoltage())
             }
             self.dataCollection.update(self.movies[movieId])
-            self.update_from_metadata(self.movies[movieId])
+            self.update_from_metadata(Path(movieFn), self.movies[movieId])
             updateIds.append(movieId)
 
     def safe_update(self, target, source):
