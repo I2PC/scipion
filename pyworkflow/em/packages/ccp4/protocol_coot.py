@@ -107,9 +107,15 @@ the pdb file from coot  to scipion '
 
         convertId = self._insertFunctionStep('convertInputStep', self.inVolumes,
                                              self.norVolumesNames)
-        self._insertFunctionStep('runCootStep', self.inVolumes, self.norVolumesNames,
-                                 prerequisites=[convertId],
-                                 interactive=True)
+
+        if self.extraCommands.get() != '':
+            interactive=False
+        else:
+            interactive=True
+        self._insertFunctionStep('runCootStep', self.inVolumes,
+                                     self.norVolumesNames,
+                                     prerequisites=[convertId],
+                                     interactive=interactive)
         #self._insertFunctionStep('createOutputStep', inVolumes,
         #                         norVolumesNames)
 
@@ -171,7 +177,8 @@ the pdb file from coot  to scipion '
 
         args = ""
         #if len(self.extraCommands.get()) > 2:
-        #    args += " --no-graphics "
+        if self.extraCommands.get() != '':
+            args += " --no-graphics "
         args +=  " --script " + self._getTmpPath(cootScriptFileName) # script wit auxiliary files
 
         self._log.info('Launching: ' + getProgram(os.environ['COOT']) + ' ' + args)
