@@ -348,6 +348,15 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertAlmostEqual(outputSet.getSamplingRate(),
                                first.getSamplingRate())
 
+    def _checkVariance(particle, varianceScore):
+        self.assertTrue(particle.hasAttribute('_xmipp_scoreByVariance'),
+                        'Particle has not scoreByVariance attribute.')
+
+
+
+
+
+
     def testExtractSameAsPicking(self):
         print "Run extract particles from same micrographs as picking"
         protExtract = self.newProtocol(XmippProtExtractParticles,
@@ -381,6 +390,7 @@ class TestXmippExtractParticles(TestXmippBase):
             self.assertEqual(micNameCoord, micNamePart,
                              "The micName should be %s and its %s"
                              %(micNameCoord, micNamePart))
+
         compare(83)
         compare(228)
 
@@ -583,6 +593,9 @@ class TestXmippExtractParticles(TestXmippBase):
                              "There was a problem generating the output.")
         self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
         self._checkSamplingConsistency(outputParts)
+
+
+
 
 
 class TestXmippEliminatingEmptyParticles(TestXmippBase):

@@ -217,8 +217,16 @@ class XmippProtScreenParticles(ProtProcessParticles):
         return summary
     
     def _validate(self):
-        pass
-        
+        validateMsgs = []
+        if self.autoParRejectionVar != self.REJ_NONE:
+            part = self.inputParticles.get().getFirstItem()
+            if not part.hasAttribute('_xmipp_scoreByVariance'):
+                validateMsgs.append('The auto-rejection by Variance can not be '
+                                    'done because the particles have not the '
+                                    'scoreByVariance attribute. Use Xmipp to '
+                                    'extract the particles.')
+        return validateMsgs
+
     def _citations(self):
         return ['Vargas2013b']
     
