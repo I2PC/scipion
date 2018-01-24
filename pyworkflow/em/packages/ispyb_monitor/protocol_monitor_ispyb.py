@@ -35,6 +35,7 @@ from datetime import datetime
 from pathlib2 import Path
 from errno import ENOENT
 from sys import float_info
+import mrcfile
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -217,8 +218,6 @@ class MonitorISPyB(Monitor):
 
         return all(finished)
 
-
-
     def now(self):
         return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
 
@@ -269,6 +268,7 @@ class MonitorISPyB(Monitor):
                 'wavelength': self.convert_volts_to_debroglie_wavelength(acquisition.getVoltage())
             }
             self.dataCollection.update(self.movies[movieId])
+            self.update_from_metadata(self.movies[movieId])
             updateIds.append(movieId)
 
     def safe_update(self, target, source):
@@ -301,6 +301,19 @@ class MonitorISPyB(Monitor):
             return path
         else:
             return self.find_visit_path(path.parent, original_path or path)
+
+    def update_from_metadata(self, data_path, to_update):
+        try:
+            metadata_path = self.navigate_to_metadata_path(data_path)
+            with mrcfile.open(metadata_path) as mrc:
+                self.safe_update(to_update,
+                        {'positionX': mrc.header['nxstart'], 'positionY': mrc.header['nystart']}
+                )
+        except Exception as ex:
+            # this can fail for all sorts of reasons which probably don't matter
+            # e.g. the metadata hasn't been written yet.
+            print "failed to get metadata for {}, probably not an issue".format(data_path)
+            print ex
 
     @staticmethod
     def convert_volts_to_debroglie_wavelength(volts):
