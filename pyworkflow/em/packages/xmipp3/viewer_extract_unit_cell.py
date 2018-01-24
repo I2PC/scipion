@@ -39,7 +39,7 @@ from pyworkflow.em.utils.chimera_utilities.convert import \
     createCoordinateAxisFile, \
     adaptOriginFromCCP4ToChimera
 from pyworkflow.em.utils.chimera_utilities.convert import \
-    symMapperScipionchimera
+    symMapperScipionchimera, getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 
 VOLUME_SLICES = 1
@@ -75,7 +75,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         }
 
     def _validate(self):
-        if find_executable('chimera') is None:
+        if find_executable(getProgram()) is None:
             return ["chimera is not available. Either install it or choose"
                     " option 'slices'. "]
         return []
