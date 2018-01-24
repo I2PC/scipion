@@ -210,7 +210,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     targetName = join(basedir, target if target else prefix + name)
     sources = []
 
-    _libpath.append(Dir('#' + SCIPION_SW + '/lib').abspath)
+    _libpath.append(Dir(SCIPION_SW + '/lib').abspath)
     
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
@@ -242,7 +242,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     
 
     _incs.append(env['CPPPATH'])
-    _incs.append('#' + SCIPION_SW + '/include')
+    _incs.append(SCIPION_SW + '/include')
 
     library = env2.SharedLibrary(
               target=targetName,
@@ -457,8 +457,8 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     else: cxxCopy = env['CXX']  
 
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy += env['CPPPATH'] + ['libraries', Dir('#' + SCIPION_SW + '/include').abspath,
-                                        Dir('#' + SCIPION_SW + '/include/python2.7').abspath]
+    incsCopy += env['CPPPATH'] + ['libraries', Dir(SCIPION_SW + '/include').abspath,
+                                        Dir(SCIPION_SW + '/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
@@ -606,7 +606,7 @@ env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-xmippPath = Dir('#' + SCIPION_SW + '/em/xmipp').abspath
+xmippPath = Dir(SCIPION_SW + '/em/xmipp').abspath
 env['PACKAGE'] = {'NAME': 'xmipp',
                   'SCONSCRIPT': xmippPath
                   }
