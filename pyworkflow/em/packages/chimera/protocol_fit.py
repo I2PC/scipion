@@ -97,7 +97,6 @@ class ChimeraProtRigidFit(EMProtocol):
         """
         if self.inputVolume.get() is None:
             fnVol = self.pdbFileToBeRefined.get().getVolume()
-            print fnVol, type(fnVol)
             index, fn = fnVol.getLocation()
             print "Volume: Volume associated to atomic structure %s(%d)\n" \
                   % (fn, index)
@@ -151,7 +150,6 @@ class ChimeraProtRigidFit(EMProtocol):
             #x, y, z = adaptOriginFromCCP4ToChimera(
             #    pdbFileToBeRefined.getOrigin().getShifts())
             x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
-            print "x, y, z: ", x, y, z
             f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d coord #0')\n"
                 % (x, y, z, 2))
         # other pdb files
@@ -199,17 +197,6 @@ class ChimeraProtRigidFit(EMProtocol):
                 origin = self.inputVolume.get().getOrigin(
                     returnInitIfNone=True)
             vol.setOrigin(origin)
-            print "origin.getShifts: ", origin.getShifts()#origin.getShifts:  (37.5, 37.5, 37.5)
-            print "ccp4header.getStartAngstrom(sampling): ", ccp4header.getStartAngstrom(
-                sampling)#ccp4header.getStartAngstrom(sampling):  (0.0, 0.0, 0.0)
-
-            # ##DELETE THIS
-            # ccp4header.setStartAngstrom(origin.getShifts(), sampling)
-            # # ccp4header.writeHeader()
-            # ###ccp4header.getStartAngstrom(sampling)
-            # print "ccp4header.getStartAngstrom(sampling): ", \
-            #     ccp4header.getStartAngstrom(sampling)#ccp4header.getStartAngstrom(sampling):  (37.5, 37.5, 37.5)
-            # ##
 
             self._defineOutputs(output3Dmap=vol)
             self._defineSourceRelation(self.inputPdbFiles, vol)
