@@ -72,8 +72,8 @@ class ChimeraProtRigidFit(EMProtocol):
         form.addParam('extraCommands', StringParam,
                       default='',
                       condition='False',
-                      label='extra commands for chimera viewer',
-                      help="""add extra commands in cmd file. Use for testing
+                      label='Extra commands for chimera viewer',
+                      help="""Add extra commands in cmd file. Use for testing
                       """)
         form.addSection(label='Help')
         form.addLine('''Execute command *scipionwrite [model #n] [refmodel
