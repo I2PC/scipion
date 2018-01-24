@@ -102,6 +102,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
                                                      self.numberOfThreads,
                                                      self.angleStep,
                                                      self.nModels)
+
         if self.doLaplacian:
             args += " -l"
         if self.doCoreWeight:
