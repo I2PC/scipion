@@ -36,7 +36,7 @@ from pyworkflow.em.convert import ImageHandler
 import pyworkflow.utils as pwutils
 import struct
 
-cootPdbTemplateFileName = "scipionOut%04d.pdb"
+cootPdbTemplateFileName = "cootOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
 ORIGIN=0 # save coordinate origin in the mrc header field=Origin (Angstrom)
 START=1 # save coordinate origin in the mrc header field=start (pixel)
@@ -67,27 +67,30 @@ def adaptBinFileToCCP4(inFileName, outFileName, scipionOriginShifts,
         if header and scipion object have the same origin creates a link to
         original file. Otherwise copy the file and fix the origin
     """
-    def compareFloatTuples(t1, t2, error=0.001):
-        return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
+    #def compareFloatTuples(t1, t2, error=0.001):
+    #    return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
 
     # scipion origin follows different conventions from ccp4
     scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
     x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
-            or inFileName.endswith(':mrc'):
-        ccp4header = Ccp4Header(inFileName, readHeader=True)
-        ccp4Origin = ccp4header.getOrigin()
-        if compareFloatTuples(ccp4Origin, scipionOriginShifts):
-            if compareFloatTuples(ccp4header.getGridSampling(), (x, y, z)):
-                if compareFloatTuples(ccp4header.getCellDimensions(),
-                                      (x*sampling, y*sampling, z*sampling)):
-                    pwutils.createLink(inFileName, outFileName)
-                    return
-
-    else:
-        print "FILE %s does not end with mrc" % inFileName
+    #if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
+    #        or inFileName.endswith(':mrc'):
+    #    ccp4header = Ccp4Header(inFileName, readHeader=True)
+    #    ccp4Origin = ccp4header.getOrigin()
+    #    if compareFloatTuples(ccp4Origin, scipionOriginShifts):
+    #        if compareFloatTuples(ccp4header.getGridSampling(), (x, y, z)):
+    #            if compareFloatTuples(ccp4header.getCellDimensions(),
+    #                                  (x*sampling, y*sampling, z*sampling)):
+    #                if inFileName.endswith(':mrc'):
+    #                    pwutils.createLink(os.path.abspath(inFileName[:-4]),
+    #                                    outFileName)
+    #                return
+    #
+    #else:
+    #    print "FILE %s does not end with mrc" % inFileName
     if z == 1:
         z = ndim
+
     ImageHandler().convert(inFileName, outFileName)
     ccp4header = Ccp4Header(outFileName, readHeader=True)
     ccp4header.setGridSampling(x, y, z)
