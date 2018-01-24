@@ -120,8 +120,11 @@ class XmippProtExtractUnit(EMProtocol):
             sym = "%s" % (XMIPP_SYM_NAME[SYM_OCTAHEDRAL])
         elif sym >= SYM_I222 and sym <= SYM_In25r:
             sym = XMIPP_SYM_NAME[self.symmetryGroup.get()]
+        inFileName = self.inputVolumes.get().getFileName()
+        if inFileName.endswith('.mrc'):
+            inFileName = inFileName + ":mrc"
         args = "-i %s -o %s" % \
-               (self.inputVolumes.get().getFileName(), self._getOutputVol())
+               (inFileName, self._getOutputVol())
         args += " --unitcell %s " % sym
         args += " %f " % self.innerRadius.get()
         args += " %f " % self.outerRadius.get()
