@@ -503,7 +503,8 @@ class Project(object):
 
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
-            protocol.copy(prot2, copyId=False)
+
+            protocol.copy(prot2, copyId=False, excludeInputs=True)
             # Restore backup values
             protocol.setJobId(jobId)
             protocol.setObjLabel(label)
@@ -783,6 +784,10 @@ class Project(object):
                         # new workflow
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
+                            if isinstance(childPointer, pwobj.PointerList):
+                                for p in childPointer:
+                                    if p.getObjValue().getObjId() == prot.getObjId():
+                                        childPointer = p
                             childPointer.set(newProt)
                             childPointer.setExtended(oKey)
                         self.mapper.store(newChildProt)

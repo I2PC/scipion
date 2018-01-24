@@ -452,11 +452,11 @@ env.addPackage('relion', version='2.0',
                updateCuda=True,
                vars=relion_vars)
 
-#env.addPackage('relion', version='2.1',
-#               tar='relion-2.1.tgz',
-#               commands=relion2_commands,
-#               updateCuda=True,
-#               vars=relion_vars)
+env.addPackage('relion', version='2.1',
+              tar='relion-2.1.tgz',
+              commands=relion2_commands,
+              updateCuda=True,
+              vars=relion_vars)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
@@ -483,6 +483,9 @@ env.addPackage('motioncor2', version='1.0.0',
 
 env.addPackage('motioncor2', version='1.0.2',
                tar='motioncor2-1.0.2.tgz')
+
+env.addPackage('motioncor2', version='1.0.4',
+               tar='motioncor2-1.0.4.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')
