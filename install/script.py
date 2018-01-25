@@ -135,7 +135,7 @@ tiff = env.addLibrary(
 
 sqlite = env.addLibrary(
     'sqlite3',
-    tar='sqlite-3.6.23.tgz',
+    tar='SQLite-1a584e49.tgz',
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
@@ -149,7 +149,7 @@ hdf5 = env.addLibrary(
 
 python = env.addLibrary(
     'python',
-    tar='Python-2.7.8.tgz',
+    tar='Python-2.7.14.tgz',
     targets=[env.getLib('python2.7'), env.getBin('python')],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
