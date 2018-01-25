@@ -139,6 +139,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             writeSetOfParticles(setOfClasses.get(), self.imgsRef)
 
     def classifyStep(self):
+
+        initTime = time.time()
         inputImgs = self._getInputFn()
         writeSetOfParticles(self.listOfParticles, inputImgs,
                             alignType=ALIGN_NONE)
@@ -161,6 +163,9 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                 '--keep_best %(keepBest)d --maxShift %(maxshift)d '
                 '--simplifiedMd --classify %(outputClassesFile)s')
         self.runJob("xmipp_cuda_correlation", args % self._params)
+        endTime = time.time()
+        print("En classifyStep", endTime-initTime)
+
 
     # ------ Methods for Streaming 2D Classification --------------
     def _stepsCheck(self):
@@ -170,6 +175,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
     def _checkNewInput(self):
         """ Check if there are new particles to be processed and add
         the necessary steps."""
+        initTime = time.time()
         particlesFile = self.inputParticles.get().getFileName()
 
         now = datetime.now()
@@ -195,10 +201,13 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         if outputStep is not None:
             outputStep.addPrerequisites(*fDeps)
         self.updateSteps()
+        endTime = time.time()
+        print("En _checkNewInput", endTime - initTime)
 
     def _checkNewOutput(self):
         """ Check for already done files and update the output set. """
 
+        initTime = time.time()
         # Check for newly done items
         newDone = self._readDoneList()
 
@@ -213,8 +222,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             self._updateOutputSetOfClasses(newDone, streamMode)
             self.doneListFn += newDone
 
-
-
         elif not self.finished:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
@@ -225,6 +232,9 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
+
+        endTime = time.time()
+        print("En _checkNewOutput", endTime - initTime)
 
     def createOutputStep(self):
         pass
