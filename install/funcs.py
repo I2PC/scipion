@@ -257,12 +257,7 @@ class Environment:
     @staticmethod
     def getSoftware():
 
-        scipionSoftware = os.environ['SCIPION_SOFTWARE']
-
-        if scipionSoftware is None:
-            scipionSoftware = 'software'
-
-        return scipionSoftware
+        return os.environ.get('SCIPION_SOFTWARE', 'software')
 
     @staticmethod
     def getLibFolder():
