@@ -21,7 +21,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
-import time
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtCreateStreamData
 from pyworkflow.em.protocol.protocol_create_stream_data import \
@@ -31,15 +30,12 @@ from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportAverages
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.em.packages.eman2.protocol_autopick import *
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import *
-from pyworkflow.em.packages.xmipp3.protocol_streaming_gpu_correlation_simple import *
+from pyworkflow.em.packages.xmipp3.protocol_streaming_gpu_correlation_simple \
+    import *
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
-NUM_MICS = 20
-
-#CTF_SQLITE = "ctfs.sqlite"
-#MIC_SQLITE = "micrographs.sqlite"
-#MIC_DISCARDED_SQLITE = "micrographsDiscarded.sqlite"
+NUM_MICS = 5
 
 class TestGpuCorrSimpleStreaming(BaseTest):
     @classmethod
@@ -102,7 +98,7 @@ class TestGpuCorrSimpleStreaming(BaseTest):
     def runExtractParticles(self, inputCoord, setCtfs):
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=64,
-                                       doInvert = False,
+                                       doInvert = True,
                                        doFlip = False)
 
         protExtract.inputCoordinates.set(inputCoord)
@@ -143,7 +139,8 @@ class TestGpuCorrSimpleStreaming(BaseTest):
         if protImportMics.isFailed():
             self.assertTrue(False)
 
-        protImportMicsStr = self.importMicrographsStr(protImportMics.outputMicrographs)
+        protImportMicsStr = self.importMicrographsStr\
+            (protImportMics.outputMicrographs)
         counter = 1
         while not protImportMicsStr.hasAttribute('outputMicrographs'):
             time.sleep(2)
@@ -195,3 +192,8 @@ class TestGpuCorrSimpleStreaming(BaseTest):
             if protClassify.isFailed():
                 self.assertTrue(False)
                 break
+        if not protClassify.hasAttribute('outputClasses'):
+            self.assertTrue(False)
+        if protClassify.outputClasses.getSize() != \
+                protImportAvgs.outputAverages.getSize():
+            self.assertTrue(False)
