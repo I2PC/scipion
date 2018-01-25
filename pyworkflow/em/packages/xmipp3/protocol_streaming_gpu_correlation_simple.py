@@ -1,6 +1,7 @@
 # ******************************************************************************
 # *
-# * Authors:     Amaya Jimenez Moreno (ajimenez@cnb.csic.es)
+# * Authors:    Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *             Amaya Jimenez Moreno (ajimenez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,24 +25,20 @@
 # *
 # ******************************************************************************
 
-from pyworkflow.em import SetOfParticles, SetOfClasses2D, ALIGN_2D, ALIGN_NONE
+from pyworkflow.em import SetOfAverages, SetOfParticles, SetOfClasses2D, ALIGN_2D, ALIGN_NONE
 from pyworkflow.em.protocol import ProtAlign2D
 import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
-from pyworkflow.em.metadata.utils import iterRows, getSize
+from pyworkflow.em.metadata.utils import iterRows
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, \
-    xmippToLocation, rowToAlignment, writeSetOfClasses2D, particleToRow, \
-    rowToParticle
-from shutil import copy
-from os.path import join, exists, getmtime
-from os import mkdir, remove
+    rowToAlignment, writeSetOfClasses2D
+from os.path import exists, getmtime
 from datetime import datetime
 from pyworkflow.utils import prettyTime
 from pyworkflow.object import Set
 from pyworkflow.protocol.constants import STATUS_NEW
-from xmipp3 import XmippMdRow
 import time
-from pyworkflow.em.data import Particle, Class2D
+from pyworkflow.em.data import Class2D
 
 
 
@@ -107,8 +104,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         self.imgsRef = self._getExtraPath('imagesRef.xmd')
         self.htAlreadyProcessed = HashTableDict()
 
-        self.last_time = time.time()
-
         self._loadInputList()
         if self.useAsRef.get() == 0:
             classId = self.inputClasses.get()
@@ -132,7 +127,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
     # --------------------------- STEPS functions ------------------------------
     def convertAveragesStep(self, classId):
 
-        if self.useAsRef==REF_CLASSES:
+        if self.useAsRef == REF_CLASSES:
             setOfClasses = self.inputClasses
         else:
             setOfClasses = self.inputAverages
@@ -226,30 +221,10 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             # so we exit from the function here
             return
 
-        #self.debug('   finished: %s ' % self.finished)
-        #self.debug('        self.streamClosed (%s) AND' % streamMode)
-        #self.debug('        allDone (%s) == len(self.listOfMics (%s)'
-        #           % (allDone, nMics))
-
         if self.finished:  # Unlock createOutputStep if finished all jobs
-            #self._updateStreamState(streamMode)
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
-
-
-
-
-
-
-        #outSet = self._loadOutputSet(SetOfClasses2D, 'classes2D.sqlite')
-        #self._updateOutputSetOfClasses('outputClasses', outSet, streamMode)
-        #if (exists(self._getPath('classes2D.sqlite'))):
-        #    outSet.close()
-
-
-
-
 
     def createOutputStep(self):
         pass
@@ -275,8 +250,12 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         else:
             summary.append("Input Particles: %s"
                            % self.inputParticles.get().getSize())
-            summary.append("Aligned with reference images: %s"
-                           % self.inputClasses.get().getSize())
+            if self.useAsRef == REF_CLASSES:
+                summary.append("Aligned with reference classes: %s"
+                               % self.inputClasses.get().getSize())
+            else:
+                summary.append("Aligned with reference averages: %s"
+                               % self.inputAverages.get().getDimensions())
         return summary
 
     def _citations(self):
@@ -298,15 +277,12 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
     # --------------------------- UTILS functions ------------------------------
     def _loadInputList(self):
         """ Load the input set of ctfs and create a list. """
-        initial_time = time.time()
         particlesSet = self._loadInputParticleSet()
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
         for p in particlesSet:
             idx = p.getObjId()
             if not self.htAlreadyProcessed.isItemPresent(idx):
-                #self.listOfParticles.append(idx)
-                # AJ new to make the list of particles instead of list of ids
                 newPart = p.clone()
                 self.listOfParticles.append(newPart)
         particlesSet.close()
@@ -327,28 +303,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                 return s
         return None
 
-
     def _readDoneList(self):
         return [fn for fn in self.listOutFn if fn not in self.doneListFn]
-
-    def _loadOutputSet(self, SetClass, baseName):
-
-        setFile = self._getPath(baseName)
-        if exists(setFile):
-            outputSet = SetClass(filename=setFile)
-            outputSet.loadAllProperties()
-            outputSet.enableAppend()
-            outputSet.setStreamState(outputSet.STREAM_OPEN)
-        else:
-            outputSet = SetClass(filename=setFile)
-            outputSet.setStreamState(outputSet.STREAM_OPEN)
-
-        inputs = self._loadInputParticleSet()
-        outputSet.copyInfo(inputs)
-        if SetClass is SetOfClasses2D:
-            outputSet.setImages(inputs)
-        return outputSet
-
 
     def _updateOutputSetOfClasses(self, outFnDone, streamMode):
         outputName = 'outputClasses'
@@ -359,9 +315,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             outputClasses = self._createSetOfClasses2D(self.inputParticles.get())
         else:
             firstTime = False
-            outputClasses.enableAppend()
-            # for class2d in outputClasses:
-            #     class2d.enableAppend()
+            outputClasses = SetOfClasses2D(filename=outputClasses.getFileName())
+            outputClasses.setStreamState(streamMode)
 
         self._fillClassesFromMd(outFnDone, outputClasses, firstTime)
         self._updateOutputSet(outputName, outputClasses, streamMode)
@@ -369,134 +324,57 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         if firstTime:
             self._defineSourceRelation(self.inputParticles, outputClasses)
 
-
-
-
-        # outputSet.setStreamState(state)
-        # if self.hasAttribute(outputName):
-        #     print("En el if")
-        #     outputSet.enableAppend()
-        #     self._fillClassesFromLevel(outputSet, False)
-        #     outputSet.write()  # Write to commit changes
-        #     outputAttr = getattr(self, outputName)
-        #     # Copy the properties to the object contained in the protocol
-        #     outputAttr.copy(outputSet, copyId=False)
-        #     # Persist changes
-        #     self._store(outputAttr)
-        # else:
-        #     print("En el else")
-        #     self._fillClassesFromLevel(outputSet, True)
-        #     self._defineOutputs(**{outputName: outputSet})
-        #     self._defineSourceRelation(self.inputParticles, outputSet)
-        #     self._store(outputSet)
-        #
-        # # Close set database to avoid locking it
-        # outputSet.close()
-
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(md.MDL_REF))
         item.setTransform(rowToAlignment(row, ALIGN_2D))
 
-    def _updateClass(self, item):
-        classId = item.getObjId()
-        if classId in self._classesInfo:
-            index, fn = self._classesInfo[classId]
-            item.setAlignment2D()
-            rep = item.getRepresentative()
-            rep.setLocation(index, fn)
-            rep.setSamplingRate(self.inputParticles.get().getSamplingRate())
-
-
-    def _loadClassesInfo(self):
-        """ Read some information about the produced 2D classes
-        from the metadata file.
-        """
-        self._classesInfo={}
-        for row in md.iterRows(self.imgsRef):
-            index, fn = xmippToLocation(row.getValue(md.MDL_IMAGE))
-            self._classesInfo[index] = (index, fn)
-
     def _fillClassesFromMd(self, outFnDone, outputClasses, firstTime):
 
         for outFn in outFnDone:
-            myFileClasses = outFn.replace('images', 'classes')
-            self._loadClassesInfo()
-            if firstTime:
-                inputSet = self._loadInputParticleSet()
-                mdClass = md.MetaData("classes@" + myFileClasses)
-                rows = iterRows(mdClass)
-                for myClass in rows:
-                    ref = myClass.getValue(md.MDL_REF)
-                    classItem = Class2D(objId=ref)
-                    classItem.setStreamState(Set.STREAM_OPEN)
-                    rep = Particle()
-                    classItem.setRepresentative(rep)
-                    classItem.copyInfo(inputSet)
-                    classItem.setAcquisition(inputSet.getAcquisition())
-                    self._updateClass(classItem)
-                    outputClasses.append(classItem)
-                    mdImages = md.MetaData("class%06d_images@" % ref + myFileClasses)
-                    images = iterRows(mdImages)
-                    for image in images:
-                        if image.getValue(md.MDL_ENABLED) == 1:
-                            rowImage = rowToParticle(image)
-                            classItem.append(rowImage)
-                    outputClasses.update(classItem)
-                    firstTime = False
-
-
-
-
-    def _fillClassesFromLevel(self, outputSet, firstTime):
-        """ Create the SetOfClasses2D from a given iteration. """
-
-        myFileParticles = self._getExtraPath('last_images.xmd')
-        myFileClasses = self._getExtraPath('last_classes.xmd')
-
-        self._loadClassesInfo(myFileClasses)
-
-        if firstTime:
-            #iterator = md.SetMdIterator(myFileParticles, sortByLabel=md.MDL_ITEM_ID,
-            #                            updateItemCallback=self._updateParticle,
-            #                            skipDisabled=True)
-            ## itemDataIterator is not necessary because, the class SetMdIterator
-            ## contain all the information about the metadata
-            #clsSet.classifyItems(updateItemCallback=iterator.updateItem,
-            #                     updateClassCallback=self._updateClass)
+            mdImages = md.MetaData(outFn)
             inputSet = self._loadInputParticleSet()
-            mdClass = md.MetaData("classes@" + myFileClasses)
-            rows = iterRows(mdClass)
-            for myClass in rows:
-                ref = myClass.getValue(md.MDL_REF)
-                classItem = Class2D(objId=ref)
-                classItem.setStreamState(Set.STREAM_OPEN)
-                rep = Particle()
-                classItem.setRepresentative(rep)
-                classItem.copyInfo(inputSet)
-                classItem.setAcquisition(inputSet.getAcquisition())
-                self._updateClass(classItem)
-                outputSet.append(classItem)
-                mdImages = md.MetaData("class%06d_images@"%ref + myFileClasses)
-                images = iterRows(mdImages)
-                for image in images:
-                    if image.getValue(md.MDL_ENABLED)==1:
-                        rowImage = rowToParticle(image)
-                        classItem.append(rowImage)
-                outputSet.update(classItem)
+            clsIdList = []
 
-        else:
-            for myClass in outputSet.iterItems():
-                myClass.enableAppend()
-                ref = myClass.getObjId()
-                print("ref",ref)
-                mdImages = md.MetaData("class%06d_images@" % ref + myFileClasses)
-                images = iterRows(mdImages)
-                for image in images:
-                    if image.getValue(md.MDL_ENABLED) == 1:
-                        rowImage = rowToParticle(image)
-                        myClass.append(rowImage)
-                outputSet.update(myClass)
-                #outputSet._insertItem(myClass)
+            if self.useAsRef == REF_AVERAGES:
+                repSet = self.inputAverages.get()
+            else:
+                repSet = SetOfAverages()
+                cls2d = self.inputClasses.get()
+                for cls in cls2d:
+                    repSet.append(cls.getRepresentative())
+
+            if firstTime:
+                for rep in repSet:
+                    repId = rep.getObjId()
+                    newClass = Class2D(objId=repId)
+                    newClass.setAlignment2D()
+                    newClass.copyInfo(inputSet)
+                    newClass.setAcquisition(inputSet.getAcquisition())
+                    newClass.setRepresentative(rep)
+                    newClass.setStreamState(Set.STREAM_OPEN)
+                    outputClasses.append(newClass)
+
+            for imgRow in iterRows(mdImages, sortByLabel=md.MDL_REF):
+                imgClassId = imgRow.getValue(md.MDL_REF)
+                imgId = imgRow.getValue(md.MDL_ITEM_ID)
+
+                if imgClassId not in clsIdList:
+                    if len(clsIdList) > 0:
+                        outputClasses.update(newClass)
+                    newClass = outputClasses[imgClassId]
+                    newClass.enableAppend()
+                    clsIdList.append(imgClassId)
+
+                part = inputSet[imgId]
+                self._updateParticle(part, imgRow)
+                newClass.append(part)
+
+            # this is to update the last class into the set.
+            outputClasses.update(newClass)
+
+            # FirstTime to False if iterate more than one metadata file.
+            if firstTime:
+                firstTime = False
 
     def _getUniqueFn(self, basename, list):
         if list == []:
