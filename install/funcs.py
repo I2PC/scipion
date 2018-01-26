@@ -264,6 +264,14 @@ class Environment:
         return '%s/lib' % (Environment.getSoftware())
 
     @staticmethod
+    def getPythonFolder():
+        return Environment.getLibFolder() + '/python2.7'
+
+    @staticmethod
+    def getPythonPackagesFolder():
+        return Environment.getPythonFolder() + '/site-packages'
+
+    @staticmethod
     def getIncludeFolder():
         return '%s/include' % (Environment.getSoftware())
 
@@ -487,7 +495,6 @@ class Environment:
         default = kwargs.get('default', True)
         neededProgs = kwargs.get('neededProgs', [])
         libChecks = kwargs.get('libChecks', [])
-        numpyIncludes = kwargs.get('numpyIncludes', False)
 
         if default or name in sys.argv[2:]:
             # Check that we have the necessary programs and libraries in place.
@@ -512,8 +519,7 @@ class Environment:
             if '/' in x:
                 return x
             else:
-                return '%s/python2.7/site-packages/%s' \
-                       % (self.getLibFolder(), x)
+                return '%s/%s' % (self.getPythonPackagesFolder(), x)
 
         environ = {
             'PYTHONHOME': prefix,
@@ -521,16 +527,6 @@ class Environment:
             'PATH': '%s/bin:%s' % (prefix, os.environ['PATH']),
             'CPPFLAGS': '-I%s/include' % prefix,
             'LDFLAGS': '-L%s/lib %s' % (prefix, os.environ.get('LDFLAGS', ''))}
-        if numpyIncludes:
-            numpyPath = '%s/lib/python2.7/site-packages/numpy/core' % prefix
-            environ['CPPFLAGS'] = ('%s -I%s/include -I%s/include/numpy' %
-                                   (environ['CPPFLAGS'], numpyPath, numpyPath))
-        # CPPFLAGS cause problems for modules like numpy and scipy (see for
-        # example https://github.com/numpy/numpy/issues/2411
-
-        # Yes, that behavior of numpy is *crazy*. We now modify the
-        # original source, and it should be safe to use our CFLAGS,
-        # CPPFLAGS and LDFLAGS.
 
         envStr = ' '.join('%s="%s"' % (k, v) for k, v in environ.items())
 

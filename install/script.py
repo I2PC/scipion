@@ -23,8 +23,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import glob
 import os
 import sys
+
+import shutil
+
 from install.funcs import Environment
 
 get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
@@ -50,8 +54,40 @@ SW_BIN = env.getBinFolder()
 SW_LIB = env.getLibFolder()
 SW_INC = env.getIncludeFolder()
 SW_TMP = env.getTmpFolder()
-SW_PYT = SW_LIB + '/python2.7'
-SW_PYT_PACK = SW_PYT + '/site-packages'
+SW_PYT_PACK = env.getPythonPackagesFolder()
+
+#  *******************************
+#  *  DETECT CURRENT INSTALLATION
+#  *******************************
+# Try to detect current installation and correct it if necessary
+
+
+def clean_python_2_7_8_installation():
+    # Detects installations where python 2.7.8 was installed.
+    # In those installations we where using sqlite 3.6.23 and matplotlib-1.3.1
+    # A bit of a hack but we will check based on matplotlib path!
+
+    oldMatplotLibPath = Environment.getPythonPackagesFolder() + '/matplotlib-1.3.1*'
+    print'Matplot lib path at %s' % oldMatplotLibPath
+    # If old matplot lib exists
+    if len(glob.glob(oldMatplotLibPath)) != 0:
+        print "OLD Installation identified: removing Python and sqlite"
+
+        # remove sqlite3 3.6.23
+        sqliteFile = Environment.getLibFolder() + "/libsqlite3*"
+        for f in glob.glob(sqliteFile):
+            os.remove(f)
+
+        print "1"
+        # remove python installation
+        os.remove(Environment.getBinFolder() + "/python")
+        print "2"
+        shutil.rmtree(Environment.getPythonFolder())
+
+        return
+
+
+clean_python_2_7_8_installation()
 
 #  ************************************************************************
 #  *                                                                      *
@@ -430,8 +466,8 @@ env.addPackage('dogpicker', version='0.2.1',
 env.addPackage('nma',
                tar='nma.tgz',
                commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
-                         ('cd NMA_cart; LDFLAGS=-L%s/lib make; mv nma_* ..' %
-                          os.environ['SCIPION_SOFTWARE'], 'nma_diag_arpack')],
+                         ('cd NMA_cart; LDFLAGS=-L%s make; mv nma_* ..' %
+                          Environment.getLibFolder(), 'nma_diag_arpack')],
                deps=['arpack'])
 
 env.addPackage('cryoem', version='1.0',
