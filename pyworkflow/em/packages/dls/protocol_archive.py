@@ -2,6 +2,7 @@ from pyworkflow.em import ProtProcessMovies
 import json
 import os
 import pyworkflow.protocol.params as params
+import hashlib
 
 
 class ProtArchive(ProtProcessMovies):
@@ -31,6 +32,7 @@ class ProtArchive(ProtProcessMovies):
 
         self._setValues(recipe_data, 'filelist', [real_path ])
         self._setValues(recipe_data, 'dropfile-dir', self.dropFileDir.get())
+        self._setValues(recipe_data, 'visit', hashlib.md5(real_path).hexdigest()[:10])
 
         self._sendMessage(recipe_data)
 
