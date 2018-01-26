@@ -787,6 +787,10 @@ class Project(object):
                         # new workflow
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
+                            if isinstance(childPointer, pwobj.PointerList):
+                                for p in childPointer:
+                                    if p.getObjValue().getObjId() == prot.getObjId():
+                                        childPointer = p
                             childPointer.set(newProt)
                             childPointer.setExtended(oKey)
                         self.mapper.store(newChildProt)

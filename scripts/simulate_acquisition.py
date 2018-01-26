@@ -21,7 +21,7 @@ def usage(error):
     Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER
         INPUT_PATTERN: input pattern matching input files.
         OUTPUT_FOLDER: where to create the output links.
-        [DELAY, dafult 30]: delay in seconds between file appearance
+        [DELAY, default 30]: delay in seconds between file appearance
     """ % error
     sys.exit(1)    
 
