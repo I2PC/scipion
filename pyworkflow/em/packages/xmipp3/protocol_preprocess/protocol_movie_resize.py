@@ -92,9 +92,6 @@ class XmippProtMovieResize(ProtProcessMovies):
 
         size = self.resizeDim.get()
         dim, _, numMov = self.inputMovies.get().getDim()
-        factor = float(size) / float(dim)
-        newSamplingRate = self.inputMovies.get().getSamplingRate() / factor
-        movie.setSamplingRate(newSamplingRate)
 
         args = "-i %s -o %s --fourier %d %d %d" % \
                (fnMovie, self._getPath("movie_%06d_resize.xmp" % movieId),
@@ -103,7 +100,7 @@ class XmippProtMovieResize(ProtProcessMovies):
         self.runJob("xmipp_image_resize", args, numberOfMpi=1)
 
 
-    def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
+    def _loadOutputSet(self, SetClass, baseName):
         """
         Load the output set if it exists or create a new one.
         fixSampling: correct the output sampling rate if binning was used,
@@ -123,12 +120,10 @@ class XmippProtMovieResize(ProtProcessMovies):
             inputMovies = self.inputMovies.get()
             outputSet.copyInfo(inputMovies)
 
-        if fixSampling:
-            size = self.resizeDim.get()
-            dim = self._getSetSize()
-            factor = float(size) / float(dim)
-            newSampling = inputMovies.getSamplingRate() / factor
-            outputSet.setSamplingRate(newSampling)
+        dim, _, _ = self.inputMovies.get().getDim()
+        factor = float(self.resizeDim.get()) / float(dim)
+        newSamplingRate = self.inputMovies.get().getSamplingRate() / factor
+        outputSet.setSamplingRate(newSamplingRate)
 
         return outputSet
 
@@ -142,16 +137,17 @@ class XmippProtMovieResize(ProtProcessMovies):
         if getattr(self, 'finished', False):
             return
         if isinstance(self.inputMovies.get(), Movie):
-            saveMovie = self.getAttributeValue('doSaveMovie', False)
-            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite', fixSampling=saveMovie)
+            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite')
 
             movie = self.inputMovies.get()
             imgOut = em.data.Movie()
             imgOut.setObjId(movie.getObjId())
-            imgOut.setSamplingRate(movie.getSamplingRate())
             imgOut.setFileName(self._getPath("movie_%06d_resize.xmp" % movie.getObjId()))
             imgOut.setAcquisition(movie.getAcquisition())
-            imageSet.setSamplingRate(movie.getSamplingRate())
+            dim, _, _ = self.inputMovies.get().getDim()
+            factor = float(self.resizeDim.get()) / float(dim)
+            newSamplingRate = self.inputMovies.get().getSamplingRate() / factor
+            imgOut.setSamplingRate(newSamplingRate)
             imageSet.append(imgOut)
 
             self._updateOutputSet('outputMovies', imageSet, Set.STREAM_CLOSED)
@@ -181,16 +177,17 @@ class XmippProtMovieResize(ProtProcessMovies):
                 # so we exit from the function here
                 return
 
-            saveMovie = self.getAttributeValue('doSaveMovie', False)
-            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite', fixSampling=saveMovie)
+            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite')
 
+            dim, _, _ = self.inputMovies.get().getDim()
+            factor = float(self.resizeDim.get()) / float(dim)
+            newSamplingRate = self.inputMovies.get().getSamplingRate() / factor
             for movie in newDone:
                 imgOut = em.data.Movie()
                 imgOut.setObjId(movie.getObjId())
-                imgOut.setSamplingRate(movie.getSamplingRate())
                 imgOut.setFileName(self._getPath("movie_%06d_resize.xmp" % movie.getObjId()))
                 imgOut.setAcquisition(movie.getAcquisition())
-                imageSet.setSamplingRate(movie.getSamplingRate())
+                imgOut.setSamplingRate(newSamplingRate)
                 imageSet.append(imgOut)
 
             self._updateOutputSet('outputMovies', imageSet, streamMode)

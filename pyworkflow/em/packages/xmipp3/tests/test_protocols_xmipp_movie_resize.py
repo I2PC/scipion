@@ -29,7 +29,6 @@
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import ProtImportMovies
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.protocol.protocol_sets import ProtUnionSet
 from pyworkflow.em.packages.xmipp3.protocol_preprocess import \
     XmippProtMovieResize
 from pyworkflow.em.protocol import ProtCreateStreamData
@@ -57,50 +56,7 @@ class TestMovieResize(BaseTest):
         prot2.getProject().closeMapper()
         prot2.closeMappers()
         return prot2
-    
-    def runImportMovie(cls, pattern, samplingRate, voltage, scannedPixelSize,
-                       magnification, sphericalAberration, dosePerFrame=None):
-        """ Run an Import micrograph protocol. """
 
-        kwargs = {
-                 'filesPath': pattern,
-                 'magnification': magnification,
-                 'voltage': voltage,
-                 'sphericalAberration': sphericalAberration,
-                 'dosePerFrame' : dosePerFrame
-                  }
-
-        # We have two options: pass the SamplingRate or
-        # the ScannedPixelSize + microscope magnification
-        if samplingRate is not None:
-            kwargs.update({'samplingRateMode': 0,
-                           'samplingRate': samplingRate})
-        else:
-            kwargs.update({'samplingRateMode': 1,
-                           'scannedPixelSize': scannedPixelSize})
-
-        cls.protImport = cls.newProtocol(ProtImportMovies, **kwargs)
-        cls.proj.launchProtocol(cls.protImport, wait=False)
-
-        if cls.protImport.isFailed():
-            raise Exception("Protocol has failed. Error: ",
-                            cls.protImport.getErrorMessage())
-
-        return cls.protImport
-    
-
-    def runImportMovie1(cls, pattern):
-        """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.14, voltage=300,
-                                  sphericalAberration=2.26, dosePerFrame=1.5,
-                                  scannedPixelSize=None, magnification=50000)
-
-    def runImportMovie2(cls, pattern):
-        """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.4, voltage=300,
-                                  sphericalAberration=2.7, dosePerFrame=1.5,
-                                  scannedPixelSize=None,
-                                  magnification=61000)
 
     def runImportMoviesRibo(cls):
         args = {'filesPath': cls.dataset.getFile('ribo/'),
@@ -114,13 +70,6 @@ class TestMovieResize(BaseTest):
         cls.proj.launchProtocol(cls.protMovieImport, wait=False)
         return cls.protMovieImport
 
-    def runUnionSet(cls, input1, input2, input3):
-        cls.protUnion = cls.newProtocol(ProtUnionSet)
-        cls.protUnion.inputSets.append(input1)
-        cls.protUnion.inputSets.append(input2)
-        cls.protUnion.inputSets.append(input3)
-        cls.proj.launchProtocol(cls.protUnion, wait=False)
-        return cls.protUnion
 
 
     def importMoviesStr(self, fnMovies):
@@ -149,38 +98,16 @@ class TestMovieResize(BaseTest):
 
     def test_pattern(self):
 
-        #protImport1 = self.runImportMovie1(self.movie1)
-        #counter = 1
-        #while not protImport1.hasAttribute('outputMovies'):
-        #    time.sleep(2)
-        #    protImport1 = self._updateProtocol(protImport1)
-        #    if counter > 100:
-        #        break
-        #    counter += 1
-
-        #protImport2 = self.runImportMovie2(self.movie2)
-        #counter = 1
-        #while not protImport2.hasAttribute('outputMovies'):
-        #    time.sleep(2)
-        #    protImport2 = self._updateProtocol(protImport2)
-        #    if counter > 100:
-        #        break
-        #    counter += 1
-
-        protImport3 = self.runImportMoviesRibo()
+        protImport = self.runImportMoviesRibo()
         counter = 1
-        while not protImport3.hasAttribute('outputMovies'):
+        while not protImport.hasAttribute('outputMovies'):
             time.sleep(2)
-            protImport3 = self._updateProtocol(protImport3)
+            protImport = self._updateProtocol(protImport)
             if counter > 100:
                 break
             counter += 1
 
-        #protUnion = self.runUnionSet(protImport1.outputMovies,
-        #                             protImport2.outputMovies,
-        #                             protImport3.outputMovies)
-
-        protImportMovsStr = self.importMoviesStr(protImport3.outputMovies)
+        protImportMovsStr = self.importMoviesStr(protImport.outputMovies)
         counter = 1
         while not protImportMovsStr.hasAttribute('outputMovies'):
             time.sleep(2)
