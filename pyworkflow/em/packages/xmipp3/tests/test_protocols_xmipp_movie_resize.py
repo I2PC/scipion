@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
-# *             Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:    Amaya Jimenez (ajimenez@cnb.csic.es)
+# *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,13 +25,20 @@
 # *
 # **************************************************************************
 
-from os.path import basename, abspath
 
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.xmipp3 import ProtImportMovies
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.protocol.protocol_sets import ProtUnionSet
+from pyworkflow.em.packages.xmipp3.protocol_preprocess import \
+    XmippProtMovieResize
+from pyworkflow.em.protocol import ProtCreateStreamData
+from pyworkflow.em.protocol.protocol_create_stream_data import \
+    SET_OF_MOVIES
+from pyworkflow.protocol.constants import STATUS_FINISHED
 
+
+NUM_MOVIES = 5
 
 # Some utility functions to import movies that are used in several tests.
 class TestMovieResize(BaseTest):
@@ -95,32 +102,123 @@ class TestMovieResize(BaseTest):
                                   scannedPixelSize=None,
                                   magnification=61000)
 
-    def runUnionSet(cls, input1, input2):
+    def runImportMoviesRibo(cls):
+        args = {'filesPath': cls.dataset.getFile('ribo/'),
+                'filesPattern': '*.mrcs',
+                'amplitudConstrast': 0.1,
+                'sphericalAberration': 2.,
+                'voltage': 300,
+                'samplingRate': 3.54
+                }
+        cls.protMovieImport = cls.newProtocol(ProtImportMovies, **args)
+        cls.proj.launchProtocol(cls.protMovieImport, wait=False)
+        return cls.protMovieImport
+
+    def runUnionSet(cls, input1, input2, input3):
         cls.protUnion = cls.newProtocol(ProtUnionSet)
         cls.protUnion.inputSets.append(input1)
         cls.protUnion.inputSets.append(input2)
-        return cls.proj.launchProtocol(cls.protUnion, wait=False)
+        cls.protUnion.inputSets.append(input3)
+        cls.proj.launchProtocol(cls.protUnion, wait=False)
+        return cls.protUnion
+
+
+    def importMoviesStr(self, fnMovies):
+        kwargs = {'inputMovie': fnMovies,
+                  'nDim': NUM_MOVIES,
+                  'creationInterval': 30,
+                  'delay': 10,
+                  'setof': SET_OF_MOVIES  # SetOfMovies
+                  }
+        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        protStream.setObjLabel('create Stream Movies')
+        self.proj.launchProtocol(protStream, wait=False)
+
+        return protStream
+
+    def runMovieResize(self, fnMovies, newDim):
+        kwargs = {'inputMovies': fnMovies,
+                  'resizeDim': newDim
+                  }
+        protResize = self.newProtocol(XmippProtMovieResize, **kwargs)
+        self.proj.launchProtocol(protResize, wait=False)
+
+        return protResize
 
 
 
     def test_pattern(self):
 
-        protImport1 = self.runImportMovie1(self.movie1)
+        #protImport1 = self.runImportMovie1(self.movie1)
+        #counter = 1
+        #while not protImport1.hasAttribute('outputMovies'):
+        #    time.sleep(2)
+        #    protImport1 = self._updateProtocol(protImport1)
+        #    if counter > 100:
+        #        break
+        #    counter += 1
+
+        #protImport2 = self.runImportMovie2(self.movie2)
+        #counter = 1
+        #while not protImport2.hasAttribute('outputMovies'):
+        #    time.sleep(2)
+        #    protImport2 = self._updateProtocol(protImport2)
+        #    if counter > 100:
+        #        break
+        #    counter += 1
+
+        protImport3 = self.runImportMoviesRibo()
         counter = 1
-        while not protImport1.hasAttribute('outputMovies'):
+        while not protImport3.hasAttribute('outputMovies'):
             time.sleep(2)
-            protImport1 = self._updateProtocol(protImport1)
+            protImport3 = self._updateProtocol(protImport3)
             if counter > 100:
                 break
             counter += 1
 
-        protImport2 = self.runImportMovie2(self.movie2)
+        #protUnion = self.runUnionSet(protImport1.outputMovies,
+        #                             protImport2.outputMovies,
+        #                             protImport3.outputMovies)
+
+        protImportMovsStr = self.importMoviesStr(protImport3.outputMovies)
         counter = 1
-        while not protImport2.hasAttribute('outputMovies'):
+        while not protImportMovsStr.hasAttribute('outputMovies'):
             time.sleep(2)
-            protImport2 = self._updateProtocol(protImport2)
+            protImportMovsStr = self._updateProtocol(protImportMovsStr)
+            if counter > 100:
+                break
+            counter += 1
+        if protImportMovsStr.isFailed():
+            self.assertTrue(False)
+
+        xOrig, yOrig, zOrig = protImportMovsStr.outputMovies.getDim()
+        newDim = int(xOrig/2)
+        protMovieResize = self.runMovieResize(protImportMovsStr.outputMovies,
+                                              newDim)
+        counter = 1
+        while not protMovieResize.hasAttribute('outputMovies'):
+            time.sleep(2)
+            protMovieResize = self._updateProtocol(protMovieResize)
             if counter > 100:
                 break
             counter += 1
 
-        protUnion = self.runUnionSet(protImport1.outputMovies, protImport2.outputMovies)
+        if not protMovieResize.hasAttribute('outputMovies'):
+            self.assertTrue(False)
+
+        while protMovieResize.getStatus() != STATUS_FINISHED:
+            protMovieResize = self._updateProtocol(protMovieResize)
+            if protMovieResize.isFailed():
+                self.assertTrue(False)
+
+        protImportMovsStr = self._updateProtocol(protImportMovsStr)
+        protMovieResize = self._updateProtocol(protMovieResize)
+        if protMovieResize.outputMovies.getSize() !=\
+                protImportMovsStr.outputMovies.getSize():
+            self.assertTrue(False)
+
+        xResize, yResize, zResize = protMovieResize.outputMovies.getDim()
+        if xResize != newDim or yResize != newDim or zResize != zOrig:
+            self.assertTrue(False)
+
+

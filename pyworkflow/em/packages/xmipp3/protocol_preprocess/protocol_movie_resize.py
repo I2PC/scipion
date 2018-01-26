@@ -32,7 +32,6 @@ from pyworkflow.object import Set
 import pyworkflow.protocol.constants as cons
 import pyworkflow.em as em
 import os
-import math
 
 
 class XmippProtMovieResize(ProtProcessMovies):
@@ -144,13 +143,14 @@ class XmippProtMovieResize(ProtProcessMovies):
             return
         if isinstance(self.inputMovies.get(), Movie):
             saveMovie = self.getAttributeValue('doSaveMovie', False)
-            imageSet = self._loadOutputSet(em.data.SetOfImages, 'movies.sqlite', fixSampling=saveMovie)
+            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite', fixSampling=saveMovie)
 
             movie = self.inputMovies.get()
-            imgOut = em.data.Image()
+            imgOut = em.data.Movie()
             imgOut.setObjId(movie.getObjId())
             imgOut.setSamplingRate(movie.getSamplingRate())
             imgOut.setFileName(self._getPath("movie_%06d_resize.xmp" % movie.getObjId()))
+            imgOut.setAcquisition(movie.getAcquisition())
             imageSet.setSamplingRate(movie.getSamplingRate())
             imageSet.append(imgOut)
 
@@ -182,13 +182,14 @@ class XmippProtMovieResize(ProtProcessMovies):
                 return
 
             saveMovie = self.getAttributeValue('doSaveMovie', False)
-            imageSet = self._loadOutputSet(em.data.SetOfImages, 'movies.sqlite', fixSampling=saveMovie)
+            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite', fixSampling=saveMovie)
 
             for movie in newDone:
-                imgOut = em.data.Image()
+                imgOut = em.data.Movie()
                 imgOut.setObjId(movie.getObjId())
                 imgOut.setSamplingRate(movie.getSamplingRate())
                 imgOut.setFileName(self._getPath("movie_%06d_resize.xmp" % movie.getObjId()))
+                imgOut.setAcquisition(movie.getAcquisition())
                 imageSet.setSamplingRate(movie.getSamplingRate())
                 imageSet.append(imgOut)
 
