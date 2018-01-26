@@ -173,7 +173,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             if self.ctfDict[micName] > 0:
                 localParams['defocusU'], localParams['phaseShift0'] = self.ctfDict[micName]
                 localParams['defocus_range'] = 0.1 * localParams['defocusU']
-
+                
         else:
             ma = self._params['maxDefocus']
             mi = self._params['minDefocus']
