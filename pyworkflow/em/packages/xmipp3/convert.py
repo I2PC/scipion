@@ -113,6 +113,8 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
     xmipp.MDL_CTF_CRIT_ICENESS,
+    xmipp.MDL_CTF_PHASE_SHIFT,
+    xmipp.MDL_CTF_VPP_RADIUS,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
     xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
@@ -381,7 +383,6 @@ def micrographToCTFParam(mic, ctfparam):
     acquisitionToRow(mic.getAcquisition(), row)
     row.writeToMd(md, md.addObject())
     md.write(ctfparam)
-
     return ctfparam
 
 def imageToRow(img, imgRow, imgLabel, **kwargs):

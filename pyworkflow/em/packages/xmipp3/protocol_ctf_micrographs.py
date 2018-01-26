@@ -58,7 +58,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
                   "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13==0 OR "
                   "ctfCritNonAstigmaticValidty<=0 OR " 
-                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>70000 OR "
+                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussian2SigmaU>70000 OR "
                   "ctfCritIceness>1") #ctfCritCtfMargin>0
 
     def __init__(self, **args):
@@ -544,6 +544,8 @@ data_fullMicrograph
  _ctfYF -999
  _ctfCritFitting -999
  _ctfCritCorr13 -999
+ _ctfVPPphaseshift -999
+ _ctfVPPRadius -999
  _ctfCritIceness -999
  _CtfDownsampleFactor -999
  _ctfCritPsdStdQ -999

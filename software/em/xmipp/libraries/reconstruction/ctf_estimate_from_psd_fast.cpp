@@ -465,6 +465,8 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 			dist = fabs(ctf2 - bg);
 			if (penalize && bg > ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
 				dist *= current_penalty;
+			if (penalize && bg < ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
+				dist *= 5;
 			break;
 		case 2:
 			dist = fabs(ctf2 - ctf2_th);
