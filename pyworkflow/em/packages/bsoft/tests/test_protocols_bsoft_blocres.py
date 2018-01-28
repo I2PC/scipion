@@ -24,13 +24,9 @@
 # *
 # **************************************************************************
 
-import unittest, sys
-# import numpy as np
-from pyworkflow.em import exists
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pyworkflow.em.packages.xmipp3 import XmippProtCreateMask3D
 from pyworkflow.em.packages.bsoft.protocol_blocres import BsoftProtBlocres
-from pyworkflow.em.protocol import ProtImportVolumes
+from pyworkflow.em.protocol import ProtImportVolumes, ProtImportMask
 
 
 
@@ -53,22 +49,14 @@ class TestBsoftBlocresBase(BaseTest):
         return cls.protImport
 
     @classmethod
-    def runCreateMask(cls, pattern, thr):
-        """ Create a volume mask. """
-        cls.msk = cls.newProtocol(XmippProtCreateMask3D,
-                                  inputVolume=pattern,
-                                  volumeOperation=0,  # OPERATION_THRESHOLD,
-                                  threshold=thr,
-                                  doSmall=True,
-                                  doBig=True,
-                                  doSymmetrize=False,
-                                  doMorphological=False,
-                                  doInvert=False,
-                                  doSmooth=False,
-                                  sigmaConvolution=2
-                                  )
-        cls.launchProtocol(cls.msk)
-        return cls.msk
+    def runImportMask(cls, pattern, samplingRate):
+        """ Run an Import volumes protocol. """
+        cls.protImport = cls.newProtocol(ProtImportMask,
+                                         maskPath=pattern,
+                                         samplingRate=samplingRate
+                                         )
+        cls.launchProtocol(cls.protImport)
+        return cls.protImport
 
 
 class TestBsoftBlocres(TestBsoftBlocresBase):
@@ -78,7 +66,7 @@ class TestBsoftBlocres(TestBsoftBlocresBase):
         TestBsoftBlocresBase.setData()
         cls.protImportHalf1 = cls.runImportVolumes(cls.half1, 3.54)
         cls.protImportHalf2 = cls.runImportVolumes(cls.half2, 3.54)
-        cls.protCreateMask = cls.runCreateMask(cls.protImportHalf1.outputVolume, 0.02)
+        cls.protCreateMask = cls.runImportMask(cls.mask, 3.54)
 
 
     def testBlocres1(self):

@@ -60,7 +60,7 @@ from pyworkflow.em.showj import *
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
-
+from protocol_movie_gain import XmippProtMovieGain
 
 
 class XmippViewer(Viewer):
@@ -93,7 +93,8 @@ class XmippViewer(Viewer):
                 XmippProtCTFMicrographs,
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair,
-                XmippProtMultiRefAlignability
+                XmippProtMultiRefAlignability,
+                XmippProtMovieGain
                 ]
 
     def __init__(self, **kwargs):
@@ -286,6 +287,17 @@ class XmippViewer(Viewer):
                     xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                     xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
                     self._views.append(xplotter)
+
+        elif issubclass(cls, XmippProtMovieGain):
+            self._visualize(obj.outputMovies)
+            movieGainMonitor = MonitorMovieGain(obj,
+                                                workingDir=obj.workingDir.get(),
+                                                samplingInterval=60,
+                                                monitorTime=300,
+                                                stddevValue=0.04,
+                                                ratio1Value=1.15,
+                                                ratio2Value=4.5)
+            self._views.append(MovieGainMonitorPlotter(movieGainMonitor))
 
         elif issubclass(cls, XmippProtRotSpectra):
             self._visualize(obj.outputClasses,
