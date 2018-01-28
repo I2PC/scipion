@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#include "parallel/mpi_reconstruct_fourier_gpu.h"
+#include <parallel_adapt_cuda/mpi_reconstruct_fourier_gpu.h>
 
 int main(int argc, char *argv[])
 {

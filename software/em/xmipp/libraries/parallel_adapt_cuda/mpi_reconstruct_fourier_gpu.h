@@ -25,8 +25,8 @@
 #ifndef MPI_RECONSTRUCT_FOURIER_GPU_H_
 #define MPI_RECONSTRUCT_FOURIER_GPU_H_
 
-#include "xmipp_mpi.h"
-#include "reconstruction_adapt_cuda/reconstruct_fourier_gpu.h"
+#include <parallel/xmipp_mpi.h>
+#include <reconstruction_adapt_cuda/reconstruct_fourier_gpu.h>
 
 #include <data/args.h>
 #include <data/projection.h>
