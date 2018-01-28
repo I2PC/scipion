@@ -203,7 +203,7 @@ addLib('XmippRecons',
              'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
 
 
-# AJ - Reconstruction CUDA
+# Reconstruction CUDA
 if cuda:
        addLib('XmippReconsCuda',
        dirs=['libraries'],
@@ -542,7 +542,6 @@ for p in ['angular_break_symmetry',
           'ctf_show',
           'ctf_sort_psds',
 
-          'cuda_reconstruct_fourier',
           'evaluate_coordinates',
 
           'idr_xray_tomo',
@@ -764,7 +763,8 @@ if opencv:
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
 
-
+if cuda:
+    addProg('cuda_reconstruct_fourier')
 
 
 #  ***********************************************************************

@@ -212,7 +212,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
         _libs.append("cuda")
         _libs.append("cufft")
         _libpath.append(env['CUDA_LIB'])
-    if name == "XmippParallel":
+    if name == "XmippParallel" and cuda==True:
         _libs.append("XmippReconsAdaptCuda")
     _incs = list(incs)
     lastTarget = deps
