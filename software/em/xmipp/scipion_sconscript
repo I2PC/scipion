@@ -217,6 +217,11 @@ if cuda:
        incs=bilib_incs,
        libs=['pthread'])
        
+       addLib('XmippParallelAdaptCuda',
+       dirs=['libraries'],
+       patterns=['parallel_adapt_cuda/*.cpp'],
+       incs=bilib_incs,
+       libs=['pthread'])
   
 
 # Interface
@@ -489,6 +494,11 @@ def addProg(progName, **kwargs):
         kwargs['cuda'] = True
         #kwargs['nvcc'] = True
         kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda']
+
+    if progName.startswith('mpi_cuda_'):
+        kwargs['cuda'] = True
+        #kwargs['nvcc'] = True
+        kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda','XmippParallelCuda']
     #FIN AJ
 
     xmippProgName = 'xmipp_%s' % progName
@@ -691,7 +701,6 @@ for p in ['angular_break_symmetry',
           'mpi_reconstruct_art',
           'mpi_reconstruct_fourier',
           'mpi_reconstruct_fourier_accel',
-          'mpi_reconstruct_fourier_gpu',
           'mpi_reconstruct_wbp',
           'mpi_reconstruct_significant',
           'mpi_reconstruct_admm',
@@ -765,6 +774,7 @@ if opencv:
 
 if cuda:
     addProg('cuda_reconstruct_fourier')
+    addProg('mpi_cuda_reconstruct_fourier')
 
 
 #  ***********************************************************************
