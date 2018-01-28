@@ -199,11 +199,24 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		fftN=&fftV;
 	}
 	V.clear();
+
+	double u;
+	int size_fourier = ZSIZE(fftV);
+	freq_fourier.initZeros(size_fourier);
+
+	int size = ZSIZE(pMask);
+
+	for(size_t k=0; k<size_fourier; ++k)
+	{
+		FFT_IDX2DIGFREQ(k,size, u);
+		VEC_ELEM(freq_fourier,k) = u;
+	}
+
 }
 
 
 void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-		double w1, double w1h, double w1l, MultidimArray<double> &amplitude, int count, FileName fnDebug)
+		double w1, double w1l, MultidimArray<double> &amplitude, int count, FileName fnDebug)
 {
 	fftVRiesz.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
@@ -253,20 +266,20 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-	DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate first component of Riesz vector
 	fftVRiesz.initZeros(myfftV);
 	double uz, uy, ux;
 	n=0;
 
-	for(size_t j=0; j<XSIZE(myfftV); ++j)
+	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
-		FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
+		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
-			for(size_t i=0; i<YSIZE(myfftV); ++i)
+			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
+				ux = VEC_ELEM(freq_fourier,j);
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
 				if (w1l<=un && un<=w1)
@@ -289,17 +302,17 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-	DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate second component of Riesz vector
 	fftVRiesz.initZeros(myfftV);
 	n=0;
 
-	for(size_t i=0; i<YSIZE(myfftV); ++i)
+	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
-		FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
+		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
+			uy = VEC_ELEM(freq_fourier,i);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
@@ -331,7 +344,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
-		FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
+		uz = VEC_ELEM(freq_fourier,k);
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
@@ -395,7 +408,7 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask)
 {
 	MultidimArray<double> resolutionVol_aux = resolutionVol;
-	double last_resolution_2 = sampling/list[(list.size()-1)];
+	double last_resolution_2 = list[(list.size()-1)];
 
 	// Count number of voxels with resolution
 	size_t N=0;
@@ -416,8 +429,8 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 
 	double freq, res, init_res, last_res;
 
-	init_res = sampling/list[0];
-	last_res = sampling/list[(list.size()-1)];
+	init_res = list[0];
+	last_res = list[(list.size()-1)];
 	
 	std::cout << "--------------------------" << std::endl;
 	std::cout << "last_res = " << last_res << std::endl;
@@ -428,14 +441,23 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 	{
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) < last_res)
 		{
-			DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
-			DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
-			DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
+			if (DIRECT_MULTIDIM_ELEM(pMask, n) >=1)
+			{
+				DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
+				DIRECT_MULTIDIM_ELEM(resolutionVol, n) = filling_value;
+			}
+			else
+			{
+				DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
+				DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
+				DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
+			}
 		}
-		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) >= trimming_value)
+		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) > trimming_value)
 		{
 		  DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
 		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
+		  DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
 		}
 	}
 	//#ifdef DEBUG_MASK
@@ -443,6 +465,77 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 	imgMask = pMask;
 	imgMask.write(fnMaskOut);
 	//#endif
+}
+
+void ProgMonogenicSignalRes::resolution2eval(int &count_res, double step,
+								double &resolution, double &last_resolution,
+								double &freq, double &freqL,
+								int &last_fourier_idx,
+								bool &continueIter,	bool &breakIter,
+								bool &doNextIteration)
+{
+	resolution = maxRes - count_res*step;
+	freq = sampling/resolution;
+	++count_res;
+
+	double Nyquist = 2*sampling;
+	double aux_frequency;
+	int fourier_idx;
+
+	DIGFREQ2FFT_IDX(freq, ZSIZE(VRiesz), fourier_idx);
+
+//	std::cout << "Resolution = " << resolution << "   iter = " << count_res-1 << std::endl;
+//	std::cout << "freq = " << freq << "   Fourier index = " << fourier_idx << std::endl;
+
+	FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), aux_frequency);
+
+	freq = aux_frequency;
+
+	if (fourier_idx == last_fourier_idx)
+	{
+//		std::cout << "entro en el if"  << std::endl;
+		continueIter = true;
+		return;
+	}
+
+	last_fourier_idx = fourier_idx;
+	resolution = sampling/aux_frequency;
+
+
+	if (count_res == 0)
+		last_resolution = resolution;
+
+	if ( ( resolution<Nyquist ))// || (resolution > last_resolution) )
+	{
+		//std::cout << "Nyquist limit reached" << std::endl;
+		breakIter = true;
+		return;
+	}
+	if ( ( freq>0.49))// || (resolution > last_resolution) )
+	{
+		std::cout << "Nyquist limit reached" << std::endl;
+		doNextIteration = false;
+		return;
+	}
+
+	freqL = sampling/(resolution + step);
+
+	int fourier_idx_2;
+
+	DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx_2);
+	double caca, caca2;
+
+	if (fourier_idx_2 == fourier_idx)
+	{
+		if (fourier_idx > 0){
+			//std::cout << " index low =  " << (fourier_idx - 1) << std::endl;
+			FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), freqL);
+		}
+		else{
+			freqL = sampling/(resolution + step);
+		}
+	}
+
 }
 
 
@@ -462,7 +555,7 @@ void ProgMonogenicSignalRes::run()
 	std::cout << "Looking for maximum frequency ..." << std::endl;
 	double criticalZ=icdf_gauss(significance);
 	double criticalW=-1;
-	double resolution, last_resolution = 10000;  //A huge value for achieving last_resolution < resolution
+	double resolution, resolution_2, last_resolution = 10000;  //A huge value for achieving last_resolution < resolution
 	double freq, freqH, freqL, resVal, counter;
 	double max_meanS = -1e38;
 	double cut_value = 0.025;
@@ -479,6 +572,7 @@ void ProgMonogenicSignalRes::run()
 	double w=w0;
 	bool doNextIteration=true;
 	bool lefttrimming = false;
+	int fourier_idx, last_fourier_idx = -1, fourier_idx_2;
 	int iter=0;
 	int count_res = 0;
 	std::vector<double> list;
@@ -488,34 +582,40 @@ void ProgMonogenicSignalRes::run()
 	FileName fnDebug;
 	do
 	{
-		resolution = maxRes - count_res*R_;
-		freqL = sampling/(resolution+R_);
-		freq = sampling/resolution;
-		freqH = sampling/(resolution-R_);
-		if (freq > 0.5)
-		{
-		  std::cout << "search stopped due to Nyquist limit has been reached" << std::endl;
-		  break;
-		}
-		++count_res;
-		if (count_res<=2)
-			counter = 0; //maxRes/R_;
-		else
-			counter = 2;//count_res-2;
 
-		std::cout << "Iteration " << iter << " Freq = " << freq << " Resolution = " << resolution << " (A)" << std::endl;
-		//std::cout << "             " << " FreqLOW = " << freqL << " FreqHIGH = " << freqH << std::endl;
+		bool continueIter = false;
+		bool breakIter = false;
+
+		resolution2eval(count_res, R_,
+						resolution, last_resolution,
+						freq, freqL,
+						last_fourier_idx, continueIter, breakIter, doNextIteration);
+
+		if (continueIter)
+			continue;
+
+		if (breakIter)
+			break;
+
+		std::cout << "resolution = " << resolution << std::endl;
+
+
+		list.push_back(resolution);
+
+		if (iter <2)
+			resolution_2 = list[0];
+		else
+			resolution_2 = list[iter - 2];
 
 		fnDebug = "Signal";
 
-		amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug);
+		amplitudeMonogenicSignal3D(fftV, freq, freqL, amplitudeMS, iter, fnDebug);
 		if (halfMapsGiven)
 		{
 			fnDebug = "Noise";
-			amplitudeMonogenicSignal3D(*fftN, freq, freqH, freqL, amplitudeMN, iter, fnDebug);
+			amplitudeMonogenicSignal3D(*fftN, freq, freqL, amplitudeMN, iter, fnDebug);
 		}
 
-		list.push_back(freq);
 
 		double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 		noiseValues.clear();
@@ -644,12 +744,6 @@ void ProgMonogenicSignalRes::run()
 		  {
 		    Nvoxels++;
 		    DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
-//		    if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
-//		    {
-//		      DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-//		    }
-//		    else
-//		      DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
 		  }
 		}
 		#ifdef DEBUG_MASK
@@ -693,7 +787,9 @@ void ProgMonogenicSignalRes::run()
 			thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
 
 		#ifdef DEBUG
-		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
+		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution <<
+				  ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = "
+				  << thresholdNoise <<std::endl;
 		#endif
 
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
@@ -707,12 +803,11 @@ void ProgMonogenicSignalRes::run()
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
 				else{
-				  
-					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
+					DIRECT_MULTIDIM_ELEM(pMask, n) += 1;
 					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
 					{
 						DIRECT_MULTIDIM_ELEM(pMask, n) = -1;
-						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution + counter*R_;//maxRes - counter*R_;
+						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2;//maxRes - counter*R_;
 					}
 				}
 		}
@@ -733,6 +828,7 @@ void ProgMonogenicSignalRes::run()
 		if (z<criticalZ)
 		{
 			criticalW = freq;
+			std::cout << "Search stopped due to z>Z (hypothesis test)" << std::endl;
 			doNextIteration=false;
 		}
 		if (doNextIteration)
@@ -742,6 +838,7 @@ void ProgMonogenicSignalRes::run()
 		}
 		}
 		iter++;
+		last_resolution = resolution;
 	} while (doNextIteration);
 
 	if (lefttrimming == false)

@@ -105,7 +105,7 @@ def readPosCoordinates(posFile):
     pass
             
 
-def readSetOfCoordinates(workDir, micSet, coordSet):
+def readSetOfCoordinates(workDir, micSet, coordSet, invertY=False):
     """ Read from Eman .json files.
     It is expected a file named: base.json under the workDir.
     Params:
@@ -123,11 +123,11 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     for mic in micSet:
         micBase = removeBaseExt(mic.getFileName())
         micPosFn = ''.join(glob.glob(jsonFninfo + '*' + micBase + '_info.json'))
-        readCoordinates(mic, micPosFn, coordSet)
+        readCoordinates(mic, micPosFn, coordSet, invertY)
     coordSet.setBoxSize(size)
 
 
-def readCoordinates(mic, fileName, coordsSet):
+def readCoordinates(mic, fileName, coordsSet, invertY=False):
     if exists(fileName):
         jsonPosDict = loadJson(fileName)
 
@@ -136,6 +136,10 @@ def readCoordinates(mic, fileName, coordsSet):
 
             for box in boxes:
                 x, y = box[:2]
+
+                if invertY:
+                    y = mic.getYDim() - y
+
                 coord = Coordinate()
                 coord.setPosition(x, y)
                 coord.setMicrograph(mic)
