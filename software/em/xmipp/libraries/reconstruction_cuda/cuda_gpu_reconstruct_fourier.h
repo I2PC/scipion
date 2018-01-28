@@ -28,12 +28,12 @@
 
 #include <map>
 
-#include "data/reconstruct_fourier_projection_traverse_space.h"
-#include "data/reconstruct_fourier_buffer_data.h"
-#include "data/reconstruct_fourier_defines.h"
-#include "data/xmipp_error.h"
+#include <reconstruction/reconstruct_fourier_projection_traverse_space.h>
+#include <reconstruction/reconstruct_fourier_buffer_data.h>
+#include <reconstruction/reconstruct_fourier_defines.h>
+#include <data/xmipp_error.h>
 
-#include "reconstruction_cuda/cuda_xmipp_utils.h"
+#include <reconstruction_cuda/cuda_xmipp_utils.h>
 
 struct RecFourierBufferDataGPU;
 

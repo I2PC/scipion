@@ -48,10 +48,10 @@
 #include <reconstruction/recons.h>
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
-#include "data/point3D.h"
-#include "data/reconstruct_fourier_defines.h"
-#include "data/reconstruct_fourier_projection_traverse_space.h"
-#include "reconstruction_cuda/cuda_gpu_reconstruct_fourier.h"
+#include <data/point3D.h>
+#include <reconstruction/reconstruct_fourier_defines.h>
+#include <reconstruction/reconstruct_fourier_projection_traverse_space.h>
+#include <reconstruction_cuda/cuda_gpu_reconstruct_fourier.h>
 
 /**@defgroup FourierReconstruction Fourier reconstruction
    @ingroup ReconsLibrary */
