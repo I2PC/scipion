@@ -221,7 +221,7 @@ if cuda:
        dirs=['libraries'],
        patterns=['parallel_adapt_cuda/*.cpp'],
        incs=bilib_incs,
-       libs=['pthread'],
+       libs=['pthread', 'XmippData', 'XmippClassif', 'XmippRecons', 'XmippBilib'],
        mpi=True)
   
 
