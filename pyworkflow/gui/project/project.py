@@ -85,7 +85,7 @@ class ProjectWindow(ProjectBaseWindow):
                             icon='fa-trash-o.png')
         projMenu.addSubMenu('Manage project labels', 'labels',
                             icon=Icon.TAGS)
-        projMenu.addSubMenu('Toogle color mode', 'color_mode',
+        projMenu.addSubMenu('Toggle color mode', 'color_mode',
                             shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
         projMenu.addSubMenu('Select all protocols', 'select all',
                             shortCut="Ctrl+a")
@@ -245,7 +245,7 @@ class ProjectWindow(ProjectBaseWindow):
     def onManageProjectLabels(self):
         self.manageLabels()
 
-    def onToogleColorMode(self):
+    def onToggleColorMode(self):
         self.getViewWidget()._toggleColorScheme(None)
 
     def onSelectAllProtocols(self):

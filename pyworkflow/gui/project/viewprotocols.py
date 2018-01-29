@@ -579,6 +579,7 @@ class ProtocolsView(tk.Frame):
         self.root.bind("<Control-f>", self._findProtocol)
         self.root.bind("<Control-a>", self._selectAllProtocols)
         self.root.bind("<Control-t>", self._toggleColorScheme)
+        self.root.bind("<Control-i>", self._inspectProtocolPointers)
 
         # To bind key press to methods
         # Listen to any key: send event to keyPressed method
@@ -1318,6 +1319,24 @@ class ProtocolsView(tk.Frame):
         # self.updateRunsGraph()
         self.drawRunsGraph()
 
+    def _inspectProtocolPointers(self, e=None):
+        objs = self._getSelectedProtocols()
+        projName =self.project.shortName
+
+        if len(objs)>0:
+            filePath = objs[0]._getLogsPath('inspector.csv')
+            objName = objs[0].getRunName()
+        else:
+            obj = self.project
+            filePath = obj.getPath(obj.logsPath,'inspector.csv')
+            objName = 'the project'  + projName
+            objs = [obj]
+
+        inspectObj(objs, filePath, inspectAll=True)
+        msg = Message.LABEL_INSPECTOR % (objName, projName+'/'+filePath)
+        pwgui.dialog.showInfo(Message.TITLE_INSPECTOR, msg, self.root)
+    
+
     # NOt used!: pconesa 02/11/2016.
     # def _deleteSelectedProtocols(self, e=None):
     #
@@ -1953,3 +1972,194 @@ class RunBox(pwgui.TextBox):
     def moveTo(self, x, y):
         pwgui.TextBox.moveTo(self, x, y)
         self.nodeInfo.setPosition(self.x, self.y)
+
+
+
+# > inspectObj(protocol, protocol.getProject().getPath('INSPECTOR_LOG.csv'))
+def inspectObj(obj, filename, prefix='', memoryDict={}, maxDeep=5, inspectAll=True):
+    """ Creates a .CSV file in the filename path with
+        all its members and recursibely with a certain maxDeep.
+    """ 
+    endl   = '\n'  # end of line char
+    delim  = '\t'  # column delimiter
+
+    childNew = '  |------>  '  # new item indention
+    childBar = '  | ' + delim  # bar indention
+    childEmp = '    ' + delim  # empty indention
+    column1  = '    - Name - ' + delim
+    column2  = '    - Type - ' + delim
+    column3  = '    - Value - ' + delim
+    column4  = '  - Memory Address -'
+    childEnd =('       -- '+delim)*4 + endl  # Child ending
+
+    indentionDeep = prefix.count('\t')
+
+    isPointer2 = str(type(obj))=="<class 'pyworkflow.object.Pointer'>"
+
+    def writeRow(name, val, prefix, posList=False):
+        """ Writes a row item. """
+        # we will avoid to recursively print the items wrote before 
+        #  (ie. with the same memory address), thus we store a dict with the
+        #  addresses and the flag isNew is propertly set
+        if str(hex(id(val))) in memoryDict:
+            memorySTR = memoryDict[str(hex(id(val)))]
+            isNew = False
+        else:
+            # if the item is new, we save its memory address in the memoryDict
+            #   and we pass the name and the line on the file as a reference.
+            memorySTR = str(hex(id(val)))
+            file = open(filename, 'r')
+            lineNum = str(len(file.readlines())+1)
+            file.close()
+            nameDict = str(name)[0:15]+' ...' if len(str(name))>25 else str(name)
+            memoryDict[str(hex(id(val)))] = '>>> '+nameDict + ' - L:'+lineNum
+            isNew = True
+
+        if not inspectAll and not isPointer2:
+            return isNew
+        
+        if posList:
+            # if posList is not False, the third column is 'pos/lenght'
+            thirdCol = posList
+        else:
+            # else, we print the value avoiding the EndOfLine char
+            thirdCol = str(val).replace(endl,' // ')
+
+        deepStr = str(indentionDeep) + delim
+        prefix = prefix.replace(delim,'') + delim
+        
+        file = open(filename, 'a')   
+        file.write( deepStr + prefix + 
+                    str(name) + delim + 
+                    str(type(val)) + delim + 
+                    thirdCol + delim + 
+                    memorySTR + endl)
+        if isPointer2 and not inspectAll:
+            file.write( deepStr + prefix + 
+                    str('POINTER') + delim + 
+                    str(type(val)) + delim + 
+                    str(val) + delim + 
+                    memorySTR + endl)
+        file.close()
+
+        return isNew
+
+    def recursivePrint(value, prefix, isLast, isFirst):
+        """ We print the childs items of tuples, lists, dicts and classes. """ 
+
+        # if it's the last item, the childs has not the bar indention
+        if isLast:  # void indention when no more items
+            prefixList = prefix.split(delim)
+            prefixList[-2]=prefixList[-2].replace('|',' ') 
+            prefix = delim.join(prefixList)
+
+        # recursive step with the new prefix and memory dict.
+        inspectObj(value, filename, prefix+childBar, memoryDict, maxDeep, 
+                   inspectAll)
+        
+        # We introduce the next header if it's not the last
+        if isFirst:
+            deepStr = str(indentionDeep) + delim
+        else:
+            # When it was not the first item, the deep is encreased 
+            #   to improve the readability when filter 
+            deepStr = str(indentionDeep+1) + delim
+
+        prefix = prefix.replace(delim,'') + delim
+
+        file = open(filename, 'a')
+        file.write(deepStr + prefix + childEnd)
+        if not isLast:
+            file.write(deepStr + prefix + column1 + column2 + column3 + column4 
+                       + endl)
+        file.close()
+
+    def isTupleListDictClass(value):
+        """ Returns true if value is a tuple, list, dict or calss. """
+        isTupleListDict = ( type(value)==type(tuple()) or 
+                            type(value)==type(dict())  or
+                            type(value)==type(list()) ) and len(value)>1
+
+        return isTupleListDict or str(type(value))[1]=='c'
+
+
+    if prefix=='':
+        prefix = ' - Root - ' # + '-'*40
+
+        # dict with name and value pairs of the members
+        if len(obj)==1: 
+            obj_dict = obj[0].__dict__
+            obj = obj[0]
+
+        treeHeader = ' - Print on ' + str(dt.datetime.now())
+
+        prefixHeader = '-DEEP-' + delim + treeHeader + delim
+        col1 = '    - Name - (value for Lists and Tuples)' + delim
+        col3 = '    - Value - (Pos./Len for Lists and Tuples) ' + delim
+
+        file = open(filename, 'w')
+        file.write(prefixHeader + col1 + column2 + col3 + column4 + endl)
+        file.close()
+
+        writeRow(obj.__class__.__name__, obj, prefix)
+
+        prefix = '  ' + childBar
+
+    else:
+        if str(type(obj))[1]=='c':
+            obj_dict = obj.__dict__
+        elif (type(obj)==type(tuple()) or
+              type(obj)==type(list())):
+            column1 = '    - Value - ' + delim
+            column3 = '  - Pos./Len. - ' + delim
+        elif type(obj)==type(dict()):
+            column1 = '    - Key - ' + delim
+            obj_dict = obj
+        else:
+            return
+
+    indentionDeep = prefix.count('\t')
+    deepStr = str(indentionDeep) + delim
+    belowMaxDeep = True if maxDeep == -1 else indentionDeep < maxDeep
+
+    prefixToWrite = prefix.replace(delim,'') + delim
+
+    file = open(filename, 'a')
+    file.write(deepStr + prefixToWrite + column1 + column2 + column3 + column4 + 
+               endl)
+    file.close()
+
+    prefixList = prefix.split(delim)
+    prefixList[-2] = childNew
+    prefixToWrite = delim.join(prefixList)  + delim
+    if indentionDeep == 1:
+        prefixToWrite = '  ' + prefixToWrite
+
+
+    count = 0
+    isNew = True
+    if str(type(obj))[1]=='c' or type(obj)==type(dict()):
+        for key, value in obj_dict.items():
+            count+=1
+
+            # write the variable
+            isNew = writeRow(key, value, prefixToWrite)
+            
+            isLast = count==len(obj_dict)
+            isFirst = count==1
+            # show attributes for objects and items for lists and tuples 
+            if belowMaxDeep and isNew and isTupleListDictClass(value):
+                recursivePrint(value, prefix, isLast, isFirst)
+
+    else:
+        for i in range(0,len(obj)): 
+            # write the variable
+            isNew = writeRow(obj[i], obj[i], prefixToWrite,
+                             str(i+1)+'/'+str(len(obj)))
+
+            isLast = len(obj)==i+1
+            isFirst = i==0
+            # show attributes for objects and items for lists and tuples 
+            if belowMaxDeep and isNew and isTupleListDictClass(obj[i]):
+                recursivePrint(obj[i], prefix, isLast, isFirst)
+

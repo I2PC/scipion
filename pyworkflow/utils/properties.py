@@ -326,6 +326,8 @@ Do you really want to continue?'
     TITLE_PICK_GAUSS = 'Automatic gaussian picking'
     LABEL_PICK_GAUSS = 'Do you wish to perform an automatic gaussian picking for the remaining micrographs?'
 
+    TITLE_INSPECTOR = 'Objects inspector created'
+    LABEL_INSPECTOR = 'CSV file created at Log dir of %s: \n -> .../projects/%s'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
