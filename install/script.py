@@ -66,22 +66,38 @@ def clean_python_2_7_8_installation():
     # Detects installations where python 2.7.8 was installed.
     # In those installations we where using sqlite 3.6.23 and matplotlib-1.3.1
     # A bit of a hack but we will check based on matplotlib path!
+    # Also this is not an exhaustive clean that might be more detailed
+    # but enough to trigger the proper installation of the new versions.
 
     oldMatplotLibPath = Environment.getPythonPackagesFolder() + '/matplotlib-1.3.1*'
     print'Matplot lib path at %s' % oldMatplotLibPath
+
+    def removeByPattern(pattern):
+        for f in glob.glob(pattern):
+            os.remove(f)
+
     # If old matplot lib exists
     if len(glob.glob(oldMatplotLibPath)) != 0:
         print "OLD Installation identified: removing Python and sqlite"
 
         # remove sqlite3 3.6.23
-        sqliteFile = Environment.getLibFolder() + "/libsqlite3*"
-        for f in glob.glob(sqliteFile):
-            os.remove(f)
+        sqliteLibs = Environment.getLibFolder() + "/libsqlite3*"
+        removeByPattern(sqliteLibs)
 
-        print "1"
+        sqliteInc = Environment.getIncludeFolder() + "/sqlite3*"
+        removeByPattern(sqliteInc)
+
+        os.remove(Environment.getBinFolder() + "/sqlite3")
+
         # remove python installation
-        os.remove(Environment.getBinFolder() + "/python")
-        print "2"
+        pythonBinaries = Environment.getBinFolder() + "/python*"
+        removeByPattern(pythonBinaries)
+
+        # Python at include
+        pythonIncludes = Environment.getIncludeFolder() + "/python*"
+        shutil.rmtree(pythonIncludes)
+
+        # Python at lib folder
         shutil.rmtree(Environment.getPythonFolder())
 
         return
