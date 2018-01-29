@@ -563,6 +563,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         return varValue
 
+
+
+    # THIS ONLY WORKS IN METADATA FILE, NOT IN SCIPION OUTPUTS......  :'(
+    #
     # def rejectByVariance(self):
     #     if self.autoParRejectionVar is not self.REJ_NONE:
     #         import numpy as np
