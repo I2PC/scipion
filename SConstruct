@@ -206,6 +206,14 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     """
     _libs = list(libs)
     _libpath = list(libpath)
+    if name == "XmippReconsAdaptCuda":
+        _libs.append("XmippReconsCuda")
+        _libs.append("cudart")
+        _libs.append("cuda")
+        _libs.append("cufft")
+        _libpath.append(env['CUDA_LIB'])
+    if name == "XmippParallel" and cuda==True:
+        _libs.append("XmippReconsAdaptCuda")
     _incs = list(incs)
     lastTarget = deps
     prefix = 'lib' if prefix is None else prefix
@@ -265,6 +273,95 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     SideEffect('dummy', library)
     env.Depends(library, sources)
     
+    if installDir:
+        install = env.Install(installDir, library)
+        SideEffect('dummy', install)
+        lastTarget = install
+    else:
+        lastTarget = library
+    env.Default(lastTarget)
+
+    for dep in deps:
+        env.Depends(sources, dep)
+
+    env.Alias(name, lastTarget)
+
+    return lastTarget
+
+def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[],
+                  libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[],
+                  mpi=False, cuda=False, default=True, target=None):
+    """Add self-made and compiled shared library to the compilation process
+
+    This pseudobuilder access given directory, compiles it
+    and installs it. It also tells SCons about it dependencies.
+
+    If default=False, the library will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final targets, the ones that Make will create.
+    """
+    _libs = list(libs)
+    _libpath = list(libpath)
+    _incs = list(incs)
+    lastTarget = deps
+    prefix = 'lib' if prefix is None else prefix
+    suffix = '.so' if suffix is None else suffix
+
+    basedir = 'lib'
+    targetName = join(basedir, target if target else prefix + name)
+    sources = []
+
+    _libpath.append(Dir('#software/lib').abspath)
+
+    for d, p in izip(dirs, patterns):
+        sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
+
+    if not sources and env.TargetInBuild(name):
+        Exit('No sources found for Library: %s. Exiting!!!' % name)
+
+    # FIXME: There must be a key in env dictionary that breaks the compilation. Please find it to make it more beautiful
+    env2 = Environment()
+    env2['ENV']['PATH'] = env['ENV']['PATH']
+
+    mpiArgs = {}
+    if mpi:
+        _libpath.append(env['MPI_LIBDIR'])
+        _libs.append(env['MPI_LIB'])
+        _incs.append(env['MPI_INCLUDE'])
+
+        mpiArgs = {'CC': env['MPI_CC'],
+                   'CXX': env['MPI_CXX'],
+                   'LINK': env['MPI_LINKERFORPROGRAMS']}
+        env2.PrependENVPath('PATH', env['MPI_BINDIR'])
+
+    # AJ
+    elif cuda:
+        _libs.append(['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt'])
+        _incs.append(env['NVCC_INCLUDE'])
+        _libpath.append(env['NVCC_LIBDIR'])
+        mpiArgs = {'CC': env['NVCC'], 'CXX': env['NVCC'], 'LINK': env['LINKERFORPROGRAMS']}
+    # FIN AJ
+
+
+    _incs.append(env['CPPPATH'])
+    _incs.append('#software/include')
+
+    library = env2.Library(
+        target=targetName,
+        # source=lastTarget,
+        source=sources,
+        CPPPATH=_incs,
+        LIBPATH=_libpath,
+        LIBS=_libs,
+        SHLIBPREFIX=prefix,
+        SHLIBSUFFIX=suffix,
+        CXXFLAGS=env['CXXFLAGS'],
+        LINKFLAGS=env['LINKFLAGS'],
+        **mpiArgs)
+    SideEffect('dummy', library)
+    env.Depends(library, sources)
+
     if installDir:
         install = env.Install(installDir, library)
         SideEffect('dummy', install)
@@ -547,6 +644,7 @@ def libraryTest(env, name, lang='c'):
 env.AddMethod(untar, 'Untar')
 env.AddMethod(compilerConfig, 'CompilerConfig')
 env.AddMethod(addCppLibrary, 'AddCppLibrary')
+env.AddMethod(addCppLibraryCuda, 'AddCppLibraryCuda')
 env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
 env.AddMethod(symLink, 'SymLink')
 env.AddMethod(addJavaTest, 'AddJavaTest')
@@ -598,6 +696,7 @@ env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
 env['NVCC'] = os.environ.get('NVCC')
 env['NVCC_INCLUDE'] = os.environ.get('NVCC_INCLUDE')
 env['NVCC_LIBDIR'] = os.environ.get('NVCC_LIBDIR')
+env['CUDA_LIB'] = os.environ.get('CUDA_LIB')
 
 # Java related environment variables, probably the main one
 # that need to be modified is JAVA_HOME
