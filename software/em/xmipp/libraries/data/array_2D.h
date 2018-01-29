@@ -33,6 +33,8 @@
 template<typename T>
 struct Array2D {
 public:
+	/* Empty constructor */
+	Array2D() : xSize(0), ySize(0), data(NULL) {};
 	/* Constructor, allocates the data immediately */
 	Array2D(int xSize, int ySize) :
 			xSize(xSize), ySize(ySize) {
@@ -91,6 +93,10 @@ public:
 
 	bool inRangeY(int y) const {
 		return (y >= 0) && (y < ySize);
+	}
+
+	T* getRow(int y) const {
+		return data[y];
 	}
 private:
 	int xSize;
