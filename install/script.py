@@ -94,7 +94,7 @@ def clean_python_2_7_8_installation():
         removeByPattern(pythonBinaries)
 
         # Python at include
-        pythonIncludes = Environment.getIncludeFolder() + "/python*"
+        pythonIncludes = Environment.getIncludeFolder() + "/python2.7"
         shutil.rmtree(pythonIncludes)
 
         # Python at lib folder
