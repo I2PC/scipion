@@ -657,11 +657,20 @@ class String(Scalar):
             fs: Use femto seconds or not, only when format=None
         """
         if formatStr is None:
-            formatStr = self.DATETIME_FORMAT
-            if fs:
-                formatStr += self.FS
+            try:
+                formatStr = self.DATETIME_FORMAT
+                if fs:
+                    formatStr += self.FS
+                datetime = dt.datetime.strptime(self._objValue, formatStr)
+            except Exception as ex:
+                # Maybe the %f (femtoseconds) is not working
+                # let's try to format without it
+                datetime = dt.datetime.strptime(self._objValue,
+                                                self.DATETIME_FORMAT)
+        else:
+            datetime = dt.datetime.strptime(self._objValue, formatStr)
 
-        return dt.datetime.strptime(self._objValue, formatStr)
+        return datetime
 
 
 class Float(Scalar):
@@ -749,7 +758,6 @@ class Pointer(Object):
         ext = ext.replace(self.EXTENDED_ITEMID, '')
         return ext
         
-
     def hasValue(self):
         return self._objValue is not None
     
@@ -777,7 +785,7 @@ class Pointer(Object):
         return value
     
     def set(self, other):
-        """ Set the pointer value but cleanning the extendend property. """
+        """ Set the pointer value but cleaning the extended property. """
         Object.set(self, other)
         # This check is needed because set is call from the Object constructor
         # when this attribute is not setup yet (a dirty patch, I know)

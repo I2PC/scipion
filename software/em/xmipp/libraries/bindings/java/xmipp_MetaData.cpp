@@ -80,7 +80,8 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_deactivateThreadMuting(JNIEnv *env, jo
     bool error=false;
     XMIPP_JAVA_TRY
     {
-        error=MDSql::deactivateThreadMuting();
+    	MetaData * md = GET_INTERNAL_METADATA(jobj);
+        error=md->getDatabase()->deactivateThreadMuting();
     }
     XMIPP_JAVA_CATCH;
 
@@ -797,6 +798,17 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_addLabel(JNIEnv *env, jobject job
     XMIPP_JAVA_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_renameColumn(JNIEnv *env, jobject jobj, jint oldLabel, jint newLabel)
+{
+    MetaData *md = GET_INTERNAL_METADATA(jobj);
+
+    XMIPP_JAVA_TRY
+    {
+        md->renameColumn((MDLabel)oldLabel, (MDLabel)newLabel);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
 (JNIEnv *env, jobject jmetadata,
  jobject jimageAvg, jobject jimageStd, jboolean applyGeo, jboolean wrap, jint label)
@@ -821,9 +833,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_writeMdToStack
     XMIPP_JAVA_TRY
     {
         MetaData * md = GET_INTERNAL_METADATA(jmetadata);
-        jboolean aux=false;
+        jboolean aux = false;
         const char * fnChars = env->GetStringUTFChars(jfilename, &aux);
-        // FileName fn = fnChars;
         writeMdToStack(*md, fnChars, applyGeo, wrap, (MDLabel)label);
     }
     XMIPP_JAVA_CATCH;

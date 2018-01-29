@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. de la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Science for Life Laboratory, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -29,13 +29,13 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.data import Coordinate
-from pyworkflow.em.protocol import ProtParticlePicking
+from pyworkflow.em.packages.bamfordlab import ETHAN_HOME
+from pyworkflow.em.protocol import ProtParticlePickingAuto
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
 
 
-
-class ProtEthanPicker(ProtParticlePicking):
+class ProtEthanPicker(ProtParticlePickingAuto):
     """
     ETHAN is a program for automatic detection of spherical particles from
     electron micrographs.
@@ -50,7 +50,7 @@ class ProtEthanPicker(ProtParticlePicking):
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
 
-        ProtParticlePicking._defineParams(self, form)
+        ProtParticlePickingAuto._defineParams(self, form)
         form.addParam('radius', params.IntParam,
                       label='Radius of particle (px)')
 
@@ -95,54 +95,61 @@ class ProtEthanPicker(ProtParticlePicking):
                       label="Perform peak pair distance test?",
                       help='')
 
-    #--------------------------- INSERT steps functions ------------------------
-    def _insertAllSteps(self):
-        deps = []
-
-        for mic in self.getInputMicrographs():
-            stepId = self._insertFunctionStep('pickMicrographStep',
-                                              self.radius.get(),
-                                              mic.getFileName())
-            deps.append(stepId)
-
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
     #--------------------------- STEPS functions -------------------------------
-    def pickMicrographStep(self, radius, micFn):
+    def _pickMicrograph(self, mic, radius):
+        micFn = mic.getFileName()
         micDir = self._getMicDir(micFn)
-        # Convert micrographs to mrc (uint8) as required by ETHAN program
         fnMicBase = pwutils.replaceBaseExt(micFn, 'mrc')
         fnMicCfg = pwutils.replaceBaseExt(micFn, 'cfg')
         fnMicFull = os.path.join(micDir, fnMicBase)
         fnPosBase = self._getMicPosFn(micFn)
 
-        # FIXME: Right now we can not define the depth (8, 16 or 32 bits)
-        # from the ImageHandler API
-        from pyworkflow.em.packages.xmipp3 import runProgram
-        args = '-i %s -o %s --depth uint8' % (micFn, fnMicFull)
-        runProgram('xmipp_image_convert', args)
+        # Convert micrographs to mrc (uint8) as required by ETHAN program
+        ih = ImageHandler()
+        ih.convert(micFn, fnMicFull, md.DT_UCHAR)
 
         # Create a configuration file to be used by ETHAN with the parameters
         # selected by the user
         self.writeConfigFile(os.path.join(micDir, fnMicCfg))
         # Run ethan program with the required arguments
         program = self.getProgram()
-        args = "%d %s %s %s" % (radius, fnMicBase, fnPosBase, fnMicCfg)
+        args = "%s %s %s %s" % (radius, fnMicBase, fnPosBase, fnMicCfg)
         self.runJob(program, args, cwd=micDir)
 
         # Clean temporary micrograph
         pwutils.cleanPath(fnMicFull)
 
     def createOutputStep(self):
-        coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
-        self.readSetOfCoordinates(self._getExtraPath(), coordSet)
-        coordSet.setBoxSize(self.radius.get() * 2)
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(self.inputMicrographs, coordSet)
+        pass
+
+    # --------------------------- INFO functions -------------------------------
+    def _summary(self):
+        summary = []
+        return summary
+
+    def _citations(self):
+        return []
+
+    def _methods(self):
+        methodsMsgs = []
+        return methodsMsgs
+
+    def _validate(self):
+        errors = []
+
+        program = self.getProgram()
+        if not os.path.exists(program):
+            errors.append("Program: '%s' was not found. " % program)
+            errors.append("Check that you have installed ethan picker by: ")
+            errors.append("   ./scipion install ethan ")
+            errors.append("And the configuration file "
+                          "~/.config/scipion/scipion.conf has the proper value "
+                          "of ETHAN_HOME variable.")
+        return errors
 
     #--------------------------- UTILS functions -------------------------------
     def getProgram(self):
-        return os.path.join(os.environ.get('ETHAN_HOME'), 'ethan')
+        return os.path.join(os.environ.get(ETHAN_HOME), 'ethan')
 
     def _getMicDir(self, micFn):
         return self._getExtraPath()
@@ -150,9 +157,14 @@ class ProtEthanPicker(ProtParticlePicking):
     def _getMicPosFn(self, micFn):
         return pwutils.replaceBaseExt(micFn, 'txt')
 
-    def readSetOfCoordinates(self, workingDir, coordSet):
+    def _getPickArgs(self):
+        """ In this case, only return the radius as argument.
+        """
+        return [self.radius.get()]
 
-        for mic in self.getInputMicrographs():
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
+        coordSet.setBoxSize(self.radius.get() * 2)
+        for mic in micList:
             micFn = mic.getFileName()
             micDir = self._getMicDir(micFn)
             coordFile = os.path.join(micDir, self._getMicPosFn(micFn))
@@ -217,27 +229,4 @@ DISTANCE_TEST %(distanceTest)s
         """ % argsDict)
         f.close()
 
-    def _summary(self):
-        summary = []
-        return summary
-
-    def _citations(self):
-        return []
-
-    def _methods(self):
-        methodsMsgs = []
-        return methodsMsgs
-
-    def _validate(self):
-        errors = []
-
-        program = self.getProgram()
-        if not os.path.exists(program):
-            errors.append("Program: '%s' was not found. " % program)
-            errors.append("Check that you have installed ethan picker by: ")
-            errors.append("   ./scipion install ethan ")
-            errors.append("And the configuration file "
-                          "~/.config/scipion/scipion.conf has the proper value "
-                          "of ETHAN_HOME variable.")
-        return errors
 

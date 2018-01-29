@@ -28,13 +28,16 @@
 
 import os
 from itertools import izip
+from math import ceil
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
+from pyworkflow.utils import yellowStr, redStr
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import MovieAlignment, SetOfMovies, SetOfMicrographs
+from pyworkflow.em.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
+                                Image)
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
 
@@ -105,8 +108,13 @@ class ProtAlignMovies(ProtProcessMovies):
 
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
-        # Do nothing now, the output should be ready.
-        pass
+        # validate that we have some output movies
+        failedList = self._readFailedList()
+        if len(failedList) == len(self.listOfMovies):
+            raise Exception(redStr("All movies failed, didn't create outputMicrographs."
+                                   "Please review movie processing steps above."))
+        elif 0 < len(failedList) < len(self.listOfMovies):
+            self.warning(yellowStr("WARNING - Failed to align %d movies." % len(failedList)))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -117,7 +125,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         setFile = self._getPath(baseName)
 
-        if os.path.exists(setFile):
+        if os.path.exists(setFile) and os.path.getsize(setFile) > 0:
             outputSet = SetClass(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
@@ -159,6 +167,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if newDone:
             self._writeDoneList(newDone)
+
         elif not self.finished:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
@@ -171,14 +180,30 @@ class ProtAlignMovies(ProtProcessMovies):
                    % (allDone, len(self.listOfMovies)))
         self.debug('   streamMode: %s' % streamMode)
 
+        doneFailed = []
+
         if self._createOutputMovies():
             saveMovie = self.getAttributeValue('doSaveMovie', False)
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
+            doneOK = []
 
             for movie in newDone:
+                # Need to check if the micrograph was actually generated to avoid
+                # discrepancies between movieSet and micSet
+                extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                if not os.path.exists(extraMicFn):
+                    print(yellowStr("WARNING: Micrograph %s was not generated, can't add it to "
+                                    "output set." % extraMicFn))
+                    doneFailed.append(movie)
+                    continue
+
                 newMovie = self._createOutputMovie(movie)
                 movieSet.append(newMovie)
+                doneOK.append(movie)
+
+            # replace newDone with movies that actually have alignment
+            newDone = doneOK
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
 
@@ -186,7 +211,12 @@ class ProtAlignMovies(ProtProcessMovies):
                 # Probably is a good idea to store a cached summary for the
                 # first resulting movie of the processing.
                 self._storeSummary(newDone[0])
+                # If the movies are not written out, then dimensions can be
+                # copied from the input movies
+                if not saveMovie:
+                    movieSet.setDim(self.inputMovies.get().getDim())
                 self._defineTransformRelation(self.inputMovies, movieSet)
+
 
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
@@ -201,13 +231,16 @@ class ProtAlignMovies(ProtProcessMovies):
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 if not os.path.exists(extraMicFn):
-                    print("Micrograph %s was not producing, not added to "
-                          "output set." % extraMicFn)
+                    print(yellowStr("WARNING: Micrograph %s was not generated, can't add it to "
+                                    "output set." % extraMicFn))
+                    doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
+            if doneFailed:
+                self._writeFailedList(doneFailed)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -231,7 +264,7 @@ class ProtAlignMovies(ProtProcessMovies):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    # --------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions ------------------------------
 
     def _validate(self):
         errors = []
@@ -247,7 +280,8 @@ class ProtAlignMovies(ProtProcessMovies):
         # self.inputMovies.get().close()
         # frames = movie.getNumberOfFrames()
 
-        # Do not continue if there ar no movies. Validation message will take place since attribute is a Pointer.
+        # Do not continue if there ar no movies. Validation message will
+        # take place since attribute is a Pointer.
         if self.inputMovies.get() is None:
             return errors
 
@@ -369,7 +403,19 @@ class ProtAlignMovies(ProtProcessMovies):
         return self.getAttributeValue('binFactor', 1.0)
 
     def _getMovieRoot(self, movie):
-        return pwutils.removeBaseExt(movie.getFileName())
+        # Try to use the 'original' fileName in case it is present
+        # the original could be different from the current filename if
+        # we are dealing with compressed movies (e.g., movie.mrc.bz2)
+        fn = movie.getAttributeValue('_originalFileName',
+                                     movie.getFileName())
+        # Remove the first extension
+        fnRoot = pwutils.removeBaseExt(fn)
+        # Check if there is a second extension
+        # (Assuming is is only a dot and 3 or 4 characters after it
+        if fnRoot[-4] == '.' or fnRoot[-5] == '.':
+            fnRoot = pwutils.removeExt(fnRoot)
+
+        return fnRoot
 
     def _getOutputMovieName(self, movie):
         """ Returns the name of the output movie.
@@ -496,33 +542,58 @@ class ProtAlignMovies(ProtProcessMovies):
             args += ' --gain ' + gain
 
         if splineOrder is not None:
-            args += '--Bspline %d ' % splineOrder
+            args += ' --Bspline %d ' % splineOrder
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
     def computePSD(self, inputMic, oroot, dim=400, overlap=0.7):
-        args = '--micrograph %s --oroot %s ' % (inputMic, oroot)
+        args = '--micrograph "%s" --oroot %s ' % (inputMic, oroot)
         args += '--dont_estimate_ctf --pieceDim %d --overlap %f' % (dim, overlap)
 
         self.__runXmippProgram('xmipp_ctf_estimate_from_micrograph', args)
 
-    def composePSD(self, psd1, psd2, outputFn):
+    def composePSD(self, psd1, psd2, outputFn,
+                   outputFnUncorrected=None, outputFnCorrected=None):
         """ Compose a single PSD image:
-         left part from psd1 (corrected PSD),
-         right-part from psd2 (uncorrected PSD)
+         left part from psd1 (uncorrected PSD),
+         right-part from psd2 (corrected PSD)
         """
         ih = ImageHandler()
-        psd = ih.read(psd1)
-        data1 = psd.getData()
-        data2 = ih.read(psd2).getData()
+        psdImg1 = ih.read(psd1)
+        data1 = psdImg1.getData()
+
+        if outputFnUncorrected is not None:
+            psdImg1.convertPSD()
+            psdImg1.write(outputFnUncorrected)
+
+        psdImg2 = ih.read(psd2)
+        data2 = psdImg2.getData()
+
+        if outputFnCorrected is not None:
+            psdImg2.convertPSD()
+            psdImg2.write(outputFnCorrected)
+
         # Compute middle index
-        x, _, _, _ = psd.getDimensions()
+        x, _, _, _ = psdImg1.getDimensions()
         m = int(round(x / 2.))
-        data1[:, m:] = data2[:, m:]
-        psd.setData(data1)
-        psd.write(outputFn)
+        data1[:, :m] = data2[:, :m]
+        psdImg1.setData(data1)
+        psdImg1.write(outputFn)
+
+    def computePSDs(self, movie, fnUncorrected, fnCorrected,
+                    outputFnUncorrected=None, outputFnCorrected=None):
+        movieFolder = self._getOutputMovieFolder(movie)
+        uncorrectedPSD = os.path.join(movieFolder, "uncorrected")
+        correctedPSD = os.path.join(movieFolder, "corrected")
+        self.computePSD(fnUncorrected, uncorrectedPSD)
+        self.computePSD(fnCorrected, correctedPSD)
+        self.composePSD(uncorrectedPSD + ".psd",
+                        correctedPSD + ".psd",
+                        self._getPsdCorr(movie),
+                        outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
+        """ Generates a thumbnail of the input file"""
         outputFn = outputFn or self.getThumbnailFn(inputFn)
         args = "%s %s " % (inputFn, outputFn)
         args += "--fouriershrink %s --process normalize" % scaleFactor
@@ -531,7 +602,37 @@ class ProtAlignMovies(ProtProcessMovies):
 
         return outputFn
 
+    def correctGain(self, movieFn, outputFn, gainFn=None, darkFn=None):
+        """correct a movie with both gain and dark images"""
+        ih = ImageHandler()
+        _, _, z, n = ih.getDimensions(movieFn)
+        numberOfFrames = max(z, n) # in case of wrong mrc stacks as volumes
+
+        def _readImgFloat(fn):
+            img = None
+            if fn:
+                img = ih.read(fn)
+                img.convert2DataType(ih.DT_FLOAT)
+            return img
+
+        gainImg = _readImgFloat(gainFn)
+        darkImg = _readImgFloat(darkFn)
+
+        img = ih.createImage()
+
+        for i in range(1, numberOfFrames + 1):
+            img.read((i, movieFn))
+            img.convert2DataType(ih.DT_FLOAT)
+
+            if darkImg:
+                img.inplaceSubtract(darkImg)
+            if gainImg:
+                img.inplaceMultiply(gainImg)
+
+            img.write((i, outputFn))
+
     def getThumbnailFn(self, inputFn):
+        """ Returns the default name for a thumbnail image"""
         return pwutils.replaceExt(inputFn, "thumb.png")
 
 
@@ -554,13 +655,15 @@ def createAlignmentPlot(meanX, meanY):
     ax.set_ylabel('Drift y (pixels)')
     ax.plot(0, 0, 'yo-')
     i = 1
+    skipLabels = ceil(len(meanX) / 10.0)
     for x, y in izip(meanX, meanY):
         preX += x
         preY += y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
         #ax.plot(preX, preY, 'yo-')
-        ax.text(preX-0.02, preY+0.02, str(i))
+        if i % skipLabels == 0:
+            ax.text(preX-0.02, preY+0.02, str(i))
         i += 1
 
     ax.plot(sumMeanX, sumMeanY, color='b')
@@ -571,3 +674,78 @@ def createAlignmentPlot(meanX, meanY):
     return plotter
 
 
+class ProtAverageFrames(ProtAlignMovies):
+    """
+    Very simple protocol to align all the frames of a given data collection
+    session. It can be used as a sanity check.
+    """
+    _label = 'average frames'
+
+    #--------------------------- DEFINE param functions ------------------------
+    def _defineAlignmentParams(self, form):
+        pass
+
+    def _processMovie(self, movie):
+        allFramesSum = self._getPath('all_frames_sum.mrc')
+        ih = ImageHandler()
+        sumImg = ih.createImage()
+        img = ih.createImage()
+
+        n = movie.getNumberOfFrames()
+        fn = movie.getFileName()
+
+        sumImg.read((1, fn))
+
+        for frame in range(2, n + 1):
+            img.read((frame, fn))
+            sumImg.inplaceAdd(img)
+
+        if os.path.exists(allFramesSum):
+            img.read(allFramesSum)
+            sumImg.inplaceAdd(img)
+
+        sumImg.write(allFramesSum)
+
+    # FIXME: Methods will change when using the streaming for the output
+    def createOutputStep(self):
+        # Really load the input, since in the streaming case we can not
+        # use the self.inputMovies directly
+        allFramesSum = self._getPath('all_frames_sum.mrc')
+        allFramesAvg = self._getPath('all_frames_avg.mrc')
+        self._loadInputList()
+        n = len(self.listOfMovies)
+
+        ih = ImageHandler()
+        sumImg = ih.read(allFramesSum)
+        sumImg.inplaceDivide(float(n))
+        sumImg.write(allFramesAvg)
+
+        outputAvg = Image()
+        outputAvg.setFileName(allFramesAvg)
+        outputAvg.setSamplingRate(self.listOfMovies[0].getSamplingRate())
+        self._defineOutputs(outputAverage=outputAvg)
+        self._defineSourceRelation(self.inputMovies, outputAvg)
+
+    def _validate(self):
+        return []
+
+    def _summary(self):
+        return []
+
+    def _createOutputMovies(self):
+        """ Returns True if an output set of movies will be generated.
+        The most common case is to always generate output movies,
+        either with alignment only or the binary aligned movie files.
+        Subclasses can override this function to change this behavior.
+        """
+        return False
+
+    def _createOutputMicrographs(self):
+        """ By default check if the user have selected 'doSaveAveMic'
+        property. Subclasses can override this method to implement different
+        behaviour.
+        """
+        return False
+
+    def _createOutputWeightedMicrographs(self):
+        return False

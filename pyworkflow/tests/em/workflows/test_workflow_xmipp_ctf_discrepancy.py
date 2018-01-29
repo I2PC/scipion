@@ -23,8 +23,8 @@
  ***************************************************************************/
 MODIFICATION ADVICE:
 
-Please,  do not  generate or  distribute 
-a modified version of this file under its original name. 
+Please,  do not  generate or  distribute
+a modified version of this file under its original name.
 """
 
 import os
@@ -39,13 +39,13 @@ import pyworkflow.tests as tests
 from pyworkflow.em import ImageHandler
 import xmipp
 
+
 class TestXmippCTFDiscrepancyBase(TestWorkflow):
     @classmethod
     def setUpClass(cls):
         tests.setupTestProject(cls)
-        #cls.dataset = tests.DataSet.getDataSet('CTFDiscrepancy')
-        
-    
+        # cls.dataset = tests.DataSet.getDataSet('CTFDiscrepancy')
+
     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
         ctf = CTFModel()
         ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
@@ -54,9 +54,9 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         return ctf
 
     def testCtfdiscrepancyWorkflow(self):
-        #create one micrograph set
+        # create one micrograph set
         fnMicSet = self.proj.getTmpPath("mics.sqlite")
-        fnMic    = self.proj.getTmpPath("mic.mrc")
+        fnMic = self.proj.getTmpPath("mic.mrc")
         mic = Micrograph()
         mic.setFileName(fnMic)
         micSet = SetOfMicrographs(filename=fnMicSet)
@@ -67,15 +67,15 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         ctfSet1 = SetOfCTF(filename=fnCTF1)
         ctfSet2 = SetOfCTF(filename=fnCTF2)
 
-        ###create one fake micrographs image
+        # create one fake micrographs image
         projSize = 32
         img = xmipp.Image()
         img.setDataType(xmipp.DT_FLOAT)
         img.resize(projSize, projSize)
         img.write(fnMic)
 
-        #fill the sets
-        for i in range(1,4):
+        # fill the sets
+        for i in range(1, 4):
             mic = Micrograph()
             mic.setFileName(fnMic)
             micSet.append(mic)
@@ -83,7 +83,7 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
             defocusU = 1000+10*i
             defocusV = 1000+i
             defocusAngle = i*10
-            psdFile="psd_1%04d"%i
+            psdFile = "psd_1%04d" % i
             ctf = self._getCTFModel(defocusU,
                                     defocusV,
                                     defocusAngle,
@@ -94,7 +94,7 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
             defocusU = 1000+20*i
             defocusV = 1000+i
             defocusAngle = i*20
-            psdFile="psd_2%04d"%i
+            psdFile = "psd_2%04d" % i
             ctf = self._getCTFModel(defocusU,
                                     defocusV,
                                     defocusAngle,
@@ -105,8 +105,7 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         ctfSet2.write()
         micSet.write()
 
-        
-        #import micrograph set
+        # import micrograph set
         args = {'importFrom': ProtImportMicrographs.IMPORT_FROM_SCIPION,
                 'sqliteFile': fnMicSet,
                 'amplitudConstrast': 0.1,
@@ -118,14 +117,16 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         protMicImport = self.newProtocol(ProtImportMicrographs, **args)
         protMicImport.setObjLabel('import micrographs from sqlite ')
         self.launchProtocol(protMicImport)
-        
-        #import ctfsets
-        protCTF1 = self.newProtocol(ProtImportCTF,
-                                 importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
-                                 filesPath=fnCTF1)
-        protCTF2 = self.newProtocol(ProtImportCTF,
-                                 importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
-                                 filesPath=fnCTF2)
+
+        # import ctfsets
+        protCTF1 = \
+            self.newProtocol(ProtImportCTF,
+                             importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
+                             filesPath=fnCTF1)
+        protCTF2 = \
+            self.newProtocol(ProtImportCTF,
+                             importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
+                             filesPath=fnCTF2)
         protCTF1.inputMicrographs.set(protMicImport.outputMicrographs)
         protCTF2.inputMicrographs.set(protMicImport.outputMicrographs)
         protCTF1.setObjLabel('import ctfs from scipion_1 ')
@@ -140,8 +141,7 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         protCtfDiscrepancy.setObjLabel('ctf discrepancy')
         self.launchProtocol(protCtfDiscrepancy)
         ctf0 = protCtfDiscrepancy.outputCTF.getFirstItem()
-        resolution = int(ctf0._discrepancy_resolution.get())
+        resolution = int(ctf0.getResolution())
         defocusU = int(ctf0.getDefocusU())
         self.assertEqual(resolution, 2)
         self.assertEqual(defocusU, 1010)
-

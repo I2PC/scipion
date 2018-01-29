@@ -27,12 +27,14 @@
 
 import os
 from glob import glob
+import numpy as np
 import pyworkflow.em.metadata as md
 import pyworkflow.em as em
+from pyworkflow.em.protocol import EMProtocol
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, STEPS_PARALLEL
 from pyworkflow.utils.path import cleanPattern, createLink, moveFile, copyFile, makePath, cleanPath
 from pyworkflow.object import String
 from pyworkflow.em.data import SetOfNormalModes
@@ -40,12 +42,32 @@ from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
-from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
 
+def mds(d, dimensions = 2):
+    """
+    Multidimensional Scaling - Given a matrix of interpoint distances,
+    find a set of low dimensional points that have similar interpoint
+    distances.
+    """
+
+    (n,n) = d.shape
+    E = (-0.5 * d**2)
+
+    # Use mat to get column and row means to act as column and row means.
+    Er = np.mat(np.mean(E,1))
+    Es = np.mat(np.mean(E,0))
+
+    # From Principles of Multivariate Analysis: A User's Perspective (page 107).
+    F = np.array(E - np.transpose(Er) - Es + np.mean(E))
+
+    [U, S, V] = np.linalg.svd(F)
+
+    Y = U * np.sqrt(S)
+
+    return (Y[:,0:dimensions], S)
 
 class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
-                                XmippProtNMABase, 
-                                XmippProtAlignVolume):
+                                XmippProtNMABase):
     """ 
     A quantitive analysis of dissimilarities (distances) among the EM maps
     that placing the entire set of density maps in to a common space of
@@ -57,6 +79,10 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
     _lastUpdateVersion = VERSION_1_1
            
     #--------------------------- DEFINE param functions --------------------------------------------
+    def __init__(self, **kwargs):
+        EMProtocol.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
+
     def _defineParams(self, form):
         
         form.addSection(label='Input')
@@ -73,10 +99,15 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         
         form.addSection(label='Pseudoatom')
         XmippProtConvertToPseudoAtomsBase._defineParams(self,form)
-        self.getParam("pseudoAtomRadius").setDefault(2)
+        self.getParam("pseudoAtomRadius").setDefault(1.5)
         self.getParam("pseudoAtomTarget").setDefault(2)
         
         form.addSection(label='Normal Mode Analysis')
+        form.addParam('rigidAlignment', params.BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
+                      label='Rigid alignment',
+                      help='Perform a rigid alignment before elastic alignment')
+        form.addParam('optimizeScale', params.BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+                      label="Optimize scale", condition="rigidAlignment")
         XmippProtNMABase._defineParamsCommon(self,form)
         
                
@@ -91,10 +122,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
-        maskArgs = ''
         alignArgs = self._getAlignArgs()
-        ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL = 1
-        self.alignmentAlgorithm = ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL 
+        self.alignmentAlgorithm = 1 # Local alignment
                                                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
         nVoli = 1
@@ -112,47 +141,61 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                                      self.numberOfModes, cutoffStr)
             self._insertFunctionStep('reformatOutputStep', os.path.basename(fnPseudoAtoms))
                                             
-            self._insertFunctionStep('qualifyModesStep', self.numberOfModes, 
+            stepQualify = self._insertFunctionStep('qualifyModesStep', self.numberOfModes, 
                                      self.collectivityThreshold.get(), 
                                      self._getPath("pseudoatoms_%d.pdb"%nVoli), suffix)
             
             #rigid alignment            
             nVolj = 1
+            deps = []
             for volj in volList:
                 if nVolj != nVoli:
-                    refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
-                    volId = volj.getObjId()
-                    outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
-                    self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn,
-                                             maskArgs, alignArgs, volId)
-                    self._insertFunctionStep('elasticAlignmentStep',nVoli, voli, nVolj)
-                nVolj += 1   
+                    if self.rigidAlignment:
+                        refFn = getImageLocation(voli)
+                        volId = volj.getObjId()
+                        outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
+                        stepId=self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn,
+                                                        volId, prerequisites=[stepQualify])
+                    else:
+                        outVolFn = inVolFn
+                        stepId = stepQualify
+                    deps.append(self._insertFunctionStep('elasticAlignmentStep', nVoli, voli.getSamplingRate(), nVolj, inVolFn, prerequisites=[stepId]))
+                nVolj += 1
+            self._insertFunctionStep('gatherSingleVolumeStep',prerequisites=deps) # This is a synchronization step, does not do any real work
             nVoli += 1
                
         self._insertFunctionStep('gatherResultsStep')
         self._insertFunctionStep('managingOutputFilesStep')
                                         
     #--------------------------- STEPS functions --------------------------------------------
-    def elasticAlignmentStep(self, nVoli, voli, nVolj):
+    def alignVolumeStep(self, refFn, inVolFn, outVolFn, volId):
+        args = "--i1 %s --i2 %s --apply %s" % (refFn, inVolFn, outVolFn)
+        args += " --local --rot 0 0 1 --tilt 0 0 1 --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1 --dontScale" 
+        args += " --copyGeo %s" % (
+                self._getExtraPath('transformation-matrix_vol%06d.txt'%volId))        
+        self.runJob("xmipp_volume_align", args)
+
+    def elasticAlignmentStep(self, nVoli, Ts, nVolj, fnAlignedVolj):
+        fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d' % (nVolj, nVoli))
+        if os.path.exists(fnVolOut+".pdb"):
+            return
         
         makePath(self._getExtraPath("modes%d"%nVoli))
         
         for i in range(self.numberOfModes.get() + 1):
-            if i == 0 :
+            if i==0:
                 i += 1 
             copyFile (self._getPath("modes/vec.%d"%i),
                       self._getExtraPath("modes%d/vec.%d"%(nVoli, i)))
             
         mdVol = xmipp.MetaData()
         fnOutMeta = self._getExtraPath('RigidAlignVol_%d_To_Vol_%d.xmd' % (nVolj, nVoli))
-        mdVol.setValue(xmipp.MDL_IMAGE, self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % 
-                                                      (nVolj, nVoli)), mdVol.addObject())      
+        mdVol.setValue(xmipp.MDL_IMAGE, fnAlignedVolj, mdVol.addObject())      
         mdVol.write(fnOutMeta)
                                               
         fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
         fnModes = self._getPath("modes_%d.xmd"%nVoli)
-        Ts = voli.getSamplingRate()
         fnDeform = self._getExtraPath('compDeformVol_%d_To_Vol_%d.xmd' % (nVolj, nVoli))
         sigma = Ts * self.pseudoAtomRadius.get()
         fnPseudoOut = self._getExtraPath('PseudoatomsDeformedPDB_Vol_%d_To_Vol_%d.pdb' % 
@@ -161,10 +204,12 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                     "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s --opdb %s"%\
                    (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma, fnPseudoOut))
         
-        fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d' % (nVolj, nVoli))
         self.runJob('xmipp_volume_from_pdb', "-i %s -o %s --sampling %s --fixed_Gaussian %s" % 
                     (fnPseudoOut, fnVolOut, Ts, sigma))
-                
+    
+    def gatherSingleVolumeStep(self):
+        pass
+    
     def gatherResultsStep(self):
                          
         volList = [vol.clone() for vol in self._iterInputVolumes()]            
@@ -202,50 +247,29 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
             fh.close()
             nVoli += 1                     
         
-        from sklearn import manifold
-               
+        distance = np.asarray(distance)
         for i in range(1, 4):
-               
-            mds = manifold.MDS(n_components=i, metric=True, max_iter=3000,
-                               eps=1e-9, random_state=0, dissimilarity="precomputed", n_jobs=1)
-            embed3d = mds.fit(distance).embedding_ 
-                                      
-            nVoli = 1
-            for x in volList:
-                for y in range(i):
-                    fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
-                    fh.write("%f\t"%embed3d[(nVoli - 1)][(y)])
-                    fh.close()
-                    fh = open(self._getExtraPath ("CoordinateMatrixColumnF%d.txt"%i),"a")
-                    fh.write("%f\n"%embed3d[(nVoli - 1)][(y)])
-                    fh.close()
-                fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
-                fh.write("\n")
-                fh.close()
-                nVoli += 1 
+            embed,_ = mds(distance,i)
+            embedExtended = np.pad(embed,((0,0),(0,i-embed.shape[1])),"constant",constant_values=0)
+            print(embedExtended)
+            np.savetxt(self._defineResultsName(i),embedExtended)        
        
     def managingOutputFilesStep(self): 
-        
-        volList = [vol.clone() for vol in self._iterInputVolumes()]
-        copyFile (self._getExtraPath ("CoordinateMatrixColumnF1.txt"),
-                  self._defineResultsName1())
-        copyFile (self._getExtraPath ("CoordinateMatrixColumnF2.txt"),
-                  self._defineResultsName2())
-        copyFile (self._getExtraPath ("CoordinateMatrixColumnF3.txt"),
-                  self._defineResultsName3())             
-        cleanPattern(self._getExtraPath('pseudoatoms*'))
+        cleanPattern(self._getPath('pseudoatoms*'))
+        cleanPattern(self._getPath('modes'))
         cleanPattern(self._getExtraPath('vec_ani.pkl'))  
-        cleanPattern(self._getExtraPath('CoordinateMatrixColumnF*'))  
-        cleanPattern(self._getPath('modes/vec*'))
-        cleanPath(self._getPath('modes'))
         
         if not self.keepingOutputFiles.get():
             cleanPattern(self._getPath('warnings*'))
             cleanPattern(self._getPath('outputRigid*'))
+            cleanPattern(self._getPath('modes*.xmd'))
             cleanPattern(self._getExtraPath('RigidAlign*'))
+            cleanPattern(self._getExtraPath('pseudoatoms*'))
             cleanPattern(self._getExtraPath('Pseudoatoms*'))
             cleanPattern(self._getExtraPath('comp*'))
             cleanPattern(self._getExtraPath('Deform*'))
+            cleanPattern(self._getExtraPath('transformation-matrix*'))
+            cleanPattern(self._getExtraPath('modes*'))
                                       
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -254,16 +278,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
             if pointer.pointsNone():
                 errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
                 errors.append('              extended: %s' % pointer.getExtended())                
-        import imp
-        try:
-            imp.find_module('sklearn')
-            found = True
-        except ImportError:
-            found = False
-        if not found:
-            errors.append("**<You need to install sklearn library>**\n"
-                          "use following script to fix this: scipion install sklearn")   
-        
         return errors 
            
     def _summary(self):
@@ -277,15 +291,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                         
         return summary 
        
-    def _methods(self):
-        messages = []
-        messages.append('C.O.S. Sorzano et. al. "StructMap: Multivariate distance analysis of\n'
-                         'elastically aligned electron microscopy density maps\n'
-                         'for exploring pathways of conformational changes"')
-        return messages
-        
     def _citations(self):
-        return ['C.O.S.Sorzano2015']
+        return ['Sorzano2016']
     
     #--------------------------- UTILS functions --------------------------------------------
     def _iterInputVolumes(self):
@@ -315,19 +322,14 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         return nVols
                     
     def _getAlignArgs(self):
-        alignArgs = ''
-        alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --scale %f %f 0.005" %\
-                (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1)
-                       
+        alignArgs = " --local --rot 0 0 1 --tilt 0 0 1 --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1"
+        if self.optimizeScale:
+            alignArgs += " --scale 1 1 0.005"
+        else:
+            alignArgs += " --dontScale"                    
         return alignArgs
         
-    def _defineResultsName1(self):
-        return self._getExtraPath('CoordinateMatrixColumn1.txt')
-    
-    def _defineResultsName2(self):
-        return self._getExtraPath('CoordinateMatrixColumn2.txt')
-    
-    def _defineResultsName3(self):
-        return self._getExtraPath('CoordinateMatrixColumn3.txt')
-     
+    def _defineResultsName(self,i):
+        return self._getExtraPath('CoordinateMatrix%d.txt'%i)
+        
     

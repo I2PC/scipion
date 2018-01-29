@@ -23,28 +23,25 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Visualization of the results of the Frealign protocol.
-"""
 
 import os
 from os.path import exists, relpath
-from pyworkflow.utils.path import cleanPath, removeBaseExt, removeExt
-from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
-from pyworkflow.em.viewer import CtfView, DataView
-import pyworkflow.em as em
+from pyworkflow.utils.path import cleanPath, removeExt
+from pyworkflow.viewer import (Viewer, ProtocolViewer,
+                               DESKTOP_TKINTER, WEB_DJANGO)
+from pyworkflow.em.viewer import DataView, CtfView
 import pyworkflow.em.showj as showj
+import pyworkflow.em as em
 
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
-                                        EnumParam, HiddenBooleanParam, FloatParam)
+                                        EnumParam, FloatParam)
 from protocol_magdist_estimate import ProtMagDistEst
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
 from protocol_ctffind import ProtCTFFind
-from convert import readCtfModel
 
 
 LAST_ITER = 0
@@ -61,7 +58,8 @@ CLASSES_SEL = 1
 
 
 class FrealignViewer(ProtocolViewer):
-    """ Visualization of Frealign."""    
+    """ Visualization of Frealign. """
+
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _label = 'viewer Frealign'
     _targets = [ProtFrealign, ProtFrealignClassify]    
@@ -545,59 +543,6 @@ Examples:
         return volumes
 
 
-class ProtCTFFindViewer(Viewer):
-    """ Visualization of Frealign."""
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _label = 'viewer CtfFind'
-    _targets = [ProtCTFFind]
-
-    def _visualize(self, obj, **args):
-        views = []
-
-        if obj.hasAttribute("outputCTF"): # Finished protocol
-            ctfSet = obj.outputCTF
-            other = ''
-        else:
-            mics = obj.inputMicrographs.get()
-            ctfSet = self.__createTemporaryCtfs(obj, mics)
-            other = obj.getObjId()
-
-        if ctfSet.isEmpty():
-            views.append(self.infoMessage("No CTF estimation has finished yet"))
-        else:
-            views.append(CtfView(self._project, ctfSet, other))
-
-        return views
-
-    def __createTemporaryCtfs(self, obj, setOfMics):
-        """ Create a temporary .sqlite file to visualize CTF while the
-             protocol has not finished yet.
-            """
-        cleanPath(obj._getPath("ctfs_temporary.sqlite"))
-        ctfSet = self.protocol._createSetOfCTF("_temporary")
-
-        for mic in setOfMics:
-            micFn = mic.getFileName()
-            micDir = obj._getExtraPath(removeBaseExt(mic.getFileName()))
-            samplingRate = mic.getSamplingRate() * self.protocol.ctfDownFactor.get()
-            mic.setSamplingRate(samplingRate)
-            out = self.protocol._getCtfOutPath(micDir)
-            psdFile = self.protocol._getPsdPath(micDir)
-
-            if exists(out) and exists(psdFile):
-                ctfModel = em.CTFModel()
-                readCtfModel(ctfModel, out,
-                             ctf4=self.protocol.useCtffind4.get())
-                ctfModel.setPsdFile(psdFile)
-                ctfModel.setMicrograph(mic)
-                ctfSet.append(ctfModel)
-
-        if not ctfSet.isEmpty():
-            ctfSet.write()
-            ctfSet.close()
-
-        return ctfSet
-    
 def createCtfPlot(ctfSet, ctfId):
     ctfModel = ctfSet[ctfId]
     psdFn = ctfModel.getPsdFile()
@@ -618,8 +563,29 @@ def createCtfPlot(ctfSet, ctfId):
     a.grid(True)
     xplotter.show()
 
+
 OBJCMD_CTFFIND4 = "Display Ctf Fitting"
+
 ProjectWindow.registerObjectCommand(OBJCMD_CTFFIND4, createCtfPlot)
+
+
+class CtffindViewer(Viewer):
+    """ Specific way to visualize SetOfCtf after Gctf. """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtCTFFind]
+
+    def _visualize(self, prot, **kwargs):
+        outputCTF = getattr(prot, 'outputCTF', None)
+
+        if outputCTF is not None:
+            ctfView = CtfView(self._project, outputCTF)
+            viewParams = ctfView.getViewParams()
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_CTFFIND4
+            return [ctfView]
+        else:
+            return [self.infoMessage("The output SetOfCTFs has not been "
+                                     "produced", "Missing output")]
+
 
 def _plotCurve(a, i, fn):
     freqs = _getValues(fn, 0)
