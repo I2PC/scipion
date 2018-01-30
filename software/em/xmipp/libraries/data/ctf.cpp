@@ -1141,8 +1141,8 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
 			row.getValueOrDefault(MDL_CTF_DEFOCUSU, DeltafU, 0);
 			row.getValueOrDefault(MDL_CTF_DEFOCUSV, DeltafV, DeltafU);
 			row.getValueOrDefault(MDL_CTF_DEFOCUS_ANGLE, azimuthal_angle, 0);
-	        row.getValueOrDefault(MDL_CTF_PHASE_SHIFT, phase_shift, 0);
-	        row.getValueOrDefault(MDL_CTF_VPP_RADIUS, VPP_radius, 0);
+			row.getValueOrDefault(MDL_CTF_PHASE_SHIFT, phase_shift, 0);
+			row.getValueOrDefault(MDL_CTF_VPP_RADIUS, VPP_radius, 0);
 
     	}
     	else if (row.containsLabel(MDL_CTF_MODEL))
@@ -1216,8 +1216,7 @@ void CTFDescription::setRow(MDRow &row) const
         row.setValue(MDL_CTF_DEFOCUSU, DeltafU);
         row.setValue(MDL_CTF_DEFOCUSV, DeltafV);
         row.setValue(MDL_CTF_DEFOCUS_ANGLE, azimuthal_angle);
-        row.setValue(MDL_CTF_PHASE_SHIFT, phase_shift);
-        row.setValue(MDL_CTF_VPP_RADIUS, VPP_radius);
+
     }
     if (enable_CTFnoise)
     {
@@ -1234,6 +1233,8 @@ void CTFDescription::setRow(MDRow &row) const
         row.setValue(MDL_CTF_BG_GAUSSIAN2_CU, cU2);
         row.setValue(MDL_CTF_BG_GAUSSIAN2_CV, cV2);
         row.setValue(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2);
+        row.setValue(MDL_CTF_PHASE_SHIFT, phase_shift);
+        row.setValue(MDL_CTF_VPP_RADIUS, VPP_radius);
 
 
     }

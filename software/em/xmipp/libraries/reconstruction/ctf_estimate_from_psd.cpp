@@ -505,11 +505,11 @@ void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
             model(i, j) *= model(i, j);
         }
     }
-
+    model.write("/home/javiermota/scipion/psd1.txt");
     // Normalize the left part so that it has similar values to
     // the enhanced PSD
     model.rangeAdjust(enhancedPSD, &mask_norm);
-
+    model.write("/home/javiermota/scipion/psd12.txt");
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
@@ -555,9 +555,8 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
     model.resizeNoCopy(enhancedPSD);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
-        if (j < Xdim / 2)
-            continue;
-
+        if (j <= Xdim / 2)
+        {
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(model, idx, freq);
@@ -571,17 +570,28 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
         current_ctfmodel.precomputeValues(XX(freq), YY(freq));
         model(i, j) = current_ctfmodel.getValuePureAt();
         model(i, j) *= model(i, j);
+        }
     }
-
+    model.write("/home/javiermota/scipion/psd2.txt");
     // Normalize the left part so that it has similar values to
     // the enhanced PSD
     model.rangeAdjust(enhancedPSD, &mask_norm);
-
+    model.write("/home/javiermota/scipion/psd21.txt");
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
-    if (j < Xdim / 2)
+    {
+    if (!(j <= Xdim / 2))
         model(i, j) = enhancedPSD(i, j);
-
+    else
+    {
+    	XX(idx) = j;
+		YY(idx) = i;
+		FFT_idx2digfreq(model, idx, freq);
+		double w=freq.module();
+		if (w>max_freq_psd)
+			model(i,j)=0;
+    }
+    }
     CenterFFT(model, true);
 }
 

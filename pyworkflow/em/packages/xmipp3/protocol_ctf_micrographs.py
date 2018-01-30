@@ -56,10 +56,10 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
     _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
-                  "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13==0 OR "
+                  "ctfCritCorr13==0 OR "
                   "ctfCritNonAstigmaticValidty<=0 OR " 
                   "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussian2SigmaU>70000 OR "
-                  "ctfCritIceness>1") #ctfCritCtfMargin>0
+                  "ctfCritIceness>1") #ctfCritCtfMargin>0 ctfCritFirstMinFirstZeroRatio>10 OR
 
     def __init__(self, **args):
 
@@ -173,7 +173,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             if self.ctfDict[micName] > 0:
                 localParams['defocusU'], localParams['phaseShift0'] = self.ctfDict[micName]
                 localParams['defocus_range'] = 0.1 * localParams['defocusU']
-                
+
         else:
             ma = self._params['maxDefocus']
             mi = self._params['minDefocus']
