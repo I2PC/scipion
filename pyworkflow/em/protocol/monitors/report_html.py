@@ -31,6 +31,7 @@ import os
 from os.path import join, exists, abspath, basename
 import numpy as np
 import multiprocessing
+from datetime import datetime
 
 from pyworkflow.protocol import getUpdatedProtocol
 from pyworkflow import getTemplatePath
@@ -46,7 +47,8 @@ PSD_PATH = 'imgPsdPath'
 SHIFT_PATH = 'imgShiftPath'
 # These constants are the name of the folders where thumbnails
 # for the html report will be stored. They are also the keys to
-# the attribute thumbPaths.
+# used in the execution.summary.template.html to read data (where
+# they will need to be changed if they're changed here)
 MIC_THUMBS = 'imgMicThumbs'
 PSD_THUMBS = 'imgPsdThumbs'
 SHIFT_THUMBS = 'imgShiftThumbs'
@@ -102,12 +104,14 @@ class ReportHtml:
             print(msg)
 
     def checkNewThumbsReady(self):
-        thumbKeys = [MIC_THUMBS, SHIFT_THUMBS]
+        thumbKeys = [MIC_THUMBS]
         if PSD_THUMBS in self.thumbPaths.keys():
             lastThumb = min(len(self.thumbPaths[PSD_THUMBS]), len(self.thumbPaths[MIC_THUMBS]))
             thumbKeys.append(PSD_THUMBS)
         else:
             lastThumb = len(self.thumbPaths[MIC_THUMBS])
+        if SHIFT_THUMBS in self.thumbPaths.keys():
+            thumbKeys.append(SHIFT_THUMBS)
         for i in range(self.thumbsReady, lastThumb):
             pathsReady = [exists(join(self.reportDir, self.thumbPaths[k][i])) for k in thumbKeys]
             if all(pathsReady):
@@ -128,80 +132,87 @@ class ReportHtml:
             and self.alignProtocol._doComputeMicThumbnail()):
             self.micThumbSymlinks = True
 
-    def getCtfThumbPaths(self, ctfData, ctfThumbsDone=0, ext='png'):
+    def getThumbPaths(self, thumbsDone=0, ctfData=None, ext='png', micIdSet=None):
         """Adds to self.thumbPaths the paths to the report thumbnails
-           that come from the alignment protocol.
+           that come from the alignment and/or ctf protocol.
 
             ===== Params =====
+            - thumbsDone: how many thumbnails have already been generated.
+                          we will get paths starting from this index
             - ctfData: dict resulting from ctfMonitor.getData()
-            - ctfThumbsDone: how many thumbnails have already been generated.
-                               we will get paths starting from this index
             - ext: extension of the thumbnail images. Defaults to png.
-
-            """
-        for i in range(ctfThumbsDone, len(ctfData[PSD_PATH])):
-            psdPath = ctfData[PSD_PATH][i]
-            movie = basename(os.path.dirname(psdPath))
-            psdThumb = join(PSD_THUMBS, "%s_%s" % (movie, pwutils.replaceExt(basename(psdPath), ext)))
-            self.thumbPaths[PSD_THUMBS].append(psdThumb)
-            self.thumbPaths[PSD_PATH].append(psdPath)
-
-    def getAlignThumbPaths(self, alignThumbsDone=0, ext="png", micIdSet=None):
-        """Adds to self.thumbPaths the paths to the report thumbnails
-        that come from the alignment protocol.
-
-        ===== Params =====
-        - alignThumbsDone: how many thumbnails have already been generated.
-                           we will get paths starting from this index
-        - ext: extension of the thumbnail images. Defaults to png.
-        - micIdSet: list of ids to use instead of the whole set of
-                    aligned micrographs. Default None.
-
+            - micIdSet: mic indexes to use
         """
+        # get psd thumbs from ctfData
+        if ctfData is not None:
+            for i in range(thumbsDone, len(ctfData[PSD_PATH])):
+                psdPath = ctfData[PSD_PATH][i]
+                movie = basename(os.path.dirname(psdPath))
+                psdThumb = join(PSD_THUMBS, "%s_%s" % (movie, pwutils.replaceExt(basename(psdPath), ext)))
+                self.thumbPaths[PSD_THUMBS].append(psdThumb)
+                self.thumbPaths[PSD_PATH].append(psdPath)
 
+        # get alignment and mic thumbs
         if self.alignProtocol is not None:
-            updatedAlignProt = getUpdatedProtocol(self.alignProtocol)
-            if micIdSet is None:
-                if hasattr(updatedAlignProt, 'outputMicrographs'):
-                    micIdSet = list(updatedAlignProt.outputMicrographs.getIdSet())
-                else:
-                    micIdSet = []
+            getMicFromCTF = False
+            updatedProt = getUpdatedProtocol(self.alignProtocol)
+            if hasattr(updatedProt, 'outputMicrographs'):
+                outputSet = updatedProt.outputMicrographs
+                if micIdSet is None:
+                    micIdSet = list(outputSet.getIdSet())
+            else:
+                return
 
-            for micId in micIdSet[alignThumbsDone:]:
-                mic = updatedAlignProt.outputMicrographs[micId]
-                if hasattr(mic, 'thumbnail'):
-                    srcMicFn = abspath(mic.thumbnail.getFileName())
-                else:
-                    srcMicFn = mic.getFileName()
-                micThumbFn = join(MIC_THUMBS, pwutils.replaceExt(basename(srcMicFn), ext))
-                self.thumbPaths[MIC_PATH].append(srcMicFn)
-                self.thumbPaths[MIC_THUMBS].append(micThumbFn)
+        elif self.ctfProtocol is not None:
+            getMicFromCTF = True
+            updatedProt = getUpdatedProtocol(self.ctfProtocol)
+            if hasattr(updatedProt, 'outputCTF'):
+                outputSet = updatedProt.outputCTF
+                if micIdSet is None:
+                    micIdSet = list(outputSet.getIdSet())
+            else:
+                return
+        else:
+            return
 
-                shiftPlot = (getattr(mic, 'plotCart', None) or getattr(mic, 'plotGlobal', None))
+        for micId in micIdSet[thumbsDone:]:
+            mic = outputSet[micId]
+            if getMicFromCTF:
+                mic = mic.getMicrograph()
+            if hasattr(mic, 'thumbnail'):
+                srcMicFn = abspath(mic.thumbnail.getFileName())
+            else:
+                srcMicFn = abspath(mic.getFileName())
+            micThumbFn = join(MIC_THUMBS, pwutils.replaceExt(basename(srcMicFn), ext))
+            self.thumbPaths[MIC_PATH].append(srcMicFn)
+            self.thumbPaths[MIC_THUMBS].append(micThumbFn)
+
+            shiftPlot = (getattr(mic, 'plotCart', None) or getattr(mic, 'plotGlobal', None))
+            if shiftPlot is not None:
                 shiftPath = "" if shiftPlot is None else abspath(shiftPlot.getFileName())
-                shiftCopy = join(SHIFT_THUMBS, pwutils.replaceExt(basename(shiftPath), ext))
+                shiftCopy = "" if shiftPlot is None else join(SHIFT_THUMBS, pwutils.replaceExt(basename(shiftPath), ext))
                 self.thumbPaths[SHIFT_PATH].append(shiftPath)
                 self.thumbPaths[SHIFT_THUMBS].append(shiftCopy)
+            else:
+                if SHIFT_PATH in self.thumbPaths:
+                    self.thumbPaths.pop(SHIFT_PATH, None)
+                if SHIFT_THUMBS in self.thumbPaths:
+                    self.thumbPaths.pop(SHIFT_THUMBS, None)
 
-                self.thumbPaths[MIC_ID].append(micId)
+            self.thumbPaths[MIC_ID].append(micId)
 
-                if self.ctfProtocol is None:
-                    psdPath = mic.psdJpeg.getFileName() if hasattr(mic, 'psdJpeg') else mic.psdCorr.getFileName()
-                    psdThumb = join(PSD_THUMBS, pwutils.replaceExt(basename(psdPath), ext))
-                    self.thumbPaths[PSD_THUMBS].append(psdThumb)
-                    self.thumbPaths[PSD_PATH].append(psdPath)
+            if self.ctfProtocol is None:
+                psdPath = mic.psdJpeg.getFileName() if hasattr(mic, 'psdJpeg') else mic.psdCorr.getFileName()
+                psdThumb = join(PSD_THUMBS, pwutils.replaceExt(basename(psdPath), ext))
+                self.thumbPaths[PSD_THUMBS].append(psdThumb)
+                self.thumbPaths[PSD_PATH].append(psdPath)
 
-        return
-
-    def generateReportImages(self, firstAlignThumbIndex=0, firstCtfThumbIndex=0, micScaleFactor=6):
-        """ Function to generate thumbnails for the report.
+    def generateReportImages(self, firstThumbIndex=0, micScaleFactor=6):
+        """ Function to generate thumbnails for the report. Uses data from
+        self.thumbPaths.
 
         ===== Params =====
-        - ctfData: dict resulting from calling ctfMonitor.getData()
-        - firstAlignThumbIndex: index from which we start generating thumbnails related
-                                to the micrographs coming from alignment protocol.
-        - firstCtfThumbIndex: index from which we start generating thumbnails related
-                              to the results of the ctf protocol.
+        - firstThumbIndex: index from which we start generating thumbnails
         - micScaleFactor: how much to reduce in size the micrographs.
 
         """
@@ -209,8 +220,8 @@ class ReportHtml:
 
         numMics = len(self.thumbPaths[MIC_PATH])
 
-        for i in range(firstAlignThumbIndex, numMics):
-            print('Generating images for mic %d' % i)
+        for i in range(firstThumbIndex, numMics):
+            print('Generating images for mic %d' % (i+1))
             # mic thumbnails
             dstImgPath = join(self.reportDir, self.thumbPaths[MIC_THUMBS][i])
             if not exists(dstImgPath):
@@ -220,11 +231,12 @@ class ReportHtml:
                     ih.computeThumbnail(self.thumbPaths[MIC_PATH][i], dstImgPath, scaleFactor=micScaleFactor)
 
             # shift plots
-            dstImgPath = join(self.reportDir, self.thumbPaths[SHIFT_THUMBS][i])
-            if not exists(dstImgPath):
-                pwutils.createAbsLink(self.thumbPaths[SHIFT_PATH][i], dstImgPath)
+            if SHIFT_THUMBS in self.thumbPaths:
+                dstImgPath = join(self.reportDir, self.thumbPaths[SHIFT_THUMBS][i])
+                if not exists(dstImgPath):
+                    pwutils.createAbsLink(self.thumbPaths[SHIFT_PATH][i], dstImgPath)
 
-            # Psds only if we don't have ctf
+            # Psd thumbnails
             if self.ctfProtocol is None:
                 srcImgPath = self.thumbPaths[PSD_PATH][i]
                 dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
@@ -236,11 +248,7 @@ class ReportHtml:
                         ih.computeThumbnail(dstImgPath, dstImgPath, scaleFactor=1)
                     else:
                         pwutils.createAbsLink(srcImgPath, dstImgPath)
-
-        if self.ctfProtocol is not None:
-            numPsds = len(self.thumbPaths[PSD_THUMBS])
-            for i in range(firstCtfThumbIndex, numPsds):
-                # psd thumbnails
+            else:
                 dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
                 if not exists(dstImgPath):
                     ih.computeThumbnail(self.thumbPaths[PSD_PATH][i], dstImgPath, scaleFactor=1)
@@ -317,17 +325,12 @@ class ReportHtml:
 
         # Ctf monitor chart data
         data = {} if self.ctfMonitor is None else self.ctfMonitor.getData()
-        reportFinished = True
 
         if data:
-            numCtfsDone = len(self.thumbPaths[PSD_THUMBS])
-            numCtfs = len(data[PSD_PATH])
-            numCtfsToDo = numCtfs - numCtfsDone
-            numMicsToDo = numCtfsToDo
-            numMicsDone = numCtfsDone
-            numMics = numCtfs
-            self.getCtfThumbPaths(data, ctfThumbsDone=numCtfsDone)
-            self.getAlignThumbPaths(alignThumbsDone=numCtfsDone, micIdSet=data['idValues'])
+            numMicsDone = len(self.thumbPaths[PSD_THUMBS])
+            numMics = len(data[PSD_PATH])
+            numMicsToDo = numMics - numMicsDone
+            self.getThumbPaths(ctfData=data, thumbsDone=numMicsDone, micIdSet=data['idValues'])
 
             if len(data['defocusU']) < 100:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
@@ -336,37 +339,33 @@ class ReportHtml:
                 data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
 
             data['resolutionHistogram'] = self.getResolutionHistogram(data['resolution'])
+
         else:
-            numCtfsDone = 0
-            numCtfsToDo = 0
-            numCtfs = 0
             # Thumbnails for Micrograph Table
             numMicsDone = len(self.thumbPaths[MIC_THUMBS])
-            self.getAlignThumbPaths(alignThumbsDone=numMicsDone)
+            self.getThumbPaths(thumbsDone=numMicsDone)
             numMics = len(self.thumbPaths[MIC_PATH])
             numMicsToDo = numMics - numMicsDone
 
-        if numMicsToDo <= 10 and numCtfsToDo <= 10:
+        if numMicsToDo <= 10:
             # we have few new images, eg streaming mode, generate thumbnails now
-            self.generateReportImages(firstAlignThumbIndex=numMicsDone, firstCtfThumbIndex=numCtfsDone)
+            self.generateReportImages(firstThumbIndex=numMicsDone)
         else:
             # we have many images, generate thumbs in a separate process
             process = multiprocessing.Process(target=self.generateReportImages,
-                                              args=(numMicsDone, numCtfsDone))
+                                              args=(numMicsDone,))
             process.start()
 
         # send over only thumbnails of the mics that have been fully processed
         self.thumbsReady = self.checkNewThumbsReady()
-        data[MIC_THUMBS] = self.thumbPaths[MIC_THUMBS][:self.thumbsReady]
-        data[SHIFT_THUMBS] = self.thumbPaths[SHIFT_THUMBS][:self.thumbsReady]
-        data[MIC_ID] = self.thumbPaths[MIC_ID][:self.thumbsReady]
-        if PSD_THUMBS in self.thumbPaths:
-            data[PSD_THUMBS] = self.thumbPaths[PSD_THUMBS][:self.thumbsReady]
+        thumbsLoading = numMics - self.thumbsReady
+        for k in [MIC_THUMBS, SHIFT_THUMBS, PSD_THUMBS]:
+            if k in self.thumbPaths:
+                data[k] = self.thumbPaths[k][:self.thumbsReady] + ['']*thumbsLoading
 
-        if self.ctfMonitor is None:
-            reportFinished = self.thumbsReady == numMics
-        else:
-            reportFinished = self.thumbsReady == numCtfs
+        data[MIC_ID] = self.thumbPaths[MIC_ID]
+
+        reportFinished = self.thumbsReady == numMics
 
         ctfData = json.dumps(data)
 
@@ -378,11 +377,11 @@ class ReportHtml:
         # system monitor chart data
         data = self.sysMonitor.getData()
         systemData = json.dumps(data)
-
+        tnow = datetime.now()
         args = {'projectName': projName,
                 'startTime': pwutils.dateStr(project.getCreationTime(), secs=True),
-                'dateStr': pwutils.prettyTime(secs=True),
-                'projectDuration': pwutils.prettyDelta(project.getElapsedTime()),
+                'dateStr': pwutils.prettyTime(dt=tnow, secs=True),
+                'projectDuration': pwutils.prettyDelta(tnow-project.getCreationTime()),
                 'projectStatus': "FINISHED" if finished else "RUNNING",
                 'scipionVersion': os.environ['SCIPION_VERSION'],
                 'acquisitionLines': acquisitionLines,
