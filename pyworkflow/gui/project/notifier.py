@@ -33,6 +33,8 @@ import time
 from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
+SCIPION_STATS_SERVER = 'http://scipion.i2pc.es'
+SCIPION_STATS_WORKFLOW_APP = SCIPION_STATS_SERVER + '/report_protocols/api/workflow/workflow/'
 
 
 class ProjectNotifier(object):
@@ -137,8 +139,7 @@ class ProjectNotifier(object):
                         'project_workflow': projectWorfklow}
 
             urlName = os.environ.get('SCIPION_NOTIFY_URL',
-                         'http://calm-shelf-73264.herokuapp.com/'
-                         'report_protocols/api/workflow/workflow/'
+                         SCIPION_STATS_WORKFLOW_APP
                          ).strip()
             urlName += "addOrUpdateWorkflow/"
             t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))

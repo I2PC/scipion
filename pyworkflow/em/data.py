@@ -125,6 +125,7 @@ class CTFModel(EMObject):
         self._defocusV = Float(kwargs.get('defocusV', None))
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
+        self._phaseShift = Float()
         self._psdFile = String()
 #         self._micFile = String()
         self._micObj = None
@@ -132,14 +133,41 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        ctfStr = "defocus(U,V,a) = (%0.2f,%0.2f,%0.2f)" % \
-                 (self._defocusU.get(),
-                  self._defocusV.get(),
-                  self._defocusAngle.get())
+        if self._resolution.hasValue():
+            ctfStr = "defocus(U,V,a,psh,re,fit) = " \
+                     "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
+                     (self._defocusU.get(),
+                      self._defocusV.get(),
+                      self._defocusAngle.get(),
+                      self._phaseShift.get(),
+                      self._resolution.get(),
+                      self._fitQuality.get()
+                      )
+        else:   # TODO; remove eventually,
+                # compatibility with old ctfmodel
+            ctfStr = "defocus(U,V,a) = " \
+                     "(%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
+                                              self._defocusV.get(),
+                                              self._defocusAngle.get())
 
         if self._micObj:
             ctfStr + " mic=%s" % self._micObj
         return ctfStr
+
+    def getPhaseShift(self):
+        # this is an awful hack to read phase shift from ctffind or gctf
+        # It should be eventually removed
+        if self._phaseShift.hasValue():
+            return self._phaseShift.get()
+        elif hasattr(self, '_ctffind4_ctfPhaseShift'):
+            return self._ctffind4_ctfPhaseShift.get()
+        elif hasattr(self, '_gctf_ctfPhaseShift'):
+            return self._gctf_ctfPhaseShift.get()
+        else:
+            return self._phaseShift.get()
+
+    def setPhaseShift(self, value):
+        self._phaseShift.set(value)
 
     def getResolution(self):
         # this is an awful hack to read freq either from ctffid/gctf or xmipp
@@ -156,11 +184,14 @@ class CTFModel(EMObject):
         else:
             return self._resolution.get()
 
+    def hasResolution(self):
+        return self._resolution.hasValue()
+
     def setResolution(self, value):
         self._resolution.set(value)
 
     def getFitQuality(self):
-        # this is an awful hack to read freq either from ctffid/gctf or xmipp
+        # this is an awful hack to read freq either from ctffind/gctf or xmipp
         # labels assigned to max resolution used to be different
         # It should be eventually removed
         if self._fitQuality.hasValue():
@@ -201,7 +232,7 @@ class CTFModel(EMObject):
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV', '_defocusAngle',
                                    '_defocusRatio', '_psdFile', '_micFile',
-                                   '_resolution', '_fitQuality')
+                                   '_resolution', '_fitQuality', '_phaseShift')
 
     def getPsdFile(self):
         return self._psdFile.get()
@@ -416,6 +447,14 @@ class Image(EMObject):
         # this matrix can be used for 2D/3D alignment or
         # to represent projection directions
         self._transform = None
+        # default orign by default is box center =
+        # (Xdim/2, Ydim/2,Zdim/2)
+        # origin stores a matrix that using as input the point (0,0,0)
+        # provides  the position of the actual origin in the system of
+        # coordinates of the default origin.
+        # _origin is an object of the class Transformor shifts
+        # units are pixels
+        self._origin = None
         if location:
             self.setLocation(location)
 
@@ -446,6 +485,9 @@ class Image(EMObject):
 
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
+
+    def getYDim(self):
+        return self.getDim()[1] if self.getDim() is not None else 0
 
     def getIndex(self):
         return self._index.get()
@@ -532,6 +574,26 @@ class Image(EMObject):
 
     def setTransform(self, newTransform):
         self._transform = newTransform
+
+    def hasOrigin(self):
+        return self._origin is not None
+
+    def getOrigin(self, returnInitIfNone=False):
+        if self.hasOrigin():
+            return self._origin
+        else:
+            if returnInitIfNone:
+                t = Transform()
+                x, y, z = self.getDim()
+                if z > 1:
+                    z = z/2
+                t.setShifts(x/2, y/2, z)
+                return t  # The identity matrix
+            else:
+                return None
+
+    def setOrigin(self, newOrigin):
+        self._origin = newOrigin
 
     def __str__(self):
         """ String representation of an Image. """
@@ -689,12 +751,19 @@ class PdbFile(EMFile):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
+        self._volume = None
 
     def getPseudoAtoms(self):
         return self._pseudoatoms.get()
 
     def setPseudoAtoms(self, value):
         self._pseudoatoms.set(value)
+
+    def getVolume(self):
+        return self._volume
+
+    def setVolume(self, volume):
+        self._volume = volume
 
     def __str__(self):
         return "%s (pseudoatoms=%s)" % \
@@ -1078,7 +1147,14 @@ class SetOfCTF(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        self._micrographsPointer.set(micrographs)
+        """ Set the micrographs from which this CTFs were estimated.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
 
 
 class SetOfDefocusGroup(EMSet):
@@ -1111,6 +1187,11 @@ class SetOfDefocusGroup(EMSet):
 
     def setAvgSet(self, value):
         self._avgSet.set(value)
+
+
+class SetOfPDBs(EMSet):
+    """ Set containing PDB items. """
+    ITEM_TYPE = PdbFile
 
 
 class Coordinate(EMObject):
@@ -1257,11 +1338,15 @@ class SetOfCoordinates(EMSet):
         return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
-        """ Set the SetOfMicrograph associates with
-        this set of coordinates.
-         """
-        self._micrographsPointer.set(micrographs)
-
+        """ Set the micrographs associated with this set of coordinates.
+        Params:
+            micrographs: Either a SetOfMicrographs object or a pointer to it.
+        """
+        if micrographs.isPointer():
+            self._micrographsPointer.copy(micrographs)
+        else:
+            self._micrographsPointer.set(micrographs)
+        
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())
@@ -1353,6 +1438,20 @@ class Transform(EMObject):
         m[1, 3] *= factor
         m[2, 3] *= factor
 
+    def getShifts(self):
+        m = self.getMatrix()
+        return m[0, 3], m[1, 3], m[2, 3]
+
+    def setShifts(self, x, y, z):
+        m = self.getMatrix()
+        m[0, 3] = x
+        m[1, 3] = y
+        m[2, 3] = z
+                
+    def composeTransform(self, matrix):
+        '''Apply a transformation matrix to the current matrix '''            
+        new_matrix = matrix * self.getMatrix()
+        self._matrix.setMatrix(new_matrix)
 
 class Class2D(SetOfParticles):
     """ Represent a Class that groups Particles objects.

@@ -33,21 +33,21 @@ searching them.
 
 import os
 import sys
-from os.path import join, basename
+
+from os.path import basename
 import argparse
 import unittest
 
-import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.tests as pwtests
 
 from pyworkflow.tests import *
 
-PATH_PATTERN = {'model': ('model em/data', 'test*.py'),
-                'xmipp': ('em/workflows', 'test*xmipp*.py'),
-                'mixed': ('em/workflows', 'test*mixed*.py'),
-                'protocols': ('em/protocols', 'test_protocols*.py'),
-                'programs': ('em/programs', 'test_program*py')}
+PATH_PATTERN = {'model': ('tests/model tests/em/data', 'test*.py'),
+                'convert': ('em/packages', 'test_convert*.py'),
+                'protocols': ('em/packages' 'tests/em/protocols',
+                              'test_protocol*.py'),
+                'mixed': ('em/workflows', 'test*mixed*.py')}
 
 MODULE = 0
 CLASS = 1
@@ -56,15 +56,15 @@ TEST = 2
 
 class Tester():
     def main(self):
-        
+    
         parser = argparse.ArgumentParser(description=__doc__)
         g = parser.add_mutually_exclusive_group()
         g.add_argument('--run', action='store_true', help='run the selected tests')
         g.add_argument('--show', action='store_true', help='show available tests')
-        
+    
         add = parser.add_argument  # shortcut
-        
-        add('--case', choices=['model', 'xmipp', 'mixed', 'protocols'],
+    
+        add('--case', choices=['model', 'convert', 'protocols', 'mixed'],
             help='get pre-defined paths and patterns for the specified case')
         add('--paths', default='.',
             help='space-separated list of paths where the tests are searched')
@@ -73,7 +73,7 @@ class Tester():
         add('--grep', default=None, nargs='+',
             help='only show/run tests containing the provided words')
         add('--label', default=None, nargs='+',
-            help='only show/run tests containing the provided label')        
+            help='only show/run tests containing the provided label')
         add('--skip', default=None, nargs='+',
             help='skip tests that contains these words')
         add('--log', default=None, nargs='?',
@@ -83,7 +83,7 @@ class Tester():
         add('tests', metavar='TEST', nargs='*',
             help='test case from string identifier (module, class or callable)')
         args = parser.parse_args()
-        
+    
         if not args.run and not args.show and not args.tests:
             sys.exit(parser.format_help())
     
@@ -92,63 +92,39 @@ class Tester():
             print 'Using paths and pattern for given case "%s"' % args.case
             args.paths, args.pattern = PATH_PATTERN[args.case]
     
+        tests = unittest.TestSuite()
         if args.tests:
-            tests = unittest.TestSuite()
             for t in args.tests:
-                prefix = ('' if t.startswith('tests.') else 'tests.')
                 try:
                     tests.addTests(unittest.defaultTestLoader.loadTestsFromName(
-                        '%s%s%s' % ('pyworkflow.', prefix, t)))
+                        '%s%s' % ('pyworkflow.', t)))
                 except Exception as e:
                     print 'Cannot find test %s -- skipping' % t
                     print 'error: ', e
         else:
-            tests = self.discoverTests(args.paths.split(), args.pattern)
+            self.discoverTests(tests, args.paths.split(), args.pattern)
     
         self.grep = args.grep
         self.skip = args.skip
         self.mode = args.mode
         self.log = args.log
         self.labels = args.label
-        
+    
         if args.show:
             self.printTests(tests)
-            
+    
         elif args.run:
             self.runTests(tests)
-        
+    
         elif args.tests:
             self.runSingleTest(tests)
-    
-    def discoverXmippTest(self, newItemCallback):
-        """ Discovers all basic xmipp tests and prints or executes them 
-            depending on newItemCallback argument
-        """
-                
-        # Build base directory.
-        path = "software/em/xmipp/applications/tests/"
-        
-        # Get all folders in current path.
-        for folder in os.listdir(path):
-            
-            # Check if current folder starts with "test_"
-            if folder.startswith("test_"):
-                
-                # Build command to execute/print.
-                command = 'xmipp_%s' % folder
-                
-                # Execute input funcion.
-                newItemCallback(CLASS, command)            
 
-    def discoverTests(self, paths, pattern):
+    def discoverTests(self, tests, paths, pattern):
         """ Return tests discovered in paths that follow the given pattern """
-        tests = unittest.TestSuite()
-        for path in [join('pyworkflow', 'tests', x) for x in paths]:
-            print "Discovering tests in '%s'" % path
+        for path in [join('pyworkflow', x) for x in paths]:
             tests.addTests(unittest.defaultTestLoader.discover(
                 path, pattern=pattern, top_level_dir=pw.HOME))
-        return tests
-    
+
     def _match(self, itemName):
         itemLower = itemName.lower()
         grep = (not self.grep or
@@ -157,7 +133,6 @@ class Tester():
                 any(g.lower() in itemLower for g in self.skip))
         
         return (grep and not skip)
-        
     
     def _visitTests(self, tests, newItemCallback):
         """ Show the list of tests available """
@@ -212,20 +187,10 @@ class Tester():
                 if mode == 'all':
                     newItemCallback(TEST, "%s.%s.%s" % (moduleName, className, testName))
 
-        # If label is "pull" then add all basic xmipp tests.
-        if (self.labels is not None):
-            if PULL_REQUEST in self.labels:
-                self.discoverXmippTest(newItemCallback)
-        else:
-            self.discoverXmippTest(newItemCallback)
-    
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
-            if (itemName.startswith("xmipp_")):
-                print "%s scipion %s" % (spaces, itemName)
-            else:
-                print "%s scipion test %s" % (spaces, itemName)
+            print "%s scipion test %s" % (spaces, itemName)
             
     def printTests(self, tests):
         self._visitTests(tests, self._printNewItem)
@@ -247,17 +212,14 @@ class Tester():
                 if self.headerPrefix  in l:
                     f.write(self.headerPrefix + self.testTimer.getToc() + '</h3>\n')
                 else:
-                    f.write(l)                
+                    f.write(l)
             f.close()
         
     def _runNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
             scipion = join(os.environ['SCIPION_HOME'], 'scipion')
-            if (itemName.startswith("xmipp_")):
-                cmd = "%s %s %s" % (spaces, scipion, itemName)
-            else:
-                cmd = "%s %s test %s" % (spaces, scipion, itemName)
+            cmd = "%s %s test %s" % (spaces, scipion, itemName)
             run = ((itemType == MODULE and self.mode == 'module') or
                    (itemType == CLASS and self.mode == 'classes') or
                    (itemType == TEST and self.mode == 'all'))

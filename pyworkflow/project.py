@@ -44,6 +44,8 @@ import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import MODE_RESTART
 
+OBJECT_PARENT_ID = 'object_parent_id'
+
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
@@ -57,7 +59,8 @@ PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 PROJECT_CREATION_TIME = 'CreationTime'
 
 # Regex to get numbering suffix and automatically propose runName
-REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
+REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+)(?P<number>\(\d*\))\s*$')
+REGEX_NUMBER_ENDING_CP=re.compile('(?P<prefix>.+\s\(copy)(?P<number>.*)\)\s*$')
 
 class Project(object):
     """This class will handle all information 
@@ -222,6 +225,7 @@ class Project(object):
                 If forProtocol is True, the settings and protocols.conf will
                 not be loaded.
         """
+
         if not os.path.exists(self.path):
             raise Exception(
                 "Cannot load project, path doesn't exist: %s" % self.path)
@@ -235,25 +239,33 @@ class Project(object):
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
-        self._loadDb(dbPath)
+        try:
 
-        self._loadHosts(hostsConf)
+            self._loadDb(dbPath)
 
-        if loadAllConfig:
-            self._loadProtocols(protocolsConf)
+            self._loadHosts(hostsConf)
 
-            # FIXME: Handle settings argument here
+            if loadAllConfig:
+                self._loadProtocols(protocolsConf)
 
-            # It is possible that settings does not exists if
-            # we are loading a project after a Project.setDbName,
-            # used when running protocols
-            settingsPath = os.path.join(self.path, self.settingsPath)
-            if os.path.exists(settingsPath):
-                self.settings = pwconfig.loadSettings(settingsPath)
-            else:
-                self.settings = None
+                # FIXME: Handle settings argument here
 
-        self._loadCreationTime()
+                # It is possible that settings does not exists if
+                # we are loading a project after a Project.setDbName,
+                # used when running protocols
+                settingsPath = os.path.join(self.path, self.settingsPath)
+                if os.path.exists(settingsPath):
+                    self.settings = pwconfig.loadSettings(settingsPath)
+                else:
+                    self.settings = None
+
+            self._loadCreationTime()
+
+        # Catch any exception..
+        except Exception as e:
+            print("ERROR: Project %s load failed.\n"
+                 "       Message: %s\n" % (self.path, e))
+
 
     def _loadCreationTime(self):
         # Load creation time, it should be in project.sqlite or
@@ -400,7 +412,7 @@ class Project(object):
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition:
+        3. Call the launch method in protocol.job to handle submission:
            mpi, thread, queue,
         and also take care if the execution is remotely."""
 
@@ -491,7 +503,8 @@ class Project(object):
 
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
-            protocol.copy(prot2, copyId=False)
+
+            protocol.copy(prot2, copyId=False, excludeInputs=True)
             # Restore backup values
             protocol.setJobId(jobId)
             protocol.setObjLabel(label)
@@ -529,6 +542,8 @@ class Project(object):
             raise
         finally:
             protocol.setAborted()
+            protocol.setMapper(self.createMapper(protocol.getDbPath()))
+            protocol._store()
             self._storeProtocol(protocol)
 
     def continueProtocol(self, protocol):
@@ -631,25 +646,25 @@ class Project(object):
 
     def __setProtocolLabel(self, newProt):
         """ Set a readable label to a newly created protocol.
-        We will try to find another existing protocol of the 
-        same class and set the label from it.
+        We will try to find another existing protocol with the default label
+        and then use an incremental labeling in parethesis (<number>++)
         """
-        prevLabel = None  # protocol with same class as newProt
-        newProtClass = newProt.getClass()
+        defaultLabel = newProt.getClassLabel()
+        maxSuffix = 0
 
         for prot in self.getRuns(iterate=True, refresh=False):
-            if newProtClass == prot.getClass():
-                prevLabel = prot.getObjLabel().strip()
+            otherProtLabel = prot.getObjLabel()
+            m = REGEX_NUMBER_ENDING.match(otherProtLabel)
+            if m and m.groupdict()['prefix'].strip() == defaultLabel:
+                stringSuffix = m.groupdict()['number'].strip('(').strip(')')
+                maxSuffix = max(int(stringSuffix),maxSuffix)
+            elif otherProtLabel == defaultLabel: # When only we have the prefix,
+                maxSuffix = max(1,maxSuffix)     # this REGEX don't match.
 
-        if prevLabel:
-            numberSuffix = 2
-            m = REGEX_NUMBER_ENDING.match(prevLabel)
-            if m and m.groupdict()['number']:
-                numberSuffix = int(m.groupdict()['number']) + 1
-                prevLabel = m.groupdict()['prefix'].strip()
-            protLabel = prevLabel + ' %s' % numberSuffix
+        if maxSuffix:
+            protLabel = '%s (%d)' % (defaultLabel, maxSuffix+1)
         else:
-            protLabel = newProt.getClassLabel()
+            protLabel = defaultLabel
 
         newProt.setObjLabel(protLabel)
 
@@ -686,12 +701,51 @@ class Project(object):
         return matches
 
     def __cloneProtocol(self, protocol):
-        """ Make a copy of the protocol parameters, not outputs. """
+        """ Make a copy of the protocol parameters, not outputs. 
+            We will label the new protocol with the same name adding the 
+            parenthesis as follow -> (copy) -> (copy 2) -> (copy 3)
+        """
         newProt = self.newProtocol(protocol.getClass())
-        newProt.setObjLabel(protocol.getRunName() + ' (copy)')
+        oldProtName = protocol.getRunName()
+        maxSuffix = 0
+
+        # if '(copy...' suffix is not in the old name, we add it in the new name
+        # and seting the newnumber 
+        mOld = REGEX_NUMBER_ENDING_CP.match(oldProtName)
+        if mOld:
+            newProtPrefix = mOld.groupdict()['prefix']
+            if mOld.groupdict()['number'] == '':
+                oldNumber = 1
+            else:
+                oldNumber = int(mOld.groupdict()['number'])
+        else:
+            newProtPrefix = oldProtName + ' (copy'
+            oldNumber = 0
+        newNumber = oldNumber + 1
+
+        # looking for "<old name> (copy" prefixes in the project and
+        # seting the newNumber as the maximum+1
+        for prot in self.getRuns(iterate=True, refresh=False):
+            otherProtLabel = prot.getObjLabel()
+            mOther = REGEX_NUMBER_ENDING_CP.match(otherProtLabel)
+            if mOther and mOther.groupdict()['prefix'] == newProtPrefix:
+                stringSuffix = mOther.groupdict()['number']
+                if stringSuffix == '':
+                    stringSuffix = 1
+                maxSuffix = max(maxSuffix, int(stringSuffix))
+                if newNumber <= maxSuffix:
+                    newNumber = maxSuffix + 1
+
+        # building the new name
+        if newNumber == 1:
+            newProtLabel = newProtPrefix + ')'
+        else:
+            newProtLabel = '%s %d)' % (newProtPrefix, newNumber)
+
+        newProt.setObjLabel(newProtLabel)
         newProt.copyDefinitionAttributes(protocol)
-        newProt.copyAttributes(protocol, 'hostName', '_useQueue',
-                               '_queueParams')
+        newProt.copyAttributes(protocol, 'hostName', '_useQueue','_queueParams')
+        
         return newProt
 
     def copyProtocol(self, protocol):
@@ -730,6 +784,10 @@ class Project(object):
                         # new workflow
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
+                            if isinstance(childPointer, pwobj.PointerList):
+                                for p in childPointer:
+                                    if p.getObjValue().getObjId() == prot.getObjId():
+                                        childPointer = p
                             childPointer.set(newProt)
                             childPointer.setExtended(oKey)
                         self.mapper.store(newChildProt)
@@ -856,7 +914,10 @@ class Project(object):
                         # This case is similar to Pointer, but the values
                         # is a list and we will setup a pointer for each value
                         elif isinstance(attr, pwobj.PointerList):
-                            for value in protDict[paramName]:
+                            attribute = protDict[paramName]
+                            if attribute is None:
+                                continue
+                            for value in attribute:
                                 p = pwobj.Pointer()
                                 _setPointer(p, value)
                                 attr.append(p)
@@ -1035,7 +1096,7 @@ class Project(object):
         if refresh or self._runsGraph is None:
             runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids) if not r.isChild()]
             self._runsGraph = self.getGraphFromRuns(runs)
-            
+
         return self._runsGraph
 
     def getGraphFromRuns(self, runs):
@@ -1088,7 +1149,7 @@ class Project(object):
                 rootNode.addChild(n)
 
         return g
-    
+
     def _getRelationGraph(self, relation=em.RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
@@ -1108,9 +1169,25 @@ class Project(object):
                 g.aliasNode(node, p2.getUniqueId())
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            # Duplicated ...
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
+
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
+
+            if pObj is None or pp.get() is None:
+                print("project._getRelationGraph: ERROR, pointer to parent is "
+                      "None. IGNORING IT.\n")
+                for key in rel.keys():
+                    print("%s: %s" % (key, rel[key]))
+
+                continue
+
             pid = pp.getUniqueId()
             parent = g.getNode(pid)
 
@@ -1195,7 +1272,12 @@ class Project(object):
         objectsDict = {}
 
         for rel in relations:
-            pObj = self.getObject(rel['object_parent_id'])
+            pObj = self.getObject(rel[OBJECT_PARENT_ID])
+
+            if pObj is None:
+                print "WARNING: Relation seems to point to a deleted object. " \
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                continue
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
 

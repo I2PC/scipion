@@ -521,7 +521,7 @@ ProgMLTomo::show()
         << " | Read more about this program in the following publication:    |"
         << std::endl;
         std::cout
-        << " |  Scheres ea.  (2009) Structure, 17, 1563-1572                 |"
+        << " |  Scheres et al.  (2009) Structure, 17, 1563-1572              |"
         << std::endl;
         std::cout
         << " |                                                               |"
@@ -688,7 +688,7 @@ ProgMLTomo::produceSideInfo()
         }
     }
     if (!mdimg_contains_angles)
-        std::cerr << labelStr + "are mmissing in input metadata and are filled with value 0.0" <<std::endl;
+        std::cerr << labelStr + "are missing in input metadata and are filled with value 0.0" <<std::endl;
 
     if (!MDimg.containsLabel(MDL_MISSINGREGION_NR))
     {
@@ -1142,7 +1142,9 @@ ProgMLTomo::produceSideInfo2(int nr_vols)
             }
             else
                 imgs_optpsi[imgno] = psi; // for limited psi searches
-            std::cerr << "r t p " << rot << " " << tilt << " " << psi <<std::endl;
+            #ifdef DEBUG
+                std::cerr << "r t p " << rot << " " << tilt << " " << psi <<std::endl;
+            #endif            
             MDsub.addRow(row);
             imgs_optangno[imgno] = count++;
 
@@ -3394,7 +3396,7 @@ ProgMLTomo::writeOutputFiles(const int iter,
     MultidimArray<double> fracline(2);
     MetaData SFo, SFc;
     MetaData DFl;
-    MetaData MDo, MDSel;
+    MetaData MDo, MDo_sorted, MDSel, MDfsc;
     std::string comment;
     Image<double> Vt;
 
@@ -3421,6 +3423,7 @@ ProgMLTomo::writeOutputFiles(const int iter,
 
         MDref.setValue(MDL_IMAGE, fn_tmp, __iter.objId);
         MDref.setValue(MDL_ENABLED, 1, __iter.objId);
+        MDref.setValue(MDL_REF, refno + 1, __iter.objId);
         //SFo.insert(fn_tmp, SelLine::ACTIVE);
         //fracline(0) = alpha_k(refno);
         //fracline(1) = 1000 * conv[refno]; // Output 1000x the change for precision
@@ -3455,10 +3458,12 @@ ProgMLTomo::writeOutputFiles(const int iter,
         refno++;
     }
     fn_tmp = fn_base + "_ref.xmd";
-    MDref.write(fn_tmp);
+    MDref.write(formatString("classes@%s", fn_tmp.c_str()));
+    fn_tmp = fn_root + "_ref.xmd";
+    MDref.write(formatString("classes@%s", fn_tmp.c_str()));
 
     // Write out FSC curves
-    std::ofstream fh;
+/*    std::ofstream fh;
     fn_tmp = fn_base + ".fsc";
     fh.open((fn_tmp).c_str(), std::ios::out);
     if (!fh)
@@ -3475,6 +3480,20 @@ ProgMLTomo::writeOutputFiles(const int iter,
         fh << "\n";
     }
     fh.close();
+*/
+    MDfsc.clear();
+    fn_tmp = fn_base + ".fsc";
+    for (int refno = 0; refno < nr_ref; refno++)
+    {
+        for (int idx = 1; idx < hdim + 1; idx++)
+            {
+            size_t id=MDfsc.addObject();
+            MDfsc.setValue(MDL_RESOLUTION_FREQ, fsc[0](idx), id);
+            MDfsc.setValue(MDL_RESOLUTION_FRC, fsc[refno + 1](idx), id);
+            }
+        MDfsc.write(formatString("class_%06d@%s", refno + 1, fn_tmp.c_str()), MD_APPEND);
+        MDfsc.clear();
+    }
 
     // Write out images with new docfile data
     fn_tmp = fn_base + "_img.xmd";
@@ -3516,28 +3535,27 @@ ProgMLTomo::writeOutputFiles(const int iter,
         //DFo.write(fn_tmp);
         // Also write out selfiles of all experimental images,
         // classified according to optimal reference image
-        fn_tmp = fn_root + "_ref";
-        for (int refno = 0; refno < nr_ref; refno++)
-        {
-            /*DFo.go_beginning();
-             SFo.clear();
-             for (int n = 0; n < DFo.dataLineNo(); n++)
-             {
-             DFo.next();
-             fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
-             DFo.adjust_to_data_line();
-             if ((refno + 1) == (int)DFo(6))
-             SFo.insert(fn_tmp, SelLine::ACTIVE);
-             }
-             fn_tmp.compose(fn_base + "_ref", refno + 1, "sel");
-             SFo.write(fn_tmp);
-             */
-            MDo.clear();
-            MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
-            fn_tmp.compose(fn_tmp, refno + 1, "");
-            fn_tmp += "_img.xmd";
-            MDo.write(fn_tmp);
-        }
+    }
+    fn_tmp = fn_root + "_ref.xmd";
+    for (int refno = 0; refno < nr_ref; refno++)
+    {
+        /*DFo.go_beginning();
+         SFo.clear();
+         for (int n = 0; n < DFo.dataLineNo(); n++)
+         {
+         DFo.next();
+         fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
+         DFo.adjust_to_data_line();
+         if ((refno + 1) == (int)DFo(6))
+         SFo.insert(fn_tmp, SelLine::ACTIVE);
+         }
+         fn_tmp.compose(fn_base + "_ref", refno + 1, "sel");
+         SFo.write(fn_tmp);
+         */
+        MDo.clear();
+        MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
+        MDo_sorted.sort(MDo, MDL_IMAGE);
+        MDo_sorted.write(formatString("class%06d_images@%s", refno + 1, fn_tmp.c_str()), MD_APPEND);
     }
 
 }

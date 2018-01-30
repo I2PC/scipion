@@ -38,12 +38,12 @@ SOURCE_MASK=2
 
 class XmippProtCreateMask2D(ProtCreateMask2D, XmippGeometricalMask2D):
     """ Create a 2D mask.
-    The mask can be created with a given geometrical shape (Circle, Rectangle, Crown...) or
-    it can be obtained from operating on a 2d image or a previuous mask.
-    """
+    The mask can be created with a given geometrical shape (Circle, Rectangle,
+    Crown...) or it can be obtained from operating on a 2d image or a previuous
+    mask. """
     _label = 'create 2d mask'
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Mask generation')
         
@@ -56,7 +56,7 @@ class XmippProtCreateMask2D(ProtCreateMask2D, XmippGeometricalMask2D):
                                             addSize=True)
 
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self.maskFile = self._getPath('mask.xmp')
     
@@ -65,7 +65,7 @@ class XmippProtCreateMask2D(ProtCreateMask2D, XmippGeometricalMask2D):
         self._insertFunctionStep('postProcessMaskStep')
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
         
     def createMaskFromGeometryStep(self):
         # Create empty volume file with desired dimensions
@@ -92,7 +92,7 @@ class XmippProtCreateMask2D(ProtCreateMask2D, XmippGeometricalMask2D):
         
         self._defineOutputs(outputMask=mask)
         
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _summary(self):
         messages = []      
         messages.append("*Mask creation*")

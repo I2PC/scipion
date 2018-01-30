@@ -36,3 +36,19 @@ from viewer_msa import ImagicViewerMSA
 
 _logo = "imagic_logo.png"
 _references = ['vanHeel1981', 'vanHeel1996', 'vanHeel2012']
+
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = []
+
+    env, imagicDir = getImagicHomeDir()
+
+    if not os.path.exists(imagicDir):
+        missingPaths.append('%s,%s : None of the 2 variables points to and '
+                            'existing path' % (IMAGIC_DIR, IMAGIC_HOME))
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors
