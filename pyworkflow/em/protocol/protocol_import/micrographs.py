@@ -459,11 +459,12 @@ class ProtImportMovies(ProtImportMicBase):
         try:
             while True:
                 fileName = RESTRequestHandler.buffer.get_nowait()
-                if fileName in self.importedFiles:
+                uniqueFn = self._getUniqueFileName(fileName)
+                if  uniqueFn in self.importedFiles:
                     self.info('WARNING: Not importing, already imported file %s \n' % fileName)
                 else:
                     self.info('OK: Importing file %s \n' % fileName)
-                    yield fileName, None
+                    yield fileName,  uniqueFn, None
         except Empty:
             self.info('buffer empty')
 
