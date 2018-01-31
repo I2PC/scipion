@@ -54,7 +54,7 @@ class ProtCreateStreamData(EMProtocol):
         micrograph -> read a micrograph in memory and writes it nDim times
         movie      -> read a movie in memory and writes it nDim times
         randomMicrographs -> creates a micrograph with random values
-        and aplies a reandom CTF
+        and applies a random CTF
         particles  -> read nDim particles in memory and writes it in streaming
     """
     _label = "create stream data"
@@ -230,6 +230,9 @@ class ProtCreateStreamData(EMProtocol):
             raise Exception('Unknown data type')
 
         newObjSet, newObj = self._checkNewItems(objSet)
+        
+        if self.setof == SET_OF_MOVIES:
+            newObjSet.setFramesRange(self.inputMovie.get().getFramesRange())
 
         # check if end ....
         if self.setof == SET_OF_PARTICLES:
