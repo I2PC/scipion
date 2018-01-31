@@ -186,6 +186,7 @@ class XmippProtMovieResize(ProtProcessMovies):
                 imgOut.setFileName(self._getPath("movie_%06d_resize.mrcs" % movie.getObjId()))
                 imgOut.setAcquisition(movie.getAcquisition())
                 imgOut.setSamplingRate(newSamplingRate)
+                imgOut.setFramesRange(self.inputMovies.get().getFramesRange())
                 imageSet.append(imgOut)
 
             self._updateOutputSet('outputMovies', imageSet, streamMode)
