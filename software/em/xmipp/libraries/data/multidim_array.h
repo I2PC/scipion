@@ -2043,6 +2043,11 @@ public:
         return A1D_ELEM(*this, i);
     }
 
+    inline T& operator[](int i) const
+     {
+         return data[i];
+     }
+
 
     /** Return the void pointer to the internal data array
      */
@@ -2376,8 +2381,7 @@ public:
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "getRow: Matrix subscript (i) greater than matrix dimension");
 
         v.resizeNoCopy(xdim);
-        for (size_t j = 0; j < xdim; j++)
-            DIRECT_A1D_ELEM(v,j) = DIRECT_A2D_ELEM(*this,i, j);
+        memcpy(&A1D_ELEM(v,0),&A2D_ELEM(*this,i,0),xdim*sizeof(T));
     }
 
     /** Set Row
@@ -2400,7 +2404,7 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "setRow: Vector dimension different from matrix one");
 
-        memcpy(&A2D_ELEM(*this,i,0),&A1D_ELEM(v,0),xdim*sizeof(double));
+        memcpy(&A2D_ELEM(*this,i,0),&A1D_ELEM(v,0),xdim*sizeof(T));
     }
 
     void getReal(MultidimArray< double > & realImg) const

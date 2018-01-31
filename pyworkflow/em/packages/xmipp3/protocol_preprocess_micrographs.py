@@ -134,6 +134,20 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       help="In normalized frequencies (<0.5). For example, "
                            "if you want to remove patterns larger than "
                            "1000 pixels, use 1/1000=0.001")
+        form.addParam('doLowPass', BooleanParam, default=False,
+                      label='Lowpass filter',
+                      help="Apply a lowpass filter in real space")
+        form.addParam('lowCutoff', FloatParam, default=0.4,
+                      condition="doLowPass",
+                      label='Cutoff frequency',
+                      help="In normalized frequencies (<0.5). For example, "
+                           "if you want to remove the crystalline ice at a frequency of 4A "
+                           "and the pixel size is 0.5A, then the cutoff should be 0.5/4=0.125")
+        form.addParam('lowRaised', FloatParam, default=0.001,
+                      condition="doLowPass", expertLevel=LEVEL_ADVANCED,
+                      label='Transition bandwidth',
+                      help="In normalized frequencies (<0.5). The number of pixels in Fourier "
+                           "will be approximately lowRaised*Xdim")
         form.addParam('doNormalize', BooleanParam, default=False,
                       label='Normalize micrograph?',
                       help='Normalize micrographs to be zero mean and '
@@ -158,6 +172,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'sigmaConvolution': self.sigmaConvolution.get(),
                        'highCutoff': self.highCutoff.get(),
                        'highRaised': self.highRaised.get(),
+                       'lowCutoff': self.lowCutoff.get(),
+                       'lowRaised': self.lowRaised.get(),
                        'maxIterTV': self.maxIteration.get()}
 
     #--------------------------- INSERT steps functions ------------------------
@@ -321,9 +337,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Smooth
         self.__insertOneStep(self.doSmooth, "xmipp_transform_filter",
                             "-i %(inputMic)s --fourier real_gaussian %(sigmaConvolution)f")
-        # Smooth
+        # Highpass
         self.__insertOneStep(self.doHighPass, "xmipp_transform_filter",
                             "-i %(inputMic)s --fourier high_pass %(highCutoff)f %(highRaised)f")
+        # Lowpass
+        self.__insertOneStep(self.doLowPass, "xmipp_transform_filter",
+                            "-i %(inputMic)s --fourier low_pass %(lowCutoff)f %(lowRaised)f")
         # Normalize
         self.__insertOneStep(self.doNormalize, "xmipp_transform_normalize",
                             "-i %(inputMic)s --method OldXmipp")
@@ -351,7 +370,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         validateMsgs = []
         # Some prepocessing option need to be marked
         if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix or self.doInvert
-               or self.doNormalize or self.doDenoise or self.doSmooth or self.doHighPass):
+               or self.doNormalize or self.doDenoise or self.doSmooth or self.doHighPass or self.doLowPass):
             validateMsgs.append('Some preprocessing option need to be selected.')
         return validateMsgs
     
@@ -384,6 +403,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             summary.append("Gaussian filtered with sigma=%f (px)"%self.sigmaConvolution.get())
         if self.doHighPass:
             summary.append("Highpass filtered with cutoff=%f (1/px)"%self.highCutoff.get())
+        if self.doLowPass:
+            summary.append("Lowpass filtered with cutoff=%f (1/px)"%self.lowCutoff.get())
         if self.doNormalize:
             summary.append("Normalized to mean 0 and variance 1")
         return summary
@@ -411,6 +432,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             txt += "been Gaussian filtered with a sigma of %0.2f pixels "%self.sigmaConvolution.get()
         if self.doHighPass:
             txt += "been highpass filtered with a cutoff of %f (1/px) "%self.highCutoff.get()
+        if self.doLowPass:
+            txt += "been lowpass filtered with a cutoff of %f (1/px) "%self.lowCutoff.get()
         if self.doNormalize:
             txt += "been normalized to mean 0 and variance 1"
 
