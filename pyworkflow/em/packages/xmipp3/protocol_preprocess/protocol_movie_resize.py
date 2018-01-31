@@ -25,7 +25,7 @@
 # **************************************************************************
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import PointerParam, IntParam
+from pyworkflow.protocol.params import PointerParam, FloatParam
 from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
 from pyworkflow.em.data import SetOfMovies, Movie
 from pyworkflow.object import Set
@@ -53,9 +53,9 @@ class XmippProtMovieResize(ProtProcessMovies):
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select one or several movies. A gain image will '
                            'be calculated for each one of them.')
-        form.addParam('resizeDim', IntParam, default=0,
-                      label='New image size (px)',
-                      help='Size in pixels of the particle images <x> <y=x> <z=x>.')
+        form.addParam('resizeFactor', FloatParam, default=1.0,
+                      label='Downsampling factor',
+                      help='Resize movies by a given downsampling factor.')
         form.addParallelSection(threads=1, mpi=1)
 
     # --------------------------- STEPS functions -------------------------------
@@ -90,11 +90,12 @@ class XmippProtMovieResize(ProtProcessMovies):
         movieId = movie.getObjId()
         fnMovie = movie.getFileName()
 
-        size = self.resizeDim.get()
+        factor = self.resizeFactor.get()
         dim, _, numMov = self.inputMovies.get().getDim()
+        size = int(dim/factor)
 
         args = "-i %s -o %s --fourier %d %d %d" % \
-               (fnMovie, self._getPath("movie_%06d_resize.xmp" % movieId),
+               (fnMovie, self._getPath("movie_%06d_resize.mrcs" % movieId),
                 size, size, numMov)
 
         self.runJob("xmipp_image_resize", args, numberOfMpi=1)
@@ -120,9 +121,8 @@ class XmippProtMovieResize(ProtProcessMovies):
             inputMovies = self.inputMovies.get()
             outputSet.copyInfo(inputMovies)
 
-        dim, _, _ = self.inputMovies.get().getDim()
-        factor = float(self.resizeDim.get()) / float(dim)
-        newSamplingRate = self.inputMovies.get().getSamplingRate() / factor
+        factor = self.resizeFactor.get()
+        newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
         outputSet.setSamplingRate(newSamplingRate)
 
         return outputSet
@@ -142,11 +142,10 @@ class XmippProtMovieResize(ProtProcessMovies):
             movie = self.inputMovies.get()
             imgOut = em.data.Movie()
             imgOut.setObjId(movie.getObjId())
-            imgOut.setFileName(self._getPath("movie_%06d_resize.xmp" % movie.getObjId()))
+            imgOut.setFileName(self._getPath("movie_%06d_resize.mrcs" % movie.getObjId()))
             imgOut.setAcquisition(movie.getAcquisition())
-            dim, _, _ = self.inputMovies.get().getDim()
-            factor = float(self.resizeDim.get()) / float(dim)
-            newSamplingRate = self.inputMovies.get().getSamplingRate() / factor
+            factor = self.resizeFactor.get()
+            newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
             imgOut.setSamplingRate(newSamplingRate)
             imageSet.append(imgOut)
 
@@ -179,13 +178,12 @@ class XmippProtMovieResize(ProtProcessMovies):
 
             imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite')
 
-            dim, _, _ = self.inputMovies.get().getDim()
-            factor = float(self.resizeDim.get()) / float(dim)
-            newSamplingRate = self.inputMovies.get().getSamplingRate() / factor
+            factor = self.resizeFactor.get()
+            newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
             for movie in newDone:
                 imgOut = em.data.Movie()
                 imgOut.setObjId(movie.getObjId())
-                imgOut.setFileName(self._getPath("movie_%06d_resize.xmp" % movie.getObjId()))
+                imgOut.setFileName(self._getPath("movie_%06d_resize.mrcs" % movie.getObjId()))
                 imgOut.setAcquisition(movie.getAcquisition())
                 imgOut.setSamplingRate(newSamplingRate)
                 imageSet.append(imgOut)
@@ -213,7 +211,7 @@ class XmippProtMovieResize(ProtProcessMovies):
             self._defineOutputs(**{outputName: outputSet})
             self._store(outputSet)
 
-        # Close set databaset to avoid locking it
+        # Close set database to avoid locking it
         outputSet.close()
 
 # --------------------------- INFO functions -------------------------------
