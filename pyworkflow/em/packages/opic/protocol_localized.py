@@ -34,7 +34,8 @@ from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
 from pyworkflow.em.protocol import ProtParticles, ProtParticlePicking
 from pyworkflow.em.data import Coordinate, SetOfCoordinates
 
-from convert import particleToRow, rowToSubcoordinate, setEnviron
+from convert import (particleToRow, rowToSubcoordinate, setEnviron,
+                     restituteRelionHome)
 
 from convert import getVersion, getRelionVersion
 
@@ -151,7 +152,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
         setEnviron() # Set the environment to access localrec modules
         import localrec
         import pyrelion
-
+        # return
         inputSet = self._getInputParticles()
         outputSet = self._createSetOfCoordinates(inputSet)
         params = {"symmetryGroup" : self.symmetryGroup.get(),
@@ -196,7 +197,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
                 rowToSubcoordinate(subpart, coord, part)
                 coord.setObjId(None) # Force to insert as a new item
                 outputSet.append(coord)
-        
+        restituteRelionHome()
         self._defineOutputs(outputCoordinates=outputSet)
         self._defineSourceRelation(self.inputParticles, outputSet)
     
