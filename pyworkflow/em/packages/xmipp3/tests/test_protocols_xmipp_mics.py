@@ -336,7 +336,7 @@ class TestXmippExtractParticles(TestXmippBase):
                                       importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
                                       filesPath=cls.dataset.getFile('ctfsDir'),
                                       filesPattern='*.ctfparam')
-        cls.protCTF.inputMicrographs.set(cls.protImport.outputMicrographs)
+        cls.protCTF.inputMicrographs.set(cls.protDown.outputMicrographs)
         cls.proj.launchProtocol(cls.protCTF, wait=True)
 
         cls.protPP = cls.runFakedPicking(cls.protDown.outputMicrographs, cls.allCrdsDir)
@@ -393,13 +393,13 @@ class TestXmippExtractParticles(TestXmippBase):
                                        doFlip=False)
         protExtract.setObjLabel("extract-original")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.inputMicrographs.set(self.protDown.outputMicrographs)
         self.launchProtocol(protExtract)
 
         inputCoords = protExtract.inputCoordinates.get()
         outputParts = protExtract.outputParticles
         samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
-        samplingFinal = self.protImport.outputMicrographs.getSamplingRate()
+        samplingFinal = self.protDown.outputMicrographs.getSamplingRate()
         samplingMics = protExtract.inputMicrographs.get().getSamplingRate()
         factor = samplingFinal / samplingCoords
 
@@ -427,7 +427,7 @@ class TestXmippExtractParticles(TestXmippBase):
     def testNoExtractBorders(self):
         print "Run extract particles avoiding extract in borders"
         protExtract = self.newProtocol(XmippProtExtractParticles,
-                                       boxSize=750,
+                                       boxSize=110,
                                        downsampleType=OTHER,
                                        doInvert=False,
                                        doBorders=False,
@@ -435,13 +435,13 @@ class TestXmippExtractParticles(TestXmippBase):
 
         protExtract.setObjLabel("extract-avoid borders")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.inputMicrographs.set(self.protDown.outputMicrographs)
         self.launchProtocol(protExtract)
 
         inputCoords = protExtract.inputCoordinates.get()
         outputParts = protExtract.outputParticles
         samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
-        samplingFinal = self.protImport.outputMicrographs.getSamplingRate()
+        samplingFinal = self.protDown.outputMicrographs.getSamplingRate()
         samplingMics = protExtract.inputMicrographs.get().getSamplingRate()
         factor = samplingFinal / samplingCoords
 
@@ -464,7 +464,7 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertEqual(outputParts.getSamplingRate(), samplingMics,
                          "Output sampling rate should be equal to input "
                          "sampling rate.")
-        self.assertAlmostEquals(outputParts.getSize(), 399, delta=1)
+        self.assertAlmostEquals(outputParts.getSize(), 403, delta=1)
         self._checkSamplingConsistency(outputParts)
 
 
@@ -483,14 +483,14 @@ class TestXmippExtractParticles(TestXmippBase):
                   self.protPP.outputCoordinates.getMicrographs()]
         
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.inputMicrographs.set(self.protDown.outputMicrographs)
         protExtract.setObjLabel("extract-other")
         self.launchProtocol(protExtract)
 
         inputCoords = protExtract.inputCoordinates.get()
         outputParts = protExtract.outputParticles
         samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
-        samplingFinal = self.protImport.outputMicrographs.getSamplingRate() * downFactor
+        samplingFinal = self.protDown.outputMicrographs.getSamplingRate() * downFactor
         samplingMics = protExtract.inputMicrographs.get().getSamplingRate()
         factor = samplingFinal / samplingCoords
         self.assertIsNotNone(outputParts,
@@ -528,12 +528,9 @@ class TestXmippExtractParticles(TestXmippBase):
                                        doInvert=False,
                                        doFlip=False,
                                        extractNoise=True)
-        # Get all the micrographs ids to validate that all particles
-        # has the micId properly set
-        micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
 
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        protExtract.inputMicrographs.set(self.protDown.outputMicrographs)
         protExtract.setObjLabel("extract-noise")
         self.launchProtocol(protExtract)
 
