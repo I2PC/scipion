@@ -141,8 +141,16 @@ class XmippProtScreenParticles(ProtProcessParticles):
                              if int(p.getObjId()) not in insertedDict],
                             self._getPath('images.xmd'),
                             alignType=em.ALIGN_NONE)
+        writeSetOfParticles([p.clone() for p in inputParts
+                             if int(p.getObjId()) in insertedDict],
+                            self._getExtraPath("xxx.xmd"),
+                            alignType=em.ALIGN_NONE)
+        ProcessedParticles = [p.clone() for p in inputParts
+                               if int(p.getObjId()) in insertedDict]
         stepId = self._insertFunctionStep('sortImages',
                                           self._getPath('images.xmd'),
+                                          self._getExtraPath("xxx.xmd"),
+                                          len(ProcessedParticles),
                                           prerequisites=[])
 
         deps.append(stepId)
@@ -241,10 +249,13 @@ class XmippProtScreenParticles(ProtProcessParticles):
         outputSet.close()
 
     #--------------------------- STEPS functions -----------------------------
-    def sortImages(self, fnInputMd):
+    def sortImages(self, fnInputMd, fnInputOldMd, lenfnInputOldMd):
 
         args = "-i Particles@%s --addToInput " % fnInputMd
-        
+
+        if lenfnInputOldMd > 0:
+            args += "--train Particles@%s " % fnInputOldMd
+
         if self.autoParRejection == self.REJ_MAXZSCORE:
             args += "--zcut " + str(self.maxZscore.get())
         

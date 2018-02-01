@@ -76,7 +76,7 @@ void ProgSortByStatistics::defineParams()
 
 
 //majorAxis and minorAxis is the estimated particle size in px
-void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool trained)
+void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
 {
     //#define DEBUG
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
@@ -97,9 +97,10 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
     double sign = 1;//;-1;
     int numNorm = 3;
     int numDescriptors0=numNorm;
+    int numDescriptors1;
     int numDescriptors2=4;
     int numDescriptors3=11;
-    int numDescriptors4 = 10;
+    int numDescriptors4=10;
 
     MultidimArray<float> v0(numDescriptors0);
     MultidimArray<float> v2(numDescriptors2);
@@ -191,7 +192,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         mI.statisticsAdjust(0,1);
         mask.setXmippOrigin();
         //The size of v1 depends on the image size and must be declared here
-        int numDescriptors1 = XSIZE(mI)/2; //=100;
+        numDescriptors1 = XSIZE(mI)/2; //=100;
         MultidimArray<float> v1(numDescriptors1);
         v1.initZeros(numDescriptors1);
         v04.reserve(numDescriptors0+numDescriptors1+numDescriptors2+numDescriptors3+numDescriptors4);
@@ -335,11 +336,12 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
             progress_bar(imgno);
     }
 
-    tempPcaAnalyzer0.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer1.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer2.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer3.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer4.evaluateZScore(2,20,trained);
+    FileName fn_tmp = fn.substr(fn.find_last_of("@") + 1);
+    tempPcaAnalyzer0.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer0").c_str(),numDescriptors0);
+    tempPcaAnalyzer1.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer1").c_str(),numDescriptors1);
+    tempPcaAnalyzer2.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer2").c_str(),numDescriptors2);
+    tempPcaAnalyzer3.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer3").c_str(),numDescriptors3);
+    tempPcaAnalyzer4.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer4").c_str(),numDescriptors4);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);
@@ -347,90 +349,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
     pcaAnalyzer.push_back(tempPcaAnalyzer3);
     pcaAnalyzer.push_back(tempPcaAnalyzer4);
 
-}
-
-void ProgSortByStatistics::processInputPrepare(MetaData &SF)
-{
-    PCAMahalanobisAnalyzer tempPcaAnalyzer;
-    tempPcaAnalyzer.clear();
-
-    Image<double> img;
-    MultidimArray<double> img2;
-    MultidimArray<int> radial_count;
-    MultidimArray<double> radial_avg;
-    Matrix1D<int> center(2);
-    center.initZeros();
-
-    if (verbose>0)
-        std::cout << " Processing training set ..." << std::endl;
-
-    int nr_imgs = SF.size();
-    if (verbose>0)
-        init_progress_bar(nr_imgs);
-    int c = XMIPP_MAX(1, nr_imgs / 60);
-    int imgno = 0, imgnoPCA=0;
-    MultidimArray<float> v;
-    MultidimArray<int> distance;
-    int dim;
-
-    bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
-    bool first=true;
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
-    {
-        if (thereIsEnable)
-        {
-            int enabled;
-            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-            if (enabled==-1)
-                continue;
-        }
-        img.readApplyGeo(SF,__iter.objId);
-        if (targetXdim!=-1 && targetXdim!=XSIZE(img()))
-        	selfScaleToSize(LINEAR,img(),targetXdim,targetXdim,1);
-        MultidimArray<double> &mI=img();
-        mI.setXmippOrigin();
-        mI.statisticsAdjust(0,1);
-
-        // Overall statistics
-        Histogram1D hist;
-        compute_hist(mI,hist,-4,4,31);
-
-        // Radial profile
-        img2.resizeNoCopy(mI);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img2)
-        {
-            double val=DIRECT_MULTIDIM_ELEM(mI,n);
-            DIRECT_MULTIDIM_ELEM(img2,n)=val*val;
-        }
-        if (first)
-        {
-            radialAveragePrecomputeDistance(img2, center, distance, dim);
-            first=false;
-        }
-        fastRadialAverage(img2, distance, dim, radial_avg, radial_count);
-
-        // Build vector
-        v.initZeros(XSIZE(hist)+XSIZE(img2)/2);
-        int idx=0;
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
-        v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
-        for (size_t i=0; i<XSIZE(img2)/2; i++)
-            v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
-
-        tempPcaAnalyzer.addVector(v);
-
-        if (imgno % c == 0 && verbose>0)
-            progress_bar(imgno);
-        imgno++;
-        imgnoPCA++;
-    }
-    if (verbose>0)
-        progress_bar(nr_imgs);
-
-    MultidimArray<double> vavg,vstddev;
-    tempPcaAnalyzer.computeStatistics(vavg,vstddev);
-    tempPcaAnalyzer.evaluateZScore(2,20,false);
-    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer);
 }
 
 void ProgSortByStatistics::run()
@@ -446,12 +364,12 @@ void ProgSortByStatistics::run()
     if (fn_train != "")
     {
         SFtrain.read(fn_train);
-        processInprocessInputPrepareSPTH(SFtrain,trained);
+        processInputPrepareSPTH(SFtrain,trained);
         trained = true;
-        processInprocessInputPrepareSPTH(SF,trained);
+        processInputPrepareSPTH(SF,trained);
     }
     else
-        processInprocessInputPrepareSPTH(SF,trained);
+        processInputPrepareSPTH(SF,trained);
 
     int imgno = 0;
     int numPCAs = pcaAnalyzer.size();
