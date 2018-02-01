@@ -27,12 +27,11 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import PointerParam, FloatParam
 from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
-from pyworkflow.em.data import SetOfMovies, Movie
 from pyworkflow.object import Set
 import pyworkflow.protocol.constants as cons
-import pyworkflow.em as em
-import os
-
+from pyworkflow.em import STEPS_PARALLEL
+from pyworkflow.em.data import SetOfMovies, Movie
+from os.path import exists
 
 class XmippProtMovieResize(ProtProcessMovies):
     """
@@ -43,13 +42,13 @@ class XmippProtMovieResize(ProtProcessMovies):
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
-        self.stepsExecutionMode = em.STEPS_PARALLEL
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
 
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies, Movie',
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select one or several movies. A gain image will '
                            'be calculated for each one of them.')
@@ -71,19 +70,12 @@ class XmippProtMovieResize(ProtProcessMovies):
             inputMovies: input movies set to be check
         """
         deps = []
-        if isinstance(self.inputMovies.get(), Movie):
-            movie = self.inputMovies.get()
+        # For each movie insert the step to process it
+        for idx, movie in enumerate(self.inputMovies.get()):
             if movie.getObjId() not in insertedDict:
                 stepId = self._insertMovieStep(movie)
                 deps.append(stepId)
                 insertedDict[movie.getObjId()] = stepId
-        else:
-            # For each movie insert the step to process it
-            for idx, movie in enumerate(self.inputMovies.get()):
-                if movie.getObjId() not in insertedDict:
-                    stepId = self._insertMovieStep(movie)
-                    deps.append(stepId)
-                    insertedDict[movie.getObjId()] = stepId
         return deps
 
     def _processMovie(self, movie):
@@ -109,7 +101,7 @@ class XmippProtMovieResize(ProtProcessMovies):
         refers to that one.
         """
         setFile = self._getPath(baseName)
-        if os.path.exists(setFile):
+        if exists(setFile):
             outputSet = SetClass(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
@@ -117,9 +109,8 @@ class XmippProtMovieResize(ProtProcessMovies):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        if isinstance(self.inputMovies.get(), SetOfMovies):
-            inputMovies = self.inputMovies.get()
-            outputSet.copyInfo(inputMovies)
+        inputMovies = self.inputMovies.get()
+        outputSet.copyInfo(inputMovies)
 
         factor = self.resizeFactor.get()
         newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
@@ -127,74 +118,54 @@ class XmippProtMovieResize(ProtProcessMovies):
 
         return outputSet
 
-
     def _checkNewInput(self):
-        if isinstance(self.inputMovies.get(), SetOfMovies):
-            ProtProcessMovies._checkNewInput(self)
-
+        ProtProcessMovies._checkNewInput(self)
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
             return
-        if isinstance(self.inputMovies.get(), Movie):
-            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite')
 
-            movie = self.inputMovies.get()
-            imgOut = em.data.Movie()
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+        # Check for newly done items
+        newDone = [m.clone() for m in self.listOfMovies
+                   if int(m.getObjId()) not in doneList
+                   and self._isMovieDone(m)]
+
+        allDone = len(doneList) + len(newDone)
+        # We have finished when there is not more input movies (stream closed)
+        # and the number of processed movies is equal to the number of inputs
+        self.finished = self.streamClosed and allDone == len(self.listOfMovies)
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        if newDone:
+            self._writeDoneList(newDone)
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+
+        imageSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite')
+
+        factor = self.resizeFactor.get()
+        newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
+        for movie in newDone:
+            imgOut = Movie()
             imgOut.setObjId(movie.getObjId())
-            imgOut.setFileName(self._getPath("movie_%06d_resize.mrcs" % movie.getObjId()))
+            imgOut.setFileName(self._getPath(
+                "movie_%06d_resize.mrcs" % movie.getObjId()))
             imgOut.setAcquisition(movie.getAcquisition())
-            factor = self.resizeFactor.get()
-            newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
             imgOut.setSamplingRate(newSamplingRate)
+            imgOut.setFramesRange(self.inputMovies.get().getFramesRange())
             imageSet.append(imgOut)
 
-            self._updateOutputSet('outputMovies', imageSet, Set.STREAM_CLOSED)
+        self._updateOutputSet('outputMovies', imageSet, streamMode)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
-            outputStep.setStatus(cons.STATUS_NEW)
-            self.finished = True
-        else:
-
-            # Load previously done items (from text file)
-            doneList = self._readDoneList()
-            # Check for newly done items
-            newDone = [m.clone() for m in self.listOfMovies
-                       if int(m.getObjId()) not in doneList and self._isMovieDone(m)]
-
-
-            allDone = len(doneList) + len(newDone)
-            # We have finished when there is not more input movies (stream closed)
-            # and the number of processed movies is equal to the number of inputs
-            self.finished = self.streamClosed and allDone == len(self.listOfMovies)
-            streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-
-            if newDone:
-                self._writeDoneList(newDone)
-            elif not self.finished:
-                # If we are not finished and no new output have been produced
-                # it does not make sense to proceed and updated the outputs
-                # so we exit from the function here
-                return
-
-            imageSet = self._loadOutputSet(em.data.SetOfMovies, 'movies.sqlite')
-
-            factor = self.resizeFactor.get()
-            newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
-            for movie in newDone:
-                imgOut = em.data.Movie()
-                imgOut.setObjId(movie.getObjId())
-                imgOut.setFileName(self._getPath("movie_%06d_resize.mrcs" % movie.getObjId()))
-                imgOut.setAcquisition(movie.getAcquisition())
-                imgOut.setSamplingRate(newSamplingRate)
-                imgOut.setFramesRange(self.inputMovies.get().getFramesRange())
-                imageSet.append(imgOut)
-
-            self._updateOutputSet('outputMovies', imageSet, streamMode)
-
-            if self.finished:  # Unlock createOutputStep if finished all jobs
-                outputStep = self._getFirstJoinStep()
-                if outputStep and outputStep.isWaiting():
-                    outputStep.setStatus(cons.STATUS_NEW)
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(cons.STATUS_NEW)
 
 
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
@@ -218,7 +189,7 @@ class XmippProtMovieResize(ProtProcessMovies):
 # --------------------------- INFO functions -------------------------------
     def _summary(self):
         fnSummary = self._getPath("summary.txt")
-        if not os.path.exists(fnSummary):
+        if not exists(fnSummary):
             summary = ["No summary information yet."]
         else:
             fhSummary = open(fnSummary, "r")

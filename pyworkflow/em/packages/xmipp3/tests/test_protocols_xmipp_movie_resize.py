@@ -85,9 +85,9 @@ class TestMovieResize(BaseTest):
 
         return protStream
 
-    def runMovieResize(self, fnMovies, newDim):
+    def runMovieResize(self, fnMovies, resizeVal):
         kwargs = {'inputMovies': fnMovies,
-                  'resizeDim': newDim
+                  'resizeFactor': resizeVal
                   }
         protResize = self.newProtocol(XmippProtMovieResize, **kwargs)
         self.proj.launchProtocol(protResize, wait=False)
@@ -118,10 +118,9 @@ class TestMovieResize(BaseTest):
         if protImportMovsStr.isFailed():
             self.assertTrue(False)
 
-        xOrig, yOrig, zOrig = protImportMovsStr.outputMovies.getDim()
-        newDim = int(xOrig/2)
+        resizeFactor=3.5
         protMovieResize = self.runMovieResize(protImportMovsStr.outputMovies,
-                                              newDim)
+                                              resizeFactor)
         counter = 1
         while not protMovieResize.hasAttribute('outputMovies'):
             time.sleep(2)
@@ -145,7 +144,9 @@ class TestMovieResize(BaseTest):
             self.assertTrue(False)
 
         xResize, yResize, zResize = protMovieResize.outputMovies.getDim()
-        if xResize != newDim or yResize != newDim or zResize != zOrig:
+        xOrig, yOrig, zOrig = protImportMovsStr.outputMovies.getDim()
+        if xResize != int(xOrig/resizeFactor) or \
+                yResize != int(yOrig/resizeFactor) or zResize != zOrig:
             self.assertTrue(False)
 
 
