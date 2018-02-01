@@ -29,7 +29,7 @@ from pyworkflow.em import ProtRefine3D, downloadPdb
 import pyworkflow.protocol.params as params
 from pyworkflow.em.data import Volume
 from pyworkflow.utils import replaceBaseExt, removeBaseExt, removeExt
-from locscale import *
+from convert import *
 
                                
 class ProtLocScale(ProtRefine3D):
@@ -167,12 +167,14 @@ class ProtLocScale(ProtRefine3D):
             maskFn = getAbsPath(self.binaryMask.get().getFileName())
             args += ' --mask %s' % maskFn
 
+        args += ' -w %s' % self.inputVolume.get().getDim()[0]
+
         if self.doParalelize:
             args += ' --mpi'
 
         inputFn = removeBaseExt(self.inputVolume.get().getFileName())
-        outFn = inputFn + '_scaled.vol'
-        args += ' -o %s' %self._getExtraPath(outFn)
+        outFn = inputFn + '_scaled.mrc'
+        args += ' -o %s' % getAbsPath(self._getExtraPath(outFn))
 
         return args
 
