@@ -82,6 +82,9 @@ the pdb file from coot  to scipion '
                       label='Extra commands for chimera viewer',
                       help="""Add extra commands in cmd file. Use for testing
                       """)
+        form.addParam('doInteractive', BooleanParam, default=True,
+                      label='Interactive', condition='False',
+                      help="""Makes coot an interactive protocol""")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot  to scipion')
         form.addLine("You may also execute (from script -> python) the "
@@ -108,14 +111,10 @@ the pdb file from coot  to scipion '
         convertId = self._insertFunctionStep('convertInputStep', self.inVolumes,
                                              self.norVolumesNames)
 
-        if self.extraCommands.get() != '':
-            interactive=False
-        else:
-            interactive=True
         self._insertFunctionStep('runCootStep', self.inVolumes,
                                      self.norVolumesNames,
                                      prerequisites=[convertId],
-                                     interactive=interactive)
+                                     interactive=self.doInteractive)
         #self._insertFunctionStep('createOutputStep', inVolumes,
         #                         norVolumesNames)
 
