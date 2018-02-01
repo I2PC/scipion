@@ -37,7 +37,7 @@ from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
 from pyworkflow.em.pdb_handler import fixCRYSrecordToPDBFile
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.utils.ccp4_utilities.convert import (
-    adaptBinFileToCCP4, runCCP4Program)
+    adaptBinFileToCCP4, runCCP4Program, ORIGIN)
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
     BooleanParam
 
@@ -125,13 +125,22 @@ class CCP4ProtRunRefmac(EMProtocol):
         """
         # TODO: IF NO VOLUME NAME USE THE VALUE ASSOCIATED TO THE PDB FILE
         # get input 3D map filename
-        inFileName  = self.inputVolume.get().getFileName()
-        # create local copy of 3Dmap
+        if self.inputVolume.get() is None:
+            fnVol = self.inputStructure.get().getVolume()
+            index, fn = fnVol.getLocation()
+            print "Volume: Volume associated to atomic structure %s(%d)\n" \
+                  % (fn, index)
+        else:
+            fnVol = self.inputVolume.get()
+            print "Volume: Input volume %s\n" % fnVol
+        inFileName  = fnVol.getFileName()
+        # create local copy of 3Dmap (tmp3DMapFile.mrc)
         localInFileName = self._getVolumeFileName()
+        #origin
         adaptBinFileToCCP4(inFileName, localInFileName,
                            self.inputVolume.get().getOrigin(
                                returnInitIfNone=True).getShifts(),
-                           self.inputVolume.get().getSamplingRate())
+                           self.inputVolume.get().getSamplingRate(), ORIGIN)
 
     def createDataDictStep(self):
         self.dict = {}
