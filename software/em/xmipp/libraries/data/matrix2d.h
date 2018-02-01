@@ -487,6 +487,15 @@ public:
         coreInit();
     }
 
+    /** Method will convert Matrix2D matrix to float[3][3] */
+    void convertTo(float out[3][3]) const {
+    	for (int i = 0; i < 3; i++) {
+    		for (int j = 0; j < 3; j++) {
+    			out[i][j] = (*this)(i, j);
+    		}
+    	}
+    }
+
     /** Core init from mapped file.
      * Offset is in bytes. */
     void coreInit(const FileName &fn, int Ydim, int Xdim, size_t offset=0)
