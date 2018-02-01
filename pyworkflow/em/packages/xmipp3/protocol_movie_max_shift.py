@@ -40,7 +40,7 @@ from pyworkflow.protocol.constants import (STATUS_NEW)
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
-                                Image)
+                                Image, Movie)
 
 
 class XmippProtMovieMaxShift(ProtProcessMovies):
@@ -62,13 +62,16 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         form.addParam('inputMovies', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MOVS,
                       pointerClass='SetOfMovies', 
-                      help='Select a set of previously aligned Movies '
-                           'or Micrographs.')
+                      help='Select a set of previously aligned Movies.')
 
-        form.addParam('maxFrameShift', params.FloatParam, default=10, 
-                       label='Max. frame shift (A)')
-        form.addParam('maxMovieShift', params.FloatParam, default=100,
-                       label='Max. movie shift (A)')
+        form.addParam('maxFrameShift', params.FloatParam, default=1, 
+                       label='Max. frame shift (A)',
+                       help='Movies with a drift between consecutive frames '
+                            'bigger than this parameter will be rejected.')
+        form.addParam('maxMovieShift', params.FloatParam, default=15,
+                       label='Max. movie shift (A)',
+                       help='Movies with a total travel bigger than '
+                            'this parameter will be rejected.')
         
     #--------------------------- INSERT steps functions ------------------------
     def _processMovie(self, movie):
@@ -77,21 +80,23 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         alignment = movie.getAlignment()
 
         if alignment is not None:
+            # getShifts() returns the absolute shifts from a certain refference
             shiftListX, shiftListY = alignment.getShifts()
             shiftArrayX = np.asarray(shiftListX)
             shiftArrayY = np.asarray(shiftListY)
             sampling = self.samplingRate
-            rejectedByFrame = ( np.max(np.abs(shiftArrayX)) * sampling > 
-                                self.maxFrameShift.get()              or
-                                np.max(np.abs(shiftArrayY)) * sampling > 
-                                self.maxFrameShift.get() )
 
-            cumsumX = np.cumsum(shiftArrayX)
-            cumsumY = np.cumsum(shiftArrayY)
-            rejectedByMovie = ( np.max(np.abs(cumsumX)) * sampling > 
-                                self.maxMovieShift.get()          or
-                                np.max(np.abs(cumsumY)) * sampling >
-                                self.maxMovieShift.get() )
+            rangeX = np.max(shiftArrayX) - np.min(shiftArrayX)
+            rangeY = np.max(shiftArrayY) - np.min(shiftArrayY)
+            rejectedByMovie = ( rangeX * sampling > self.maxMovieShift.get() or
+                                rangeY * sampling > self.maxMovieShift.get() )
+
+            frameShiftX = np.diff(shiftArrayX)
+            frameShiftY = np.diff(shiftArrayY)
+            rejectedByFrame = ( np.max(np.abs(frameShiftX)) * sampling > 
+                                self.maxFrameShift.get()          or
+                                np.max(np.abs(frameShiftY)) * sampling >
+                                self.maxFrameShift.get() )
 
             if not rejectedByFrame and not rejectedByMovie:
                 self.acceptedIdMoviesList.append(movieId)
@@ -184,7 +189,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
-
+  
         # Close the output objects
         if (exists(self._getPath('movies.sqlite'))):
             movieSetAccepted.close()
@@ -198,14 +203,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         pass
 
     #--------------------------- UTILS functions -------------------------------
-    def _createOutputMovies(self):
-        """ Returns True if an output set of movies will be generated.
-        The most common case is to always generate output movies,
-        either with alignment only or the binary aligned movie files.
-        Subclasses can override this function to change this behavior.
-        """
-        return True
-
     def _loadInputMovieSet(self):
         movieFile = self.inputMovies.get().getFileName()
         self.debug("Loading input db: %s" % movieFile)
@@ -222,15 +219,19 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
 
         if exists(setFile):
             outputSet = SetClass(filename=setFile)
+            if(outputSet.__len__() is 0):
+                pwutils.path.cleanPath(setFile)
+
+        if exists(setFile):
+            outputSet = SetClass(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
         else:
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        if isinstance(self.inputMovies.get(), SetOfMovies):
-            inputMovies = self.inputMovies.get()
-            outputSet.copyInfo(inputMovies)
+        inputMovies = self.inputMovies.get()
+        outputSet.copyInfo(inputMovies)
 
         if fixSampling:
             newSampling = inputMovies.getSamplingRate()

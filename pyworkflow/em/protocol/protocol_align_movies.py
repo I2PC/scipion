@@ -638,37 +638,33 @@ class ProtAlignMovies(ProtProcessMovies):
 
 def createAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """
-    sumMeanX = []
-    sumMeanY = []
     figureSize = (8, 6)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
-    preX = 0.0
-    preY = 0.0
-    sumMeanX.append(0.0)
-    sumMeanY.append(0.0)
     ax = figure.add_subplot(111)
     ax.grid()
+    ax.axis('equal')
     ax.set_title('Cartesian representation')
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
-    ax.plot(0, 0, 'yo-')
-    i = 1
+    
+    plotRange = max(max(meanX)-min(meanX), max(meanY)-min(meanY))
+    i = 1 
     skipLabels = ceil(len(meanX) / 10.0)
     for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
-        sumMeanX.append(preX)
-        sumMeanY.append(preY)
-        #ax.plot(preX, preY, 'yo-')
         if i % skipLabels == 0:
-            ax.text(preX-0.02, preY+0.02, str(i))
+            ax.text(x-0.02*plotRange, y+0.02*plotRange, str(i),
+                    horizontalalignment='right')
         i += 1
 
-    ax.plot(sumMeanX, sumMeanY, color='b')
-    ax.plot(sumMeanX, sumMeanY, 'yo')
+    ax.plot(meanX, meanY, color='b')
+    ax.plot(meanX, meanY, 'yo')
 
+    # setting the plot windows to properly see the data
+    ax.axis([min(meanX)-0.1*plotRange, max(meanX)+0.1*plotRange, 
+             min(meanY)-0.1*plotRange, max(meanY)+0.1*plotRange])
+    
     plotter.tightLayout()
 
     return plotter
