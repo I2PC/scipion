@@ -26,10 +26,11 @@
 This EM module contains Gautomatch auto-picking protocol 
 """
 
-from pyworkflow.em.utils.chimera_utilities.convert import getEnviron
+from pyworkflow.em.viewers.chimera_utils import getEnviron
 
 _logo = "ChimeraLogoSmall.png"
 
 from protocol_fit import ChimeraProtRigidFit
+from operate import ChimeraProtOperate
 from viewer import ChimeraProtRigidFitViewer
 _environ = getEnviron()
