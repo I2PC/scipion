@@ -39,7 +39,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.em.utils.chimera_utilities.convert import \
+from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile,  adaptOriginFromCCP4ToChimera, getProgram
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
