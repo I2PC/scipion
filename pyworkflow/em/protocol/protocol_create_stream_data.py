@@ -2,6 +2,7 @@
 # *
 # * Authors:     R. Marabini (roberto@cnb.csic.es)
 # *              Tomas Majtner (tmajtner@cnb.csic.es)   -- added particles
+# *              Amaya Jimenez (ajimenez@cnb.csic.es) -- Mov for SetOfMovs
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -80,7 +81,7 @@ class ProtCreateStreamData(EMProtocol):
                                'Particles'],
                       label='set Of',
                       help='create set of')
-        form.addParam('inputMovie', params.PointerParam, pointerClass='SetOfMovies',
+        form.addParam('inputMovies', params.PointerParam, pointerClass='SetOfMovies',
                       condition="setof==%d"%SET_OF_MOVIES,
                       label="movie",
                       help='This movie will be copied "number of items" times')
@@ -180,7 +181,7 @@ class ProtCreateStreamData(EMProtocol):
             if self.setof != SET_OF_MOVIES:
                 objSet.setSamplingRate(self.samplingRate.get())
             else:
-                objSet.setSamplingRate(self.inputMovie.get().getSamplingRate())
+                objSet.setSamplingRate(self.inputMovies.get().getSamplingRate())
 
         if self.setof == SET_OF_MOVIES:
             obj = Movie()
@@ -232,7 +233,7 @@ class ProtCreateStreamData(EMProtocol):
         newObjSet, newObj = self._checkNewItems(objSet)
         
         if self.setof == SET_OF_MOVIES:
-            newObjSet.setFramesRange(self.inputMovie.get().getFramesRange())
+            newObjSet.setFramesRange(self.inputMovies.get().getFramesRange())
 
         # check if end ....
         if self.setof == SET_OF_PARTICLES:
@@ -251,8 +252,8 @@ class ProtCreateStreamData(EMProtocol):
         if not ProtCreateStreamData.object or self.setof == SET_OF_MOVIES:
 
             if self.setof == SET_OF_MOVIES:
-                setDim = self.inputMovie.get().getSize()
-                for idx, mov in enumerate(self.inputMovie.get()):
+                setDim = self.inputMovies.get().getSize()
+                for idx, mov in enumerate(self.inputMovies.get()):
                     if idx == (counter - 1) % setDim:
                         newMov = mov.clone()
                         break
