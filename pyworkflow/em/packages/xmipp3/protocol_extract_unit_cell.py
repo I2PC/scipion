@@ -32,7 +32,7 @@ from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, \
 from pyworkflow.em.data import Transform
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.utils.ccp4_utilities.convert import Ccp4Header
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 from pyworkflow.protocol.params import PointerParam, FloatParam, EnumParam, \
     IntParam
 
