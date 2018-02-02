@@ -73,7 +73,7 @@ class TestMovieResize(BaseTest):
 
 
     def importMoviesStr(self, fnMovies):
-        kwargs = {'inputMovie': fnMovies,
+        kwargs = {'inputMovies': fnMovies,
                   'nDim': NUM_MOVIES,
                   'creationInterval': 30,
                   'delay': 10,

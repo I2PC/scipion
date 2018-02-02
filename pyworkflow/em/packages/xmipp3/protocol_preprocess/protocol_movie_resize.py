@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# * Authors:     Amaya Jimenez (ajimenez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -50,8 +50,7 @@ class XmippProtMovieResize(ProtProcessMovies):
 
         form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
                       label=Message.LABEL_INPUT_MOVS,
-                      help='Select one or several movies. A gain image will '
-                           'be calculated for each one of them.')
+                      help='Select a set of movies to be resized.')
         form.addParam('resizeFactor', FloatParam, default=1.0,
                       label='Downsampling factor',
                       help='Resize movies by a given downsampling factor.')
@@ -96,9 +95,6 @@ class XmippProtMovieResize(ProtProcessMovies):
     def _loadOutputSet(self, SetClass, baseName):
         """
         Load the output set if it exists or create a new one.
-        fixSampling: correct the output sampling rate if binning was used,
-        except for the case when the original movies are kept and shifts
-        refers to that one.
         """
         setFile = self._getPath(baseName)
         if exists(setFile):
@@ -188,13 +184,13 @@ class XmippProtMovieResize(ProtProcessMovies):
 
 # --------------------------- INFO functions -------------------------------
     def _summary(self):
-        fnSummary = self._getPath("summary.txt")
-        if not exists(fnSummary):
+        if not hasattr(self, 'outputMovies'):
             summary = ["No summary information yet."]
         else:
-            fhSummary = open(fnSummary, "r")
-            summary = []
-            for line in fhSummary.readlines():
-                summary.append(line.rstrip())
-            fhSummary.close()
+            xIn, yIn, zIn = self.inputMovies.get().getDim()
+            xOut, yOut, zOut = self.outputMovies.getDim()
+            summary = ["%d input movies of size %dx%dx%d resized to %d "
+                       "output movies of size %dx%dx%d."
+                       %(self.inputMovies.get().getSize(), xIn, yIn, zIn,
+                       self.outputMovies.getSize(), xOut, yOut, zOut)]
         return summary
