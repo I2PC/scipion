@@ -58,7 +58,7 @@ import showj
 import metadata as md
 from data import PdbFile
 from convert import ImageHandler
-from pyworkflow.em.utils.chimera_utilities.convert import \
+from pyworkflow.em.viewers.chimera_utils import \
     adaptOriginFromCCP4ToChimera, getChimeraEnviron,  createCoordinateAxisFile
 
 import xmipp
