@@ -155,8 +155,9 @@ class ProtRelionBase(EMProtocol):
                       important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')
-        form.addParam('copyAlignment', BooleanParam, default=True,
+        form.addParam('copyAlignment', BooleanParam, default=False,
                       label='Consider previous alignment?',
+                      condition='not doContinue',
                       help='If set to Yes, then alignment information from input'
                            ' particles will be considered.')
         form.addParam('maskDiameterA', IntParam, default=-1,
@@ -744,21 +745,22 @@ class ProtRelionBase(EMProtocol):
     def addSymmetry(self, container):
         container.addParam('symmetryGroup', StringParam, default='c1',
                            label="Symmetry",
-                           help='If the molecule is asymmetric, set Symmetry group '
-                                'to C1. Note their are multiple possibilities for '
-                                'icosahedral symmetry: \n'
-                                '* I1: No-Crowther 222 (standard in Heymann,Chagoyen '
-                                '& Belnap, JSB, 151 (2005) 196-207)               \n'
-                                '* I2: Crowther 222                                 \n'
-                                '* I3: 52-setting (as used in SPIDER?)              \n'
-                                '* I4: A different 52 setting                       \n'
+                           help='If the molecule is asymmetric, set Symmetry '
+                                'group to C1. Note their are multiple '
+                                'possibilities for icosahedral symmetry:\n'
+                                '* I1: No-Crowther 222 (standard in Heymann,'
+                                'Chagoyen  & Belnap, JSB, 151 (2005) 196-207)\n'
+                                '* I2: Crowther 222                          \n'
+                                '* I3: 52-setting (as used in SPIDER?)       \n'
+                                '* I4: A different 52 setting                \n'
                                 'The command *relion_refine --sym D2 '
-                                '--print_symmetry_ops* prints a list of all symmetry '
-                                'operators for symmetry group D2. RELION uses '
-                                'XMIPP\'s libraries for symmetry operations. '
-                                'Therefore, look at the XMIPP Wiki for more details:'
-                                ' http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/'
-                                'WebHome?topic=Symmetry')
+                                '--print_symmetry_ops* prints a list of all '
+                                'symmetry operators for symmetry group D2. '
+                                'RELION uses MIPP\'s libraries for symmetry '
+                                'operations.  Therefore, look at the XMIPP '
+                                'Wiki for more details:\n'
+                                ' http://xmipp.cnb.csic.es/twiki/bin/view/'
+                                'Xmipp/WebHome?topic=Symmetry')
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
@@ -798,79 +800,75 @@ class ProtRelionBase(EMProtocol):
                 the input particles are changed.
         """
         imgSet = self._getInputParticles()
-        imgStar = self._getFileName('input_star')
-
-        self.info("Converting set from '%s' into '%s'" %
-                  (imgSet.getFileName(), imgStar))
-
-        # Pass stack file as None to avoid write the images files
-        # If copyAlignmet is set to False pass alignType to ALIGN_NONE
-        if copyAlignment:
-            alignType = imgSet.getAlignment()
+        if not self.doContinue:
+            imgStar = self._getFileName('input_star')
+    
+            self.info("Converting set from '%s' into '%s'" %
+                      (imgSet.getFileName(), imgStar))
+    
+            # Pass stack file as None to avoid write the images files
+            # If copyAlignmet is set to False pass alignType to ALIGN_NONE
+            if copyAlignment:
+                alignType = imgSet.getAlignment()
+            else:
+                alignType = em.ALIGN_NONE
+    
+            writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
+                                alignType=alignType,
+                                postprocessImageRow=self._postprocessParticleRow)
+            
+            if self.doCtfManualGroups:
+                self._splitInCTFGroups(imgStar)
         else:
-            alignType = em.ALIGN_NONE
-
-        writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
-                            alignType=alignType,
-                            postprocessImageRow=self._postprocessParticleRow)
+            self.info("In continue mode is not necessary convert the input "
+                      "particles")
         
-        if self.doCtfManualGroups:
-            self._splitInCTFGroups(imgStar)
-        
-        if not self.IS_CLASSIFY:
-            if self.realignMovieFrames:
-                movieParticleSet = self.inputMovieParticles.get()
-                movieFn = self._getFileName('movie_particles')
-                self.info("Converting set from '%s' into '%s'" %
-                          (movieParticleSet.getFileName(), movieFn))
-                
-                auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
-                auxMovieParticles.copyInfo(movieParticleSet)
-                # Discard the movie particles that are not present in the
-                # refinement set
-                for movieParticle in movieParticleSet:
-                    particle = imgSet[movieParticle.getParticleId()]
-                    if particle is not None:
-                        auxMovieParticles.append(movieParticle)
-                writeSetOfParticles(auxMovieParticles,
-                                    movieFn, None, originalSet=imgSet,
-                                    postprocessImageRow=self._postprocessImageRow)
-                mdMovies = md.MetaData(movieFn)
-                continueRun = self.continueRun.get()
-                continueIter = self._getContinueIter()
-                mdParts = md.MetaData(continueRun._getFileName('data', iter = continueIter))
+        # if self.realignMovieFrames, self.IS_CLASSIFY must be False.
+        if self.realignMovieFrames:
+            movieParticleSet = self.inputMovieParticles.get()
+            movieFn = self._getFileName('movie_particles')
+            self.info("Converting set from '%s' into '%s'" %
+                      (movieParticleSet.getFileName(), movieFn))
+            
+            auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
+            auxMovieParticles.copyInfo(movieParticleSet)
+            
+            # Discard movie particles that are not present in the
+            # refinement set
+            for movieParticle in movieParticleSet:
+                particle = imgSet[movieParticle.getParticleId()]
+                if particle is not None:
+                    auxMovieParticles.append(movieParticle)
+                    
+            writeSetOfParticles(auxMovieParticles,
+                                movieFn, None, fillMagnification=True,
+                                postprocessImageRow=self._postprocessImageRow)
+            mdMovies = md.MetaData(movieFn)
+            continueRun = self.continueRun.get()
+            continueIter = self._getContinueIter()
+            mdParts = md.MetaData(continueRun._getFileName('data',
+                                                           iter = continueIter))
 
-                if getVersion() == V1_3:
-                    mdParts.renameColumn(md.RLN_IMAGE_NAME,
-                                         md.RLN_PARTICLE_NAME)
-                else:
-                    mdParts.renameColumn(md.RLN_IMAGE_NAME,
-                                         md.RLN_PARTICLE_ORI_NAME)
-                mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
-                
-                mag = movieParticleSet.getAcquisition().getMagnification()
-                movieSamplingRate = movieParticleSet.getSamplingRate()
-                detectorPxSize = mag * movieSamplingRate / 10000
-                
-                mdAux = md.MetaData()
-                mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE,
-                                      detectorPxSize)
-                mdMovies.fillConstant(md.RLN_CTF_MAGNIFICATION, mag)
-                mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
-                            md.RLN_IMAGE_ID, md.INNER_JOIN)
-                # set priors equal to orig. values
-                mdAux.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR, md.RLN_ORIENT_ORIGIN_X)
-                mdAux.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR, md.RLN_ORIENT_ORIGIN_Y)
-                mdAux.copyColumn(md.RLN_ORIENT_PSI_PRIOR, md.RLN_ORIENT_PSI)
-                mdAux.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
-                mdAux.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
-                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES, self._getNumberOfFrames())
-                if isVersion2():
-                    # FIXME: set to 1 till frame averaging is implemented in xmipp
-                    mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
+            if getVersion() == V1_3:
+                mdParts.renameColumn(md.RLN_IMAGE_NAME,
+                                     md.RLN_PARTICLE_NAME)
+            else:
+                mdParts.renameColumn(md.RLN_IMAGE_NAME,
+                                     md.RLN_PARTICLE_ORI_NAME)
+            
+            mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
+            
+            mdAux = md.MetaData()
+            mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
+                        md.RLN_IMAGE_ID, md.INNER_JOIN)
+            mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES,
+                               self._getNumberOfFrames())
+            if isVersion2():
+                # FIXME: set to 1 till frame averaging is implemented in xmipp
+                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
 
-                mdAux.write(movieFn, md.MD_OVERWRITE)
-                cleanPath(auxMovieParticles.getFileName())
+            mdAux.write(movieFn, md.MD_OVERWRITE)
+            cleanPath(auxMovieParticles.getFileName())
     
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
