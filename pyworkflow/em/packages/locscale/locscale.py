@@ -42,11 +42,11 @@ def getSupportedVersions():
 
 
 def getSupportedEmanVersions():
-    return ['2.12']
+    return ['2.11, 2.12, 2.2']
 
 
 def getEmanVersion():
-    path = os.environ['LOCSCALE_EMAN_HOME']
+    path = os.environ['EMAN2DIR']
     for v in getSupportedEmanVersions():
         if v in path:
             return v
@@ -66,7 +66,7 @@ def validateEmanVersion(protocol, errors):
 def getEmanEnviron():
     """ Setup the environment variables needed to launch Eman. """
     environ = Environ(os.environ)
-    EMAN2DIR = os.environ['LOCSCALE_EMAN_HOME']
+    EMAN2DIR = os.environ['EMAN2DIR']
     pathList = [os.path.join(EMAN2DIR, d)
                 for d in ['lib', 'bin', 'extlib/site-packages']]
 
@@ -88,7 +88,7 @@ def setEnviron():
     os.environ.update(getEmanEnviron())
     sys.path.append(os.path.join(os.environ["LOCSCALE_HOME"], "source"))
     if not 'EMAN_PYTHON' in os.environ:
-        os.environ['EMAN_PYTHON'] = os.path.join(os.environ['LOCSCALE_EMAN_HOME'],
+        os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'],
                                                  'Python/bin/python')
 
 def getProgram(program):
