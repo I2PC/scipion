@@ -29,7 +29,7 @@ import os
 
 from pyworkflow.em.convert import ImageHandler
 from protocol_fit import ChimeraProtRigidFit
-from pyworkflow.em.utils.chimera_utilities.convert import \
+from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, \
     adaptOriginFromCCP4ToChimera, runChimeraProgram, \
     getProgram, chimeraPdbTemplateFileName
