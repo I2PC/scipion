@@ -29,8 +29,10 @@
 # emringer and molprobity
 
 from pyworkflow.em.packages.chimera.protocol_fit import ChimeraProtRigidFit 
-from pyworkflow.em.packages.powerfit.protocol_powerfit import PowerfitProtRigidFit 
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb, ProtImportVolumes
+from pyworkflow.em.packages.powerfit.protocol_powerfit import \
+    PowerfitProtRigidFit
+from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
+    ProtImportVolumes
 from pyworkflow.em.packages.ccp4.protocol_coot import CootRefine
 from pyworkflow.tests import *
 import os.path
