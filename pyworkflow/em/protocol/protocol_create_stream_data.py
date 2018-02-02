@@ -2,6 +2,7 @@
 # *
 # * Authors:     R. Marabini (roberto@cnb.csic.es)
 # *              Tomas Majtner (tmajtner@cnb.csic.es)   -- added particles
+# *              Amaya Jimenez (ajimenez@cnb.csic.es) -- Mic for SetOfMics
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
