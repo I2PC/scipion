@@ -39,7 +39,7 @@ from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
 from base import ProtImportFiles
 from images import ProtImportImages
-from pyworkflow.em.utils.ccp4_utilities.convert import Ccp4Header
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 
 class ProtImportVolumes(ProtImportImages):
