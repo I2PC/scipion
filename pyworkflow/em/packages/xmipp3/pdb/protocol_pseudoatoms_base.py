@@ -35,9 +35,9 @@ from pyworkflow.protocol.params import EnumParam, PointerParam, FloatParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.protocol import Prot3D
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-from pyworkflow.em.utils.ccp4_utilities.convert import adaptBinFileToCCP4
+from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4
 from pyworkflow.em.data import Transform
-from pyworkflow.em.utils.chimera_utilities.convert import \
+from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, adaptOriginFromCCP4ToChimera
 import os
 
