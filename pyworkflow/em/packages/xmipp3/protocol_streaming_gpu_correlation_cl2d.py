@@ -609,7 +609,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         for i in range(len(listLastClasses)):
             listToMultiply = []
             total.append(listLastClasses[i] + listNewClasses[i])
-            if total[i]==0: #AJ to avoid to divide by zero
+            if total[i]==0: #AJ to avoid dividing by zero
                 listToMultiply = [0, 0]
             else:
                 listToMultiply.append(float(listLastClasses[i]) / float(total[i]))
