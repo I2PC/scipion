@@ -1,7 +1,7 @@
--# -*- conf -*-
--
--# Scipion will read this file to construct the protocols menu.
--
+# -*- conf -*-
+
+# Scipion will read this file to construct the protocols menu.
+
 [PROTOCOLS]
 Protocols SPA = [
 	{"tag": "section", "text": "Imports", "icon": "bookmark.png", "children": [
