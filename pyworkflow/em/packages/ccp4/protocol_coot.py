@@ -32,7 +32,7 @@ from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.utils.ccp4_utilities.convert import (getProgram,
+from pyworkflow.em.convert_header.CCP4.convert import (getProgram,
                                                         copyMRCHeader,
                                                         runCCP4Program,
                                                         cootPdbTemplateFileName,
@@ -57,6 +57,7 @@ the pdb file from coot  to scipion '
     _label = 'coot refinement'
     _program = ""
     _version = VERSION_1_2
+    COOT = 'coot'
 
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -180,10 +181,10 @@ the pdb file from coot  to scipion '
             args += " --no-graphics "
         args +=  " --script " + self._getTmpPath(cootScriptFileName) # script wit auxiliary files
 
-        self._log.info('Launching: ' + getProgram(os.environ['COOT']) + ' ' + args)
+        self._log.info('Launching: ' + getProgram(self.COOT) + ' ' + args)
 
         #run in the background
-        runCCP4Program(getProgram(os.environ['COOT']), args)
+        runCCP4Program(getProgram(self.COOT), args)
 
         counter=self.getCounter()
         self.createOutputStep(inVolumes,
@@ -236,7 +237,7 @@ the pdb file from coot  to scipion '
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram(os.environ['COOT'])
+        program = getProgram(self.COOT)
         if program is None:
             errors.append("Missing variables COOT and/or CCP4_HOME")
         elif not os.path.exists(program):
@@ -249,7 +250,7 @@ the pdb file from coot  to scipion '
             if program is not None:
                 errors.append("Current values:")
                 errors.append("CCP4_HOME = %s" % os.environ['CCP4_HOME'])
-                errors.append("COOT = %s" % os.environ['COOT'])
+                errors.append("COOT = %s" % self.COOT)
 
         # Check that the input volume exist
         if (not self.pdbFileToBeRefined.get().hasVolume()) \
