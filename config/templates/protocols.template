@@ -17,16 +17,16 @@ Protocols SPA = [
 		]}
 	]},
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [
-	{"tag": "protocol", "value": "XmippProtOFAlignment", "text": "default"},
-	{"tag": "protocol", "value": "XmippProtMovieCorr", "text": "default"},
-	{"tag": "protocol", "value": "XmippProtMovieAverage", "text": "default"},
-	{"tag": "protocol", "value": "ProtUnblur", "text": "default"},
-	{"tag": "protocol", "value": "ProtSummovie", "text": "default"},
-	{"tag": "protocol", "value": "ProtMotionCorr", "text": "default"},
-	{"tag": "protocol", "value": "XmippProtMovieGain", "text": "default"},
-	{"tag": "protocol", "value": "ProtMovieAssignGain", "text": "default"},
-	{"tag": "protocol", "value": "ProtMagDistCorr", "text": "default"},
-	{"tag": "protocol", "value": "ProtMagDistEst", "text": "default"}
+		{"tag": "protocol", "value": "XmippProtOFAlignment", "text": "default"},
+		{"tag": "protocol", "value": "XmippProtMovieCorr", "text": "default"},
+		{"tag": "protocol", "value": "XmippProtMovieAverage", "text": "default"},
+		{"tag": "protocol", "value": "ProtUnblur", "text": "default"},
+		{"tag": "protocol", "value": "ProtSummovie", "text": "default"},
+		{"tag": "protocol", "value": "ProtMotionCorr", "text": "default"},
+		{"tag": "protocol", "value": "XmippProtMovieGain", "text": "default"},
+		{"tag": "protocol", "value": "ProtMovieAssignGain", "text": "default"},
+		{"tag": "protocol", "value": "ProtMagDistCorr", "text": "default"},
+		{"tag": "protocol", "value": "ProtMagDistEst", "text": "default"}
 	]},
 	{"tag": "section", "text": "Micrographs", "children": [
 		{"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
@@ -91,34 +91,34 @@ Protocols SPA = [
 		]}
 	]},
 	{"tag": "section", "text": "2D", "children": [
-	{"tag": "protocol_group", "text": "Align", "openItem": "False", "children": [
-	{"tag": "protocol", "value": "XmippProtCL2DAlign",   "text": "default"},
-	{"tag": "protocol", "value": "SpiderProtAlignPairwise",  "text": "default"},
-	{"tag": "protocol", "value": "SpiderProtAlignAPSR",  "text": "default"},
-	{"tag": "section", "text": "more", "openItem": "False", "children": [
-	{"tag": "protocol", "value": "ProtAlignmentAssign", "text": "default"},
-	{"tag": "protocol", "value": "XmippProtApplyTransformationMatrix", "text": "default"},
-	{"tag": "protocol", "value": "XmippProtApplyAlignment", "text": "default"}
-	]}
-	]},
-	{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
-	{"tag": "protocol", "value": "XmippProtCL2D",   "text": "default"},
-	{"tag": "protocol", "value": "ProtRelionClassify2D",   "text": "default"},
-	{"tag": "section", "text": "mda", "openItem": "False", "children": [
-	{"tag": "protocol", "value": "SpiderProtCAPCA", "text": "default"},
-	{"tag": "protocol", "value": "SpiderProtClassifyWard", "text": "default"},
-	{"tag": "protocol", "value": "SpiderProtClassifyDiday", "text": "default"},
-	{"tag": "protocol", "value": "SpiderProtClassifyKmeans", "text": "default"}
-	]},
-	{"tag": "section", "text": "more", "openItem": "False", "children": [
-	{"tag": "protocol", "value": "XmippProtML2D", "text": "default"},
-	{"tag": "protocol", "value": "XmippProtKerdensom", "text": "default"},
-	{"tag": "protocol", "value": "XmippProtRotSpectra", "text": "default"},
-	{"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"},
-	{"tag": "protocol", "value": "ImagicProtMSA", "text": "default"},
-	{"tag": "protocol", "value": "ImagicProtMSAClassify", "text": "default"}
-	]}
-	]}
+		{"tag": "protocol_group", "text": "Align", "openItem": "False", "children": [
+			{"tag": "protocol", "value": "XmippProtCL2DAlign",   "text": "default"},
+			{"tag": "protocol", "value": "SpiderProtAlignPairwise",  "text": "default"},
+			{"tag": "protocol", "value": "SpiderProtAlignAPSR",  "text": "default"},
+			{"tag": "section", "text": "more", "openItem": "False", "children": [
+				{"tag": "protocol", "value": "ProtAlignmentAssign", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtApplyTransformationMatrix", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtApplyAlignment", "text": "default"}
+			]}
+		]},
+		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
+			{"tag": "protocol", "value": "XmippProtCL2D",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelionClassify2D",   "text": "default"},
+			{"tag": "section", "text": "mda", "openItem": "False", "children": [
+				{"tag": "protocol", "value": "SpiderProtCAPCA", "text": "default"},
+				{"tag": "protocol", "value": "SpiderProtClassifyWard", "text": "default"},
+				{"tag": "protocol", "value": "SpiderProtClassifyDiday", "text": "default"},
+				{"tag": "protocol", "value": "SpiderProtClassifyKmeans", "text": "default"}
+			]},
+			{"tag": "section", "text": "more", "openItem": "False", "children": [
+				{"tag": "protocol", "value": "XmippProtML2D", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtKerdensom", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtRotSpectra", "text": "default"},
+				{"tag": "protocol", "value": "ProtClassesConsensus", "text": "default"},
+		{"tag": "protocol", "value": "ImagicProtMSA", "text": "default"},
+			{"tag": "protocol", "value": "ImagicProtMSAClassify", "text": "default"}
+			]}
+		]}
 	]},
 	{"tag": "section", "text": "3D", "children": [
 		{"tag": "protocol_group", "text": "Initial volume", "openItem": "False", "children": [
@@ -222,12 +222,12 @@ Protocols SPA = [
     ]}]
 MDA workflow = [
 	{"tag": "section", "text": "MDA workflow", "children": [
-	{"tag": "protocol",      "value": "ProtImportParticles",  "text": "Import particles", "icon": "bookmark.png"},
-	{"tag": "protocol",      "value": "SpiderProtFilter",     "text": "Filter (optional)"},
-	{"tag": "protocol_base", "value": "ProtAlign2D",          "text": "Align", "openItem": true},
-	{"tag": "protocol",      "value": "SpiderProtCustomMask", "text": "Create mask (optional)"},
-	{"tag": "protocol",      "value": "SpiderProtCAPCA",      "text": "Dimension reduction"},
-	{"tag": "protocol_base", "value": "SpiderProtClassify",   "text": "Classify", "openItem": true}
+		{"tag": "protocol",      "value": "ProtImportParticles",  "text": "Import particles", "icon": "bookmark.png"},
+		{"tag": "protocol",      "value": "SpiderProtFilter",     "text": "Filter (optional)"},
+		{"tag": "protocol_base", "value": "ProtAlign2D",          "text": "Align", "openItem": true},
+		{"tag": "protocol",      "value": "SpiderProtCustomMask", "text": "Create mask (optional)"},
+		{"tag": "protocol",      "value": "SpiderProtCAPCA",      "text": "Dimension reduction"},
+		{"tag": "protocol_base", "value": "SpiderProtClassify",   "text": "Classify", "openItem": true}
 	]}]
 Random Conical Tilt = [
 	{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "Import micrograph pairs", "icon": "bookmark.png"},
@@ -236,23 +236,23 @@ Random Conical Tilt = [
 	{"tag": "protocol", "value": "XmippProtRCT",                   "text": "Random Conical Tilt"}]
 HEMNMA = [
 	{"tag": "section", "text": "1. PDB structure", "children": [
-	{"tag": "protocol", "value": "ProtImportPdb", "text": " a. Import PDB", "icon": "bookmark.png"},
-	{"tag": "protocol", "value": "ProtImportVolumes", "text": "b1. Import volume", "icon": "bookmark.png"},
-	{"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "b2. Convert volume to PDB"}
+		{"tag": "protocol", "value": "ProtImportPdb", "text": " a. Import PDB", "icon": "bookmark.png"},
+		{"tag": "protocol", "value": "ProtImportVolumes", "text": "b1. Import volume", "icon": "bookmark.png"},
+		{"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "b2. Convert volume to PDB"}
 	]},
 	{"tag": "section", "text": "2. Normal mode analysis", "children": [
-	{"tag": "protocol", "value": "XmippProtNMA", "text": "Modes analysis & selection"}
+		{"tag": "protocol", "value": "XmippProtNMA", "text": "Modes analysis & selection"}
 	]},
 	{"tag": "section", "text": "3. Stop here or continue"},
 	{"tag": "section", "text": "4. Images", "children": [
-	{"tag": "protocol", "value": "ProtImportParticles", "text": "Import particles", "icon": "bookmark.png"},
-	{"tag": "protocol", "value": "XmippProtCropResizeParticles", "text": "Resize particles (optional)"}
+		{"tag": "protocol", "value": "ProtImportParticles", "text": "Import particles", "icon": "bookmark.png"},
+		{"tag": "protocol", "value": "XmippProtCropResizeParticles", "text": "Resize particles (optional)"}
 	]},
 	{"tag": "section", "text": "5. Conformational distribution", "children": [
-	{"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "Image analysis with selected modes"}
+		{"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "Image analysis with selected modes"}
 	]},
 	{"tag": "section", "text": "6. 3D reconstructions & animations", "children": [
-	{"tag": "protocol", "value": "XmippProtDimredNMA", "text": "Clustering and trajectories"}
+		{"tag": "protocol", "value": "XmippProtDimredNMA", "text": "Clustering and trajectories"}
 	]}]
 Localized Reconstruction = [
 	{"tag": "protocol", "value": "ProtLocalizedRecons", "text": "1. Compute sub-particles"},
