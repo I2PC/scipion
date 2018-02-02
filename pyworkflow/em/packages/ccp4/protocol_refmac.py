@@ -36,8 +36,8 @@ from pyworkflow.em.packages.ccp4.refmac_template_mask import \
 from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
 from pyworkflow.em.pdb_handler import fixCRYSrecordToPDBFile
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.utils.ccp4_utilities.convert import (
-    adaptBinFileToCCP4, runCCP4Program, ORIGIN)
+from pyworkflow.em.convert_header.CCP4.convert import (
+    adaptFileToCCP4, runCCP4Program, ORIGIN, getProgram)
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
     BooleanParam
 
@@ -58,6 +58,7 @@ class CCP4ProtRunRefmac(EMProtocol):
     maskedMapFileName = "masked_fs"
     refmacShiftsNames=["pdbin_cell", "pdbin_shifts", "pdbout_cell",
                        "pdbout_shifts"]
+    REFMAC='refmac5'
 
     def __init__(self, **kwargs):
             EMProtocol.__init__(self, **kwargs)
@@ -112,12 +113,13 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     # --------------------------- STEPS functions --------------------------------------------
     def fixCRYSrecordToPDBFileStep(self):
+        fnVol = self._getInputVolume()
         self.fixedPDBFileName = fixCRYSrecordToPDBFile(
         self.inputStructure.get().getFileName(),
         self._getTmpPath(),
-            x=self.inputVolume.get().getDim()[0],
-            y=self.inputVolume.get().getDim()[1],
-            z=self.inputVolume.get().getDim()[2],
+            x=fnVol.getDim()[0],
+            y=fnVol.getDim()[1],
+            z=fnVol.getDim()[2],
             alpha=90., beta=90., gamma=90.)
 
     def convertInputStep(self):
@@ -125,27 +127,19 @@ class CCP4ProtRunRefmac(EMProtocol):
         """
         # TODO: IF NO VOLUME NAME USE THE VALUE ASSOCIATED TO THE PDB FILE
         # get input 3D map filename
-        if self.inputVolume.get() is None:
-            fnVol = self.inputStructure.get().getVolume()
-            index, fn = fnVol.getLocation()
-            print "Volume: Volume associated to atomic structure %s(%d)\n" \
-                  % (fn, index)
-        else:
-            fnVol = self.inputVolume.get()
-            print "Volume: Input volume %s\n" % fnVol
-        inFileName  = fnVol.getFileName()
+        fnVol = self._getInputVolume()
+        inFileName = fnVol.getFileName()
         # create local copy of 3Dmap (tmp3DMapFile.mrc)
         localInFileName = self._getVolumeFileName()
-        #origin
-        adaptBinFileToCCP4(inFileName, localInFileName,
-                           self.inputVolume.get().getOrigin(
-                               returnInitIfNone=True).getShifts(),
-                           self.inputVolume.get().getSamplingRate(), ORIGIN)
+        origin = fnVol.getOrigin(returnInitIfNone=True).getShifts()
+        sampling = fnVol.getSamplingRate()
+        adaptFileToCCP4(inFileName, localInFileName, origin, sampling,
+                        ORIGIN)
 
     def createDataDictStep(self):
         self.dict = {}
         self.dict['CCP4_HOME'] = os.environ['CCP4_HOME']
-        self.dict['REFMAC_BIN'] = os.environ['REFMAC_BIN']
+        self.dict['REFMAC_BIN'] = getProgram(self.REFMAC)
         # dict['PDBDIR'] =  os.path.dirname(self.inputStructure.get().getFileName())
         self.dict['PDBDIR'] = os.path.dirname(self.fixedPDBFileName)
         pdfileName = os.path.splitext(
@@ -194,7 +188,8 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     def createIfftScriptFileStep(self):
         # samling
-        sampling = self.inputVolume.get().getSamplingRate()
+        fnVol = self._getInputVolume()
+        sampling = fnVol.getSamplingRate()
         # parse refmac shifts
         refmacShiftDict = self.parseRefmacShiftFile()
         shiftDict = refmacShiftDict[self.refmacShiftsNames[0]]
@@ -220,28 +215,29 @@ class CCP4ProtRunRefmac(EMProtocol):
         volLocation = vol.setLocation(self._getExtraPath('%s.map'
                                              %self.maskedMapFileName)) #
         # ifft volume
-        sampling = self.inputVolume.get().getSamplingRate()
+        fnVol = self._getInputVolume()
+        sampling = fnVol.getSamplingRate()
         vol.setSamplingRate(sampling)
         #
         """
         ccp4header = Ccp4Header(volLocation, readHeader=True)
         t = Transform()
         x, y, z = ccp4header.getOffset()  # origin output vol coordinates
-        _inputVol = self.inputVolume.get()
+        fnVol = self._getInputVolume()
         # x, y, z origin input vol coordinates
-        x_origin = _inputVol.getOrigin().getShifts()[0]
-        y_origin = _inputVol.getOrigin().getShifts()[1]
-        z_origin = _inputVol.getOrigin().getShifts()[2]
+        x_origin = fnVol.getOrigin().getShifts()[0]
+        y_origin = fnVol.getOrigin().getShifts()[1]
+        z_origin = fnVol.getOrigin().getShifts()[2]
         # x, y, z origin output vol coordinates
-        x += _inputVol.getDim()[0] / 2. - x_origin
-        y += _inputVol.getDim()[1] / 2. - y_origin
-        z += _inputVol.getDim()[2] / 2. - z_origin
+        x += fnVol.getDim()[0] / 2. - x_origin
+        y += fnVol.getDim()[1] / 2. - y_origin
+        z += fnVol.getDim()[2] / 2. - z_origin
         t.setShifts(-x, -y, -z)  # we follow chimera convention no MRC
         vol.setOrigin(t)
         """
         #
         self._defineOutputs(outputMaskedVolume=vol)
-        self._defineSourceRelation(self.inputVolume, self.outputMaskedVolume)
+        self._defineSourceRelation(fnVol, self.outputMaskedVolume)
         self._defineSourceRelation(self.inputStructure, self.outputMaskedVolume)
 
     def createRefineScriptFileStep(self):
@@ -263,7 +259,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         pdb.setFileName(self._getOutPdbFileName())
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure, self.outputPdb)
-        self._defineSourceRelation(self.inputVolume, self.outputPdb)
+        fnVol = self._getInputVolume()
+        self._defineSourceRelation(fnVol, self.outputPdb)
 
     def writeFinalResultsTableStep(self):
         with open(self._getlogFileName()) as input_data:
@@ -276,6 +273,12 @@ class CCP4ProtRunRefmac(EMProtocol):
                 print line
 
     # --------------------------- UTLIS functions --------------------------------------------
+    def _getInputVolume(self):
+        if self.inputVolume.get() is None:
+            fnVol = self.inputStructure.get().getVolume()
+        else:
+            fnVol = self.inputVolume.get()
+        return fnVol
     def _getOutPdbFileName(self):
         pdfileName = os.path.splitext(os.path.basename(
             self.inputStructure.get().getFileName()))[0]
