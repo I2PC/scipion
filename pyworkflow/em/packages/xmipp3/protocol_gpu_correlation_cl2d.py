@@ -35,7 +35,6 @@ from convert import writeSetOfParticles
 from shutil import copy
 from os.path import join, exists
 from os import mkdir, remove, listdir
-import sys
 
 
 class XmippProtGpuCrrCL2D(ProtAlign2D):
@@ -369,11 +368,12 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
     def iterationStep (self, refSet, imgsExp, iter, useReferenceImages, level, flag_split, flag_attraction):
 
         print('iterationStep')
+
+        if not exists(join(self._getExtraPath(), 'level%03d' % level)):
+            mkdir(join(self._getExtraPath(), 'level%03d' % level))
+
         flag_error = False
         if not useReferenceImages and iter==0 and flag_split==True:
-
-            if not exists(join(self._getExtraPath(),'level%03d' % level)):
-                mkdir(join(self._getExtraPath(),'level%03d' % level))
 
             # First step: divide the metadata input file to generate
             # a couple of references
