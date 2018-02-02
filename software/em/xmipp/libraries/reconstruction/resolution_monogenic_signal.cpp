@@ -206,6 +206,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 
 	int size = ZSIZE(pMask);
 
+	VEC_ELEM(freq_fourier,0) = 1e-38;
 	for(size_t k=0; k<size_fourier; ++k)
 	{
 		FFT_IDX2DIGFREQ(k,size, u);
@@ -441,6 +442,7 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 	{
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) < last_res)
 		{
+			DIRECT_MULTIDIM_ELEM(resolutionVol, n) = -1;
 			if (DIRECT_MULTIDIM_ELEM(pMask, n) >=1)
 			{
 				DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
@@ -449,14 +451,13 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 			else
 			{
 				DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
-				DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
 				DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
 			}
 		}
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) > trimming_value)
 		{
 		  DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
-		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
+		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = -1;
 		  DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
 		}
 	}
