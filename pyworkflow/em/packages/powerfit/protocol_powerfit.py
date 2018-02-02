@@ -26,9 +26,9 @@
 # **************************************************************************
 
 from pyworkflow.em import *
-from pyworkflow.em.utils.ccp4_utilities.convert import adaptBinFileToCCP4, \
+from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4, \
     ORIGIN
-from pyworkflow.em.utils.chimera_utilities.convert import \
+from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils import *
@@ -92,8 +92,8 @@ class PowerfitProtRigidFit(ProtFitting3D):
         origin = volume.getOrigin(returnInitIfNone=True).getShifts()
 
         # powerfit needs offset in start
-        adaptBinFileToCCP4(volume.getFileName(), localInputVol,
-                           origin, sampling, ORIGIN)
+        adaptFileToCCP4(volume.getFileName(), localInputVol,
+                        origin, sampling, ORIGIN)
         args = "%s %f %s -d %s -p %d -a %f -n %d" % (localInputVol,
                                                      self.resolution,
                                                      self.inputPDB.get().
