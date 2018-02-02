@@ -35,11 +35,9 @@ from protocol_extract_unit_cell import XmippProtExtractUnit
 from pyworkflow.em.constants import SYM_I222
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import (SetOfVolumes)
-from pyworkflow.em.utils.chimera_utilities.convert import \
+from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera
-from pyworkflow.em.utils.chimera_utilities.convert import \
-    symMapperScipionchimera, getProgram
+    adaptOriginFromCCP4ToChimera, symMapperScipionchimera, getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 
 VOLUME_SLICES = 1
