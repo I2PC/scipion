@@ -32,7 +32,7 @@ from pyworkflow.em.data import PdbFile, Volume
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 from pyworkflow.em.data import Transform
-from pyworkflow.em.utils.chimera_utilities.convert import \
+from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile
 
 
