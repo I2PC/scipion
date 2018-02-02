@@ -1283,7 +1283,8 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 	}
 	String fnFinal=formatString("%s/%s",fnDir.c_str(),fn_out.c_str());
 	mdOut.write(fnFinal);
-	//printf("fnFinal %s \n", fnFinal.c_str()); //TODO fix what happens when dont put an odir but the name has a path, appears something like ./path/filename.whatever
+	//printf("fnFinal %s \n", fnFinal.c_str());
+	//TODO fix what happens when dont put an odir but the name has a path, appears something like ./path/filename.whatever
 
 	delete iterExp;
 
@@ -1594,7 +1595,11 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	for(int i=0; i<mdInSize; i++){
 		skip_image=false;
 		SF.getRow(rowSF, iterSF->objId);
-		rowSF.getValue(MDL_ITEM_ID, refNum);
+		if (rowSF.containsLabel(MDL_ITEM_ID))
+			rowSF.getValue(MDL_ITEM_ID, refNum);
+		else
+			refNum=i+1;
+
 		iterSFexp->init(SFexp);
 
 		MetaData SFq;
