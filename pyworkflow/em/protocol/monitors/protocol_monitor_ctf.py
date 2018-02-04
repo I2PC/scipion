@@ -161,11 +161,11 @@ class MonitorCTF(Monitor):
             astig = abs(defocusU - defocusV)
             resolution = ctf.getResolution()
             if isinf(resolution):
-                 resolution=0.
+                 resolution = 0.
             
             fitQuality = ctf.getFitQuality()
             if fitQuality is None or isinf(fitQuality): 
-                  fitQuality=0.
+                  fitQuality = 0.
             
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
