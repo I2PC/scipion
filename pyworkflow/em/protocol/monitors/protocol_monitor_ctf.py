@@ -40,6 +40,7 @@ from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
 
 from pyworkflow.em.plotter import EmPlotter
+from math import isinf
 
 CTF_LOG_SQLITE = 'ctf_log.sqlite'
 
@@ -154,10 +155,18 @@ class MonitorCTF(Monitor):
             ctf = setOfCTFs[ctfID]
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
-            #defocusAngle = ctf.getDefocusAngle()
+            defocusAngle = ctf.getDefocusAngle()
+            if defocusAngle > 360 or defocusAngle< -360:
+                defocusAngle = 0
             astig = abs(defocusU - defocusV)
             resolution = ctf.getResolution()
+            if isinf(resolution):
+                 resolution=0.
+            
             fitQuality = ctf.getFitQuality()
+            if fitQuality is None or isinf(fitQuality): 
+                  fitQuality=0.
+            
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
             shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
