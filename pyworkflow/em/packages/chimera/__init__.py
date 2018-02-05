@@ -31,6 +31,7 @@ from pyworkflow.em.viewers.chimera_utils import getEnviron
 _logo = "ChimeraLogoSmall.png"
 
 from protocol_fit import ChimeraProtRigidFit
-from operate import ChimeraProtOperate
+from protocol_operate import ChimeraProtOperate
 from viewer import ChimeraProtRigidFitViewer
+from test_protocol_chimera_operate import TestChimeraOperate
 _environ = getEnviron()
