@@ -407,7 +407,6 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 	{
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) < last_res)
 		{
-			DIRECT_MULTIDIM_ELEM(resolutionVol, n) = -1;
 			if (DIRECT_MULTIDIM_ELEM(pMask, n) >=1)
 			{
 				DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
@@ -422,7 +421,7 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) > trimming_value)
 		{
 		  DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
-		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = -1;
+		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = filling_value;
 		  DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
 		}
 	}
