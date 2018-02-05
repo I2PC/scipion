@@ -38,11 +38,11 @@ from pyworkflow.em.viewers.chimera_utils import \
     adaptOriginFromCCP4ToChimera, getProgram, runChimeraProgram,\
     chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
     chimeraScriptFileName
-from pyworkflow.em.packages.chimera.operate import createScriptFile
+from pyworkflow.em.packages.chimera.protocol_operate import createScriptFile
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     StringParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.packages.chimera.operate import ChimeraProtOperate
+from pyworkflow.em.packages.chimera.protocol_operate import ChimeraProtOperate
 
 
 class ChimeraProtRigidFit(ChimeraProtOperate):
