@@ -44,7 +44,6 @@ class ChimeraProtRigidFitViewer(Viewer):
     _environments = [DESKTOP_TKINTER]
 
     def _visualize(self, obj, **args):
-            # TODO if input volume is not mrc this will not work.
         # Construct the coordinate file and visualization
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
@@ -93,11 +92,12 @@ class ChimeraProtRigidFitViewer(Viewer):
                         "%0.2f,%0.2f,%0.2f\n"
                         % (outputVol.getSamplingRate(), x, y, z))
 
-        outputPDB = os.path.abspath(self.protocol._getExtraPath((
-                     chimeraPdbTemplateFileName) % 1))
-
-        if os.path.exists(outputPDB):
-            f.write("open %s\n" % outputPDB)
+        directory = self.protocol._getExtraPath()
+        counter=0
+        for filename in os.listdir(directory):
+            if filename.endswith(".pdb"):
+                path = os.path.join(directory, filename)
+                f.write("open %s\n" % os.path.abspath(path))
 
         f.close()
 
