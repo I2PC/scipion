@@ -107,6 +107,16 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                            'suboptimal fitting. This options resamples micrographs to '
                            'a more reasonable pixel size if needed',
                       expertLevel=params.LEVEL_ADVANCED)
+
+        form.addParam('slowSearch', params.BooleanParam, default=True,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Slower, more exhaustive search?",
+                      condition='useCtffind4 and _isNewCtffind4',
+                      help="From version 4.1.5 to 4.1.8 the slow (more precise) "
+                           "search was activated by default because of reports the "
+                           "faster 1D search was significantly less accurate "
+                           "(thanks Rado Danev & Tim Grant). "
+                           "Set this parameters to *No* to get faster fits.")
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
@@ -273,10 +283,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
-            if self.resamplePix:  # ctffind >= v4.1.5
-                self._params['resamplePix'] = "yes"
-            else:
-                self._params['resamplePix'] = "no"
+
+            # ctffind >= v4.1.5
+            self._params['resamplePix'] = "yes" if self.resamplePix else "no"
+
+            self._params['slowSearch'] = "yes" if self.slowSearch else "no"
 
             self._argsCtffind4()
 
@@ -311,10 +322,10 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
-            if self.resamplePix:  # ctffind >= v4.1.5
-                self._params['resamplePix'] = "yes"
-            else:
-                self._params['resamplePix'] = "no"
+            # ctffind >= v4.1.5
+            self._params['resamplePix'] = "yes" if self.resamplePix else "no"
+
+            self._params['slowSearch'] = "yes" if self.slowSearch else "no"
 
             self._argsCtffind4()
 
@@ -356,7 +367,7 @@ eof
             if self.findPhaseShift:
                 self._args += """
 no
-no
+%(slowSearch)s
 yes
 %(astigmatism)f
 %(phaseShift)s
@@ -370,7 +381,7 @@ eof
             else:
                 self._args += """
 no
-no
+%(slowSearch)s
 yes
 %(astigmatism)f
 %(phaseShift)s
@@ -424,3 +435,4 @@ eof
                            " but returns an error code. Disregard error messages until this is fixed."
                            "http://grigoriefflab.janelia.org/node/5421")
         return summary
+

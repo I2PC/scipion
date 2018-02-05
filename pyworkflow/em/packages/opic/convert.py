@@ -39,7 +39,8 @@ from collections import OrderedDict
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.em.packages.opic import LOCALREC_HOME, LOCALREC_RELION_HOME
+from pyworkflow.em.packages.opic import (LOCALREC_HOME, LOCALREC_RELION_HOME,
+                                         RELION_HOME,TMP_RELION_HOME)
 
 from pyworkflow.object import ObjectWrap, String
 from pyworkflow.utils import Environ
@@ -125,12 +126,20 @@ def getRelionVersion():
     return ''
 
 
+def modRelionHome():
+    os.environ[TMP_RELION_HOME] = os.environ[RELION_HOME]
+    os.environ[RELION_HOME] = os.environ[LOCALREC_RELION_HOME]
+
+
+def restituteRelionHome():
+    os.environ[RELION_HOME] = os.environ[TMP_RELION_HOME]
+
+
 def getRelionEnviron():
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
     
     relionHome = os.environ[LOCALREC_RELION_HOME]
-    
     binPath = join(relionHome, 'bin')
     libPath = join(relionHome, 'lib') + ":" + join(relionHome, 'lib64')
     
@@ -140,12 +149,12 @@ def getRelionEnviron():
                         'SCIPION_MPI_FLAGS': os.environ.get(
                             'RELION_MPI_FLAGS', ''),
                         }, position=Environ.BEGIN)
-    
     return environ
 
 
 def setEnviron():
     """ Setup the environment variables needed to import localrec classes. """
+    modRelionHome()
     os.environ.update(getRelionEnviron())
     sys.path.append(os.path.join(os.environ[LOCALREC_HOME], "lib"))
 

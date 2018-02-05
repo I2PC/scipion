@@ -25,6 +25,7 @@
 
 import os
 from itertools import izip
+from math import ceil
 
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
@@ -467,7 +468,7 @@ eof
         plotter.savefig(self._getPlotGlobal(movie))
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
-    """ Create a plotter with the cumulative shift per frame. """
+    """ Create a plotter with the shift per frame. """
     sumMeanX = []
     sumMeanY = []
     preX = 0.0
@@ -478,19 +479,24 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     figure = plotter.getFigure()
     ax = figure.add_subplot(111)
     ax.grid()
-    ax.set_title('Global frame shift (cumulative)')
+    ax.set_title('Alignment based upon full frames')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
-    #if meanX[0] != 0 or meanY[0] != 0:
-    #    raise Exception("First frame shift must be (0,0)!")
-
+    
     i = first
+    skipLabels = ceil(len(meanX)/10.0)
+    labelTick = 1
+
     for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
+        preX = x
+        preY = y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
-        ax.text(preX - 0.02, preY + 0.02, str(i))
+        if labelTick == 1:
+            ax.text(preX - 0.02, preY + 0.02, str(i))
+            labelTick = skipLabels
+        else:
+            labelTick -= 1
         i += 1
 
     ax.plot(sumMeanX, sumMeanY, color='b')
@@ -499,3 +505,4 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     plotter.tightLayout()
 
     return plotter
+

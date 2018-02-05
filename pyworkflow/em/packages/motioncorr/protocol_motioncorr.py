@@ -327,6 +327,13 @@ class ProtMotionCorr(ProtAlignMovies):
                 preExp, dose = self._getCorrectedDose(inputMovies)
             else:
                 preExp, dose = 0.0, 0.0
+            
+            # reset values = 1 to 0 (motioncor2 does it automatically,
+            # but we need to keep this for consistency)
+            if self.patchX.get() == 1:
+                self.patchX.set(0)
+            if self.patchY.get() == 1:
+                self.patchY.set(0)
 
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': '%d %d' % (self.patchX, self.patchY),
@@ -547,9 +554,12 @@ class ProtMotionCorr(ProtAlignMovies):
             xShifts, yShifts = parseMovieAlignment(logPath)
         else:
             xShifts, yShifts = parseMovieAlignment2(logPath)
-        xSfhtsCorr = [x * binning for x in xShifts]
-        ySfhtsCorr = [y * binning for y in yShifts]
-        return xSfhtsCorr, ySfhtsCorr
+        # ROB: this is wrong, shifts are given in "original pixels"
+        # even if bin is requested
+        # xSfhtsCorr = [x * binning for x in xShifts]
+        # ySfhtsCorr = [y * binning for y in yShifts]
+        # return xSfhtsCorr, ySfhtsCorr
+        return xShifts, yShifts
 
     def _setPlotInfo(self, movie, mic):
         mic.plotGlobal = em.Image(location=self._getPlotGlobal(movie))
@@ -645,7 +655,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
-    """ Create a plotter with the cumulative shift per frame. """
+    """ Create a plotter with the shift per frame. """
     sumMeanX = []
     sumMeanY = []
     preX = 0.0
@@ -656,18 +666,29 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     figure = plotter.getFigure()
     ax = figure.add_subplot(111)
     ax.grid()
-    ax.set_title('Global frame shift (cumulative)')
+    ax.set_title('Alignment based upon full frames')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
-    if meanX[0] != 0 or meanY[0] != 0:
-        raise Exception("First frame shift must be (0,0)!")
+    # morioncor2 (1.0.2) values refer to the middle frame, so first frame is no longer 0,0
+    #if meanX[0] != 0 or meanY[0] != 0:
+    #    raise Exception("First frame shift must be (0,0)!")
 
     i = first
+
+    # ROB no accumulation is needed
+    # see Motioncor2 user manual: "The output and log files list the shifts relative to the first frame."
+    # or middle frame for motioncor2 1.0.2
+
+    # ROB unit seems to be pixels since samplingrate is only asked by the program if
+    # dose filtering is required
     skipLabels = ceil(len(meanX)/10.0)
     labelTick = 1
+
     for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
+        #preX += x
+        #preY += y
+        preX = x
+        preY = y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
         if labelTick == 1:

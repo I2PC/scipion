@@ -1056,6 +1056,7 @@ class ParamWidget():
     def _browsePath(self, e=None):
         def onSelect(obj):
             self.set(obj.getPath())
+
         v = self.get().strip()
         path = None
         if v:
