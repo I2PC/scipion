@@ -116,7 +116,8 @@ class XmippCTFWizard(CtfWizard):
             args = {'unit': UNIT_PIXEL,
                     'downsample': downSampling, #_value[0],
                     'lf': _value[1],
-                    'hf': _value[2]
+                    'hf': _value[2],
+                    'showInAngstroms': True
                     }
             oldDowsample = downSampling
             d = CtfDownsampleDialog(form.root, provider, **args)

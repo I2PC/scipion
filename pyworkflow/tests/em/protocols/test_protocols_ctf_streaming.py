@@ -69,6 +69,7 @@ class TestCtfStreaming(BaseTest):
                     if ctfSet.getSize() > counter:
                         counter += 1
                         for ctf in ctfSet:
+                            self.assertNotEqual(ctf._phaseShift.get(), None)
                             self.assertNotEqual(ctf._resolution.get(), None)
                             self.assertNotEqual(ctf._fitQuality.get(), None)
                             self.assertNotEqual(ctf.isEnabled(), None)
@@ -156,6 +157,7 @@ class TestCtfStreaming(BaseTest):
         self.assertSetSize(ctfSet, MICS, "Ctffind4 output size does not match")
 
         for ctf in ctfSet:
+            self.assertNotEqual(ctf._phaseShift.get(), None)
             self.assertNotEqual(ctf._resolution.get(), None)
             self.assertNotEqual(ctf._fitQuality.get(), None)
             self.assertNotEqual(ctf.isEnabled(), None)

@@ -112,8 +112,12 @@ def addLib(name, **kwargs):
     # If pattern not provided use *.cpp as default
     patterns = kwargs.get('patterns', '*.cpp')
     kwargs['patterns'] = patterns
-
-    lib = env.AddCppLibrary(name, **kwargs)
+    
+    if 'cuda' in kwargs and kwargs['cuda']:
+    	lib = env.AddCppLibraryCuda(name, **kwargs)
+    else:    	
+    	lib = env.AddCppLibrary(name, **kwargs)
+    	
     env.Alias('xmipp-libs', lib)
 
     return lib
@@ -197,6 +201,29 @@ addLib('XmippRecons',
        libs=['hdf5', 'hdf5_cpp', 'pthread',
              'fftw3_threads',  
              'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
+
+
+# Reconstruction CUDA
+if cuda:
+       addLib('XmippReconsCuda',
+       dirs=['libraries'],
+       patterns=['reconstruction_cuda/*.cpp'],
+       incs=bilib_incs, cuda=True,
+       libs=['pthread'])
+       
+       addLib('XmippReconsAdaptCuda',
+       dirs=['libraries'],
+       patterns=['reconstruction_adapt_cuda/*.cpp'],
+       incs=bilib_incs,
+       libs=['pthread'])
+       
+       addLib('XmippParallelAdaptCuda',
+       dirs=['libraries'],
+       patterns=['parallel_adapt_cuda/*.cpp'],
+       incs=bilib_incs,
+       libs=['pthread', 'XmippData', 'XmippClassif', 'XmippRecons', 'XmippBilib', 'XmippReconsCuda', 'XmippReconsAdaptCuda'],
+       mpi=True)
+  
 
 # Interface
 python_incs = ['#software/include/python2.7',
@@ -462,6 +489,18 @@ def addProg(progName, **kwargs):
     if progName.startswith('mpi_'):
         kwargs['mpi'] = True
         kwargs['libs'] += ['mpi', 'mpi_cxx', 'XmippParallel']
+
+    #AJ
+    if progName.startswith('cuda_'):
+        kwargs['cuda'] = True
+        #kwargs['nvcc'] = True
+        kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda']
+
+    if progName.startswith('mpi_cuda_'):
+        kwargs['cuda'] = True
+        #kwargs['nvcc'] = True
+        kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda','XmippParallelAdaptCuda']
+    #FIN AJ
 
     xmippProgName = 'xmipp_%s' % progName
 
@@ -735,11 +774,9 @@ if opencv:
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
 
-#ROB not sure if cuda=True is necesary
 if cuda:
-    addProg('gpu_example',
-                nvcc=True,cuda=True)
-
+    addProg('cuda_reconstruct_fourier')
+    addProg('mpi_cuda_reconstruct_fourier')
 
 
 #  ***********************************************************************
@@ -853,3 +890,4 @@ XmippAlias = env.Alias('xmipp', ['xmipp-libs',
 
 
 Return('XmippAlias')
+

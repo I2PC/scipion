@@ -44,7 +44,9 @@ except ImportError:  # Python 3
     import tkinter.ttk as ttk
 
 import pyworkflow as pw
-from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
+from pyworkflow.em.constants import *
+from pyworkflow.em import ImageHandler, OrderedDict
+from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils import Environ, runJob
 from pyworkflow.utils import getFreePort
 from pyworkflow.gui.matplotlib_image import ImageWindow
@@ -73,6 +75,10 @@ class DataView(View):
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
+
+    def getViewParams(self):
+        """ Give access to the viewParams dict. """
+        return self._viewParams
 
     def _loadPath(self, path):
         self._tableName = None
@@ -218,7 +224,7 @@ class CtfView(ObjectView):
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
-                    '_ctffind4_ctfPhaseShift',
+                    '_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
                     '_xmipp_ctfCritFirstZero',
                     '_xmipp_ctfCritCorr13', '_xmipp_ctfCritIceness','_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
@@ -235,9 +241,10 @@ class CtfView(ObjectView):
 
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
-        labels = 'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio %s  _micObj._filename' % \
-                  extraLabels
+        labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
+        labels += '_defocusAngle _defocusRatio '
+        labels += '_phaseShift _resolution _fitQuality %s ' % extraLabels
+        labels += ' _micObj._filename'
 
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
@@ -251,9 +258,20 @@ class CtfView(ObjectView):
         if ctfSet.isStreamOpen():
             viewParams['dont_recalc_ctf'] = ''
 
-        if first.hasAttribute('_ctffind4_ctfResolution'):
+        def _anyAttrStartsBy(obj, prefix):
+            """ Return True if any of the attributes of this object starts
+            by the provided prefix.
+            """
+            return any(attrName.startswith(prefix)
+                       for attrName, _ in obj.getAttributesToStore())
+
+        if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
             import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
+
+        elif _anyAttrStartsBy(first, '_gctf'):
+            from pyworkflow.em.packages.gctf.viewer import OBJCMD_GCTF
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,
@@ -931,6 +949,95 @@ def getVmdEnviron():
     environ.set('PATH', os.path.join(os.environ['VMD_HOME'], 'bin'),
                 position=Environ.BEGIN)
     return environ
+
+
+class LocalResolutionViewer(ProtocolViewer):
+    """
+    Visualization tools for local resolution results.
+
+    """
+    binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
+    
+    def __init__(self, *args, **kwargs):
+        ProtocolViewer.__init__(self, *args, **kwargs)
+    
+    def getImgData(self, imgFile):
+        import numpy as np
+        img = ImageHandler().read(imgFile)
+        imgData = img.getData()
+
+        maxRes = np.amax(imgData)
+        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
+        minRes = np.amin(imgData2)
+
+        return imgData2, minRes, maxRes
+
+    def getSlice(self, index, volumeData):
+        return int(index*volumeData.shape[0] / 9)
+
+    def getSliceImage(self, volumeData, sliceNumber, dataAxis):
+        if dataAxis == 'y':
+            imgSlice = volumeData[:, sliceNumber, :]
+        elif dataAxis == 'x':
+            imgSlice = volumeData[:, :, sliceNumber]
+        else:
+            imgSlice = volumeData[sliceNumber, :, :]
+        return imgSlice
+    
+    def createChimeraScript(self, scriptFile, fnResVol, fnOrigMap, sampRate):
+        import pyworkflow.gui.plotter as plotter
+        import os
+        from itertools import izip
+        fhCmd = open(scriptFile, 'w')
+        imageFile = os.path.abspath(fnResVol)
+        
+        _, minRes, maxRes = self.getImgData(imageFile)
+        
+        stepColors = self._getStepColors(minRes, maxRes)
+        colorList = plotter.getHexColorList(stepColors, self._getColorName())
+        
+        fnVol = os.path.abspath(fnOrigMap)
+
+        fhCmd.write("background solid white\n")
+        
+        fhCmd.write("open %s\n" % fnVol)
+        fhCmd.write("open %s\n" % (imageFile))
+        
+        fhCmd.write("volume #0 voxelSize %s\n" % (str(sampRate)))
+        fhCmd.write("volume #1 voxelSize %s\n" % (str(sampRate)))
+        fhCmd.write("volume #1 hide\n")
+
+        scolorStr = ''
+        for step, color in izip(stepColors, colorList):
+            scolorStr += '%s,%s:' % (step, color)
+        scolorStr = scolorStr[:-1]
+        line = ("scolor #0 volume #1 perPixel false cmap " + scolorStr + "\n")
+        fhCmd.write(line)
+
+        scolorStr2 = ''
+        for step, color in izip(stepColors, colorList):
+            indx = stepColors.index(step)
+            if ((indx % 4) != 0):
+                scolorStr2 += '" " %s ' % color
+            else:
+                scolorStr2 += '%s %s ' % (step, color)
+        line = ("colorkey 0.01,0.05 0.02,0.95 labelColor None "
+                + scolorStr2 + " \n")
+        fhCmd.write(line)
+        fhCmd.close()
+        
+    def _getStepColors(self, minRes, maxRes, numberOfColors=13):
+        inter = (maxRes - minRes) / (numberOfColors - 1)
+        rangeList = []
+        for step in range(0, numberOfColors):
+            rangeList.append(round(minRes + step * inter, 2))
+        return rangeList
+    
+    def _getColorName(self):
+        if self.colorMap.get() != COLOR_OTHER:
+            return COLOR_CHOICES[self.colorMap.get()]
+        else:
+            return self.otherColorMap.get()    
 
 
 class VmdView(CommandView):

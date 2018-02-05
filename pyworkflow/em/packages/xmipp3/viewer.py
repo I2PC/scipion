@@ -42,6 +42,7 @@ import pyworkflow.gui.dialog as dialog
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_compare_reprojections import XmippProtCompareReprojections
+from protocol_compare_angles import XmippProtCompareAngles
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
@@ -59,7 +60,7 @@ from pyworkflow.em.showj import *
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
-
+from protocol_movie_gain import XmippProtMovieGain
 
 
 class XmippViewer(Viewer):
@@ -80,6 +81,7 @@ class XmippViewer(Viewer):
                 SetOfMovies,
                 SetOfNormalModes,
                 XmippProtCompareReprojections,
+                XmippProtCompareAngles,
                 XmippParticlePickingAutomatic,
                 XmippProtExtractParticles,
                 XmippProtExtractParticlesPairs,
@@ -91,7 +93,8 @@ class XmippViewer(Viewer):
                 XmippProtCTFMicrographs,
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair,
-                XmippProtMultiRefAlignability
+                XmippProtMultiRefAlignability,
+                XmippProtMovieGain
                 ]
 
     def __init__(self, **kwargs):
@@ -205,7 +208,7 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
-            labels = 'id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR _sampling '
+            labels = 'id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR _sampling _xmipp_scoreEmptiness '
             labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={ORDER: labels,
@@ -285,6 +288,17 @@ class XmippViewer(Viewer):
                     xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
                     self._views.append(xplotter)
 
+        elif issubclass(cls, XmippProtMovieGain):
+            self._visualize(obj.outputMovies)
+            movieGainMonitor = MonitorMovieGain(obj,
+                                                workingDir=obj.workingDir.get(),
+                                                samplingInterval=60,
+                                                monitorTime=300,
+                                                stddevValue=0.04,
+                                                ratio1Value=1.15,
+                                                ratio2Value=4.5)
+            self._views.append(MovieGainMonitorPlotter(movieGainMonitor))
+
         elif issubclass(cls, XmippProtRotSpectra):
             self._visualize(obj.outputClasses,
                             viewParams={'columns': obj.SomXdim.get(),
@@ -311,6 +325,16 @@ class XmippViewer(Viewer):
                                               viewParams={ORDER: labels,
                                                       VISIBLE: labels,
                                                       SORT_BY: '_xmipp_cost asc', RENDER:labelRender,
+                                                      MODE: MODE_MD}))
+
+        elif issubclass(cls, XmippProtCompareAngles):
+                fn = obj.outputParticles.getFileName()
+                labels = 'id enabled _index _filename _xmipp_shiftDiff _xmipp_angleDiff'
+                labelRender = "_filename"
+                self._views.append(ObjectView(self._project, obj.outputParticles.strId(), fn,
+                                              viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
+                                                      SORT_BY: '_xmipp_angleDiff asc', RENDER:labelRender,
                                                       MODE: MODE_MD}))
 
         elif issubclass(cls, XmippParticlePickingAutomatic):
