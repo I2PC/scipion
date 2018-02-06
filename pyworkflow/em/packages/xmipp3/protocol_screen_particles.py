@@ -33,10 +33,11 @@ import pyworkflow.em.metadata as md
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.protocol import ProtProcessParticles
-from pyworkflow.object import String, Set
+from pyworkflow.object import String, Set, Float
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
                                         LEVEL_ADVANCED, FloatParam, BooleanParam)
 from convert import readSetOfParticles, writeSetOfParticles, setXmippAttributes
+
 
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order
@@ -45,15 +46,18 @@ class XmippProtScreenParticles(ProtProcessParticles):
     _label = 'screen particles'
 
     # Automatic Particle rejection enum
+    ZSCORE_CHOICES = ['None', 'MaxZscore', 'Percentage']
     REJ_NONE = 0
     REJ_MAXZSCORE = 1
-    REJ_PERCENTAGE =2
-    REJ_PERCENTAGE_SSNR =1
-    #--------------------------- DEFINE param functions ----------------------
+    REJ_PERCENTAGE = 2
+    REJ_PERCENTAGE_SSNR = 1
+
+    # --------------------------- DEFINE param functions -----------------------
+
     def _defineProcessParams(self, form):
         
         form.addParam('autoParRejection', EnumParam,
-                      choices=['None', 'MaxZscore', 'Percentage'],
+                      choices=self.ZSCORE_CHOICES,
                       label="Automatic particle rejection based on Zscore",
                       default=self.REJ_NONE,
                       display=EnumParam.DISPLAY_COMBO,
@@ -101,15 +105,18 @@ class XmippProtScreenParticles(ProtProcessParticles):
                       help='Add features used for the ranking to each one '
                            'of the input particles')
         form.addParallelSection(threads=0, mpi=0)
-        
+
+    # --------------------------- INSERT steps functions -----------------------
+
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""
         return (0, 0)
-     
+
     #--------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self.insertedDict = {}
         self.finished = False
+        self._initializeZscores()
         self.SetOfParticles = [m.clone() for m in self.inputParticles.get()]
         partsSteps = self._insertNewPartsSteps(self.insertedDict,
                                                self.SetOfParticles)
@@ -229,6 +236,10 @@ class XmippProtScreenParticles(ProtProcessParticles):
                             itemDataIterator=md.iterRows(
                                 self.outputMd.get(),
                                 sortByLabel=md.MDL_ITEM_ID))
+
+        # Persist zScore values for summary and testing
+        self._store()
+
         return outputSet
 
 
@@ -281,27 +292,41 @@ class XmippProtScreenParticles(ProtProcessParticles):
                                      fnInputMd)
         self._updateOutputSet('outputParticles', outSet, streamMode)
 
-    #--------------------------- INFO functions ------------------------------
+
+    def _initializeZscores(self):
+
+        # Store the set for later access , ;-(
+        self.minZScore = Float()
+        self.maxZScore = Float()
+        self.sumZScore = Float()
+        self._store()
+
+    def _calculateSummaryValues(self, particle):
+
+        zScore = particle._xmipp_zScore.get()
+
+        self.minZScore.set(min(zScore, self.minZScore.get(1000)))
+        self.maxZScore.set(max(zScore, self.maxZScore.get(0)))
+        self.sumZScore.set(self.sumZScore.get(0) + zScore)
+
+    # -------------------------- INFO functions -------------------------------
     def _summary(self):
         summary = []
+        if self.autoParRejection is not None:
+            summary.append("Rejection method: " +
+                           self.ZSCORE_CHOICES[self.autoParRejection.get()])
+
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            fnSummary = self._getExtraPath("summary.txt")
-            if not os.path.exists(fnSummary):
-                zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
-                if len(zscores)>0:
-                    fhSummary = open(fnSummary,"w")
-                    fhSummary.write("The minimum ZScore is %.2f\n" % min(zscores))
-                    fhSummary.write("The maximum ZScore is %.2f\n" % max(zscores))
-                    fhSummary.write("The mean ZScore is %.2f\n"
-                                    % (sum(zscores)*1.0/len(self.outputParticles)))
-                fhSummary.close()
-            if os.path.exists(fnSummary):
-                fhSummary = open(fnSummary)
-                for line in fhSummary.readlines():
-                    summary.append(line.strip())
-                fhSummary.close()
+            if hasattr(self, 'sumZScore'):
+                summary.append("The minimum ZScore is %.2f" % self.minZScore)
+                summary.append("The maximum ZScore is %.2f" % self.maxZScore)
+                meanZScore = self.sumZScore.get() * 1.0 / len(self.outputParticles)
+                summary.append("The mean ZScore is %.2f" % meanZScore)
+            else:
+                summary.append(
+                    "Summary values not calculated during processing.")
         return summary
     
     def _validate(self):
@@ -319,13 +344,13 @@ class XmippProtScreenParticles(ProtProcessParticles):
                                  if outParticles is not None else None)
             particlesRejectedText = (' ('+str(particlesRejected)+')' if
                                      particlesRejected is not None else '')
-            rejectionText = ['',# REJ_NONE
+            rejectionText = ['',  # REJ_NONE
                              ' and removing those not reaching %s%s'
                              % (str(self.maxZscore.get()),
-                                particlesRejectedText),# REJ_MAXZSCORE
-                             ' and removing worst %s percent%s'
+                                particlesRejectedText),  # REJ_MAXZSCORE
+                             ' and removing worst %s percent %s'
                              % (str(self.percentage.get()),
-                                particlesRejectedText)# REJ_PERCENTAGE
+                                particlesRejectedText)  # REJ_PERCENTAGE
                              ]
             methods.append('Input dataset %s of %s particles was sorted by'
                            ' its ZScore using xmipp_image_sort_by_statistics'
@@ -337,7 +362,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                            % self.getObjectTag('outputParticles'))
         return methods
     
-    #--------------------------- UTILS functions -----------------------------
+    # --------------------------- UTILS functions ------------------------------
     def _updateParticle(self, item, row):
         setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1,
                            md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1,
@@ -348,6 +373,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
             item._appendItem = False
         else:
             item._appendItem = True
+            self._calculateSummaryValues(item)
 
     def _readDoneList(self):
         """ Read from a file the id's of the items that have been done. """
