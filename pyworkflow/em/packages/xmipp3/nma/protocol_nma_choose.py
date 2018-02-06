@@ -70,15 +70,11 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase):
         filename = getImageLocation(inputStructure)
         deps = []
         for volCounter in range(1,len(filenames)+1):
-            print 'aaaaa'
-            #fnIn=filenames[volCounter-1]
             prefix="_%02d"%volCounter
-            print prefix
             fnMask = self._insertMaskStep(filenameRef, prefix)
             
             self._insertFunctionStep('convertToPseudoAtomsStep', inputStructure, filenameRef, fnMask, prefix, prerequisites=deps)
             parentId=self._insertFunctionStep('computeNMAStep',self._getPath("pseudoatoms%s.pdb"%prefix), prefix)
-            print parentId
         deps=[]
         for volCounter2 in range(1,len(filenames)+1):
             #if volCounter2!=volCounter:
@@ -214,12 +210,7 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase):
 
     def _methods(self):
         summary = []
-#        summary.append('We converted the volume %s into a pseudoatomic representation with Gaussian atoms (sigma=%f A and a target error'\
-#                       ' of %f%%) [Nogales2013].'%(self.inputStructure.get().getNameId(),
-#                                     self.pseudoAtomRadius.get()*self.inputStructure.get().getSamplingRate(),
-#                                     self.pseudoAtomTarget.get()));
-#        if self.hasAttribute('outputPdb'):
-#            summary.append('We refer to the pseudoatomic model as %s.'%self.outputPdb.getNameId())
+
         return summary
 
     def _citations(self):
