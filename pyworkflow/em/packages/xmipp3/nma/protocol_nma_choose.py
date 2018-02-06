@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-#from protocol_convert_to_pseudoatoms_base import *
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 from protocol_nma_base import *
 from pyworkflow.utils.path import createLink, cleanPath
@@ -65,34 +64,31 @@ class XmippProtNMAChoose(XmippProtConvertToPseudoAtomsBase,XmippProtNMABase):
         inputStructure = self.inputStructure.get()
         self.sampling = inputRefStructure.getSamplingRate()
         filenames=[]
-        #for inputStructure in inputStructure:
-        #filenames.append(getImageLocation(inputStructure))
+        for inputStructure in inputStructure:
+            filenames.append(getImageLocation(inputStructure))
         filenameRef = getImageLocation(inputRefStructure)
         filename = getImageLocation(inputStructure)
         deps = []
         for volCounter in range(1,len(filenames)+1):
-            print 'aaaaa'
-            #fnIn=filenames[volCounter-1]
+            fnIn=filenames[volCounter-1]
             prefix="_%02d"%volCounter
-            print prefix
             fnMask = self._insertMaskStep(filenameRef, prefix)
             
             self._insertFunctionStep('convertToPseudoAtomsStep', inputStructure, filenameRef, fnMask, prefix, prerequisites=deps)
             parentId=self._insertFunctionStep('computeNMAStep',self._getPath("pseudoatoms%s.pdb"%prefix), prefix)
-            print parentId
         deps=[]
         for volCounter2 in range(1,len(filenames)+1):
-            #if volCounter2!=volCounter:
-            args="-i %s --pdb %s --modes %s --sampling_rate %f -o %s --fixed_Gaussian %f --opdb %s"%\
-                    (filenames[volCounter2-1],self._getPath("pseudoatoms%s.pdb"%prefix), \
-                    self._getPath("modes%s.xmd"%prefix),self.sampling,\
-                    self._getExtraPath('alignment_%02d_%02d.xmd'%(volCounter,volCounter2)),\
-                    self.sampling*self.pseudoAtomRadius.get(),
-                    self._getExtraPath('alignment_%02d_%02d.pdb'%(volCounter,volCounter2)))
-            if self.alignVolumes.get():
-                args+=" --alignVolumes"
-            stepId=self._insertRunJobStep("xmipp_nma_alignment_vol",args,prerequisites=[parentId])
-            deps.append(stepId)
+            if volCounter2!=volCounter:
+                args="-i %s --pdb %s --modes %s --sampling_rate %f -o %s --fixed_Gaussian %f --opdb %s"%\
+                        (filenames[volCounter2-1],self._getPath("pseudoatoms%s.pdb"%prefix), \
+                        self._getPath("modes%s.xmd"%prefix),self.sampling,\
+                        self._getExtraPath('alignment_%02d_%02d.xmd'%(volCounter,volCounter2)),\
+                        self.sampling*self.pseudoAtomRadius.get(),
+                        self._getExtraPath('alignment_%02d_%02d.pdb'%(volCounter,volCounter2)))
+                if self.alignVolumes.get():
+                    args+=" --alignVolumes"
+                stepId=self._insertRunJobStep("xmipp_nma_alignment_vol",args,prerequisites=[parentId])
+                deps.append(stepId)
             
         self._insertFunctionStep('evaluateDeformationsStep',prerequisites=deps)
         
