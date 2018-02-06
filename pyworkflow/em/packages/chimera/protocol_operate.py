@@ -38,6 +38,7 @@ from pyworkflow.em.viewers.chimera_utils import \
     adaptOriginFromCCP4ToChimera, getProgram, runChimeraProgram,\
     chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
     chimeraScriptFileName
+
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     StringParam
 from pyworkflow.utils.properties import Message
@@ -73,8 +74,7 @@ class ChimeraProtOperate(EMProtocol):
                       default='',
                       condition='False',
                       label='Extra commands for chimera viewer',
-                      help="""Add extra commands in cmd file. Use for testing
-                      """)
+                      help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
         form.addLine('''Execute command *scipionwrite [model #n] [refmodel
         #p] [saverefmodel 0|1]* from command
@@ -211,19 +211,26 @@ class ChimeraProtOperate(EMProtocol):
                 vol = self.pdbFileToBeRefined.get().getVolume()
             else:
                 vol = self.inputVolume.get()
-
-        pdb = PdbFile()
-        pdb.setFileName(self._getExtraPath(chimeraPdbTemplateFileName) % 1)
-        if vol is not None:
-            pdb.setVolume(vol)
-        self._defineOutputs(outputPdb=pdb)
-        self._defineSourceRelation(self.inputPdbFiles, pdb)
-        if self.inputVolume.get() is None:
-            if self.pdbFileToBeRefined.get().getVolume() is not None:
-                self._defineSourceRelation(
-                self.pdbFileToBeRefined.get().getVolume(), pdb)
-        else:
-            self._defineSourceRelation(self.inputVolume.get(), pdb)
+        directory = self._getExtraPath()
+        counter=0
+        for filename in sorted(os.listdir(directory)):
+            if filename.endswith(".pdb"):
+                path = os.path.join(directory, filename)
+                pdb = PdbFile()
+                pdb.setFileName(path)
+                if vol is not None:
+                    pdb.setVolume(vol)
+                keyword = "outputPdb_%02d"%counter
+                counter +=1
+                kwargs = {keyword: pdb}
+                self._defineOutputs(**kwargs)
+                self._defineSourceRelation(self.inputPdbFiles, pdb)
+                if self.inputVolume.get() is None:
+                    if self.pdbFileToBeRefined.get().getVolume() is not None:
+                        self._defineSourceRelation(
+                        self.pdbFileToBeRefined.get().getVolume(), pdb)
+                else:
+                    self._defineSourceRelation(self.inputVolume.get(), pdb)
 
     # --------------------------- INFO functions ----------------------------
     def _validate(self):
@@ -268,6 +275,12 @@ class ChimeraProtOperate(EMProtocol):
 # define scipion_write command
 chimeraScriptHeader = '''
 import os
+def newFileName(template):
+    counter = 1
+    while os.path.isfile(template%counter):
+        counter += 1
+    return template%counter
+
 def beep(time):
    """I simply do not know how to create a portable beep sound.
       This system call seems to work pretty well if you have sox
@@ -293,8 +306,8 @@ chimeraScriptMain = '''
   def scipionWrite(model="#%(pdbID)d",refmodel="#%(_3DmapId)d",
      saverefmodel=0):
      #get model (pdb) id
-     modelId = int(model[1:])# model to write
-     refModelId = int(refmodel[1:])# coordenate system refers to this model
+     modelId = int(model[1:])-1# model to write
+     refModelId = int(refmodel[1:])-1# coordenate system refers to this model
 
      # get actual models
      model    = chimera.openModels.list()[modelId]
@@ -303,7 +316,8 @@ chimeraScriptMain = '''
      # Save the PDB relative to the volume coordinate system
      # TODO: check if this Will work if the reference is a PDB?
      from Midas import write
-     write(model, refModel, "%(pdbFileTemplate)s")
+     fileName = newFileName('%(pdbFileTemplate)s')
+     write(model, refModel, fileName)
      # alternative way to save  the pdb file using a command
      #run('write relative #1 #0 pdb_path')
 
@@ -326,7 +340,6 @@ def createScriptFile(pdbID, _3DmapId,
     d = {}
     d['pdbID'] = pdbID
     d['_3DmapId'] = _3DmapId
-    d['pdbFileTemplate'] = pdbFileTemplate % 1
+    d['pdbFileTemplate'] = pdbFileTemplate # % 1
     d['chimeraMapTemplateFileName'] = mapFileTemplate % 1
-
     f.write(chimeraScriptMain % d)
