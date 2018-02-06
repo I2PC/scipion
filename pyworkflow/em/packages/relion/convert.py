@@ -360,7 +360,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         angle = angles[0] + angles[2]
         alignmentRow.setValue(md.RLN_ORIENT_PSI, -angle)
         # Also set the prior
-        alignmentRow.setValue(md.RLN_ORIENT_ROT_PRIOR, -angle)
+        alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, -angle)
 
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
