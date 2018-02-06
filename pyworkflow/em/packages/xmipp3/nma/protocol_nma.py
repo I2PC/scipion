@@ -92,7 +92,6 @@ class XmippProtNMA(XmippProtNMABase):
         n = self.numberOfModes.get()
         # Link the input
         inputFn = self.inputStructure.get().getFileName()
-        #print inputFn
         localFn = self._getPath(basename(inputFn))
         self._insertFunctionStep('copyPdbStep', inputFn, localFn, self.structureEM)
         
