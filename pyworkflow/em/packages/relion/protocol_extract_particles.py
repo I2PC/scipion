@@ -418,8 +418,39 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         return [params]
 
     def readPartsFromMics(self, micList, outputParts):
-        pass
-    
+        """ Read the particles extract for the given list of micrographs
+        and update the outputParts set with new items.
+        """
+        p = em.Particle()
+        for mic in micList:
+            # We need to make this dict because there is no ID in the
+            # coord.star file
+            coordDict = {}
+            for coord in self.coordDict[mic.getObjId()]:
+                coordDict[self._getPos(coord)] = coord
+        
+            _, partStarFn = self._getStarFiles(mic)
+        
+            for row in md.iterRows(self._getPath(partStarFn)):
+                pos = (row.getValue(md.RLN_IMAGE_COORD_X),
+                       row.getValue(md.RLN_IMAGE_COORD_Y))
+            
+                coord = coordDict.get(pos, None)
+                if coord is not None:
+                    # scale the coordinates according to particles dimension.
+                    coord.scale(self.getBoxScale())
+                    p.copyObjId(coord)
+                    idx, fn = relionToLocation(row.getValue(md.RLN_IMAGE_NAME))
+                    p.setLocation(idx, self._getPath(fn[1:]))
+                    p.setCoordinate(coord)
+                    p.setMicId(mic.getObjId())
+                    p.setCTF(mic.getCTF())
+                    outputParts.append(p)
+        
+            # Release the list of coordinates for this micrograph since it
+            # will not be longer needed
+            del self.coordDict[mic.getObjId()]
+
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """
         return self.downsampleType == OTHER
@@ -581,37 +612,3 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         
         return (self.getInputMicrographs().isStreamOpen() or
                 ctfStreamOpen or self.getCoords().isStreamOpen())
-
-    def readPartsFromMics(self, micList, outputParts):
-        """ Read the particles extract for the given list of micrographs
-        and update the outputParts set with new items.
-        """
-        p = em.Particle()
-        for mic in micList:
-            # We need to make this dict because there is no ID in the
-            # coord.star file
-            coordDict = {}
-            for coord in self.coordDict[mic.getObjId()]:
-                coordDict[self._getPos(coord)] = coord
-            
-            _, partStarFn = self._getStarFiles(mic)
-
-            for row in md.iterRows(self._getPath(partStarFn)):
-                pos = (row.getValue(md.RLN_IMAGE_COORD_X),
-                       row.getValue(md.RLN_IMAGE_COORD_Y))
-                
-                coord = coordDict.get(pos, None)
-                if coord is not None:
-                    # scale the coordinates according to particles dimension.
-                    coord.scale(self.getBoxScale())
-                    p.copyObjId(coord)
-                    idx, fn = relionToLocation(row.getValue(md.RLN_IMAGE_NAME))
-                    p.setLocation(idx, self._getPath(fn[1:]))
-                    p.setCoordinate(coord)
-                    p.setMicId(mic.getObjId())
-                    p.setCTF(mic.getCTF())
-                    outputParts.append(p)
-        
-            # Release the list of coordinates for this micrograph since it
-            # will not be longer needed
-            del self.coordDict[mic.getObjId()]
