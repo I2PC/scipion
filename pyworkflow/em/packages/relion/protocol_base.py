@@ -824,7 +824,7 @@ class ProtRelionBase(EMProtocol):
                       "particles")
         
         # if self.realignMovieFrames, self.IS_CLASSIFY must be False.
-        if self.realignMovieFrames:
+        if getattr(self, 'realignMovieFrames', False):
             movieParticleSet = self.inputMovieParticles.get()
             movieFn = self._getFileName('movie_particles')
             self.info("Converting set from '%s' into '%s'" %
