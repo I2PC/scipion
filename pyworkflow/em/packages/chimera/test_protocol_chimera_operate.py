@@ -29,7 +29,7 @@
 # manipulations with chimera
 
 from pyworkflow.em.packages.chimera.protocol_operate import ChimeraProtOperate
-from pyworkflow.tests.em.workflows.test_workflow_model_building \
+from pyworkflow.tests.em.workflows.test_workflow_modeling \
     import TestImportData
 from pyworkflow.tests import *
 import os.path
