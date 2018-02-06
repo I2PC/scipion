@@ -64,11 +64,10 @@ def getEnviron(ccp4First=True):
             'CEXAM': os.path.join(_ccp4_home, 'examples'),
             'CCP4I_TOP': os.path.join(_ccp4_home, 'share/ccp4i'),
             'MMCIFDIC': os.path.join(_ccp4_home, 'lib', 'cif_mmdic.lib'),
-            'CRANK': os.path.join(_ccp4_home, 'lib', 'data', 'monomers'),
-            'CLIBD_MON': os.path.join(_ccp4_home, 'crank'),
+            'CLIBD_MON': os.path.join(_ccp4_home, 'lib', 'data', 'monomers'),
+            'CRANK': os.path.join(_ccp4_home, 'crank'),
             'CCP4_HELPDIR': os.path.join(_ccp4_home, 'help'),
             }, position=pos)
-
     return environ
 #     """ DEFAULT CCP4 configuration file # This is CCP4 setup file for users of bash, zsh and similar shells.
 # # The include/ccp4.setup-sh.in file is a template used to generate
