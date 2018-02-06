@@ -187,7 +187,7 @@ class CCP4ProtRunRefmac(EMProtocol):
                        {'GENERIC':self._getExtraPath("")})
 
     def createIfftScriptFileStep(self):
-        # samling
+        # sampling
         fnVol = self._getInputVolume()
         sampling = fnVol.getSamplingRate()
         # parse refmac shifts
