@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-#from protocol_convert_to_pseudoatoms_base import *
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 from protocol_nma_base import *
 from pyworkflow.utils.path import createLink, cleanPath
