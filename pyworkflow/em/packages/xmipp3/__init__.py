@@ -46,6 +46,7 @@ from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_ml2d import XmippML2DViewer
+from viewer_mltomo import XmippMLTomoViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
@@ -71,6 +72,7 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
+from protocol_compare_angles import XmippProtCompareAngles
 from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
@@ -86,6 +88,7 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_gain import XmippProtMovieGain
+from protocol_mltomo import XmippProtMLTomo
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
@@ -118,6 +121,7 @@ from protocol_volume_strain import XmippProtVolumeStrain
 from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
+from protocol_ctf_selection import XmippProtCTFSelection
 # Wizards
 from wizard import *
 

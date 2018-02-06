@@ -197,6 +197,11 @@ class ProtImportImages(ProtImportFiles):
             imgSet.loadAllProperties()
             self._fillImportedFiles(imgSet)
             imgSet.enableAppend()
+        
+        pointerExcludedMovs = getattr(self, 'moviesToExclude', None)
+        if pointerExcludedMovs is not None:
+            excludedMovs = pointerExcludedMovs.get()
+            self._fillImportedFiles(excludedMovs)
 
         imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
         acquisition = imgSet.getAcquisition()
@@ -484,8 +489,8 @@ class ProtImportImages(ProtImportFiles):
             
     def _getUniqueFileName(self, filename, filePaths=None):
         if filePaths is None:
-            filePaths = [re.split(r'[$*#]', self.getPattern())[0]]
-
+            filePaths = [re.split(r'[$*#?]', self.getPattern())[0]]
+        
         commPath = pwutils.commonPath(filePaths)
         return filename.replace(commPath + "/", "").replace("/", "_")
 

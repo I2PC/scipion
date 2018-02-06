@@ -23,11 +23,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
 """
 Add functions related to metadata
 """
 
-import sys
 from collections import OrderedDict
 
 from pyworkflow.object import ObjectWrap
@@ -98,9 +99,11 @@ class Row():
                 value = str(value)
             try:
                 md.setValue(label, value, objId)
-            except Exception, ex:
-                print >> sys.stderr, "XmippMdRow.writeToMd: Error writting value to metadata."
-                print >> sys.stderr, "                     label: %s, value: %s, type(value): %s" % (label2Str(label), value, type(value))
+            except Exception as ex:
+                import sys
+                print("XmippMdRow.writeToMd: Error writing value to metadata.", file=sys.stderr)
+                print("                     label: %s, value: %s, type(value): %s" % (
+                label2Str(label), value, type(value)), file=sys.stderr)
                 raise ex
             
     def readFromFile(self, fn):
@@ -157,7 +160,7 @@ class Row():
             
     def printDict(self):
         """ Fancy printing of the row, mainly for debugging. """
-        print str(self)
+        print (str(self))
         
         
 class RowMetaData():

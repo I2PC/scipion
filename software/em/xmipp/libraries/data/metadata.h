@@ -398,6 +398,10 @@ public:
       return _parsedLines;
     }
 
+    MDSql * getDatabase() {
+    	return myMDSql;
+    }
+
     /**Set precision (number of decimal digits) use by operator == when comparing
      * metadatas with double data. "2" is a good value for angles
      */

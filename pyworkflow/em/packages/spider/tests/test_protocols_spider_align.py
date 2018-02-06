@@ -26,13 +26,10 @@
 
 
 import pyworkflow.em.packages.spider as spider
-from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import ProtImportParticles
-from pyworkflow.em.packages.spider.convert import writeSetOfImages
 
-from pyworkflow.tests import setupTestProject, DataSet, unittest, BaseTest
+from pyworkflow.tests import setupTestProject, DataSet
 from pyworkflow.tests.em.workflows.test_workflow import TestWorkflow
-import os
 
   
    
