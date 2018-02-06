@@ -29,10 +29,127 @@
 # manipulations with chimera
 
 from pyworkflow.em.packages.chimera.protocol_operate import ChimeraProtOperate
-from pyworkflow.tests.em.workflows.test_workflow_modeling \
-    import TestImportData
+
 from pyworkflow.tests import *
 import os.path
+
+class TestImportBase(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
+
+class TestImportData(TestImportBase):
+    """ Import map volumes and atomic structures(PDBx/mmCIF files)
+    """
+
+    def _importVolume(self):
+        args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
+                'samplingRate': 1.5,
+                'setDefaultOrigin': True
+                }
+        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol.setObjLabel('volume 1ake_4-5A\n')
+        self.launchProtocol(protImportVol)
+        volume = protImportVol.outputVolume
+        return volume
+
+    def _importVolume2(self):
+        args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
+                'samplingRate': 1.5,
+                'setDefaultOrigin': False,
+                'x': 11.994,
+                'y': -7.881,
+                'z': 10.91
+                }
+        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol.setObjLabel('volume 1ake_4-5A\n')
+        self.launchProtocol(protImportVol)
+        volume2 = protImportVol.outputVolume
+        return volume2
+
+    def _importStructurePDBWoVol(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/1ake_start.pdb'),
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('pdb 1ake_start')
+        self.launchProtocol(protImportPDB)
+        structure1_PDB = protImportPDB.outputPdb
+        return structure1_PDB
+
+    def _importStructuremmCIFWoVol(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/1ake_start.pdb.cif'),
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('mmCIF 1ake_start')
+        self.launchProtocol(protImportPDB)
+        structure1_mmCIF = protImportPDB.outputPdb
+        self.assertTrue(structure1_mmCIF.getFileName())
+        return structure1_mmCIF
+
+    def _importStructurePDBWithVol(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/1ake_start.pdb'),
+                'inputVolume': self._importVolume()
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('pdb 1ake_start')
+        self.launchProtocol(protImportPDB)
+        structure2_PDB = protImportPDB.outputPdb
+        self.assertTrue(structure2_PDB.getFileName())
+        return structure2_PDB
+
+    def _importStructuremmCIFWithVol(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile('PDBx_mmCIF/'
+                                                   '1ake_start.pdb.cif'),
+                'inputVolume': self._importVolume()
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('mmCIF 1ake_start')
+        self.launchProtocol(protImportPDB)
+        structure2_mmCIF = protImportPDB.outputPdb
+        self.assertTrue(structure2_mmCIF.getFileName())
+        return structure2_mmCIF
+
+    def _importMut1StructurePDBWoVol(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/1ake_mut1.pdb'),
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('pdb 1ake_mut1')
+        self.launchProtocol(protImportPDB)
+        structure3_PDB = protImportPDB.outputPdb
+        return structure3_PDB
+
+    def _importMut2StructurePDBWoVol(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/1ake_mut2.pdb'),
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('pdb 1ake_mut2')
+        self.launchProtocol(protImportPDB)
+        structure4_PDB = protImportPDB.outputPdb
+        return structure4_PDB
+
+    def _importCootStructureWoVol(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                        'PDBx_mmCIF/scipionOut0001.pdb')
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('pdb_coot')
+        self.launchProtocol(protImportPDB)
+        structureCoot_PDB = protImportPDB.outputPdb
+        self.assertTrue(structureCoot_PDB.getFileName())
+        return structureCoot_PDB
 
 
 class TestChimeraOperate(TestImportData):
@@ -66,10 +183,10 @@ class TestChimeraOperate(TestImportData):
         protChimera = self.newProtocol(ChimeraProtOperate,
                                        **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protChimera.outputPdb.getFileName()))
-        self.assertTrue(os.path.exists(protChimera.outputPdb.
+        self.assertTrue(os.path.exists(protChimera.outputPdb_01.getFileName()))
+        self.assertTrue(os.path.exists(protChimera.outputPdb_01.
                                        getVolume().getFileName()))
 
     def testChimeraOperateFromVolAndmmCIF(self):
@@ -93,9 +210,9 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protChimera.outputPdb.
+        self.assertTrue(os.path.exists(protChimera.outputPdb_01.
                                        getVolume().getFileName()))
 
     def testChimeraOperateFromVolAssocToPDB(self):
@@ -117,9 +234,9 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protChimera.outputPdb.
+        self.assertTrue(os.path.exists(protChimera.outputPdb_01.
                                        getVolume().getFileName()))
 
     def testChimeraOperateFromVolAssocTommCIF(self):
@@ -142,9 +259,9 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protChimera.outputPdb.
+        self.assertTrue(os.path.exists(protChimera.outputPdb_01.
                                        getVolume().getFileName()))
 
     def testChimeraOperateFromPDBWithoutVol(self):
@@ -169,7 +286,7 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
 
     def testChimeraOperateFrommmCIFWithoutVol(self):
@@ -193,7 +310,7 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
 
 
@@ -219,7 +336,7 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        structure2_PDB = protChimera.outputPdb
+        structure2_PDB = protChimera.outputPdb_01
 
         extraCommands = ""
         extraCommands += "runCommand('move 24.11,45.76,24.60 model #2 " \
@@ -232,7 +349,7 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        structure3_PDB = protChimera.outputPdb
+        structure3_PDB = protChimera.outputPdb_01
         extraCommands = ""
         extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
                          "coord #1')\n"
@@ -246,9 +363,9 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protChimera.outputPdb.
+        self.assertTrue(os.path.exists(protChimera.outputPdb_01.
                                        getVolume().getFileName()))
 
     def testChimeraOperateFromVolAssocToPDBPlusPDBs(self):
@@ -281,5 +398,5 @@ class TestChimeraOperate(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb.getFileName(),
+        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")

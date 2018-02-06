@@ -212,7 +212,7 @@ class ChimeraProtOperate(EMProtocol):
             else:
                 vol = self.inputVolume.get()
         directory = self._getExtraPath()
-        counter=0
+        counter=1
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".pdb"):
                 path = os.path.join(directory, filename)
@@ -275,6 +275,7 @@ class ChimeraProtOperate(EMProtocol):
 # define scipion_write command
 chimeraScriptHeader = '''
 import os
+import chimera
 def newFileName(template):
     counter = 1
     while os.path.isfile(template%counter):
@@ -306,9 +307,10 @@ chimeraScriptMain = '''
   def scipionWrite(model="#%(pdbID)d",refmodel="#%(_3DmapId)d",
      saverefmodel=0):
      #get model (pdb) id
-     modelId = int(model[1:])-1# model to write
-     refModelId = int(refmodel[1:])-1# coordenate system refers to this model
-
+     
+     modelId = int(model[1:])# model to write  1
+     refModelId = int(refmodel[1:])# coordenate system refers to this model 0
+     
      # get actual models
      model    = chimera.openModels.list()[modelId]
      refModel = chimera.openModels.list()[refModelId]
