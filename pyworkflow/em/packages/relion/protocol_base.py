@@ -136,7 +136,7 @@ class ProtRelionBase(EMProtocol):
         self._iterRegex = re.compile('_it(\d{3,3})_')
         
         
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         self.IS_3D = not self.IS_2D
         form.addSection(label='Input')
@@ -214,7 +214,7 @@ class ProtRelionBase(EMProtocol):
                        label="Input volume",
                        condition='not doContinue and not is2D',
                        help='Initial reference 3D map, it should have the same '
-                           'dimensions and the same pixel size as your input '
+                            'dimensions and the same pixel size as your input '
                             'particles.')
         group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                        label="Is initial 3D map on absolute greyscale?",
