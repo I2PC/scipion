@@ -620,6 +620,7 @@ class TestChimeraFit(TestImportData):
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
 
+
 class TestCootRefinement(TestImportData):
     """ Test the flexible fitting of coot refinement protocol
     """
@@ -630,7 +631,7 @@ class TestCootRefinement(TestImportData):
 fit_molecule_to_map_by_random_jiggle(0,7000,2)
 scipion_write()
 coot_real_exit(0)
-"""%(x, y, z)
+""" % (x, y, z)
         else:
             return """scipion_write()
 coot_real_exit(0)
@@ -676,7 +677,8 @@ coot_real_exit(0)
         structure_PDB = self._importStructurePDBWoVol()
 
         listVolCoot = [volume]
-        args = {'extraCommands': self._createExtraCommandLine(-24.11, -45.76, -24.60),
+        args = {'extraCommands': self._createExtraCommandLine(-24.11, -45.76,
+                                                              -24.60),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
@@ -686,7 +688,8 @@ coot_real_exit(0)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
     def testCootFlexibleFitFromVolAndPDB(self):
         """ This test checks that coot runs with a volume provided
@@ -730,7 +733,8 @@ coot_real_exit(0)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
     def testCootFlexibleFitFromVolAssocToPDB(self):
 
@@ -772,7 +776,8 @@ coot_real_exit(0)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
     def testCootFlexibleFitFromtwoVolAndPDB(self):
         """ This test checks that coot runs with two volumes provided
@@ -817,8 +822,8 @@ coot_real_exit(0)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
-
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
     def testCootFitFromPDBFromPowerFitAndChimera(self):
         # This test checks that coot runs when a volume is provided
@@ -872,8 +877,8 @@ coot_real_exit(0)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
-
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
     def testCootFitFromPDBFromPowerFitAndChimera_2(self):
         # This test checks that coot runs when a volume is provided
@@ -928,8 +933,8 @@ coot_real_exit(0)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
-
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
     def testMultipleCootFit(self):
         # This test checks that coot runs when a volume is provided
@@ -986,18 +991,13 @@ coot_real_exit(0)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
         protCoot.doInteractive.set(False)
         self.launchProtocol(protCoot)
         self.assertIsNotNone(protCoot.outputPdb_0002.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.outputPdb_0002.getFileName()))
-        self.assertTrue(os.path.exists(protCoot.output3DMap_0001.getFileName()))
-
-
-
-
-
-
-
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
