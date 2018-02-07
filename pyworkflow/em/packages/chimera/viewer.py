@@ -38,7 +38,7 @@ from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
 class ChimeraProtRigidFitViewer(Viewer):
-    """ Visualize the output of protocol volume strain """
+    """ Visualize the output of protocols protocol_fit and protocol_operate """
     _label = 'viewer fit'
     _targets = [ChimeraProtRigidFit, ChimeraProtOperate]
     _environments = [DESKTOP_TKINTER]
@@ -57,10 +57,6 @@ class ChimeraProtRigidFitViewer(Viewer):
                 dim = _inputVol.getDim()[0]
                 sampling = _inputVol.getSamplingRate()
 
-            #dim = self.protocol.pdbFileToBeRefined.get().getVolume().\
-            #    getDim()[0]
-            #sampling = self.protocol.pdbFileToBeRefined.get().getVolume().\
-            #    getSamplingRate()
         else:
             dim = self.protocol.inputVolume.get().getDim()[0]
             sampling = self.protocol.inputVolume.get().getSamplingRate()
@@ -93,7 +89,7 @@ class ChimeraProtRigidFitViewer(Viewer):
                         % (outputVol.getSamplingRate(), x, y, z))
 
         directory = self.protocol._getExtraPath()
-        counter=0
+        counter = 0
         for filename in os.listdir(directory):
             if filename.endswith(".pdb"):
                 path = os.path.join(directory, filename)
