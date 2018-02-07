@@ -643,12 +643,6 @@ void CTFDescription1D::produceSideInfo()
     double local_kV = kV * 1e3;
     double local_ispr = ispr * 1e6;
 
-    // lambda=h/sqrt(2*m*e*kV)
-    //    h: Planck constant
-    //    m: electron mass
-    //    e: electron charge
-    // lambda units in amstron
-
     lambda=12.2643247/sqrt(local_kV*(1.+0.978466e-6*local_kV)); // See http://en.wikipedia.org/wiki/Electron_diffraction
     //
     // Phase shift for spherical aberration
@@ -1154,37 +1148,22 @@ void CTFDescription::readFromMdRow(const MDRow &row, bool disable_if_not_K)
     		readFromMetadataRow(ctfparam,ctfparam.firstObject(),disable_if_not_K);
     	}
 
-        /*if (K == 0 && disable_if_not_K)
-            enable_CTF = false;*/
     }
     if (enable_CTFnoise)
     {
-        //row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_K, gaussian_K, 0);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_SIGMAU, sigmaU, 0);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_SIGMAV, sigmaV, sigmaU);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_CU, cU, 0);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_CV, cV, cU);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN_ANGLE, gaussian_angle, 0);
-        //row.getValueOrDefault(MDL_CTF_BG_SQRT_K, sqrt_K, 0);
         row.getValueOrDefault(MDL_CTF_BG_SQRT_U, sqU, 0);
         row.getValueOrDefault(MDL_CTF_BG_SQRT_V, sqV, sqU);
         row.getValueOrDefault(MDL_CTF_BG_SQRT_ANGLE, sqrt_angle, 0);
-        //row.getValueOrDefault(MDL_CTF_BG_BASELINE, base_line, 0);
-        //row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_K, gaussian_K2, 0);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_SIGMAU, sigmaU2, 0);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_SIGMAV, sigmaV2, sigmaU2);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_CU, cU2, 0);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_CV, cV2, cU2);
         row.getValueOrDefault(MDL_CTF_BG_GAUSSIAN2_ANGLE, gaussian_angle2, 0);
-        //row.getValueOrDefault(MDL_CTF_PHASE_SHIFT, phase_shift, 0);
-        //row.getValueOrDefault(MDL_CTF_VPP_RADIUS, VPP_radius, 0);
-        //row.getValueOrDefault(MDL_CTF_BG_R1, bgR1, 0);
-        //row.getValueOrDefault(MDL_CTF_BG_R2, bgR2, 0);
-        //row.getValueOrDefault(MDL_CTF_BG_R3, bgR3, 0);
-
-        /*if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
-            disable_if_not_K)
-            enable_CTFnoise = false;*/
     }
 }
 

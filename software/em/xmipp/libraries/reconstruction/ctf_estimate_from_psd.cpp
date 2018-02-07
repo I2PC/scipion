@@ -276,12 +276,6 @@ void ProgCTFEstimateFromPSD::readParams()
 	readBasicParams(this);
 }
 
-/* Show -------------------------------------------------------------------- */
-/*void ProgCTFEstimateFromPSD::show()
-{
-	ProgCTFBasicParams::show();
-}*/
-
 /* Usage ------------------------------------------------------------------- */
 void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
 {
