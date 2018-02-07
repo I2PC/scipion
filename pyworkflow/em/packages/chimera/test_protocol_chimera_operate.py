@@ -29,7 +29,8 @@
 # manipulations with chimera
 
 from pyworkflow.em.packages.chimera.protocol_operate import ChimeraProtOperate
-
+from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
+    ProtImportVolumes
 from pyworkflow.tests import *
 import os.path
 
@@ -53,20 +54,6 @@ class TestImportData(TestImportBase):
         self.launchProtocol(protImportVol)
         volume = protImportVol.outputVolume
         return volume
-
-    def _importVolume2(self):
-        args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
-                'samplingRate': 1.5,
-                'setDefaultOrigin': False,
-                'x': 11.994,
-                'y': -7.881,
-                'z': 10.91
-                }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
-        protImportVol.setObjLabel('volume 1ake_4-5A\n')
-        self.launchProtocol(protImportVol)
-        volume2 = protImportVol.outputVolume
-        return volume2
 
     def _importStructurePDBWoVol(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -138,18 +125,6 @@ class TestImportData(TestImportBase):
         self.launchProtocol(protImportPDB)
         structure4_PDB = protImportPDB.outputPdb
         return structure4_PDB
-
-    def _importCootStructureWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                        'PDBx_mmCIF/scipionOut0001.pdb')
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('pdb_coot')
-        self.launchProtocol(protImportPDB)
-        structureCoot_PDB = protImportPDB.outputPdb
-        self.assertTrue(structureCoot_PDB.getFileName())
-        return structureCoot_PDB
 
 
 class TestChimeraOperate(TestImportData):
