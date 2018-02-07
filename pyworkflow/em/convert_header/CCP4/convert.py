@@ -38,8 +38,9 @@ import struct
 
 cootPdbTemplateFileName = "cootOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
-ORIGIN=0 # save coordinate origin in the mrc header field=Origin (Angstrom)
-START=1 # save coordinate origin in the mrc header field=start (pixel)
+ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
+START = 1  # save coordinate origin in the mrc header field=start (pixel)
+
 
 def getEnviron(ccp4First=True):
     environ = pwutils.Environ(os.environ)
@@ -67,13 +68,13 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
         if header and scipion object have the same origin creates a link to
         original file. Otherwise copy the file and fix the origin
     """
-    #def compareFloatTuples(t1, t2, error=0.001):
+    # def compareFloatTuples(t1, t2, error=0.001):
     #    return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
 
     # scipion origin follows different conventions from ccp4
     scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
     x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    #if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
+    # if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
     #        or inFileName.endswith(':mrc'):
     #    ccp4header = Ccp4Header(inFileName, readHeader=True)
     #    ccp4Origin = ccp4header.getOrigin()
@@ -86,7 +87,7 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
     #                                    outFileName)
     #                return
     #
-    #else:
+    # else:
     #    print "FILE %s does not end with mrc" % inFileName
     if z == 1:
         z = ndim
@@ -102,6 +103,7 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
 
     ccp4header.writeHeader()
 
+
 def copyMRCHeader(inFileName, outFileName, scipionOriginShifts,
                   sampling, originField=START):
     x, y, z, ndim = ImageHandler().getDimensions(inFileName)
@@ -114,6 +116,7 @@ def copyMRCHeader(inFileName, outFileName, scipionOriginShifts,
     else:
         ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
     ccp4header.writeHeader()
+
 
 def getProgram(progName):
     """ Return the program binary that will be used. """
@@ -220,27 +223,27 @@ class Ccp4Header():
         self._header['Ylength'] = self._header['NY'] * sampling
         self._header['Zlength'] = self._header['NZ'] * sampling
 
-    def setStartPixel(self,  originTransformShift):#PIXEL
+    def setStartPixel(self, originTransformShift):  # PIXEL
         """input pixels"""
-        self._header['originX'] = 0.#originTransformShift[0]
-        self._header['originY'] = 0.#originTransformShift[1]
-        self._header['originZ'] = 0.#originTransformShift[2]
+        self._header['originX'] = 0.  # originTransformShift[0]
+        self._header['originY'] = 0.  # originTransformShift[1]
+        self._header['originZ'] = 0.  # originTransformShift[2]
         self._header['NCSTART'] = originTransformShift[0]
         self._header['NRSTART'] = originTransformShift[1]
         self._header['NSSTART'] = originTransformShift[2]
 
-    def setStartAngstrom(self,  originTransformShift, sampling):#Angstrom
+    def setStartAngstrom(self,  originTransformShift, sampling):  # Angstrom
         """input Angstrom"""
-        self.setStartPixel(tuple([ int(round(x/sampling)) for x in
-                                    originTransformShift]))
+        self.setStartPixel(tuple([int(round(x/sampling)) for x in
+                           originTransformShift]))
 
-    def getStartPixel(self):#PIXEL
+    def getStartPixel(self):  # PIXEL
         """returns pixels"""
         return self._header['NCSTART'],\
-               self._header['NRSTART'],\
+               self._header['NRSTART'], \
                self._header['NSSTART']
 
-    def getStartAngstrom(self, sampling):#Angstrom
+    def getStartAngstrom(self, sampling):  # Angstrom
         """returns Angstrom"""
         return tuple([x*sampling for x in self.getStartPixel()])
 
@@ -320,5 +323,3 @@ class Ccp4Header():
 
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
-
-
