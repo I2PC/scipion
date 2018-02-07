@@ -99,11 +99,10 @@ class ProtLocScale(ProtRefine3D):
         pdbFn = self.getPdbFn()
         refVol = removeExt(self.getRefFn())
 
-        args  = '-i %s' % pdbFn
-        args += ' --sampling %f' % self.getSampling()
-        args += ' -o %s' % refVol
-        args += ' --centerPDB'
-        args += ' --size %d' % self.inputVolume.get().getDim()[0]
+        args  = "-i '%s'" % pdbFn
+        args += " -o '%s'" % refVol
+        args += " --centerPDB"
+        args += " --size %d" % self.inputVolume.get().getDim()[0]
 
         self.info("Input file: " + pdbFn)
         self.info("Output file: " + refVol)
@@ -198,19 +197,19 @@ class ProtLocScale(ProtRefine3D):
                          help='MPI version call by: \"{0}\"'.format(mpi_cmd)
         """
 
-        args  = ' --em_map %s' % self.getAbsPath(self.getInputFn())
-        args += ' --model_map %s' % self.getAbsPath(self.getRefFn())
-        args += ' --apix %f' % self.getSampling()
+        args  = " --em_map '%s'" % self.getAbsPath(self.getInputFn())
+        args += " --model_map '%s'" % self.getAbsPath(self.getRefFn())
+        args += " --apix %f" % self.getSampling()
         
         if self.binaryMask.hasValue():
             maskFn = self.getAbsPath(self.binaryMask.get().getFileName())
-            args += ' --mask %s' % maskFn
+            args += " --mask '%s'" % maskFn
 
-        args += ' --window_size %d' % self.patchSize
-        args += ' -o %s' % self.getAbsPath(self.getOutputFn())
+        args += " --window_size %d" % self.patchSize
+        args += " -o '%s'" % self.getAbsPath(self.getOutputFn())
 
         if self.doParalelize:
-            args += ' --mpi'
+            args += " --mpi"
 
         return args
 
