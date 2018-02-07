@@ -34,11 +34,13 @@ from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
 from pyworkflow.tests import *
 import os.path
 
+
 class TestImportBase(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
+
 
 class TestImportData(TestImportBase):
     """ Import map volumes and atomic structures(PDBx/mmCIF files)
@@ -193,7 +195,8 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFromVolAssocToPDB(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and not directly as inputVol
-        print "Run Chimera operate from imported pdb file and volume associated"
+        print "Run Chimera operate from imported pdb file and volume " \
+              "associated"
 
         structure2_PDB = self._importStructurePDBWithVol()
         extraCommands = ""
@@ -243,8 +246,8 @@ class TestChimeraOperate(TestImportData):
         # This test corroborates that chimera runs with a pdb and without
         # providing a volume
 
-        print "Run Chimera operate from imported pdb file without imported or " \
-              "pdb-associated volume"
+        print "Run Chimera operate from imported pdb file without imported " \
+              "or pdb-associated volume"
 
         structure1_PDB = self._importStructurePDBWoVol()
         self.assertTrue(structure1_PDB.getFileName())
@@ -267,8 +270,8 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFrommmCIFWithoutVol(self):
         # This test corroborates that chimera runs with a mmCIF file and
         # without providing a volume
-        print "Run chimera operate from imported mmCIF file without imported " \
-              "or mmCIF-associated volume"
+        print "Run chimera operate from imported mmCIF file without " \
+              "imported or mmCIF-associated volume"
 
         structure1_mmCIF = self._importStructuremmCIFWoVol()
         self.assertTrue(structure1_mmCIF.getFileName())
@@ -287,7 +290,6 @@ class TestChimeraOperate(TestImportData):
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
-
 
     def testChimeraOperateFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
