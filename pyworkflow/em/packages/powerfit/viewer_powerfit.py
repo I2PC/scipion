@@ -32,36 +32,44 @@ from pyworkflow.em.showj import MODE, MODE_MD, ORDER, VISIBLE, SORT_BY
 from protocol_powerfit import PowerfitProtRigidFit
 import pyworkflow.protocol.params as params
 
+
 class PowerfitProtRigidFitViewer(ProtocolViewer):
     """ Wrapper to visualize powerfit results
     """
-    
+
     _label = 'viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [PowerfitProtRigidFit]
-        
+
     def _defineParams(self, form):
         form.addSection(label='Show Powerfit')
-        form.addParam('doShowFitTable', params.LabelParam, label="Display fitting quality")
-        form.addParam('modelNumber', params.IntParam, default=1, label="Model to visualize")
-        form.addParam('doShowFit', params.LabelParam, label="Display the fitting")
-    
+        form.addParam('doShowFitTable', params.LabelParam,
+                      label="Display fitting quality")
+        form.addParam('modelNumber', params.IntParam, default=1,
+                      label="Model to visualize")
+        form.addParam('doShowFit', params.LabelParam,
+                      label="Display the fitting")
+
     def _getVisualizeDict(self):
-        return {'doShowFit': self._visualizeFit, 'doShowFitTable': self._visualizeFitTable}
-    
+        return {'doShowFit': self._visualizeFit,
+                'doShowFitTable': self._visualizeFitTable}
+
     def _visualizeFit(self, e=None):
         import os
-        fnCmd = self.protocol._getExtraPath('chimera_%d.cmd'%self.modelNumber)
+        fnCmd = self.protocol._getExtraPath('chimera_%d.cmd' %
+                                            self.modelNumber)
         if os.path.exists(fnCmd):
             return [ChimeraView(fnCmd)]
 
     def _visualizeFitTable(self, e=None):
         views = []
         if hasattr(self.protocol, "outputPDBs"):
-            labels = 'id _filename _powerfit_cc _powerfit_Fish_z _powerfit_rel_z'
+            labels = \
+                'id _filename _powerfit_cc _powerfit_Fish_z _powerfit_rel_z'
             views.append(ObjectView(self._project,
-                                    self.protocol.outputPDBs.strId(), 
+                                    self.protocol.outputPDBs.strId(),
                                     self.protocol.outputPDBs.getFileName(),
-                                    viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, SORT_BY:"_powerfit_cc desc"}))
-        return views 
-    
+                                    viewParams={MODE: MODE_MD, ORDER: labels,
+                                                VISIBLE: labels,
+                                                SORT_BY: "_powerfit_cc desc"}))
+        return views
