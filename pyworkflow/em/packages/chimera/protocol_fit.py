@@ -27,7 +27,6 @@
 # **************************************************************************
 
 from protocol_operate import ChimeraProtOperate
-#from pyworkflow.em.packages.chimera.protocol_operate import ChimeraProtOperate
 
 
 class ChimeraProtRigidFit(ChimeraProtOperate):
