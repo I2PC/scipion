@@ -121,7 +121,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
             if exists(fnPdb):
                 fnCmd = self._getExtraPath("chimera_%d.cmd" % n)
                 fhCmd = open(fnCmd, 'w')
-                fhCmd.write("open %s\n"%_localInputVol)
+                fhCmd.write("open %s\n" % _localInputVol)
                 fhCmd.write("open lcc.mrc\n")
                 fhCmd.write("open fit_%d.pdb\n" % n)
                 fhCmd.write("vol #1 hide\n")
@@ -163,7 +163,6 @@ class PowerfitProtRigidFit(ProtFitting3D):
         self._defineOutputs(outputPDBs=setOfPDBs)
         self._defineSourceRelation(self.inputPDB.get(), setOfPDBs)
         self._defineSourceRelation(volume, setOfPDBs)
-
 
     # --------------------------- INFO functions ------------------------------
     def _summary(self):
