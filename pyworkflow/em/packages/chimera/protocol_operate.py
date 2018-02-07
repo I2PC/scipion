@@ -122,7 +122,7 @@ class ChimeraProtOperate(EMProtocol):
         else:
             dim = 150  # eventually we will create a PDB library that
                        # computes PDB dim
-            sampling=1.
+            sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
         createCoordinateAxisFile(dim,
@@ -148,22 +148,22 @@ class ChimeraProtOperate(EMProtocol):
         f.write("runCommand('open %s')\n" % os.path.abspath(
             pdbFileToBeRefined.getFileName()))
         if pdbFileToBeRefined.hasOrigin():
-            #x, y, z = adaptOriginFromCCP4ToChimera(
+            #  x, y, z = adaptOriginFromCCP4ToChimera(
             #    pdbFileToBeRefined.getOrigin().getShifts())
             x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
-            f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d coord #0')\n"
-                % (x, y, z, pdbModelCounter))
+            f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
+                    "coord #0')\n" % (x, y, z, pdbModelCounter))
         # other pdb files
         pdbModelCounter += 1
         for pdb in self.inputPdbFiles:
             f.write("runCommand('open %s')\n" % os.path.abspath(pdb.get(
             ).getFileName()))
             if pdb.get().hasOrigin():
-                # x, y, z = adaptOriginFromCCP4ToChimera(
+                #  x, y, z = adaptOriginFromCCP4ToChimera(
                 #     pdb.get().getOrigin().getShifts())
                 x, y, z = pdb.get().getOrigin().getShifts()
-                f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d coord #0')\n"
-                        % (x,y,z,pdbModelCounter))
+                f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
+                        "coord #0')\n" % (x, y, z, pdbModelCounter))
 
         # run the text:
         if len(self.extraCommands.get()) > 2:
@@ -212,7 +212,7 @@ class ChimeraProtOperate(EMProtocol):
             else:
                 vol = self.inputVolume.get()
         directory = self._getExtraPath()
-        counter=1
+        counter = 1
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".pdb"):
                 path = os.path.join(directory, filename)
@@ -220,15 +220,15 @@ class ChimeraProtOperate(EMProtocol):
                 pdb.setFileName(path)
                 if vol is not None:
                     pdb.setVolume(vol)
-                keyword = "outputPdb_%02d"%counter
-                counter +=1
+                keyword = "outputPdb_%02d" % counter
+                counter += 1
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
                 self._defineSourceRelation(self.inputPdbFiles, pdb)
                 if self.inputVolume.get() is None:
                     if self.pdbFileToBeRefined.get().getVolume() is not None:
                         self._defineSourceRelation(
-                        self.pdbFileToBeRefined.get().getVolume(), pdb)
+                            self.pdbFileToBeRefined.get().getVolume(), pdb)
                 else:
                     self._defineSourceRelation(self.inputVolume.get(), pdb)
 
@@ -307,10 +307,10 @@ chimeraScriptMain = '''
   def scipionWrite(model="#%(pdbID)d",refmodel="#%(_3DmapId)d",
      saverefmodel=0):
      #get model (pdb) id
-     
+
      modelId = int(model[1:])# model to write  1
      refModelId = int(refmodel[1:])# coordenate system refers to this model 0
-     
+
      # get actual models
      model    = chimera.openModels.list()[modelId]
      refModel = chimera.openModels.list()[refModelId]
@@ -342,6 +342,6 @@ def createScriptFile(pdbID, _3DmapId,
     d = {}
     d['pdbID'] = pdbID
     d['_3DmapId'] = _3DmapId
-    d['pdbFileTemplate'] = pdbFileTemplate # % 1
+    d['pdbFileTemplate'] = pdbFileTemplate  # % 1
     d['chimeraMapTemplateFileName'] = mapFileTemplate % 1
     f.write(chimeraScriptMain % d)
