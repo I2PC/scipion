@@ -336,8 +336,8 @@ def _change_chain_id(signStep):
         dic['fromAaChain']  = mydict['aa_main_chain']
         dic['toAaChain']    = mydict['aa_auxiliary_chain']
     mydict['aaNumber'] = mydict['aaNumber'] + (dic['step'] * signStep)
-    command = "change_chain_id(%(imol)d, '%(fromAaChain)s', '%(toAaChain)s',
-               1, %(fromAaNumber)d, %(toAaNumber)d)"%dic
+    command = "change_chain_id(%(imol)d, '%(fromAaChain)s', '%(toAaChain)s', 1, %(fromAaNumber)d, %(toAaNumber)d)"%dic
+
     doIt(command)
 
 def _refine_zone(signStep):
@@ -352,8 +352,8 @@ def _refine_zone(signStep):
         dic['fromAaNumber'] = mydict['aaNumber'] - 2
         dic['toAaNumber']   = mydict['aaNumber'] + dic['step']
         mydict['aaNumber']  = mydict['aaNumber'] + dic['step']
-    command = 'refine_zone(%(imol)s, "%(aa_main_chain)s", %(fromAaNumber)d,
-               %(toAaNumber)d, "")'%dic
+    command = 'refine_zone(%(imol)s, "%(aa_main_chain)s", %(fromAaNumber)d, %(toAaNumber)d, "")'%dic
+
     doIt(command)
 
 def _updateMol():
@@ -370,8 +370,7 @@ def _updateMol():
     try:
         mydict['imol']               = int(config.get("myvars", "imol"))
         mydict['aa_main_chain']      = config.get("myvars", "aa_main_chain")
-        mydict['aa_auxiliary_chain'] = config.get("myvars",
-                                                  "aa_auxiliary_chain")
+        mydict['aa_auxiliary_chain'] = config.get("myvars","aa_auxiliary_chain")
         mydict['aaNumber']           = int(config.get("myvars", "aaNumber"))
         mydict['step']               = int(config.get("myvars", "step"))
         mydict['outfile']            = int(config.get("myvars", "outfile"))
@@ -410,7 +409,6 @@ def scipion_write(imol=0):
 
 def doIt(command):
     """launch command"""
-    print "********", command
     eval(command)
     #beep(0.1)
 
