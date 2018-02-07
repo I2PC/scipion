@@ -92,11 +92,12 @@ public:
     MultidimArray<double> iu, VRiesz; // Inverse of the frequency
 	MultidimArray< std::complex<double> > fftV, *fftN; // Fourier transform of the input volume
 	FourierTransformer transformer_inv;
-	MultidimArray< std::complex<double> > fftVRiesz;
+	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
 	bool halfMapsGiven;
 	Image<double> Vfiltered, VresolutionFiltered;
 	Matrix1D<double> freq_fourier;
+	Matrix2D<double> resolutionMatrix, maskMatrix;
 };
 //@}
 #endif
