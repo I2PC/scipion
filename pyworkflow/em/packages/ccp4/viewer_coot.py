@@ -41,7 +41,7 @@ from protocol_coot import CootRefine
 
 
 class CootRefineViewer(Viewer):
-    """ Visualize the output of protocol volume strain """
+    """ Visualize the output of the coot protocol """
     _label = 'coot viewer'
     _targets = [CootRefine]
     _environments = [DESKTOP_TKINTER]
@@ -54,13 +54,15 @@ class CootRefineViewer(Viewer):
         samplings = []
         if len(self.protocol.inputVolumes) is 0:
             dim = self.protocol.pdbFileToBeRefined.get().getVolume().getDim()[0]
-            sampling = self.protocol.pdbFileToBeRefined.get().getVolume().getSamplingRate()
+            sampling = self.protocol.pdbFileToBeRefined.get().getVolume().\
+                getSamplingRate()
             dims.append(dim)
             samplings.append(sampling)
         else:
             for i in range(len(self.protocol.inputVolumes)):
                 dim = self.protocol.inputVolumes[i].get().getDim()[0]
-                sampling = self.protocol.inputVolumes[i].get().getSamplingRate()
+                sampling = self.protocol.inputVolumes[i].get().\
+                    getSamplingRate()
                 dims.append(dim)
                 samplings.append(sampling)
         createCoordinateAxisFile(max(dims),
@@ -70,15 +72,6 @@ class CootRefineViewer(Viewer):
         f = open(fnCmd, 'w')
         f.write("open %s\n" % bildFileName)
 
-        # try:
-        #     outputsVol = self.protocol.norVolumesNames
-        #     count = 1
-        #     for outputVol in outputsVol:
-        #         outputVolFileName = os.path.abspath(outputVol.getFileName())
-        #         f.write("open %s\n" % outputVolFileName)
-        #         f.write("volume #%d style surface\n" % count)
-        #         count =+ 1
-        # except:
         outputsVol = []
         if len(self.protocol.inputVolumes) is 0:
             outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
@@ -87,12 +80,7 @@ class CootRefineViewer(Viewer):
             for i in range(len(self.protocol.inputVolumes)):
                 outputVol = self.protocol.inputVolumes[i].get()
                 outputsVol.append(outputVol)
-            # if self.protocol.inputVolumes is None:
-            #     outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
-            #     outputsVol.append(outputVol)
-            # else:
-            #     for outputVol in self.protocol.inputVolumes:
-            #         outputsVol.append(outputVol)
+
         count = 1
         for outputVol in outputsVol:
             print "outputVol: ", outputVol
@@ -103,13 +91,13 @@ class CootRefineViewer(Viewer):
             f.write("open %s\n" % outputVolFileName)
             f.write("volume #%d  style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
-                    % (count, outputVol.getSamplingRate(),x, y, z))
+                    % (count, outputVol.getSamplingRate(), x, y, z))
             count += 1
 
         counter = 1
         template = self.protocol._getExtraPath(cootPdbTemplateFileName)
-        while os.path.isfile(template%counter):
-            pdbFileName = os.path.abspath(template%counter)
+        while os.path.isfile(template % counter):
+            pdbFileName = os.path.abspath(template % counter)
             counter += 1
         f.write("open %s\n" % pdbFileName)
 
@@ -117,6 +105,3 @@ class CootRefineViewer(Viewer):
         # run in the background
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []
-
-
-
