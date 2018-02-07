@@ -262,9 +262,19 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             # micrograph stack
             lastMicName = None
             count = 0 # Counter for the particles of a given micrograph
-    
+            # Check missing mics to report error once
+            missingMics = set()
+ 
             for coord in inputCoords.iterItems(orderBy='_micId'):
-                micName = coordMics[coord.getMicId()].getMicName()
+                micId = coord.getMicId()
+                mic = coordMics[micId] 
+                if mic is None:
+                    if not micId in missingMics:
+                        print("Ignoring wrong micId: ", micId)
+                        missingMics.add(micId)
+                    micName = None
+                else:
+                    micName = coordMics[coord.getMicId()].getMicName()
                 # If Micrograph Source is "other" and extract from a subset
                 # of micrographs, micName key should be checked if it exists.
                 if micName in micDict.keys():
