@@ -28,14 +28,13 @@ import os
 from os.path import join
 
 from pyworkflow.em.packages.eman2 import EMAN_DIR_VAR
+from pyworkflow.em.packages.eman2 import _plugin
 from pyworkflow.utils import Environ
-
-
 
 def getEnviron():
     """ Setup the environment variables needed to launch Eman. """
-    environ = Environ(os.environ)
-    EMAN2DIR = os.environ[('%s' % EMAN_DIR_VAR)]
+    environ = _plugin.configVars
+    EMAN2DIR = os.environ[EMAN_DIR_VAR]
     pathList = [os.path.join(EMAN2DIR, d)
                 for d in ['lib', 'bin', 'extlib/site-packages']]
 
@@ -54,7 +53,7 @@ def getEnviron():
 
 
 def getVersion():
-    path = os.environ['EMAN2DIR']
+    path = os.environ[EMAN_DIR_VAR]
     for v in getSupportedVersions():
         if v in path:
             return v
@@ -85,9 +84,9 @@ def getEmanProgram(program):
     #raise Exception('EMAN_PYTHON is not load in environment')
     python = os.environ['EMAN_PYTHON']
     return '%(python)s %(program)s ' % locals()
-    
-    
-def getEmanCommand(program, args):    
+
+
+def getEmanCommand(program, args):
     return getEmanProgram(program) + args
     
     

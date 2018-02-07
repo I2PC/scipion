@@ -28,10 +28,18 @@ This package contains the protocols and data for EMAN2
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
+from pyworkflow.plugin import Plugin
+import os
 
-_logo = "eman2_logo.png"
-_references = ['Tang2007']
 EMAN_DIR_VAR = 'EMAN2DIR'
+VARS = {EMAN_DIR_VAR: '/home/yaiza/scipion/scipion/software/em/eman-2.12'}
+
+_plugin = Plugin('eman2',
+                 homeDir=os.path.dirname(os.path.realpath(__file__)),
+                 version=2,
+                 configVars=VARS,
+                 logo="eman2_logo2.png",
+                 references=['Tang2007'])
 
 from eman2 import *
 from protocol_boxing import EmanProtBoxing
@@ -41,12 +49,16 @@ from protocol_refineasy import EmanProtRefine
 from protocol_autopick import SparxGaussianProtPicking
 from viewer import EmanViewer, RefineEasyViewer
 from wizard import SparxGaussianPickerWizard
+
+
+_logo = _plugin.logo
+_references = _plugin.references
 _environ = getEnviron()
 
 def validateInstallation():
     """ This function will be used to check if package is properly installed."""
     missingPaths = ["%s: %s" % (var, _environ[var])
-                    for var in [EMAN_DIR_VAR]
+                    for var in VARS
                     if not os.path.exists(_environ[var])]
 
     if missingPaths:

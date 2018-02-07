@@ -1363,6 +1363,18 @@ class Protocol(Step):
             'pyworkflow.protocol.scipion', 'scipion')
 
     @classmethod
+    def getPluginLogoPath(cls):
+        package = cls.getClassPackage()
+        logo = getattr(package, '_logo', None)
+        if logo:
+            logoPath = (pw.findResource(logo) or
+                        os.path.join(os.path.abspath(os.path.dirname(package.__file__)), logo))
+        else:
+            logoPath = None
+
+        return logoPath
+
+    @classmethod
     def validatePackageVersion(cls, varName, errors):
         """ Function to validate the the package version specified in
         configuration file ~/.config/scipion/scipion.conf is among the available
