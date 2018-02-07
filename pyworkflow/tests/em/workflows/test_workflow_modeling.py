@@ -34,11 +34,9 @@ from pyworkflow.em.packages.powerfit.protocol_powerfit import \
 from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
     ProtImportVolumes
 from pyworkflow.em.packages.ccp4.protocol_coot import CootRefine
-from pyworkflow.tests import BaseTest, DataSet, setupTestProject #*
+from pyworkflow.tests import *
 import os.path
 
-#class ChimeraProtRigidFit():
-#    pass
 
 class TestImportBase(BaseTest):
     @classmethod
