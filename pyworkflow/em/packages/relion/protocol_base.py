@@ -782,7 +782,6 @@ class ProtRelionBase(EMProtocol):
         self._insertFunctionStep('runRelionStep', params)
     
     #--------------------------- STEPS functions -------------------------------
-    
     def convertInputStep(self, particlesId, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
@@ -830,9 +829,9 @@ class ProtRelionBase(EMProtocol):
                 particle = imgSet[movieParticle.getParticleId()]
                 if particle is not None:
                     auxMovieParticles.append(movieParticle)
-                    
-            writeSetOfParticles(auxMovieParticles,
-                                movieFn, None, fillMagnification=True,
+            
+            writeSetOfParticles(auxMovieParticles, movieFn, None,
+                                alignType=em.ALIGN_PROJ, fillMagnification=True,
                                 postprocessImageRow=self._postprocessImageRow)
             mdMovies = md.MetaData(movieFn)
             continueRun = self.continueRun.get()
