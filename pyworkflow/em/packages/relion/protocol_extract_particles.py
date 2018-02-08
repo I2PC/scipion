@@ -214,7 +214,6 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         with the coordinates is not present. """
         
         micsStar, partStar = self._getStarFiles(mic)
-        print "params: ", params
         args = params % locals()
         self.runJob(self._getProgram('relion_preprocess'), args,
                     cwd=self.getWorkingDir())
@@ -308,10 +307,12 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
-
+        
+        self.validatePackageVersion('RELION_HOME', errors)
         if self.doNormalize and self.backDiameter > self.boxSize:
             errors.append("Background diameter for normalization should "
                           "be equal or less than the box size.")
+
 
         # We cannot check this if the protocol is in streaming.
         
@@ -451,7 +452,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                     coord.scale(self.getBoxScale())
                     p.copyObjId(coord)
                     idx, fn = relionToLocation(row.getValue(md.RLN_IMAGE_NAME))
-                    p.setLocation(idx, self._getPath(fn[1:]))
+                    p.setLocation(idx, self._getPath(fn[2:]))
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
