@@ -831,7 +831,7 @@ class ProtRelionBase(EMProtocol):
                     auxMovieParticles.append(movieParticle)
             
             writeSetOfParticles(auxMovieParticles, movieFn, None,
-                                alignType=em.ALIGN_PROJ, fillMagnification=True,
+                                fillMagnification=True,
                                 postprocessImageRow=self._postprocessImageRow)
             mdMovies = md.MetaData(movieFn)
             continueRun = self.continueRun.get()
@@ -840,6 +840,18 @@ class ProtRelionBase(EMProtocol):
                                                            iter = continueIter))
             mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
             mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
+            
+            # set priors equal to orig. values
+            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR,
+                               md.RLN_ORIENT_ORIGIN_X)
+            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR,
+                               md.RLN_ORIENT_ORIGIN_Y)
+            mdParts.copyColumn(md.RLN_ORIENT_PSI_PRIOR,
+                               md.RLN_ORIENT_PSI)
+            mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR,
+                               md.RLN_ORIENT_ROT)
+            mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR,
+                               md.RLN_ORIENT_TILT)
             
             mdAux = md.MetaData()
             mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
