@@ -97,6 +97,13 @@ class XmippCTFWizard(CtfWizard):
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
         return CtfWizard._getListProvider(self, _objs)
+
+    def getAutodownsampling(self,protocol, coeff=1.5):
+        samplingRate = protocol.inputMicrographs.get().getSamplingRate()
+        downsampling_factor = coeff / samplingRate
+        if downsampling_factor < 1:
+            downsampling_factor = 1
+        return downsampling_factor
         
     def show(self, form):
         protocol = form.protocol
@@ -114,7 +121,7 @@ class XmippCTFWizard(CtfWizard):
         
         if provider is not None:
             args = {'unit': UNIT_PIXEL,
-                    'downsample': downSampling, #_value[0],
+                    'downsample': downSampling,
                     'lf': _value[1],
                     'hf': _value[2],
                     'showInAngstroms': True

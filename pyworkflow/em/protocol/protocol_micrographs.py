@@ -645,11 +645,3 @@ class ProtCTFMicrographs(ProtMicrographs):
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass
-
-
-
-def calculateAutodownsampling(samplingRate):
-    ctfDownFactor = 1.5 / samplingRate
-    if ctfDownFactor < 1.0:
-        ctfDownFactor = 1.0
-    return ctfDownFactor
