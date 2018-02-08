@@ -34,10 +34,9 @@ from pyworkflow import findResource
 
 class Plugin(object):
 
-    def __init__(self, label, homeDir, version=None, configVars=None,
+    def __init__(self, label, version=None, configVars=None,
                  logo=None, references=None):
         self.label = label
-        self.homeDir = homeDir
         self.version = version
         self.configVars = self.getDefaultConfig(configVars)
         self.logo = logo
@@ -45,15 +44,7 @@ class Plugin(object):
 
     @staticmethod
     def getDefaultConfig(configVarDict):
-        environ = Environ(os.environ)
         for k in configVarDict:
-            environ.setdefault(k, configVarDict[k])
+            os.environ.setdefault(k, configVarDict[k])
+        environ = Environ(os.environ)
         return environ
-
-    def getLogoPath(self):
-        if self.logo:
-            logoPath = findResource(self.logo) or os.path.join(self.homeDir, self.logo)
-        else:
-            logoPath = None
-
-        return logoPath

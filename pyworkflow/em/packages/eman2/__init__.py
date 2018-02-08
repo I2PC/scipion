@@ -32,10 +32,9 @@ from pyworkflow.plugin import Plugin
 import os
 
 EMAN_DIR_VAR = 'EMAN2DIR'
-VARS = {EMAN_DIR_VAR: '/home/yaiza/scipion/scipion/software/em/eman-2.12'}
+VARS = {EMAN_DIR_VAR: '/sample/plugin/default/path/software/em/eman-2.12'}
 
 _plugin = Plugin('eman2',
-                 homeDir=os.path.dirname(os.path.realpath(__file__)),
                  version=2,
                  configVars=VARS,
                  logo="eman2_logo2.png",
