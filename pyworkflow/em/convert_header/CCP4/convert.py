@@ -55,7 +55,7 @@ def getEnviron(ccp4First=True):
             'CCP4_MASTER': _ccp4_master,
             'CCP4': _ccp4_home,
             'CCP4_SCR': os.path.join("/tmp", _username),
-            'GFORTRAN_UNBUFFERED_PRECONNECTED': os.path.join("Y"),
+            'GFORTRAN_UNBUFFERED_PRECONNECTED':"Y",
             'CBIN': os.path.join(_ccp4_home, 'bin'),
             'CLIB': os.path.join(_ccp4_home, 'lib'),
             'CLIBD': os.path.join(_ccp4_home, 'lib/data'),
