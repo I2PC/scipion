@@ -172,7 +172,8 @@ the pdb file from coot  to scipion '
             listOfPDBs.append(pdb.get().getFileName())  # other pdb files
 
         createScriptFile(0,  # imol
-                         self._getTmpPath(cootScriptFileName),
+                         self._getExtraPath(cootScriptFileName), # save script in extra otherwise is lost
+                                                               # when continue
                          self._getExtraPath(cootPdbTemplateFileName),
                          norVolumesNames,
                          listOfPDBs,
@@ -182,7 +183,7 @@ the pdb file from coot  to scipion '
         args = ""
         if self.extraCommands.get() != '':
             args += " --no-graphics "
-        args += " --script " + self._getTmpPath(cootScriptFileName)
+        args += " --script " + self._getExtraPath(cootScriptFileName)
         # script with auxiliary files
 
         self._log.info('Launching: ' + getProgram(self.COOT) + ' ' + args)
@@ -363,7 +364,7 @@ def _updateMol():
     aa_main_chain: A
     aa_auxiliary_chain: AA
     aaNumber: 82
-    called /tmp/config.ini"""
+    called /tmp/coot.ini"""
     global mydict
     config = ConfigParser.ConfigParser()
     config.read(os.environ.get('COOT_INI',"/tmp/coot.ini"))
@@ -373,7 +374,7 @@ def _updateMol():
         mydict['aa_auxiliary_chain'] = config.get("myvars","aa_auxiliary_chain")
         mydict['aaNumber']           = int(config.get("myvars", "aaNumber"))
         mydict['step']               = int(config.get("myvars", "step"))
-        mydict['outfile']            = int(config.get("myvars", "outfile"))
+        mydict['outfile']            = config.get("myvars", "outfile")
     except ConfigParser.NoOptionError:
         pass
     print ("reading:", "/tmp/coot.ini", mydict)
