@@ -60,7 +60,7 @@ PATHMRCBIN=$PATHCCP4/bin
 fft HKLIN ${OUTPUTDIR}_masked_fs.mtz MAPOUT ${OUTPUTDIR}masked_fs.map << END-fft > ${OUTPUTDIR}ifft.log
     LABIN F1=Fout0 PHI=Pout0 
     SCALE F1 1.0 300.0 
-    RESOLUTION 3.0 
+    RESOLUTION %(RESOMAX)d
     GRID %(XDIM)d %(YDIM)d %(ZDIM)d  
     END 
 END-fft

@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-
+import os
 from protocol_refmac import CCP4ProtRunRefmac
 from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer, Viewer
@@ -34,6 +34,10 @@ from pyworkflow.object import Float, String
 from pyworkflow.em.viewer import ObjectView, TableView, ImageView, ChimeraView
 from tkMessageBox import showerror
 from pyworkflow.gui.plotter import Plotter
+from pyworkflow.em.viewers.chimera_utils import \
+    createCoordinateAxisFile, \
+    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
+    getProgram, chimeraPdbTemplateFileName
 
 
 
@@ -94,6 +98,8 @@ class ParseFile():
                 row = []
                 line = filePointer.readline()
                 words = line.strip().split()
+                if words == ['$$']:
+                    break
                 #the first column has 2 words
                 row.extend([words[0]+" "+ words[1], words[2], words[3]])
                 dataList.append(tuple(row))
@@ -331,7 +337,49 @@ and rmsCHIRAL (root mean square of chiral index""")
         }
 
     def _visualizeMask(self, e=None):
-        maskedMapFileName = self.protocol._getExtraPath(self.protocol.maskedMapFileName+'.map')
+        bildFileName = os.path.abspath(self.protocol._getTmpPath(
+            "axis_output.bild"))
+        if self.protocol.inputVolume.get() is None:
+            _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+            dim = _inputVol.getDim()[0]
+            sampling = _inputVol.getSamplingRate()
+        else:
+            dim = self.protocol.inputVolume.get().getDim()[0]
+            sampling = self.protocol.inputVolume.get().getSamplingRate()
+        createCoordinateAxisFile(dim,
+                                 bildFileName=bildFileName,
+                                 sampling=sampling)
+        fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
+        f = open(fnCmd, 'w')
+        f.write("open %s\n" % bildFileName)
+
+        maskedMapFileName = self.protocol._getExtraPath(
+            self.protocol.maskedMapFileName + '.map')
+        f.write("open %s\n" % maskedMapFileName)
+
+        fnVol = self.protocol._getInputVolume()
+        localInVolFileName = os.path.abspath(self.protocol._getTmpExtraPath(
+            "tmp3DMapFile.mrc"))
+        x, y, z = adaptOriginFromCCP4ToChimera(fnVol.getOrigin().getShifts())
+        f.write("open %s\n" % localInVolFileName)
+        f.write("volume #2 style surface voxelSize %f origin "
+                "%0.2f,%0.2f,%0.2f\n") % (fnVol.getSamplingRate(), x, y, z))
+
+        if self.protocol.inputVolume.get() is None:
+                outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+
+            else:
+                outputVol = self.protocol.inputVolume.get()
+            if outputVol is not None:
+                outputVolFileName = os.path.abspath(
+                    ImageHandler.removeFileType(outputVol.getFileName()))
+                x, y, z = adaptOriginFromCCP4ToChimera(
+                    outputVol.getOrigin().getShifts())
+                f.write("open %s\n" % outputVolFileName)
+                f.write("volume #1 style surface voxelSize %f origin "
+                        "%0.2f,%0.2f,%0.2f\n"
+                        % (outputVol.getSamplingRate(), x, y, z))
+
         view = ChimeraView(maskedMapFileName)
         return [view]
 

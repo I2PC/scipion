@@ -159,11 +159,9 @@ the pdb file from coot  to scipion '
 
         # if there is not previous output use pdb file form
         # otherwise use last created pdb file
-        print "counter", counter
         if counter == 1:
             pdbFileToBeRefined = self.pdbFileToBeRefined.get().getFileName()
         else:
-            print "SECOND"
             pdbFileToBeRefined = template % (counter-1)
             self._log.info("Using last created PDB file named=%s",
                            pdbFileToBeRefined)

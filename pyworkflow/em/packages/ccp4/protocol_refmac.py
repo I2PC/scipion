@@ -37,7 +37,7 @@ from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
 from pyworkflow.em.pdb_handler import fixCRYSrecordToPDBFile
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.convert_header.CCP4.convert import (
-    adaptFileToCCP4, runCCP4Program, ORIGIN, getProgram)
+    adaptFileToCCP4, runCCP4Program, START, getProgram)
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
     BooleanParam
 
@@ -67,33 +67,56 @@ class CCP4ProtRunRefmac(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputVolume', PointerParam, label="Input Volume", important=True,
-                      pointerClass='Volume',
-                      help='This is the unit cell volume.')#que pasa si la extension no es mrc?
-        form.addParam('inputStructure', PointerParam, label="Input PDB file", important=True,
-                      pointerClass='PdbFile', help='Specify a PDB object.')
+        form.addParam('inputVolume', PointerParam, label="Input Volume",
+                      important=True, pointerClass='Volume',
+                      help='This is the unit cell volume.')
+        form.addParam('inputStructure', PointerParam, label="Input PDB file",
+                      important=True, pointerClass='PdbFile',
+                      help='Specify a PDB object.')
         form.addParam('maxResolution', FloatParam, default=5,
-                      label='Max. Resolution (A):', help="Max resolution used in the refinement (Angstroms).")
+                      label='Max. Resolution (A):',
+                      help="Max resolution used in the refinement (Angstroms)."
+                           "Use at least the double of the sampling rate ("
+                           "Angstroms/pixel)")
         form.addParam('minResolution', FloatParam, default=200,
-                      label='Min. Resolution (A):', help="Min resolution used in the refinement (Angstroms).")
-        form.addParam('nRefCycle', IntParam, default=30, expertLevel=const.LEVEL_ADVANCED,
+                      label='Min. Resolution (A):',
+                      help="Min resolution used in the refinement (Angstroms).")
+        form.addParam('nRefCycle', IntParam, default=30,
+                      expertLevel=const.LEVEL_ADVANCED,
                       label='Number of refinement iterations:',
                       help='Specify the number of cycles of refinement.\n')
-        form.addParam('weightMatrix', FloatParam, default=0.01, expertLevel=const.LEVEL_ADVANCED, label= 'Matrix refinement weight:',
-                      help='Weight between the density map and the chemical constraints. Smaller means less weight for the EM map.\n')
-        form.addParam('generateMaskedVolume', BooleanParam, default=True, label="Generate masked volume",
-                      expertLevel=const.LEVEL_ADVANCED, important=True, help='If set to True, the masked volume will be generated')
-        form.addParam('SFCALCmapradius', FloatParam, default=3, expertLevel=const.LEVEL_ADVANCED,
-                      label='SFCALC mapradius:', help='Specify how much around molecule should be cut (Angstroms)')
-        form.addParam('SFCALCmradius', FloatParam, default=3, expertLevel=const.LEVEL_ADVANCED,
-                      label='SFCALC mradius:', help='Specify the radius (Angstroms)to calculate the mask around molecule')
-        form.addParam('BFactorSet', FloatParam, default=0, expertLevel=const.LEVEL_ADVANCED,
-                      label='B Factor:', help='Specify the B factor value prior to refinement')
-        form.addParam('RefiSharpen', FloatParam, default=0, expertLevel=const.LEVEL_ADVANCED,
-                      label='Map sharpening:', help='Specify the map sharpening to be used during refinement')
+        form.addParam('weightMatrix', FloatParam, default=0.01,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label= 'Matrix refinement weight:',
+                      help='Weight between the density map and the chemical '
+                           'constraints. Smaller means less weight for the '
+                           'EM map.\n')
+        form.addParam('generateMaskedVolume', BooleanParam, default=True,
+                      label="Generate masked volume",
+                      expertLevel=const.LEVEL_ADVANCED, important=True,
+                      help='If set to True, the masked volume will be '
+                           'generated')
+        form.addParam('SFCALCmapradius', FloatParam, default=3,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='SFCALC mapradius:',
+                      help='Specify how much around molecule should be cut '
+                           '(Angstroms)')
+        form.addParam('SFCALCmradius', FloatParam, default=3,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='SFCALC mradius:',
+                      help='Specify the radius (Angstroms) to calculate the '
+                           'mask around molecule')
+        form.addParam('BFactorSet', FloatParam, default=0,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='B Factor:', help='Specify the B factor value '
+                                              'prior to refinement')
+        form.addParam('RefiSharpen', FloatParam, default=0,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='Map sharpening:',
+                      help='Specify the map sharpening to be used during '
+                           'refinement')
 
-
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('fixCRYSrecordToPDBFileStep')
         self._insertFunctionStep('convertInputStep')
@@ -102,16 +125,16 @@ class CCP4ProtRunRefmac(EMProtocol):
         self._insertFunctionStep('executeMaskRefmacStep')
         self._insertFunctionStep('createIfftScriptFileStep')
         self._insertFunctionStep('executeIfftStep')
-        self._insertFunctionStep('createIfftOutputStep') # create masked
-                                                          # volume
+        self._insertFunctionStep('createIfftOutputStep')  # create masked
+        #                                                   volume
         self._insertFunctionStep('createRefineScriptFileStep')
         self._insertFunctionStep('executeRefineRefmacStep')
-        self._insertFunctionStep('createRefmacOutputStep') # create output
-                                                           # pdb file
-        self._insertFunctionStep('writeFinalResultsTableStep') #Print output
-        # results
+        self._insertFunctionStep('createRefmacOutputStep')  # create output
+        #                                                     pdb file
+        self._insertFunctionStep('writeFinalResultsTableStep')  # Print output
+        #                                                         results
 
-    # --------------------------- STEPS functions --------------------------------------------
+    # --------------------------- STEPS functions ---------------------------
     def fixCRYSrecordToPDBFileStep(self):
         fnVol = self._getInputVolume()
         self.fixedPDBFileName = fixCRYSrecordToPDBFile(
@@ -134,7 +157,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         origin = fnVol.getOrigin(returnInitIfNone=True).getShifts()
         sampling = fnVol.getSamplingRate()
         adaptFileToCCP4(inFileName, localInFileName, origin, sampling,
-                        ORIGIN)
+                        START)
 
     def createDataDictStep(self):
         self.dict = {}
@@ -192,7 +215,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         sampling = fnVol.getSamplingRate()
         # parse refmac shifts
         refmacShiftDict = self.parseRefmacShiftFile()
-        shiftDict = refmacShiftDict[self.refmacShiftsNames[0]]
+        #shiftDict = refmacShiftDict[self.refmacShiftsNames[0]]
+        shiftDict = refmacShiftDict[self.refmacShiftsNames[2]]
         self.dict['XDIM']=int(shiftDict[0] / sampling)
         self.dict['YDIM']=int(shiftDict[1] / sampling)
         self.dict['ZDIM']=int(shiftDict[2] / sampling)
@@ -279,6 +303,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         else:
             fnVol = self.inputVolume.get()
         return fnVol
+
     def _getOutPdbFileName(self):
         pdfileName = os.path.splitext(os.path.basename(
             self.inputStructure.get().getFileName()))[0]
