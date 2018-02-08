@@ -234,6 +234,11 @@ class CtfCorrectWiener3d(XmippProgramTest):
         self.runCase("-i input/ctf_correct3d.xmd --oroot %o/wiener",
                 outputs=["wiener_deconvolved.vol","wiener_ctffiltered_group000001.vol"])
 
+    def test_case2(self):
+        self.runCase("-i input/ctf_correct3d.xmd --oroot %o/wiener",
+                     outputs=["wiener_deconvolved.vol",
+                              "wiener_ctffiltered_group000001.vol"])
+
 
 class CtfCorrectIdr(XmippProgramTest):
     _owner = COSS
@@ -282,9 +287,17 @@ class CtfEstimateFromMicrograph(XmippProgramTest):
                 outputs=["micrograph.psd"])
     def test_case2(self):
         self.setTimeOut(400)
-        self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.3 --defocus_range 1000 --acceleration1D",
+        self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.3 --defocus_range 1000",
                 postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ','xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
                 outputs=["micrograph.psd","micrograph_enhanced_psd.xmp","micrograph.ctfparam","Defocus.xmd"])
+
+    def test_case3(self):
+        self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.3 --defocus_range 1000 --acceleration1D",
+        postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd",
+            'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ',
+            'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
+        outputs=["micrograph.psd", "micrograph_enhanced_psd.xmp",
+                 "micrograph.ctfparam", "Defocus.xmd"])
 
 
 class CtfEstimateFromPsd(XmippProgramTest):
