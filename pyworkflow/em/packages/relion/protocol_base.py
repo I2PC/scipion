@@ -42,7 +42,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
-from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V1_3, V2_0
+from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V2_0
 from convert import (convertBinaryVol, writeSetOfParticles, isVersion2,
                      getVersion, getImageLocation, convertMask)
 
@@ -333,7 +333,7 @@ class ProtRelionBase(EMProtocol):
                                'Too small values yield too-low resolution '
                                'structures; too high values result in '
                                'over-estimated resolutions and overfitting.')
-            if isVersion2() and getVersion() != V2_0:  # version 2.1+ only
+            if getVersion() != V2_0:  # version 2.1+ only
                 form.addParam('doSubsets', BooleanParam, default=False,
                               condition='not doContinue',
                               expertLevel=LEVEL_ADVANCED,
@@ -428,21 +428,20 @@ class ProtRelionBase(EMProtocol):
                                'have one-values inside the virion and '
                                'zero-values in the capsid and the solvent '
                                'areas.')
-            if isVersion2():
-                form.addParam('solventFscMask', BooleanParam, default=False,
-                              expertLevel=LEVEL_ADVANCED,
-                              label='Use solvent-flattened FSCs?',
-                              help='If set to Yes, then instead of using '
-                                   'unmasked maps to calculate the gold-standard '
-                                   'FSCs during refinement, masked half-maps '
-                                   'are used and a post-processing-like '
-                                   'correction of the FSC curves (with '
-                                   'phase-randomisation) is performed every '
-                                   'iteration. This only works when a reference '
-                                   'mask is provided on the I/O tab. This may '
-                                   'yield higher-resolution maps, especially '
-                                   'when the mask contains only a relatively '
-                                   'small volume inside the box.')
+            form.addParam('solventFscMask', BooleanParam, default=False,
+                          expertLevel=LEVEL_ADVANCED,
+                          label='Use solvent-flattened FSCs?',
+                          help='If set to Yes, then instead of using '
+                               'unmasked maps to calculate the gold-standard '
+                               'FSCs during refinement, masked half-maps '
+                               'are used and a post-processing-like '
+                               'correction of the FSC curves (with '
+                               'phase-randomisation) is performed every '
+                               'iteration. This only works when a reference '
+                               'mask is provided on the I/O tab. This may '
+                               'yield higher-resolution maps, especially '
+                               'when the mask contains only a relatively '
+                               'small volume inside the box.')
         else:
             form.addParam('referenceMask', PointerParam, pointerClass='Mask',
                           label='Reference mask (optional)', allowsNull=True,
@@ -617,108 +616,100 @@ class ProtRelionBase(EMProtocol):
                                     'ribosomes, we used a value of 1 degree')
         
         form.addSection('Additional')
-        if isVersion2():
-            form.addParam('useParallelDisk', BooleanParam, default=True,
-                          label='Use parallel disc I/O?',
-                          help='If set to Yes, all MPI slaves will read '
-                               'their own images from disc. Otherwise, only '
-                               'the master will read images and send them '
-                               'through the network to the slaves. Parallel '
-                               'file systems like gluster of fhgfs are good '
-                               'at parallel disc I/O. NFS may break with many '
-                               'slaves reading in parallel.')
-            form.addParam('pooledParticles', IntParam, default=3,
-                          label='Number of pooled particles:',
-                          help='Particles are processed in individual batches '
-                               'by MPI slaves. During each batch, a stack of '
-                               'particle images is only opened and closed '
-                               'once to improve disk access times. All '
-                               'particle images of a single batch are read '
-                               'into memory together. The size of these '
-                               'batches is at least one particle per thread '
-                               'used. The nr_pooled_particles parameter '
-                               'controls how many particles are read together '
-                               'for each thread. If it is set to 3 and one '
-                               'uses 8 threads, batches of 3x8=24 particles '
-                               'will be read together. This may improve '
-                               'performance on systems where disk access, and '
-                               'particularly metadata handling of disk '
-                               'access, is a problem. It has a modest cost of '
-                               'increased RAM usage.')
-            form.addParam('allParticlesRam', BooleanParam, default=False,
-                          label='Pre-read all particles into RAM?',
-                          help='If set to Yes, all particle images will be '
-                               'read into computer memory, which will greatly '
-                               'speed up calculations on systems with slow '
-                               'disk access. However, one should of course be '
-                               'careful with the amount of RAM available. '
-                               'Because particles are read in '
-                               'float-precision, it will take \n'
-                               '( N * (box_size)^2 * 4 / (1024 * 1024 '
-                               '* 1024) ) Giga-bytes to read N particles into '
-                               'RAM. For 100 thousand 200x200 images, that '
-                               'becomes 15Gb, or 60 Gb for the same number of '
-                               '400x400 particles. Remember that running a '
-                               'single MPI slave on each node that runs as '
-                               'many threads as available cores will have '
-                               'access to all available RAM.\n\n'
-                               'If parallel disc I/O is set to No, then only '
-                               'the master reads all particles into RAM and '
-                               'sends those particles through the network to '
-                               'the MPI slaves during the refinement '
-                               'iterations.')
-            form.addParam('scratchDir', PathParam,
-                          condition='not allParticlesRam',
-                          label='Copy particles to scratch directory: ',
-                          help='If a directory is provided here, then the job '
-                               'will create a sub-directory in it called '
-                               'relion_volatile. If that relion_volatile '
-                               'directory already exists, it will be wiped. '
-                               'Then, the program will copy all input '
-                               'particles into a large stack inside the '
-                               'relion_volatile subdirectory. Provided this '
-                               'directory is on a fast local drive (e.g. an '
-                               'SSD drive), processing in all the iterations '
-                               'will be faster. If the job finishes '
-                               'correctly, the relion_volatile directory will '
-                               'be wiped. If the job crashes, you may want to '
-                               'remove it yourself.')
-            form.addParam('combineItersDisc', BooleanParam, default=False,
-                          label='Combine iterations through disc?',
-                          help='If set to Yes, at the end of every iteration '
-                               'all MPI slaves will write out a large file '
-                               'with their accumulated results. The MPI '
-                               'master will read in all these files, combine '
-                               'them all, and write out a new file with the '
-                               'combined results. All MPI salves will then '
-                               'read in the combined results. This reduces '
-                               'heavy load on the network, but increases load '
-                               'on the disc I/O. This will affect the time it '
-                               'takes between the progress-bar in the '
-                               'expectation step reaching its end (the mouse '
-                               'gets to the cheese) and the start of the '
-                               'ensuing maximisation step. It will depend on '
-                               'your system setup which is most efficient.')
-            form.addParam('doGpu', BooleanParam, default=True,
-                          label='Use GPU acceleration?',
-                          help='If set to Yes, the job will try to use GPU '
-                               'acceleration.')
-            form.addParam('gpusToUse', StringParam, default='',
-                          label='Which GPUs to use:', condition='doGpu', 
-                          help='This argument is not necessary. If left empty, '
-                               'the job itself will try to allocate available '
-                               'GPU resources. You can override the default '
-                               'allocation by providing a list of which GPUs '
-                               '(0,1,2,3, etc) to use. MPI-processes are '
-                               'separated by ":", threads by ",". '
-                               'For example: "0,0:1,1:0,0:1,1"')
-        else:
-            form.addParam('memoryPreThreads', IntParam, default=2,
-                          label='Memory per Threads',
-                          help='Computer memory in Gigabytes that is '
-                               'available for each thread. This will only '
-                               'affect some of the warnings about required '
-                               'computer memory.')
+        form.addParam('useParallelDisk', BooleanParam, default=True,
+                      label='Use parallel disc I/O?',
+                      help='If set to Yes, all MPI slaves will read '
+                           'their own images from disc. Otherwise, only '
+                           'the master will read images and send them '
+                           'through the network to the slaves. Parallel '
+                           'file systems like gluster of fhgfs are good '
+                           'at parallel disc I/O. NFS may break with many '
+                           'slaves reading in parallel.')
+        form.addParam('pooledParticles', IntParam, default=3,
+                      label='Number of pooled particles:',
+                      help='Particles are processed in individual batches '
+                           'by MPI slaves. During each batch, a stack of '
+                           'particle images is only opened and closed '
+                           'once to improve disk access times. All '
+                           'particle images of a single batch are read '
+                           'into memory together. The size of these '
+                           'batches is at least one particle per thread '
+                           'used. The nr_pooled_particles parameter '
+                           'controls how many particles are read together '
+                           'for each thread. If it is set to 3 and one '
+                           'uses 8 threads, batches of 3x8=24 particles '
+                           'will be read together. This may improve '
+                           'performance on systems where disk access, and '
+                           'particularly metadata handling of disk '
+                           'access, is a problem. It has a modest cost of '
+                           'increased RAM usage.')
+        form.addParam('allParticlesRam', BooleanParam, default=False,
+                      label='Pre-read all particles into RAM?',
+                      help='If set to Yes, all particle images will be '
+                           'read into computer memory, which will greatly '
+                           'speed up calculations on systems with slow '
+                           'disk access. However, one should of course be '
+                           'careful with the amount of RAM available. '
+                           'Because particles are read in '
+                           'float-precision, it will take \n'
+                           '( N * (box_size)^2 * 4 / (1024 * 1024 '
+                           '* 1024) ) Giga-bytes to read N particles into '
+                           'RAM. For 100 thousand 200x200 images, that '
+                           'becomes 15Gb, or 60 Gb for the same number of '
+                           '400x400 particles. Remember that running a '
+                           'single MPI slave on each node that runs as '
+                           'many threads as available cores will have '
+                           'access to all available RAM.\n\n'
+                           'If parallel disc I/O is set to No, then only '
+                           'the master reads all particles into RAM and '
+                           'sends those particles through the network to '
+                           'the MPI slaves during the refinement '
+                           'iterations.')
+        form.addParam('scratchDir', PathParam,
+                      condition='not allParticlesRam',
+                      label='Copy particles to scratch directory: ',
+                      help='If a directory is provided here, then the job '
+                           'will create a sub-directory in it called '
+                           'relion_volatile. If that relion_volatile '
+                           'directory already exists, it will be wiped. '
+                           'Then, the program will copy all input '
+                           'particles into a large stack inside the '
+                           'relion_volatile subdirectory. Provided this '
+                           'directory is on a fast local drive (e.g. an '
+                           'SSD drive), processing in all the iterations '
+                           'will be faster. If the job finishes '
+                           'correctly, the relion_volatile directory will '
+                           'be wiped. If the job crashes, you may want to '
+                           'remove it yourself.')
+        form.addParam('combineItersDisc', BooleanParam, default=False,
+                      label='Combine iterations through disc?',
+                      help='If set to Yes, at the end of every iteration '
+                           'all MPI slaves will write out a large file '
+                           'with their accumulated results. The MPI '
+                           'master will read in all these files, combine '
+                           'them all, and write out a new file with the '
+                           'combined results. All MPI salves will then '
+                           'read in the combined results. This reduces '
+                           'heavy load on the network, but increases load '
+                           'on the disc I/O. This will affect the time it '
+                           'takes between the progress-bar in the '
+                           'expectation step reaching its end (the mouse '
+                           'gets to the cheese) and the start of the '
+                           'ensuing maximisation step. It will depend on '
+                           'your system setup which is most efficient.')
+        form.addParam('doGpu', BooleanParam, default=True,
+                      label='Use GPU acceleration?',
+                      help='If set to Yes, the job will try to use GPU '
+                           'acceleration.')
+        form.addParam('gpusToUse', StringParam, default='',
+                      label='Which GPUs to use:', condition='doGpu',
+                      help='This argument is not necessary. If left empty, '
+                           'the job itself will try to allocate available '
+                           'GPU resources. You can override the default '
+                           'allocation by providing a list of which GPUs '
+                           '(0,1,2,3, etc) to use. MPI-processes are '
+                           'separated by ":", threads by ",". '
+                           'For example: "0,0:1,1:0,0:1,1"')
         
         joinHalves = ("--low_resol_join_halves 40 (only not continue mode)"
                       if not self.IS_CLASSIFY else "")
@@ -848,14 +839,7 @@ class ProtRelionBase(EMProtocol):
             continueIter = self._getContinueIter()
             mdParts = md.MetaData(continueRun._getFileName('data',
                                                            iter = continueIter))
-
-            if getVersion() == V1_3:
-                mdParts.renameColumn(md.RLN_IMAGE_NAME,
-                                     md.RLN_PARTICLE_NAME)
-            else:
-                mdParts.renameColumn(md.RLN_IMAGE_NAME,
-                                     md.RLN_PARTICLE_ORI_NAME)
-            
+            mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
             mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
             
             mdAux = md.MetaData()
@@ -879,14 +863,9 @@ class ProtRelionBase(EMProtocol):
         pass  # should be implemented in subclasses
     
     #--------------------------- INFO functions --------------------------------
-
     def _validate(self):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
-        if getVersion() == V1_3 and not self.doContinue and self.copyAlignment:
-            errors.append('In RELION v1.3 a new refinement always starts '
-                          'from global search. You cannot consider previous'
-                          'alignment unless you run in Continue mode.')
 
         if self.doContinue:
             continueProtocol = self.continueRun.get()
