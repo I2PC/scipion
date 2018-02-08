@@ -26,17 +26,14 @@
 # *
 # **************************************************************************
 
-import sys
-import unittest
-
-from pyworkflow.utils import redStr, greenStr, magentaStr
+from __future__ import print_function
+from pyworkflow.utils import magentaStr
 from pyworkflow.tests import *
-from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3 import XmippFilterHelper as xfh
 from pyworkflow.em.packages.xmipp3 import XmippResizeHelper as xrh
 from pyworkflow.em.packages.xmipp3.protocol_preprocess import (
-    OP_COLUNM, OP_DOTPRODUCT, OP_MULTIPLY, OP_SQRT, OP_RADIAL, OP_ROW)
+    OP_DOTPRODUCT, OP_MULTIPLY, OP_SQRT)
 
 
 # Some utility functions to import particles that are used
@@ -61,7 +58,7 @@ class TestXmippBase(BaseTest):
                                          samplingRate=samplingRate,
                                          checkStack=checkStack,
                                          haveDataBeenPhaseFlipped=phaseFlip)
-        print '_label: ', cls.protImport._label
+        print('_label: ', cls.protImport._label)
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
@@ -75,7 +72,7 @@ class TestXmippBase(BaseTest):
                                             filesPath=pattern,
                                             samplingRate=samplingRate,
                                             checkStack=checkStack)
-        print '_label: ', cls.protImportAvg._label
+        print('_label: ', cls.protImportAvg._label)
         cls.launchProtocol(cls.protImportAvg)
         # check that input images have been imported (a better way to do this?)
         if cls.protImportAvg.outputAverages is None:
@@ -89,7 +86,7 @@ class TestXmippBase(BaseTest):
                                          filesPath=pattern,
                                          samplingRate=samplingRate,
                                          checkStack=checkStack)
-        print '_label: ', cls.protImport._label
+        print('_label: ', cls.protImport._label)
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputVolume is None:
@@ -135,7 +132,7 @@ class TestXmippCreateMask2D(TestXmippBase):
         cls.size = 20
         
     def testCreateCircularMask(self):
-        print "Run create circular mask for particles"
+        print("Run create circular mask for particles")
         protMask1 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate = self.samplingRate, 
                                      size= self.size, 
@@ -145,19 +142,19 @@ class TestXmippCreateMask2D(TestXmippBase):
         self.assertIsNotNone(protMask1.outputMask, "There was a problem with create circular mask for particles")
     
     def testCreateBoxMask(self):
-        print "Run create box mask for particles"
+        print("Run create box mask for particles")
         protMask2 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate = self.samplingRate, 
                                      size= self.size, 
                                      geo=1, boxSize=-1 )
         protMask2.setObjLabel('box mask')
-        print "launching protMask2"
+        print("launching protMask2")
         self.launchProtocol(protMask2)
-        print "assert...."
+        print("assert....")
         self.assertIsNotNone(protMask2.outputMask, "There was a problem with create boxed mask for particles")
     
     def testCreateCrownMask(self):
-        print "Run create crown mask for particles"
+        print("Run create crown mask for particles")
         protMask3 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate = self.samplingRate, 
                                      size= self.size, 
@@ -167,7 +164,7 @@ class TestXmippCreateMask2D(TestXmippBase):
         self.assertIsNotNone(protMask3.outputMask, "There was a problem with create crown mask for particles")
     
     def testCreateGaussianMask(self):
-        print "Run create gaussian mask for particles"
+        print("Run create gaussian mask for particles")
         protMask4 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate = self.samplingRate, 
                                      size= self.size, 
@@ -177,7 +174,7 @@ class TestXmippCreateMask2D(TestXmippBase):
         self.assertIsNotNone(protMask4.outputMask, "There was a problem with create gaussian mask for particles")
     
     def testCreateRaisedCosineMask(self):
-        print "Run create raised cosine mask for particles"
+        print("Run create raised cosine mask for particles")
         protMask5 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate = self.samplingRate, 
                                      size= self.size,
@@ -187,7 +184,7 @@ class TestXmippCreateMask2D(TestXmippBase):
         self.assertIsNotNone(protMask5.outputMask, "There was a problem with create raised cosine mask for particles")
     
     def testCreateRaisedCrownMask(self):
-        print "Run create raised crown mask for particles"
+        print("Run create raised crown mask for particles")
         protMask6 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate = self.samplingRate, 
                                      size= self.size, 
@@ -205,7 +202,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
 
     def testApplyCircularMask(self):
-        print "Run apply circular mask for particles"
+        print("Run apply circular mask for particles")
         protMask1 = self.newProtocol(XmippProtMaskParticles,
                                      source=0, geo=0, radius=-1,
                                      fillType=0, fillValue=5 )
@@ -217,7 +214,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask1.outputParticles, "There was a problem with apply circular mask for particles")
     
     def testApplyBoxMask(self):
-        print "Run apply box mask for particles"
+        print("Run apply box mask for particles")
         protMask2 = self.newProtocol(XmippProtMaskParticles,
                                      source=0, geo=1, boxSize=-1,
                                      fillType=1 )
@@ -229,7 +226,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask2.outputParticles, "There was a problem with apply boxed mask for particles")
     
     def testApplyCrownMask(self):
-        print "Run apply crown mask for particles"
+        print("Run apply crown mask for particles")
         protMask3 = self.newProtocol(XmippProtMaskParticles,
                                      source=0, geo=2, innerRadius=2, outerRadius=12,
                                      fillType=2 )
@@ -241,7 +238,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask3.outputParticles, "There was a problem with apply crown mask for particles")
         
     def testApplyGaussianMask(self):
-        print "Run apply gaussian mask for particles"
+        print("Run apply gaussian mask for particles")
         protMask4 = self.newProtocol(XmippProtMaskParticles,
                                      source=0, geo=3, sigma=-1,
                                      fillType=3 )
@@ -253,7 +250,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask4.outputParticles, "There was a problem with apply gaussian mask for particles")
         
     def testApplyRaisedCosineMask(self):
-        print "Run apply raised cosine mask for particles"
+        print("Run apply raised cosine mask for particles")
         protMask5 = self.newProtocol(XmippProtMaskParticles,
                                      source=0, geo=4, innerRadius=2, outerRadius=12,
                                      fillType=0, fillValue=5 )
@@ -265,7 +262,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask5.outputParticles, "There was a problem with apply raised cosine mask for particles")
         
     def testApplyRaisedCrownMask(self):
-        print "Run apply raised crown mask for particles"
+        print("Run apply raised crown mask for particles")
         protMask6 = self.newProtocol(XmippProtMaskParticles,
                                      source=0, geo=5, innerRadius=2, outerRadius=12, borderDecay=2,
                                      fillType=1 )
@@ -278,7 +275,7 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask6.outputParticles, "There was a problem with apply raised crown mask for particles")
 
     def testApplyUserMask(self):
-        print "Run apply user mask for particles"
+        print("Run apply user mask for particles")
         # Create MASK
         protMask01 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate=1.237, 
@@ -303,7 +300,8 @@ class TestXmippApplyMask2D(TestXmippBase):
 
 
 class TestXmippScreenParticles(TestXmippBase):
-    """This class check if the protocol to classify particles by their similarity to discard outliers work properly"""
+    """This class check if the protocol to classify particles by their
+    similarity to discard outliers work properly"""
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -314,54 +312,86 @@ class TestXmippScreenParticles(TestXmippBase):
     
     def test_screenPart(self):
         from itertools import izip
-        print 'Running Screen particles test'
+        print('Running Screen particles test')
         xpsp = XmippProtScreenParticles  # short notation
-        # First test for check I/O. Input and Output SetOfParticles must be equal sized if not rejection is selected
-        print '--> Running Screen without rejection'
+        # First test for check I/O. Input and Output SetOfParticles must
+        # be equal sized if not rejection is selected
+        print('--> Running Screen without rejection')
         protScreenNone = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_NONE)
         protScreenNone.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protScreenNone)
-        self.assertIsNotNone(protScreenNone.outputParticles, 'Output has not been produced')
-        print '\t --> Output is not None'
-        self.assertEqual(len(protScreenNone.outputParticles), len(self.protImport.outputParticles), "Input and Output Set Of Particles don't have same size")
-        print '\t --> Input/Output sets sizes are equal (%s)' % len(protScreenNone.outputParticles)
+        self.assertIsNotNone(protScreenNone.outputParticles,
+                             'Output has not been produced')
+        print('\t --> Output is not None')
+        self.assertEqual(len(protScreenNone.outputParticles),
+                         len(self.protImport.outputParticles),
+                         "Input and Output Set Of Particles don't have same size")
+        print('\t --> Input/Output sets sizes are equal (%s)' % len(
+            protScreenNone.outputParticles))
         
         for x, y in izip(self.protImport.outputParticles, protScreenNone.outputParticles):
-            print "\t      compare %s with %s" % (x, y)
+            print("\t      compare %s with %s" % (x, y))
             self.assertEqual(x.getObjId(), y.getObjId(), "Particles differ")
             self.assertEqual(x.getSamplingRate(), y.getSamplingRate(), "Particle sampling rate differ")
-        print '\t --> Input/Output sets contain the same particles'
-        
-        # After this, we check for errors in method with particle rejection by ZScore
-        print "--> Running Screen with rejection to maxZScore upper than 2.6"
-        protScreenZScore = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_MAXZSCORE,
-                                      maxZscore=2.6)
+        print('\t --> Input/Output sets contain the same particles')
+
+        # Test summary zScores
+        self.assertIsNotEmpty(protScreenNone.minZScore)
+        self.assertIsNotEmpty(protScreenNone.maxZScore)
+        self.assertIsNotEmpty(protScreenNone.sumZScore)
+
+        # test zScore
+        self.assertAlmostEqual(0.823016, protScreenNone.minZScore.get())
+        self.assertAlmostEqual(3.276184, protScreenNone.maxZScore.get())
+        self.assertAlmostEqual(133.033408, protScreenNone.sumZScore.get())
+
+        # After this, we check for errors in method with particle rejection
+        # by ZScore
+        print("--> Running Screen with rejection to maxZScore upper than 2.5")
+        protScreenZScore = self.newProtocol(xpsp,
+                                            autoParRejection=xpsp.REJ_MAXZSCORE,
+                                            maxZscore=2.5)
         protScreenZScore.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protScreenZScore)
-        self.assertIsNotNone(protScreenZScore.outputParticles, "Output has not been produced")
-        print '\t --> Output is not None'
-        self.assertEqual(len(protScreenZScore.outputParticles), 71, "Output Set Of Particles must be 71, but %s found" % len(protScreenZScore.outputParticles))
-        print '\t --> Output set size is correct (%s)' % len(protScreenZScore.outputParticles)
+        self.assertIsNotNone(protScreenZScore.outputParticles,
+                             "Output has not been produced")
+        print('\t --> Output is not None')
+        self.assertEqual(len(protScreenZScore.outputParticles),
+                         69,
+                         "Output Set Of Particles must be 71, but %s found" %
+                         len(protScreenZScore.outputParticles))
+        print('\t --> Output set size is correct (%s)' % len(
+            protScreenZScore.outputParticles))
         
+        # test values not equal to previous run
+        self.assertAlmostEqual(0.823016, protScreenZScore.minZScore.get())
+        self.assertAlmostEqual(2.460981, protScreenZScore.maxZScore.get())
+        self.assertAlmostEqual(113.302433, protScreenZScore.sumZScore.get())
+
         for x in protScreenZScore.outputParticles:
-            self.assertLess(x._xmipp_zScore.get(), 2.6, "Particle with id (%s) has a ZScore of %s, upper than supposed threshold %s" % (x.getObjId(), x._xmipp_zScore.get(), 2.6))
-        print '\t --> Output particles are below the ZScore threshold'
+            self.assertLess(x._xmipp_zScore.get(), 2.5, "Particle with id (%s) has a ZScore of %s, upper than supposed threshold %s" % (x.getObjId(), x._xmipp_zScore.get(), 2.5))
+        print('\t --> Output particles are below the ZScore threshold')
         
         # Finally, we check for errors in method with particle rejection by percentage
-        print "--> Running Screen with rejection of the 5% particles with the lowest ZScore"
-        protScreenPercentage = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_MAXZSCORE,
-                                      maxZscore=2.6)
+        print(
+        "--> Running Screen with rejection of the 5% particles with the lowest ZScore")
+        protScreenPercentage = self.newProtocol(xpsp,
+                                                autoParRejection=xpsp.REJ_PERCENTAGE)
         protScreenPercentage.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protScreenPercentage)
         self.assertIsNotNone(protScreenPercentage.outputParticles, "Output has not been produced")
-        print '\t --> Output is not None'
-        self.assertEqual(len(protScreenPercentage.outputParticles), 71, "Output Set Of Particles must be 71, but %s found" % len(protScreenPercentage.outputParticles))
-        print '\t --> Output set size is correct (%s)' % len(protScreenPercentage.outputParticles)
+        print('\t --> Output is not None')
+        self.assertEqual(len(protScreenPercentage.outputParticles), 69,
+                         "Output Set Of Particles must be 69, but %s found"
+                         % len(protScreenPercentage.outputParticles))
+        print('\t --> Output set size is correct (%s)'
+              % len(protScreenPercentage.outputParticles))
         
         for x, y in izip(protScreenZScore.outputParticles, protScreenPercentage.outputParticles):
-            print "\t      compare %s with %s" % (x, y)
+            print("\t      compare %s with %s" % (x, y))
             self.assertEqual(x.getObjId(), y.getObjId(), "Particles differ")
-        print '\t --> Particles rejected using maxZScore(2.6) method and percentage(5%) one are the same'
+        print(
+        '\t --> Particles rejected using maxZScore(2.5) method and percentage(5%) one are the same')
 
 
 class TestXmippPreprocessParticles(TestXmippBase):
@@ -373,7 +403,7 @@ class TestXmippPreprocessParticles(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
         
     def test_preprocessPart(self):
-        print "Run Preprocess particles"
+        print("Run Preprocess particles")
         protPreproc = self.newProtocol(XmippProtPreprocessParticles, 
                                       doRemoveDust=True, doNormalize=True, 
                                       backRadius=48, doInvert=True,
@@ -386,7 +416,7 @@ class TestXmippPreprocessParticles(TestXmippBase):
             from itertools import izip
             for x, y in izip(self.protImport.outputParticles.get(),
                              protPreproc.outputParticles.get()):
-                print "compare ", x , " with ", y
+                print("compare ", x, " with ", y)
                 self.assertEquals(x.getAlignment(), y.getAlignment(),
                                   "Alignment wrong")
                 
@@ -403,7 +433,8 @@ class TestXmippCropResizeParticles(TestXmippBase):
     """Check protocol crop/resize particles from Xmipp."""
     @classmethod
     def setUpClass(cls):
-        print "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-'))
+        print(
+        "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-')))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
@@ -411,7 +442,7 @@ class TestXmippCropResizeParticles(TestXmippBase):
 
     def launch(self, **kwargs):
         "Launch XmippProtCropResizeParticles and return output particles."
-        print magentaStr("\n==> Crop/Resize input params: %s" % kwargs)
+        print(magentaStr("\n==> Crop/Resize input params: %s" % kwargs))
         prot = self.newProtocol(XmippProtCropResizeParticles, **kwargs)
         prot.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(prot)
@@ -484,13 +515,14 @@ class TestXmippCropResizeWAngles(TestXmippBase):
     """Check protocol crop/resize particles from Xmipp."""
     @classmethod
     def setUpClass(cls):
-        print "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-'))
+        print(
+        "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-')))
         setupTestProject(cls)
         TestXmippBase.setData('relion_tutorial')
     
     def launch(self, **kwargs):
         "Launch XmippProtCropResizeParticles and return output particles."
-        print magentaStr("\n==> Crop/Resize input params: %s" % kwargs)
+        print(magentaStr("\n==> Crop/Resize input params: %s" % kwargs))
         prot = self.newProtocol(XmippProtCropResizeParticles, **kwargs)
 #         prot.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(prot)
@@ -500,7 +532,7 @@ class TestXmippCropResizeWAngles(TestXmippBase):
         return prot.outputParticles  # for more tests
 
     def test_CropResizeWAngles(self):
-        print "Import Set of particles with angles"
+        print("Import Set of particles with angles")
         prot1 = self.newProtocol(ProtImportParticles,
                                  objLabel='from scipion (to-reconstruct)',
                                  importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
@@ -549,18 +581,18 @@ class TestXmippFilterParticles(TestXmippBase):
 
     @classmethod
     def setUpClass(cls):
-        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+        print("\n", greenStr(" Set Up - Collect data ".center(75, '-')))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237,
                                                 True, True)
 
     def test_filterParticles(self):
-        print "\n", greenStr(" Filter Particles ".center(75, '-'))
+        print("\n", greenStr(" Filter Particles ".center(75, '-')))
 
         def test(parts=self.protImport.outputParticles, **kwargs):
             "Launch XmippProtFilterParticles on parts and check results."
-            print magentaStr("\n==> Input params: %s" % kwargs)
+            print(magentaStr("\n==> Input params: %s" % kwargs))
             prot = self.newProtocol(XmippProtFilterParticles, **kwargs)
             prot.inputParticles.set(parts)
             self.launchProtocol(prot)
@@ -576,7 +608,7 @@ class TestXmippFilterParticles(TestXmippBase):
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
         test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
         # For wavelets, we need the input's size to be a power of 2
-        print magentaStr("\n==> Resizing particles to 256 pixels")
+        print(magentaStr("\n==> Resizing particles to 256 pixels"))
         protResize = self.newProtocol(XmippProtCropResizeParticles,
                                       doResize=True,
                                       resizeOption=xrh.RESIZE_DIMENSIONS,
@@ -590,7 +622,7 @@ class TestXmippFilterParticles(TestXmippBase):
 class TestXmippOperateParticles(TestXmippBase):
     @classmethod
     def setUpClass(cls):
-        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+        print("\n", greenStr(" Set Up - Collect data ".center(75, '-')))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237,
@@ -598,7 +630,8 @@ class TestXmippOperateParticles(TestXmippBase):
 
     def launchSet(self, **kwargs):
         "Launch XmippProtImageOperateParticles and return output volumes."
-        print magentaStr("\n==> Operate set of volumes input params: %s" % kwargs)
+        print(
+        magentaStr("\n==> Operate set of volumes input params: %s" % kwargs))
         prot = XmippProtImageOperateParticles()
         prot.operation.set(kwargs.get('operation', 1))
         prot.inputParticles.set(self.protImport.outputParticles)
@@ -647,7 +680,7 @@ class TestXmippML2D(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
     
     def test_ml2d(self):
-        print "Run ML2D"
+        print("Run ML2D")
         protML2D = self.newProtocol(XmippProtML2D, 
                                    numberOfClasses=2, maxIters=3,
                                    numberOfMpi=2, numberOfThreads=2)
@@ -667,7 +700,7 @@ class TestXmippCL2D(TestXmippBase):
         cls.protImportAvgs = cls.runImportAverages(cls.particlesDir + '/img00007[1-4].spi', 3.5)
     
     def test_cl2d(self):
-        print "Run CL2D"
+        print("Run CL2D")
         # Run CL2D with random class and core analysis
         protCL2DRandomCore = self.newProtocol(XmippProtCL2D,
                                    numberOfClasses=8, numberOfInitialClasses=1,
@@ -706,7 +739,7 @@ class TestXmippProtCL2DAlign(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
     
     def test_xmippProtCL2DAlign(self):
-        print "Run Only Align"
+        print("Run Only Align")
         # Run test without image reference
         CL2DAlignNoRef = self.newProtocol(XmippProtCL2DAlign,
                                     maximumShift=5, numberOfIterations=5,
@@ -769,12 +802,12 @@ class TestXmippDenoiseParticles(TestXmippBase):
         cls.launchProtocol(cls.protRelion2DClass)
 
     def test_denoiseparticles(self):
-        print """
+        print("""
 *****************************
 | Note: This part of the test may last for several minutes,
 |       building a PCA basis for denoising is time expensive.
 *****************************
-"""
+""")
         protDenoise = self.newProtocol(XmippProtDenoiseParticles)
         protDenoise.inputParticles.set(self.protImport.outputParticles)
         protDenoise.inputClasses.set(self.protRelion2DClass.outputClasses)
@@ -853,14 +886,14 @@ class TestXmippRotSpectra(TestXmippBase):
         cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
          
     def test_rotSpectra(self):
-        print "Run Rotational Spectra"
+        print("Run Rotational Spectra")
         xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, SomXdim=2, SomYdim=2)
         xmippProtRotSpectra.inputParticles.set(self.align2D.outputParticles)
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
 
     def test_rotSpectraMask(self):
-        print "Run Rotational Spectra with Mask"
+        print("Run Rotational Spectra with Mask")
         protMask = self.runCreateMask(3.5, 100)
         xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, useMask=True, SomXdim=2, SomYdim=2)
         xmippProtRotSpectra.inputParticles.set(self.align2D.outputParticles)
@@ -880,14 +913,14 @@ class TestXmippKerdensom(TestXmippBase):
         cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
 
     def test_kerdensom(self):
-        print "Run Kerdensom"
+        print("Run Kerdensom")
         xmippProtKerdensom = self.newProtocol(XmippProtKerdensom, SomXdim=2, SomYdim=2)
         xmippProtKerdensom.inputParticles.set(self.align2D.outputParticles)
         self.launchProtocol(xmippProtKerdensom)
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
     def test_kerdensomMask(self):
-        print "Run Kerdensom with a mask"
+        print("Run Kerdensom with a mask")
         protMask = self.runCreateMask(3.5, 100)
         xmippProtKerdensom = self.newProtocol(XmippProtKerdensom, SomXdim=2, SomYdim=2)
         xmippProtKerdensom.inputParticles.set(self.align2D.outputParticles)
@@ -919,7 +952,7 @@ class TestXmippCompareReprojections(TestXmippBase):
         cls.launchProtocol(cls.protProjMatch)
     
     def test_particles1(self):
-        print "Run Compare Reprojections from classes"
+        print("Run Compare Reprojections from classes")
         prot = self.newProtocol(XmippProtCompareReprojections, 
                                         symmetryGroup="d6", numberOfMpi=5)
         prot.inputSet.set(self.protClassify.outputClasses)
@@ -928,7 +961,7 @@ class TestXmippCompareReprojections(TestXmippBase):
         self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from classes")
 
     def test_particles2(self):
-        print "Run Compare Reprojections from averages"
+        print("Run Compare Reprojections from averages")
         prot = self.newProtocol(XmippProtCompareReprojections, 
                                         symmetryGroup="d6", numberOfMpi=5)
         prot.inputSet.set(self.protImportAvgs.outputAverages)
@@ -937,7 +970,7 @@ class TestXmippCompareReprojections(TestXmippBase):
         self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from averages")
 
     def test_particles3(self):
-        print "Run Compare Reprojections from projections with angles"
+        print("Run Compare Reprojections from projections with angles")
         prot = self.newProtocol(XmippProtCompareReprojections, 
                                         symmetryGroup="d6", numberOfMpi=5)
         prot.inputSet.set(self.protProjMatch.outputParticles)
@@ -1000,14 +1033,14 @@ class TestXmippBreakSym(TestXmippBase):
         p.setTransform(Transform(m))
         partSet.append(p)
         partSet.write()
-        
-        print "import particles"
+
+        print("import particles")
         protImport = self.newProtocol(ProtImportParticles, 
                                          sqliteFile=fileTmp.name, samplingRate=1, importFrom=4,
                                          checkStack=False, haveDataBeenPhaseFlipped=False)
         self.launchProtocol(protImport)
-        
-        print "Run AngBreakSymmetry particles"
+
+        print("Run AngBreakSymmetry particles")
         protBreakSym = self.newProtocol(XmippProtAngBreakSymmetry, symmetryGroup="i2")
         protBreakSym.inputParticles.set(protImport.outputParticles)
         self.launchProtocol(protBreakSym)
@@ -1039,7 +1072,7 @@ class TestXmippCorrectWiener2D(TestXmippBase):
                                  haveDataBeenPhaseFlipped=False
                                  )
         self.launchProtocol(prot1)
-        print "Run CTFCorrectWiener2D particles"
+        print("Run CTFCorrectWiener2D particles")
         protCorrect = self.newProtocol(XmippProtCTFCorrectWiener2D)
         protCorrect.inputParticles.set(prot1.outputParticles)
         self.launchProtocol(protCorrect)
@@ -1085,6 +1118,6 @@ if __name__ == "__main__":
             suite = unittest.TestLoader().loadTestsFromTestCase(cls)
             unittest.TextTestRunner(verbosity=2).run(suite)
         else:
-            print "Test: '%s' not found." % className
+            print("Test: '%s' not found." % className)
     else:
         unittest.main()
