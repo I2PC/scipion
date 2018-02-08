@@ -26,11 +26,6 @@
 """
 This modules contains classes related with EM
 """
-#import os
-#import sys
-
-#import pyworkflow as pw
-#import pyworkflow.utils as pwutils
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
 from data_tiltpairs import *
