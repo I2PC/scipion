@@ -152,6 +152,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         # get input 3D map filename
         fnVol = self._getInputVolume()
         inFileName = fnVol.getFileName()
+
         # create local copy of 3Dmap (tmp3DMapFile.mrc)
         localInFileName = self._getVolumeFileName()
         origin = fnVol.getOrigin(returnInitIfNone=True).getShifts()
@@ -215,11 +216,21 @@ class CCP4ProtRunRefmac(EMProtocol):
         sampling = fnVol.getSamplingRate()
         # parse refmac shifts
         refmacShiftDict = self.parseRefmacShiftFile()
-        #shiftDict = refmacShiftDict[self.refmacShiftsNames[0]]
-        shiftDict = refmacShiftDict[self.refmacShiftsNames[2]]
-        self.dict['XDIM']=int(shiftDict[0] / sampling)
-        self.dict['YDIM']=int(shiftDict[1] / sampling)
-        self.dict['ZDIM']=int(shiftDict[2] / sampling)
+        #shiftDict = refmacShiftDict[self.refmacShiftsNames[2]]
+        shiftDict = refmacShiftDict[self.refmacShiftsNames[0]]
+        # x =
+        # x = int(shiftDict[2] / sampling + 0.5)
+        # self.dict['XDIM']=x if x%2==0 else x + 1
+        # y = int(shiftDict[0] / sampling + 0.5)
+        # self.dict['YDIM']=y if y%2==0 else y + 1
+        # z = int(shiftDict[1] / sampling + 0.5)
+        # self.dict['ZDIM']=z if z%2==0 else z + 1
+        x = int(shiftDict[0] / sampling + 0.5)
+        self.dict['XDIM'] = x if x % 2 == 0 else x + 1
+        y = int(shiftDict[1] / sampling + 0.5)
+        self.dict['YDIM'] = y if y % 2 == 0 else y + 1
+        z = int(shiftDict[2] / sampling + 0.5)
+        self.dict['ZDIM'] = z if z % 2 == 0 else z + 1
         # create template file
         data_ifft = template_ifft % self.dict
         f_ifft = open(self._getIfftScriptFileName(), "w")
@@ -235,34 +246,19 @@ class CCP4ProtRunRefmac(EMProtocol):
                        {'GENERIC':self._getExtraPath("")})
 
     def createIfftOutputStep(self):
-        vol = Volume()
-        volLocation = vol.setLocation(self._getExtraPath('%s.map'
-                                             %self.maskedMapFileName)) #
+        pass # do not save intemediate results
+        #vol = Volume()
+        #volLocation = vol.setLocation(self._getExtraPath('%s.map'
+        #                                     %self.maskedMapFileName)) #
         # ifft volume
-        fnVol = self._getInputVolume()
-        sampling = fnVol.getSamplingRate()
-        vol.setSamplingRate(sampling)
+        #fnVol = self._getInputVolume()
+        #sampling = fnVol.getSamplingRate()
+        #vol.setSamplingRate(sampling)
         #
-        """
-        ccp4header = Ccp4Header(volLocation, readHeader=True)
-        t = Transform()
-        x, y, z = ccp4header.getOffset()  # origin output vol coordinates
-        fnVol = self._getInputVolume()
-        # x, y, z origin input vol coordinates
-        x_origin = fnVol.getOrigin().getShifts()[0]
-        y_origin = fnVol.getOrigin().getShifts()[1]
-        z_origin = fnVol.getOrigin().getShifts()[2]
-        # x, y, z origin output vol coordinates
-        x += fnVol.getDim()[0] / 2. - x_origin
-        y += fnVol.getDim()[1] / 2. - y_origin
-        z += fnVol.getDim()[2] / 2. - z_origin
-        t.setShifts(-x, -y, -z)  # we follow chimera convention no MRC
-        vol.setOrigin(t)
-        """
-        #
-        self._defineOutputs(outputMaskedVolume=vol)
-        self._defineSourceRelation(fnVol, self.outputMaskedVolume)
-        self._defineSourceRelation(self.inputStructure, self.outputMaskedVolume)
+        #self._defineOutputs(outputMaskedVolume=vol)
+        #self._defineSourceRelation(fnVol, self.outputMaskedVolume)
+        #self._defineSourceRelation(self.inputStructure,
+        # self.outputMaskedVolume)
 
     def createRefineScriptFileStep(self):
         data_refine = template_refine % self.dict
