@@ -954,7 +954,6 @@ class ProtExtractParticles(ProtParticles):
         if outputParts is None:
             inputMics = self.getInputMicrographs()
             outputParts = self._createSetOfParticles()
-            outputParts.copyInfo(inputMics)
             outputParts.setCoordinates(self.getCoords())
             if self.doFlip:
                 outputParts.setIsPhaseFlipped(not inputMics.isPhaseFlipped())

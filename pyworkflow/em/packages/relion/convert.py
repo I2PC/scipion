@@ -160,7 +160,7 @@ def isVersion2():
 
 
 def getSupportedVersions():
-    return [V1_3, V1_4, V2_0, V2_1]
+    return [V2_0, V2_1]
 
 
 def locationToRelion(index, filename):
