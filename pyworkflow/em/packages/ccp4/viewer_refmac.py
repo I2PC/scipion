@@ -166,10 +166,8 @@ class ParseFile():
         while 1:
             line = filePointer.readline()
             if line.find('Ncyc    Rfact    Rfree     FOM      -LL     -LLfree  rmsBOND  zBOND rmsANGL  zANGL rmsCHIRAL $$')!=-1:
-                print("Yes Ncyc")
                 break
             if not line:
-                print("NO Ncyc")
                 stop = True
                 break
         if stop:
@@ -349,39 +347,55 @@ and rmsCHIRAL (root mean square of chiral index""")
         createCoordinateAxisFile(dim,
                                  bildFileName=bildFileName,
                                  sampling=sampling)
+        counter = 0
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
         f = open(fnCmd, 'w')
+        # reference axis model = 0
         f.write("open %s\n" % bildFileName)
 
-        maskedMapFileName = self.protocol._getExtraPath(
-            self.protocol.maskedMapFileName + '.map')
-        f.write("open %s\n" % maskedMapFileName)
-
+        # input 3D map
+        counter += 1 # 1
         fnVol = self.protocol._getInputVolume()
-        localInVolFileName = os.path.abspath(self.protocol._getTmpExtraPath(
-            "tmp3DMapFile.mrc"))
-        x, y, z = adaptOriginFromCCP4ToChimera(fnVol.getOrigin().getShifts())
-        f.write("open %s\n" % localInVolFileName)
-        f.write("volume #2 style surface voxelSize %f origin "
-                "%0.2f,%0.2f,%0.2f\n") % (fnVol.getSamplingRate(), x, y, z))
+        f.write("open %s\n" % os.path.abspath(fnVol.getFileName()))
+        x, y, z = adaptOriginFromCCP4ToChimera(
+            fnVol.getOrigin(returnInitIfNone=True).getShifts())
+        sampling = fnVol.getSamplingRate()
+        f.write("volume #%d style surface voxelSize %f origin "
+                "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, x, y, z))
 
-        if self.protocol.inputVolume.get() is None:
-                outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+        #input PDB (usually from coot)
+        counter += 1 #2
+        pdbFileName = os.path.abspath(
+            self.protocol.inputStructure.get().getFileName())
+        f.write("open %s\n" % pdbFileName)
 
-            else:
-                outputVol = self.protocol.inputVolume.get()
-            if outputVol is not None:
-                outputVolFileName = os.path.abspath(
-                    ImageHandler.removeFileType(outputVol.getFileName()))
-                x, y, z = adaptOriginFromCCP4ToChimera(
-                    outputVol.getOrigin().getShifts())
-                f.write("open %s\n" % outputVolFileName)
-                f.write("volume #1 style surface voxelSize %f origin "
-                        "%0.2f,%0.2f,%0.2f\n"
-                        % (outputVol.getSamplingRate(), x, y, z))
+        #MAsk created by first refmac
+        counter += 1 # 3
+        refmacShiftDict = self.protocol.parseRefmacShiftFile()
+        shiftDict = refmacShiftDict[self.protocol.refmacShiftsNames[3]]
+        x = shiftDict[0]
+        y = shiftDict[1]
+        z = shiftDict[2]
+        maskedMapFileName = os.path.abspath(self.protocol._getExtraPath(
+                                            self.protocol.maskedMapFileName +
+                                            '.map'))
+        f.write("open %s\n" % maskedMapFileName)
+        f.write("move %0.2f,%0.2f,%0.2f model #%d coord #0\n" % (x, y,
+                                                                z, counter))
 
-        view = ChimeraView(maskedMapFileName)
-        return [view]
+        # second refmac output (no shift needed)
+        counter += 1 #4
+        pdbFileName = os.path.abspath(self.protocol._getExtraPath(
+            "cootOut0001-refined.pdb")) # TODO: no fixed names
+        f.write("open %s\n" % pdbFileName)
+
+        f.close()
+        # run in the background
+        runChimeraProgram(getProgram(), fnCmd + "&")
+        return []
+
+        # view = ChimeraView(maskedMapFileName)
+        # return [view]
 
     def _visualizeFinalResults(self, e=None):
 
