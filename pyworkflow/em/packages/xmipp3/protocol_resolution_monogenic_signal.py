@@ -46,6 +46,7 @@ OUTPUT_MASK_FILE = 'outputmask'
 FN_MEAN_VOL = 'meanvol'
 METADATA_MASK_FILE = 'metadataresolutions'
 FN_METADATA_HISTOGRAM = 'mdhist'
+BINARY_MASK = 'binarymask'
 
 
 class XmippProtMonoRes(ProtAnalysis3D):
@@ -112,6 +113,13 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       help='Relution is computed using hipothesis tests, '
                       'this value determines the significance of that test')
         
+        group.addParam('maskthreshold', FloatParam, default=0.5, 
+                       expertLevel=LEVEL_ADVANCED,
+                      label="Mask threshold",
+                      help='If the provided mask is not binary. Then, MonoRes'
+                      'will try to binarize it. Bmask values below the threshold'
+                      'will be change to 0 and above the thresthol will be 1')
+        
         group.addParam('isPremasked', BooleanParam, default=False,
                       label="Is the original premasked?",
                       help='Sometimes the original volume is masked inside '
@@ -166,7 +174,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                  FN_FILTERED_MAP: self._getExtraPath('filteredMap.vol'),
                  OUTPUT_RESOLUTION_FILE: self._getExtraPath('mgresolution.vol'),
                  METADATA_MASK_FILE: self._getExtraPath('mask_data.xmd'),
-                 FN_METADATA_HISTOGRAM: self._getExtraPath('hist.xmd')
+                 FN_METADATA_HISTOGRAM: self._getExtraPath('hist.xmd'),
+                 BINARY_MASK: self._getExtraPath('binarized_mask.vol')
                  }
         self._updateFilenamesDict(myDict)
 
@@ -211,6 +220,14 @@ class XmippProtMonoRes(ProtAnalysis3D):
         extMask = getExt(self.maskFn)
         if (extMask == '.mrc') or (extMask == '.map'):
             self.maskFn = self.maskFn + ':mrc'
+            
+       
+        params = ' -i %s' % self.maskFn
+        params += ' -o %s' % self._getFileName(BINARY_MASK)
+        params += ' --select below %f' % self.maskthreshold.get()
+        params += ' --substitute binarize'
+        
+        self.runJob('xmipp_transform_threshold', params)
 
     def resolutionMonogenicSignalStep(self):
 
@@ -244,12 +261,12 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 
         if self.halfVolumes.get() is False:
             params = ' --vol %s' % self.vol0Fn
-            params += ' --mask %s' % self.maskFn
+            params += ' --mask %s' % self._getFileName(BINARY_MASK)
         else:
             params = ' --vol %s' % self.vol1Fn
             params += ' --vol2 %s' % self.vol2Fn
             params += ' --meanVol %s' % self._getFileName(FN_MEAN_VOL)
-            params += ' --mask %s' % self.maskFn
+            params += ' --mask %s' % self._getFileName(BINARY_MASK)
         params += ' --mask_out %s' % self._getFileName(OUTPUT_MASK_FILE)
         params += ' -o %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
         if (self.halfVolumes):
@@ -262,6 +279,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --volumeRadius %f' % xdim
+        params += ' --exact'
         params += ' --chimera_volume %s' % self._getFileName(
                                                     OUTPUT_RESOLUTION_FILE_CHIMERA)
         params += ' --sym %s' % self.symmetry.get()

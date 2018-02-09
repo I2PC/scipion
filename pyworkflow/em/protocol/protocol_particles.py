@@ -160,7 +160,8 @@ class ProtParticlePicking(ProtParticles):
     def _getCoords(self, CoordClass):
         result = None
         for _, attr in self.iterOutputAttributes(CoordClass):
-            result = attr # Get the last output that is SetOfCoordinates or so
+            if not 'coordinatesDiscarded' in attr.getFileName():
+                result = attr # Get the last GOOD output that is SetOfCoordinates
         return result
 
     def getCoords(self):
