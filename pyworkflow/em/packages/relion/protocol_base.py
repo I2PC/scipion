@@ -158,8 +158,15 @@ class ProtRelionBase(EMProtocol):
         form.addParam('copyAlignment', BooleanParam, default=False,
                       label='Consider previous alignment?',
                       condition='not doContinue',
-                      help='If set to Yes, then alignment information from input'
-                           ' particles will be considered.')
+                      help='If set to Yes, then alignment information from'
+                           ' input particles will be considered.')
+        form.addParam('alignmentAsPriors', BooleanParam, default=False,
+                      label='Consider alignment as priors?',
+                      condition='not doContinue and copyAlignment',
+                      help='If set to Yes, then alignment information from '
+                           'input particles will be considered as PRIORS. This '
+                           'option is mandatory if you want to do local '
+                           'searches')
         form.addParam('maskDiameterA', IntParam, default=-1,
                       condition='not doContinue',
                       label='Particle mask diameter (A)',
@@ -800,12 +807,21 @@ class ProtRelionBase(EMProtocol):
             # If copyAlignmet is set to False pass alignType to ALIGN_NONE
             if copyAlignment:
                 alignType = imgSet.getAlignment()
+                alignToPrior = getattr(self, 'alignmentAsPriors', True)
+                
             else:
                 alignType = em.ALIGN_NONE
+                alignToPrior = False
     
             writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
                                 alignType=alignType,
                                 postprocessImageRow=self._postprocessParticleRow)
+            
+            if alignToPrior:
+                mdParts = md.MetaData(imgStar)
+                self._copyAlignAsPriors(mdParts, alignType)
+                mdParts.write(imgStar)
+                
             
             if self.doCtfManualGroups:
                 self._splitInCTFGroups(imgStar)
@@ -836,22 +852,12 @@ class ProtRelionBase(EMProtocol):
             mdMovies = md.MetaData(movieFn)
             continueRun = self.continueRun.get()
             continueIter = self._getContinueIter()
-            mdParts = md.MetaData(continueRun._getFileName('data',
-                                                           iter = continueIter))
+            mdFile = continueRun._getFileName('data', iter = continueIter)
+            mdParts = md.MetaData(mdFile)
+            
+            self._copyAlignAsPriors(mdParts, em.ALIGN_PROJ)
             mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
             mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
-            
-            # set priors equal to orig. values
-            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR,
-                               md.RLN_ORIENT_ORIGIN_X)
-            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR,
-                               md.RLN_ORIENT_ORIGIN_Y)
-            mdParts.copyColumn(md.RLN_ORIENT_PSI_PRIOR,
-                               md.RLN_ORIENT_PSI)
-            mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR,
-                               md.RLN_ORIENT_ROT)
-            mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR,
-                               md.RLN_ORIENT_TILT)
             
             mdAux = md.MetaData()
             mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
@@ -1205,3 +1211,14 @@ class ProtRelionBase(EMProtocol):
         # Since 'doSubsets' property is only valid for 2.1+ protocols
         # we need provide a default value for backward compatibility
         return self.getAttributeValue('doSubsets', False)
+    
+    def _copyAlignAsPriors(self, mdParts, alignType):
+        # set priors equal to orig. values
+        mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR, md.RLN_ORIENT_ORIGIN_X)
+        mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR, md.RLN_ORIENT_ORIGIN_Y)
+        mdParts.copyColumn(md.RLN_ORIENT_PSI_PRIOR, md.RLN_ORIENT_PSI)
+        
+        if alignType == em.ALIGN_PROJ:
+            mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
+            mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
+        

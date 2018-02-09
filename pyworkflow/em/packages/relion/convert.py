@@ -352,15 +352,10 @@ def alignmentToRow(alignment, alignmentRow, alignType):
 
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X, shifts[0])
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y, shifts[1])
-    # Also set the priors
-    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X_PRIOR, shifts[0])
-    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y_PRIOR, shifts[1])
     
     if is2D:
         angle = angles[0] + angles[2]
         alignmentRow.setValue(md.RLN_ORIENT_PSI, -angle)
-        # Also set the prior
-        alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, -angle)
 
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
@@ -377,10 +372,6 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
         alignmentRow.setValue(md.RLN_ORIENT_TILT, angles[1])
         alignmentRow.setValue(md.RLN_ORIENT_PSI,  angles[2])
-        # Also set the priors
-        alignmentRow.setValue(md.RLN_ORIENT_ROT_PRIOR, angles[0])
-        alignmentRow.setValue(md.RLN_ORIENT_TILT_PRIOR, angles[1])
-        alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, angles[2])
         
 
 def rowToAlignment(alignmentRow, alignType):
