@@ -204,6 +204,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='The volume is zero padded by this factor to produce projections')
         form.addParam('contSimultaneous', IntParam, label="Number of simultaneous processes", default=4, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                       help='At the beginning of the process, each process requires more memory, this is the number of simultaneous processes that can do this part')
+        form.addParam('gpuRecons', BooleanParam, label="Use GPU reconstruction", default=False, expertLevel=LEVEL_ADVANCED,
+                      help='Use GPU reconstruction algorithm')
         
         form.addSection(label='Weights')
         form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=False, expertLevel=LEVEL_ADVANCED,
@@ -1228,8 +1230,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnAnglesToUse = fnRestricted
                 
                 # Reconstruct Fourier
-                args="-i %s -o %s --sym %s --weight --thr %d"%(fnAnglesToUse,fnVol,self.symmetryGroup,self.numberOfThreads.get())
-                self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get())
+                args="-i %s -o %s --sym %s --weight"%(fnAnglesToUse,fnVol,self.symmetryGroup)
+                if self.gpuRecons:
+                    self.runJob('xmipp_cuda_reconstruct_fourier',args,numberOfMpi=1)
+                else:
+                    self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                 
                 if deleteStack:
                     cleanPath(deletePattern)
