@@ -267,6 +267,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 micOut.setSamplingRate(self.inputMicrographs.get().getSamplingRate() * self.downFactor.get())
             micOut.setObjId(mic.getObjId())
             micOut.setFileName(self._getOutputMicrograph(mic))
+            micOut.setMicName(mic.getMicName())
             outSet.append(micOut)
 
         self._updateOutputSet('outputMicrographs', outSet, streamMode)
