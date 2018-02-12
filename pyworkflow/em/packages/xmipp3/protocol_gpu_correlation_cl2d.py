@@ -65,7 +65,8 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                       help='Maximum number of iterations in split stage')
         form.addParam('numberOfClassifyIterations', params.IntParam, default=15,
                       label='Number of iterations in classify stage:',
-                      help='Maximum number of iterations when the classification of the whole image set is carried out')
+                      help='Maximum number of iterations when the classification '
+                           'of the whole image set is carried out')
         form.addParam('numberOfClasses', params.IntParam, default=5,
                       label='Number of classes:',
                       help='Number of classes (or references) to be generated.')
@@ -437,17 +438,13 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                             'outputClassesFile': filename,
                             }
         Nrefs = getSize(refSet)
-        if True: #Nrefs>2:
-            try:
-                args = '-i_ref %(imgsRef)s -i_exp %(imgsExp)s -o %(outputFile)s '\
-                       '--odir %(tmpDir)s --keep_best %(keepBest)d '\
-                       '--maxShift %(maxshift)d --classify %(outputClassesFile)s '\
-                       '--simplifiedMd'
-                self.runJob("xmipp_cuda_correlation", args % self._params, numberOfMpi=1)
-            except Exception as ex:
-                print("Error in CUDA CORR: ", str(ex))
-                flag_error = True
-                return flag_error
+        if Nrefs>2:
+            args = '-i_ref %(imgsRef)s -i_exp %(imgsExp)s -o %(outputFile)s '\
+                   '--odir %(tmpDir)s --keep_best %(keepBest)d '\
+                   '--maxShift %(maxshift)d --classify %(outputClassesFile)s '\
+                   '--simplifiedMd'
+            self.runJob("xmipp_cuda_correlation", args % self._params, numberOfMpi=1)
+
 
             #try:
             #    args = '-i %(imgsExp)s --ref0 %(imgsRef)s --nref %(Nrefs)d --iter 1 --distance correlation ' \
@@ -764,6 +761,9 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
     def _validate(self):
         errors = []
         if self.useReferenceImages:
+            if self.numberOfClasses<self.referenceImages.get().getSize():
+                errors.append('The number of classes must be equal or greater'
+                              ' than the number of references')
             if self.referenceImages.hasValue():
                 refImage = self.referenceImages.get()
                 [x1, y1, z1] = refImage.getDim()
