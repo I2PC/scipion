@@ -24,7 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # ******************************************************************************
-
+from pyworkflow import VERSION_1_2
 from pyworkflow.em import SetOfParticles, SetOfClasses2D, \
     ALIGN_2D, ALIGN_NONE
 from pyworkflow.em.protocol import ProtAlign2D
@@ -65,8 +65,10 @@ class HashTableDict:
 
 
 class XmippProtStrGpuCrrSimple(ProtAlign2D):
-    """ Aligns a set of particles in streaming using the GPU Correlation algorithm. """
-    _label = 'align with GPU Correlation in streaming'
+    """ Aligns a set of particles in streaming using the GPU Correlation
+    algorithm. """
+    _label = 'align with GPU Correlation using previous classes'
+    _lastUpdateVersion = VERSION_1_2
 
 
     # --------------------------- DEFINE param functions -----------------------
@@ -76,10 +78,11 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                       default=0, important=True,
                       label='Set to use as reference images',
                       display=params.EnumParam.DISPLAY_LIST,
-                      help="Select which kind of set to use as reference images "
-                           "for the classification of the new particles.")
+                      help="Select which kind of set to use as reference images"
+                           " for the classification of the new particles.")
         form.addParam('inputClasses', params.PointerParam,
                       pointerClass='SetOfClasses2D',
+                      important=True,
                       condition='useAsRef==%d' % REF_CLASSES,
                       label="Set of reference classes",
                       help='Set of classes that will serve as reference for '
@@ -105,6 +108,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         self.listInFn = []
         self.listOutFn = []
         self.doneListFn = []
+        self.lastDate = 0
         self.imgsRef = self._getExtraPath('imagesRef.xmd')
         self.htAlreadyProcessed = HashTableDict()
 
@@ -230,7 +234,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
         if newDone:
-            #self._updateOutputCoordSet(newDone, streamMode)
             self._updateOutputSetOfClasses(newDone, streamMode)
             self.doneListFn += newDone
 
@@ -306,11 +309,14 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
         with Timer() as t:
-            for p in particlesSet:
+            for p in particlesSet.iterItems(orderBy='creation',
+                                            where="creation>'%s'"
+                                            % self.lastDate):
                 idx = p.getObjId()
                 if not self.htAlreadyProcessed.isItemPresent(idx):
                     newPart = p.clone()
                     self.listOfParticles.append(newPart)
+            self.lastDate = p.getObjCreation()
         print "_loop: %s s" % t.secs
 
         particlesSet.close()
@@ -340,13 +346,16 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         firstTime = True
 
         if outputClasses is None:
-            outputClasses = self._createSetOfClasses2D(self.inputParticles.get())
+            outputClasses=self._createSetOfClasses2D(self.inputParticles.get())
         else:
             firstTime = False
             outputClasses = SetOfClasses2D(filename=outputClasses.getFileName())
             outputClasses.setStreamState(streamMode)
+            outputClasses.setImages(self.inputParticles.get())
 
-        self._fillClassesFromMd(outFnDone, outputClasses, firstTime)
+        outputClasses.printAll()
+        
+        self._fillClassesFromMd(outFnDone, outputClasses, firstTime, streamMode)
         self._updateOutputSet(outputName, outputClasses, streamMode)
 
         if firstTime:
@@ -361,7 +370,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             item._rlnGroupName=String(None)
             item._rlnNormCorrection=Float(None)
 
-    def _fillClassesFromMd(self, outFnDone, outputClasses, firstTime):
+    def _fillClassesFromMd(self, outFnDone, outputClasses, firstTime,
+                           streamMode):
 
         for outFn in outFnDone:
             mdImages = md.MetaData(outFn)
@@ -370,6 +380,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
             if firstTime:
 
+                self.lastId = 0
                 if self.useAsRef == REF_AVERAGES:
                     repSet = self.inputAverages.get()
                     for rep in repSet:
@@ -379,7 +390,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                         newClass.copyInfo(inputSet)
                         newClass.setAcquisition(inputSet.getAcquisition())
                         newClass.setRepresentative(rep)
-                        newClass.setStreamState(Set.STREAM_OPEN)
+                        newClass.setStreamState(streamMode)
                         outputClasses.append(newClass)
                 else:
                     cls2d = self.inputClasses.get()
@@ -391,33 +402,35 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                         newClass.copyInfo(inputSet)
                         newClass.setAcquisition(inputSet.getAcquisition())
                         newClass.setRepresentative(representative)
-                        newClass.setStreamState(Set.STREAM_OPEN)
+                        newClass.setStreamState(streamMode)
                         outputClasses.append(newClass)
 
-                    #Fill the output set with the previous particles of the classes
+                    #Fill the output set with the previous particles
+                    # of the classes
                     #AAAAJJJJ CUIDADO CON LOS IDS
-                    lastId=0
+                    #AAAAJJJJ ARREGLAR LO DEL STREAM CLOSED
                     self.flag_relion=False
                     for cls in cls2d:
                         repId = cls.getObjId()
                         newClass = outputClasses[repId]
                         for img in cls:
-                            if not self.flag_relion and img.hasAttribute('_rlnGroupName'):
+                            if not self.flag_relion \
+                                    and img.hasAttribute('_rlnGroupName'):
                                 self.flag_relion=True
                             newClass.append(img)
-                            if img.getObjId()>lastId:
-                                lastId = img.getObjId()
+                            if img.getObjId()>self.lastId:
+                                self.lastId = img.getObjId()
 
-                        outputClasses.update(newClass)
-
+                    outputClasses.update(newClass)
 
             for imgRow in iterRows(mdImages, sortByLabel=md.MDL_REF):
-                lastId+=1
+                self.lastId+=1
                 imgClassId = imgRow.getValue(md.MDL_REF)
                 imgId = imgRow.getValue(md.MDL_ITEM_ID)
 
                 if imgClassId not in clsIdList:
                     if len(clsIdList) > 0:
+                        newClass.setAlignment2D()
                         outputClasses.update(newClass)
                     newClass = outputClasses[imgClassId]
                     newClass.enableAppend()
@@ -425,10 +438,11 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
                 part = inputSet[imgId]
                 self._updateParticle(part, imgRow)
-                part.setObjId(lastId)
+                part.setObjId(self.lastId)
                 newClass.append(part)
 
             # this is to update the last class into the set.
+            newClass.setAlignment2D()
             outputClasses.update(newClass)
 
             # FirstTime to False if iterate more than one metadata file.
