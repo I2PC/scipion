@@ -1493,9 +1493,13 @@ class Protocol(Step):
         1. If the folder for this protocol run exists.
         """
         if not self.isSaved() and not os.path.exists(self.workingDir.get()):
-            self.addSummaryWarning((
-                                   "*Missing run data*: The directory for this run is missing, so it won't be"
-                                   "possible to use its outputs in other protocols."))
+            self.addSummaryWarning(("*Missing run data*: The directory for this run "
+                                    "is missing, so it won't be possible to use its "
+                                    "outputs in other protocols."))
+        if os.path.exists(self.workingDir.get()) and not os.access(self.workingDir.get(), os.W_OK):
+            self.addSummaryWarning(("*Read-Only run*: The directory for this run "
+                                    "is read-only. Its output may be used in other protocols."))
+
         return self.summaryWarnings
 
     def isContinued(self):
