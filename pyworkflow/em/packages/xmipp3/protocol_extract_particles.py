@@ -29,7 +29,6 @@
 # **************************************************************************
 
 from glob import glob
-import random
 from os.path import exists, basename
 
 from pyworkflow.object import Float
@@ -52,11 +51,6 @@ from xmipp3 import XmippProtocol
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates"""
     _label = 'extract particles'
-
-    # Automatic Particle rejection enum
-    REJ_NONE = 0
-    REJ_VARIANCE = 1
-    REJ_VARGINI = 2
     
     def __init__(self, **kwargs):
         ProtExtractParticles.__init__(self, **kwargs)
@@ -150,23 +144,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
                            'value is 0, then half the box size is used.')
-        # form.addParam('autoParRejectionVar', params.EnumParam, default=0,
-        #               choices=['None', 'Variance', 'Var. and Gini'],
-        #               label='Automatic particle rejection based on Variance',
-        #               # expertLevel=LEVEL_ADVANCED,
-        #               help='How to automatically reject particles based on '
-        #                    'Variance. It can be:\n'
-        #                    '  *None* - no rejection.\n'
-        #                    '  *Variance* - reject the particles in '
-        #                    'high variance zones.\n'
-        #                    '  *Var. and Gini* - taking into account also '
-        #                    'the Gini coeff. of the micrographs.')
+        
         form.addParam('patchSize', params.IntParam, default=-1, 
                       label='Patch size for the variance filter (px)', 
                       expertLevel=LEVEL_ADVANCED,
                       help='Windows size to make the variance filtter and '
                            'compute the Gini coeff. A twice of the particle '
-                           'size is recommended. Set at -1 applies 1.5*BoxSize')
+                           'size is recommended. Set at -1 applies 1.5*BoxSize.')
 
         form.addParallelSection(threads=4, mpi=1)
     
@@ -288,11 +272,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         return args
 
-    def createOutputStep(self):
-        if self.hasAttribute('outputParticles'):
-            imagesMd = self._getPath('images.xmd')
-            writeSetOfParticles(self.outputParticles, imagesMd)
-            # self.rejectByVariance()
+    # def createOutputStep(self):
+    #     if self.hasAttribute('outputParticles'):
+    #         imagesMd = self._getPath('images.xmd')
+    #         writeSetOfParticles(self.outputParticles, imagesMd)
+    #         # self.rejectByVariance()
 
 
     #--------------------------- INFO functions --------------------------------
@@ -507,7 +491,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             added = set() # Keep track of added coords to avoid duplicates
             for row in md.iterRows(self._getMicXmd(mic)):
                 pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
-
                 coord = coordDict.get(pos, None)
                 if coord is not None and coord.getObjId() not in added:
                     # scale the coordinates according to particles dimension.
@@ -517,10 +500,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
-                    
+                    # adding the variance value of the mic zone
                     varValue = row.getValue(md.MDL_SCORE_BY_VAR)
                     setSingleXmippAttribute(p, md.MDL_SCORE_BY_VAR,
                                             Float(self._normalizeVar(varValue)))
+                    # adding the Gini coefficient of the mic
                     setXmippAttributes(p, row, md.MDL_SCORE_BY_GINI)
 
                     # disabled particles (in metadata) should not add to the
@@ -538,7 +522,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         micBase = pwutils.removeBaseExt(mic.getFileName())
         return self._getExtraPath(micBase + ".pos")
 
-
     def _getMicXmd(self, mic):
         """ Return the corresponding .xmd with extracted particles
         for this micrograph. """
@@ -548,7 +531,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _setVarMinMax(self, micList):
         """ Sets the Min and Max values to a global variable
         """
-        varMIN, varMAX = 0, 0
+        varMIN, varMAX = 1000000, 0
         for mic in micList:
             for row in md.iterRows(self._getMicXmd(mic)):
                 varMIN = min(varMIN, row.getValue(md.MDL_SCORE_BY_VAR))
@@ -562,37 +545,3 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         varValue /= self.stimatedMinMax[1]
 
         return varValue
-
-
-
-    # THIS ONLY WORKS IN METADATA FILE, NOT IN SCIPION OUTPUTS......  :'(
-    #
-    # def rejectByVariance(self):
-    #     if self.autoParRejectionVar is not self.REJ_NONE:
-    #         import numpy as np
-    #         from scipy import signal
-
-    #         imagesMd = self._getPath('images.xmd')
-    #         mdata = md.xmipp.MetaData(imagesMd)
-    #         varList = []
-    #         giniList = []
-    #         for objId in mdata:
-    #             varList.append(mdata.getValue(md.MDL_SCORE_BY_VAR, objId))
-    #             giniList.append(mdata.getValue(md.MDL_SCORE_BY_GINI, objId))
-
-    #         if self.autoParRejectionVar == self.REJ_VARIANCE:
-    #             hist, bin_edges = np.histogram(varList, bins=50)
-    #         else:
-    #             vargini = [var*(1-gini) for var, gini in zip(varList, giniList)]
-    #             hist, bin_edges = np.histogram(vargini, bins=50)
-
-    #         peakind = signal.find_peaks_cwt(hist, np.arange(1,10))
-
-    #         idx = (np.abs(hist[peakind[-1]:]-hist.max()/3)).argmin() + peakind[-1]
-    #         threshold = bin_edges[idx]
-    #         print('Variance threshold = %f' % threshold)
-    #         for objId in mdata:
-    #             if mdata.getValue(md.MDL_SCORE_BY_VAR, objId)>threshold:
-    #                 mdata.setValue(md.MDL_ENABLED, -1, objId)
-
-    #         mdata.write(imagesMd)

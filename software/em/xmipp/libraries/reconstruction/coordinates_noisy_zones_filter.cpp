@@ -69,27 +69,28 @@ void ProgCoordinatesNoisyZonesFilter::run()
 	Image<double> im;
 	im.read(fnInMic);
 
+    std::cout << " - Starting normalization " << std::endl;
     MultidimArray<double> &matrixMic = im();
-
     matrixMic.selfNormalizeInterval();
-    Image<double> normMic(matrixMic);
-    normMic.write(fnInCoord.withoutExtension()+"_normalized.mrc");
-
-
-    // getting the gini coefficient of the Micrograph whereas applaying a 
-    // variance filter to the matrixMic (and filtered to smooth the result) 
-    double giniV = giniCoeff(matrixMic, patchSize);
-
-    Image<double> varMic(matrixMic);
-    varMic.write(fnInCoord.withoutExtension()+"_variance.mrc");
 
     if (verbose>1)
     {
-        Image<double> imVar(matrixMic);
-        imVar.write(fnInCoord.withoutExtension()+"_varianceFilter.mrc");
+        Image<double> aux(matrixMic);
+        aux.write(fnInCoord.withoutExtension()+"_normalized.mrc");
+    }
+
+    // getting the gini coefficient of the Micrograph whereas applaying a 
+    // variance filter to the matrixMic (and filtered to smooth the result) 
+    std::cout << " - Starting giniCoeff() " << std::endl;
+    double giniV = giniCoeff(matrixMic, patchSize);
+
+    // if (verbose>1)
+    // {
+        Image<double> aux(matrixMic);
+        aux.write(fnInCoord.withoutExtension()+"_varianceFilter.mrc");
         std::cout << " Gini Coeff: " << giniV << std::endl
                   << "(" << fnInMic << ")" << std::endl;
-    }
+    // }
     
     // adding the variance value of the zone to every coordinate
     std::vector<Particle_coords> &allCoords=mic.coords;
