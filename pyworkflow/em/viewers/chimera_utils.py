@@ -38,8 +38,8 @@ from pyworkflow.em.constants import SYM_CYCLIC, SYM_DIHEDRAL, \
 from pyworkflow.utils import  Environ
 
 #
-chimeraPdbTemplateFileName = "scipionOut%04d.pdb"
-chimeraMapTemplateFileName = "scipionOut%04d.mrc"
+chimeraPdbTemplateFileName = "chimeraOut%04d.pdb"
+chimeraMapTemplateFileName = "chimeraOut%04d.mrc"
 chimeraScriptFileName = "chimeraScript.py"
 
 symMapperScipionchimera = {}
