@@ -23,9 +23,10 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow import VERSION_1_1
+from pyworkflow import VERSION_1_2
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import PointerParam, FloatParam
+from pyworkflow.protocol.params import PointerParam, FloatParam, EnumParam, \
+    IntParam
 from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
 from pyworkflow.object import Set
 import pyworkflow.protocol.constants as cons
@@ -33,12 +34,18 @@ from pyworkflow.em import STEPS_PARALLEL
 from pyworkflow.em.data import SetOfMovies, Movie
 from os.path import exists
 
+RESIZE_SAMPLINGRATE = 0
+RESIZE_DIMENSIONS = 1
+RESIZE_FACTOR = 2
+
+
 class XmippProtMovieResize(ProtProcessMovies):
     """
-    Resize a set of movies.
+    Resize a set of movies. Only downsampling is allowed.
     """
     _label = 'movie resize'
-    _lastUpdateVersion = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_2
+
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -51,16 +58,31 @@ class XmippProtMovieResize(ProtProcessMovies):
         form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of movies to be resized.')
-        form.addParam('resizeFactor', FloatParam, default=1.0,
+        form.addParam('resizeOption', EnumParam,
+                      choices=['Sampling Rate', 'Dimensions', 'Factor'],
+                      default=RESIZE_SAMPLINGRATE,
+                      label="Resize option", display=EnumParam.DISPLAY_COMBO,
+                      help='Select an option to resize the images: \n '
+                           '_Sampling Rate_: Set the desire sampling rate '
+                           'to resize. \n'
+                           '_Dimensions_: Set the output dimensions. \n'
+                           '_Factor_: Set a resize factor to resize. \n ')
+        form.addParam('resizeSamplingRate', FloatParam, default=4.0,
+                      condition='resizeOption==%d' % RESIZE_SAMPLINGRATE,
+                      label='Resize sampling rate (A/px)',
+                      help='Set the new output sampling rate.')
+        form.addParam('resizeDim', IntParam, default=1024,
+                      condition='resizeOption==%d' % RESIZE_DIMENSIONS,
+                      label='New image size (px)',
+                      help='Size in pixels of the particle images '
+                           '<x> <y=x> <z=x>.')
+        form.addParam('resizeFactor', FloatParam, default=2.0,
+                      condition='resizeOption==%d' % RESIZE_FACTOR,
                       label='Downsampling factor',
-                      help='Resize movies by a given downsampling factor.')
+                      help='New size is the old one x resize factor.')
         form.addParallelSection(threads=1, mpi=1)
 
-    # --------------------------- STEPS functions -------------------------------
-
-    def createOutputStep(self):
-        # Do nothing now, the output should be ready.
-        pass
+    # ------------------------ INSERT STEPS functions --------------------------
 
     def _insertNewMoviesSteps(self, insertedDict, inputMovies):
         """ Insert steps to process new movies (from streaming)
@@ -77,45 +99,38 @@ class XmippProtMovieResize(ProtProcessMovies):
                 insertedDict[movie.getObjId()] = stepId
         return deps
 
+    # --------------------------- STEPS functions ------------------------------
+
     def _processMovie(self, movie):
         movieId = movie.getObjId()
         fnMovie = movie.getFileName()
 
-        factor = self.resizeFactor.get()
         dim, _, numMov = self.inputMovies.get().getDim()
-        size = int(dim/factor)
+        samplingRate = self.inputMovies.get().getSamplingRate()
+        if self.resizeOption==RESIZE_FACTOR:
+            factor = self.resizeFactor.get()
+            newDim = int(dim/factor)
+            self.newSamplingRate =  samplingRate*factor
+        if self.resizeOption==RESIZE_DIMENSIONS:
+            newDim = self.resizeDim.get()
+            self.newSamplingRate = float(samplingRate)*(float(dim)/float(
+                newDim))
+        if self.resizeOption==RESIZE_SAMPLINGRATE:
+            self.newSamplingRate = self.resizeSamplingRate.get()
+            factor = self.newSamplingRate/samplingRate
+            newDim = int(dim/factor)
 
         args = "-i %s -o %s --fourier %d %d %d" % \
                (fnMovie, self._getPath("movie_%06d_resize.mrcs" % movieId),
-                size, size, numMov)
+                newDim, newDim, numMov)
 
         self.runJob("xmipp_image_resize", args, numberOfMpi=1)
 
+    # -------------- Methods for Streaming --------------------
 
-    def _loadOutputSet(self, SetClass, baseName):
-        """
-        Load the output set if it exists or create a new one.
-        """
-        setFile = self._getPath(baseName)
-        if exists(setFile):
-            outputSet = SetClass(filename=setFile)
-            outputSet.loadAllProperties()
-            outputSet.enableAppend()
-        else:
-            outputSet = SetClass(filename=setFile)
-            outputSet.setStreamState(outputSet.STREAM_OPEN)
-
-        inputMovies = self.inputMovies.get()
-        outputSet.copyInfo(inputMovies)
-
-        factor = self.resizeFactor.get()
-        newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
-        outputSet.setSamplingRate(newSamplingRate)
-
-        return outputSet
-
-    def _checkNewInput(self):
-        ProtProcessMovies._checkNewInput(self)
+    def createOutputStep(self):
+        # Do nothing now, the output should be ready.
+        pass
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
@@ -144,15 +159,13 @@ class XmippProtMovieResize(ProtProcessMovies):
 
         imageSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite')
 
-        factor = self.resizeFactor.get()
-        newSamplingRate = self.inputMovies.get().getSamplingRate() * factor
         for movie in newDone:
             imgOut = Movie()
             imgOut.setObjId(movie.getObjId())
             imgOut.setFileName(self._getPath(
                 "movie_%06d_resize.mrcs" % movie.getObjId()))
             imgOut.setAcquisition(movie.getAcquisition())
-            imgOut.setSamplingRate(newSamplingRate)
+            imgOut.setSamplingRate(self.newSamplingRate)
             imgOut.setFramesRange(self.inputMovies.get().getFramesRange())
             imageSet.append(imgOut)
 
@@ -163,6 +176,27 @@ class XmippProtMovieResize(ProtProcessMovies):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
+    # --------------------------- UTILS functions ------------------------------
+
+    def _loadOutputSet(self, SetClass, baseName):
+        """
+        Load the output set if it exists or create a new one.
+        """
+        setFile = self._getPath(baseName)
+        if exists(setFile):
+            outputSet = SetClass(filename=setFile)
+            outputSet.loadAllProperties()
+            outputSet.enableAppend()
+        else:
+            outputSet = SetClass(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+
+        inputMovies = self.inputMovies.get()
+        outputSet.copyInfo(inputMovies)
+
+        outputSet.setSamplingRate(self.newSamplingRate)
+
+        return outputSet
 
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
         outputSet.setStreamState(state)
@@ -194,3 +228,24 @@ class XmippProtMovieResize(ProtProcessMovies):
                        %(self.inputMovies.get().getSize(), xIn, yIn, zIn,
                        self.outputMovies.getSize(), xOut, yOut, zOut)]
         return summary
+
+    def validate(self):
+        """ Try to find errors on define params. """
+        errors = []
+        dim, _, numMov = self.inputMovies.get().getDim()
+        samplingRate = self.inputMovies.get().getSamplingRate()
+        if self.resizeOption == RESIZE_FACTOR:
+            if self.resizeFactor.get()<1.0:
+                errors.append('Please provide a resizeFactor higher than 1, '
+                              'only downsampling is allowed.')
+        if self.resizeOption == RESIZE_DIMENSIONS:
+            if self.resizeDim.get() > dim:
+                errors.append('Please provide a resizeDim higher than the '
+                              'size of the input set, only downsampling is '
+                              'allowed.')
+        if self.resizeOption == RESIZE_SAMPLINGRATE:
+            if self.resizeSamplingRate.get() <= samplingRate:
+                errors.append('Please provide a resizeSamplingRate higher '
+                              'than the original one, only downsampling is '
+                              'allowed.')
+        return errors
