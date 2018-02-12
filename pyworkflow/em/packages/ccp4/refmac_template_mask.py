@@ -64,17 +64,14 @@ PATHCCP4=%(CCP4_HOME)s
 #Directory of output files (extra folder)
 OUTPUTDIR=%(OUTPUTDIR)s
 
-#suffix for output files 
-molecule_id=${MOL}
-
 # Delete some temporary files. Otherwise if the script is executed
 # two times there will be conflicts
 RM='rm -f'
 ${RM} ${OUTPUTDIR}average_for_refmac.mtz ${OUTPUTDIR}mask.log 
 ${RM} ${OUTPUTDIR}_orig_data_start.txt
-${RM} ${OUTPUTDIR}$molecule_id-initial.pdb ${OUTPUTDIR}masked_fs.mtz
+${RM} ${OUTPUTDIR}refmac-mask.pdb ${OUTPUTDIR}masked_fs.mtz
 ${RM} ${OUTPUTDIR}shifts.txt
-${RM} ${OUTPUTDIR}$molecule_id-refined.mtz ${OUTPUTDIR}$molecule_id-refined.pdb
+${RM} ${OUTPUTDIR}refmac-refined.mtz ${OUTPUTDIR}refmac-refined.pdb
 ${RM} ${OUTPUTDIR}refine.log ${OUTPUTDIR}ifft.log
 ${RM} ${OUTPUTDIR}masked_fs.map
 
@@ -95,7 +92,7 @@ if [ "$generateMaskedVolume" = True ] ; then
     $refmac MAPIN ${MAPFILE} \\
    	    HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \\
    	    XYZIN $pdb_in \\
-   	    XYZOUT ${OUTPUTDIR}$molecule_id-initial.pdb \\
+   	    XYZOUT ${OUTPUTDIR}refmac-mask.pdb \\
    	    > ${OUTPUTDIR}mask.log \\
    	        << eof
         MODE SFCALC 
