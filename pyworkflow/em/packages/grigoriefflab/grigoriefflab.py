@@ -70,7 +70,7 @@ def getSupportedVersions(var=FREALIGN_APP):
     if var == 'UNBLUR':
         return ['1.0_150529', '1.0.2']
     elif var == CTFFIND4_APP:
-        return ['4.0.15', '4.1.5', '4.1.8', '4.1.10']
+        return ['4.0.15', '4.1.5', '4.1.8', V4_1_10]
     else:  # FREALIGN
         return ['9.07']
 
