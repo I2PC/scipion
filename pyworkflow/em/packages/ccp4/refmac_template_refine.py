@@ -60,17 +60,15 @@ PATHMRCBIN=$PATHCCP4/bin
 #refmac binary
 refmac=%(REFMAC_BIN)s
 
-# suffix for output files 
-molecule_id=${MOL}
 # Delete some temporary files. If not and the script is executed
 # two times there will be conflicts
 
 # refine the structure
 
 $refmac HKLIN ${OUTPUTDIR}_masked_fs.mtz \\
-        HKLOUT ${OUTPUTDIR}$molecule_id-refined.mtz \\
-        XYZIN  ${OUTPUTDIR}$molecule_id-initial.pdb \\
-        XYZOUT ${OUTPUTDIR}$molecule_id-refined.pdb\\
+        HKLOUT ${OUTPUTDIR}refmac-refined.mtz \\
+        XYZIN  ${OUTPUTDIR}refmac-mask.pdb \\
+        XYZOUT ${OUTPUTDIR}refmac-refined.pdb\\
         atomsf ${PATHCCP4}/bin/atomsf_electron.lib \\
         > ${OUTPUTDIR}refine.log <<EOF  
 
@@ -112,7 +110,7 @@ EXTERNAL WEIGHT GMWT 0.1
 MONI DIST 1000000
 END
 EOF
-          echo Output ${OUTPUTDIR}$molecule_id-refined.pdb  
+          echo Output ${OUTPUTDIR}refmac-refined.pdb  
           #fi
           #cd - 
       #fi
