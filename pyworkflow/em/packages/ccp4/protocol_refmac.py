@@ -50,7 +50,7 @@ class CCP4ProtRunRefmac(EMProtocol):
     refmacMaskScriptFileName = "mask_refmac.sh"
     refmacIfftScriptFileName = "ifft_refmac.sh"
     refmacRefineScriptFileName = "refine_refmac.sh"
-    OutPdbFileName = "%s-refined.pdb"
+    OutPdbFileName = "refmac-refined.pdb"
     createMaskLogFileName = "mask.log"
     refineLogFileName = "refine.log"
     fftLogFileName = "ifft.log"
@@ -267,10 +267,13 @@ class CCP4ProtRunRefmac(EMProtocol):
             fnVol = self.inputVolume.get()
         return fnVol
 
+    # def _getOutPdbFileName(self):
+    #     pdfileName = os.path.splitext(os.path.basename(
+    #         self.inputStructure.get().getFileName()))[0]
+    #     return self._getExtraPath(self.OutPdbFileName % pdfileName)
+
     def _getOutPdbFileName(self):
-        pdfileName = os.path.splitext(os.path.basename(
-            self.inputStructure.get().getFileName()))[0]
-        return self._getExtraPath(self.OutPdbFileName % pdfileName)
+        return self._getExtraPath(self.OutPdbFileName)
 
     def _getMaskScriptFileName(self):
         return self._getTmpPath(self.refmacMaskScriptFileName)
