@@ -33,7 +33,7 @@ from pyworkflow.utils import Environ
 
 def getEnviron():
     """ Setup the environment variables needed to launch Eman. """
-    environ = _plugin.configVars
+    environ = _plugin.setDefaultEnviron()
     EMAN2DIR = environ[EMAN_DIR_VAR]
     pathList = [os.path.join(EMAN2DIR, d)
                 for d in ['lib', 'bin', 'extlib/site-packages']]

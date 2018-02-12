@@ -48,6 +48,7 @@ def getModules(path):
             try:
                 m = __import__(f)
                 modules[f] = m
+                checkPlugin(m)
             except Exception, ex:
                 print ">>> Error loading module: '%s'" % f
                 print ">>> Exception: ", ex
@@ -97,3 +98,8 @@ def getSubclasses(BaseClass, inputDict):
         if isclass(v) and issubclass(v, BaseClass):
             outputDict[k] = v
     return outputDict
+
+def checkPlugin(module):
+    if not getattr(module, '_plugin', None):
+        print('WARNING: module "%s" using old package structure, '
+              '_plugin attribute missing' % module.__name__)
