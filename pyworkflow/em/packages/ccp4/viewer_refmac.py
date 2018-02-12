@@ -400,17 +400,23 @@ and rmsCHIRAL (root mean square of chiral index""")
 
         # second refmac step output (no shift needed)
         counter += 1  # 4
+        pdbFileName = os.path.abspath(self.protocol.outputPdb.getFileName())
+        print pdbFileName
+        f.write("open %s\n" % pdbFileName)
+
+        ####TO DELETE
+        counter += 1  # 5
         pdbFileName = os.path.abspath(self.protocol._getExtraPath(
-            "cootOut0001-refined.pdb"))  # TODO: no fixed names
+            "refmac-mask.pdb"))
+        print pdbFileName
+        ####
+
         f.write("open %s\n" % pdbFileName)
 
         f.close()
         # run in the background
         runChimeraProgram(getProgram(), fnCmd + "&")
         return []
-
-        # view = ChimeraView(maskedMapFileName)
-        # return [view]
 
     def _visualizeFinalResults(self, e=None):
 
