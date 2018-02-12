@@ -26,7 +26,6 @@
 
 import os
 import stat
-
 import pyworkflow.protocol.constants as const
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import Volume, PdbFile
@@ -52,18 +51,18 @@ class CCP4ProtRunRefmac(EMProtocol):
     refmacIfftScriptFileName = "ifft_refmac.sh"
     refmacRefineScriptFileName = "refine_refmac.sh"
     OutPdbFileName = "%s-refined.pdb"
-    createMaskLogFileName="mask.log"
+    createMaskLogFileName = "mask.log"
     refineLogFileName = "refine.log"
     fftLogFileName = "ifft.log"
     maskedMapFileName = "masked_fs"
-    refmacShiftsNames=["pdbin_cell", "pdbin_shifts", "pdbout_cell",
-                       "pdbout_shifts"]
-    REFMAC='refmac5'
+    refmacShiftsNames = ["pdbin_cell", "pdbin_shifts", "pdbout_cell",
+                         "pdbout_shifts"]
+    REFMAC = 'refmac5'
 
     def __init__(self, **kwargs):
             EMProtocol.__init__(self, **kwargs)
 
-    #--------------------------- DEFINE param functions ----------------------
+    # --------------------------- DEFINE param functions ---------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -80,14 +79,15 @@ class CCP4ProtRunRefmac(EMProtocol):
                            "Angstroms/pixel)")
         form.addParam('minResolution', FloatParam, default=200,
                       label='Min. Resolution (A):',
-                      help="Min resolution used in the refinement (Angstroms).")
+                      help="Min resolution used in the refinement "
+                           "(Angstroms).")
         form.addParam('nRefCycle', IntParam, default=30,
                       expertLevel=const.LEVEL_ADVANCED,
                       label='Number of refinement iterations:',
                       help='Specify the number of cycles of refinement.\n')
         form.addParam('weightMatrix', FloatParam, default=0.01,
                       expertLevel=const.LEVEL_ADVANCED,
-                      label= 'Matrix refinement weight:',
+                      label='Matrix refinement weight:',
                       help='Weight between the density map and the chemical '
                            'constraints. Smaller means less weight for the '
                            'EM map.\n')
@@ -116,7 +116,7 @@ class CCP4ProtRunRefmac(EMProtocol):
                       help='Specify the map sharpening to be used during '
                            'refinement')
 
-    #--------------------------- INSERT steps functions --------------------
+    # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('fixCRYSrecordToPDBFileStep')
         self._insertFunctionStep('convertInputStep')
@@ -124,9 +124,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         self._insertFunctionStep('createMaskScriptFileStep')
         self._insertFunctionStep('executeMaskRefmacStep')
         self._insertFunctionStep('createIfftScriptFileStep')
-        self._insertFunctionStep('executeIfftStep')
-        self._insertFunctionStep('createIfftOutputStep')  # create masked
-        #                                                   volume
+        self._insertFunctionStep('executeIfftStep')  # create masked
+        #                                              volume
         self._insertFunctionStep('createRefineScriptFileStep')
         self._insertFunctionStep('executeRefineRefmacStep')
         self._insertFunctionStep('createRefmacOutputStep')  # create output
@@ -138,8 +137,8 @@ class CCP4ProtRunRefmac(EMProtocol):
     def fixCRYSrecordToPDBFileStep(self):
         fnVol = self._getInputVolume()
         self.fixedPDBFileName = fixCRYSrecordToPDBFile(
-        self.inputStructure.get().getFileName(),
-        self._getTmpPath(),
+            self.inputStructure.get().getFileName(),
+            self._getTmpPath(),
             x=fnVol.getDim()[0],
             y=fnVol.getDim()[1],
             z=fnVol.getDim()[2],
@@ -148,7 +147,6 @@ class CCP4ProtRunRefmac(EMProtocol):
     def convertInputStep(self):
         """ convert 3Dmaps to MRC '.mrc' format
         """
-        # TODO: IF NO VOLUME NAME USE THE VALUE ASSOCIATED TO THE PDB FILE
         # get input 3D map filename
         fnVol = self._getInputVolume()
         inFileName = fnVol.getFileName()
@@ -164,17 +162,11 @@ class CCP4ProtRunRefmac(EMProtocol):
         self.dict = {}
         self.dict['CCP4_HOME'] = os.environ['CCP4_HOME']
         self.dict['REFMAC_BIN'] = getProgram(self.REFMAC)
-        # dict['PDBDIR'] =  os.path.dirname(self.inputStructure.get().getFileName())
         self.dict['PDBDIR'] = os.path.dirname(self.fixedPDBFileName)
         pdfileName = os.path.splitext(
             os.path.basename(self.inputStructure.get().getFileName()))[0]
         self.dict['PDBFILE'] = pdfileName
-
         self.dict['MAPFILE'] = self._getVolumeFileName()
-        #self.inputVolume.get(
-        # ).getFileName().replace(     ':mrc', '')
-
-        #       dict['CHIMERA_BIN'] = os.path.join(os.environ['CHIMERA_HOME'],"bin","chimera")
         self.dict['RESOMIN'] = self.minResolution.get()
         self.dict['RESOMAX'] = self.maxResolution.get()
         self.dict['NCYCLE'] = self.nRefCycle.get()
@@ -183,9 +175,6 @@ class CCP4ProtRunRefmac(EMProtocol):
         self.dict['MASKED_VOLUME'] = self.generateMaskedVolume.get()
         self.dict['SFCALC_mapradius'] = self.SFCALCmapradius.get()
         self.dict['SFCALC_mradius'] = self.SFCALCmradius.get()
-        #self.dict['XDIM'] = self.inputVolume.get().getDim()[0]
-        #self.dict['YDIM'] = self.inputVolume.get().getDim()[1]
-        #self.dict['ZDIM'] = self.inputVolume.get().getDim()[2]
         if self.BFactorSet.get() == 0:
             self.dict['BFACTOR_SET'] = "#BFACtor SET 0"
         else:
@@ -207,8 +196,8 @@ class CCP4ProtRunRefmac(EMProtocol):
     def executeMaskRefmacStep(self):
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
-        runCCP4Program(self._getMaskScriptFileName(),"",
-                       {'GENERIC':self._getExtraPath("")})
+        runCCP4Program(self._getMaskScriptFileName(), "",
+                       {'GENERIC': self._getExtraPath("")})
 
     def createIfftScriptFileStep(self):
         # sampling
@@ -216,15 +205,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         sampling = fnVol.getSamplingRate()
         # parse refmac shifts
         refmacShiftDict = self.parseRefmacShiftFile()
-        #shiftDict = refmacShiftDict[self.refmacShiftsNames[2]]
+        # shiftDict = refmacShiftDict[self.refmacShiftsNames[2]]
         shiftDict = refmacShiftDict[self.refmacShiftsNames[0]]
-        # x =
-        # x = int(shiftDict[2] / sampling + 0.5)
-        # self.dict['XDIM']=x if x%2==0 else x + 1
-        # y = int(shiftDict[0] / sampling + 0.5)
-        # self.dict['YDIM']=y if y%2==0 else y + 1
-        # z = int(shiftDict[1] / sampling + 0.5)
-        # self.dict['ZDIM']=z if z%2==0 else z + 1
         x = int(shiftDict[0] / sampling + 0.5)
         self.dict['XDIM'] = x if x % 2 == 0 else x + 1
         y = int(shiftDict[1] / sampling + 0.5)
@@ -242,23 +224,8 @@ class CCP4ProtRunRefmac(EMProtocol):
     def executeIfftStep(self):
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
-        runCCP4Program(self._getIfftScriptFileName(),"",
-                       {'GENERIC':self._getExtraPath("")})
-
-    def createIfftOutputStep(self):
-        pass # do not save intemediate results
-        #vol = Volume()
-        #volLocation = vol.setLocation(self._getExtraPath('%s.map'
-        #                                     %self.maskedMapFileName)) #
-        # ifft volume
-        #fnVol = self._getInputVolume()
-        #sampling = fnVol.getSamplingRate()
-        #vol.setSamplingRate(sampling)
-        #
-        #self._defineOutputs(outputMaskedVolume=vol)
-        #self._defineSourceRelation(fnVol, self.outputMaskedVolume)
-        #self._defineSourceRelation(self.inputStructure,
-        # self.outputMaskedVolume)
+        runCCP4Program(self._getIfftScriptFileName(), "",
+                       {'GENERIC': self._getExtraPath("")})
 
     def createRefineScriptFileStep(self):
         data_refine = template_refine % self.dict
@@ -271,8 +238,8 @@ class CCP4ProtRunRefmac(EMProtocol):
     def executeRefineRefmacStep(self):
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
-        runCCP4Program(self._getRefineScriptFileName(),"",
-                       {'GENERIC':self._getExtraPath("")})
+        runCCP4Program(self._getRefineScriptFileName(), "",
+                       {'GENERIC': self._getExtraPath("")})
 
     def createRefmacOutputStep(self):
         pdb = PdbFile()
@@ -292,7 +259,7 @@ class CCP4ProtRunRefmac(EMProtocol):
                     break
                 print line
 
-    # --------------------------- UTLIS functions --------------------------------------------
+    # --------------------------- UTLIS functions --------------------------
     def _getInputVolume(self):
         if self.inputVolume.get() is None:
             fnVol = self.inputStructure.get().getVolume()
@@ -303,11 +270,8 @@ class CCP4ProtRunRefmac(EMProtocol):
     def _getOutPdbFileName(self):
         pdfileName = os.path.splitext(os.path.basename(
             self.inputStructure.get().getFileName()))[0]
-        return self._getExtraPath(self.OutPdbFileName%pdfileName)
+        return self._getExtraPath(self.OutPdbFileName % pdfileName)
 
-    #def _getVolName(self):
-        #return self.Volume.get()
-        #pass
     def _getMaskScriptFileName(self):
         return self._getTmpPath(self.refmacMaskScriptFileName)
 
@@ -324,10 +288,10 @@ class CCP4ProtRunRefmac(EMProtocol):
         return self._getExtraPath(baseFileName)
 
     def parseRefmacShiftFile(self):
-        _shiftFileName =  self._getExtraPath("_shifts.txt")
+        _shiftFileName = self._getExtraPath("_shifts.txt")
         f = open(_shiftFileName, 'r')
-        refmacShiftDict={}
-        for i in range (4):
+        refmacShiftDict = {}
+        for i in range(4):
             l = []
             words = f.readline().split()
             for d in words[2:]:
@@ -336,15 +300,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         ##
         s = ""
         for k, v in refmacShiftDict.iteritems():
-            s += "%s: %s\n"%(str(k), str(v))
+            s += "%s: %s\n" % (str(k), str(v))
         print s
         ##
         return refmacShiftDict
-
-
-
-
-
-
-
-
