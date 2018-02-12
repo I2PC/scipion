@@ -117,7 +117,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
                                  sampling=sampling)
 
         for n in range(1, self.nModels.get()+1):
-            fnPdb = self._getExtraPath("fit_%d.pdb" % n)
+            fnPdb = self._getExtraPath("powerfit_%d.pdb" % n)
             if exists(fnPdb):
                 fnCmd = self._getExtraPath("chimera_%d.cmd" % n)
                 fhCmd = open(fnCmd, 'w')
