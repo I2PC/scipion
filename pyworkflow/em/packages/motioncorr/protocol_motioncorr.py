@@ -71,8 +71,23 @@ class ProtMotionCorr(ProtAlignMovies):
         """
         return getVersion('MOTIONCOR2').startswith('1.0.')
 
-    def isLatestVersion(self):
-        return getVersion('MOTIONCOR2') == '1.0.2'
+    def versionGE(self, version):
+        """ Return True if current version of motioncor2 is greater
+         or equal than the input argument.
+         Params:
+            version: string version (semantic version, e.g 1.0.1)
+        """
+        if not self.isSemVersion():
+            return False
+
+        v1 = map(int, getVersion('MOTIONCOR2').split('.'))
+        v2 = map(int, version.split('.'))
+
+        for x1, x2 in zip(v1, v2):
+            if x1 < x2:
+                return False
+
+        return True
 
     def _getConvertExtension(self, filename):
         """ Check wether it is needed to convert to .mrc or not """
@@ -151,18 +166,18 @@ class ProtMotionCorr(ProtAlignMovies):
         line = form.addLine('Number of patches', condition='useMotioncor2',
                             help='Number of patches to be used for patch based '
                                  'alignment. Set to *0 0* to do only global motion '
-                                 'correction.')
+                                 'correction. \n')
         line.addParam('patchX', params.IntParam, default=5, label='X')
         line.addParam('patchY', params.IntParam, default=5, label='Y')
 
-        if self.isLatestVersion():
+        if self.versionGE('1.0.1'): # Patch overlap was introduced in 1.0.1
             form.addParam('patchOverlap', params.IntParam, default=0,
-                          label='Patches overlap (%)',
-                          help="Specify the overlapping between adjacent "
-                               "patches. \nFor example, overlap=20 means that "
-                               "each patch will have a 20% overlapping with "
-                               "its neighboring patches in each dimension. \n"
-                               "Note: NEW in version 1.0.1")
+                          label='Patches Overlap (%)',
+                          help='In versions > 1.0.1 it is possible to specify'
+                                 'the overlapping between patches. '
+                                 '\nFor example, overlap=20 means that '
+                                 'each patch will have a 20% overlapping \n'
+                                 'with its neighboring patches in each dimension.')
 
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
@@ -359,8 +374,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 if self.defectFile.get():
                     argsDict['-DefectFile'] = self.defectFile.get()
 
-                # From version 1.0.1
-                if self.isLatestVersion():
+                if self.versionGE('1.0.1'):  # Patch overlap was introduced in 1.0.1
                     patchOverlap = self.getAttributeValue('patchOverlap', None)
                     if patchOverlap: # 0 or None is False
                         argsDict['-Patch'] += " %d" % patchOverlap
