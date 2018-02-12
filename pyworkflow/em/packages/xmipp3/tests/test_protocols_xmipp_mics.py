@@ -520,7 +520,7 @@ class TestXmippExtractParticles(TestXmippBase):
 
     def testExtractNoise(self):
         print "Run extract particles from original micrographs, with downsampling"
-        downFactor = 3.0
+        downFactor = 5.0
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=183, downsampleType=OTHER,
                                        doDownsample=True,
@@ -528,9 +528,6 @@ class TestXmippExtractParticles(TestXmippBase):
                                        doInvert=False,
                                        doFlip=False,
                                        extractNoise=True)
-        # Get all the micrographs ids to validate that all particles
-        # has the micId properly set
-        micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
 
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
