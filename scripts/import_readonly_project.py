@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:     Pablo Conesa (pconesa@cnb.csic.es)
+# * Authors:     Yaiza Rancel (cyrancel@cnb.csic.es)
 # *
 # * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
