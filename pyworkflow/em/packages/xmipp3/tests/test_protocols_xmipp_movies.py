@@ -656,8 +656,8 @@ class TestMaxShift(BaseTest):
         alignment = movie.getAlignment()
         range = alignment.getRange()
         msgRange = "Alignment range must be %s %s and it is %s (%s)"
-        self.assertEqual(goldRange, range,
-                         msgRange % (goldRange, range, type(goldRange), type(range)))
+        self.assertEqual(goldRange, range, msgRange
+                         %(goldRange, range, type(goldRange), type(range)))
         roi = alignment.getRoi()
         msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
         self.assertEqual(goldRoi, roi,
@@ -665,38 +665,38 @@ class TestMaxShift(BaseTest):
     
     def test_qbeta(self):
         protAlign = self.newProtocol(XmippProtMovieCorr,
-                                alignFrame0=3, alignFrameN=5,
-                                cropOffsetX=10, cropOffsetY=10,
-                                doSaveAveMic=False)
+                                     alignFrame0=3, alignFrameN=5,
+                                     cropOffsetX=10, cropOffsetY=10,
+                                     doSaveAveMic=False)
         protAlign.inputMovies.set(self.protImport.outputMovies)
         self.launchProtocol(protAlign)
         
-        self._checkAlignment(protAlign.outputMovies[1],
-                             (3,5), [10, 10, 0, 0])
+        self._checkAlignment(protAlign.outputMovies[1], (3,5), [10, 10, 0, 0])
+                             
         
         # This must discart the movie for a Frame shift
         protMaxShift1 = self.newProtocol(XmippProtMovieMaxShift,
-                                            maxFrameShift=0.04,
-                                            maxMovieShift=0.1)
+                                         maxFrameShift=0.04,
+                                         maxMovieShift=0.1)
         protMaxShift1.inputMovies.set(protAlign.outputMovies)
-        protMaxShift1.setObjLabel('max shift filtering 1')
+        protMaxShift1.setObjLabel('Movie maxShift filtering by Frame')
         self.launchProtocol(protMaxShift1)
         self._checkMaxShiftFiltering(protMaxShift1, False)
 
         # This must discart the movie for a Global shift
         protMaxShift2 = self.newProtocol(XmippProtMovieMaxShift,
-                                            maxFrameShift=0.06,
-                                            maxMovieShift=0.06)
+                                         maxFrameShift=0.05,
+                                         maxMovieShift=0.051)
         protMaxShift2.inputMovies.set(protAlign.outputMovies)
-        protMaxShift2.setObjLabel('max shift filtering 2')
+        protMaxShift2.setObjLabel('Movie maxShift filtering by Movie')
         self.launchProtocol(protMaxShift2)
         self._checkMaxShiftFiltering(protMaxShift2, False)
 
         # This must accept the movie
         protMaxShift3 = self.newProtocol(XmippProtMovieMaxShift,
-                                            maxFrameShift=1,
-                                            maxMovieShift=1)
+                                         maxFrameShift=1,
+                                         maxMovieShift=1)
         protMaxShift3.inputMovies.set(protAlign.outputMovies)
-        protMaxShift3.setObjLabel('max shift filtering 3')
+        protMaxShift3.setObjLabel('Movie maxShift filtering -Let pass-')
         self.launchProtocol(protMaxShift3)
         self._checkMaxShiftFiltering(protMaxShift3, True)
