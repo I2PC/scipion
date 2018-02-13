@@ -77,6 +77,23 @@ def stop(protocol):
         return _stopRemote(protocol)
 
 
+def schedule(protocol, wait=False):
+    """ Use this function to schedule protocols that are not ready to
+    run yet. Right now it only make sense to schedule jobs locally.
+    """
+    protStrId = protocol.strId()
+    python = pw.SCIPION_PYTHON
+    scipion = pw.getScipionScript()
+    cmd = '%s %s runprotocol pw_schedule_run.py' % (python, scipion)
+    cmd += ' "%s" "%s" %s' % (protocol.getProject().path,
+                              protocol.getDbPath(),
+                              protStrId)
+    jobId = _run(cmd, wait)
+    protocol.setJobId(jobId)
+
+    return jobId
+
+
 
 # ******************************************************************
 # *         Internal utility functions
@@ -231,7 +248,7 @@ def _run(command, wait, stdin=None, stdout=None, stderr=None):
 
 def _stopLocal(protocol):
     
-    if protocol.useQueue():     
+    if protocol.useQueue() and not protocol.isScheduled():
         jobId = protocol.getJobId()        
         host = protocol.getHostConfig()
         cancelCmd = host.getCancelCommand() % {'JOB_ID': jobId}

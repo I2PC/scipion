@@ -36,7 +36,7 @@ from django.core.servers.basehttp import FileWrapper
 import pyworkflow.em as em
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
-from pyworkflow.project import Project
+from pyworkflow.project import Project, PROJECT_CONFIG_HOSTS
 from pyworkflow.utils import *
 from pyworkflow.gui import getImage, getPILImage
 from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
@@ -218,7 +218,7 @@ def getServiceManager(serviceName):
     serviceConf = os.path.join(os.environ['HOME'], '.config', 'scipion', serviceName)
     manager.config = os.path.join(serviceConf, 'scipion.conf')
     manager.protocols = os.path.join(serviceConf, 'protocols.conf')
-    manager.hosts = os.path.join(serviceConf, 'hosts.conf')
+    manager.hosts = os.path.join(serviceConf, PROJECT_CONFIG_HOSTS)
     
     print "config: ", manager.config
     print "protocols: ", manager.protocols

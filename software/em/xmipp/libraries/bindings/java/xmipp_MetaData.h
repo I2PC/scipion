@@ -392,6 +392,13 @@ extern "C"
 
     /*
      * Class:     xmipp_MetaData
+     * Method:    renameColumn
+     * Signature: (V)II
+     */
+    JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_renameColumn
+    (JNIEnv *, jobject, jint, jint);
+    /*
+     * Class:     xmipp_MetaData
      * Method:    getPCAbasis
      * Signature: (Lxmipp/ImageGeneric;)V
      */

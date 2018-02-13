@@ -96,7 +96,8 @@ class TestMotioncorrAlignMovies(BaseTest):
 
     def test_qbeta(self):
         prot = self.newProtocol(ProtMotionCorr,
-                                objLabel='qbeta - motioncorr test1')
+                                objLabel='qbeta - motioncorr test1',
+                                useMotioncor2=False,)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
@@ -109,6 +110,7 @@ class TestMotioncorrAlignMovies(BaseTest):
     def test_cct(self):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='cct - motioncorr test',
+                                useMotioncor2=False,
                                 doSaveMovie=True)
         prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
@@ -121,6 +123,7 @@ class TestMotioncorrAlignMovies(BaseTest):
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='qbeta - motioncorr test2',
+                                useMotioncor2=False,
                                 alignFrame0=3, alignFrameN=5,
                                 cropOffsetX=10, cropOffsetY=10)
         prot.inputMovies.set(self.protImport1.outputMovies)

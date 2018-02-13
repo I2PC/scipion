@@ -5,6 +5,8 @@ Created on Feb 21, 2014
 '''
 import os
 from xmipp import *
+
+from pyworkflow.em.packages.bsoft import BSOFT_HOME_VAR
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.convert import rowToCoordinate, rowFromMd
@@ -13,7 +15,7 @@ from pyworkflow.em.packages.xmipp3.convert import rowToCoordinate, rowFromMd
 def getEnviron():
     """ Setup the environment variables needed to launch Bsoft. """
     environ = Environ(os.environ)
-    BSOFT_HOME = os.environ['BSOFT_HOME']
+    BSOFT_HOME = os.environ[('%s' % BSOFT_HOME_VAR)]
     
     environ.update({
             'BSOFT': BSOFT_HOME,
@@ -27,7 +29,7 @@ def getEnviron():
 SUPPORTED_VERSIONS = ['1.8.8', '1.9.0']
 
 def getVersion():
-    path = os.environ['BSOFT_HOME']
+    path = os.environ[BSOFT_HOME_VAR]
     for v in SUPPORTED_VERSIONS:
         if v in path:
             return v

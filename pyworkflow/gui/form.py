@@ -37,6 +37,7 @@ from itertools import izip
 from datetime import datetime
 
 import pyworkflow.object as pwobj
+from pyworkflow.gui.project.utils import getStatusColorFromRun
 from pyworkflow.mapper import Mapper
 from pyworkflow.utils import startDebugger
 from pyworkflow.utils.path import getHomePath
@@ -366,8 +367,15 @@ class SubclassesTreeProvider(TreeProvider):
                             p = pwobj.Pointer(prot, extended=paramName)
                             p._allowsSelection = True
                             objects.append(p)
+
+                        # JMRT: Adding the inner items cause a significant
+                        # performance penalty, anyway, subsets can be selected
+                        # from showj GUI and used as inputs.
                         # If attr is a set, then we should consider its elements
-                        if isinstance(attr, em.EMSet):
+                        # JMRT: The inclusion of subitems as possible inputs
+                        # is causing a performance penalty. So for the moment
+                        # we will restrict that to SetOfVolumes only
+                        if isinstance(attr, em.SetOfVolumes):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
@@ -874,6 +882,7 @@ class ParamWidget():
         
         elif t is params.PointerParam or t is params.RelationParam:
             var = PointerVar(self._protocol)
+            var.trace('w', self.window._onPointerChanged)
             entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, 
                              state="readonly", font=self.window.font)
             entry.grid(row=0, column=0, sticky='w')
@@ -947,7 +956,7 @@ class ParamWidget():
                             self._showHelpMessage)
         
         self.var = var
-        
+
     def _visualizeVar(self, e=None):
         """ Visualize specific variable. """
         self.visualizeCallback(self.paramName)
@@ -1047,6 +1056,7 @@ class ParamWidget():
     def _browsePath(self, e=None):
         def onSelect(obj):
             self.set(obj.getPath())
+
         v = self.get().strip()
         path = None
         if v:
@@ -1270,7 +1280,15 @@ class FormWindow(Window):
         else:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
         headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), sticky='nw')
-        
+
+        # Add status label
+        status = self.protocol.status.get()
+        # For viewers and new protocols (status less object): skip this
+        if status is not None:
+            color = getStatusColorFromRun(self.protocol)
+            stLabel = tk.Label(headerFrame, text=status, background=color)
+            stLabel.grid(row=0, column=1, padx=5, pady=5, sticky='e')
+
         def _addButton(text, icon, command, col):
             btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
                        compound=tk.LEFT, cursor='hand2')
@@ -1278,8 +1296,8 @@ class FormWindow(Window):
             btn.grid(row=0, column=col, padx=5, sticky='e')
         
         _addButton(Message.LABEL_CITE, Icon.ACTION_REFERENCES,
-                   self._showReferences, 1)
-        _addButton(Message.LABEL_HELP ,Icon.ACTION_HELP, self._showHelp, 2)
+                   self._showReferences, 2)
+        _addButton(Message.LABEL_HELP ,Icon.ACTION_HELP, self._showHelp, 3)
         
         return headerFrame
         
@@ -1492,7 +1510,7 @@ class FormWindow(Window):
         # Grab the host config from the project, since it 
         # have not been set in the protocol
         hostConfig = self._getHostConfig()
-        queues = hostConfig.queueSystem.queues
+        queues = OrderedDict(sorted(hostConfig.queueSystem.queues.items()))
         # If there is only one Queue and it has not parameters
         # don't bother to showing the QueueDialog
         noQueueChoices = len(queues) == 1 and len(queues.values()[0]) == 0
@@ -1576,20 +1594,29 @@ class FormWindow(Window):
     def _createButtons(self, parent):
         """ Create the bottom buttons: Close, Save and Execute. """
         btnFrame = tk.Frame(parent)
-        
+
         btnClose = self.createCloseButton(btnFrame)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
         # Save button is not added in VISUALIZE or CHILD modes
         # Neither in the case of a LegacyProtocol
-
         if (not self.visualizeMode and not self.childMode and
             not self._isLegacyProtocol()):
-            btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN,
-                             Icon.ACTION_SAVE, command=self.save)
-            btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
-            btnExecute = HotButton(btnFrame, Message.LABEL_BUTTON_EXEC, 
-                                   Icon.ACTION_EXECUTE, command=self.execute)
-            btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
+
+            # Check editable or not:
+            btnState = tk.DISABLED if (self.protocol.isActive()
+                                       and not self.protocol.isInteractive()) \
+                                   else tk.NORMAL
+
+            self.btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN,
+                                  Icon.ACTION_SAVE, command=self.save,
+                                  state=btnState)
+            self.btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
+            self.btnExecute = HotButton(btnFrame, Message.LABEL_BUTTON_EXEC,
+                                        Icon.ACTION_EXECUTE,
+                                        command=self.execute, state=btnState)
+            self.btnExecute.grid(row=0, column=2, padx=(5, 28),
+                                 pady=5, sticky='se')
+            self._onPointerChanged()
             
         return btnFrame
         
@@ -1667,7 +1694,14 @@ class FormWindow(Window):
         
     def save(self, e=None):
         self._close(onlySave=True)
-        
+
+    def schedule(self):
+        if self.protocol.useQueue():
+            if not self._editQueueParams():
+                return
+
+        self._close(doSchedule=True)
+
     def execute(self, e=None):
         
         if self.protocol.useQueue():
@@ -1694,7 +1728,7 @@ class FormWindow(Window):
         errors = self.protocol.validate()
         
         if errors:
-            self.showError(errors)
+            self.showInfo(errors)
         else:
             warns = self.protocol.warnings()
             if warns and not self.askYesNo("There are some warnings",
@@ -1702,12 +1736,12 @@ class FormWindow(Window):
                 return
             self._close()
         
-    def _close(self, onlySave=False):
+    def _close(self, onlySave=False, doSchedule=False):
         try:
             # Set the protocol label
             self.updateProtocolLabel()
             
-            message = self.callback(self.protocol, onlySave)
+            message = self.callback(self.protocol, onlySave, doSchedule)
             if not self.visualizeMode:
                 if len(message):
                     self.showInfo(message, "Protocol action")
@@ -1942,6 +1976,22 @@ class FormWindow(Window):
         """
         for paramName, _ in self.protocol.iterDefinitionAttributes():
             self.setParamFromVar(paramName)
+
+    def _onPointerChanged(self, *args):
+        btnExecute = getattr(self, 'btnExecute', None)
+
+        # This event can be fired even before the button is created
+        if btnExecute is None:
+            return
+
+        if self.protocol.hasLinkedInputs():
+            btnText = 'Schedule'
+            cmd = self.schedule
+        else:
+            btnText = Message.LABEL_BUTTON_EXEC
+            cmd = self.execute
+
+        btnExecute.config(text=btnText, command=cmd)
 
 
 def editObject(self, title, root, obj, mapper):
