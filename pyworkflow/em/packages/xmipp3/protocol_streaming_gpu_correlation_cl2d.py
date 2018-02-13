@@ -102,6 +102,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         self.listRefImgs = []
         self.htAlreadyProcessed = HashTableDict()
         self.last_time = time.time()
+        self.deltaTime = 60.0
 
         self._loadInputList()
         deps = []
@@ -126,6 +127,9 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
     def _stepsCheck(self):
         self._checkNewInput()
+        self._checkNewOutput()
+
+    def createOutputStep(self):
         self._checkNewOutput()
 
     def _checkNewInput(self):
@@ -167,11 +171,19 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
     def _checkNewOutput(self):
         """ Check for already done files and update the output set. """
+        inputSize = self.inputParticles.get().getSize()
+        if inputSize>10000 and inputSize<50000:
+            self.deltaTime = 180.0
+        elif inputSize>=50000 and inputSize<100000:
+            self.deltaTime = 300.0
+        elif inputSize>100000:
+            self.deltaTime = 600.0
+
         initial_time = time.time()
-        #if initial_time < self.last_time + 180.0:
-        #    return
-        #else:
-        #    self.last_time = initial_time
+        if initial_time < self.last_time + self.deltaTime:
+            return
+        else:
+            self.last_time = initial_time
 
         print("En checkNewOutput")
 
@@ -669,8 +681,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         print("self.listNumImgs", self.listNumImgs)
         print("self.listRefImgs", self.listRefImgs)
 
-    def createOutputStep(self):
-        self._checkNewOutput()
 
     def _loadInputList(self):
         """ Load the input set of ctfs and create a list. """
