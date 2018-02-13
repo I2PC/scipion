@@ -343,7 +343,6 @@ class ProtRelionBase(EMProtocol):
             if getVersion() != V2_0:  # version 2.1+ only
                 form.addParam('doSubsets', BooleanParam, default=False,
                               condition='not doContinue',
-                              expertLevel=LEVEL_ADVANCED,
                               label='Use subsets for initial updates?',
                               help='If set to True, multiple maximization updates '
                                    '(as many as defined by the _Number of subset '
@@ -364,7 +363,6 @@ class ProtRelionBase(EMProtocol):
                                    'this option may be less useful.')
                 form.addParam('subsetSize', IntParam, default=10000,
                               condition='doSubsets and not doContinue',
-                              expertLevel=LEVEL_ADVANCED,
                               label='Initial subset size',
                               help='Number of individual particles after which one '
                                    'will perform a maximization update in the first '
@@ -372,7 +370,6 @@ class ProtRelionBase(EMProtocol):
                                    'in the order of ten thousand particles.')
                 form.addParam('subsetUpdates', IntParam, default=3,
                               condition='doSubsets and not doContinue',
-                              expertLevel=LEVEL_ADVANCED,
                               label='Number of subset updates',
                               help='This option is only used when a positive '
                                    'number is given for the _Initial subset size_. '
@@ -760,7 +757,7 @@ class ProtRelionBase(EMProtocol):
                                 ' http://xmipp.cnb.csic.es/twiki/bin/view/'
                                 'Xmipp/WebHome?topic=Symmetry')
 
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._initialize()
         self._insertFunctionStep('convertInputStep',
@@ -788,7 +785,7 @@ class ProtRelionBase(EMProtocol):
         
         self._insertFunctionStep('runRelionStep', params)
     
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions -------------------------------
     def convertInputStep(self, particlesId, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
@@ -821,8 +818,7 @@ class ProtRelionBase(EMProtocol):
                 mdParts = md.MetaData(imgStar)
                 self._copyAlignAsPriors(mdParts, alignType)
                 mdParts.write(imgStar)
-                
-            
+
             if self.doCtfManualGroups:
                 self._splitInCTFGroups(imgStar)
         else:
