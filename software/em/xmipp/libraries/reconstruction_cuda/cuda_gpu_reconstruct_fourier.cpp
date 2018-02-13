@@ -344,8 +344,9 @@ void FRecBufferDataGPUWrapper::copyToDevice(int stream) {
 }
 
 float* allocateTempVolumeGPU(float*& ptr, int size, int typeSize) {
-	cudaMalloc((void**)&ptr, size * size * size * typeSize);
-	cudaMemset(ptr, 0.f, size * size * size * typeSize);
+	size_t bytes = (size_t)size * size * size * typeSize;
+	cudaMalloc((void**)&ptr, bytes);
+	cudaMemset(ptr, 0.f, bytes);
 	gpuErrchk( cudaPeekAtLastError() );
 
 	return ptr;
