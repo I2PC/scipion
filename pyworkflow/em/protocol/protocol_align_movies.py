@@ -180,30 +180,19 @@ class ProtAlignMovies(ProtProcessMovies):
                    % (allDone, len(self.listOfMovies)))
         self.debug('   streamMode: %s' % streamMode)
 
-        doneFailed = []
-
         if self._createOutputMovies():
             saveMovie = self.getAttributeValue('doSaveMovie', False)
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
-            doneOK = []
 
             for movie in newDone:
-                # Need to check if the micrograph was actually generated to avoid
-                # discrepancies between movieSet and micSet
-                extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
-                if not os.path.exists(extraMicFn):
-                    print(yellowStr("WARNING: Micrograph %s was not generated, can't add it to "
-                                    "output set." % extraMicFn))
-                    doneFailed.append(movie)
-                    continue
-
                 newMovie = self._createOutputMovie(movie)
-                movieSet.append(newMovie)
-                doneOK.append(movie)
+                if newMovie.getAlignment().getShifts()[0]:
+                    movieSet.append(newMovie)
+                else:
+                    print(yellowStr("WARNING: Movie %s has empty alignment data, can't add it to "
+                                    "output set." % movie.getFileName()))
 
-            # replace newDone with movies that actually have alignment
-            newDone = doneOK
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
 
@@ -221,6 +210,7 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
+            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()

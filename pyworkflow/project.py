@@ -53,10 +53,15 @@ PROJECT_TMP = 'Tmp'
 PROJECT_UPLOAD = 'Uploads'
 PROJECT_SETTINGS = 'settings.sqlite'
 PROJECT_CONFIG = '.config'
-PROJECT_CONFIG_HOSTS = 'hosts.conf'
 PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 
 PROJECT_CREATION_TIME = 'CreationTime'
+
+# Allow the name of the host configuration to be changed.
+# This is useful for having the same central installation that
+# could be used from different environments (cluster vs workstations)
+PROJECT_CONFIG_HOSTS = os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
+
 
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+)(?P<number>\(\d*\))\s*$')
@@ -309,7 +314,7 @@ class Project(object):
             else:
                 localDir = os.path.dirname(os.environ['SCIPION_LOCAL_CONFIG'])
                 hostsFile = [os.environ['SCIPION_HOSTS'],
-                             os.path.join(localDir, 'hosts.conf')]
+                             os.path.join(localDir, PROJECT_CONFIG_HOSTS)]
         else:
             pwutils.copyFile(hosts, projHosts)
             hostsFile = hosts
