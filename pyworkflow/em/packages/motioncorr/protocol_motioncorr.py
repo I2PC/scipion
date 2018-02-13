@@ -321,7 +321,6 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-ned': '%d' % aN,
                         '-nss': '%d' % s0,
                         '-nes': '%d' % sN,
-                        '-gpu': self.gpuList.get(),
                         '-flg': logFile,
                         }
 
@@ -341,6 +340,7 @@ class ProtMotionCorr(ProtAlignMovies):
             if self.doSaveMovie:
                 args += ' -fct "%s" -ssc 1' % outputMovieFn
 
+            args += '-gpu %(GPU)s'
             args += ' ' + self.extraParams.get()
             program = MOTIONCORR_PATH
 
@@ -378,7 +378,6 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
                         '-kV': inputMovies.getAcquisition().getVoltage(),
-                        '-Gpu': self.gpuList.get(),
                         '-LogFile': logFileBase,
                         }
             if getVersion('MOTIONCOR2') != '03162016':
@@ -432,6 +431,7 @@ class ProtMotionCorr(ProtAlignMovies):
             if inputMovies.getGain():
                 args += ' -Gain "%s" ' % inputMovies.getGain()
 
+            args += ' -Gpu %(GPU)s'
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
 
@@ -726,10 +726,9 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     ax.set_title('Alignment based upon full frames')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
-    # morioncor2 (1.0.2) values refer to the middle frame, so first frame is no longer 0,0
+    # motioncor2 (1.0.2) values refer to the middle frame, so first frame is no longer 0,0
     #if meanX[0] != 0 or meanY[0] != 0:
     #    raise Exception("First frame shift must be (0,0)!")
-
     i = first
 
     # ROB no accumulation is needed

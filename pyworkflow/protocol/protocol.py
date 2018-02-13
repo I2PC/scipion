@@ -637,7 +637,7 @@ class Protocol(Step):
         if not self.allowsGpu():
             return []
 
-        return self.gpuList.get() # FIXME: support list expansion
+        return pwutils.getListFromRangeString(self.gpuList.get())
 
     def getOutputsSize(self):
         return sum(1 for _ in self.iterOutputEM())
@@ -1856,6 +1856,7 @@ def runProtocolMain(projectPath, protDbPath, protId):
 
     # Create the steps executor
     executor = None
+
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
             # Handle special case to execute in parallel
@@ -1868,11 +1869,15 @@ def runProtocolMain(projectPath, protDbPath, protId):
                                      numberOfMpi=protocol.numberOfMpi.get(),
                                      hostConfig=hostConfig)
             sys.exit(retcode)
+
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,
-                                          protocol.numberOfThreads.get() - 1)
+                                          protocol.numberOfThreads.get()-1,
+                                          gpuList=protocol.getGpuList())
     if executor is None:
-        executor = StepExecutor(hostConfig)
+        executor = StepExecutor(hostConfig,
+                                gpuList=protocol.getGpuList())
+
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
     protocol.run()
@@ -1886,8 +1891,8 @@ def runProtocolMainMPI(projectPath, protDbPath, protId, mpiComm):
     protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=True)
     hostConfig = protocol.getHostConfig()
     # Create the steps executor
-    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get() - 1,
-                               mpiComm)
+    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get()-1,
+                               mpiComm, gpuList=protocol.getGpuList())
 
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
