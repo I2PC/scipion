@@ -350,7 +350,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
         self._prepareArgs(self.__params)
 
-
     def _prepareRecalCommand(self, ctfModel):
         if self.recalculate:
             self._defineRecalValues(ctfModel)
