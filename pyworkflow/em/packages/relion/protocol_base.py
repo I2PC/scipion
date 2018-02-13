@@ -42,7 +42,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
-from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V1_3, V2_0
+from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V2_0
 from convert import (convertBinaryVol, writeSetOfParticles, isVersion2,
                      getVersion, getImageLocation, convertMask)
 
@@ -155,8 +155,9 @@ class ProtRelionBase(EMProtocol):
                       important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')
-        form.addParam('copyAlignment', BooleanParam, default=True,
+        form.addParam('copyAlignment', BooleanParam, default=False,
                       label='Consider previous alignment?',
+                      condition='not doContinue',
                       help='If set to Yes, then alignment information from input'
                            ' particles will be considered.')
         form.addParam('maskDiameterA', IntParam, default=-1,
@@ -332,7 +333,7 @@ class ProtRelionBase(EMProtocol):
                                'Too small values yield too-low resolution '
                                'structures; too high values result in '
                                'over-estimated resolutions and overfitting.')
-            if isVersion2() and getVersion() != V2_0:  # version 2.1+ only
+            if getVersion() != V2_0:  # version 2.1+ only
                 form.addParam('doSubsets', BooleanParam, default=False,
                               condition='not doContinue',
                               expertLevel=LEVEL_ADVANCED,
@@ -427,21 +428,20 @@ class ProtRelionBase(EMProtocol):
                                'have one-values inside the virion and '
                                'zero-values in the capsid and the solvent '
                                'areas.')
-            if isVersion2():
-                form.addParam('solventFscMask', BooleanParam, default=False,
-                              expertLevel=LEVEL_ADVANCED,
-                              label='Use solvent-flattened FSCs?',
-                              help='If set to Yes, then instead of using '
-                                   'unmasked maps to calculate the gold-standard '
-                                   'FSCs during refinement, masked half-maps '
-                                   'are used and a post-processing-like '
-                                   'correction of the FSC curves (with '
-                                   'phase-randomisation) is performed every '
-                                   'iteration. This only works when a reference '
-                                   'mask is provided on the I/O tab. This may '
-                                   'yield higher-resolution maps, especially '
-                                   'when the mask contains only a relatively '
-                                   'small volume inside the box.')
+            form.addParam('solventFscMask', BooleanParam, default=False,
+                          expertLevel=LEVEL_ADVANCED,
+                          label='Use solvent-flattened FSCs?',
+                          help='If set to Yes, then instead of using '
+                               'unmasked maps to calculate the gold-standard '
+                               'FSCs during refinement, masked half-maps '
+                               'are used and a post-processing-like '
+                               'correction of the FSC curves (with '
+                               'phase-randomisation) is performed every '
+                               'iteration. This only works when a reference '
+                               'mask is provided on the I/O tab. This may '
+                               'yield higher-resolution maps, especially '
+                               'when the mask contains only a relatively '
+                               'small volume inside the box.')
         else:
             form.addParam('referenceMask', PointerParam, pointerClass='Mask',
                           label='Reference mask (optional)', allowsNull=True,
@@ -616,108 +616,100 @@ class ProtRelionBase(EMProtocol):
                                     'ribosomes, we used a value of 1 degree')
         
         form.addSection('Additional')
-        if isVersion2():
-            form.addParam('useParallelDisk', BooleanParam, default=True,
-                          label='Use parallel disc I/O?',
-                          help='If set to Yes, all MPI slaves will read '
-                               'their own images from disc. Otherwise, only '
-                               'the master will read images and send them '
-                               'through the network to the slaves. Parallel '
-                               'file systems like gluster of fhgfs are good '
-                               'at parallel disc I/O. NFS may break with many '
-                               'slaves reading in parallel.')
-            form.addParam('pooledParticles', IntParam, default=3,
-                          label='Number of pooled particles:',
-                          help='Particles are processed in individual batches '
-                               'by MPI slaves. During each batch, a stack of '
-                               'particle images is only opened and closed '
-                               'once to improve disk access times. All '
-                               'particle images of a single batch are read '
-                               'into memory together. The size of these '
-                               'batches is at least one particle per thread '
-                               'used. The nr_pooled_particles parameter '
-                               'controls how many particles are read together '
-                               'for each thread. If it is set to 3 and one '
-                               'uses 8 threads, batches of 3x8=24 particles '
-                               'will be read together. This may improve '
-                               'performance on systems where disk access, and '
-                               'particularly metadata handling of disk '
-                               'access, is a problem. It has a modest cost of '
-                               'increased RAM usage.')
-            form.addParam('allParticlesRam', BooleanParam, default=False,
-                          label='Pre-read all particles into RAM?',
-                          help='If set to Yes, all particle images will be '
-                               'read into computer memory, which will greatly '
-                               'speed up calculations on systems with slow '
-                               'disk access. However, one should of course be '
-                               'careful with the amount of RAM available. '
-                               'Because particles are read in '
-                               'float-precision, it will take \n'
-                               '( N * (box_size)^2 * 4 / (1024 * 1024 '
-                               '* 1024) ) Giga-bytes to read N particles into '
-                               'RAM. For 100 thousand 200x200 images, that '
-                               'becomes 15Gb, or 60 Gb for the same number of '
-                               '400x400 particles. Remember that running a '
-                               'single MPI slave on each node that runs as '
-                               'many threads as available cores will have '
-                               'access to all available RAM.\n\n'
-                               'If parallel disc I/O is set to No, then only '
-                               'the master reads all particles into RAM and '
-                               'sends those particles through the network to '
-                               'the MPI slaves during the refinement '
-                               'iterations.')
-            form.addParam('scratchDir', PathParam,
-                          condition='not allParticlesRam',
-                          label='Copy particles to scratch directory: ',
-                          help='If a directory is provided here, then the job '
-                               'will create a sub-directory in it called '
-                               'relion_volatile. If that relion_volatile '
-                               'directory already exists, it will be wiped. '
-                               'Then, the program will copy all input '
-                               'particles into a large stack inside the '
-                               'relion_volatile subdirectory. Provided this '
-                               'directory is on a fast local drive (e.g. an '
-                               'SSD drive), processing in all the iterations '
-                               'will be faster. If the job finishes '
-                               'correctly, the relion_volatile directory will '
-                               'be wiped. If the job crashes, you may want to '
-                               'remove it yourself.')
-            form.addParam('combineItersDisc', BooleanParam, default=False,
-                          label='Combine iterations through disc?',
-                          help='If set to Yes, at the end of every iteration '
-                               'all MPI slaves will write out a large file '
-                               'with their accumulated results. The MPI '
-                               'master will read in all these files, combine '
-                               'them all, and write out a new file with the '
-                               'combined results. All MPI salves will then '
-                               'read in the combined results. This reduces '
-                               'heavy load on the network, but increases load '
-                               'on the disc I/O. This will affect the time it '
-                               'takes between the progress-bar in the '
-                               'expectation step reaching its end (the mouse '
-                               'gets to the cheese) and the start of the '
-                               'ensuing maximisation step. It will depend on '
-                               'your system setup which is most efficient.')
-            form.addParam('doGpu', BooleanParam, default=True,
-                          label='Use GPU acceleration?',
-                          help='If set to Yes, the job will try to use GPU '
-                               'acceleration.')
-            form.addParam('gpusToUse', StringParam, default='',
-                          label='Which GPUs to use:', condition='doGpu', 
-                          help='This argument is not necessary. If left empty, '
-                               'the job itself will try to allocate available '
-                               'GPU resources. You can override the default '
-                               'allocation by providing a list of which GPUs '
-                               '(0,1,2,3, etc) to use. MPI-processes are '
-                               'separated by ":", threads by ",". '
-                               'For example: "0,0:1,1:0,0:1,1"')
-        else:
-            form.addParam('memoryPreThreads', IntParam, default=2,
-                          label='Memory per Threads',
-                          help='Computer memory in Gigabytes that is '
-                               'available for each thread. This will only '
-                               'affect some of the warnings about required '
-                               'computer memory.')
+        form.addParam('useParallelDisk', BooleanParam, default=True,
+                      label='Use parallel disc I/O?',
+                      help='If set to Yes, all MPI slaves will read '
+                           'their own images from disc. Otherwise, only '
+                           'the master will read images and send them '
+                           'through the network to the slaves. Parallel '
+                           'file systems like gluster of fhgfs are good '
+                           'at parallel disc I/O. NFS may break with many '
+                           'slaves reading in parallel.')
+        form.addParam('pooledParticles', IntParam, default=3,
+                      label='Number of pooled particles:',
+                      help='Particles are processed in individual batches '
+                           'by MPI slaves. During each batch, a stack of '
+                           'particle images is only opened and closed '
+                           'once to improve disk access times. All '
+                           'particle images of a single batch are read '
+                           'into memory together. The size of these '
+                           'batches is at least one particle per thread '
+                           'used. The nr_pooled_particles parameter '
+                           'controls how many particles are read together '
+                           'for each thread. If it is set to 3 and one '
+                           'uses 8 threads, batches of 3x8=24 particles '
+                           'will be read together. This may improve '
+                           'performance on systems where disk access, and '
+                           'particularly metadata handling of disk '
+                           'access, is a problem. It has a modest cost of '
+                           'increased RAM usage.')
+        form.addParam('allParticlesRam', BooleanParam, default=False,
+                      label='Pre-read all particles into RAM?',
+                      help='If set to Yes, all particle images will be '
+                           'read into computer memory, which will greatly '
+                           'speed up calculations on systems with slow '
+                           'disk access. However, one should of course be '
+                           'careful with the amount of RAM available. '
+                           'Because particles are read in '
+                           'float-precision, it will take \n'
+                           '( N * (box_size)^2 * 4 / (1024 * 1024 '
+                           '* 1024) ) Giga-bytes to read N particles into '
+                           'RAM. For 100 thousand 200x200 images, that '
+                           'becomes 15Gb, or 60 Gb for the same number of '
+                           '400x400 particles. Remember that running a '
+                           'single MPI slave on each node that runs as '
+                           'many threads as available cores will have '
+                           'access to all available RAM.\n\n'
+                           'If parallel disc I/O is set to No, then only '
+                           'the master reads all particles into RAM and '
+                           'sends those particles through the network to '
+                           'the MPI slaves during the refinement '
+                           'iterations.')
+        form.addParam('scratchDir', PathParam,
+                      condition='not allParticlesRam',
+                      label='Copy particles to scratch directory: ',
+                      help='If a directory is provided here, then the job '
+                           'will create a sub-directory in it called '
+                           'relion_volatile. If that relion_volatile '
+                           'directory already exists, it will be wiped. '
+                           'Then, the program will copy all input '
+                           'particles into a large stack inside the '
+                           'relion_volatile subdirectory. Provided this '
+                           'directory is on a fast local drive (e.g. an '
+                           'SSD drive), processing in all the iterations '
+                           'will be faster. If the job finishes '
+                           'correctly, the relion_volatile directory will '
+                           'be wiped. If the job crashes, you may want to '
+                           'remove it yourself.')
+        form.addParam('combineItersDisc', BooleanParam, default=False,
+                      label='Combine iterations through disc?',
+                      help='If set to Yes, at the end of every iteration '
+                           'all MPI slaves will write out a large file '
+                           'with their accumulated results. The MPI '
+                           'master will read in all these files, combine '
+                           'them all, and write out a new file with the '
+                           'combined results. All MPI salves will then '
+                           'read in the combined results. This reduces '
+                           'heavy load on the network, but increases load '
+                           'on the disc I/O. This will affect the time it '
+                           'takes between the progress-bar in the '
+                           'expectation step reaching its end (the mouse '
+                           'gets to the cheese) and the start of the '
+                           'ensuing maximisation step. It will depend on '
+                           'your system setup which is most efficient.')
+        form.addParam('doGpu', BooleanParam, default=True,
+                      label='Use GPU acceleration?',
+                      help='If set to Yes, the job will try to use GPU '
+                           'acceleration.')
+        form.addParam('gpusToUse', StringParam, default='',
+                      label='Which GPUs to use:', condition='doGpu',
+                      help='This argument is not necessary. If left empty, '
+                           'the job itself will try to allocate available '
+                           'GPU resources. You can override the default '
+                           'allocation by providing a list of which GPUs '
+                           '(0,1,2,3, etc) to use. MPI-processes are '
+                           'separated by ":", threads by ",". '
+                           'For example: "0,0:1,1:0,0:1,1"')
         
         joinHalves = ("--low_resol_join_halves 40 (only not continue mode)"
                       if not self.IS_CLASSIFY else "")
@@ -744,21 +736,22 @@ class ProtRelionBase(EMProtocol):
     def addSymmetry(self, container):
         container.addParam('symmetryGroup', StringParam, default='c1',
                            label="Symmetry",
-                           help='If the molecule is asymmetric, set Symmetry group '
-                                'to C1. Note their are multiple possibilities for '
-                                'icosahedral symmetry: \n'
-                                '* I1: No-Crowther 222 (standard in Heymann,Chagoyen '
-                                '& Belnap, JSB, 151 (2005) 196-207)               \n'
-                                '* I2: Crowther 222                                 \n'
-                                '* I3: 52-setting (as used in SPIDER?)              \n'
-                                '* I4: A different 52 setting                       \n'
+                           help='If the molecule is asymmetric, set Symmetry '
+                                'group to C1. Note their are multiple '
+                                'possibilities for icosahedral symmetry:\n'
+                                '* I1: No-Crowther 222 (standard in Heymann,'
+                                'Chagoyen  & Belnap, JSB, 151 (2005) 196-207)\n'
+                                '* I2: Crowther 222                          \n'
+                                '* I3: 52-setting (as used in SPIDER?)       \n'
+                                '* I4: A different 52 setting                \n'
                                 'The command *relion_refine --sym D2 '
-                                '--print_symmetry_ops* prints a list of all symmetry '
-                                'operators for symmetry group D2. RELION uses '
-                                'XMIPP\'s libraries for symmetry operations. '
-                                'Therefore, look at the XMIPP Wiki for more details:'
-                                ' http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/'
-                                'WebHome?topic=Symmetry')
+                                '--print_symmetry_ops* prints a list of all '
+                                'symmetry operators for symmetry group D2. '
+                                'RELION uses MIPP\'s libraries for symmetry '
+                                'operations.  Therefore, look at the XMIPP '
+                                'Wiki for more details:\n'
+                                ' http://xmipp.cnb.csic.es/twiki/bin/view/'
+                                'Xmipp/WebHome?topic=Symmetry')
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
@@ -789,7 +782,6 @@ class ProtRelionBase(EMProtocol):
         self._insertFunctionStep('runRelionStep', params)
     
     #--------------------------- STEPS functions -------------------------------
-    
     def convertInputStep(self, particlesId, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
@@ -798,79 +790,80 @@ class ProtRelionBase(EMProtocol):
                 the input particles are changed.
         """
         imgSet = self._getInputParticles()
-        imgStar = self._getFileName('input_star')
-
-        self.info("Converting set from '%s' into '%s'" %
-                  (imgSet.getFileName(), imgStar))
-
-        # Pass stack file as None to avoid write the images files
-        # If copyAlignmet is set to False pass alignType to ALIGN_NONE
-        if copyAlignment:
-            alignType = imgSet.getAlignment()
+        if not self.doContinue:
+            imgStar = self._getFileName('input_star')
+    
+            self.info("Converting set from '%s' into '%s'" %
+                      (imgSet.getFileName(), imgStar))
+    
+            # Pass stack file as None to avoid write the images files
+            # If copyAlignmet is set to False pass alignType to ALIGN_NONE
+            if copyAlignment:
+                alignType = imgSet.getAlignment()
+            else:
+                alignType = em.ALIGN_NONE
+    
+            writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
+                                alignType=alignType,
+                                postprocessImageRow=self._postprocessParticleRow)
+            
+            if self.doCtfManualGroups:
+                self._splitInCTFGroups(imgStar)
         else:
-            alignType = em.ALIGN_NONE
-
-        writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
-                            alignType=alignType,
-                            postprocessImageRow=self._postprocessParticleRow)
+            self.info("In continue mode is not necessary convert the input "
+                      "particles")
         
-        if self.doCtfManualGroups:
-            self._splitInCTFGroups(imgStar)
-        
-        if not self.IS_CLASSIFY:
-            if self.realignMovieFrames:
-                movieParticleSet = self.inputMovieParticles.get()
-                movieFn = self._getFileName('movie_particles')
-                self.info("Converting set from '%s' into '%s'" %
-                          (movieParticleSet.getFileName(), movieFn))
-                
-                auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
-                auxMovieParticles.copyInfo(movieParticleSet)
-                # Discard the movie particles that are not present in the
-                # refinement set
-                for movieParticle in movieParticleSet:
-                    particle = imgSet[movieParticle.getParticleId()]
-                    if particle is not None:
-                        auxMovieParticles.append(movieParticle)
-                writeSetOfParticles(auxMovieParticles,
-                                    movieFn, None, originalSet=imgSet,
-                                    postprocessImageRow=self._postprocessImageRow)
-                mdMovies = md.MetaData(movieFn)
-                continueRun = self.continueRun.get()
-                continueIter = self._getContinueIter()
-                mdParts = md.MetaData(continueRun._getFileName('data', iter = continueIter))
+        # if self.realignMovieFrames, self.IS_CLASSIFY must be False.
+        if getattr(self, 'realignMovieFrames', False):
+            movieParticleSet = self.inputMovieParticles.get()
+            movieFn = self._getFileName('movie_particles')
+            self.info("Converting set from '%s' into '%s'" %
+                      (movieParticleSet.getFileName(), movieFn))
+            
+            auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
+            auxMovieParticles.copyInfo(movieParticleSet)
+            
+            # Discard movie particles that are not present in the
+            # refinement set
+            for movieParticle in movieParticleSet:
+                particle = imgSet[movieParticle.getParticleId()]
+                if particle is not None:
+                    auxMovieParticles.append(movieParticle)
+            
+            writeSetOfParticles(auxMovieParticles, movieFn, None,
+                                fillMagnification=True,
+                                postprocessImageRow=self._postprocessImageRow)
+            mdMovies = md.MetaData(movieFn)
+            continueRun = self.continueRun.get()
+            continueIter = self._getContinueIter()
+            mdParts = md.MetaData(continueRun._getFileName('data',
+                                                           iter = continueIter))
+            mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
+            mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
+            
+            # set priors equal to orig. values
+            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR,
+                               md.RLN_ORIENT_ORIGIN_X)
+            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR,
+                               md.RLN_ORIENT_ORIGIN_Y)
+            mdParts.copyColumn(md.RLN_ORIENT_PSI_PRIOR,
+                               md.RLN_ORIENT_PSI)
+            mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR,
+                               md.RLN_ORIENT_ROT)
+            mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR,
+                               md.RLN_ORIENT_TILT)
+            
+            mdAux = md.MetaData()
+            mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
+                        md.RLN_IMAGE_ID, md.INNER_JOIN)
+            mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES,
+                               self._getNumberOfFrames())
+            if isVersion2():
+                # FIXME: set to 1 till frame averaging is implemented in xmipp
+                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
 
-                if getVersion() == V1_3:
-                    mdParts.renameColumn(md.RLN_IMAGE_NAME,
-                                         md.RLN_PARTICLE_NAME)
-                else:
-                    mdParts.renameColumn(md.RLN_IMAGE_NAME,
-                                         md.RLN_PARTICLE_ORI_NAME)
-                mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
-                
-                mag = movieParticleSet.getAcquisition().getMagnification()
-                movieSamplingRate = movieParticleSet.getSamplingRate()
-                detectorPxSize = mag * movieSamplingRate / 10000
-                
-                mdAux = md.MetaData()
-                mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE,
-                                      detectorPxSize)
-                mdMovies.fillConstant(md.RLN_CTF_MAGNIFICATION, mag)
-                mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
-                            md.RLN_IMAGE_ID, md.INNER_JOIN)
-                # set priors equal to orig. values
-                mdAux.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR, md.RLN_ORIENT_ORIGIN_X)
-                mdAux.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR, md.RLN_ORIENT_ORIGIN_Y)
-                mdAux.copyColumn(md.RLN_ORIENT_PSI_PRIOR, md.RLN_ORIENT_PSI)
-                mdAux.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
-                mdAux.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
-                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES, self._getNumberOfFrames())
-                if isVersion2():
-                    # FIXME: set to 1 till frame averaging is implemented in xmipp
-                    mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
-
-                mdAux.write(movieFn, md.MD_OVERWRITE)
-                cleanPath(auxMovieParticles.getFileName())
+            mdAux.write(movieFn, md.MD_OVERWRITE)
+            cleanPath(auxMovieParticles.getFileName())
     
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
@@ -881,14 +874,9 @@ class ProtRelionBase(EMProtocol):
         pass  # should be implemented in subclasses
     
     #--------------------------- INFO functions --------------------------------
-
     def _validate(self):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
-        if getVersion() == V1_3 and not self.doContinue and self.copyAlignment:
-            errors.append('In RELION v1.3 a new refinement always starts '
-                          'from global search. You cannot consider previous'
-                          'alignment unless you run in Continue mode.')
 
         if self.doContinue:
             continueProtocol = self.continueRun.get()
