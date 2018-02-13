@@ -43,7 +43,7 @@ class StepExecutor():
     """ Run a list of Protocol steps. """
     def __init__(self, hostConfig, **kwargs):
         self.hostConfig = hostConfig
-        self.gpuList = kwargs.get('gpuList', None)
+        self.gpuList = kwargs.get(cts.GPU_LIST, None)
 
     def getGpuList(self):
         """ Return the GPU list assigned to current thread. """
@@ -177,8 +177,9 @@ class ThreadStepExecutor(StepExecutor):
             pwutils.prettyDict(self.gpuDict)
 
     def getGpuList(self):
-        """ Return the GPU list assigned to current thread. """
-        return self.gpuDict[threading.currentThread().thId]
+        """ Return the GPU list assigned to current thread
+        or empty list if not using GPUs. """
+        return self.gpuDict.get(threading.currentThread().thId, [])
         
     def runSteps(self, steps, 
                  stepStartedCallback, 
