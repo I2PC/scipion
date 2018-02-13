@@ -187,7 +187,12 @@ class ProtAlignMovies(ProtProcessMovies):
 
             for movie in newDone:
                 newMovie = self._createOutputMovie(movie)
-                movieSet.append(newMovie)
+                if newMovie.getAlignment().getShifts()[0]:
+                    movieSet.append(newMovie)
+                else:
+                    print(yellowStr("WARNING: Movie %s has empty alignment data, can't add it to "
+                                    "output set." % movie.getFileName()))
+
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
 

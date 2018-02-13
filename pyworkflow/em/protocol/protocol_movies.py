@@ -305,13 +305,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
             self._processMovie(movie)
 
-            if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
-                self.info('Clean movie data DISABLED. '
-                          'Movie folder will remain in disk!!!')
-            else:
-                self.info("Erasing.....movieFolder: %s" % movieFolder)
-                os.system('rm -rf %s' % movieFolder)
-                # cleanPath(movieFolder)
+            if self._doMovieFolderCleanUp():
+                self._cleanMovieFolder()
 
         # Mark this movie as finished
         open(movieDoneFn, 'w').close()
@@ -402,6 +397,23 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
+
+    def _doMovieFolderCleanUp(self):
+        """ This functions allows subclasses to change the default behaviour
+        of cleanup the movie folders after the _processMovie function.
+        In some cases it makes sense that the protocol subclass take cares
+        of when to do the clean up.
+        """
+        return True
+
+    def _cleanMovieFolder(self, movieFolder):
+        if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+            self.info('Clean movie data DISABLED. '
+                      'Movie folder will remain in disk!!!')
+        else:
+            self.info("Erasing.....movieFolder: %s" % movieFolder)
+            os.system('rm -rf %s' % movieFolder)
+            # cleanPath(movieFolder)
 
 
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):

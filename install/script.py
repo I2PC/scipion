@@ -390,6 +390,10 @@ env.addPackage('ctffind4', version='4.1.5',
 env.addPackage('ctffind4', version='4.1.8',
                tar='ctffind_V4.1.8.tgz')
 
+env.addPackage('ctffind4', version='4.1.10',
+               tar='ctffind4-4.1.10.tgz')
+
+
 env.addPackage('summovie', version='1.0.2',
                tar='summovie_1.0.2.tgz')
 
@@ -476,6 +480,9 @@ env.addPackage('motioncor2', version='1.0.2',
 
 env.addPackage('motioncor2', version='1.0.4',
                tar='motioncor2-1.0.4.tgz')
+
+env.addPackage('motioncor2', version='1.0.5',
+               tar='motioncor2-1.0.5.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')

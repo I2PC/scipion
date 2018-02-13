@@ -516,6 +516,9 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                 errors.append('Particle diameter (%d) can not be greater than '
                               'size (%d)' % (self.particleDiameter,
                                              self.getInputDimA()))
+            if self.getInputReferences().isOddX():
+                errors.append("Relion only works with even values for the "
+                              "average dimensions!")
         else:
             if self.particleDiameter <= 0:
                 errors.append('When using Gaussian blobs, you need to specify '
