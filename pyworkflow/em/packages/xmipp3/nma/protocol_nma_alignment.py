@@ -197,6 +197,17 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         self.runJob("xmipp_nma_alignment", args % locals())
         
         cleanPath(self._getPath('nmaTodo.xmd'))
+
+        inputSet = self.inputParticles.get()
+        mdImgs = md.MetaData(self.imgsFn)
+        for objId in mdImgs:
+            imgPath = mdImgs.getValue(md.MDL_IMAGE, objId)
+            index, fn = xmippToLocation(imgPath)
+            # Conside the index is the id in the input set
+            particle = inputSet[index]
+            mdImgs.setValue(md.MDL_IMAGE, getImageLocation(particle), objId)
+            mdImgs.setValue(md.MDL_ITEM_ID, long(particle.getObjId()), objId)
+        mdImgs.write(self.imgsFn)
     
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
