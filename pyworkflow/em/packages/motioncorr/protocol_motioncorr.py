@@ -431,6 +431,9 @@ class ProtMotionCorr(ProtAlignMovies):
             if inputMovies.getGain():
                 args += ' -Gain "%s" ' % inputMovies.getGain()
 
+            if inputMovies.getDark():
+                args += ' -Dark "%s"' % inputMovies.getDark()
+
             args += ' -Gpu %(GPU)s'
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
@@ -454,7 +457,7 @@ class ProtMotionCorr(ProtAlignMovies):
                     fakeShiftsFn = self.writeZeroShifts(movie)
                     self.averageMovie(movie, fakeShiftsFn, aveMicFn,
                                       binFactor=self.binFactor.get(),
-                                      roi=roi, dark=None,
+                                      roi=roi, dark=inputMovies.getDark(),
                                       gain=inputMovies.getGain())
 
                     self.computePSDs(movie, aveMicFn, outMicFn,
