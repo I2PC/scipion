@@ -255,8 +255,8 @@ class ProtCreateStreamData(EMProtocol):
     def createParticlesStep(self):
         self.name = "particle"
         for idx, p in enumerate(self.inputParticles.get()):
-            if ((idx > self.counter) and (idx <= self.nDim.get()) and
-                    (idx <= self.counter + self.groups.get())):
+            if ((idx > self.counter-1) and (idx <= self.nDim.get()) and
+                    (idx <= self.counter-1 + self.groups.get())):
                 ProtCreateStreamData.object = \
                     ImageHandler().read(p.getLocation())
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
