@@ -360,6 +360,8 @@ class XmippProtReconstructSwarm(ProtRefine3D):
                 self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get())
                 args="-i %s --mask circular %f"%(fnVol,-R)
                 self.runJob("xmipp_transform_mask",args,numberOfMpi=1)
+                args="-i %s --select below 0 --substitute value 0"%fnVol
+                self.runJob("xmipp_transform_threshold",args,numberOfMpi=1)
 
             # Clean
             cleanPath(fnTrain)
