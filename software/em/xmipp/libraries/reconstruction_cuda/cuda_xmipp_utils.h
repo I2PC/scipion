@@ -14,12 +14,12 @@ void gpuMalloc(void** d_data, int Nbytes);
 void gpuFree(void* d_data);
 void cpuMalloc(void** h_data, int Nbytes);
 void cpuFree(void* h_data);
-void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, int Nbytes, myStreamHandle &myStream);
 void initializeIdentity(float* d_data, float *h_data, int Ndim, myStreamHandle &myStream);
 void setTranslationMatrix(float* d_data, float* posX, float* posY, int Ndim, myStreamHandle &myStream);
 void setRotationMatrix(float* d_data, float *ang, int Ndim, myStreamHandle &myStream);
-void gpuCopyFromCPUToGPU(void* data, void* d_data, int Nbytes, myStreamHandle &myStream);
-void gpuCopyFromGPUToCPU(void* d_data, void* data, int Nbytes, myStreamHandle &myStream);
+void gpuCopyFromGPUToGPUStream(void* d_dataFrom, void* d_dataTo, int Nbytes, myStreamHandle &myStream);
+void gpuCopyFromCPUToGPUStream(void* data, void* d_data, int Nbytes, myStreamHandle &myStream);
+void gpuCopyFromGPUToCPUStream(void* d_data, void* data, int Nbytes, myStreamHandle &myStream);
 int gridFromBlock(int tasks, int Nthreads);
 
 
@@ -208,17 +208,17 @@ public:
 		if (lastMatrix.isEmpty())
 			lastMatrix.resize(myStream, Ndim, 3, 3, 1);
 
-		gpuCopyFromGPUToGPU(d_data, lastMatrix.d_data, nzyxdim*sizeof(float), myStream);
+		gpuCopyFromGPUToGPUStream(d_data, lastMatrix.d_data, nzyxdim*sizeof(float), myStream);
 	}
 
 	void copyMatrixToCpu(myStreamHandle &myStream)
 	{
-		gpuCopyFromGPUToCPU(d_data, h_data, nzyxdim*sizeof(float), myStream);
+		gpuCopyFromGPUToCPUStream(d_data, h_data, nzyxdim*sizeof(float), myStream);
 	}
 
 	void copyOneMatrixToCpu(float* &matrixCpu, int idxCpu, int idxGpu, myStreamHandle &myStream)
 	{
-		gpuCopyFromGPUToCPU(&d_data[9*idxGpu], &matrixCpu[9*idxCpu], 9*sizeof(float), myStream);
+		gpuCopyFromGPUToCPUStream(&d_data[9*idxGpu], &matrixCpu[9*idxCpu], 9*sizeof(float), myStream);
 	}
 
 
@@ -245,6 +245,12 @@ public:
 		resize(_Xdim, _Ydim, _Zdim, _Ndim);
     }
 
+	GpuMultidimArrayAtGpu(size_t _Xdim, size_t _Ydim, size_t _Zdim, size_t _Ndim, T* deviceData)
+	{
+		setDims(_Xdim, _Ydim, _Zdim, _Ndim);
+		d_data = deviceData;
+	}
+
 	template<typename T1>
 	void resize(const GpuMultidimArrayAtGpu<T1>& array)
 	{
@@ -263,13 +269,7 @@ public:
 
 		clear();
 
-		Xdim=_Xdim;
-		Ydim=_Ydim;
-		Zdim=_Zdim;
-		Ndim=_Ndim;
-        yxdim=(size_t)_Ydim*_Xdim;
-        zyxdim=yxdim*_Zdim;
-        nzyxdim=zyxdim*_Ndim;
+		setDims(_Xdim, _Ydim, _Zdim, _Ndim);
         gpuMalloc((void**) &d_data,nzyxdim*sizeof(T));
 
     }
@@ -294,22 +294,22 @@ public:
 		clear();
 	}
 
-	void copyToGpu(T* data, myStreamHandle &myStream)
+	void copyToGpuStream(T* data, myStreamHandle &myStream)
 	{
-		gpuCopyFromCPUToGPU((void *)data, (void *)d_data, nzyxdim*sizeof(T), myStream);
+		gpuCopyFromCPUToGPUStream((void *)data, (void *)d_data, nzyxdim*sizeof(T), myStream);
 	}
 
-	void fillImageToGpu(T* data, myStreamHandle &myStream, int n=0)
+	void fillImageToGpuStream(T* data, myStreamHandle &myStream, int n=0)
 	{
-		gpuCopyFromCPUToGPU((void *)data, (void *)&d_data[n*zyxdim], zyxdim*sizeof(T), myStream);
+		gpuCopyFromCPUToGPUStream((void *)data, (void *)&d_data[n*zyxdim], zyxdim*sizeof(T), myStream);
 	}
 
-	void copyGpuToGpu(GpuMultidimArrayAtGpu<T> &gpuArray, myStreamHandle &myStream)
+	void copyGpuToGpuStream(GpuMultidimArrayAtGpu<T> &gpuArray, myStreamHandle &myStream)
 	{
 		if (gpuArray.isEmpty())
 			gpuArray.resize(Xdim,Ydim,Zdim,Ndim);
 
-		gpuCopyFromGPUToGPU(d_data, gpuArray.d_data, nzyxdim*sizeof(T), myStream);
+		gpuCopyFromGPUToGPUStream(d_data, gpuArray.d_data, nzyxdim*sizeof(T), myStream);
 	}
 
 	void calculateGridSize(const XmippDim3 &blockSize, XmippDim3 &gridSize) const
@@ -327,15 +327,26 @@ public:
 	}
 
 	template <typename T1>
-	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle, myStreamHandle &myStream,
+	void fftStream(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle, myStreamHandle &myStream,
 			bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &dataRef);
 
 	// RealSpace must already be resized
 	template <typename T1>
-	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle, myStreamHandle &myStream,
+	void ifftStream(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle, myStreamHandle &myStream,
 			bool useCallback, GpuMultidimArrayAtGpu< std::complex<float> > &dataExp);
 
 	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
+
+private:
+	void setDims(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1) {
+		Xdim=_Xdim;
+		Ydim=_Ydim;
+		Zdim=_Zdim;
+		Ndim=_Ndim;
+		yxdim=(size_t)_Ydim*_Xdim;
+		zyxdim=yxdim*_Zdim;
+		nzyxdim=zyxdim*_Ndim;
+	}
 
 };
 

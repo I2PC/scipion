@@ -24,6 +24,7 @@ void mycufftDestroy(void *ptr)
 {
 	cufftHandle *planPtr = (cufftHandle *)ptr;
 	cufftDestroy(*planPtr);
+	delete planPtr;
 }
 
 void myStreamDestroy(void *ptr)
@@ -42,7 +43,7 @@ void myStreamCreate(myStreamHandle &myStream)
 }
 
 
-void createPlanFFT(int Xdim, int Ydim, int Ndim, int Zdim,
+void createPlanFFTStream(int Xdim, int Ydim, int Ndim, int Zdim,
 		bool forward, cufftHandle *plan, myStreamHandle &myStream){
 
 	int Xfdim=(Xdim/2)+1;
@@ -174,7 +175,7 @@ void setRotationMatrix(float* d_data, float* ang, int Ndim, myStreamHandle &mySt
 	delete []rad_vector;
 }
 
-void gpuCopyFromCPUToGPU(void* data, void* d_data, int Nbytes, myStreamHandle &myStream)
+void gpuCopyFromCPUToGPUStream(void* data, void* d_data, int Nbytes, myStreamHandle &myStream)
 {
 	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 	gpuErrchk(cudaMemcpyAsync(d_data, data, Nbytes, cudaMemcpyHostToDevice, *stream));
@@ -182,7 +183,7 @@ void gpuCopyFromCPUToGPU(void* data, void* d_data, int Nbytes, myStreamHandle &m
 	//gpuErrchk(cudaStreamSynchronize(*stream));
 }
 
-void gpuCopyFromGPUToCPU(void* d_data, void* data, int Nbytes, myStreamHandle &myStream)
+void gpuCopyFromGPUToCPUStream(void* d_data, void* data, int Nbytes, myStreamHandle &myStream)
 {
 	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 	gpuErrchk(cudaMemcpyAsync(data, d_data, Nbytes, cudaMemcpyDeviceToHost, *stream));
@@ -191,7 +192,7 @@ void gpuCopyFromGPUToCPU(void* d_data, void* data, int Nbytes, myStreamHandle &m
 	//cudaDeviceSynchronize();
 }
 
-void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, int Nbytes, myStreamHandle &myStream)
+void gpuCopyFromGPUToGPUStream(void* d_dataFrom, void* d_dataTo, int Nbytes, myStreamHandle &myStream)
 {
 	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 	gpuErrchk(cudaMemcpyAsync(d_dataTo, d_dataFrom, Nbytes, cudaMemcpyDeviceToDevice, *stream));
@@ -281,7 +282,7 @@ __device__ cufftCallbackStoreC d_pointwiseMultiplicationComplexKernelStore = CB_
 
 template<>
 template<>
-void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float> > &fourierTransform,
+void GpuMultidimArrayAtGpu<float>::fftStream(GpuMultidimArrayAtGpu< std::complex<float> > &fourierTransform,
 		mycufftHandle &myhandle, myStreamHandle &myStream, bool useCallback,
 		GpuMultidimArrayAtGpu< std::complex<float> > &dataMask)
 {
@@ -310,18 +311,18 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 		GpuMultidimArrayAtGpu<cufftComplex> auxOutFFT;
 		if(NdimNew!=Ndim){
 			auxInFFT.resize(Xdim,Ydim,Zdim,NdimNew);
-			gpuCopyFromGPUToGPU((cufftReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftReal), myStream);
+			gpuCopyFromGPUToGPUStream((cufftReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftReal), myStream);
 			auxOutFFT.resize(Xfdim,Ydim,Zdim,NdimNew);
 		}
 
 		cufftHandle *planFptr = new cufftHandle;
 		cufftHandle *planAuxFptr = new cufftHandle;
 		if(auxNdim!=NdimNew){
-			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr, myStream);
+			createPlanFFTStream(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr, myStream);
 		}else{
 			if(myhandle.ptr == NULL){
 				//printf("Creating plan FFT\n");
-				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr, myStream);
+				createPlanFFTStream(Xdim, Ydim, NdimNew, Zdim, true, planFptr, myStream);
 				myhandle.ptr = (void *)planFptr;
 				planFptr=(cufftHandle *)myhandle.ptr;
 			}else{
@@ -375,7 +376,7 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 
 
 		if(NdimNew!=Ndim){
-			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftComplex), myStream);
+			gpuCopyFromGPUToGPUStream(auxOutFFT.d_data, (cufftComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftComplex), myStream);
 			auxOutFFT.clear();
 			auxInFFT.clear();
 		}
@@ -400,7 +401,7 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 
 template<>
 template<>
-void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<float> &realSpace,
+void GpuMultidimArrayAtGpu< std::complex<float> >::ifftStream(GpuMultidimArrayAtGpu<float> &realSpace,
 		mycufftHandle &myhandle, myStreamHandle &myStream, bool useCallback,
 		GpuMultidimArrayAtGpu< std::complex<float> > &dataMask)
 {
@@ -428,18 +429,18 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 		GpuMultidimArrayAtGpu<cufftReal> auxOutFFT;
 		if(NdimNew!=Ndim){
 			auxInFFT.resize(Xfdim,realSpace.Ydim,realSpace.Zdim,NdimNew);
-			gpuCopyFromGPUToGPU((cufftComplex*)&d_data[positionFFT], auxInFFT.d_data, Xfdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftComplex), myStream);
+			gpuCopyFromGPUToGPUStream((cufftComplex*)&d_data[positionFFT], auxInFFT.d_data, Xfdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftComplex), myStream);
 			auxOutFFT.resize(realSpace.Xdim,realSpace.Ydim,realSpace.Zdim, NdimNew);
 		}
 
 		cufftHandle *planBptr = new cufftHandle;
 		cufftHandle *planAuxBptr = new cufftHandle;
 		if(auxNdim!=NdimNew){
-			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, false, planAuxBptr, myStream);
+			createPlanFFTStream(Xdim, Ydim, NdimNew, Zdim, false, planAuxBptr, myStream);
 		}else{
 			if(myhandle.ptr == NULL){
 				//printf("Creating plan IFFT\n");
-				createPlanFFT(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr, myStream);
+				createPlanFFTStream(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr, myStream);
 				myhandle.ptr = (void *)planBptr;
 				planBptr=(cufftHandle *)myhandle.ptr;
 			}else{
@@ -492,7 +493,7 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 		gpuErrchk(cudaStreamSynchronize(*stream));
 
 		if(NdimNew!=Ndim){
-			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftReal*)&realSpace.d_data[positionReal], realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftReal), myStream);
+			gpuCopyFromGPUToGPUStream(auxOutFFT.d_data, (cufftReal*)&realSpace.d_data[positionReal], realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftReal), myStream);
 			auxOutFFT.clear();
 			auxInFFT.clear();
 		}

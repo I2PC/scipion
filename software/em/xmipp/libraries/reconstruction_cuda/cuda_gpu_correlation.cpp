@@ -1309,12 +1309,12 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 
 	GpuMultidimArrayAtGpu< std::complex<float> > dull;
 
-	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream, false, dull);
-	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream, false, dull);
+	myStructureAux.MF.ifftStream(MFrealSpace, myhandlePaddedB, myStream, false, dull);
+	myStructureAux.MF2.ifftStream(MF2realSpace, myhandlePaddedB, myStream, false, dull);
 
 	//pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux, myStream);
 	maskAutocorrelation.resize(Xdim, Ydim);
-	maskAux.ifft(maskAutocorrelation, myhandleMaskB, myStream, false, dull);
+	maskAux.ifftStream(maskAutocorrelation, myhandleMaskB, myStream, false, dull);
 	maskAux.clear();
 
 }
@@ -1340,10 +1340,10 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 
-	myStructureAux.MF.ifft(MFrealSpace, myhandlePaddedB, myStream, false, dull);
-	myStructureAux.MF2.ifft(MF2realSpace, myhandlePaddedB, myStream, false, dull);
+	myStructureAux.MF.ifftStream(MFrealSpace, myhandlePaddedB, myStream, false, dull);
+	myStructureAux.MF2.ifftStream(MF2realSpace, myhandlePaddedB, myStream, false, dull);
 
-	maskAutocorr.copyGpuToGpu(maskAutocorrelation, myStream);
+	maskAutocorr.copyGpuToGpuStream(maskAutocorrelation, myStream);
 
 }
 
@@ -1366,10 +1366,10 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 
-	d_projFFT.ifft(MFrealSpace, ifftcb, myStream, true, d_maskFFT);
-	d_projSquaredFFT.ifft(MF2realSpace, ifftcb, myStream, true, d_maskFFT);
+	d_projFFT.ifftStream(MFrealSpace, ifftcb, myStream, true, d_maskFFT);
+	d_projSquaredFFT.ifftStream(MF2realSpace, ifftcb, myStream, true, d_maskFFT);
 
-	maskAutocorr.copyGpuToGpu(maskAutocorrelation, myStream);
+	maskAutocorr.copyGpuToGpuStream(maskAutocorrelation, myStream);
 
 
 }
@@ -1563,7 +1563,7 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
     GpuMultidimArrayAtGpu< std::complex<float> > dull;
     myStructureAux.RefExpRealSpacePolar.resize(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
     		referenceAux.d_projPolarFFT.Ndim);
-    myStructureAux.RefExpFourierPolar.ifft(myStructureAux.RefExpRealSpacePolar, myhandlePadded, myStream, false, dull);
+    myStructureAux.RefExpFourierPolar.ifftStream(myStructureAux.RefExpRealSpacePolar, myhandlePadded, myStream, false, dull);
 
     XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
     myStructureAux.RefExpRealSpacePolar.calculateGridSizeVectorized(blockSize2, gridSize2);
@@ -1678,7 +1678,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
     		referenceAux.d_projFFT.Ndim);
 
     GpuMultidimArrayAtGpu< std::complex<float> > dull;
-    myStructureAux.RefExpFourier.ifft(myStructureAux.RefExpRealSpace, myhandlePadded, myStream, false, dull);
+    myStructureAux.RefExpFourier.ifftStream(myStructureAux.RefExpRealSpace, myhandlePadded, myStream, false, dull);
 
 
  	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
@@ -1840,9 +1840,9 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
 
 
     GpuMultidimArrayAtGpu< std::complex<float> > dull;
-    myStructureAuxTR.RefExpFourier.ifft(myStructureAuxTR.RefExpRealSpace, myhandlePaddedTR, myStreamTR, false, dull);
+    myStructureAuxTR.RefExpFourier.ifftStream(myStructureAuxTR.RefExpRealSpace, myhandlePaddedTR, myStreamTR, false, dull);
 
-    myStructureAuxRT.RefExpFourierPolar.ifft(myStructureAuxRT.RefExpRealSpacePolar, myhandlePaddedRT, myStreamRT, false, dull);
+    myStructureAuxRT.RefExpFourierPolar.ifftStream(myStructureAuxRT.RefExpRealSpacePolar, myhandlePaddedRT, myStreamRT, false, dull);
     //referenceAux.d_projPolarFFT.ifft(myStructureAuxRT.RefExpRealSpacePolar, ifftcb, myStreamRT, true, experimentalAuxRT.d_projPolarFFT);
 
 

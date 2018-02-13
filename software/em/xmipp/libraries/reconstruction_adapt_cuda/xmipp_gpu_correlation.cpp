@@ -132,7 +132,7 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 	float *mask_aux;
 	cpuMalloc((void**)&mask_aux, sizeof(float)*Xdim*Ydim*Zdim);
 	memcpy(mask_aux, MULTIDIM_ARRAY(dMask), sizeof(float)*Xdim*Ydim*Zdim);
-	d_correlationAux.d_mask.copyToGpu(mask_aux, myStream);
+	d_correlationAux.d_mask.copyToGpuStream(mask_aux, myStream);
 
 	padding_masking(image_stack_gpu, d_correlationAux.d_mask, myStructureAux.padded_image_gpu, myStructureAux.padded_image2_gpu,
 			myStructureAux.padded_mask_gpu, false, myStream);
@@ -147,14 +147,14 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 
 	GpuMultidimArrayAtGpu< std::complex<float> > dull;
 
-    myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded, myStream, false, dull);
+    myStructureAux.padded_image_gpu.fftStream(d_correlationAux.d_projFFT, myhandlePadded, myStream, false, dull);
 
     //gettimeofday(&end, NULL);
     //double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
     //printf("Padded FFT time ref %lf \n", elapsed);
 
-    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream, false, dull);
-    myStructureAux.padded_mask_gpu.fft(d_correlationAux.d_maskFFT, myhandleMask, myStream, false, dull);
+    myStructureAux.padded_image2_gpu.fftStream(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream, false, dull);
+    myStructureAux.padded_mask_gpu.fftStream(d_correlationAux.d_maskFFT, myhandleMask, myStream, false, dull);
 
 	//Polar transform of the projected images
 	cuda_cart2polar(image_stack_gpu, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, false, myStream);
@@ -165,13 +165,13 @@ void preprocess_images_reference(MetaData &SF, int firstIdx, int numImages, Mask
 
 	//gettimeofday(&begin, NULL);
 
-    myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream, false, dull);
+    myStructureAux.polar_gpu.fftStream(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream, false, dull);
 
     //gettimeofday(&end, NULL);
 	//elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
 	//printf("Polar FFT time %lf \n", elapsed);
 
-    myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream, false, dull);
+    myStructureAux.polar2_gpu.fftStream(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream, false, dull);
 
     /*/AJ to write the image
     FileName myFile;
@@ -239,14 +239,14 @@ void preprocess_images_experimental(MetaData &SF, FileName &fnImg, int numImages
 		//struct timeval begin, end;
 		//gettimeofday(&begin, NULL);
 
-		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded, myStream, false, dull);
+		myStructureAux.padded_image_gpu.fftStream(d_correlationAux.d_projFFT, myhandlePadded, myStream, false, dull);
 
 		//gettimeofday(&end, NULL);
 		//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
 		//printf("Padded FFT time %lf \n", elapsed);
 
-	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream, false, dull);
-		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT, myStream);
+	    myStructureAux.padded_image2_gpu.fftStream(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream, false, dull);
+		d_maskFFT.copyGpuToGpuStream(d_correlationAux.d_maskFFT, myStream);
 
 	    /*/AJ to write the image
 	    FileName myFile;
@@ -268,8 +268,8 @@ void preprocess_images_experimental(MetaData &SF, FileName &fnImg, int numImages
 
 	if(rotation){
 		cuda_cart2polar(d_correlationAux.d_original_image, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, true, myStream);
-	    myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream, false, dull);
-	    myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream, false, dull);
+	    myStructureAux.polar_gpu.fftStream(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream, false, dull);
+	    myStructureAux.polar2_gpu.fftStream(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream, false, dull);
 
 	    //AJ to write the image
 	    //GpuMultidimArrayAtCpu< float > image(d_correlationAux.d_projPolarFFT.Xdim,d_correlationAux.d_projPolarFFT.Ydim,1,d_correlationAux.d_projPolarFFT.Ndim);
@@ -357,15 +357,15 @@ void preprocess_images_experimental_two(MetaData &SF, FileName &fnImg, int numIm
 	    //printf("Justo antes\n");
 	    //fflush(stdout);
 	    //myStructureAuxTR.padded_image_gpu.fft(d_correlationAuxTR.d_projFFT, ifftcb, myStreamTR, true, d_maskFFT);
-		myStructureAuxTR.padded_image_gpu.fft(d_correlationAuxTR.d_projFFT, myhandlePaddedTR, myStreamTR, false, dull);
+		myStructureAuxTR.padded_image_gpu.fftStream(d_correlationAuxTR.d_projFFT, myhandlePaddedTR, myStreamTR, false, dull);
 	    //printf("Justo despues\n");
 	    //fflush(stdout);
 
-		myStructureAuxTR.padded_image2_gpu.fft(d_correlationAuxTR.d_projSquaredFFT, myhandlePaddedTR, myStreamTR, false, dull);
-		d_maskFFT.copyGpuToGpu(d_correlationAuxTR.d_maskFFT, myStreamTR);
+		myStructureAuxTR.padded_image2_gpu.fftStream(d_correlationAuxTR.d_projSquaredFFT, myhandlePaddedTR, myStreamTR, false, dull);
+		d_maskFFT.copyGpuToGpuStream(d_correlationAuxTR.d_maskFFT, myStreamTR);
 
-	    myStructureAuxRT.polar_gpu.fft(d_correlationAuxRT.d_projPolarFFT, myhandlePolarRT, myStreamRT, false, dull);
-	    myStructureAuxRT.polar2_gpu.fft(d_correlationAuxRT.d_projPolarSquaredFFT, myhandlePolarRT, myStreamRT, false, dull);
+	    myStructureAuxRT.polar_gpu.fftStream(d_correlationAuxRT.d_projPolarFFT, myhandlePolarRT, myStreamRT, false, dull);
+	    myStructureAuxRT.polar2_gpu.fftStream(d_correlationAuxRT.d_projPolarSquaredFFT, myhandlePolarRT, myStreamRT, false, dull);
 
 	    /*
 	    printf("Polar\n");
@@ -449,12 +449,12 @@ void preprocess_images_experimental_transform_two(MetaData &SF, FileName &fnImg,
 	cuda_cart2polar(d_correlationAuxTwo.d_transform_image, myStructureAuxTwo.polar_gpu, myStructureAuxTwo.polar2_gpu, true, myStreamTwo);
 
 	GpuMultidimArrayAtGpu< std::complex<float> > dull;
-	myStructureAuxOne.padded_image_gpu.fft(d_correlationAuxOne.d_projFFT, myhandlePaddedOne, myStreamOne, false, dull);
-	myStructureAuxOne.padded_image2_gpu.fft(d_correlationAuxOne.d_projSquaredFFT, myhandlePaddedOne, myStreamOne, false, dull);
-	d_maskFFT.copyGpuToGpu(d_correlationAuxOne.d_maskFFT, myStreamOne);
+	myStructureAuxOne.padded_image_gpu.fftStream(d_correlationAuxOne.d_projFFT, myhandlePaddedOne, myStreamOne, false, dull);
+	myStructureAuxOne.padded_image2_gpu.fftStream(d_correlationAuxOne.d_projSquaredFFT, myhandlePaddedOne, myStreamOne, false, dull);
+	d_maskFFT.copyGpuToGpuStream(d_correlationAuxOne.d_maskFFT, myStreamOne);
 
-	myStructureAuxTwo.polar_gpu.fft(d_correlationAuxTwo.d_projPolarFFT, myhandlePolarTwo, myStreamTwo, false, dull);
-	myStructureAuxTwo.polar2_gpu.fft(d_correlationAuxTwo.d_projPolarSquaredFFT, myhandlePolarTwo, myStreamTwo, false, dull);
+	myStructureAuxTwo.polar_gpu.fftStream(d_correlationAuxTwo.d_projPolarFFT, myhandlePolarTwo, myStreamTwo, false, dull);
+	myStructureAuxTwo.polar2_gpu.fftStream(d_correlationAuxTwo.d_projPolarSquaredFFT, myhandlePolarTwo, myStreamTwo, false, dull);
 
 
 	/*
@@ -540,14 +540,14 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 		//struct timeval begin, end;
 		//gettimeofday(&begin, NULL);
 
-		myStructureAux.padded_image_gpu.fft(d_correlationAux.d_projFFT, myhandlePadded, myStream, false, dull);
+		myStructureAux.padded_image_gpu.fftStream(d_correlationAux.d_projFFT, myhandlePadded, myStream, false, dull);
 
 		//gettimeofday(&end, NULL);
 		//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
 		//printf("Padded FFT time %lf \n", elapsed);
 
-	    myStructureAux.padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream, false, dull);
-		d_maskFFT.copyGpuToGpu(d_correlationAux.d_maskFFT, myStream);
+	    myStructureAux.padded_image2_gpu.fftStream(d_correlationAux.d_projSquaredFFT, myhandlePadded, myStream, false, dull);
+		d_maskFFT.copyGpuToGpuStream(d_correlationAux.d_maskFFT, myStream);
 
 	    /*/AJ to write the image
 	    FileName myFile;
@@ -569,8 +569,8 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 	//Polar transform of the projected images
 	if(rotation){
 		cuda_cart2polar(d_correlationAux.d_transform_image, myStructureAux.polar_gpu, myStructureAux.polar2_gpu, true, myStream);
-		myStructureAux.polar_gpu.fft(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream, false, dull);
-		myStructureAux.polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream, false, dull);
+		myStructureAux.polar_gpu.fftStream(d_correlationAux.d_projPolarFFT, myhandlePolar, myStream, false, dull);
+		myStructureAux.polar2_gpu.fftStream(d_correlationAux.d_projPolarSquaredFFT, myhandlePolar, myStream, false, dull);
 
 	    /*/AJ to write the image
 	    FileName myFile;

@@ -90,12 +90,12 @@ public:
 			gpuArray.resize(Xdim,Ydim,Zdim,Ndim);
 		}
 
-		gpuCopyFromCPUToGPU(data, gpuArray.d_data, nzyxdim*sizeof(T), myStream);
+		gpuCopyFromCPUToGPUStream(data, gpuArray.d_data, nzyxdim*sizeof(T), myStream);
 	}
 
 	void copyFromGpu(GpuMultidimArrayAtGpu<T> &gpuArray, myStreamHandle myStream)
 	{
-		gpuCopyFromGPUToCPU(gpuArray.d_data, data, nzyxdim*sizeof(T), myStream);
+		gpuCopyFromGPUToCPUStream(gpuArray.d_data, data, nzyxdim*sizeof(T), myStream);
 
 	}
 
@@ -106,7 +106,7 @@ public:
 
 		int index = 0;
 		for(int i=0; i<numCopy; i++){
-			gpuCopyFromCPUToGPU(data, &gpuArray.d_data[index], nzyxdim*sizeof(T), myStream);
+			gpuCopyFromCPUToGPUStream(data, &gpuArray.d_data[index], nzyxdim*sizeof(T), myStream);
 			index=index+nzyxdim;
 		}
 	}
@@ -139,7 +139,7 @@ public:
 template<class T>
 void fillImage(GpuMultidimArrayAtGpu<T> &to, const MultidimArray<T> &from, myStreamHandle myStream, int n=0)
 {
-	gpuCopyFromCPUToGPU(MULTIDIM_ARRAY(from), to.d_data+n*MULTIDIM_SIZE(from), MULTIDIM_SIZE(from)*sizeof(T), myStream);
+	gpuCopyFromCPUToGPUStream(MULTIDIM_ARRAY(from), to.d_data+n*MULTIDIM_SIZE(from), MULTIDIM_SIZE(from)*sizeof(T), myStream);
 }
 
 //@}
