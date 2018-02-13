@@ -147,7 +147,7 @@ hdf5 = env.addLibrary(
 
 python = env.addLibrary(
     'python',
-    tar='Python-2.7.8.tgz',
+    tar='Python-2.7.14.tgz',
     targets=[env.getLib('python2.7'), env.getBin('python')],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
