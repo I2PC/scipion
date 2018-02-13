@@ -135,7 +135,6 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
                       choices=['dilation', 'erosion', 'closing', 'opening'],
                       label='Operation')
         form.addParam('elementSize', IntParam, default=1, condition="doMorphological",
-                      expertLevel=LEVEL_ADVANCED,
                       label='Structural element size',                      
                       help="The larger this value, the more the effect will be noticed")
         form.addParam('doInvert', BooleanParam, default=False,
