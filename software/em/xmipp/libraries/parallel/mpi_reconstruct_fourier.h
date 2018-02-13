@@ -104,6 +104,3 @@ public:
 
 #endif /* MPI_RECONSTRUCT_FOURIER_H_ */
 
-
-
-

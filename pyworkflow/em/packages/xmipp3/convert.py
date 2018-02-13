@@ -228,6 +228,17 @@ def objectToRow(obj, row, attrDict, extraLabels=[]):
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
+            value = getattr(obj, attr).get()
+            try:
+                row.setValue(label, valueType(value))
+            except Exception as e:
+                print e
+                print "Problems found converting metadata: "
+                print "Label id = %s" % label
+                print "Attribute = %s" % attr
+                print "Value = %s" % value
+                print "Value type = %s" % valueType
+                raise e
             row.setValue(label, valueType(getattr(obj, attr).get()))
             
     attrLabels = attrDict.values()
@@ -820,7 +831,7 @@ def writeMicCoordinates(mic, coordList, outputFn, isManual=True, getPosFunc=None
     f.close()
     
 
-def readSetOfCoordinates(outputDir, micSet, coordSet):
+def readSetOfCoordinates(outputDir, micSet, coordSet, readDiscarded=False):
     """ Read from Xmipp .pos files.
     Params:
         outputDir: the directory where the .pos files are.
@@ -829,6 +840,7 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         micSet: the SetOfMicrographs to associate the .pos, which
             name should be the same of the micrographs.
         coordSet: the SetOfCoordinates that will be populated.
+        readDiscarded: read only the coordinates with the MDL_ENABLE set at -1
     """
     # Read the boxSize from the config.xmd metadata
     configfile = join(outputDir, 'config.xmd')
@@ -839,13 +851,13 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         coordSet.setBoxSize(boxSize)
     for mic in micSet:
         posFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'pos'))
-        readCoordinates(mic, posFile, coordSet, outputDir)
+        readCoordinates(mic, posFile, coordSet, outputDir, readDiscarded)
 
     coordSet._xmippMd = String(outputDir)
 
 
-def readCoordinates(mic, fileName, coordsSet, outputDir):
-        posMd = readPosCoordinates(fileName)
+def readCoordinates(mic, fileName, coordsSet, outputDir, readDiscarded=False):
+        posMd = readPosCoordinates(fileName, readDiscarded)
         # TODO: CHECK IF THIS LABEL IS STILL NECESSARY
         posMd.addLabel(md.MDL_ITEM_ID)
 
@@ -865,22 +877,32 @@ def readCoordinates(mic, fileName, coordsSet, outputDir):
             posMd.setValue(md.MDL_ITEM_ID, long(coord.getObjId()), objId)
 
 
-def readPosCoordinates(posFile):
+def readPosCoordinates(posFile, readDiscarded=False):
     """ Read the coordinates in .pos file and return corresponding metadata.
     There are two possible blocks with particles:
     particles: with manual/supervised particles
     particles_auto: with automatically picked particles.
     If posFile doesn't exist, the metadata will be empty
+    readDiscarded: read only the coordinates in the particles_auto DB
+                   with the MDL_ENABLE set at -1 and a positive cost  
     """
     mData = md.MetaData()
 
     if exists(posFile):
         blocks = md.getBlocksInMetaDataFile(posFile)
 
-        for b in ['particles', 'particles_auto']:
+        blocksToRead = ['particles_auto'] if readDiscarded \
+                        else ['particles','particles_auto']
+
+        for b in blocksToRead:
             if b in blocks:
                 mdAux = md.MetaData('%(b)s@%(posFile)s' % locals())
                 mData.unionAll(mdAux)
+        if readDiscarded:
+            for objId in mData:
+                if mData.getValue(md.MDL_COST, objId)>0:
+                    enabled=mData.getValue(md.MDL_ENABLED, objId)
+                    mData.setValue(md.MDL_ENABLED, -1*enabled, objId)
         mData.removeDisabled()
     return mData
 
