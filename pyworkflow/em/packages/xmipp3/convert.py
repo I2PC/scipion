@@ -228,6 +228,17 @@ def objectToRow(obj, row, attrDict, extraLabels=[]):
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
+            value = getattr(obj, attr).get()
+            try:
+                row.setValue(label, valueType(value))
+            except Exception as e:
+                print e
+                print "Problems found converting metadata: "
+                print "Label id = %s" % label
+                print "Attribute = %s" % attr
+                print "Value = %s" % value
+                print "Value type = %s" % valueType
+                raise e
             row.setValue(label, valueType(getattr(obj, attr).get()))
             
     attrLabels = attrDict.values()
