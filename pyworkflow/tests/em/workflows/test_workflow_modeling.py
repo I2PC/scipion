@@ -34,6 +34,7 @@ from pyworkflow.em.packages.powerfit.protocol_powerfit import \
 from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
     ProtImportVolumes
 from pyworkflow.em.packages.ccp4.protocol_coot import CootRefine
+from pyworkflow.em.packages.ccp4.protocol_refmac import CCP4ProtRunRefmac
 from pyworkflow.tests import *
 import os.path
 
@@ -639,7 +640,7 @@ coot_real_exit(0)
 
     def testCootFlexibleFitFromPDB(self):
         """ This test checks that coot runs with an atomic structure;
-         No PDB was provided and an error mesage is expected"""
+         No Volume was provided and an error message is expected"""
         print "Run Coot fit from imported pdb file without imported or " \
               "pdb-associated volume"
 
@@ -1001,3 +1002,196 @@ coot_real_exit(0)
         self.assertTrue(os.path.exists(protCoot.outputPdb_0002.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
+
+
+class TestRefmacRefinement(TestImportData):
+    """ Test the flexible fitting of refmac refinement protocol
+    """
+
+    def testRefmacFlexibleFitFromPDB(self):
+        """ This test checks that refmac runs with an atomic structure;
+         No Volume was provided and an error message is expected"""
+        print "Run Refmac refinement from imported pdb file without imported " \
+              "or pdb-associated volume"
+
+        # import PDB
+        structure_PDB = self._importStructurePDBWoVol()
+        self.assertTrue(structure_PDB.getFileName())
+        self.assertFalse(structure_PDB.getVolume())
+
+        protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+
+        try:
+            self.launchProtocol(protRefmac)
+        except Exception as e:
+            self.assertTrue(True)
+            print "This test should return a error message as '" \
+                  " ERROR running protocol scipion - coot refinement"
+
+            return
+        self.assertTrue(False)
+
+    def testRefmacFlexibleFitAfterCoot(self):
+        """ This test checks that refmac runs with a volume provided
+        directly as inputVol, the input PDB was fitted to the volume and
+        refined previously by coot
+         """
+        print "Run Refmac refinement from imported volume and pdb file " \
+              "fitted and refined by Coot"
+
+        # Import Volume
+        volume = self._importVolume()
+
+        # import PDB
+        structure_PDB = self._importStructurePDBWoVol()
+
+        # coot
+        listVolCoot = [volume]
+        args = {'extraCommands': self._createExtraCommandLine(-24.11, -45.76,
+                                                              -24.60),
+                'inputVolumes': listVolCoot,
+                'pdbFileToBeRefined': structure_PDB,
+                'doInteractive': False
+                }
+        protCoot = self.newProtocol(CootRefine, **args)
+        self.launchProtocol(protCoot)
+
+        # refmac
+        coot_PDB = protCoot.outputPdb_0001
+        args = {'inputVolume': volume,
+                'inputStructure': coot_PDB
+                }
+
+        protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
+
+    def testRefmacFlexibleFitAfterChimeraAndCoot(self):
+        """ This test checks that refmac runs with a volume provided
+        by Chimera, the input PDB is provided by Coot """
+        print "Run Refmac refinement from volume provided by Chimera " \
+              "and pdb file provided by Coot"
+
+        # Import Volume
+        volume = self._importVolume()
+
+        # import PDB
+        structure_PDB = self._importStructurePDBWoVol()
+
+        # create auxiliary CMD file for chimera fit
+        extraCommands = ""
+        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
+                         "coord #1')\n"
+        extraCommands += "runCommand('fitmap #2 #1')\n"
+        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
+                         "saverefmodel 1')\n"
+        extraCommands += "runCommand('stop')\n"
+
+        args = {'extraCommands': extraCommands,
+                'inputVolume': volume,
+                'pdbFileToBeRefined': structure_PDB
+                }
+        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        self.launchProtocol(protChimera)
+
+        structure2_PDB = protChimera.outputPdb_01
+        volume2 = protChimera.output3Dmap
+
+        listVolCoot = [volume2]
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+                'inputVolumes': listVolCoot,
+                'pdbFileToBeRefined': structure2_PDB,
+                'doInteractive': False
+                }
+        protCoot = self.newProtocol(CootRefine, **args)
+
+        self.launchProtocol(protCoot)
+
+        # refmac
+        coot_PDB = protCoot.outputPdb_0001
+        args = {'inputVolume': volume2,
+                'inputStructure': coot_PDB
+                }
+
+        protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
+
+    def testRefmacRefinementAfterMultipleCootFit(self):
+        # This test checks that refmac runs when a volume provided
+        # by (Powerfit and Chimera) workflow
+        # the PDB is provided by Coot
+        # starting volume with a different coordinate origin
+        print "Run Refmac refinement from PDB file saved from " \
+              "PowerFit/Chimera_2/Coot"
+
+        # Powerfit
+        args = {'resolution': 2.,
+                'angleStep': 45.,
+                'nModels': 3.
+                }
+        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
+        volume2 = self._importVolume2()
+        protPower.inputVol.set(volume2)
+        structure1_PDB = self._importStructurePDBWoVol()
+        protPower.inputPDB.set(structure1_PDB)
+        self.launchProtocol(protPower)
+
+        # chimera fit
+        structure2_PDB = protPower.outputPDBs.getFirstItem()
+
+        # trick to save a single PDB from the set of PDBs
+        protPower._defineOutputs(outputPDB2s=structure2_PDB)
+
+        extraCommands = ""
+        extraCommands += "runCommand('fitmap #2 #1')\n"
+        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
+                         "saverefmodel 1')\n"
+        extraCommands += "runCommand('stop')\n"
+
+        args = {'extraCommands': extraCommands,
+                'pdbFileToBeRefined': structure2_PDB
+                }
+
+        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        self.launchProtocol(protChimera)
+
+        volume = protChimera.output3Dmap
+        structure3_PDB = protChimera.outputPdb_01
+
+        listVolCoot = [volume]
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+                'inputVolumes': listVolCoot,
+                'pdbFileToBeRefined': structure3_PDB,
+                'doInteractive': True
+                }
+        protCoot = self.newProtocol(CootRefine, **args)
+        try:
+            self.launchProtocol(protCoot)
+        except:
+            print "first call to coot ended"
+        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
+
+        protCoot.doInteractive.set(False)
+        self.launchProtocol(protCoot)
+
+        # refmac
+        coot_PDB = protCoot.outputPdb_0002
+        args = {'inputVolume': volume,
+                'inputStructure': coot_PDB
+                }
+
+        protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
+
+
+
+

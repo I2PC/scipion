@@ -260,6 +260,33 @@ class CCP4ProtRunRefmac(EMProtocol):
                 print line
 
     # --------------------------- UTLIS functions --------------------------
+
+    def _validate(self):
+        errors = []
+        # Check that the program exists
+        program = getProgram(self.REFMAC)
+        if program is None:
+            errors.append("Missing variables REFMAC and/or CCP4_HOME")
+        elif not os.path.exists(program):
+            errors.append("Binary '%s' does not exists.\n" % program)
+
+        # If there is any error at this point it is related to config variables
+        if errors:
+            errors.append("Check configuration file: "
+                          "~/.config/scipion/scipion.conf")
+            errors.append("and set REFMAC and CCP4_HOME variables properly.")
+            if program is not None:
+                errors.append("Current values:")
+                errors.append("CCP4_HOME = %s" % os.environ['CCP4_HOME'])
+                errors.append("REFMAC = %s" % self.REFMAC)
+
+        # Check that the input volume exist
+        if (not self.pdbFileToBeRefined.get().hasVolume()) \
+                and self.inputVolumes is None:
+            errors.append("Error: You should provide a volume.\n")
+
+        return errors
+
     def _getInputVolume(self):
         if self.inputVolume.get() is None:
             fnVol = self.inputStructure.get().getVolume()

@@ -62,6 +62,12 @@ class ProtImportVolumes(ProtImportImages):
                            "by default (True) or provide it. Only Modeling "
                            "related programs support this feature so far",
                       default=True)
+        # form.addParam('acquisitionWizard', params.LabelParam, important=True,
+        #                condition=self._acquisitionWizardCondition(),
+        #                label='Use the wizard button to import acquisition.',
+        #                help='Depending on the import Format, the wizard\n'
+        #                     'will try to import the acquisition values.\n'
+        #                     'If not found, required ones should be provided.')
         line = form.addLine('Offset',
                             help= "You have to provide the map center "
                             "coordinates in Angstroms (pixels x sampling). "

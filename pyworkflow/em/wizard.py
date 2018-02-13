@@ -53,7 +53,8 @@ from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
 from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
                                                     ProtImportMovies,
-                                                    ProtImportCoordinates)
+                                                    ProtImportCoordinates,
+                                                    ProtImportVolumes)
 
 
 import xmipp
@@ -864,3 +865,14 @@ class ImportCoordinatesBoxSizeWizard(Wizard):
 
     def show(self, form):
         form.setVar('boxSize', self._getBoxSize(form.protocol))
+
+
+class ImportOriginVolumeWizard(Wizard):
+    _targets = [(ProtImportVolumes, ['x', 'y', 'z'])]
+
+    def show(self, form, *params):
+        protocol = form.protocol
+        filesPattern = protocol.filesPattern
+        filesPath = protocol.filesPath
+        print "wwwwwwwwwwwwwwwww", filesPattern, filesPath
+        form.setVar('x', 53)
