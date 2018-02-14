@@ -432,6 +432,9 @@ class ProtMotionCorr(ProtAlignMovies):
             if inputMovies.getGain():
                 args += ' -Gain "%s" ' % inputMovies.getGain()
 
+            if inputMovies.getDark():
+                args += ' -Dark "%s"' % inputMovies.getDark()
+
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
 
