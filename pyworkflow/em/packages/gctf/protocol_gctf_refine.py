@@ -437,6 +437,7 @@ class ProtGctfRefine(em.ProtParticles):
             pwutils.cleanPath(micDirTmp)
 
         pwutils.cleanPath(self.matchingMics.getFileName())
+        pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
     def createCtfModelStep(self):
         inputSet = self.inputParticles.get()
