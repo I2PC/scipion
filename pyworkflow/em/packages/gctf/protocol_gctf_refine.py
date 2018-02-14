@@ -33,6 +33,7 @@ import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import Coordinate
+from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow import VERSION_1_2
 from convert import getVersion, writeSetOfCoordinates, rowToCtfModel, getShifts
 
@@ -64,19 +65,10 @@ class ProtGctfRefine(em.ProtParticles):
         self.allowMpi = False
         self.allowThreads = False
         self._params = {}
-        #self.stepsExecutionMode = STEPS_PARALLEL
-        #self.isFirstTime = Boolean(False)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('recalculate', params.BooleanParam, default=False,
-                      condition='recalculate',
-                      label="Do recalculate ctf?")
-        form.addParam('continueRun', params.PointerParam, allowsNull=True,
-                      condition='recalculate', label="Input previous run",
-                      pointerClass=self.getClassName())
-        form.addHidden('sqliteFile', params.FileParam, condition='recalculate',
-                       allowsNull=True)
         form.addParam('inputParticles', params.PointerParam,
                       important=True,
                       label='Input particles',
@@ -88,13 +80,11 @@ class ProtGctfRefine(em.ProtParticles):
                            'recalculate new coordinates. This can be useful '
                            'for re-centering particle coordinates.')
         form.addParam('inputMicrographs', params.PointerParam, important=True,
-                      condition='not recalculate',
                       label='Input micrographs',
                       pointerClass='SetOfMicrographs',
                       help='Select the SetOfMicrographs related to input particles.')
         form.addParam('ctfDownFactor', params.FloatParam, default=1.,
                       label='CTF Downsampling factor',
-                      condition='not recalculate',
                       help='Set to 1 for no downsampling. Non-integer '
                            'downsample factors are possible. This downsampling '
                            'is only used for estimating the CTF and it does not '
@@ -103,7 +93,7 @@ class ProtGctfRefine(em.ProtParticles):
                            'concentrated at the origin (too small to be seen) and '
                            'not occupying the whole power spectrum (since this '
                            'downsampling might entail aliasing).')
-        line = form.addLine('Resolution', condition='not recalculate',
+        line = form.addLine('Resolution',
                             help='Give a value in digital frequency (i.e. between '
                                  '0.0 and 0.5). These cut-offs prevent the typical '
                                  'peak at the center of the PSD and high-resolution '
@@ -123,7 +113,6 @@ class ProtGctfRefine(em.ProtParticles):
 
         line = form.addLine('Defocus search range (microns)',
                             expertLevel=params.LEVEL_ADVANCED,
-                            condition='not recalculate',
                             help='Select _minimum_ and _maximum_ values for '
                                  'defocus search range (in microns). '
                                  'Underfocus is represented by a positive '
@@ -138,7 +127,7 @@ class ProtGctfRefine(em.ProtParticles):
                       expertLevel=params.LEVEL_ADVANCED)
         form.addParam('windowSize', params.IntParam, default=512,
                       expertLevel=params.LEVEL_ADVANCED,
-                      label='Window size', condition='not recalculate',
+                      label='Window size',
                       help='The PSD is estimated from small patches of this '
                            'size. Bigger patches allow identifying more '
                            'details. However, since there are fewer windows, '
@@ -302,22 +291,22 @@ class ProtGctfRefine(em.ProtParticles):
         firstCoord = inputParticles.getFirstItem().getCoordinate()
         hasMicName = firstCoord.getMicName() is not None
         inputMics = self._getMicrographs()
-        alignType = inputParticles.getAlignment()
-        downFactor = self.ctfDownFactor.get()
+        self.alignType = inputParticles.getAlignment()
+        self.downFactor = self.ctfDownFactor.get()
 
         # create a tmp set for matching mics
         self.matchingMics = self._createSetOfMicrographs(suffix='_tmp')
         self.matchingMics.copyInfo(inputMics)
 
-        if downFactor != 1.:
-            self.matchingMics.setDownsample(self.downFactor.get())
+        if self.downFactor != 1.:
+            self.matchingMics.setDownsample(self.downFactor)
 
         # create a tmp set for coords
         coords = self._createSetOfCoordinates(inputMics, suffix='_tmp')
         newCoord = Coordinate()
-        scale = inputParticles.getSamplingRate() / inputMics.getSamplingRate()
-        if scale != 1.0:
-            print "Scaling coordinates by a factor *%0.2f*" % scale
+        self.scale = inputParticles.getSamplingRate() / inputMics.getSamplingRate()
+        if self.scale != 1.0:
+            print "Scaling coordinates by a factor *%0.2f*" % self.scale
 
         # Create the micrograph dicts
         micDict = {}  # dict with micName or micId
@@ -362,13 +351,12 @@ class ProtGctfRefine(em.ProtParticles):
                 newCoord.copyObjId(particle)
                 x, y = coord.getPosition()
                 if self.applyShifts:
-                    shifts = getShifts(particle.getTransform(), alignType)
+                    shifts = getShifts(particle.getTransform(), self.alignType)
                     xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
-                    newCoord.setPosition(xCoor*scale, yCoor*scale)
+                    newCoord.setPosition(xCoor * self.scale, yCoor * self.scale)
                 else:
-                    newCoord.setPosition(x*scale, y*scale)
+                    newCoord.setPosition(x * self.scale, y * self.scale)
 
-                newCoord.setPosition(x * scale, y * scale)
                 newCoord.setMicrograph(mic)
                 coords.append(newCoord)
 
@@ -384,15 +372,15 @@ class ProtGctfRefine(em.ProtParticles):
             pwutils.makePath(micDir)
             outMic = pwutils.join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
 
-            if downFactor != 1.:
+            if self.downFactor != 1.:
                 # Replace extension by 'mrc' cause there are some formats
                 # that cannot be written (such as dm3)
                 import pyworkflow.em.packages.xmipp3 as xmipp3
                 self.runJob("xmipp_transform_downsample",
                             "-i %s -o %s --step %f --method fourier"
-                            % (micName, outMic, downFactor),
+                            % (micName, outMic, self.downFactor),
                             env=xmipp3.getEnviron())
-                sps = inputMics.getScannedPixelSize() * downFactor
+                sps = inputMics.getScannedPixelSize() * self.downFactor
                 self._params['scannedPixelSize'] = sps
             else:
                 if micName.endswith('.mrc'):
@@ -459,12 +447,18 @@ class ProtGctfRefine(em.ProtParticles):
             coord = particle.getCoordinate()
             if coord is None:
                 continue
-            pos = coord.getPosition()
+            x, y = coord.getPosition()
+            if self.applyShifts:
+                shifts = getShifts(particle.getTransform(), self.alignType)
+                xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
+                xNew, yNew = (xCoor * self.scale, yCoor * self.scale)
+            else:
+                xNew, yNew = (x * self.scale, y * self.scale)
+
             micBase = pwutils.removeBaseExt(coord.getMicName())
 
             for key in self.matchingMics:
                 micKey = pwutils.removeBaseExt(key.getFileName())
-
                 if micBase in micKey:
                     # micName from mic and micName from coord may be different
                     ctfFn = pwutils.join(self._getExtraPath(micKey),
@@ -474,7 +468,7 @@ class ProtGctfRefine(em.ProtParticles):
                         for row in md.iterRows(mdFn):
                             coordX = row.getValue(md.RLN_IMAGE_COORD_X)
                             coordY = row.getValue(md.RLN_IMAGE_COORD_Y)
-                            if pos == (coordX, coordY):
+                            if (int(xNew), int(yNew)) == (coordX, coordY):
                                 newPart = particle.clone()
                                 rowToCtfModel(row, newPart.getCTF())
                                 partSet.append(newPart)
@@ -531,7 +525,7 @@ class ProtGctfRefine(em.ProtParticles):
                         }
 
     def _prepareCommand(self):
-        sampling = self._getMicrographs().getSamplingRate() * self.ctfDownFactor.get()
+        sampling = self._getMicrographs().getSamplingRate() * self.downFactor
         # Convert digital frequencies to spatial frequencies
         self._params['sampling'] = sampling
         self._params['lowRes'] = sampling / self._params['lowRes']
