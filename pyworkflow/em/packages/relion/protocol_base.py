@@ -802,14 +802,12 @@ class ProtRelionBase(EMProtocol):
     
             # Pass stack file as None to avoid write the images files
             # If copyAlignmet is set to False pass alignType to ALIGN_NONE
-            if copyAlignment:
-                alignType = imgSet.getAlignment()
-                alignToPrior = getattr(self, 'alignmentAsPriors', True)
-                
-            else:
-                alignType = em.ALIGN_NONE
-                alignToPrior = False
-    
+            alignType = imgSet.getAlignment() if copyAlignment \
+                        else em.ALIGN_NONE
+            
+            alignToPrior = False if alignType == em.ALIGN_NONE \
+                           else getattr(self, 'alignmentAsPriors', True)
+            
             writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
                                 alignType=alignType,
                                 postprocessImageRow=self._postprocessParticleRow)
