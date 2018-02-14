@@ -147,7 +147,7 @@ hdf5 = env.addLibrary(
 
 python = env.addLibrary(
     'python',
-    tar='Python-2.7.8.tgz',
+    tar='Python-2.7.14.tgz',
     targets=[env.getLib('python2.7'), env.getBin('python')],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
@@ -390,6 +390,10 @@ env.addPackage('ctffind4', version='4.1.5',
 env.addPackage('ctffind4', version='4.1.8',
                tar='ctffind_V4.1.8.tgz')
 
+env.addPackage('ctffind4', version='4.1.10',
+               tar='ctffind4-4.1.10.tgz')
+
+
 env.addPackage('summovie', version='1.0.2',
                tar='summovie_1.0.2.tgz')
 
@@ -416,10 +420,6 @@ env.addPackage('frealign', version='9.07',
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion_refine'])]
-
-env.addPackage('relion', version='1.3',
-               tar='relion-1.3.tgz',
-               commands=relion_commands)
 
 env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
@@ -476,6 +476,9 @@ env.addPackage('motioncor2', version='1.0.2',
 
 env.addPackage('motioncor2', version='1.0.4',
                tar='motioncor2-1.0.4.tgz')
+
+env.addPackage('motioncor2', version='1.0.5',
+               tar='motioncor2-1.0.5.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')
