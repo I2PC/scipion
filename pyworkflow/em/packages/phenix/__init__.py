@@ -30,7 +30,7 @@ wrapping Phenix programs
 
 
 from bibtex import _bibtex # Load bibtex dict with references
-from atsas import *
+from phenix import *
 from protocol_automated_sharpening import PhenixProtAutomatedSharpening
 
 
