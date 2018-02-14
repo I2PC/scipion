@@ -122,7 +122,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
-        alignArgs = self._getAlignArgs()
+        #alignArgs = self._getAlignArgs()
         self.alignmentAlgorithm = 1 # Local alignment
                                                 
         volList = [vol.clone() for vol in self._iterInputVolumes()]
@@ -171,7 +171,11 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
     #--------------------------- STEPS functions --------------------------------------------
     def alignVolumeStep(self, refFn, inVolFn, outVolFn, volId):
         args = "--i1 %s --i2 %s --apply %s" % (refFn, inVolFn, outVolFn)
-        args += " --local --rot 0 0 1 --tilt 0 0 1 --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1 --dontScale" 
+        args += " --local --rot 0 0 1 --tilt 0 0 1 --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1"
+        if self.optimizeScale:
+            args += " --scale 1 1 0.005"
+        else:
+            args += " --dontScale"
         args += " --copyGeo %s" % (
                 self._getExtraPath('transformation-matrix_vol%06d.txt'%volId))        
         self.runJob("xmipp_volume_align", args)
@@ -320,14 +324,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
             nVols += 1    
             
         return nVols
-                    
-    def _getAlignArgs(self):
-        alignArgs = " --local --rot 0 0 1 --tilt 0 0 1 --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1"
-        if self.optimizeScale:
-            alignArgs += " --scale 1 1 0.005"
-        else:
-            alignArgs += " --dontScale"                    
-        return alignArgs
+
         
     def _defineResultsName(self,i):
         return self._getExtraPath('CoordinateMatrix%d.txt'%i)
