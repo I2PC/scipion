@@ -27,13 +27,32 @@
 This sub-package contains data and protocol classes
 wrapping Kai Zhang's GCTF program
 """
+import os
+
+_logo = "gctf_logo.png"
+GCTF_HOME = 'GCTF_HOME'
+
 from bibtex import _bibtex # Load bibtex dict with references
 from convert import getEnviron
 
-_logo = "gctf_logo.png"
-
 from protocol_gctf import ProtGctf
-from viewer import ProtGctfViewer
+
 # Wizards
 from wizard import GctfCTFWizard
 _environ = getEnviron()
+
+# We need this import to register the specific viewing command
+# when visualizing Gctf results
+from viewer import GctfViewer
+
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in [GCTF_HOME]
+                    if not os.path.exists(_environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors

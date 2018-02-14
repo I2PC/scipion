@@ -58,6 +58,8 @@ void ProgTransformGeometry::defineParams()
     addParamsLine("             matrix <r11> <r12> <r13> <r21> <r22> <r23> <r31> <r32> <r33>    : 3x3 rotation matrix, first index is row");
     addParamsLine("             alignZ <x> <y> <z>           : Align (x,y,z) with Z axis");
     addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
+    addParamsLine("             icosahedral <from> <to>      : Rotate an icosahedral volume from i1 to i2, for instance");
+    addParamsLine("                                          : valid symmetries are i1, i2, i3 and i4");
     addParamsLine("[--scale <factor=1>]                      : Perfom Scaling. Factor 0.5 halves and 2 doubles");
     addParamsLine(" alias -s;");
     addParamsLine("[--shift <x=0> <y=0> <z=0>]               : Shift by x, y and z");
@@ -102,14 +104,17 @@ void ProgTransformGeometry::readParams()
         splineDegree = LINEAR;
     flip = checkParam("--flip");
 
-    /** In most cases output "-o" is a metadata with the new geometry keeping the names of input images
-     *  so we set the flags to keep the same image names in the output metadata
+    /** In most cases output "-o" is a metadata with the new geometry keeping 
+     *  the names of input images so we set the flags to keep the same image 
+     *  names in the output metadata
      */
     if ( !checkParam("--oroot") && fn_out.hasMetadataExtension())
     {
         if ( input_is_metadata && !applyTransform )
             each_image_produces_an_output = !(produces_a_metadata = true);
-        else /** If "-o" is a metadata but we are writing output images, -o can only be a stack if --oroot is no passed, and then MD is generated automatically **/
+        else /** If "-o" is a metadata but we are writing output images, 
+              *  -o can only be a stack if --oroot is no passed, and 
+              *  then MD is generated automatically **/
             fn_out = fn_out.replaceExtension("stk");
     }
     else if ( !checkParam("--oroot") && !checkParam("-o") )
@@ -119,12 +124,15 @@ void ProgTransformGeometry::readParams()
 
 void ProgTransformGeometry::calculateRotationMatrix()
 {
-    Matrix1D<double> xyz(3);
-    XX(xyz) = getDoubleParam("--rotate_volume", 1); //rot
-    YY(xyz) = getDoubleParam("--rotate_volume", 2); //tilt
-    ZZ(xyz) = getDoubleParam("--rotate_volume", 3);//psi
-
     const char * rotateType = getParam("--rotate_volume");
+    Matrix1D<double> xyz(3);
+    if (!STR_EQUAL(rotateType, "icosahedral"))
+    {   // params are char for icosahedral option
+        XX(xyz) = getDoubleParam("--rotate_volume", 1); //rot
+        YY(xyz) = getDoubleParam("--rotate_volume", 2); //tilt
+        ZZ(xyz) = getDoubleParam("--rotate_volume", 3); //psi
+    }
+
     if (STR_EQUAL(rotateType, "euler"))
         Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), R, true);
     else if (STR_EQUAL(rotateType, "matrix"))
@@ -140,6 +148,12 @@ void ProgTransformGeometry::calculateRotationMatrix()
     }
     else if (STR_EQUAL(rotateType, "alignZ"))
         alignWithZ(xyz, R);
+    else if (STR_EQUAL(rotateType, "icosahedral"))
+    {
+        const char * icoFrom = getParam("--rotate_volume", 1);
+        const char * icoTo = getParam("--rotate_volume", 2);
+        rotation3DMatrixFromIcoOrientations(icoFrom, icoTo, R);
+    }
     else
     {
         double ang = getDoubleParam("--rotate_volume", 1);
@@ -149,7 +163,6 @@ void ProgTransformGeometry::calculateRotationMatrix()
         rotation3DMatrix(ang, xyz, R, true);
     }
 }
-
 
 void ProgTransformGeometry::preProcess()
 {
@@ -192,7 +205,10 @@ void ProgTransformGeometry::preProcess()
         A = A.inv();
 }
 
-void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
+void ProgTransformGeometry::processImage(const FileName &fnImg,
+                                         const FileName &fnImgOut,
+                                         const MDRow &rowIn,
+                                         MDRow &rowOut)
 {
 
     if (checkParam("--matrix"))

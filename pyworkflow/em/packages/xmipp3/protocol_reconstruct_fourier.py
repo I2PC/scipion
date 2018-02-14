@@ -97,6 +97,7 @@ class XmippProtReconstructFourier(ProtReconstruct3D):
         params += ' --padding %0.3f' % self.pad.get()
         params += ' --thr %d' % self.numberOfThreads.get()
         params += ' --sampling %f' % self.inputParticles.get().getSamplingRate()
+        params += ' %s' % self.extraParams.get()
         self._insertFunctionStep('reconstructStep', params)
         
     #--------------------------- STEPS functions --------------------------------------------

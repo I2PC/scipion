@@ -27,10 +27,10 @@
 #include "xmipp_program.h"
 
 /*---------------------------------------------------------------------------*/
-/* Multidim Masks                                                                  */
+/* Multidim Masks                                                            */
 /*---------------------------------------------------------------------------*/
-void RaisedCosineMask(MultidimArray<double> &mask,
-                      double r1, double r2, int mode, double x0, double y0, double z0)
+void RaisedCosineMask(MultidimArray<double> &mask, double r1, double r2, 
+                                    int mode, double x0, double y0, double z0)
 {
     double K = PI / (r2 - r1);
     double r1_2=r1*r1;
@@ -115,7 +115,7 @@ void KaiserMask(MultidimArray<double> &mask, double delta, double Deltaw)
     {
         double r = sqrt((double)(i * i + j * j + k * k));
         if (r <= M)
-            A3D_ELEM(mask, k, i, j) = bessi0(beta * sqrt(1 - (r / M) * (r / M))) * iI0Beta;
+            A3D_ELEM(mask, k, i, j) = bessi0(beta * sqrt(1-(r/M)*(r/M))) * iI0Beta;
     }
 
 }
@@ -254,8 +254,8 @@ void BinaryCrownMask(MultidimArray<int> &mask,
     }
 }
 
-void BinaryTubeMask(MultidimArray<int> &mask,
-                     double R1, double R2, double H, int mode, double x0, double y0, double z0)
+void BinaryTubeMask(MultidimArray<int> &mask, double R1, double R2, double H, 
+                                  int mode, double x0, double y0, double z0)
 {
     mask.initZeros();
     double R12 = R1 * R1;
@@ -302,8 +302,8 @@ void BlobCrownMask(MultidimArray<double> &mask,
 
 }
 
-void BinaryFrameMask(MultidimArray<int> &mask,
-                     int Xrect, int Yrect, int Zrect, int mode, double x0, double y0, double z0)
+void BinaryFrameMask(MultidimArray<int> &mask, int Xrect, int Yrect, int Zrect, 
+                                   int mode, double x0, double y0, double z0)
 {
     mask.initZeros();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
@@ -1212,7 +1212,8 @@ void Mask::write_mask(const FileName &fn)
 }
 
 
-void Mask::defineParams(XmippProgram * program, int allowed_data_types, const char* prefix, const char* comment, bool moreOptions)
+void Mask::defineParams(XmippProgram * program, int allowed_data_types,
+                        const char* prefix, const char* comment, bool moreOptions)
 {
     char tempLine[256], tempLine2[256];
 
@@ -1720,7 +1721,8 @@ void apply_geo_cont_2D_mask(MultidimArray<double> &mask,
 }
 
 int count_with_mask(const MultidimArray<int> &mask,
-                    const MultidimArray< std::complex<double> > &m, int mode, double th1, double th2)
+                    const MultidimArray< std::complex<double> > &m, 
+                    int mode, double th1, double th2)
 {
     SPEED_UP_tempsInt;
     int N = 0;
@@ -1745,7 +1747,8 @@ int count_with_mask(const MultidimArray<int> &mask,
 }
 
 void rangeAdjust_within_mask(const MultidimArray<double> *mask,
-                             const MultidimArray<double> &m1, MultidimArray<double> &m2)
+                             const MultidimArray<double> &m1, 
+                                   MultidimArray<double> &m2)
 {
     Matrix2D<double> A(2, 2);
     A.initZeros();
@@ -1864,7 +1867,8 @@ void ProgMask::postProcess()
 }
 
 /* Process image ------------------------------------------------------------- */
-void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
+void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, 
+                            const MDRow &rowIn, MDRow &rowOut)
 {
     static size_t imageCount = 0;
     ++imageCount;

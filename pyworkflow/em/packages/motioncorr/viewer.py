@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em.viewer import MicrographsView
 import pyworkflow.em.showj as showj
 
 from protocol_motioncorr import ProtMotionCorr
@@ -39,14 +40,6 @@ class ProtMotioncorrViewer(Viewer):
     def _visualize(self, obj, **kwargs):
         views = []
 
-        plotLabels = 'psdCorr._filename plotGlobal._filename'
-        labels = 'enabled id ' + plotLabels + ' _filename '
-        viewParams = {showj.MODE: showj.MODE_MD,
-                      showj.ORDER: labels,
-                      showj.VISIBLE: labels,
-                      showj.RENDER: plotLabels,
-                      showj.ZOOM: 10
-                      }
         labelsDef = 'enabled id _filename'
         viewParamsDef = {showj.MODE: showj.MODE_MD,
                          showj.ORDER: labelsDef,
@@ -54,18 +47,22 @@ class ProtMotioncorrViewer(Viewer):
                          showj.RENDER: None
                          }
 
-        if obj.hasAttribute('outputMicrographs'):
-            views.append(self.objectView(obj.outputMicrographs,
-                                         viewParams=viewParams))
-        if not obj.hasAttribute('outputMicrographs') and not obj.hasAttribute('outputMicrographsDoseWeighted'):
-            views.append(self.infoMessage("Output micrographs have "
-                                          "not been produced yet."))
+        outputLabels = ['outputMicrographs', 'outputMicrographsDoseWeighted',
+                        'outputMovies']
 
-        if obj.hasAttribute('outputMicrographsDoseWeighted'):
-            views.append(self.objectView(obj.outputMicrographsDoseWeighted,
-                                         viewParams=viewParams))
-        if obj.hasAttribute('outputMovies'):
-            views.append(self.objectView(obj.outputMovies,
-                                         viewParams=viewParamsDef))
+        if not any(obj.hasAttribute(l) for l in outputLabels):
+            return [self.infoMessage("Output (micrographs or movies) have "
+                                     "not been produced yet.")]
+
+        # Display only the first available output, showing all of them
+        # can be confusing and not useful.
+        # The user can still double-click in the specific output
+        for l in outputLabels:
+            if obj.hasAttribute(l):
+                output = getattr(obj, l)
+                if 'Micrographs' in l:
+                    return [MicrographsView(self.getProject(), output)]
+                else:  # Movies case
+                    return [self.objectView(output, viewParams=viewParamsDef)]
 
         return views

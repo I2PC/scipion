@@ -41,6 +41,6 @@ from protocol_magdist_correct_coords import ProtMagDistCorrCoord
 from protocol_ml_classification import ProtFrealignClassify
 from protocol_unblur import ProtUnblur
 from protocol_summovie import ProtSummovie
-from viewer import ProtCTFFindViewer, FrealignViewer, MagDistEstViewer
+from viewer import FrealignViewer, MagDistEstViewer, CtffindViewer
 # Wizards
 from wizard import *

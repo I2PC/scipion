@@ -40,6 +40,8 @@ void ProgVolumeHalvesRestoration::readParams()
     bankOverlap = getDoubleParam("--filterBank",1);
     weightFun = getIntParam("--filterBank",2);
     weightPower = getDoubleParam("--filterBank",3);
+    NiterDiff = getIntParam("--difference");
+    Kdiff = getDoubleParam("--difference",1);
     if (checkParam("--mask"))
         mask.readParams(this);
 }
@@ -61,6 +63,8 @@ void ProgVolumeHalvesRestoration::show()
 	<< "Bank overlap:" << bankOverlap << std::endl
 	<< "Weight fun:" << weightFun << std::endl
 	<< "Weight power:" << weightPower << std::endl
+	<< "Difference Iterations: " << NiterDiff << std::endl
+	<< "Kdiff: " << Kdiff << std::endl
 	;
     mask.show();
 }
@@ -76,7 +80,8 @@ void ProgVolumeHalvesRestoration::defineParams()
     addParamsLine("  [--deconvolution <N=0> <sigma0=0.2> <lambda=0.001>]   : Number of iterations of deconvolution in Fourier space, initial sigma and lambda");
     addParamsLine("  [--filterBank <step=0> <overlap=0.5> <weightFun=1> <weightPower=3>] : Frequency step for the filter bank (typically, 0.01; between 0 and 0.5)");
     addParamsLine("                                        : filter overlap is between 0 (no overlap) and 1 (full overlap)");
-    addParamsLine("                               : Weight function (0=mean, 1=min, 2=mean*diff");
+    addParamsLine("                                : Weight function (0=mean, 1=min, 2=mean*diff");
+    addParamsLine("  [--difference <N=0> <K=1.5>]  : Number of iterations of difference evaluation in real space");
     Mask::defineParams(this,INT_MASK);
 }
 
@@ -151,6 +156,13 @@ void ProgVolumeHalvesRestoration::run()
 
 	if (bankStep>0)
 		filterBank();
+
+	if (NiterDiff>0)
+		for (int iter=0; iter<NiterDiff; iter++)
+		{
+			std::cout << "Difference iteration " << iter << std::endl;
+			evaluateDifference();
+		}
 
 	V1r.write(fnRoot+"_restored1.vol");
 	V2r.write(fnRoot+"_restored2.vol");
@@ -430,4 +442,43 @@ void ProgVolumeHalvesRestoration::filterBank()
 	progress_bar(imax);
 	S()/=sumWeight;
 	S.write(fnRoot+"_filterBank.vol");
+}
+
+void ProgVolumeHalvesRestoration::evaluateDifference()
+{
+	// Compute the difference between the two
+	N()=V1r();
+	N()-=V2r();
+
+	S()=V1r();
+	S()+=V2r();
+	S()*=0.5;
+
+	// Compute the std within the signal mask
+	double mean, stddev;
+	if (pMask==NULL)
+		N().computeAvgStdev(mean,stddev);
+	else
+		N().computeAvgStdev_within_binary_mask(*pMask,mean,stddev);
+	stddev*=Kdiff;
+
+	MultidimArray<double> &m1=V1r();
+	MultidimArray<double> &m2=V2r();
+	MultidimArray<double> &mN=N();
+	MultidimArray<double> &mS=S();
+	double k=-0.5/(stddev*stddev);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mN)
+	{
+		double w=exp(k*DIRECT_MULTIDIM_ELEM(mN,n)*DIRECT_MULTIDIM_ELEM(mN,n));
+		double s=DIRECT_MULTIDIM_ELEM(mS,n);
+		double d1=DIRECT_MULTIDIM_ELEM(m1,n)-s;
+		double d2=DIRECT_MULTIDIM_ELEM(m2,n)-s;
+		DIRECT_MULTIDIM_ELEM(m1,n)=s+d1*w;
+		DIRECT_MULTIDIM_ELEM(m2,n)=s+d2*w;
+	}
+
+	S()=V1r();
+	S()+=V2r();
+	S()*=0.5;
+	S.write(fnRoot+"_avgDiff.vol");
 }

@@ -30,6 +30,7 @@ from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.protocol import ProtMonitorCTF
+from pyworkflow.em.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -60,7 +61,7 @@ class TestCtfStream(BaseTest):
                   'samplingRate': 1.25,
                   'creationInterval': 5,
                   'delay': 0,
-                  'setof': 0  # SetOfMicrographs
+                  'setof': SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
                 }
 
         # put some stress on the system

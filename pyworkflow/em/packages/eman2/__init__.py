@@ -31,7 +31,7 @@ from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "eman2_logo.png"
 _references = ['Tang2007']
-
+EMAN_DIR_VAR = 'EMAN2DIR'
 
 from eman2 import *
 from protocol_boxing import EmanProtBoxing
@@ -42,3 +42,14 @@ from protocol_autopick import SparxGaussianProtPicking
 from viewer import EmanViewer, RefineEasyViewer
 from wizard import SparxGaussianPickerWizard
 _environ = getEnviron()
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in [EMAN_DIR_VAR]
+                    if not os.path.exists(_environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors

@@ -28,7 +28,7 @@ This sub-package contains data and protocol classes
 wrapping Cryoem programs. The protocol was provided by
 the author, Paul Joubert. pjouber@gwdg.de
 """
-from bibtex import _bibtex # Load bibtex dict with references
+from bibtex import _bibtex  # Load bibtex dict with references
 
 _logo = "cryoem_logo.png"
 
@@ -36,5 +36,14 @@ from cryoem_scipion import *
 
 from protocol_cryoem import ProtCryoem
 
-# from viewer import *
 
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, var)
+                    for var in [CRYOEM_BIN, CRYOEM_HOME]
+                    if not os.path.exists(var)]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors

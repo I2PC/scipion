@@ -523,6 +523,14 @@ class Environment:
             commands: a list with actions to be executed to install the package
         """
         # Add to the list of available packages, for reference (used in --help).
+        neededProgs = kwargs.get('neededProgs', [])
+
+        if name in sys.argv[2:]:
+            # Check that we have the necessary programs in place.
+            for prog in neededProgs:
+                assert progInPath(prog), ("Cannot find necessary program: %s\n"
+                                          "Please install and try again" % prog)
+
         if name not in self._packages:
             self._packages[name] = []
 

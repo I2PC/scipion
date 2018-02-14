@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Mohsen Kazemi  (mkazemi@cnb.csic.es)
+# *              Javier Vargas  (javier.vargasbalbuena@mcgill.ca)  
 # *              
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -29,9 +30,11 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, 
-                                                   readSetOfParticles)
+                                                   readSetOfParticles,
+                                                   geometryFromMatrix,
+                                                   SetOfParticles)
+from pyworkflow.utils import getExt
 import numpy as np
-
 
 class XmippProtVolumeHomogenizer(ProtProcessParticles):
     
@@ -40,8 +43,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     and correcting (deforming) all images of one of the volumes (input volume) 
     with respect to the another one as a reference, using optical flow algorithm.
     The output is a setOfParticles contaied deformed reference particles.
-    """
-    
+    """    
     _label = 'volume homogenizer'
     _lastUpdateVersion = VERSION_1_1
     #--------------------------- DEFINE param functions --------------------------------------------   
@@ -49,133 +51,331 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
+        form.addParam('doGoldStandard', params.BooleanParam, default=False,
+                      label='do Gold Standard?',
+                      help="If YES provide half1 and half2 maps for reference"
+                           "and for input volumes.")
         form.addParam('referenceVolume', params.PointerParam,
-                 pointerClass='Volume',
-                 label='Reference volume', 
-                 help="This is the volume that will be used as the reference "
-                      "in OF algorithm.")
+                      condition='not doGoldStandard',
+                      pointerClass='Volume',
+                      label='Reference volume',
+                      help="This is the volume that will be used as the "
+                           "reference in OF algorithm. If you want to "
+                           "use Gold-Standard provide here half1 map")
+        form.addParam('referenceVolume1', params.PointerParam,
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Reference volume half1',
+                      help="This is the half1 volume that will be used as the "
+                           "reference for half1 in OF algorithm.")
+        form.addParam('referenceVolume2', params.PointerParam,
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Reference volume half2',
+                      help="This is half2 volume that will be used as the "
+                           "reference for half2 in OF algorithm.")
         form.addParam('inputVolume', params.PointerParam,
-                 pointerClass='Volume',
-                 label='Input volume', 
-                 help="Volume that we want to deform its related particles.")
-        form.addParam('inputParticles', params.PointerParam, 
+                      condition='not doGoldStandard',
+                      pointerClass='Volume',
+                      label='Input volume',
+                      help="Volume that we want to process its related "
+                           "particles.")
+        form.addParam('inputVolume1', params.PointerParam,
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Input volume half1', 
+                      help="Volume that we want to process its related"
+                           " particles. It should represent half1 map.")
+        form.addParam('inputVolume2', params.PointerParam,
+                      condition='doGoldStandard',
+                      pointerClass='Volume',
+                      label='Input volume half2', 
+                      help="Volume that we want to process its related "
+                           "particles. It should represent half2 map.")                
+        form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
                       pointerCondition='hasAlignmentProj',
                       label="Input particles",  
                       help="Aligned particles related to the input volume. "
-                           "These particles will be deformed (corrected) "
-                           "based on the reference volume using OF algorithm.")        
+                           "These particles will be processed (deformed) "
+                           "based on the reference volume using OF algorithm."
+                           "If selected doGoldStandard True the particles have"
+                           " to have  information about the halfId they "
+                           "belong.")        
         form.addParam('doAlignment', params.BooleanParam, default=False,
                       label='Reference and input volumes need to be aligned?',
                       help="Input and reference volumes must be aligned. "
                            "If you have not aligned them before choose this "
-                           "option, so protocol will handle it internally.")
-        form.addParam('cutOffFrequency', params.FloatParam, default = -1,
-                      label="Cut-off frequency",
-                      help="This digital frequency is used to filter both "
-                           "input and reference voluem."
-                           "IF it is (-1), cut-off frequency will be based on "
-                           "Nyquist theorem.\n"
-                           "Note:\n"
-                           "Based on the experimental results, the best value "
-                           "for cut-off frequency is 20A "
-                           "(digitalFrequency = samplingRate/20)")
+                           "option, so protocol will handle it internally.")        
+        form.addParam('dofrm', params.BooleanParam, default=True,
+                      condition='doAlignment',
+                      label='Use Fast Rotational Matching.',
+                      help="Use Fast Rotational Matching. Before use it you "
+                           "have to install it by scipion install frm"
+                           "This method for volume alignment is much more "
+                           "fast than exhaustive search")        
+        form.addParam('resLimit', params.FloatParam, default=20,
+                      label="Resolution Limit (A)",
+                      help="Resolution limit used to low pass filter both "
+                           "input and reference map(s)."
+                           "Based on previous experimental results, a good "
+                           "value for  seems to be 20A ")                
+        form.addSection(label='OF')
         form.addParam('winSize', params.IntParam, default=50,
-                       label="Window size",
-                       expertLevel=params.LEVEL_ADVANCED,
-                       help="Size of the search window at each pyramid level "
-                            "(shifts are assumed to be constant "
-                            "within this window).")          
-                      
+                      label="Window size",
+                      help="Size of the search window at each pyramid level "
+                            "(shifts are assumed to be constant within this "
+                            "window).")                   
+        form.addParam('pyrScale', params.FloatParam, default=0.5,
+                      label="pyramid Scale",
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help="Parameter, specifying the image scale (<1) to "
+                           "build pyramids for each image. pyrScale=0.5 " 
+                            "means a classical pyramid, where each next layer" 
+                            " is twice smaller than the previous one.")        
+        form.addParam('levels', params.IntParam, default=2,
+                      label="Number of Levels",
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help="Number of pyramid layers including the initial "
+                           "image; levels=1 means that no extra layers are "
+                           "created and only the original images are used.")
+        form.addParam('iterations', params.IntParam, default=10,
+                      label="Iterations",
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help="Number of iterations the algorithm does at "                             
+                           "each pyramid level.")                      
         form.addParallelSection(threads=1, mpi=2)
+        
     #--------------------------- INSERT steps functions --------------------------------------------
 
-    def _insertAllSteps(self):            
-        inputParticlesMd = self._getExtraPath('input_particles.xmd')
-        inputParticles = self.inputParticles.get()
-        writeSetOfParticles(inputParticles, inputParticlesMd)        
-        inputVol = self.inputVolume.get().getFileName()
-        referenceVol = self.referenceVolume.get().getFileName()
-        
-        if not self.doAlignment.get():
-            self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                     inputVol, referenceVol, inputParticlesMd)
-        else:
-            fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
-            fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
-            fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
-            self._insertFunctionStep('volumeAlignmentStep', 
-                                     referenceVol, inputVol, fnAlignedVolFf, 
-                                     fnAlnVolFfLcl, fnInPartsNewAng)
-            self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                     fnAlnVolFfLcl, referenceVol, fnInPartsNewAng)
-                        
-        self._insertFunctionStep('createOutputStep')        
-    #--------------------------- STEPS functions --------------------------------------------
+    def _insertAllSteps(self):              
+        #If doGoldStandard then we have two halves
+        inputPart = self.inputParticles.get()        
+        if self.doGoldStandard.get():            
+            inputParticlesMd1 = self._getExtraPath('input_particles_half1.xmd')
+            
+            inputParticlesHalf1 = SetOfParticles(filename=':memory:')            
+            inputParticlesHalf1.copyInfo(inputPart)
+            inputParticlesHalf1.copyItems(inputPart,
+                                 updateItemCallback=self._setHalf1)                                
+            writeSetOfParticles(inputParticlesHalf1, inputParticlesMd1)
     
-    def volumeAlignmentStep (self, referenceVol, inputVol, fnAlignedVolFf, 
-                                   fnAlnVolFfLcl, fnInPartsNewAng):
-        fnTransformMatFF = self._getExtraPath('transformation-matrix-FF.txt')
-        alignArgsFf = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
-                                                      inputVol, 
-                                                      fnAlignedVolFf)
-        alignArgsFf += " --frm --copyGeo %s" % fnTransformMatFF
-        self.runJob('xmipp_volume_align', alignArgsFf, numberOfMpi = 1)        
+            inputParticlesMd2 = self._getExtraPath('input_particles_half2.xmd')
+            inputParticlesHalf2 = SetOfParticles(filename=':memory:')          
+            inputParticlesHalf2.copyInfo(inputPart)
+            inputParticlesHalf2.copyItems(inputPart,
+                                 updateItemCallback=self._setHalf2)                                
+            writeSetOfParticles(inputParticlesHalf2, inputParticlesMd2)
+            
+            inputVol1 = self.changeExtension(self.inputVolume1.get().getFileName())
+            inputVol2 = self.changeExtension(self.inputVolume2.get().getFileName())
+            referenceVol1 = self.changeExtension(self.referenceVolume1.get().getFileName())
+            referenceVol2 = self.changeExtension(self.referenceVolume2.get().getFileName())
+
+            if not self.doAlignment.get():         #No alignment
+                fnOutputHalf1 = self._getExtraPath('deformed_particles_half1')
+                fnOutputHalf2 = self._getExtraPath('deformed_particles_half2')
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol1, referenceVol1, inputParticlesMd1, fnOutputHalf1)                
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol2, referenceVol2, inputParticlesMd2, fnOutputHalf2)
+
+            else:
+                               
+                fnInputToRefLocal1 = self._getExtraPath('aligned_inputVol_to_refVol_Local1.vol')
+                fnInputToRefLocal2 = self._getExtraPath('aligned_inputVol_to_refVol_Local2.vol')
+                
+                fnInPartsNewAng1 = self._getExtraPath("inputparts_anglesModified1.xmd")
+                fnInPartsNewAng2 = self._getExtraPath("inputparts_anglesModified2.xmd")
+                
+                self._insertFunctionStep('volumeAlignmentStep', 
+                                         inputVol1, referenceVol1, inputParticlesMd1, 
+                                         fnInputToRefLocal1, fnInPartsNewAng1)      
+
+                self._insertFunctionStep('volumeAlignmentStep', 
+                                         inputVol2, referenceVol2, inputParticlesMd2,
+                                         fnInputToRefLocal2, fnInPartsNewAng2)                
+                
+                fnOutputHalf1 = self._getExtraPath('deformed_particles_half1')
+                fnOutputHalf2 = self._getExtraPath('deformed_particles_half2')
+                
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         fnInputToRefLocal1, referenceVol1, fnInPartsNewAng1,fnOutputHalf1)                
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         fnInputToRefLocal2, referenceVol2, fnInPartsNewAng2,fnOutputHalf2)
+      
+        else:
+            
+            inputParticlesMd = self._getExtraPath('input_particles.xmd')
+            writeSetOfParticles(inputPart, inputParticlesMd)
+            
+            inputVol = self.changeExtension(self.inputVolume.get().getFileName())
+            referenceVol = self.changeExtension(self.referenceVolume.get().getFileName())                
+            fnOutput = self._getExtraPath('deformed_particles')
+            
+            if not self.doAlignment.get():
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         inputVol, referenceVol, inputParticlesMd, fnOutput)
+            else:
+                
+                fnInputToRefLocal = self._getExtraPath('aligned_inputVol_to_refVol_Local.vol')                
+                fnInPartsNewAng = self._getExtraPath("inputparts_anglesModified.xmd")
+                self._insertFunctionStep('volumeAlignmentStep', 
+                                         inputVol, referenceVol, inputParticlesMd,  
+                                         fnInputToRefLocal, fnInPartsNewAng)                
+                self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                         fnInputToRefLocal, referenceVol, fnInPartsNewAng, fnOutput)                
+
+                        
+        self._insertFunctionStep('createOutputStep')
+                
+    #--------------------------- STEPS functions --------------------------------------------
         
-        fnTransformMatLocal = self._getExtraPath('transformation-matrix-local.txt')
-        alignArgsLocal = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
-                                                         fnAlignedVolFf, 
-                                                         fnAlnVolFfLcl)
-        alignArgsLocal += " --local --rot 0 0 1 --tilt 0 0 1"
-        alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
-        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s" % fnTransformMatLocal        
-        self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi = 1)
-                 
-        #apply transformation matrix to input ratricles
-        transMatFromFileFF = np.loadtxt(fnTransformMatFF)
-        transformationArrayFF = np.reshape(transMatFromFileFF,(4,4))
+    def changeExtension(self, vol):
+            extVol = getExt(vol)
+            if (extVol == '.mrc') or (extVol == '.map'):
+                vol = vol + ':mrc'
+            return vol
+            
+    def volumeAlignmentStep (self, inputVol, referenceVol, inputPartsMD,
+                                   fnInputToRefLocal, fnInPartsNewAng):
+        '''The input vol is modified towards the reference vol first by a global alignment and then by a local one'''
+        '''The particles orientations are changed accordingly'''               
+        
+        fnTransformMatGlobal = self._getExtraPath('transformation-matrix-Global.txt')
+        fnTransformMatLocal = self._getExtraPath('transformation-matrix-Local.txt')
+        alignArgsGlobal = "--i1 %s --i2 %s --dontScale  --copyGeo %s" % (referenceVol,       
+                                                                                            inputVol,                                                                                                                                                                                                                               
+                                                                                            fnTransformMatGlobal)
+        if (self.dofrm):
+            alignArgsGlobal += " --frm --show_fit "                        
+        else:
+            alignArgsGlobal += " --rot 0.000000 360.000000 5.000000 --tilt 0.000000 180.000000 5.000000 --psi 0.000000 360.000000 5.000000 -x 0.000000 0.000000 1.000000 -y 0.000000 0.000000 1.000000 -z 0.000000 0.000000 1.000000"
+                                       
+        self.runJob('xmipp_volume_align', alignArgsGlobal, numberOfMpi=1, numberOfThreads=1)
+        transMatFromFileFF = np.loadtxt(fnTransformMatGlobal)
+        transformationArrayFF = np.reshape(transMatFromFileFF, (4, 4))
         transformMatrixFF = np.matrix(transformationArrayFF)
+        shifts, angles = geometryFromMatrix(transformMatrixFF, False) 
+        print("Global transformation to be applied: ")
+        print(transformMatrixFF)
+        print("Shifts and angles to be applied: ")
+        print(shifts, angles)
+        print("\n ")                
         
+        #We calculate one local alignment
+        alignArgsLocal = "--i1 %s --i2 %s --apply %s --show_fit  --local --dontScale --copyGeo %s " % (referenceVol, 
+                                                                                                       inputVol, 
+                                                                                                       fnInputToRefLocal,
+                                                                                                       fnTransformMatLocal)
+        alignArgsLocal += "--rot %s --tilt %s --psi %s -x %s -y %s -z %s" % (angles[0], angles[1], angles[2],
+                                                                             shifts[0],shifts[1],shifts[2])                                                        
+
+        self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi=1)
         transMatFromFileLocal = np.loadtxt(fnTransformMatLocal)
-        transformationArrayLocal = np.reshape(transMatFromFileLocal,(4,4))
+        transformationArrayLocal = np.reshape(transMatFromFileLocal, (4, 4))
         transformMatrixLocal = np.matrix(transformationArrayLocal)
+        shifts, angles = geometryFromMatrix(transformMatrixLocal, False)        
+        print(shifts, angles)        
+        print("\n ")
         
-        transformMatrix = transformMatrixFF * transformMatrixLocal
-        print "Transformation matrix used to apply to the input particles =\n"
-        print transformMatrix
-        inputParts = self.inputParticles.get()
-        outputSet = self._createSetOfParticles()
-        for part in inputParts.iterItems():        
-            partTransformMat = part.getTransform().getMatrix()            
-            partTransformMatrix = np.matrix(partTransformMat)            
-            newTransformMatrix = transformMatrix * partTransformMatrix                      
-            part.getTransform().setMatrix(newTransformMatrix)
-            outputSet.append(part)       
+        #We calculate another local alignment
+        alignArgsLocal = "--i1 %s --i2 %s --apply %s --show_fit  --local --dontScale --copyGeo %s " % (referenceVol, 
+                                                                                                       inputVol, 
+                                                                                                       fnInputToRefLocal,
+                                                                                                       fnTransformMatLocal)        
+        alignArgsLocal += "--rot %s --tilt %s --psi %s -x %s -y %s -z %s" % (angles[0], angles[1], angles[2],
+                                                                             shifts[0],shifts[1],shifts[2])                                                        
+        self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi=1)
+        transMatFromFileLocal = np.loadtxt(fnTransformMatLocal)
+        transformationArrayLocal = np.reshape(transMatFromFileLocal, (4, 4))
+        transformMatrixLocal = np.matrix(transformationArrayLocal)
+        shifts, angles = geometryFromMatrix(transformMatrixLocal, False)
+        print(shifts, angles)        
+        print("\n ")
+
+        #And one more.        
+        alignArgsLocal = "--i1 %s --i2 %s --apply %s --show_fit  --local --dontScale --copyGeo %s " % (referenceVol, 
+                                                                                                       inputVol, 
+                                                                                                       fnInputToRefLocal,
+                                                                                                       fnTransformMatLocal)        
+        alignArgsLocal += "--rot %s --tilt %s --psi %s -x %s -y %s -z %s" % (angles[0], angles[1], angles[2],
+                                                                             shifts[0],shifts[1],shifts[2])                                                        
+        self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi=1)
+        transMatFromFileLocal = np.loadtxt(fnTransformMatLocal)
+        transformationArrayLocal = np.reshape(transMatFromFileLocal, (4, 4))
+        transformMatrixLocal = np.matrix(transformationArrayLocal)
+        shifts, angles = geometryFromMatrix(transformMatrixLocal, False)
+        print(shifts, angles)        
+            
+        print("Local transformation to be applied: ")
+        print(transformMatrixLocal)
+        print("Shifts and angles to be applied: ")
+        print(shifts, angles)
+        print("\n ")
+                
+        inputParts = SetOfParticles(filename=':memory:')
+        inputParts.copyInfo(self.inputParticles.get())
+        readSetOfParticles(inputPartsMD, inputParts)
+
+        outputSet = SetOfParticles(filename=':memory:')
+                                          
+        for part in inputParts.iterItems():
+            part.getTransform().composeTransform(np.matrix(transformMatrixLocal))
+            outputSet.append(part)   
+                                                   
         outputSet.copyInfo(inputParts)                
         writeSetOfParticles(outputSet, fnInPartsNewAng)             
         
-    def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd):
+    def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd, fnOutput):
         winSize = self.winSize.get()
-        if self.cutOffFrequency.get() == -1:
-            cutFreq = 0.5
-        else:
-            cutFreq = self.cutOffFrequency.get()
-        fnOutput = self._getExtraPath('deformed-particles')        
-          
+        pyrScale = self.pyrScale.get()
+        levels = self.levels.get()
+        iterations = self.iterations.get()
+        
+        sampling_rate = self.inputParticles.get().getSamplingRate()
+        resLimitDig = sampling_rate/self.resLimit.get()
+        
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get()
+        
         self.runJob("xmipp_volume_homogenizer", 
-                    "-i %s -ref %s -img %s -o %s --winSize %d --cutFreq %f" % (
+                    "-i %s -ref %s -img %s -o %s --winSize %d --cutFreq %f --pyr_scale %f --levels %d --iterations %d" % (
                     inputVol, referenceVol, inputParticlesMd, 
-                    fnOutput, winSize, cutFreq), 
-                    numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())        
-    
+                    fnOutput, winSize, resLimitDig,
+                    pyrScale, levels, iterations), 
+                    numberOfMpi=nproc,numberOfThreads=nT)
+            
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()        
-        fnDeformedParticles = self._getExtraPath('deformed-particles.xmd')
+        inputClassName = str(inputParticles.getClassName())
+        key = 'output' + inputClassName.replace('SetOf', '') + '%02d'  
 
-        outputSetOfParticles = self._createSetOfParticles()
-        readSetOfParticles(fnDeformedParticles, outputSetOfParticles)        
-        outputSetOfParticles.copyInfo(inputParticles)        
-        self._defineOutputs(outputParticles=outputSetOfParticles)              
+        
+        if not self.doGoldStandard.get():            
+            fnDeformedParticles = self._getExtraPath('deformed_particles.xmd')
+            outputSetOfParticles = self._createSetOfParticles()
+            readSetOfParticles(fnDeformedParticles, outputSetOfParticles)        
+            outputSetOfParticles.copyInfo(inputParticles)        
+            self._defineOutputs(outputParticles=outputSetOfParticles)              
+        else:
+            fnDeformedParticlesHalf1 = self._getExtraPath('deformed_particles_half1.xmd')
+            outputSetOfParticlesHalf1 = self._createSetOfParticles(suffix="1")            
+            readSetOfParticles(fnDeformedParticlesHalf1, outputSetOfParticlesHalf1)                                
+            outputSetOfParticlesHalf1.copyInfo(inputParticles)                     
+ 
+            self._defineOutputs(**{key % 1: outputSetOfParticlesHalf1})            
+            self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf1)
+            
+            fnDeformedParticlesHalf2 = self._getExtraPath('deformed_particles_half2.xmd')
+            outputSetOfParticlesHalf2 = self._createSetOfParticles(suffix="2")                                  
+            readSetOfParticles(fnDeformedParticlesHalf2, outputSetOfParticlesHalf2)
+            outputSetOfParticlesHalf2.copyInfo(inputParticles)            
+
+            self._defineOutputs(**{key % 2: outputSetOfParticlesHalf2})  
+            self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf2)
+     
+            
     #--------------------------- INFO functions -------------------------------------------- 
     
     def _summary(self):
@@ -204,16 +404,36 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     def _citations(self):
         return ['**********????????????????????************']
     
+    def _setHalf1(self, item, row):
+        if (item._rln_halfId == 1):
+            item._appendItem=False
+
+    def _setHalf2(self, item, row):
+        if (item._rln_halfId == 2):
+            item._appendItem=False
+            
     def _validate(self):
         errors=[]
-        inputVolDim = self.inputVolume.get().getDim()[0]
-        inputParticlesDim = self.inputParticles.get().getDim()[0]
-        referenceVolDim = self.referenceVolume.get().getDim()[0]
-        if inputVolDim != referenceVolDim:
-            errors.append("Input and reference maps must have the "
-                          "same dimensions!!!") 
-        if inputParticlesDim != inputVolDim:
-            errors.append("Input particles and input map do not have "
-                          "the same dimensions!!!")
-        return errors              
+                 
+        if self.doGoldStandard.get():
+            
+            inputVolDim1 = self.inputVolume1.get().getDim()[0]
+            inputVolDim2 = self.inputVolume2.get().getDim()[0]
+            
+            inputParticlesDim = self.inputParticles.get().getDim()[0]
+            referenceVolDim1 = self.referenceVolume1.get().getDim()[0]
+            referenceVolDim2 = self.referenceVolume2.get().getDim()[0]
+            
+            if ( (inputVolDim1 != inputVolDim2) or  (referenceVolDim1 != referenceVolDim2) or  (inputVolDim1 != referenceVolDim1) or (inputParticlesDim != inputVolDim1)):
+                errors.append("Incorrect dimensions of the input data") 
+        else:
+            
+            inputVolDim = self.inputVolume.get().getDim()[0]
+            inputParticlesDim = self.inputParticles.get().getDim()[0]
+            referenceVolDim = self.referenceVolume.get().getDim()[0]
+            
+            if ( (inputVolDim != referenceVolDim) or (inputParticlesDim != inputVolDim)):
+                errors.append("Incorrect dimensions of the input data") 
+
+        return errors
     

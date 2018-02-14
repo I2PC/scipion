@@ -50,7 +50,8 @@ class ProgMonogenicSignalRes : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial, fnSym, fnMeanVol, fnMaskOut, fnMd;
+	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial, fnSym,
+	fnMeanVol, fnMaskOut, fnMd;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R;
@@ -73,10 +74,17 @@ public:
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-    		double w1, double w1l, double w1h, MultidimArray<double> &amplitude,
+    		double w1, double w1l, MultidimArray<double> &amplitude,
     		int count, FileName fnDebug);
     void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
-    		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask);
+    		std::vector<double> &list, MultidimArray<double> &resolutionChimera,
+    		double &cut_value, MultidimArray<int> &pMask);
+    void resolution2eval(int &count_res, double step,
+    								double &resolution, double &last_resolution,
+    								double &freq, double &freqL,
+    								int &last_fourier_idx,
+    								bool &continueIter,	bool &breakIter,
+    								bool &doNextIteration);
     void run();
 
 public:
@@ -84,10 +92,12 @@ public:
     MultidimArray<double> iu, VRiesz; // Inverse of the frequency
 	MultidimArray< std::complex<double> > fftV, *fftN; // Fourier transform of the input volume
 	FourierTransformer transformer_inv;
-	MultidimArray< std::complex<double> > fftVRiesz;
+	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
 	bool halfMapsGiven;
 	Image<double> Vfiltered, VresolutionFiltered;
+	Matrix1D<double> freq_fourier;
+	Matrix2D<double> resolutionMatrix, maskMatrix;
 };
 //@}
 #endif
