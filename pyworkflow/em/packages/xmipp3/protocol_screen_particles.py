@@ -106,7 +106,6 @@ class XmippProtScreenParticles(ProtProcessParticles):
                            'of the input particles')
         form.addParallelSection(threads=0, mpi=0)
 
-    # --------------------------- INSERT steps functions -----------------------
 
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""

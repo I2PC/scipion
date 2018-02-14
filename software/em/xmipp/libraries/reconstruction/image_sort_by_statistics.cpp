@@ -107,6 +107,8 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
     MultidimArray<float> v3(numDescriptors3);
     MultidimArray<float> v4(numDescriptors4);
     std::vector<double> v04;
+    std::vector<std::vector<double> > v04all;
+    v04all.clear();
 
     if (verbose>0)
     {
@@ -170,6 +172,8 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
     Image<double> img;
     FourierTransformer transformer(FFTW_BACKWARD);
 
+    FileName fn_tmp = fn.substr(fn.find_last_of("@") + 1);
+
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (thereIsEnable)
@@ -206,6 +210,7 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
         tempM = (modI*modI);
 
         A1D_ELEM(v0,0) = (tempM*ROI).sum();
+        v04.push_back(A1D_ELEM(v0,0));
         int index = 1;
         var+=2;
         while (index < numNorm)
@@ -251,13 +256,13 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
 
         if (img.name()==name2)
         {
-            FileName fpName    = "test_1.txt";
+            FileName fpName = "test_1.txt";
             mI.write(fpName);
-            fpName    = "test_2.txt";
+            fpName = "test_2.txt";
             nI.write(fpName);
-            fpName    = "test_3.txt";
+            fpName = "test_3.txt";
             tempM.write(fpName);
-            fpName    = "test_4.txt";
+            fpName = "test_4.txt";
             ROI.write(fpName);
             //exit(1);
         }
@@ -318,14 +323,15 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
         tempPcaAnalyzer4.addVector(v4);
         if (addFeatures)
         	SF.setValue(MDL_SCORE_BY_SCREENING,v04,__iter.objId);
+        v04all.push_back(v04);
 
 #ifdef DEBUG
 
         if (img.name()==name1)
         {
-            FileName fpName    = "test.txt";
+            FileName fpName = "test.txt";
             mI.write(fpName);
-            fpName    = "test3.txt";
+            fpName = "test3.txt";
             nI.write(fpName);
         }
 #endif
@@ -336,7 +342,46 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
             progress_bar(imgno);
     }
 
-    FileName fn_tmp = fn.substr(fn.find_last_of("@") + 1);
+    std::ofstream fhv0, fhv1, fhv2, fhv3, fhv4;
+    fhv0.open((fn_tmp.withoutExtension() + "_v0").c_str(),
+        std::ios_base::app);
+    fhv1.open((fn_tmp.withoutExtension() + "_v1").c_str(),
+        std::ios_base::app);
+    fhv2.open((fn_tmp.withoutExtension() + "_v2").c_str(),
+        std::ios_base::app);
+    fhv3.open((fn_tmp.withoutExtension() + "_v3").c_str(),
+        std::ios_base::app);
+    fhv4.open((fn_tmp.withoutExtension() + "_v4").c_str(),
+        std::ios_base::app);
+    int n1 = numDescriptors0+numDescriptors1;
+    int n2 = n1+numDescriptors2;
+    int n3 = n2+numDescriptors3;
+    int n4 = n3+numDescriptors4;
+    if (fhv0.is_open() && fhv1.is_open() && fhv2.is_open() &&
+        fhv3.is_open() && fhv4.is_open())
+    {
+        for (int m=0; m<SF.size(); m++)
+        {
+            for (int n=0; n<numDescriptors0; n++)
+                fhv0 << v04all[m][n] << " ";
+            fhv0 << std::endl;
+            for (int n=numDescriptors0; n<n1; n++)
+                fhv1 << v04all[m][n] << " ";
+            fhv1 << std::endl;
+            for (int n=n1; n<n2; n++)
+                fhv2 << v04all[m][n] << " ";
+            fhv2 << std::endl;
+            for (int n=n2; n<n3; n++)
+                fhv3 << v04all[m][n] << " ";
+            fhv3 << std::endl;
+            for (int n=n3; n<n4; n++)
+                fhv4 << v04all[m][n] << " ";
+            fhv4 << std::endl;
+        }
+        fhv0.close(); fhv1.close(); fhv2.close(); fhv3.close(); fhv4.close();
+    }
+    else std::cerr << "Unable to open file(s).\n";
+
     tempPcaAnalyzer0.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer0").c_str(),numDescriptors0);
     tempPcaAnalyzer1.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer1").c_str(),numDescriptors1);
     tempPcaAnalyzer2.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer2").c_str(),numDescriptors2);
@@ -359,17 +404,14 @@ void ProgSortByStatistics::run()
     MetaData SF2 = SF;
     SF = SF2;
 
-    bool trained = false;
-
     if (fn_train != "")
     {
         SFtrain.read(fn_train);
-        processInputPrepareSPTH(SFtrain,trained);
-        trained = true;
-        processInputPrepareSPTH(SF,trained);
+        //processInputPrepareSPTH(SFtrain,trained);
+        processInputPrepareSPTH(SF,true);
     }
     else
-        processInputPrepareSPTH(SF,trained);
+        processInputPrepareSPTH(SF,false);
 
     int imgno = 0;
     int numPCAs = pcaAnalyzer.size();
