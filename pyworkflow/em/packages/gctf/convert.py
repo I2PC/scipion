@@ -30,9 +30,11 @@ This module contains converter functions that will serve to:
 """
 
 import os
+import numpy
 from collections import OrderedDict
 
 from pyworkflow.em.packages.gctf import GCTF_HOME
+from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
 from pyworkflow.object import Float, ObjectWrap
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -156,10 +158,9 @@ _rlnCoordinateY #2
         f.close()
 
 
-def rowToCtfModel(ctfRow):
+def rowToCtfModel(ctfRow, ctfModel):
     """ Create a CTFModel from a row of a meta """
     if ctfRow.containsAll(CTF_DICT):
-        ctfModel = em.CTFModel()
         for attr, label in CTF_DICT.iteritems():
             value = ctfRow.getValue(label)
             if not hasattr(ctfModel, attr):
@@ -172,3 +173,55 @@ def rowToCtfModel(ctfRow):
         ctfModel = None
 
     return ctfModel
+
+
+def getShifts(transform, alignType):
+    """
+    is2D == True-> matrix is 2D (2D images alignment)
+            otherwise matrix is 3D (3D volume alignment or projection)
+    invTransform == True  -> for xmipp implies projection
+                          -> for xmipp implies alignment
+    """
+    if alignType == ALIGN_NONE:
+        return None
+
+    inverseTransform = alignType == ALIGN_PROJ
+    # only flip is meaningful if 2D case
+    # in that case the 2x2 determinant is negative
+    flip = False
+    matrix = transform.getMatrix()
+    if alignType == ALIGN_2D:
+        # get 2x2 matrix and check if negative
+        flip = bool(numpy.linalg.det(matrix[0:2, 0:2]) < 0)
+        if flip:
+            matrix[0, :2] *= -1.  # invert only the first two columns keep x
+            matrix[2, 2] = 1.  # set 3D rot
+        else:
+            pass
+
+    elif alignType == ALIGN_3D:
+        flip = bool(numpy.linalg.det(matrix[0:3, 0:3]) < 0)
+        if flip:
+            matrix[0, :4] *= -1.  # now, invert first line including x
+            matrix[3, 3] = 1.  # set 3D rot
+        else:
+            pass
+
+    else:
+        pass
+        # flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        # if flip:
+        #    matrix[0,:4] *= -1.#now, invert first line including x
+    shifts = geometryFromMatrix(matrix, inverseTransform)
+
+    return shifts
+
+
+def geometryFromMatrix(matrix, inverseTransform):
+    from pyworkflow.em.transformations import translation_from_matrix
+    if inverseTransform:
+        matrix = numpy.linalg.inv(matrix)
+        shifts = -translation_from_matrix(matrix)
+    else:
+        shifts = translation_from_matrix(matrix)
+    return shifts
