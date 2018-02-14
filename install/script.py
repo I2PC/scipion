@@ -421,10 +421,6 @@ relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion_refine'])]
 
-env.addPackage('relion', version='1.3',
-               tar='relion-1.3.tgz',
-               commands=relion_commands)
-
 env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
                commands=relion_commands)
