@@ -294,10 +294,13 @@ class XmippProtReconstructSwarm(ProtRefine3D):
         Ts=self.readInfoField(fnDir,"sampling",xmipp.MDL_SAMPLINGRATE)
 
         # Final average
+        TsOrig=self.inputParticles.get().getSamplingRate()
+        XdimOrig=self.inputParticles.get().getDimensions()[0]
         fnAvg = self._getExtraPath("volumeAvg.vol")
+        self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnAvg,XdimOrig),numberOfMpi=1)
         volume=Volume()
         volume.setFileName(fnAvg)
-        volume.setSamplingRate(Ts)
+        volume.setSamplingRate(TsOrig)
         self._defineOutputs(outputVolume=volume)
         self._defineSourceRelation(self.inputParticles.get(),volume)
         self._defineSourceRelation(self.inputVolumes.get(),volume)
