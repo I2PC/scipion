@@ -58,13 +58,13 @@ class GctfCTFWizard(CtfWizard):
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
         return CtfWizard._getListProvider(self, _objs)
-        
+
     def show(self, form):
         protocol = form.protocol
         params = self._getParameters(protocol)
         _value = params['value']
         _label = params['label']
-        
+
 #        form.setParamFromVar('inputMicrographs') # update selected input micrographs
         provider = self._getProvider(protocol)
         
