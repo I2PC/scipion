@@ -271,7 +271,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             outSet.append(micOut)
 
         self._updateOutputSet('outputMicrographs', outSet, streamMode)
-
+        
+        if len(doneList)==0: #firstTime
+            self._defineTransformRelation(self.inputMicrographs, outSet) 
+            
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
