@@ -189,7 +189,7 @@ class TestGctfRefine(TestGctfBase):
         self.assertIsNotNone(protCTF.outputParticles,
                              "SetOfParticles has not been produced.")
         self.assertEqual(protCTF.inputParticles.get().getSize(),
-                         protCTF.outputParticles.get().getSize())
+                         protCTF.outputParticles.getSize())
 
     def testRunGctf2(self):
         protCTF = ProtGctfRefine(objLabel='gCTF local refinement (with input CTFs)')
@@ -215,7 +215,7 @@ class TestGctfRefine(TestGctfBase):
         self.assertIsNotNone(protCTF.outputParticles,
                              "SetOfParticles has not been produced.")
         self.assertEqual(protCTF.inputParticles.get().getSize(),
-                         protCTF.outputParticles.get().getSize())
+                         protCTF.outputParticles.getSize())
 
 
 if __name__ == "__main__":
