@@ -514,13 +514,13 @@ env.addPackage('cryoem', version='1.0',
 env.addPackage('gEMpicker', version='1.1',
                tar='gEMpicker_v1.1.tgz')
 
-env.addPackage('Gctf', version='0.50',
+env.addPackage('gctf', version='0.50',
                tar='Gctf_v0.50.tgz')
 
-env.addPackage('Gctf', version='1.06',
+env.addPackage('gctf', version='1.06',
                tar='Gctf_v1.06.tgz')
 
-env.addPackage('Gautomatch', version='0.53',
+env.addPackage('gautomatch', version='0.53',
                tar='Gautomatch_v0.53.tgz')
 
 env.addPackage('mag_distortion', version='1.0.1',
@@ -529,5 +529,16 @@ env.addPackage('mag_distortion', version='1.0.1',
 env.addPackage('ethan', version='1.2',
                tar='ethan-1.2.tgz',
                commands=[('make', 'ethan')])
+
+fsc_commands = [('conda env create -f environment.yml && touch IS_INSTALLED',
+                 'IS_INSTALLED')]
+
+env.addPackage('nysbc-3DFSC', version='2.5',
+               tar='nysbc-3DFSC_2.5.tgz',
+               commands=fsc_commands,
+               neededProgs=['conda'])
+
+env.addPackage('cryoEF', version='1.1.0',
+               tar='cryoEF_v1.1.0.tgz')
 
 env.execute()
