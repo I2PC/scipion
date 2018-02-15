@@ -31,6 +31,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
+from pyworkflow.em.constants import RELATION_CTF
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import Coordinate
 from pyworkflow.protocol.constants import STEPS_PARALLEL
@@ -57,7 +58,7 @@ class ProtGctfRefine(em.ProtParticles):
     To find more information about Gctf go to:
     http://www.mrc-lmb.cam.ac.uk/kzhang
     """
-    _label = 'CTF refinement on GPU'
+    _label = 'CTF local refinement'
     _lastUpdateVersion = VERSION_1_2
 
     def __init__(self, **kwargs):
@@ -240,7 +241,7 @@ class ProtGctfRefine(em.ProtParticles):
                       help='Phase shift target in the search: CCC or '
                            'resolution limit')
 
-        form.addSection(label='Particle refine')
+        form.addSection(label='Local refinement')
         line = form.addLine('Local resolution (A)',
                             help='Select _lowest_ and _highest_ resolution '
                                  'to be used for local CTF (in Angstrom).')
@@ -278,6 +279,40 @@ class ProtGctfRefine(em.ProtParticles):
                            'changes in local area (suggested). If True, '
                            'refine local astigmatism (not suggested unless '
                            'SNR is very good).')
+
+        form.addSection(label='CTF refinement')
+        form.addParam('useInputCtf', params.BooleanParam, default=False,
+                      label="Refine input CTFs",
+                      help='Input CTF will be taken from input micrographs. '
+                           'By default Gctf wil NOT refine user-provided '
+                           'CTF parameters but do ab initial determination.')
+        form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
+                      condition='useInputCtf',
+                      relationName=RELATION_CTF,
+                      attributeName='_getMicrographs',
+                      label='Input CTF estimation',
+                      help='Choose some CTF estimation related to input '
+                           'micrographs.')
+        form.addParam('defUerr', params.FloatParam, default=500.0,
+                      condition='useInputCtf',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='DefocusU error (nm)',
+                      help='Estimated error of input initial defocus_U.')
+        form.addParam('defVerr', params.FloatParam, default=500.0,
+                      condition='useInputCtf',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='DefocusV error (nm)',
+                      help='Estimated error of input initial defocus_V.')
+        form.addParam('defAerr', params.FloatParam, default=15.0,
+                      condition='useInputCtf',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Defocus angle error',
+                      help='Estimated error of input initial defocus angle.')
+        form.addParam('Berr', params.FloatParam, default=50.0,
+                      condition='useInputCtf',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='B-factor error',
+                      help='Estimated error of input initial B-factor.')
         form.addParallelSection(threads=0, mpi=0)
 
     #--------------------------- STEPS functions -------------------------------
@@ -289,7 +324,7 @@ class ProtGctfRefine(em.ProtParticles):
     def convertInputStep(self):
         inputParticles = self.inputParticles.get()
         firstCoord = inputParticles.getFirstItem().getCoordinate()
-        hasMicName = firstCoord.getMicName() is not None
+        self.hasMicName = firstCoord.getMicName() is not None
         inputMics = self._getMicrographs()
         self.alignType = inputParticles.getAlignment()
         self.downFactor = self.ctfDownFactor.get()
@@ -315,7 +350,7 @@ class ProtGctfRefine(em.ProtParticles):
         insertedMics = {}
 
         for mic in inputMics:
-            if hasMicName:
+            if self.hasMicName:
                 micKey = mic.getMicName()
                 micKey2 = pwutils.removeBaseExt(micKey)
             else:
@@ -327,7 +362,7 @@ class ProtGctfRefine(em.ProtParticles):
                 print "           - %s" % mic.getLocation()
                 raise Exception("Micrograph key %s is duplicated!" % micKey)
             micDict[micKey] = mic.clone()
-            if hasMicName:
+            if self.hasMicName:
                 micBaseDict[micKey2] = mic.clone()
 
         # match the mic from coord with micDict
@@ -337,7 +372,7 @@ class ProtGctfRefine(em.ProtParticles):
                 print "Skipping particle, coordinates not found"
                 continue
 
-            if hasMicName:
+            if self.hasMicName:
                 micKey = coord.getMicName()
                 micKey2 = pwutils.removeBaseExt(micKey)
             else:
@@ -413,6 +448,39 @@ class ProtGctfRefine(em.ProtParticles):
             self._params['micFn'] = outMic
             self._params['gctfOut'] = micFnOut
 
+            if self.useInputCtf and self.ctfRelations.get():
+                # get input CTFs from a mic
+                ctfs = self.ctfRelations.get()
+                micKey = mic.getMicName() if self.hasMicName else mic.getObjId()
+
+                for ctf in ctfs:
+                    ctfMicName = ctf.getMicrograph().getMicName()
+                    ctfMicId = ctf.getMicrograph().getObjId()
+                    if micKey == ctfMicName or micKey == ctfMicId:
+                        # add CTF refine options
+                        self._params.update({'refine_input_ctf': 1,
+                                             'defU_init': ctf.getDefocusU(),
+                                             'defV_init': ctf.getDefocusV(),
+                                             'defA_init': ctf.getDefocusAngle(),
+                                             'B_init': self.bfactor.get()
+                                             })
+                        self._args += "--refine_input_ctf %d " % self._params['refine_input_ctf']
+                        self._args += "--defU_init %f " % self._params['defU_init']
+                        self._args += "--defV_init %f " % self._params['defV_init']
+                        self._args += "--defA_init %f " % self._params['defA_init']
+                        self._args += "--B_init %f " % self._params['B_init']
+                        self._args += "--defU_err %f " % self.defUerr.get()
+                        self._args += "--defV_err %f " % self.defVerr.get()
+                        self._args += "--defA_err %f " % self.defAerr.get()
+                        self._args += "--B_err %f " % self.Berr.get()
+
+                        break
+
+            # final args
+            self._args += "--do_validation %d " % (1 if self.doValidate else 0)
+            self._args += "%(micFn)s "
+            self._args += "> %(gctfOut)s"
+
             try:
                 self.runJob(self._getProgram(), self._args % self._params,
                             env=self._getEnviron())
@@ -487,7 +555,21 @@ class ProtGctfRefine(em.ProtParticles):
                           "~/.config/scipion/scipion.conf\n"
                           "and set GCTF variables properly."
                           % self._getProgram())
+        if self.useInputCtf and not self.ctfRelations.get():
+            errors.append("Please provide input CTFs for refinement.")
+
         return errors
+
+    def _summary(self):
+        summary = []
+
+        if not hasattr(self, 'outputParticles'):
+            summary.append("Output is not ready yet.")
+        else:
+            summary.append("CTF refinement of %d particles."
+                           % self.inputParticles.get().getSize())
+
+        return summary
 
     def _citations(self):
         return ['Zhang2016']
@@ -534,6 +616,7 @@ class ProtGctfRefine(em.ProtParticles):
             self._params['lowRes'] = 50
         self._params['highRes'] = sampling / self._params['highRes']
         self._params['step_focus'] = 500.0
+
         self._argsGctf()
 
     def _argsGctf(self):
@@ -583,10 +666,6 @@ class ProtGctfRefine(em.ProtParticles):
             self._args += "--Href_resL %d " % self.HighResL.get()
             self._args += "--Href_resH %d " % self.HighResH.get()
             self._args += "--Href_bfac %d " % self.HighResBf.get()
-
-        self._args += "--do_validation %d " % (1 if self.doValidate else 0)
-        self._args += "%(micFn)s "
-        self._args += "> %(gctfOut)s"
 
     def _getPsdPath(self, micDir):
         return os.path.join(micDir, 'ctfEstimation.mrc')
