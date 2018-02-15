@@ -98,6 +98,12 @@ class XmippProtSolidAngles(ProtAnalysis3D):
                            "computed and this is needed for protocols "
                            "split-volume. ")
 
+        form.addParam('homogeneize', params.IntParam, default=-1,
+                      label='Homogeneize groups', condition="directionalClasses==1",
+                      help="Set to -1 for no homogeneization. Set to 0 for homogeneizing "
+                           "to the minimum of class size. Set to any other number to "
+                           "homogeneize to that particular number")
+
         form.addParam('targetResolution', params.FloatParam, default=10,
                       condition="directionalClasses > 1",
                       label='Target resolution (A)')
@@ -129,6 +135,8 @@ class XmippProtSolidAngles(ProtAnalysis3D):
                                  self.symmetryGroup.get())
 
         self._insertFunctionStep('classifyGroupsStep')
+        if self.directionalClasses.get()==1 and self.homogeneize.get()>=0:
+            self._insertFunctionStep('homogeneizeStep')
 
         if self.refineAngles:
             self._insertFunctionStep('refineAnglesStep')
@@ -307,6 +315,36 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         self.info("Writing images info to: %s" % fnDirectionalImages)
         mdImages.write(fnDirectionalImages)
 
+    def homogeneizeStep(self):
+        minClass = self.homogeneize.get()
+        fnNeighbours = self._getExtraPath("neighbours.xmd")
+        
+        # Look for the block with the minimum number of images
+        if minClass==0:
+            minClass = 1e38
+            for block in xmipp.getBlocksInMetaDataFile(fnNeighbours):
+                projNumber = int(block.split("_")[1])
+                fnDir=self._getExtraPath("direction_%d"%projNumber,"level_00","class_classes.xmd")
+                if exists(fnDir):
+                    blockSize = md.getSize("class000001_images@"+fnDir)
+                    if blockSize<minClass:
+                        minClass=blockSize
+        
+        # Construct the homogeneized metadata
+        mdAll = xmipp.MetaData()
+        mdSubset=xmipp.MetaData()
+        mdRandom=xmipp.MetaData()
+        for block in xmipp.getBlocksInMetaDataFile(fnNeighbours):
+            projNumber = int(block.split("_")[1])
+            fnDir=self._getExtraPath("direction_%d"%projNumber,"level_00","class_classes.xmd")
+            if exists(fnDir):
+                mdDirection = xmipp.MetaData("class000001_images@"+fnDir)
+                mdRandom.randomize(mdDirection)
+                mdSubset.selectPart(mdRandom,0L,min(mdRandom.size(),minClass))
+                mdAll.unionAll(mdSubset)
+        mdAll.removeDuplicates(md.MDL_ITEM_ID)
+        mdAll.write(self._getExtraPath("images_homogeneous.xmd"))    
+
     def refineAnglesStep(self):
         # TODO: Implement this step from the current DirectionalClasses protocol
         pass
@@ -328,6 +366,20 @@ class XmippProtSolidAngles(ProtAnalysis3D):
                                     updateItemCallback=self._updateParticle,
                                     skipDisabled=True)
 
+        fnHomogeneous = self._getExtraPath("images_homogeneous.xmd")
+        if exists(fnHomogeneous):
+            homogeneousSet = self._createSetOfParticles()
+            homogeneousSet.copyInfo(inputParticles)
+            homogeneousSet.setAlignmentProj()
+            self.iterMd = md.iterRows(fnHomogeneous, md.MDL_PARTICLE_ID)
+            self.lastRow = next(self.iterMd) 
+            homogeneousSet.copyItems(inputParticles,
+                                     updateItemCallback=self._updateHomogeneousItem)
+            print(homogeneousSet)
+            self._defineOutputs(outputHomogeneous=homogeneousSet)
+            self._defineSourceRelation(self.inputParticles, homogeneousSet)
+            aaaa
+
         classes2D.classifyItems(updateItemCallback=iterator.updateItem,
                                 updateClassCallback=self._updateClass)
 
@@ -335,6 +387,23 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         self._defineOutputs(outputAverages=self.averageSet)
         self._defineSourceRelation(self.inputParticles, classes2D)
         self._defineSourceRelation(self.inputParticles, self.averageSet)
+
+    def _updateHomogeneousItem(self, particle, row):
+        count = 0
+        while self.lastRow and particle.getObjId() == self.lastRow.getValue(md.MDL_PARTICLE_ID):
+            count += 1
+            if count:
+                createItemMatrix(particle, self.lastRow)
+                #self._createItemMatrix(particle, self.lastRow)
+            try:
+                self.lastRow = next(self.iterMd)
+            except StopIteration:
+                self.lastRow = None
+                    
+        particle._appendItem = count > 0
+
+    def _createItemMatrix(self, particle, row):
+        createItemMatrix(particle, row, align=em.ALIGN_PROJ)
 
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(xmipp.MDL_REF2))
