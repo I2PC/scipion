@@ -226,10 +226,10 @@ class CtfView(ObjectView):
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
                     '_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
                     '_xmipp_ctfCritFirstZero',
-                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
+                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritIceness','_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
                     '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq',
-                    '_xmipp_ctfCritPsdCorr90'
+                    '_xmipp_ctfCritPsdCorr90', '_xmipp_ctfVPPphaseshift'
                    ]
 
 
