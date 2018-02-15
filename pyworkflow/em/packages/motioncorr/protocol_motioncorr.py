@@ -103,7 +103,7 @@ class ProtMotionCorr(ProtAlignMovies):
                       label='WARNING! You need to have installed CUDA'
                             ' libraries and a Nvidia GPU')
 
-        form.addParam('GPUIDs', params.StringParam, default='0',
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
                       expertLevel=cons.LEVEL_ADVANCED,
                       label="Choose GPU IDs",
                       help="GPU may have several cores. Set it to zero"
@@ -321,7 +321,6 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-ned': '%d' % aN,
                         '-nss': '%d' % s0,
                         '-nes': '%d' % sN,
-                        '-gpu': self.GPUIDs.get(),
                         '-flg': logFile,
                         }
 
@@ -341,6 +340,7 @@ class ProtMotionCorr(ProtAlignMovies):
             if self.doSaveMovie:
                 args += ' -fct "%s" -ssc 1' % outputMovieFn
 
+            args += '-gpu %(GPU)s'
             args += ' ' + self.extraParams.get()
             program = MOTIONCORR_PATH
 
@@ -378,7 +378,6 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
                         '-kV': inputMovies.getAcquisition().getVoltage(),
-                        '-Gpu': self.GPUIDs.get(),
                         '-LogFile': logFileBase,
                         }
             if getVersion('MOTIONCOR2') != '03162016':
@@ -435,6 +434,7 @@ class ProtMotionCorr(ProtAlignMovies):
             if inputMovies.getDark():
                 args += ' -Dark "%s"' % inputMovies.getDark()
 
+            args += ' -Gpu %(GPU)s'
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
 
@@ -457,7 +457,7 @@ class ProtMotionCorr(ProtAlignMovies):
                     fakeShiftsFn = self.writeZeroShifts(movie)
                     self.averageMovie(movie, fakeShiftsFn, aveMicFn,
                                       binFactor=self.binFactor.get(),
-                                      roi=roi, dark=None,
+                                      roi=roi, dark=inputMovies.getDark(),
                                       gain=inputMovies.getGain())
 
                     self.computePSDs(movie, aveMicFn, outMicFn,
@@ -523,7 +523,7 @@ class ProtMotionCorr(ProtAlignMovies):
                           "path (%s). Please, check scipion configuration."
                           % (cudaConst, CUDA_LIB, cudaLib))
 
-        gpu = self.GPUIDs.get()
+        gpu = self.gpuList.get()
 
         if not self.useMotioncor2:
             bin = self.binFactor.get()
@@ -729,10 +729,9 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     ax.set_title('Alignment based upon full frames')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
-    # morioncor2 (1.0.2) values refer to the middle frame, so first frame is no longer 0,0
+    # motioncor2 (1.0.2) values refer to the middle frame, so first frame is no longer 0,0
     #if meanX[0] != 0 or meanY[0] != 0:
     #    raise Exception("First frame shift must be (0,0)!")
-
     i = first
 
     # ROB no accumulation is needed

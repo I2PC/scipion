@@ -458,7 +458,8 @@ def getListFromRangeString(rangeStr):
     "2,6,9-11" -> [2,6,9,10,11]
     "2 5, 6-8" -> [2,5,6,7,8]
     """
-    elements = rangeStr.split(',')
+    # Split elements by command or space
+    elements = re.split(',| ', rangeStr)
     values = []
     for e in elements:
         if '-' in e:
