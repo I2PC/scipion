@@ -33,8 +33,9 @@ from pyworkflow.utils.path import makePath
 from pyworkflow.em.convert import ImageHandler, ALIGN_PROJ
 from pyworkflow.em.data import Image
 from pyworkflow.em.protocol import ProtAnalysis3D
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import createItemMatrix, writeSetOfParticles
 import pyworkflow.em.metadata as md
+import pyworkflow.em as em
 
 import xmipp
 from convert import rowToAlignment, setXmippAttributes, xmippToLocation
@@ -343,7 +344,11 @@ class XmippProtSolidAngles(ProtAnalysis3D):
                 mdSubset.selectPart(mdRandom,0L,min(mdRandom.size(),minClass))
                 mdAll.unionAll(mdSubset)
         mdAll.removeDuplicates(md.MDL_ITEM_ID)
-        mdAll.write(self._getExtraPath("images_homogeneous.xmd"))    
+        mdAll.sort(md.MDL_ITEM_ID)
+        mdAll.fillConstant(md.MDL_PARTICLE_ID,1)
+        fnHomogeneous = self._getExtraPath("images_homogeneous.xmd")
+        mdAll.write(fnHomogeneous)    
+        self.runJob("xmipp_metadata_utilities",'-i %s --operate modify_values "particleId=itemId"'%fnHomogeneous,numberOfMpi=1)
 
     def refineAnglesStep(self):
         # TODO: Implement this step from the current DirectionalClasses protocol
@@ -360,7 +365,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         self.averageSet.copyInfo(inputParticles)
         self.averageSet.setAlignmentProj()
 
-        # Let's use a SetMdIterator because it could be less particles
+        # Let's use a SetMdIterator because it should be less particles
         # in the metadata produced than in the input set
         iterator = md.SetMdIterator(self.mdImages, sortByLabel=md.MDL_ITEM_ID,
                                     updateItemCallback=self._updateParticle,
@@ -375,10 +380,8 @@ class XmippProtSolidAngles(ProtAnalysis3D):
             self.lastRow = next(self.iterMd) 
             homogeneousSet.copyItems(inputParticles,
                                      updateItemCallback=self._updateHomogeneousItem)
-            print(homogeneousSet)
             self._defineOutputs(outputHomogeneous=homogeneousSet)
             self._defineSourceRelation(self.inputParticles, homogeneousSet)
-            aaaa
 
         classes2D.classifyItems(updateItemCallback=iterator.updateItem,
                                 updateClassCallback=self._updateClass)
@@ -393,8 +396,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         while self.lastRow and particle.getObjId() == self.lastRow.getValue(md.MDL_PARTICLE_ID):
             count += 1
             if count:
-                createItemMatrix(particle, self.lastRow)
-                #self._createItemMatrix(particle, self.lastRow)
+                createItemMatrix(particle, self.lastRow, align=em.ALIGN_PROJ)
             try:
                 self.lastRow = next(self.iterMd)
             except StopIteration:
@@ -402,19 +404,8 @@ class XmippProtSolidAngles(ProtAnalysis3D):
                     
         particle._appendItem = count > 0
 
-    def _createItemMatrix(self, particle, row):
-        createItemMatrix(particle, row, align=em.ALIGN_PROJ)
-
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(xmipp.MDL_REF2))
-
-        # item.setTransform(rowToAlignment(row, em.ALIGN_2D))
-        #
-        # item._rlnNormCorrection = em.Float(row.getValue('rlnNormCorrection'))
-        # item._rlnLogLikeliContribution = em.Float(
-        #     row.getValue('rlnLogLikeliContribution'))
-        # item._rlnMaxValueProbDistribution = em.Float(
-        #     row.getValue('rlnMaxValueProbDistribution'))
 
     def _updateClass(self, item):
         classId = item.getObjId()
@@ -432,26 +423,6 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         reprojection = Image()
         reprojection.setLocation(xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE1)))
         item.reprojection = reprojection
-
-    # def createOutputStep(self):
-    #     fnDirectional=self._getPath("directionalClasses.xmd")
-    #     if exists(fnDirectional):
-    #         inputParticles = self.inputParticles.get()
-    #         self._sampling = inputParticles.getSamplingRate()
-    #         classes2DSet = self._createSetOfClasses2D(inputParticles)
-    #         readSetOfClasses2D(classes2DSet, fnDirectional, 'classes',
-    #                            preprocessClass=self._readRow)
-    #         self._defineOutputs(outputClasses=classes2DSet)
-    #         self._defineSourceRelation(self.inputParticles, classes2DSet)
-    #
-    # def _readRow(self, classItem, row):
-    #     img = Image()
-    #     img.setSamplingRate(self._sampling)
-    #     img.setLocation(xmippToLocation(row.getValue(xmipp.MDL_IMAGE1)))
-    #     classItem.reprojection = img
-    #
-    #     setXmippAttributes(classItem, row, xmipp.MDL_ANGLE_ROT)
-    #     setXmippAttributes(classItem, row, xmipp.MDL_ANGLE_TILT)
 
     # --------------------------- INFO functions -------------------------------
 
