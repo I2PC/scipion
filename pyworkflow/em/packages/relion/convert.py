@@ -687,6 +687,11 @@ def micrographToRow(mic, micRow, **kwargs):
     """ Set labels values from Micrograph mic to md row. """
     imageToRow(mic, micRow, imgLabel=md.RLN_MICROGRAPH_NAME, **kwargs)
 
+
+def movieToRow(movie, movieRow, **kwargs):
+    """ Set labels values from movie to md row. """
+    imageToRow(movie, movieRow, imgLabel=md.RLN_MICROGRAPH_MOVIE_NAME, **kwargs)
+
     
 def writeSetOfMicrographs(micSet, starFile, **kwargs):
     """ If 'outputDir' is in kwargs, the micrographs are\
@@ -696,6 +701,13 @@ def writeSetOfMicrographs(micSet, starFile, **kwargs):
     setOfImagesToMd(micSet, micMd, micrographToRow, **kwargs)
     blockName = kwargs.get('blockName', 'Particles')
     micMd.write('%s@%s' % (blockName, starFile))
+
+
+def writeSetOfMovies(movieSet, starFile, **kwargs):
+    movieMd = md.MetaData()
+    setOfImagesToMd(movieSet, movieMd, movieToRow, **kwargs)
+    blockName = kwargs.get('blockName', '')
+    movieMd.write('%s@%s' % (blockName, starFile))
 
 
 def writeSqliteIterData(imgStar, imgSqlite, **kwargs):
@@ -941,16 +953,8 @@ def readCoordinates(mic, fileName, coordsSet):
         coordsSet.append(coord)
 
 
-def writeSetOfCoordinates(coordSet, outputDir):
-    pass
-
-
-def writeCoordinates(mic, fileName):
-    pass
-
-
 def openStar(fn, extraLabels=False):
-    # We are going to write metadata directy to file to do it faster
+    # We are going to write metadata directly to file to do it faster
     f = open(fn, 'w')
     s = """
 data_
