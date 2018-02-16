@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #include "ctf_estimate_from_micrograph.h"
-#include "ctf_enhance_psd.h"
+#include "ctf_enhance_psd.h" //Al final hay una funcion que lo necesita. Pero es necesaria?
 
 #include <data/args.h>
 #include <data/micrograph.h>
@@ -76,8 +76,17 @@ void ProgCTFEstimateFromMicrograph::readParams()
         fn_pos = getParam("--mode", 1);
     }
     estimate_ctf = !checkParam("--dont_estimate_ctf");
+    acceleration1D = checkParam("--acceleration1D");
+
     if (estimate_ctf)
-        prmEstimateCTFFromPSD.readBasicParams(this);
+    {
+    	if (!acceleration1D)
+    		prmEstimateCTFFromPSD.readBasicParams(this);
+    	else
+    		prmEstimateCTFFromPSDFast.readBasicParams(this); //Nuevo
+
+    }
+
     bootstrapN = getIntParam("--bootstrapFit");
 }
 
@@ -117,6 +126,7 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addParamsLine("                              : The file is metadata with the position of each particle within the micrograph");
     addParamsLine("==+ CTF fit");
     addParamsLine("  [--dont_estimate_ctf]       : Do not fit a CTF to PSDs");
+    addParamsLine("  [--acceleration1D]          : Accelerate PSD estimation");
     ARMA_parameters::defineParams(this);
     ProgCTFEstimateFromPSD::defineBasicParams(this);
     addExampleLine("Estimate PSD", false);
@@ -331,7 +341,6 @@ void ProgCTFEstimateFromMicrograph::run()
     // Attenuate borders to avoid discontinuities
     MultidimArray<double> pieceSmoother;
     constructPieceSmoother(piece, pieceSmoother);
-
     if (verbose)
         std::cerr << "Computing models of each piece ...\n";
 
@@ -345,6 +354,7 @@ void ProgCTFEstimateFromMicrograph::run()
     	fn_psd.deleteFile();
     if (fileExists(fn_root+".ctfparam"))
     	FileName(fn_root+".ctfparam").deleteFile();
+    printf("FileName = %s \n",fn_psd.c_str());
 
     if (verbose)
         init_progress_bar(div_Number);
@@ -481,6 +491,7 @@ void ProgCTFEstimateFromMicrograph::run()
         		// Compute the theoretical model if not averaging ....................
         		if (psd_mode != OnePerMicrograph)
         		{
+
         			if (bootstrapN != -1)
         				REPORT_ERROR(ERR_VALUE_INCORRECT,
         						"Bootstrapping is only available for micrograph averages");
@@ -504,12 +515,27 @@ void ProgCTFEstimateFromMicrograph::run()
         				ROUT_Adjust_CTF(prmEstimateCTFFromPSD, ctfmodel, false);
 
         				int idxi=blocki-skipBorders;
-        				int idxj=blockj-skipBorders;
-        				A2D_ELEM(defocusPlanefittingU,idxi,idxj)=ctfmodel.DeltafU;
-        				A2D_ELEM(defocusPlanefittingV,idxi,idxj)=ctfmodel.DeltafV;
+						int idxj=blockj-skipBorders;
+						A2D_ELEM(defocusPlanefittingU,idxi,idxj)=ctfmodel.DeltafU;
+						A2D_ELEM(defocusPlanefittingV,idxi,idxj)=ctfmodel.DeltafV;
 
-        				A2D_ELEM(Xm,idxi,idxj)=(piecei+pieceDim/2)*ctfmodel.Tm;
-        				A2D_ELEM(Ym,idxi,idxj)=(piecej+pieceDim/2)*ctfmodel.Tm;
+						A2D_ELEM(Xm,idxi,idxj)=(piecei+pieceDim/2)*ctfmodel.Tm;
+						A2D_ELEM(Ym,idxi,idxj)=(piecej+pieceDim/2)*ctfmodel.Tm;
+
+						//1D//
+						prmEstimateCTFFromPSDFast.fn_psd = fn_psd_piece; //Nuevo
+						CTFDescription1D ctf1Dmodel; //Nuevo
+        				ctf1Dmodel.isLocalCTF = true;
+						ctf1Dmodel.x0 = piecej;
+						ctf1Dmodel.xF = (piecej + pieceDim-1);
+						ctf1Dmodel.y0 = piecei;
+						ctf1Dmodel.yF = (piecei + pieceDim-1);
+        				ROUT_Adjust_CTFFast(prmEstimateCTFFromPSDFast, ctf1Dmodel, false); //Nuevo
+
+						A2D_ELEM(defocusPlanefittingU,idxi,idxj)=ctf1Dmodel.Defocus;
+
+						A2D_ELEM(Xm,idxi,idxj)=(piecei+pieceDim/2)*ctf1Dmodel.Tm;
+						A2D_ELEM(Ym,idxi,idxj)=(piecej+pieceDim/2)*ctf1Dmodel.Tm;
 
         				if (psd_mode == OnePerParticle)
         					posFile.setValue(MDL_CTF_MODEL,
@@ -532,9 +558,10 @@ void ProgCTFEstimateFromMicrograph::run()
     if (verbose)
         progress_bar(div_Number);
 
-    // If averaging, compute the CTF model ----------------------------------
+    // If averaging, compute the CTF model ----------------------------------  //Program execution
     if (psd_mode == OnePerMicrograph)
     {
+
         // Compute the avg and stddev of the local PSDs
         const MultidimArray<double> &mpsd_std = psd_std();
         const MultidimArray<double> &mpsd_avg = psd_avg();
@@ -557,7 +584,10 @@ void ProgCTFEstimateFromMicrograph::run()
             // Estimate the CTF parameters
             std::cerr << "Adjusting CTF model to the PSD ...\n";
             prmEstimateCTFFromPSD.fn_psd = fn_psd;
-            CTFDescription ctfmodel;
+            prmEstimateCTFFromPSDFast.fn_psd = fn_psd;
+			CTFDescription ctfmodel;
+			CTFDescription1D ctf1Dmodel; //Nuevo
+
             if (bootstrapN == -1)
             {
                 try {
@@ -601,13 +631,25 @@ void ProgCTFEstimateFromMicrograph::run()
                     psign += "+";
                 double zrandomness = checkRandomness(psign);
 
+				if(!acceleration1D)
+				{
                 ctfmodel.isLocalCTF = false;
                 ctfmodel.x0 = 0;
                 ctfmodel.xF = (Xdim-1);
                 ctfmodel.y0 = 0;
                 ctfmodel.yF = (Ydim-1);
                 ROUT_Adjust_CTF(prmEstimateCTFFromPSD,ctfmodel, false);
-
+				}
+				else
+				{
+				std::cout << "1D acceleration" << std::endl;
+                ctf1Dmodel.isLocalCTF = false;
+				ctf1Dmodel.x0 = 0;
+				ctf1Dmodel.xF = (Xdim-1);
+				ctf1Dmodel.y0 = 0;
+				ctf1Dmodel.yF = (Ydim-1);
+                ROUT_Adjust_CTFFast(prmEstimateCTFFromPSDFast,ctf1Dmodel, false);
+				}
                 // Evaluate PSD variance and write into the CTF
                 double stdQ = 0;
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(mpsd_std)
@@ -625,9 +667,12 @@ void ProgCTFEstimateFromMicrograph::run()
             else
             {
                 // If bootstrapping
-                MultidimArray<double> CTFs(bootstrapN, 32);
+
                 prmEstimateCTFFromPSD.bootstrap = true;
                 prmEstimateCTFFromPSD.show_optimization = true;
+                if (!acceleration1D)
+                {
+                MultidimArray<double> CTFs(bootstrapN, 32);
                 FileName fnBase = fn_psd.withoutExtension();
                 std::cerr << "Computing bootstrap ...\n";
                 init_progress_bar(bootstrapN);
@@ -635,6 +680,7 @@ void ProgCTFEstimateFromMicrograph::run()
                 {
                     CTFs(n, 31) = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                   ctfmodel, false);
+
                     CTFs(n, 0) = ctfmodel.Tm;
                     CTFs(n, 1) = ctfmodel.kV;
                     CTFs(n, 2) = ctfmodel.DeltafU;
@@ -667,6 +713,7 @@ void ProgCTFEstimateFromMicrograph::run()
                     CTFs(n, 29) = ctfmodel.cV2;
                     CTFs(n, 30) = ctfmodel.gaussian_angle2;
 
+
                     std::string command = (std::string) "mv -i " + fnBase
                                           + ".ctfparam " + fnBase + "_bootstrap_"
                                           + integerToString(n, 4) + ".ctfparam";
@@ -686,9 +733,69 @@ void ProgCTFEstimateFromMicrograph::run()
                     progress_bar(n);
                 }
                 progress_bar(bootstrapN);
+
+                }
+////////////////////////////CTF 1D execution///////////////////////////////////
+                else
+                {
+                	MultidimArray<double> CTFs(bootstrapN, 21);
+					prmEstimateCTFFromPSDFast.bootstrap = true;
+					prmEstimateCTFFromPSDFast.show_optimization = true;
+					FileName fnBase = fn_psd.withoutExtension();
+					std::cerr << "Computing bootstrap ...\n";
+					init_progress_bar(bootstrapN);
+					for (int n = 0; n < bootstrapN; n++)
+					{
+						CTFs(n, 21) = ROUT_Adjust_CTFFast(prmEstimateCTFFromPSDFast,ctf1Dmodel, false);
+
+						CTFs(n, 0) = ctf1Dmodel.Tm;
+						CTFs(n, 1) = ctf1Dmodel.kV;
+						CTFs(n, 2) = ctf1Dmodel.Defocus;
+						CTFs(n, 3) = ctf1Dmodel.Cs;
+						CTFs(n, 4) = ctf1Dmodel.Ca;
+						CTFs(n, 5) = ctf1Dmodel.espr;
+						CTFs(n, 6) = ctf1Dmodel.ispr;
+						CTFs(n, 7) = ctf1Dmodel.alpha;
+						CTFs(n, 8) = ctf1Dmodel.DeltaF;
+						CTFs(n, 9) = ctf1Dmodel.DeltaR;
+						CTFs(n, 10) = ctf1Dmodel.Q0;
+						CTFs(n, 11) = ctf1Dmodel.K;
+						CTFs(n, 12) = ctf1Dmodel.gaussian_K;
+						CTFs(n, 13) = ctf1Dmodel.sigma1;
+						CTFs(n, 14) = ctf1Dmodel.Gc1;
+						CTFs(n, 15) = ctf1Dmodel.sqrt_K;
+						CTFs(n, 16) = ctf1Dmodel.sq;
+						CTFs(n, 17) = ctf1Dmodel.base_line;
+						CTFs(n, 18) = ctf1Dmodel.gaussian_K2;
+						CTFs(n, 19) = ctf1Dmodel.sigma2;
+						CTFs(n, 20) = ctf1Dmodel.Gc2;
+
+
+						std::string command = (std::string) "mv -i " + fnBase
+											  + ".ctfparam " + fnBase + "_bootstrap_"
+											  + integerToString(n, 4) + ".ctfparam";
+						if (system(command.c_str())==-1)
+							REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+						command = (std::string) "mv -i " + fnBase
+								  + ".ctf1Dmodel_quadrant " + fnBase + "_bootstrap_"
+								  + integerToString(n, 4) + ".ctf1Dmodel_quadrant";
+						if (system(command.c_str())==-1)
+							REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+						command = (std::string) "mv -i " + fnBase
+								  + ".ctf1Dmodel_halfplane " + fnBase + "_bootstrap_"
+								  + integerToString(n, 4) + ".ctf1Dmodel_halfplane";
+						if (system(command.c_str())==-1)
+							REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+						progress_bar(n);
+					}
+					progress_bar(bootstrapN);
+					}
+                }
+
+
             }
         }
-    }
 
     // Assign a CTF to each particle ----------------------------------------
     if (psd_mode == OnePerRegion && estimate_ctf)

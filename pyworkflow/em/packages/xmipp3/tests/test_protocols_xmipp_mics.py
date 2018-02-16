@@ -281,9 +281,9 @@ class TestXmippCTFEstimation(TestXmippBase):
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         ctfModel = protCTF.outputCTF.getFirstItem()
-        self.assertAlmostEquals(ctfModel.getDefocusU(),23825.9, delta=500)
-        self.assertAlmostEquals(ctfModel.getDefocusV(),23520.3, delta=500)
-        self.assertAlmostEquals(ctfModel.getDefocusAngle(), 49.2882, delta=5)
+        self.assertAlmostEquals(ctfModel.getDefocusU(),23928.4, delta=500)
+        self.assertAlmostEquals(ctfModel.getDefocusV(),23535.2, delta=500)
+        self.assertAlmostEquals(ctfModel.getDefocusAngle(), 63.669, delta=5)
         sampling = ctfModel.getMicrograph().getSamplingRate()
         self.assertAlmostEquals(sampling, 2.474, delta=0.001)
 
@@ -520,7 +520,7 @@ class TestXmippExtractParticles(TestXmippBase):
 
     def testExtractNoise(self):
         print "Run extract particles from original micrographs, with downsampling"
-        downFactor = 3.0
+        downFactor = 5.0
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=183, downsampleType=OTHER,
                                        doDownsample=True,
@@ -528,9 +528,6 @@ class TestXmippExtractParticles(TestXmippBase):
                                        doInvert=False,
                                        doFlip=False,
                                        extractNoise=True)
-        # Get all the micrographs ids to validate that all particles
-        # has the micId properly set
-        micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
 
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)

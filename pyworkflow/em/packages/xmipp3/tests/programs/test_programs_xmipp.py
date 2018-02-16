@@ -234,6 +234,11 @@ class CtfCorrectWiener3d(XmippProgramTest):
         self.runCase("-i input/ctf_correct3d.xmd --oroot %o/wiener",
                 outputs=["wiener_deconvolved.vol","wiener_ctffiltered_group000001.vol"])
 
+    def test_case2(self):
+        self.runCase("-i input/ctf_correct3d.xmd --oroot %o/wiener",
+                     outputs=["wiener_deconvolved.vol",
+                              "wiener_ctffiltered_group000001.vol"])
+
 
 class CtfCorrectIdr(XmippProgramTest):
     _owner = COSS
@@ -286,6 +291,14 @@ class CtfEstimateFromMicrograph(XmippProgramTest):
                 postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ','xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
                 outputs=["micrograph.psd","micrograph_enhanced_psd.xmp","micrograph.ctfparam","Defocus.xmd"])
 
+    def test_case3(self):
+        self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.3 --defocus_range 1000 --acceleration1D",
+        postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd",
+            'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ',
+            'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
+        outputs=["micrograph.psd", "micrograph_enhanced_psd.xmp",
+                 "micrograph.ctfparam", "Defocus.xmd"])
+
 
 class CtfEstimateFromPsd(XmippProgramTest):
     _owner = RM
@@ -299,6 +312,17 @@ class CtfEstimateFromPsd(XmippProgramTest):
                 postruns=["xmipp_metadata_utilities -i %o/down1_01nov26b.001.001.001.002_Periodogramavg2.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = (round(abs(15132.6-ctfDefocusU)/15132.6)*100)" ','xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = (round(abs(14800-ctfDefocusV)/14800)*100)" '],
                 outputs=["Defocus.xmd"])
 
+class CtfEstimateFromPsdFast(XmippProgramTest):
+    _owner = RM
+    @classmethod
+    def getProgram(cls):
+        return 'xmipp_ctf_estimate_from_psd_fast'
+
+    def test_case1(self):
+        self.runCase("--psd %o/down1_01nov26b.001.001.001.002_Periodogramavg2.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU 15000 --defocus_range 200 --ctfmodelSize 170",
+                preruns=["cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o" ," xmipp_transform_downsample -i %o/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/down1_01nov26b.001.001.001.002_Periodogramavg2.psd --step 3" ],
+                postruns=["xmipp_metadata_utilities -i %o/down1_01nov26b.001.001.001.002_Periodogramavg2.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = (round(abs(15132.6-ctfDefocusU)/15132.6)*100)" ','xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = (round(abs(14800-ctfDefocusV)/14800)*100)" '],
+                outputs=["Defocus.xmd"])
 
 class CtfGroup(XmippProgramTest):
     _owner = RM
