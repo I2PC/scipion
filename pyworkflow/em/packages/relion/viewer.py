@@ -234,7 +234,7 @@ Examples:
                            'number images assigned to each class')
         if self.protocol.IS_CLASSIFY:
           form.addParam('plotClassDistribution', params.LabelParam, default=True,
-                        label='Prot class distribution over iterations',
+                        label='Plot class distribution over iterations',
                         help='Plot each class distribution over iterations as '
                              'bar plots.')
                                               
