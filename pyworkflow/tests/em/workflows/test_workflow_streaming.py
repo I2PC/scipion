@@ -278,6 +278,11 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         protExtract.inputCoordinates.set(protPick.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         self.launchProtocol(protExtract)
+        
+        x, y, _ = protExtract.outputParticles.getDim()
+        self.assertEqual(protExtract.outputParticles.getDim(), (64, 64, 1),
+                         "Dimension of the particles should be 64 x 64 and it "
+                         "is %d x %d" % (x, y))
 
 
 class TestRelionPickStreaming(TestBaseRelionStreaming):

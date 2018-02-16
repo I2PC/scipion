@@ -645,7 +645,7 @@ void ProgRecFourierGPU::convertToExpectedSpace(T*** input, int size,
 	for (int z = 0; z <= size; z++) {
     	for (int y = 0; y <= size; y++) {
 			for (int x = 0; x <= halfSize; x++) {
-    			int newPos[3];
+    			size_t newPos[3];
     			// shift FFT from center to corners
 				newPos[0] = x; // no need to move
     			newPos[1] = (y < halfSize) ? VoutFourier.ydim - halfSize + y : y - halfSize ;
