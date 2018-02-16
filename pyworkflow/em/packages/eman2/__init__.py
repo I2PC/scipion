@@ -28,18 +28,11 @@ This package contains the protocols and data for EMAN2
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
-from pyworkflow.plugin import Plugin
-import os
 
 EMAN_DIR_VAR = 'EMAN2DIR'
-VARS = {EMAN_DIR_VAR: '/sample/plugin/default/path/software/em/eman-2.12'}
 
-_plugin = Plugin('eman2',
-                 version=2,
-                 configVars=VARS,
-                 logo="eman2_logo2.png",
-                 references=['Tang2007'])
-
+import os
+from plugin import VARS, _plugin
 from eman2 import *
 from protocol_boxing import EmanProtBoxing
 from protocol_initialmodel import EmanProtInitModel

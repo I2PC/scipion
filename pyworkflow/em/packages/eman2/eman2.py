@@ -28,7 +28,7 @@ import os
 from os.path import join
 
 from pyworkflow.em.packages.eman2 import EMAN_DIR_VAR
-from pyworkflow.em.packages.eman2 import _plugin
+from pyworkflow.em.packages.eman2.plugin import _plugin
 from pyworkflow.utils import Environ
 
 def getEnviron():

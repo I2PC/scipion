@@ -330,6 +330,29 @@ class Environment:
     def getTargets(self):
         return self._targetList
 
+
+    def getPlugins(self, path):
+        """ TODO: discover all plugins from pip instead of path
+        """
+        import importlib
+        sys.path.append(path)
+        folders = [f for f in os.listdir(path) if os.path.isdir(join(path, f))]
+        plugins = {}
+        for f in folders:
+            if exists(join(path, f, 'plugin.py')):
+                try:
+                    plugin_module = importlib.import_module(f+'.plugin')
+                    plugins[f] = getattr(plugin_module, '_plugin')
+                except Exception as ex:
+                    print(">>> Error loading module: '%s'" % f)
+                    print(">>> Exception: ", ex)
+                    import traceback
+                    traceback.print_exc()
+            else:
+                print('WARNING: EM package %s has not been pluginized' % f)
+
+        return plugins
+
     def _addTargetDeps(self, target, deps):
         """ Add the dependencies to target.
         Check that each dependency correspond to a previous target.

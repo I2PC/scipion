@@ -35,12 +35,13 @@ from pyworkflow import findResource
 class Plugin(object):
 
     def __init__(self, name, version=None, configVars=None,
-                 logo=None, references=None):
+                 logo=None, references=None, registerFunction=None):
         self.name = name
         self.version = version
         self.configVars = configVars
         self.logo = logo
         self.references = references
+        self.registerFunction = registerFunction
 
     def setDefaultEnviron(self):
         for k in self.configVars:
