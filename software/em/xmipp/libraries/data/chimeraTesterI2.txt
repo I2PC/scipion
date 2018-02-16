@@ -19,7 +19,7 @@
 		testFile << ".color yellow\n";
 		testFile << ".sphere " << _3f(0)*scale*74   << " " << _3f(1)*scale*74   << " "<< _3f(2)*scale*74   << " " << .05*scale*10 <<"\n";
         
-        //cilinders uning the reference points
+        //cilinders joining the reference points
 		testFile << ".color blue\n";
 		testFile << ".cylinder " << _5f(0)*scale*74   << " " << _5f(1)*scale*74   << " "<< _5f(2)*scale*74
 		         << " " << _5fp(0)*scale*74   << " " << _5fp(1)*scale*74   << " "<< _5fp(2)*scale*74 << " " << .01*scale*10 <<"\n";

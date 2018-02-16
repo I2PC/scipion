@@ -511,6 +511,13 @@ env.addPackage('cryoem', version='1.0',
                 numpyIncludes=True,
                 deps=[numpy, scipy, matplotlib, cythongsl])
 
+env.addPackage('powerfit', version='2.0',
+                tar='powerfit.tgz',
+                targets=['powerfit-2.0*'],
+                pythonMod=True, default=False,
+                numpyIncludes=True,
+                deps=[numpy, scipy, fftw3])
+
 env.addPackage('gEMpicker', version='1.1',
                tar='gEMpicker_v1.1.tgz')
 

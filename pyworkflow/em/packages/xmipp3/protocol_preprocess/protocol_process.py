@@ -153,6 +153,8 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
             vol = volClass() # Create an instance with the same class of input 
             vol.copyInfo(volInput)
             vol.setLocation(1, self.outputStk)
+            if volInput.hasOrigin():
+                vol.setOrigin(volInput.getOrigin())
             self._postprocessOutput(vol)
             self._defineOutputs(outputVol=vol)
         else:
