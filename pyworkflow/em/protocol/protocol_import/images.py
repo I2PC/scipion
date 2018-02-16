@@ -340,7 +340,7 @@ class ProtImportImages(ProtImportFiles):
                 if (not self.dataStreaming and
                     not (imgFn.endswith('bz2') or 
                          imgFn.endswith('tbz') or
-			             ih.isImageFile(imgFn))):
+			 ih.isImageFile(imgFn))):
                     if not errors:  # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)
