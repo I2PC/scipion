@@ -98,11 +98,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 			{
 				classifier = new GenericClassifier(params.classifierProperties);
 				setMode(Mode.Supervised);
-				for (SupervisedPickerMicrograph m : micrographs) {
-					System.out.println("Loading micrograph: " + m.getPosFile());
+				for (SupervisedPickerMicrograph m : micrographs)
 					loadMicrographData(m);
-					System.out.println("   particles: " + m.getParticles().size());
-				}
 			}
 			else
 			{
@@ -167,8 +164,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return threads;
 	}
 
-	
-
 	public int getTemplatesNumber()
 	{
 		if (templates == null)
@@ -185,14 +180,14 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return dtemplatesnum;
 	}
         
-        public void setSize(int size)
+	public void setSize(int size)
 	{
 
 		super.setSize(size);
 		classifier.setSize(size);
 	}
         
-        public synchronized void initTemplates()
+	public synchronized void initTemplates()
 	{
 		initTemplates(getTemplatesNumber());
 	}
@@ -225,8 +220,6 @@ public class SupervisedParticlePicker extends ParticlePicker
                 saveConfig();
 	}
 
-	
-
 	public synchronized ImageGeneric getTemplates()
 	{
 		return templates;
@@ -250,8 +243,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-        // to update templates with the right particles
-        public synchronized void resetParticleImages()
+
+	// to update templates with the right particles
+	public synchronized void resetParticleImages()
 	{
 		for (SupervisedPickerMicrograph m : micrographs)
 		{
@@ -301,7 +295,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
         
-        public synchronized void centerParticle(ManualParticle p)
+	public synchronized void centerParticle(ManualParticle p)
 	{
 
 		if (getManualParticlesNumber() <= getTemplatesNumber())
