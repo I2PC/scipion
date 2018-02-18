@@ -33,7 +33,7 @@ from pyworkflow.utils.path import cleanPath
 from ..constants import *
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from ..convert import locationToXmipp, writeSetOfParticles
-
+from pyworkflow.em import Volume
 
 class XmippPreprocessHelper():
     """ 
@@ -815,7 +815,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             for part in partSet.iterItems(orderBy='RANDOM()', direction='ASC'):
                 if counter < numOfParts:
                     newPartSet.append(part)
-                    counter =+ 1
+                    counter += 1
                 else:
                     break
         else:
