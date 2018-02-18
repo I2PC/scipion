@@ -93,22 +93,26 @@ public class SupervisedParticlePicker extends ParticlePicker
             templates.getRadialAvg(radialtemplates);
             MDRow[] micsmd = new MDRow[micrographs.size()];
             MDRow row; int index = 0;
-			for (SupervisedPickerMicrograph m : micrographs)
-			{
-				loadMicrographData(m);
-				row = new MDRow();
-                row.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile());
-                micsmd[index] = row;
-                index ++;
-			}
+
 			if(params.classifierProperties != null)
 			{
 				classifier = new GenericClassifier(params.classifierProperties);
 				setMode(Mode.Supervised);
+				for (SupervisedPickerMicrograph m : micrographs) {
+					System.out.println("Loading micrograph: " + m.getPosFile());
+					loadMicrographData(m);
+					System.out.println("   particles: " + m.getParticles().size());
+				}
 			}
 			else
 			{
-				
+				for (SupervisedPickerMicrograph m : micrographs) {
+					loadMicrographData(m);
+					row = new MDRow();
+					row.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile());
+					micsmd[index] = row;
+					index ++;
+				}
 				classifier = new PickingClassifier(getSize(), getOutputPath("model"), micsmd);
 			}
 		}

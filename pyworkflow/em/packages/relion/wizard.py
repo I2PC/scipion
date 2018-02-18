@@ -262,7 +262,8 @@ class Relion2AutopickParams(EmWizard):
         makePath(coordsDir)
 
         cmd = '%s relion_autopick ' % pw.getScipionScript()
-        cmd += '--i extra/%(micrographName).star '
+        #cmd += '--i extra/%(micrographName).star '
+        cmd += '--i input_micrographs.star '
         cmd += '--threshold %(threshold) --min_distance %(ipd) '
         cmd += ' --max_stddev_noise %(maxStddevNoise) '
         cmd += ' --read_fom_maps'
@@ -278,6 +279,7 @@ class Relion2AutopickParams(EmWizard):
             "threshold": autopickProt.pickingThreshold,
             'min_distance': autopickProt.interParticleDistance,
             'autopickCommand': cmd,
+            'preprocessCommand': 'rm -rf %s/*.pos' % coordsDir,
             'convertCmd': convertCmd,
             'protDir': autopickProt.getWorkingDir(),
             'maxStddevNoise': autopickProt.maxStddevNoise
@@ -298,8 +300,11 @@ class Relion2AutopickParams(EmWizard):
         maxStddevNoise.label = Max. stddev noise
         maxStddevNoise.help = Prevent picking in carbon areas, useful values probably between 1.0 and 1.2, use -1 to switch it off
         runDir = %(protDir)s
+        preprocessCommand = %(preprocessCommand)s
         autopickCommand = %(autopickCommand)s
         convertCommand = %(convertCmd)s
+        hasInitialCoordinates = true
+        doPickAll = true
         """ % args)
         f.close()
         process = CoordinatesObjectView(autopickProt.getProject(), micfn,
