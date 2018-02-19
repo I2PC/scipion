@@ -816,3 +816,52 @@ class TestRelionExpandSymmetry(TestRelionBase):
                                "Number of output particles is %d and"
                                " must be %d" % (sizeOut, sizeIn * 4))
 
+
+class TestRelionCreate3dMask(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+
+    def importVolume(self):
+        volFn = self.ds.getFile('import/refine3d/extra/relion_class001.mrc')
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   objLabel='import volume',
+                                   filesPath=volFn,
+                                   samplingRate=3)
+        self.launchProtocol(protVol)
+        return protVol
+
+    def _validations(self, mask, dims, pxSize, prot):
+        self.assertIsNotNone(mask, "There was a problem with mask 3d protocol, "
+                                  "using %s protocol as input" % prot)
+        xDim = mask.getXDim()
+        sr = mask.getSamplingRate()
+        self.assertEqual(xDim, dims, "The dimension of your volume is (%d)^3 "
+                                     "and must be (%d)^3" % (xDim, dims))
+
+        self.assertAlmostEqual(sr, pxSize, 0.0001,
+                               "Pixel size of your volume is %0.2f and"
+                               " must be %0.2f" % (sr, pxSize))
+
+    def test_createMask(self):
+        importProt = self.importVolume()
+
+        maskProt = self.newProtocol(ProtRelionCreateMask3D,
+                                    initialLowPassFilterA=10)  # filter at 10 A
+        vol = importProt.outputVolume
+        maskProt.inputVolume.set(vol)
+        self.launchProtocol(maskProt)
+
+        self._validations(maskProt.outputMask, vol.getXDim(),
+                          vol.getSamplingRate(), maskProt)
+
+        ih = ImageHandler()
+        img = ih.read(maskProt.outputMask)
+        mean, std, _min, _max = img.computeStats()
+        # Check the mask is non empty and between 0 and 1
+        self.assertAlmostEqual(_min, 0)
+        self.assertAlmostEqual(_max, 1)
+        self.assertTrue(mean > 0)
+
+
