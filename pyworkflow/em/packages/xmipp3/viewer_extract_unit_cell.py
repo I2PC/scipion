@@ -25,16 +25,20 @@
 # *
 # **************************************************************************
 
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
+import os
+from distutils.spawn import find_executable
+from os.path import exists
+
+import pyworkflow.em as em
 import pyworkflow.protocol.params as params
-from pyworkflow.em.packages.chimera.convert import symMapperScipionchimera
 from protocol_extract_unit_cell import XmippProtExtractUnit
 from pyworkflow.em.constants import SYM_I222
-from distutils.spawn import find_executable
-import pyworkflow.em as em
-import os
-from os.path import exists
+from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import (SetOfVolumes)
+from pyworkflow.em.viewers.chimera_utils import \
+    createCoordinateAxisFile, \
+    adaptOriginFromCCP4ToChimera, symMapperScipionchimera, getProgram
+from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
@@ -69,7 +73,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         }
 
     def _validate(self):
-        if find_executable('chimera') is None:
+        if find_executable(getProgram()) is None:
             return ["chimera is not available. Either install it or choose"
                     " option 'slices'. "]
         return []
@@ -83,17 +87,6 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             return self._showVolumesChimera()
         elif self.displayVol == VOLUME_SLICES:
             return self._showVolumesXmipp()
-
-    def _getVolumeName(self, vol):
-        volName = vol.getFileName().replace(':mrc', '')
-        return volName
-
-    def _getOrigin(self, vol):
-        origin = vol.getOrigin(returnInitIfNone=True).getShifts()
-        x = int(origin[0])
-        y = int(origin[1])
-        z = int(origin[2])
-        return x, y, z
 
     def _createSetOfVolumes(self):
         if not exists(self.protocol._getTmpPath() + '/tmpVolumes.sqlite'):
@@ -114,42 +107,34 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
         f = open(tmpFileNameCMD, "w")
         dim = self.protocol.inputVolumes.get().getDim()[0]
         sampling = self.protocol.inputVolumes.get().getSamplingRate()
-        tmpFileNameBILD = self.protocol._getTmpPath("axis.bild")
-        tmpFileNameBILD = os.path.abspath(tmpFileNameBILD)
-        f.write("open %s\n" % tmpFileNameBILD)
+        tmpFileName = os.path.abspath(self.protocol._getTmpPath("axis.bild"))
+        createCoordinateAxisFile(dim,
+                                 bildFileName=tmpFileName,
+                                 sampling=sampling)
+        f.write("open %s\n" % tmpFileName)
 
-        ff = open(tmpFileNameBILD, "w+")
-        arrowDict = {}
-        arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
-            sampling * dim * 3. / 4.
-        arrowDict["r1"] = 0.1  # sampling * dim / 600.
-        arrowDict["r2"] = 4 * arrowDict["r1"]
-        arrowDict["rho"] = 0.75  # sampling * dim / 150.
-
-        ff.write(".color 1 0 0\n"
-                 ".arrow 0 0 0 %(x)d 0 0 %(r1)f %(r2)f %(rho)f\n"
-                 ".color 1 1 0\n"
-                 ".arrow 0 0 0 0 %(y)d 0 %(r1)f %(r2)f %(rho)f\n"
-                 ".color 0 0 1\n"
-                 ".arrow 0 0 0 0 0 %(z)d %(r1)f %(r2)f %(rho)f\n" %
-                 arrowDict)
-        ff.close()
         _inputVol = self.protocol.inputVolumes.get()
         _outputVol = self.protocol.outputVolume
-        inputVolFileName = os.path.abspath(self._getVolumeName(_inputVol))
+        inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
+            _inputVol.getFileName()))
+
         # input vol origin coordinates
-        x_input, y_input, z_input = self. _getOrigin(_inputVol)
+        x_input, y_input, z_input = adaptOriginFromCCP4ToChimera(
+            _inputVol.getVolOriginAsTuple())
         f.write("open %s\n" % inputVolFileName)
-        f.write("volume #1 style mesh level 0.001 voxelSize %f originIndex "
-                "%d,%d,%d\n"
+        f.write("volume #1 style mesh level 0.001 voxelSize %f origin "
+                "%0.2f,%0.2f,%0.2f\n"
                 % (_inputVol.getSamplingRate(), x_input, y_input, z_input))
 
-        outputVolFileName = os.path.abspath(self._getVolumeName(_outputVol))
+        outputVolFileName = os.path.abspath(ImageHandler.removeFileType(
+            _outputVol.getFileName()))
+
         # output vol origin coordinates
-        x_output, y_output, z_output = self. _getOrigin(_outputVol)
+        x_output, y_output, z_output = adaptOriginFromCCP4ToChimera(
+            _outputVol.getVolOriginAsTuple())
         f.write("open %s\n" % outputVolFileName)
-        f.write("volume #2 style surface level 0.001 voxelSize %f originIndex "
-                "%d,%d,%d\n"
+        f.write("volume #2 style surface level 0.001 voxelSize %f origin "
+                "%0.2f,%0.2f,%0.2f\n"
                 % (_outputVol.getSamplingRate(), x_output, y_output, z_output))
 
         cMap = ['red', 'yellow', 'green', 'cyan', 'blue']
