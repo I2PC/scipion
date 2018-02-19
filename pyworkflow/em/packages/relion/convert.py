@@ -43,6 +43,7 @@ from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
 RELION_HOME = 'RELION_HOME'
+
 ACQUISITION_DICT = OrderedDict([ 
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
@@ -507,6 +508,10 @@ def particleToRow(part, partRow, **kwargs):
                              'fake_micrograph_%06d.mrc' % part.getMicId())
     if part.hasAttribute('_rlnParticleId'):
         partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
+
+    if kwargs.get('fillRandomSubset') and part.hasAttribute('_rlnRandomSubset'):
+        partRow.setValue(md.RLN_PARTICLE_RANDOM_SUBSET, int(part._rlnRandomSubset.get()))
+
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
 
 

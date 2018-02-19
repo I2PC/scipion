@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol for 3d refinement with Relion.
-"""
+
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume, FSC
@@ -34,10 +32,11 @@ from pyworkflow.em import ALIGN_PROJ
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 from convert import (isVersion2, readSetOfParticles, createItemMatrix,
-                     MOVIE_EXTRA_LABELS)
+                     MOVIE_EXTRA_LABELS, setRelionAttributes)
+
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
-    """Protocol to refine a 3D map using Relion. Relion employs an empirical
+    """ Protocol to refine a 3D map using Relion. Relion employs an empirical
 Bayesian approach to refinement of (multiple) 3D reconstructions
 or 2D class averages in electron cryo-microscopy (cryo-EM). Many
 parameters of a statistical model are learned from the data,which
@@ -55,13 +54,14 @@ leads to objective and high-quality results.
         
     def _initialize(self):
         """ This function is mean to be called after the 
-        working dir for the protocol have been set. (maybe after recovery from mapper)
+        working dir for the protocol have been set.
+        (maybe after recovery from mapper)
         """
         ProtRelionBase._initialize(self)
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
         self.numberOfClasses.set(1)  # For refinement we only need just one "class"
     
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    # -------------------------- INSERT steps functions -----------------------
     def _setSamplingArgs(self, args):
         """ Set sampling related params"""
         # Sampling stuff
@@ -84,13 +84,14 @@ leads to objective and high-quality results.
             args['--realign_movie_frames'] = self._getFileName('movie_particles')
             args['--movie_frames_running_avg'] = self.movieAvgWindow.get()
             args['--sigma_off'] = self.movieStdTrans.get()
+
             if not self.movieIncludeRotSearch:
                 args['--skip_rotate'] = ''
                 args['--skip_maximize'] = ''
             else:
                 args['--sigma_ang'] = self.movieStdRot.get()
 
-    #--------------------------- STEPS functions --------------------------------------------     
+    # -------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
         
         if not self.realignMovieFrames:
@@ -150,9 +151,7 @@ leads to objective and high-quality results.
             self._defineTransformRelation(self.inputParticles, outMovieSet)
             self._defineTransformRelation(self.inputMovieParticles, outMovieSet)
 
-
-
-    #--------------------------- INFO functions -------------------------------------------- 
+    # -------------------------- INFO functions -------------------------------
     def _validateNormal(self):
         """ Should be overwritten in subclasses to 
         return summary message for NORMAL EXECUTION. 
@@ -163,7 +162,8 @@ leads to objective and high-quality results.
 
         if isVersion2() and self.IS_3D:
             if self.solventFscMask and not self.referenceMask.get():
-                errors.append('When using solvent-corrected FSCs, please provide a reference mask.')
+                errors.append('When using solvent-corrected FSCs, '
+                              'please provide a reference mask.')
 
         return errors
     
@@ -182,7 +182,8 @@ leads to objective and high-quality results.
             continueIter = int(self.continueIter.get())
         
         if continueIter > lastIter:
-            errors += ["The iteration from you want to continue must be %01d or less" % lastIter]
+            errors += ["The iteration from you want to continue must be %01d "
+                       "or less" % lastIter]
         
         return errors
     
@@ -195,20 +196,26 @@ leads to objective and high-quality results.
             summary.append("Output volume not ready yet.")
             it = self._lastIter()
             if it >= 1:
-                row = md.getFirstRow('model_general@' + self._getFileName('half1_model', iter=it))
+                row = md.getFirstRow('model_general@' +
+                                     self._getFileName('half1_model',
+                                                       iter=it))
                 resol = row.getValue("rlnCurrentResolution")
                 summary.append("Current resolution: *%0.2f A*" % resol)
         else:
-            row = md.getFirstRow('model_general@' + self._getFileName('modelFinal'))
+            row = md.getFirstRow('model_general@' +
+                                 self._getFileName('modelFinal'))
             resol = row.getValue("rlnCurrentResolution")
             summary.append("Final resolution: *%0.2f A*" % resol)
 
         if self.realignMovieFrames:
             summary.append('\nMovie refinement:')
-            summary.append('    Running average window: %d frames' % self.movieAvgWindow.get())
-            summary.append('    Stddev on the translations: %0.2f px' % self.movieStdTrans)
+            summary.append('    Running average window: %d frames'
+                           % self.movieAvgWindow.get())
+            summary.append('    Stddev on the translations: %0.2f px'
+                           % self.movieStdTrans)
             if self.movieIncludeRotSearch:
-                summary.append('    Stddev on the rotations: %0.2f deg' % self.movieStdRot)
+                summary.append('    Stddev on the rotations: %0.2f deg'
+                               % self.movieStdRot)
 
         return summary
     
@@ -216,20 +223,21 @@ leads to objective and high-quality results.
         """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        summary = []
-        summary.append("Continue from iteration %01d" % self._getContinueIter())
-        return summary
+        return ["Continue from iteration %01d" % self._getContinueIter()]
 
-    #--------------------------- UTILS functions --------------------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _fillDataFromIter(self, imgSet, iteration):
         outImgsFn = self._getFileName('data', iter=iteration)
         imgSet.setAlignmentProj()
         imgSet.copyItems(self._getInputParticles(),
                          updateItemCallback=self._createItemMatrix,
-                         itemDataIterator=md.iterRows(outImgsFn, sortByLabel=md.RLN_IMAGE_ID))
+                         itemDataIterator=md.iterRows(outImgsFn,
+                                                      sortByLabel=md.RLN_IMAGE_ID))
     
-    def _createItemMatrix(self, item, row):
-        createItemMatrix(item, row, align=ALIGN_PROJ)
+    def _createItemMatrix(self, particle, row):
+        createItemMatrix(particle, row, align=ALIGN_PROJ)
+        setRelionAttributes(particle, row, md.RLN_PARTICLE_RANDOM_SUBSET)
 
     def _updateParticle(self, particle, row):
         particle._coordinate._micName = em.String(row.getValue('rlnMicrographName'))
+

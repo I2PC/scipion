@@ -122,8 +122,8 @@ class TestRelionClassify2D(TestRelionBase):
 
         def _checkAsserts(relionProt):
 
-            self.assertIsNotNone(relionProt.outputClasses, "There was a problem with "
-                                                           "Relion 2D classify")
+            self.assertIsNotNone(relionProt.outputClasses,
+                                 "There was a problem with Relion 2D classify")
         
             partsPixSize = self.protNormalize.outputParticles.getSamplingRate()
             classsesPixSize = relionProt.outputClasses.getImages().getSamplingRate()
@@ -221,8 +221,6 @@ class TestRelionRefine(TestRelionBase):
         self.launchProtocol(relNorm)
         
         def _runRelionRefine(doGpu=False, label=''):
-            
-            print label
             relionRefine = self.newProtocol(ProtRelionRefine3D,
                                             doCTF=False, runMode=1,
                                             memoryPreThreads=1,
@@ -239,12 +237,12 @@ class TestRelionRefine(TestRelionBase):
             self.launchProtocol(relionRefine)
             return relionRefine
         
-        def _checkAsserts(relionProt):
-            relionProt._initialize()  # Load filename templates
-            dataSqlite = relionProt._getIterData(3)
+        def _checkAsserts(relionRefine):
+            relionRefine._initialize()  # Load filename templates
+            dataSqlite = relionRefine._getIterData(3)
             outImgSet = em.SetOfParticles(filename=dataSqlite)
             
-            self.assertIsNotNone(relionNoGpu.outputVolume,
+            self.assertIsNotNone(relionRefine.outputVolume,
                                  "There was a problem with Relion autorefine")
             self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
                                    relNorm.outputParticles[1].getSamplingRate(),
@@ -255,15 +253,16 @@ class TestRelionRefine(TestRelionBase):
                                    "The particles filenames are wrong")
         
         if isVersion2():
-            relionNoGpu = _runRelionRefine(False, "Relion auto-refine No GPU")
-            _checkAsserts(relionNoGpu)
-
             environ = Environ(os.environ)
             cudaPath = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
 
-            if cudaPath is not None and os.path.exists(cudaPath):
-                relionGpu = _runRelionRefine(True, "Relion auto-refine GPU")
-                _checkAsserts(relionGpu)
+            hasCuda = (cudaPath is not None and
+                       all(os.path.exists(p) for p in cudaPath.split(os.pathsep)))
+
+            relionRefine = _runRelionRefine(hasCuda,
+                                            "Relion auto-refine %sGPU"
+                                            % ('' if hasCuda else 'NO-'))
+            _checkAsserts(relionRefine)
         else:
             relionProt = _runRelionRefine(label="Run Relion auto-refine")
             _checkAsserts(relionProt)
