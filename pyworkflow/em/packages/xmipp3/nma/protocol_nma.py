@@ -217,7 +217,7 @@ class XmippProtNMA(XmippProtNMABase):
         
         if self.structureEM:
             fn = "pseudoatoms.pdb"
-            self.runJob("nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d"
+            self.runJob("nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d "
                                                      "%f extra/animations/"
                                                      "animated_mode %d %d %f"%\
                       (fn,numberOfModes,amplitude,nFrames,downsample,
