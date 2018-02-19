@@ -47,24 +47,30 @@ class XmippProtNMA(XmippProtNMABase):
     
     def _defineParams(self, form):
         form.addSection(label='Normal Mode Analysis')
-        form.addParam('inputStructure', PointerParam, label="Input structure", important=True, 
+        form.addParam('inputStructure', PointerParam, label="Input structure",
+                      important=True,
                       pointerClass='PdbFile',
-                      help='The input structure can be an atomic model (true PDB) or a pseudoatomic model\n'
+                      help='The input structure can be an atomic model '
+                           '(true PDB) or a pseudoatomic model\n'
                            '(an EM volume converted into pseudoatoms)')
         XmippProtNMABase._defineParamsCommon(self,form)
         form.addParam('rtbBlockSize', IntParam, default=10,
                       expertLevel=LEVEL_ADVANCED,
                       label='Number of residues per RTB block',
                       help='This is the RTB block size for the RTB NMA method. \n'
-                           'When calculating the normal modes, aminoacids are grouped\n'
-                           'into blocks of this size that are moved translationally\n'
+                           'When calculating the normal modes, aminoacids are '
+                           'grouped\n'
+                           'into blocks of this size that are moved '
+                           'translationally\n'
                            'and rotationally together.') 
         form.addParam('rtbForceConstant', FloatParam, default=10,
                       expertLevel=LEVEL_ADVANCED,
                       label='Interaction force constant',
                       help='This is the RTB block size for the RTB NMA method. \n'
-                           'When calculating the normal modes, aminoacids are grouped\n'
-                           'into blocks of this size that are moved translationally\n'
+                           'When calculating the normal modes, aminoacids are '
+                           'grouped\n'
+                           'into blocks of this size that are moved '
+                           'translationally\n'
                            'and rotationally together.')
               
         form.addSection(label='Animation')        
@@ -77,12 +83,15 @@ class XmippProtNMA(XmippProtNMABase):
                       expertLevel=LEVEL_ADVANCED,
                       # condition=isEm
                       label='Downsample pseudoatomic structure',
-                      help='Downsample factor 2 means removing one half of the atoms or pseudoatoms.')
+                      help='Downsample factor 2 means removing one half of the '
+                           'atoms or pseudoatoms.')
         form.addParam('pseudoAtomThreshold', FloatParam, default=0,
                       expertLevel=LEVEL_ADVANCED,
                       # cond
                       label='Pseudoatom mass threshold',
-                      help='Remove pseudoatoms whose mass is below this threshold. This value should be between 0 and 1.\n'
+                      help='Remove pseudoatoms whose mass is below this '
+                           'threshold. '
+                           'This value should be between 0 and 1.\n'
                            'A threshold of 0 implies no atom removal.')
 
                                    
@@ -90,11 +99,11 @@ class XmippProtNMA(XmippProtNMABase):
         # Some steps will differ if the input is a volume or a pdb file
         self.structureEM = self.inputStructure.get().getPseudoAtoms()
         n = self.numberOfModes.get()
-        
         # Link the input
         inputFn = self.inputStructure.get().getFileName()
         localFn = self._getPath(basename(inputFn))
-        self._insertFunctionStep('copyPdbStep', inputFn, localFn, self.structureEM)
+        self._insertFunctionStep('copyPdbStep', inputFn, localFn,
+                                 self.structureEM)
         
         # Construct string for relative-absolute cutoff
         # This is used to detect when to reexecute a step or not
@@ -106,25 +115,32 @@ class XmippProtNMA(XmippProtNMABase):
 
         # Compute modes
         self.pseudoAtomRadius=1
+        if self.cutoffMode == NMA_CUTOFF_REL:
+            params = '-i %s --operation distance_histogram %s' \
+                     % (localFn, self._getExtraPath('atoms_distance.hist'))
+            self._insertRunJobStep("xmipp_pdb_analysis", params)
         if self.structureEM:
             with open(inputFn, 'r') as fh:
                 first_line = fh.readline()
                 second_line = fh.readline()
                 self.pseudoAtomRadius = float(second_line.split()[2])
-            self._insertFunctionStep('computeModesStep', self.inputStructure.get().getFileName(), n, cutoffStr)
+            self._insertFunctionStep('computeModesStep', localFn, n, cutoffStr)
             self._insertFunctionStep('reformatOutputStep',"pseudoatoms.pdb")
         else:
-            if self.cutoffMode == NMA_CUTOFF_REL:
-                params = '-i %s --operation distance_histogram %s' % (localFn, self._getExtraPath('atoms_distance.hist'))
-                self._insertRunJobStep("xmipp_pdb_analysis", params)
-            self._insertFunctionStep('computePdbModesStep', n, self.rtbBlockSize.get(), self.rtbForceConstant.get(), cutoffStr)
+            self._insertFunctionStep('computePdbModesStep', n,
+                                     self.rtbBlockSize.get(),
+                                     self.rtbForceConstant.get(), cutoffStr)
             self._insertFunctionStep('reformatPdbOutputStep', n)
             self.PseudoAtomThreshold=0.0
         
-        self._insertFunctionStep('qualifyModesStep', n, self.collectivityThreshold.get(), self.structureEM)
+        self._insertFunctionStep('qualifyModesStep', n,
+                                 self.collectivityThreshold.get(),
+                                 self.structureEM)
         self._insertFunctionStep('animateModesStep', n,
-                                 self.amplitude.get(), self.nframes.get(), self.downsample.get(), 
-                                 self.pseudoAtomThreshold.get(), self.pseudoAtomRadius)
+                                 self.amplitude.get(), self.nframes.get(),
+                                 self.downsample.get(),
+                                 self.pseudoAtomThreshold.get(),
+                                 self.pseudoAtomRadius)
         self._insertFunctionStep('computeAtomShiftsStep', n)
         self._insertFunctionStep('createOutputStep')
         
@@ -138,23 +154,31 @@ class XmippProtNMA(XmippProtNMABase):
         if not os.path.exists(fnOut):
             createLink(localFn, fnOut)
         
-    def computePdbModesStep(self, numberOfModes, RTBblockSize, RTBForceConstant, cutoffStr):
+    def computePdbModesStep(self, numberOfModes, RTBblockSize, RTBForceConstant,
+                            cutoffStr):
         rc = self._getRc(self._getExtraPath('atoms_distance.hist'))
                 
         self._enterWorkingDir()
-        self.runJob('nma_record_info_PDB.py', "%d %d atoms.pdb %f %f" % (numberOfModes, RTBblockSize, rc, RTBForceConstant),
+        self.runJob('nma_record_info_PDB.py', "%d %d atoms.pdb %f %f"
+                    % (numberOfModes, RTBblockSize, rc, RTBForceConstant),
                     env=getNMAEnviron())
         self.runJob("nma_elnemo_pdbmat","",env=getNMAEnviron())
         self.runJob("nma_diagrtb","",env=getNMAEnviron())
 
         if not exists("diagrtb.eigenfacs"):
-            msg = "Modes cannot be computed. Check the number of modes you asked to compute and/or consider "
-            msg += "increasing cut-off distance. The maximum number of modes allowed by the method for atomic "
-            msg += "normal mode analysis is 6 times the number of RTB blocks but the protocol allows only up "
-            msg += "to 200 modes as 20-100 modes are usually enough. If the number of modes is below the minimum "
-            msg += "between 200 and 6 times the number of RTB blocks, consider increasing cut-off distance."
+            msg = "Modes cannot be computed. Check the number of modes you " \
+                  "asked to compute and/or consider "
+            msg += "increasing cut-off distance. The maximum number of " \
+                   "modes allowed by the method for atomic "
+            msg += "normal mode analysis is 6 times the number of RTB blocks " \
+                   "but the protocol allows only up "
+            msg += "to 200 modes as 20-100 modes are usually enough. If the " \
+                   "number of modes is below the minimum "
+            msg += "between 200 and 6 times the number of RTB blocks, consider " \
+                   "increasing cut-off distance."
             self._printWarnings(redStr(msg) + '\n')
-        self.runJob("rm","-f *.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf pdbmat.dat")
+        self.runJob("rm","-f *.dat_run diagrtb.dat pdbmat.xyzm pdbmat.sdijf "
+                         "pdbmat.dat")
         
         self._leaveWorkingDir()
         
@@ -186,32 +210,41 @@ class XmippProtNMA(XmippProtNMABase):
 
         self._leaveWorkingDir()
         
-    def animateModesStep(self, numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold,pseudoAtomRadius):
+    def animateModesStep(self, numberOfModes,amplitude,nFrames,downsample,
+                         pseudoAtomThreshold,pseudoAtomRadius):
         makePath(self._getExtraPath('animations'))
         self._enterWorkingDir()
         
         if self.structureEM:
             fn = "pseudoatoms.pdb"
-            self.runJob("nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d %d %f"%\
-                      (fn,numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold),env=getNMAEnviron())
+            self.runJob("nma_animate_pseudoatoms.py","%s extra/vec_ani.pkl 7 %d"
+                                                     "%f extra/animations/"
+                                                     "animated_mode %d %d %f"%\
+                      (fn,numberOfModes,amplitude,nFrames,downsample,
+                       pseudoAtomThreshold),env=getNMAEnviron())
         else:
             fn="atoms.pdb"
-            self.runJob("nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
+            self.runJob("nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f "
+                                               "extra/animations/animated_mode "
+                                               "%d"%\
                       (fn,numberOfModes,amplitude,nFrames),env=getNMAEnviron())
         
         for mode in range(7,numberOfModes+1):
-            fnAnimation = join("extra", "animations", "animated_mode_%03d" % mode)
+            fnAnimation = join("extra", "animations", "animated_mode_%03d"
+                               % mode)
             fhCmd=open(fnAnimation+".vmd",'w')
             fhCmd.write("mol new %s.pdb\n" % self._getPath(fnAnimation))
             fhCmd.write("animate style Loop\n")
             fhCmd.write("display projection Orthographic\n")
             if self.structureEM:
                 fhCmd.write("mol modcolor 0 0 Beta\n")
-                fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"%(pseudoAtomRadius))
+                fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"
+                            %(pseudoAtomRadius))
             else:
                 fhCmd.write("mol modcolor 0 0 Index\n")
                 #fhCmd.write("mol modstyle 0 0 Beads 1.000000 8.000000\n")
-                fhCmd.write("mol modstyle 0 0 NewRibbons 1.800000 6.000000 2.600000 0\n")
+                fhCmd.write("mol modstyle 0 0 NewRibbons 1.800000 6.000000 "
+                            "2.600000 0\n")
             fhCmd.write("animate speed 0.5\n")
             fhCmd.write("animate forward\n")
             fhCmd.close();
