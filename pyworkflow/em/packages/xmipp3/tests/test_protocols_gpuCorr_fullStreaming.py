@@ -37,7 +37,7 @@ from pyworkflow.em.packages.xmipp3.protocol_streaming_gpu_correlation_cl2d \
 # can be modified in the environment
 NUM_MICS = 5
 
-class TestGpuCorrSimpleStreaming(BaseTest):
+class TestGpuCorrFullStreaming(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -46,15 +46,16 @@ class TestGpuCorrSimpleStreaming(BaseTest):
 
     def importMicrographs(self):
         prot = self.newProtocol(ProtImportMicrographs,
-                                      filesPath=self.dsRelion.getFile('micrographs'),
-                                      filesPattern='*.mrc',
-                                      samplingRateMode=1,
-                                      magnification=79096,
-                                      scannedPixelSize=56, voltage=300,
-                                      sphericalAberration=2.0)
+                                filesPath=self.dsRelion.getFile('micrographs'),
+                                filesPattern='*.mrc',
+                                samplingRateMode=1,
+                                magnification=79096,
+                                scannedPixelSize=56, voltage=300,
+                                sphericalAberration=2.0)
         self.launchProtocol(prot)
 
         return prot
+
 
     def importMicrographsStr(self, fnMics):
         kwargs = {'inputMics': fnMics,
@@ -101,11 +102,9 @@ class TestGpuCorrSimpleStreaming(BaseTest):
 
         return protExtract
 
-    def runClassify(self, inputParts, inputAvgs):
+    def runClassify(self, inputParts):
         protClassify = self.newProtocol(XmippProtStrGpuCrrCL2D)
-
         protClassify.inputParticles.set(inputParts)
-        protClassify.inputAverages.set(inputAvgs)
         self.proj.launchProtocol(protClassify, wait=False)
 
         return protClassify

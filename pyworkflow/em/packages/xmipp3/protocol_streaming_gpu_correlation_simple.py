@@ -42,7 +42,7 @@ import time
 from pyworkflow.em.data import Class2D
 from pyworkflow.monitor import Timer
 from pyworkflow.object import Float, String
-
+import pyworkflow.protocol.constants as const
 
 
 REF_CLASSES = 0
@@ -73,31 +73,22 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
     # --------------------------- DEFINE param functions -----------------------
     def _defineAlignParams(self, form):
-        form.addParam('useAsRef', params.EnumParam,
-                      choices=['Classes', 'Averages'],
-                      default=0, important=True,
-                      label='Set to use as reference images',
-                      display=params.EnumParam.DISPLAY_LIST,
-                      help="Select which kind of set to use as reference images"
-                           " for the classification of the new particles.")
-        form.addParam('inputClasses', params.PointerParam,
-                      pointerClass='SetOfClasses2D',
+        form.addParam('inputRefs', params.PointerParam,
+                      pointerClass='SetOfClasses2D, SetOfAverages',
                       important=True,
-                      condition='useAsRef==%d' % REF_CLASSES,
-                      label="Set of reference classes",
-                      help='Set of classes that will serve as reference for '
-                           'the classification')
-        form.addParam('inputAverages', params.PointerParam,
-                      pointerClass='SetOfAverages',
-                      condition='useAsRef==%d' % REF_AVERAGES,
-                      label="Set of reference averages",
-                      help='Set of averages that will serve as reference for '
-                           'the classification')
-        form.addParam('maximumShift', params.IntParam, default=10,
-                      label='Maximum shift (px):')
-        form.addParam('keepBest', params.IntParam, default=2,
+                      label="Set of references",
+                      help='Set of references that will serve as reference for '
+                           'the classification. This can be a set of classes '
+                           'or set of averages')
+        form.addParam('maxShift', params.IntParam, default=10,
+                      label='Maximum shift (px):',
+                      help='Maximum shift allowed during the alignment as '
+                           'percentage of the input set size',
+                      expertLevel=const.LEVEL_ADVANCED)
+        form.addParam('keepBest', params.IntParam, default=1,
                       label='Number of best images:',
-                      help='Number of the best images to keep for every class')
+                      help='Number of the best images to keep for every class',
+                      expertLevel=const.LEVEL_ADVANCED)
         form.addParallelSection(threads=0, mpi=0)
 
 
@@ -111,12 +102,15 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         self.lastDate = 0
         self.imgsRef = self._getExtraPath('imagesRef.xmd')
         self.htAlreadyProcessed = HashTableDict()
+        xOrig = self.inputParticles.get().getXDim()
+        self.maximumShift = int(self.maxShift.get() * xOrig / 100)
 
         self._loadInputList()
-        if self.useAsRef.get() == 0:
-            classId = self.inputClasses.get()
+        if isinstance(self.inputRefs.get(), SetOfClasses2D):
+            self.useAsRef = REF_CLASSES
         else:
-            classId = self.inputAverages.get()
+            self.useAsRef = REF_AVERAGES
+        classId = self.inputRefs.get()
 
         deps = []
         self._insertFunctionStep('convertAveragesStep', classId)
@@ -135,15 +129,10 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
     def convertAveragesStep(self, classId):
 
         if self.useAsRef == REF_CLASSES:
-            setOfClasses = self.inputClasses
-        else:
-            setOfClasses = self.inputAverages
-
-        if self.useAsRef == REF_CLASSES:
-            writeSetOfClasses2D(setOfClasses.get(), self.imgsRef,
+            writeSetOfClasses2D(self.inputRefs.get(), self.imgsRef,
                                 writeParticles=True)
         else:
-            writeSetOfParticles(setOfClasses.get(), self.imgsRef)
+            writeSetOfParticles(self.inputRefs.get(), self.imgsRef)
 
     def classifyStep(self):
 
@@ -162,7 +151,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                         'imgsExp': inputImgs,
                         'outputFile': outImgs,
                         'keepBest': self.keepBest.get(),
-                        'maxshift': self.maximumShift.get(),
+                        'maxshift': self.maximumShift,
                         'outputClassesFile': clasesOut,
                         }
 
@@ -257,10 +246,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
-        if self.useAsRef==REF_CLASSES:
-            refImage = self.inputClasses.get()
-        else:
-            refImage = self.inputAverages.get()
+        refImage = self.inputRefs.get()
         [x1, y1, z1] = refImage.getDimensions()
         [x2, y2, z2] = self.inputParticles.get().getDim()
         if x1 != x2 or y1 != y2 or z1 != z2:
@@ -275,12 +261,12 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         else:
             summary.append("Input Particles: %s"
                            % self.inputParticles.get().getSize())
-            if self.useAsRef == REF_CLASSES:
+            if isinstance(self.inputRefs.get(), SetOfClasses2D):
                 summary.append("Aligned with reference classes: %s"
-                               % self.inputClasses.get().getSize())
+                               % self.inputRefs.get().getSize())
             else:
                 summary.append("Aligned with reference averages: %s"
-                               % self.inputAverages.get().getDimensions())
+                               % self.inputRefs.get().getDimensions())
         return summary
 
     def _citations(self):
@@ -295,7 +281,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                 "We aligned images %s with respect to the reference image set "
                 "%s using Xmipp CUDA correlation"
                 % (self.getObjectTag('inputParticles'),
-                   self.getObjectTag('inputClasses')))
+                   self.getObjectTag('inputRefs')))
 
         return methods
 
@@ -381,8 +367,9 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             if firstTime:
 
                 self.lastId = 0
+                self.flag_relion = False
                 if self.useAsRef == REF_AVERAGES:
-                    repSet = self.inputAverages.get()
+                    repSet = self.inputRefs.get()
                     for rep in repSet:
                         repId = rep.getObjId()
                         newClass = Class2D(objId=repId)
@@ -393,7 +380,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                         newClass.setStreamState(streamMode)
                         outputClasses.append(newClass)
                 else:
-                    cls2d = self.inputClasses.get()
+                    cls2d = self.inputRefs.get()
                     for cls in cls2d:
                         representative = cls.getRepresentative()
                         repId = cls.getObjId()
@@ -409,7 +396,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                     # of the classes
                     #AAAAJJJJ CUIDADO CON LOS IDS
                     #AAAAJJJJ ARREGLAR LO DEL STREAM CLOSED
-                    self.flag_relion=False
                     for cls in cls2d:
                         repId = cls.getObjId()
                         newClass = outputClasses[repId]
