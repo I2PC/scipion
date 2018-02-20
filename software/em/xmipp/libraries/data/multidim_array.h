@@ -2043,6 +2043,11 @@ public:
         return A1D_ELEM(*this, i);
     }
 
+    inline T& operator[](int i) const
+     {
+         return data[i];
+     }
+
 
     /** Return the void pointer to the internal data array
      */
@@ -2377,8 +2382,6 @@ public:
 
         v.resizeNoCopy(xdim);
         memcpy(&A1D_ELEM(v,0),&A2D_ELEM(*this,i,0),xdim*sizeof(T));
-//        for (size_t j = 0; j < xdim; j++)
-//            DIRECT_A1D_ELEM(v,j) = DIRECT_A2D_ELEM(*this,i, j);
     }
 
     /** Set Row

@@ -131,7 +131,7 @@ class TestImportParticles(TestImportBase):
         prot1 = self.newProtocol(ProtImportParticles,
                                  objLabel='from relion (auto-refine 3d)',
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                 starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
+                                 starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it025_data.star'),
                                  magnification=10000,
                                  samplingRate=7.08,
                                  haveDataBeenPhaseFlipped=True

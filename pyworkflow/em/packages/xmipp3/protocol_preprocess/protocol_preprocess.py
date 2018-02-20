@@ -33,7 +33,7 @@ from pyworkflow.utils.path import cleanPath
 from ..constants import *
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from ..convert import locationToXmipp, writeSetOfParticles
-
+from pyworkflow.em import Volume
 
 class XmippPreprocessHelper():
     """ 
@@ -108,10 +108,10 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         apply threshold, etc """
     _label = 'preprocess particles'
 
-    # Automatic Particle rejection enum
-    REJ_NONE = 0
-    REJ_MAXZSCORE = 1
-    REJ_PERCENTAGE =2
+    # Normalization enum constants
+    NORM_OLD = 0
+    NORM_NEW = 1
+    NORM_RAMP =2
     
     def __init__(self, **kwargs):
         XmippProcessParticles.__init__(self, **kwargs)
@@ -136,13 +136,13 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
                       help='It subtract a ramp in the gray values and normalizes'
                            'so that in the background there is 0 mean and'
                            'standard deviation 1.')
-        form.addParam('normType', EnumParam, default=2, condition='doNormalize', 
-                      choices=['OldXmipp','NewXmipp','Ramp'], 
-                      display=EnumParam.DISPLAY_COMBO, label='Normalization type',
-                      expertLevel=LEVEL_ADVANCED,
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).'
-                           'NewXmipp (mean(background)=0, stddev(background)=1)'
-                           'Ramp (subtract background+NewXmipp).')
+        form.addParam('normType', EnumParam, condition='doNormalize',
+                      label='Normalization type', expertLevel=LEVEL_ADVANCED,
+                      choices=['OldXmipp','NewXmipp','Ramp'],
+                      default=self.NORM_RAMP,display=EnumParam.DISPLAY_COMBO, 
+                      help='OldXmipp: mean(Image)=0, stddev(Image)=1\n'
+                           'NewXmipp: mean(background)=0, stddev(background)=1\n'
+                           'Ramp: subtract background + NewXmipp')
         form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
                       label='Background radius', expertLevel=LEVEL_ADVANCED,
                       help='Pixels outside this circle are assumed to be noise and'
@@ -259,10 +259,10 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         radii = self._getSize()
         if bgRadius <= 0:
             bgRadius = int(radii)
-        
-        if normType == "OldXmipp":
+
+        if normType == self.NORM_OLD:
             args += " --method OldXmipp"
-        elif normType == "NewXmipp":
+        elif normType == self.NORM_NEW:
             args += " --method NewXmipp --background circle %d" % bgRadius
         else:
             args += " --method Ramp --background circle %d" % bgRadius
@@ -815,7 +815,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             for part in partSet.iterItems(orderBy='RANDOM()', direction='ASC'):
                 if counter < numOfParts:
                     newPartSet.append(part)
-                    counter =+ 1
+                    counter += 1
                 else:
                     break
         else:

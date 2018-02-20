@@ -42,7 +42,8 @@ from protocol_tiltpairs import *
 from protocol_ctf_assign import ProtCTFAssign
 from protocol_alignment_assign import ProtAlignmentAssign
 from protocol_batch import *
-from protocol_classes_consensus import ProtClassesConsensus, ViewerClassesConsensus
+from protocol_classes_consensus import ProtClassesConsensus, \
+    ViewerClassesConsensus
 from protocol_extract_coordinates import ProtExtractCoords
 from protocol_stress import ProtStress
 from protocol_create_stream_data import ProtCreateStreamData
@@ -50,5 +51,4 @@ from parallel import ProtTestParallel
 from protocol_picking_difference import ProtPickingDifference
 
 from monitors import *
-#from protocol_export import *
-from protocol_export.protocol_export_emdb import ProtExportEMDB
+from protocol_export import *

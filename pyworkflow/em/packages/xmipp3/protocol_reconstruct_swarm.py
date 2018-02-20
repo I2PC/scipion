@@ -294,10 +294,13 @@ class XmippProtReconstructSwarm(ProtRefine3D):
         Ts=self.readInfoField(fnDir,"sampling",xmipp.MDL_SAMPLINGRATE)
 
         # Final average
+        TsOrig=self.inputParticles.get().getSamplingRate()
+        XdimOrig=self.inputParticles.get().getDimensions()[0]
         fnAvg = self._getExtraPath("volumeAvg.vol")
+        self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnAvg,XdimOrig),numberOfMpi=1)
         volume=Volume()
         volume.setFileName(fnAvg)
-        volume.setSamplingRate(Ts)
+        volume.setSamplingRate(TsOrig)
         self._defineOutputs(outputVolume=volume)
         self._defineSourceRelation(self.inputParticles.get(),volume)
         self._defineSourceRelation(self.inputVolumes.get(),volume)
@@ -360,6 +363,8 @@ class XmippProtReconstructSwarm(ProtRefine3D):
                 self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get())
                 args="-i %s --mask circular %f"%(fnVol,-R)
                 self.runJob("xmipp_transform_mask",args,numberOfMpi=1)
+                args="-i %s --select below 0 --substitute value 0"%fnVol
+                self.runJob("xmipp_transform_threshold",args,numberOfMpi=1)
 
             # Clean
             cleanPath(fnTrain)

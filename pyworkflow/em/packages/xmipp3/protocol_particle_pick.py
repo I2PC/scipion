@@ -45,13 +45,17 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
 
-    #--------------------------- DEFINE param functions --------------------------------------------    
+    #--------------------------- DEFINE param functions ------------------------   
     def _defineParams(self, form):
         ProtParticlePicking._defineParams(self, form)
         form.addParam('memory', FloatParam, default=2,
-                   label='Memory to use (In Gb)', expertLevel=2)  
+                      label='Memory to use (In Gb)', expertLevel=2)
+        form.addParam('saveDiscarded', BooleanParam, default=False,
+                      label='Save discarded particles',
+                      help='Generates an output with '
+                           'the manually discarded particles.') 
               
-    #--------------------------- INSERT steps functions --------------------------------------------    
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         """The Particle Picking process is realized for a set of micrographs"""
         # Get pointer to input micrographs
@@ -60,7 +64,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchParticlePickGUIStep', micFn, interactive=True)
+            self._insertFunctionStep('launchParticlePickGUIStep', micFn,
+                                      interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')
             # Insert step to create output objects
@@ -72,6 +77,9 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         memory = '%dg'%self.memory.get()
         process = launchSupervisedPickerGUI(micFn, extraDir, self, memory=memory)
         process.wait()
+        # generate the discarded output only if there is a good output
+        if self.saveDiscarded and exists(self._getPath('coordinates.sqlite')):
+            self.createDiscardedStep()
 
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
@@ -87,12 +95,27 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.inputMicrographs, coordSet)
+
+    def createDiscardedStep(self):
+        posDir = self._getExtraPath()
+        suffixRoot = self._ProtParticlePicking__getOutputSuffix()
+        suffix = '' if suffixRoot=='2' or suffixRoot=='' \
+                 else str(int(suffixRoot)-1)
+        coordSetDisc = self._createSetOfCoordinates(self.inputMics,
+                                                    suffix='Discarded'+suffix)
+        readSetOfCoordinates(posDir, self.inputMics, coordSetDisc,
+                             readDiscarded=True)
+        if coordSetDisc.getSize()>0:
+            outputName = 'outputDiscardedCoordinates' + suffix
+            outputs = {outputName: coordSetDisc}
+            self._defineOutputs(**outputs)
+            self._defineSourceRelation(self.inputMicrographs, coordSetDisc)
         
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _citations(self):
         return ['Abrishami2013']
 
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def __str__(self):
         """ String representation of a Supervised Picking run """
         if not hasattr(self, 'outputCoordinates'):
@@ -180,9 +203,3 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def getCoordsDir(self):
         return self._getExtraPath()
     
-    
-
-
-
-
-

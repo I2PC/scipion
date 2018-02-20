@@ -25,9 +25,6 @@
  ***************************************************************************/
 #include "transform_geometry.h"
 
-#include <stdio.h>
-#include <time.h>
-
 ProgTransformGeometry::ProgTransformGeometry()
 {}
 
@@ -214,17 +211,6 @@ void ProgTransformGeometry::processImage(const FileName &fnImg,
                                          MDRow &rowOut)
 {
 
-#ifdef TIME
-	clock_t t_ini, t_fin;
-	double secs;
-	t_ini = clock();
-#endif
-
-	//AJ
-	int aux2;
-	int repeticiones=1;
-	//FIN AJ
-
     if (checkParam("--matrix"))
     {
       // In this case we are directly reading the transformation matrix
@@ -255,9 +241,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg,
         imgOut.setDatatype(img.getDatatype());
         imgOut().resize(1, zdimOut, ydimOut, xdimOut, false);
         imgOut().setXmippOrigin();
-        for (int i=0; i<repeticiones; i++){
         applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
-        }
         imgOut.write(fnImgOut);
         rowOut.resetGeo(false);
     }
@@ -267,11 +251,4 @@ void ProgTransformGeometry::processImage(const FileName &fnImg,
         if (fnImg != fnImgOut )
             img.write(fnImgOut);
     }
-
-#ifdef TIME
-    t_fin = clock();
-    secs = (double)(t_fin - t_ini) / CLOCKS_PER_SEC;
-    printf("%.16g milisegundos\n", secs * 1000.0);
-#endif
-
 }

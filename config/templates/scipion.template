@@ -20,8 +20,10 @@ SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
 EM_ROOT = software/em
 
 BSOFT_HOME = %(EM_ROOT)s/bsoft-1.9.0
+CRYOEF_HOME = %(EM_ROOT)s/cryoEF-1.1.0
 CTFFIND_HOME = %(EM_ROOT)s/ctffind-3.6
 CTFFIND4_HOME = %(EM_ROOT)s/ctffind4-4.1.8
+CCP4_HOME =  %(EM_ROOT)s/ccp4-6.5
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker-0.2.1
 EMAN2DIR = %(EM_ROOT)s/eman-2.12
 ETHAN_HOME = %(EM_ROOT)s/ethan-1.2
@@ -47,6 +49,7 @@ MOTIONCORR = dosefgpu_driftcorr_7.5
 MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-1.0.4
 MOTIONCOR2_CUDA_LIB = /usr/local/cuda-8.0/lib64 
 NMA_HOME = %(EM_ROOT)s/nma
+NYSBC_3DFSC_HOME = %(EM_ROOT)s/nysbc-3DFSC-2.5
 PYTOM_HOME = %(EM_ROOT)s/pytom
 RELION_HOME = %(EM_ROOT)s/relion-2.1
 # Uncomment the following line to define a different CUDA path for Relion

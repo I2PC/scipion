@@ -181,4 +181,6 @@ class TestGpuCorrFullStreaming(BaseTest):
                 break
         if not protClassify.hasAttribute('outputClasses'):
             self.assertTrue(False)
+        if not protClassify.hasAttribute('outputAverages'):
+            self.assertTrue(False)
 

@@ -117,6 +117,7 @@ MDSql::MDSql(MetaData *md)
     sqlMutex.unlock();
     myMd = md;
     myCache = new MDCache();
+    beThreadSafe = false;
 
 }
 
@@ -213,10 +214,12 @@ bool  MDSql::activateRegExtensions(void)
 
 bool  MDSql::deactivateThreadMuting(void)
 {
+	beThreadSafe = false;
     return ( sqlite3_config(SQLITE_CONFIG_MULTITHREAD) == SQLITE_OK);
 }
 bool  MDSql::activateThreadMuting(void)
 {
+	beThreadSafe = true;
     return ( sqlite3_config(SQLITE_CONFIG_SERIALIZED) == SQLITE_OK);
 }
 
@@ -580,6 +583,7 @@ bool MDSql::getObjectsValues( std::vector<MDLabel> labels, std::vector<MDObject>
 
 bool MDSql::getObjectValue(const int objId, MDObject  &value)
 {
+	if (beThreadSafe) { sqlMutex.lock(); }
     std::stringstream ss;
     MDLabel column = value.label;
     sqlite3_stmt * &stmt = myCache->getValueCache[column];
@@ -602,19 +606,16 @@ bool MDSql::getObjectValue(const int objId, MDObject  &value)
     sqlite3_reset(stmt);
     sqlite3_bind_int(stmt, 1, objId);
 
-    if (sqlite3_step(stmt) == SQLITE_ROW)
-        //|| rc== SQLITE_DONE)
+    bool wasSuccess = (sqlite3_step(stmt) == SQLITE_ROW);
+
+    if (wasSuccess)
     {
         extractValue(stmt, 0, value);
         sqlite3_step(stmt);
     }
-    else
-    {
-        return false;
-    }
-    //not finalize now because cached
-    //sqlite3_finalize(stmt);
-    return true;
+    if (beThreadSafe) { sqlMutex.unlock(); }
+
+    return wasSuccess;
 }
 
 void MDSql::selectObjects(std::vector<size_t> &objectsOut, const MDQuery *queryPtr)
@@ -1602,7 +1603,7 @@ void MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &value
         break;
     }
     default:
-        REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to extract a value from this type");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Do not know how to extract a value of type " + valueOut.type);
     }
 }
 
