@@ -306,7 +306,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             self._processMovie(movie)
 
             if self._doMovieFolderCleanUp():
-                self._cleanMovieFolder()
+                self._cleanMovieFolder(movieFolder)
 
         # Mark this movie as finished
         open(movieDoneFn, 'w').close()

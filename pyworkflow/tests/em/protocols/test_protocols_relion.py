@@ -122,8 +122,8 @@ class TestRelionClassify2D(TestRelionBase):
 
         def _checkAsserts(relionProt):
 
-            self.assertIsNotNone(relionProt.outputClasses, "There was a problem with "
-                                                           "Relion 2D classify")
+            self.assertIsNotNone(relionProt.outputClasses,
+                                 "There was a problem with Relion 2D classify")
         
             partsPixSize = self.protNormalize.outputParticles.getSamplingRate()
             classsesPixSize = relionProt.outputClasses.getImages().getSamplingRate()
@@ -221,8 +221,6 @@ class TestRelionRefine(TestRelionBase):
         self.launchProtocol(relNorm)
         
         def _runRelionRefine(doGpu=False, label=''):
-            
-            print label
             relionRefine = self.newProtocol(ProtRelionRefine3D,
                                             doCTF=False, runMode=1,
                                             memoryPreThreads=1,
@@ -239,12 +237,12 @@ class TestRelionRefine(TestRelionBase):
             self.launchProtocol(relionRefine)
             return relionRefine
         
-        def _checkAsserts(relionProt):
-            relionProt._initialize()  # Load filename templates
-            dataSqlite = relionProt._getIterData(3)
+        def _checkAsserts(relionRefine):
+            relionRefine._initialize()  # Load filename templates
+            dataSqlite = relionRefine._getIterData(3)
             outImgSet = em.SetOfParticles(filename=dataSqlite)
             
-            self.assertIsNotNone(relionNoGpu.outputVolume,
+            self.assertIsNotNone(relionRefine.outputVolume,
                                  "There was a problem with Relion autorefine")
             self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
                                    relNorm.outputParticles[1].getSamplingRate(),
@@ -255,15 +253,16 @@ class TestRelionRefine(TestRelionBase):
                                    "The particles filenames are wrong")
         
         if isVersion2():
-            relionNoGpu = _runRelionRefine(False, "Relion auto-refine No GPU")
-            _checkAsserts(relionNoGpu)
-
             environ = Environ(os.environ)
             cudaPath = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
 
-            if cudaPath is not None and os.path.exists(cudaPath):
-                relionGpu = _runRelionRefine(True, "Relion auto-refine GPU")
-                _checkAsserts(relionGpu)
+            hasCuda = (cudaPath is not None and
+                       all(os.path.exists(p) for p in cudaPath.split(os.pathsep)))
+
+            relionRefine = _runRelionRefine(hasCuda,
+                                            "Relion auto-refine %sGPU"
+                                            % ('' if hasCuda else 'NO-'))
+            _checkAsserts(relionRefine)
         else:
             relionProt = _runRelionRefine(label="Run Relion auto-refine")
             _checkAsserts(relionProt)
@@ -815,4 +814,53 @@ class TestRelionExpandSymmetry(TestRelionBase):
         self.assertAlmostEqual(sizeIn * 4, sizeOut, 0.0001,
                                "Number of output particles is %d and"
                                " must be %d" % (sizeOut, sizeIn * 4))
+
+
+class TestRelionCreate3dMask(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+
+    def importVolume(self):
+        volFn = self.ds.getFile('import/refine3d/extra/relion_class001.mrc')
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   objLabel='import volume',
+                                   filesPath=volFn,
+                                   samplingRate=3)
+        self.launchProtocol(protVol)
+        return protVol
+
+    def _validations(self, mask, dims, pxSize, prot):
+        self.assertIsNotNone(mask, "There was a problem with mask 3d protocol, "
+                                  "using %s protocol as input" % prot)
+        xDim = mask.getXDim()
+        sr = mask.getSamplingRate()
+        self.assertEqual(xDim, dims, "The dimension of your volume is (%d)^3 "
+                                     "and must be (%d)^3" % (xDim, dims))
+
+        self.assertAlmostEqual(sr, pxSize, 0.0001,
+                               "Pixel size of your volume is %0.2f and"
+                               " must be %0.2f" % (sr, pxSize))
+
+    def test_createMask(self):
+        importProt = self.importVolume()
+
+        maskProt = self.newProtocol(ProtRelionCreateMask3D,
+                                    initialLowPassFilterA=10)  # filter at 10 A
+        vol = importProt.outputVolume
+        maskProt.inputVolume.set(vol)
+        self.launchProtocol(maskProt)
+
+        self._validations(maskProt.outputMask, vol.getXDim(),
+                          vol.getSamplingRate(), maskProt)
+
+        ih = ImageHandler()
+        img = ih.read(maskProt.outputMask)
+        mean, std, _min, _max = img.computeStats()
+        # Check the mask is non empty and between 0 and 1
+        self.assertAlmostEqual(_min, 0)
+        self.assertAlmostEqual(_max, 1)
+        self.assertTrue(mean > 0)
+
 

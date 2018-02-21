@@ -38,7 +38,7 @@ from protocol_autopick_v2 import ProtRelion2Autopick, RUN_COMPUTE
 from protocol_create_mask3d import ProtRelionCreateMask3D
 from protocol_sort import ProtRelionSortParticles
 from protocol_initialmodel import ProtRelionInitialModel
-from pyworkflow.utils.utils import readProperties
+import pyworkflow.utils as pwutils
 
 #===============================================================================
 # MASKS
@@ -234,7 +234,7 @@ class RelionAutopickParams(EmWizard):
         f.close()
         process = CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerProps=pickerProps).show()
         process.wait()
-        myprops = readProperties(pickerProps)
+        myprops = pwutils.readProperties(pickerProps)
 
         if myprops['applyChanges'] == 'true':
             form.setVar('pickingThreshold', myprops['threshold.value'])
@@ -261,8 +261,16 @@ class Relion2AutopickParams(EmWizard):
         cleanPath(coordsDir)
         makePath(coordsDir)
 
+        # Create a folder in extra to backup the original autopick star files
+        backupDir = autopickProt._getExtraPath('wizard-backup')
+        cleanPath(backupDir)
+        makePath(backupDir)
+        pwutils.copyPattern(autopickProt._getExtraPath("*autopick.star"),
+                            backupDir)
+
         cmd = '%s relion_autopick ' % pw.getScipionScript()
-        cmd += '--i extra/%(micrographName).star '
+        #cmd += '--i extra/%(micrographName).star '
+        cmd += '--i input_micrographs.star '
         cmd += '--threshold %(threshold) --min_distance %(ipd) '
         cmd += ' --max_stddev_noise %(maxStddevNoise) '
         cmd += ' --read_fom_maps'
@@ -278,6 +286,7 @@ class Relion2AutopickParams(EmWizard):
             "threshold": autopickProt.pickingThreshold,
             'min_distance': autopickProt.interParticleDistance,
             'autopickCommand': cmd,
+            'preprocessCommand': 'rm -rf %s/*.pos' % coordsDir,
             'convertCmd': convertCmd,
             'protDir': autopickProt.getWorkingDir(),
             'maxStddevNoise': autopickProt.maxStddevNoise
@@ -298,18 +307,21 @@ class Relion2AutopickParams(EmWizard):
         maxStddevNoise.label = Max. stddev noise
         maxStddevNoise.help = Prevent picking in carbon areas, useful values probably between 1.0 and 1.2, use -1 to switch it off
         runDir = %(protDir)s
+        preprocessCommand = %(preprocessCommand)s
         autopickCommand = %(autopickCommand)s
         convertCommand = %(convertCmd)s
+        hasInitialCoordinates = true
+        doPickAll = true
         """ % args)
         f.close()
         process = CoordinatesObjectView(autopickProt.getProject(), micfn,
                                         coordsDir, autopickProt,
                                         pickerProps=pickerProps).show()
         process.wait()
-        myprops = readProperties(pickerProps)
+        myprops = pwutils.readProperties(pickerProps)
 
         # Check if the wizard changes were accepted or just canceled
-        if myprops['applyChanges'] == 'true':
+        if myprops.get('applyChanges', 'false') == 'true':
             form.setVar('pickingThreshold', myprops['threshold.value'])
             form.setVar('interParticleDistance', myprops['ipd.value'])
             form.setVar('maxStddevNoise', myprops['maxStddevNoise.value'])
@@ -318,6 +330,11 @@ class Relion2AutopickParams(EmWizard):
             form.setVar('runType', RUN_COMPUTE)
             # Mark the wizard was used
             setattr(autopickProt, 'wizardExecuted', True)
+        else:
+            # If the wizard was not execute, we should restore the original
+            # autopick star files in case their were modified by the wizard
+            pwutils.copyPattern(os.path.join(backupDir, "*autopick.star"),
+                                autopickProt._getExtraPath())
 
 
 class Relion2PartDiameter(RelionPartMaskDiameterWizard):

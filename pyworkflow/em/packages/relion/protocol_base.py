@@ -153,7 +153,7 @@ class ProtRelionBase(EMProtocol):
                       pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
-                      label="Input particles",  
+                      label="Input particles",
                       help='Select the input images from the project.')
         form.addParam('copyAlignment', BooleanParam, default=False,
                       label='Consider previous alignment?',
@@ -161,12 +161,20 @@ class ProtRelionBase(EMProtocol):
                       help='If set to Yes, then alignment information from'
                            ' input particles will be considered.')
         form.addParam('alignmentAsPriors', BooleanParam, default=False,
-                      label='Consider alignment as priors?',
                       condition='not doContinue and copyAlignment',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Consider alignment as priors?',
                       help='If set to Yes, then alignment information from '
                            'input particles will be considered as PRIORS. This '
                            'option is mandatory if you want to do local '
                            'searches')
+        form.addParam('fillRandomSubset', BooleanParam, default=False,
+                      condition='not doContinue and copyAlignment',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Consider random subset value?',
+                      help='If set to Yes, then random subset value '
+                           'of input particles will be put into the'
+                           'star file that is generated.')
         form.addParam('maskDiameterA', IntParam, default=-1,
                       condition='not doContinue',
                       label='Particle mask diameter (A)',
@@ -801,16 +809,17 @@ class ProtRelionBase(EMProtocol):
                       (imgSet.getFileName(), imgStar))
     
             # Pass stack file as None to avoid write the images files
-            # If copyAlignmet is set to False pass alignType to ALIGN_NONE
+            # If copyAlignment is set to False pass alignType to ALIGN_NONE
             alignType = imgSet.getAlignment() if copyAlignment \
                         else em.ALIGN_NONE
-            
-            alignToPrior = False if alignType == em.ALIGN_NONE \
-                           else getattr(self, 'alignmentAsPriors', True)
-            
+            hasAlign = alignType != em.ALIGN_NONE
+            alignToPrior = hasAlign and getattr(self, 'alignmentAsPriors', False)
+            fillRandomSubset = hasAlign and getattr(self, 'fillRandomSubset', False)
+
             writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
                                 alignType=alignType,
-                                postprocessImageRow=self._postprocessParticleRow)
+                                postprocessImageRow=self._postprocessParticleRow,
+                                fillRandomSubset=fillRandomSubset)
             
             if alignToPrior:
                 mdParts = md.MetaData(imgStar)

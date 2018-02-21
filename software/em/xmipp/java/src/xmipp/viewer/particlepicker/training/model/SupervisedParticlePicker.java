@@ -93,22 +93,23 @@ public class SupervisedParticlePicker extends ParticlePicker
             templates.getRadialAvg(radialtemplates);
             MDRow[] micsmd = new MDRow[micrographs.size()];
             MDRow row; int index = 0;
-			for (SupervisedPickerMicrograph m : micrographs)
-			{
-				loadMicrographData(m);
-				row = new MDRow();
-                row.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile());
-                micsmd[index] = row;
-                index ++;
-			}
+
 			if(params.classifierProperties != null)
 			{
 				classifier = new GenericClassifier(params.classifierProperties);
 				setMode(Mode.Supervised);
+				for (SupervisedPickerMicrograph m : micrographs)
+					loadMicrographData(m);
 			}
 			else
 			{
-				
+				for (SupervisedPickerMicrograph m : micrographs) {
+					loadMicrographData(m);
+					row = new MDRow();
+					row.setValueString(MDLabel.MDL_MICROGRAPH, m.getFile());
+					micsmd[index] = row;
+					index ++;
+				}
 				classifier = new PickingClassifier(getSize(), getOutputPath("model"), micsmd);
 			}
 		}
@@ -163,8 +164,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return threads;
 	}
 
-	
-
 	public int getTemplatesNumber()
 	{
 		if (templates == null)
@@ -181,14 +180,14 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return dtemplatesnum;
 	}
         
-        public void setSize(int size)
+	public void setSize(int size)
 	{
 
 		super.setSize(size);
 		classifier.setSize(size);
 	}
         
-        public synchronized void initTemplates()
+	public synchronized void initTemplates()
 	{
 		initTemplates(getTemplatesNumber());
 	}
@@ -221,8 +220,6 @@ public class SupervisedParticlePicker extends ParticlePicker
                 saveConfig();
 	}
 
-	
-
 	public synchronized ImageGeneric getTemplates()
 	{
 		return templates;
@@ -246,8 +243,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-        // to update templates with the right particles
-        public synchronized void resetParticleImages()
+
+	// to update templates with the right particles
+	public synchronized void resetParticleImages()
 	{
 		for (SupervisedPickerMicrograph m : micrographs)
 		{
@@ -297,7 +295,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
         
-        public synchronized void centerParticle(ManualParticle p)
+	public synchronized void centerParticle(ManualParticle p)
 	{
 
 		if (getManualParticlesNumber() <= getTemplatesNumber())
