@@ -24,63 +24,59 @@
 # *
 # **************************************************************************
 
-import os
 
 import pyworkflow.utils as pwutils
-from pyworkflow.protocol.constants import STATUS_FINISHED
-from pyworkflow.em.protocol import ProtExtractMovieParticles, ProtProcessMovies
+from pyworkflow.protocol.constants import STATUS_FINISHED, STEPS_SERIAL
+from pyworkflow.em.protocol import ProtExtractMovieParticles
+from pyworkflow import VERSION_1_2
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.utils.properties import Message
 
-from convert import (writeSetOfCoordinates, writeMicCoordinates,
-                     relionToLocation, writeSetOfMovies, rowToParticle,
-                     isVersion2)
-
+from convert import (writeSetOfMovies, isVersion2,
+                     writeSetOfParticles, readSetOfParticles)
 from protocol_base import ProtRelionBase
 
-
-# Micrograph type constants for particle extraction
-SAME_AS_PICKING = 0
-OTHER = 1
 
 
 class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase):
     """Protocol to extract particles from a set of coordinates"""
     _label = 'movie particles extraction'
+    _lastUpdateVersion = VERSION_1_2
+
+    @classmethod
+    def isDisabled(cls):
+        return not isVersion2()
 
     def __init__(self, **kwargs):
         ProtExtractMovieParticles.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_SERIAL
 
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
-        self.movieFolder = self._getTmpPath('movie_%(movieId)06d/')
-        self.frameRoot = self.movieFolder + 'frame_%(frame)02d'
-        myDict = {
-                  'frameImages': self.frameRoot + '_images',
-                  'frameMic': self.frameRoot + '.mrc',
-                  'frameMdFile': self.frameRoot + '_images.xmd',
-                  'frameCoords': self.frameRoot + '_coordinates.xmd',
-                  'frameStk': self.frameRoot + '_images.stk'
-                 }
+        myDict = {'inputMovies': 'input_movies.star',
+                  'inputParts': 'input_particles.star',
+                  'outputDir': pwutils.join('extra', 'movie_particles'),
+                  'outputParts': self._getExtraPath('extra/????.star')
+                  }
 
         self._updateFilenamesDict(myDict)
 
     #--------------------------- DEFINE param functions ------------------------
-    def _definePreprocessParams(self, form):
+    def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('inputMovies', params.PointerParam,
                       pointerClass='SetOfMovies',
                       important=True,
-                      label=Message.LABEL_INPUT_MOVS,
-                      help='Select a set of previously imported '
-                           'ALIGNED movies.')
+                      label='Input aligned movies',
+                      help='Select a set of ALIGNED movies.')
 
         form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
+                      pointerCondition='hasAlignmentProj',
                       important=True,
-                      label='Input particles',
+                      label='Input aligned particles',
                       help='Relion requires input particles set, which it will '
                            'use to get the coordinates and X/Y-shifts for '
                            'movie particle extraction.')
@@ -89,12 +85,6 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                       label='Particle box size (px)',
                       validators=[params.Positive],
                       help='This is size of the boxed particles (in pixels).')
-
-        form.addParam('applyAlignment', params.BooleanParam, default=False,
-                      label='Apply particle alignments to extract?',
-                      help='If the input particles contain alignments, '
-                           'you decide whether to use that information '
-                           'for extracting the movie particles.')
 
         line = form.addLine('Frames range',
                             help='Specify the frames range to extract particles. '
@@ -180,148 +170,54 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
     def _insertAllSteps(self):
         self._createFilenameTemplates()
         inputMovies = self.getInputMovies()
-
         firstStepId = self._insertFunctionStep('convertInputStep',
-                                               inputMovies.getObjId())
+                                 inputMovies.getObjId())
         args = self._getExtractArgs()
-        self._insertFunctionStep('extractNoStreamParticlesStep', *args,
+        self._insertFunctionStep('extractNoStreamParticlesStep', args,
                                  prerequisites=[firstStepId])
-        self._insertFunctionStep('createOutputStep')
+        #self._insertFunctionStep('createOutputStep')
 
         # Disable streaming functions:
         self._insertFinalSteps = self._doNothing
         self._stepsCheck = self._doNothing
 
-    def _insertInitialSteps(self):
-        self._setupBasicProperties()
-    
-        return []
-    
     def _doNothing(self, *args):
         pass  # used to avoid some streaming functions
 
     # -------------------------- STEPS functions -------------------------------
     def convertInputStep(self, moviesId):
-        self._ih = em.ImageHandler()  # used to convert micrographs
+        self._ih = em.ImageHandler()  # used to convert movies
         inputMovies = self.getInputMovies()
-        movieStar, _ = self._getStarFiles()
-        writeSetOfMovies(inputMovies, self._getPath(movieStar),
+        inputParts = self.getParticles()
+        # convert movies to mrcs and write a movie star file
+        writeSetOfMovies(inputMovies,
+                         self._getPath(self._getFileName('inputMovies')),
                          preprocessImageRow=self._preprocessMovieRow)
 
-        # We need to compute a scale factor for the particles if extracting
-        # from movies with a different pixel size
-        movieDict = {}
-        for movie in inputMovies:
-            movieDict[movie.getMicName()] = movie.getFileName()
+        # convert particle set to star file
+        writeSetOfParticles(inputParts,
+                            self._getPath(self._getFileName('inputParts')),
+                            self._getExtraPath(),
+                            fillMagnification=True,
+                            alignType=inputParts.getAlignment(),
+                            postprocessImageRow=self._postprocessParticleRow)
 
-        def _getCoordsStarFile(movie):
-            movieName = movie.getMicName()
-            if movieName not in movieDict:
-                return None
-            movieFn = movieDict[movieName]
-            return self._getExtraPath('particles_data.star')
-
-        self.info("Using scale: %s" % self.getScaleFactor())
-        writeSetOfCoordinates(self._getExtraPath(), self.getParticles(),
-                              _getCoordsStarFile, scale=self.getScaleFactor())
-
-    def extractNoStreamParticlesStep(self, *args):
-        self._extractMicrograph(None, *args)
-    
-    def _extractMicrograph(self, mic, params):
-        """ Extract particles from one micrograph, ignore if the .star
-        with the coordinates is not present. """
-        
-        micsStar, partStar = self._getStarFiles(mic)
-        args = params % locals()
+    def extractNoStreamParticlesStep(self, args):
+        """ Run relion extract particles job. """
         self.runJob(self._getProgram('relion_preprocess'), args,
                     cwd=self.getWorkingDir())
 
     def createOutputStep(self):
-        if self.streamIsOpen:
-            pass
-        else:
-            inputMics = self.getInputMovies()
-            inputCoords = self.getParticles()
-            coordMics = inputCoords.getMicrographs()
-    
-            # Create output SetOfParticles
-            partSet = self._createSetOfParticles()
-            partSet.copyInfo(inputMics)
-            # set coords from the input, will update later if needed
-            partSet.setCoordinates(inputCoords)
-    
-    
-            hasCTF = self._useCTF()
-            partSet.setSamplingRate(self._getNewSampling())
-            partSet.setHasCTF(hasCTF)
-    
-            ctfDict = {}
-    
-            if hasCTF:
-                # Load CTF dictionary for all micrographs, all CTF should be present
-                for ctf in self.ctfRelations.get():
-                    ctfMic = ctf.getMicrograph()
-                    newCTF = ctf.clone()
-                    ctfDict[ctfMic.getMicName()] = newCTF
-    
-            # Keep a dictionary between the micName and its corresponding
-            # particles stack file and CTF model object
-            micDict = {}
-            for mic in inputMics:
-                stackFile = self._getMicStackFile(mic)
-                ctfModel = ctfDict[mic.getMicName()] if hasCTF else None
-                micDict[mic.getMicName()] = (stackFile, ctfModel)
-    
-            scaleFactor = self.getBoxScale()
-            doScale = self.notOne(scaleFactor)
-    
-            # Track last micName to know when to load particles from another
-            # micrograph stack
-            lastMicName = None
-            count = 0 # Counter for the particles of a given micrograph
-            # Check missing mics to report error once
-            missingMics = set()
- 
-            for coord in inputCoords.iterItems(orderBy='_micId'):
-                micId = coord.getMicId()
-                mic = coordMics[micId] 
-                if mic is None:
-                    if not micId in missingMics:
-                        print("Ignoring wrong micId: ", micId)
-                        missingMics.add(micId)
-                    micName = None
-                else:
-                    micName = coordMics[coord.getMicId()].getMicName()
-                # If Micrograph Source is "other" and extract from a subset
-                # of micrographs, micName key should be checked if it exists.
-                if micName in micDict.keys():
-                    # Load the new particles mrcs file and reset counter
-                    if micName != lastMicName:
-                        stackFile, ctfModel = micDict[micName]
-                        count = 1
-                        lastMicName = micName
-        
-                    p = em.Particle()
-                    p.setLocation(count, stackFile)
-                    if hasCTF:
-                        p.setCTF(ctfModel)
-                    p.setCoordinate(coord)
-                    # Copy objId and micId from the coordinate
-                    p.copyObjId(coord)
-                    p.setMicId(coord.getMicId())
-        
-                    if doScale:
-                        p.scaleCoordinate(scaleFactor)
-        
-                    partSet.append(p)
-                    count += 1
-    
-            self._defineOutputs(outputParticles=partSet)
-            self._defineSourceRelation(self.inputCoordinates, partSet)
-    
-            if self._useCTF():
-                self._defineSourceRelation(self.ctfRelations.get(), partSet)
+        inputMovies = self.getInputMovies()
+        movieParticles = self._createSetOfMovieParticles()
+        movieParticles.copyInfo(inputMovies)
+
+        particleMd = self._getFileName('outputParts')
+        readSetOfParticles(particleMd, movieParticles, removeDisabled=False)
+
+        self._defineOutputs(outputParticles=movieParticles)
+        self._defineSourceRelation(self.inputMovies, movieParticles)
+
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -332,14 +228,16 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
             errors.append("Background diameter for normalization should "
                           "be equal or less than the box size.")
 
+        # check if movie frame shifts are all zeros
+        movie = self.getInputMovies().getFirstItem()
+        iniFrame, lastFrame, _ = movie.getFramesRange()
+        shiftsAligned = [0] * (lastFrame-iniFrame+1)
+        shiftX, shiftY = movie.getAlignment().getShifts()
 
-        # We cannot check this if the protocol is in streaming.
-        
-        # self._setupCtfProperties() # setup self.micKey among others
-        # if self._useCTF() and self.micKey is None:
-        #     errors.append('Some problem occurs matching micrographs and '
-        #                   'CTF.\n There were micrographs for which CTF '
-        #                   'was not found either using micName or micId.\n')
+        if movie.hasAlignment() and not (shiftX == shiftY == shiftsAligned):
+            errors.append('Input movies must have zero shifts, meaning they '
+                          'should be already aligned.')
+
         return errors
     
     def _citations(self):
@@ -347,14 +245,12 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         
     def _summary(self):
         summary = []
-        summary.append("Micrographs source: %s"
-                       % self.getEnumText("downsampleType"))
         summary.append("Particle box size: %d" % self.boxSize)
         
         if not hasattr(self, 'outputParticles'):
             summary.append("Output images not ready yet.") 
         else:
-            summary.append("Particles extracted: %d" %
+            summary.append("Movie particles extracted: %d" %
                            self.outputParticles.getSize())
             
         return summary
@@ -363,64 +259,29 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         methodsMsgs = []
 
         if self.getStatus() == STATUS_FINISHED:
-            msg = ("A total of %d particles of size %d were extracted"
+            msg = ("A total of %d movie particles of size %d were extracted"
                    % (self.getOutput().getSize(), self.boxSize))
-            
-            if self._micsOther():
-                msg += (" from another set of micrographs: %s"
-                        % self.getObjectTag('inputMicrographs'))
 
-            msg += " using coordinates %s" % self.getObjectTag('inputCoordinates')
             msg += self.methodsVar.get('')
             methodsMsgs.append(msg)
 
-            if self.doRemoveDust:
-                methodsMsgs.append("Removed dust over a threshold of %s."
-                                   % self.thresholdDust)
             if self.doInvert:
                 methodsMsgs.append("Inverted contrast on images.")
             if self._doDownsample():
                 methodsMsgs.append("Particles downsampled by a factor of %0.2f."
-                                   % self.downFactor)
-            if self.doNormalize:
-                methodsMsgs.append("Normalization: %s."
-                                   % self.getEnumText('normType'))
+                                   % self._getDownFactor())
 
         return methodsMsgs
 
     #--------------------------- UTILS functions -------------------------------
-    def _setupBasicProperties(self):
-        # Set sampling rate (before and after doDownsample) and inputMics
-        # according to micsSource type
-        inputCoords = self.getParticles()
-        mics = inputCoords.getMicrographs()
-        self.samplingInput = inputCoords.getMicrographs().getSamplingRate()
-        self.samplingMics = self.getInputMovies().getSamplingRate()
-        self.samplingFactor = float(self.samplingMics / self.samplingInput)
-
-        scale = self.getBoxScale()
-        self.debug("Scale: %f" % scale)
-        if self.notOne(scale):
-            # If we need to scale the box, then we need to scale the coordinates
-            getPos = lambda coord: (int(coord.getX() * scale),
-                                    int(coord.getY() * scale))
-        else:
-            getPos = lambda coord: coord.getPosition()
-        # Store the function to be used for scaling coordinates
-        self._getPos = getPos
-
     def _getExtractArgs(self):
-        # The following parameters are executing 'relion_preprocess' to
-        # extract the particles of a given micrographs
-        # The following is assumed:
-        # - relion_preproces will be executed from the protocol workingDir
-        # - the micrographs (or links) and coordinate files will be in 'extra'
-        # - coordinate files have the 'coords.star' suffix
-        params = ' --i %(micsStar)s'
-        params += ' --coord_dir "."'
-        params += ' --coord_suffix .coords.star'
-        params += ' --part_star %(partStar)s'
-        params += ' --part_dir "." --extract '
+        params = ' --i %s' % self._getFileName('inputMovies')
+        params += ' --reextract_data_star %s' % self._getFileName('inputParts')
+        params += ' --part_dir %s' % self._getFileName('outputDir')
+        params += ' --extract --extract_movies --movie_name movie'
+        params += ' --avg_movie_frames %d' % self.avgFrames.get()
+        params += ' --first_movie_frame %d --last_movie_frame %d' %\
+                  (self.frame0.get(), self.frameN.get())
         params += ' --extract_size %d' % self.boxSize
 
         if self.backDiameter <= 0:
@@ -445,45 +306,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         if self.stddevBlackDust > 0:
             params += ' --black_dust %0.3f' % self.stddevBlackDust
 
-        return [params]
-
-    def readPartsFromMics(self, micList, outputParts):
-        """ Read the particles extract for the given list of micrographs
-        and update the outputParts set with new items.
-        """
-        p = em.Particle()
-        for mic in micList:
-            # We need to make this dict because there is no ID in the
-            # coord.star file
-            coordDict = {}
-            for coord in self.coordDict[mic.getObjId()]:
-                coordDict[self._getPos(coord)] = coord
-        
-            _, partStarFn = self._getStarFiles(mic)
-        
-            for row in md.iterRows(self._getPath(partStarFn)):
-                pos = (row.getValue(md.RLN_IMAGE_COORD_X),
-                       row.getValue(md.RLN_IMAGE_COORD_Y))
-            
-                coord = coordDict.get(pos, None)
-                if coord is not None:
-                    # scale the coordinates according to particles dimension.
-                    coord.scale(self.getBoxScale())
-                    p.copyObjId(coord)
-                    idx, fn = relionToLocation(row.getValue(md.RLN_IMAGE_NAME))
-                    p.setLocation(idx, self._getPath(fn[2:]))
-                    p.setCoordinate(coord)
-                    p.setMicId(mic.getObjId())
-                    p.setCTF(mic.getCTF())
-                    outputParts.append(p)
-        
-            # Release the list of coordinates for this micrograph since it
-            # will not be longer needed
-            del self.coordDict[mic.getObjId()]
-
-    def _micsOther(self):
-        """ Return True if other micrographs are used for extract. """
-        return self.downsampleType == OTHER
+        return params
 
     def _getDownFactor(self):
         if self.doRescale:
@@ -493,38 +316,6 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
     def _doDownsample(self):
         return self.doRescale and self.rescaledSize != self.boxSize
 
-    def notOne(self, value):
-        return abs(value - 1) > 0.0001
-
-    def _getNewSampling(self):
-        newSampling = self.getInputMovies().getSamplingRate()
-
-        if self._doDownsample():
-            # Set new sampling, it should be the input sampling of the used
-            # micrographs multiplied by the downFactor
-            newSampling *= self._getDownFactor()
-
-        return newSampling
-
-    # def _setupCtfProperties(self):
-    #     inputMics = self.getInputMicrographs()
-    #     if self._useCTF():
-    #         # Load CTF dictionary for all micrographs, all CTF should be present
-    #         self.ctfDict = {}
-    #
-    #         for ctf in self.ctfRelations.get():
-    #             ctfMic = ctf.getMicrograph()
-    #             newCTF = ctf.clone()
-    #             self.ctfDict[ctfMic.getMicName()] = newCTF
-    #             self.ctfDict[ctfMic.getObjId()] = newCTF
-    #
-    #         if all(mic.getMicName() in self.ctfDict for mic in inputMics):
-    #             self.micKey = lambda mic: mic.getMicName()
-    #         elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
-    #             self.micKey = lambda mic: mic.getObjId()
-    #         else:
-    #             self.micKey = None # some problem matching CTF
-            
     def getInputMovies(self):
             return self.inputMovies.get()
 
@@ -533,46 +324,10 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
 
     def getOutput(self):
         if (self.hasAttribute('outputParticles') and
-            self.outputParticles.hasValue()):
+                self.outputParticles.hasValue()):
             return self.outputParticles
         else:
             return None
-
-    def getCoordSampling(self):
-        return
-
-    def getScaleFactor(self):
-        """ Returns the scaling factor that needs to be applied to the input
-        particles to adapt for the input movies.
-        """
-        partsSampling = self.getParticles().getSamplingRate()
-        moviesSampling = self.getInputMovies().getSamplingRate()
-        return partsSampling / moviesSampling
-
-    def getBoxScale(self):
-        """ Computing the sampling factor between input and output.
-        We should take into account the differences in sampling rate between
-        micrographs used for picking and the ones used for extraction.
-        The downsampling factor could also affect the resulting scale.
-        """
-        f = self.getScaleFactor()
-        return f / self._getDownFactor() if self._doDownsample() else f
-
-    def getBoxSize(self):
-        # This function is needed by the wizard
-        return int(self.getParticles().getBoxSize() * self.getBoxScale())
-
-    def _getOutputImgMd(self):
-        return self._getPath('images.xmd')
-
-    def createParticles(self, item, row):
-        particle = rowToParticle(row, readCtf=self._useCTF())
-        coord = particle.getCoordinate()
-        item.setY(coord.getY())
-        item.setX(coord.getX())
-        particle.setCoordinate(item)
-
-        item._appendItem = False
 
     def _preprocessMovieRow(self, img, imgRow):
         newName = pwutils.replaceBaseExt(img.getFileName(), 'mrcs')
@@ -588,36 +343,23 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         # so, let's make the movie path relative to that
         img.setFileName(pwutils.join('extra', newName))
 
-    def __getMicFile(self, mic, ext):
-        """ Return a filename based on the micrograph.
-        The filename will be located in the extra folder and with
-        the given extension.
-        """
-        return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(),ext))
-    
-    def _useCTF(self):
-        return self.ctfRelations.hasValue()
+    def _postprocessParticleRow(self, part, partRow):
+        # we need to remove the suffix (from protocol_align_movies) so that
+        # Relion can match the rlnImageName (from particle set) and
+        # the rlnMicrographMovieName (from movie set)
+        imgName = partRow.getValue(md.RLN_IMAGE_NAME)
+        newImgName = imgName.replace('_aligned_mic_DW.', '_aligned.')
+        newImgName = newImgName.replace('_aligned_mic.', '_aligned.')
+        partRow.setValue(md.RLN_IMAGE_NAME, newImgName)
 
-    def _getMicStarFile(self, mic):
-        return self.__getMicFile(mic, 'star')
-
-    def _getMicStackFile(self, mic):
-        return self.__getMicFile(mic, 'mrcs')
-
-    def _getStarFiles(self, movie=None):
-        # Actually extract
-        # Since the program will be run in the run working dir
-        # we don't need to use the workingDir prefix here
-        if movie is None:
-            moviesStar = 'input_movies.star'
-            partStar = os.path.join('extra', 'output_movie_particles.star')
+        if part.hasAttribute('_rlnGroupName'):
+            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
+                             '%s' % part.getAttributeValue('_rlnGroupName'))
         else:
-            moviesStar = 'input_movies_%s.star' % movie.getObjId()
-            partStar = os.path.join('extra',
-                                    'output_movie_particles_%s.star' % movie.getObjId())
-        
-        return moviesStar, partStar
+            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
+                             '%s' % part.getMicId())
 
-    def _isStreamOpen(self):
-        return (self.getInputMovies().isStreamOpen() or
-                self.getParticles().isStreamOpen())
+        ctf = part.getCTF()
+
+        if ctf is not None and ctf.getPhaseShift():
+            partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
