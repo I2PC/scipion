@@ -28,26 +28,26 @@
 # cell from a specific volume
 
 import os
-import math
 from tempfile import mkstemp
-from pyworkflow.utils import runJob
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.packages.xmipp3 import getEnviron
-from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
-from pyworkflow.em.protocol import ProtImportVolumes
-from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell \
-    import XmippProtExtractUnit
+
+from pyworkflow.tests.em.protocols.icosahedron import *
 from pyworkflow.em.constants import SYM_I222r, SYM_I222, SCIPION_SYM_NAME, \
     SYM_In25, SYM_In25r, SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, \
     SYM_OCTAHEDRAL
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base \
-    import NMA_MASK_THRE
+from pyworkflow.em.data import Transform
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
+from pyworkflow.em.packages.xmipp3 import getEnviron
+from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms \
     import XmippProtConvertToPseudoAtoms
-from icosahedron import *
-from pyworkflow.em.packages.ccp4.convert import Ccp4Header
-from pyworkflow.em.data import Transform
+from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base \
+    import NMA_MASK_THRE
+from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell \
+    import XmippProtExtractUnit
+from pyworkflow.em.protocol import ProtImportVolumes
+from pyworkflow.tests import BaseTest, setupTestProject
+from pyworkflow.utils import runJob
 
 OFFSET = 22.5
 
@@ -342,7 +342,7 @@ class TestProtModelBuilding(BaseTest):
     def setUpClass(cls):
         cls.mode = 'xmipp'
         # Cyclic
-        cls.symOrder = 8  # phantom symmetry order for CN and similars
+        cls.symOrder = 8  # phantom symmetry order for Cn and similars
 
         # general
         cls.innerRadius = None
@@ -360,14 +360,14 @@ class TestProtModelBuilding(BaseTest):
         self.filename[SYM_CYCLIC] = generate(
             SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),
             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder))
-        self.box[SYM_CYCLIC] = (60, 49, 81)
+        self.box[SYM_CYCLIC] = (50, 45, 81)
         self.extractunitCell(SYM_CYCLIC)
 
         # C8 + offset
         self.filename[SYM_CYCLIC] = generate(
             SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),
             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder), OFFSET)
-        self.box[SYM_CYCLIC] = (50, 52, 81)
+        self.box[SYM_CYCLIC] = (46, 48, 81)
         self.extractunitCell(SYM_CYCLIC, OFFSET)
 
         # C1
@@ -383,7 +383,7 @@ class TestProtModelBuilding(BaseTest):
         self.filename[SYM_CYCLIC] = generate(
             SCIPION_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder),
             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1] + str(self.symOrder))
-        self.box[SYM_CYCLIC] = (81, 45, 81)
+        self.box[SYM_CYCLIC] = (81, 81, 81)
         self.symOrder = 2
         self.extractunitCell(SYM_CYCLIC)
 
@@ -396,14 +396,14 @@ class TestProtModelBuilding(BaseTest):
         self.filename[SYM_DIHEDRAL] = generate(
             SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
             'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder))
-        self.box[SYM_DIHEDRAL] = (60, 49, 81)
+        self.box[SYM_DIHEDRAL] = (50, 45, 81)
         self.extractunitCell(SYM_DIHEDRAL)
 
         # D8 + offset
         self.filename[SYM_DIHEDRAL] = generate(
             SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), 'xmipp',
             XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), OFFSET)
-        self.box[SYM_DIHEDRAL] = (50, 52, 81)
+        self.box[SYM_DIHEDRAL] = (46, 48, 81)
         self.extractunitCell(SYM_DIHEDRAL, OFFSET)
 
     # function to extract the unit cell of tetrahedral symmetry
@@ -478,22 +478,23 @@ class TestProtModelBuilding(BaseTest):
             _, outputFile2 = mkstemp(suffix=".mrc")
             args = "-i %s -o %s" % (outputFile1, outputFile2)
             args += " --corners "
-            args += " %d " % (- x / 2)
-            args += " %d " % (- y / 2)
-            args += " %d " % (0)
-            args += " %d " % (+ x / 2)
-            args += " %d " % (+ y / 2)
-            args += " %d " % (+ z / 2)
+            args += " %d " % (- x / 2.)
+            args += " %d " % (- y / 2.)
+            args += " %d " % (0.)
+            args += " %d " % (+ x / 2.)
+            args += " %d " % (+ y / 2.)
+            args += " %d " % (+ z / 2.)
             runJob(None, "xmipp_transform_window", args, env=getEnviron())
             t.setShifts(0, 0, 0)
             outputFile = outputFile2
             ccp4header = Ccp4Header(outputFile2, readHeader=True)
+
         else:
             t.setShifts(0, 0, 0)
             outputFile = outputFile1
 
         ccp4header.setSampling(_samplingRate)
-        ccp4header.setOffset(t)
+        ccp4header.setOrigin(t.getShifts())
         ccp4header.writeHeader()
 
         # import volume
@@ -503,9 +504,10 @@ class TestProtModelBuilding(BaseTest):
                     'samplingRate': _samplingRate,
                     'copyFiles': True,
                     'setDefaultOrigin': False,
-                    'x': 90,
-                    'y': 90,
+                    'x': 90. * _samplingRate,
+                    'y': 90. * _samplingRate,
                     'z': 0.
+                    # x, y, z in Angstroms
                     }
         else:
             args = {'filesPath': outputFile,
@@ -534,11 +536,11 @@ class TestProtModelBuilding(BaseTest):
         ih = ImageHandler()
         xdim, ydim, zdim, ndim = \
             ih.getDimensions(prot.outputVolume.getFileName())
-        self.assertEqual(xdim, self.box[sym][0])
-        self.assertEqual(ydim, self.box[sym][1])
-        self.assertEqual(zdim, self.box[sym][2])
+        self.assertTrue(abs(xdim - self.box[sym][0])<2)
+        self.assertTrue(abs(ydim - self.box[sym][1])<2)
+        self.assertTrue(abs(zdim - self.box[sym][2])<2)
 
-        # create pdb fileoot
+        # create pdb fileoutput
         args = {'inputStructure': prot.outputVolume,
                 'maskMode': NMA_MASK_THRE,
                 'maskThreshold': 0.5,

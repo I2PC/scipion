@@ -75,8 +75,7 @@ class TestRelionBase(BaseTest):
             raise Exception('Import of images: %s, failed. outputParticles '
                             'is None.' % partStar)
         return protImport
-        return protImport
-    
+
     @classmethod
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """

@@ -548,6 +548,7 @@ for p in ['angular_break_symmetry',
           'ctf_enhance_psd',
           'ctf_estimate_from_micrograph',
           'ctf_estimate_from_psd',
+          'ctf_estimate_from_psd_fast',
           'ctf_group',
           'ctf_phase_flip',
           'ctf_show',
@@ -740,6 +741,7 @@ for p in ['angular_break_symmetry',
           'test_sampling',
           'test_symmetries',
           'test_transformation',
+          'test_transform_window',
           'test_wavelets'
           ]:
     # Allow to add specific libs for indiviual programs
