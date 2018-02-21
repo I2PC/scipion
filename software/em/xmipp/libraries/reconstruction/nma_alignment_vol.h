@@ -122,6 +122,9 @@ public:
     // Mask
     MultidimArray<int> mask;
 
+    // RMSD
+    double rmsd;
+
 public:
     /// Empty constructor
     ProgNmaAlignmentVol();

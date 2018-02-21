@@ -45,6 +45,9 @@ public:
     /** Output distance histogram */
     FileName fn_hist;
 
+    /** PDB2 */
+    FileName fn_pdb2;
+
     /** Nearest neighbours to explore */
     int Nnearest;
 

@@ -97,6 +97,8 @@ class XmippProtNMABase(EMProtocol):
         (baseDir,fnBase)=os.path.split(fnPseudoatoms)
         fnBase=fnBase.replace(".pdb","")
         fnDistanceHist=os.path.join(baseDir,'extra','atoms_distance.hist')
+        if not os.path.exists(fnDistanceHist):
+            fnDistanceHist=os.path.join(baseDir,'extra',fnBase+'_distance.hist')
         rc = self._getRc(fnDistanceHist)
         self._enterWorkingDir()
         self.runJob('nma_record_info.py', "%d %s.pdb %d" % (numberOfModes, fnBase, rc),env=getNMAEnviron())

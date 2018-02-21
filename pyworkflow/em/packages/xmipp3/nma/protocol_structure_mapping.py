@@ -78,6 +78,9 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
     _label = 'structure mapping'
     _lastUpdateVersion = VERSION_1_1
            
+    CROSS_CORRELATION = 0
+    RMSD = 1
+
     #--------------------------- DEFINE param functions --------------------------------------------
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -96,6 +99,8 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                       label="Keeping intermediate output files",
                       help="Set to true if you want to keep all intermediate "
                            "produced files during rigid and elastic alignment.")        
+        form.addParam('distanceMetric', params.EnumParam, label='Distance between volumes',
+                      choices=['Cross correlation','RMSD'], default=self.CROSS_CORRELATION)
         
         form.addSection(label='Pseudoatom')
         XmippProtConvertToPseudoAtomsBase._defineParams(self,form)
@@ -229,8 +234,13 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                 else:
                     elasticRow = xmipp.MetaData(self._getExtraPath('compDeformVol_%d_To_Vol_%d.xmd' %
                                                                    (nVolj, nVoli)))
-                    maxCc = elasticRow.getValue(md.MDL_MAXCC,1)
-                    score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
+                    if self.distanceMetric==self.CROSS_CORRELATION:
+                        maxCc = elasticRow.getValue(md.MDL_MAXCC,1)
+                        score[(nVoli-1)][(nVolj-1)] = (1 - maxCc)
+                    else:
+                        rmsd = elasticRow.getValue(md.MDL_NMA_ATOMSHIFT,1)
+                        score[(nVoli-1)][(nVolj-1)] = rmsd
+                        
                 nVolj += 1
             nVoli += 1     
                               
@@ -262,6 +272,11 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         cleanPattern(self._getPath('pseudoatoms*'))
         cleanPattern(self._getPath('modes'))
         cleanPattern(self._getExtraPath('vec_ani.pkl'))  
+        cleanPattern(self._getExtraPath('CoordinateMatrixColumnF*'))  
+        cleanPattern(self._getExtraPath('modes*'))
+        cleanPattern(self._getExtraPath('transformation*'))
+        cleanPattern(self._getPath('modes*'))
+        cleanPattern(self._getPath('pseudoatoms*'))
         
         if not self.keepingOutputFiles.get():
             cleanPattern(self._getPath('warnings*'))

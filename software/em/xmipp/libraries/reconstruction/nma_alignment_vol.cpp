@@ -131,6 +131,7 @@ void ProgNmaAlignmentVol::createWorkFiles() {
 		mdDone.addLabel(MDL_ENABLED);
 		mdDone.addLabel(MDL_NMA);
 		mdDone.addLabel(MDL_NMA_ENERGY);
+		mdDone.addLabel(MDL_NMA_ATOMSHIFT);
 		mdDone.addLabel(MDL_MAXCC);
 		mdDone.write(fn);
 	}
@@ -283,9 +284,17 @@ void ProgNmaAlignmentVol::processImage(const FileName &fnImg,
 	parameters.resize(VEC_XSIZE(parameters) + 1);
 	parameters(VEC_XSIZE(parameters) - 1) = fitness_min;
 
-	writeVolumeParameters(fnImg);
 	if (fnOutPDB!="")
+	{
 		deformPDB(fnPDB,fnOutPDB,fnModeList,trial_best);
+		PDBPhantom pdb1, pdb2; // It cannot be a PDBRichAtom because it also has to work with pseudoatomic structures
+		pdb1.read(fnPDB);
+		pdb2.read(fnOutPDB);
+		rmsd=computeRMSD(pdb1,pdb2);
+	}
+	else
+		rmsd=-1;
+	writeVolumeParameters(fnImg);
 	delete of;
 }
 
@@ -308,6 +317,7 @@ void ProgNmaAlignmentVol::writeVolumeParameters(const FileName &fnImg) {
 	md.setValue(MDL_NMA, vectortemp, objId);
 	md.setValue(MDL_NMA_ENERGY, energy, objId);
 	md.setValue(MDL_MAXCC, 1-parameters(numberOfModes), objId);
+	md.setValue(MDL_NMA_ATOMSHIFT, rmsd, objId);
 
 	md.append(fnOutDir+"/nmaDone.xmd");
 }

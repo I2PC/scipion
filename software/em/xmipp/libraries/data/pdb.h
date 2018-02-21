@@ -83,6 +83,8 @@ public:
 
     /// Position Z
     double z;
+
+    double rmsd(const Atom &atom2) const;
 };
 
 /** Phantom description using atoms. */
@@ -333,5 +335,8 @@ void projectPDB(const PDBPhantom &phantomPDB,
  * with Nbin samples.
  */
 void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, double maxDistance, int Nbins, Histogram1D &hist);
+
+/** Compute RMSD */
+double computeRMSD(const PDBPhantom &pdb1, const PDBPhantom &pdb2);
 //@}
 #endif

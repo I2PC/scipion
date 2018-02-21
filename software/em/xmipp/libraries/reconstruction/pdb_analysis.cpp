@@ -35,6 +35,7 @@ void ProgPdbAnalysis::defineParams()
 	addParamsLine("          distance_histogram <fileOut> <Nnearest=3> <MaxDistance=-1>: Compute the distance histogram between");
 	addParamsLine("                                                                    : an atom and its N nearest neighbours");
 	addParamsLine("                                                                    : The maximum distance of the neighbours may be limited (in Angstroms)");
+	addParamsLine("          rmsd <pdb2>: RMSD between pdb1 and pdb2, they are supposed to have the same atoms and in the same order");
 	addExampleLine("Compute the histogram of interatomic distances",false);
 	addExampleLine("xmipp_pdb_analysis -i mypdb.pdb --operation distance_histogram distance.hist");
 }
@@ -49,6 +50,10 @@ void ProgPdbAnalysis::readParams()
 		Nnearest=getIntParam("--operation",2);
 		maxDistance=getDoubleParam("--operation",3);
 	}
+	else if (op=="rmsd")
+	{
+		fn_pdb2=getParam("--operation",1);
+	}
 }
 
 void ProgPdbAnalysis::show()
@@ -62,16 +67,26 @@ void ProgPdbAnalysis::show()
 		std::cout << "Output histogram: " << fn_hist << std::endl
 		          << "Nnearest:         " << Nnearest << std::endl
 				  << "MaxDistance:      " << maxDistance << std::endl;
+	else if (op=="rmsd")
+	{
+		std::cout << "PDB2:             " << fn_pdb2 << std::endl;
+	}
 }
 
 void ProgPdbAnalysis::run()
 {
+	PDBPhantom pdb; // It cannot be a PDBRichAtom because it also has to work with pseudoatomic structures
+	pdb.read(fn_pdb);
 	if (op=="distance_histogram")
 	{
-		PDBPhantom pdb; // It cannot be a PDBRichAtom because it also has to work with pseudoatomic structures
-		pdb.read(fn_pdb);
 		Histogram1D hist;
 		distanceHistogramPDB(pdb,Nnearest,maxDistance,200,hist);
 		hist.write(fn_hist);
+	}
+	else if (op=="rmsd")
+	{
+		PDBPhantom pdb2;
+		pdb2.read(fn_pdb2);
+		std::cout << "RMSD= " << computeRMSD(pdb,pdb2) << std::endl;
 	}
 }

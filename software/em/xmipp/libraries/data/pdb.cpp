@@ -32,6 +32,15 @@
 #include "integration.h"
 #include "numerical_tools.h"
 
+/* Atoms ------------------------------------------------------------------- */
+double Atom::rmsd(const Atom &atom2) const
+{
+	double dx=x-atom2.x;
+	double dy=y-atom2.y;
+	double dz=z-atom2.z;
+	return sqrt(dx*dx+dy*dy+dz*dz);
+}
+
 /* Atom charge ------------------------------------------------------------- */
 int atomCharge(const std::string &atom)
 {
@@ -1089,3 +1098,17 @@ void distanceHistogramPDB(const PDBPhantom &phantomPDB, size_t Nnearest, double 
     }
     compute_hist(NnearestDistances, hist, 0, NnearestDistances.computeMax(), Nbins);
 }
+
+double computeRMSD(const PDBPhantom &pdb1, const PDBPhantom &pdb2)
+{
+	const std::vector<Atom> &atoms1=pdb1.atomList;
+	const std::vector<Atom> &atoms2=pdb2.atomList;
+	if (atoms1.size()!=atoms2.size())
+		REPORT_ERROR(ERR_UNCLASSIFIED,"The number of atoms in the two PDBs is not the same");
+    int Natoms=atoms1.size();
+    double sumRMSD=0.0;
+    for (int i=0; i<Natoms; i++)
+    	sumRMSD+=atoms1[i].rmsd(atoms2[i]);
+    return sumRMSD/Natoms;
+}
+
