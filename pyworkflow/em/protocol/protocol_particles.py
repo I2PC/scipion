@@ -27,6 +27,7 @@
 # **************************************************************************
 
 import os
+import time
 from datetime import datetime
 from collections import OrderedDict
 
@@ -308,6 +309,22 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     # ------ Methods for Streaming picking --------------
 
+    def _defineStreamingParams(self, form):
+        """ Define some common parameters for streaming behaviour. """
+        form.addSection("Streaming")
+        form.addParam("streamingWarning", params.LabelParam, important=True,
+                      label="The following params are related to how "
+                            "streaming is done in Scipion.")
+        form.addParam("streamingSleepOnWait", params.IntParam, default=0,
+                      label="Sleep when waiting (secs)",
+                      help="If you specify a value greater than zero, "
+                           "it will be the number of seconds that the "
+                           "protocol will sleep when waiting for new "
+                           "input data in streaming mode. ")
+        form.addParam("streamingBatchSize", params.IntParam, default=0,
+                      label="Batch size",
+                      help="")
+
     def _stepsCheck(self):
         # To allow streaming picking we need to detect:
         #   1) new micrographs ready to be picked
@@ -417,7 +434,6 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         self.debug('   streamMode: %s newDone: %s' % (streamMode,
                                                       not(newDone == [])))
-
         if newDone:
             newDoneUpdated = self._updateOutputCoordSet(newDone, streamMode)
             self._writeDoneList(newDoneUpdated)
@@ -425,6 +441,15 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
+
+            # JMRT: Maybe it would be good idea to take a snap to avoid
+            # so much IO if this protocol does not have much to do now
+            if allDone == nMics:
+                sleepOnWait = self.getAttributeValue('streamingSleepOnWait', 0)
+                if sleepOnWait > 0:
+                    self.info("Not much work to do now, sleeping %s seconds."
+                              % sleepOnWait)
+                    time.sleep(sleepOnWait)
             return
 
         self.debug('   finished: %s ' % self.finished)

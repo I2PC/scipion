@@ -36,7 +36,6 @@ from convert import (readSetOfCoordinates, writeSetOfCoordinates,
                      runGautomatch, getProgram)
 
 
-
 class ProtGautomatch(em.ProtParticlePickingAuto):
     """
     Gautomatch is a GPU accelerated program for accurate, fast, flexible and
@@ -254,13 +253,14 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
                       help='Specify to write out the auto-detected mask (ice, '
                            'contamination, aggregation, carbon edges etc.)')
 
-    # --------------------------- INSERT steps functions -----------------------
+        self._defineStreamingParams(form)
+
+    # --------------------------- INSERT steps functions ----------------------
     def _insertInitialSteps(self):
         convId = self._insertFunctionStep('convertInputStep')
         return [convId]
 
-    # --------------------------- STEPS functions ------------------------------
-
+    # --------------------------- STEPS functions -----------------------------
     def convertInputStep(self):
         """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format,
@@ -287,8 +287,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
     def createOutputStep(self):
         pass
         
-
-    # --------------------------- INFO functions -------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists

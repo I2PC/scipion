@@ -288,9 +288,11 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                       important=True,
                       label='Helix processing is not implemented still.')
 
+        self._defineStreamingParams(form)
+
         form.addParallelSection(threads=0, mpi=4)
 
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions ------------------------------
 
     def _pickMicrograph(self, micStarFile, params, threshold,
                                minDistance, maxStddevNoise, fom):
@@ -303,7 +305,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         self.runJob(self._getProgram('relion_autopick'), params,
                     cwd=self.getWorkingDir())
 
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self.inputStreaming = self.getInputMicrographs().isStreamOpen()
 
@@ -357,7 +359,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         # Return the updated micDict and the closed status
         return micDict, micClose and ctfClosed
 
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions ------------------------------
 
     def convertInputStep(self, micsId, refsId, runType):
         # runType is passed as parameter to force a re-execute of this step
@@ -451,7 +453,6 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         self._preprocessMicrographRow(mic, micRow)
         micrographToRow(mic, micRow)
         self._postprocessMicrographRow(mic, micRow)
-        print micRow
         self._pickMicrographsFromStar(self._getMicStarFile(mic), params,
                                       threshold, minDistance, fom)
 

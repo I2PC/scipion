@@ -229,7 +229,9 @@ class ProtGctf(em.ProtCTFMicrographs):
                       help='Phase shift target in the search: CCC or '
                            'resolution limit')
 
-    #--------------------------- STEPS functions -------------------------------
+        self._defineStreamingParams(form)
+
+    # -------------------------- STEPS functions ------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run Gctf with required parameters """
         doneFile = os.path.join(micDir, 'done.txt')
@@ -345,7 +347,7 @@ class ProtGctf(em.ProtCTFMicrographs):
     def _createOutputStep(self):
         pass
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
@@ -376,7 +378,7 @@ class ProtGctf(em.ProtCTFMicrographs):
 
         return [methods]
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _prepareCommand(self):
         sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
         # Convert digital frequencies to spatial frequencies
