@@ -34,12 +34,12 @@ This module contains protocols related to Set operations such us:
 import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
-from pyworkflow.object import Boolean
+from pyworkflow.object import Boolean, Object
+
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
     pass
-
 
 class ProtUnionSet(ProtSets):
     """ Protocol to join two or more sets of images.
@@ -66,8 +66,8 @@ class ProtUnionSet(ProtSets):
 
             if  inputText == 'All':
                 pointerClass = 'EMSet'
-#             elif inputText == 'CTFs + Micrographs':
-#                 pointerClass = 'SetOfCTF'
+            # elif inputText == 'CTFs + Micrographs':
+            #     pointerClass = 'SetOfCTF'
             else:
                 pointerClass = 'SetOf' + inputText
             # For relatively small set we usually want to include
@@ -82,7 +82,7 @@ class ProtUnionSet(ProtSets):
         
         self.inputType.trace(onChangeInputType)
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
@@ -124,11 +124,11 @@ class ProtUnionSet(ProtSets):
         
         # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
 
-    #--------------------------- INSERT steps functions --------------------------------------------   
+    #--------------------------- INSERT steps functions ------------------------  
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
 
@@ -146,13 +146,23 @@ class ProtUnionSet(ProtSets):
         #or implement it. But this will be for Scipion 1.2
         self.ignoreExtraAttributes = Boolean(True)
         if self.ignoreExtraAttributes:
-            commonAttrs = list(self.commonAttributes())
+            _, commonAttrs = self.commonAttributes()
+
+            # Get the 1st level attributes to be used for the copyAttributes
+            copyAttrs = list()
+            for attr in commonAttrs:
+                if not "." in attr:
+                    copyAttrs.append(attr)
 
         for itemSet in self.inputSets:
             for obj in itemSet.get():
                 if self.ignoreExtraAttributes:
                     newObj = itemSet.get().ITEM_TYPE()
-                    newObj.copyAttributes(obj, *commonAttrs)
+                    newObj.copyAttributes(obj, *copyAttrs)
+
+                    self.cleanExtraAttributes(newObj, commonAttrs)
+                    if not cleanIds:
+                        newObj.setObjId(obj.getObjId())
                 else:
                     newObj = obj
 
@@ -164,11 +174,26 @@ class ProtUnionSet(ProtSets):
         for itemSet in self.inputSets:
             self._defineSourceRelation(itemSet, outputSet)
 
+    def cleanExtraAttributes(self, obj, verifyAttrs, prefix=""):
+
+        for attr, value in obj.getAttributesToStore():
+
+            prefixedAttribute = prefix + attr
+
+            if not prefixedAttribute in verifyAttrs:
+                value._objDoStore = False
+                print ("%s will be lost." % attr)
+
+            else:
+                self.cleanExtraAttributes(value, verifyAttrs,
+                                     prefixedAttribute + ".")
+
     def getObjDict(self, includeClass=False):
         return super(ProtUnionSet, self).getObjDict(includeClass)
     
     def duplicatedIds(self):
-        """ Check if there are duplicated ids to renumber from the beginning. """
+        """ Check if there are duplicated ids to renumber from
+        the beginning. """
         usedIds = set()  # to keep track of the object ids we have already seen
         
         for itemSet in self.inputSets:
@@ -179,24 +204,52 @@ class ProtUnionSet(ProtSets):
                 usedIds.add(objId)
         return False
 
+    def getAllSetsAttributes(self):
+
+        allSetsAttributes = list()
+        for itemSet in self.inputSets:
+            obj = itemSet.get().getFirstItem()
+            allSetsAttributes.append(self._getAttributesToStoreRecursive(obj))
+
+        return allSetsAttributes
+
+    def _getAttributesToStoreRecursive(self, obj, prefix=""):
+        """ Return all attributes of an object going deep into its structure"""
+        attr = set()
+
+        for a, value in obj.getAttributesToStore():
+
+            # Add the attribute with the prefix
+            attr.add(prefix + a)
+
+            if isinstance(value, Object):
+                childrenAttr = self._getAttributesToStoreRecursive(value, prefix + a + ".")
+                attr.update(childrenAttr)
+
+        return attr
+
     def commonAttributes(self):
-        """ Compute the set of common attributes to all items withint
+        """ Compute the set of common attributes to all items within
         each input set. """
         commonAttrs = None
 
-        for itemSet in self.inputSets:
-            obj = itemSet.get().getFirstItem()
-            attrSet = {a for a, _ in obj.getAttributesToStore()}
+        allSetsAttributes = self.getAllSetsAttributes()
+
+        for attrSet in allSetsAttributes:
 
             if commonAttrs is None: # first time
                 commonAttrs = attrSet
+
             else:
+
                 commonAttrs = commonAttrs & attrSet
 
-        return commonAttrs
+        print ("All sets common attributes: %s" % "\n".join(commonAttrs))
+
+        return allSetsAttributes, list(commonAttrs)
 
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         # Are all inputSets from the same class?
         classes = {x.get().getClassName() for x in self.inputSets}
@@ -204,16 +257,51 @@ class ProtUnionSet(ProtSets):
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
 
-#        if not self.ignoreExtraAttributes:
-#            # Do all inputSets contain elements with the same attributes defined?
-#            def attrNames(s):  # get attribute names of the first element of set s
-#                return sorted(iter(s.get()).next().getObjDict().keys())
-#            attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
-#            if len(attrs) > 1:
-#                return ["All elements must have the same attributes.",
-#                        "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+
+       # if not self.ignoreExtraAttributes:
+       #     # Do all inputSets contain elements with the same attributes defined?
+       #     def attrNames(s):  # get attribute names of the first element of set s
+       #         return sorted(iter(s.get()).next().getObjDict().keys())
+       #     attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+       #     if len(attrs) > 1:
+       #         return ["All elements must have the same attributes.",
+       #                 "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
 
         return []  # no errors
+
+    def _warnings(self):
+        """ Warn about loosing info. """
+
+        warnings = []
+
+        # Get all attributes "map"
+        allSetsAttributes, commonAttributes = self.commonAttributes()
+
+        # Use a set
+        commonAttributes = set(commonAttributes)
+
+        # Go through all sets attributes
+        for index, setAttributes in enumerate(allSetsAttributes):
+
+            setAttributes = set(setAttributes)
+
+            # Get the difference
+            lostAttributes = setAttributes-commonAttributes
+
+            if len(lostAttributes) != 0:
+
+                warnings.append("Set #%d will loose following "
+                                "attributes:" % index)
+                for attr in lostAttributes:
+                    warnings.append(attr)
+
+        if len(warnings):
+            warnings.append("Your input sets have different attributes. "
+                            "We will keep only the common ones. This may "
+                            "cause the lost of important data like CFT, "
+                            "alignment information,...")
+
+        return warnings
 
     def _summary(self):
         if not hasattr(self, 'outputSet'):
@@ -231,7 +319,7 @@ class ProtSplitSet(ProtSets):
     """
     _label = 'split sets'
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -247,11 +335,11 @@ class ProtSplitSet(ProtSets):
                       label="Randomize elements",
                       help='Put the elements at random in the different subsets.')
     
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputClassName = str(inputSet.getClassName())
@@ -286,7 +374,7 @@ class ProtSplitSet(ProtSets):
             self._defineOutputs(**{key % i: subset})
             self._defineTransformRelation(inputSet, subset)
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         if self.inputSet.get().getSize() < self.numberOfSets:
@@ -320,7 +408,7 @@ class ProtSubSet(ProtSets):
     SET_INTERSECTION = 0
     SET_DIFFERENCE = 1
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
 
@@ -361,11 +449,11 @@ class ProtSubSet(ProtSets):
                  'will be included. If _difference_, elements that\n'
                  'are in input but not in other will picked.')
 
-    #--------------------------- INSERT steps functions --------------------------------------------   
+    #--------------------------- INSERT steps functions ------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         inputFullSet = self.inputFullSet.get()
 
@@ -409,7 +497,7 @@ class ProtSubSet(ProtSets):
         else:
             self.summaryVar.set('Output was not generated. Resulting set was EMPTY!!!')
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
 
