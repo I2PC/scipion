@@ -69,9 +69,10 @@ class CCP4ProtRunRefmac(EMProtocol):
         form.addParam('inputVolume', PointerParam, label="Input Volume",
                       important=True, pointerClass='Volume',
                       help='This is the unit cell volume.')
-        form.addParam('inputStructure', PointerParam, label="Input PDB file",
+        form.addParam('inputStructure', PointerParam, label="Input PDBx/mmCIF "
+                                                            "file",
                       important=True, pointerClass='PdbFile',
-                      help='Specify a PDB object.')
+                      help='Specify a PDBx/mmCIF object.')
         form.addParam('maxResolution', FloatParam, default=5,
                       label='Max. Resolution (A):',
                       help="Max resolution used in the refinement (Angstroms)."
@@ -150,6 +151,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         # get input 3D map filename
         fnVol = self._getInputVolume()
         inFileName = fnVol.getFileName()
+        if inFileName.endswith(":mrc"):
+            inFileName.replace(":mrc", "")
 
         # create local copy of 3Dmap (tmp3DMapFile.mrc)
         localInFileName = self._getVolumeFileName()
@@ -257,7 +260,6 @@ class CCP4ProtRunRefmac(EMProtocol):
             for line in input_data:
                 if line.strip() == '$$':
                     break
-                print line
 
     # --------------------------- UTLIS functions --------------------------
 
@@ -281,8 +283,8 @@ class CCP4ProtRunRefmac(EMProtocol):
                 errors.append("REFMAC = %s" % self.REFMAC)
 
         # Check that the input volume exist
-        if (not self.pdbFileToBeRefined.get().hasVolume()) \
-                and self.inputVolumes is None:
+        if (not self.inputStructure.get().hasVolume()) \
+                and self.inputVolume is None:
             errors.append("Error: You should provide a volume.\n")
 
         return errors
@@ -331,6 +333,5 @@ class CCP4ProtRunRefmac(EMProtocol):
         s = ""
         for k, v in refmacShiftDict.iteritems():
             s += "%s: %s\n" % (str(k), str(v))
-        print s
         ##
         return refmacShiftDict
