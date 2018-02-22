@@ -388,6 +388,9 @@ env.addPackage('bsoft', version='1.8.8',
 env.addPackage('bsoft', version='1.9.0',
                tar='bsoft1_9_0_Fedora_20.tgz')
 
+env.addPackage('ctftilt', version='1.7',
+               tar='ctftilt_V1.7.tgz')
+
 env.addPackage('ctffind', version='3.6',
                tar='ctffind_V3.5.tgz')
 
