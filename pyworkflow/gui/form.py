@@ -1011,15 +1011,18 @@ class ParamWidget():
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
         title = "Select object of types: %s" % self.param.pointerClass.get()
+
         pointerCond = self.param.pointerCondition.get()
+
         if pointerCond:
             title += " (condition: %s)" % pointerCond
                                             
-        dlg = ListDialog(self.parent, title,
-                         tp, "Double click an item to preview the object",
+        dlg = ListDialog(self.parent, title, tp,
+                         "Double click selects the item, right-click allows "
+                         "you to visualize it",
                          validateSelectionCallback=validateSelected,
-                         selectmode=self._selectmode)
-        
+                         selectmode=self._selectmode, selectOnDoubleClick=True)
+
         if dlg.values:
             if isinstance(self.param, params.MultiPointerParam):
                 self.set(dlg.values)
@@ -1038,7 +1041,10 @@ class ParamWidget():
         tp = RelationsTreeProvider(self._protocol, self.param,
                                    selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp,
-                         selectmoded=self._selectmode)
+                         "Double click selects the item, right-click allows "
+                         "you to visualize it",
+                         selectmoded=self._selectmode,
+                         selectOnDoubleClick=True)
         if dlg.values:
             self.set(dlg.values[0])
             

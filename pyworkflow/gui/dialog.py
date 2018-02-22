@@ -103,7 +103,6 @@ class Dialog(tk.Toplevel):
         
         gui.configureWeigths(self)
 
-
         if self.initial_focus is None:
             self.initial_focus = self
 
@@ -112,16 +111,12 @@ class Dialog(tk.Toplevel):
         if self.parent is not None:
             self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
                                       parent.winfo_rooty()+50))
-
         self.deiconify() # become visible now
-
         self.initial_focus.focus_set()
-
         # wait for window to appear on screen before calling grab_set
         self.wait_visibility()
         self.grab_set()
         self.wait_window(self)
-        
 
     def destroy(self):
         """Destroy the window"""
@@ -139,10 +134,10 @@ class Dialog(tk.Toplevel):
         """
         pass
 
-        
     def _createButton(self, frame, text, result):
         icon = self.icons[result]
-        return  tk.Button(frame, text=text, image=self.getImage(icon), compound=tk.LEFT,
+        return tk.Button(frame, text=text, image=self.getImage(icon),
+                         compound=tk.LEFT,
                          command=lambda: self._handleResult(result))
         
     def buttonbox(self, btnFrame):
@@ -160,7 +155,6 @@ class Dialog(tk.Toplevel):
         self.bind("<Return>", self._handleReturn)
         self.bind("<Escape>", lambda e: self._handleResult(RESULT_CANCEL))
 
-
     def _handleResult(self, resultValue):
         """This method will be called when any button is pressed.
         It will set the resultValue associated with the button
@@ -172,7 +166,6 @@ class Dialog(tk.Toplevel):
             self.initial_focus.focus_set() # put focus back
             return
         
-
         self.withdraw()
         self.update_idletasks()
 
@@ -304,7 +297,8 @@ class YesNoDialog(MessageDialog):
 
 class EntryDialog(Dialog):
     """Dialog to ask some entry"""
-    def __init__(self, parent, title, entryLabel, entryWidth=20, defaultValue='', headerLabel=None):
+    def __init__(self, parent, title, entryLabel, entryWidth=20,
+                 defaultValue='', headerLabel=None):
         self.entryLabel = entryLabel
         self.entryWidth = entryWidth
         self.headerLabel = headerLabel
@@ -324,7 +318,8 @@ class EntryDialog(Dialog):
             row += 1
         label = tk.Label(bodyFrame, text=self.entryLabel, bg='white', bd=0)
         label.grid(row=row, column=0, sticky='nw', padx=(15, 10), pady=15)
-        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth, textvariable=self.tkvalue)
+        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor,
+                              width=self.entryWidth, textvariable=self.tkvalue)
         self.entry.grid(row=row, column=1, sticky='new', padx=(0,15), pady=15)
         self.initial_focus = self.entry
         
@@ -457,6 +452,7 @@ class ListDialog(Dialog):
         self.validateSelectionCallback = kwargs.get('validateSelectionCallback',
                                                     None)
         self._selectmode = kwargs.get('selectmode', 'extended')
+        self._selectOnDoubleClick = kwargs.get('selectOnDoubleClick', False)
         self._allowsEmptySelection = kwargs.get('allowsEmptySelection', False)
 
         buttons = []
@@ -467,18 +463,20 @@ class ListDialog(Dialog):
         Dialog.__init__(self, parent, title, buttons=buttons)
         
     def body(self, bodyFrame):
-        bodyFrame.config(bg='white')
+        bodyFrame.config()
         gui.configureWeigths(bodyFrame)
         self._createTree(bodyFrame)
         if self.message:
-            label = tk.Label(bodyFrame, text=self.message, bg='white',
-                     image=self.getImage(Icon.LIGHTBULB), compound=tk.LEFT)
+            label = tk.Label(bodyFrame, text=self.message, compound=tk.LEFT,
+                             image=self.getImage(Icon.LIGHTBULB))
             label.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
         self.initial_focus = self.tree
         
     def _createTree(self, parent):
         self.tree = BoundTree(parent, self.provider, selectmode=self._selectmode)
-        
+        if self._selectOnDoubleClick:
+            self.tree.itemDoubleClick = lambda obj: self._handleResult(RESULT_YES)
+
     def apply(self):
         self.values = self.tree.getSelectedObjects()
     
