@@ -290,6 +290,12 @@ def setPsdFiles(ctfModel, ctfRow):
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
+    # Refresh phase shift!
+    phaseShift = ctfModel.getPhaseShift()
+
+    if phaseShift is not None:
+        ctfRow.setValue(md.RLN_CTF_PHASESHIFT, phaseShift)
+
     objectToRow(ctfModel, ctfRow, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
     
 
@@ -297,6 +303,10 @@ def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a meta """
     if ctfRow.containsAll(CTF_DICT):
         ctfModel = em.CTFModel()
+
+        # Add phaseshift in case it comes in relion metadata
+        CTF_DICT['_phaseShift'] = md.RLN_CTF_PHASESHIFT
+
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
         ctfModel.standardize()
         setPsdFiles(ctfModel, ctfRow)

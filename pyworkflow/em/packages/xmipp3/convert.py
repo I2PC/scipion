@@ -68,7 +68,6 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
-       ("_phaseShift", xmipp.RLN_CTF_PHASESHIFT),
        ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
        ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])

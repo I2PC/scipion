@@ -49,14 +49,14 @@ class TestConversions(BaseTest):
         cls.dataset = DataSet.getDataSet('relion_tutorial')  
         cls.getFile = cls.dataset.getFile
         
-        cls.ds = DataSet.getDataSet('relion_tutorial')
+        # cls.ds = cls.dataset
         
         
-    def aaatest_particlesToStar(self):
+    def test_particlesToStar(self):
         """ Write a SetOfParticles to Relion star input file. """
         imgSet = SetOfParticles(filename=self.getOutputPath("particles.sqlite"))
         n = 10
-        fn = self.particles
+        fn = self.getFile('particles_binary')
         ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15),
                 CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25)
                ]
@@ -88,7 +88,47 @@ class TestConversions(BaseTest):
         self.assertTrue(mdAll.containsLabel(md.RLN_IMAGE_COORD_X))
         self.assertTrue(mdAll.containsLabel(md.RLN_IMAGE_COORD_Y))
         self.assertFalse(mdAll.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE))
-        
+        self.assertFalse(mdAll.containsLabel(md.RLN_CTF_PHASESHIFT))
+
+    def test_particlesWithPhaseShiftToStar(self):
+        """ Write a SetOfParticles to Relion star input file. """
+        imgSet = SetOfParticles(filename=self.getOutputPath("particles_ph_sh.sqlite"))
+        n = 10
+        fn = self.getFile('particles_binary')
+        ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15, phaseShift=90),
+                CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25, phaseShift=60)
+                ]
+        acquisition = Acquisition(magnification=60000, voltage=300,
+                                  sphericalAberration=2.,
+                                  amplitudeContrast=0.07)
+        imgSet.setAcquisition(acquisition)
+        coord = Coordinate()
+        coord.setMicId(1)
+
+        for i in range(n):
+            p = Particle()
+            p.setLocation(i + 1, fn)
+            ctf = ctfs[i % 2]
+            p.setCTF(ctf)
+            p.setAcquisition(acquisition)
+            p._xmipp_zScore = Float(i)
+            coord.setX(i * 10)
+            coord.setY(i * 10)
+            p.setCoordinate(coord)
+            imgSet.append(p)
+
+        fnStar = self.getOutputPath('particles_ph_sh.star')
+        fnStk = self.getOutputPath('particles.stk')
+
+        print ">>> Writing to file: %s" % fnStar
+        relion.writeSetOfParticles(imgSet, fnStar, fnStk)
+
+        mdAll = md.MetaData(fnStar)
+        self.assertTrue(mdAll.containsLabel(md.RLN_IMAGE_COORD_X))
+        self.assertTrue(mdAll.containsLabel(md.RLN_IMAGE_COORD_Y))
+        self.assertFalse(mdAll.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE))
+        self.assertTrue(mdAll.containsLabel(md.RLN_CTF_PHASESHIFT))
+
     def test_particlesFromStar(self):
         """ Read a set of particles from an .star file.  """
         fnStar = self.getFile('relion_it020_data')
