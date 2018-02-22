@@ -305,7 +305,7 @@ def rowToCtfModel(ctfRow):
         ctfModel = em.CTFModel()
 
         # Add phaseshift in case it comes in relion metadata
-        CTF_DICT['_phaseShift'] = md.RLN_CTF_PHASESHIFT
+        CTF_DICT[em.CTFModel.PHASE_SHIFT] = md.RLN_CTF_PHASESHIFT
 
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
         ctfModel.standardize()

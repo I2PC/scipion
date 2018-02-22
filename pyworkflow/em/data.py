@@ -31,14 +31,10 @@ for EM data objects like: Image, SetOfImage and others
 
 import os
 import json
-
 from pyworkflow.object import *
-import pyworkflow.utils as pwutils
-
 from constants import *
 from convert import ImageHandler
 import numpy as np
-# import xmipp
 
 
 class EMObject(OrderedObject):
@@ -119,13 +115,17 @@ class Acquisition(EMObject):
 
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
+
+    PHASE_SHIFT = '_phaseShift'
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._defocusU = Float(kwargs.get('defocusU', None))
         self._defocusV = Float(kwargs.get('defocusV', None))
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
-        self._phaseShift = Float(kwargs.get('phaseShift', None))
+        if self.PHASE_SHIFT in kwargs:
+            self.setPhaseShift(kwargs.get(self.PHASE_SHIFT))
         self._psdFile = String()
 #         self._micFile = String()
         self._micObj = None
@@ -139,7 +139,7 @@ class CTFModel(EMObject):
                      (self._defocusU.get(),
                       self._defocusV.get(),
                       self._defocusAngle.get(),
-                      self._phaseShift.get(),
+                      self.getPhaseShift(),
                       self._resolution.get(),
                       self._fitQuality.get()
                       )
@@ -157,17 +157,26 @@ class CTFModel(EMObject):
     def getPhaseShift(self):
         # this is an awful hack to read phase shift from ctffind or gctf
         # It should be eventually removed
-        if self._phaseShift.hasValue():
-            return self._phaseShift.get()
-        elif hasattr(self, '_ctffind4_ctfPhaseShift'):
-            return self._ctffind4_ctfPhaseShift.get()
-        elif hasattr(self, '_gctf_ctfPhaseShift'):
-            return self._gctf_ctfPhaseShift.get()
+        if self._hasPhaseShiftAttr():
+            if self._phaseShift.hasValue():
+                return self._phaseShift.get()
+            elif hasattr(self, '_ctffind4_ctfPhaseShift'):
+                return self._ctffind4_ctfPhaseShift.get()
+            elif hasattr(self, '_gctf_ctfPhaseShift'):
+                return self._gctf_ctfPhaseShift.get()
+            else:
+                return self._phaseShift.get()
         else:
-            return self._phaseShift.get()
+            return None
 
     def setPhaseShift(self, value):
+        if not self._hasPhaseShiftAttr():
+            self._phaseShift = Float()
+
         self._phaseShift.set(value)
+
+    def _hasPhaseShiftAttr(self):
+        return hasattr(self, self.PHASE_SHIFT)
 
     def getResolution(self):
         # this is an awful hack to read freq either from ctffid/gctf or xmipp
@@ -232,7 +241,7 @@ class CTFModel(EMObject):
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV', '_defocusAngle',
                                    '_defocusRatio', '_psdFile', '_micFile',
-                                   '_resolution', '_fitQuality', '_phaseShift')
+                                   '_resolution', '_fitQuality', PHASE_SHIFT)
 
     def getPsdFile(self):
         return self._psdFile.get()

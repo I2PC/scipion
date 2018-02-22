@@ -647,7 +647,7 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
-        ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
+
 
     else:
         ctfModel = None

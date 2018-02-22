@@ -26,6 +26,7 @@
 # *
 # **************************************************************************
 
+from __future__ import print_function
 import os
 import subprocess
 import numpy
@@ -81,7 +82,7 @@ class TestConversions(BaseTest):
         fnStar = self.getOutputPath('particles.star')
         fnStk = self.getOutputPath('particles.stk')
         
-        print ">>> Writing to file: %s" % fnStar
+        print (">>> Writing to file: %s" % fnStar)
         relion.writeSetOfParticles(imgSet, fnStar, fnStk)
         
         mdAll = md.MetaData(fnStar)
@@ -95,8 +96,10 @@ class TestConversions(BaseTest):
         imgSet = SetOfParticles(filename=self.getOutputPath("particles_ph_sh.sqlite"))
         n = 10
         fn = self.getFile('particles_binary')
-        ctfs = [CTFModel(defocusU=10000, defocusV=15000, defocusAngle=15, phaseShift=90),
-                CTFModel(defocusU=20000, defocusV=25000, defocusAngle=25, phaseShift=60)
+        ctfs = [CTFModel(defocusU=10000, defocusV=15000,
+                         defocusAngle=15, _phaseShift=90),
+                CTFModel(defocusU=20000, defocusV=25000,
+                         defocusAngle=25, _phaseShift=60)
                 ]
         acquisition = Acquisition(magnification=60000, voltage=300,
                                   sphericalAberration=2.,
@@ -120,7 +123,7 @@ class TestConversions(BaseTest):
         fnStar = self.getOutputPath('particles_ph_sh.star')
         fnStk = self.getOutputPath('particles.stk')
 
-        print ">>> Writing to file: %s" % fnStar
+        print (">>> Writing to file: %s" % fnStar)
         relion.writeSetOfParticles(imgSet, fnStar, fnStk)
 
         mdAll = md.MetaData(fnStar)
@@ -133,7 +136,7 @@ class TestConversions(BaseTest):
         """ Read a set of particles from an .star file.  """
         fnStar = self.getFile('relion_it020_data')
         
-        print ">>> Reading star file: ", fnStar
+        print (">>> Reading star file: ", fnStar)
         mdAll = md.MetaData(fnStar)
         goldLabels = ['rlnVoltage', 'rlnDefocusU', 'rlnDefocusV', 
                       'rlnDefocusAngle', 'rlnSphericalAberration', 
@@ -176,7 +179,7 @@ class TestConvertBinaryFiles(BaseTest):
         
         partSet.close()
         
-        print filesDict
+        print (filesDict)
         
     def test_mrcsLink(self):
         """ In this case just a link with .mrcs extension 
@@ -194,7 +197,7 @@ class TestConvertBinaryFiles(BaseTest):
         
         filesDict = convertBinaryFiles(partSet, outputDir)
         
-        print filesDict
+        print (filesDict)
 
 
 SHOW_IMAGES  = False # Launch xmipp_showj to open intermediate results
@@ -204,7 +207,7 @@ PRINT_FILES  = True
 
 
 def runRelionProgram(cmd):
-    print ">>>", cmd
+    print (">>>", cmd)
     p = subprocess.Popen(cmd, shell=True, env=relion.getEnviron())
     return p.wait()
 
@@ -214,12 +217,12 @@ class TestConvertAnglesBase(BaseTest):
     """ Base class to launch both Alignment and Reconstruction tests."""
     IS_ALIGNMENT = None
     CMD = None
-    
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('emx')
-    
+
     def launchTest(self, fileKey, mList, alignType=None, **kwargs):
         """ Helper function to launch similar alignment tests
         give the EMX transformation matrix.
@@ -228,18 +231,18 @@ class TestConvertAnglesBase(BaseTest):
             mList: the matrix list of transformations
                 (should be the same length of the stack of images)
         """
-        print "\n"
-        print "*" * 80
-        print "* Launching test: ", fileKey
-        print "*" * 80
-        
+        print ("\n")
+        print ("*" * 80)
+        print ("* Launching test: ", fileKey)
+        print ("*" * 80)
+
         is2D = alignType == ALIGN_2D
-        
+
         stackFn = self.dataset.getFile(fileKey)
         partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
         mdFn = self.getOutputPath(fileKey + "_particles.star")
         partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
-        
+
         if self.IS_ALIGNMENT:
             outputFn = self.getOutputPath(fileKey + "_output.mrcs")
             outputFnRelion = self.getOutputPath(fileKey + "_output")
@@ -247,15 +250,15 @@ class TestConvertAnglesBase(BaseTest):
         else:
             outputFn = self.getOutputPath(fileKey + "_output.vol")
             goldFn = self.dataset.getFile(fileKey + '_Gold_output.vol')
-        
+
         if PRINT_FILES:
-            print "BINARY DATA: ", stackFn
-            print "SET1:        ", partFn1
-            print "  MD:        ", mdFn
-            print "SET2:        ", partFn2
-            print "OUTPUT:      ", outputFn
-            print "GOLD:        ", goldFn
-        
+            print("BINARY DATA: ", stackFn)
+            print("SET1:        ", partFn1)
+            print("  MD:        ", mdFn)
+            print("SET2:        ", partFn2)
+            print("OUTPUT:      ", outputFn)
+            print("GOLD:        ", goldFn)
+
         if alignType == ALIGN_2D or alignType == ALIGN_PROJ:
             partSet = SetOfParticles(filename=partFn1)
         else:
@@ -275,7 +278,7 @@ class TestConvertAnglesBase(BaseTest):
             p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
-        print "Parset", partFn1
+        print ("Parset", partFn1)
         partSet.printAll()
         partSet.write()
         # Convert to a Xmipp metadata and also check that the images are
@@ -293,20 +296,20 @@ class TestConvertAnglesBase(BaseTest):
             relion.readSetOfParticles(mdFn, partSet2, alignType=alignType)
         else:
             relion.readSetOfVolumes(mdFn, partSet2, alignType=alignType)
-        
+
         partSet2.write()
-        
+
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
                 m2 = img.getTransform().getMatrix()
-                print "-" * 5
-                print img.getFileName(), img.getIndex()
-                print 'm1:\n', m1, relion.geometryFromMatrix(m1, False)
-                
-                print 'm2:\n', m2, relion.geometryFromMatrix(m2, False)
+                print ("-" * 5)
+                print (img.getFileName(), img.getIndex())
+                print ('m1:\n', m1, relion.geometryFromMatrix(m1, False))
+
+                print ('m2:\n', m2, relion.geometryFromMatrix(m2, False))
                 # self.assertTrue(numpy.allclose(m1, m2, rtol=1e-2))
-        
+
         # Launch apply transformation and check result images
         runRelionProgram(self.CMD % locals())
 
@@ -646,7 +649,7 @@ class TestReconstruct(TestConvertAnglesBase):
             aMatrix = a.getMatrix()
             # aMatrix[0,:] *= -1; aMatrix[2,:] *= -1;
             #same two matrices with flip
-            print "aMatrix: \n", aMatrix, "bMatrix: \n", b.getMatrix()
+            print ("aMatrix: \n", aMatrix, "bMatrix: \n", b.getMatrix())
             
             self.assertTrue(numpy.allclose(aMatrix, b.getMatrix(), rtol=1e-2))
 
