@@ -52,7 +52,7 @@ class Dialog(tk.Toplevel):
     An image name can be passed to display left to the message.
     """
     
-    def __init__(self, parent, title, **args):
+    def __init__(self, parent, title, **kwargs):
         """Initialize a dialog.
         Arguments:
             parent -- a parent window (the application window)
@@ -92,9 +92,9 @@ class Dialog(tk.Toplevel):
                       RESULT_NO: Icon.BUTTON_CLOSE,
                       RESULT_CANCEL: Icon.BUTTON_CANCEL}
         
-        self.buttons = args.get('buttons', [('OK', RESULT_YES),
-                                            ('Cancel', RESULT_CANCEL)])
-        self.defaultButton = args.get('default', 'OK')
+        self.buttons = kwargs.get('buttons', [('OK', RESULT_YES),
+                                              ('Cancel', RESULT_CANCEL)])
+        self.defaultButton = kwargs.get('default', 'OK')
         btnFrame = tk.Frame(self)
         # Create buttons 
         self.buttonbox(btnFrame)
@@ -109,8 +109,11 @@ class Dialog(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.cancel)
 
         if self.parent is not None:
-            self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
-                                      parent.winfo_rooty()+50))
+            position = kwargs.get('position', (parent.winfo_rootx() + 50,
+                                               parent.winfo_rooty() + 50))
+            print("Dialog.position: ", position)
+            self.geometry("+%d+%d" % position)
+
         self.deiconify() # become visible now
         self.initial_focus.focus_set()
         # wait for window to appear on screen before calling grab_set
@@ -350,7 +353,7 @@ class EditObjectDialog(Dialog):
         self.commentHeight = 15
         self.valueComment = self.obj.getObjComment()
         
-        Dialog.__init__(self, parent, title)
+        Dialog.__init__(self, parent, title, **kwargs)
         
     def body(self, bodyFrame):
         bodyFrame.config(bg='white')
@@ -370,13 +373,13 @@ class EditObjectDialog(Dialog):
         label_comment = tk.Label(bodyFrame, text=self.commentLabel, bg='white', bd=0)
         label_comment.grid(row=1, column=0, sticky='nw', padx=(15, 10), pady=15)
         # Comment box
-        self.textComment = Text(bodyFrame, height=self.commentHeight, 
-                         width=self.commentWidth)
+        self.textComment = Text(bodyFrame, height=self.commentHeight,
+                                width=self.commentWidth)
         self.textComment.setReadOnly(False)
         self.textComment.setText(self.valueComment)
         self.textComment.grid(row=1, column=1, sticky='news', padx=5, pady=5)
-        self.initial_focus = self.textComment
-        
+        self.initial_focus = self.textLabel
+
     def getLabel(self):
         return self.textLabel.get()
     
@@ -460,7 +463,7 @@ class ListDialog(Dialog):
             buttons.append(('Select', RESULT_YES))
         buttons.append(('Cancel', RESULT_CANCEL))
 
-        Dialog.__init__(self, parent, title, buttons=buttons)
+        Dialog.__init__(self, parent, title, buttons=buttons, **kwargs)
         
     def body(self, bodyFrame):
         bodyFrame.config()
