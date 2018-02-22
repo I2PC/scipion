@@ -195,7 +195,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                            'of the in-plane rotations for all references.')
 
         form.addParam('refsHaveInvertedContrast', params.BooleanParam,
-                      default=False,
+                      default=True,
                       label='References have inverted contrast?',
                       help='Set to Yes to indicate that the reference have '
                            'inverted contrast with respect to the particles '

@@ -59,7 +59,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
                            "auto-generated. This is fine for *spherical "
                            "particles* like virus or ribosome.")
         form.addParam('invertTemplatesContrast',
-                      params.BooleanParam, default=False,
+                      params.BooleanParam, default=True,
                       label='References have inverted contrast',
                       help='Set to Yes to indicate that the reference have '
                            'inverted contrast with respect to the particles '
