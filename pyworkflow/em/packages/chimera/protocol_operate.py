@@ -134,8 +134,7 @@ class ChimeraProtOperate(EMProtocol):
         pdbModelCounter = 1
         if _inputVol is not None:
             pdbModelCounter += 1
-            x_input, y_input, z_input = adaptOriginFromCCP4ToChimera(
-                _inputVol.getVolOriginAsTuple())
+            x_input, y_input, z_input = _inputVol.getVolOriginAsTuple()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
             f.write("runCommand('open %s')\n" % inputVolFileName)
@@ -185,6 +184,11 @@ class ChimeraProtOperate(EMProtocol):
         """
         volFileName = self._getExtraPath((chimeraMapTemplateFileName) % 1)
         if os.path.exists(volFileName):
+            if self.inputVolume.get() is None:
+                _inputVol = self.pdbFileToBeRefined.get().getVolume()
+            else:
+                _inputVol = self.inputVolume.get()
+            oldSampling = _inputVol.getSamplingRate()
             vol = Volume()
             vol.setLocation(volFileName)
 
@@ -197,7 +201,9 @@ class ChimeraProtOperate(EMProtocol):
             else:
                 origin = self.inputVolume.get().getOrigin(
                     returnInitIfNone=True)
-            vol.setOrigin(origin)
+
+            newOrigin = vol.originResampled(origin, oldSampling)
+            vol.setOrigin(newOrigin)
 
             self._defineOutputs(output3Dmap=vol)
             self._defineSourceRelation(self.inputPdbFiles, vol)
