@@ -371,9 +371,11 @@ and rmsCHIRAL (root mean square of chiral index""")
         # input 3D map
         counter += 1  # 1
         fnVol = self.protocol._getInputVolume()
-        f.write("open %s\n" % os.path.abspath(fnVol.getFileName()))
-        x, y, z = adaptOriginFromCCP4ToChimera(
-            fnVol.getOrigin(returnInitIfNone=True).getShifts())
+        fnVolName = os.path.abspath(fnVol.getFileName())
+        if fnVolName.endswith(":mrc"):
+            fnVolName= fnVolName.split(":")[0]
+        f.write("open %s\n" % fnVolName)
+        x, y, z = fnVol.getOrigin(returnInitIfNone=True).getShifts()
         sampling = fnVol.getSamplingRate()
         f.write("volume #%d style surface voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, x, y, z))
@@ -401,17 +403,19 @@ and rmsCHIRAL (root mean square of chiral index""")
         # second refmac step output (no shift needed)
         counter += 1  # 4
         pdbFileName = os.path.abspath(self.protocol.outputPdb.getFileName())
-        print pdbFileName
         f.write("open %s\n" % pdbFileName)
+        f.write("move %0.2f,%0.2f,%0.2f model #%d coord #0\n" %
+                       (x, y, z, counter))
 
         ####TO DELETE
         counter += 1  # 5
         pdbFileName = os.path.abspath(self.protocol._getExtraPath(
             "refmac-mask.pdb"))
-        print pdbFileName
-        ####
 
+        ####
         f.write("open %s\n" % pdbFileName)
+        f.write("move %0.2f,%0.2f,%0.2f model #%d coord #0\n" %
+                (x, y, z, counter))
 
         f.close()
         # run in the background
