@@ -119,8 +119,9 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             _inputVol.getFileName()))
 
         # input vol origin coordinates
-        x_input, y_input, z_input = adaptOriginFromCCP4ToChimera(
-            _inputVol.getVolOriginAsTuple())
+        #x_input, y_input, z_input = adaptOriginFromCCP4ToChimera(
+        #    _inputVol.getVolOriginAsTuple())
+        x_input, y_input, z_input = _inputVol.getVolOriginAsTuple()
         f.write("open %s\n" % inputVolFileName)
         f.write("volume #1 style mesh level 0.001 voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n"
@@ -130,8 +131,9 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             _outputVol.getFileName()))
 
         # output vol origin coordinates
-        x_output, y_output, z_output = adaptOriginFromCCP4ToChimera(
-            _outputVol.getVolOriginAsTuple())
+        # x_output, y_output, z_output = adaptOriginFromCCP4ToChimera(
+        #     _outputVol.getVolOriginAsTuple())
+        x_output, y_output, z_output = _outputVol.getVolOriginAsTuple()
         f.write("open %s\n" % outputVolFileName)
         f.write("volume #2 style surface level 0.001 voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n"
