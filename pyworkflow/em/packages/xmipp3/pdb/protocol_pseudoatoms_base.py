@@ -38,7 +38,7 @@ from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4
 from pyworkflow.em.data import Transform
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, adaptOriginFromCCP4ToChimera
+    createCoordinateAxisFile
 import os
 
 # from xmipp3 import XmippProtocol
