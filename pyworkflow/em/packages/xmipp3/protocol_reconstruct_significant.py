@@ -266,10 +266,24 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             writeSetOfClasses2D(inputSet, classesFn, writeParticles=False)
         else:
             writeSetOfParticles(inputSet, classesFn)
-            
+
         if self.thereisRefVolume:
             inputVolume= self.refVolume.get()
             fnVolumes = self._getExtraPath('input_volumes.xmd')
+
+            # TsVol = inputVolume.getSamplingRate()
+            # self.TsCurrent = self.maxResolution.get()
+            # Xdim = inputVolume.getDimensions()[0]
+            # newXdim = long(round(Xdim * TsVol / self.TsCurrent))
+            # if TsVol != self.TsCurrent:
+            #     self.runJob('xmipp_image_resize',"-i %s --factor %f" % (
+            #         fnVolumes, TsVol / self.TsCurrent), numberOfMpi=1)
+            # self.runJob('xmipp_transform_window',
+            #             "-i %s --size %d" % (fnVolumes, newXdim), numberOfMpi=1)
+            # args = "-i %s --sampling %f --fourier low_pass %f" % (
+            #     fnVolumes, self.TsCurrent, self.maxResolution.get())
+            # self.runJob("xmipp_transform_filter", args, numberOfMpi=1)
+
             row = XmippMdRow()
             volumeToRow(inputVolume, row, alignType = ALIGN_NONE)
             md = xmipp.MetaData()
