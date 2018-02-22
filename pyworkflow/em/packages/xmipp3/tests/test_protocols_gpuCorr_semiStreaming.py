@@ -22,15 +22,19 @@
 # ***************************************************************************/
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+from pyworkflow.em.protocol.protocol_create_stream_data import \
+    SET_OF_MICROGRAPHS
+from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.em.packages.eman2.protocol_autopick import *
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import *
-from pyworkflow.em.packages.xmipp3.protocol_classification_gpuCorr import *
+from pyworkflow.em.packages.xmipp3.protocol_classification_gpuCorr_semi \
+    import *
 
 # Number of mics to be processed
-NUM_MICS = 20 #maximum the number of mics in the relion set
+NUM_MICS = 5
 
-class TestGpuCorrClassifier(BaseTest):
+class TestGpuCorrSemiStreaming(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -57,16 +61,18 @@ class TestGpuCorrClassifier(BaseTest):
 
         return prot
 
+    def importMicrographsStr(self, fnMics):
+        kwargs = {'inputMics': fnMics,
+                  'nDim': NUM_MICS,
+                  'creationInterval': 30,
+                  'delay': 10,
+                  'setof': SET_OF_MICROGRAPHS  # SetOfMics
+                  }
+        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        protStream.setObjLabel('create Stream Mic')
+        self.proj.launchProtocol(protStream, wait=False)
 
-    def subsetMics(self, inputMics):
-        protSubset = ProtSubSet()
-        protSubset.inputFullSet.set(inputMics)
-        protSubset.chooseAtRandom.set(True)
-        protSubset.nElements.set(NUM_MICS)
-        self.launchProtocol(protSubset)
-
-        return protSubset
-
+        return protStream
 
     def calculateCtf(self, inputMics):
         protCTF = ProtCTFFind(useCftfind4=True)
@@ -74,18 +80,16 @@ class TestGpuCorrClassifier(BaseTest):
         protCTF.ctfDownFactor.set(1.0)
         protCTF.lowRes.set(0.05)
         protCTF.highRes.set(0.5)
-        self.launchProtocol(protCTF)
+        self.proj.launchProtocol(protCTF, wait=False)
 
         return protCTF
 
 
     def runPicking(self, inputMicrographs):
         """ Run a particle picking. """
-        protPicking = SparxGaussianProtPicking(boxSize=64,
-                                               numberOfThreads=1,
-                                               numberOfMpi=1)
+        protPicking = SparxGaussianProtPicking(boxSize=64)
         protPicking.inputMicrographs.set(inputMicrographs)
-        self.launchProtocol(protPicking)
+        self.proj.launchProtocol(protPicking, wait=False)
 
         return protPicking
 
@@ -98,98 +102,96 @@ class TestGpuCorrClassifier(BaseTest):
         protExtract.inputCoordinates.set(inputCoord)
         protExtract.ctfRelations.set(setCtfs)
 
-        self.launchProtocol(protExtract)
+        self.proj.launchProtocol(protExtract, wait=False)
 
         return protExtract
 
-    def runClassify(self, inputParts):
-        numClasses = int(inputParts.getSize()/1000)
-        if numClasses<2:
-            numClasses=2
-        protClassify = self.newProtocol(XmippProtGpuCrrCL2D,
-                                        useReferenceImages=False,
-                                        numberOfClasses=numClasses)
+    def runClassify(self, inputParts, inputAvgs):
+        protClassify = self.newProtocol(XmippProtStrGpuCrrSimple,
+                                        useAsRef=REF_AVERAGES)
+
         protClassify.inputParticles.set(inputParts)
-        self.launchProtocol(protClassify)
+        protClassify.inputRefs.set(inputAvgs)
+        self.proj.launchProtocol(protClassify, wait=False)
 
-        return protClassify, numClasses
+        return protClassify
 
-    def runClassify2(self, inputParts, inputRefs):
-        numClasses = int(inputParts.getSize()/1000)
-        if numClasses<inputRefs.getSize():
-            numClasses=inputRefs.getSize()
-        protClassify = self.newProtocol(XmippProtGpuCrrCL2D,
-                                        useReferenceImages=True,
-                                        numberOfClasses=numClasses)
-        protClassify.inputParticles.set(inputParts)
-        protClassify.referenceImages.set(inputRefs)
-        self.launchProtocol(protClassify)
 
-        return protClassify, numClasses
+    def _updateProtocol(self, prot):
+            prot2 = getProtocolFromDb(prot.getProject().path,
+                                      prot.getDbPath(),
+                                      prot.getObjId())
+            # Close DB connections
+            prot2.getProject().closeMapper()
+            prot2.closeMappers()
+            return prot2
 
-    def runClassify3(self, inputParts, inputRefs):
-        numClasses = inputRefs.getSize()+2
-        protClassify = self.newProtocol(XmippProtGpuCrrCL2D,
-                                        useReferenceImages=True,
-                                        numberOfClasses=numClasses)
-        protClassify.inputParticles.set(inputParts)
-        protClassify.referenceImages.set(inputRefs)
-        protClassify.useAttraction.set(False)
-        self.launchProtocol(protClassify)
-
-        return protClassify, numClasses
 
 
     def test_pattern(self):
 
+        protImportAvgs = self.importAverages()
+        if protImportAvgs.isFailed():
+            self.assertTrue(False)
         protImportMics = self.importMicrographs()
         if protImportMics.isFailed():
             self.assertTrue(False)
 
-        protImportAvgs = self.importAverages()
-        if protImportAvgs.isFailed():
+        protImportMicsStr = self.importMicrographsStr\
+            (protImportMics.outputMicrographs)
+        counter = 1
+        while not protImportMicsStr.hasAttribute('outputMicrographs'):
+            time.sleep(2)
+            protImportMicsStr = self._updateProtocol(protImportMicsStr)
+            if counter > 100:
+                break
+            counter += 1
+        if protImportMicsStr.isFailed():
             self.assertTrue(False)
 
-        # protSubsetMics = self.subsetMics(protImportMics.outputMicrographs)
-        # if protSubsetMics.isFailed():
-        #     self.assertTrue(False)
-
-        protCtf = self.calculateCtf(protImportMics.outputMicrographs)
+        protCtf = self.calculateCtf(protImportMicsStr.outputMicrographs)
+        counter = 1
+        while not protCtf.hasAttribute('outputCTF'):
+            time.sleep(2)
+            protCtf = self._updateProtocol(protCtf)
+            if counter > 100:
+                break
+            counter += 1
         if protCtf.isFailed():
             self.assertTrue(False)
 
-        protPicking = self.runPicking(protImportMics.outputMicrographs)
+        protPicking = self.runPicking(protImportMicsStr.outputMicrographs)
+        counter = 1
+        while not protPicking.hasAttribute('outputCoordinates'):
+            time.sleep(2)
+            protPicking = self._updateProtocol(protPicking)
+            if counter > 100:
+                break
+            counter += 1
         if protPicking.isFailed():
             self.assertTrue(False)
 
         protExtract = self.runExtractParticles(protPicking.outputCoordinates,
                                                protCtf.outputCTF)
+        counter = 1
+        while not protExtract.hasAttribute('outputParticles'):
+            time.sleep(2)
+            protExtract = self._updateProtocol(protExtract)
+            if counter > 100:
+                break
+            counter += 1
         if protExtract.isFailed():
             self.assertTrue(False)
 
-        protClassify, numClasses = self.runClassify(protExtract.outputParticles)
-        if protClassify.isFailed():
-            self.assertTrue(False)
+        protClassify = self.runClassify(protExtract.outputParticles,
+                                        protImportAvgs.outputAverages)
+        while protClassify.getStatus()!=STATUS_FINISHED:
+            protClassify = self._updateProtocol(protClassify)
+            if protClassify.isFailed():
+                self.assertTrue(False)
+                break
         if not protClassify.hasAttribute('outputClasses'):
             self.assertTrue(False)
-        if protClassify.outputClasses.getSize() != numClasses:
+        if protClassify.outputClasses.getSize() != \
+                protImportAvgs.outputAverages.getSize():
             self.assertTrue(False)
-
-        protClassify2, numClasses2 = self.runClassify2(
-            protExtract.outputParticles, protImportAvgs.outputAverages)
-        if protClassify2.isFailed():
-            self.assertTrue(False)
-        if not protClassify2.hasAttribute('outputClasses'):
-            self.assertTrue(False)
-        if protClassify2.outputClasses.getSize() != numClasses2:
-            self.assertTrue(False)
-
-        protClassify3, numClasses3 = self.runClassify3(
-            protExtract.outputParticles, protImportAvgs.outputAverages)
-        if protClassify3.isFailed():
-            self.assertTrue(False)
-        if not protClassify3.hasAttribute('outputClasses'):
-            self.assertTrue(False)
-        if protClassify3.outputClasses.getSize() != numClasses3:
-            self.assertTrue(False)
-
