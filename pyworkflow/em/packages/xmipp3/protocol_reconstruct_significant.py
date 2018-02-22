@@ -85,9 +85,15 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         form.addParam('keepIntermediate', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Keep intermediate volumes',
                       help='Keep all volumes and angular assignments along iterations')
+        form.addParam('useMaxRes', BooleanParam, default=False,
+                      label="Use new maximum resolution?",
+                      help='You may use a new maximum resolution to simplify '
+                           'the calculations keeping only low frequency '
+                           'information.',
+                      expertLevel=LEVEL_ADVANCED)
         form.addParam('maxResolution', FloatParam,
                       label="Target resolution", default=12,
-                      help='Target resolution (A).',
+                      help='Target resolution (A).', condition='useMaxRes',
                       expertLevel=LEVEL_ADVANCED)
 
         form.addSection(label='Criteria')
@@ -153,6 +159,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         SL = xmipp.SymList()
         SL.readSymmetryFile(self.symmetryGroup.get())
         self.trueSymsNo = SL.getTrueSymsNo()
+        self.TsCurrent = self.inputSet.get().getSamplingRate()
 
         n = self.iter.get()
         alpha0 = self.alpha0.get()
@@ -243,9 +250,10 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         #TODO mask the final volume in some smart way...
 
         #To filter the volume
-        self.runJob('xmipp_transform_filter',
-                    '-i %s --fourier low_pass %f --sampling %f' % \
-                    (volFn, self.maxResolution, self.TsCurrent), numberOfMpi=1)
+        if self.useMaxRes:
+            self.runJob('xmipp_transform_filter',
+                        '-i %s --fourier low_pass %f --sampling %f' % \
+                        (volFn, self.maxResolution, self.TsCurrent), numberOfMpi=1)
 
         if not self.keepIntermediate:
             cleanPath(prevVolFn, iterDir)
@@ -272,12 +280,15 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         fnDir = self._getExtraPath()
         fnNewParticles = join(fnDir,"input_classes.stk")
         TsOrig = self.inputSet.get().getSamplingRate()
-        self.TsCurrent = max(TsOrig, self.maxResolution.get())
-        Xdim=self.inputSet.get().getDimensions()[0]
-        newXdim=long(round(Xdim*TsOrig/self.TsCurrent))
-        if newXdim<40:
-            newXdim=long(40)
-        if newXdim!=Xdim:
+        if self.useMaxRes:
+            self.TsCurrent = max([TsOrig, self.maxResolution.get()])
+            Xdim=self.inputSet.get().getDimensions()[0]
+            newXdim=long(round(Xdim*TsOrig/self.TsCurrent))
+            if newXdim<40:
+                newXdim=long(40)
+                self.TsCurrent = float(TsOrig)*(float(Xdim)/float(newXdim))
+            print("self.TsCurrent", self.TsCurrent, TsOrig, Xdim, newXdim)
+        if self.useMaxRes and newXdim!=Xdim:
             self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"
                         %(self.imgsFn,fnNewParticles,newXdim),
                         numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
@@ -292,9 +303,10 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         vol = Volume()
         vol.setObjComment('significant volume 1')
         vol.setLocation(self.getIterVolume(lastIter))
-        vol.setSamplingRate(self.inputSet.get().getSamplingRate())
+        vol.setSamplingRate(self.TsCurrent)
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputSet, vol)
+
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -305,9 +317,17 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 x1, y1, _ = refVolume.getDim()
                 x2, y2, _ = self.inputSet.get().getDimensions()
                 if x1!=x2 or y1!=y2:
-                    errors.append('The input images and the reference volume have different sizes') 
+                    errors.append('The input images and the reference volume have different sizes')
             else:
                 errors.append("Please, enter a reference image")
+        if self.useMaxRes:
+            if self.maxResolution.get()<self.inputSet.get().getSamplingRate():
+                errors.append("Please, enter a maximum resolution higher (in "
+                              "A) than that from the input classes.")
+        if self.thereisRefVolume and self.useMaxRes:
+            errors.append('With a reference volume it cannot be provided a '
+                          'maximum resolution different to that from the '
+                          'inputs.')
         
         SL = xmipp.SymList()
         SL.readSymmetryFile(self.symmetryGroup.get())
