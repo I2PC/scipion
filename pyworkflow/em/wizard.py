@@ -190,8 +190,7 @@ class DownsampleWizard(EmWizard):
     @classmethod
     def getView(self):
         return "wiz_downsampling"
-        
-    
+
 class CtfWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
@@ -214,8 +213,8 @@ class CtfWizard(EmWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_ctf"           
-    
+        return "wiz_ctf"
+
 class MaskRadiusWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
