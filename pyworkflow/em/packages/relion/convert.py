@@ -510,9 +510,9 @@ def particleToRow(part, partRow, **kwargs):
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
 
 
-def rowToParticle(partRow, **kwargs):
+def rowToParticle(partRow, particleClass=em.Particle, **kwargs):
     """ Create a Particle from a row of a meta """
-    img = em.Particle()
+    img = particleClass()
     
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
@@ -588,6 +588,10 @@ def readSetOfParticles(filename, partSet, **kwargs):
         
     partSet.setHasCTF(img.hasCTF())
     partSet.setAlignment(kwargs['alignType'])
+
+
+def readSetOfMovieParticles(filename, partSet, **kwargs):
+    readSetOfParticles(filename, partSet, particleClass=em.MovieParticle, **kwargs)
     
 
 def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):

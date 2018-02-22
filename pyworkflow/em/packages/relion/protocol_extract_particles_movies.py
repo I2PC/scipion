@@ -28,6 +28,7 @@
 import pyworkflow.utils as pwutils
 from pyworkflow.protocol.constants import STATUS_FINISHED, STEPS_SERIAL
 from pyworkflow.em.protocol import ProtExtractMovieParticles
+from pyworkflow.em.constants import ALIGN_PROJ
 from pyworkflow import VERSION_1_2
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
@@ -35,7 +36,8 @@ import pyworkflow.em.metadata as md
 from pyworkflow.utils.properties import Message
 
 from convert import (writeSetOfMovies, isVersion2,
-                     writeSetOfParticles, readSetOfParticles)
+                     writeSetOfParticles, readSetOfMovieParticles,
+                     MOVIE_EXTRA_LABELS)
 from protocol_base import ProtRelionBase
 
 
@@ -57,8 +59,8 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         """ Centralize how files are called for iterations and references. """
         myDict = {'inputMovies': 'input_movies.star',
                   'inputParts': 'input_particles.star',
-                  'outputDir': pwutils.join('extra', 'movie_particles'),
-                  'outputParts': self._getExtraPath('extra/????.star')
+                  'outputDir': pwutils.join('extra', 'output'),
+                  'outputParts': self._getExtraPath('output/movie_particles.star')
                   }
 
         self._updateFilenamesDict(myDict)
@@ -175,7 +177,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         args = self._getExtractArgs()
         self._insertFunctionStep('extractNoStreamParticlesStep', args,
                                  prerequisites=[firstStepId])
-        #self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep('createOutputStep')
 
         # Disable streaming functions:
         self._insertFinalSteps = self._doNothing
@@ -187,19 +189,19 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
     # -------------------------- STEPS functions -------------------------------
     def convertInputStep(self, moviesId):
         self._ih = em.ImageHandler()  # used to convert movies
-        inputMovies = self.getInputMovies()
-        inputParts = self.getParticles()
+        self.inputMovieSet = self.getInputMovies()
+        self.inputParts = self.getParticles()
         # convert movies to mrcs and write a movie star file
-        writeSetOfMovies(inputMovies,
+        writeSetOfMovies(self.inputMovieSet,
                          self._getPath(self._getFileName('inputMovies')),
                          preprocessImageRow=self._preprocessMovieRow)
 
         # convert particle set to star file
-        writeSetOfParticles(inputParts,
+        writeSetOfParticles(self.inputParts,
                             self._getPath(self._getFileName('inputParts')),
                             self._getExtraPath(),
                             fillMagnification=True,
-                            alignType=inputParts.getAlignment(),
+                            alignType=self.inputParts.getAlignment(),
                             postprocessImageRow=self._postprocessParticleRow)
 
     def extractNoStreamParticlesStep(self, args):
@@ -208,16 +210,37 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                     cwd=self.getWorkingDir())
 
     def createOutputStep(self):
-        inputMovies = self.getInputMovies()
         movieParticles = self._createSetOfMovieParticles()
-        movieParticles.copyInfo(inputMovies)
+        movieParticles.copyInfo(self.inputParts)
+        movieParticles.setSamplingRate(self._getNewSampling())
+
+        mData = md.MetaData()
+        mdAll = md.MetaData()
+
+        for movie in self.inputMovieSet:
+            movieName = movie.getMicName()
+            # 'aligned_movie' suffix comes from protocol_align_movies
+            movieParts = movieName.replace('.mrcs',
+                                           '_aligned_movie_extract.star')
+            moviePartsStar = pwutils.join(self._getExtraPath('output/extra'),
+                                          movieParts)
+
+            # Join output star files with movie particles
+            if pwutils.exists(moviePartsStar):
+                mData.read(moviePartsStar)
+                mData.removeLabel(md.RLN_IMAGE_ID)
+                mdAll.unionAll(mData)
 
         particleMd = self._getFileName('outputParts')
-        readSetOfParticles(particleMd, movieParticles, removeDisabled=False)
+        mdAll.write(particleMd)
+        readSetOfMovieParticles(particleMd, movieParticles,
+                                removeDisabled=False,
+                                alignType=ALIGN_PROJ,
+                                extraLabels=MOVIE_EXTRA_LABELS,
+                                postprocessImageRow=self._postprocessImageRow)
 
         self._defineOutputs(outputParticles=movieParticles)
         self._defineSourceRelation(self.inputMovies, movieParticles)
-
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -313,6 +336,16 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
             return self.boxSize.get() / self.rescaledSize.get()
         return 1
 
+    def _getNewSampling(self):
+        newSampling = self.getInputMovies().getSamplingRate()
+
+        if self._doDownsample():
+            # Set new sampling, it should be the input sampling of the used
+            # movies multiplied by the downFactor
+            newSampling *= self._getDownFactor()
+
+        return newSampling
+
     def _doDownsample(self):
         return self.doRescale and self.rescaledSize != self.boxSize
 
@@ -363,3 +396,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
 
         if ctf is not None and ctf.getPhaseShift():
             partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
+
+    def _postprocessImageRow(self, img, imgRow):
+        img.setFrameId(imgRow.getValue(md.RLN_IMAGE_FRAME_NR))
+        #img.setParticleId(imgRow.getValue(md.RLN_PARTICLE_ID))  # this is set in rowToParticle
