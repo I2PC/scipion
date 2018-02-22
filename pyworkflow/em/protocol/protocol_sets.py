@@ -182,7 +182,7 @@ class ProtUnionSet(ProtSets):
 
             if not prefixedAttribute in verifyAttrs:
                 value._objDoStore = False
-                print ("%s will be lost." % attr)
+                print ("INFO: %s will be lost." % attr)
 
             else:
                 self.cleanExtraAttributes(value, verifyAttrs,
@@ -208,26 +208,10 @@ class ProtUnionSet(ProtSets):
 
         allSetsAttributes = list()
         for itemSet in self.inputSets:
-            obj = itemSet.get().getFirstItem()
-            allSetsAttributes.append(self._getAttributesToStoreRecursive(obj))
+            item = itemSet.get().getFirstItem()
+            allSetsAttributes.append(item.getAttributesToStoreEx())
 
         return allSetsAttributes
-
-    def _getAttributesToStoreRecursive(self, obj, prefix=""):
-        """ Return all attributes of an object going deep into its structure"""
-        attr = set()
-
-        for a, value in obj.getAttributesToStore():
-
-            # Add the attribute with the prefix
-            attr.add(prefix + a)
-
-            if isinstance(value, Object):
-                childrenAttr = self._getAttributesToStoreRecursive(value,
-                                                            prefix + a + ".")
-                attr.update(childrenAttr)
-
-        return attr
 
     def commonAttributes(self):
         """ Compute the set of common attributes to all items within

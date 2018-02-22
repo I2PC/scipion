@@ -129,12 +129,30 @@ class Object(object):
         subclasses of Object and will be stored"""
         for key, attr in self.getAttributes():
             if not hasattr(attr, '_objDoStore'):
-                print "Object.getAttributesToStore: attribute '%s' seems to be overwritten," % key
-                print "   since '_objDoStore' was not found. Ignoring attribute. "
+                print ("Object.getAttributesToStore: attribute '%s' seems to "
+                      "be overwritten," % key)
+                print ("   since '_objDoStore' was not found. "
+                       "Ignoring attribute. ")
             else:
                 if attr is not None and attr._objDoStore:
                     yield (key, attr)
-            
+
+    def getAttributesToStoreEx(self, prefix=""):
+        """ Return all "storageable" attributes of an
+        object going deep into its structure"""
+        attr = set()
+
+        for a, value in self.getAttributesToStore():
+
+            # Add the attribute with the prefix
+            attr.add(prefix + a)
+
+            if isinstance(value, Object):
+                childrenAttr = value.getAttributesToStoreEx(prefix + a + ".")
+                attr.update(childrenAttr)
+
+        return attr
+
     def isPointer(self):
         """If this is true, the value field is a pointer 
         to another object"""
