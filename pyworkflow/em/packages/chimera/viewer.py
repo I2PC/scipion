@@ -31,9 +31,7 @@ from pyworkflow.em.convert import ImageHandler
 from protocol_fit import ChimeraProtRigidFit
 from protocol_operate import ChimeraProtOperate
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
-    getProgram, chimeraPdbTemplateFileName
+    createCoordinateAxisFile, runChimeraProgram, getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
