@@ -34,8 +34,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, getProgram, runChimeraProgram,\
+    createCoordinateAxisFile, getProgram, runChimeraProgram,\
     chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
     chimeraScriptFileName
 
@@ -134,8 +133,7 @@ class ChimeraProtOperate(EMProtocol):
         pdbModelCounter = 1
         if _inputVol is not None:
             pdbModelCounter += 1
-            x_input, y_input, z_input = adaptOriginFromCCP4ToChimera(
-                _inputVol.getVolOriginAsTuple())
+            x_input, y_input, z_input = _inputVol.getVolOriginAsTuple()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
             f.write("runCommand('open %s')\n" % inputVolFileName)
@@ -148,8 +146,6 @@ class ChimeraProtOperate(EMProtocol):
         f.write("runCommand('open %s')\n" % os.path.abspath(
             pdbFileToBeRefined.getFileName()))
         if pdbFileToBeRefined.hasOrigin():
-            #  x, y, z = adaptOriginFromCCP4ToChimera(
-            #    pdbFileToBeRefined.getOrigin().getShifts())
             x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
             f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                     "coord #0')\n" % (x, y, z, pdbModelCounter))
@@ -159,8 +155,6 @@ class ChimeraProtOperate(EMProtocol):
             f.write("runCommand('open %s')\n" % os.path.abspath(pdb.get(
             ).getFileName()))
             if pdb.get().hasOrigin():
-                #  x, y, z = adaptOriginFromCCP4ToChimera(
-                #     pdb.get().getOrigin().getShifts())
                 x, y, z = pdb.get().getOrigin().getShifts()
                 f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                         "coord #0')\n" % (x, y, z, pdbModelCounter))
@@ -185,6 +179,11 @@ class ChimeraProtOperate(EMProtocol):
         """
         volFileName = self._getExtraPath((chimeraMapTemplateFileName) % 1)
         if os.path.exists(volFileName):
+            if self.inputVolume.get() is None:
+                _inputVol = self.pdbFileToBeRefined.get().getVolume()
+            else:
+                _inputVol = self.inputVolume.get()
+            oldSampling = _inputVol.getSamplingRate()
             vol = Volume()
             vol.setLocation(volFileName)
 
@@ -197,7 +196,9 @@ class ChimeraProtOperate(EMProtocol):
             else:
                 origin = self.inputVolume.get().getOrigin(
                     returnInitIfNone=True)
-            vol.setOrigin(origin)
+
+            newOrigin = vol.originResampled(origin, oldSampling)
+            vol.setOrigin(newOrigin)
 
             self._defineOutputs(output3Dmap=vol)
             self._defineSourceRelation(self.inputPdbFiles, vol)

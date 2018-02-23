@@ -219,7 +219,7 @@ the pdb file from coot  to scipion '
                 outVol = Volume()
                 sampling = inVol.getSamplingRate()
                 origin = inVol.getOrigin(
-                    returnInitIfNone=True).getShifts()
+                    returnInitIfNone=True)
                 outVol.setSamplingRate(sampling)
                 outVol.setOrigin(origin)
 
@@ -379,7 +379,6 @@ def _updateMol():
         mydict['outfile']            = config.get("myvars", "outfile")
     except ConfigParser.NoOptionError:
         pass
-    print ("reading:", "/tmp/coot.ini", mydict)
     beep(0.1)
 
 def getOutPutFileName(template):
