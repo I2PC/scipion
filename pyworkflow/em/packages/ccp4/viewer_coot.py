@@ -29,9 +29,8 @@ import os
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, PdbFile
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
-    getProgram, chimeraPdbTemplateFileName
+    createCoordinateAxisFile, runChimeraProgram, \
+    getProgram
 from pyworkflow.em.convert_header.CCP4.convert import cootPdbTemplateFileName
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 from protocol_coot import CootRefine
