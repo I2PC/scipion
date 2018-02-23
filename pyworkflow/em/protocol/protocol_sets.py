@@ -209,7 +209,10 @@ class ProtUnionSet(ProtSets):
         allSetsAttributes = list()
         for itemSet in self.inputSets:
             item = itemSet.get().getFirstItem()
-            allSetsAttributes.append(item.getAttributesToStoreEx())
+
+            attrs = set(item.getObjDict().keys())
+
+            allSetsAttributes.append(attrs)
 
         return allSetsAttributes
 
@@ -228,8 +231,6 @@ class ProtUnionSet(ProtSets):
             else:
 
                 commonAttrs = commonAttrs & attrSet
-
-        print ("All sets common attributes: %s" % "\n".join(commonAttrs))
 
         return allSetsAttributes, list(commonAttrs)
 

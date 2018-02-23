@@ -137,22 +137,6 @@ class Object(object):
                 if attr is not None and attr._objDoStore:
                     yield (key, attr)
 
-    def getAttributesToStoreEx(self, prefix=""):
-        """ Return all "storageable" attributes of an
-        object going deep into its structure"""
-        attr = set()
-
-        for a, value in self.getAttributesToStore():
-
-            # Add the attribute with the prefix
-            attr.add(prefix + a)
-
-            if isinstance(value, Object):
-                childrenAttr = value.getAttributesToStoreEx(prefix + a + ".")
-                attr.update(childrenAttr)
-
-        return attr
-
     def isPointer(self):
         """If this is true, the value field is a pointer 
         to another object"""
