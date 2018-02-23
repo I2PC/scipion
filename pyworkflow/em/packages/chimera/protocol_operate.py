@@ -277,11 +277,25 @@ class ChimeraProtOperate(EMProtocol):
 chimeraScriptHeader = '''
 import os
 import chimera
+from chimera import runCommand
 def newFileName(template):
     counter = 1
     while os.path.isfile(template%counter):
         counter += 1
     return template%counter
+
+def sessionName(template):
+     fileName = template % 1
+     dirPath = os.path.dirname(fileName)
+     return os.path.join(dirPath,"SESSION.py")
+
+def saveSession(template):
+    fileName = sessionName(template)
+    runCommand('save %s' % fileName)
+
+def restoreSession(template):
+    fileName = sessionName(template)
+    runCommand('open %s' % fileName)
 
 def beep(time):
    """I simply do not know how to create a portable beep sound.
@@ -332,8 +346,27 @@ chimeraScriptMain = '''
 
   doExtensionFunc(scipionWrite,args)
 
+def cmd_scipionSaveSession(scipionWrite,args):
+  from Midas.midas_text import doExtensionFunc
+  def scipionSaveSession():
+     saveSession('%(pdbFileTemplate)s')
+     beep(0.1)
+
+  doExtensionFunc(scipionSaveSession,args)
+
+def cmd_scipionRestoreSession(scipionWrite,args):
+  from Midas.midas_text import doExtensionFunc
+  def scipionRestoreSession():
+     restoreSession('%(pdbFileTemplate)s')
+     beep(0.1)
+
+  doExtensionFunc(scipionRestoreSession,args)
+
+
 from Midas.midas_text import addCommand
 addCommand('scipionwrite', cmd_scipionWrite, help="http://scipion.cnb.csic.es")
+addCommand('scipionss', cmd_scipionSaveSession, help="http://scipion.cnb.csic.es")
+addCommand('scipionrs', cmd_scipionRestoreSession, help="http://scipion.cnb.csic.es")
 '''
 
 
