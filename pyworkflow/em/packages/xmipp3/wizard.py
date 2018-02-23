@@ -46,7 +46,7 @@ from protocol_particle_pick_consensus import XmippProtConsensusPicking
 from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_reconstruct_highres import XmippProtReconstructHighRes
-
+from protocol_extract_unit_cell import XmippProtExtractUnit
 from pyworkflow.em.wizard import *
 
 #===============================================================================
@@ -154,7 +154,7 @@ class XmippBoxSizeWizard(Wizard):
 
 
 #===============================================================================
-# BOXSIZE
+# CONSENSUS RADIUS
 #===============================================================================
 class XmippParticleConsensusRadiusWizard(Wizard):
     _targets = [(XmippProtConsensusPicking, ['consensusRadius'])]
@@ -327,7 +327,9 @@ class XmippVolumeMaskRadiusProjMWizard(XmippVolumeMaskRadiusWizard):
         return protParams
 
 class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
-    _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]
+    _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius']),
+               (XmippProtExtractUnit, ['innerRadius', 'outerRadius'])
+              ]
     
     def _getParameters(self, protocol):
         
