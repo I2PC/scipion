@@ -33,9 +33,7 @@ from pyworkflow.em.viewer import TableView
 from tkMessageBox import showerror
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
-    getProgram
+    createCoordinateAxisFile, runChimeraProgram, getProgram
 
 
 def errorWindow(tkParent, msg):
