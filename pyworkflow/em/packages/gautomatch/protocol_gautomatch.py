@@ -32,8 +32,8 @@ import pyworkflow.em as em
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 
-from convert import (readSetOfCoordinates, writeSetOfCoordinates,
-                     runGautomatch, getProgram)
+from convert import (readSetOfCoordinates, runGautomatch, getProgram,
+                     writeDefectsFile, writeMicCoords)
 
 
 class ProtGautomatch(em.ProtParticlePickingAuto):
@@ -193,7 +193,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         form.addSection(label='Exclusive picking')
         form.addParam('exclusive', params.BooleanParam, default=False,
                       label='Exclusive picking?',
-                      help='Exclude user-providedareas. This can be useful in '
+                      help='Exclude user-provided areas. This can be useful in '
                            'the following cases:\n\n'
                            '(a) Another cycle of auto-picking after 2D '
                            'classification: in this case, usually you are '
@@ -267,21 +267,28 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
             converted otherwise.
         References: will always be converted to '.mrcs' format
         """
-        micDir = self.getMicrographsDir()  # put output and mics in extra dir
-        pwutils.makePath(micDir)
+        pwutils.makePath(self.getMicrographsDir())  # put output and mics in extra dir
         # We will always convert the templates to mrcs stack
-        self.convertReferences(self._getExtraPath('references.mrcs'))
-        # Convert input coords for exclusive picking
-        self.convertCoordinates(micDir)
+        self.convertReferences(self._getReferencesFn())
+        # Write defects star file if necessary
+        if self.exclusive and self.inputDefects.get():
+            writeDefectsFile(self.inputDefects.get(), self._getDefectsFn())
 
     def _pickMicrograph(self, mic, args):
-        micName = mic.getFileName()
-        if self.inputReferences.get():
-            refStack = self._getExtraPath('references.mrcs')
-        else:
-            refStack = None
+        micFn = mic.getFileName()
+        # The coordinates conversion is done for each micrograph
+        # and not in convertInputStep, this is needed for streaming
+        badCoords = self.inputBadCoords.get()
+
+        if self.exclusive and badCoords:
+            fnCoords = os.path.join(self.getMicrographsDir(), '%s_rubbish.star'
+                                    % pwutils.removeBaseExt(micFn))
+            writeMicCoords(mic, badCoords.iterCoordinates(mic), fnCoords)
         # We convert the input micrograph on demand if not in .mrc
-        runGautomatch(micName, refStack, self.getMicrographsDir(), args,
+        runGautomatch(micFn,
+                      self._getReferencesFn(),
+                      self.getMicrographsDir(),
+                      args,
                       env=self._getEnviron())
 
     def createOutputStep(self):
@@ -311,6 +318,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
 
         if not self.localAvgMin < self.localAvgMax:
             errors.append('Wrong values of local average cut-off!')
+
         if self.exclusive:
             if not self.inputBadCoords.get() and not self.inputDefects.get():
                 errors.append("You have to provide at least "
@@ -377,6 +385,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         readSetOfCoordinates(self.getMicrographsDir(), micList,
                              coordSetAux, suffix='_rejected.star')
         coordSetAux.write()
+        coordSetAux.close()
     
         # debug output
         if self.writeCC:
@@ -454,8 +463,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
             if self.inputBadCoords.get():
                 args += ' --exclusive_picking --excluded_suffix _rubbish.star'
             if self.inputDefects.get():
-                args += (' --global_excluded_box %s'
-                         % self._getExtraPath('micrographs/defects.star'))
+                args += (' --global_excluded_box %s' % self._getDefectsFn())
 
         if self.writeCC:
             args += ' --write_ccmax_mic'
@@ -483,18 +491,8 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
 
     def convertReferences(self, refStack):
         """ Write input references as an .mrcs stack. """
-        inputRefs = self.inputReferences.get()
-        if inputRefs:
+        if refStack:  # refStack should be None when not using references
             self.inputReferences.get().writeStack(refStack)
-
-    def convertCoordinates(self, workingDir):
-        if self.exclusive:
-            if self.inputBadCoords.get():
-                writeSetOfCoordinates(workingDir, self.inputBadCoords.get(),
-                                      isGlobal=False)
-            if self.inputDefects.get():
-                writeSetOfCoordinates(workingDir, self.inputDefects.get(),
-                                      isGlobal=True)
 
     def getOutputName(self, fn, key):
         """ Give a key, append the mrc extension
@@ -503,3 +501,12 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         template = pwutils.removeBaseExt(fn) + key + '.mrc'
 
         return pwutils.join(self.getMicrographsDir(), template)
+
+    def _getDefectsFn(self):
+        """ Return the filename for the defects star file. """
+        return self._getExtraPath('micrographs', 'defects.star')
+
+    def _getReferencesFn(self):
+        if self.inputReferences.get():
+            return self._getExtraPath('references.mrcs')
+        return None
