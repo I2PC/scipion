@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+import os
 
 import pyworkflow.utils as pwutils
 from pyworkflow.protocol.constants import STATUS_FINISHED, STEPS_SERIAL
@@ -89,12 +90,11 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                       help='This is size of the boxed particles (in pixels).')
 
         line = form.addLine('Frames range',
-                            help='Specify the frames range to extract particles. '
-                                 'The first frame is 1. If you set 0 in the '
-                                 'last frame, it means that you will use until the '
-                                 'last frame of the movie. If you apply the '
-                                 'previous alignment of the movies, you only can use '
-                                 'a frame range equal or less as used to alignment.')
+                            help='Specify the frames range to extract '
+                                 'particles. The first frame is 1. If '
+                                 'you set 0 in the last frame, it '
+                                 'means that you will use until the '
+                                 'last frame of the movie.')
         line.addParam('frame0', params.IntParam, label='First')
         line.addParam('frameN',  params.IntParam, label='Last')
 
@@ -173,7 +173,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         self._createFilenameTemplates()
         inputMovies = self.getInputMovies()
         firstStepId = self._insertFunctionStep('convertInputStep',
-                                 inputMovies.getObjId())
+                                               inputMovies.getObjId())
         args = self._getExtractArgs()
         self._insertFunctionStep('extractNoStreamParticlesStep', args,
                                  prerequisites=[firstStepId])
@@ -224,12 +224,25 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                                            '_aligned_movie_extract.star')
             moviePartsStar = pwutils.join(self._getExtraPath('output/extra'),
                                           movieParts)
-
             # Join output star files with movie particles
             if pwutils.exists(moviePartsStar):
                 mData.read(moviePartsStar)
                 mData.removeLabel(md.RLN_IMAGE_ID)
                 mdAll.unionAll(mData)
+
+        # move output movie particle stacks and change rlnImageName in star file
+        from convert import relionToLocation, locationToRelion
+        for objId in mdAll:
+            index, imgPath = relionToLocation(mdAll.getValue(md.RLN_IMAGE_NAME, objId))
+            baseFn = os.path.basename(imgPath)
+            newPath = pwutils.join(self._getExtraPath('output'), baseFn)
+            newLoc = locationToRelion(index, newPath)
+            if not pwutils.exists(newPath):
+                pwutils.moveFile(self._getPath(imgPath), newPath)
+            mdAll.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
+
+        # delete old imgPath
+        pwutils.cleanPath(self._getExtraPath('output/extra'))
 
         particleMd = self._getFileName('outputParts')
         mdAll.write(particleMd)
