@@ -34,8 +34,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, getProgram, runChimeraProgram,\
+    createCoordinateAxisFile, getProgram, runChimeraProgram,\
     chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
     chimeraScriptFileName
 
@@ -147,8 +146,6 @@ class ChimeraProtOperate(EMProtocol):
         f.write("runCommand('open %s')\n" % os.path.abspath(
             pdbFileToBeRefined.getFileName()))
         if pdbFileToBeRefined.hasOrigin():
-            #  x, y, z = adaptOriginFromCCP4ToChimera(
-            #    pdbFileToBeRefined.getOrigin().getShifts())
             x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
             f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                     "coord #0')\n" % (x, y, z, pdbModelCounter))
@@ -158,8 +155,6 @@ class ChimeraProtOperate(EMProtocol):
             f.write("runCommand('open %s')\n" % os.path.abspath(pdb.get(
             ).getFileName()))
             if pdb.get().hasOrigin():
-                #  x, y, z = adaptOriginFromCCP4ToChimera(
-                #     pdb.get().getOrigin().getShifts())
                 x, y, z = pdb.get().getOrigin().getShifts()
                 f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                         "coord #0')\n" % (x, y, z, pdbModelCounter))
