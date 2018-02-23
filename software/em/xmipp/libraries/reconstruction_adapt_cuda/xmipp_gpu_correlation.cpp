@@ -1076,9 +1076,11 @@ void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float>
 		int idxMax = DIRECT_A2D_ELEM(corrOrderByRowIndex,i,0)-1;
 		for(int j=0; j<2*mdInSize; j++){
 			int idx = DIRECT_A2D_ELEM(corrOrderByRowIndex,i,j)-1;
+			float weight;
 			if(DIRECT_A2D_ELEM(corrTotalRow,i,idx)<0)
-				break;
-			float weight = 1.0 - (j/(float)corrOrderByRowIndex.xdim);
+				weight=0.0;
+			else
+				weight = 1.0 - (j/(float)corrOrderByRowIndex.xdim);
 			weight *= DIRECT_A2D_ELEM(corrTotalRow,i,idx) / DIRECT_A2D_ELEM(corrTotalRow,i,idxMax);
 			DIRECT_A2D_ELEM(weights1, i, idx) = weight;
 		}
@@ -1087,7 +1089,11 @@ void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float>
 		int idxMax = DIRECT_A2D_ELEM(corrOrderByColIndex,0,i)-1;
 		for(int j=0; j<2*mdExpSize; j++){
 			int idx = DIRECT_A2D_ELEM(corrOrderByColIndex,j,i)-1;
-			float weight = 1.0 - (j/(float)corrOrderByColIndex.ydim);
+			float weight;
+			if(DIRECT_A2D_ELEM(corrTotalCol,idx,i)<0)
+				weight=0.0;
+			else
+				weight = 1.0 - (j/(float)corrOrderByColIndex.ydim);
 			weight *= DIRECT_A2D_ELEM(corrTotalCol,idx,i) / DIRECT_A2D_ELEM(corrTotalCol,idxMax,i);
 			if(idx<mdExpSize){
 				DIRECT_A2D_ELEM(weights2, idx, i) = weight;
