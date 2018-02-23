@@ -444,7 +444,7 @@ add_key_binding("write pdb file","w", lambda: _write())
 add_key_binding("print enviroment","E", lambda: _printEnv())
 
 #finish project
-add_key_binding("print enviroment","e", lambda: _finishProj())
+add_key_binding("finish project","e", lambda: _finishProj())
 
 '''
 
