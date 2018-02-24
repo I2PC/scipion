@@ -278,8 +278,15 @@ eof
         if hasattr(self, 'outputCTF'):
             ctfs = self.outputCTF
             for ctf in ctfs:
+                angle = float(ctf._ctftilt_tiltAngle)
+                axis = float(ctf._ctftilt_tiltAxis)
                 summary.append('Estimated tilt parameters:\n - tilt angle _%0.2f_\n'
                                ' - tilt axis _%0.2f_' %
-                               (ctf._ctftilt_tiltAxis, ctf._ctftilt_tiltAngle))
+                               (angle, axis))
+                summary.append('If you think that tilt angle should have an '
+                               'opposite sign than reported, use the following '
+                               'values:\n - tilt angle _%0.2f_\n'
+                               ' - tilt axis _%0.2f_' %
+                               (-angle, axis + 180.0) )
 
         return summary
