@@ -189,7 +189,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         String result = "";
 
         if (new File(dir).isDirectory()) {
-            //System.err.println("JM_DEBUG: ============= import from Folder ============");
             result = ppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale, invertx, inverty);
             boolean resize = ((Integer)sizetf.getValue()).intValue() != ppicker.getSize();
             sizetf.setValue(ppicker.getSize());
@@ -206,6 +205,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         return result;
 
     }
+
 
     protected void initializeCanvas() {
 
@@ -733,8 +733,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         }
         ppicker.setMicrograph(next);
         ppicker.saveConfig();
-        
-        if (ppicker.getMode() == Mode.Supervised) {
+        Mode mode = ppicker.getMode();
+
+        if (mode == Mode.Supervised) {
             resetbt.setEnabled(next.getState() != MicrographState.Manual);
             double threshold = next.getThreshold();
             if(threshold == 0 && next.getAutomaticParticlesNumber() == 0)
@@ -748,6 +749,10 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             thresholdsl.setValue((int) (threshold * 100));
             thresholdtf.setValue(threshold);
         }
+        else if (mode == Mode.Automatic) {
+            resetbt.setEnabled(false);
+        }
+
         initializeCanvas();
         if(ppicker.containsPSD())
             iconbt.setIcon(next.getCTFIcon());

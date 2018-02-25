@@ -298,7 +298,7 @@ class Relion2AutopickParams(EmWizard):
         f.write("""
         parameters = ipd,threshold,maxStddevNoise
         ipd.value = %(min_distance)s
-        ipd.label = Inter-particles distance
+        ipd.label = Inter-particles distance (A)
         ipd.help = Minimum distance (in Angstroms) between particles
         threshold.value =  %(threshold)s
         threshold.label = Threshold
@@ -316,6 +316,7 @@ class Relion2AutopickParams(EmWizard):
         f.close()
         process = CoordinatesObjectView(autopickProt.getProject(), micfn,
                                         coordsDir, autopickProt,
+                                        mode=CoordinatesObjectView.MODE_AUTOMATIC,
                                         pickerProps=pickerProps).show()
         process.wait()
         myprops = pwutils.readProperties(pickerProps)
