@@ -351,7 +351,7 @@ and rmsCHIRAL (root mean square of chiral index""")
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
         if self.protocol.inputVolume.get() is None:
-            _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+            _inputVol = self.protocol.inputStructure.get().getVolume()
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
         else:
