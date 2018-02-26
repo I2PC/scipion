@@ -68,7 +68,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         form.addSection(label='Input')
 
         form.addParam('inputVolume', PointerParam, label="Input Volume",
-                      important=True, pointerClass='Volume',
+                      allowsNull=True, pointerClass='Volume',
                       help='This is the unit cell volume.')
         form.addParam('inputStructure', PointerParam, label="Input PDBx/mmCIF "
                                                             "file",
