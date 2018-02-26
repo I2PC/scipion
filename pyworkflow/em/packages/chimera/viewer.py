@@ -46,9 +46,13 @@ class ChimeraProtRigidFitViewer(Viewer):
         _inputVol = self.protocol.inputVolume.get()
         if _inputVol is None:
             _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
-
-        dim = _inputVol.getDim()[0]
-        sampling = _inputVol.getSamplingRate()
+        if _inputVol is not None:
+            dim = _inputVol.getDim()[0]
+            sampling = _inputVol.getSamplingRate()
+        else:
+            # To show pdbs only
+            dim = 150.
+            sampling = 1.
 
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
@@ -59,18 +63,20 @@ class ChimeraProtRigidFitViewer(Viewer):
         f = open(fnCmd, 'w')
         f.write("open %s\n" % bildFileName)
 
-        try:
-            outputVol = self.protocol.output3Dmap
-            outputVolFileName = os.path.abspath(outputVol.getFileName())
-        except:
-            outputVol =  _inputVol
-            outputVolFileName = os.path.abspath(
-                    ImageHandler.removeFileType(outputVol.getFileName()))
-        f.write("open %s\n" % outputVolFileName)
-        x, y, z = outputVol.getOrigin().getShifts()
-        f.write("volume #1 style surface voxelSize %f origin "
-                "%0.2f,%0.2f,%0.2f\n"
-                % (outputVol.getSamplingRate(), x, y, z))
+        if _inputVol is not None:
+        # In case we have PDBs only, the _inputVolume is None:
+            try:
+                outputVol = self.protocol.output3Dmap
+                outputVolFileName = os.path.abspath(outputVol.getFileName())
+            except:
+                outputVol =  _inputVol
+                outputVolFileName = os.path.abspath(
+                        ImageHandler.removeFileType(outputVol.getFileName()))
+            f.write("open %s\n" % outputVolFileName)
+            x, y, z = outputVol.getOrigin().getShifts()
+            f.write("volume #1 style surface voxelSize %f origin "
+                    "%0.2f,%0.2f,%0.2f\n"
+                    % (outputVol.getSamplingRate(), x, y, z))
 
         directory = self.protocol._getExtraPath()
         for filename in os.listdir(directory):
