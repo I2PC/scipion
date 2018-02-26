@@ -402,18 +402,6 @@ and rmsCHIRAL (root mean square of chiral index""")
         counter += 1  # 4
         pdbFileName = os.path.abspath(self.protocol.outputPdb.getFileName())
         f.write("open %s\n" % pdbFileName)
-        #f.write("move %0.2f,%0.2f,%0.2f model #%d coord #0\n" %
-        #               (x, y, z, counter))
-
-        ####TO DELETE
-        #counter += 1  # 5
-        #pdbFileName = os.path.abspath(self.protocol._getExtraPath(
-        #    "refmac-mask.pdb"))
-        #
-        ####
-        #f.write("open %s\n" % pdbFileName)
-        #f.write("move %0.2f,%0.2f,%0.2f model #%d coord #0\n" %
-        #        (x, y, z, counter))
 
         f.close()
         # run in the background
