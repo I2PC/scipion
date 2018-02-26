@@ -205,13 +205,11 @@ class ProtUnionSet(ProtSets):
         return False
 
     def getAllSetsAttributes(self):
-
         allSetsAttributes = list()
+
         for itemSet in self.inputSets:
             item = itemSet.get().getFirstItem()
-
             attrs = set(item.getObjDict().keys())
-
             allSetsAttributes.append(attrs)
 
         return allSetsAttributes
@@ -220,51 +218,40 @@ class ProtUnionSet(ProtSets):
         """ Compute the set of common attributes to all items within
         each input set. """
         commonAttrs = None
-
         allSetsAttributes = self.getAllSetsAttributes()
 
         for attrSet in allSetsAttributes:
-
             if commonAttrs is None:  # first time
                 commonAttrs = attrSet
-
             else:
-
                 commonAttrs = commonAttrs & attrSet
 
         return allSetsAttributes, list(commonAttrs)
 
-    # -------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         # Are all inputSets from the same class?
         classes = {x.get().getClassName() for x in self.inputSets}
         if len(classes) > 1:
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
-
         return []  # no errors
 
     def _warnings(self):
         """ Warn about loosing info. """
-
         warnings = []
-
         # Get all attributes "map"
         allSetsAttributes, commonAttributes = self.commonAttributes()
-
         # Use a set
         commonAttributes = set(commonAttributes)
 
         # Go through all sets attributes
         for index, setAttributes in enumerate(allSetsAttributes):
-
             setAttributes = set(setAttributes)
-
             # Get the difference
             lostAttributes = setAttributes-commonAttributes
 
             if len(lostAttributes) != 0:
-
                 warnings.append("Set #%d will loose following "
                                 "attributes:" % index)
                 for attr in lostAttributes:
@@ -275,7 +262,6 @@ class ProtUnionSet(ProtSets):
                             "We will keep only the common ones. This may "
                             "cause the lost of important data like CFT, "
                             "alignment information,...")
-
         return warnings
 
     def _summary(self):
@@ -294,7 +280,7 @@ class ProtSplitSet(ProtSets):
     """
     _label = 'split sets'
 
-    # -------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -313,11 +299,11 @@ class ProtSplitSet(ProtSets):
                       help='Put the elements at random in the different '
                            'subsets.')
     
-    # -------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    # -------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputClassName = str(inputSet.getClassName())
@@ -334,10 +320,8 @@ class ProtSplitSet(ProtSets):
         ns = [len(elements) // n + (1 if i < len(elements) % n else 0)
               for i in range(n)]  # number of elements in each subset
         pos, i = 0, 0  # index of current subset and index of position inside it
-        if self.randomize.get():
-            orderBy = 'RANDOM()'
-        else:
-            orderBy = 'id'
+        orderBy = 'RANDOM()' if self.randomize else 'id'
+
         for elem in elements.iterItems(orderBy=orderBy, direction='ASC'):
             if i >= ns[pos]:
                 pos += 1
@@ -352,7 +336,7 @@ class ProtSplitSet(ProtSets):
             self._defineOutputs(**{key % i: subset})
             self._defineTransformRelation(inputSet, subset)
 
-    # -------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         if self.inputSet.get().getSize() < self.numberOfSets:
@@ -386,7 +370,7 @@ class ProtSubSet(ProtSets):
     SET_INTERSECTION = 0
     SET_DIFFERENCE = 1
 
-    # -------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
 
@@ -405,8 +389,7 @@ class ProtSubSet(ProtSets):
             condition='chooseAtRandom',
             label="Number of elements",
             help='How many elements will be taken from the full set.')
-        
-        add('inputSubSet', pwprot.params.PointerParam, 
+        add('inputSubSet', pwprot.params.PointerParam,
             pointerClass='EMSet', condition='not chooseAtRandom',
             label="Other set",
             help='The elements present in this set will be used to pick \n'
@@ -428,11 +411,11 @@ class ProtSubSet(ProtSets):
                  'will be included. If _difference_, elements that\n'
                  'are in input but not in other will picked.')
 
-    # -------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    # -------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
         inputFullSet = self.inputFullSet.get()
 
@@ -479,7 +462,7 @@ class ProtSubSet(ProtSets):
             self.summaryVar.set('Output was not generated. Resulting set '
                                 'was EMPTY!!!')
 
-    # -------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
 
@@ -526,7 +509,6 @@ class ProtSubSet(ProtSets):
                (c2 == classA and c1 in classesIncompatible)):
                 return ["The full set and the subset are of incompatible classes",
                         "%s and %s." % (c1, c2)]
-
         return []  # no errors
 
     def _summary(self):
