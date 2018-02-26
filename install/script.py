@@ -290,67 +290,45 @@ pip = env.addTarget('pip')
 pip.addCommand('python scripts/get-pip.py', targets=SW_PYT_PACK + '/pip',
                default=True, final=True)
 
-
-def addPipModule(name, version, target=None, default=True, deps=[]):
-    """Add a new module to our built Python .
-    Params in kwargs:
-        name: pip module name
-        version: module version is mandatory to prevent undesired updates.
-        default: True if this module is build by default.
-    """
-
-    target = name if target is None else target
-    t = env.addTarget(name, default=default)
-
-    # Add the dependencies
-    env._addTargetDeps(t, [pip, python] + deps)
-
-    t.addCommand('python %s/pip install %s==%s'
-                % (SW_PYT_PACK, name, version),
-                final=True,
-                targets=SW_PYT_PACK + '/' + target)
-
-    return t
-
-
 # Scons has a different pattern: it is expected to be in bin..TODO
 scons = env.addModule(
      'scons',
      targets=[env.getBin('scons')],
      tar='scons-2.3.4.tgz')
-#addPipModule('scons','2.3.6', target='scons-2.3.6')
+#env.addPipModule('scons','2.3.6', target='scons-2.3.6')
 
 # Required python modules
-addPipModule('setuptools', '38.2.5')
-matplotlib = addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
-addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
-addPipModule('mpi4py', '1.3.1')
-scipy = addPipModule('scipy', '0.14.0',
+env.addPipModule('setuptools', '38.2.5')
+numpy = env.addPipModule('numpy','1.14.1')
+matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
+env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
+env.addPipModule('mpi4py', '1.3.1')
+scipy = env.addPipModule('scipy', '0.14.0',
                      default=not noScipy, deps=[lapack, matplotlib])
-addPipModule('bibtexparser', '0.6.2')
-addPipModule('django', '1.5.5')
-addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
+env.addPipModule('bibtexparser', '0.6.2')
+env.addPipModule('django', '1.5.5')
+env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
     deps=[jpeg])
 
 
 # Optional python modules
-addPipModule('paramiko', '1.14.0', default=False)
+env.addPipModule('paramiko', '1.14.0', default=False)
 # 1.4.8 could not be found ! Using latest available
-addPipModule('winpdb', '1.3.6', default=False)
+env.addPipModule('winpdb', '1.3.6', default=False)
 
-addPipModule('lxml', '3.4.1', target='lxml-3.4.1*', default=False)
-addPipModule('requests', '2.18.4', default=False)
+env.addPipModule('lxml', '3.4.1', target='lxml-3.4.1*', default=False)
+env.addPipModule('requests', '2.18.4', default=False)
 
 # These were dependencies of iPython
-addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
-addPipModule('jinja2', '2.7.3', default=False)
-addPipModule('tornado', '4.0.2', default=False)
-addPipModule('ipython', '2.1.0', target='IPython', default=False)
-cython = addPipModule('cython', '0.22', target='Cython-0.22*', default=False)
-cythongsl = addPipModule('cythongsl','0.2.1',
+env.addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
+env.addPipModule('jinja2', '2.7.3', default=False)
+env.addPipModule('tornado', '4.0.2', default=False)
+env.addPipModule('ipython', '2.1.0', target='IPython', default=False)
+cython = env.addPipModule('cython', '0.22', target='Cython-0.22*', default=False)
+cythongsl = env.addPipModule('cythongsl','0.2.1',
                          target='CythonGSL-0.2.1*',
                          default=False, deps=[cython])
-addPipModule('scikit-learn', '0.17', target='scikit_learn*',
+env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
              default=False, deps=[scipy, cython])
 
 
@@ -489,14 +467,12 @@ env.addPackage('nma',
 env.addPackage('cryoem', version='1.0',
                 tar='cryoem-1.0.tgz',
                 pythonMod=True, default=False,
-                numpyIncludes=True,
                 deps=[scipy, matplotlib, cythongsl])
 
 env.addPackage('powerfit', version='2.0',
                 tar='powerfit.tgz',
                 targets=['powerfit-2.0*'],
                 pythonMod=True, default=False,
-                numpyIncludes=True,
                 deps=[numpy, scipy, fftw3])
 
 env.addPackage('gEMpicker', version='1.1',

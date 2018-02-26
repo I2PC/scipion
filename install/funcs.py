@@ -481,6 +481,27 @@ class Environment:
 
         return t
 
+    def addPipModule(self, name, version, target=None, default=True, deps=[]):
+        """Add a new module to our built Python .
+        Params in kwargs:
+            name: pip module name
+            version: module version is mandatory to prevent undesired updates.
+            default: True if this module is build by default.
+        """
+
+        target = name if target is None else target
+        t = self.addTarget(name, default=default)
+
+        # Add the dependencies
+        self._addTargetDeps(t, ['pip', 'python'] + deps)
+
+        t.addCommand('python %s/pip install %s==%s'
+                     % (self.getPythonPackagesFolder(), name, version),
+                     final=True,
+                     targets=self.getPythonPackagesFolder() + '/' + target)
+
+        return t
+
     def addModule(self, name, **kwargs):
         """Add a new module to our built Python .
         Params in kwargs:
