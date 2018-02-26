@@ -143,7 +143,7 @@ class ProtLocScale(ProtRefine3D):
         self._defineOutputs(outputVolume=volume)
         self._defineTransformRelation(self.inputVolume, volume)
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         validateEmanVersion(self, errors)
@@ -195,7 +195,7 @@ class ProtLocScale(ProtRefine3D):
     def _citations(self):
         return ['Jakobi2017']
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def prepareParams(self):
         """ The input params of the program are as follows:
         '-em', '--em_map', required=True, help='Input filename EM map')
