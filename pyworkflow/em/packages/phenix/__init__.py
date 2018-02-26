@@ -30,7 +30,18 @@ wrapping Phenix programs
 
 
 from bibtex import _bibtex # Load bibtex dict with references
-from phenix import *
 from protocol_automated_sharpening import PhenixProtAutomatedSharpening
+from phenix import *
+#from convert import getEnviron
 
-
+# _environ = getEnviron()
+# def validateInstallation():
+#     """ This function will be used to check if package is properly installed."""
+#     missingPaths = ["%s: %s" % (var, _environ[var])
+#                     for var in ['PHENIX_HOME']
+#                     if not os.path.exists(_environ[var])]
+# 
+#     if missingPaths:
+#         return ["Missing variables:"] + missingPaths
+#     else:
+#         return [] # No errors
