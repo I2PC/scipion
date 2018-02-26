@@ -4,7 +4,7 @@
 // icosahedron _5f_to_2f and _5f_2fp: vector that joing a vertex with the two closes 2-fold symmetry axis
 #define tg60   1.73205081
 #define sin60  0.8660254
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define scale 1.//780-use to scale chimera bild files so they fit your actual 3Dmap
 #endif
@@ -96,9 +96,9 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 	this->offset = offset; //rotate unit cell this degrees
 	this->expanded = expanded; //coefficient of expansion
 	this->sampling = sampling; // Angstrom/pixels relation 
-	this->x_origin = x_origin; // origin x coordinate introduced with the input volume
-	this->y_origin = y_origin; // origin y coordinate introduced with the input volume
-	this->z_origin = z_origin; // origin z coordinate introduced with the input volume
+	this->x_origin = x_origin; // origin x coordinate introduced with the input volume (in pixels)
+	this->y_origin = y_origin; // origin y coordinate introduced with the input volume (in pixels)
+	this->z_origin = z_origin; // origin z coordinate introduced with the input volume (in pixels)
 	this->newOriginAfterExpansion = vectorR3(0., 0., 0.);
 	SL.isSymmetryGroup(sym, symmetry, sym_order); //parse symmetry string
 	std::cerr << "symmetry: " << symmetry << std::endl;
@@ -181,13 +181,12 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 	Matrix1D<double> vp_1 = vectorProduct(planeVector, _centre_to_2fp);
 	vp_1.selfNormalize();
 	vectExpansion.push_back(expanded * vp_1 * rmax / 2);
+	
+	//vectExpansion of the _centre of coordinates
+	double mod_vector = (expanded * rmax / 2) / sin(0.5 * (TWOPI / order));
+	Matrix1D<double> vp_2 = vectorR3(mod_vector * cos((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), mod_vector * sin((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), 0.);
 
 	//computation of coordinates for expandedUnitCell vertices
-	Matrix1D<double> d_2f = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2fp;
-	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2f;
-
 	if (expanded == 0) {
 		expandedUnitCell.push_back(_centre);
 		expandedUnitCell.push_back(_2f);
@@ -195,9 +194,10 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 	} else if (expanded >= 0) {
 		//_centre expands to expandedUnitCell[0], which is equivalent to newOriginAfterExpansion
 		if (order == 2) {
-			expandedUnitCell.push_back(_centre + vectExpansion[0]);
+			expandedUnitCell.push_back(_centre + vectExpansion[0]); 
 		} else if (order > 2) {
-			expandedUnitCell.push_back(_centre + d_2f + d_2fp);
+			//expandedUnitCell.push_back(_centre + vp_2);
+			expandedUnitCell.push_back(_centre + vp_2);
 		}
 		//_2f expands to expandedUnitCell[1]
 		expandedUnitCell.push_back(_2f + vectExpansion[0]);
@@ -205,7 +205,7 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 		expandedUnitCell.push_back(_2fp + vectExpansion[1]);
 	}
 	newOriginAfterExpansion = expandedUnitCell[0];
-
+	
 	//computation of coordinates from expandedUnitCells regarding to the newOriginAfterExpansion
 	Matrix1D<double> new_centre_to_new_2f = expandedUnitCell[1]
 			- newOriginAfterExpansion;
@@ -254,12 +254,12 @@ void UnitCell::dihedralSymmetry(const Matrix1D<double> & _centre,
 	vectExpansion.push_back(expanded * vp_1 * rmax / 2);
 	Matrix1D<double> vp_2 = planeVector_down;
 	vectExpansion.push_back(expanded * vp_2 * rmax / 2);
+	
+	//vectExpansion of the _centre of coordinates
+	double mod_vector = (expanded * rmax / 2) / sin(0.5 * (TWOPI / order));
+	Matrix1D<double> vp_3 = vectorR3(mod_vector * cos((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), mod_vector * sin((0.5 * (TWOPI / order)) + offset + (TWOPI / 2)), 0.);
 
 	//computation of coordinates for expandedUnitCell vertices
-	Matrix1D<double> d_2f = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2fp;
-	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset)) * (-1)
-			* _2f;
 
 	if (expanded == 0) {
 		expandedUnitCell.push_back(_centre);
@@ -272,7 +272,7 @@ void UnitCell::dihedralSymmetry(const Matrix1D<double> & _centre,
 					_centre + vectExpansion[0] + vectExpansion[2]);
 		} else if (order > 2) {
 			expandedUnitCell.push_back(
-					_centre + d_2f + d_2fp + vectExpansion[2]);
+					_centre + vp_3 + vectExpansion[2]);
 		}
 		//_2f expands to expandedUnitCell[1]
 		expandedUnitCell.push_back(_2f + vectExpansion[0] + vectExpansion[2]);
@@ -555,7 +555,7 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 	in3Dmap.getDimensions(xDim, yDim, zDim);
 	double x_offset = x_origin - xDim/2.; //difference between default and user introduced x_origin coordinate
 	double y_offset = y_origin - yDim/2.; //difference between default and user introduced y_origin coordinate
-	double z_offset = z_origin - zDim/2; //difference between default and user introduced z_origin coordinate
+	double z_offset = z_origin - zDim/2.; //difference between default and user introduced z_origin coordinate
 	
 	if (rmax == 0)
 		rmax = (double) xDim / 2.;
@@ -596,11 +596,18 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 			 maxY;
 			if (symmetry == pg_CN || symmetry == pg_DN) {
 				maxY = rmax;
+				if (sym_order == 2){
+					minX = - rmax;
+					minY = - rmax;
+					minZ = - rmax;
+					maxX = rmax;
+					maxY = rmax;
+					maxZ = rmax;
+				}
 			} else if (symmetry != pg_CN && symmetry != pg_DN) {
 				maxY = rmin;
 			}
 			 maxZ = _maxZ;
-
 			Matrix1D<double> minVector, maxVector;
 			for (std::vector<Matrix1D<double> >::iterator it =
 					expandedUnitCell.begin(); it != expandedUnitCell.end();
@@ -880,9 +887,10 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 		imageMap2->selfWindow(iMinZ, iMinY, iMinX, iMaxZ, iMaxY, iMaxX, 0.);
 		MDRow MD;
 		out3DDmap.setDataMode(_DATA_ALL);
-		MD.setValue(MDL_SHIFT_X, -(double) iMinX);
-		MD.setValue(MDL_SHIFT_Y, -(double) iMinY);
-		MD.setValue(MDL_SHIFT_Z, -(double) iMinZ);
+		//CCP save routine multiplies by sampling rate
+		MD.setValue(MDL_ORIGIN_X, -(double) (iMinX - x_offset) );
+		MD.setValue(MDL_ORIGIN_Y, -(double) (iMinY - y_offset) );
+		MD.setValue(MDL_ORIGIN_Z, -(double) (iMinZ - z_offset) );
 
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
 
