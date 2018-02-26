@@ -334,7 +334,7 @@ chimeraScriptMain = '''
      counter=0
      for m in chimera.openModels.list():
       if m.id == modelId:
-          f.write(str(counter)+'\n')
+          f.write(str(counter)+'')
           f.flush()
       counter += 1
      f.close()
