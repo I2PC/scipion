@@ -52,7 +52,6 @@ class CCP4ProtRunRefmac(EMProtocol):
     refmacIfftScriptFileName = "ifft_refmac.sh"
     refmacRefineScriptFileName = "refine_refmac.sh"
     OutPdbFileName = "refmac-refined.pdb"
-    OutMovedPdbFileName = "refmac-refined-moved.pdb"
     createMaskLogFileName = "mask.log"
     refineLogFileName = "refine.log"
     fftLogFileName = "ifft.log"
@@ -262,7 +261,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         f.write("write #%d %s" % (counter,
                                   os.path.abspath(
                                       self._getOutPdbFileName(
-                                          self.OutMovedPdbFileName)
+                                          self.OutPdbFileName)
                                                 )
                                   )
                 )
@@ -272,7 +271,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         runChimeraProgram(chimera_get_program(), args)
 
         pdb = PdbFile()
-        pdb.setFileName(self._getOutPdbFileName(self.OutMovedPdbFileName))
+        pdb.setFileName(self._getOutPdbFileName(self.OutPdbFileName))
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure, self.outputPdb)
         fnVol = self._getInputVolume()
@@ -321,11 +320,6 @@ class CCP4ProtRunRefmac(EMProtocol):
         else:
             fnVol = self.inputVolume.get()
         return fnVol
-
-    # def _getOutPdbFileName(self):
-    #     pdfileName = os.path.splitext(os.path.basename(
-    #         self.inputStructure.get().getFileName()))[0]
-    #     return self._getExtraPath(self.OutPdbFileName % pdfileName)
 
     def _getOutPdbFileName(self, fileName=None):
         if fileName is None:
