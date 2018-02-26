@@ -304,10 +304,9 @@ def rowToCtfModel(ctfRow):
     if ctfRow.containsAll(CTF_DICT):
         ctfModel = em.CTFModel()
 
-        # Add phaseshift in case it comes in relion metadata
-        CTF_DICT[em.CTFModel.PHASE_SHIFT] = md.RLN_CTF_PHASESHIFT
-
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
+        if ctfRow.hasLabel(md.RLN_CTF_PHASESHIFT):
+            ctfModel.setPhaseShift(ctfRow.getValue(md.RLN_CTF_PHASESHIFT, 0))
         ctfModel.standardize()
         setPsdFiles(ctfModel, ctfRow)
     else:
