@@ -330,6 +330,14 @@ chimeraScriptMain = '''
      model    = chimera.openModels.list()[modelId]
      refModel = chimera.openModels.list()[refModelId]
 
+     f = open('/tmp/kk','w')
+     counter=0
+     for m in chimera.openModels.list():
+      if m.id == modelId:
+          f.write(str(counter)+'\n')
+          f.flush()
+      counter += 1
+     f.close()
      # Save the PDB relative to the volume coordinate system
      # TODO: check if this Will work if the reference is a PDB?
      from Midas import write
