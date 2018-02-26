@@ -178,8 +178,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         outputRoot = str(self._getExtraPath(baseMicName))
         fnPosFile = self._getMicPos(mic)
         boxSize = self.boxSize.get()
+        downFactor = self.downFactor.get()
         patchSize = self.patchSize.get() if self.patchSize.get() > 0 \
-                    else int(boxSize*1.5)
+                    else int(boxSize*1.5*downFactor)
 
         particlesMd = 'particles@%s' % fnPosFile
         # If it has coordinates extract the particles
@@ -194,12 +195,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             args += ' --patchSize %d' % patchSize
             self.runJob('xmipp_coordinates_noisy_zones_filter', args)
 
-            # Check if it is required to downsample our micrographs
-            downFactor = self.downFactor.get()
-
             def getMicTmp(suffix):
                 return self._getTmpPath(baseMicName + suffix)
 
+            # Check if it is required to downsample our micrographs
             if self.notOne(downFactor):
                 fnDownsampled = getMicTmp("_downsampled.xmp")
                 args = "-i %s -o %s --step %f --method fourier"

@@ -69,7 +69,7 @@ void ProgCoordinatesNoisyZonesFilter::run()
 	Image<double> im;
 	im.read(fnInMic);
 
-    std::cout << " - Starting normalization " << std::endl;
+    // std::cout << " - Starting normalization " << std::endl;
     MultidimArray<double> &matrixMic = im();
     matrixMic.selfNormalizeInterval();
 
@@ -81,7 +81,7 @@ void ProgCoordinatesNoisyZonesFilter::run()
 
     // getting the gini coefficient of the Micrograph whereas applaying a 
     // variance filter to the matrixMic (and filtered to smooth the result) 
-    std::cout << " - Starting giniCoeff() " << std::endl;
+    // std::cout << " - Starting giniCoeff() " << std::endl;
     double giniV = giniCoeff(matrixMic, patchSize);
 
     // if (verbose>1)

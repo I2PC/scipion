@@ -348,14 +348,18 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertAlmostEqual(outputSet.getSamplingRate(),
                                first.getSamplingRate())
 
-    def _checkVariance(particle, varianceScore):
+    def _checkVarianceAndGiniCoeff(self, particle, varianceScore, giniScore):
         self.assertTrue(particle.hasAttribute('_xmipp_scoreByVariance'),
                         'Particle has not scoreByVariance attribute.')
+        print('VAR  = %s'%particle._xmipp_scoreByVariance.get())
+        print('GINI = %s'%particle._xmipp_scoreByGiniCoeff.get())
 
-
-
-
-
+        self.assertAlmostEqual(particle._xmipp_scoreByVariance.get(), varianceScore,
+                               3, "The was a problem with the varianceScore")
+        self.assertTrue(particle.hasAttribute('_xmipp_scoreByGiniCoeff'),
+                        'Particle has not scoreByGiniCoeff attribute.')
+        self.assertAlmostEqual(particle._xmipp_scoreByGiniCoeff.get(), giniScore,
+                               3, "The was a problem with the giniCoeffScore")
 
     def testExtractSameAsPicking(self):
         print "Run extract particles from same micrographs as picking"
@@ -363,7 +367,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        boxSize=110,
                                        downsampleType=SAME_AS_PICKING,
                                        doInvert=False,
-                                       doFlip=False)
+                                       doFlip=False,
+                                       numberOfThreads=1)
         protExtract.setObjLabel("extract-same as picking")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         self.launchProtocol(protExtract)
@@ -393,6 +398,7 @@ class TestXmippExtractParticles(TestXmippBase):
 
         compare(83)
         compare(228)
+        self._checkVarianceAndGiniCoeff(outputParts[170], 0.7027, 0.6694)
 
     def testExtractOriginal(self):
         print "Run extract particles from the original micrographs"
@@ -400,7 +406,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        boxSize=550,
                                        downsampleType=OTHER,
                                        doInvert=False,
-                                       doFlip=False)
+                                       doFlip=False,
+                                       numberOfThreads=1)
         protExtract.setObjLabel("extract-original")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
@@ -433,6 +440,7 @@ class TestXmippExtractParticles(TestXmippBase):
                          "Output sampling rate should be equal to input "
                          "sampling rate.")
         self._checkSamplingConsistency(outputParts)
+        self._checkVarianceAndGiniCoeff(outputParts[170], 0.3943, 0.6422)
 
     def testNoExtractBorders(self):
         print "Run extract particles avoiding extract in borders"
@@ -441,7 +449,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        downsampleType=OTHER,
                                        doInvert=False,
                                        doBorders=False,
-                                       doFlip=False)
+                                       doFlip=False,
+                                       numberOfThreads=1)
 
         protExtract.setObjLabel("extract-avoid borders")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
@@ -476,6 +485,7 @@ class TestXmippExtractParticles(TestXmippBase):
                          "sampling rate.")
         self.assertAlmostEquals(outputParts.getSize(), 399, delta=1)
         self._checkSamplingConsistency(outputParts)
+        self._checkVarianceAndGiniCoeff(outputParts[170], 0.5255, 0.6009)
 
 
     def testExtractOther(self):
@@ -486,7 +496,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        doDownsample=True,
                                        downFactor=downFactor,
                                        doInvert=False,
-                                       doFlip=False)
+                                       doFlip=False,
+                                       numberOfThreads=1)
         # Get all the micrographs ids to validate that all particles
         # has the micId properly set
         micsId = [mic.getObjId() for mic in
@@ -527,6 +538,8 @@ class TestXmippExtractParticles(TestXmippBase):
         for particle in outputParts:
             self.assertTrue(particle.getCoordinate().getMicId() in micsId)
             self.assertAlmostEqual(outputSampling, particle.getSamplingRate())
+        self._checkVarianceAndGiniCoeff(outputParts[170], 0.5110, 0.6385)
+
 
     def testExtractNoise(self):
         print "Run extract particles from original micrographs, with downsampling"
@@ -537,7 +550,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        downFactor=downFactor,
                                        doInvert=False,
                                        doFlip=False,
-                                       extractNoise=True)
+                                       extractNoise=True,
+                                       numberOfThreads=1)
 
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
@@ -547,6 +561,8 @@ class TestXmippExtractParticles(TestXmippBase):
         outputParts = protExtract.outputParticles
         self.assertIsNotNone(outputParts, "There was a problem generating the output.")
         self.assertAlmostEquals(outputParts.getSize(), 403, delta=1)
+        self._checkVarianceAndGiniCoeff(outputParts[170], 0.4469, 0.5348)
+
 
     def testExtractCTF(self):
         print "Run extract particles with CTF"
@@ -554,7 +570,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        boxSize=110,
                                        downsampleType=SAME_AS_PICKING,
                                        doInvert=False,
-                                       doFlip=True)
+                                       doFlip=True,
+                                       numberOfThreads=1)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
         protExtract.setObjLabel("extract-ctf")
@@ -590,6 +607,7 @@ class TestXmippExtractParticles(TestXmippBase):
                              "There was a problem generating the output.")
         self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
         self._checkSamplingConsistency(outputParts)
+        self._checkVarianceAndGiniCoeff(outputParts[170], 0.4182, 0.6694)
 
 
 

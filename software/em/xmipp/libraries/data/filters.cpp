@@ -767,7 +767,7 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize, bool relative)
     kernel.resize(kernelSize,kernelSize);
     kernel.setXmippOrigin();
 
-    std::cout << " Creating the variance matrix " << std::endl;
+    // std::cout << " Creating the variance matrix " << std::endl;
     MultidimArray<double> mVar(YSIZE(I),XSIZE(I));
     mVar.setXmippOrigin();
     double stdKernel, varKernel, avgKernel, min_val, max_val;
@@ -814,17 +814,17 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize, bool relative)
     }
 
     // std::cout << " Creating the auxiliar matrix " << std::endl;
-    // // Working in a auxilary windows to avoid borders bad defined
-    // I.initZeros(mVar);
+    // Working in a auxilary windows to avoid borders bad defined
+    I.initZeros(mVar);
     // MultidimArray<double> I(YSIZE(I)-kernelSize,XSIZE(I)-kernelSize);
     // I.setXmippOrigin();
-    // mVar.window(I,STARTINGY(mVar)+kernelSize_2, STARTINGX(mVar)+kernelSize_2,
-    //                    FINISHINGY(mVar)-kernelSize_2, FINISHINGX(mVar)-kernelSize_2);
+    mVar.window(I,STARTINGY(mVar)+kernelSize_2, STARTINGX(mVar)+kernelSize_2,
+                       FINISHINGY(mVar)-kernelSize_2, FINISHINGX(mVar)-kernelSize_2);
 
-    // Returning to the previous windows size
-    I.initZeros(mVar);
-    mVar.window(I, STARTINGY(mVar), STARTINGX(mVar),
-                  FINISHINGY(mVar), FINISHINGX(mVar));
+    // // Returning to the previous windows size
+    // I.initZeros(mVar);
+    // mVar.window(I, STARTINGY(mVar), STARTINGX(mVar),
+    //               FINISHINGY(mVar), FINISHINGX(mVar));
 }
 
 /* Noise filter (returns a binary mask where both variance and mean are high)*/
@@ -922,22 +922,22 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize)
 {
     MultidimArray<double> im = I;
 
-    std::cout << " - Starting fft filtering " << std::endl;
+    // std::cout << " - Starting fft filtering " << std::endl;
 
     FourierFilter filter;
     filter.FilterShape = REALGAUSSIAN;
     filter.FilterBand = LOWPASS;
-    // filter.w1 = 4;
-    // filter.applyMaskSpace(im);
+    filter.w1 = 4;
+    filter.applyMaskSpace(im);
    
     // Image<double> imG(im);
     // imG.write("I_Gauss.mrc");
 
-    std::cout << " - Calling varianceFilter() " << std::endl;
+    // std::cout << " - Calling varianceFilter() " << std::endl;
     varianceFilter(I, varKernelSize, true);
     im = I;
 
-    std::cout << " - Starting 2nd fft filtering " << std::endl;
+    // std::cout << " - Starting 2nd fft filtering " << std::endl;
     filter.w1 = varKernelSize/8;
     filter.applyMaskSpace(I);
 
@@ -950,12 +950,12 @@ double giniCoeff(MultidimArray<double> &I, int varKernelSize)
     // Image<double> imGVN(im);
     // imGVN.write("I_Gauss_Var_Norm.mrc");
    
-    std::cout << " - Starting histogram analysis " << std::endl;
+    // std::cout << " - Starting histogram analysis " << std::endl;
     Histogram1D hist;
     hist.clear();
     compute_hist(im, hist, 256);
 
-    std::cout << " - Computing Gini coeff " << std::endl;
+    // std::cout << " - Computing Gini coeff " << std::endl;
     MultidimArray<double> sortedList=hist;
     hist.sort(sortedList);
     double height=0, area=0;
