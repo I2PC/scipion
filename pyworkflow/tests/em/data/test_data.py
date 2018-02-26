@@ -74,6 +74,20 @@ class TestImage(unittest.TestCase):
 
         self.assertEqual('all_volumes.stk', vol1.getBaseName())
 
+    def testOrigin(self):
+        fn = self.mic1
+        mic = Micrograph()
+        mic.setFileName(fn)
+        t = mic.getOrigin(True)
+        referenceT = Transform()
+        referenceT.setShifts(4608.,4720.,1)
+        mt = t.getMatrix()
+        mreferenceT = referenceT.getMatrix()
+        for i in range(4):
+            for j in range(4):
+                self.assertAlmostEquals(mt[i][j],mreferenceT[i][j],1)
+
+
 
 class TestImageHandler(unittest.TestCase):
 

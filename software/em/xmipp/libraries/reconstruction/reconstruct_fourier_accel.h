@@ -104,13 +104,14 @@ struct LoadThreadParams
     int startImageIndex;
     int endImageIndex;
     MetaData* selFile;
-    ProjectionData* buffer1 = NULL;
-    ProjectionData* buffer2 = NULL;
+    ProjectionData* buffer1;
+    ProjectionData* buffer2;
 };
 
 class ProgRecFourierAccel : public ProgReconsBase
 {
 public:
+	ProgRecFourierAccel() : tempVolume(NULL), tempWeights(NULL) {};
     /**
      * Run the image processing.
      * Method will load data, process them and store result to final destination.
@@ -154,13 +155,13 @@ protected:
 	 * Lowest frequencies are in the center, i.e. Fourier space creates a
 	 * sphere within a cube.
 	 */
-	std::complex<float>*** tempVolume = NULL;
+	std::complex<float>*** tempVolume;
 
 	/**
 	 * 3D volume holding the weights of the Fourier coefficients stored
 	 * in tempVolume.
 	 */
-	float*** tempWeights = NULL;
+	float*** tempWeights;
 
 	/**
 	 * Method will take temp spaces (containing complex conjugate values

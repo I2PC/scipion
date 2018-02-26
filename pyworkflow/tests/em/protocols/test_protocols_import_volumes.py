@@ -38,7 +38,17 @@ class TestImportBase(BaseTest):
 
 class TestImportVolumes(TestImportBase):
 
-    def test_default_origin(self):
+    def test_import_volume(self):
+        """ 1) Import single volume and set origin in default position
+                center volume in center of coordinates
+            2) Import single volume and set origin in userDefined position
+            3) Import two volumes and set default position, chimera will not
+            show axis
+            4) Import three volumes and set origin in user defined  position,
+            chimera will not show axis
+            5) Import two volumes and set de in user defined  position,
+            chimera will not show axis
+        """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
                 'samplingRate': 2.1,
@@ -48,35 +58,42 @@ class TestImportVolumes(TestImportBase):
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
         prot1 = self.newProtocol(ProtImportVolumes, **args)
-        prot1.setObjLabel('volume_1 mrc')
+        prot1.setObjLabel('import vol,\n default origin,\n chimera show '
+                          'axis,\n vol origin in coord origin')
         self.launchProtocol(prot1)
         volume = prot1.outputVolume
         t = volume.getOrigin()
         x, y, z = t.getShifts()
-        self.assertEqual(32, x)
-        self.assertEqual(32, y)
-        self.assertEqual(32, z)
+        # x, y, z in Angstroms
+        # Chimera will show (x, y, z) divided by the samplingRate
+        # in pixels = (32, 32, 32)
+        self.assertEqual(67.2, x)
+        self.assertEqual(67.2, y)
+        self.assertEqual(67.2, z)
 
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
                 'samplingRate': 2.1,
                 'setDefaultOrigin': False,
-                'x': 8,
-                'y': 16,
-                'z': 24
+                'x': 16.8,
+                'y': 33.6,
+                'z': 50.4
                 }
 
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
         prot2 = self.newProtocol(ProtImportVolumes, **args)
-        prot2.setObjLabel('volume_1 origin mrc')
+        prot2.setObjLabel('import vol,\n user origin,\n chimera show axis')
         self.launchProtocol(prot2)
         volume = prot2.outputVolume
         t = volume.getOrigin()
         x, y, z = t.getShifts()
-        self.assertEqual(8, x)
-        self.assertEqual(16, y)
-        self.assertEqual(24, z)
+        # x, y, z in Angstroms
+        # in Chimera we will see (x, y, z) divided by the samplingRate
+        # in pixels = (8, 16, 24)
+        self.assertEqual(16.8, x)
+        self.assertEqual(33.6, y)
+        self.assertEqual(50.4, z)
 
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
@@ -87,62 +104,44 @@ class TestImportVolumes(TestImportBase):
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
         prot3 = self.newProtocol(ProtImportVolumes, **args)
-        prot3.setObjLabel('import mrc')
+        prot3.setObjLabel('import 2 vols,\n default origin,\n chimera no '
+                          'axis')
         self.launchProtocol(prot3)
         for volume in prot3.outputVolumes:
             t = volume.getOrigin()
             x, y, z = t.getShifts()
-            self.assertEqual(32, x)
-            self.assertEqual(32, y)
-            self.assertEqual(32, z)
+            self.assertEqual(67.2, x)
+            self.assertEqual(67.2, y)
+            self.assertEqual(67.2, z)
 
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
                 'samplingRate': 2.1,
                 'setDefaultOrigin': False,
-                'x': 8,
-                'y': 16,
-                'z': 24
+                'x': 16.8,
+                'y': 33.6,
+                'z': 50.4
                 }
 
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
         prot4 = self.newProtocol(ProtImportVolumes, **args)
-        prot4.setObjLabel('import2 mrc')
+        prot4.setObjLabel('import 3 vols,\n user origin,\n chimera no axis')
         self.launchProtocol(prot4)
         for volume in prot4.outputVolumes:
             t = volume.getOrigin()
             x, y, z = t.getShifts()
-            self.assertEqual(8, x)
-            self.assertEqual(16, y)
-            self.assertEqual(24, z)
-
-    def test_pattern(self):
-        """ Import several Particles from a given pattern.
-        """
-        args = {'filesPath': self.dsXmipp.getFile('volumes/'),
-                'filesPattern': 'volume_*mrc',
-                'samplingRate': 2.1,
-                'setDefaultOrigin': True,
-                }
-
-        # Id's should be set increasing from 1 if ### is not in the pattern
-        prot1 = self.newProtocol(ProtImportVolumes, **args)
-        prot1.setObjLabel('import mrc')
-        self.launchProtocol(prot1)
-        for volume in prot1.outputVolumes:
-            t = volume.getOrigin()
-            x, y, z = t.getShifts()
-            self.assertEqual(32, x)
-            self.assertEqual(32, y)
-            self.assertEqual(32, z)
+            self.assertEqual(16.8, x)
+            self.assertEqual(33.6, y)
+            self.assertEqual(50.4, z)
 
         # Id's should be taken from filename
         args['filesPath'] = self.dsRelion.getFile('import/case2/'
                                                   'relion_volumes.mrc')
         args['filesPattern'] = ''
         prot2 = self.newProtocol(ProtImportVolumes, **args)
-        prot2.setObjLabel('from mrc stack')
+        prot2.setObjLabel('import 3 vols from mrc stack,\n default origin,'
+                          '\n chimera no axis')
         self.launchProtocol(prot2)
         # Check the number of output volumes and dimensions
         self.assertEqual(3, prot2.outputVolumes.getSize())
@@ -153,7 +152,8 @@ class TestImportVolumes(TestImportBase):
                                                   'relion_volumes.stk')
         args['filesPattern'] = ''
         prot3 = self.newProtocol(ProtImportVolumes, **args)
-        prot3.setObjLabel('from spider stack')
+        prot3.setObjLabel('import 3 vols from spider stack\n default origin,'
+                          '\n chimera no axis')
         self.launchProtocol(prot3)
         # Check the number of output volumes and dimensions
         self.assertEqual(3, prot3.outputVolumes.getSize())
