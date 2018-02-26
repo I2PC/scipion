@@ -39,7 +39,8 @@ from pyworkflow.em.convert_header.CCP4.convert import (
     adaptFileToCCP4, runCCP4Program, START, getProgram)
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
     BooleanParam
-
+from pyworkflow.em.viewers.chimera_utils import getProgram as chimera_get_program
+from pyworkflow.em.viewers.chimera_utils import runChimeraProgram
 
 class CCP4ProtRunRefmac(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
@@ -51,6 +52,7 @@ class CCP4ProtRunRefmac(EMProtocol):
     refmacIfftScriptFileName = "ifft_refmac.sh"
     refmacRefineScriptFileName = "refine_refmac.sh"
     OutPdbFileName = "refmac-refined.pdb"
+    OutMovedPdbFileName = "refmac-refined-moved.pdb"
     createMaskLogFileName = "mask.log"
     refineLogFileName = "refine.log"
     fftLogFileName = "ifft.log"
@@ -60,7 +62,7 @@ class CCP4ProtRunRefmac(EMProtocol):
     REFMAC = 'refmac5'
 
     def __init__(self, **kwargs):
-            EMProtocol.__init__(self, **kwargs)
+        EMProtocol.__init__(self, **kwargs)
 
     # --------------------------- DEFINE param functions ---------------------
     def _defineParams(self, form):
@@ -245,8 +247,32 @@ class CCP4ProtRunRefmac(EMProtocol):
                        {'GENERIC': self._getExtraPath("")})
 
     def createRefmacOutputStep(self):
+        # get PDB shifts
+        counter = 0
+        refmacShiftDict = self.parseRefmacShiftFile()
+        shiftDict = refmacShiftDict[self.refmacShiftsNames[3]]
+        x = shiftDict[0]
+        y = shiftDict[1]
+        z = shiftDict[2]
+        fnCmd = os.path.abspath(self._getTmpPath("chimera_shift_pdb.cmd"))
+        f = open(fnCmd, 'w')
+        f.write("open %s\n" % os.path.abspath(self._getOutPdbFileName()))
+        f.write("move %0.2f,%0.2f,%0.2f model #%d\n" %
+                (x, y, z, counter))
+        f.write("write #%d %s" % (counter,
+                                  os.path.abspath(
+                                      self._getOutPdbFileName(
+                                          self.OutMovedPdbFileName)
+                                                )
+                                  )
+                )
+        f.close()
+        args = " --nogui %s" % fnCmd
+
+        runChimeraProgram(chimera_get_program(), args)
+
         pdb = PdbFile()
-        pdb.setFileName(self._getOutPdbFileName())
+        pdb.setFileName(self._getOutPdbFileName(self.OutMovedPdbFileName))
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure, self.outputPdb)
         fnVol = self._getInputVolume()
@@ -301,8 +327,10 @@ class CCP4ProtRunRefmac(EMProtocol):
     #         self.inputStructure.get().getFileName()))[0]
     #     return self._getExtraPath(self.OutPdbFileName % pdfileName)
 
-    def _getOutPdbFileName(self):
-        return self._getExtraPath(self.OutPdbFileName)
+    def _getOutPdbFileName(self, fileName=None):
+        if fileName is None:
+            fileName = self.OutPdbFileName
+        return self._getExtraPath(fileName)
 
     def _getMaskScriptFileName(self):
         return self._getTmpPath(self.refmacMaskScriptFileName)
