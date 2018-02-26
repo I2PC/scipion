@@ -297,6 +297,9 @@ def restoreSession(template):
     fileName = sessionName(template)
     runCommand('open %s' % fileName)
 
+def saveModel(model, refModel, fileName):
+    runCommand('write relative %s %s %s'%(refModel, model, fileName))
+
 def beep(time):
    """I simply do not know how to create a portable beep sound.
       This system call seems to work pretty well if you have sox
@@ -327,22 +330,20 @@ chimeraScriptMain = '''
      refModelId = int(refmodel[1:])# coordenate system refers to this model 0
 
      # get actual models
-     model    = chimera.openModels.list()[modelId]
+     #model    = chimera.openModels.list()[modelId]
+     #TODO: this ID is wrong if models before refmodel are modified
      refModel = chimera.openModels.list()[refModelId]
 
-     f = open('/tmp/kk','w')
-     counter=0
-     for m in chimera.openModels.list():
-      if m.id == modelId:
-          f.write(str(counter)+'')
-          f.flush()
-      counter += 1
-     f.close()
+     #for m in chimera.openModels.list():
+     #    if m.id != modelId:
+     #        continue
+     #    else:
+     #        break
      # Save the PDB relative to the volume coordinate system
      # TODO: check if this Will work if the reference is a PDB?
-     from Midas import write
+     #from Midas import write
      fileName = newFileName('%(pdbFileTemplate)s')
-     write(model, refModel, fileName)
+     saveModel(model, refModel, fileName)
      # alternative way to save  the pdb file using a command
      #run('write relative #1 #0 pdb_path')
 
@@ -350,7 +351,7 @@ chimeraScriptMain = '''
      if saverefmodel:
          from VolumeData import save_grid_data
          save_grid_data(refModel.data, "%(chimeraMapTemplateFileName)s")
-     beep(0.1)
+     #beep(0.1)
 
   doExtensionFunc(scipionWrite,args)
 
