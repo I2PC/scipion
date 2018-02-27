@@ -144,7 +144,7 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/1ake_mut2.pdb'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('pdb pdb\n 1ake_mut2')
+        protImportPDB.setObjLabel('import pdb\n 1ake_mut2')
         self.launchProtocol(protImportPDB)
         structure4_PDB = protImportPDB.outputPdb
         return structure4_PDB
@@ -192,7 +192,7 @@ class TestPowerFit(TestImportData):
         protPower.inputVol.set(volume)
         structure1_PDB = self._importStructurePDBWoVol()
         protPower.inputPDB.set(structure1_PDB)
-        protPower.setObjLabel('powerfit\n save structure')
+        protPower.setObjLabel('powerfit\n volume and pdb\n save structure')
         self.launchProtocol(protPower)
         self.assertIsNotNone(protPower.outputPDBs.getFileName(),
                              "There was a problem with the alignment")
@@ -211,7 +211,7 @@ class TestPowerFit(TestImportData):
         protPower.inputVol.set(volume)
         structure1_mmCIF = self._importStructuremmCIFWoVol()
         protPower.inputPDB.set(structure1_mmCIF)
-        protPower.setObjLabel('powerfit\n save structure')
+        protPower.setObjLabel('powerfit\n volume and mmCIF\n save structure')
         self.launchProtocol(protPower)
         self.assertIsNotNone(protPower.outputPDBs.getFileName(),
                              "There was a problem with the alignment")
@@ -1158,6 +1158,7 @@ class TestRefmacRefinement(TestImportData):
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
 
         # refmac
@@ -1166,6 +1167,8 @@ class TestRefmacRefinement(TestImportData):
                 'inputStructure': coot_PDB
                 }
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
+                               'model')
         self.launchProtocol(protRefmac)
         self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
                              "There was a problem with the alignment")
@@ -1197,6 +1200,8 @@ class TestRefmacRefinement(TestImportData):
                 'pdbFileToBeRefined': structure_PDB
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
+                                'and model')
         self.launchProtocol(protChimera)
 
         structure2_PDB = protChimera.outputPdb_01
@@ -1209,7 +1214,7 @@ class TestRefmacRefinement(TestImportData):
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
-
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
 
         # refmac
@@ -1219,6 +1224,8 @@ class TestRefmacRefinement(TestImportData):
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
+                               'model')
         self.launchProtocol(protRefmac)
         self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
                              "There was a problem with the alignment")
@@ -1242,6 +1249,7 @@ class TestRefmacRefinement(TestImportData):
         protPower.inputVol.set(volume2)
         structure1_PDB = self._importStructurePDBWoVol()
         protPower.inputPDB.set(structure1_PDB)
+        protPower.setObjLabel('powerfit\n volume and pdb\n save model')
         self.launchProtocol(protPower)
 
         # chimera fit
@@ -1261,6 +1269,8 @@ class TestRefmacRefinement(TestImportData):
                 }
 
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume associated '
+                               'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -1273,6 +1283,8 @@ class TestRefmacRefinement(TestImportData):
                 'doInteractive': True
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
+                             'save model')
         try:
             self.launchProtocol(protCoot)
         except:
@@ -1293,6 +1305,8 @@ class TestRefmacRefinement(TestImportData):
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and '
+                               'pdb\n save model')
         self.launchProtocol(protRefmac)
         self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
                              "There was a problem with the alignment")
