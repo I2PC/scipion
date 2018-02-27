@@ -37,6 +37,7 @@ from pyworkflow.object import String, Set, Float
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
                                         LEVEL_ADVANCED, FloatParam, BooleanParam)
 from convert import readSetOfParticles, writeSetOfParticles, setXmippAttributes
+from pyworkflow.utils.path import copyFile
 
 
 class XmippProtScreenParticles(ProtProcessParticles):
@@ -145,17 +146,17 @@ class XmippProtScreenParticles(ProtProcessParticles):
                             alignType=em.ALIGN_NONE)
         writeSetOfParticles([p.clone() for p in inputParts
                              if int(p.getObjId()) not in insertedDict],
-                            self._getPath('images.xmd'),
+                            self._getExtraPath('newParts.xmd'),
                             alignType=em.ALIGN_NONE)
         writeSetOfParticles([p.clone() for p in inputParts
                              if int(p.getObjId()) in insertedDict],
-                            self._getExtraPath("xxx.xmd"),
+                            self._getExtraPath("oldParts.xmd"),
                             alignType=em.ALIGN_NONE)
         ProcessedParticles = [p.clone() for p in inputParts
                                if int(p.getObjId()) in insertedDict]
         stepId = self._insertFunctionStep('sortImages',
-                                          self._getPath('images.xmd'),
-                                          self._getExtraPath("xxx.xmd"),
+                                          self._getExtraPath('newParts.xmd'),
+                                          self._getExtraPath("oldParts.xmd"),
                                           len(ProcessedParticles),
                                           prerequisites=[])
 
@@ -261,7 +262,8 @@ class XmippProtScreenParticles(ProtProcessParticles):
     #--------------------------- STEPS functions -----------------------------
     def sortImages(self, fnInputMd, fnInputOldMd, lenfnInputOldMd):
 
-        args = "-i Particles@%s --addToInput " % fnInputMd
+        args = "-i Particles@%s -o %s --addToInput " % (
+        fnInputMd, self._getPath("images.xmd"))
 
         if lenfnInputOldMd > 0:
             args += "--train Particles@%s " % fnInputOldMd
@@ -290,7 +292,6 @@ class XmippProtScreenParticles(ProtProcessParticles):
         outSet = self._loadOutputSet(SetOfParticles, 'outputParticles.sqlite',
                                      fnInputMd)
         self._updateOutputSet('outputParticles', outSet, streamMode)
-
 
     def _initializeZscores(self):
 

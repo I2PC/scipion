@@ -342,51 +342,16 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
             progress_bar(imgno);
     }
 
-    std::ofstream fhv0, fhv1, fhv2, fhv3, fhv4;
-    fhv0.open((fn_tmp.withoutExtension() + "_v0").c_str(),
-        std::ios_base::app);
-    fhv1.open((fn_tmp.withoutExtension() + "_v1").c_str(),
-        std::ios_base::app);
-    fhv2.open((fn_tmp.withoutExtension() + "_v2").c_str(),
-        std::ios_base::app);
-    fhv3.open((fn_tmp.withoutExtension() + "_v3").c_str(),
-        std::ios_base::app);
-    fhv4.open((fn_tmp.withoutExtension() + "_v4").c_str(),
-        std::ios_base::app);
-    int n1 = numDescriptors0+numDescriptors1;
-    int n2 = n1+numDescriptors2;
-    int n3 = n2+numDescriptors3;
-    int n4 = n3+numDescriptors4;
-    if (fhv0.is_open() && fhv1.is_open() && fhv2.is_open() &&
-        fhv3.is_open() && fhv4.is_open())
-    {
-        for (int m=0; m<SF.size(); m++)
-        {
-            for (int n=0; n<numDescriptors0; n++)
-                fhv0 << v04all[m][n] << " ";
-            fhv0 << std::endl;
-            for (int n=numDescriptors0; n<n1; n++)
-                fhv1 << v04all[m][n] << " ";
-            fhv1 << std::endl;
-            for (int n=n1; n<n2; n++)
-                fhv2 << v04all[m][n] << " ";
-            fhv2 << std::endl;
-            for (int n=n2; n<n3; n++)
-                fhv3 << v04all[m][n] << " ";
-            fhv3 << std::endl;
-            for (int n=n3; n<n4; n++)
-                fhv4 << v04all[m][n] << " ";
-            fhv4 << std::endl;
-        }
-        fhv0.close(); fhv1.close(); fhv2.close(); fhv3.close(); fhv4.close();
-    }
-    else std::cerr << "Unable to open file(s).\n";
-
-    tempPcaAnalyzer0.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer0").c_str(),numDescriptors0);
-    tempPcaAnalyzer1.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer1").c_str(),numDescriptors1);
-    tempPcaAnalyzer2.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer2").c_str(),numDescriptors2);
-    tempPcaAnalyzer3.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer3").c_str(),numDescriptors3);
-    tempPcaAnalyzer4.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() + "_tempPcaAnalyzer4").c_str(),numDescriptors4);
+    tempPcaAnalyzer0.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
+        "_tempPcaAnalyzer0").c_str(),numDescriptors0);
+    tempPcaAnalyzer1.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
+        "_tempPcaAnalyzer1").c_str(),numDescriptors1);
+    tempPcaAnalyzer2.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
+        "_tempPcaAnalyzer2").c_str(),numDescriptors2);
+    tempPcaAnalyzer3.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
+        "_tempPcaAnalyzer3").c_str(),numDescriptors3);
+    tempPcaAnalyzer4.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
+        "_tempPcaAnalyzer4").c_str(),numDescriptors4);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);
@@ -644,8 +609,17 @@ void ProgSortByStatistics::run()
     if (!fn_out.empty())
     {
         MetaData SFsorted;
+        if (fn_out.exists()) SFsorted.read(fn_out);
+        int countItems = 0;
+        MDRow row;
+        FOR_ALL_OBJECTS_IN_METADATA(SFsorted)
+        {
+            countItems++;
+    	    SFsorted.getRow(row, countItems);
+    	    SFout.addRow(row);
+    	}
         SFsorted.sort(SFout,MDL_ZSCORE);
-        SFout.write(fn_out,MD_OVERWRITE);
+        SFsorted.write(formatString("@%s", fn_out.c_str()), MD_APPEND);
     }
     if (addToInput)
     {
