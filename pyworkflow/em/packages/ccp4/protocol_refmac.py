@@ -308,8 +308,7 @@ class CCP4ProtRunRefmac(EMProtocol):
                 errors.append("REFMAC = %s" % self.REFMAC)
 
         # Check that the input volume exist
-        if (not self.inputStructure.get().hasVolume()) \
-                and self.inputVolume is None:
+        if self._getInputVolume() is None:
             errors.append("Error: You should provide a volume.\n")
 
         return errors
