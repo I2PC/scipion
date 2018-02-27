@@ -50,10 +50,15 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     """
     _label = 'movie maxshift'
     
+    REJ_TYPES = ['by frame', 'by whole movie', 'both']
+    REJ_FRAME = 0
+    REJ_MOVIE = 1
+    REJ_BOTH = 2
+
     def __init__(self, **args):
         ProtProcessMovies.__init__(self, **args)
-        self.acceptedIdMoviesList = []
-        self.discartedIdMoviesList = []
+        self.acceptedMoviesList = []
+        self.discartedMoviesList = []
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -64,44 +69,54 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                       pointerClass='SetOfMovies', 
                       help='Select a set of previously aligned Movies.')
 
+        form.addParam('rejType', params.EnumParam, choices=self.REJ_TYPES,
+                      label='Rejection type', default=self.REJ_BOTH)
         form.addParam('maxFrameShift', params.FloatParam, default=1, 
                        label='Max. frame shift (A)',
+                       condition='rejType==%s or rejType==%s'
+                                  % (self.REJ_FRAME, self.REJ_BOTH),
                        help='Movies with a drift between consecutive frames '
                             'bigger than this parameter will be rejected.')
         form.addParam('maxMovieShift', params.FloatParam, default=15,
                        label='Max. movie shift (A)',
+                       condition='rejType==%s or rejType==%s'
+                                  % (self.REJ_MOVIE, self.REJ_BOTH),
                        help='Movies with a total travel bigger than '
                             'this parameter will be rejected.')
         
     #--------------------------- INSERT steps functions ------------------------
     def _processMovie(self, movie):
         """ Fill either the accepted or the rejected list with the movieID """
-        movieId = movie.getObjId()
         alignment = movie.getAlignment()
+        sampling = self.samplingRate
 
-        if alignment is not None:
-            # getShifts() returns the absolute shifts from a certain refference
-            shiftListX, shiftListY = alignment.getShifts()
+        # getShifts() returns the absolute shifts from a certain refference
+        shiftListX, shiftListY = alignment.getShifts()
+
+        rejectedByMovie = False
+        rejectedByFrame = False
+        if any(shiftListX) and any(shiftListY):
             shiftArrayX = np.asarray(shiftListX)
             shiftArrayY = np.asarray(shiftListY)
-            sampling = self.samplingRate
 
-            rangeX = np.max(shiftArrayX) - np.min(shiftArrayX)
-            rangeY = np.max(shiftArrayY) - np.min(shiftArrayY)
-            rejectedByMovie = ( rangeX * sampling > self.maxMovieShift.get() or
-                                rangeY * sampling > self.maxMovieShift.get() )
+            if self.rejType == self.REJ_MOVIE or self.rejType == self.REJ_BOTH:
+                rangeX = np.max(shiftArrayX) - np.min(shiftArrayX)
+                rangeY = np.max(shiftArrayY) - np.min(shiftArrayY)
+                rejectedByMovie = (rangeX*sampling > self.maxMovieShift.get() or
+                                   rangeY*sampling > self.maxMovieShift.get() )
 
-            frameShiftX = np.diff(shiftArrayX)
-            frameShiftY = np.diff(shiftArrayY)
-            rejectedByFrame = ( np.max(np.abs(frameShiftX)) * sampling > 
-                                self.maxFrameShift.get()          or
-                                np.max(np.abs(frameShiftY)) * sampling >
-                                self.maxFrameShift.get() )
+            if self.rejType == self.REJ_MOVIE or self.rejType == self.REJ_BOTH:
+                frameShiftX = np.abs(np.diff(shiftArrayX))
+                frameShiftY = np.abs(np.diff(shiftArrayY))
+                rejectedByFrame = ( np.max(frameShiftX) * sampling > 
+                                    self.maxFrameShift.get()          or
+                                    np.max(frameShiftY) * sampling >
+                                    self.maxFrameShift.get() )
 
             if not rejectedByFrame and not rejectedByMovie:
-                self.acceptedIdMoviesList.append(movieId)
+                self.acceptedMoviesList.append(movie.getObjId())
             else:
-                self.discartedIdMoviesList.append(movieId)
+                self.discartedMoviesList.append(movie.getObjId())
 
     def _checkNewOutput(self):
         """ Check for already selected Movies and update the output set. """
@@ -114,11 +129,11 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         # Check for newly done items
         newDoneAccepted = [m.clone() for m in self.listOfMovies
                            if int(m.getObjId()) not in doneList and 
-                              int(m.getObjId()) in self.acceptedIdMoviesList]
+                              int(m.getObjId()) in self.acceptedMoviesList]
 
         newDoneDiscarted = [m.clone() for m in self.listOfMovies
                             if int(m.getObjId()) not in doneList and 
-                               int(m.getObjId()) in self.discartedIdMoviesList]
+                               int(m.getObjId()) in self.discartedMoviesList]
 
         # Update the file with the newly done movies
         # or exit from the function if no new done movies
