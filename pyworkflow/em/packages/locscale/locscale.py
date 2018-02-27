@@ -91,11 +91,17 @@ def setEnviron():
         os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'],
                                                  'Python/bin/python')
 
-def getProgram(program):
+def getProgram(program, mpiCores=0):
     # For localscale python scripts, join the path to source
     if not 'EMAN_PYTHON' in os.environ:
         setEnviron()
     program = os.path.join(os.environ['LOCSCALE_HOME'], 'source', program)
     #raise Exception('EMAN_PYTHON is not load in environment')
     python = os.environ['EMAN_PYTHON']
-    return '%(python)s %(program)s ' % locals()
+
+    if mpiCores>0:
+        prefix = 'mpirun -np %d' %mpiCores
+    else:
+        prefix = ''
+
+    return '%(prefix)s %(python)s %(program)s ' % locals()

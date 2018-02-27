@@ -133,7 +133,8 @@ class ProtLocScale(ProtRefine3D):
         args = self.prepareParams()
 
         self.info("Launching LocScale method")
-        program = getProgram('locscale_mpi.py')
+
+        program = getProgram('locscale_mpi.py', 4)
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
@@ -216,10 +217,11 @@ class ProtLocScale(ProtRefine3D):
             args += " --mask '%s'" % maskFn
 
         args += " --window_size %d" % self.patchSize
-        args += " -o '%s'" % self.getAbsPath(self.getOutputFn())
 
         if self.doParalelize:
-            args += " --mpi"
+            args += " -mpi"
+
+        args += " -o '%s'" % self.getAbsPath(self.getOutputFn())
 
         return args
 
