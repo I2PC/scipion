@@ -129,12 +129,14 @@ class Object(object):
         subclasses of Object and will be stored"""
         for key, attr in self.getAttributes():
             if not hasattr(attr, '_objDoStore'):
-                print "Object.getAttributesToStore: attribute '%s' seems to be overwritten," % key
-                print "   since '_objDoStore' was not found. Ignoring attribute. "
+                print ("Object.getAttributesToStore: attribute '%s' seems to "
+                      "be overwritten," % key)
+                print ("   since '_objDoStore' was not found. "
+                       "Ignoring attribute. ")
             else:
                 if attr is not None and attr._objDoStore:
                     yield (key, attr)
-            
+
     def isPointer(self):
         """If this is true, the value field is a pointer 
         to another object"""
