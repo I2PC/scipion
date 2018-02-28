@@ -29,15 +29,14 @@
 
 import os
 import pyworkflow.em as em
-import pyworkflow.em.metadata as md
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.object import String, Set, Float
-from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_ADVANCED, FloatParam, BooleanParam)
-from convert import readSetOfParticles, writeSetOfParticles, setXmippAttributes
-from pyworkflow.utils.path import copyFile
+from pyworkflow.protocol.params import (EnumParam, IntParam, Positive,
+                                        Range, LEVEL_ADVANCED, FloatParam,
+                                        BooleanParam)
+from convert import readSetOfParticles, writeSetOfParticles
 
 
 class XmippProtScreenParticles(ProtProcessParticles):
@@ -53,7 +52,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
     REJ_PERCENTAGE = 2
     REJ_PERCENTAGE_SSNR = 1
 
-    # --------------------------- DEFINE param functions -----------------------
+    # --------------------------- DEFINE param functions ---------------------
 
     def _defineProcessParams(self, form):
         
@@ -306,7 +305,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
         self.maxZScore.set(max(zScore, self.maxZScore.get(0)))
         self.sumZScore.set(self.sumZScore.get(0) + zScore)
 
-    # -------------------------- INFO functions -------------------------------
+    # -------------------------- INFO functions ------------------------------
     def _summary(self):
         summary = []
         if self.autoParRejection is not None:
