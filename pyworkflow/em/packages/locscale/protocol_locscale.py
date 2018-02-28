@@ -80,9 +80,6 @@ class ProtLocScale(ProtRefine3D):
                       label='Patch size', help='Window size for local scale.\n'
                             'Recomended: 7 * average_map_resolution / pixel_size')
 
-        # form.addParam('doParalelize', params.BooleanParam, default=False,
-        #               label='Paralelize', help='Do it in paralel with 4 MPI.')
-
         form.addParallelSection(threads=0, mpi=4)
     
     #--------------------------- INSERT steps functions ------------------------
@@ -121,23 +118,15 @@ class ProtLocScale(ProtRefine3D):
 
     def refineStep(self):
         """ Run the LocScale program (with EMAN enviroment)
-            to refine a volume. """
-        # self.info('Checking the origin of the map:')
-        # check = getProgram('check_and_set_ori_zero.py')
-        # checkArgs = '--map %s' % self.getAbsPath(self.getInputFn())
-        # self.runJob(check, checkArgs, cwd=self._getExtraPath())
-
-        # self.info('Checking the origin of the ref:')
-        # check = getProgram('check_and_set_ori_zero.py')
-        # checkArgs = '--map %s' % self.getAbsPath(self.getRefFn())
-        # self.runJob(check, checkArgs, cwd=self._getExtraPath())
-
+            to refine a volume. 
+        """
         args = self.prepareParams()
 
         self.info("Launching LocScale method")
 
-        program = getProgram('locscale_mpi.py')
-        self.runJob(program, args, cwd=self._getExtraPath())
+        python, program_args = getProgram('locscale_mpi.py', args)
+        self.runJob(python, program_args)
+        # self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
         volume = Volume()
@@ -210,12 +199,12 @@ class ProtLocScale(ProtRefine3D):
         '-mpi', '--mpi', action='store_true', default=False,
                          help='MPI version call by: \"{0}\"'.format(mpi_cmd)
         """
-        args  =  "--em_map '%s'" % self.getAbsPath(self.getInputFn())
-        args += " --model_map '%s'" % self.getAbsPath(self.getRefFn())
+        args  =  "--em_map '%s'" % self.getInputFn()
+        args += " --model_map '%s'" % self.getRefFn()
         args += " --apix %f" % self.getSampling()
         
         if self.binaryMask.hasValue():
-            maskFn = self.getAbsPath(self.binaryMask.get().getFileName())
+            maskFn = self.binaryMask.get().getFileName()
             args += " --mask '%s'" % maskFn
 
         args += " --window_size %d" % self.patchSize
@@ -223,7 +212,7 @@ class ProtLocScale(ProtRefine3D):
         if self.numberOfMpi>1:
             args += " -mpi"
 
-        args += " -o '%s'" % self.getAbsPath(self.getOutputFn())
+        args += " -o '%s'" % self.getOutputFn()
 
         return args
 
@@ -231,7 +220,7 @@ class ProtLocScale(ProtRefine3D):
         return self.inputVolume.get().getSamplingRate()
 
     def getInputFn(self):
-        return self.inputVolume.get().getFileName()
+        return self.inputVolume.get().getFileName().replace(":mrc","")
 
     def getPdbFn(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
@@ -261,15 +250,13 @@ class ProtLocScale(ProtRefine3D):
 
     def getRefFn(self):
         if self.isRefInputPdb():
+            # here the .vol is done from the xmipp PDBconvert
             fn = self._getExtraPath(replaceBaseExt(self.getPdbFn(),"vol"))
         else:
             fn = self.inputPath.get() if self.inputPdbData==self.IMPORT_FROM_FILES \
-                 else self.refObj.get().getFileName()
+                 else self.refObj.get().getFileName().replace(":mrc","")
         return fn
 
     def getOutputFn(self):
-        inputFn = removeBaseExt(self.inputVolume.get().getFileName())
-        return self._getExtraPath(inputFn) + '_scaled.mrc'
-
-    def getAbsPath(self, fileName):
-        return os.path.abspath(fileName).replace(":mrc","")
+        outputFnBase = removeBaseExt(self.getInputFn())
+        return self._getExtraPath(outputFnBase) + '_scaled.mrc'

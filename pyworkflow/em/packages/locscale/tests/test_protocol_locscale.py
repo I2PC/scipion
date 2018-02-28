@@ -84,9 +84,9 @@ class TestProtLocscale(BaseTest):
             In addition, returns the size of the set.
         """
         def launchTest(pdbFrom, label, pdbId=None, refObj=None, inputPath=None):
-            print magentaStr("\n%s test:" % label)
+            print magentaStr("\n%s 4MPI test:" % label)
             pLocScale = self.proj.newProtocol(ProtLocScale,
-                                              objLabel='locscale - ' + label,
+                                              objLabel='locscale MPI - ' + label,
                                               inputVolume=self.inputVol,
                                               inputPdbData=pdbFrom,
                                               pdbId=pdbId,
@@ -98,8 +98,8 @@ class TestProtLocscale(BaseTest):
                                  "outputVolume is None for %s test." % label)
             # return pLocScale.outputVolume
 
-        # pdb IMPORT_FROM_ID   -  FIXME: this pdbID is not for this volume!!!
-        launchTest(ProtLocScale.IMPORT_FROM_ID, 'pdbFromID', pdbId='3j5p')
+        # pdb IMPORT_FROM_ID   -  FIXME: this pdbID is not for this volume!!! --------------------
+        # launchTest(ProtLocScale.IMPORT_FROM_ID, 'pdbFromID', pdbId='3j5p')
 
         # pdb IMPORT_FROM_OBJ
         launchTest(ProtLocScale.IMPORT_FROM_OBJ, 'pdbFromObject',
@@ -134,8 +134,8 @@ class TestProtLocscale(BaseTest):
                                  "outputVolume is None for %s test." % label)
             # return pLocScale.outputVolume
 
-        # pdb IMPORT_FROM_ID   -  FIXME: this pdbID is not for this volume!!!
-        launchTest(ProtLocScale.IMPORT_FROM_ID, 'pdbFromID', pdbId='3j5p')
+        # pdb IMPORT_FROM_ID   -  FIXME: this pdbID is not for this volume!!! ------------------
+        # launchTest(ProtLocScale.IMPORT_FROM_ID, 'pdbFromID', pdbId='3j5p')
 
         # pdb IMPORT_FROM_OBJ
         launchTest(ProtLocScale.IMPORT_FROM_OBJ, 'pdbFromObject',
@@ -150,28 +150,28 @@ class TestProtLocscale(BaseTest):
                    inputPath=self.dataSet.getFile('pdb'))
 
 
-    def testLocscaleMPI(self):
+    def testLocscaleNoMPI(self):
         """ Check that an output was generated and the condition is valid.
             In addition, returns the size of the set.
         """
         def launchTest(pdbFrom, label, pdbId=None, refObj=None, inputPath=None):
-            print magentaStr("\n%s test in MPI:" % label)
+            print magentaStr("\n%s test without MPI:" % label)
             pLocScale = self.proj.newProtocol(ProtLocScale,
-                                              objLabel='locscale MPI - '+label,
+                                              objLabel='locscale noMPI - '+label,
                                               inputVolume=self.inputVol,
                                               inputPdbData=pdbFrom,
                                               pdbId=pdbId,
                                               refObj=refObj,
                                               inputPath=inputPath,
                                               patchSize=16,
-                                              doParalelize=True)
+                                              numberOfMpi=1)
             self.proj.launchProtocol(pLocScale, wait=True)
             self.assertIsNotNone(pLocScale.outputVolume,
                                  "outputVolume is None for %s test." % label)
             # return pLocScale.outputVolume
 
-        # pdb IMPORT_FROM_ID   -  FIXME: this pdbID is not for this volume!!!
-        launchTest(ProtLocScale.IMPORT_FROM_ID, 'pdbFromID', pdbId='3j5p')
+        # pdb IMPORT_FROM_ID   -  FIXME: this pdbID is not for this volume!!! ------------------
+        # launchTest(ProtLocScale.IMPORT_FROM_ID, 'pdbFromID', pdbId='3j5p')
 
         # pdb IMPORT_FROM_OBJ
         launchTest(ProtLocScale.IMPORT_FROM_OBJ, 'pdbFromObject', 
