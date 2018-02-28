@@ -80,8 +80,10 @@ class ProtLocScale(ProtRefine3D):
                       label='Patch size', help='Window size for local scale.\n'
                             'Recomended: 7 * average_map_resolution / pixel_size')
 
-        form.addParam('doParalelize', params.BooleanParam, default=False,
-                      label='Paralelize', help='Do it in paralel with 4 MPI.')
+        # form.addParam('doParalelize', params.BooleanParam, default=False,
+        #               label='Paralelize', help='Do it in paralel with 4 MPI.')
+
+        form.addParallelSection(threads=0, mpi=4)
     
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
@@ -134,7 +136,7 @@ class ProtLocScale(ProtRefine3D):
 
         self.info("Launching LocScale method")
 
-        program = getProgram('locscale_mpi.py', 4)
+        program = getProgram('locscale_mpi.py')
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
@@ -218,7 +220,7 @@ class ProtLocScale(ProtRefine3D):
 
         args += " --window_size %d" % self.patchSize
 
-        if self.doParalelize:
+        if self.numberOfMpi>1:
             args += " -mpi"
 
         args += " -o '%s'" % self.getAbsPath(self.getOutputFn())
