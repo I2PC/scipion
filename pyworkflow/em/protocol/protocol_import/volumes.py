@@ -117,7 +117,6 @@ class ProtImportVolumes(ProtImportImages):
                     n = 1
                 else:
                     zDim = z
-            print "wwwwwwwwwwwwwwwww", x, y, z, n
             origin = Transform()
             if setOrigCoord:
                 origin.setShiftsTuple(self._getOrigCoord())
