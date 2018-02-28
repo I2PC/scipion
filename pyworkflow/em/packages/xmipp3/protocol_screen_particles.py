@@ -231,12 +231,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
         readSetOfParticles(fnInputMd, partsSet)
         inputs = self.inputParticles.get()
         outputSet.copyInfo(inputs)
-        outputSet.copyItems(partsSet,
-                            updateItemCallback=self._updateParticle,
-                            itemDataIterator=md.iterRows(
-                                self.outputMd.get(),
-                                sortByLabel=md.MDL_ITEM_ID))
-
+        outputSet.copyItems(partsSet)
+        for item in partsSet:
+            self._calculateSummaryValues(item)
         # Persist zScore values for summary and testing
         self._store()
 
@@ -362,19 +359,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                            % self.getObjectTag('outputParticles'))
         return methods
     
-    # --------------------------- UTILS functions ------------------------------
-    def _updateParticle(self, item, row):
-        setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1,
-                           md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1,
-                           md.MDL_ZSCORE_SNR2, md.MDL_CUMULATIVE_SSNR)
-        if self.addFeatures:
-            setXmippAttributes(item, row, md.MDL_SCORE_BY_SCREENING)
-        if row.getValue(md.MDL_ENABLED) <= 0:
-            item._appendItem = False
-        else:
-            item._appendItem = True
-            self._calculateSummaryValues(item)
-
+    # --------------------------- UTILS functions ----------------------------
     def _readDoneList(self):
         """ Read from a file the id's of the items that have been done. """
         doneFile = self._getAllDone()

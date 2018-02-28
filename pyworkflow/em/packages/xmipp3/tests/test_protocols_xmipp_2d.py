@@ -356,9 +356,8 @@ class TestXmippScreenParticles(TestXmippBase):
         self.assertIsNotNone(protScreenZScore.outputParticles,
                              "Output has not been produced")
         print('\t --> Output is not None')
-        self.assertEqual(len(protScreenZScore.outputParticles),
-                         69,
-                         "Output Set Of Particles must be 71, but %s found" %
+        self.assertEqual(len(protScreenZScore.outputParticles), 69,
+                         "Output Set Of Particles must be 69, but %s found" %
                          len(protScreenZScore.outputParticles))
         print('\t --> Output set size is correct (%s)' % len(
             protScreenZScore.outputParticles))
