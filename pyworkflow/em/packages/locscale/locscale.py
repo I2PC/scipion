@@ -95,8 +95,8 @@ def getProgram(program, args):
     # For localscale python scripts, join the path to source
     if not 'EMAN_PYTHON' in os.environ:
         setEnviron()
+
     program = os.path.join(os.environ['LOCSCALE_HOME'], 'source', program)
-    
     python = os.environ['EMAN_PYTHON']
 
-    return python, program+' '+args
+    return python, '%s %s'%(program, args)

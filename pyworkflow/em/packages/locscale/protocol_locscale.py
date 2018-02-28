@@ -120,13 +120,11 @@ class ProtLocScale(ProtRefine3D):
         """ Run the LocScale program (with EMAN enviroment)
             to refine a volume. 
         """
-        args = self.prepareParams()
-
         self.info("Launching LocScale method")
+        args = self.prepareParams()
 
         python, program_args = getProgram('locscale_mpi.py', args)
         self.runJob(python, program_args)
-        # self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
         volume = Volume()
@@ -199,20 +197,28 @@ class ProtLocScale(ProtRefine3D):
         '-mpi', '--mpi', action='store_true', default=False,
                          help='MPI version call by: \"{0}\"'.format(mpi_cmd)
         """
+
         args  =  "--em_map '%s'" % self.getInputFn()
+        self.info("Input file: " + self.getInputFn())
+
         args += " --model_map '%s'" % self.getRefFn()
+        self.info("Model file: " + self.getRefFn())
+
         args += " --apix %f" % self.getSampling()
+        self.info("Samplig rate: %f" % self.getSampling())
         
         if self.binaryMask.hasValue():
-            maskFn = self.binaryMask.get().getFileName()
-            args += " --mask '%s'" % maskFn
+            args += " --mask '%s'" % self.binaryMask.get().getFileName()
+            self.info("Mask file: " + self.binaryMask.get().getFileName())
 
         args += " --window_size %d" % self.patchSize
+        self.info("Window size: %d" % self.patchSize)
 
         if self.numberOfMpi>1:
             args += " -mpi"
 
         args += " -o '%s'" % self.getOutputFn()
+        self.info("Output file: " + self.getOutputFn())
 
         return args
 
