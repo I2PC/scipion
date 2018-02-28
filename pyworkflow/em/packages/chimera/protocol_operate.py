@@ -61,14 +61,14 @@ class ChimeraProtOperate(EMProtocol):
                       help="Volume to process")
         form.addParam('pdbFileToBeRefined', PointerParam,
                       pointerClass="PdbFile",
-                      label='PDBx/mmCIF file to be refined',
-                      help="PDBx/mmCIF file to be refined. This cif object, "
-                           "after refinement, will be saved")
+                      label='PDBx/mmCIF file',
+                      help="PDBx/mmCIF file that you can save after operating "
+                           "with it.")
         form.addParam('inputPdbFiles', MultiPointerParam,
                       pointerClass="PdbFile",
-                      label='Other referece PDBx/mmCIF files',
-                      help="Other PDBx/mmCIF files used as reference. "
-                           "This cif objects will not be saved")
+                      label='Other PDBx/mmCIF files',
+                      help="Other PDBx/mmCIF that you can save after "
+                           "operating with them.")
         form.addParam('extraCommands', StringParam,
                       default='',
                       condition='False',
@@ -77,10 +77,13 @@ class ChimeraProtOperate(EMProtocol):
         form.addSection(label='Help')
         form.addLine('''Execute command *scipionwrite [model #n] [refmodel
         #p] [saverefmodel 0|1]* from command
-        line in order to transfer fitted cif to scipion. Default values are
-        model=#2,
-        refmodel =#1 and saverefmodel 0 (false).
-        model refers to the cif file. refmodel to a 3Dmap''')
+        line in order to transfer structures and PDBx/mmCIF to scipion. 
+        In the particular case that you only have a volume and a 
+        structure default values are model=#2, refmodel =#1 and 
+        saverefmodel 0 (false). Model refers to the cif file. refmodel to a 
+        3Dmap. If you have several structures and no volumes you can save 
+        all of them by executing commands *scipion [model #1]*, *scipion [
+        model #2]*, *scipion [model #3]*, and so on.''')
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
