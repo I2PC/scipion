@@ -820,7 +820,8 @@ def writeMicCoordinates(mic, coordList, outputFn, isManual=True,
     """
     if getPosFunc is None:
         getPosFunc = lambda coord: coord.getPostion()
-        state = 'Manual' if isManual else 'Supervised'
+
+    state = 'Manual' if isManual else 'Supervised'
     f = openMd(outputFn, state)
 
     for coord in coordList:
