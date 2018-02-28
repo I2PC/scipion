@@ -27,6 +27,8 @@
 # **************************************************************************
 
 from protocol_operate import ChimeraProtOperate
+from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
+    StringParam
 
 
 class ChimeraProtRigidFit(ChimeraProtOperate):
@@ -37,6 +39,35 @@ class ChimeraProtRigidFit(ChimeraProtOperate):
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
     _label = 'chimera rigid fit'
+
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputVolume', PointerParam, pointerClass="Volume",
+                      label='Input Volume', allowsNull=True,
+                      help="Volume to process")
+        form.addParam('pdbFileToBeRefined', PointerParam,
+                      pointerClass="PdbFile",
+                      label='PDBx/mmCIF file to be refined',
+                      help="PDBx/mmCIF file to be refined. This structure "
+                           "object will be saved after refinement")
+        form.addParam('inputPdbFiles', MultiPointerParam,
+                      pointerClass="PdbFile",
+                      label='Other reference PDBx/mmCIF files',
+                      help="Other PDBx/mmCIF files used as reference. "
+                           "This structure objects will not be saved")
+        form.addParam('extraCommands', StringParam,
+                      default='',
+                      condition='False',
+                      label='Extra commands for chimera viewer',
+                      help="Add extra commands in cmd file. Use for testing")
+        form.addSection(label='Help')
+        form.addLine('''Execute command *scipionwrite [model #n] [refmodel
+        #p] [saverefmodel 0|1]* from command line in order to transfer fitted 
+        structure to scipion. Default values are model=#2,
+        refmodel =#1 and saverefmodel 0 (false).
+        Model refers to the structure file. refmodel to a 3Dmap''')
+
+        # --------------------------- INSERT steps functions --------------------
 
     def prerequisitesStep(self):
         """
