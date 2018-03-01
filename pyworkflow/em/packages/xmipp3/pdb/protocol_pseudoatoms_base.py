@@ -132,9 +132,9 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         if fnIn.endswith(":mrc"):
             fnIn = fnIn[:-4]
 
-        x, y, z = volume.getOrigin().getShifts()
+        x, y, z = volume.getOrigin(returnInitIfNone=True).getShifts()
         xx, yy, zz = volume.getDim()
-        xv, yv, zv = volume.getOrigin().getShifts()
+        #xv, yv, zv = volume.getOrigin().getShifts()
 
         dim = volume.getDim()[0]
         bildFileName = os.path.abspath(self._getExtraPath("axis.bild"))
@@ -157,7 +157,7 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
                     % (threshold, sampling, x, y, z))
         fhCmd.write("open %s\n" % bildFileName)
         fhCmd.write("move %0.2f,%0.2f,%0.2f model #0 coord #2\n"
-                    % (2. * x + (xx / 2. * sampling) - xv,
-                       2. * y + (yy / 2. * sampling) - yv,
-                       2. * z + (zz / 2. * sampling) - zv))
+                    % (x + (xx / 2. * sampling),
+                       y + (yy / 2. * sampling),
+                       z + (zz / 2. * sampling)))
         fhCmd.close()
