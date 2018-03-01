@@ -58,7 +58,9 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     def __init__(self, **args):
         ProtProcessMovies.__init__(self, **args)
         self.acceptedMoviesList = []
-        self.discartedMoviesList = []
+        self.discardedMoviesList = []
+        self.acceptedDone = 0
+        self.discardedDone = 0
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -85,7 +87,19 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                             'this parameter will be rejected.')
         
     #--------------------------- INSERT steps functions ------------------------
-    def _processMovie(self, movie):
+    def _insertMovieStep(self, movie):
+        """ Insert the processMovieStep for a given movie. """
+        # Note1: At this point is safe to pass the movie, since this
+        # is not executed in parallel, here we get the params
+        # to pass to the actual step that is gone to be executed later on
+        # Note2: We are serializing the Movie as a dict that can be passed
+        # as parameter for a functionStep
+        movieStepId = self._insertFunctionStep('_checkMovieAlign',
+                                               movie.clone(),
+                                               prerequisites=[])
+        return movieStepId
+
+    def _checkMovieAlign(self, movie):
         """ Fill either the accepted or the rejected list with the movieID """
         alignment = movie.getAlignment()
         sampling = self.samplingRate
@@ -114,103 +128,86 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                                     self.maxFrameShift.get() )
 
             if not rejectedByFrame and not rejectedByMovie:
-                self.acceptedMoviesList.append(movie.getObjId())
+                self.acceptedMoviesList.append(movie)
             else:
-                self.discartedMoviesList.append(movie.getObjId())
+                self.discardedMoviesList.append(movie)
 
     def _checkNewOutput(self):
         """ Check for already selected Movies and update the output set. """
         if getattr(self, 'finished', False):
             return
 
-        # Load previously done items (from text file)
-        doneList = self._readDoneList()
+        # load if first time in order to make dataSets relations
+        firstTimeAcc = self.acceptedDone==0
+        firstTimeDisc = self.discardedDone==0
+
+        # Load previously done items
+        preDone = self.acceptedDone + self.discardedDone
 
         # Check for newly done items
-        newDoneAccepted = [m.clone() for m in self.listOfMovies
-                           if int(m.getObjId()) not in doneList and 
-                              int(m.getObjId()) in self.acceptedMoviesList]
+        newDoneAccepted = self.acceptedMoviesList[self.acceptedDone:]
+        newDoneDiscarded = self.discardedMoviesList[self.discardedDone:]
 
-        newDoneDiscarted = [m.clone() for m in self.listOfMovies
-                            if int(m.getObjId()) not in doneList and 
-                               int(m.getObjId()) in self.discartedMoviesList]
+        # Updating the done lists
+        self.acceptedDone = len(self.acceptedMoviesList)
+        self.discardedDone = len(self.discardedMoviesList)
+        
+        allDone = preDone + len(newDoneAccepted) + len(newDoneDiscarded)
 
         # Update the file with the newly done movies
         # or exit from the function if no new done movies
         self.debug('_checkNewOutput: ')
         self.debug('   listOfMovies: %d,' %len(self.listOfMovies))
-        self.debug('   doneList: %d,' %len(doneList))
+        self.debug('   doneList: %d,' %preDone)
         self.debug('   newDoneAccepted: %d.' %len(newDoneAccepted))
-        self.debug('   newDoneDiscarted: %d,' %len(newDoneDiscarted))
-
-        allDone = len(doneList) + len(newDoneAccepted) + len(newDoneDiscarted)
+        self.debug('   newDoneDiscarded: %d,' %len(newDoneDiscarded))
     
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movie is equal to the number of inputs
         self.finished = self.streamClosed and allDone == len(self.listOfMovies)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
-        # reading the outputs
-        if (len(doneList)>0 or len(newDoneAccepted)>0):
-            movieSetAccepted = self._loadOutputSet(SetOfMovies, 'movies.sqlite')
-
-        # new output subset of discarted movies
-        if (len(doneList)>0 or len(newDoneDiscarted)>0):
-            movieSetDiscarted = self._loadOutputSet(SetOfMovies,
-                                                       'moviesDiscarted.sqlite')
-
-        if newDoneAccepted:
-            for movie in newDoneAccepted:
-                movie.setEnabled(True)
-                movieSetAccepted.append(movie)
-            self._writeDoneList(newDoneAccepted)
-
-        if newDoneDiscarted:
-            for movie in newDoneDiscarted:
-                movie.setEnabled(False)
-                movieSetDiscarted.append(movie)
-            self._writeDoneList(newDoneDiscarted)
-
-        if not self.finished and not newDoneDiscarted and not newDoneAccepted:
+        if not self.finished and not newDoneDiscarded and not newDoneAccepted:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
             return
 
-        if (exists(self._getPath('movies.sqlite'))):
-            firstTime = not self.hasAttribute('outputMovies')
+        if newDoneAccepted:
+            movieSetAccepted = self._loadOutputSet(SetOfMovies, 'movies.sqlite')
+            for movie in newDoneAccepted:
+                movie.setEnabled(True)
+                movieSetAccepted.append(movie)
+                
             self._updateOutputSet('outputMovies', movieSetAccepted, streamMode)
-            if firstTime:
+            if firstTimeAcc:
                 # define relation just once
-                self._defineSourceRelation(self.inputMovies.get(),
+                self._defineTransformRelation(self.inputMovies.get(),
                                            movieSetAccepted)
-            else:
-                movieSetAccepted.close()
+            movieSetAccepted.close()
 
-        # AJ new subsets with discarted movies
-        if (exists(self._getPath('moviesDiscarted.sqlite'))):
-            firstTime = not self.hasAttribute('outputMoviesDiscarted')
-            self._updateOutputSet('outputMoviesDiscarted',
-                                  movieSetDiscarted, streamMode)
-            if firstTime:
+        # new subsets with discarded movies
+        if newDoneDiscarded:
+            movieSetDiscarded = self._loadOutputSet(SetOfMovies,
+                                                       'moviesDiscarded.sqlite')
+            for movie in newDoneDiscarded:
+                movie.setEnabled(False)
+                movieSetDiscarded.append(movie)
+
+            self._updateOutputSet('outputMoviesDiscarded',
+                                  movieSetDiscarded, streamMode)
+            if firstTimeDisc:
                 # define relation just once
-                self._defineSourceRelation(self.inputMovies.get(),
-                                           movieSetDiscarted)
-            else:
-                movieSetDiscarted.close()
-            
+                self._defineTransformRelation(self.inputMovies.get(),
+                                              movieSetDiscarded)
+            movieSetDiscarded.close()
+
         # Unlock createOutputStep if finished all jobs
         if self.finished:  
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(STATUS_NEW)
-  
-        # Close the output objects
-        if (exists(self._getPath('movies.sqlite'))):
-            movieSetAccepted.close()
+                outputStep.setStatus(STATUS_NEW)            
 
-        if (exists(self._getPath('moviesDiscarted.sqlite'))):
-            movieSetDiscarted.close()
 
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
@@ -218,13 +215,6 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         pass
 
     #--------------------------- UTILS functions -------------------------------
-    def _loadInputMovieSet(self):
-        movieFile = self.inputMovies.get().getFileName()
-        self.debug("Loading input db: %s" % movieFile)
-        movieSet = SetOfMovies(filename=movieFile)
-        movieSet.loadAllProperties()
-        return movieSet
-        
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """ Load the output set if it exists or create a new one.
         fixSampling: correct the output sampling rate if binning was used,
@@ -263,12 +253,12 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         return errors
 
     def _summary(self):
-        summary = ['Movies processed: %d' % len(self._readDoneList()) ]
-        
-        if self.hasAttribute('outputMoviesDiscarted'):
-            rejectedMovies = self.outputMoviesDiscarted.getSize()
-        else:
-            rejectedMovies = 0
-        summary.append('Movies rejected: *%d*' % rejectedMovies)
+        moviesAcc = 0 if not self.hasAttribute('outputMovies') else \
+                    self.outputMovies.getSize()
+        moviesDisc = 0 if not self.hasAttribute('outputMoviesDiscarded') else \
+                    self.outputMoviesDiscarded.getSize()
+
+        summary = ['Movies processed: %d'%(moviesAcc+moviesDisc)]
+        summary.append('Movies rejected: *%d*' % moviesDisc)
 
         return summary

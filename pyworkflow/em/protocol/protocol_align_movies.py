@@ -639,13 +639,13 @@ def createAlignmentPlot(meanX, meanY):
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
     
+    # Max range of the plot of the two coordinates
     plotRange = max(max(meanX)-min(meanX), max(meanY)-min(meanY))
     i = 1 
     skipLabels = ceil(len(meanX) / 10.0)
     for x, y in izip(meanX, meanY):
         if i % skipLabels == 0:
-            ax.text(x-0.02*plotRange, y+0.02*plotRange, str(i),
-                    horizontalalignment='right')
+            ax.text(x-0.02*plotRange, y+0.02*plotRange, str(i))
         i += 1
 
     ax.plot(meanX, meanY, color='b')
