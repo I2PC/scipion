@@ -73,7 +73,7 @@ class ChimeraProtRigidFitViewer(Viewer):
                 outputVolFileName = os.path.abspath(
                         ImageHandler.removeFileType(outputVol.getFileName()))
             f.write("open %s\n" % outputVolFileName)
-            x, y, z = outputVol.getOrigin().getShifts()
+            x, y, z = outputVol.getOrigin(returnInitIfNone=True).getShifts()
             f.write("volume #1 style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
                     % (outputVol.getSamplingRate(), x, y, z))
