@@ -379,7 +379,8 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         self.samplingMics = self.getInputMicrographs().getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
-        scale = self.getBoxScale()
+        # scale = self.getBoxScale()
+        scale = self.getScaleFactor()
         self.debug("Scale: %f" % scale)
         if self.notOne(scale):
             # If we need to scale the box, then we need to scale the coordinates

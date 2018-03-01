@@ -68,7 +68,6 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
-       ("_phaseShift", xmipp.RLN_CTF_PHASESHIFT),
        ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
        ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
@@ -648,7 +647,7 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
-        ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
+
 
     else:
         ctfModel = None
@@ -820,7 +819,8 @@ def writeMicCoordinates(mic, coordList, outputFn, isManual=True,
     """
     if getPosFunc is None:
         getPosFunc = lambda coord: coord.getPostion()
-        state = 'Manual' if isManual else 'Supervised'
+
+    state = 'Manual' if isManual else 'Supervised'
     f = openMd(outputFn, state)
 
     for coord in coordList:
