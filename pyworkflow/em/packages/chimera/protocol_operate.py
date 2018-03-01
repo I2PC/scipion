@@ -67,7 +67,8 @@ class ChimeraProtOperate(EMProtocol):
         form.addParam('inputPdbFiles', MultiPointerParam,
                       pointerClass="PdbFile",
                       label='Other PDBx/mmCIF files',
-                      help="Other PDBx/mmCIF that you can save after "
+                      help="In case you need to load more PDBx/mmCIF files, "
+                           "you can load them here and save them after "
                            "operating with them.")
         form.addParam('extraCommands', StringParam,
                       default='',
@@ -75,15 +76,15 @@ class ChimeraProtOperate(EMProtocol):
                       label='Extra commands for chimera viewer',
                       help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
-        form.addLine('''Execute command *scipionwrite [model #n] [refmodel
-        #p] [saverefmodel 0|1]* from command
-        line in order to transfer structures and PDBx/mmCIF to scipion. 
-        In the particular case that you only have a volume and a 
-        structure default values are model=#2, refmodel =#1 and 
-        saverefmodel 0 (false). Model refers to the cif file. refmodel to a 
-        3Dmap. If you have several structures and no volumes you can save 
-        all of them by executing commands *scipion [model #1]*, *scipion [
-        model #2]*, *scipion [model #3]*, and so on.''')
+        form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] 
+        [saverefmodel 0|1]* from command line in order to transfer structures 
+        and 3D map volumes to SCIPION. 
+        In the particular case in which you have only a volume and a structure, 
+        default values are model #2, refmodel #1 and saverefmodel 0 (false). 
+        Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
+        If you have several structures and no volumes, you can save 
+        all of them by executing commands *scipionwrite [model #1]*, 
+        *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.''')
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -204,10 +205,9 @@ class ChimeraProtOperate(EMProtocol):
             vol.setOrigin(newOrigin)
 
             self._defineOutputs(output3Dmap=vol)
-            self._defineSourceRelation(self.inputPdbFiles, vol)
             if self.inputVolume.get() is None:
                 self._defineSourceRelation(
-                    self.pdbFileToBeRefined.get().getVolume(), vol)
+                    self.pdbFileToBeRefined.get(), vol)
             else:
                 self._defineSourceRelation(self.inputVolume.get(), vol)
         else:
@@ -228,13 +228,15 @@ class ChimeraProtOperate(EMProtocol):
                 counter += 1
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
-                self._defineSourceRelation(self.inputPdbFiles, pdb)
-                if self.inputVolume.get() is None:
-                    if self.pdbFileToBeRefined.get().getVolume() is not None:
-                        self._defineSourceRelation(
-                            self.pdbFileToBeRefined.get().getVolume(), pdb)
-                else:
-                    self._defineSourceRelation(self.inputVolume.get(), pdb)
+                self._defineSourceRelation(self.pdbFileToBeRefined.get(), pdb)
+                for pdbFile in self.inputPdbFiles:
+                    self._defineSourceRelation(pdbFile.get(), pdb)
+                # if self.inputVolume.get() is None:
+                #     if self.pdbFileToBeRefined.get().getVolume() is not None:
+                #         self._defineSourceRelation(
+                #             self.pdbFileToBeRefined.get().getVolume(), pdb)
+                # else:
+                #     self._defineSourceRelation(self.inputVolume.get(), pdb)
 
     # --------------------------- INFO functions ----------------------------
     def _validate(self):
