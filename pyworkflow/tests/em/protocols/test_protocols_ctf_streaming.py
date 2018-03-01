@@ -69,13 +69,14 @@ class TestCtfStreaming(BaseTest):
                     if ctfSet.getSize() > counter:
                         counter += 1
                         for ctf in ctfSet:
-                            self.assertNotEqual(ctf.getPhaseShift(), None)
                             self.assertNotEqual(ctf._resolution.get(), None)
                             self.assertNotEqual(ctf._fitQuality.get(), None)
                             self.assertNotEqual(ctf.isEnabled(), None)
                             self.assertNotEqual(ctf._defocusU.get(), None)
                             self.assertNotEqual(ctf._defocusV.get(), None)
                             self.assertNotEqual(ctf._defocusRatio.get(), None)
+                            if ctf.getPhaseShift():
+                                self.assertNotEqual(ctf.getPhaseShift(), None)
             self.assertIsNotNone(prot.outputCTF,
                                  "Error: outputCTF is not produced "
                                  "in %s." % prot.getClassName())
@@ -110,6 +111,8 @@ class TestCtfStreaming(BaseTest):
         #time.sleep(10)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
+        protCTF.findPhaseShift.set(True)
+        protCTF.slowSearch.set(False)
         protCTF.highRes.set(0.4)
         protCTF.lowRes.set(0.05)
         protCTF.numberOfThreads.set(4)
