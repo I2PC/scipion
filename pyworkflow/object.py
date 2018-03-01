@@ -1042,12 +1042,11 @@ class Set(OrderedObject):
         return self._getMapper().selectById(itemId) != None
 
     def iterItems(self, orderBy='id', direction='ASC', where='1',
-                  limit=None, skipRows=None):
+                  limit=None):
         return self._getMapper().selectAll(orderBy=orderBy,
                                            direction=direction,
                                            where=where,
-                                           limit=limit,
-                                           skipRows=skipRows)#has flat mapper, iterate is true
+                                           limit=limit)#has flat mapper, iterate is true
 
     def getFirstItem(self):
         """ Return the first item in the Set. """

@@ -867,8 +867,7 @@ class SqliteFlatMapper(Mapper):
                       , orderBy=ID
                       , direction='ASC'
                       , where='1'
-                      , limit=None
-                      , skipRows=None):
+                      , limit=None):
         # Just a sanity check for emtpy sets, that doesn't contains 'Properties' table
         if not self.db.hasTable('Properties'):
             return iter([]) if iterate else []
@@ -878,8 +877,7 @@ class SqliteFlatMapper(Mapper):
         objRows = self.db.selectAll(orderBy=orderBy,
                                     direction=direction,
                                     where=where,
-                                    limit=limit,
-                                    skipRows=skipRows)
+                                    limit=limit)
         
         return self.__objectsFromRows(objRows, iterate, objectFilter) 
 
@@ -1132,7 +1130,7 @@ class SqliteFlatDb(SqliteDb):
         return self.cursor.fetchone()
 
     def selectAll(self, iterate=True, orderBy=ID, direction='ASC',
-                  where='1', limit=None, skipRows=None):
+                  where='1', limit=None):
         # Handle the specials orderBy values of 'id' and 'RANDOM()'
         # other columns names should be mapped to table column
         # such as: _micId -> c04
@@ -1170,6 +1168,12 @@ class SqliteFlatDb(SqliteDb):
 
         # If there is a limit
         if limit:
+            # if it is a tuple
+            if isinstance(limit, tuple):
+
+                skipRows = limit[1]
+                limit = limit[0]
+
             # If we need to skip rows
             skipPart = "%s," % skipRows if skipRows else ""
             cmd += " LIMIT %s %s" % (skipPart, limit)

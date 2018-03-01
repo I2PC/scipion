@@ -301,7 +301,7 @@ class TestSqliteFlatMapper(BaseTest):
         self.assertEqual(1, firstItem[0], "First object unexpected")
 
         # Check select all with limit and skipping rows
-        items = db.selectAll(iterate=False, limit=1, skipRows=1)
+        items = db.selectAll(iterate=False, limit=(1, 1))
         self.assertEqual(1, len(items))
         firstItem = items[0]
         self.assertEqual(2, firstItem[0], "First object using skipRows unexpected")

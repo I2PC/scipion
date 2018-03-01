@@ -200,7 +200,7 @@ class TestObject(BaseTest):
                   % (limit, skipRows))
             expectedId = 1 if skipRows is None else skipRows+1
             index = 0
-            for item in imgSet.iterItems(limit=limit, skipRows=skipRows):
+            for item in imgSet.iterItems(limit=(limit, skipRows)):
 
                 self.assertEqual(item.getIndex(), expectedId+index,
                                  "Wrong item in set when using limits.")
@@ -213,7 +213,6 @@ class TestObject(BaseTest):
 
         # Check iteration with limit and skip rows
         checkSetIteration(3, 2)
-
 
     def test_copyAttributes(self):
         """ Check that after copyAttributes, the values
