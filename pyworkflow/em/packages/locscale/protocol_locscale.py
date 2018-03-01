@@ -25,51 +25,32 @@
 # **************************************************************************
 
 import os
-from pyworkflow.em import ProtRefine3D, downloadPdb
+from pyworkflow.em import ProtRefine3D
 import pyworkflow.protocol.params as params
-from pyworkflow.em.data import Volume, PdbFile
+from pyworkflow.em.data import Volume
 from pyworkflow.utils import replaceBaseExt, removeBaseExt, removeExt
 from locscale import *
 
                                
 class ProtLocScale(ProtRefine3D):
-    """ This Protocol sharpens a volume using a PDB model. """
+    """ This Protocol computes contrast-enhanced cryo-EM maps 
+        by local amplitude scaling using a reference model.
+    """
+    
     _label = 'local scale'
-
-    IMPORT_FROM_ID = 0
-    IMPORT_FROM_OBJ = 1
-    IMPORT_FROM_FILES = 2 
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-       
         form.addParam('inputVolume', params.PointerParam, pointerClass='Volume',
                       important=True, label='Input volume',
                       help='Input EM volume')
-
-        form.addParam('inputPdbData', params.EnumParam, 
-                      choices=['id', 'object', 'file'],
-                      label="Retrieve PDB model from",
-                      default=self.IMPORT_FROM_OBJ,
-                      display=params.EnumParam.DISPLAY_HLIST,
-                      help='Model to apply the local scale.\n'
-                           'The PDB can be retrieved from server, '
-                           'using a pdb Object or from a local file.')
-        form.addParam('pdbId', params.StringParam, 
-                      label="Pdb Id", allowsNull=True,
-                      condition='inputPdbData == IMPORT_FROM_ID',
-                      help='Type a pdb Id (four alphanumeric characters).')
+        
         form.addParam('refObj', params.PointerParam, allowsNull=True,
-                      label="Reference Volume or pdb",
-                      pointerClass='PdbFile, Volume',
-                      condition='inputPdbData == IMPORT_FROM_OBJ',
-                      help='Choose a volume or pdb object to take it as refference.')
-        form.addParam('inputPath', params.FileParam,
-                      label="File path", allowsNull=True,
-                      condition='inputPdbData == IMPORT_FROM_FILES',
-                      help='Specify a path to desired PDB structure.')
+                      label="Reference Volume", pointerClass='Volume',
+                      help='Choose a model to take it as refference '
+                           '(usually this volume should come from a PDB).')
 
         form.addParam('binaryMask', params.PointerParam,
                       pointerClass='VolumeMask',
@@ -84,38 +65,10 @@ class ProtLocScale(ProtRefine3D):
     
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        if self.inputPdbData == self.IMPORT_FROM_ID:
-            self._insertFunctionStep('pdbDownloadStep')
-        if self.isRefInputPdb():
-            self._insertFunctionStep('prepareInput')
-
         self._insertFunctionStep('refineStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions -------------------------------
-    def pdbDownloadStep(self):
-        """Download the pdb file and unzip it."""
-        downloadPdb(self.pdbId.get(), self.getPdbFn(), self._log)
-
-    def prepareInput(self):
-        """Convert the pdb to a density map."""
-        pdbFn = self.getPdbFn()
-        refVol = removeExt(self.getRefFn())
-
-        args  =  "-i '%s'" % pdbFn
-        args += " -o '%s'" % refVol
-        args += " --centerPDB"
-        args += " --size %d" % self.inputVolume.get().getDim()[0]
-
-        self.info("Input file: " + pdbFn)
-        self.info("Output file: " + refVol)
-        
-        program = "xmipp_volume_from_pdb"
-
-        import xmipp3
-        xmipp3.runXmippProgram(program, args)
-
-
     def refineStep(self):
         """ Run the LocScale program (with EMAN enviroment)
             to refine a volume. 
@@ -136,51 +89,47 @@ class ProtLocScale(ProtRefine3D):
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
-        validateEmanVersion(self, errors)
-        if (self.inputPdbData == self.IMPORT_FROM_OBJ and 
-            isinstance(self.refObj.get(), Volume)):
-            if (self.inputVolume.get().getDim() != self.refObj.get().getDim() 
-                or self.getSampling() != self.refObj.get().getSamplingRate()):
-                errors.append('Input volume and reference volume should be '
-                              'of the same size and samplig rate')
+        errors = validateEmanVersion(self, errors)
 
+        inputSize = self.inputVolume.get().getDim()
+        refSize = self.refObj.get().getDim()
+        refSamp = self.refObj.get().getSamplingRate()
+
+        if inputSize != refSize or self.getSampling() != refSamp:
+            errors.append('Input volume and reference volume should be '
+                          'of the same size and samplig rate')
         return errors
+
+    def _warnings(self):
+        warnings = []
+
+        if self.binaryMask.hasValue() and self.binaryMask.get().getDim() != \
+                                          self.inputVolume.get().getDim():
+            warnings.append('Input volume and binary mask should be '
+                          'of the same size')
+
+        return warnings
     
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputVolume'):
             summary.append("Output volumes not ready yet.")
         else:
-            methodsStr  = 'We obtained a sharpened volume of the '
-            methodsStr += str(self.getObjectTag('inputVolume'))
-
-            if self.inputPdbData == self.IMPORT_FROM_OBJ:
-                methodsStr += ' using %s as reference.' \
-                              % self.getObjectTag('refObj')
-            elif self.inputPdbData == self.IMPORT_FROM_ID:
-                methodsStr += (' using a dowloaded model of the %s '
-                               'pdb as reference.' % self.pdbId)
-            elif self.inputPdbData == self.IMPORT_FROM_FILES:
-                methodsStr += ' using the %s as reference.' % self.inputPath
-
-            methodsStr += '\nFor more information see https://doi.org/10.7554/eLife.27131'
-            summary.append(methodsStr)
+            summary.append('We obtained a sharpened volume of the %s '
+                           'using %s as reference.'
+                            % (self.getObjectTag('inputVolume'),
+                               self.getObjectTag('refObj')))
         return summary
 
     def _methods(self):
-        methodsStr  = 'We obtained a sharpened volume of the '
-        methodsStr += str(self.getObjectTag('inputVolume'))
+        methods = []
+        methods.append('LocScale has locally scaled the amplitude of the %s '
+                       'using %s as reference with a window size of %d.'
+                        % (self.getObjectTag('inputVolume'),
+                           self.getObjectTag('refObj'),
+                           self.patchSize))
+        return methods
 
-        if self.inputPdbData == self.IMPORT_FROM_OBJ:
-            methodsStr += ' using %s as reference.' % self.getObjectTag('refObj')
-        elif self.inputPdbData == self.IMPORT_FROM_ID:
-            methodsStr += ' using a dowloaded model of the %s pdb as reference.'\
-                          % self.pdbId
-        elif self.inputPdbData == self.IMPORT_FROM_FILES:
-            methodsStr += ' using the %s as reference.' % self.inputPath
-
-        methodsStr += '\nFor more information see https://doi.org/10.7554/eLife.27131'
-        return [methodsStr]
 
     def _citations(self):
         return ['Jakobi2017']
@@ -197,7 +146,6 @@ class ProtLocScale(ProtRefine3D):
         '-mpi', '--mpi', action='store_true', default=False,
                          help='MPI version call by: \"{0}\"'.format(mpi_cmd)
         """
-
         args  =  "--em_map '%s'" % self.getInputFn()
         self.info("Input file: " + self.getInputFn())
 
@@ -228,40 +176,8 @@ class ProtLocScale(ProtRefine3D):
     def getInputFn(self):
         return self.inputVolume.get().getFileName().replace(":mrc","")
 
-    def getPdbFn(self):
-        if self.inputPdbData == self.IMPORT_FROM_ID:
-            fn = self._getExtraPath('%s.pdb' % self.pdbId.get())
-        elif self.inputPdbData == self.IMPORT_FROM_OBJ:
-            fn = self.refObj.get().getFileName()
-        elif self.inputPdbData == self.IMPORT_FROM_FILES:
-            fn = self.inputPath.get()
-        else:
-            fn = None
-        return fn
-
-    def isRefInputPdb(self):
-        """ The reference data can be either a pdb or a volume.
-             - returns True if ref is a PDB and 
-             - returns False if ref is a Volume.
-        """
-        if self.inputPdbData == self.IMPORT_FROM_OBJ:
-            result = isinstance(self.refObj.get(),PdbFile)
-        elif self.inputPdbData == self.IMPORT_FROM_FILES:
-            result = str(self.inputPath).endswith('.pdb')
-        elif self.inputPdbData == self.IMPORT_FROM_ID:
-            result = True
-        else:
-            result = False
-        return result
-
     def getRefFn(self):
-        if self.isRefInputPdb():
-            # here the .vol is done from the xmipp PDBconvert
-            fn = self._getExtraPath(replaceBaseExt(self.getPdbFn(),"vol"))
-        else:
-            fn = self.inputPath.get() if self.inputPdbData==self.IMPORT_FROM_FILES \
-                 else self.refObj.get().getFileName().replace(":mrc","")
-        return fn
+        return self.refObj.get().getFileName().replace(":mrc","")
 
     def getOutputFn(self):
         outputFnBase = removeBaseExt(self.getInputFn())

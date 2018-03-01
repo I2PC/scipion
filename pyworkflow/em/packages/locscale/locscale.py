@@ -31,26 +31,25 @@ from pyworkflow.utils import Environ
 
 def getVersion():
     path = os.environ['LOCSCALE_HOME']
+    version = ''
     for v in getSupportedVersions():
         if v in path:
-            return v
-    return ''
-
+            version = v
+    return version
 
 def getSupportedVersions():
     return ['0.1']
 
-
 def getSupportedEmanVersions():
     return ['2.11, 2.12, 2.2']
 
-
 def getEmanVersion():
     path = os.environ['EMAN2DIR']
+    emanVersion = ''
     for v in getSupportedEmanVersions():
         if v in path:
-            return v
-    return ''
+            emanVersion = v
+    return emanVersion
 
 def validateEmanVersion(protocol, errors):
     """ Validate if eman version is set properly according
@@ -62,6 +61,7 @@ def validateEmanVersion(protocol, errors):
     if getEmanVersion == '':
         errors.append('Eman%s is needed to execute this protocol'
                       % getSupportedEmanVersions())
+    return errors
 
 def getEmanEnviron():
     """ Setup the environment variables needed to launch Eman. """
