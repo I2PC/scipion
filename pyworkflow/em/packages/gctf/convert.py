@@ -97,13 +97,16 @@ def readCtfModel(ctfModel, filename, ctf4=False):
     result = parseGctfOutput(filename)
     if result is None:
         setWrongDefocus(ctfModel)
-        ctfFit, ctfResolution, ctfPhaseShift = -999, -999, -999
+        ctfFit, ctfResolution, ctfPhaseShift = -999, -999, 0
     else:
         defocusU, defocusV, defocusAngle, ctfFit, ctfPhaseShift, ctfResolution = result
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     ctfModel.setFitQuality(ctfFit)
     ctfModel.setResolution(ctfResolution)
-    ctfModel.setPhaseShift(ctfPhaseShift)
+
+    # Avoid creation of phaseShift
+    if ctfPhaseShift != 0:
+        ctfModel.setPhaseShift(ctfPhaseShift)
 
 
 def getEnviron():
