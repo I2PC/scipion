@@ -1055,9 +1055,12 @@ class SetOfImages(EMSet):
         """ Return the string representing the dimensions. """
         return str(self._firstDim)
 
-    def iterItems(self, orderBy='id', direction='ASC'):
+    def iterItems(self, orderBy='id', direction='ASC', limit=None, skipRows=None):
         """ Redefine iteration to set the acquisition to images. """
-        for img in Set.iterItems(self, orderBy=orderBy, direction=direction):
+        for img in Set.iterItems(self, orderBy=orderBy,
+                                 direction=direction,
+                                 limit=limit,
+                                 skipRows=skipRows):
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
             # don't want to override with the set acquisition for this case

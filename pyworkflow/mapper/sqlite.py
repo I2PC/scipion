@@ -866,7 +866,9 @@ class SqliteFlatMapper(Mapper):
                       , objectFilter=None
                       , orderBy=ID
                       , direction='ASC'
-                      , where='1'):
+                      , where='1'
+                      , limit=None
+                      , skipRows=None):
         # Just a sanity check for emtpy sets, that doesn't contains 'Properties' table
         if not self.db.hasTable('Properties'):
             return iter([]) if iterate else []
@@ -875,7 +877,9 @@ class SqliteFlatMapper(Mapper):
             self.__loadObjDict()
         objRows = self.db.selectAll(orderBy=orderBy,
                                     direction=direction,
-                                    where=where)
+                                    where=where,
+                                    limit=limit,
+                                    skipRows=skipRows)
         
         return self.__objectsFromRows(objRows, iterate, objectFilter) 
 
@@ -1114,8 +1118,8 @@ class SqliteFlatDb(SqliteDb):
     def insertObject(self, *args):
         """Insert a new object as a row.
         *args: id, label, comment, ...
-        where ... is the values of the objDict from which the tables where created.        
-        """
+        where ... is the values of the objDict from which the tables
+        where created."""
         self.executeCommand(self.INSERT_OBJECT, args)
 
     def updateObject(self, *args):
@@ -1127,7 +1131,8 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd(ID + "=?"), (objId,))
         return self.cursor.fetchone()
 
-    def selectAll(self, iterate=True, orderBy=ID, direction='ASC', where='1'):
+    def selectAll(self, iterate=True, orderBy=ID, direction='ASC',
+                  where='1', limit=None, skipRows=None):
         # Handle the specials orderBy values of 'id' and 'RANDOM()'
         # other columns names should be mapped to table column
         # such as: _micId -> c04
@@ -1149,9 +1154,9 @@ class SqliteFlatDb(SqliteDb):
         else:
             raise Exception('Invalid type for orderBy: %s' % type(orderBy))
 
-        # Parse the where string to replace the colunm name with
+        # Parse the where string to replace the column name with
         # the real table column name ( for example: _micId -> c01 )
-        # Right now we are asuming a simple where string in the form
+        # Right now we are assuming a simple where string in the form
         # colName=VALUE
         if '=' in where:
             whereCol = where.split('=')[0]
@@ -1162,6 +1167,14 @@ class SqliteFlatDb(SqliteDb):
 
         cmd = self.selectCmd(whereStr,
                              orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
+
+        # If there is a limit
+        if limit:
+            # If we need to skip rows
+            skipPart = "%s," % skipRows if skipRows else ""
+            cmd += " LIMIT %s %s" % (skipPart, limit)
+
+
         self.executeCommand(cmd)
         return self._results(iterate)
 
