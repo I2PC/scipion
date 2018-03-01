@@ -134,7 +134,6 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
 
         x, y, z = volume.getOrigin(returnInitIfNone=True).getShifts()
         xx, yy, zz = volume.getDim()
-        #xv, yv, zv = volume.getOrigin().getShifts()
 
         dim = volume.getDim()[0]
         bildFileName = os.path.abspath(self._getExtraPath("axis.bild"))
