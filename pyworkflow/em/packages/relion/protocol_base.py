@@ -207,14 +207,25 @@ class ProtRelionBase(EMProtocol):
                            'unsupervised manner from a single reference by '
                            'division of the data into random subsets during '
                            'the first iteration.')
+        form.addParam('referenceAverages', PointerParam,
+                      pointerClass='SetOfAverages',
+                      condition='not doContinue and isClassify',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Reference averages',
+                      help='This option is not recommended and should be used '
+                           'with care. The provided averages will be used as '
+                           'initial 2D references. If this option is used, '
+                           'the number of classes will be ignored. '
+                      )
         group = form.addGroup('Reference 3D map',
                               condition='not doContinue and not is2D')
-        group.addParam('referenceVolume', PointerParam, pointerClass='Volume',
+        group.addParam('referenceVolume', PointerParam,
+                       pointerClass='Volume, SetOfVolumes',
                        important=True,
                        label="Input volume",
                        condition='not doContinue and not is2D',
                        help='Initial reference 3D map, it should have the same '
-                           'dimensions and the same pixel size as your input '
+                            'dimensions and the same pixel size as your input '
                             'particles.')
         group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                        label="Is initial 3D map on absolute greyscale?",
