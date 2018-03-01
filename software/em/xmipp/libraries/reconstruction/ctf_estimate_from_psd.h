@@ -28,68 +28,82 @@
 #define _ADJUST_CTF_HH
 
 #include "fourier_filter.h"
+#include "ctf_estimate_from_psd_base.h"
+#include "ctf_estimate_from_psd_fast.h"
 
 /**@defgroup AdjustParametricCTF adjust_ctf (Adjust CTF parameters to PSD)
    @ingroup ReconsLibrary */
 //@{
 /** Adjust CTF parameters. */
-class ProgCTFEstimateFromPSD: public XmippProgram
+class ProgCTFEstimateFromPSD: public ProgCTFBasicParams
 {
 public:
-    /// CTF filename
-    FileName             fn_psd;
-    /// Downsample performed
-    double				 downsampleFactor;
-    /// CTF amplitude to model
-    Image<double>        ctftomodel;
-    /// CTF amplitude to model
-    Image<double>        enhanced_ctftomodel;
-    /// CTF amplitude to model
-    Image<double>        enhanced_ctftomodel_fullsize;
+
     /// CTF model
-    CTFDescription       initial_ctfmodel;
-    /// Show convergence values
-    bool                 show_optimization;
-    /// X dimension of particle projections (-1=the same as the psd)
-    int                  ctfmodelSize;
-    /// Bootstrap estimation
-    bool                 bootstrap;
-    /// Fast defocus estimate
-    bool                 fastDefocusEstimate;
-    /// Regularization factor for the phase direction and unwrapping estimates (used in Zernike estimate)
-    double               lambdaPhase;
-    /// Size of the average window used during phase direction and unwrapping estimates (used in Zernike estimate)
-    int                  sizeWindowPhase;
-    /// Minimum frequency to adjust
-    double               min_freq;
-    /// Maximum frequency to adjust
-    double               max_freq;
-    /// Sampling rate
-    double               Tm;
-    /// Defocus range
-    double               defocus_range;
+    CTFDescription       initial_ctfmodel, current_ctfmodel, ctfmodel_defoci;
 
-    /// Enhancement filter low freq
-    double               f1;
-    /// Enhancement filter high freq
-    double               f2;
-    /// Weight of the enhanced image
-    double               enhanced_weight;
+    ProgCTFEstimateFromPSD()
+    {
+    }
+    //Copy useful initial values in 2D taken from 1D.
+    ProgCTFEstimateFromPSD(ProgCTFEstimateFromPSDFast *copy)
+    {
+    	action = copy->action;
+    	x_contfreq = copy->x_contfreq;
+        y_contfreq = copy->y_contfreq;
+        w_contfreq = copy->w_contfreq;
+    	x_digfreq = copy->x_digfreq;
+    	y_digfreq = copy->y_digfreq;
+    	w_digfreq = copy->w_digfreq;
+    	///PSD data
+    	psd_exp_radial = copy->psd_exp_radial;
+    	psd_exp_enhanced_radial = copy->psd_exp_enhanced_radial;
+    	psd_exp_enhanced_radial_derivative = copy->psd_exp_enhanced_radial_derivative;
+    	psd_theo_radial_derivative = copy->psd_theo_radial_derivative;
+    	psd_exp_radial_derivative = copy->psd_exp_radial_derivative;
+    	psd_theo_radial = copy->psd_theo_radial;
+    	w_digfreq_r_iN = copy->w_digfreq_r_iN;
+    	w_digfreq_r = copy->w_digfreq_r;
+    	///Masks
+    	mask = copy->mask;
+    	mask_between_zeroes = copy->mask_between_zeroes;
+    	max_freq = copy->max_freq;
+    	min_freq = copy->min_freq;
+    	min_freq_psd = copy->min_freq_psd;
+    	max_freq_psd = copy->max_freq_psd;
+    	corr13 = copy->corr13;
 
-    /// Set of parameters for the complete adjustment of the CTF
-    Matrix1D<double>     adjust;
-    
-    /// Model simplification
-    int                  modelSimplification;
+    	show_inf = copy->show_inf;
+    	heavy_penalization = copy->heavy_penalization;
+    	penalize = copy->penalize;
+    	evaluation_reduction = copy->evaluation_reduction;
+    	modelSimplification = copy->modelSimplification;
+    	defocus_range = copy->defocus_range;
+    	downsampleFactor = copy->downsampleFactor;
+
+    	enhanced_ctftomodel() = copy->enhanced_ctftomodel();
+    	enhanced_ctftomodel_fullsize() = copy->enhanced_ctftomodel_fullsize();
+    	enhanced_weight = copy->enhanced_weight;
+
+    	current_ctfmodel = copy->current_ctfmodel;
+    	initial_ctfmodel = copy->initial_ctfmodel;
+    	ctfmodel_defoci = copy->ctfmodel_defoci;
+    	current_ctfmodel.precomputeValues(x_contfreq,y_contfreq);
+
+    	Tm = copy->Tm;
+    	f = copy->f;
+    	ctfmodelSize = copy->ctfmodelSize;
+    	show_optimization = copy->show_optimization;
+    	fn_psd = copy->fn_psd;
+
+    }
+
 public:
-    /// Read parameters
-    void readParams();
-
+    
     /// Read parameters
     void readBasicParams(XmippProgram *program);
 
-    /// Show parameters
-    void show();
+    void readParams();
 
     /// Define basic parameters
     static void defineBasicParams(XmippProgram * program);
@@ -110,7 +124,56 @@ public:
 
     /** Run */
     void run();
+
+    /* Assign ctfmodel from a vector and viceversa ----------------------------- */
+    void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
+                                 int l, int modelSimplification);
+
+    void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
+                                 int l, int modelSimplification);
+
+    /* Center focus ----------------------------------------------------------- */
+    void center_optimization_focus(bool adjust_freq, bool adjust_th, double margin);
+
+    /* The model is taken from global_adjust and global_ctfmodel is modified */
+    void generateModelSoFar(Image<double> &I, bool apply_log);
+
+    /* Compute central region -------------------------------------------------- */
+    void compute_central_region(double &w1, double &w2, double ang);
+
+    /* Save intermediate results ----------------------------------------------- */
+    /* First call to generate model so far and then save the image, and a couple
+     of cuts along X and Y.
+     This function returns the fitting error.*/
+    void saveIntermediateResults(const FileName &fn_root, bool generate_profiles);
+
+    /** CTF fitness */
+    double CTF_fitness_object(double *p);
+
+    // Estimate sqrt parameters
+    void estimate_background_sqrt_parameters();
+
+    // Estimate first gaussian parameters ------------------------------------- */
+    void estimate_background_gauss_parameters();
+
+    // Estimate second gaussian parameters ------------------------------------- */
+    void estimate_background_gauss_parameters2();
+
+    // Estimate envelope parameters -------------------------------------------- */
+    void estimate_envelope_parameters();
+
+    // Estimate defoci --------------------------------------------------------- */
+    void showFirstDefoci();
+    void estimate_defoci();
+
+    // Estimate defoci with Zernike and SPTH transform--------------------------------------------- */
+    void estimate_defoci_Zernike(MultidimArray<double> &psdToModelFullSize, double min_freq, double max_freq, double Tm,
+                                 double kV, double lambdaPhase, int sizeWindowPhase,
+                                 double &defocusU, double &defocusV, double &ellipseAngle, int verbose);
+    void estimate_defoci_Zernike();
 };
+
+double evaluateIceness(MultidimArray<double> &enhanced_ctftomodel, double Tm);
 
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error

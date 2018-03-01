@@ -47,12 +47,10 @@ __nickname__ = DEVEL
 __releasedate__ = ''
 
 
-
 # This script tries to run ok with any python version. So we cannot
 # use some of the cool syntax of modern Python (no "with" statement,
 # no inline "if ... else ...", etc.), and we better avoid things like
 # "print" (we use sys.stdout.write()) and be careful with exceptions.
-
 
 SCIPION_HOME = dirname(os.path.realpath(__file__))
 
@@ -82,7 +80,12 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         sys.exit('Unknown argument: %s' % arg)
 
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
-SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
+
+# Allow the name of the host configuration to be changed.
+# This is useful for having the same central installation that
+# could be used from different environments (cluster vs workstations)
+SCIPION_HOSTS = join(dirname(SCIPION_CONFIG),
+                     os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf'))
 
 
 # Check for old configuration files and tell the user to update.
@@ -446,7 +449,7 @@ Example: scipion install eman-2.12
                 return 0
 
             # Get xmipp source code file
-            xmippArgsSource = join(SCIPION_HOME, 'software', 'em', 'xmipp',
+            xmippArgsSource = join(SCIPION_HOME, SCIPION_SOFTWARE, 'em', 'xmipp',
                                    'libraries', 'data', 'args.h')
             if not os.path.exists(xmippArgsSource):
                 print ("Xmipp source code file %s not found. It seems you have" \
@@ -550,8 +553,9 @@ Example: scipion install eman-2.12
         runScript('scripts/scipionbox_wizard_demo.py')
 
     elif mode == MODE_DEPENDENCIES:
-        runScript('scripts/find_deps.py software/bin software/lib %s'
-                  % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+        script = 'scripts/find_deps.py $s/bin s%/lib %s' \
+                 % (SCIPION_SOFTWARE, SCIPION_SOFTWARE)
+        runScript( script % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
 
     # Allow to run programs from different packages
     # scipion will load the specified environment

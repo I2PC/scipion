@@ -68,7 +68,7 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
-       ("_phaseShift", xmipp.RLN_CTF_PHASESHIFT),
+       ("_phaseShift", xmipp.MDL_CTF_PHASE_SHIFT),
        ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
        ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
@@ -113,6 +113,8 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
     xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_CRIT_ICENESS,
+    xmipp.MDL_CTF_VPP_RADIUS,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
     xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
@@ -159,6 +161,7 @@ CTF_EXTRA_LABELS_PLUS_RESOLUTION = [
     xmipp.MDL_CTF_CRIT_MAXFREQ,  # ###
     xmipp.MDL_CTF_CRIT_FITTINGSCORE,  # ###
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_CRIT_ICENESS,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
     xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
@@ -173,7 +176,8 @@ CTF_EXTRA_LABELS_PLUS_RESOLUTION = [
     xmipp.MDL_CTF_Q0,
     xmipp.MDL_CTF_CS,
     xmipp.MDL_CTF_VOLTAGE,
-    xmipp.MDL_CTF_SAMPLING_RATE
+    xmipp.MDL_CTF_SAMPLING_RATE,
+    xmipp.MDL_CTF_VPP_RADIUS,
     ]
 
 # Some extra labels to take into account the zscore
@@ -230,6 +234,17 @@ def objectToRow(obj, row, attrDict, extraLabels=[]):
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
+            value = getattr(obj, attr).get()
+            try:
+                row.setValue(label, valueType(value))
+            except Exception as e:
+                print e
+                print "Problems found converting metadata: "
+                print "Label id = %s" % label
+                print "Attribute = %s" % attr
+                print "Value = %s" % value
+                print "Value type = %s" % valueType
+                raise e
             row.setValue(label, valueType(getattr(obj, attr).get()))
             
     attrLabels = attrDict.values()
@@ -385,7 +400,6 @@ def micrographToCTFParam(mic, ctfparam):
     acquisitionToRow(mic.getAcquisition(), row)
     row.writeToMd(md, md.addObject())
     md.write(ctfparam)
-
     return ctfparam
 
 def imageToRow(img, imgRow, imgLabel, **kwargs):
@@ -644,7 +658,6 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
-        ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
 
     else:
         ctfModel = None

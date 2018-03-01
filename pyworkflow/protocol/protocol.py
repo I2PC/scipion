@@ -974,7 +974,7 @@ class Protocol(Step):
 
         if startIndex == len(self._steps):
             self.lastStatus = STATUS_FINISHED
-            self.info("All steps seems to be FINISHED, nothing to be done.")
+            self.info("All steps seem to be FINISHED, nothing to be done.")
         else:
             self.lastStatus = self.status.get()
             self._stepsExecutor.runSteps(self._steps,

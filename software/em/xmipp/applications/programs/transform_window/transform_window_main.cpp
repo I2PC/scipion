@@ -115,11 +115,11 @@ public:
 		addParamsLine(
 				"                                         : sampling=if the output is a mrc file it will use this value to fill the header");
 		addParamsLine(
-				"                                         : x_origin = origin x coordinate introduced by the user with the input volume");
+				"                                         : x_origin = origin x coordinate introduced by the user with the input volume (in pixels)");
 		addParamsLine(
-				"                                         : y_origin = origin y coordinate introduced by the user with the input volume");
+				"                                         : y_origin = origin y coordinate introduced by the user with the input volume (in pixels)");
 		addParamsLine(
-				"                                         : z_origin = origin z coordinate introduced by the user with the input volume");
+				"                                         : z_origin = origin z coordinate introduced by the user with the input volume (in pixels)");
 		addParamsLine(
 				"  [--physical]                           : use physical instead of logical coordinates");
 		addParamsLine("    requires --corners;");
@@ -253,8 +253,8 @@ public:
 		case UNITCELLMODE:
 			std::cout << "Sym: " << sym << ", rmin: " << rmin << ", rmax: " << rmax
 					  << ", Expand Factor: " << expand << ", offset: " << offset
-					  << ", sampling: " << sampling << "; Origin: "
-			          << " x: " << x_origin << ", y: " << y_origin << ", z: " << z_origin
+					  << ", sampling: " << sampling << "; Origin in Angstroms: "
+			          << " x: " << x_origin * sampling << ", y: " << y_origin * sampling << ", z: " << z_origin * sampling
 					  << std::endl;
 			break;
 		}
