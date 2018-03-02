@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Jose Luis Vilas Prieto (jlvilas@cnb.csic.es)
+# * Authors:    Erney Ramírez Aportela (eramirez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -59,10 +59,36 @@ class TestPhenixAutSharp(TestPhenixAutSharpBase):
         cls.protImportHalf2 = cls.runImportVolumes(cls.half2, 3.54)
 
     def testMapSharp(self):
-        print "Run autosharpen for input map"        
+        #print "Run autosharpen for input map"        
         autosharpen1 = self.newProtocol(PhenixProtAutomatedSharpening,
                                    inputMap=self.protImportMap.outputVolume,
                                    resolution=10)
         self.launchProtocol(autosharpen1)
-        #self.assertIsNotNone(autosharpen1.outputVol,
-        #                "autosharpen1 has failed")
+        self.assertIsNotNone(autosharpen1.outputVol,
+                        "autosharpen1 has failed")
+         
+    def testMapSharpHalfMap(self):
+        #print "Run autosharpen for input map with half map"        
+        autosharpen2 = self.newProtocol(PhenixProtAutomatedSharpening,
+                                   inputMap=self.protImportMap.outputVolume,
+                                   useSplitVolumes=True,
+                                   volumeHalf1=self.protImportHalf1.outputVolume,
+                                   volumeHalf2=self.protImportHalf2.outputVolume,
+                                   resolution=10,
+                                   sharpening=4) 
+        self.launchProtocol(autosharpen2)
+        self.assertIsNotNone(autosharpen2.outputVol,
+                        "autosharpen2 has failed")    
+   
+    def testMapSharpPDB(self):
+        #print "Run autosharpen for input map with atomic model'pdb'"        
+        autosharpen3 = self.newProtocol(PhenixProtAutomatedSharpening,
+                                   inputMap=self.protImportMap.outputVolume,
+                                   usePDB=True,
+                                   pdbId='5a1a',
+                                   resolution=10,
+                                   sharpening=5)
+        self.launchProtocol(autosharpen3)
+        self.assertIsNotNone(autosharpen3.outputVol,
+                        "autosharpen3 has failed")          
+             

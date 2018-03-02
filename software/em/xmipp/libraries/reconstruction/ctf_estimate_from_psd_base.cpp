@@ -32,6 +32,7 @@
 #include <data/filters.h>
 #include <data/xmipp_fft.h>
 
+const double ProgCTFBasicParams::penalty = 32.0; // Maximum penalization
 
 /* Read parameters --------------------------------------------------------- */
 void ProgCTFBasicParams::readBasicParams(XmippProgram *program)
