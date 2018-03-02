@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
-# *              David Maluenda    (dmaluenda@cnb.csic.es)
+# * Authors:     David Maluenda    (dmaluenda@cnb.csic.es)
+# *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -50,10 +50,12 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     """
     _label = 'movie maxshift'
     
-    REJ_TYPES = ['by frame', 'by whole movie', 'both']
+    REJ_TYPES = ['by frame', 'by whole movie', 'by frame and movie', 
+                 'by frame or movie']
     REJ_FRAME = 0
     REJ_MOVIE = 1
-    REJ_BOTH = 2
+    REJ_AND = 2
+    REJ_OR = 3
 
     def __init__(self, **args):
         ProtProcessMovies.__init__(self, **args)
@@ -72,19 +74,28 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                       help='Select a set of previously aligned Movies.')
 
         form.addParam('rejType', params.EnumParam, choices=self.REJ_TYPES,
-                      label='Rejection type', default=self.REJ_BOTH)
+                      label='Rejection type', default=self.REJ_OR,
+                      help='Rejection criteria:\n'
+                           ' - *by frame*: Rejects movies with drifts between '
+                                    'frames bigger than a certain maximum.\n'
+                           ' - *by whole movie*: Rejects movies with a total '
+                                    'travel bigger than a certain maximmum.\n'
+                           ' - *by frame and movie*: Rejects movies if both '
+                                    'conditions above are met.\n'
+                           ' - *by frame or movie*: Rejects movies if one of '
+                                    'the conditions above are met.')
         form.addParam('maxFrameShift', params.FloatParam, default=1, 
                        label='Max. frame shift (A)',
-                       condition='rejType==%s or rejType==%s'
-                                  % (self.REJ_FRAME, self.REJ_BOTH),
-                       help='Movies with a drift between consecutive frames '
-                            'bigger than this parameter will be rejected.')
+                       condition='rejType==%s or rejType==%s or rejType==%s'
+                                  % (self.REJ_FRAME, self.REJ_AND, self.REJ_OR),
+                       help='Maximum drift between consecutive frames '
+                            'to evaluate the frame condition.')
         form.addParam('maxMovieShift', params.FloatParam, default=15,
                        label='Max. movie shift (A)',
-                       condition='rejType==%s or rejType==%s'
-                                  % (self.REJ_MOVIE, self.REJ_BOTH),
-                       help='Movies with a total travel bigger than '
-                            'this parameter will be rejected.')
+                       condition='rejType==%s or rejType==%s or rejType==%s'
+                                  % (self.REJ_MOVIE, self.REJ_AND, self.REJ_OR),
+                       help='Maximum total travel to evaluate the whole movie '
+                            'condition.')
         
     #--------------------------- INSERT steps functions ------------------------
     def _insertMovieStep(self, movie):
@@ -94,12 +105,12 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         # to pass to the actual step that is gone to be executed later on
         # Note2: We are serializing the Movie as a dict that can be passed
         # as parameter for a functionStep
-        movieStepId = self._insertFunctionStep('_checkMovieAlign',
+        movieStepId = self._insertFunctionStep('_evaluateMovieAlign',
                                                movie.clone(),
                                                prerequisites=[])
         return movieStepId
 
-    def _checkMovieAlign(self, movie):
+    def _evaluateMovieAlign(self, movie):
         """ Fill either the accepted or the rejected list with the movieID """
         alignment = movie.getAlignment()
         sampling = self.samplingRate
@@ -109,17 +120,19 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
 
         rejectedByMovie = False
         rejectedByFrame = False
-        if any(shiftListX) and any(shiftListY):
+        if any(shiftListX) or any(shiftListY):
             shiftArrayX = np.asarray(shiftListX)
             shiftArrayY = np.asarray(shiftListY)
 
-            if self.rejType == self.REJ_MOVIE or self.rejType == self.REJ_BOTH:
+            evalBoth = self.rejType==self.REJ_AND or self.rejType==self.REJ_OR
+
+            if self.rejType == self.REJ_MOVIE or evalBoth:
                 rangeX = np.max(shiftArrayX) - np.min(shiftArrayX)
                 rangeY = np.max(shiftArrayY) - np.min(shiftArrayY)
                 rejectedByMovie = (rangeX*sampling > self.maxMovieShift.get() or
                                    rangeY*sampling > self.maxMovieShift.get() )
 
-            if self.rejType == self.REJ_MOVIE or self.rejType == self.REJ_BOTH:
+            if self.rejType == self.REJ_FRAME or evalBoth:
                 frameShiftX = np.abs(np.diff(shiftArrayX))
                 frameShiftY = np.abs(np.diff(shiftArrayY))
                 rejectedByFrame = ( np.max(frameShiftX) * sampling > 
@@ -127,10 +140,16 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                                     np.max(frameShiftY) * sampling >
                                     self.maxFrameShift.get() )
 
-            if not rejectedByFrame and not rejectedByMovie:
-                self.acceptedMoviesList.append(movie)
-            else:
-                self.discardedMoviesList.append(movie)
+            if self.rejType == self.REJ_AND:
+                if rejectedByFrame and rejectedByMovie:
+                    self.discardedMoviesList.append(movie)
+                else:
+                    self.acceptedMoviesList.append(movie)
+            else:  # for the OR and also for the individuals evaluations
+                if rejectedByFrame or rejectedByMovie:
+                    self.discardedMoviesList.append(movie)
+                else:
+                    self.acceptedMoviesList.append(movie)
 
     def _checkNewOutput(self):
         """ Check for already selected Movies and update the output set. """
