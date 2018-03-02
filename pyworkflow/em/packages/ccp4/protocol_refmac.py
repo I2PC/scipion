@@ -39,7 +39,8 @@ from pyworkflow.em.convert_header.CCP4.convert import (
     adaptFileToCCP4, runCCP4Program, START, getProgram)
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
     BooleanParam
-
+from pyworkflow.em.viewers.chimera_utils import getProgram as chimera_get_program
+from pyworkflow.em.viewers.chimera_utils import runChimeraProgram
 
 class CCP4ProtRunRefmac(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
@@ -60,18 +61,19 @@ class CCP4ProtRunRefmac(EMProtocol):
     REFMAC = 'refmac5'
 
     def __init__(self, **kwargs):
-            EMProtocol.__init__(self, **kwargs)
+        EMProtocol.__init__(self, **kwargs)
 
     # --------------------------- DEFINE param functions ---------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
         form.addParam('inputVolume', PointerParam, label="Input Volume",
-                      important=True, pointerClass='Volume',
+                      allowsNull=True, pointerClass='Volume',
                       help='This is the unit cell volume.')
-        form.addParam('inputStructure', PointerParam, label="Input PDB file",
+        form.addParam('inputStructure', PointerParam, label="Input PDBx/mmCIF "
+                                                            "file",
                       important=True, pointerClass='PdbFile',
-                      help='Specify a PDB object.')
+                      help='Specify a PDBx/mmCIF object.')
         form.addParam('maxResolution', FloatParam, default=5,
                       label='Max. Resolution (A):',
                       help="Max resolution used in the refinement (Angstroms)."
@@ -150,6 +152,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         # get input 3D map filename
         fnVol = self._getInputVolume()
         inFileName = fnVol.getFileName()
+        if inFileName.endswith(":mrc"):
+            inFileName.replace(":mrc", "")
 
         # create local copy of 3Dmap (tmp3DMapFile.mrc)
         localInFileName = self._getVolumeFileName()
@@ -242,8 +246,32 @@ class CCP4ProtRunRefmac(EMProtocol):
                        {'GENERIC': self._getExtraPath("")})
 
     def createRefmacOutputStep(self):
+        # get PDB shifts
+        counter = 0
+        refmacShiftDict = self.parseRefmacShiftFile()
+        shiftDict = refmacShiftDict[self.refmacShiftsNames[3]]
+        x = shiftDict[0]
+        y = shiftDict[1]
+        z = shiftDict[2]
+        fnCmd = os.path.abspath(self._getTmpPath("chimera_shift_pdb.cmd"))
+        f = open(fnCmd, 'w')
+        f.write("open %s\n" % os.path.abspath(self._getOutPdbFileName()))
+        f.write("move %0.2f,%0.2f,%0.2f model #%d\n" %
+                (x, y, z, counter))
+        f.write("write #%d %s" % (counter,
+                                  os.path.abspath(
+                                      self._getOutPdbFileName(
+                                          self.OutPdbFileName)
+                                                )
+                                  )
+                )
+        f.close()
+        args = " --nogui %s" % fnCmd
+
+        runChimeraProgram(chimera_get_program(), args)
+
         pdb = PdbFile()
-        pdb.setFileName(self._getOutPdbFileName())
+        pdb.setFileName(self._getOutPdbFileName(self.OutPdbFileName))
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure, self.outputPdb)
         fnVol = self._getInputVolume()
@@ -257,7 +285,6 @@ class CCP4ProtRunRefmac(EMProtocol):
             for line in input_data:
                 if line.strip() == '$$':
                     break
-                print line
 
     # --------------------------- UTLIS functions --------------------------
 
@@ -281,8 +308,7 @@ class CCP4ProtRunRefmac(EMProtocol):
                 errors.append("REFMAC = %s" % self.REFMAC)
 
         # Check that the input volume exist
-        if (not self.pdbFileToBeRefined.get().hasVolume()) \
-                and self.inputVolumes is None:
+        if self._getInputVolume() is None:
             errors.append("Error: You should provide a volume.\n")
 
         return errors
@@ -294,13 +320,10 @@ class CCP4ProtRunRefmac(EMProtocol):
             fnVol = self.inputVolume.get()
         return fnVol
 
-    # def _getOutPdbFileName(self):
-    #     pdfileName = os.path.splitext(os.path.basename(
-    #         self.inputStructure.get().getFileName()))[0]
-    #     return self._getExtraPath(self.OutPdbFileName % pdfileName)
-
-    def _getOutPdbFileName(self):
-        return self._getExtraPath(self.OutPdbFileName)
+    def _getOutPdbFileName(self, fileName=None):
+        if fileName is None:
+            fileName = self.OutPdbFileName
+        return self._getExtraPath(fileName)
 
     def _getMaskScriptFileName(self):
         return self._getTmpPath(self.refmacMaskScriptFileName)
@@ -331,6 +354,5 @@ class CCP4ProtRunRefmac(EMProtocol):
         s = ""
         for k, v in refmacShiftDict.iteritems():
             s += "%s: %s\n" % (str(k), str(v))
-        print s
         ##
         return refmacShiftDict
