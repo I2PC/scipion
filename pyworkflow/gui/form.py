@@ -310,7 +310,11 @@ def getObjectLabel(pobj, mapper):
         if not len(label):
             label = '%s.%s' % (prot.getRunName(), extended)
 
-    return label
+    label = label.replace("\n"," ")
+    if obj is not None:
+        id = obj.getObjId()
+        return label + " (%d)"%obj.getObjId()
+    return label 
 
     
 class SubclassesTreeProvider(TreeProvider):
