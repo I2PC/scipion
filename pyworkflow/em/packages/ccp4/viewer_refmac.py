@@ -33,7 +33,9 @@ from pyworkflow.em.viewer import TableView
 from tkMessageBox import showerror
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, runChimeraProgram, getProgram
+    createCoordinateAxisFile, \
+    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
+    getProgram
 
 
 def errorWindow(tkParent, msg):
@@ -298,31 +300,29 @@ class CCP4ProtRunRefmacViewer(ProtocolViewer):
         form.addSection(label='Visualization of Refmac results')
         # group = form.addGroup('Overall results')
         form.addParam('displayMask', LabelParam,
-                      label="Volume, models and masked map",
-                      help="Display of input volume, input pdb that has to be"
-                           "refined, masked map generated in the first refmac "
-                           "run, and final refined model of the structure.")
+                      label="PDB based Mask",
+                      help="Display Masked map")
         form.addParam('showFinalResults', LabelParam,
                       label="Final Results Table",
-                      help="Table of Final Results from refine.log file.")
+                      help="Table of Final Results from refine.log file")
         form.addParam('showLogFile', LabelParam,
                       label="Show log file",
-                      help="Open refmac log file in a text editor.")
+                      help="open refmac log file in a text editor")
         form.addParam('showLastIteration', LabelParam,
                       label="Results Table (last iteration)",
                       help="Table stored in log file summarizing the last "
-                           "iteration.")
+                           "iteration")
         form.addParam('displayRFactorPlot', LabelParam,
                       label="R-factor vs. iteration",
-                      help="Plot R-factor as a function of the iteration.")
+                      help="Plot R-factor as a function of the iteration")
         form.addParam('displayFOMPlot', LabelParam,
                       label="FOM vs. iteration",
                       help="Plot Figure Of Merit as a function of the "
-                           "iteration.")
+                           "iteration")
         form.addParam('displayLLPlot', LabelParam,
                       label="-LL vs. iteration",
                       help="Plot Log likelihood as a function of the "
-                           "iteration.")
+                           "iteration")
         form.addParam('displayLLfreePlot', LabelParam,
                       label="-LLfree vs. iteration",
                       help="Plot Log likelihood as a function of the "
@@ -334,7 +334,7 @@ Geometry includes rmsBOND (root mean square bond lengths)
 zBOND (zscore of the deviation of bond lengths)
 rmsANGL (root mean square bond angles)
 zANGL (zscore of the deviation of bond angles)
-and rmsCHIRAL (root mean square of chiral index.""")
+and rmsCHIRAL (root mean square of chiral index""")
 
     def _getVisualizeDict(self):
         return {
@@ -353,7 +353,7 @@ and rmsCHIRAL (root mean square of chiral index.""")
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
         if self.protocol.inputVolume.get() is None:
-            _inputVol = self.protocol.inputStructure.get().getVolume()
+            _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
         else:
@@ -371,11 +371,9 @@ and rmsCHIRAL (root mean square of chiral index.""")
         # input 3D map
         counter += 1  # 1
         fnVol = self.protocol._getInputVolume()
-        fnVolName = os.path.abspath(fnVol.getFileName())
-        if fnVolName.endswith(":mrc"):
-            fnVolName= fnVolName.split(":")[0]
-        f.write("open %s\n" % fnVolName)
-        x, y, z = fnVol.getOrigin(returnInitIfNone=True).getShifts()
+        f.write("open %s\n" % os.path.abspath(fnVol.getFileName()))
+        x, y, z = adaptOriginFromCCP4ToChimera(
+            fnVol.getOrigin(returnInitIfNone=True).getShifts())
         sampling = fnVol.getSamplingRate()
         f.write("volume #%d style surface voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, x, y, z))
@@ -400,9 +398,19 @@ and rmsCHIRAL (root mean square of chiral index.""")
         f.write("move %0.2f,%0.2f,%0.2f model #%d coord #0\n" %
                 (x, y, z, counter))
 
-        # second refmac step output -> refined PDB
+        # second refmac step output (no shift needed)
         counter += 1  # 4
         pdbFileName = os.path.abspath(self.protocol.outputPdb.getFileName())
+        print pdbFileName
+        f.write("open %s\n" % pdbFileName)
+
+        ####TO DELETE
+        counter += 1  # 5
+        pdbFileName = os.path.abspath(self.protocol._getExtraPath(
+            "refmac-mask.pdb"))
+        print pdbFileName
+        ####
+
         f.write("open %s\n" % pdbFileName)
 
         f.close()
