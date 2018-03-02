@@ -43,6 +43,7 @@ import time
 from pyworkflow.monitor import Timer
 import pyworkflow.protocol.constants as const
 from os import system, popen
+import sys
 
 
 HASH_SIZE = 100
@@ -115,13 +116,25 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         self.listNumImgs = []
         self.listNameImgs = []
         self.listRefImgs = []
+        self.sizeBlk = 300
+        self.particlesToProcess = []
+        self.randRef = None
+        self.randRefCount = None
         self.htAlreadyProcessed = HashTableDict()
         xOrig = self.inputParticles.get().getXDim()
         self.maximumShift = int(self.maxShift.get() * xOrig / 100)
 
         self._loadInputList()
         deps = []
-        deps += self._insertStepsForParticles(True, False)
+        numBlk, rem = divmod(len(self.listOfParticles), self.sizeBlk)
+        if rem > 0:
+            numBlk += 1
+        for i in range(numBlk):
+            if i==0:
+                deps += self._insertStepsForParticles(True, False)
+            else:
+                deps += self._insertStepsForParticles(False, True)
+
         self._insertFunctionStep('createOutputStep', prerequisities=deps,
                                  wait=True)
 
@@ -179,7 +192,14 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             return None
 
         deps=[]
-        deps += self._insertStepsForParticles(False, True)
+        # AJ-blocks
+        numBlk, rem = divmod(len(self.listOfParticles), self.sizeBlk)
+        if rem>0:
+            numBlk+=1
+        for i in range(numBlk):
+            deps += self._insertStepsForParticles(False, True)
+        #AJ-no blocks
+        #deps += self._insertStepsForParticles(False, True)
         if outputStep is not None:
             outputStep.addPrerequisites(*deps)
         self.updateSteps()
@@ -230,12 +250,41 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         print("len(self.listOfParticles)", len(self.listOfParticles),
               self.inputParticles.get().getSize())
+        sys.stdout.flush()
 
-        self.generateInput(expImgMd, flag_split, reclassification)
+        # AJ-blocks
+        auxList=[]
+        for i in range(len(self.listOfParticles)):
+            print(i)
+            sys.stdout.flush()
+            idx = self.listOfParticles[i].getObjId()
+            if not self.htAlreadyProcessed.isItemPresent(idx):
+                auxList.append(self.listOfParticles[i])
+                self.htAlreadyProcessed.pushItem(idx)
+        self.particlesToProcess+=auxList
+        print("Antes len(self.particlesToProcess)",len(self.particlesToProcess))
+        sys.stdout.flush()
+        if len(self.particlesToProcess)==0:
+            return
 
-        for p in self.listOfParticles:
-            partId = p.getObjId()
-            self.htAlreadyProcessed.pushItem(partId)
+        if len(self.particlesToProcess)<self.sizeBlk:
+            particlesToProcessAux = self.particlesToProcess
+        else:
+            particlesToProcessAux = self.particlesToProcess[:self.sizeBlk]
+        print("len(particlesToProcessAux)", len(particlesToProcessAux))
+        sys.stdout.flush()
+
+        self.generateInput(expImgMd, flag_split, reclassification,
+                           particlesToProcessAux)
+
+        print("len(particlesToProcessAux)", len(particlesToProcessAux))
+        sys.stdout.flush()
+        print("Mitad len(self.particlesToProcess)", len(self.particlesToProcess))
+        sys.stdout.flush()
+        for j in range(len(particlesToProcessAux)):
+            self.particlesToProcess.pop(0)
+        print("Despues len(self.particlesToProcess)", len(self.particlesToProcess))
+        sys.stdout.flush()
 
         if flag_split:
             refImgMd = self._getExtraPath('split_last_classes.xmd')
@@ -286,39 +335,45 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         print("split step exec_time", exec_time)
 
 
-    def generateInput(self, inputImgs, flag_split, reclassification):
+    def generateInput(self, inputImgs, flag_split, reclassification,
+                      particlesToProcess):
 
         init_time =time.time()
 
         print("En generateInput")
+        sys.stdout.flush()
 
         inputStack = inputImgs.replace('xmd','stk')
-        xO = self.listOfParticles[0].getXDim()
+        xO = particlesToProcess[0].getXDim()
         newSize = self.imageSize.get()
-        self.newSamplingRate = self.listOfParticles[0].getSamplingRate()
+        self.newSamplingRate = particlesToProcess[0].getSamplingRate()
         if xO != newSize:
             factor = float(xO) / float(newSize)
             self.newSamplingRate = self.newSamplingRate * factor
-            writeSetOfParticles(self.listOfParticles, inputImgs,
+            writeSetOfParticles(particlesToProcess, inputImgs,
                                 alignType=ALIGN_NONE)
             args = "-i %s -o %s --save_metadata_stack --fourier %d " % (
                 inputImgs, inputStack, newSize)
             self.runJob("xmipp_image_resize", args, numberOfMpi=1)
         else:
-            writeSetOfParticles(self.listOfParticles, inputImgs,
+            print("inputImgs", inputImgs)
+            sys.stdout.flush()
+            writeSetOfParticles(particlesToProcess, inputImgs,
                                 alignType=ALIGN_NONE)
 
         if reclassification:
-            randRef = randint(1, len(self.listNumImgs))
-            print("cat de reclass", randRef)
+            self.randRef = randint(1, len(self.listNumImgs))
+            print("cat de reclass", self.randRef)
+            sys.stdout.flush()
 
-            self._unionReclassification(randRef, inputImgs) ####
+            self._unionReclassification(self.randRef, inputImgs) ####
 
             mdAll = md.MetaData()
             fn = self._getExtraPath('last_classes.xmd')
             mdClass = md.MetaData('classes' + "@" + fn)
             for row in iterRows(mdClass):
-                if mdClass.getValue(md.MDL_REF, row.getObjId())==randRef:
+                if mdClass.getValue(md.MDL_REF, row.getObjId())==self.randRef:
+                    self.randRefCount = row.getValue(md.MDL_CLASS_COUNT)
                     row.setValue(md.MDL_CLASS_COUNT, 0L)
                 row.addToMd(mdAll)
             mdAll.write('classes@' + fn, MD_APPEND)
@@ -340,18 +395,11 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         listNameImgs = self.listNameImgs
         listNumImgs = self.listNumImgs
 
-        # Renumerate unchanged classes
-        listNewNumImages=[-1]*len(listNumImgs)
         count = 1
-        for i in range(len(listNumImgs)):
-            if listNumImgs[i] is not -1:
-                listNewNumImages[i] = count
-                count+=1
-
         # Construct the new classes with the renumerated old classes
         mdNewClasses = md.MetaData()
         for i in range(len(listNumImgs)):
-            if listNumImgs[i] is not -1:
+            if listNumImgs[i] != -1:
                 name = listNameImgs[i]
                 fn = name[name.find('@') + 1:-4] + '.xmd'
                 numRef = int(name[0:6])
@@ -359,8 +407,9 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                 mdClass = md.MetaData("classes@" + fn)
                 for row in iterRows(mdClass):
                     if mdClass.getValue(md.MDL_REF, row.getObjId()) == numRef:
-                        row.setValue(md.MDL_REF, listNewNumImages[i])
+                        row.setValue(md.MDL_REF, count)
                         row.addToMd(mdNewClasses)
+                count += 1
 
         # Add the two new classes to the list of renumerated classes
         mdClass = md.MetaData("classes@" + classesOut)
@@ -368,27 +417,25 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         for row in rows:
             row.setValue(md.MDL_REF, count)
             row.addToMd(mdNewClasses)
-            count = count + 1
+            count += 1
         mdNewClasses.write('classes@'
                            + self._getExtraPath('split_last_classes.xmd'),
                            MD_APPEND)
 
         # Generate the intermediate images and the blocks of the intermediate
         # classes for the unchanged classes
+        count=1
         for i in range(len(listNumImgs)):
-           if listNumImgs[i] is not -1:
+           if listNumImgs[i] != -1:
                # Read the list of images in this class
                mdImgsInClass =  md.MetaData(self._getExtraPath(
                    'dataClass%06d.xmd' % (i+1)))
-               mdImgsInClass.fillConstant(md.MDL_REF, listNewNumImages[i])
+               mdImgsInClass.fillConstant(md.MDL_REF, count)
                mdImgsInClass.write(self._getExtraPath('dataClass%06d.xmd' %
-                                                      listNewNumImages[i]))
+                                                      count))
+               count += 1
 
         # Add the two new classes
-        if len(listNumImgs) == 0:
-           count = 1
-        else:
-           count = len(listNumImgs)
         for newRef in range(0, 2):
            mdImgsInClass = md.MetaData(
                'class%06d_images@%s' % (newRef + 1, classesOut))
@@ -417,7 +464,8 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             finalName = finalMetadata
 
         total=[]
-        i = 0
+        newRef = 1
+        i = 1
         for itemLast, itemNew in zip(metadataItemLast, metadataItemNew):
             listToMultiply = []
             numImgsLastClasses = metadataItemLast.getValue(
@@ -428,25 +476,37 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                                                          itemNew)
             numImgsNewClasses = metadataItemNew.getValue(md.MDL_CLASS_COUNT,
                                                          itemNew)
-            total.append(numImgsLastClasses + numImgsNewClasses)
+            if flag_iter and i==self.randRef:
+                print("Usando self.randRefCount en average classes")
+                numImgsNewClasses = self.randRefCount
+            i += 1
+            auxSum = numImgsLastClasses + numImgsNewClasses
+
+            total.append(auxSum)
+
+            if (auxSum)==0:
+                continue
 
             if numImgsNewClasses==0:
                 im1 = Image(nameRefLastClasses)
-                im1.write('%06d@' % (i + 1) + finalName)
-                i += 1
+                im1.write('%06d@' % newRef + finalName)
+                print('%06d@' % newRef + finalName)
+                newRef += 1
                 continue
             if numImgsLastClasses==0:
                 im2 = Image(nameRefNewClasses)
-                im2.write('%06d@' % (i + 1) + finalName)
-                i += 1
+                im2.write('%06d@' % newRef + finalName)
+                print('%06d@' % newRef + finalName)
+                newRef += 1
                 continue
 
-            if total[i]==0: #AJ to avoid dividing by zero
-                listToMultiply = [0, 0]
-            else:
-                listToMultiply.append(float(numImgsLastClasses)/float(total[i]))
-                listToMultiply.append(float(numImgsNewClasses)/float(total[i]))
+            #if total[i]==0: #AJ to avoid dividing by zero
+            #    listToMultiply = [0, 0]
+            #else:
+            listToMultiply.append(float(numImgsLastClasses)/float(auxSum))
+            listToMultiply.append(float(numImgsNewClasses)/float(auxSum))
 
+            #if total[i] != 0:
             im1 = Image(nameRefLastClasses)
             im2 = Image(nameRefNewClasses)
             im1.align(im2)
@@ -455,8 +515,9 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             im1.convert2DataType(DT_DOUBLE)
             im2.convert2DataType(DT_DOUBLE)
             im1.inplaceAdd(im2)  # Aligned
-            im1.write('%06d@' % (i + 1) + finalName)
-            i+=1
+            im1.write('%06d@' % newRef + finalName)
+            print('%06d@' % newRef + finalName)
+            newRef+=1
 
         final_time = time.time()
         exec_time = final_time - init_time
@@ -487,24 +548,37 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         total = self.averageClasses(finalMetadata, lastMetadata, newMetadata,
                                     False)
+        print("total", total)
 
         copy(self._getExtraPath('aux_classes.stk'),
              self._getExtraPath('last_classes.stk'))
 
         mdAll = md.MetaData()
-        for i in range(len(total)):
-            row = md.Row()
-            row.setValue(md.MDL_REF, i+1)
-            row.setValue(md.MDL_IMAGE, '%06d@'%(i+1) + finalMetadata)
-            row.setValue(md.MDL_CLASS_COUNT, total[i])
-            row.addToMd(mdAll)
+        newRef=1
+        for i in total:
+            if i != 0:
+                row = md.Row()
+                row.setValue(md.MDL_REF, newRef)
+                row.setValue(md.MDL_IMAGE, '%06d@'%newRef + finalMetadata)
+                row.setValue(md.MDL_CLASS_COUNT, i)
+                row.addToMd(mdAll)
+                newRef+=1
+            else:
+                print("Nooooooo")
+                sys.stdout.flush()
         mdAll.write('classes@'+finalMetadata[:-3] + 'xmd', MD_APPEND)
 
         copy(self._getExtraPath('aux_classes.xmd'),
             self._getExtraPath('last_classes.xmd'))
 
+        newRef=1
         for i in range(len(total)):
-            self._unionDataClass(classesOut, i+1)
+            if total[i] != 0:
+                self._unionDataClass(classesOut, i+1, newRef)
+                newRef+=1
+            else:
+                print("Nooooooo")
+                sys.stdout.flush()
 
         final_time = time.time()
         exec_time = final_time - init_time
@@ -629,6 +703,8 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             refImg = metadataItem.getValue(md.MDL_REF, item)
             self.listRefImgs.append(refImg)
 
+        print("listNumImgs", self.listNumImgs)
+        sys.stdout.flush()
         i=0
         while i<len(self.listNumImgs):
 
@@ -683,6 +759,8 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                 idx = p.getObjId()
                 if not self.htAlreadyProcessed.isItemPresent(idx):
                     newPart = p.clone()
+                    #AJ-blocks
+                    newPart.setObjCreation(p.getObjCreation())
                     self.listOfParticles.append(newPart)
             if len(self.listOfParticles)>0:
                 self.lastDate = p.getObjCreation()
@@ -869,30 +947,61 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                                      self._getExtraPath('last_classes.xmd')))
 
 
-    def _unionDataClass(self, fn, ref):
+    def _unionDataClass(self, fn, refOld, refNew):
 
-        fn1 = self._getExtraPath('dataClass%06d.xmd' % ref)
-        if exists(fn1):
+        fnNew = self._getExtraPath('dataClass%06d.xmd' % refNew)
+        fnOld = self._getExtraPath('dataClass%06d.xmd' % refOld)
+        if refOld != refNew and exists(fnOld):
+            mdOld = md.MetaData(fnOld)
+            mdOld.fillConstant(md.MDL_REF, refNew)
+            mdOld.write(fnOld)
+
+        if exists(fnOld):
+            print("metadata existe")
+            sys.stdout.flush()
             fnAux = self._getExtraPath('aux.xmd')
-            mdImgsInClass = md.MetaData('class%06d_images@%s' % (ref, fn))
+            mdImgsInClass = md.MetaData('class%06d_images@%s' % (refOld, fn))
             if not mdImgsInClass.isEmpty():
+                if refOld != refNew:
+                    mdImgsInClass.fillConstant(md.MDL_REF, refNew)
+                print("metadata con cosillas")
+                sys.stdout.flush()
                 mdImgsInClass.write(fnAux)
                 line = ""
                 numLine = 0
                 while not line.startswith('   '):
                     numLine += 1
                     line = popen('sed -n %ip %s' % (numLine, fnAux)).read()
-                fnSave = self._getExtraPath('newDataClass%06d.xmd'%ref)
+                fnSave = self._getExtraPath('newDataClass%06d.xmd'%refNew)
                 system('tail -n +%i %s >> %s' % (numLine, fnAux, fnSave))
                 cleanPath(fnAux)
-                system('cat %s >> %s' % (fnSave, fn1))
+                if refOld==refNew:
+                    system('cat %s >> %s' % (fnSave, fnNew))
+                else:
+                    if exists(fnNew):
+                        cleanPath(fnNew)
+                    system('cat %s %s >> %s' %(fnOld, fnSave, fnNew))
                 cleanPath(fnSave)
+            else:
+                print("metadata empty")
+                sys.stdout.flush()
+                if refOld!=refNew:
+                    if exists(fnNew):
+                        cleanPath(fnNew)
+                    copy(fnOld, fnNew)
         else:
-            mdImgsInClass = md.MetaData('class%06d_images@%s' % (ref, fn))
-            mdImgsInClass.write(fn1)
+            print("metadata NO existe")
+            sys.stdout.flush()
+            mdImgsInClass = md.MetaData('class%06d_images@%s' % (refOld, fn))
+            if refOld != refNew:
+                mdImgsInClass.fillConstant(md.MDL_REF, refNew)
+            mdImgsInClass.write(fnNew)
 
 
     def _unionReclassification(self, ref, inputImgs):
+
+        print("En unionReclassification")
+        sys.stdout.flush()
 
         fn1 = self._getExtraPath('dataClass%06d.xmd' % ref)
         line = ""
@@ -900,9 +1009,15 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         while not line.startswith('   '):
             numLine += 1
             line = popen('sed -n %ip %s' % (numLine, fn1)).read()
+            print(line)
+            sys.stdout.flush()
         fnSave = self._getExtraPath('aux.xmd')
         system('tail -n +%i %s >> %s' % (numLine, fn1, fnSave))
+        print('tail -n +%i %s >> %s' % (numLine, fn1, fnSave))
+        sys.stdout.flush()
         system('cat %s >> %s' % (fnSave, inputImgs))
+        print('cat %s >> %s' % (fnSave, inputImgs))
+        sys.stdout.flush()
         cleanPath(fnSave)
         cleanPath(fn1)
 
