@@ -298,29 +298,31 @@ class CCP4ProtRunRefmacViewer(ProtocolViewer):
         form.addSection(label='Visualization of Refmac results')
         # group = form.addGroup('Overall results')
         form.addParam('displayMask', LabelParam,
-                      label="PDB based Mask",
-                      help="Display Masked map")
+                      label="Volume, models and masked map",
+                      help="Display of input volume, input pdb that has to be"
+                           "refined, masked map generated in the first refmac "
+                           "run, and final refined model of the structure.")
         form.addParam('showFinalResults', LabelParam,
                       label="Final Results Table",
-                      help="Table of Final Results from refine.log file")
+                      help="Table of Final Results from refine.log file.")
         form.addParam('showLogFile', LabelParam,
                       label="Show log file",
-                      help="open refmac log file in a text editor")
+                      help="Open refmac log file in a text editor.")
         form.addParam('showLastIteration', LabelParam,
                       label="Results Table (last iteration)",
                       help="Table stored in log file summarizing the last "
-                           "iteration")
+                           "iteration.")
         form.addParam('displayRFactorPlot', LabelParam,
                       label="R-factor vs. iteration",
-                      help="Plot R-factor as a function of the iteration")
+                      help="Plot R-factor as a function of the iteration.")
         form.addParam('displayFOMPlot', LabelParam,
                       label="FOM vs. iteration",
                       help="Plot Figure Of Merit as a function of the "
-                           "iteration")
+                           "iteration.")
         form.addParam('displayLLPlot', LabelParam,
                       label="-LL vs. iteration",
                       help="Plot Log likelihood as a function of the "
-                           "iteration")
+                           "iteration.")
         form.addParam('displayLLfreePlot', LabelParam,
                       label="-LLfree vs. iteration",
                       help="Plot Log likelihood as a function of the "
@@ -332,7 +334,7 @@ Geometry includes rmsBOND (root mean square bond lengths)
 zBOND (zscore of the deviation of bond lengths)
 rmsANGL (root mean square bond angles)
 zANGL (zscore of the deviation of bond angles)
-and rmsCHIRAL (root mean square of chiral index""")
+and rmsCHIRAL (root mean square of chiral index.""")
 
     def _getVisualizeDict(self):
         return {
