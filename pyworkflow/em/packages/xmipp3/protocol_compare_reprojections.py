@@ -109,7 +109,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         img.convert(self.inputVolume.get(), fnVol)
         xdim=self.inputVolume.get().getDim()[0]
         if xdim!=self._getDimensions():
-            self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnVol,self._getDimensions()))
+            self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnVol,self._getDimensions()),numberOfMpi=1)
     
     def produceResiduals(self, fnVol, fnAngles, Ts):
         if fnVol.endswith(".mrc"):
