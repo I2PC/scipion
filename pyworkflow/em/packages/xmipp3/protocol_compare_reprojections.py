@@ -112,12 +112,11 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
             self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnVol,self._getDimensions()),numberOfMpi=1)
     
     def produceResiduals(self, fnVol, fnAngles, Ts):
-        if fnVol.endswith(".mrc"):
-            fnVol+=":mrc"
+        fnVol = self._getTmpPath("volume.vol")
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
-        xdim=self.inputVolume.get().getDim()[0]
+        xdim=self._getDimensions()
         self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
                     (fnAngles,anglesOutFn,fnVol,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
         fnNewParticles=self._getExtraPath("images.stk")
