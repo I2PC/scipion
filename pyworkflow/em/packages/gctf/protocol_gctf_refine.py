@@ -315,7 +315,7 @@ class ProtGctfRefine(em.ProtParticles):
                       help='Estimated error of input initial B-factor.')
         form.addParallelSection(threads=0, mpi=0)
 
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions -------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('refineCtfStep')
@@ -399,6 +399,7 @@ class ProtGctfRefine(em.ProtParticles):
                     insertedMics[mic.getObjId()] = mic
                     self.matchingMics.append(mic)
 
+        ih = em.ImageHandler()
         # We convert matching micrographs if they are not *.mrc
         for mic in self.matchingMics:
             # Create micrograph dir
@@ -408,20 +409,14 @@ class ProtGctfRefine(em.ProtParticles):
             outMic = pwutils.join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
 
             if self.downFactor != 1.:
-                # Replace extension by 'mrc' cause there are some formats
-                # that cannot be written (such as dm3)
-                import pyworkflow.em.packages.xmipp3 as xmipp3
-                self.runJob("xmipp_transform_downsample",
-                            "-i %s -o %s --step %f --method fourier"
-                            % (micName, outMic, self.downFactor),
-                            env=xmipp3.getEnviron())
+                ih.scaleFourier(micName, outMic, self.downFactor)
                 sps = inputMics.getScannedPixelSize() * self.downFactor
                 self._params['scannedPixelSize'] = sps
             else:
                 if micName.endswith('.mrc'):
                     pwutils.createLink(micName, outMic)
                 else:
-                    em.ImageHandler().convert(micName, outMic)
+                    ih.convert(micName, outMic)
 
         # Write out coordinate files and sets
         writeSetOfCoordinates(self._getTmpPath(), coords, self.matchingMics)
@@ -545,7 +540,7 @@ class ProtGctfRefine(em.ProtParticles):
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(inputSet, partSet)
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
@@ -587,7 +582,7 @@ class ProtGctfRefine(em.ProtParticles):
 
         return [methods]
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions -------------------------------
     def _defineValues(self):
         """ This function get some parameters of the micrographs"""
         self.inputMics = self._getMicrographs()
