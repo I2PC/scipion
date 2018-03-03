@@ -29,8 +29,9 @@ import os
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, PdbFile
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, runChimeraProgram, \
-    getProgram
+    createCoordinateAxisFile, \
+    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
+    getProgram, chimeraPdbTemplateFileName
 from pyworkflow.em.convert_header.CCP4.convert import cootPdbTemplateFileName
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 from protocol_coot import CootRefine
@@ -85,7 +86,8 @@ class CootRefineViewer(Viewer):
             print "outputVol: ", outputVol
             outputVolFileName = os.path.abspath(
                     ImageHandler.removeFileType(outputVol.getFileName()))
-            x, y, z = outputVol.getOrigin(returnInitIfNone=True).getShifts()
+            x, y, z = adaptOriginFromCCP4ToChimera(
+                outputVol.getOrigin().getShifts())
             f.write("open %s\n" % outputVolFileName)
             f.write("volume #%d  style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
