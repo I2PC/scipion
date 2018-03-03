@@ -127,6 +127,7 @@ def getEnviron():
 
     return environ
 
+
 def writeSetOfCoordinates(coordDir, coordSet, micsSet):
     """ Write a star file on metadata format for each micrograph
     on the coordSet.
@@ -143,18 +144,32 @@ _rlnCoordinateX #1
 _rlnCoordinateY #2
 """
 
-    # Create a dictionary with the star filenames for each micrograph
+    # Create a dictionary with the pos filenames for each micrograph
+    posDict = {}
     for mic in micsSet:
-        micId = mic.getObjId()
         micBase = pwutils.removeBaseExt(mic.getFileName())
-        fnCoords = pwutils.join(coordDir, micBase, micBase + '_coords.star')
-        f = open(fnCoords, 'w')
-        f.write(header)
-        for coord in coordSet:
-            if coord.getMicId() == micId:
-                x = coord.getX()
-                y = coord.getY()
-                f.write("%d %d\n" % (x, y))
+        posDict[mic.getObjId()] = pwutils.join(coordDir, micBase,
+                                               micBase + '_coords.star')
+
+    f = None
+    lastMicId = None
+
+    # Iterate only once over the whole SetOfCoordinates, but ordering by
+    # micrograph Id, so we can detect when there are coordinates from a
+    # new micrographs to write the new star file
+    for coord in coordSet.iterItems(orderBy='_micId'):
+        micId = coord.getMicId()
+
+        if micId != lastMicId:  # Detect there is a new micrograph
+            if f:  # we need to close previous opened file
+                f.close()
+            f = open(posDict[micId], 'w')
+            f.write(header)
+            lastMicId = micId
+
+        f.write("%d %d\n" % coord.getPosition())
+
+    if f:
         f.close()
 
 
