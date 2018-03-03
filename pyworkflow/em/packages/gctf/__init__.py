@@ -36,6 +36,7 @@ from bibtex import _bibtex # Load bibtex dict with references
 from convert import getEnviron
 
 from protocol_gctf import ProtGctf
+from protocol_gctf_refine import ProtGctfRefine
 
 # Wizards
 from wizard import GctfCTFWizard
