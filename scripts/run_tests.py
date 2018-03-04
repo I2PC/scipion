@@ -40,6 +40,7 @@ import unittest
 
 import pyworkflow.utils as pwutils
 import pyworkflow.tests as pwtests
+from pyworkflow import HOME
 
 from pyworkflow.tests import *
 

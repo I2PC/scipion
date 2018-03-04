@@ -449,7 +449,7 @@ Example: scipion install eman-2.12
                 return 0
 
             # Get xmipp source code file
-            xmippArgsSource = join(SCIPION_HOME, 'software', 'em', 'xmipp',
+            xmippArgsSource = join(SCIPION_HOME, SCIPION_SOFTWARE, 'em', 'xmipp',
                                    'libraries', 'data', 'args.h')
             if not os.path.exists(xmippArgsSource):
                 print ("Xmipp source code file %s not found. It seems you have" \
@@ -553,8 +553,9 @@ Example: scipion install eman-2.12
         runScript('scripts/scipionbox_wizard_demo.py')
 
     elif mode == MODE_DEPENDENCIES:
-        runScript('scripts/find_deps.py software/bin software/lib %s'
-                  % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+        script = 'scripts/find_deps.py $s/bin s%/lib %s' \
+                 % (SCIPION_SOFTWARE, SCIPION_SOFTWARE)
+        runScript( script % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
 
     # Allow to run programs from different packages
     # scipion will load the specified environment
