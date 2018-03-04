@@ -30,7 +30,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_2
-from grigoriefflab import CTFTILT_PATH, CTFTILTMP_PATH, CTFTILT_HOME
+from grigoriefflab import CTFTILT_PATH, CTFTILTMP_PATH, CTFFIND_HOME
 from convert import readCtfModel, parseCtftiltOutput
 
 
@@ -54,8 +54,8 @@ class ProtCTFTilt(em.ProtCTFMicrographs):
         missingPaths = []
 
         if not os.path.exists(CTFTILT_PATH):
-            missingPaths.append("%s : ctftilt installation not found"
-                                " - %s" % (CTFTILT_HOME, CTFTILT_PATH))
+            missingPaths.append("%s : ctffind3/ctftilt installation not found"
+                                " - %s" % (CTFFIND_HOME, CTFTILT_PATH))
         return missingPaths
 
     def _defineProcessParams(self, form):

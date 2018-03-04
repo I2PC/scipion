@@ -38,8 +38,6 @@ FREALIGN_HOME_VAR = 'FREALIGN_HOME'
 CTFFIND4_HOME = 'CTFFIND4_HOME'
 CTFFIND_HOME = 'CTFFIND_HOME'
 
-CTFTILT_HOME = 'CTFTILT_HOME'
-
 CTFFIND3 = 'ctffind3.exe'
 CTFFIND3MP = 'ctffind3_mp.exe'
 CTFFIND4 = 'ctffind'
@@ -69,8 +67,6 @@ def getSupportedVersions(var='FREALIGN'):
         return ['1.0_150529', '1.0.2']
     elif var == 'CTFFIND4':
         return ['4.0.15', '4.1.5', '4.1.8']
-    elif var == 'CTFTILT':
-        return ['1.7']
     else:  # FREALIGN
         return ['9.07']
 
@@ -93,8 +89,8 @@ CTFFIND_PATH = join(os.environ[CTFFIND_HOME], CTFFIND3)
 CTFFINDMP_PATH = join(os.environ[CTFFIND_HOME], CTFFIND3MP)
 CTFFIND4_PATH = _getCtffind4()
 
-CTFTILT_PATH = join(os.environ[CTFTILT_HOME], CTFTILT)
-CTFTILTMP_PATH = join(os.environ[CTFTILT_HOME], CTFTILTMP)
+CTFTILT_PATH = join(os.environ[CTFFIND_HOME], CTFTILT)
+CTFTILTMP_PATH = join(os.environ[CTFFIND_HOME], CTFTILTMP)
 
 FREALIGN_HOME = _getHome(FREALIGN_HOME_VAR, 'frealign')
 FREALIGN_PATH = join(FREALIGN_HOME, 'bin', FREALIGN)
