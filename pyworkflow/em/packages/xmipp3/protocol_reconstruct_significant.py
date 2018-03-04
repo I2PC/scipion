@@ -35,6 +35,7 @@ from convert import writeSetOfClasses2D, writeSetOfParticles
 import pyworkflow.em.metadata as metadata
 from pyworkflow.protocol.params import *
 import xmipp
+from shutil import copy
 
 
 
@@ -193,11 +194,11 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             self.runJob("xmipp_angular_project_library ",args)
 
             # Align
-            #TODO check the alpha values
-            if self.trueSymsNo!=0: #AJ REVISAR ESTO PARA C1 - EL ALPHA NO PARECE ESTAR BIEN EN C1 - Fixed??
-                alphaApply = (alpha*self.trueSymsNo)/2 #????
+            #TODO check the alpha values for gpu
+            if self.trueSymsNo!=0:
+                alphaApply = (alpha*self.trueSymsNo)/2
             else:
-                alphaApply = alpha/2 #AJ REVISAR ESTO PARA C1 - EL ALPHA NO PARECE ESTAR BIEN EN C1 - Fixed??
+                alphaApply = alpha/2
             if self.maximumShift==-1:
                 maxShift = 10
             else:
@@ -253,7 +254,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         if self.useMaxRes:
             self.runJob('xmipp_transform_filter',
                         '-i %s --fourier low_pass %f --sampling %f' % \
-                        (volFn, self.maxResolution, self.TsCurrent), numberOfMpi=1)
+                        (volFn, self.maxResolution.get(), self.TsCurrent),
+                        numberOfMpi=1)
 
         if not self.keepIntermediate:
             cleanPath(prevVolFn, iterDir)
@@ -267,49 +269,58 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         else:
             writeSetOfParticles(inputSet, classesFn)
 
-        if self.thereisRefVolume:
-            inputVolume= self.refVolume.get()
-            fnVolumes = self._getExtraPath('input_volumes.xmd')
-
-            # TsVol = inputVolume.getSamplingRate()
-            # self.TsCurrent = self.maxResolution.get()
-            # Xdim = inputVolume.getDimensions()[0]
-            # newXdim = long(round(Xdim * TsVol / self.TsCurrent))
-            # if TsVol != self.TsCurrent:
-            #     self.runJob('xmipp_image_resize',"-i %s --factor %f" % (
-            #         fnVolumes, TsVol / self.TsCurrent), numberOfMpi=1)
-            # self.runJob('xmipp_transform_window',
-            #             "-i %s --size %d" % (fnVolumes, newXdim), numberOfMpi=1)
-            # args = "-i %s --sampling %f --fourier low_pass %f" % (
-            #     fnVolumes, self.TsCurrent, self.maxResolution.get())
-            # self.runJob("xmipp_transform_filter", args, numberOfMpi=1)
-
-            row = XmippMdRow()
-            volumeToRow(inputVolume, row, alignType = ALIGN_NONE)
-            md = xmipp.MetaData()
-            row.writeToMd(md, md.addObject())
-            md.write(fnVolumes)
-
         #To re-sample input images
         fnDir = self._getExtraPath()
         fnNewParticles = join(fnDir,"input_classes.stk")
         TsOrig = self.inputSet.get().getSamplingRate()
+        TsRefVol = -1
+        if self.thereisRefVolume:
+            TsRefVol = self.refVolume.get().getSamplingRate()
         if self.useMaxRes:
-            self.TsCurrent = max([TsOrig, self.maxResolution.get()])
+            self.TsCurrent = max([TsOrig, self.maxResolution.get(), TsRefVol])
+            self.TsCurrent = self.TsCurrent/3
             Xdim=self.inputSet.get().getDimensions()[0]
             newXdim=long(round(Xdim*TsOrig/self.TsCurrent))
             if newXdim<40:
                 newXdim=long(40)
                 self.TsCurrent = float(TsOrig)*(float(Xdim)/float(newXdim))
-            print("self.TsCurrent", self.TsCurrent, TsOrig, Xdim, newXdim)
-        if self.useMaxRes and newXdim!=Xdim:
-            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"
-                        %(self.imgsFn,fnNewParticles,newXdim),
-                        numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-        else:
-            self.runJob("xmipp_image_convert","-i %s -o %s --save_metadata_stack %s"
-                        %(self.imgsFn,fnNewParticles,join(fnDir,"input_classes.xmd")),
-                        numberOfMpi=1)
+            if newXdim!=Xdim:
+                self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"
+                            %(self.imgsFn,fnNewParticles,newXdim),
+                            numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+            else:
+                self.runJob("xmipp_image_convert","-i %s -o %s --save_metadata_stack %s"
+                            %(self.imgsFn,fnNewParticles,join(fnDir,"input_classes.xmd")),
+                            numberOfMpi=1)
+
+        #To resample the refVolume if exists with the newXdim calculated
+        # previously
+        if self.thereisRefVolume:
+            fnFilVol = self._getExtraPath('filteredVolume.vol')
+            copy(self.refVolume.get().getFileName(), fnFilVol)
+            #TsVol = self.refVolume.get().getSamplingRate()
+            if self.useMaxRes:
+                if newXdim != Xdim:
+                    self.runJob('xmipp_image_resize',"-i %s --fourier %d" %
+                                (fnFilVol, newXdim), numberOfMpi=1)
+                    self.runJob('xmipp_transform_window', "-i %s --size %d" %
+                                (fnFilVol, newXdim), numberOfMpi=1)
+                    args = "-i %s --fourier low_pass %f --sampling %f " % (
+                        fnFilVol, self.maxResolution.get(), self.TsCurrent)
+                    self.runJob("xmipp_transform_filter", args, numberOfMpi=1)
+
+            if not self.useMaxRes:
+                inputVolume= self.refVolume.get()
+            else:
+                inputVolume = Volume(fnFilVol)
+                inputVolume.setSamplingRate(self.TsCurrent)
+                inputVolume.setObjId(self.refVolume.get().getObjId())
+            fnVolumes = self._getExtraPath('input_volumes.xmd')
+            row = XmippMdRow()
+            volumeToRow(inputVolume, row, alignType = ALIGN_NONE)
+            md = xmipp.MetaData()
+            row.writeToMd(md, md.addObject())
+            md.write(fnVolumes)
 
 
     def createOutputStep(self):
@@ -334,14 +345,10 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                     errors.append('The input images and the reference volume have different sizes')
             else:
                 errors.append("Please, enter a reference image")
-        if self.useMaxRes:
-            if self.maxResolution.get()<self.inputSet.get().getSamplingRate():
-                errors.append("Please, enter a maximum resolution higher (in "
-                              "A) than that from the input classes.")
-        if self.thereisRefVolume and self.useMaxRes:
-            errors.append('With a reference volume it cannot be provided a '
-                          'maximum resolution different to that from the '
-                          'inputs.')
+        #if self.useMaxRes:
+        #    if self.maxResolution.get()<self.inputSet.get().getSamplingRate():
+        #        errors.append("Please, enter a maximum resolution higher (in "
+        #                      "A) than that from the input classes.")
         
         SL = xmipp.SymList()
         SL.readSymmetryFile(self.symmetryGroup.get())
