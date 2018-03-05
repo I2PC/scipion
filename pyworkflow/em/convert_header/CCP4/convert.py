@@ -36,7 +36,7 @@ from pyworkflow.em.convert import ImageHandler
 import pyworkflow.utils as pwutils
 import struct
 import getpass
-
+from math import isnan
 cootPdbTemplateFileName = "cootOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
 ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
@@ -123,114 +123,10 @@ def getEnviron(ccp4First=True):
             'CCP4_HELPDIR': os.path.join(_ccp4_home, 'help'),
             }, position=pos)
     return environ
-#     """ DEFAULT CCP4 configuration file # This is CCP4 setup file for
-# # users of bash, zsh and similar shells.
-# # The include/ccp4.setup-sh.in file is a template used to generate
-# # the bin/ccp4.setup-sh file.  Source the latter to use CCP4.
-# # You may add it to one of your shell startup files, such as ~/.bashrc:
-# # . /full/path/to/ccp4/ccp4-version/bin/ccp4.setup-sh
-#
-# # To remove previously added CCP4 directories from the PATH, uncomment:
-# #[ -n "$CCP4" ] && PATH="$(echo "$PATH" | sed "s,${CCP4}[^:]*:,,g")"
-#
-# ################### MOST-OFTEN CUSTOMIZED VARIABLES #####################
-#
-# # CCP4_MASTER is the location of the top-level directory containing ccp4-N.N.N.
-# export CCP4_MASTER=/home/roberto
-# export CCP4=$CCP4_MASTER/ccp4-6.5
-#
-# # CCP4_SCR: a per-user directory for run-time-generated scratch files.
-# export CCP4_SCR=/tmp/`whoami`
-#
-# # CCP4I_TCLTK - directory containing tclsh, wish and bltwish executables
-# #               for ccp4i. The CCP4 suite is distributed with Tcl/Tk 8.4.
-# export CCP4I_TCLTK=$CCP4/bin
-#
-# # BALBES pipeline with large database
-# test -d $CCP4_MASTER/BALBES && export BALBES_ROOT=$CCP4_MASTER/BALBES
-#
-# ### Optional - setting http proxy
-# #export HTTP_PROXY=wwwblah.blah.ac.uk:xxxx/blah.blah
-#
-#
-# ######################### ALL THE REST ###########################
-#
-# # This variable is set to ensure that the logfile output from programs
-# # compiled with Gfortran is in the correct order.
-# export GFORTRAN_UNBUFFERED_PRECONNECTED=Y
-#
-# # CBIN: location of the executables -- must be on your path (see below)
-# export CBIN=$CCP4/bin
-# # CLIB: location of (binary) library files such as libccp4.a and libccp4.so
-# export CLIB=$CCP4/lib
-# # CLIBD: platform-independent data files
-# export CLIBD=$CCP4/lib/data
-# # CETC: executable scripts (NOT configuration files)
-# export CETC=$CCP4/etc
-# # CINCL: headers and two *.def files for handling "logical names" in CCP4
-# export CINCL=$CCP4/include
-# # CHTML: html documentation
-# export CHTML=$CCP4/html
-# # CEXAM: examples and some tests
-# export CEXAM=$CCP4/examples
-# # source code directories
-# #export CLIBS=$CCP4/lib/libccp4
-# #export CPROG=$CCP4/src
-# # CCP4I_TOP: the top directory of the interface
-# export CCP4I_TOP=$CCP4/share/ccp4i
-# # MMCIFDIC: platform-dependent (not in $CLIBD) data file for the ccif library
-# export MMCIFDIC=$CLIB/ccp4/cif_mmdic.lib
-# # CRANK: location of Crank automation suite within ccp4i
-# export CRANK=$CCP4I_TOP/crank
-# # CLIBD_MON: dictionary files for REFMAC5 (keep trailing /)
-# export CLIBD_MON=$CCP4/lib/data/monomers/
-# # CCP4_HELPDIR: location of the VMS-style help file used by (ip)mosflm
-# export CCP4_HELPDIR=$CCP4/help/            # NB trailing /
-#
-# if test ! -d $CCP4; then
-#     echo "WARNING: The directory $CCP4"
-#     echo 'WARNING: (assigned to $CCP4) does not exist.'
-#     echo "WARNING: The CCP4 programs will not run correctly."
-# fi
-#
-# # check to see if $CCP4_SCR exists and if not try to make it
-# test -d $CCP4_SCR || mkdir $CCP4_SCR
-# test -d $CCP4_SCR || echo "Unable to assign CCP4_SCR. This will cause probs."
-#
-# # HARVESTHOME specifies location of harvesting files (defaults to $HOME)
-# #export HARVESTHOME=$HOME
-#
-# # MOSFLM_WISH: if not set, ${CCP4I_TCLTK}/wish is used
-# #export MOSFLM_WISH=${CCP4I_TCLTK}/wish
-#
-# # CCP4_OPEN is set to 'UNKNOWN' by default. When set to 'NEW' traditional
-# # CCP4 programs treat over-writing of existing files as a fatal error.
-# export CCP4_OPEN=UNKNOWN
-#
-# PATH=$CCP4/etc:$CCP4/bin:$CCP4/share/xia2/Applications:$PATH
-#
-# if [ -n "$MANPATH" ]; then
-#   export MANPATH=$CCP4/share/man:$MANPATH
-# fi
-#
-# # traditional aliases
-# alias ccp4='pushd $CCP4>/dev/null'
-# alias xtal='pushd $CCP4_MASTER>/dev/null'
-# alias cbin='pushd $CBIN>/dev/null'
-# alias cetc='pushd $CETC>/dev/null'
-# #alias cprog='pushd $CPROG>/dev/null'
-# alias cincl='pushd $CINCL>/dev/null'
-# alias clib='pushd $CLIB>/dev/null'
-# alias clibd='pushd $CLIBD>/dev/null'
-# #alias clibs='pushd $CLIBS>/dev/null'
-# alias cexam='pushd $CEXAM>/dev/null'
-# alias chtml='pushd $CHTML>/dev/null'
-# """
 
 def runCCP4Program(program, args="", extraEnvDict=None):
     """ Internal shortcut function to launch a CCP4 program. """
     env = getEnviron()
-    # env.update(_envDict)
     if extraEnvDict is not None:
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
@@ -247,24 +143,9 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
     #    return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
 
     # scipion origin follows different conventions from ccp4
-    scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
+    #scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
     x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    # if inFileName.endswith('.mrc') or inFileName.endswith('.map')\
-    #        or inFileName.endswith(':mrc'):
-    #    ccp4header = Ccp4Header(inFileName, readHeader=True)
-    #    ccp4Origin = ccp4header.getOrigin()
-    #    if compareFloatTuples(ccp4Origin, scipionOriginShifts):
-    #        if compareFloatTuples(ccp4header.getGridSampling(), (x, y, z)):
-    #            if compareFloatTuples(ccp4header.getCellDimensions(),
-    #                                  (x*sampling, y*sampling, z*sampling)):
-    #                if inFileName.endswith(':mrc'):
-    #                    pwutils.createLink(os.path.abspath(inFileName[:-4]),
-    #                                    outFileName)
-    #                return
-    #
-    # else:
-    #    print "FILE %s does not end with mrc" % inFileName
-    if z == 1:
+    if z == 1 and ndim > 1:
         z = ndim
 
     ImageHandler().convert(inFileName, outFileName)
@@ -285,7 +166,7 @@ def copyMRCHeader(inFileName, outFileName, scipionOriginShifts,
     ccp4header = Ccp4Header(outFileName, readHeader=True)
     ccp4header.setGridSampling(x, y, z)
     ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-    scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
+    #scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
     if originField == ORIGIN:
         ccp4header.setOrigin(scipionOriginShifts)
     else:
@@ -388,10 +269,23 @@ class Ccp4Header():
         self._header['NRSTART'] = 0.
         self._header['NSSTART'] = 0.
 
-    def getOrigin(self):
-        return self._header['originX'], \
-               self._header['originY'], \
-               self._header['originZ']
+    # def getOrigin(self):
+    #     return self._header['originX'], \
+    #            self._header['originY'], \
+    #            self._header['originZ']
+
+    def getOrigin(self, changeSign=False):
+        x = self._header['originX']
+        y = self._header['originY']
+        z = self._header['originZ']
+        if (x==0. and y==0. and z==0.) or isnan(x) or isnan(y) or isnan(z):
+            sampling = self.computeSampling()
+            x = self._header['NCSTART'] * sampling
+            y = self._header['NRSTART'] * sampling
+            z = self._header['NSSTART'] * sampling
+        if changeSign:
+            x *= -1.; y *= -1.; z *= -1.;
+        return x, y, z
 
     def setSampling(self, sampling):
         self._header['Xlength'] = self._header['NX'] * sampling
@@ -446,6 +340,18 @@ class Ccp4Header():
         return self._header['Xlength'],\
                self._header['Ylength'],\
                self._header['Zlength']
+
+    def read_header_values(self, file, file_size, file_type):
+
+        MRC_USER = 29
+        CCP4_USER = 15
+        MRC_NUM_LABELS = 10
+        MRC_LABEL_SIZE = 80
+        MRC_HEADER_LENGTH = 1024
+
+        from numpy import int32, float32
+        i32 = int32
+        f32 = float32
 
     def readHeader(self):
         # check file exists
