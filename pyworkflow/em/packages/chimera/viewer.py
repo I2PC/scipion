@@ -31,9 +31,7 @@ from pyworkflow.em.convert import ImageHandler
 from protocol_fit import ChimeraProtRigidFit
 from protocol_operate import ChimeraProtOperate
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
-    getProgram, chimeraPdbTemplateFileName
+    createCoordinateAxisFile, runChimeraProgram, getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
@@ -45,21 +43,19 @@ class ChimeraProtRigidFitViewer(Viewer):
 
     def _visualize(self, obj, **args):
         # Construct the coordinate file and visualization
+        _inputVol = self.protocol.inputVolume.get()
+        if _inputVol is None:
+            _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+        if _inputVol is not None:
+            dim = _inputVol.getDim()[0]
+            sampling = _inputVol.getSamplingRate()
+        else:
+            # To show pdbs only
+            dim = 150.
+            sampling = 1.
+
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
-        if self.protocol.inputVolume.get() is None:
-            _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
-            if _inputVol is None:
-                dim = 150  # eventually we will create a PDB library that
-                # computes PDB dim
-                sampling = 1.
-            else:
-                dim = _inputVol.getDim()[0]
-                sampling = _inputVol.getSamplingRate()
-
-        else:
-            dim = self.protocol.inputVolume.get().getDim()[0]
-            sampling = self.protocol.inputVolume.get().getSamplingRate()
         createCoordinateAxisFile(dim,
                                  bildFileName=bildFileName,
                                  sampling=sampling)
@@ -67,29 +63,22 @@ class ChimeraProtRigidFitViewer(Viewer):
         f = open(fnCmd, 'w')
         f.write("open %s\n" % bildFileName)
 
-        try:
-            outputVol = self.protocol.output3Dmap
-            outputVolFileName = os.path.abspath(outputVol.getFileName())
-            f.write("open %s\n" % outputVolFileName)
-            f.write("volume #1 style surface\n")
-        except:
-            if self.protocol.inputVolume.get() is None:
-                outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
-
-            else:
-                outputVol = self.protocol.inputVolume.get()
-            if outputVol is not None:
+        if _inputVol is not None:
+        # In case we have PDBs only, the _inputVolume is None:
+            try:
+                outputVol = self.protocol.output3Dmap
+                outputVolFileName = os.path.abspath(outputVol.getFileName())
+            except:
+                outputVol =  _inputVol
                 outputVolFileName = os.path.abspath(
-                    ImageHandler.removeFileType(outputVol.getFileName()))
-                x, y, z = adaptOriginFromCCP4ToChimera(
-                    outputVol.getOrigin().getShifts())
-                f.write("open %s\n" % outputVolFileName)
-                f.write("volume #1 style surface voxelSize %f origin "
-                        "%0.2f,%0.2f,%0.2f\n"
-                        % (outputVol.getSamplingRate(), x, y, z))
+                        ImageHandler.removeFileType(outputVol.getFileName()))
+            f.write("open %s\n" % outputVolFileName)
+            x, y, z = outputVol.getOrigin(returnInitIfNone=True).getShifts()
+            f.write("volume #1 style surface voxelSize %f origin "
+                    "%0.2f,%0.2f,%0.2f\n"
+                    % (outputVol.getSamplingRate(), x, y, z))
 
         directory = self.protocol._getExtraPath()
-        counter = 0
         for filename in os.listdir(directory):
             if filename.endswith(".pdb"):
                 path = os.path.join(directory, filename)
