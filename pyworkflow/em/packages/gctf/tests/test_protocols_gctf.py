@@ -37,6 +37,9 @@ class TestGctfBase(BaseTest):
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.micFn = cls.dataset.getFile('allMics')
+        cls.partFn1 = cls.dataset.getFile('particles2')
+        cls.partFn2 = cls.dataset.getFile('particles3')
+        cls.ctfFn = cls.dataset.getFile('ctf')
 
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage,
@@ -47,11 +50,13 @@ class TestGctfBase(BaseTest):
         # ScannedPixelSize + microscope magnification
         if samplingRate is not None:
             cls.protImport = ProtImportMicrographs(
+                objLabel='import mics',
                 samplingRateMode=0, filesPath=pattern,
                 samplingRate=samplingRate, magnification=magnification,
                 voltage=voltage, sphericalAberration=sphericalAberration)
         else:
             cls.protImport = ProtImportMicrographs(
+                objLabel='import mics',
                 samplingRateMode=1, filesPath=pattern,
                 scannedPixelSize=scannedPixelSize,
                 voltage=voltage, magnification=magnification,
@@ -66,6 +71,25 @@ class TestGctfBase(BaseTest):
         return cls.protImport
 
     @classmethod
+    def runImportParticles(cls, pattern, label, samplingRate, voltage, magnification):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportParticles,
+                                         objLabel=label,
+                                         sqliteFile=pattern,
+                                         samplingRate=samplingRate,
+                                         voltage=voltage,
+                                         magnification=magnification,
+                                         importFrom=ProtImportParticles.IMPORT_FROM_SCIPION)
+
+        cls.proj.launchProtocol(cls.protImport, wait=True)
+        # check that input particles have been imported
+        # (a better way to do this?)
+        if cls.protImport.outputParticles is None:
+            raise Exception('Import of particles: %s, failed. '
+                            'outputParticles is None.' % pattern)
+        return cls.protImport
+
+    @classmethod
     def runImportMicrographBPV(cls, pattern):
         """ Run an Import micrograph protocol. """
         return cls.runImportMicrograph(pattern,
@@ -74,6 +98,15 @@ class TestGctfBase(BaseTest):
                                        sphericalAberration=2,
                                        scannedPixelSize=None,
                                        magnification=56000)
+
+    @classmethod
+    def runImportParticlesBPV(cls, pattern, label):
+        """ Run an Import particles protocol. """
+        return cls.runImportParticles(pattern,
+                                      label=label,
+                                      samplingRate=4.95,
+                                      voltage=300,
+                                      magnification=56000)
 
 
 class TestGctf(TestGctfBase):
@@ -133,6 +166,56 @@ class TestGctf(TestGctfBase):
                 ctfModel.getResolution(), values[3], delta=1)
             self.assertAlmostEquals(
                 ctfModel.getFitQuality(), values[4], delta=.1)
+
+
+class TestGctfRefine(TestGctfBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestGctfBase.setData()
+        cls.protImport1 = cls.runImportParticlesBPV(cls.partFn1,
+                                                    label='import particles (no alignment)')
+        cls.protImport2 = cls.runImportParticlesBPV(cls.partFn2,
+                                                    label='import particles (with alignment)')
+        cls.protImportMics = cls.runImportMicrographBPV(cls.micFn)
+
+    def testRunGctf1(self):
+        protCTF = ProtGctfRefine(objLabel='gCTF local refinement')
+        protCTF.inputParticles.set(self.protImport1.outputParticles)
+        protCTF.inputMicrographs.set(self.protImportMics.outputMicrographs)
+        protCTF.ctfDownFactor.set(2)
+
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputParticles,
+                             "SetOfParticles has not been produced.")
+        self.assertEqual(protCTF.inputParticles.get().getSize(),
+                         protCTF.outputParticles.getSize())
+
+    def testRunGctf2(self):
+        protCTF = ProtGctfRefine(objLabel='gCTF local refinement (with input CTFs)')
+        protCTF.inputParticles.set(self.protImport2.outputParticles)
+        protCTF.ctfDownFactor.set(2)
+        protCTF.useInputCtf.set(True)
+        protCTF.applyShifts.set(True)
+        protCTF.inputMicrographs.set(self.protImportMics.outputMicrographs)
+
+        # run import CTF protocol
+        protImportCTF = self.newProtocol(ProtImportCTF,
+                                         objLabel='import CTF from scipion',
+                                         importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
+                                         filesPath=self.ctfFn)
+        protImportCTF.inputMicrographs.set(self.protImportMics.outputMicrographs)
+        self.launchProtocol(protImportCTF)
+        self.assertIsNotNone(protImportCTF.outputCTF,
+                             "There was a problem when importing ctfs.")
+
+        protCTF.ctfRelations.set(protImportCTF.outputCTF)
+
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputParticles,
+                             "SetOfParticles has not been produced.")
+        self.assertEqual(protCTF.inputParticles.get().getSize(),
+                         protCTF.outputParticles.getSize())
 
 
 if __name__ == "__main__":

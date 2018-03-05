@@ -59,7 +59,7 @@ import metadata as md
 from data import PdbFile
 from convert import ImageHandler
 from pyworkflow.em.viewers.chimera_utils import \
-    getChimeraEnviron,  createCoordinateAxisFile
+    adaptOriginFromCCP4ToChimera, getChimeraEnviron,  createCoordinateAxisFile
 
 import xmipp
 
@@ -536,7 +536,8 @@ class ChimeraViewer(Viewer):
                     f.write("open %s\n" % os.path.abspath(
                         ImageHandler.removeFileType(volumeObject.getFileName())))
                     f.write("volume #%d style surface\n"%volID)
-                    x, y, z = volumeObject.getVolOriginAsTuple()
+                    x, y, z = adaptOriginFromCCP4ToChimera(
+                        volumeObject.getVolOriginAsTuple())
                     f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" % (volID, x,
                                                                      y, z))
                 else:

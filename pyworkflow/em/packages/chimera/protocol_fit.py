@@ -27,8 +27,6 @@
 # **************************************************************************
 
 from protocol_operate import ChimeraProtOperate
-from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
-    StringParam
 
 
 class ChimeraProtRigidFit(ChimeraProtOperate):
@@ -39,17 +37,6 @@ class ChimeraProtRigidFit(ChimeraProtOperate):
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
     _label = 'chimera rigid fit'
-
-    def _defineParams(self, form):
-        super(ChimeraProtRigidFit, self)._defineParams(form)
-        param = form.getParam('pdbFileToBeRefined')
-        param.label.set('PDBx/mmCIF file to be refined')
-        param.help.set('PDBx/mmCIF file to be refined. ')
-        param = form.getParam('inputPdbFiles')
-        param.label.set('Other reference PDBx/mmCIF files')
-        param.help.set('Other PDBx/mmCIF files used as reference.')
-
-        # --------------------------- INSERT steps functions --------------------
 
     def prerequisitesStep(self):
         """
