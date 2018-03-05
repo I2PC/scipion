@@ -310,6 +310,10 @@ def getObjectLabel(pobj, mapper):
         if not len(label):
             label = '%s.%s' % (prot.getRunName(), extended)
 
+    label = label.replace("\n"," ")
+    if obj is not None:
+        id = obj.getObjId()
+        return label + " (%d)"%obj.getObjId()
     return label
 
     
