@@ -280,13 +280,13 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             self.TsCurrent = max([TsOrig, self.maxResolution.get(), TsRefVol])
             self.TsCurrent = self.TsCurrent/3
             Xdim=self.inputSet.get().getDimensions()[0]
-            newXdim=long(round(Xdim*TsOrig/self.TsCurrent))
-            if newXdim<40:
-                newXdim=long(40)
-                self.TsCurrent = float(TsOrig)*(float(Xdim)/float(newXdim))
-            if newXdim!=Xdim:
+            self.newXdim=long(round(Xdim*TsOrig/self.TsCurrent))
+            if self.newXdim<40:
+                self.newXdim=long(40)
+                self.TsCurrent = float(TsOrig)*(float(Xdim)/float(self.newXdim))
+            if self.newXdim!=Xdim:
                 self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d"
-                            %(self.imgsFn,fnNewParticles,newXdim),
+                            %(self.imgsFn,fnNewParticles,self.newXdim),
                             numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
             else:
                 self.runJob("xmipp_image_convert","-i %s -o %s --save_metadata_stack %s"
@@ -300,11 +300,11 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             copy(self.refVolume.get().getFileName(), fnFilVol)
             #TsVol = self.refVolume.get().getSamplingRate()
             if self.useMaxRes:
-                if newXdim != Xdim:
+                if self.newXdim != Xdim:
                     self.runJob('xmipp_image_resize',"-i %s --fourier %d" %
-                                (fnFilVol, newXdim), numberOfMpi=1)
+                                (fnFilVol, self.newXdim), numberOfMpi=1)
                     self.runJob('xmipp_transform_window', "-i %s --size %d" %
-                                (fnFilVol, newXdim), numberOfMpi=1)
+                                (fnFilVol, self.newXdim), numberOfMpi=1)
                     args = "-i %s --fourier low_pass %f --sampling %f " % (
                         fnFilVol, self.maxResolution.get(), self.TsCurrent)
                     self.runJob("xmipp_transform_filter", args, numberOfMpi=1)
@@ -325,10 +325,18 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
 
     def createOutputStep(self):
         lastIter = self.getLastIteration(1)
+
+        #To recover the original size of the volume if it was changed
+        volFn = self.getIterVolume(lastIter)
+        Xdim = self.inputSet.get().getDimensions()[0]
+        if self.useMaxRes and self.newXdim != Xdim:
+                self.runJob('xmipp_image_resize', "-i %s --fourier %d" %
+                            (volFn, Xdim), numberOfMpi=1)
+
         vol = Volume()
         vol.setObjComment('significant volume 1')
-        vol.setLocation(self.getIterVolume(lastIter))
-        vol.setSamplingRate(self.TsCurrent)
+        vol.setLocation(volFn)
+        vol.setSamplingRate(self.inputSet.get().getSamplingRate())
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputSet, vol)
 
