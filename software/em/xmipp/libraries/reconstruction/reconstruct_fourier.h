@@ -224,7 +224,7 @@ public:
 
     /// Method for the correction of the fourier coefficients
     void correctWeight();
-	
+
 	/// Force the weights to be symmetrized
     void forceWeightSymmetry(MultidimArray<double> &FourierWeights);
 

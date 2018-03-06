@@ -25,44 +25,70 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
+In this module are protocol base classes related to EM imports of Micrographs,
+Particles, Volumes...
 """
 
 from os.path import exists, basename
-
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import copyFile
-
+import pyworkflow.protocol.constants as const
 import pyworkflow.protocol.params as params
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
-
+from pyworkflow.em.data import Transform
 from base import ProtImportFiles
 from images import ProtImportImages
-
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
     _outputClassName = 'SetOfVolumes'
     _label = 'import volumes'
-    
+
     def __init__(self, **args):
-        ProtImportImages.__init__(self, **args)         
-       
+        ProtImportImages.__init__(self, **args)
+
     def _defineAcquisitionParams(self, form):
         """ Define acquisition parameters, it can be overriden
         by subclasses to change what parameters to include.
         """
         form.addParam('samplingRate', params.FloatParam,
-                   label=Message.LABEL_SAMP_RATE)
-    
-    def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumesStep', self.getPattern(), self.samplingRate.get())
+                      label=Message.LABEL_SAMP_RATE)
+        form.addParam('setDefaultOrigin', params.BooleanParam,
+                      label="setDefaultOrigin",
+                      help="Set origin of coordinates in the 3D map center "
+                           "by default (True) or provide it. Only Modeling "
+                           "related programs support this feature so far",
+                      default=True)
+        # form.addParam('acquisitionWizard', params.LabelParam, important=True,
+        #                condition=self._acquisitionWizardCondition(),
+        #                label='Use the wizard button to import acquisition.',
+        #                help='Depending on the import Format, the wizard\n'
+        #                     'will try to import the acquisition values.\n'
+        #                     'If not found, required ones should be provided.')
+        line = form.addLine('Offset',
+                            help= "You have to provide the map center "
+                            "coordinates in Angstroms (pixels x sampling). "
+                            "We follow the same convention than CCP4. Chimera"
+                            " considers the same magnitude and opposite sign "
+                            "than CCP4.", condition='not setDefaultOrigin')
+        line.addParam('x', params.FloatParam, condition='not setDefaultOrigin',
+                      label="x", help="offset along x axis (A)")
+        line.addParam('y', params.FloatParam, condition='not setDefaultOrigin',
+                      label="y", help="offset along y axis (A)")
+        line.addParam('z', params.FloatParam, condition='not setDefaultOrigin',
+                      label="z", help="offset along z axis (A)")
 
-    #--------------------------- STEPS functions ---------------------------------------------------
-    
-    def importVolumesStep(self, pattern, samplingRate):
+    def _insertAllSteps(self):
+        self._insertFunctionStep('importVolumesStep', self.getPattern(),
+                                 self.samplingRate.get(),
+                                 self.setDefaultOrigin.get())
+
+    # --------------------------- STEPS functions -----------------------------
+
+    def importVolumesStep(self, pattern, samplingRate, setDefaultOrigin=True):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -70,12 +96,12 @@ class ProtImportVolumes(ProtImportImages):
 
         # Create a Volume template object
         vol = Volume()
-        vol.setSamplingRate(self.samplingRate.get())
+        vol.setSamplingRate(samplingRate)
         copyOrLink = self.getCopyOrLink()
         imgh = ImageHandler()
 
         volSet = self._createSetOfVolumes()
-        volSet.setSamplingRate(self.samplingRate.get())
+        volSet.setSamplingRate(samplingRate)
 
         for fileName, fileId in self.iterFiles():
             dst = self._getExtraPath(basename(fileName))
@@ -83,16 +109,35 @@ class ProtImportVolumes(ProtImportImages):
             x, y, z, n = imgh.getDimensions(dst)
             # First case considers when reading mrc without volume flag
             # Second one considers single volumes (not in stack)
-            if (z == 1 and n != 1) or (z !=1 and n == 1):
+            if (z == 1 and n != 1) or (z != 1 and n == 1):
                 vol.setObjId(fileId)
                 if dst.endswith('.mrc'):
                     dst += ':mrc'
                 vol.setLocation(dst)
+                t = Transform()
+                if setDefaultOrigin:
+                    if (z == 1 and n != 1):
+                        zDim = n
+                    else:
+                        zDim = z
+                    t.setShifts(x/2. * samplingRate,
+                                y/2. * samplingRate,
+                                zDim/2. * samplingRate)
+                else:
+                    t.setShifts(self.x, self.y, self.z)
+                vol.setOrigin(t)
                 volSet.append(vol)
             else:
                 for index in range(1, n+1):
                     vol.cleanObjId()
                     vol.setLocation(index, dst)
+                    if setDefaultOrigin:
+                        t = Transform()
+                        if setDefaultOrigin:
+                            t.setShifts(x / 2., y / 2., z / 2.)
+                        else:
+                            t.setShifts(self.x, self.y, self.z)
+                        vol.setOrigin(t)
                     volSet.append(vol)
 
         if volSet.getSize() > 1:
@@ -100,60 +145,71 @@ class ProtImportVolumes(ProtImportImages):
         else:
             self._defineOutputs(outputVolume=vol)
 
-    #--------------------------- INFO functions ----------------------------------------------------
-    
+    # --------------------------- INFO functions ------------------------------
+
     def _getVolMessage(self):
         if self.hasAttribute('outputVolume'):
-            return "Volume %s"% self.getObjectTag('outputVolume')
+            return "Volume %s" % self.getObjectTag('outputVolume')
         else:
             return "Volumes %s" % self.getObjectTag('outputVolumes')
-        
+
     def _summary(self):
         summary = []
-        if self.hasAttribute('outputVolume') or self.hasAttribute('outputVolumes'):
-            summary.append("%s imported from:\n%s" % (self._getVolMessage(), self.getPattern()))
+        if self.hasAttribute('outputVolume') or \
+                self.hasAttribute('outputVolumes'):
+            summary.append("%s imported from:\n%s" % (self._getVolMessage(),
+                           self.getPattern()))
 
-            summary.append(u"Sampling rate: *%0.2f* (Å/px)" % self.samplingRate.get())
+            summary.append(u"Sampling rate: *%0.2f* (Å/px)" %
+                           self.samplingRate.get())
         return summary
-    
+
     def _methods(self):
         methods = []
-        if self.hasAttribute('outputVolume') or self.hasAttribute('outputVolumes'):
-            methods.append(" %s imported with a sampling rate *%0.2f*" % (self._getVolMessage(), self.samplingRate.get()),)
+        if self.hasAttribute('outputVolume') or \
+                self.hasAttribute('outputVolumes'):
+            methods.append(" %s imported with a sampling rate *%0.2f*" %
+                           (self._getVolMessage(), self.samplingRate.get()),)
         return methods
-    
-    
-        
+
+
 class ProtImportPdb(ProtImportFiles):
     """ Protocol to import a set of pdb volumes to the project"""
-    _label = 'import pdb volumes'
+    _label = 'import atomic structure'
     IMPORT_FROM_ID = 0
-    IMPORT_FROM_FILES = 1 
-    
+    IMPORT_FROM_FILES = 1
+
     def __init__(self, **args):
         ProtImportFiles.__init__(self, **args)
-       
+
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputPdbData', params.EnumParam, choices=['id', 'file'],
-                      label="Import PDB from", default=self.IMPORT_FROM_ID,
+                      label="Import atomic structure from",
+                      default=self.IMPORT_FROM_ID,
                       display=params.EnumParam.DISPLAY_HLIST,
-                      help='Import PDB data from online server or a local file')
-        form.addParam('pdbId', params.StringParam, condition='inputPdbData == IMPORT_FROM_ID',
-                      label="Pdb Id ", allowsNull=True,
-                      help='Type a pdb Id (four alphanumeric characters).')
-        form.addParam('pdbFile', params.PathParam,
-                      label="File path", condition='inputPdbData == IMPORT_FROM_FILES', allowsNull=True,
-                      help='Specify a path to desired PDB structure.')
-         
+                      help='Import mmCIF data from online server or local file')
+        form.addParam('pdbId', params.StringParam,
+                      condition='inputPdbData == IMPORT_FROM_ID',
+                      label="Atomic structure ID ", allowsNull=True,
+                      help='Type a mmCIF ID (four alphanumeric characters).')
+        form.addParam('pdbFile', params.PathParam, label="File path",
+                      condition='inputPdbData == IMPORT_FROM_FILES',
+                      allowsNull=True,
+                      help='Specify a path to desired atomic structure.')
+        form.addParam('inputVolume', params.PointerParam, label="Input Volume",
+                      pointerClass='Volume',
+                      allowsNull=True,
+                      help='Associate this volume to the mmCIF file.')
+
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
-            pdbPath = self._getPath('%s.pdb' % self.pdbId.get())
+            pdbPath = self._getPath('%s.cif' % self.pdbId.get())
             self._insertFunctionStep('pdbDownloadStep', pdbPath)
         else:
             pdbPath = self.pdbFile.get()
         self._insertFunctionStep('createOutputStep', pdbPath)
-        
+
     def pdbDownloadStep(self, pdbPath):
         """Download all pdb files in file_list and unzip them."""
         downloadPdb(self.pdbId.get(), pdbPath, self._log)
@@ -162,29 +218,42 @@ class ProtImportPdb(ProtImportFiles):
         """ Copy the PDB structure and register the output object.
         """
         if not exists(pdbPath):
-            raise Exception("PDB not found at *%s*" % pdbPath)
-        
+            raise Exception("Atomic structure not found at *%s*" % pdbPath)
+
         baseName = basename(pdbPath)
         localPath = self._getExtraPath(baseName)
         copyFile(pdbPath, localPath)
         pdb = PdbFile()
+        volume = self.inputVolume.get()
+
+        # if a volume exists assign it to the pdb object
+        # IMPORTANT: we DO need to if volume is not None
+        # because we need to persist the pdb object
+        # before we can make the last source relation
+        if volume is not None:
+            pdb.setVolume(volume)
+
         pdb.setFileName(localPath)
         self._defineOutputs(outputPdb=pdb)
 
+        if volume is not None:
+            self._defineSourceRelation(volume, pdb)
+
     def _summary(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
-            summary = ['PDB imported from ID: *%s*' % self.pdbId]
+            summary = ['Atomic structure imported from ID: *%s*' %
+                       self.pdbId]
         else:
-            summary = ['PDB imported from file: *%s*' % self.pdbFile]
+            summary = ['Atomic structure imported from file: *%s*' %
+                       self.pdbFile]
 
         return summary
-    
+
     def _validate(self):
         errors = []
-        if (self.inputPdbData == self.IMPORT_FROM_FILES and
-            not exists(self.pdbFile.get())):
-            errors.append("PDB not found at *%s*" % self.pdbPath.get())
-        #TODO: maybe also validate that if exists is a valid PDB file 
+        if (self.inputPdbData == self.IMPORT_FROM_FILES and not exists(
+                self.pdbFile.get())):
+            errors.append("Atomic structure not found at *%s*" %
+                          self.pdbPath.get())
+        # TODO: maybe also validate that if exists is a valid PDB file
         return errors
-    
-    

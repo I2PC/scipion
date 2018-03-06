@@ -38,7 +38,7 @@ import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
-from pyworkflow.object import PointerList
+from pyworkflow.object import PointerList, Pointer
 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.constants import (UNIT_PIXEL, 
@@ -53,7 +53,8 @@ from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
 from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
                                                     ProtImportMovies,
-                                                    ProtImportCoordinates)
+                                                    ProtImportCoordinates,
+                                                    ProtImportVolumes)
 
 
 import xmipp
@@ -188,8 +189,7 @@ class DownsampleWizard(EmWizard):
     @classmethod
     def getView(self):
         return "wiz_downsampling"
-        
-    
+
 class CtfWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
@@ -212,8 +212,8 @@ class CtfWizard(EmWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_ctf"           
-    
+        return "wiz_ctf"
+
 class MaskRadiusWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
@@ -386,6 +386,19 @@ class ImportAcquisitionWizard(EmWizard):
                     comment += "%s = %s\n" % (k, v)
             if comment:
                 prot.setObjComment(comment)
+
+class PDBVolumeWizard(EmWizard):
+    def show(self, form):
+        if form.protocol.inputPDB.hasValue():
+            pdb = form.protocol.inputPDB.get()
+            print("pdb ",pdb._volume, str(pdb._volume))
+            if pdb._volume:
+                print("Setting ",str(pdb.getVolume()))
+                ptr = Pointer()
+                ptr.copy(form.protocol.inputPDB)
+                ptr.setExtended(ptr.getExtended()+"._volume")
+#                 ptr.set(pdb.getVolume())
+                form.setVar('inputVol', ptr)
 
 #===============================================================================
 #  Dialogs used by wizards
@@ -851,3 +864,14 @@ class ImportCoordinatesBoxSizeWizard(Wizard):
 
     def show(self, form):
         form.setVar('boxSize', self._getBoxSize(form.protocol))
+
+
+class ImportOriginVolumeWizard(Wizard):
+    _targets = [(ProtImportVolumes, ['x', 'y', 'z'])]
+
+    def show(self, form, *params):
+        protocol = form.protocol
+        filesPattern = protocol.filesPattern
+        filesPath = protocol.filesPath
+        print "wwwwwwwwwwwwwwwww", filesPattern, filesPath
+        form.setVar('x', 53)

@@ -1,0 +1,85 @@
+		#ifdef DEBUG
+    {
+    
+        	#include <iostream>
+	        #include <fstream>
+	        //Debug chimera file
+                std::ofstream testFile;
+ 
+		//Reference points: centre, 2f and 2fp
+		testFile.open ("cyclic.bild");
+		testFile << ".comment five fold\n.color red\n";
+		testFile << ".sphere " << _centre(0)*scale   << " " << _centre(1)*scale   << " "<< _centre(2)*scale   << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << _2f(0)*scale  << " " << _2f(1)*scale  << " "<< _2f(2)*scale  << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << _2fp(0)*scale << " " << _2fp(1)*scale << " "<< _2fp(2)*scale << " " << .05*scale*10 <<"\n";
+
+        
+        //cilinders joining the reference points
+		testFile << ".color blue\n";
+		testFile << ".cylinder " << _centre(0)*scale   << " " << _centre(1)*scale   << " "<< _centre(2)*scale
+		         << " " << _2f(0)*scale   << " " << _2f(1)*scale   << " "<< _2f(2)*scale << " " << .01*scale*10 <<"\n";
+		testFile << ".cylinder " << _centre(0)*scale   << " " << _centre(1)*scale   << " "<< _centre(2)*scale
+		         << " " << _2fp(0)*scale   << " " << _2fp(1)*scale   << " "<< _2fp(2)*scale << " " << .01*scale*10 <<"\n";
+		testFile << ".cylinder " << _2f(0)*scale   << " " << _2f(1)*scale   << " "<< _2f(2)*scale
+		         << " " << _2fp(0)*scale   << " " << _2fp(1)*scale   << " "<< _2fp(2)*scale << " " << .001*scale*10 <<"\n";
+		
+
+		//Vectors that join those points
+		Matrix1D<double> t = _2f/4.;
+		t *= scale;
+		testFile << ".color cyan\n";
+		testFile << ".arrow " << _centre(0)*scale   << " " << _centre(1)*scale   << " "<< _centre(2)*scale;
+		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+		t = _2fp/4.;
+		t *= scale;
+		testFile << ".arrow " << _centre(0)*scale   << " " << _centre(1)*scale   << " "<< _centre(2)*scale;
+		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+		t = _2f + _2f_to_2fp/4.;
+		t *= scale;
+		testFile << ".arrow " << _2f(0)*scale   << " " << _2f(1)*scale   << " "<< _2f(2)*scale;
+		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+		
+		
+		//Vectors perpendicular to previous one in the plane of the triangle
+		//defined by centre, 2f, 2fp
+		if (expanded != 0){
+			testFile << ".color purple\n";
+			vectExpansion[0].selfNormalize();
+			t = _2f + vectExpansion[0] * 10;
+			t *= scale;
+			testFile << ".arrow " << _2f(0)*scale   << " " << _2f(1)*scale   << " "<< _2f(2)*scale
+		         	 << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+			vectExpansion[1].selfNormalize();
+			t = _2fp + vectExpansion[1] * 10;
+			t *= scale;
+			testFile << ".arrow " << _2fp(0)*scale   << " " << _2fp(1)*scale   << " "<< _2fp(2)*scale;
+			testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+			}
+		
+		//Expanded points: newOriginAfterExpansion, expandedUnitCell[1], expandedUnitCell[2]
+		testFile << ".comment five fold\n.color green\n";
+		testFile << ".sphere " << newOriginAfterExpansion(0)*scale << " " << newOriginAfterExpansion(1)*scale << " "<< newOriginAfterExpansion(2)*scale  << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << expandedUnitCell[1](0)*scale  << " " << expandedUnitCell[1](1)*scale  << " "<< expandedUnitCell[1](2)*scale   << " " << .05*scale*10  <<"\n";
+		testFile << ".sphere " << expandedUnitCell[2](0)*scale  << " " << expandedUnitCell[2](1)*scale  << " "<< expandedUnitCell[2](2)*scale  << " " << .05*scale*10 <<"\n";
+
+		//new expanded perimeter 
+		Matrix1D<double> aux;
+		Matrix1D<double> tt;
+		testFile << ".color red\n";
+		t = newOriginAfterExpansion;
+		tt = expandedUnitCell[1];
+		t *= scale;
+		tt *= scale;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = newOriginAfterExpansion;
+		tt = expandedUnitCell[2];
+		t *= scale;
+		tt *= scale;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+                testFile.close();
+        
+    }
+		#endif
+

@@ -306,6 +306,18 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
     G, chemistry/ultrastructure; Protein Structure, Tertiary}
 }
 
+@article{Scheres2009c,
+  author = {Scheres, Sjors H W. and Melero, Roberto and Valle, Mikel and Carazo, JosÈ MarÌa},
+  title = {Averaging of Electron Subtomograms and Random Conical Tilt Reconstructions through Likelihood Optimization},
+  journal = {Structure},
+  year = {2009},
+  volume = {17},
+  pages = {1563--1572},
+  number = {12},
+  month = {Dec},
+  doi = {http://dx.doi.org/10.1016/j.str.2009.10.009}
+}
+
 @article{Sorzano2004b,
 title = "A multiresolution approach to orientation assignment in 3D electron microscopy of single particles ",
 journal = "JSB ",
@@ -534,18 +546,18 @@ author = "B. Heymann",
 keywords = ""
 }
 
-@article{C.O.S.Sorzano2015,
-title = "StructMap:... ",
-journal = "",
-volume = "",
+@article{Sorzano2016,
+title = "StructMap: Elastic distance analysis of electron microscopy maps for studying conformational changes",
+journal = "Biophysical J.",
+volume = "110",
 number = "",
-pages = "",
-year = "",
-note = "submitted",
+pages = "1753-1765",
+year = "2016",
+note = "",
 issn = "",
-doi = "",
-url = "",
-author = "C.O.S.Sorzano et al.",
+doi = "http://doi.org/10.1016/j.bpj.2016.03.019",
+url = "http://doi.org/10.1016/j.bpj.2016.03.019",
+author = "C.O.S. Sorzano, A.L. √Ålvarez-Cabrera, M. Kazemi, J.M. Carazo, S. Jonic",
 keywords = ""
 }
 
