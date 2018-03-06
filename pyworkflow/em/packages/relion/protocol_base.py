@@ -208,8 +208,8 @@ class ProtRelionBase(EMProtocol):
                            'division of the data into random subsets during '
                            'the first iteration.')
         form.addParam('referenceAverages', PointerParam,
-                      pointerClass='SetOfAverages',
-                      condition='not doContinue and isClassify',
+                      pointerClass='SetOfAverages', allowsNull=True,
+                      condition='not doContinue and isClassify and is2D',
                       expertLevel=LEVEL_ADVANCED,
                       label='Reference averages',
                       help='This option is not recommended and should be used '
