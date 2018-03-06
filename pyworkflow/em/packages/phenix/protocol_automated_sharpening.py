@@ -37,7 +37,7 @@ from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam,
 from phenix import  *
 from pyworkflow.utils.path import createLink
 from pyworkflow.em.convert import ImageHandler
-import xmipp3
+import pyworkflow.em.packages.xmipp3 as xmipp3
 
 OUTPUT_SHARP = 'outputvolume'
 OUTPUT_HALF1 = 'outputhalf1'
@@ -86,12 +86,6 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
                       label="Use half volumes for FSC?",
                       help='Use split volumes for FSC calculation.' 
                       ' Then you must select halfMapSharp in sharpenig methods')                          
-#         form.addParam('volumeHalf1', PointerParam,
-#                       label="Volume half 1", important=True,
-#                       pointerClass='Volume', condition="useSplitVolumes")
-#         form.addParam('volumeHalf2', PointerParam,
-#                       pointerClass='Volume', condition="useSplitVolumes",
-#                       label="Volume half 2", important=True)
         form.addParam('usePDB', BooleanParam, default=False,
                       label="Introduce atomic model?",
                       help='If a model is supplied, the map will be adjusted' 
@@ -119,9 +113,7 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
         form.addParam('resolution', FloatParam, default=-1, 
                       label='resolution', 
                       help="Optimal nominal resolution of the map") 
-          
                
-#         form.addSection(label='Sharpening Methods')      
         form.addParam('sharpening', EnumParam, 
                       choices=['b_iso_to_d_cut', 'b_iso', 'target_b_iso_to_d_cut', 
                                'resolDependent',  'halfMapSharp', 'modelSharp', 'no_sharpening'],
@@ -131,28 +123,6 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
                       " b_iso_to_d_cut applies b_iso only up to resolution specified,"
                       " with fall-over of k_sharpen. Resolution dependent adjusts 3 parameters"
                       " to sharpen variably over resolution range. Default is b_iso_to_d_cut" )        
-           
-#         form.addParam('sharpeningLabel', LabelParam, important=True,
-#                       label="Sharpening methods ",
-#                       help="Methods to use in sharpening. b_iso searches for b_iso" 
-#                       " to maximize sharpening target (kurtosis or adjusted_sa)."
-#                       " b_iso_to_d_cut applies b_iso only up to resolution specified,"
-#                       " with fall-over of k_sharpen. Resolution dependent adjusts 3 parameters"
-#                       " to sharpen variably over resolution range. Default is b_iso_to_d_cut" )
-#         form.addParam('halfMapSharp', BooleanParam, default=True,
-#                       label='Use half_map_sharpening', condition = 'useSplitVolumes')                          
-#         form.addParam('modelSharp', BooleanParam, default=True,
-#                       label='Use model_sharpening', condition = 'usePDB')              
-#         form.addParam('bIsoCut', BooleanParam, default=False,
-#                       label='Use b_iso_to_d_cut')  
-#         form.addParam('bIsoSharp', BooleanParam, default=False,
-#                       label='Use b_iso') 
-#         form.addParam('resolDependent', BooleanParam, default=False,
-#                       label='Use resolution_dependent')                               
-#         form.addParam('targetIsoCut', BooleanParam, default=False,
-#                       label='Use target_b_iso_to_d_cut')         
-#         form.addParam('noSharp', BooleanParam, default=False,
-#                       label='Use no_sharpening')   
 
         form.addParam('sharpTarget', EnumParam, choices=['adjusted_sa', 'kurtosis'],
                       label='sharpening_target', default=self.METHOD_ADJUSTED,                    
@@ -178,10 +148,7 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
         myDict = {
                  OUTPUT_SHARP: self._getExtraPath('sharpened_map_file.mrc'),
                  OUTPUT_HALF1: self._getExtraPath('sharpened_half1_file.mrc'),
-                 OUTPUT_HALF2: self._getExtraPath('sharpened_half2_file.mrc'),                 
-                 #COEF_SHARP: self._getExtraPath('sharpened_map_file.mtz'),
-                 #SHIFTED_INPUT: self._getExtraPath('shifted_map_file.ccp4'),
-                 #SHIFTED_SHARP: self._getExtraPath('shifted_sharpened_map_file.ccp4')                                  
+                 OUTPUT_HALF2: self._getExtraPath('sharpened_half2_file.mrc'),                                                  
                  }
         self._updateFilenamesDict(myDict)    
     
@@ -207,26 +174,25 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
         self.vol0Fn = self._getTmpPath("inputMap.mrc")
         img.convert(self.inputMap.get(), self.vol0Fn)
         xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
-                               %(self.vol0Fn,self.inputMap.get().getSamplingRate()))
+                               %(self.vol0Fn+":mrc",self.inputMap.get().getSamplingRate()))
 
         if self.useSplitVolumes.get() is True or self.sharpSplitVolumes.get() is True:  
              self.vol1Fn, self.vol2Fn = self.inputMap.get().getHalfMaps()
              self.vol1FnM = self._getTmpPath("halfMap1.mrc")
              img.convert(self.vol1Fn, self.vol1FnM)            
              self.vol2FnM = self._getTmpPath("halfMap2.mrc")  
-             img.convert(self.vol2Fn, self.vol2FnM)                      
-
+             img.convert(self.vol2Fn, self.vol2FnM) 
+             
              xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
-                                    %(self.vol1FnM,self.inputMap.get().getSamplingRate()))           
+                                   %(self.vol1FnM+":mrc",self.inputMap.get().getSamplingRate()))           
              xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
-                                    %(self.vol2FnM,self.inputMap.get().getSamplingRate()))                    
+                                   %(self.vol2FnM+":mrc",self.inputMap.get().getSamplingRate()))                    
                 
         if self.usePDB:  
              self.pdbFn = self._getPdbFileName()                           
     
     def autoSharpeningStep(self):
-        params=''
-        #nohalf = ' map_file=%s' % self.vol0Fn            
+        params=''           
         if self.useSplitVolumes.get() is True:    
              params += ' half_map_file=%s' % self.vol1FnM      
              params += ' half_map_file=%s' % self.vol2FnM  
@@ -251,23 +217,6 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
         elif self.sharpening == self.SHARP_NOSHARP:                                             
              params += ' auto_sharpen_methods=no_sharpening'         
             
-#         #auto_sharpen_methods         
-#         if self.bIsoCut.get() is True:                                            
-#             params += ' auto_sharpen_methods=b_iso_to_d_cut'                  
-#         elif self.bIsoSharp.get() is True:                                            
-#             params += ' auto_sharpen_methods=b_iso'  
-#         elif self.targetIsoCut.get() is True:                                            
-#             params += ' auto_sharpen_methods=target_b_iso_to_d_cut'                    
-#         elif self.resolDependent.get() is True:                                            
-#             params += ' auto_sharpen_methods=resolution_dependent'  
-#         elif self.useSplitVolumes.get() is True:                                            
-#             params += ' auto_sharpen_methods=half_map_sharpening'              
-#         elif self.usePDB.get() is True:                                            
-#             params += ' auto_sharpen_methods=model_sharpening'             
-#         elif self.noSharp.get() is True:                                            
-#             params += ' auto_sharpen_methods=no_sharpening' 
-#         else: 
-#             params += ' auto_sharpen_methods=b_iso_to_d_cut' 
             
         if self.sharpTarget == self.METHOD_ADJUSTED:              
              params += ' sharpening_target=adjusted_sa  residual_target=adjusted_sa'    
@@ -278,13 +227,7 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
              params += ' b_iso=%f' % self.bIso.get()   
         if self.bSharp.get() != -1:                                       
              params += ' b_sharpen=%f' % self.bSharp.get()   
-
-        #params += ' sharpened_map_file=%s' % self._getFileName(OUTPUT_SHARP) 
-        #params += ' sharpened_map_coeffs_file=%s' % self._getFileName(COEF_SHARP)         
-        #params += ' shifted_map_file=%s' % self._getFileName(SHIFTED_INPUT)  
-        #params += ' shifted_sharpened_map_file=%s' % self._getFileName(SHIFTED_SHARP)       
-          
-
+            
         self.runJob("phenix.auto_sharpen map_file=%s sharpened_map_file=%s" 
                     % (self.vol0Fn, self._getFileName(OUTPUT_SHARP)) , params)
         xmipp3.runXmippProgram("xmipp_transform_mirror","-i %s --flipZ"
@@ -316,16 +259,13 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
         self._defineOutputs(outputVol=vol)       
         self._defineSourceRelation(self.inputMap, vol)    
         
-        if self.sharpSplitVolumes:
-             vol.setFileName(self._getFileName(OUTPUT_HALF1))       
-             vol.setSamplingRate(self.inputMap.get().getSamplingRate())       
-             self._defineOutputs(outputHalf1=vol)       
-             self._defineSourceRelation(self.inputMap, vol)      
-             
-             vol.setFileName(self._getFileName(OUTPUT_HALF2))       
-             vol.setSamplingRate(self.inputMap.get().getSamplingRate())       
-             self._defineOutputs(outputHalf2=vol)       
-             self._defineSourceRelation(self.inputMap, vol)                      
+        if self.sharpSplitVolumes:            
+            half1 = self._getFileName(OUTPUT_HALF1)
+            half2 = self._getFileName(OUTPUT_HALF2)
+            vol.setHalfMaps([half1, half2])   
+            self._defineOutputs(outputVol=vol)
+            self._defineSourceRelation(self.inputMap, vol)                      
+                  
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []

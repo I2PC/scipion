@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Erney Ramírez Aportela (eramirez@cnb.csic.es)
+# * Authors:    Erney Ramirez Aportela (eramirez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,6 +27,8 @@
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pyworkflow.em.packages.phenix.protocol_automated_sharpening import PhenixProtAutomatedSharpening
 from pyworkflow.em.protocol import ProtImportVolumes, ProtImportPdb
+import pyworkflow.em as em 
+#import phenix
 
 
 
@@ -54,41 +56,50 @@ class TestPhenixAutSharp(TestPhenixAutSharpBase):
     def setUpClass(cls):
         setupTestProject(cls)
         TestPhenixAutSharpBase.setData()
-        cls.protImportMap = cls.runImportVolumes(cls.map, 3.54)        
-        cls.protImportHalf1 = cls.runImportVolumes(cls.half1, 3.54)
-        cls.protImportHalf2 = cls.runImportVolumes(cls.half2, 3.54)
-
-    def testMapSharp(self):
-        #print "Run autosharpen for input map"        
+        cls.protImportMap = cls.runImportVolumes(cls.map, 3.54)  
+        vol = cls.protImportMap.outputVolume
+        vol.setHalfMaps([cls.half1, cls.half2])
+        cls.protImportMap._store()
+        
+    def testMapSharp(self):               
+        print "Run autosharpen for input map"        
         autosharpen1 = self.newProtocol(PhenixProtAutomatedSharpening,
                                    inputMap=self.protImportMap.outputVolume,
                                    resolution=10)
         self.launchProtocol(autosharpen1)
         self.assertIsNotNone(autosharpen1.outputVol,
                         "autosharpen1 has failed")
-         
-    def testMapSharpHalfMap(self):
-        #print "Run autosharpen for input map with half map"        
+
+    def testSharpUseHalfMap(self):
+        print "Run autosharpen for input map and half maps"        
         autosharpen2 = self.newProtocol(PhenixProtAutomatedSharpening,
                                    inputMap=self.protImportMap.outputVolume,
-                                   useSplitVolumes=True,
-                                   volumeHalf1=self.protImportHalf1.outputVolume,
-                                   volumeHalf2=self.protImportHalf2.outputVolume,
-                                   resolution=10,
-                                   sharpening=4) 
+                                   sharpSplitVolumes=True,
+                                   resolution=10) 
         self.launchProtocol(autosharpen2)
         self.assertIsNotNone(autosharpen2.outputVol,
-                        "autosharpen2 has failed")    
-   
-    def testMapSharpPDB(self):
-        #print "Run autosharpen for input map with atomic model'pdb'"        
+                        "autosharpen2 has failed")
+         
+    def testMapUseHalfMap(self):
+        print "Run autosharpen for input map with half map for FSC calculation"        
         autosharpen3 = self.newProtocol(PhenixProtAutomatedSharpening,
+                                   inputMap=self.protImportMap.outputVolume,
+                                   useSplitVolumes=True,
+                                   resolution=10,
+                                   sharpening=4) 
+        self.launchProtocol(autosharpen3)
+        self.assertIsNotNone(autosharpen3.outputVol,
+                        "autosharpen3 has failed")    
+    
+    def testMapSharpPDB(self):
+        print "Run autosharpen for input map with atomic model (pdb)"        
+        autosharpen4 = self.newProtocol(PhenixProtAutomatedSharpening,
                                    inputMap=self.protImportMap.outputVolume,
                                    usePDB=True,
                                    pdbId='5a1a',
                                    resolution=10,
                                    sharpening=5)
-        self.launchProtocol(autosharpen3)
-        self.assertIsNotNone(autosharpen3.outputVol,
+        self.launchProtocol(autosharpen4)
+        self.assertIsNotNone(autosharpen4.outputVol,
                         "autosharpen3 has failed")          
              
