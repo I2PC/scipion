@@ -103,14 +103,14 @@ class ChimeraProtBase(EMProtocol):
         # volume with samplingRate and Origin information
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
         f.write("from chimera import runCommand\n")
+
         # create coherent header
-        sessionFileName = self.parentProt._getExtraPath(sessionFile)
         createScriptFile(1,  # model id pdb
                          1,  # model id 3D map
                          self._getExtraPath(chimeraPdbTemplateFileName),
                          self._getExtraPath(chimeraMapTemplateFileName),
-                         self._getExtraPath(sessionFileName),
-                         f
+                         f,
+                         self._getExtraPath(sessionFile)
                          )
 
         if self.inputVolume.get() is None:
@@ -262,11 +262,19 @@ class ChimeraProtBase(EMProtocol):
     def _summary(self):
         # Think on how to update this summary with created PDB
         summary = []
-        summary.append("TO BE DONE")
         if (self.getOutputsSize() > 0):
+            directory = self._getExtraPath()
+            counter = 1
+            summary.append("Produced files:")
+            for filename in sorted(os.listdir(directory)):
+                if filename.endswith(".pdb"):
+                    summary.append(filename)
+            for filename in sorted(os.listdir(directory)):
+                if filename.endswith(".mrc"):
+                    summary.append(filename)
             summary.append("we have some result")
         else:
-            summary.append(Message.TEXT_NO_OUTPUT_CO)
+            summary.append(Message.TEXT_NO_OUTPUT_FILES)
         return summary
 
     def _methods(self):
@@ -382,7 +390,8 @@ addCommand('scipionrs', cmd_scipionRestoreSession, help="http://scipion.cnb.csic
 
 
 def createScriptFile(pdbID, _3DmapId,
-                     pdbFileTemplate, mapFileTemplate, sessionFileName,f):
+                     pdbFileTemplate, mapFileTemplate,
+                     f, sessionFileName=''):
     f.write(chimeraScriptHeader)
     d = {}
     d['pdbID'] = pdbID
