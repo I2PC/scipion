@@ -31,7 +31,6 @@
 from glob import glob
 from os.path import exists, basename
 
-from pyworkflow.object import Float
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER
@@ -43,8 +42,7 @@ from pyworkflow.em.data import Particle
 from pyworkflow.em.constants import RELATION_CTF
 
 from convert import (micrographToCTFParam, writeMicCoordinates, xmippToLocation,
-                     setSingleXmippAttribute, setXmippAttributes,
-                     writeSetOfParticles)
+                     setXmippAttributes)
 from xmipp3 import XmippProtocol
 
 
@@ -189,9 +187,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             # the required command line parameters (except input/ouput files)
             micOps = []
 
-            # Compute the variance and Gini coeff. of the part and mic, resp.
+            # Compute the variance and Gini coeff. of the part. and mic., resp.
             args  =  '--pos %s' % fnPosFile
-            args += ' --mic %s' % mic.getFileName()
+            args += ' --mic %s' % fnLast
             args += ' --patchSize %d' % patchSize
             self.runJob('xmipp_coordinates_noisy_zones_filter', args)
 
@@ -270,12 +268,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             args += " --background circle %d" % bgRadius
 
         return args
-
-    # def createOutputStep(self):
-    #     if self.hasAttribute('outputParticles'):
-    #         imagesMd = self._getPath('images.xmd')
-    #         writeSetOfParticles(self.outputParticles, imagesMd)
-    #         # self.rejectByVariance()
 
 
     #--------------------------- INFO functions --------------------------------
@@ -472,10 +464,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         """ Read the particles extract for the given list of micrographs
         and update the outputParts set with new items.
         """
-        # We set the Min and Max only with the first processed mics
-        if outputParts.getSize() == 0:
-            self._setVarMinMax(micList)
-
         p = Particle()
         for mic in micList:
             # We need to make this dict because there is no ID in the .xmd file
@@ -499,11 +487,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
-                    # adding the variance value of the mic zone
-                    varValue = row.getValue(md.MDL_SCORE_BY_VAR)
-                    setSingleXmippAttribute(p, md.MDL_SCORE_BY_VAR,
-                                            Float(self._normalizeVar(varValue)))
-                    # adding the Gini coefficient of the mic
+                    # adding the variance and Gini coeff. value of the mic zone
+                    setXmippAttributes(p, row, md.MDL_SCORE_BY_VAR)
                     setXmippAttributes(p, row, md.MDL_SCORE_BY_GINI)
 
                     # disabled particles (in metadata) should not add to the
@@ -526,21 +511,3 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         for this micrograph. """
         micBase = pwutils.removeBaseExt(mic.getFileName())
         return self._getExtraPath(micBase + ".xmd")
-
-    def _setVarMinMax(self, micList):
-        """ Sets the Min and Max values to a global variable
-        """
-        varMIN, varMAX = 1000000, 0
-        for mic in micList:
-            for row in md.iterRows(self._getMicXmd(mic)):
-                varMIN = min(varMIN, row.getValue(md.MDL_SCORE_BY_VAR))
-                varMAX = max(varMAX, row.getValue(md.MDL_SCORE_BY_VAR))
-        self.stimatedMinMax = (varMIN, varMAX)
-
-    def _normalizeVar(self, varValue):
-        """ Normalize the varValue with the stimatedMinMax global variable
-        """
-        varValue -= self.stimatedMinMax[0]
-        varValue /= self.stimatedMinMax[1]
-
-        return varValue

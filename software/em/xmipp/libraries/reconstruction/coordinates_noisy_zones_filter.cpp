@@ -31,7 +31,7 @@ void ProgCoordinatesNoisyZonesFilter::defineParams()
     addParamsLine(" --pos <coordinates> : Input coordinates");
     addParamsLine(" --mic <micrograph> : Reference volume");
     addParamsLine(" [--patchSize <n=50>] : Patch size for the variance filter");
-    addParamsLine(" [-o <coordinates=pos>] : Output coordinates (if not passed, "
+    addParamsLine(" [-o <coordinates>] : Output coordinates (if not passed, "
                                                    "the input is overwritten)");
 }
 
@@ -39,8 +39,9 @@ void ProgCoordinatesNoisyZonesFilter::readParams()
 {
 	fnInCoord = getParam("--pos");
 	fnInMic = getParam("--mic");
-    fnOut = getParam("-o");
-    if (fnOut=="pos")
+    if (checkParam("-o"))
+        fnOut = getParam("-o");
+    else
         fnOut = fnInCoord;
 	patchSize = getIntParam("--patchSize");
 }
@@ -79,18 +80,15 @@ void ProgCoordinatesNoisyZonesFilter::run()
         aux.write(fnInCoord.withoutExtension()+"_normalized.mrc");
     }
 
-    // getting the gini coefficient of the Micrograph whereas applaying a 
-    // variance filter to the matrixMic (and filtered to smooth the result) 
-    // std::cout << " - Starting giniCoeff() " << std::endl;
     double giniV = giniCoeff(matrixMic, patchSize);
 
-    // if (verbose>1)
-    // {
+    if (verbose>1)
+    {
         Image<double> aux(matrixMic);
         aux.write(fnInCoord.withoutExtension()+"_varianceFilter.mrc");
         std::cout << " Gini Coeff: " << giniV << std::endl
                   << "(" << fnInMic << ")" << std::endl;
-    // }
+    }
     
     // adding the variance value of the zone to every coordinate
     std::vector<Particle_coords> &allCoords=mic.coords;

@@ -813,18 +813,37 @@ void varianceFilter(MultidimArray<double> &I, int kernelSize, bool relative)
         mVar = mVar/avgVar;
     }
 
-    // std::cout << " Creating the auxiliar matrix " << std::endl;
-    // Working in a auxilary windows to avoid borders bad defined
-    I.initZeros(mVar);
-    // MultidimArray<double> I(YSIZE(I)-kernelSize,XSIZE(I)-kernelSize);
-    // I.setXmippOrigin();
-    mVar.window(I,STARTINGY(mVar)+kernelSize_2, STARTINGX(mVar)+kernelSize_2,
-                       FINISHINGY(mVar)-kernelSize_2, FINISHINGX(mVar)-kernelSize_2);
+    I = mVar;
 
-    // // Returning to the previous windows size
-    // I.initZeros(mVar);
-    // mVar.window(I, STARTINGY(mVar), STARTINGX(mVar),
-    //               FINISHINGY(mVar), FINISHINGX(mVar));
+    // filling the borders with the nearest variance value
+    // the corners only are filled once (with Ycoord)
+    for (int i=0; i<YSIZE(I); ++i)
+        for (int j=0; j<kernelSize; j++)
+        {
+            if (i<kernelSize)
+                DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, kernelSize, kernelSize);
+            else if (i>YSIZE(I)-kernelSize)
+                DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, YSIZE(I)-kernelSize, kernelSize);
+            else
+                DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, i, kernelSize);
+        }
+    for (int i=0; i<YSIZE(I); ++i)
+        for (int j=XSIZE(I)-kernelSize; j<XSIZE(I); j++)
+        {
+            if (i<kernelSize)
+                DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, kernelSize, XSIZE(I)-kernelSize);
+            else if (i>YSIZE(I)-kernelSize)
+                DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, YSIZE(I)-kernelSize, XSIZE(I)-kernelSize);
+            else
+                DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, i, XSIZE(I)-kernelSize);
+        }
+    for (int j=kernelSize; j<XSIZE(I)-kernelSize; ++j)
+        for (int i=0; i<kernelSize; i++)
+            DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, kernelSize, j);
+    for (int j=kernelSize; j<XSIZE(I)-kernelSize; ++j)
+        for (int i=YSIZE(I)-kernelSize; i<YSIZE(I); i++)
+            DIRECT_A2D_ELEM(I, i, j) = DIRECT_A2D_ELEM(mVar, YSIZE(I)-kernelSize, j);
+    
 }
 
 /* Noise filter (returns a binary mask where both variance and mean are high)*/

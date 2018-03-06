@@ -289,14 +289,8 @@ def setXmippAttributes(obj, objRow, *labels):
     and the datatype will be set correctly.
     """
     for label in labels:
-        setSingleXmippAttribute(obj,label, objRow.getValueAsObject(label))
-        #        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label),
-        #        objRow.getValueAsObject(label))
-
-def setSingleXmippAttribute(obj, label, value):
-    """ Set an attribute of an object following an Xmipp label pattern
-    """
-    setattr(obj, '_xmipp_%s' % xmipp.label2Str(label), value)
+        setattr(obj, '_xmipp_%s' % xmipp.label2Str(label),
+                objRow.getValueAsObject(label))
 
 def rowFromMd(md, objId):
     row = XmippMdRow()
