@@ -196,10 +196,10 @@ class ChimeraProtBase(EMProtocol):
             vol.setSamplingRate(sampling)
             if self.inputVolume.get() is None:
                 origin = self.pdbFileToBeRefined.get().getVolume(). \
-                    getOrigin(returnInitIfNone=True)
+                    getOrigin(force=True)
             else:
                 origin = self.inputVolume.get().getOrigin(
-                    returnInitIfNone=True)
+                    force=True)
 
             newOrigin = vol.originResampled(origin, oldSampling)
             vol.setOrigin(newOrigin)
