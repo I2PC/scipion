@@ -880,11 +880,6 @@ class ImportOriginVolumeWizard(Wizard):
         else:
             fullPattern = filesPath
 
-        # if str(filesPath).endswith("/"):
-        #     #fullPattern = str(filesPath) + str(filesPattern)
-        #     fullPattern = os.path.join(str(filesPath), str(filesPattern))
-        # else:
-        #     fullPattern = filesPath
         sampling = protocol.samplingRate.get()
         for fileName, fileId in protocol.iterFiles():
             inputVol = Volume()
@@ -895,8 +890,7 @@ class ImportOriginVolumeWizard(Wizard):
                 x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
             else:
                 x, y, z = self._halfOriginCoordinates(inputVol, sampling)
-            print "fullPattern: ", fullPattern
-            print "x, y, z: ", x, y, z
+
             form.setVar('x', x)
             form.setVar('y', y)
             form.setVar('z', z)
