@@ -145,7 +145,7 @@ the pdb file from coot  to scipion '
                 else:
                     ImageHandler().convert(inVolName, norVolName)
                 copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
-                              returnInitIfNone=True).getShifts(),
+                              force=True).getShifts(),
                               inVol.getSamplingRate(), originField=START)
 
     def runCootStep(self, inVolumes, norVolumesNames):
@@ -219,7 +219,7 @@ the pdb file from coot  to scipion '
                 outVol = Volume()
                 sampling = inVol.getSamplingRate()
                 origin = inVol.getOrigin(
-                    returnInitIfNone=True)
+                    force=True)
                 outVol.setSamplingRate(sampling)
                 outVol.setOrigin(origin)
 
