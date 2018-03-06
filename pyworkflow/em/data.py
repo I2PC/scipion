@@ -607,16 +607,6 @@ class Image(EMObject):
         """shifts in A"""
         self._origin = newOrigin
 
-    # def setOriginResampled(self, originNotResampled, oldSampling):
-    #     """shifts in A"""
-    #     factor = self.getSamplingRate() / oldSampling
-    #     shifts = origin.getShifts()
-    #     origin = self.getOrigin()
-    #     if origin is not None:
-    #         origin.setShifts(shifts[0]*factor,
-    #                      shifts[1] * factor,
-    #                      shifts[2] * factor)
-
     def originResampled(self, originNotResampled, oldSampling):
         factor = self.getSamplingRate() / oldSampling
         shifts = originNotResampled.getShifts()
@@ -625,7 +615,6 @@ class Image(EMObject):
                          shifts[1] * factor,
                          shifts[2] * factor)
         return origin
-
 
     def __str__(self):
         """ String representation of an Image. """
