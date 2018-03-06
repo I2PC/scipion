@@ -90,8 +90,8 @@ class ChimeraProtRestore(ChimeraProtBase):
                          1,  # model id 3D map
                          self._getExtraPath(chimeraPdbTemplateFileName),
                          self._getExtraPath(chimeraMapTemplateFileName),
-                         sessionFileName,
-                         f
+                         f,
+                         sessionFileName
                          )
 
         f.write("restoreSession('%s')\n"%parentSessionFileName)
