@@ -752,8 +752,6 @@ class Project(object):
         newProt.copyDefinitionAttributes(protocol)
         newProt.copyAttributes(protocol, 'hostName', '_useQueue','_queueParams')
         
-        inspectObj(protocol, protocol.getProject().getPath('INSPECTOR_LOG.csv'))
-
         return newProt
 
     def copyProtocol(self, protocol):
@@ -1359,3 +1357,4 @@ class Project(object):
                                 print "  Found file %s, creating link..." % newFile
                                 print pwutils.green("   %s -> %s" % (f, newFile))
                                 pwutils.createAbsLink(newFile, f)
+                                

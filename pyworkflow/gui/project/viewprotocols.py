@@ -579,7 +579,8 @@ class ProtocolsView(tk.Frame):
         self.root.bind("<Control-f>", self._findProtocol)
         self.root.bind("<Control-a>", self._selectAllProtocols)
         self.root.bind("<Control-t>", self._toggleColorScheme)
-        self.root.bind("<Control-i>", self._inspectProtocolPointers)
+        if pwutils.envVarOn('SCIPION_DEBUG'):
+            self.root.bind("<Control-i>", self._inspectProtocols)
 
         # To bind key press to methods
         # Listen to any key: send event to keyPressed method
@@ -1319,7 +1320,7 @@ class ProtocolsView(tk.Frame):
         # self.updateRunsGraph()
         self.drawRunsGraph()
 
-    def _inspectProtocolPointers(self, e=None):
+    def _inspectProtocols(self, e=None):
         objs = self._getSelectedProtocols()
         projName =self.project.shortName
 
@@ -1334,9 +1335,8 @@ class ProtocolsView(tk.Frame):
             objs = [obj]
 
         inspectObj(objs, filePath)
-        msg = Message.LABEL_INSPECTOR % (objName, projName+'/'+filePath)
-        pwgui.dialog.showInfo(Message.TITLE_INSPECTOR, msg, self.root)
-    
+        from pyworkflow.gui.text import openTextFileEditor
+        openTextFileEditor(filePath)
 
     # NOt used!: pconesa 02/11/2016.
     # def _deleteSelectedProtocols(self, e=None):
