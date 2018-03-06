@@ -394,7 +394,6 @@ class TestXmippExtractParticles(TestXmippBase):
             self.assertEqual(micNameCoord, micNamePart,
                              "The micName should be %s and its %s"
                              %(micNameCoord, micNamePart))
-
         compare(83)
         compare(228)
         self._checkVarianceAndGiniCoeff(outputParts[170], 1.1640, 0.5190)
@@ -484,7 +483,6 @@ class TestXmippExtractParticles(TestXmippBase):
         self._checkSamplingConsistency(outputParts)
         self._checkVarianceAndGiniCoeff(outputParts[170], 1.2120, 0.5275)
 
-
     def testExtractOther(self):
         print "Run extract particles from original micrographs, with downsampling"
         downFactor = 3.0
@@ -536,7 +534,6 @@ class TestXmippExtractParticles(TestXmippBase):
             self.assertAlmostEqual(outputSampling, particle.getSamplingRate())
         self._checkVarianceAndGiniCoeff(outputParts[170], 1.2472, 0.6052)
 
-
     def testExtractNoise(self):
         # here we will try a different patchSize than the default
         print "Run extract particles from original micrographs, with downsampling"
@@ -559,7 +556,6 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertIsNotNone(outputParts, "There was a problem generating the output.")
         self.assertAlmostEquals(outputParts.getSize(), 403, delta=1)
         self._checkVarianceAndGiniCoeff(outputParts[170], 1.1594, 0.5702)
-
 
     def testExtractCTF(self):
         print "Run extract particles with CTF"
@@ -604,9 +600,6 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
         self._checkSamplingConsistency(outputParts)
         self._checkVarianceAndGiniCoeff(outputParts[170], 1.1640, 0.5190)
-
-
-
 
 
 class TestXmippEliminatingEmptyParticles(TestXmippBase):

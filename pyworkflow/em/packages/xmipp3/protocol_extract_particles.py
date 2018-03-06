@@ -269,7 +269,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         return args
 
-
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []

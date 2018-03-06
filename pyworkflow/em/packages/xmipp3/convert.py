@@ -292,6 +292,7 @@ def setXmippAttributes(obj, objRow, *labels):
         setattr(obj, '_xmipp_%s' % xmipp.label2Str(label),
                 objRow.getValueAsObject(label))
 
+
 def rowFromMd(md, objId):
     row = XmippMdRow()
     row.readFromMd(md, objId)

@@ -80,6 +80,8 @@ void ProgCoordinatesNoisyZonesFilter::run()
         aux.write(fnInCoord.withoutExtension()+"_normalized.mrc");
     }
 
+    // giniCoeff(Image, patchSize) returns the giniCoeff of the Image and
+    //   applies a variance filter to the Image with a patchSize 
     double giniV = giniCoeff(matrixMic, patchSize);
 
     if (verbose>1)

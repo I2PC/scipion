@@ -304,8 +304,6 @@ class XmippViewer(Viewer):
                     xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_SCORE_BY_VAR, nbins=100)
                     self._views.append(xplotter)
 
-
-
         elif issubclass(cls, XmippProtMovieGain):
             self._visualize(obj.outputMovies)
             movieGainMonitor = MonitorMovieGain(obj,
