@@ -30,15 +30,15 @@ import os
 from pyworkflow.em.convert import ImageHandler
 from protocol_fit import ChimeraProtRigidFit
 from protocol_operate import ChimeraProtOperate
+from protocol_restore import ChimeraProtRestore
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, runChimeraProgram, getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
-class ChimeraProtRigidFitViewer(Viewer):
+
+class ChimeraViewerBase(Viewer):
     """ Visualize the output of protocols protocol_fit and protocol_operate """
-    _label = 'viewer fit'
-    _targets = [ChimeraProtRigidFit, ChimeraProtOperate]
     _environments = [DESKTOP_TKINTER]
 
     def _visualize(self, obj, **args):
@@ -89,3 +89,22 @@ class ChimeraProtRigidFitViewer(Viewer):
         # run in the background
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []
+
+class ChimeraRestoreViewer(ChimeraViewerBase):
+    """ Visualize the output of protocols protocol_fit and protocol_operate """
+    _label = 'viewer restore'
+    _targets = [ChimeraProtRestore]
+
+    def _visualize(self, obj, **args):
+        self.inputVolume = self.protocol.parentProt.inputVolume
+        self.pdbFileToBeRefined = self.protocol.parentProt.pdbFileToBeRefined
+        self.inputPdbFiles = self.protocol.parentProt.inputPdbFiles
+        super(ChimeraRestoreViewer, self)._visualize()
+
+class ChimeraProtRigidFitViewer(ChimeraViewerBase):
+    _label = 'viewer fit'
+    _targets = [ChimeraProtRigidFit]
+
+class ChimeraProtOperateViewer(ChimeraViewerBase):
+    _label = 'viewer operate'
+    _targets = [ChimeraProtOperate]

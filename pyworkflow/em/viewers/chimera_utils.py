@@ -41,6 +41,7 @@ from pyworkflow.utils import  Environ
 chimeraPdbTemplateFileName = "chimeraOut%04d.pdb"
 chimeraMapTemplateFileName = "chimeraOut%04d.mrc"
 chimeraScriptFileName = "chimeraScript.py"
+sessionFile = "SESSION.py"
 
 symMapperScipionchimera = {}
 symMapperScipionchimera[SYM_CYCLIC] = "Cn"
