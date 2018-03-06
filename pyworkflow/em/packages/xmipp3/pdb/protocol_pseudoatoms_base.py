@@ -132,7 +132,7 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         if fnIn.endswith(":mrc"):
             fnIn = fnIn[:-4]
 
-        x, y, z = volume.getOrigin(returnInitIfNone=True).getShifts()
+        x, y, z = volume.getOrigin(force=True).getShifts()
         xx, yy, zz = volume.getDim()
 
         dim = volume.getDim()[0]
