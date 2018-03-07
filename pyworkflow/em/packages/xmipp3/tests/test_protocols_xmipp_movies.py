@@ -597,3 +597,231 @@ class TestExtractMovieParticles(BaseTest):
         size = protExtract.outputParticles.getSize()
         self.assertEqual(size, 88, 'Number of particles must be 135 and its '
                                    '%d' % size)
+
+
+class TestMaxShift(BaseTest):
+    @classmethod
+    def setData(cls):
+        cls.ds = DataSet.getDataSet('movies')
+
+    @classmethod
+    def runImportMovies(cls, pattern, **kwargs):
+        """ Run an Import movies protocol. """
+        # We have two options: passe the SamplingRate or
+        # the ScannedPixelSize + microscope magnification
+        params = {'samplingRate': 1.14,
+                  'voltage': 300,
+                  'sphericalAberration': 2.7,
+                  'magnification': 50000,
+                  'scannedPixelSize': None,
+                  'filesPattern': pattern
+                  }
+        if 'samplingRate' not in kwargs:
+            del params['samplingRate']
+            params['samplingRateMode'] = 0
+        else:
+            params['samplingRateMode'] = 1
+
+        params.update(kwargs)
+
+        protImport = cls.newProtocol(ProtImportMovies, **params)
+        cls.launchProtocol(protImport)
+        return protImport
+
+    @classmethod
+    def runAlignMovies(cls):
+        protAlign = cls.newProtocol(XmippProtMovieCorr,
+                                     alignFrame0=3, alignFrameN=5,
+                                     cropOffsetX=10, cropOffsetY=10,
+                                     doSaveAveMic=False)
+        protAlign.inputMovies.set(cls.protImport.outputMovies)
+        cls.launchProtocol(protAlign)
+        return protAlign.outputMovies
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.setData()
+        cls.protImport = cls.runImportMovies(cls.ds.getFile('qbeta/qbeta.mrc'))
+        cls.alignedMovies = cls.runAlignMovies()
+    
+    def _checkMaxShiftFiltering(self, protocol, goldDecision, label):
+        # Decision: = True for ACCEPTING Movies ; = False for DISCARTING Movies.
+        # if the Movie must be accepted: 
+        #                     outputMovies EXISTS and outputMoviesDiscarded NOT.
+        # if the Movie must be rejected: 
+        #                     outputMoviesDiscarded EXIST and outputMovies NOT.
+        if goldDecision:
+            #  Checking if the Movie is crated and it have the same size and 
+            #       sampling rate of the inputMovie
+            self.assertIsNotNone(getattr(protocol, 'outputMovies', None),
+                                 "outputMovies (accepted) were not created. "
+                                 "Bad filtering in %s test." % label)
+            self.assertEqual(protocol.outputMovies.getDim(),
+                             protocol.inputMovies.get().getDim(),
+                             "The size of the movies has change for %s test."
+                              % label)
+            self.assertEqual(protocol.outputMovies.getSamplingRate(),
+                             protocol.inputMovies.get().getSamplingRate(),
+                             "The samplig rate of the movies has change for "
+                             "%s test." % label)
+            #  Checking if the MovieDiscarded set is not created
+            self.assertIsNone(getattr(protocol, 'outputMoviesDiscarded', None),
+                              "outputMoviesDiscarded were created. "
+                              "Bad filtering in %s test." % label)
+        else:
+            #  Checking if the Movie is crated and it have the same size and 
+            #       sampling rate of the inputMovie
+            self.assertIsNotNone(getattr(protocol, 'outputMoviesDiscarded', None),
+                        "outputMoviesDiscarded were not created. Bad filtering")
+            self.assertEqual(protocol.outputMoviesDiscarded.getDim(),
+                             protocol.inputMovies.get().getDim(),
+                             "The size of the movies has change for %s test."
+                              % label)
+            self.assertEqual(protocol.outputMoviesDiscarded.getSamplingRate(),
+                             protocol.inputMovies.get().getSamplingRate(),
+                             "The samplig rate of the movies has change for "
+                             "%s test." % label)
+            #  Checking if the Movie (accepted) set is not created
+            self.assertIsNone(getattr(protocol, 'outputMovies', None),
+                         "outputMovies (accepted)t were created. Bad filtering")
+    
+    def testFilterFrame(self):                                    
+        # This must discart the movie for a Frame shift
+        label = 'maxShift filtering by Frame'
+        protMaxShift1 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=0.04,
+                                         rejType=XmippProtMovieMaxShift.REJ_FRAME,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift1)
+        self._checkMaxShiftFiltering(protMaxShift1, False, label)
+
+    def testFilterMovie(self): 
+        # This must discart the movie for a Global shift
+        label = 'maxShift filtering by Movie'
+        protMaxShift2 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxMovieShift=0.051,
+                                         rejType=XmippProtMovieMaxShift.REJ_MOVIE,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift2)
+        self._checkMaxShiftFiltering(protMaxShift2, False, label)
+
+    def testFilterAnd(self): 
+        # This must discard the movie for AND
+        label = 'maxShift filtering AND'
+        protMaxShift3 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=0.04,
+                                         maxMovieShift=0.051,
+                                         rejType=XmippProtMovieMaxShift.REJ_AND,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift3)
+        self._checkMaxShiftFiltering(protMaxShift3, False, label)
+
+    def testFilterOrFrame(self): 
+        # This must discard the movie for OR (Frame) 
+        label = 'maxShift filtering OR (frame)'
+        protMaxShift4 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=0.04,
+                                         maxMovieShift=1,
+                                         rejType=XmippProtMovieMaxShift.REJ_OR,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift4)
+        self._checkMaxShiftFiltering(protMaxShift4, False, label)
+
+    def testFilterOrMovie(self): 
+        # This must discard the movie for OR (Movie) 
+        label = 'maxShift filtering OR (movie)'
+        protMaxShift5 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=1,
+                                         maxMovieShift=0.051,
+                                         rejType=XmippProtMovieMaxShift.REJ_OR,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift5)
+        self._checkMaxShiftFiltering(protMaxShift5, False, label)
+
+    def testFilterOrBoth(self): 
+        # This must discard the movie for OR (both) 
+        label = 'maxShift filtering OR (both)'
+        protMaxShift6 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=0.04,
+                                         maxMovieShift=0.051,
+                                         rejType=XmippProtMovieMaxShift.REJ_OR,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift6)
+        self._checkMaxShiftFiltering(protMaxShift6, False, label)
+
+    def testLetPassFrame(self): 
+        # This must accept the movie FRAME
+        label = 'maxShift let pass - by Frame'
+        protMaxShift7 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=1,
+                                         rejType=XmippProtMovieMaxShift.REJ_FRAME,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift7)
+        self._checkMaxShiftFiltering(protMaxShift7, True, label)
+
+    def testLetPassMovie(self):
+        # This must accept the movie MOVIE
+        label = 'maxShift let pass - by Movie'
+        protMaxShift8 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxMovieShift=1,
+                                         rejType=XmippProtMovieMaxShift.REJ_MOVIE,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift8)
+        self._checkMaxShiftFiltering(protMaxShift8, True, label)
+
+    def testLetPassAndB(self):
+        # This must accept the movie AND
+        label = 'maxShift let pass - ANDb'
+        protMaxShift9 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=1,
+                                         maxMovieShift=1,
+                                         rejType=XmippProtMovieMaxShift.REJ_AND,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift9)
+        self._checkMaxShiftFiltering(protMaxShift9, True, label)
+
+    def testLetPassAndF(self):
+        # This must accept the movie AND
+        label = 'maxShift let pass - ANDf'
+        protMaxShift10 = self.newProtocol(XmippProtMovieMaxShift,
+                                          inputMovies=self.alignedMovies,
+                                          maxFrameShift=0.04,
+                                          maxMovieShift=1,
+                                          rejType=XmippProtMovieMaxShift.REJ_AND,
+                                          objLabel=label)
+        self.launchProtocol(protMaxShift10)
+        self._checkMaxShiftFiltering(protMaxShift10, True, label)
+
+    def testLetPassAndM(self):
+        # This must accept the movie AND
+        label = 'maxShift let pass - ANDm'
+        protMaxShift11 = self.newProtocol(XmippProtMovieMaxShift,
+                                         inputMovies=self.alignedMovies,
+                                         maxFrameShift=1,
+                                         maxMovieShift=0.051,
+                                         rejType=XmippProtMovieMaxShift.REJ_AND,
+                                         objLabel=label)
+        self.launchProtocol(protMaxShift11)
+        self._checkMaxShiftFiltering(protMaxShift11, True, label)
+
+    def testLetPassOr(self):
+        # This must accept the movie OR
+        label = 'maxShift let pass - OR'
+        protMaxShift12 = self.newProtocol(XmippProtMovieMaxShift,
+                                          inputMovies=self.alignedMovies,
+                                          maxFrameShift=1,
+                                          maxMovieShift=1,
+                                          rejType=XmippProtMovieMaxShift.REJ_OR,
+                                          objLabel=label)
+        self.launchProtocol(protMaxShift12)
+        self._checkMaxShiftFiltering(protMaxShift12, True, label)
