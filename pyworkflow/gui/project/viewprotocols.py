@@ -1324,19 +1324,26 @@ class ProtocolsView(tk.Frame):
         objs = self._getSelectedProtocols()
         projName =self.project.shortName
 
+        # We will inspect the selected objects or 
+        #   the whole project is no protocol is selected
         if len(objs)>0:
             objs.sort(key=lambda obj: obj._objId, reverse=True)
             filePath = objs[0]._getLogsPath('inspector.csv')
             objName = objs[0].getRunName()
+            doInspect = True
         else:
             obj = self.project
             filePath = obj.getPath(obj.logsPath,'inspector.csv')
             objName = 'the project'  + projName
             objs = [obj]
+            doInspect = pwgui.dialog.askYesNo(Message.TITLE_INSPECTOR,
+                                              Message.LABEL_INSPECTOR, self.root)
 
-        inspectObj(objs, filePath)
-        from pyworkflow.gui.text import openTextFileEditor
-        openTextFileEditor(filePath)
+        if doInspect:
+            inspectObj(objs, filePath, maxDeep)
+            # we open the resulting CSV file with the OS default software
+            pwgui.text.openTextFileEditor(filePath)
+
 
     # NOt used!: pconesa 02/11/2016.
     # def _deleteSelectedProtocols(self, e=None):
@@ -1976,8 +1983,8 @@ class RunBox(pwgui.TextBox):
 
 
 
-def inspectObj(obj, filename, prefix='', memoryDict={}, maxDeep=5,
-               inspectDetail=2):
+def inspectObj(obj, filename, prefix='', maxDeep=5, inspectDetail=2,
+               memoryDict={}):
     """ Creates a .CSV file in the filename path with
         all its members and recursibely with a certain maxDeep,
         if maxDeep=0 means no maxDeep (untils all members are inspected).
@@ -2063,8 +2070,8 @@ def inspectObj(obj, filename, prefix='', memoryDict={}, maxDeep=5,
             prefix = indentCounter.join(prefixList)
 
         # recursive step with the new prefix and memory dict.
-        inspectObj(value, filename, prefix+childBar, memoryDict, maxDeep, 
-                   inspectDetail)
+        inspectObj(value, filename, prefix+childBar, maxDeep, inspectDetail, 
+                   memoryDict)
         
         
         if isFirstOrLast == IS_FIRST:
