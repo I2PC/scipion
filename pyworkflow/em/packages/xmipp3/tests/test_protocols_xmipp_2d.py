@@ -449,7 +449,8 @@ class TestXmippTriggerParticles(TestXmippBase):
 
     def test_triggerPart(self):
         print("Start Streaming Particles")
-        protStream = self.newProtocol(ProtCreateStreamData, setof=3, creationInterval=2, nDim=76, groups=10)
+        protStream = self.newProtocol(ProtCreateStreamData, setof=3,
+                                      creationInterval=2, nDim=76, groups=10)
         protStream.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protStream, wait=False)
 
