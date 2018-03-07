@@ -97,9 +97,9 @@ class TestConversions(BaseTest):
         n = 10
         fn = self.getFile('particles_binary')
         ctfs = [CTFModel(defocusU=10000, defocusV=15000,
-                         defocusAngle=15, _phaseShift=90),
+                         defocusAngle=15, phaseShift=90),
                 CTFModel(defocusU=20000, defocusV=25000,
-                         defocusAngle=25, _phaseShift=60)
+                         defocusAngle=25, phaseShift=60)
                 ]
         acquisition = Acquisition(magnification=60000, voltage=300,
                                   sphericalAberration=2.,
