@@ -147,8 +147,10 @@ class ProtCreateStreamData(EMProtocol):
             raise Exception('Unknown data type')
 
         if self.setof == SET_OF_PARTICLES:
-            for mic in range(1, (self.nDim.get() / self.groups.get()) +
-                    (self.nDim.get() % self.groups.get() > 0) + 1):
+            self.nDims = int(min(self.nDim, len(self.inputParticles.get())))
+            self.group = int(min(self.nDims, self.groups.get()))
+            for mic in range(1, (self.nDims / self.group) +
+                    (self.nDims % self.group > 0) + 1):
                 self._insertFunctionStep(step, prerequisites=deps)
         else:
             for mic in range(1, self.nDim.get() + 1):
@@ -236,10 +238,7 @@ class ProtCreateStreamData(EMProtocol):
             newObjSet.setFramesRange(self.inputMovies.get().getFramesRange())
 
         # check if end ....
-        if self.setof == SET_OF_PARTICLES:
-            endObjs = newObjSet.getSize() >= self.nDim.get()/self.groups.get()
-        else:
-            endObjs = newObjSet.getSize() == self.nDim.get()
+        endObjs = newObjSet.getSize() == self.nDims
 
         if newObj:
             if endObjs:
@@ -276,10 +275,11 @@ class ProtCreateStreamData(EMProtocol):
     def createParticlesStep(self):
         self.name = "particle"
         for idx, p in enumerate(self.inputParticles.get()):
-            if ((idx > self.counter) and (idx <= self.nDim.get()) and
-                    (idx <= self.counter + self.groups.get())):
+            if ((idx > self.counter-1) and (idx < self.nDims) and
+                    (idx <= self.counter-1 + self.group)):
+                newP = p.clone()
                 ProtCreateStreamData.object = \
-                    ImageHandler().read(p.getLocation())
+                    ImageHandler().read(newP.getLocation())
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
