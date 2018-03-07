@@ -1165,19 +1165,16 @@ class SqliteFlatDb(SqliteDb):
 
         cmd = self.selectCmd(whereStr,
                              orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
-
         # If there is a limit
         if limit:
             # if it is a tuple
             if isinstance(limit, tuple):
-
-                skipRows = limit[1]
-                limit = limit[0]
-
+                limit, skipRows = limit  # Extract values from tuple
+            else:
+                skipRows = None
             # If we need to skip rows
             skipPart = "%s," % skipRows if skipRows else ""
             cmd += " LIMIT %s %s" % (skipPart, limit)
-
 
         self.executeCommand(cmd)
         return self._results(iterate)
@@ -1189,10 +1186,9 @@ class SqliteFlatDb(SqliteDb):
         #This cannot be like the following line should be expresed in terms
         #of C1, C2 etc....
         for operation in operations:
-            selectStr += "%s %s(%s) AS %s"%(separator
-                                            , operation
-                                            , self._columnsMapping[operationLabel]
-                                            , operation)
+            selectStr += "%s %s(%s) AS %s" % (separator, operation,
+                                              self._columnsMapping[operationLabel],
+                                              operation)
             separator = ', '
         if groupByLabels is not None:
             groupByStr = 'GROUP BY '
