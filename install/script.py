@@ -33,18 +33,19 @@ from install.funcs import Environment
 
 get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
+args = sys.argv
 
-env = Environment(args=sys.argv)
+env = Environment(args=args[2:])
 
-noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
-noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
+noOpencv = '--no-opencv' in args or not get('OPENCV')
+noScipy = '--no-scipy' in args or not get('SCIPY')
 
 
 #  *******************************
 #  *  PATHS
 #  *******************************
 # GET the real path where scipion is installed
-SCIPION = env._args[0]
+SCIPION = args[0]
 SCIPION = os.path.realpath(SCIPION)
 SCIPION = os.path.dirname(SCIPION)
 SCIPION = os.path.abspath(SCIPION)
@@ -70,7 +71,7 @@ def clean_python_2_7_8_installation():
     # but enough to trigger the proper installation of the new versions.
 
     oldMatplotLibPath = Environment.getPythonPackagesFolder() + '/matplotlib-1.3.1*'
-    print'Matplot lib path at %s' % oldMatplotLibPath
+    print('Matplot lib path at %s' % oldMatplotLibPath)
 
     def removeByPattern(pattern):
         for f in glob.glob(pattern):
@@ -78,7 +79,7 @@ def clean_python_2_7_8_installation():
 
     # If old matplot lib exists
     if len(glob.glob(oldMatplotLibPath)) != 0:
-        print "OLD Installation identified: removing Python and sqlite"
+        print("OLD Installation identified: removing Python and sqlite")
 
         # remove sqlite3 3.6.23
         sqliteLibs = Environment.getLibFolder() + "/libsqlite3*"
@@ -287,7 +288,7 @@ nfft3 = env.addLibrary(
 
 # Add pip to our python
 pip = env.addTarget('pip')
-pip.addCommand('python scripts/get-pip.py', targets=SW_PYT_PACK + '/pip',
+pip.addCommand('python scripts/get-pip.py -I', targets=SW_PYT_PACK + '/pip',
                default=True, final=True)
 
 # Scons has a different pattern: it is expected to be in bin..TODO
@@ -368,16 +369,16 @@ env.addPackage('unblur', version='1.0.15',
 env.addPackage('unblur', version='1.0.2',
                tar='unblur_1.0.2.tgz')
 
-eman2_commands = [('./eman2-installer',
-                   'eman2.*rc')]
-
-env.addPackage('eman', version='2.11',
-               tar='eman2.11.linux64.tgz',
-               commands=eman2_commands)
-
-env.addPackage('eman', version='2.12',
-               tar='eman2.12.linux64.tgz',
-               commands=eman2_commands)
+# eman2_commands = [('./eman2-installer',
+#                    'eman2.*rc')]
+#
+# env.addPackage('eman', version='2.11',
+#                tar='eman2.11.linux64.tgz',
+#                commands=eman2_commands)
+#
+# env.addPackage('eman', version='2.12',
+#                tar='eman2.12.linux64.tgz',
+#                commands=eman2_commands)
 
 env.addPackage('frealign', version='9.07',
                tar='frealign_v9.07.tgz')

@@ -296,7 +296,8 @@ MODE_TEST_DATA = 'testdata'
 MODE_HELP = 'help'
 MODE_VIEWER = ['viewer', 'view', 'show']
 MODE_INSTALL = 'install'
-MODE_INSTALL_PLUGIN_BINARY = 'install_plugin'
+MODE_INSTALL_PLUGIN = 'install_plugin'
+MODE_UNINSTALL_PLUGIN = 'uninstall_plugin'
 MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
@@ -402,18 +403,14 @@ def main():
         import scripts.clean as clean
         sys.exit(0)
 
-    elif mode == MODE_INSTALL_PLUGIN_BINARY:
+    elif mode in [MODE_INSTALL_PLUGIN, MODE_UNINSTALL_PLUGIN]:
         cwd = os.getcwd()
         os.chdir(SCIPION_HOME)
 
         os.environ.update(VARS)
-        # Note: need to start args at index 1 because it is later required by
-        # the install Environment to properly read the plugins. Maybe change
-        # how the environment reads the args in the future?
-        args = ' '.join(sys.argv[1:])
+        args = ' '.join(sys.argv)
 
         runScript('%s %s' % (join(VARS['SCIPION_INSTALL'], 'install-plugin.py'), args))
-
 
     elif mode == MODE_INSTALL:
         # Always move to SCIPION_HOME dir before installing

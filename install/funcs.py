@@ -247,6 +247,7 @@ class Environment:
         self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
+        self._pipCmd = kwargs.get('pipCmd', 'python {}/pip install %s==%s'.format(self.getPythonPackagesFolder()))
 
     def getLibSuffix(self):
         return self._libSuffix
@@ -284,12 +285,12 @@ class Environment:
         return '%s/bin' % Environment.getSoftware()
 
     @staticmethod
-    def getBin(name):
-        return '%s/%s' % (Environment.getBinFolder(), name)
-
-    @staticmethod
     def getTmpFolder():
         return '%s/tmp' % Environment.getSoftware()
+
+    @staticmethod
+    def getBin(name):
+        return '%s/%s' % (Environment.getBinFolder(), name)
 
     @staticmethod
     def getEmFolder():
@@ -298,6 +299,10 @@ class Environment:
     @staticmethod
     def getEm(name):
         return '%s/%s' % (Environment.getEmFolder(), name)
+
+    @staticmethod
+    def getEmPackagesFolder():
+        return "pyworkflow/em/packages"
 
     def addTarget(self, name, *commands, **kwargs):
 
@@ -329,29 +334,6 @@ class Environment:
     
     def getTargets(self):
         return self._targetList
-
-
-    def getPlugins(self, path):
-        """ TODO: discover all plugins from pip instead of path
-        """
-        import importlib
-        sys.path.append(path)
-        folders = [f for f in os.listdir(path) if os.path.isdir(join(path, f))]
-        plugins = {}
-        for f in folders:
-            if exists(join(path, f, 'plugin.py')):
-                try:
-                    plugin_module = importlib.import_module(f+'.plugin')
-                    plugins[f] = getattr(plugin_module, '_plugin')
-                except Exception as ex:
-                    print(">>> Error loading module: '%s'" % f)
-                    print(">>> Exception: ", ex)
-                    import traceback
-                    traceback.print_exc()
-            else:
-                print('WARNING: EM package %s has not been pluginized' % f)
-
-        return plugins
 
     def _addTargetDeps(self, target, deps):
         """ Add the dependencies to target.
@@ -504,24 +486,29 @@ class Environment:
 
         return t
 
-    def addPipModule(self, name, version, target=None, default=True, deps=[]):
+    def addPipModule(self, name, version="", pipCmd=None,
+                     target=None, default=True, deps=[], ignoreDefaultDeps=False):
         """Add a new module to our built Python .
         Params in kwargs:
             name: pip module name
-            version: module version is mandatory to prevent undesired updates.
+            version: module version - must be specified to prevent undesired updates.
             default: True if this module is build by default.
         """
 
         target = name if target is None else target
+        pipCmd = pipCmd or self._pipCmd % (name, version)
         t = self.addTarget(name, default=default)
 
         # Add the dependencies
-        self._addTargetDeps(t, ['pip', 'python'] + deps)
+        if ignoreDefaultDeps:
+            defaultDeps = []
+        else:
+            defaultDeps = ['pip', 'python']
+        self._addTargetDeps(t, defaultDeps + deps)
 
-        t.addCommand('python %s/pip install %s==%s'
-                     % (self.getPythonPackagesFolder(), name, version),
+        t.addCommand(pipCmd,
                      final=True,
-                     targets=self.getPythonPackagesFolder() + '/' + target)
+                     targets="%s/%s" % (self.getPythonPackagesFolder(), target))
 
         return t
 
@@ -622,8 +609,8 @@ class Environment:
                    if kwargs.get('updateCuda', False) else None)
 
         # Set environment
-        variables = kwargs.get('vars',[])
-        for var,value in variables:
+        variables = kwargs.get('vars', [])
+        for var, value in variables:
             environ.update({var: value})
 
 
@@ -649,7 +636,7 @@ class Environment:
             target.addCommand(
                 cmd, targets=[join(target.targetPath, t) for t in tgt],
                 cwd=target.buildPath, final=True, environ=environ)
-        
+
         target.addCommand(Command(self, Link(extName, targetDir),
                                   targets=[self.getEm(extName),
                                            self.getEm(targetDir)],
@@ -713,19 +700,20 @@ class Environment:
                 executed.add(tgt.getName())
                 exploring.discard(tgt.getName())
 
-    def _getExtName(self, name, version):
+    @staticmethod
+    def _getExtName(name, version):
         """ Return folder name for a given package-version """
         return '%s-%s' % (name, version)
 
     def _isInstalled(self, name, version):
         """ Return true if the package-version seems to be installed. """
-        pydir = join(self.getLibFolder(), 'python2.7', 'site-packages')
+        pydir = self.getPythonPackagesFolder()
         extName = self._getExtName(name, version)
         return (exists(join(self.getEmFolder(), extName)) or
                 extName in [x[:len(extName)] for x in os.listdir(pydir)])
 
     def execute(self):
-        if '--help' in self._args[2:]:
+        if '--help' in self._args:
             if self._packages:
                 print("Available packages: "
                       "([ ] not installed, [X] seems already installed)")
@@ -743,7 +731,7 @@ class Environment:
 
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'
-        cmdTargets = [a for a in self._args[2:]
+        cmdTargets = [a for a in self._args
                       if a[0].isalpha() and not a.startswith('xmipp')]
         if cmdTargets:
             # Check that they are all command targets
