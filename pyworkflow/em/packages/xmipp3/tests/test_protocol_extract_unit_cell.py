@@ -503,7 +503,7 @@ class TestProtModelBuilding(BaseTest):
                     'filesPattern': '',
                     'samplingRate': _samplingRate,
                     'copyFiles': True,
-                    'setOrigCoord': True,
+                    'setDefaultOrigin': False,
                     'x': 90. * _samplingRate,
                     'y': 90. * _samplingRate,
                     'z': 0.
@@ -514,7 +514,7 @@ class TestProtModelBuilding(BaseTest):
                     'filesPattern': '',
                     'samplingRate': _samplingRate,
                     'copyFiles': True,
-                    'setDefaultOrigin': False,
+                    'setDefaultOrigin': True,
                     }
         prot = self.newProtocol(ProtImportVolumes, **args)
         prot.setObjLabel('import volume(%s)' % XMIPP_SYM_NAME[sym])
