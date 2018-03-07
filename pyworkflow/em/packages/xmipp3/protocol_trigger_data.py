@@ -44,7 +44,7 @@ class XmippProtTriggerData(ProtProcessParticles):
     def _defineProcessParams(self, form):
 
         form.addParam('outputSize', IntParam, default=60,
-                      label='Output size',
+                      label='Minimum output size',
                       help='How many particles need to be on input to '
                            'create output set.')
         form.addParam('checkInterval', IntParam, default=60,
@@ -55,7 +55,7 @@ class XmippProtTriggerData(ProtProcessParticles):
                       help='If NO is selected, only subset of "Output size" '
                            'particles will be send to output.')
         form.addParam('delay', IntParam, default=1,
-                      label="Delay (sec)",
+                      label="Delay (sec)", 
                       help="Delay in seconds before checking new output")
 
     # --------------------------- INSERT steps functions ----------------------
