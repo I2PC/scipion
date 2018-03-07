@@ -60,12 +60,25 @@ class ProtImportVolumes(ProtImportImages):
                       label=Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
                       label="Set origin of coordinates",
-                      help="Option YES: A new volume will be created with "
+                      help="Option YES: A new volume will be created with a "
                            "specific ORIGIN coordinates. This ORIGIN will be "
-                           "set in the map file header. This option is "
-                           "recommended to run model building programs.\n"
+                           "set in the map file header.\n"
                            "Option NO: The input volume will be saved by "
-                           "default.\n",
+                           "default. This option is recommended to run model "
+                           "building programs with complete volumes. "
+                           "The volume will be centered in the origin of "
+                           "coordinates. Then, for volumes having cyclic, "
+                           "dihedral, icosahedral, octahedral or tetrahedral "
+                           "symmetry, the origin of coordinates coincides "
+                           "with the origin of symmetry of the volume.\n"
+                           "WARNING: In case you want to process "
+                           "the volume with programs requiring a specific "
+                           "symmetry regarding the origin of coordinates, "
+                           "for example the protocol to extract the unit "
+                           "cell, check carefully that the coordinates of the "
+                           "origin preserve the symmetry of the whole volume. "
+                           "This is particularly relevant for loading "
+                           "fragments/subunits of the whole volume.\n",
                       default=False)
         line = form.addLine('Offset',
                             help= "A wizard will suggest you possible "
