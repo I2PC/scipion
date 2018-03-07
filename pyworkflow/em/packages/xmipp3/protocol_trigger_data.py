@@ -55,7 +55,7 @@ class XmippProtTriggerData(ProtProcessParticles):
                       help='If NO is selected, only subset of "Output size" '
                            'particles will be send to output.')
         form.addParam('delay', IntParam, default=1,
-                      label="Delay (sec)", 
+                      label="Delay (sec)", expertLevel=cons.LEVEL_ADVANCED,
                       help="Delay in seconds before checking new output")
 
     # --------------------------- INSERT steps functions ----------------------
