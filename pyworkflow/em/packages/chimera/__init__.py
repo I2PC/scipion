@@ -33,6 +33,7 @@ _logo = "ChimeraLogoSmall.png"
 from protocol_fit import ChimeraProtRigidFit
 from protocol_operate import ChimeraProtOperate
 from protocol_restore import ChimeraProtRestore
-from viewer import ChimeraProtRigidFitViewer
+from viewer import ChimeraProtRigidFitViewer, ChimeraProtOperateViewer, \
+    ChimeraRestoreViewer
 from test_protocol_chimera_operate import TestChimeraOperate
 _environ = getEnviron()
