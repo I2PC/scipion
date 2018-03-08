@@ -33,6 +33,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from convert import readCtfModel, parseGctfOutput, getVersion
+from pyworkflow.protocol import STEPS_PARALLEL
 
 
 # Phase shift target type
@@ -50,6 +51,10 @@ class ProtGctf(em.ProtCTFMicrographs):
     """
     _label = 'CTF estimation on GPU'
     _lastUpdateVersion = VERSION_1_1
+
+    def __init__(self, **kwargs):
+        em.ProtCTFMicrographs.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)
@@ -124,12 +129,15 @@ class ProtGctf(em.ProtCTFMicrographs):
                       help='Whether to plot an estimated resolution ring '
                            'on the power spectrum',
                       expertLevel=params.LEVEL_ADVANCED)
-        form.addParam('GPUCore', params.IntParam, default=0,
+
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
                       expertLevel=params.LEVEL_ADVANCED,
-                      label="Choose GPU core",
-                      help='GPU may have several cores. Set it to zero if '
-                           'you do not know what we are talking about. '
-                           'First core index is 0, second 1 and so on.')
+                      label="Choose GPU IDs",
+                      help="GPU may have several cores. Set it to zero"
+                           " if you do not know what we are talking about."
+                           " First core index is 0, second 1 and so on."
+                           " Motioncor2 can use multiple GPUs - in that case"
+                           " set to i.e. *0 1 2*.")
 
         form.addSection(label='Advanced')
         form.addParam('doEPA', params.BooleanParam, default=False,
@@ -229,7 +237,9 @@ class ProtGctf(em.ProtCTFMicrographs):
                       help='Phase shift target in the search: CCC or '
                            'resolution limit')
 
-    #--------------------------- STEPS functions -------------------------------
+        form.addParallelSection(threads=1, mpi=1)
+
+    # -------------------------- STEPS functions ------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run Gctf with required parameters """
         doneFile = os.path.join(micDir, 'done.txt')
@@ -273,7 +283,9 @@ class ProtGctf(em.ProtCTFMicrographs):
             traceback.print_exc()
 
         try:
-            self.runJob(self._getProgram(), self._args % self._params,  env=self._getEnviron())
+            args = self._args % self._params
+            args += " --gid %(GPU)s "
+            self.runJob(self._getProgram(), args,  env=self._getEnviron())
         except:
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
 
@@ -345,7 +357,7 @@ class ProtGctf(em.ProtCTFMicrographs):
     def _createOutputStep(self):
         pass
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
@@ -376,7 +388,7 @@ class ProtGctf(em.ProtCTFMicrographs):
 
         return [methods]
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _prepareCommand(self):
         sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
         # Convert digital frequencies to spatial frequencies
@@ -426,7 +438,6 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--do_EPA %d " % (1 if self.doEPA else 0)
         self._args += "--boxsize %d " % self._params['windowSize']
         self._args += "--plot_res_ring %d " % (1 if self.plotResRing else 0)
-        self._args += "--gid %d " % self.GPUCore.get()
         self._args += "--bfac %d " % self.bfactor.get()
         self._args += "--B_resH %f " % (2 * self._params['sampling'])
         self._args += "--overlap %f " % self.overlap.get()

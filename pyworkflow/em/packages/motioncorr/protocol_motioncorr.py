@@ -94,10 +94,9 @@ class ProtMotionCorr(ProtAlignMovies):
     def _getConvertExtension(self, filename):
         """ Check wether it is needed to convert to .mrc or not """
         ext = pwutils.getExt(filename).lower()
-        print "_getConvertExtension: ", ext
         return None if ext in ['.mrc', '.mrcs', '.tiff', '.tif'] else 'mrc'
 
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineAlignmentParams(self, form):
         form.addParam('gpuMsg', params.LabelParam, default=True,
                       label='WARNING! You need to have installed CUDA'
