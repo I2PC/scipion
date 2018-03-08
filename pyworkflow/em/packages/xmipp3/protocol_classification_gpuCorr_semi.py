@@ -38,9 +38,7 @@ from datetime import datetime
 from pyworkflow.utils import prettyTime
 from pyworkflow.object import Set
 from pyworkflow.protocol.constants import STATUS_NEW
-import time
 from pyworkflow.em.data import Class2D
-from pyworkflow.monitor import Timer
 from pyworkflow.object import Float, String
 import pyworkflow.protocol.constants as const
 
@@ -135,7 +133,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
     def classifyStep(self):
 
-        initTime = time.time()
         inputImgs = self._getInputFn()
         writeSetOfParticles(self.listOfParticles, inputImgs,
                             alignType=ALIGN_NONE)
@@ -158,26 +155,16 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                 '--keep_best %(keepBest)d --maxShift %(maxshift)d '
                 '--simplifiedMd --classify %(outputClassesFile)s')
         self.runJob("xmipp_cuda_correlation", args % self._params)
-        endTime = time.time()
-        print("En classifyStep", endTime-initTime)
 
 
     # ------ Methods for Streaming 2D Classification --------------
     def _stepsCheck(self):
-
-        with Timer() as t:
-            self._checkNewInput()
-        print "_checkNewInput: %s s" % t.secs
-
-        with Timer() as t:
-            self._checkNewOutput()
-        print "_checkNewOutput: %s s" % t.secs
-
+        self._checkNewInput()
+        self._checkNewOutput()
 
     def _checkNewInput(self):
         """ Check if there are new particles to be processed and add
         the necessary steps."""
-        #initTime = time.time()
         particlesFile = self.inputParticles.get().getFileName()
 
         now = datetime.now()
@@ -196,22 +183,18 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         outputStep = self._getFirstJoinStep()
 
         # Open input and close it as soon as possible
-        with Timer() as t:
-            self._loadInputList()
-        print "_loadInputList: %s s" % t.secs
+        self._loadInputList()
 
         fDeps=[]
         fDeps = self._insertStepsForParticles(fDeps)
         if outputStep is not None:
             outputStep.addPrerequisites(*fDeps)
         self.updateSteps()
-        #endTime = time.time()
-        #print("En _checkNewInput", endTime - initTime)
+
 
     def _checkNewOutput(self):
         """ Check for already done files and update the output set. """
 
-        initTime = time.time()
         # Check for newly done items
         newDone = self._readDoneList()
 
@@ -235,9 +218,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
-
-        endTime = time.time()
-        print("En _checkNewOutput", endTime - initTime)
 
     def createOutputStep(self):
         pass
@@ -284,22 +264,19 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
     # --------------------------- UTILS functions ------------------------------
     def _loadInputList(self):
         """ Load the input set of ctfs and create a list. """
-        with Timer() as t:
-            particlesSet = self._loadInputParticleSet()
-        print "_loadInputParticleSet: %s s" % t.secs
+        particlesSet = self._loadInputParticleSet()
 
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
-        with Timer() as t:
-            for p in particlesSet.iterItems(orderBy='creation',
-                                            where="creation>'%s'"
-                                            % self.lastDate):
-                idx = p.getObjId()
-                if not self.htAlreadyProcessed.isItemPresent(idx):
-                    newPart = p.clone()
-                    self.listOfParticles.append(newPart)
-            self.lastDate = p.getObjCreation()
-        print "_loop: %s s" % t.secs
+
+        for p in particlesSet.iterItems(orderBy='creation',
+                                        where="creation>'%s'"
+                                        % self.lastDate):
+            idx = p.getObjId()
+            if not self.htAlreadyProcessed.isItemPresent(idx):
+                newPart = p.clone()
+                self.listOfParticles.append(newPart)
+        self.lastDate = p.getObjCreation()
 
         particlesSet.close()
         self.debug("Closed db.")
@@ -335,8 +312,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             outputClasses.setStreamState(streamMode)
             outputClasses.setImages(self.inputParticles.get())
 
-        outputClasses.printAll()
-        
         self._fillClassesFromMd(outFnDone, outputClasses, firstTime, streamMode)
         self._updateOutputSet(outputName, outputClasses, streamMode)
 
@@ -390,8 +365,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
                     #Fill the output set with the previous particles
                     # of the classes
-                    #AAAAJJJJ CUIDADO CON LOS IDS
-                    #AAAAJJJJ ARREGLAR LO DEL STREAM CLOSED
                     for cls in cls2d:
                         repId = cls.getObjId()
                         newClass = outputClasses[repId]
@@ -400,13 +373,17 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                                     and img.hasAttribute('_rlnGroupName'):
                                 self.flag_relion=True
                             newClass.append(img)
-                            if img.getObjId()>self.lastId:
-                                self.lastId = img.getObjId()
+                            #We store the last id just in case we found any
+                            # problem with repeated ids that requires to
+                            # change them, this must not happen
+                            #if img.getObjId()>self.lastId:
+                            #    self.lastId = img.getObjId()
 
                     outputClasses.update(newClass)
 
             for imgRow in iterRows(mdImages, sortByLabel=md.MDL_REF):
-                self.lastId+=1
+                #Just in case of having repeated ids, this must not happen
+                #self.lastId+=1
                 imgClassId = imgRow.getValue(md.MDL_REF)
                 imgId = imgRow.getValue(md.MDL_ITEM_ID)
 
@@ -420,7 +397,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
                 part = inputSet[imgId]
                 self._updateParticle(part, imgRow)
-                part.setObjId(self.lastId)
+                # Just in case of having repeated ids, this must not happen
+                #part.setObjId(self.lastId)
                 newClass.append(part)
 
             # this is to update the last class into the set.

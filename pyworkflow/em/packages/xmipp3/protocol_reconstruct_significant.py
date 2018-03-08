@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# *              Amaya Jimenez Moreno (ajimenez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *

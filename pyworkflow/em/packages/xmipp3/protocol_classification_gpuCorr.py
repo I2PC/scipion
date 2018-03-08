@@ -134,8 +134,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
     def classifyStep(self):
 
-        print('classifyStep')
-
         listNumImgs = []
         listNameImgs = []
         change = False
@@ -193,7 +191,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
     def createOutputStep(self):
 
-        print('createOutputStep')
         inputParticles = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(inputParticles)
         self._fillClassesFromLevel(classes2DSet)
@@ -205,8 +202,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
     # --------------------------- Other functions --------------------------
 
     def splitStep(self, level):
-
-        print('splitStep')
 
         expSet = self.imgsExp
         if level > 0:
@@ -233,8 +228,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
     def classifyWholeSetStep(self, level):
 
-        print('classifyWholeSetStep')
-
         i=self.iterReturnClass
         if i == self.numberOfClassifyIterations:
             copy(self._getExtraPath(join('level%03d' % level,
@@ -244,7 +237,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                                          +  '.xmd')))
 
         while i <self.numberOfClassifyIterations:
-            print("ITER",i)
             self.iterationStep(self.ref, self.imgsExp, i, False, level, False,
                                False)
             self.ref = self._getExtraPath(join('level%03d' % level,
@@ -255,14 +247,14 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
             if self.checkContinueClassification(level, i-1):
                 return
 
-            # AJ check attraction
+            #check attraction
             if not self.useAttraction:
                 if self.fastCheckingAtt(level, False):
                     self.iterReturnClass=i
                     return
 
 
-    # AJ check attraction
+    #check attraction
     def fastCheckingAtt (self, level, flag_split):
         listAuxNum = []
         if flag_split:
@@ -274,10 +266,8 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
         for item in metadata:
             numImgs = metadata.getValue(md.MDL_CLASS_COUNT, item)
             listAuxNum.append(numImgs)
-            print("numImgs",numImgs)
         total = sum(listAuxNum)
         th = (self.p * total / len(listAuxNum))
-        print("th", th)
         aux = [i for i in listAuxNum if i<th]
         if len(aux)>0:
             return True
@@ -287,7 +277,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
     def checkContinueClassification(self, level, iter):
 
-        print('checkContinueClassification', level, iter)
         diff=0
         i=0
         metadata = md.MetaData(self._getExtraPath(join('level%03d' % level,
@@ -311,7 +300,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                     self.listContinueClass.append(refImg)
             i+=1
         num=(diff*100/i)
-        print('checkContinueClassification',num,diff,i)
         if num<self.percentStopClassify and iter>0:
             return True
         else:
@@ -320,8 +308,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
     def iterationStep (self, refSet, imgsExp, iter, useReferenceImages,
                        level, flag_split, flag_attraction):
-
-        print('iterationStep')
 
         if not exists(join(self._getExtraPath(), 'level%03d' % level)):
             mkdir(join(self._getExtraPath(), 'level%03d' % level))
@@ -427,7 +413,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                     self.runJob("mpirun -np 4 -bynode xmipp_mpi_classify_CL2D",
                                 args % self._params)
                 except Exception as ex:
-                    print("Error in CL2D: ", str(ex))
                     flag_error = True
 
             if flag_split:
@@ -464,8 +449,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
             # update with +1 this value
             self.depthSplit += 1
 
-            print('CHANGEEEEEEEEEEEEEEEE')
-
             self.imgsExp = self._getExtraPath(join('level%03d' % level,
                                                    'images_level%03d' % level
                                                    + '_NoAtt.xmd'))
@@ -475,7 +458,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
             args = ('-i %(input)s -o %(outputMd)s')
             self.runJob("xmipp_metadata_utilities", args % self._params,
                         numberOfMpi=1)
-
 
             i = 0
             while i < self.numberOfSplitIterations:
@@ -532,8 +514,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
             self.depth+=1
 
         if change:
-            print('CHANGEEEEEEEEEEEEEEEE', level)
-
             self._params = {'input': 'class%06d_images' % (labelMaxClass)  +
                                      '@' + mdToCheck,
                             'outputMd': self._getExtraPath(join('level%03d'
@@ -576,19 +556,16 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
             listAuxNum.append(numImgs)
             listAuxName.append(name)
             listAuxRef.append(ref)
-            print(listAuxNum)
         total = sum(listAuxNum)
 
         th = (self.p*total/len(listAuxNum))
         labelMinClass=[]
-        print('TH', self.p * total / len(listAuxNum))
         for i in range(len(listAuxNum)):
             if listAuxNum[i]<th:
                 labelMinClass.append(listAuxRef[i])
                 listAuxNum[i] = -1
 
         labelMaxClass = listAuxRef[listAuxNum.index(max(listAuxNum))]
-        print("labelMaxClass",labelMaxClass)
         listAuxNum[labelMaxClass-1] = -1
 
         if len(labelMinClass)>0:
@@ -601,8 +578,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
 
     def checkOutput(self, level):
-
-        print('checkOutput')
 
         listAuxString = []
         listAuxNum = []
@@ -618,9 +593,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
             listAuxNum.append(numImgs)
             refImg = metadataItem.getValue(md.MDL_REF, item)
             listAuxRefs.append(refImg)
-        print(listAuxString)
-        print(listAuxNum)
-        print(listAuxRefs)
 
         maxValue = max(listAuxNum)
         maxPos = listAuxNum.index(maxValue)
@@ -642,10 +614,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
 
     def generateMetadata(self, listNameImgs, listNumImgs, level):
 
-        print('generateMetadata', level)
-        print('listNameImgs en generateMetadata', listNameImgs)
-        print('listNumImgs en generateMetadata', listNumImgs)
-
         # Renumerate unchanged classes
         listNewNumImages = [-1] * len(listNumImgs)
         count = 1
@@ -661,7 +629,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                 name = listNameImgs[i]
                 fn = name[name.find('@') + 1:-4] + '.xmd'
                 numRef = int(name[0:6])
-                print(name, numRef)
 
                 mdClass = md.MetaData("classes@" + fn)
                 for row in iterRows(mdClass):
@@ -689,7 +656,6 @@ class XmippProtGpuCrrCL2D(ProtAlign2D):
                 name = listNameImgs[i]
                 fn = name[name.find('@') + 1:-4] + '.xmd'
                 numRef = int(name[0:6])
-                print(name, numRef)
 
                 # Read the list of images in this class
                 mdImgsInClass = md.MetaData(
