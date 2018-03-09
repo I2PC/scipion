@@ -28,7 +28,7 @@ from pyworkflow.em.packages.xmipp3.protocol_extract_particles import *
 from pyworkflow.em.packages.xmipp3.protocol_classification_gpuCorr import *
 
 # Number of mics to be processed
-NUM_MICS = 20 #maximum the number of mics in the relion set
+NUM_MICS = 5 #maximum the number of mics in the relion set
 
 class TestGpuCorrClassifier(BaseTest):
     @classmethod
@@ -105,7 +105,7 @@ class TestGpuCorrClassifier(BaseTest):
     def runClassify(self, inputParts):
         numClasses = int(inputParts.getSize()/1000)
         if numClasses<2:
-            numClasses=2
+            numClasses=4
         protClassify = self.newProtocol(XmippProtGpuCrrCL2D,
                                         useReferenceImages=False,
                                         numberOfClasses=numClasses)
@@ -149,16 +149,20 @@ class TestGpuCorrClassifier(BaseTest):
         protImportAvgs = self.importAverages()
         if protImportAvgs.isFailed():
             self.assertTrue(False)
+        outMics = protImportMics.outputMicrographs
 
-        # protSubsetMics = self.subsetMics(protImportMics.outputMicrographs)
-        # if protSubsetMics.isFailed():
-        #     self.assertTrue(False)
+        if NUM_MICS<20:
+            protSubsetMics = self.subsetMics(protImportMics.outputMicrographs)
+            if protSubsetMics.isFailed():
+                self.assertTrue(False)
+            outMics = protSubsetMics.outputMicrographs
 
-        protCtf = self.calculateCtf(protImportMics.outputMicrographs)
+
+        protCtf = self.calculateCtf(outMics)
         if protCtf.isFailed():
             self.assertTrue(False)
 
-        protPicking = self.runPicking(protImportMics.outputMicrographs)
+        protPicking = self.runPicking(outMics)
         if protPicking.isFailed():
             self.assertTrue(False)
 
