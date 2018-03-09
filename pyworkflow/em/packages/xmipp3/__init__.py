@@ -74,7 +74,6 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
 #AJ
 from protocol_classification_gpuCorr import XmippProtGpuCrrCL2D
-from protocol_classification_gpuCorr_full import XmippProtStrGpuCrrCL2D
 from protocol_classification_gpuCorr_semi import XmippProtStrGpuCrrSimple
 #END
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
