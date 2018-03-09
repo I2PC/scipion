@@ -30,6 +30,7 @@ from pyworkflow.em.packages.eman2.protocol_autopick import *
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import *
 from pyworkflow.em.packages.xmipp3.protocol_classification_gpuCorr_semi \
     import *
+import time
 
 # Number of mics to be processed
 NUM_MICS = 5
