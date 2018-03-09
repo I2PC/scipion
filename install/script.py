@@ -23,9 +23,13 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import glob
 import os
 import sys
-from install.funcs import Environment, progInPath
+
+import shutil
+
+from install.funcs import Environment
 
 get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
@@ -45,10 +49,61 @@ SCIPION = os.path.realpath(SCIPION)
 SCIPION = os.path.dirname(SCIPION)
 SCIPION = os.path.abspath(SCIPION)
 
-SW = SCIPION + '/software'
-SW_BIN = SW + '/bin'
-SW_LIB = SW + '/lib'
-SW_INC = SW + '/include'
+
+SW_BIN = env.getBinFolder()
+SW_LIB = env.getLibFolder()
+SW_INC = env.getIncludeFolder()
+SW_TMP = env.getTmpFolder()
+SW_PYT_PACK = env.getPythonPackagesFolder()
+
+#  *******************************
+#  *  DETECT CURRENT INSTALLATION
+#  *******************************
+# Try to detect current installation and correct it if necessary
+
+
+def clean_python_2_7_8_installation():
+    # Detects installations where python 2.7.8 was installed.
+    # In those installations we where using sqlite 3.6.23 and matplotlib-1.3.1
+    # A bit of a hack but we will check based on matplotlib path!
+    # Also this is not an exhaustive clean that might be more detailed
+    # but enough to trigger the proper installation of the new versions.
+
+    oldMatplotLibPath = Environment.getPythonPackagesFolder() + '/matplotlib-1.3.1*'
+    print'Matplot lib path at %s' % oldMatplotLibPath
+
+    def removeByPattern(pattern):
+        for f in glob.glob(pattern):
+            os.remove(f)
+
+    # If old matplot lib exists
+    if len(glob.glob(oldMatplotLibPath)) != 0:
+        print "OLD Installation identified: removing Python and sqlite"
+
+        # remove sqlite3 3.6.23
+        sqliteLibs = Environment.getLibFolder() + "/libsqlite3*"
+        removeByPattern(sqliteLibs)
+
+        sqliteInc = Environment.getIncludeFolder() + "/sqlite3*"
+        removeByPattern(sqliteInc)
+
+        os.remove(Environment.getBinFolder() + "/sqlite3")
+
+        # remove python installation
+        pythonBinaries = Environment.getBinFolder() + "/python*"
+        removeByPattern(pythonBinaries)
+
+        # Python at include
+        pythonIncludes = Environment.getIncludeFolder() + "/python2.7"
+        shutil.rmtree(pythonIncludes)
+
+        # Python at lib folder
+        shutil.rmtree(Environment.getPythonFolder())
+
+        return
+
+
+clean_python_2_7_8_installation()
 
 #  ************************************************************************
 #  *                                                                      *
@@ -60,11 +115,11 @@ cmake = env.addLibrary(
     'cmake',
     tar='cmake-3.2.2.tgz',
     targets=[env.getBin('cmake')],
-    commands=[('cd software/tmp/cmake-3.2.2; '
+    commands=[('cd ' + SW_TMP + '/cmake-3.2.2; '
                './bootstrap --prefix=../.. --parallel=%d' % env.getProcessors(),
-               'software/tmp/cmake-3.2.2/Makefile'),
-              ('cd software/tmp/cmake-3.2.2; make install -j %d'
-               % env.getProcessors(), 'software/bin/cmake')],
+               SW_TMP + '/cmake-3.2.2/Makefile'),
+              ('cd ' + SW_TMP + '/cmake-3.2.2; make install -j %d'
+               % env.getProcessors(), SW_BIN + '/cmake')],
     default=False)
 
 # In order to get both the float and double libraries of fftw
@@ -106,8 +161,8 @@ tk = env.addLibrary(
 # Special case: tk does not make the link automatically, go figure.
 tk_wish = env.addTarget('tk_wish')
 tk_wish.addCommand('ln -v -s wish8.6 wish',
-                   targets='software/bin/wish',
-                   cwd='software/bin')
+                   targets=SW_BIN + '/wish',
+                   cwd= SW_BIN)
 
 zlib = env.addLibrary(
     'zlib',
@@ -119,7 +174,6 @@ jpeg = env.addLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
     flags=['--without-simd'])
-    #flags=([] if progInPath('nasm') else ['--without-simd']))
 
 png = env.addLibrary(
     'png',
@@ -133,7 +187,7 @@ tiff = env.addLibrary(
 
 sqlite = env.addLibrary(
     'sqlite3',
-    tar='sqlite-3.6.23.tgz',
+    tar='SQLite-1a584e49.tgz',
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
@@ -147,7 +201,7 @@ hdf5 = env.addLibrary(
 
 python = env.addLibrary(
     'python',
-    tar='Python-2.7.8.tgz',
+    tar='Python-2.7.14.tgz',
     targets=[env.getLib('python2.7'), env.getBin('python')],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
@@ -169,8 +223,8 @@ swig = env.addLibrary(
 sh_alignment = env.addLibrary(
     'sh_alignment',
     tar='sh_alignment.tgz',
-    commands=[('cd software/tmp/sh_alignment; make install',
-               'software/lib/python2.7/site-packages/sh_alignment/frm.py')],
+    commands=[('cd ' + SW_TMP + '/sh_alignment; make install',
+               SW_PYT_PACK + '/sh_alignment/frm.py')],
     deps=[python, swig],
     default=False)
 
@@ -187,10 +241,10 @@ arpack = env.addLibrary(
     'arpack',
     tar='arpack-96.tgz',
     neededProgs=['gfortran'],
-    commands=[('cd software/bin; ln -s $(which gfortran) f77',
-               'software/bin/f77'),
-              ('cd software/tmp/arpack-96; make all',
-               'software/lib/libarpack.a')],
+    commands=[('cd ' + SW_BIN + '; ln -s $(which gfortran) f77',
+               SW_BIN + '/f77'),
+              ('cd ' + SW_TMP + '/arpack-96; make all',
+               SW_LIB +'libarpack.a')],
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
@@ -211,8 +265,8 @@ opencv = env.addLibrary(
 boost = env.addLibrary(
     'boost',
     tar='boost_1_56_0.tgz',
-    commands=[('cp -rf software/tmp/boost_1_56_0/boost software/include/', 
-               'software/include/boost')],
+    commands=[('cp -rf ' + SW_TMP + '/boost_1_56_0/boost ' + SW_INC + '/',
+               SW_INC + '/boost')],
     default=False)
 
 nfft3 = env.addLibrary(
@@ -231,146 +285,51 @@ nfft3 = env.addLibrary(
 # creating a single Python egg. That way the modules create a full
 # directory with the name of package, and we use that as a target.
 
-setuptools = env.addModule(
-    'setuptools',
-    tar='setuptools-5.4.1.tgz',
-    targets=['setuptools.pth'])
-
-scons = env.addModule(
-    'scons',
-    targets=[env.getBin('scons')],
-    tar='scons-2.3.4.tgz')
-
-numpy = env.addModule(
-    'numpy',
-    tar='numpy-1.8.1.tgz',
-    deps=[lapack])
-
-six = env.addModule(
-    'six',
-    tar='six-1.7.3.tgz',
-    targets=['six-1.7.3*'])
-
-dateutil = env.addModule(
-    'dateutil',
-    tar='python-dateutil-1.5.tgz',
-    targets=['python_dateutil-1.5*'],
-    deps=[setuptools, six])
-
-pyparsing = env.addModule(
-    'pyparsing',
-    tar='pyparsing-2.0.2.tgz',
-    targets=['pyparsing.py'])
-
-matplotlib = env.addModule(
-    'matplotlib',
-    tar='matplotlib-1.3.1.tgz',
-    targets=['matplotlib-1.3.1*'],
-    numpyIncludes=True,
-    deps=[numpy, png, dateutil, pyparsing])
-
-psutil = env.addModule(
-    'psutil',
-    targets=['psutil-2.1.1*'],
-    tar='psutil-2.1.1.tgz')
-
-mpi4py = env.addModule(
-    'mpi4py',
-    tar='mpi4py-1.3.1.tgz')
-
-scipy = env.addModule(
-    'scipy',
-    tar='scipy-0.14.0.tgz',
-    default=not noScipy,
-    deps=[lapack, numpy, matplotlib])
-
-bibtexparser = env.addModule(
-    'bibtexparser',
-    tar='bibtexparser-0.5.tgz')
-
-django = env.addModule(
-    'django',
-    tar='Django-1.5.5.tgz')
-
-paramiko = env.addModule(
-    'paramiko',
-    tar='paramiko-1.14.0.tgz',
-    default=False)
-
-pillow = env.addModule(
-    'Pillow',
-    tar='Pillow-2.5.1.tgz',
-    targets=['Pillow-2.5.1*'],
-    deps=[setuptools, jpeg])
-
-winpdb = env.addModule(
-    'winpdb',
-    tar='winpdb-1.4.8.tgz',
-    targets=[env.getBin('winpdb')],
-    default=False)
-
-pyzmq = env.addModule(
-    'pyzmq',
-    tar='pyzmq-2.2.0.1.tar.gz',
-    default=False)
-
-jinja2 = env.addModule(
-    'jinja2',
-    tar='Jinja2-2.7.3.tar.gz',
-    default=False)
-
-tornado = env.addModule(
-    'tornado',
-    tar='tornado-4.0.2.tar.gz',
-    default=False)
-
-lxml = env.addModule(
-    'lxml',
-    tar='lxml-3.4.1.tgz',
-    targets=['lxml-3.4.1*'],
-    libChecks=['libxml-2.0', 'libxslt'],
-    deps=[], # libxml2, libxslt],
-    incs=['/usr/include/libxml2'],
-    default=False)
-
+# Add pip to our python
 pip = env.addTarget('pip')
-pip.addCommand('python scripts/get-pip.py', targets='software/lib/python2.7/site-packages/pip', default=False, final=True)
-scpSoftware = os.environ['SCIPION_SOFTWARE']
+pip.addCommand('python scripts/get-pip.py', targets=SW_PYT_PACK + '/pip',
+               default=True, final=True)
 
-requests = env.addTarget('requests')
-requests.addCommand('python %s/lib/python2.7/site-packages/pip install requests'%scpSoftware,
-                      targets='software/lib/python2.7/site-packages/requests', default=False, final=True,
-                      deps=[pip])
+# Scons has a different pattern: it is expected to be in bin..TODO
+scons = env.addModule(
+     'scons',
+     targets=[env.getBin('scons')],
+     tar='scons-2.3.4.tgz')
+#env.addPipModule('scons','2.3.6', target='scons-2.3.6')
 
-# libxml2 and libxslt are checked instead of compiled because
-# they are so hard to compile right.
+# Required python modules
+env.addPipModule('setuptools', '38.2.5')
+numpy = env.addPipModule('numpy','1.14.1')
+matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
+env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
+env.addPipModule('mpi4py', '1.3.1')
+scipy = env.addPipModule('scipy', '0.14.0',
+                     default=not noScipy, deps=[lapack, matplotlib])
+env.addPipModule('bibtexparser', '0.6.2')
+env.addPipModule('django', '1.5.5')
+env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
+    deps=[jpeg])
 
-ipython = env.addModule(
-    'ipython',
-    tar='ipython-2.1.0.tar.gz',
-    deps=[pyzmq, jinja2, tornado],
-    default=False)
 
-cython = env.addModule(
-    'cython',
-    tar='Cython-0.22.tgz',
-    targets=['Cython-0.22*'],
-    default=False)
+# Optional python modules
+env.addPipModule('paramiko', '1.14.0', default=False)
+# 1.4.8 could not be found ! Using latest available
+env.addPipModule('winpdb', '1.3.6', default=False)
 
-cythongsl = env.addModule(
-    'cythongsl',
-    tar='CythonGSL-0.2.1.tgz',
-    targets=['CythonGSL-0.2.1*'],
-    default=False,
-    deps=[cython])
-# TODO: add checks for dependencies: GSL
+env.addPipModule('lxml', '3.4.1', target='lxml-3.4.1*', default=False)
+env.addPipModule('requests', '2.18.4', default=False)
 
-sklearn = env.addModule(
-    'sklearn',
-    tar='scikit-learn-0.17.tar.gz',
-    default=False,
-    deps=[scipy, numpy, cython])
-
+# These were dependencies of iPython
+env.addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
+env.addPipModule('jinja2', '2.7.3', default=False)
+env.addPipModule('tornado', '4.0.2', default=False)
+env.addPipModule('ipython', '2.1.0', target='IPython', default=False)
+cython = env.addPipModule('cython', '0.22', target='Cython-0.22*', default=False)
+cythongsl = env.addPipModule('cythongsl','0.2.1',
+                         target='CythonGSL-0.2.1*',
+                         default=False, deps=[cython])
+env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
+             default=False, deps=[scipy, cython])
 
 
 #  ************************************************************************
@@ -501,21 +460,19 @@ env.addPackage('dogpicker', version='0.2.1',
 env.addPackage('nma',
                tar='nma.tgz',
                commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
-                         ('cd NMA_cart; LDFLAGS=-L%s/lib make; mv nma_* ..' %
-                          os.environ['SCIPION_SOFTWARE'], 'nma_diag_arpack')],
+                         ('cd NMA_cart; LDFLAGS=-L%s make; mv nma_* ..' %
+                          Environment.getLibFolder(), 'nma_diag_arpack')],
                deps=['arpack'])
 
 env.addPackage('cryoem', version='1.0',
                 tar='cryoem-1.0.tgz',
                 pythonMod=True, default=False,
-                numpyIncludes=True,
-                deps=[numpy, scipy, matplotlib, cythongsl])
+                deps=[scipy, matplotlib, cythongsl])
 
 env.addPackage('powerfit', version='2.0',
                 tar='powerfit.tgz',
                 targets=['powerfit-2.0*'],
                 pythonMod=True, default=False,
-                numpyIncludes=True,
                 deps=[numpy, scipy, fftw3])
 
 env.addPackage('gEMpicker', version='1.1',

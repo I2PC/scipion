@@ -40,6 +40,7 @@ import unittest
 
 import pyworkflow.utils as pwutils
 import pyworkflow.tests as pwtests
+from pyworkflow import HOME
 
 from pyworkflow.tests import *
 
@@ -123,7 +124,7 @@ class Tester():
         """ Return tests discovered in paths that follow the given pattern """
         for path in [join('pyworkflow', x) for x in paths]:
             tests.addTests(unittest.defaultTestLoader.discover(
-                path, pattern=pattern, top_level_dir=pw.HOME))
+                path, pattern=pattern, top_level_dir=HOME))
 
     def _match(self, itemName):
         itemLower = itemName.lower()
