@@ -60,21 +60,27 @@ class ProtImportVolumes(ProtImportImages):
                       label=Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
                       label="Set origin of coordinates",
-                      help="Option YES: A new volume will be created with a "
-                           "specific ORIGIN coordinates. This ORIGIN will be "
+                      help="Option YES: A new volume will be created with the "
+                           "given ORIGIN of coordinates. This ORIGIN will be "
                            "set in the map file header.\n"
-                           "Option NO: The input volume will be saved by "
-                           "default. This option is recommended to run model "
-                           "building programs with complete volumes. "
-                           "The volume will be centered in the origin of "
-                           "coordinates. Then, for volumes having cyclic, "
-                           "dihedral, icosahedral, octahedral or tetrahedral "
-                           "symmetry, the origin of coordinates coincides "
-                           "with the origin of symmetry of the volume.\n"
+                           # Option YES: The binary of the object volume will 
+                           # be saved with its header modified. 
+                           # Option NO: The binary of the object volume will 
+                           # saved without any modifications. Then, the volume
+                           # is the input volume itself with other filename.
+                           # In this case the coordinates of the origin will
+                           # be saved as SCIPION object, not in the header 
+                           # volume. 
+                           # Volumes are not copied by default. They are only
+                           # copied if the user has selected the option YES in
+                           # the advanced question form "Copy files?"
+                           "Option NO: The ORIGIN of coordinates will be " 
+                           "placed at the center of the whole volume. This "
+                           "ORIGIN will NOT be set in the map file header. \n"
                            "WARNING: In case you want to process "
                            "the volume with programs requiring a specific "
                            "symmetry regarding the origin of coordinates, "
-                           "for example the protocol to extract the unit "
+                           "for example the protocol extract unit "
                            "cell, check carefully that the coordinates of the "
                            "origin preserve the symmetry of the whole volume. "
                            "This is particularly relevant for loading "
