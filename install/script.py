@@ -318,7 +318,7 @@ env.addPipModule('paramiko', '1.14.0', default=False)
 env.addPipModule('winpdb', '1.3.6', default=False)
 
 env.addPipModule('lxml', '3.4.1', target='lxml-3.4.1*', default=False)
-env.addPipModule('requests', '2.18.4', default=False)
+env.addPipModule('requests', '2.18.4', default=True)
 
 # These were dependencies of iPython
 env.addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
