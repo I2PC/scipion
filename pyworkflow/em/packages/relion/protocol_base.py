@@ -837,7 +837,7 @@ class ProtRelionBase(EMProtocol):
             continueRun = self.continueRun.get()
             continueIter = self._getContinueIter()
             mdParts = md.MetaData(continueRun._getFileName('data',
-                                                           iter = continueIter))
+                                                           iter=continueIter))
             mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
             mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
             
@@ -859,8 +859,9 @@ class ProtRelionBase(EMProtocol):
             mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES,
                                self._getNumberOfFrames())
             if isVersion2():
-                # FIXME: set to 1 till frame averaging is implemented in xmipp
-                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
+                if not mdMovies.containsLabel(md.RLN_PARTICLE_NR_FRAMES_AVG):
+                    # set to 1 till frame averaging is implemented in xmipp
+                    mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
 
             mdAux.write(movieFn, md.MD_OVERWRITE)
             cleanPath(auxMovieParticles.getFileName())
@@ -1186,7 +1187,7 @@ class ProtRelionBase(EMProtocol):
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
                         "%06d@fake_movie_%06d.mrcs"
-                        % (img.getFrameId(), img.getMicId()))  # fix relion-2.1
+                        % (img.getFrameId(), img.getMicId()))
 
     def _postprocessParticleRow(self, part, partRow):
         if part.hasAttribute('_rlnGroupName'):

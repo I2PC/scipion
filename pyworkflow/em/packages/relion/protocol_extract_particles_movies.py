@@ -229,6 +229,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                 mData.read(moviePartsStar)
                 mData.removeLabel(md.RLN_IMAGE_ID)
                 mdAll.unionAll(mData)
+                mdAll.addItemId()
 
         # move output movie particle stacks and change rlnImageName in star file
         from convert import relionToLocation, locationToRelion
@@ -240,11 +241,17 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
             if not pwutils.exists(newPath):
                 pwutils.moveFile(self._getPath(imgPath), newPath)
             mdAll.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
+            # set particleId=index from originalParticleName and frameId=index from micName
+            frameId, _ = relionToLocation(mdAll.getValue(md.RLN_MICROGRAPH_NAME, objId))
+            mdAll.setValue(md.MDL_FRAME_ID, long(frameId), objId)
+            particleId, _ = relionToLocation(mdAll.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
+            mdAll.setValue(md.MDL_PARTICLE_ID, long(particleId), objId)
 
         # delete old imgPath
         pwutils.cleanPath(self._getExtraPath('output/extra'))
 
         particleMd = self._getFileName('outputParts')
+
         mdAll.write(particleMd)
         readSetOfMovieParticles(particleMd, movieParticles,
                                 removeDisabled=False,
@@ -411,5 +418,5 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
             partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
 
     def _postprocessImageRow(self, img, imgRow):
-        img.setFrameId(imgRow.getValue(md.RLN_IMAGE_FRAME_NR))
-        #img.setParticleId(imgRow.getValue(md.RLN_PARTICLE_ID))  # this is set in rowToParticle
+        img.setFrameId(imgRow.getValue(md.MDL_FRAME_ID))
+        img.setParticleId(imgRow.getValue(md.MDL_PARTICLE_ID))

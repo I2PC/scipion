@@ -621,8 +621,9 @@ def writeSetOfParticles(imgSet, starFile,
         starFile: the filename where to write the meta
         filesMapping: this dict will help when there is need to replace images names
     """
-    filesDict = convertBinaryFiles(imgSet, outputDir)
-    kwargs['filesDict'] = filesDict
+    if outputDir is not None:
+        filesDict = convertBinaryFiles(imgSet, outputDir)
+        kwargs['filesDict'] = filesDict
     partMd = md.MetaData()
     setOfImagesToMd(imgSet, partMd, particleToRow, **kwargs)
     
@@ -851,7 +852,7 @@ def convertBinaryFiles(imgSet, outputDir, extension='mrcs'):
         return newFn
         
     ext = getExt(imgSet.getFirstItem().getFileName())[1:] # remove dot in extension
-    
+
     if ext == extension:
         mapFunc = createBinaryLink
         print "convertBinaryFiles: creating soft links."
