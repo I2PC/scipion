@@ -30,9 +30,10 @@ import pyworkflow.em.showj as showj
 from protocol_movie_opticalflow import (XmippProtOFAlignment,
                                         OBJCMD_MOVIE_ALIGNCARTESIAN)
 from protocol_movie_correlation import XmippProtMovieCorr
+from protocol_movie_max_shift import XmippProtMovieMaxShift
 
 class XmippMovieAlignViewer(Viewer):
-    _targets = [XmippProtOFAlignment, XmippProtMovieCorr]
+    _targets = [XmippProtOFAlignment, XmippProtMovieCorr, XmippProtMovieMaxShift]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
     _label = 'viewer optical/correlation alignment'
