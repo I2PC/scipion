@@ -430,8 +430,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 				threadParams->buffer,
 				parent->blob.radius, parent->maxVolumeIndexYZ, parent->useFast,
 				parent->maxResolutionSqr,
-				threadParams->gpuStream,
-				parent->blob.order, parent->blob.alpha);
+				threadParams->gpuStream);
 			parent->logProgress(threadParams->buffer->noOfImages);
 		}
 		// once the processing finished, buffer can be reused
