@@ -70,7 +70,6 @@ def clean_python_2_7_8_installation():
     # but enough to trigger the proper installation of the new versions.
 
     oldMatplotLibPath = Environment.getPythonPackagesFolder() + '/matplotlib-1.3.1*'
-    print'Matplot lib path at %s' % oldMatplotLibPath
 
     def removeByPattern(pattern):
         for f in glob.glob(pattern):
@@ -78,7 +77,7 @@ def clean_python_2_7_8_installation():
 
     # If old matplot lib exists
     if len(glob.glob(oldMatplotLibPath)) != 0:
-        print "OLD Installation identified: removing Python and sqlite"
+        print("OLD Installation identified: removing Python and sqlite")
 
         # remove sqlite3 3.6.23
         sqliteLibs = Environment.getLibFolder() + "/libsqlite3*"
@@ -287,7 +286,7 @@ nfft3 = env.addLibrary(
 
 # Add pip to our python
 pip = env.addTarget('pip')
-pip.addCommand('python scripts/get-pip.py', targets=SW_PYT_PACK + '/pip',
+pip.addCommand('python scripts/get-pip.py -I', targets=SW_PYT_PACK + '/pip',
                default=True, final=True)
 
 # Scons has a different pattern: it is expected to be in bin..TODO
