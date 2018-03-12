@@ -218,7 +218,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
 
         self._insertFunctionStep('createOutputStep')
 
-        # --------------------------- STEPS functions -----------------------------
+        # --------------------------- STEPS functions --------------------------
 
     def significantStep(self, iterNumber, alpha):
         iterDir = self._getTmpPath('iter%03d' % iterNumber)
@@ -396,7 +396,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputSet, vol)
 
-    # --------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         if self.thereisRefVolume:
@@ -444,11 +444,11 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                       self.getObjectTag('inputSet')
             if self.thereisRefVolume:
                 retval += " We used %s volume " % self.getObjectTag('refVolume')
-                retval += "as a starting point of the reconstruction iterations."
+                retval+="as a starting point of the reconstruction iterations."
             else:
                 retval += " We started the iterations with 1 random volume."
             retval += " %d iterations were run going from a " % self.iter
-            retval += "starting significance of %f%% to a final one of %f%%." % \
+            retval+="starting significance of %f%% to a final one of %f%%." % \
                       (self.alpha0, self.alphaF)
             if self.useImed:
                 retval += " IMED weighting was used."
