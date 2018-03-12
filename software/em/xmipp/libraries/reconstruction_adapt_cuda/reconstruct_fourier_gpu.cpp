@@ -249,7 +249,7 @@ void ProgRecFourierGPU::cropAndShift(
 				FFT_IDX2DIGFREQ(j, parent->paddedImgSize, tempMyPadd[0]);
 				FFT_IDX2DIGFREQ(i, parent->paddedImgSize, tempMyPadd[1]);
 				if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1]> parent->maxResolutionSqr) {
-					continue;
+					paddedFourierTmp = std::complex<double>(0.0, 0.0);
 				}
 				// do the shift
 				int myPadI = (i < halfY) ?	i + sizeX : i - paddedFourier.ydim + sizeX;

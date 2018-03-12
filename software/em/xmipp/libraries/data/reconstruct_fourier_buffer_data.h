@@ -54,15 +54,15 @@ struct RecFourierBufferData
 		spaces = new RecFourierProjectionTraverseSpace[maxNoOfImages * noOfSymmetries];
 		if (hasFFTs) {
 			paddedImages = NULL;
-			FFTs = new float[fftSizeX * fftSizeY * maxNoOfImages * 2]; // *2 since it's complex
+			FFTs = new float[fftSizeX * fftSizeY * maxNoOfImages * 2](); // *2 since it's complex
 		} else {
 			FFTs = NULL;
-			paddedImages = new float[paddedImgSize * paddedImgSize * maxNoOfImages];
+			paddedImages = new float[paddedImgSize * paddedImgSize * maxNoOfImages]();
 		}
 
 		if (hasCTFs) {
-			CTFs = new float[fftSizeX * fftSizeY * maxNoOfImages];
-			modulators = new float[fftSizeX * fftSizeY * maxNoOfImages];
+			CTFs = new float[fftSizeX * fftSizeY * maxNoOfImages]();
+			modulators = new float[fftSizeX * fftSizeY * maxNoOfImages]();
 		} else {
 			CTFs = modulators = NULL;
 		}
