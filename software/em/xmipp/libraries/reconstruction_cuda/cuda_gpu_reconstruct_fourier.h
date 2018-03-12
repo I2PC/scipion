@@ -28,13 +28,12 @@
 
 #include <map>
 
-#include "data/reconstruct_fourier_projection_traverse_space.h"
-#include "data/reconstruct_fourier_buffer_data.h"
-#include "data/reconstruct_fourier_defines.h"
+#include <reconstruction/reconstruct_fourier_projection_traverse_space.h>
+#include <reconstruction/reconstruct_fourier_buffer_data.h>
+#include <reconstruction/reconstruct_fourier_defines.h>
+#include <data/xmipp_error.h>
 
-#include "reconstruction_cuda/cuda_xmipp_utils.h"
-#include "reconstruction_adapt_cuda/xmipp_gpu_utils.h"
-
+#include <reconstruction_cuda/cuda_xmipp_utils.h>
 
 struct RecFourierBufferDataGPU;
 
@@ -58,12 +57,15 @@ struct FRecBufferDataGPUWrapper {
 	 */
 	void copyToDevice(int stream);
 
-	// object in CPU memory space
+	// object in CPU memory space (page-locked)
 	RecFourierBufferDataGPU* cpuCopy;
 
 	// object in GPU memory space
 	RecFourierBufferDataGPU* gpuCopy;
 };
+
+/** set device to use for calculation (has to be done by each thread) */
+void setDevice(int device);
 
 /**
  * Method will allocate buffer wrapper for given stream
@@ -130,13 +132,18 @@ void copyBlobTable(float* blobTableSqrt, int size);
  */
 void releaseBlobTable();
 
+void pinMemory(RecFourierBufferData* buffer);
+
+void unpinMemory(RecFourierBufferData* buffer);
+
 /**
  * Method will copy constants used for calculation to GPU memory
  * Blocking operation
  */
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
-		float blobRadius, float iDeltaSqrt);
+		float blobRadius, float blobAlpha,
+		float iDeltaSqrt, float iw0, float oneOverBessiOrderAlpha);
 
 /**
  * Method will copy content of the 'buffer' to GPU and
@@ -147,7 +154,7 @@ void copyConstants(
 void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,
 		float blobRadius, int maxVolIndexYZ, bool useFast,
-		float maxResolutionSqr, int stream);
+		float maxResolutionSqr, int stream, int blobOrder, float blobAlpha);
 
 void processBufferGPUInverse(float* tempVolumeGPU, float* tempWeightsGPU,
 		RecFourierBufferData* buffer,

@@ -33,6 +33,8 @@ import time
 from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
+SCIPION_STATS_SERVER = 'http://scipion.i2pc.es'
+SCIPION_STATS_WORKFLOW_APP = SCIPION_STATS_SERVER + '/report_protocols/api/workflow/workflow/'
 
 
 class ProjectNotifier(object):
@@ -76,15 +78,19 @@ class ProjectNotifier(object):
         return delta < timedelta(seconds=seconds)
 
     def _sendData(self, url, dataDict=None):
-        #then connect to webserver a send json
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
-        data = urllib.urlencode(dataDict)
-        content = opener.open(url, data=data).read()
-        now = time.time()
-        #print "Notifying...."
-        #pwutils.prettyDate(now)
-        #print "dataDict: ", dataDict
-        os.utime(self._getUuidFileName(), (now, now))
+        try:
+            # then connect to webserver a send json
+            # set debuglevel=0 for no messages
+            opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))
+            data = urllib.urlencode(dataDict)
+            content = opener.open(url, data=data).read()
+            now = time.time()
+            #print "Notifying...."
+            #pwutils.prettyDate(now)
+            #print "dataDict: ", dataDict
+            os.utime(self._getUuidFileName(), (now, now))
+        except Exception:
+            print "Could not notify, maybe there is not internet connection."
 
     def _dataModified(self, projectWorfklow):
         try:
@@ -97,43 +103,50 @@ class ProjectNotifier(object):
         return True
 
     def notifyWorkflow(self):
-        #check if enviroment exists otherwise abort
-        if not pwutils.envVarOn('SCIPION_NOTIFY'):
-            return
 
-        # Check the seconds range of the notify, by default one day
-        seconds = int(os.environ.get('SCIPION_NOTIFY_SECONDS', '86400'))
+        try:
+            #check if enviroment exists otherwise abort
+            if not pwutils.envVarOn('SCIPION_NOTIFY'):
+                return
 
-        if self._modifiedBefore(seconds): # notify not more than once a day
-            #print "sec, no notification", seconds
-            return
+            # Check the seconds range of the notify, by default one day
+            seconds = int(os.environ.get('SCIPION_NOTIFY_SECONDS', '86400'))
 
-        # INFO: now we are only sending the protocols names in the project.
-        # We could pass namesOnly=False to get the full workflow template
-        projectWorfklow = self.project.getProtocolsJson(namesOnly=True)
+            if self._modifiedBefore(seconds): # notify not more than once a day
+                #print "sec, no notification", seconds
+                return
 
-        #if list with workflow has not been altered do not sent it
-        if not self._dataModified(projectWorfklow):
-            #print "No change: Do not send new data"
-            return
-        else:
-            # For compatibility with version 1.0 check 
-            # if Log directory exists. If it does not 
-            # create it
-            #TODO REMOVE this check in scipion 1.3
-            dataFile = self._getDataFileName()
-            pwutils.makeFilePath(dataFile) # create the folder of the file path if not exists
-            with open(dataFile,'w') as f:
-                f.write(projectWorfklow)
-            #print "change send new data"
-        dataDict = {'project_uuid': self._getUuid(),
-                    'project_workflow': projectWorfklow}
+            # INFO: now we are only sending the protocols names in the project.
+            # We could pass namesOnly=False to get the full workflow template
+            projectWorfklow = self.project.getProtocolsJson(namesOnly=True)
 
-        urlName = os.environ.get('SCIPION_NOTIFY_URL', 'http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/').strip()
-        urlName += "addOrUpdateWorkflow/"
-        t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
-        t.start() # will execute function in a separate thread
+            #if list with workflow has not been altered do not sent it
+            if not self._dataModified(projectWorfklow):
+                #print "No change: Do not send new data"
+                return
+            else:
+                # For compatibility with version 1.0 check
+                # if Log directory exists. If it does not
+                # create it
+                #TODO REMOVE this check in scipion 1.3
+                dataFile = self._getDataFileName()
+                # create the folder of the file path if not exists
+                pwutils.makeFilePath(dataFile)
+                with open(dataFile,'w') as f:
+                    f.write(projectWorfklow)
+                #print "change send new data"
+            dataDict = {'project_uuid': self._getUuid(),
+                        'project_workflow': projectWorfklow}
 
+            urlName = os.environ.get('SCIPION_NOTIFY_URL',
+                         SCIPION_STATS_WORKFLOW_APP
+                         ).strip()
+            urlName += "addOrUpdateWorkflow/"
+            t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
+            t.start() # will execute function in a separate thread
+        except Exception as e:
+            print "Can't report usage: ", e
+            
     def getEntryFromWebservice(self,uuid):
         if not pwutils.envVarOn('SCIPION_NOTIFY'):
             return

@@ -27,7 +27,7 @@
 This sub-package contains Xmipp specific protocols
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
+from bibtex import _bibtex  # Load bibtex dict with references
 
 _logo = "xmipp_logo.png"
 _references = ['delaRosaTrevin2013', 'Sorzano2013']
@@ -39,15 +39,14 @@ from dataimport import *
 # some sub-packages
 from nma import *
 from pdb import *
-
 from protocol_preprocess import *
-
 from viewer import XmippViewer
 
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_ml2d import XmippML2DViewer
+from viewer_mltomo import XmippMLTomoViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
@@ -58,9 +57,12 @@ from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
 from viewer_reconstruct_highres import XmippReconstructHighResViewer
 from viewer_solid_angles import SolidAnglesViewer
+from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
+#ROB no file protocol_3dbionotes in devel
+#from protocol_3dbionotes import XmippProt3DBionotes
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
@@ -72,22 +74,27 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
+from protocol_compare_angles import XmippProtCompareAngles
 from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
 from protocol_subtract_projection import XmippProtSubtractProjection
 from protocol_denoise_particles import XmippProtDenoiseParticles
+from protocol_eliminate_empty_particles import XmippProtEliminateEmptyParticles
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_movies import XmippProtExtractMovieParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
+from protocol_extract_unit_cell import XmippProtExtractUnit
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_gain import XmippProtMovieGain
+from protocol_mltomo import XmippProtMLTomo
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
+from protocol_movie_max_shift import XmippProtMovieMaxShift
 from protocol_multiple_fscs import XmippProtMultipleFSCs
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_normalize_strain import XmippProtNormalizeStrain
@@ -102,6 +109,7 @@ from protocol_ransac import XmippProtRansac
 from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_reconstruct_highres import XmippProtReconstructHighRes
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
+from protocol_reconstruct_swarm import XmippProtReconstructSwarm
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from protocol_rotational_spectra import XmippProtRotSpectra 
@@ -116,6 +124,7 @@ from protocol_volume_strain import XmippProtVolumeStrain
 from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
+from protocol_ctf_selection import XmippProtCTFSelection
 # Wizards
 from wizard import *
 

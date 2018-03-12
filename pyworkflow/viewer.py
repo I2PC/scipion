@@ -120,7 +120,7 @@ class Viewer(object):
     """ A Viewer will provide several Views to visualize
     the data associated to data objects or protocol.
     
-    The _targets class property should contains a list of string
+    The _targets class property should contain a list of string
     with the class names that this viewer is able to visualize.
     For example: _targets = ['Image', 'SetOfImages']
     """
@@ -136,6 +136,9 @@ class Viewer(object):
         self.formWindow = args.get('parent', None)
         self._tkRoot = self.formWindow.root if self.formWindow else None
         
+    def getTkRoot(self):
+        return self._tkRoot
+
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
     
@@ -202,7 +205,7 @@ class Viewer(object):
         Params:
             filenameOrObject: This parameter can be either a filename or an
                 object that has 'getFileName' method.
-            **kwargs: Can receive extra keyword-arguments that will be passeed
+            **kwargs: Can receive extra keyword-arguments that will be passed
                 to the ObjectView constructor
         """
         # We can not import em globally
@@ -214,12 +217,14 @@ class Viewer(object):
             # from the protocol. This assumes that self.protocol have been
             # previously set
             fn = filenameOrObject
-            if not hasattr(self, 'protocol'):
-                raise Exception("self.protocol is not defined for this Viewer.")
-            strId = self.protocol.strId()
+            strId = self.getProtocolId()
 
         elif isinstance(filenameOrObject, Object):
-            strId = filenameOrObject.strId()
+
+            if filenameOrObject.getObjId() is None:
+                strId = self.getProtocolId()
+            else:
+                strId = filenameOrObject.strId()
 
             if hasattr(filenameOrObject, 'getLocation'):
                 # In this case fn will be a location tuple that will be
@@ -235,8 +240,14 @@ class Viewer(object):
                             "methods).")
 
         return ObjectView(self._project, strId, fn, **kwargs)
-        
-        
+
+    def getProtocolId(self):
+
+        if not hasattr(self, 'protocol'):
+            raise Exception("self.protocol is not defined for this Viewer.")
+        return self.protocol.strId()
+
+
 class ProtocolViewer(Protocol, Viewer):
     """ Special kind of viewer that have a Form to organize better
     complex visualization associated with protocol results.

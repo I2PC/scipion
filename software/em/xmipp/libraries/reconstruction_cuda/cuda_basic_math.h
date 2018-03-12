@@ -71,6 +71,11 @@ inline __host__ __device__ float2 operator*(float2 a, float2 b)
 {
     return make_float2(a.x * b.x, a.y * b.y);
 }
+inline __host__ __device__ void operator*=(float2 &a, float2 b)
+{
+    a.x *= b.x;
+    a.y *= b.y;
+}
 inline __host__ __device__ float2 operator*(float2 a, float s)
 {
     return make_float2(a.x * s, a.y * s);
@@ -299,6 +304,22 @@ inline __host__ __device__ float3 floor(const float3 v)
 inline __host__ __device__ float3 reflect(float3 i, float3 n)
 {
 	return i - 2.0f * n * dot(n,i);
+}
+
+
+/** Returns true if x is in (min, max), i.e. opened, interval */
+template <typename T>
+inline __host__ __device__
+static bool inRange(T x, T min, T max) {
+	return (x > min) && (x < max);
+}
+
+/** Returns value within the range (included) */
+template<typename T, typename U>
+inline __host__ __device__
+static U clamp(U val, T min, T max) {
+	U res = (val > max) ? max : val;
+	return (res < min) ? min : res;
 }
 
 #endif

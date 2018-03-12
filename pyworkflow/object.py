@@ -657,11 +657,20 @@ class String(Scalar):
             fs: Use femto seconds or not, only when format=None
         """
         if formatStr is None:
-            formatStr = self.DATETIME_FORMAT
-            if fs:
-                formatStr += self.FS
+            try:
+                formatStr = self.DATETIME_FORMAT
+                if fs:
+                    formatStr += self.FS
+                datetime = dt.datetime.strptime(self._objValue, formatStr)
+            except Exception as ex:
+                # Maybe the %f (femtoseconds) is not working
+                # let's try to format without it
+                datetime = dt.datetime.strptime(self._objValue,
+                                                self.DATETIME_FORMAT)
+        else:
+            datetime = dt.datetime.strptime(self._objValue, formatStr)
 
-        return dt.datetime.strptime(self._objValue, formatStr)
+        return datetime
 
 
 class Float(Scalar):
@@ -749,7 +758,6 @@ class Pointer(Object):
         ext = ext.replace(self.EXTENDED_ITEMID, '')
         return ext
         
-
     def hasValue(self):
         return self._objValue is not None
     
@@ -777,7 +785,7 @@ class Pointer(Object):
         return value
     
     def set(self, other):
-        """ Set the pointer value but cleanning the extendend property. """
+        """ Set the pointer value but cleaning the extended property. """
         Object.set(self, other)
         # This check is needed because set is call from the Object constructor
         # when this attribute is not setup yet (a dirty patch, I know)
@@ -1033,10 +1041,12 @@ class Set(OrderedObject):
         """ element in Set """
         return self._getMapper().selectById(itemId) != None
 
-    def iterItems(self, orderBy='id', direction='ASC', where='1'):
+    def iterItems(self, orderBy='id', direction='ASC', where='1',
+                  limit=None):
         return self._getMapper().selectAll(orderBy=orderBy,
                                            direction=direction,
-                                           where=where)#has flat mapper, iterate is true
+                                           where=where,
+                                           limit=limit)#has flat mapper, iterate is true
 
     def getFirstItem(self):
         """ Return the first item in the Set. """
@@ -1225,7 +1235,7 @@ class Set(OrderedObject):
     def enableAppend(self):
         """ By default, when a Set is loaded, it is opened
         in read-only mode, so no new insertions are allowed.
-        This function will allow to apppend more items
+        This function will allow to append more items
         to an existing set.
         """
         self._getMapper().enableAppend()

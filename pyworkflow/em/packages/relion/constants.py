@@ -159,4 +159,5 @@ XMIPP_RELION_LABELS_EXTRA = {
 V1_3 = '1.3'
 V1_4 = '1.4'
 V2_0 = '2.0'
+V2_1 = '2.1'
 

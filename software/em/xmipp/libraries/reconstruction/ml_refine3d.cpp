@@ -770,7 +770,7 @@ void ProgMLRefine3D::reconstructVolumes()
                 mdOne.write(fn_one);
                 // Set input/output for the reconstruction algorithm
 				reconsProgram = createReconsProgram(fn_one, fn_vol);
-                reconsProgram->run(); // FIXME what should be the result of this call?
+                reconsProgram->run();
 				delete reconsProgram;
             }
             //Store output volumes, avoid noise and cref volumes

@@ -76,7 +76,7 @@ class Preview(tk.Frame):
     def __init__(self, parent, dim, dpi=36, label=None, col=0, row=0):
         tk.Frame.__init__(self, parent)
         self.dim = dim
-        self.bg = np.zeros((dim, dim), float)
+        self.bg = np.zeros((int(dim), int(dim)), float)
         ddim = dim/dpi
         self.figure = Figure(figsize=(ddim, ddim), dpi=dpi, frameon=False)
         self.canvas = FigureCanvasTkAgg(self.figure, master=self)

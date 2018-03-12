@@ -44,6 +44,8 @@ void ProgRecFourierGPU::defineParams()
     addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
     addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
+    addParamsLine("  [--thr <threads=all>]                  : Number of concurrent threads (and GPU streams). All threads are used by default");
+    addParamsLine("  [--device <dev=0>]                 : GPU device to use. 0th by default");
     addParamsLine("  [--fast]                       : Do the blobing at the end of the computation.");
     addParamsLine("                                 : Gives slightly different results, but is faster.");
     addParamsLine("  [--fftOnGPU]                   : Perform the FFT conversion of the input images on GPU.");
@@ -74,6 +76,8 @@ void ProgRecFourierGPU::readParams()
     blob.order    = getIntParam("--blob", 1);
     blob.alpha    = getDoubleParam("--blob", 2);
     useFast		  = checkParam("--fast");
+    parseNoOfThreads();
+    device = getIntParam("--device");
     fftOnGPU	  = checkParam("--fftOnGPU");
     maxResolution = getDoubleParam("--max_resolution");
     useCTF = checkParam("--useCTF");
@@ -116,10 +120,41 @@ void ProgRecFourierGPU::show()
     }
 }
 
+void ProgRecFourierGPU::parseNoOfThreads() {
+	const char* threadsStr = progDef->getParam("--thr");
+	noOfThreads = strtol(threadsStr, NULL, 10); // get from cmd
+	if (noOfThreads <= 0) {
+		if (strcmp(threadsStr, "all")) {
+			std::cerr << "'" << threadsStr << "' is invalid int. Using default value instead." << std::endl;
+		}
+		noOfThreads = sysconf(_SC_NPROCESSORS_ONLN); // all by default
+	}
+	if (noOfThreads <= 0) {
+		std::cerr << "Cannot obtain number of cores. Using 1 (one) instead." << std::endl;
+		noOfThreads = 1; // one core on error
+	}
+}
+
+void ProgRecFourierGPU::checkDefines() {
+	if (!((TILE == 1) || (BLOCK_DIM % TILE == 0))) { //
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"TILE has to be set to 1(one) or BLOCK_DIM has to be a multiple of TILE");
+	}
+	if ((SHARED_IMG == 1) && (TILE != 1)) {
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"TILE cannot be used while SHARED_IMG is active");
+	}
+	if (TILE >= BLOCK_DIM) {
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"TILE must be smaller than BLOCK_DIM");
+	}
+	if ((SHARED_BLOB_TABLE == 1) && (PRECOMPUTE_BLOB_VAL == 0)) {
+		REPORT_ERROR(ERR_PARAM_INCORRECT,"PRECOMPUTE_BLOB_VAL must be set to 1(one) when SHARED_BLOB_TABLE is active");
+	}
+}
+
 // Main routine ------------------------------------------------------------
 void ProgRecFourierGPU::run()
 {
     show();
+    checkDefines(); // check that there is not a logical error in defines
     produceSideinfo();
     if (verbose) {
 		init_progress_bar(SF.size());
@@ -152,6 +187,7 @@ void ProgRecFourierGPU::produceSideinfo()
     // Read the input images
     SF.read(fn_in);
     SF.removeDisabled();
+    SF.getDatabase()->activateThreadMuting();
 
     // Ask for memory for the output volume and its Fourier transform
     size_t objId = SF.firstObject();
@@ -181,15 +217,15 @@ void ProgRecFourierGPU::produceSideinfo()
     double deltaFourier  = (sqrt(3.)*Xdim/2.)/(BLOB_TABLE_SIZE_SQRT-1);
 
     // The interpolation kernel must integrate to 1
-    double iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
+    iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
     double padXdim3 = padding_factor_vol * Xdim;
     padXdim3 = padXdim3 * padXdim3 * padXdim3;
     double blobTableSize = blob.radius*sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
     for (int i = 0; i < BLOB_TABLE_SIZE_SQRT; i++)
     {
-        //use a r*r sample instead of r
-        //DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
-        blobTableSqrt[i] = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
+		//use a r*r sample instead of r
+		//DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
+		blobTableSqrt[i] = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
         //***
         //DIRECT_VEC_ELEM(fourierBlobTableSqrt,i) =
         //     blob_Fourier_val(fourierBlobTableSize*sqrt(i), blobFourier)*padXdim3  *iw0;
@@ -225,21 +261,6 @@ void ProgRecFourierGPU::produceSideinfo()
             R_repository.push_back(R);
         }
     }
-
-    // query the system on the number of cores
-	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
-}
-
-inline void ProgRecFourierGPU::getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v) {
-	float x0 = plane[0].x;
-	float y0 = plane[0].y;
-	float z0 = plane[0].z;
-	u.x = plane[1].x - x0;
-	u.y = plane[1].y - y0;
-	u.z = plane[1].z - z0;
-	v.x = plane[3].x - x0;
-	v.y = plane[3].y - y0;
-	v.z = plane[3].z - z0;
 }
 
 void ProgRecFourierGPU::cropAndShift(
@@ -262,7 +283,7 @@ void ProgRecFourierGPU::cropAndShift(
 				FFT_IDX2DIGFREQ(j, parent->paddedImgSize, tempMyPadd[0]);
 				FFT_IDX2DIGFREQ(i, parent->paddedImgSize, tempMyPadd[1]);
 				if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1]> parent->maxResolutionSqr) {
-					continue;
+					paddedFourierTmp = std::complex<double>(0.0, 0.0);
 				}
 				// do the shift
 				int myPadI = (i < halfY) ?	i + sizeX : i - paddedFourier.ydim + sizeX;
@@ -374,19 +395,21 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     RecFourierWorkThread* threadParams = (RecFourierWorkThread *) threadArgs;
     ProgRecFourierGPU* parent = threadParams->parent;
     std::vector<size_t> objId;
-    // HACK threads cannot share the same object, as it would lead to race conditioning
-	// during data load (as SQLITE seems to be non-thread-safe)
-    // FIXME in extremely fast calculations, SQLITE methods sometimes fail, causing program to crash
-    threadParams->selFile = new MetaData(parent->SF);
+
+    threadParams->selFile = &parent->SF;
     threadParams->selFile->findObjects(objId);
     bool hasCTF = parent->useCTF
     		&& (threadParams->selFile->containsLabel(MDL_CTF_MODEL)
     				|| threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU));
 
+
+    setDevice(parent->device);
+
     // allocate buffer
     threadParams->buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
     		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
 			parent->bufferSize, (int)parent->R_repository.size());
+    pinMemory(threadParams->buffer);
     // allocate GPU
     allocateWrapper(threadParams->buffer, threadParams->gpuStream);
 
@@ -407,7 +430,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 				threadParams->buffer,
 				parent->blob.radius, parent->maxVolumeIndexYZ, parent->useFast,
 				parent->maxResolutionSqr,
-				threadParams->gpuStream);
+				threadParams->gpuStream,
+				parent->blob.order, parent->blob.alpha);
 			parent->logProgress(threadParams->buffer->noOfImages);
 		}
 		// once the processing finished, buffer can be reused
@@ -415,9 +439,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
     // clean after itself
     releaseWrapper(threadParams->gpuStream);
+    unpinMemory(threadParams->buffer);
     delete threadParams->buffer;
     threadParams->buffer = NULL;
-    delete threadParams->selFile;
     threadParams->selFile = NULL;
     barrier_wait( &parent->barrier );// notify that thread finished
 
@@ -437,14 +461,14 @@ inline void ProgRecFourierGPU::multiply(const float transform[3][3], Point3D<flo
 void ProgRecFourierGPU::createProjectionCuboid(Point3D<float>* cuboid, float sizeX, float sizeY, float blobSize)
 {
 	float halfY = sizeY / 2.0f;
-	cuboid[0].x = cuboid[3].x = cuboid[4].x = cuboid[7].x = 0.f - blobSize;
-	cuboid[1].x = cuboid[2].x = cuboid[5].x = cuboid[6].x = sizeX + blobSize;
+	cuboid[3].x = cuboid[2].x = cuboid[7].x = cuboid[6].x = 0.f - blobSize;
+	cuboid[0].x = cuboid[1].x = cuboid[4].x = cuboid[5].x = sizeX + blobSize;
 
-	cuboid[0].y = cuboid[1].y = cuboid[4].y = cuboid[5].y = -(halfY + blobSize);
-	cuboid[2].y = cuboid[3].y = cuboid[6].y = cuboid[7].y = halfY + blobSize;
+	cuboid[3].y = cuboid[0].y = cuboid[7].y = cuboid[4].y = -(halfY + blobSize);
+	cuboid[1].y = cuboid[2].y = cuboid[5].y = cuboid[6].y = halfY + blobSize;
 
-	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
-	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
+	cuboid[3].z = cuboid[0].z = cuboid[1].z = cuboid[2].z = 0.f + blobSize;
+	cuboid[7].z = cuboid[4].z = cuboid[5].z = cuboid[6].z = 0.f - blobSize;
 }
 
 inline void ProgRecFourierGPU::translateCuboid(Point3D<float>* cuboid, Point3D<float> vector) {
@@ -621,7 +645,7 @@ void ProgRecFourierGPU::convertToExpectedSpace(T*** input, int size,
 	for (int z = 0; z <= size; z++) {
     	for (int y = 0; y <= size; y++) {
 			for (int x = 0; x <= halfSize; x++) {
-    			int newPos[3];
+    			size_t newPos[3];
     			// shift FFT from center to corners
 				newPos[0] = x; // no need to move
     			newPos[1] = (y < halfSize) ? VoutFourier.ydim - halfSize + y : y - halfSize ;
@@ -736,7 +760,6 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 
 	// store data
 	space->projectionIndex = projectionIndex;
-	getVectors(cuboid, space->u, space->v);
 	space->minZ = floor(AABB[0].z);
 	space->minY = floor(AABB[0].y);
 	space->minX = floor(AABB[0].x);
@@ -755,10 +778,12 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	}
 
 	// calculate best traverse direction
-	Point3D<float> unitNormal = getNormal(space->u, space->v, true);
-	float nX = std::abs(unitNormal.x);
-	float nY = std::abs(unitNormal.y);
-	float nZ = std::abs(unitNormal.z);
+	space->unitNormal.x = space->unitNormal.y = 0.f;
+	space->unitNormal.z = 1.f;
+	multiply(transform, space->unitNormal);
+	float nX = std::abs(space->unitNormal.x);
+	float nY = std::abs(space->unitNormal.y);
+	float nZ = std::abs(space->unitNormal.z);
 
 	// biggest vector indicates ideal direction
 	if (nX >= nY  && nX >= nZ) { // iterate YZ plane
@@ -788,24 +813,28 @@ void ProgRecFourierGPU::logProgress(int increment) {
 
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
-	// initialize GPU
+
+	setDevice(device);
+
+// initialize GPU
     if (NULL == tempVolumeGPU) {
     	allocateTempVolumeGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
     }
     if (NULL == tempWeightsGPU) {
     	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
-    createStreams(noOfCores);
-    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ, blob.radius, iDeltaSqrt);
+    createStreams(noOfThreads);
+    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
+    		blob.radius, blob.alpha, iDeltaSqrt, iw0, 1.f/getBessiOrderAlpha(blob));
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }
 
 	// create threads
-	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
-	workThreads = new RecFourierWorkThread[noOfCores];
-	barrier_init( &barrier, noOfCores + 1 ); // + main thread
-	for (int i = 0; i < noOfCores; i++) {
+	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfThreads);
+	workThreads = new RecFourierWorkThread[noOfThreads];
+	barrier_init( &barrier, noOfThreads + 1 ); // + main thread
+	for (int i = 0; i < noOfThreads; i++) {
 		int sIndex = firstImageIndex + i*imgPerThread;
 		int eIndex = std::min(lastImageIndex, sIndex + imgPerThread-1);
 		createWorkThread(i, sIndex, eIndex, workThreads[i]);
@@ -815,13 +844,13 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	barrier_wait( &barrier );
 
 	// clean threads and GPU
-	for (int i = 0; i < noOfCores; i++) {
+	for (int i = 0; i < noOfThreads; i++) {
 		pthread_join(workThreads[i].id, NULL);
 	}
 	barrier_destroy( &barrier );
 	delete[] workThreads;
-	releaseBlobTable();
-	deleteStreams(noOfCores);
+	releaseBlobTable(); // this also ensures that all work on GPU is done (synchronous call)
+	deleteStreams(noOfThreads);
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {
@@ -848,7 +877,7 @@ void ProgRecFourierGPU::finishComputations( const FileName &out_name )
     Image<double> Vout;
     Vout().initZeros(paddedImgSize,paddedImgSize,paddedImgSize);
     FourierTransformer transformerVol;
-    transformerVol.setThreadsNumber(noOfCores);
+    transformerVol.setThreadsNumber(noOfThreads);
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();

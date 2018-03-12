@@ -61,7 +61,18 @@ public abstract class ParticlePicker {
     protected ParticlePickerParams params;
     protected static ParticlePicker picker;
     protected double zoom = -1.f;
-    
+    private boolean showDeleted = false;
+
+    public boolean isShowDeleted() {
+        return showDeleted;
+    }
+
+    public void setShowDeleted(boolean showDeleted) {
+        this.showDeleted = showDeleted;
+    }
+    public void toggleShowDeleted(){
+        this.showDeleted = ! this.showDeleted;
+    }
     
     public double getZoom()
     {

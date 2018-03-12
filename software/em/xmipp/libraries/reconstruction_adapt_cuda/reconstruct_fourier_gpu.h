@@ -48,10 +48,10 @@
 #include <reconstruction/recons.h>
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
-#include "data/point3D.h"
-#include "data/reconstruct_fourier_defines.h"
-#include "data/reconstruct_fourier_projection_traverse_space.h"
-#include "reconstruction_cuda/cuda_gpu_reconstruct_fourier.h"
+#include <data/point3D.h>
+#include <reconstruction/reconstruct_fourier_defines.h>
+#include <reconstruction/reconstruct_fourier_projection_traverse_space.h>
+#include <reconstruction_cuda/cuda_gpu_reconstruct_fourier.h>
 
 /**@defgroup FourierReconstruction Fourier reconstruction
    @ingroup ReconsLibrary */
@@ -139,7 +139,20 @@ protected:
 	 */
 	float* tempWeightsGPU = NULL;
 
+
+    /** Holds number of cores available at the host system */
+    int noOfThreads;
+
+    /** CUDA device to use */
+    int device;
+
 //	METHODS
+
+	/**
+	 * Method checks that there is no logical problem in the defines used by
+	 * program. If found, error is thrown.
+	 */
+	void checkDefines();
 
 	/**
 	 * Method will take temp spaces (containing complex conjugate values
@@ -202,6 +215,9 @@ protected:
 
 private:
 //    FIELDS
+
+    /** variable used for blob table values calculation */
+    double iw0;
 
     /** File with symmetries */
     FileName fn_sym;
@@ -266,9 +282,6 @@ private:
     /** If set to true, FFT of the input projections shall be done on GPU */
     bool fftOnGPU;
 
-    /** Holds number of cores available at the host system */
-    int noOfCores;
-
 // STATIC METHODS
 
     /** Method to allocate 3D array (not continuous) of given size */
@@ -290,6 +303,17 @@ private:
 	template<typename T>
 	static std::complex<T> conjugate(std::complex<T> f) { return conj(f);};
 
+	static float getBessiOrderAlpha(blobtype blob) {
+		switch (blob.order) {
+		case 0: return bessi0(blob.alpha);
+		case 1: return bessi1(blob.alpha);
+		case 2: return bessi2(blob.alpha);
+		case 3: return bessi3(blob.alpha);
+		case 4: return bessi4(blob.alpha);
+		REPORT_ERROR(ERR_VALUE_INCORRECT,"Order must be in interval [0..4]");
+		}
+	}
+
     /**
      * Method will process the 'paddedFourier' (not shifted, i.e. low frequencies are in corners)
      * in the following way:
@@ -306,14 +330,15 @@ private:
 			float* dest);
 
     /**
-    *          7____6
-    *         3/___2/
+    *          6____5
+    *         2/___1/
     *    +    | |  ||   y
-    * [0,0,0] |*|4 ||5
+    * [0,0,0] |*|7 ||4
     *    -    |/___|/  z  sizes are padded with blob-radius
-    *        0   x  1
-    * [0,0] is in the middle of the left side (point [0] and [3]), provided the blobSize is 0
+    *         3  x  0
+    * [0,0] is in the middle of the left side (point [2] and [3]), provided the blobSize is 0
     * otherwise the values can go to negative values
+    * origin(point[0]) in in 'high' frequencies so that possible numerical instabilities are moved to high frequencies
     */
     static void createProjectionCuboid(Point3D<float>* cuboid, float sizeX, float sizeY, float blobSize);
 
@@ -338,9 +363,6 @@ private:
     		float minX, float minY, float minZ,
     		float maxX, float maxY, float maxZ);
 
-    /** Method returns vectors defining the plane */
-    static void getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v);
-
     /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
     static void printAABB(Point3D<float> AABB[]);
 
@@ -363,33 +385,12 @@ private:
 			RecFourierBufferData* buffer,
     		int storeIndex);
 
-    /**
-     * Method calculates a (normalized) normal vector to the vector u and v
-     */
-    template<typename T>
-    static Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
-    	Point3D<T> result;
-    	result.x = u.y*v.z - u.z*v.y;
-    	result.y = u.z*v.x - u.x*v.z;
-    	result.z = u.x*v.y - u.y*v.x;
-    	if (normalize) {
-    		float length = getLength(result);
-    		result.x /= length;
-    		result.y /= length;
-    		result.z /= length;
-    	}
-    	return result;
-    }
-
-    /**
-     * Returns length of the vector
-     */
-    template<typename T>
-    static T getLength(const Point3D<T>& v) {
-    	return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-    }
-
 // METHODS
+
+    /** method will parse number of threads from CMD and set accordingly
+     *  or default value will be used (all available threads)
+     */
+    void parseNoOfThreads();
 
     /**
 	 * Method will take input array (of size

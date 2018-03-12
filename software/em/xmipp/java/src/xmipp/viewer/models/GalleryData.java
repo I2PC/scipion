@@ -1808,7 +1808,7 @@ public class GalleryData {
         {
 	        shiftx = md.getValueDouble(MDLabel.RLN_ORIENT_ORIGIN_X, id);
 	        shifty = md.getValueDouble(MDLabel.RLN_ORIENT_ORIGIN_Y, id);
-	        psiangle = md.getValueDouble(MDLabel.RLN_ORIENT_PSI, id);
+	        psiangle = -1 * md.getValueDouble(MDLabel.RLN_ORIENT_PSI, id);
 	        flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
         }
         else

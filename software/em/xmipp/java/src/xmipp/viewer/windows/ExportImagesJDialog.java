@@ -162,7 +162,25 @@ public class ExportImagesJDialog extends JDialog{
                     	}
                     	else
                     		md = frame.data.getMd();
-                    	
+
+                        // Relion rlnAnglePsi is inverse as how we expect it in Xmipp
+                        // that's why we need to invert the angle before exporting particles
+                        System.out.println("Exporting metadata to: " + path);
+
+                    	if (md.containsLabel(MetaData.GEOMETRY_RELION_LABELS))
+                    	{
+                    	    // Since we need to modify the metadata, let's make a copy
+                    	    // Since the copy constructor is not ported to the binding
+                    	    // I will use this dirty way with unionAll
+                    	    MetaData md2 = new MetaData();
+                    	    md2.unionAll(md);
+                    	    md = md2;
+                            md.operate("rlnAnglePsi=rlnAnglePsi*-1");
+                            md.renameColumn(MDLabel.RLN_ORIENT_ORIGIN_X, MDLabel.MDL_SHIFT_X);
+                            md.renameColumn(MDLabel.RLN_ORIENT_ORIGIN_Y, MDLabel.MDL_SHIFT_Y);
+                            md.renameColumn(MDLabel.RLN_ORIENT_PSI, MDLabel.MDL_ANGLE_PSI);
+                        }
+
                     	md.writeMdToStack(path, applygeochb.isSelected(), frame.data.isWrap(), label);
 
                     } catch (Exception ex) {
