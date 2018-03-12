@@ -295,7 +295,7 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
 }
 
 @article{Scheres2009c,
-  author = {Scheres, Sjors H W. and Melero, Roberto and Valle, Mikel and Carazo, Jos� Mar�a},
+  author = {Scheres, Sjors H W. and Melero, Roberto and Valle, Mikel and Carazo, José María},
   title = {Averaging of Electron Subtomograms and Random Conical Tilt Reconstructions through Likelihood Optimization},
   journal = {Structure},
   year = {2009},
