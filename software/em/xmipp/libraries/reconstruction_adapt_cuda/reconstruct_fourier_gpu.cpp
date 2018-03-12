@@ -824,7 +824,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     }
     createStreams(noOfThreads);
     copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
-    		blob.radius, blob.alpha, iDeltaSqrt, iw0, 1.f/getBessiOrderAlpha(blob));
+    		blob.radius, iDeltaSqrt);
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }

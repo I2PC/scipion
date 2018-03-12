@@ -32,11 +32,6 @@
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
 
-#if SHARED_IMG
-__shared__ Point3D<float> SHARED_AABB[2];
-extern __shared__ float2 IMG[];
-#endif
-
 // FIELDS
 
 // Holding streams used for calculation. Present on CPU
@@ -51,155 +46,7 @@ float* devBlobTableSqrt = NULL;
 __device__ __constant__ int cMaxVolumeIndexX = 0;
 __device__ __constant__ int cMaxVolumeIndexYZ = 0;
 __device__ __constant__ float cBlobRadius = 0.f;
-__device__ __constant__ float cOneOverBlobRadiusSqr = 0.f;
-__device__ __constant__ float cBlobAlpha = 0.f;
-__device__ __constant__ float cIw0 = 0.f;
 __device__ __constant__ float cIDeltaSqrt = 0.f;
-__device__ __constant__ float cOneOverBessiOrderAlpha = 0.f;
-
-__device__
-float bessi0Fast(float x) { // X must be <= 15
-	// stable rational minimax approximations to the modified bessel functions, blair, edwards
-	// from table 5
-	float x2 = x*x;
-	float num = -0.8436825781374849e-19f; // p11
-	num = fmaf(num, x2, -0.93466495199548700e-17f); // p10
-	num = fmaf(num, x2, -0.15716375332511895e-13f); // p09
-	num = fmaf(num, x2, -0.42520971595532318e-11f); // p08
-	num = fmaf(num, x2, -0.13704363824102120e-8f);  // p07
-	num = fmaf(num, x2, -0.28508770483148419e-6f);  // p06
-	num = fmaf(num, x2, -0.44322160233346062e-4f);  // p05
-	num = fmaf(num, x2, -0.46703811755736946e-2f);  // p04
-	num = fmaf(num, x2, -0.31112484643702141e-0f);  // p03
-	num = fmaf(num, x2, -0.11512633616429962e+2f);  // p02
-	num = fmaf(num, x2, -0.18720283332732112e+3f);  // p01
-	num = fmaf(num, x2, -0.75281108169006924e+3f);  // p00
-
-	float den = 1.f; // q01
-	den = fmaf(den, x2, -0.75281109410939403e+3f); // q00
-
-	return num/den;
-}
-
-__device__
-float bessi0(float x)
-{
-    float y, ax, ans;
-    if ((ax = fabsf(x)) < 3.75f)
-    {
-        y = x / 3.75f;
-        y *= y;
-        ans = 1.f + y * (3.5156229f + y * (3.0899424f + y * (1.2067492f
-                                          + y * (0.2659732f + y * (0.360768e-1f + y * 0.45813e-2f)))));
-    }
-    else
-    {
-        y = 3.75f / ax;
-        ans = (expf(ax) * rsqrtf(ax)) * (0.39894228f + y * (0.1328592e-1f
-                                      + y * (0.225319e-2f + y * (-0.157565e-2f + y * (0.916281e-2f
-                                                                + y * (-0.2057706e-1f + y * (0.2635537e-1f + y * (-0.1647633e-1f
-                                                                                            + y * 0.392377e-2f))))))));
-    }
-    return ans;
-}
-
-
-__device__
-float bessi1(float x)
-{
-    float ax, ans;
-    float y;
-    if ((ax = fabsf(x)) < 3.75f)
-    {
-        y = x / 3.75f;
-        y *= y;
-        ans = ax * (0.5f + y * (0.87890594f + y * (0.51498869f + y * (0.15084934f
-                               + y * (0.2658733e-1f + y * (0.301532e-2f + y * 0.32411e-3f))))));
-    }
-    else
-    {
-        y = 3.75f / ax;
-        ans = 0.2282967e-1f + y * (-0.2895312e-1f + y * (0.1787654e-1f
-                                  - y * 0.420059e-2f));
-        ans = 0.39894228f + y * (-0.3988024e-1f + y * (-0.362018e-2f
-                                + y * (0.163801e-2f + y * (-0.1031555e-1f + y * ans))));
-        ans *= (expf(ax) * rsqrtf(ax));
-    }
-    return x < 0.0 ? -ans : ans;
-}
-
-__device__
-float bessi2(float x)
-{
-    return (x == 0) ? 0 : bessi0(x) - ((2*1) / x) * bessi1(x);
-}
-
-__device__
-float bessi3(float x)
-{
-    return (x == 0) ? 0 : bessi1(x) - ((2*2) / x) * bessi2(x);
-}
-
-__device__
-float bessi4(float x)
-{
-    return (x == 0) ? 0 : bessi2(x) - ((2*3) / x) * bessi3(x);
-}
-
-
-template<int order>
-__device__
-float kaiserValue(float r, float a)
-{
-    float rda, rdas, arg, w;
-
-    rda = r / a;
-    if (rda <= 1.f)
-    {
-        rdas = rda * rda;
-        arg = cBlobAlpha * sqrtf(1.f - rdas);
-        if (order == 0)
-        {
-            w = bessi0(arg) * cOneOverBessiOrderAlpha;
-        }
-        else if (order == 1)
-        {
-            w = sqrtf (1.f - rdas);
-			w *= bessi1(arg) * cOneOverBessiOrderAlpha;
-        }
-        else if (order == 2)
-        {
-            w = sqrtf (1.f - rdas);
-            w = w * w;
-			w *= bessi2(arg) * cOneOverBessiOrderAlpha;
-        }
-        else if (order == 3)
-        {
-            w = sqrtf (1.f - rdas);
-            w = w * w * w;
-			w *= bessi3(arg) * cOneOverBessiOrderAlpha;
-        }
-        else if (order == 4)
-        {
-            w = sqrtf (1.f - rdas);
-            w = w * w * w *w;
-			w *= bessi4(arg) * cOneOverBessiOrderAlpha;
-        }
-        else {
-        	printf("order (%d) out of range in kaiser_value(): %s, %d\n", order, __FILE__, __LINE__);
-        }
-    }
-    else
-        w = 0.f;
-
-    return w;
-}
-
-__device__
-float kaiserValueFast(float distSqr) {
-	float arg = cBlobAlpha * sqrtf(1.f - (distSqr * cOneOverBlobRadiusSqr)); // alpha * sqrt(1-(dist/blobRadius^2))
-	return bessi0Fast(arg) * cOneOverBessiOrderAlpha * cIw0;
-}
 
 /**
  * Structure for buffer data on GPU
@@ -371,46 +218,6 @@ void releaseTempVolumeGPU(float*& ptr) {
 	gpuErrchk(cudaPeekAtLastError());
 }
 
-
-/** Index to frequency
- *
- * Given an index and a size of the FFT, this function returns the corresponding
- * digital frequency (-1/2 to 1/2)
- */ // FIXME unify with xmipp_fft.h::FFT_IDX2DIGFREQ
-__device__
-float FFT_IDX2DIGFREQ(int idx, int size) {
-	if (size <= 1) return 0;
-	return ((idx <= (size / 2)) ? idx : (-size + idx)) / (float)size;
-}
-
-/**
- * Calculates Z coordinate of the point [x, y] on the plane defined by p0 (origin) and normal
- */
-__device__
-float getZ(float x, float y, const Point3D<float>& n, const Point3D<float>& p0) {
-	// from a(x-x0)+b(y-y0)+c(z-z0)=0
-	return (-n.x*(x-p0.x)-n.y*(y-p0.y))/n.z + p0.z;
-}
-
-/**
- * Calculates Y coordinate of the point [x, z] on the plane defined by p0 (origin) and normal
- */
-__device__
-float getY(float x, float z, const Point3D<float>& n, const Point3D<float>& p0){
-	// from a(x-x0)+b(y-y0)+c(z-z0)=0
-	return (-n.x*(x-p0.x)-n.z*(z-p0.z))/n.y + p0.y;
-}
-
-
-/**
- * Calculates X coordinate of the point [y, z] on the plane defined by p0 (origin) and normal
- */
-__device__
-float getX(float y, float z, const Point3D<float>& n, const Point3D<float>& p0){
-	// from a(x-x0)+b(y-y0)+c(z-z0)=0
-	return (-n.y*(y-p0.y)-n.z*(z-p0.z))/n.x + p0.x;
-}
-
 /** Do 3x3 x 1x3 matrix-vector multiplication */
 __device__
 void multiply(const float transform[3][3], Point3D<float>& inOut) {
@@ -420,181 +227,6 @@ void multiply(const float transform[3][3], Point3D<float>& inOut) {
 	inOut.x = tmp0;
 	inOut.y = tmp1;
 	inOut.z = tmp2;
-}
-
-/** Compute Axis Aligned Bounding Box of given cuboid */
-__device__
-void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
-	AABB[0].x = AABB[0].y = AABB[0].z = INFINITY;
-	AABB[1].x = AABB[1].y = AABB[1].z = -INFINITY;
-	Point3D<float> tmp;
-	for (int i = 0; i < 8; i++) {
-		tmp = cuboid[i];
-		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
-		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
-		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
-		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
-		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
-		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
-	}
-	AABB[0].x = ceilf(AABB[0].x);
-	AABB[0].y = ceilf(AABB[0].y);
-	AABB[0].z = ceilf(AABB[0].z);
-
-	AABB[1].x = floorf(AABB[1].x);
-	AABB[1].y = floorf(AABB[1].y);
-	AABB[1].z = floorf(AABB[1].z);
-}
-
-
-
-
-/**
- * Method will rotate box using transformation matrix around center of the
- * working space
- */
-__device__
-void rotate(Point3D<float>* box, const float transform[3][3]) {
-	for (int i = 0; i < 8; i++) {
-		Point3D<float> imgPos;
-		// transform current point to center
-		imgPos.x = box[i].x - cMaxVolumeIndexX/2;
-		imgPos.y = box[i].y - cMaxVolumeIndexYZ/2;
-		imgPos.z = box[i].z - cMaxVolumeIndexYZ/2;
-		// rotate around center
-		multiply(transform, imgPos);
-		// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
-		imgPos.y += cMaxVolumeIndexYZ / 2;
-
-		box[i] = imgPos;
-	}
-}
-
-/**
- * Method calculates an Axis Aligned Bounding Box in the image space.
- * AABB is guaranteed to be big enough that all threads in the block,
- * while processing the traverse space, will not read image data outside
- * of the AABB
- */
-__device__
-void calculateAABB(const RecFourierProjectionTraverseSpace* tSpace, const RecFourierBufferDataGPU* buffer, Point3D<float>* dest) {
-	Point3D<float> box[8];
-	// calculate AABB for the whole working block
-	if (tSpace->XY == tSpace->dir) { // iterate XY plane
-		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
-
-		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
-		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
-
-		box[0].z = getZ(box[0].x, box[0].y, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[4].z = getZ(box[4].x, box[4].y, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[3].z = getZ(box[3].x, box[3].y, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[7].z = getZ(box[7].x, box[7].y, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[2].z = getZ(box[2].x, box[2].y, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[6].z = getZ(box[6].x, box[6].y, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[1].z = getZ(box[1].x, box[1].y, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[5].z = getZ(box[5].x, box[5].y, tSpace->unitNormal, tSpace->topOrigin);
-	} else if (tSpace->XZ == tSpace->dir) { // iterate XZ plane
-		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
-
-		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
-		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
-
-		box[0].y = getY(box[0].x, box[0].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[4].y = getY(box[4].x, box[4].z, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[3].y = getY(box[3].x, box[3].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[7].y = getY(box[7].x, box[7].z, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[2].y = getY(box[2].x, box[2].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[6].y = getY(box[6].x, box[6].z, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[1].y = getY(box[1].x, box[1].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[5].y = getY(box[5].x, box[5].z, tSpace->unitNormal, tSpace->topOrigin);
-	} else { // iterate YZ plane
-		box[0].y = box[3].y = box[4].y = box[7].y = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
-
-		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
-		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
-
-		box[0].x = getX(box[0].y, box[0].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[4].x = getX(box[4].y, box[4].z, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[3].x = getX(box[3].y, box[3].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[7].x = getX(box[7].y, box[7].z, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[2].x = getX(box[2].y, box[2].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[6].x = getX(box[6].y, box[6].z, tSpace->unitNormal, tSpace->topOrigin);
-
-		box[1].x = getX(box[1].y, box[1].z, tSpace->unitNormal, tSpace->bottomOrigin);
-		box[5].x = getX(box[5].y, box[5].z, tSpace->unitNormal, tSpace->topOrigin);
-	}
-	// transform AABB to the image domain
-	rotate(box, tSpace->transformInv);
-	// AABB is projected on image. Create new AABB that will encompass all vertices
-	computeAABB(dest, box);
-}
-
-/**
- * Method returns true if AABB lies within the image boundaries
- */
-__device__
-bool isWithin(Point3D<float>* AABB, int imgXSize, int imgYSize) {
-	return (AABB[0].x < imgXSize)
-			&& (AABB[1].x >= 0)
-			&& (AABB[0].y < imgYSize)
-			&& (AABB[1].y >= 0);
-}
-
-/**
- * Method will load data from image at position tXindex, tYindex
- * and return them.
- * In case the data lies outside of the image boundaries, zeros (0,0)
- * are returned
- */
-__device__
-void getImgData(Point3D<float>* AABB,
-		int tXindex, int tYindex,
-		RecFourierBufferDataGPU* const buffer, int imgIndex,
-		float& vReal, float& vImag) {
-	int imgXindex = tXindex + AABB[0].x;
-	int imgYindex = tYindex + AABB[0].y;
-	if ((imgXindex >=0)
-			&& (imgXindex < buffer->fftSizeX)
-			&& (imgYindex >=0)
-			&& (imgYindex < buffer->fftSizeY))	{
-		int index = imgYindex * buffer->fftSizeX + imgXindex; // copy data from image
-		vReal = buffer->getNthItem(buffer->FFTs, imgIndex)[2*index];
-		vImag = buffer->getNthItem(buffer->FFTs, imgIndex)[2*index + 1];
-
-	} else {
-		vReal = vImag = 0.f; // out of image bound, so return zero
-	}
-}
-
-/**
- * Method will copy imgIndex(th) data from buffer
- * to given destination (shared memory).
- * Only data within AABB will be copied.
- * Destination is expected to be continuous array of sufficient
- * size (imgCacheDim^2)
- */
-__device__
-void copyImgToCache(float2* dest, Point3D<float>* AABB,
-		RecFourierBufferDataGPU* const buffer, int imgIndex,
-		 int imgCacheDim) {
-	for (int y = threadIdx.y; y < imgCacheDim; y += blockDim.y) {
-		for (int x = threadIdx.x; x < imgCacheDim; x += blockDim.x) {
-			int memIndex = y * imgCacheDim + x;
-			getImgData(AABB, x, y, buffer, imgIndex, dest[memIndex].x, dest[memIndex].y);
-		}
-	}
 }
 
 __device__
@@ -703,9 +335,6 @@ void processPixelBlob(
 	}
 }
 
-
-
-
 /**
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
@@ -809,17 +438,17 @@ void releaseWrapper(int streamIndex) {
 
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
-		float blobRadius, float blobAlpha,
-		float iDeltaSqrt, float iw0, float oneOverBessiOrderAlpha) {
+		float blobRadius,
+		float iDeltaSqrt) {
 	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
 	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
 	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
-	cudaMemcpyToSymbol(cBlobAlpha, &blobAlpha,sizeof(blobAlpha));
-	cudaMemcpyToSymbol(cIw0, &iw0,sizeof(iw0));
 	cudaMemcpyToSymbol(cIDeltaSqrt, &iDeltaSqrt,sizeof(iDeltaSqrt));
-	cudaMemcpyToSymbol(cOneOverBessiOrderAlpha, &oneOverBessiOrderAlpha,sizeof(oneOverBessiOrderAlpha));
-	float oneOverBlobRadiusSqr = 1.f / (blobRadius * blobRadius);
-	cudaMemcpyToSymbol(cOneOverBlobRadiusSqr, &oneOverBlobRadiusSqr,sizeof(oneOverBlobRadiusSqr));
+	gpuErrchk( cudaPeekAtLastError() );
+}
+
+void setDevice(int device) {
+	cudaSetDevice(device);
 	gpuErrchk( cudaPeekAtLastError() );
 }
 
@@ -867,132 +496,3 @@ void processBufferGPUInverse(float* tempVolumeGPU, float* tempWeightsGPU,
 					imgCacheDim);
 		}
 }
-
-
-
-
-/**
- * Method will use data stored in the buffer and update temporal
- * storages appropriately.
- * Actual calculation is done asynchronously, but 'buffer' can be reused
- * once the method returns.
- */
-template<int blobOrder, bool useFastKaiser>
-void processBufferGPU_(float* tempVolumeGPU, float* tempWeightsGPU,
-		RecFourierBufferData* buffer,
-		float blobRadius, int maxVolIndexYZ, bool useFast,
-		float maxResolutionSqr, int streamIndex) {
-
-	cudaStream_t stream = streams[streamIndex];
-
-	// copy all data to gpu
-	FRecBufferDataGPUWrapper* wrapper = wrappers[streamIndex];
-	wrapper->copyFrom(buffer, streamIndex);
-	wrapper->copyToDevice(streamIndex);
-
-	// process input data if necessary
-	// FIXME unsupported
-	// now wait till all necessary data are loaded to GPU (so that host can continue in work)
-	cudaStreamSynchronize(stream);
-
-	// enqueue kernel and return control
-	int size2D = maxVolIndexYZ + 1;
-	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
-	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
-	dim3 dimGrid(ceil(size2D/(float)dimBlock.x),ceil(size2D/(float)dimBlock.y), GRID_DIM_Z);
-
-	// by using templates, we can save some registers, especially for 'fast' version
-	if (useFast && buffer->hasCTFs) {
-//		processBufferKernel<true, true, blobOrder,useFastKaiser><<<dimGrid, dimBlock, 0, stream>>>(
-//			tempVolumeGPU, tempWeightsGPU,
-//			wrapper->gpuCopy,
-//			devBlobTableSqrt,
-//			imgCacheDim);
-		   return;
-   }
-   if (useFast && !buffer->hasCTFs) {
-//	   processBufferKernel<true, false, blobOrder,useFastKaiser><<<dimGrid, dimBlock, 0, stream>>>(
-//				tempVolumeGPU, tempWeightsGPU,
-//				wrapper->gpuCopy,
-//				devBlobTableSqrt,
-//				imgCacheDim);
-	   return;
-   }
-   // if making copy of the image in shared memory, allocate enough space
-   int sharedMemSize = SHARED_IMG ? (imgCacheDim*imgCacheDim*sizeof(float2)) : 0;
-   if (!useFast && buffer->hasCTFs) {
-//	   processBufferKernel<false, true, blobOrder,useFastKaiser><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
-//			tempVolumeGPU, tempWeightsGPU,
-//			wrapper->gpuCopy,
-//			devBlobTableSqrt,
-//			imgCacheDim);
-	   return;
-   }
-   if (!useFast && !buffer->hasCTFs) {
-//	   processBufferKernel<false, false, blobOrder,useFastKaiser><<<dimGrid, dimBlock, sharedMemSize, stream>>>(
-//			tempVolumeGPU, tempWeightsGPU,
-//			wrapper->gpuCopy,
-//			devBlobTableSqrt,
-//			imgCacheDim);
-	   return;
-   }
-}
-
-void setDevice(int device) {
-	cudaSetDevice(device);
-	gpuErrchk( cudaPeekAtLastError() );
-}
-
-void processBufferGPU(float* tempVolumeGPU, float* tempWeightsGPU,
-		RecFourierBufferData* buffer,
-		float blobRadius, int maxVolIndexYZ, bool useFast,
-		float maxResolutionSqr, int streamIndex, int blobOrder, float blobAlpha) {
-	switch (blobOrder) {
-	case 0:
-		if (blobAlpha <= 15.0) {
-			processBufferGPU_<0, true>(tempVolumeGPU, tempWeightsGPU,
-				buffer,
-				blobRadius, maxVolIndexYZ, useFast,
-				maxResolutionSqr,
-				streamIndex);
-		} else {
-			processBufferGPU_<0, false>(tempVolumeGPU, tempWeightsGPU,
-				buffer,
-				blobRadius, maxVolIndexYZ, useFast,
-				maxResolutionSqr,
-				streamIndex);
-		}
-		break;
-	case 1:
-		processBufferGPU_<1, false>(tempVolumeGPU, tempWeightsGPU,
-				buffer,
-				blobRadius, maxVolIndexYZ, useFast,
-				maxResolutionSqr,
-				streamIndex);
-		break;
-	case 2:
-		processBufferGPU_<2, false>(tempVolumeGPU, tempWeightsGPU,
-				buffer,
-				blobRadius, maxVolIndexYZ, useFast,
-				maxResolutionSqr,
-				streamIndex);
-		break;
-	case 3:
-		processBufferGPU_<3, false>(tempVolumeGPU, tempWeightsGPU,
-				buffer,
-				blobRadius, maxVolIndexYZ, useFast,
-				maxResolutionSqr,
-				streamIndex);
-		break;
-	case 4:
-		processBufferGPU_<4, false>(tempVolumeGPU, tempWeightsGPU,
-				buffer,
-				blobRadius, maxVolIndexYZ, useFast,
-				maxResolutionSqr,
-				streamIndex);
-		break;
-	default:
-		REPORT_ERROR(ERR_VALUE_INCORRECT, "m out of range [0..4] in kaiser_value()");
-	}
-}
-

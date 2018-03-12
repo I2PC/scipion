@@ -142,8 +142,8 @@ void unpinMemory(RecFourierBufferData* buffer);
  */
 void copyConstants(
 		int maxVolIndexX, int maxVolIndexYZ,
-		float blobRadius, float blobAlpha,
-		float iDeltaSqrt, float iw0, float oneOverBessiOrderAlpha);
+		float blobRadius,
+		float iDeltaSqrt);
 
 /**
  * Method will copy content of the 'buffer' to GPU and
