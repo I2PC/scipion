@@ -47,8 +47,6 @@ import sys
 
 
 HASH_SIZE = 100
-MAX_NUMBER_CLASSES = 64
-BLOCK_SIZE=1000
 
 class HashTableDict:
     def __init__(self, Ndict=HASH_SIZE):
@@ -101,6 +99,15 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                       help='The threshold in the number of images assigned '
                            'to one class to make a spliting of that class',
                       expertLevel=const.LEVEL_ADVANCED)
+        form.addParam('blockSize', params.IntParam, default=3000,
+                      label='Block size',
+                      help='The inputs will be processed in a block-by-block '
+                           'basis of this size',
+                      expertLevel=const.LEVEL_ADVANCED)
+        form.addParam('numClasses', params.IntParam, default=1000,
+                      label='Maximum number of classes',
+                      help='Maximum number of classes to be generated',
+                      expertLevel=const.LEVEL_ADVANCED)
         form.addParallelSection(threads=0, mpi=0)
 
 
@@ -127,7 +134,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         self._loadInputList()
         deps = []
         #AJ-blocks(8)
-        numBlk, rem = divmod(len(self.listOfParticles), BLOCK_SIZE)
+        numBlk, rem = divmod(len(self.listOfParticles), self.blockSize)
         if rem > 0:
             numBlk += 1
         for i in range(numBlk):
@@ -197,7 +204,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         deps=[]
         # AJ-blocks (5)
-        numBlk, rem = divmod(len(self.listOfParticles), BLOCK_SIZE)
+        numBlk, rem = divmod(len(self.listOfParticles), self.blockSize)
         if rem>0:
             numBlk+=1
         for i in range(numBlk):
@@ -269,10 +276,10 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         if len(self.particlesToProcess)==0:
             return
 
-        if len(self.particlesToProcess)<BLOCK_SIZE:
+        if len(self.particlesToProcess)<self.blockSize:
             particlesToProcessAux = self.particlesToProcess
         else:
-            particlesToProcessAux = self.particlesToProcess[:BLOCK_SIZE]
+            particlesToProcessAux = self.particlesToProcess[:self.blockSize]
         print("len(particlesToProcessAux)", len(particlesToProcessAux))
         sys.stdout.flush()
         self.generateInput(expImgMd, flag_split, reclassification,
@@ -729,7 +736,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         auxList = sorted(self.listNumImgs, reverse=True)
         while i<len(self.listNumImgs):
 
-            if len(self.listNumImgs) < MAX_NUMBER_CLASSES: #inside the while
+            if len(self.listNumImgs) < self.numClasses: #inside the while
                 # just in case we lose some class we want to allow one more
                 # split
 
