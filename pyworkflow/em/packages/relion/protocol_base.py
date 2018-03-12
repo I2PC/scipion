@@ -136,7 +136,7 @@ class ProtRelionBase(EMProtocol):
         self._iterRegex = re.compile('_it(\d{3,3})_')
         
         
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         self.IS_3D = not self.IS_2D
         form.addSection(label='Input')
