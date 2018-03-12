@@ -1,4 +1,3 @@
-
 //Host includes
 #include "cuda_gpu_correlation.h"
 
@@ -18,12 +17,6 @@
 #define PI 3.14159265
 
 
-//TODO : ask, what happens if one variable is size_t type and I send it to a kernel that has an integer as input?
-// is the cpu responsible for casting the types, or the gpu??
-//change every size_t in the code for int
-
-
-//NOW WE DONT USE THIS KERNEL
 __global__ void calcAbsKernel(cufftComplex *d_in, float *d_out, int dim){
 
 	int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -64,120 +57,6 @@ __global__ void sumRadiusKernel(float *d_in, float *d_out, float *d_out_max, flo
 	d_out_max[idx] = out_max;
 
 }
-
-
-//NOW WE DONT USE THIS KERNEL
-__global__ void calculateMax(float *d_in, float *d_out, float *position, int yxdim, int Ndim, bool firstCall){
-
-	extern __shared__ float sdata[];
-
-	int idx = threadIdx.x;
-	int blockSize = blockDim.x;
-
-	//Version 6
-	int i = blockIdx.x * blockSize*2 + idx;
-	int index = 0;
-	for(int imN=0; imN<Ndim; imN++){
-
-		if(i<yxdim){
-			if(i+blockSize < yxdim)
-				sdata[idx]=fmaxf(d_in[i+index], d_in[i+blockSize+index]);
-			else
-				sdata[idx]=d_in[i+index];
-
-			if(firstCall)
-				sdata[idx+blockSize] = (sdata[idx]==d_in[i+index]) ? (float)i : (float)(i+blockSize); //AJ position
-			else
-				sdata[idx+blockSize] = (sdata[idx]==d_in[i+index]) ? position[i+index] : position[i+blockSize+index];
-		}
-
-		__syncthreads();
-
-		if(i>=yxdim)
-			sdata[idx]=-1.0;
-		__syncthreads();
-
-
-		if(blockSize >= 1024){
-			if(idx<512){
-				sdata[idx] = fmaxf(sdata[idx], sdata[idx+512]);
-				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+512]) ? sdata[idx+blockSize+512] : sdata[idx+blockSize];
-			}
-			__syncthreads();
-		}
-		if(blockSize >= 512){
-			if(idx<256){
-				sdata[idx] = fmaxf(sdata[idx], sdata[idx+256]);
-				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+256]) ? sdata[idx+blockSize+256] : sdata[idx+blockSize];
-			}
-			__syncthreads();
-		}
-		if(blockSize >= 256){
-			if(idx<128){
-				sdata[idx] = fmaxf(sdata[idx], sdata[idx+128]);
-				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+128]) ? sdata[idx+blockSize+128] : sdata[idx+blockSize];
-			}
-			__syncthreads();
-		}
-		if(blockSize >= 128){
-			if(idx<64){
-				sdata[idx] = fmaxf(sdata[idx], sdata[idx+64]);
-				sdata[idx+blockSize] = (sdata[idx]==sdata[idx+64]) ? sdata[idx+blockSize+64] : sdata[idx+blockSize];
-			}
-			__syncthreads();
-		}
-		if(idx<32){
-			if(blockSize>=64){
-				if(idx<32){
-					sdata[idx] = fmaxf(sdata[idx], sdata[idx+32]);
-					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+32]) ? sdata[idx+blockSize+32] : sdata[idx+blockSize];
-				}
-			}
-			if(blockSize>=32){
-				if(idx<16){
-					sdata[idx] = fmaxf(sdata[idx], sdata[idx+16]);
-					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+16]) ? sdata[idx+blockSize+16] : sdata[idx+blockSize];
-				}
-			}
-			if(blockSize>=16){
-				if(idx<8){
-					sdata[idx] = fmaxf(sdata[idx], sdata[idx+8]);
-					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+8]) ? sdata[idx+blockSize+8] : sdata[idx+blockSize];
-				}
-			}
-			if(blockSize>=8){
-				if(idx<4){
-					sdata[idx] = fmaxf(sdata[idx], sdata[idx+4]);
-					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+4]) ? sdata[idx+blockSize+4] : sdata[idx+blockSize];
-				}
-			}
-			if(blockSize>=4){
-				if(idx<2){
-					sdata[idx] = fmaxf(sdata[idx], sdata[idx+2]);
-					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+2]) ? sdata[idx+blockSize+2] : sdata[idx+blockSize];
-				}
-			}
-			if(blockSize>=2){
-				if(idx<1){
-					sdata[idx] = fmaxf(sdata[idx], sdata[idx+1]);
-					sdata[idx+blockSize] = (sdata[idx]==sdata[idx+1]) ? sdata[idx+blockSize+1] : sdata[idx+blockSize];
-				}
-			}
-		}
-
-		if(idx==0){
-			d_out[blockIdx.x+(gridDim.x*imN)] = sdata[0];
-			position[blockIdx.x+(gridDim.x*imN)] = sdata[blockSize];
-		}
-
-		__syncthreads();
-
-		index = index+(int)yxdim;
-
-	}
-
-}
-
 
 
 __global__ void calculateMax2(float *d_in, float *d_out, float *position, int yxdim, int Ndim, bool firstCall){
@@ -292,50 +171,15 @@ __global__ void calculateMax2(float *d_in, float *d_out, float *position, int yx
 		index = index+(int)yxdim;
 
 	}
-	//printf("d_out0 %f, position0 %f \n", d_out[0], position[0]);
-	//printf("d_out1 %f, position1 %f \n", d_out[1], position[1]);
 
 }
 
-//NOW WE DONT USE THIS KERNEL
-__global__ void matrixMultiplication (float* newMat, float* lastMat, float* result, int n, double maxShift2,
-		float *maxGpu, float *NCC, int NCC_yxdim){
-
-	int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	if(idx>=n)
-		return;
-
-
-	int idx9 = idx*9;
-	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2]*lastMat[idx9+8];
-	float shifty = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5]*lastMat[idx9+8];
-	float radShift = shiftx*shiftx + shifty*shifty;
-	if(radShift > maxShift2){
-		result[idx9] = lastMat[idx9];
-		result[idx9+1] = lastMat[idx9+1];
-		result[idx9+2] = lastMat[idx9+2];
-		result[idx9+3] = lastMat[idx9+3];
-		result[idx9+4] = lastMat[idx9+4];
-		result[idx9+5] = lastMat[idx9+5];
-		maxGpu[idx] = NCC[idx*NCC_yxdim];
-	}else{
-		result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3] + newMat[idx9+2]*lastMat[idx9+6];
-		result[idx9+2] = shiftx;
-		result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4] + newMat[idx9+2]*lastMat[idx9+7];
-		result[idx9+3] = newMat[idx9+3]*lastMat[idx9] + newMat[idx9+4]*lastMat[idx9+3] + newMat[idx9+5]*lastMat[idx9+6];
-		result[idx9+4] = newMat[idx9+3]*lastMat[idx9+1] + newMat[idx9+4]*lastMat[idx9+4] + newMat[idx9+5]*lastMat[idx9+7];
-		result[idx9+5] = shifty;
-	}
-
-}
 
 __global__ void pointwiseMultiplicationComplexOneManyKernel_three(cufftComplex *M,
 		cufftComplex *manyF, cufftComplex *MmanyF, cufftComplex *manyF_sq, cufftComplex *MmanyF_sq,
 		cufftComplex *maskAux, int nzyxdim, int yxdim, int ndim, bool power2)
 {
 
-	//change size_t to int
-	//change unsigned.... to int but check it before
 	int idx = threadIdx.x;
 	int nIm = blockIdx.x;
 	int blockSize = blockDim.x;
@@ -370,11 +214,6 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel_three(cufftComplex *
 			myM = M[myIdxMask];
 			mulOut = cuCmulf(manyF[myIdx], myM);
 			mulOut_sq = cuCmulf(manyF_sq[myIdx], myM);
-			//more operations for one thread and lower number of threads???
-			//every th working with N images
-			//in this way we are able to use registers memory for M, but no shared
-			//to use shared memory has sense when the whole block th will read several times the same memory positions
-			//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
 
 			MmanyF[myIdx] = mulOut*normFactor;
 			MmanyF_sq[myIdx] = mulOut_sq*normFactor;
@@ -394,8 +233,6 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel_two(cufftComplex *M,
 		int nzyxdim, int yxdim, int ndim, bool power2)
 {
 
-	//change size_t to int
-	//change unsigned.... to int but check it before
 	int idx = threadIdx.x;
 	int nIm = blockIdx.x;
 	int blockSize = blockDim.x;
@@ -428,11 +265,6 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel_two(cufftComplex *M,
 			myM = M[myIdxMask];
 			mulOut = cuCmulf(manyF[myIdx], myM);
 			mulOut_sq = cuCmulf(manyF_sq[myIdx], myM);
-			//more operations for one thread and lower number of threads???
-			//every th working with N images
-			//in this way we are able to use registers memory for M, but no shared
-			//to use shared memory has sense when the whole block th will read several times the same memory positions
-			//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
 
 			MmanyF[myIdx] = mulOut*normFactor;
 			MmanyF_sq[myIdx] = mulOut_sq*normFactor;
@@ -450,10 +282,6 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftComplex *M, cuf
 		int nzyxdim, int yxdim, bool power2)
 {
 
-	//extern __shared__ float sdata[];
-
-	//change size_t to int
-	//change unsigned.... to int but check it before
 	int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	int idxLow;
 	if (power2==true)
@@ -461,20 +289,12 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftComplex *M, cuf
 	else
 		idxLow = idx%yxdim;
 
-	//check if yxdim is power of 2 in cpu and put here some flag to avoid the % operation and change it to bitwise operation
-
 	if (idx>=nzyxdim)
 		return;
 
 	float normFactor = (1.0f/yxdim);
 
 	cuComplex mulOut = cuCmulf(manyF[idx], M[idxLow]);
-	//more operations for one thread and lower number of threads???
-	//every th working with N images
-	//in this way we are able to use registers memory for M, but no shared
-	//to use shared memory has sense when the whole block th will read several times the same memory positions
-	//to use registers is useful when one th needs to access the same value several times but this value is not useful for the rest of ths in the blocks
-
 	MmanyF[idx] = mulOut*normFactor;
 
 }
@@ -567,19 +387,10 @@ __global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat,
 
 	extern __shared__ float transMatSD[];
 
-	//change size_t for int
-	//module operation: change it as in OneMany kernel
 	int idxIm = blockDim.x * blockIdx.x + threadIdx.x;
 	int idxTh = threadIdx.x;
 	int numIm = blockIdx.y;
 
-/*	int idxIm;
-	if (power2yx==true)
-		idxIm = idx & (yxdim-1);
-	else
-		idxIm = idx%yxdim;
-*/
-	//int numIm = idx/yxdim;
 
 	if(idxIm>=yxdim)
 		return;
@@ -804,34 +615,21 @@ __global__ void buildTranslationMatrix (float *d_pos, float* lastMat, float* res
 		posY = -(posY_aux+1);
 	}
 
-	//printf("Idx %i, posX %f, posY %f, fixPadding %i, Xdim %i, Ydim %i \n", idx, posX, posY, fixPadding, Xdim, Ydim);
-
 	//Fixing padding problem
 	posX+=fixPadding;
 	posY+=fixPadding;
 
 	int idx9 = idx*9;
 
-	/*newMat[idx9]=1.0f;
-	newMat[idx9+1]=0.0f;
-	newMat[idx9+2]=-posX;
-	newMat[idx9+3]=0.0f;
-	newMat[idx9+4]=1.0f;
-	newMat[idx9+5]=-posY;
-	newMat[idx9+6]=0.0f;
-	newMat[idx9+7]=0.0f;
-	newMat[idx9+8]=1.0f;*/
-
-	//double maxShift2 = maxShift*maxShift;
 	float new0 = 1.0f;
 	float new1 = 0.0f;
 	float new2 = -posX;
 	float new3 = 0.0f;
 	float new4 = 1.0f;
 	float new5 = -posY;
-	float new6 = 0.0f;
-	float new7 = 0.0f;
-	float new8 = 1.0f;
+	//float new6 = 0.0f;
+	//float new7 = 0.0f;
+	//float new8 = 1.0f;
 
 	float last0 = lastMat[idx9];
 	float last1 = lastMat[idx9+1];
@@ -901,26 +699,16 @@ __global__ void buildRotationMatrix (float *d_pos, float* lastMat, float* result
 	float rad = (float)(-posX*PI/180);
 
 	int idx9 = idx*9;
-	/*newMat[idx9]=cosf(rad);
-	newMat[idx9+1]=-sinf(rad);
-	newMat[idx9+2]=0.0f;
-	newMat[idx9+3]=sinf(rad);
-	newMat[idx9+4]=cosf(rad);
-	newMat[idx9+5]=0.0f;
-	newMat[idx9+6]=0.0f;
-	newMat[idx9+7]=0.0f;
-	newMat[idx9+8]=1.0f;*/
 
-	//double maxShift2 = maxShift*maxShift;
 	float new0 = cosf(rad);
 	float new1 = -sinf(rad);
 	float new2 = 0.0f;
 	float new3 = sinf(rad);
 	float new4 = cosf(rad);
 	float new5 = 0.0f;
-	float new6 = 0.0f;
-	float new7 = 0.0f;
-	float new8 = 1.0f;
+	//float new6 = 0.0f;
+	//float new7 = 0.0f;
+	//float new8 = 1.0f;
 
 	float last0 = lastMat[idx9];
 	float last1 = lastMat[idx9+1];
@@ -997,9 +785,6 @@ __global__ void cart2polar(float *image, float *polar, float *polar2, int maxRad
 	else
 		polarIdx = (maxAng-angle-1)+((maxRadius-radius-1)*maxAng);
 
-	//change this loop: every th dedicated to lower amount of images, having another dimension of blocks dedicated to manage several images at the same time
-	//for (int n=0; n<Nimgs; n++)
-	//{
 		int n=numIm;
 
 		imgOffset = n*NXY;
@@ -1012,11 +797,6 @@ __global__ void cart2polar(float *image, float *polar, float *polar2, int maxRad
 		int finalPolarIndex=polarIdx+polarOffset;
 		polar[finalPolarIndex] = imVal;
 		polar2[finalPolarIndex] = imVal*imVal;
-
-		//imgOffset+=NXY;
-		//polarOffset+=NXYpolar;
-	//}
-
 
 }
 
@@ -1032,7 +812,6 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 	int posTh = nIm*yxdim + idx;
 	int n = ceilf(((float)yxdim/(float)blockSize));
 
-	//printf("n %i\n", n);
 	float tmp, tmpPos;
 
 	if(idx>=yxdim){
@@ -1042,11 +821,7 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 		tmp = d_in[posTh];
 		tmpPos = idx;
 		for (int i=1; i<n; i++){
-			//printf("posTh+i*blockSize %i, yxdim*(nIm+1) %i\n", posTh+i*blockSize, yxdim*(nIm+1));
 			if (posTh+i*blockSize < yxdim*(nIm+1)){
-
-					//printf("i %i posTh %i tmp %f posTh+i*blockSize %i d_in[posTh+i*blockSize] %f \n", i, posTh, tmp, posTh+i*blockSize, d_in[posTh+i*blockSize]);
-
 				tmp = fmaxf(tmp, d_in[posTh+i*blockSize]);
 				tmpPos = (tmp==d_in[posTh+i*blockSize]) ? idx+i*blockSize : tmpPos;
 			}
@@ -1055,9 +830,6 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 	int posOut = nIm*blockSize + idx;
 	d_out[posOut] = tmp;
 	position[posOut] = tmpPos;
-	//if(nIm==0){
-		//printf("posOut %i d_out[posOut] %f position[posOut] %f \n", posOut, d_out[posOut], position[posOut]);
-	//}
 
 	__syncthreads();
 
@@ -1068,7 +840,6 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 	//Version 6
 	int i = blockIdx.x * blockSize + idx;
 
-	//printf("d_in[%i] %f \n", i, d_in[i]);
 
 	int index = 0;
 	for(int imN=0; imN<Ndim2; imN++){
@@ -1077,8 +848,6 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 			sdata[idx]=d_out[i+index];
 			sdata[idx+blockSize] = position[i+index];
 		}
-		//if (idx==0)
-			//printf("i %i, sdata %f \n", i, sdata[idx]);
 
 		__syncthreads();
 
@@ -1155,7 +924,6 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 		}
 
 		if(idx==0){
-			//printf("idx %i sdata[0] %f sdata[blockSize] %f \n", blockIdx.x+(gridDim.x*imN), sdata[0], sdata[blockSize]);
 			d_out[blockIdx.x+(gridDim.x*imN)] = sdata[0];
 			position[blockIdx.x+(gridDim.x*imN)] = sdata[blockSize];
 		}
@@ -1165,8 +933,6 @@ __global__ void calculateMaxThreads (float *d_in, float *d_out, float *position,
 		index = index+(int)yxdim2;
 
 	}
-	//printf("d_out0 %f, position0 %f \n", d_out[0], position[0]);
-	//printf("d_out1 %f, position1 %f \n", d_out[1], position[1]);
 
 }
 
@@ -1270,26 +1036,6 @@ void pointwiseMultiplicationFourier_three(const GpuMultidimArrayAtGpu< std::comp
 
 }
 
-/*
-void calculateDenomFunction(const GpuMultidimArrayAtGpu< float > &MFrealSpace, const GpuMultidimArrayAtGpu < float >& MF2realSpace,
-		const GpuMultidimArrayAtGpu < float >& maskAutocorrelation, GpuMultidimArrayAtGpu< float > &out)
-{
-    int numTh = 1024;
-    XmippDim3 blockSize(numTh, 1, 1), gridSize;
-    MFrealSpace.calculateGridSizeVectorized(blockSize, gridSize);
-
-    bool power2;
-    if (MFrealSpace.yxdim & (MFrealSpace.yxdim-1))
-    	power2 = false;
-    else
-    	power2 = true;
-    calculateDenomFunctionKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-			(MFrealSpace.d_data, MF2realSpace.d_data, maskAutocorrelation.d_data, out.d_data, MFrealSpace.nzyxdim, MFrealSpace.yxdim);
-
-}
-*/
-
-
 
 void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB,
 		StructuresAux &myStructureAux, myStreamHandle &myStream)
@@ -1297,9 +1043,6 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	myStructureAux.MF.resize(d_projFFT);
 	myStructureAux.MF2.resize(d_projSquaredFFT);
 	GpuMultidimArrayAtGpu< std::complex<float> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
-
-	//pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
-	//pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
 
 	pointwiseMultiplicationFourier_three(d_maskFFT, d_projFFT, myStructureAux.MF, d_projSquaredFFT,
 			myStructureAux.MF2, myStream, maskAux);
@@ -1312,7 +1055,6 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	myStructureAux.MF.ifftStream(MFrealSpace, myhandlePaddedB, myStream, false, dull);
 	myStructureAux.MF2.ifftStream(MF2realSpace, myhandlePaddedB, myStream, false, dull);
 
-	//pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux, myStream);
 	maskAutocorrelation.resize(Xdim, Ydim);
 	maskAux.ifftStream(maskAutocorrelation, myhandleMaskB, myStream, false, dull);
 	maskAux.clear();
@@ -1328,9 +1070,6 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	myStructureAux.MF.resize(d_projFFT);
 	myStructureAux.MF2.resize(d_projSquaredFFT);
 
-	//TODO everything managed by just one kernel??
-	//pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
-	//pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
 
 	pointwiseMultiplicationFourier_two(d_maskFFT, d_projFFT, myStructureAux.MF, d_projSquaredFFT,
 			myStructureAux.MF2, myStream);
@@ -1353,14 +1092,6 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 		bool skip, mycufftHandle &ifftcb)
 {
 
-	//myStructureAux.MF.resize(d_projFFT);
-	//myStructureAux.MF2.resize(d_projSquaredFFT);
-
-	//TODO everything managed by just one kernel??
-	//pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, myStructureAux.MF, myStream);
-	//d_projFFT.copyGpuToGpu(myStructureAux.MF, myStream);
-	//pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, myStructureAux.MF2, myStream);
-
 	GpuMultidimArrayAtGpu< std::complex<float> > dull;
 
 	MF2realSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
@@ -1375,76 +1106,6 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 }
 
 
-/*
-void calculateMaxNew1D(int xdim, int Ndim, float *d_data,
-		GpuMultidimArrayAtGpu<float> &d_out, GpuMultidimArrayAtGpu<float> &d_pos){
-
-    int numTh = 1024;
-    int numBlk = xdim/1024;
-    if(xdim%1024!=0)
-    	numBlk++;
-    numBlk=ceil((float)numBlk/2);
-    int numBlk2, size_aux2;
-
-    d_out.resize(numBlk*Ndim);
-    d_pos.resize(numBlk*Ndim);
-
-	calculateMax<<<numBlk, numTh, 2*numTh * sizeof(float)>>>(d_data, d_out.d_data, d_pos.d_data, xdim, Ndim, true);
-
-	numBlk2=numBlk;
-	size_aux2=numBlk;
-	while(1){
-		if(numBlk2>numTh){
-		   numBlk2=numBlk2/numTh;
-		   if(numBlk2%numTh!=0)
-			   numBlk2++;
-		   numBlk=ceil((float)numBlk/2);
-		}else{
-			numTh=ceil((float)size_aux2/2);
-			float aux1 = log((float)numTh)/log(2.0);
-			int aux2 = (int)aux1;
-			float error = aux1-(float)aux2;
-			if(error>0.001)
-				aux2++;
-			numTh=pow(2,aux2);
-			numBlk2=1;
-		}
-		calculateMax<<<numBlk2, numTh, 2*numTh * sizeof(float)>>> (d_out.d_data, d_out.d_data, d_pos.d_data, size_aux2, Ndim, false);
-		size_aux2=numBlk2;
-		if(numBlk2==1)
-			break;
-   }
-
-///*	float *h_pos = new float[Ndim];
-	cudaMemcpy(h_pos, d_pos.d_data, Ndim*sizeof(float), cudaMemcpyDeviceToHost);
-	float *h_auxMax = new float[xdim*Ndim];
-	cudaMemcpy(h_auxMax, auxMax, xdim*Ndim*sizeof(float), cudaMemcpyDeviceToHost);
-
-	for(int i=0; i<Ndim; i++){
-
-		int position = (int)h_pos[i];
-		max_values[i] = h_auxMax[position+(i*360)];
-
-		float posX_aux = (float)(position%xdim);
-		float Xdim2 = (float)(xdim/2);
-
-
-		if(posX_aux<Xdim2){
-			posX[i] = -(posX_aux+1);
-		}else if(posX_aux>=Xdim2){
-			posX[i] = xdim-1-posX_aux;
-		}
-
-		//Fixing padding problem
-		posX[i]+=fixPadding;
-
-	}///*
-
-}
-*/
-
-
-
 void calculateMaxNew2DNew(int yxdim, int Ndim, float *d_data,
 		GpuMultidimArrayAtGpu<float> &d_out, GpuMultidimArrayAtGpu<float> &d_pos, myStreamHandle &myStream){
 
@@ -1457,88 +1118,9 @@ void calculateMaxNew2DNew(int yxdim, int Ndim, float *d_data,
     d_pos.resize(numTh * numBlk);
 
     calculateMaxThreads<<<numBlk, numTh, 2*numTh * sizeof(float), *stream>>>(d_data, d_out.d_data, d_pos.d_data, yxdim, Ndim, numTh, 1);
-    //cudaStreamSynchronize(*stream);
-
-    //calculateMax2<<<numBlk, numTh, 2*numTh * sizeof(float), *stream>>> (d_out.d_data, d_out.d_data, d_pos.d_data, numTh, 1, false);
-    //cudaStreamSynchronize(*stream);
 
 }
 
-/*
-void calculateMaxNew2D(int yxdim, int Ndim, float *d_data,
-		GpuMultidimArrayAtGpu<float> &d_out, GpuMultidimArrayAtGpu<float> &d_pos){
-
-    int numTh = 1024;
-    int numBlk = yxdim/1024;
-    if(yxdim%1024!=0)
-    	numBlk++;
-    numBlk=ceil((float)numBlk/2);
-    int numBlk2, size_aux2;
-
-    d_out.resize(numBlk*Ndim);
-    d_pos.resize(numBlk*Ndim);
-
-	calculateMax<<<numBlk, numTh, 2*numTh * sizeof(float)>>>(d_data, d_out.d_data, d_pos.d_data, yxdim, Ndim, true);
-
-	numBlk2=numBlk;
-	size_aux2=numBlk;
-	while(1){
-		if(numBlk2>numTh){
-		   numBlk2=numBlk2/numTh;
-		   if(numBlk2%numTh!=0)
-			   numBlk2++;
-		   numBlk=ceil((float)numBlk/2);
-		}else{
-			numTh=ceil((float)size_aux2/2);
-			float aux1 = log((float)numTh)/log(2.0);
-			int aux2 = (int)aux1;
-			float error = aux1-(float)aux2;
-			if(error>0.001)
-				aux2++;
-			numTh=pow(2,aux2);
-			numBlk2=1;
-		}
-		calculateMax<<<numBlk2, numTh, 2*numTh * sizeof(float)>>> (d_out.d_data, d_out.d_data, d_pos.d_data, size_aux2, Ndim, false);
-		size_aux2=numBlk2;
-		if(numBlk2==1)
-			break;
-   }
-
-	///*float *h_pos = new float[Ndim];
-	cudaMemcpy(h_pos, d_pos.d_data, Ndim*sizeof(float), cudaMemcpyDeviceToHost);
-	//cudaMemcpy(max_values, d_out.d_data, Ndim*sizeof(float), cudaMemcpyDeviceToHost);
-
-	for(int i=0; i<Ndim; i++){
-
-		int position = (int)h_pos[i];
-
-		float posX_aux = (float)(position%Xdim);
-		float posY_aux = (float)(position/Xdim);
-		float Xdim2 = (float)(Xdim/2);
-		float Ydim2 = (float)(Ydim/2);
-
-		if(posX_aux>=Xdim2 && posY_aux>=Ydim2){
-			posX[i] = Xdim-1-posX_aux;
-			posY[i] = Ydim-1-posY_aux;
-		}else if(posX_aux<Xdim2 && posY_aux>=Ydim2){
-			posX[i] = -(posX_aux+1);
-			posY[i] = Ydim-1-posY_aux;
-		}else if(posX_aux<Xdim2 && posY_aux<Ydim2){
-			posX[i] = -(posX_aux+1);
-			posY[i] = -(posY_aux+1);
-		}else if(posX_aux>=Xdim2 && posY_aux<Ydim2){
-			posX[i] = Xdim-1-posX_aux;
-			posY[i] = -(posY_aux+1);
-		}
-
-		//Fixing padding problem
-		posX[i]+=fixPadding;
-		posY[i]+=fixPadding;
-
-	}///*
-
-}
-*/
 
 void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
 		float *max_vector, int maxShift, mycufftHandle &myhandlePadded, bool mirror,
@@ -1591,29 +1173,8 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
     		myStructureAux.auxZero.d_data, myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim, myStructureAux.d_NCCPolar.Ydim,
 			myStructureAux.d_NCCPolar.Ndim);
 
-
-	//float *max_values = new float[myStructureAux.d_NCCPolar.Ndim];
-	//float *posX = new float[myStructureAux.d_NCCPolar.Ndim];
-	//float *posY = new float[myStructureAux.d_NCCPolar.Ndim];
-
-    //printf("myStructureAux.d_NCCPolar1D.Xdim %i \n", myStructureAux.d_NCCPolar1D.Xdim);
-	//printf("myStructureAux.d_NCCPolar1D.Ydim %i \n", myStructureAux.d_NCCPolar1D.Ydim);
-	//printf("myStructureAux.d_NCCPolar1D.Ndim %i \n", myStructureAux.d_NCCPolar1D.Ndim);
-
-	//struct timeval begin, end;
-	//gettimeofday(&begin, NULL);
-
 	calculateMaxNew2DNew(myStructureAux.d_NCCPolar1D.Xdim, myStructureAux.d_NCCPolar1D.Ndim, myStructureAux.d_NCCPolar1D.d_data,
 			myStructureAux.d_out_polar_max, myStructureAux.d_pos_polar_max, myStream);
-
-	//gettimeofday(&end, NULL);
-	//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
-	//printf("Calculate Max 1D time %lf \n", elapsed);
-
-
-    //TransformMatrix<float> result(myStream, transMat.Ndim);
-	//TransformMatrix<float> newMat(myStream, transMat.Ndim);
-	//newMat.setRotation(posX);
 
 	numTh = 1024;
 	numBlk = transMat.Ndim/numTh;
@@ -1632,24 +1193,9 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 			myStructureAux.d_NCCPolar1D.Xdim, myStructureAux.d_NCCPolar1D.Ndim,
 			myStructureAux.d_NCCPolar1D.yxdim, 0, maxShift2, _power2x);
 
-	/*numTh = 1024;
-		numBlk = transMat.Ndim/numTh;
-		if(transMat.Ndim%numTh > 0)
-			numBlk++;
-
-	GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCCPolar1D.Ndim);
-	gpuErrchk(cudaMemcpy(maxGpu.d_data, max_values, myStructureAux.d_NCCPolar1D.Ndim*sizeof(float), cudaMemcpyHostToDevice));
-	double maxShift2 = (2*maxShift)*(2*maxShift);
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift2,
-			maxGpu.d_data, myStructureAux.auxZero.d_data, myStructureAux.d_NCCPolar1D.yxdim);*/
 	resultRT.copyMatrix(transMat, myStream);
 
 	gpuErrchk(cudaMemcpyAsync(max_vector, myStructureAux.maxGpu.d_data, myStructureAux.maxGpu.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *stream));
-
-
-	//delete[] max_values;
-	//delete[] posX;
-	//delete[] posY;
 
 }
 
@@ -1711,50 +1257,8 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	if(referenceAux.XdimOrig%2!=0 && referenceAux.Xdim%2!=0)
 		fixPadding=0;
 
-    //AJ new maximum calculation
-	//float *max_values = new float[myStructureAux.d_NCC.Ndim];
-	//float *posX = new float[myStructureAux.d_NCC.Ndim];
-	//float *posY = new float[myStructureAux.d_NCC.Ndim];
-
-	/*float *mio = new float [2000*2];
-	for (int i=0; i<2000*2; i++)
-		mio[i]=i;
-
-	gpuErrchk(cudaMemcpy(myStructureAux.d_NCC.d_data, mio, 2048*2*sizeof(float), cudaMemcpyHostToDevice));
-*/
-
-
-	//printf("myStructureAux.d_NCC.Xdim %i \n", myStructureAux.d_NCC.Xdim);
-	//printf("myStructureAux.d_NCC.Ydim %i \n", myStructureAux.d_NCC.Ydim);
-	//printf("myStructureAux.d_NCC.Ndim %i \n", myStructureAux.d_NCC.Ndim);
-
-	//struct timeval begin, end;
-	//gettimeofday(&begin, NULL);
-
 	calculateMaxNew2DNew(myStructureAux.d_NCC.yxdim, myStructureAux.d_NCC.Ndim,
 			myStructureAux.d_NCC.d_data, myStructureAux.d_out_max, myStructureAux.d_pos_max, myStream);
-
-	//gettimeofday(&end, NULL);
-	//double elapsed = (end.tv_sec - begin.tv_sec) + ((end.tv_usec - begin.tv_usec)/1000000.0);
-	//printf("Calculate Max 2D time %lf \n", elapsed);
-
-
-
-	//TransformMatrix<float> result(myStream, transMat.Ndim);
-	//TransformMatrix<float> newMat(myStream, transMat.Ndim);
-	/*newMat.setTranslation(posX, posY, myStructureAux.d_out_max.d_data);
-
-	numTh = 1024;
-	int numBlk = transMat.Ndim/numTh;
-	if(transMat.Ndim%numTh > 0)
-		numBlk++;
-
-	//GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCC.Ndim);
-	//gpuErrchk(cudaMemcpy(maxGpu.d_data, max_values, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyHostToDevice));
-	double maxShift2 = (2*maxShift)*(2*maxShift);
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift2,
-			myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.d_data, myStructureAux.d_NCC.yxdim);
-	result.copyMatrix(transMat);*/
 
 	numTh = 1024;
 	int numBlk = transMat.Ndim/numTh;
@@ -1775,11 +1279,6 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 
 	if(saveMaxVector)
 		gpuErrchk(cudaMemcpyAsync(max_vector, myStructureAux.d_out_max.d_data, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyDeviceToHost, *stream));
-
-
-	//delete[] max_values;
-	//delete[] posX;
-	//delete[] posY;
 
 }
 
@@ -1843,9 +1342,6 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
     myStructureAuxTR.RefExpFourier.ifftStream(myStructureAuxTR.RefExpRealSpace, myhandlePaddedTR, myStreamTR, false, dull);
 
     myStructureAuxRT.RefExpFourierPolar.ifftStream(myStructureAuxRT.RefExpRealSpacePolar, myhandlePaddedRT, myStreamRT, false, dull);
-    //referenceAux.d_projPolarFFT.ifft(myStructureAuxRT.RefExpRealSpacePolar, ifftcb, myStreamRT, true, experimentalAuxRT.d_projPolarFFT);
-
-
 
  	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
  	myStructureAuxTR.RefExpRealSpace.calculateGridSizeVectorized(blockSize2, gridSize2);
@@ -1896,16 +1392,11 @@ void cuda_calculate_correlation_two(GpuCorrelationAux &referenceAux, GpuCorrelat
     		myStructureAuxRT.auxZero.d_data, myStructureAuxRT.d_NCCPolar.Xdim*myStructureAuxRT.d_NCCPolar.Ndim, myStructureAuxRT.d_NCCPolar.Ydim,
 			myStructureAuxRT.d_NCCPolar.Ndim);
 
-
-
-
 	calculateMaxNew2DNew(myStructureAuxTR.d_NCC.yxdim, myStructureAuxTR.d_NCC.Ndim,
 			myStructureAuxTR.d_NCC.d_data, myStructureAuxTR.d_out_max, myStructureAuxTR.d_pos_max, myStreamTR);
 
 	calculateMaxNew2DNew(myStructureAuxRT.d_NCCPolar1D.Xdim, myStructureAuxRT.d_NCCPolar1D.Ndim, myStructureAuxRT.d_NCCPolar1D.d_data,
 			myStructureAuxRT.d_out_polar_max, myStructureAuxRT.d_pos_polar_max, myStreamRT);
-
-
 
 	numTh = 1024;
 	numBlk = transMatTR.Ndim/numTh;
@@ -1957,8 +1448,6 @@ void apply_transform(GpuMultidimArrayAtGpu<float> &d_original_image, GpuMultidim
 	cudaStream_t *stream = (cudaStream_t*) myStream.ptr;
 
 	int numTh = 1024;
-	//XmippDim3 blockSize(numTh, 1, 1), gridSize;
-	//d_original_image.calculateGridSizeVectorized(blockSize, gridSize);
 
 	int numBlk = d_transform_image.yxdim/numTh;
 	if(d_transform_image.yxdim%numTh > 0)
@@ -1996,8 +1485,6 @@ void cuda_cart2polar(GpuMultidimArrayAtGpu<float> &image, GpuMultidimArrayAtGpu<
 		if(polar_image.Ydim%numTh > 0)
 			numBlky++;
 
-    //XmippDim3 blockSize(numTh, numTh, 1), gridSize;
-    //polar_image.calculateGridSize(blockSize, gridSize);
     dim3 blockSize(numTh, numTh, 1);
     dim3 gridSize(numBlkx, numBlky, polar_image.Ndim);
 
@@ -2021,6 +1508,5 @@ void calculateAbs (std::complex<float> *data, float *out, int size, myStreamHand
 	if(size%numTh > 0)
 		numBlk++;
 	calcAbsKernel <<< numBlk, numTh, 0, *stream>>> ((cufftComplex*)data, out, size);
-
 
 }
