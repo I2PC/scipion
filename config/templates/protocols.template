@@ -23,6 +23,7 @@ Protocols SPA = [
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [
 		{"tag": "protocol", "value": "XmippProtMovieCorr", "text": "default"},
 		{"tag": "protocol", "value": "XmippProtOFAlignment", "text": "default"},
+		{"tag": "protocol", "value": "XmippProtMovieMaxShift", "text": "default"},
 		{"tag": "protocol", "value": "XmippProtMovieAverage", "text": "default"},
 		{"tag": "protocol", "value": "ProtUnblur", "text": "default"},
 		{"tag": "protocol", "value": "ProtSummovie", "text": "default"},
