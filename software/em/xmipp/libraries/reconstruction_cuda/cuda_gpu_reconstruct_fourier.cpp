@@ -601,41 +601,25 @@ __device__
 void processPixel(
 	float* tempVolumeGPU, float* tempWeightsGPU,
 	RecFourierBufferDataGPU* const data,
-	const RecFourierProjectionTraverseSpace* const space)
+	const RecFourierProjectionTraverseSpace* const space,
+	int x, int y)
 {
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
-	int y = blockIdx.y*blockDim.y + threadIdx.y;
-//	if(x >= data->fftSizeX  || y >= data->fftSizeY) {
-//		return;
-//	}
-
 	Point3D<float> imgPos;
-	float wBlob = 1.f;
-	float wCTF = 1.f;
-	float wModulator = 1.f;
 	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
 
 	float dataWeight = space->weight;
-	int xSize = data->fftSizeX;
-	int ySize = data->fftSizeY;
-	int index2D = y * xSize + x;
+	int index2D = y * data->fftSizeX + x;
 
 	if (img[2*index2D] == 0.f && img[2*index2D + 1] == 0.f) {
 		return;
 	}
 
 	// transform current point to center
-//	imgPos.x = x - cMaxVolumeIndexX/2;
-//	imgPos.y = y ;
-//	imgPos.z = z - cMaxVolumeIndexYZ/2;
 	imgPos.x = x;
 	imgPos.y = y - cMaxVolumeIndexYZ/2;
 	imgPos.z = 0.f;
 	// rotate around center
 	multiply(space->transform, imgPos);
-//	if (imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z > space->maxDistanceSqr) {
-//		return; // discard iterations that would access pixel with too high frequency
-//	}
 	// transform back and round
 	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
 	int volX = clamp((int)(imgPos.x + cMaxVolumeIndexX/2 + 0.5f), 0, cMaxVolumeIndexX);
@@ -644,19 +628,10 @@ void processPixel(
 
 	int index3D = volZ * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + volY * (cMaxVolumeIndexX+1) + volX;
 
-//	if (hasCTF) {
-//		const float* __restrict__ CTF = data->getNthItem(data->CTFs, space->projectionIndex);
-//		const float* __restrict__ modulator = data->getNthItem(data->modulators, space->projectionIndex);
-//		wCTF = CTF[index2D];
-//		wModulator = modulator[index2D];
-//	}
-
-	float weight = wBlob * wModulator * dataWeight;
-
 	 // use atomic as two blocks can write to same voxel
-	atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight * wCTF);
-	atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight * wCTF);
-	atomicAdd(&tempWeightsGPU[index3D], weight);
+	atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * dataWeight);
+	atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * dataWeight);
+	atomicAdd(&tempWeightsGPU[index3D], dataWeight);
 }
 
 __device__
@@ -664,21 +639,14 @@ void processPixelBlob(
 	float* tempVolumeGPU, float* tempWeightsGPU,
 	RecFourierBufferDataGPU* const data,
 	const RecFourierProjectionTraverseSpace* const space,
-	const float* blobTableSqrt)
+	const float* blobTableSqrt,
+	int x, int y)
 {
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
-	int y = blockIdx.y*blockDim.y + threadIdx.y;
-
 	Point3D<float> imgPos;
-	float wBlob = 1.f;
-	float wCTF = 1.f;
-	float wModulator = 1.f;
 	const float* __restrict__ img = data->getNthItem(data->FFTs, space->projectionIndex);
 
 	float dataWeight = space->weight;
-	int xSize = data->fftSizeX;
-	int ySize = data->fftSizeY;
-	int index2D = y * xSize + x;
+	int index2D = y * data->fftSizeX + x;
 
 	if (img[2*index2D] == 0.f && img[2*index2D + 1] == 0.f) {
 		return;
@@ -727,33 +695,12 @@ void processPixelBlob(
 
 				float weight = wBlob * dataWeight;
 
-//				if (index3D < 0 || index3D >= (cMaxVolumeIndexX * cMaxVolumeIndexYZ * cMaxVolumeIndexYZ)) {
-//					printf("prusvih, X %d %d Y %d %d Z %d %d, ted %d %d %d\n",
-//							minX, maxX, minY, maxY, minZ, maxZ, j, i, l );
-//				}
-
-				atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight * wCTF);
-				atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight * wCTF);
+				atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight );
+				atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight );
 				atomicAdd(&tempWeightsGPU[index3D], weight);
 			}
 		}
 	}
-
-
-
-//	if (hasCTF) {
-//		const float* __restrict__ CTF = data->getNthItem(data->CTFs, space->projectionIndex);
-//		const float* __restrict__ modulator = data->getNthItem(data->modulators, space->projectionIndex);
-//		wCTF = CTF[index2D];
-//		wModulator = modulator[index2D];
-//	}
-
-//	float weight = wBlob * wModulator * dataWeight;
-//
-//	 // use atomic as two blocks can write to same voxel
-//	atomicAdd(&tempVolumeGPU[2*index3D], img[2*index2D] * weight * wCTF);
-//	atomicAdd(&tempVolumeGPU[2*index3D + 1], img[2*index2D + 1] * weight * wCTF);
-//	atomicAdd(&tempWeightsGPU[index3D], weight);
 }
 
 
@@ -763,44 +710,40 @@ void processPixelBlob(
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
  */
-//template<bool useFast>
+template<bool useFast>
 __global__
 void processBufferKernelInverse(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		RecFourierBufferDataGPU* buffer,
 		float* devBlobTableSqrt,
-		int imgCacheDim,bool useFast) {
+		int imgCacheDim) {
+#if TILE > 1
+	int id = threadIdx.y * blockDim.x + threadIdx.x;
+	int tidX = threadIdx.x % TILE + (id / (blockDim.y * TILE)) * TILE;
+	int tidY = (id / TILE) % blockDim.y;
+	int idx = blockIdx.x*blockDim.x + tidX;
+	int idy = blockIdx.y*blockDim.y + tidY;
+#else
+	// map thread to each (2D) voxel
+	volatile int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	volatile int idy = blockIdx.y*blockDim.y + threadIdx.y;
+#endif
 
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
-	int y = blockIdx.y*blockDim.y + threadIdx.y;
-
-	if(x >= buffer->fftSizeX  || y >= buffer->fftSizeY) {
+	if(idx >= buffer->fftSizeX  || idy >= buffer->fftSizeY) {
 		return;
 	}
 
-#if SHARED_BLOB_TABLE
-	if ( ! useFast) {
-		// copy blob table to shared memory
-		int id = threadIdx.y*blockDim.x + threadIdx.x;
-		int blockSize = blockDim.x * blockDim.y;
-		for (int i = id; i < BLOB_TABLE_SIZE_SQRT; i+= blockSize)
-			BLOB_TABLE[i] = devBlobTableSqrt[i];
-		__syncthreads();
-	}
-#endif
-
-
-	for (int i = 0; i < buffer->getNoOfSpaces(); i++) {
+	for (int i = blockIdx.z; i < buffer->getNoOfSpaces(); i += gridDim.z) {
 		RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
 
 		if (useFast) {
-		processPixel(
-			tempVolumeGPU, tempWeightsGPU,
-			buffer, space);
+			processPixel(
+				tempVolumeGPU, tempWeightsGPU,
+				buffer, space, idx, idy);
 		} else {
 			processPixelBlob(tempVolumeGPU, tempWeightsGPU,
-					buffer, space,
-					devBlobTableSqrt);
+				buffer, space,
+				devBlobTableSqrt, idx, idy);
 		}
 		__syncthreads(); // sync threads to avoid write after read problems
 	}
@@ -884,7 +827,7 @@ void copyConstants(
 /**
  * Method will use data stored in the buffer and update temporal
  * storages appropriately.
- * Acuall calculation is done asynchronously, but 'buffer' can be reused
+ * Actual calculation is done asynchronously, but 'buffer' can be reused
  * once the method returns.
  */
 void processBufferGPUInverse(float* tempVolumeGPU, float* tempWeightsGPU,
@@ -910,11 +853,19 @@ void processBufferGPUInverse(float* tempVolumeGPU, float* tempWeightsGPU,
 		dim3 dimGrid(ceil(size2D/(float)dimBlock.x),ceil(size2D/(float)dimBlock.y), GRID_DIM_Z);
 
 		// by using templates, we can save some registers, especially for 'fast' version
-		processBufferKernelInverse<<<dimGrid, dimBlock, 0, stream>>>(
-				tempVolumeGPU, tempWeightsGPU,
-				wrapper->gpuCopy,
-				devBlobTableSqrt,
-				imgCacheDim, useFast);
+		if (useFast) {
+			processBufferKernelInverse<true><<<dimGrid, dimBlock, 0, stream>>>(
+					tempVolumeGPU, tempWeightsGPU,
+					wrapper->gpuCopy,
+					devBlobTableSqrt,
+					imgCacheDim);
+		} else {
+			processBufferKernelInverse<false><<<dimGrid, dimBlock, 0, stream>>>(
+					tempVolumeGPU, tempWeightsGPU,
+					wrapper->gpuCopy,
+					devBlobTableSqrt,
+					imgCacheDim);
+		}
 }
 
 
