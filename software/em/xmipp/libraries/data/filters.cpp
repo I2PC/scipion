@@ -2792,7 +2792,7 @@ void centerImageRotationally(MultidimArray<double> &I,
 
 /* Center both rotationally and translationally ---------------------------- */
 //#define DEBUG
-void centerImage(MultidimArray<double> &I, CorrelationAux &aux,
+Matrix2D<double> centerImage(MultidimArray<double> &I, CorrelationAux &aux,
                  RotationalCorrelationAux &aux2, int Niter, bool limitShift)
 {
     I.checkDimension(2);
@@ -3006,6 +3006,7 @@ void centerImage(MultidimArray<double> &I, CorrelationAux &aux,
     I = Iaux;
     I += avg;
     delete plans;
+    return A;
 }
 #undef DEBUG
 
