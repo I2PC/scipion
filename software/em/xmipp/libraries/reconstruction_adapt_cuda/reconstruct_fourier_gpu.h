@@ -131,15 +131,13 @@ public:
 		ProgRecFourierGPU* parent,
 	    std::vector<size_t> objId,
 	    RecFourierBufferData* buffer,
-	    ktt::ArgumentId imgCacheId,
 	    ktt::ArgumentId startSpaceIndexId,
 	    ktt::ArgumentId spaceNoId,
-	    ktt::ArgumentId sharedMemId,
 	    ktt::ArgumentId spaceId,
 		ktt::ArgumentId FFTsId,
 	    int firstImgIndex, int lastImgIndex) :
 		threadParams(threadParams), parent(parent), objId(objId), buffer(buffer),
-	    imgCacheId(imgCacheId),startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId), sharedMemId(sharedMemId),
+	    startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId),
 	    spaceId(spaceId),FFTsId(FFTsId),
 	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
 
@@ -157,12 +155,6 @@ public:
 	        globalSize.setSizeX(targetSizeX);
 	        globalSize.setSizeY(ceil(size2D/(float)localSize.getSizeY()));
 	        int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(localSize.getSizeX() + 2*parent->blob.radius));
-	        updateArgumentScalar(imgCacheId, &imgCacheDim);
-
-	        size_t useSharedMem = getParameterValue("SHARED_IMG", parameterValues);
-	        updateArgumentLocal(sharedMemId, useSharedMem ? imgCacheDim*imgCacheDim : 1);
-
-	        size_t useAtomics = getParameterValue("USE_ATOMICS", parameterValues);
 
 	        parent->initProgress();
 	        parent->logProgress(0, true);
@@ -186,33 +178,12 @@ public:
 						updateArgumentVector(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs));
 						updateArgumentScalar(spaceNoId, &noOfSpaces);
 
-					if (useAtomics == 1) {
 						runKernel(kernelId, globalSize, localSize);
 						parent->logProgress(buffer->noOfImages);
-					} else {
-						int noOfSpaces = buffer->getNoOfElements(buffer->spaces);
-						for (int i = 0; i < noOfSpaces; i++) {
-							int one = 1;
-//							RecFourierProjectionTraverseSpace* space = &buffer->spaces[i];
-//							std::cout << "space index " << i << " FFT " << space->projectionIndex << std::endl;
-							updateArgumentScalar(startSpaceIndexId, &i);
-//							updateArgumentScalar(startFFTIndexId, &space->projectionIndex);
-//							updateArgumentVector(FFTsId, buffer->getNthItem(buffer->FFTs, space->projectionIndex), buffer->getNoOfElements(buffer->FFTs) / buffer->noOfImages);
-							updateArgumentScalar(spaceNoId, &one);
-
-							runKernel(kernelId, globalSize, localSize);
-							parent->logProgress(1);
-						}
-					}
-
-
 
 				}
 				// once the processing finished, buffer can be reused
 			}
-
-
-
 	    }
 
 	private:
@@ -220,10 +191,8 @@ public:
 	    RecFourierWorkThread* threadParams;
 	    std::vector<size_t> objId;
 	    RecFourierBufferData* buffer;
-	    ktt::ArgumentId imgCacheId;
 	    ktt::ArgumentId startSpaceIndexId;
 	    ktt::ArgumentId spaceNoId;
-	    ktt::ArgumentId sharedMemId;
 	    ktt::ArgumentId spaceId;
 	    ktt::ArgumentId FFTsId;
 
@@ -239,15 +208,13 @@ public:
 		ProgRecFourierGPU* parent,
 	    std::vector<size_t> objId,
 	    RecFourierBufferData* buffer,
-	    ktt::ArgumentId imgCacheId,
 	    ktt::ArgumentId startSpaceIndexId,
 	    ktt::ArgumentId spaceNoId,
-	    ktt::ArgumentId sharedMemId,
 	    ktt::ArgumentId spaceId,
 		ktt::ArgumentId FFTsId,
 	    int firstImgIndex, int lastImgIndex) :
 		threadParams(threadParams), parent(parent), objId(objId), buffer(buffer),
-	    imgCacheId(imgCacheId),startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId), sharedMemId(sharedMemId),
+	    startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId),
 	    spaceId(spaceId),FFTsId(FFTsId),
 	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
 
@@ -300,10 +267,8 @@ public:
 	    ProgRecFourierGPU* parent;
 	    std::vector<size_t> objId;
 	    RecFourierBufferData* buffer;
-	    ktt::ArgumentId imgCacheId;
 	    ktt::ArgumentId startSpaceIndexId;
 	    ktt::ArgumentId spaceNoId;
-	    ktt::ArgumentId sharedMemId;
 	    ktt::ArgumentId spaceId;
 	    ktt::ArgumentId FFTsId;
 
