@@ -323,7 +323,11 @@ void processPixelBlob(
 
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f));
 
+#if SHARED_BLOB_TABLE
+				float wBlob = BLOB_TABLE[aux];
+#else
 				float wBlob = blobTableSqrt[aux];
+#endif
 
 				float weight = wBlob * dataWeight;
 
@@ -356,6 +360,18 @@ void processBufferKernelInverse(
 	// map thread to each (2D) voxel
 	volatile int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	volatile int idy = blockIdx.y*blockDim.y + threadIdx.y;
+#endif
+
+
+#if SHARED_BLOB_TABLE
+	if ( ! useFast) {
+		// copy blob table to shared memory
+		volatile int id = threadIdx.y*blockDim.x + threadIdx.x;
+		volatile int blockSize = blockDim.x * blockDim.y;
+		for (int i = id; i < BLOB_TABLE_SIZE_SQRT; i+= blockSize)
+			BLOB_TABLE[i] = devBlobTableSqrt[i];
+		__syncthreads();
+	}
 #endif
 
 	if(idx >= buffer->fftSizeX  || idy >= buffer->fftSizeY) {
