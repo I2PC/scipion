@@ -128,25 +128,13 @@ author = "Jonic, S. and C.O.S. Sorzano and P. Thevenaz and C. El-Bez and S. De C
 keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
 }
 
-@article{Li2013,
-  title="Electron counting and beam-induced motion correction enable near-atomic-resolution single-particle cryo-EM",
-  author="Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Christopher R and Braunfeld, Michael B and Gubbens, Sander and Agard, David A and Cheng, Yifan",
-  journal="Nature methods",
-  volume="10",
-  number="6",
-  pages="584-590",
-  year="2013",
-  publisher="Nature Publishing Group",
-  doi = "http://dx.doi.org/10.1038/nmeth.2472"
-}
-
 @article{Nogales2013,
 title={3DEM Loupe: analysis of macromolecular dynamics using structures from electron microscopy},
 author={Nogales-Cadenas, R. and Jonic, S. and Tama, F. and Arteni, A. A. and Tabas-Madrid, D. and V{\'a}zquez, M. and Pascual-Montano, A. and Sorzano, C. O. S.},
 journal={Nucleic acids research},
 year={2013},
 publisher={Oxford Univ Press},
-doi='http://dx.doi.org/10.1093/nar/gkt385'
+doi={http://dx.doi.org/10.1093/nar/gkt385}
 }
 
 @article{Otsu1979,
@@ -215,7 +203,7 @@ keywords = "Classification, Electron tomography, Image processing, Neural networ
    Pages="721--745",
    Month="Oct",
    url="http://www.sciencedirect.com/science/article/pii/S0022283603010222",
-   doi="http://dx.doi.org/10.1016/j.jmb.2003.07.013"
+   doi={http://dx.doi.org/10.1016/j.jmb.2003.07.013}
 }
 
 
@@ -307,7 +295,7 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
 }
 
 @article{Scheres2009c,
-  author = {Scheres, Sjors H W. and Melero, Roberto and Valle, Mikel and Carazo, José María},
+  author = {Scheres, Sjors H W. and Melero, Roberto and Valle, Mikel and Carazo, JosÃ© MarÃ­a},
   title = {Averaging of Electron Subtomograms and Random Conical Tilt Reconstructions through Likelihood Optimization},
   journal = {Structure},
   year = {2009},
@@ -392,7 +380,7 @@ pages = "171-193",
   journal                  = {Proc. Intl. Work-Conference on Bioinformatics and Biomedical Engineering, IWBBIO},
   year                     = {2014},
   pages                    = {950},
-  doi                      = "http://biocomp.cnb.csic.es/~coss/Articulos/Sorzano2014.pdf"
+  doi                      = {http://biocomp.cnb.csic.es/~coss/Articulos/Sorzano2014.pdf}
 }
 
 @article{Sorzano2015,
@@ -402,7 +390,7 @@ journal = "J. Structural Biology",
 year = "2015",
 volume = "189",
 pages = "213-219",
-doi = "http://dx.doi.org/10.1016/j.jsb.2015.01.009"
+doi = {http://dx.doi.org/10.1016/j.jsb.2015.01.009}
 }
 
 @article{Vargas2013a,

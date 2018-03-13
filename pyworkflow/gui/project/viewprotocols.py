@@ -1880,10 +1880,10 @@ class ProtocolsView(tk.Frame):
             if bibTexCites:
                 with tempfile.NamedTemporaryFile(suffix='.bib') as bibFile:
                     for refId, refDict in bibTexCites.iteritems():
-                        refType = refDict['type']
+                        refType = refDict['ENTRYTYPE']
                         # remove 'type' and 'id' keys
                         refDict = {k: v for k, v in refDict.items()
-                                   if k not in ['type', 'id']}
+                                   if k not in ['ENTRYTYPE', 'ID']}
                         jsonStr = json.dumps(refDict, indent=4,
                                              ensure_ascii=False)[1:]
                         jsonStr = jsonStr.replace('": "', '"= "')
