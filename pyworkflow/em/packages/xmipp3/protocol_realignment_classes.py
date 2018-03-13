@@ -107,9 +107,7 @@ class XmippProtReAlignClasses(ProtClassify2D):
         mdNewClasses.write('classes@' + self._getExtraPath('final_classes.xmd'),
                            MD_APPEND)
 
-        #mdImages = md.MetaData()
-        import time
-        time.sleep(10)
+        mdImages = md.MetaData()
         i=0
         mdBlocks = md.getBlocksInMetaDataFile(inputMdName)
         for block in mdBlocks:
@@ -118,7 +116,7 @@ class XmippProtReAlignClasses(ProtClassify2D):
                 newMatrix = newMat.getMatrix()
                 #print newMatrix
                 mdClass = md.MetaData(block + "@" + inputMdName)
-                #mdImages.unionAll(mdClass)
+                mdImages.unionAll(mdClass)
                 mdNewClass = md.MetaData()
                 i+=1
                 for rowIn in md.iterRows(mdClass):
@@ -143,6 +141,7 @@ class XmippProtReAlignClasses(ProtClassify2D):
                     rowOut.addToMd(mdNewClass)
                 mdNewClass.write(block + "@" + self._getExtraPath(
                     'final_classes.xmd'), MD_APPEND)
+        mdImages.write(self._getExtraPath('final_images.xmd'))
 
 
     def createOutputStep(self):
@@ -152,6 +151,14 @@ class XmippProtReAlignClasses(ProtClassify2D):
         result = {'outputClasses': outputClasses}
         self._defineOutputs(**result)
         self._defineSourceRelation(self.inputClasses, outputClasses)
+
+        outputParticles = self._createSetOfParticles()
+        outputParticles.copyInfo(inputParticles)
+        self._fillParticles(outputParticles)
+        result = {'outputParticles': outputParticles}
+        self._defineOutputs(**result)
+        self._defineSourceRelation(self.inputClasses, outputParticles)
+
 
     # --------------------------- UTILS functions ------------------------------
 
@@ -188,6 +195,15 @@ class XmippProtReAlignClasses(ProtClassify2D):
                 i+=1
                 newClass.setAlignment2D()
                 outputClasses.update(newClass)
+
+    def _fillParticles(self, outputParticles):
+        """ Create the SetOfParticles """
+        myParticles = md.MetaData(self._getExtraPath('final_images.xmd'))
+        outputParticles.enableAppend()
+        for row in md.iterRows(myParticles):
+            p = rowToParticle(row)
+            outputParticles.append(p)
+
 
 
     # --------------------------- INFO functions -------------------------------
