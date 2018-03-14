@@ -41,6 +41,7 @@ from pyworkflow.protocol.constants import STATUS_NEW
 from pyworkflow.em.data import Class2D
 from pyworkflow.object import Float, String
 import pyworkflow.protocol.constants as const
+from os.path import exists
 
 
 REF_CLASSES = 0
@@ -97,6 +98,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         self.listOutFn = []
         self.doneListFn = []
         self.lastDate = 0
+        self.flag_relion = False
         self.imgsRef = self._getExtraPath('imagesRef.xmd')
         self.htAlreadyProcessed = HashTableDict()
         xOrig = self.inputParticles.get().getXDim()
@@ -107,10 +109,9 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             self.useAsRef = REF_CLASSES
         else:
             self.useAsRef = REF_AVERAGES
-        classId = self.inputRefs.get()
 
         deps = []
-        self._insertFunctionStep('convertAveragesStep', classId)
+        self._insertFunctionStep('convertAveragesStep')
         deps = self._insertStepsForParticles(deps)
 
         self._insertFunctionStep('createOutputStep',
@@ -123,7 +124,7 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         return deps
 
     # --------------------------- STEPS functions ------------------------------
-    def convertAveragesStep(self, classId):
+    def convertAveragesStep(self):
 
         if self.useAsRef == REF_CLASSES:
             writeSetOfClasses2D(self.inputRefs.get(), self.imgsRef,
@@ -140,6 +141,8 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         for p in self.listOfParticles:
             partId = p.getObjId()
             self.htAlreadyProcessed.pushItem(partId)
+        self.lastDate = p.getObjCreation()
+        self._saveCreationTimeFile(self.lastDate)
 
         # Calling program xmipp_cuda_correlation
         outImgs, clasesOut = self._getOutputsFn()
@@ -268,15 +271,16 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
 
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
+        lastDate = self._readCreationTimeFile()
 
         for p in particlesSet.iterItems(orderBy='creation',
                                         where="creation>'%s'"
-                                        % self.lastDate):
+                                        % lastDate):
             idx = p.getObjId()
             if not self.htAlreadyProcessed.isItemPresent(idx):
                 newPart = p.clone()
+                newPart.setObjCreation(p.getObjCreation())
                 self.listOfParticles.append(newPart)
-        self.lastDate = p.getObjCreation()
 
         particlesSet.close()
         self.debug("Closed db.")
@@ -335,10 +339,18 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
             inputSet = self._loadInputParticleSet()
             clsIdList = []
 
+            if self.useAsRef == REF_CLASSES:
+                cls2d = self.inputRefs.get()
+                for cls in cls2d:
+                    for img in cls:
+                        if img.hasAttribute('_rlnGroupName'):
+                            self.flag_relion = True
+                        break
+                    break
+
             if firstTime:
 
                 self.lastId = 0
-                self.flag_relion = False
                 if self.useAsRef == REF_AVERAGES:
                     repSet = self.inputRefs.get()
                     for rep in repSet:
@@ -369,9 +381,9 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
                         repId = cls.getObjId()
                         newClass = outputClasses[repId]
                         for img in cls:
-                            if not self.flag_relion \
-                                    and img.hasAttribute('_rlnGroupName'):
-                                self.flag_relion=True
+                            # if not self.flag_relion \
+                            #         and img.hasAttribute('_rlnGroupName'):
+                            #     self.flag_relion=True
                             newClass.append(img)
                             #We store the last id just in case we found any
                             # problem with repeated ids that requires to
@@ -427,3 +439,17 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         imagesFn = self._getUniqueFn(nameImages, self.listOutFn)
         classesFn = imagesFn.replace('images', 'classes')
         return imagesFn, classesFn
+
+    def _saveCreationTimeFile(self, cTime):
+        fn = open(self._getExtraPath('creation.txt'),'w')
+        fn.write(cTime)
+        fn.close()
+
+    def _readCreationTimeFile(self):
+        if exists(self._getExtraPath('creation.txt')):
+            fn = open(self._getExtraPath('creation.txt'), 'r')
+            cTime = fn.readline()
+            fn.close()
+        else:
+            cTime = 0
+        return cTime

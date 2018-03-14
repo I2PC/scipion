@@ -22,6 +22,8 @@
 # ***************************************************************************/
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+from pyworkflow.em.protocol import ProtImportAverages, ProtImportMicrographs, \
+    ProtCreateStreamData
 from pyworkflow.em.protocol.protocol_create_stream_data import \
     SET_OF_MICROGRAPHS
 from pyworkflow.protocol import getProtocolFromDb
@@ -31,6 +33,7 @@ from pyworkflow.em.packages.xmipp3.protocol_extract_particles import *
 from pyworkflow.em.packages.xmipp3.protocol_classification_gpuCorr_semi \
     import *
 import time
+
 
 # Number of mics to be processed
 NUM_MICS = 5
