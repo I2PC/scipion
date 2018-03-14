@@ -276,6 +276,9 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             if not self.htAlreadyProcessed.isItemPresent(idx):
                 auxList.append(self.listOfParticles[i])
                 self.htAlreadyProcessed.pushItem(idx)
+                self.lastDate = self.listOfParticles[i].getObjCreation()
+        self._saveCreationTimeFile(self.lastDate)
+
         self.particlesToProcess+=auxList
         print("Antes len(self.particlesToProcess)", len(self.particlesToProcess))
         sys.stdout.flush()
@@ -796,18 +799,20 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             particlesSet = self._loadInputParticleSet()
         print "_loadInputParticleSet: %s s" % t.secs
 
+        lastDate = self._readCreationTimeFile()
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
         with Timer() as t:
             for p in particlesSet.iterItems(orderBy='creation',
                                             where="creation>'%s'"
-                                            % self.lastDate):
+                                            % lastDate):
                 idx = p.getObjId()
                 if not self.htAlreadyProcessed.isItemPresent(idx):
                     newPart = p.clone()
+                    newPart.setObjCreation(p.getObjCreation())
                     self.listOfParticles.append(newPart)
-            if len(self.listOfParticles)>0:
-                self.lastDate = p.getObjCreation()
+            # if len(self.listOfParticles)>0:
+            #     self.lastDate = p.getObjCreation()
         print "_loop: %s s" % t.secs
 
         particlesSet.close()
@@ -1058,6 +1063,21 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         system('cat %s >> %s' % (fnSave, inputImgs))
         cleanPath(fnSave)
         cleanPath(fn1)
+
+
+    def _saveCreationTimeFile(self, cTime):
+        fn = open(self._getExtraPath('creation.txt'),'w')
+        fn.write(cTime)
+        fn.close()
+
+    def _readCreationTimeFile(self):
+        if exists(self._getExtraPath('creation.txt')):
+            fn = open(self._getExtraPath('creation.txt'), 'r')
+            cTime = fn.readline()
+            fn.close()
+        else:
+            cTime = 0
+        return cTime
 
 
 
