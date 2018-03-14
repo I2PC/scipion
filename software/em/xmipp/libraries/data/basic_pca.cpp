@@ -379,7 +379,8 @@ void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
 
 /* Evaluate score --------------------------------------------------------- */
 //#define DEBUG
-void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained, const char* fileName, int numdesc)
+void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained,
+    const char* fileName, int numdesc)
 {
 
     int N=v.size();
