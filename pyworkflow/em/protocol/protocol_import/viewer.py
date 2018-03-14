@@ -71,7 +71,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         }
 
     def _validate(self):
-        if find_executable(getProgram()) is None:
+        if self.displayVol == VOLUME_CHIMERA and find_executable(getProgram()) is None:
             return ["chimera is not available. "
                     "Either install it or choose option 'slices'. "]
         return []
