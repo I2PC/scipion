@@ -28,7 +28,6 @@
 
 import os
 
-from pyworkflow.em import *  
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import IntParam, FloatParam
 from pyworkflow.em.protocol import ProtParticlePickingAuto
@@ -51,7 +50,6 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         ProtParticlePickingAuto.__init__(self, **kwargs)
         self.extraParams = ('pixel_input=1:pixel_output=1:invert_contrast'
                             '=True:use_variance=True')
-        self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -68,7 +66,6 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         form.addParam('gaussWidth', FloatParam, default='1',
                       label='Gauss Width',
                       help='Width of the Gaussian kernel used')
-        form.addParallelSection(threads=1, mpi=4)
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertInitialSteps(self):

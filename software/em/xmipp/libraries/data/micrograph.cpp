@@ -262,11 +262,18 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     aux.valid = true;
     aux.label = label;
     aux.cost = 1;
+    aux.scoreVar = -1;
+    aux.scoreGini = -1;
 
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         MD.getValue(MDL_XCOOR, aux.X, __iter.objId); //aux.X=x;
         MD.getValue(MDL_YCOOR, aux.Y, __iter.objId); //aux.Y=y;
+        if (MD.containsLabel(MDL_SCORE_BY_VAR))
+        {
+            MD.getValue(MDL_SCORE_BY_VAR, aux.scoreVar, __iter.objId);
+            MD.getValue(MDL_SCORE_BY_GINI, aux.scoreGini, __iter.objId);
+        }
         coords.push_back(aux);
     }
 }
@@ -404,6 +411,12 @@ void Micrograph::produce_all_images(int label, double minCost,
     size_t id;
 
     Particle_coords Pnoise;
+    Pnoise.valid = true;
+    Pnoise.label = 0;
+    Pnoise.cost = 1;
+    Pnoise.scoreVar = -1;
+    Pnoise.scoreGini = -1;
+
 	int minNoiseDistance=Y_window_size/2;
 	std::vector<Particle_coords> noiseCoords;
 
@@ -420,6 +433,11 @@ void Micrograph::produce_all_images(int label, double minCost,
             SF.setValue(MDL_MICROGRAPH, M->fn_micrograph, id);
             SF.setValue(MDL_XCOOR, coords[n].X, id);
             SF.setValue(MDL_YCOOR, coords[n].Y, id);
+            if (coords[n].scoreVar>0)
+            {
+                SF.setValue(MDL_SCORE_BY_VAR, coords[n].scoreVar, id);
+                SF.setValue(MDL_SCORE_BY_GINI, coords[n].scoreGini, id);
+            }
             bool t=false;
             if (extractNoise)
             {
@@ -505,6 +523,8 @@ int Micrograph::add_coord(int x, int y, int label, double cost)
     aux.Y = y;
     aux.label = label;
     aux.cost = cost;
+    aux.scoreVar = -1;
+    aux.scoreGini = -1;
     coords.push_back(aux);
     return coords.size() - 1;
 }
