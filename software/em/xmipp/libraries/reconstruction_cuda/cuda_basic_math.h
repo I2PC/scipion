@@ -36,6 +36,7 @@ typedef signed char schar;
 // float2 functions
 ////////////////////////////////////////////////////////////////////////////////
 
+
 // additional constructors
 inline __host__ __device__ float2 make_float2(float s)
 {
@@ -305,7 +306,6 @@ inline __host__ __device__ float3 reflect(float3 i, float3 n)
 {
 	return i - 2.0f * n * dot(n,i);
 }
-
 
 /** Returns true if x is in (min, max), i.e. opened, interval */
 template <typename T>

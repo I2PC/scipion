@@ -27,6 +27,7 @@
 
 import os
 import time
+from datetime import datetime
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.protocol import ProtProcessParticles
@@ -42,8 +43,8 @@ class XmippProtTriggerData(ProtProcessParticles):
     # --------------------------- DEFINE param functions ----------------------
     def _defineProcessParams(self, form):
 
-        form.addParam('outputSize', IntParam, default=60,
-                      label='Output size',
+        form.addParam('outputSize', IntParam, default=10000,
+                      label='Minimum output size',
                       help='How many particles need to be on input to '
                            'create output set.')
         form.addParam('checkInterval', IntParam, default=60,
@@ -54,13 +55,13 @@ class XmippProtTriggerData(ProtProcessParticles):
                       help='If NO is selected, only subset of "Output size" '
                            'particles will be send to output.')
         form.addParam('delay', IntParam, default=1,
-                      label="Delay (sec)",
+                      label="Delay (sec)", expertLevel=cons.LEVEL_ADVANCED,
                       help="Delay in seconds before checking new output")
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self.finished = False
-        self.AddedParticles = []
+        self.particles = []
         partsSteps = self.delayStep()
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=partsSteps, wait=True)
@@ -92,44 +93,57 @@ class XmippProtTriggerData(ProtProcessParticles):
 
     def _checkNewInput(self):
         partsFile = self.inputParticles.get().getFileName()
+        self.lastCheck = getattr(self, 'lastCheck', datetime.now())
+        mTime = datetime.fromtimestamp(os.path.getmtime(partsFile))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'newParticles'):
+            return None
+
+        # Open input movies.sqlite and close it as soon as possible
         self.partsSet = SetOfParticles(filename=partsFile)
         self.partsSet.loadAllProperties()
-        self.SetOfParticles = [m.clone() for m in self.partsSet if
-                               int(m.getObjId()) not in self.AddedParticles]
+        if len(self.particles) > 0:
+            self.newParticles = [m.clone() for m in self.partsSet.iterItems(
+                orderBy='creation',
+                where='creation>"' + str(self.check) + '"')]
+        else:
+            self.newParticles = [m.clone() for m in self.partsSet]
+
+        self.particles = self.particles + self.newParticles
+        if len(self.newParticles) > 0:
+            self.check = self.partsSet[len(self.particles)-1].getObjCreation()
+
+        self.lastCheck = datetime.now()
         self.streamClosed = self.partsSet.isStreamClosed()
         self.partsSet.close()
-        for m in self.SetOfParticles:
-            if int(m.getObjId()) not in self.AddedParticles:
-                self.AddedParticles.append(m.getObjId())
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
-        if len(self.AddedParticles) >= self.outputSize:
+        if len(self.particles) >= self.outputSize:
             if self.allParticles:
                 if not os.path.exists(self._getPath('particles.sqlite')):
-                    self.SetOfAllParticles = [m.clone() for m in self.partsSet]
                     imageSet = self._loadOutputSet(SetOfParticles,
                                                    'particles.sqlite',
-                                                   self.SetOfAllParticles)
+                                                   self.particles)
                 else:
                     imageSet = self._loadOutputSet(SetOfParticles,
                                                    'particles.sqlite',
-                                                   self.SetOfParticles)
+                                                   self.newParticles)
                 self._updateOutputSet('outputParticles', imageSet, streamMode)
 
             elif not os.path.exists(self._getPath('particles.sqlite')):
-                self.SetOfAllParticles = [m.clone() for m in self.partsSet]
                 imageSet = self._loadOutputSet(SetOfParticles,
                                                'particles.sqlite',
-                                               self.SetOfAllParticles)
+                                               self.particles)
                 self._updateOutputSet('outputParticles', imageSet, streamMode)
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
             return
         self.finished = (not self.allParticles and
-                         len(self.AddedParticles) > self.outputSize) or \
+                         len(self.particles) > self.outputSize) or \
                         (self.streamClosed and self.allParticles
-                          and len(self.AddedParticles) == len(self.partsSet))
+                          and len(self.particles) == len(self.partsSet))
         outputStep = self._getFirstJoinStep()
         deps = []
         if self.finished:  # Unlock createOutputStep if finished all jobs

@@ -296,6 +296,13 @@ class XmippViewer(Viewer):
                     xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                     xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
                     self._views.append(xplotter)
+                # If VARscore on output images plot VARscore particle sorting
+                if md.containsLabel(xmipp.MDL_SCORE_BY_VAR):
+                    from plotter import XmippPlotter
+                    xplotter = XmippPlotter(windowTitle="Variance particles sorting")
+                    xplotter.createSubPlot("Variance Histogram", "Variance", "Number of particles")
+                    xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_SCORE_BY_VAR, nbins=100)
+                    self._views.append(xplotter)
 
         elif issubclass(cls, XmippProtMovieGain):
             self._visualize(obj.outputMovies)

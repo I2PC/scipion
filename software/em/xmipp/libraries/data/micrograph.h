@@ -64,6 +64,10 @@ struct Particle_coords
     bool valid;
     /// Cost, scaled between 0 and 1
     double cost;
+    /// Score by var and Gini
+    double scoreVar;
+    /// Score by Gini
+    double scoreGini;
 };
 
 struct Point

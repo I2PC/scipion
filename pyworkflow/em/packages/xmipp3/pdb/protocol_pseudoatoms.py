@@ -64,7 +64,7 @@ class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
         volume.setFileName(self._getExtraPath("pseudoatoms_approximation.vol"))
         volume.setSamplingRate(samplingRate)
         x, y, z = volume.getDim()
-        xv,yv,zv=inputVol.getOrigin().getShifts()
+        xv,yv,zv=inputVol.getOrigin(returnInitIfNone=True).getShifts()
         t = Transform()
         t.setShifts((x / 2. * samplingRate) - xv,
                     (y / 2. * samplingRate) - yv,

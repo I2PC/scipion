@@ -194,6 +194,8 @@ IMAGE_EXTRA_LABELS = [
     xmipp.MDL_CUMULATIVE_SSNR,
     xmipp.MDL_PARTICLE_ID,
     xmipp.MDL_FRAME_ID,
+    xmipp.MDL_SCORE_BY_VAR,
+    xmipp.MDL_SCORE_BY_GINI,
     ]
 
 ANGLES_DICT = OrderedDict([
@@ -956,11 +958,19 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
     if 'alignType' not in kwargs:
         kwargs['alignType'] = imgSet.getAlignment()
 
-    for img in imgSet:
-        objId = md.addObject()
-        imgRow = XmippMdRow()
-        imgToFunc(img, imgRow, **kwargs)
-        imgRow.writeToMd(md, objId)
+    if 'firstId' in kwargs:
+        firstId = kwargs['firstId']
+        for img in imgSet.iterItems(where="id>%d"% firstId):
+            objId = md.addObject()
+            imgRow = XmippMdRow()
+            imgToFunc(img, imgRow, **kwargs)
+            imgRow.writeToMd(md, objId)
+    else:
+        for img in imgSet:
+            objId = md.addObject()
+            imgRow = XmippMdRow()
+            imgToFunc(img, imgRow, **kwargs)
+            imgRow.writeToMd(md, objId)
 
 
 def readAnglesFromMicrographs(micFile, anglesSet):
