@@ -1657,7 +1657,7 @@ class Protocol(Step):
         try:
             # Get the first author surname
             if useKeyLabel:
-                label = cite['id']
+                label = cite['ID']
             else:
                 label = cite['author'].split(' and ')[0].split(',')[0].strip()
                 label += ', et al., %s, %s' % (cite['journal'], cite['year'])

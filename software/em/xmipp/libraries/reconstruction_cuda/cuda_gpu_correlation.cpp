@@ -1,4 +1,3 @@
-
 //Host includes
 #include "cuda_gpu_correlation.h"
 
@@ -1509,6 +1508,5 @@ void calculateAbs (std::complex<float> *data, float *out, int size, myStreamHand
 	if(size%numTh > 0)
 		numBlk++;
 	calcAbsKernel <<< numBlk, numTh, 0, *stream>>> ((cufftComplex*)data, out, size);
-
 
 }

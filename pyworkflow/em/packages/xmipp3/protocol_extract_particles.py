@@ -41,7 +41,8 @@ from pyworkflow.em.protocol import ProtExtractParticles
 from pyworkflow.em.data import Particle
 from pyworkflow.em.constants import RELATION_CTF
 
-from convert import (micrographToCTFParam, writeMicCoordinates, xmippToLocation)
+from convert import (micrographToCTFParam, writeMicCoordinates, xmippToLocation,
+                     setXmippAttributes)
 from xmipp3 import XmippProtocol
 
 
@@ -141,6 +142,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
                            'value is 0, then half the box size is used.')
+        
+        form.addParam('patchSize', params.IntParam, default=-1, 
+                      label='Patch size for the variance filter (px)', 
+                      expertLevel=LEVEL_ADVANCED,
+                      help='Windows size to make the variance filtter and '
+                           'compute the Gini coeff. A twice of the particle '
+                           'size is recommended. Set at -1 applies 1.5*BoxSize.')
 
         form.addParallelSection(threads=4, mpi=1)
     
@@ -167,22 +175,28 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         baseMicName = pwutils.removeBaseExt(fnLast)
         outputRoot = str(self._getExtraPath(baseMicName))
         fnPosFile = self._getMicPos(mic)
-
-        # If it has coordinates extract the particles
-        particlesMd = 'particles@%s' % fnPosFile
         boxSize = self.boxSize.get()
+        downFactor = self.downFactor.get()
+        patchSize = self.patchSize.get() if self.patchSize.get() > 0 \
+                    else int(boxSize*1.5*downFactor)
 
+        particlesMd = 'particles@%s' % fnPosFile
+        # If it has coordinates extract the particles
         if exists(fnPosFile):
             # Create a list with micrographs operations (programs in xmipp) and
             # the required command line parameters (except input/ouput files)
             micOps = []
 
-            # Check if it is required to downsample your micrographs
-            downFactor = self.downFactor.get()
+            # Compute the variance and Gini coeff. of the part. and mic., resp.
+            args  =  '--pos %s' % fnPosFile
+            args += ' --mic %s' % fnLast
+            args += ' --patchSize %d' % patchSize
+            self.runJob('xmipp_coordinates_noisy_zones_filter', args)
 
             def getMicTmp(suffix):
                 return self._getTmpPath(baseMicName + suffix)
 
+            # Check if it is required to downsample our micrographs
             if self.notOne(downFactor):
                 fnDownsampled = getMicTmp("_downsampled.xmp")
                 args = "-i %s -o %s --step %f --method fourier"
@@ -472,6 +486,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
+                    # adding the variance and Gini coeff. value of the mic zone
+                    setXmippAttributes(p, row, md.MDL_SCORE_BY_VAR)
+                    setXmippAttributes(p, row, md.MDL_SCORE_BY_GINI)
+
                     # disabled particles (in metadata) should not add to the
                     # final set
                     if row.getValue(md.MDL_ENABLED) > 0:
