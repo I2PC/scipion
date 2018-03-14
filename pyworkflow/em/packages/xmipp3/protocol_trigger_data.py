@@ -43,7 +43,7 @@ class XmippProtTriggerData(ProtProcessParticles):
     # --------------------------- DEFINE param functions ----------------------
     def _defineProcessParams(self, form):
 
-        form.addParam('outputSize', IntParam, default=60,
+        form.addParam('outputSize', IntParam, default=10000,
                       label='Minimum output size',
                       help='How many particles need to be on input to '
                            'create output set.')
