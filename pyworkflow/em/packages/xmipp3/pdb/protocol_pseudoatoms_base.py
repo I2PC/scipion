@@ -130,15 +130,13 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         fnIn = getImageLocation(volume)
         if fnIn.endswith(":mrc"):
             fnIn = fnIn[:-4]
-        # x, y, z = volume.getDim()
-        # x /= (-2. / sampling)#; x = int(round(x))
-        # y /= (-2. / sampling)#; y = int(round(y))
-        # z /= (-2. / sampling)#; z = int(round(z))
 
-        x, y, z = adaptOriginFromCCP4ToChimera(
-            volume.getOrigin().getShifts())
+        #x, y, z = adaptOriginFromCCP4ToChimera(
+        #    volume.getOrigin().getShifts())
+        #xx, yy, zz = volume.getDim()
+        #xv,yv,zv=volume.getOrigin().getShifts()
+        x, y, z = volume.getOrigin(returnInitIfNone=True).getShifts()
         xx, yy, zz = volume.getDim()
-        xv,yv,zv=volume.getOrigin().getShifts()
 
         dim = volume.getDim()[0]
         bildFileName = os.path.abspath(self._getExtraPath("axis.bild"))
@@ -160,8 +158,12 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
                     "%0.2f,%0.2f,%0.2f\n"
                     % (threshold, sampling, x, y, z))
         fhCmd.write("open %s\n" % bildFileName)
+        #fhCmd.write("move %0.2f,%0.2f,%0.2f model #0 coord #2\n"
+        #            % ((xx / 2. * sampling) - xv,
+        #               (yy / 2. * sampling) - yv,
+        #               (zz / 2. * sampling) - zv))
         fhCmd.write("move %0.2f,%0.2f,%0.2f model #0 coord #2\n"
-                    % ((xx / 2. * sampling) - xv,
-                       (yy / 2. * sampling) - yv,
-                       (zz / 2. * sampling) - zv))
+                    % (x + (xx / 2. * sampling),
+                       y + (yy / 2. * sampling),
+                       z + (zz / 2. * sampling)))
         fhCmd.close()

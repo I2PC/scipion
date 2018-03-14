@@ -19,8 +19,8 @@ class TestObject(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('model')
-        cls.modelGoldSqlite = cls.dataset.getFile( 'modelGoldSqlite')
-        cls.modelGoldXml = cls.dataset.getFile( 'modelGoldXml')
+        cls.modelGoldSqlite = cls.dataset.getFile('modelGoldSqlite')
+        cls.modelGoldXml = cls.dataset.getFile('modelGoldXml')
             
     def test_Object(self):
         value = 2
@@ -176,7 +176,44 @@ class TestObject(BaseTest):
         self.assertEqual(imgSet[7], ptr4.get())
         self.assertEqual(ptr4.getExtended(), 'outputImages.7')
 
-    
+    def test_Sets(self):
+
+        stackFn = "images.stk"
+
+        fn = self.getOutputPath('test_images2.sqlite')
+        imgSet = SetOfImages(filename=fn)
+        imgSet.setSamplingRate(1.0)
+        for i in range(10):
+            img = Image()
+            img.setLocation(i + 1, stackFn)
+            imgSet.append(img)
+
+        imgSet.write()
+
+        # Test size is 10
+        self.assertSetSize(imgSet, 10)
+
+        # PERFORMANCE functionality
+        def checkSetIteration(limit, skipRows=None):
+
+            print("Checking set iteration with limit:%s and skipRows: %s"
+                  % (limit, skipRows))
+            expectedId = 1 if skipRows is None else skipRows+1
+            index = 0
+            for item in imgSet.iterItems(limit=(limit, skipRows)):
+
+                self.assertEqual(item.getIndex(), expectedId+index,
+                                 "Wrong item in set when using limits.")
+                index += 1
+
+            self.assertEqual(index, limit, "Number of iterations wrong with limits")
+
+        # Check iteration with limit
+        checkSetIteration(2)
+
+        # Check iteration with limit and skip rows
+        checkSetIteration(3, 2)
+
     def test_copyAttributes(self):
         """ Check that after copyAttributes, the values
         were properly copied.
