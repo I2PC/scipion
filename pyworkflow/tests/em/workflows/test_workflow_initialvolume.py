@@ -43,7 +43,9 @@ import pyworkflow.tests as tests
 import pyworkflow.em as em
 import pyworkflow.em.packages.xmipp3 as xmipp3
 import pyworkflow.em.packages.eman2 as eman2
-  
+
+from os.path import exists
+
    
 class TestGroel(tests.BaseTest):
     
@@ -272,11 +274,21 @@ class TestSignificant(tests.BaseTest):
         #prot2.inputClasses.set(inputSet)
         prot2.refVolume.set(output)
         self.launchProtocol(prot2)
+
+        # Run significant with one volume and new target resolution
+        myargs['useMaxRes'] = True
+        prot3 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
+                                 objLabel='significant d7 (ref and maxRes)',
+                                 **myargs
+                                 )
+        prot3.refVolume.set(output)
+        self.launchProtocol(prot3)
         
         
     def test_significant(self):
         """ Run an Import particles protocol. """
         cpus = os.environ.get('SCIPION_TEST_CPU', 4)
+        gpuFlag= exists(os.environ.get('CUDA_BIN'))
         # 1. Run import of averages
         avg = self.ds.getFile('groel')
         
@@ -293,4 +305,16 @@ class TestSignificant(tests.BaseTest):
                 }
         # Run significant with one volume
         self._runSignificant(protImport.outputAverages, args)
+
+
+        #Run more test with GPU if it is possible
+        if gpuFlag:
+            args = {'symmetryGroup': 'd7',
+                    'iter': 3,
+                    'useGPU': True,
+                    'inputSet': protImport.outputAverages,
+                    'alpha0': 98.0
+                    }
+            # Run significant with GPU and new target resolution
+            self._runSignificant(protImport.outputAverages, args)
         
