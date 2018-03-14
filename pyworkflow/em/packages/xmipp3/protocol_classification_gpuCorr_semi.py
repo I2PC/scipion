@@ -272,7 +272,6 @@ class XmippProtStrGpuCrrSimple(ProtAlign2D):
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
         lastDate = self._readCreationTimeFile()
-        print("lastDate", lastDate)
 
         for p in particlesSet.iterItems(orderBy='creation',
                                         where="creation>'%s'"

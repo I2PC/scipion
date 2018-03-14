@@ -22,15 +22,14 @@
 # ***************************************************************************/
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportAverages, ProtImportMicrographs, \
-    ProtCreateStreamData
+from pyworkflow.em.protocol import ProtImportMicrographs, ProtCreateStreamData
 from pyworkflow.em.protocol.protocol_create_stream_data import \
     SET_OF_MICROGRAPHS
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.em.packages.eman2.protocol_autopick import *
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import *
-from pyworkflow.em.packages.xmipp3.protocol_classification_gpuCorr_semi \
+from pyworkflow.em.packages.xmipp3.protocol_classification_gpuCorr_full \
     import *
 import time
 
@@ -38,20 +37,11 @@ import time
 # Number of mics to be processed
 NUM_MICS = 5
 
-class TestGpuCorrSemiStreaming(BaseTest):
+class TestGpuCorrFullStreaming(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsRelion = DataSet.getDataSet('relion_tutorial')
-
-    def importAverages(self):
-        prot = self.newProtocol(ProtImportAverages,
-                                filesPath=self.dsRelion.getFile(
-                                    'import/averages.mrcs'),
-                                samplingRate=1.0)
-        self.launchProtocol(prot)
-
-        return prot
 
     def importMicrographs(self):
         prot = self.newProtocol(ProtImportMicrographs,
@@ -110,12 +100,10 @@ class TestGpuCorrSemiStreaming(BaseTest):
 
         return protExtract
 
-    def runClassify(self, inputParts, inputAvgs):
-        protClassify = self.newProtocol(XmippProtStrGpuCrrSimple,
-                                        useAsRef=REF_AVERAGES)
+    def runClassify(self, inputParts):
+        protClassify = self.newProtocol(XmippProtStrGpuCrrCL2D)
 
         protClassify.inputParticles.set(inputParts)
-        protClassify.inputRefs.set(inputAvgs)
         self.proj.launchProtocol(protClassify, wait=False)
 
         return protClassify
@@ -134,9 +122,6 @@ class TestGpuCorrSemiStreaming(BaseTest):
 
     def test_pattern(self):
 
-        protImportAvgs = self.importAverages()
-        if protImportAvgs.isFailed():
-            self.assertTrue(False)
         protImportMics = self.importMicrographs()
         if protImportMics.isFailed():
             self.assertTrue(False)
@@ -187,8 +172,7 @@ class TestGpuCorrSemiStreaming(BaseTest):
         if protExtract.isFailed():
             self.assertTrue(False)
 
-        protClassify = self.runClassify(protExtract.outputParticles,
-                                        protImportAvgs.outputAverages)
+        protClassify = self.runClassify(protExtract.outputParticles)
         while protClassify.getStatus()!=STATUS_FINISHED:
             protClassify = self._updateProtocol(protClassify)
             if protClassify.isFailed():
@@ -196,6 +180,4 @@ class TestGpuCorrSemiStreaming(BaseTest):
                 break
         if not protClassify.hasAttribute('outputClasses'):
             self.assertTrue(False)
-        if protClassify.outputClasses.getSize() != \
-                protImportAvgs.outputAverages.getSize():
-            self.assertTrue(False)
+

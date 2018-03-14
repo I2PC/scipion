@@ -109,6 +109,9 @@ Protocols SPA = [
 		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "XmippProtCL2D",   "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionClassify2D",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtGpuCrrCL2D",   "text": "default"},
+	        {"tag": "protocol", "value": "XmippProtStrGpuCrrSimple",   "text": "default"},
+	        {"tag": "protocol", "value": "XmippProtStrGpuCrrCL2D",   "text": "default"},
 			{"tag": "section", "text": "mda", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "SpiderProtCAPCA", "text": "default"},
 				{"tag": "protocol", "value": "SpiderProtClassifyWard", "text": "default"},

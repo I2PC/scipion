@@ -134,7 +134,10 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         self._loadInputList()
         deps = []
         #AJ-blocks(8)
-        numBlk, rem = divmod(len(self.listOfParticles), self.blockSize)
+        numBlk, rem = divmod(float(len(self.listOfParticles)),
+                             float(self.blockSize))
+        numBlk = int(numBlk)
+        rem = int(rem)
         if rem > 0:
             numBlk += 1
         for i in range(numBlk):
@@ -204,7 +207,10 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         deps=[]
         # AJ-blocks (5)
-        numBlk, rem = divmod(len(self.listOfParticles), self.blockSize)
+        numBlk, rem = divmod(float(len(self.listOfParticles)),
+                             float(self.blockSize))
+        numBlk = int(numBlk)
+        rem = int(rem)
         if rem>0:
             numBlk+=1
         for i in range(numBlk):
