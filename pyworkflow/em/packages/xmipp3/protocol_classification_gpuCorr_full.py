@@ -135,11 +135,12 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         deps = []
         #AJ-blocks(8)
         numBlk, rem = divmod(float(len(self.listOfParticles)),
-                             float(self.blockSize))
+                             float(self.blockSize.get()))
         numBlk = int(numBlk)
         rem = int(rem)
         if rem > 0:
             numBlk += 1
+        print("numBlk", numBlk)
         for i in range(numBlk):
             if i==0:
                 deps += self._insertStepsForParticles(True, False)
@@ -208,7 +209,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         deps=[]
         # AJ-blocks (5)
         numBlk, rem = divmod(float(len(self.listOfParticles)),
-                             float(self.blockSize))
+                             float(self.blockSize.get()))
         numBlk = int(numBlk)
         rem = int(rem)
         if rem>0:
@@ -271,24 +272,25 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         # AJ-blocks (21)
         auxList=[]
-        for i in range(len(self.listOfParticles)):
-            idx = self.listOfParticles[i].getObjId()
+        for im in range(len(self.listOfParticles)):
+            idx = self.listOfParticles[im].getObjId()
             if not self.htAlreadyProcessed.isItemPresent(idx):
-                auxList.append(self.listOfParticles[i])
+                auxList.append(self.listOfParticles[im])
                 self.htAlreadyProcessed.pushItem(idx)
-                self.lastDate = self.listOfParticles[i].getObjCreation()
-        self._saveCreationTimeFile(self.lastDate)
 
         self.particlesToProcess+=auxList
+        # self.particlesToProcess = auxList[:]
         print("Antes len(self.particlesToProcess)", len(self.particlesToProcess))
         sys.stdout.flush()
         if len(self.particlesToProcess)==0:
             return
 
-        if len(self.particlesToProcess)<self.blockSize:
+        if len(self.particlesToProcess)<self.blockSize.get():
             particlesToProcessAux = self.particlesToProcess
+            lastIm = len(self.particlesToProcess)-1
         else:
-            particlesToProcessAux = self.particlesToProcess[:self.blockSize]
+            particlesToProcessAux = self.particlesToProcess[:self.blockSize.get()]
+            lastIm = self.blockSize.get()
         print("len(particlesToProcessAux)", len(particlesToProcessAux))
         sys.stdout.flush()
         self.generateInput(expImgMd, flag_split, reclassification,
@@ -337,6 +339,10 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         final_time = time.time()
         exec_time = final_time - init_time
         print("classify step exec_time", exec_time)
+
+        print("4",len(self.listOfParticles), lastIm)
+        self.lastDate = self.listOfParticles[lastIm].getObjCreation()
+        self._saveCreationTimeFile(self.lastDate)
 
 
 
@@ -390,7 +396,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
             writeSetOfParticles(particlesToProcess, inputImgs,
                                 alignType=ALIGN_NONE)
 
-        if reclassification:
+        if reclassification and len(self.listNumImgs)!=0:
             self.randRef = randint(1, len(self.listNumImgs))
             print("cat de reclass", self.randRef)
             sys.stdout.flush()
@@ -745,7 +751,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         auxList = sorted(self.listNumImgs, reverse=True)
         while i<len(self.listNumImgs):
 
-            if len(self.listNumImgs) < self.numClasses: #inside the while
+            if len(self.listNumImgs) < self.numClasses.get(): #inside the while
                 # just in case we lose some class we want to allow one more
                 # split
 
@@ -813,6 +819,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                     self.listOfParticles.append(newPart)
             # if len(self.listOfParticles)>0:
             #     self.lastDate = p.getObjCreation()
+            # self._saveCreationTimeFile(self.lastDate)
         print "_loop: %s s" % t.secs
 
         particlesSet.close()
