@@ -32,7 +32,8 @@ import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from grigoriefflab import (CTFFIND_PATH, CTFFINDMP_PATH,
                            CTFFIND4_PATH, getVersion,
-                           CTFFIND4_HOME, CTFFIND_HOME)
+                           CTFFIND4_HOME, CTFFIND_HOME, CTFFIND4_APP, V4_0_15,
+                           V4_1_10)
 from convert import (readCtfModel, parseCtffindOutput,
                      parseCtffind4Output)
 
@@ -258,7 +259,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
 
     #--------------------------- UTILS functions ---------------------------------------------------
     def _isNewCtffind4(self):
-        if self.useCtffind4 and getVersion('CTFFIND4') != '4.0.15':
+        if self.useCtffind4 and getVersion('CTFFIND4') != V4_0_15:
             return True
         else:
             return False
@@ -363,7 +364,7 @@ eof
 %(maxDefocus)f
 %(step_focus)f"""
 
-        if getVersion('CTFFIND4') in ['4.1.5', '4.1.8']:
+        if getVersion(CTFFIND4_APP) in ['4.1.5', '4.1.8', V4_1_10]:
             if self.findPhaseShift:
                 self._args += """
 no
@@ -389,7 +390,7 @@ yes
 %(resamplePix)s
 eof
 """
-        elif getVersion('CTFFIND4') == '4.0.15':
+        elif getVersion(CTFFIND4_APP) == V4_0_15:
             if self.findPhaseShift:
                 self._args += """
 %(astigmatism)f
