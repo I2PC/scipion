@@ -266,9 +266,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         init_time = time.time()
 
-        # print("len(self.listOfParticles)", len(self.listOfParticles),
-        #       getSize(self.inputParticles.get().getFileName()))
-        sys.stdout.flush()
 
         # AJ-blocks (21)
         auxList=[]
@@ -285,12 +282,18 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         if len(self.particlesToProcess)==0:
             return
 
+        print("1",self.listOfParticles[0].getFileName(),
+              self.listOfParticles[0].getObjCreation())
+        sys.stdout.flush()
+        print("1.1", self.particlesToProcess[0].getFileName(),
+              self.particlesToProcess[0].getObjCreation())
+        sys.stdout.flush()
         if len(self.particlesToProcess)<self.blockSize.get():
             particlesToProcessAux = self.particlesToProcess
             lastIm = len(self.particlesToProcess)-1
         else:
             particlesToProcessAux = self.particlesToProcess[:self.blockSize.get()]
-            lastIm = self.blockSize.get()
+            lastIm = self.blockSize.get()-1
         print("len(particlesToProcessAux)", len(particlesToProcessAux))
         sys.stdout.flush()
         self.generateInput(expImgMd, flag_split, reclassification,
@@ -299,21 +302,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         # AJ-no blocks (2)
         #self.generateInput(expImgMd, flag_split, reclassification,
         #                   self.listOfParticles) #particlesToProcessAux
-
-        # AJ-blocks (4)
-        print("len(particlesToProcessAux)", len(particlesToProcessAux))
-        sys.stdout.flush()
-        print("Mitad len(self.particlesToProcess)", len(self.particlesToProcess))
-        sys.stdout.flush()
-
-        #AJ-blocks (4)
-        for p in range(len(particlesToProcessAux)):
-            self.particlesToProcess.pop(0)
-        print("Final len(self.particlesToProcess)", len(self.particlesToProcess))
-        sys.stdout.flush()
-        # AJ-no blocks (2)
-        #for p in self.listOfParticles:
-        #    self.htAlreadyProcessed.pushItem(p.getObjId())
 
 
         if flag_split:
@@ -336,13 +324,30 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         self.checkSplit()
 
+        # AJ-blocks (4)
+        print("len(particlesToProcessAux)", len(particlesToProcessAux))
+        sys.stdout.flush()
+        print("Mitad len(self.particlesToProcess)", len(self.particlesToProcess))
+        sys.stdout.flush()
+
+        self.lastDate = self.particlesToProcess[lastIm].getObjCreation()
+        self._saveCreationTimeFile(self.lastDate)
+        print("2",self.particlesToProcess[lastIm].getFileName(),
+              self.particlesToProcess[lastIm].getObjCreation())
+        sys.stdout.flush()
+
+        #AJ-blocks (4)
+        for p in range(len(particlesToProcessAux)):
+            self.particlesToProcess.pop(0)
+        print("Final len(self.particlesToProcess)", len(self.particlesToProcess))
+        sys.stdout.flush()
+        # AJ-no blocks (2)
+        #for p in self.listOfParticles:
+        #    self.htAlreadyProcessed.pushItem(p.getObjId())
+
         final_time = time.time()
         exec_time = final_time - init_time
         print("classify step exec_time", exec_time)
-
-        print("4",len(self.listOfParticles), lastIm)
-        self.lastDate = self.listOfParticles[lastIm].getObjCreation()
-        self._saveCreationTimeFile(self.lastDate)
 
 
 
@@ -806,6 +811,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         print "_loadInputParticleSet: %s s" % t.secs
 
         lastDate = self._readCreationTimeFile()
+        print("lastDate", lastDate)
         self.isStreamClosed = particlesSet.getStreamState()
         self.listOfParticles = []
         with Timer() as t:
