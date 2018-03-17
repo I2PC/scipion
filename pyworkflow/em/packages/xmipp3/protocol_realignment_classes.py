@@ -114,9 +114,8 @@ class XmippProtReAlignClasses(ProtClassify2D):
             if block.startswith('class00'):
                 newMat = listTransform[i]
                 newMatrix = newMat.getMatrix()
-                #print newMatrix
+                #print "repMatrix",newMatrix
                 mdClass = md.MetaData(block + "@" + inputMdName)
-                mdImages.unionAll(mdClass)
                 mdNewClass = md.MetaData()
                 i+=1
                 for rowIn in md.iterRows(mdClass):
@@ -126,9 +125,9 @@ class XmippProtReAlignClasses(ProtClassify2D):
                         flag_psi=False
                     inMat = rowToAlignment(rowIn, ALIGN_2D)
                     inMatrix = inMat.getMatrix()
-                    #print inMatrix
+                    #print "partMat",inMatrix
                     resultMatrix = np.dot(newMatrix,inMatrix)
-                    #print resultMatrix
+                    #print "resultMat",resultMatrix
                     resultMat = Transform()
                     resultMat.setMatrix(resultMatrix)
                     rowOut=md.Row()
@@ -138,9 +137,22 @@ class XmippProtReAlignClasses(ProtClassify2D):
                         newAngle = rowOut.getValue(md.MDL_ANGLE_PSI)
                         rowOut.setValue(md.MDL_ANGLE_PSI, 0.)
                         rowOut.setValue(md.MDL_ANGLE_ROT, newAngle)
+
+                    #AJ testing
+                    inPoint = np.array([[0.],[0.],[0.],[1.]])
+                    invResultMat = np.linalg.inv(resultMatrix)
+                    centerPoint = np.dot(invResultMat,inPoint)
+                    #print "centerPoint",centerPoint
+                    rowOut.setValue(md.MDL_XCOOR, rowOut.getValue(
+                        md.MDL_XCOOR)+int(centerPoint[0]))
+                    rowOut.setValue(md.MDL_YCOOR, rowOut.getValue(
+                        md.MDL_YCOOR)+int(centerPoint[1]))
+                    #END AJ
+
                     rowOut.addToMd(mdNewClass)
                 mdNewClass.write(block + "@" + self._getExtraPath(
                     'final_classes.xmd'), MD_APPEND)
+                mdImages.unionAll(mdNewClass)
         mdImages.write(self._getExtraPath('final_images.xmd'))
 
 
