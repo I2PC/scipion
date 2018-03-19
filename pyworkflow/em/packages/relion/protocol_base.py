@@ -23,9 +23,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol base class for Relion protocols
-"""
 
 import re
 from glob import glob
@@ -35,7 +32,7 @@ from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
                                         IntParam, EnumParam, StringParam, 
                                         LabelParam, PathParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, replaceBaseExt
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -135,7 +132,6 @@ class ProtRelionBase(EMProtocol):
         # and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
         
-        
     # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         self.IS_3D = not self.IS_2D
@@ -219,10 +215,16 @@ class ProtRelionBase(EMProtocol):
                       )
         group = form.addGroup('Reference 3D map',
                               condition='not doContinue and not is2D')
+        referenceClass = 'Volume'
+        referenceLabel = 'Input volume'
+        if self.IS_CLASSIFY:  # allow SetOfVolumes as references for 3D
+            referenceClass += ', SetOfVolumes'
+            referenceLabel += '(s)'
+
         group.addParam('referenceVolume', PointerParam,
-                       pointerClass='Volume, SetOfVolumes',
+                       pointerClass=referenceClass,
                        important=True,
-                       label="Input volume",
+                       label=referenceLabel,
                        condition='not doContinue and not is2D',
                        help='Initial reference 3D map, it should have the same '
                             'dimensions and the same pixel size as your input '
@@ -842,6 +844,9 @@ class ProtRelionBase(EMProtocol):
         else:
             self.info("In continue mode is not necessary convert the input "
                       "particles")
+
+        if self._getRefArg():
+            self._convertRef()
         
         # if self.realignMovieFrames, self.IS_CLASSIFY must be False.
         if getattr(self, 'realignMovieFrames', False):
@@ -978,7 +983,7 @@ class ProtRelionBase(EMProtocol):
         """
         return []
     
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _setNormalArgs(self, args):
         maskDiameter = self.maskDiameterA.get()
         if maskDiameter <= 0:
@@ -1001,8 +1006,6 @@ class ProtRelionBase(EMProtocol):
     
         if self.IS_3D:
             if not self.IS_3D_INIT:
-                args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
-                                                 self._getTmpPath())
                 if not self.isMapAbsoluteGreyScale:
                     args['--firstiter_cc'] = ''
                 args['--ini_high'] = self.initialLowPassFilterA.get()
@@ -1010,6 +1013,10 @@ class ProtRelionBase(EMProtocol):
         
         if not isVersion2():
             args['--memory_per_thread'] = self.memoryPreThreads.get()
+
+        refArg = self._getRefArg()
+        if refArg:
+            args['--ref'] = refArg
     
         self._setBasicArgs(args)
 
@@ -1071,7 +1078,6 @@ class ProtRelionBase(EMProtocol):
     
         self._setSamplingArgs(args)
         self._setMaskArgs(args)
-
 
     def _setCTFArgs(self, args):
         # CTF stuff
@@ -1200,7 +1206,72 @@ class ProtRelionBase(EMProtocol):
         frames = inputMovies.getFirstItem().getNumberOfFrames()
 
         return frames
-    
+
+    def _getRefArg(self):
+        """ Return the filename that will be used for the --ref argument.
+        The value will depend if in 2D and 3D or if input references will
+        be used.
+        It will return None if no --ref should be used. """
+        if self.IS_3D:
+            if not self.IS_3D_INIT:
+                inputObj = self.referenceVolume.get()
+                if isinstance(inputObj, em.Volume):
+                    return self._convertVolFn(inputObj)
+                else:  # input SetOfVolumes as references
+                    return self._getRefStar()
+        else:  # 2D
+            if self.referenceAverages.get():
+                return self._getRefStar()
+        return None  # No --ref should be used at this point
+
+    def _convertVolFn(self, inputVol):
+        """ Return a new name if the inputFn is not .mrc """
+        index, fn = inputVol.getLocation()
+        return self._getTmpPath(replaceBaseExt(fn, '%02d.mrc' % index))
+
+    def _convertVol(self, ih, inputVol):
+        outputFn = self._convertVolFn(inputVol)
+
+        if outputFn:
+            xdim = self._getInputParticles().getXDim()
+            img = ih.read(inputVol)
+            img.scale(xdim, xdim, xdim)
+            img.write(outputFn)
+
+        return outputFn
+
+    def _getRefStar(self):
+        return self._getTmpPath("input_references.star")
+
+    def _convertRef(self):
+        ih = em.ImageHandler()
+
+        if self.IS_3D:
+            if not self.IS_3D_INIT:
+                inputObj = self.referenceVolume.get()
+                if isinstance(inputObj, em.Volume):
+                    self._convertVol(ih, inputObj)
+                else:  # input SetOfVolumes as references
+                    row = md.Row()
+                    refMd = md.MetaData()
+                    for vol in inputObj:
+                        newVolFn = self._convertVol(ih, vol)
+                        row.setValue(md.RLN_MLMODEL_REF_IMAGE, newVolFn)
+                        row.addToMd(refMd)
+                    refMd.write(self._getRefStar())
+        else:  # 2D
+            inputAvgs = self.referenceAverages.get()
+            if inputAvgs:
+                row = md.Row()
+                refMd = md.MetaData()
+                refStack = self._getTmpPath('input_references.mrcs')
+                for i, avg in enumerate(inputAvgs):
+                    newAvgLoc = (i+1, refStack)
+                    ih.convert(avg, newAvgLoc)
+                    row.setValue(md.RLN_MLMODEL_REF_IMAGE, "%05d@%s" % newAvgLoc)
+                    row.addToMd(refMd)
+                refMd.write(self._getRefStar())
+
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
