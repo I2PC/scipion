@@ -1129,3 +1129,28 @@ class TestRelionExtractParticles(TestRelionBase):
                              "There was a problem generating the output.")
         self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
         self._checkSamplingConsistency(outputParts)
+
+
+class TestRelionCenterAverages(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('mda')
+
+    def test_basic(self):
+        """ Run an Import particles protocol. """
+        protImport = self.newProtocol(ProtImportAverages,
+                                     filesPath=self.ds.getFile('averages/averages.stk'),
+                                     samplingRate=5.04)
+        self.launchProtocol(protImport)
+        inputAvgs = protImport.outputAverages
+        protCenter = self.newProtocol(ProtRelionCenterAverages)
+        protCenter.inputAverages.set(inputAvgs)
+        self.launchProtocol(protCenter)
+
+        conditions = ['outputAverages.getSize()==%d' % inputAvgs.getSize(),
+                      'outputAverages.getSamplingRate() - %f < 0.00001'
+                      % inputAvgs.getSamplingRate()]
+        self.checkOutput(protCenter, 'outputAverages', conditions)
+
+# data/tests/hemoglobin_mda/averages/averages.stk

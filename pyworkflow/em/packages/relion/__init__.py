@@ -51,6 +51,7 @@ from protocol_autopick_v2 import ProtRelion2Autopick
 from protocol_extract_particles import ProtRelionExtractParticles
 
 from protocol_export_ctf import ProtRelionExportCtf
+from protocol_center_averages import ProtRelionCenterAverages
 
 # Wizards
 from wizard import *
