@@ -111,7 +111,6 @@ class Dialog(tk.Toplevel):
         if self.parent is not None:
             position = kwargs.get('position', (parent.winfo_rootx() + 50,
                                                parent.winfo_rooty() + 50))
-            print("Dialog.position: ", position)
             self.geometry("+%d+%d" % position)
 
         self.deiconify() # become visible now
