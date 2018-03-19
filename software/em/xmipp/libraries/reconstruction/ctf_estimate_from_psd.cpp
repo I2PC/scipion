@@ -138,6 +138,11 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
 {
     ctfmodel.Tm = global_prm->Tm;
 
+    /*
+        ¡¡ BE CAREFULL in add new parameters between the existing ones !!
+             below in the core of the program we set step(i) = 0 or 1 
+        if you change here the value of certain param, change it everywhere!
+    */
     ASSIGN_CTF_PARAM(0, DeltafU);
     ASSIGN_CTF_PARAM(1, DeltafV);
     ASSIGN_CTF_PARAM(2, azimuthal_angle);
@@ -222,6 +227,11 @@ void assignCTFfromParameters(double *p, CTFDescription &ctfmodel, int ia,
 void assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
                              int l, int modelSimplification)
 {
+    /*
+        ¡¡ BE CAREFULL in add new parameters between the existing ones !!
+             below in the core of the program we set step(i) to 0 or 1 
+        if you change here the value of certain param, change it everywhere!
+    */
     ASSIGN_PARAM_CTF(0, DeltafU);
     ASSIGN_PARAM_CTF(1, DeltafV);
     ASSIGN_PARAM_CTF(2, azimuthal_angle);
@@ -2645,7 +2655,7 @@ double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm,
     steps(3) = 0; // kV
     steps(5) = 0; // The spherical aberration (Cs) is not optimized
     if (prm.initial_ctfmodel.Q0 != 0)
-        steps(12) = 0; // Q0
+        steps(15) = 0; // Q0
     if (prm.modelSimplification >= 3)
         steps(20) = steps(21) = steps(23) = 0;
     if (prm.modelSimplification >= 2)

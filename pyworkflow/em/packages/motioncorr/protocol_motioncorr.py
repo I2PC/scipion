@@ -185,6 +185,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if self.versionGE('1.0.1'): # Patch overlap was introduced in 1.0.1
             form.addParam('patchOverlap', params.IntParam, default=0,
+                          condition='useMotioncor2',
                           label='Patches Overlap (%)',
                           help='In versions > 1.0.1 it is possible to specify'
                                  'the overlapping between patches. '
