@@ -73,7 +73,8 @@ class ChimeraProtRestore(ChimeraProtBase):
         """
         """
         self.parentProt = self.inputProtocol.get()
-        self.parentProt.setProject(self.getProject()) # I do not really understand this line
+        self.parentProt.setProject(self.getProject()) # I do not really
+        # understand this line
 
         self.inputVolume = self.parentProt.inputVolume
         self.pdbFileToBeRefined = self.parentProt.pdbFileToBeRefined
@@ -102,7 +103,6 @@ class ChimeraProtRestore(ChimeraProtBase):
                 chimeraScriptFileName)
         else:
             args = " --script " + self._getTmpPath(chimeraScriptFileName)
-
         f.close()
         program = getProgram()
         self._log.info('Launching: ' + program + ' ' + args)
@@ -116,10 +116,12 @@ class ChimeraProtRestore(ChimeraProtBase):
     def _validate(self):
         errors = super(ChimeraProtRestore, self)._validate()
         parentProt = self.inputProtocol.get()
-        parentProt.setProject(self.getProject()) # I do not really understand this line
+        parentProt.setProject(self.getProject()) # I do not really understand
+                                                 # this line
         sessionFileName = parentProt._getExtraPath(sessionFile)
         # Check SESSION.py exists
         if (not os.path.exists(sessionFileName)):
-            errors.append("Error: No session saved by protocol: %s\n"%parentProt.getObjLabel())
+            errors.append("Error: No session saved by protocol: %s\n"
+                          % parentProt.getObjLabel())
 
         return errors
