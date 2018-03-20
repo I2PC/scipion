@@ -366,6 +366,7 @@ def _updateMol():
     aa_main_chain: A
     aa_auxiliary_chain: AA
     aaNumber: 82
+    step: 15
     called /tmp/coot.ini"""
     global mydict
     config = ConfigParser.ConfigParser()
