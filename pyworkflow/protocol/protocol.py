@@ -306,6 +306,7 @@ class Protocol(Step):
 
     # Version where protocol appeared first time
     _lastUpdateVersion = pw.VERSION_1
+    _stepsCheckSecs = 3
 
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)
@@ -980,7 +981,8 @@ class Protocol(Step):
             self._stepsExecutor.runSteps(self._steps,
                                          self._stepStarted,
                                          self._stepFinished,
-                                         self._stepsCheck)
+                                         self._stepsCheck,
+                                         self._stepsCheckSecs)
         self.setStatus(self.lastStatus)
         self._store(self.status)
 
@@ -1655,7 +1657,7 @@ class Protocol(Step):
         try:
             # Get the first author surname
             if useKeyLabel:
-                label = cite['id']
+                label = cite['ID']
             else:
                 label = cite['author'].split(' and ')[0].split(',')[0].strip()
                 label += ', et al., %s, %s' % (cite['journal'], cite['year'])
