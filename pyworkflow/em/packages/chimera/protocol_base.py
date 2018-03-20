@@ -82,7 +82,12 @@ class ChimeraProtBase(EMProtocol):
         Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
         If you have several structures and no volumes, you can save 
         all of them by executing commands *scipionwrite [model #1]*, 
-        *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.''')
+        *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.
+        When you use the command line scipionwrite, the Chimera session will 
+        be saved by default. Additionally, you can save the Chimera session 
+        whenever you want by executing the command *scipionss". You will be 
+        able to restore the saved session by using the protocol chimera restore 
+        session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -306,7 +311,11 @@ def restoreSession(sessionFileName):
 
 def saveModel(model, refModel, fileName):
     runCommand('write relative %s %s %s'%(refModel, model, fileName))
-
+    
+def _save_grid_data(refModel_data, fileName):
+    from VolumeData import save_grid_data
+    save_grid_data(refModel_data, os.path.abspath(fileName))
+    
 def beep(time):
    """I simply do not know how to create a portable beep sound.
       This system call seems to work pretty well if you have sox
@@ -331,14 +340,20 @@ def cmd_scipionWrite(scipionWrite,args):
 chimeraScriptMain = '''
   def scipionWrite(model="#%(pdbID)d",refmodel="#%(_3DmapId)d",
      saverefmodel=0):
-     #get model (pdb) id
+     # get model (pdb) id
+     try:
+         saveSession('%(sessionFileName)s')
+     except Exception as e:
+         f = open ('/tmp/chimera_error.txt','w')
+         f.write(e.message)
+         f.close()
 
      modelId = int(model[1:])# model to write  1
      refModelId = int(refmodel[1:])# coordenate system refers to this model 0
 
      # get actual models
-     #model    = chimera.openModels.list()[modelId]
-     #TODO: this ID is wrong if models before refmodel are modified
+     # model    = chimera.openModels.list()[modelId]
+     # TODO: this ID is wrong if models before refmodel are modified
      refModel = chimera.openModels.list()[refModelId]
 
      #for m in chimera.openModels.list():
@@ -348,20 +363,17 @@ chimeraScriptMain = '''
      #        break
      # Save the PDB relative to the volume coordinate system
      # TODO: check if this Will work if the reference is a PDB?
-     #from Midas import write
+     # from Midas import write
      fileName = newFileName('%(pdbFileTemplate)s')
      saveModel(model, refModel, fileName)
      # alternative way to save  the pdb file using a command
-     #run('write relative #1 #0 pdb_path')
+     # run('write relative #1 #0 pdb_path')
 
      # Save the map if sampling rate has been changed
      if saverefmodel:
-         from VolumeData import save_grid_data
-         save_grid_data(refModel.data, "%(chimeraMapTemplateFileName)s")
-     #always save session when write
-     saveSession('%(sessionFileName)s')
-
-     #beep(0.1)
+         _save_grid_data(refModel.data,"%(chimeraMapTemplateFileName)s" )
+     # always save session when write
+     # beep(0.1)
 
   doExtensionFunc(scipionWrite,args)
 
