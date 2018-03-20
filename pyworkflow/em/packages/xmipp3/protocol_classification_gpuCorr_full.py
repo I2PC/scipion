@@ -32,7 +32,7 @@ from pyworkflow.em.metadata.utils import iterRows, getSize
 from xmipp import Image, MD_APPEND, DT_DOUBLE
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, \
     xmippToLocation, rowToAlignment, rowToParticle
-from shutil import copy
+from shutil import copy, copytree
 from os.path import exists, getmtime
 from datetime import datetime
 from pyworkflow.utils import prettyTime, cleanPath
@@ -40,7 +40,8 @@ from pyworkflow.object import Set
 from pyworkflow.protocol.constants import STATUS_NEW
 from random import randint
 import pyworkflow.protocol.constants as const
-from os import system, popen
+from os import system, popen, mkdir, listdir
+from os.path import join
 
 
 HASH_SIZE = 100
@@ -112,6 +113,9 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
     def _insertAllSteps(self):
         """" Mainly prepare the command line for calling cuda corrrelation
         program"""
+
+        self._readingCheckPoint()
+
         self.listInFn = []
         self.listOutFn = []
         self.listOutSplitFn = []
@@ -292,6 +296,8 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
 
         for p in range(len(particlesToProcessAux)):
             self.particlesToProcess.pop(0)
+
+        self._savingCheckPoint()
 
 
 
@@ -917,6 +923,29 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         else:
             cTime = 0
         return cTime
+
+    def _savingCheckPoint(self):
+        if not exists(join(self._getExtraPath(), 'checkpoint')):
+            mkdir(join(self._getExtraPath(), 'checkpoint'))
+
+        listFolder = listdir(self._getExtraPath())
+        for fn in listFolder:
+            if fn.startswith('dataClass'):
+                copy(join(self._getExtraPath(),fn),
+                     self._getExtraPath(join('checkpoint',fn)))
+        copy(self._getExtraPath('last_classes.xmd'),
+             self._getExtraPath(join('checkpoint', 'last_classes.xmd')))
+        if exists(self._getExtraPath('last_classes.stk')):
+            copy(self._getExtraPath('last_classes.stk'),
+                 self._getExtraPath(join('checkpoint', 'last_classes.stk')))
+
+    def _readingCheckPoint(self):
+        if exists(join(self._getExtraPath(), 'checkpoint')):
+            listFolder = listdir(join(self._getExtraPath(), 'checkpoint'))
+            for fn in listFolder:
+                copy(self._getExtraPath(join('checkpoint',fn)),
+                     self._getExtraPath(fn))
+
 
 
 
