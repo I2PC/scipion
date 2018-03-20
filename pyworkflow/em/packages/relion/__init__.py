@@ -52,6 +52,7 @@ from protocol_extract_particles import ProtRelionExtractParticles
 
 from protocol_export_ctf import ProtRelionExportCtf
 from protocol_center_averages import ProtRelionCenterAverages
+from protocol_export_particles import ProtRelionExportParticles
 
 # Wizards
 from wizard import *
