@@ -42,10 +42,20 @@ class ChimeraViewerBase(Viewer):
     _environments = [DESKTOP_TKINTER]
 
     def _visualize(self, obj, **args):
-        # Construct the coordinate file and visualization
-        _inputVol = self.protocol.inputVolume.get()
+        # THe input map or pdb may be a parameter from the protocol
+        # or from the parent protocol.
+        try:
+            _inputVol = self.protocol.inputVolume.get()
+            directory = self.protocol._getExtraPath()
+        except:
+            _inputVol = self.protocol.inputProtocol.get().inputVolume.get()
+            directory = self.protocol.inputProtocol.get()._getExtraPath()
+
         if _inputVol is None:
-            _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+            try:
+                _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+            except:
+                _inputVol = self.protocol.inputProtocol.get().pdbFileToBeRefined.get().getVolume()
         if _inputVol is not None:
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
@@ -78,7 +88,6 @@ class ChimeraViewerBase(Viewer):
                     "%0.2f,%0.2f,%0.2f\n"
                     % (outputVol.getSamplingRate(), x, y, z))
 
-        directory = self.protocol._getExtraPath()
         for filename in os.listdir(directory):
             if filename.endswith(".pdb"):
                 path = os.path.join(directory, filename)
@@ -95,11 +104,13 @@ class ChimeraRestoreViewer(ChimeraViewerBase):
     _label = 'viewer restore'
     _targets = [ChimeraProtRestore]
 
-    def _visualize(self, obj, **args):
-        self.inputVolume = self.protocol.parentProt.inputVolume
-        self.pdbFileToBeRefined = self.protocol.parentProt.pdbFileToBeRefined
-        self.inputPdbFiles = self.protocol.parentProt.inputPdbFiles
-        super(ChimeraRestoreViewer, self)._visualize()
+    def _visualize(self, obj, **args):#inputProtocol
+
+        parentProt = self.protocol.inputProtocol.get()
+        self.inputVolume = parentProt.inputVolume
+        self.pdbFileToBeRefined = parentProt.pdbFileToBeRefined
+        self.inputPdbFiles = parentProt.inputPdbFiles
+        super(ChimeraRestoreViewer, self)._visualize(obj, **args)
 
 class ChimeraProtRigidFitViewer(ChimeraViewerBase):
     _label = 'viewer fit'
