@@ -535,7 +535,7 @@ def rowToParticle(partRow, **kwargs):
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(partRow))
         
-    # alignment is mandatory at this point, it shoud be check
+    # alignment is mandatory at this point, it should be check
     # and detected defaults if not passed at readSetOf.. level
     alignType = kwargs.get('alignType') 
     
