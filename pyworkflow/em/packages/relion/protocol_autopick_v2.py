@@ -292,19 +292,6 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
 
         form.addParallelSection(threads=0, mpi=4)
 
-    # -------------------------- STEPS functions ------------------------------
-
-    def _pickMicrograph(self, micStarFile, params, threshold,
-                               minDistance, maxStddevNoise, fom):
-        """ Launch the 'relion_autopick' for all micrographs. """
-        params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
-        params += ' --max_stddev_noise %0.3f' % maxStddevNoise
-        params += ' --threshold %0.3f ' % threshold
-        params += ' --min_distance %0.3f %s' % (minDistance, fom)
-
-        self.runJob(self._getProgram('relion_autopick'), params,
-                    cwd=self.getWorkingDir())
-
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self.inputStreaming = self.getInputMicrographs().isStreamOpen()
