@@ -326,6 +326,10 @@ Do you really want to continue?'
     TITLE_PICK_GAUSS = 'Automatic gaussian picking'
     LABEL_PICK_GAUSS = 'Do you wish to perform an automatic gaussian picking for the remaining micrographs?'
 
+    TITLE_INSPECTOR = 'Objects inspector'
+    LABEL_INSPECTOR = 'Objects inspector will inspect the whole project. ' \
+                      'Thus, it can take a while depending on the size of the project.\n' \
+                      'Do you want to continue?'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():

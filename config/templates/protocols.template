@@ -23,6 +23,7 @@ Protocols SPA = [
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [
 		{"tag": "protocol", "value": "XmippProtMovieCorr", "text": "default"},
 		{"tag": "protocol", "value": "XmippProtOFAlignment", "text": "default"},
+		{"tag": "protocol", "value": "XmippProtMovieMaxShift", "text": "default"},
 		{"tag": "protocol", "value": "XmippProtMovieAverage", "text": "default"},
 		{"tag": "protocol", "value": "ProtUnblur", "text": "default"},
 		{"tag": "protocol", "value": "ProtSummovie", "text": "default"},
@@ -108,6 +109,8 @@ Protocols SPA = [
 		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "XmippProtCL2D",   "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionClassify2D",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtGpuCrrCL2D",   "text": "default"},
+	        {"tag": "protocol", "value": "XmippProtStrGpuCrrSimple",   "text": "default"},
 			{"tag": "section", "text": "mda", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "SpiderProtCAPCA", "text": "default"},
 				{"tag": "protocol", "value": "SpiderProtClassifyWard", "text": "default"},
