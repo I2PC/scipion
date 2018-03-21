@@ -811,7 +811,7 @@ class PdbFile(EMFile):
     def hasOrigin(self):
         return self._origin is not None
 
-    def getOrigin(self, returnInitIfNone=False):
+    def getOrigin(self, force=False):
         if self.hasOrigin():
             return self._origin
         else:
