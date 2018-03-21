@@ -34,6 +34,7 @@ from protocol_micrographs import *
 from protocol_movies import *
 from protocol_align_movies import ProtAlignMovies, ProtAverageFrames
 from protocol_particles import *
+from protocol_particles_picking import *
 from protocol_2d import *
 from protocol_3d import *
 from protocol_sets import *
