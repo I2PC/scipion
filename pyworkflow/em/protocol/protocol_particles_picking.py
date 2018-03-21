@@ -249,6 +249,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         to picking the given micrograph. """
         pass
 
+
     # --------------------------- UTILS functions ----------------------------
 
     # ------ Methods for Streaming picking --------------
@@ -265,9 +266,12 @@ class ProtParticlePickingAuto(ProtParticlePicking):
                            "it will be the number of seconds that the "
                            "protocol will sleep when waiting for new "
                            "input data in streaming mode. ")
-        form.addParam("streamingBatchSize", params.IntParam, default=0,
+        form.addParam("streamingBatchSize", params.IntParam, default=1,
                       label="Batch size",
                       help="")
+
+    def _getStreamingBatchSize(self):
+        return self.getAttributeValue('streamingBatchSize', 1)
 
     def _stepsCheck(self):
         # To allow streaming picking we need to detect:
@@ -523,3 +527,84 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         pass
 
 
+class ProtPickingDifference(ProtParticlePicking):
+    """
+    Protocol to compute the difference between a reference SetOfPartices and
+    a another set (usually a negative reference).
+
+    The output will be a SetOfCoordinates with the particles in the reference
+    input that are not close to coordinates in the negative input.
+
+    """
+    _label = 'picking difference'
+
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputCoordinates', params.PointerParam,
+                      pointerClass='SetOfCoordinates',
+                      label="Input coordinates",
+                      help='Select the reference set of coordinates.')
+        form.addParam('negativeCoordinates', params.PointerParam,
+                      pointerClass='SetOfCoordinates',
+                      label="Negative coordinates",
+                      help='Negative coordinates that will help to exclude '
+                           'coordinates from the input set. ')
+        form.addParam('differenceRadius', params.IntParam, default=10,
+                      label="Radius (px)",
+                      help="Distance radius to consider that two coordinates "
+                           "close enough. If a particle in the input reference"
+                           "set have any close particle in the negative set, "
+                           "it will not be included in the output set. ")
+
+        form.addParallelSection(threads=0, mpi=0)
+
+    # ------------------------- INSERT steps functions -------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep("createOutputStep",
+                                 self.inputCoordinates.getObjId(),
+                                 self.negativeCoordinates.getObjId(),
+                                 self.differenceRadius.get())
+
+    def getInputMicrographs(self):
+        return self.inputCoordinates[0].get().getMicrographs()
+
+    def _summary(self):
+        summary = []
+        return summary
+
+    def _methods(self):
+        return []
+
+    def createOutputStep(self, inputId, negId, radius):
+        inputCoords = self.inputCoordinates.get()
+        negCoords = self.negativeCoordinates.get()
+        inputMics = inputCoords.getMicrographs()
+        outputCoords = self._createSetOfCoordinates(inputMics)
+        outputCoords.setBoxSize(inputCoords.getBoxSize())
+
+        r2 = radius * radius  # to avoid computing sqrt when comparing distances
+
+        def _discard(coord, negPos):
+            """ Find if there is a close negative particle to this one. """
+            x, y = coord.getPosition()
+
+            for nx, ny in negPos:
+                if abs((x - nx) * (y - ny)) < r2:
+                    return True
+
+            return False  # Far enough from all negative coordinates
+
+        # Read all consensus particles
+        for mic in inputMics:
+            negPos = [(c.getX(), c.getY())
+                      for c in negCoords.iterCoordinates(mic)]
+            for coord in inputCoords.iterCoordinates(mic):
+                if not _discard(coord, negPos):
+                    outputCoords.append(coord)
+
+        # Set output
+        self._defineOutputs(outputCoordinates=outputCoords)
+        self._defineTransformRelation(self.inputCoordinates,
+                                      self.outputCoordinates)
+        self._defineSourceRelation(self.negativeCoordinates,
+                                   self.outputCoordinates)
