@@ -471,8 +471,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
     def getLastIteration(self, Nvolumes):
         lastIter = -1
         for n in range(1, self.iter.get() + 1):
-            NvolumesIter = len(glob(self._getExtraPath('volume_iter%03d*.vol'
-                                                       % n)))
+            NvolumesIter=len(glob(self._getExtraPath('volume_iter%03d*.vol'%n)))
             if NvolumesIter == 0:
                 continue
             elif NvolumesIter == Nvolumes:
