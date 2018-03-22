@@ -188,7 +188,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.micDict = OrderedDict()
         pwutils.makeFilePath(self._getAllDone())
 
-        micDict, _ = self._loadInputList()
+        micDict, self.streamClosed = self._loadInputList()
         pickMicIds = self._insertNewMicsSteps(micDict.values())
 
         self._insertFinalSteps(pickMicIds)
@@ -217,7 +217,6 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         micStepId = self._insertFunctionStep('pickMicrographStep',
                                              mic.getMicName(), *args,
                                              prerequisites=prerequisites)
-
         return micStepId
 
     def pickMicrographStep(self, micName, *args):
@@ -249,6 +248,47 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         to picking the given micrograph. """
         pass
 
+    # Group of functions to pick several micrographs if the batch size is
+    # defined. In some programs it might be more efficient to pick many
+    # at once and not one by one
+
+    def _insertPickMicrographListStep(self, micList, prerequisites, *args):
+        """ Basic method to insert a picking step for a given micrograph. """
+        micNameList = [mic.getMicName() for mic in micList]
+        micStepId = self._insertFunctionStep('pickMicrographListStep',
+                                             micNameList, *args,
+                                             prerequisites=prerequisites)
+        return micStepId
+
+    def pickMicrographListStep(self, micNameList, *args):
+        micList = []
+
+        for micName in micNameList:
+            mic = self.micDict[micName]
+            micDoneFn = self._getMicDone(mic)
+            micFn = mic.getFileName()
+            if self.isContinued() and os.path.exists(micDoneFn):
+                self.info("Skipping micrograph: %s, seems to be done" % micFn)
+
+            else:
+                # Clean old finished files
+                pwutils.cleanPath(micDoneFn)
+                self.info("Picking micrograph: %s " % micFn)
+                micList.append(mic)
+
+        self._pickMicrographList(micList, *args)
+
+        for mic in micList:
+            # Mark this mic as finished
+            open(self._getMicDone(mic), 'w').close()
+
+    def _pickMicrographList(self, micList, *args):
+        """ This function can be implemented by subclasses if it is a more
+        effcient way to pick many micrographs at once.
+         Default implementation will just call the _pickMicrograph
+        """
+        for mic in micList:
+            self._pickMicrograph(mic, *args)
 
     # --------------------------- UTILS functions ----------------------------
 
@@ -288,14 +328,44 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             inputMics: input mics set to be check
         """
         deps = []
-        # For each mic insert the step to process it
-        for mic in inputMics:
-            micKey = mic.getMicName()
-            if micKey not in self.micDict:
+        insertedMics = inputMics
+
+        # Despite this function only should insert new micrographs
+        # let's double check that they are not inserted already
+        micList = [mic for mic in inputMics
+                   if mic.getMicName() not in self.micDict]
+
+        def _insertSubset(micSubset):
+            stepId = self._insertPickMicrographListStep(micSubset,
+                                                        self.initialIds,
+                                                        *self._getPickArgs())
+            deps.append(stepId)
+
+        # Now handle the steps depending on the streaming batch size
+        batchSize = self._getStreamingBatchSize()
+
+        if batchSize == 1: # This is one by one, as before the batch size
+            for mic in micList:
                 stepId = self._insertPickMicrographStep(mic, self.initialIds,
                                                         *self._getPickArgs())
                 deps.append(stepId)
-                self.micDict[micKey] = mic
+        elif batchSize == 0: # Greedy, take all available ones
+            _insertSubset(micList)
+        else:  # batchSize > 0, insert only batches of this size
+            n = len(inputMics)
+            d = n / batchSize # number of batches to insert
+            nd = d * batchSize
+            for i in range(d):
+                _insertSubset(micList[i*batchSize:(i+1)*batchSize])
+
+            if n > nd and self.streamClosed:  # insert last ones
+                _insertSubset(micList[nd:])
+            else:
+                insertedMics = micList[:nd]
+
+        for mic in insertedMics:
+            self.micDict[mic.getMicName()] = mic
+
         return deps
 
     def _loadSet(self, inputSet, SetClass, getKeyFunc):
@@ -447,6 +517,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         else:
             outputCoords.enableAppend()
 
+        self.info("Reading coordinates from mics: %s" % ','.join([mic.strId() for mic in micList]))
         self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
         self.debug(" _updateOutputCoordSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCoords, streamMode)

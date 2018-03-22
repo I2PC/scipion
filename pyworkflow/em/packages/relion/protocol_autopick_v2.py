@@ -362,8 +362,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         micStar = self._getPath('input_micrographs.star')
         writeSetOfMicrographs(self.getMicrographList(), micStar,
                               alignType=ALIGN_NONE,
-                              preprocessImageRow=self._preprocessMicrographRow,
-                              postprocessImageRow=self._postprocessMicrographRow)
+                              preprocessImageRow=self._preprocessMicrographRow)
 
         if self.useInputReferences():
             writeReferences(self.getInputReferences(),
@@ -433,15 +432,21 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
     def _pickMicrograph(self, mic, params, threshold, minDistance, fom):
         """ This method should be invoked only when working in streaming mode.
         """
-        # We need to write the needed star files
-        # TODO: We need to check when working in real streaming, not all
-        # TODO: CTF will be available and this needs to be taken into account
         micRow = md.Row()
         self._preprocessMicrographRow(mic, micRow)
         micrographToRow(mic, micRow)
         self._postprocessMicrographRow(mic, micRow)
         self._pickMicrographsFromStar(self._getMicStarFile(mic), params,
                                       threshold, minDistance, fom)
+
+    def _pickMicrographList(self, micList, params, threshold, minDistance, fom):
+        micStar = self._getPath('input_micrographs_%s-%s.star' %
+                                (micList[0].strId(), micList[-1].strId()))
+        writeSetOfMicrographs(micList, micStar,
+                              alignType=ALIGN_NONE,
+                              preprocessImageRow=self._preprocessMicrographRow)
+        self._pickMicrographsFromStar(micStar, params, threshold, minDistance,
+                                      fom)
 
     def _createSetOfCoordinates(self, micSet, suffix=''):
         """ Override this method to set the box size. """
