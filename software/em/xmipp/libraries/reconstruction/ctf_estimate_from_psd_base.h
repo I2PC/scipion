@@ -107,7 +107,7 @@ public:
 	// Penalization for forbidden values of the parameters
 	double heavy_penalization;
 	double current_penalty;
-	static const double penalty = 32; // Maximum penalization
+	static const double penalty; // Maximum penalization
 	//Some aliases
 	MultidimArray<double> *f; // The CTF to model
 	Matrix1D<double> *adjust_params; // Current theoretical adjustment

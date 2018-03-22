@@ -117,6 +117,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam("saveSpace", BooleanParam, default=True, label="Remove intermediate files", expertLevel=LEVEL_ADVANCED)
         
         form.addSection(label='Next Reference')
+        form.addParam("nextInternal",BooleanParam, label="Internal reference", default=True,
+                      help="By default, we take the reference from the previous highres iteration. Use this flag "
+                           "to provide an external reference. Ideally, the external reference should have two "
+                           "independent halves. If not, the external volume is copied to both references and"
+                           "the phases are randomized from the 0.25 digital frequency.")
+        form.addParam("nextExternalReference",PointerParam,pointerClass='Volume',
+                      label="Reference volume", condition="not nextInternal",
+                      allowsNull=True)
         form.addParam('nextLowPass', BooleanParam, label="Low pass filter?", default=True, expertLevel=LEVEL_ADVANCED,
                       help='Apply a low pass filter to the previous iteration whose maximum frequency is '\
                            'the current resolution(A) + resolutionOffset(A). If resolutionOffset>0, then fewer information' \
@@ -578,7 +586,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             if state>=1:
                 return
         
-        print "Preparing images to sampling rate=",TsCurrent
+        print ("Preparing images to sampling rate=",TsCurrent)
         Xdim=self.inputParticles.get().getDimensions()[0]
         newXdim=long(round(Xdim*self.TsOrig/TsCurrent))
         if newXdim<40:
@@ -633,20 +641,33 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             if state>=2:
                 return
 
-        print "Preparing references to sampling rate=",TsCurrent
+        print ("Preparing references to sampling rate=",TsCurrent)
         fnMask=''
         newXdim=self.readInfoField(fnDir,"size",xmipp.MDL_XSIZE)
         if self.nextMask.hasValue():
             fnMask=join(fnDir,"mask.vol")
             self.prepareMask(self.nextMask.get(), fnMask, TsCurrent, newXdim)
-        oldXdim=self.readInfoField(fnDirPrevious,"size",xmipp.MDL_XSIZE)
+        
+        img = ImageHandler()
         for i in range(1,3):
-            fnPreviousVol=join(fnDirPrevious,"volume%02d.vol"%i)
             fnReferenceVol=join(fnDir,"volumeRef%02d.vol"%i)
-            if oldXdim!=newXdim:
-                self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%(fnPreviousVol,fnReferenceVol,newXdim),numberOfMpi=1)
-            else:
+            if self.nextInternal:
+                fnPreviousVol=join(fnDirPrevious,"volume%02d.vol"%i)
                 copyFile(fnPreviousVol, fnReferenceVol)
+            else:
+                if self.nextExternalReference.get().hasHalfMaps():
+                    fnVolList = self.nextExternalReference.get().getHalfMaps()
+                    fnPreviousVol = fnVolList[i-1]
+                    self.runJob('xmipp_image_convert',"-i %s -o %s -t vol"%(fnPreviousVol,fnReferenceVol),
+                                numberOfMpi=1)
+                else:
+                    img.convert(self.nextExternalReference.get(), fnReferenceVol)
+                    self.runJob('xmipp_transform_randomize_phases',"-i %s --freq discrete 0.25"%fnReferenceVol,
+                                numberOfMpi=1)
+
+            oldXdim, _, _, _ =img.getDimensions((1,fnReferenceVol))
+            if oldXdim!=newXdim:
+                self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnReferenceVol,newXdim),numberOfMpi=1)
             self.runJob('xmipp_transform_filter','-i %s --fourier fsc %s --sampling %f'%(fnReferenceVol,join(fnDirPrevious,"fsc.xmd"),TsCurrent),numberOfMpi=1)
             if self.nextLowPass:
                 self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%\
@@ -1417,6 +1438,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             errors.append("Symmetrize within mask requires a mask")
         if not self.doContinue and not self.inputParticles.hasValue():
             errors.append("You must provide input particles")
+        if not self.nextInternal and not self.nextExternalReference.hasValue():
+            errors.append("You must provide an external volume as reference")
         return errors    
     
     def _summary(self):

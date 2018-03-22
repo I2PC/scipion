@@ -49,6 +49,7 @@ MOTIONCORR = dosefgpu_driftcorr_7.5
 MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-1.0.4
 MOTIONCOR2_CUDA_LIB = /usr/local/cuda-8.0/lib64 
 NMA_HOME = %(EM_ROOT)s/nma
+PHENIX_HOME = %(EM_ROOT)s/phenix-1.13-2998
 NYSBC_3DFSC_HOME = %(EM_ROOT)s/nysbc-3DFSC-2.5
 PYTOM_HOME = %(EM_ROOT)s/pytom
 RELION_HOME = %(EM_ROOT)s/relion-2.1
