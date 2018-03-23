@@ -212,13 +212,15 @@ class RelionAutopickParams(EmWizard):
           'protDir': autopickFomProt.getWorkingDir()
           }
 
-        autopickCommand = '%(picker)s --i extra/%%(micrographName).star --o autopick --particle_diameter %(diameter)s --angpix %(apix)s --ref %(ref)s --ang %(ang)s --lowpass %(lowpass)s --threshold %%(threshold) --min_distance %%(ipd) --read_fom_maps'%args
+        autopickCmd = '%(picker)s --i extra/%%(micrographName).star --o autopick --particle_diameter %(diameter)s '
+        autopickCmd += '--angpix %(apix)s --ref %(ref)s --ang %(ang)s --lowpass %(lowpass)s --threshold %%(threshold) '
+        autopickCmd += '--min_distance %%(ipd) --read_fom_maps' % args
         if autopickFomProt.refsHaveInvertedContrast:
-            autopickCommand += ' --invert'
+            autopickCmd += ' --invert'
         
         if autopickFomProt.refsCtfCorrected:
-            autopickCommand += ' --ctf'
-        args['autopickCommand'] = autopickCommand
+            autopickCmd += ' --ctf'
+        args['autopickCmd'] = autopickCmd
         f.write("""
         parameters = ipd,threshold
         ipd.value = %(min_distance)s
@@ -228,7 +230,7 @@ class RelionAutopickParams(EmWizard):
         threshold.label = Threshold
         threshold.help = some help
         runDir = %(protDir)s
-        autopickCommand = %(autopickCommand)s 
+        autopickCmd = %(autopickCmd)s
         convertCommand = %(convert)s --coordinates --from relion --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s --extra %(protDir)s/extra
         """ % args)
         f.close()
