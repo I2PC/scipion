@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
-# * [1] SciLifeLab, Stockholm University
+# * MRC Laboratory of Molecular Biology (MRC-LMB)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -26,15 +26,15 @@
 
 import os
 
-import pyworkflow.utils as pwutils
 from pyworkflow.protocol.constants import STATUS_FINISHED, STEPS_SERIAL
 from pyworkflow.em.protocol import ProtExtractMovieParticles
 from pyworkflow.em.constants import ALIGN_PROJ
+from pyworkflow.utils.properties import Message
 from pyworkflow import VERSION_1_2
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.utils.properties import Message
+import pyworkflow.utils as pwutils
 
 from convert import (writeSetOfMovies, isVersion2,
                      writeSetOfParticles, readSetOfMovieParticles,
@@ -275,11 +275,12 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         movie = self.getInputMovies().getFirstItem()
         iniFrame, lastFrame, _ = movie.getFramesRange()
         shiftsAligned = [0] * (lastFrame-iniFrame+1)
-        shiftX, shiftY = movie.getAlignment().getShifts()
 
-        if movie.hasAlignment() and not (shiftX == shiftY == shiftsAligned):
-            errors.append('Input movies must have zero shifts, meaning they '
-                          'should be already aligned.')
+        if movie.hasAlignment():
+            shiftX, shiftY = movie.getAlignment().getShifts()
+            if not (shiftX == shiftY == shiftsAligned):
+                errors.append('Input movies must have zero shifts, meaning they '
+                              'should be already aligned.')
 
         return errors
     

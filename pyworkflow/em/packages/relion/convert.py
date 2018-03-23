@@ -43,6 +43,7 @@ from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
 RELION_HOME = 'RELION_HOME'
+
 ACQUISITION_DICT = OrderedDict([ 
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
@@ -352,15 +353,10 @@ def alignmentToRow(alignment, alignmentRow, alignType):
 
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X, shifts[0])
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y, shifts[1])
-    # Also set the priors
-    #alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X_PRIOR, shifts[0])
-    #alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y_PRIOR, shifts[1])
-    
+
     if is2D:
         angle = angles[0] + angles[2]
         alignmentRow.setValue(md.RLN_ORIENT_PSI, -angle)
-        # Also set the prior
-        #alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, -angle)
 
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
@@ -377,11 +373,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
         alignmentRow.setValue(md.RLN_ORIENT_TILT, angles[1])
         alignmentRow.setValue(md.RLN_ORIENT_PSI,  angles[2])
-        # Also set the priors
-        #alignmentRow.setValue(md.RLN_ORIENT_ROT_PRIOR, angles[0])
-        #alignmentRow.setValue(md.RLN_ORIENT_TILT_PRIOR, angles[1])
-        #alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, angles[2])
-        
+
 
 def rowToAlignment(alignmentRow, alignType):
     """
@@ -558,11 +550,7 @@ def rowToParticle(partRow, particleClass=em.Particle, **kwargs):
     if partRow.hasLabel(md.RLN_PARTICLE_ID):
         img._rlnParticleId = Integer(partRow.getValue(md.RLN_PARTICLE_ID))
     
-    # copy particleId if available from row to particle
-    if partRow.hasLabel(md.RLN_PARTICLE_RANDOM_SUBSET):
-        img._rln_halfId = Integer(partRow.getValue(md.RLN_PARTICLE_RANDOM_SUBSET))
-    
-    # Provide a hook to be used if something is needed to be 
+    # Provide a hook to be used if something is needed to be
     # done for special cases before converting image to row
     postprocessImageRow = kwargs.get('postprocessImageRow', None)
     if postprocessImageRow:

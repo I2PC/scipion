@@ -94,6 +94,17 @@ class TestRelionBase(BaseTest):
         cls.launchProtocol(protImport)
         return protImport
 
+    @classmethod
+    def runImportMovies(cls, pattern, mag, samplingRate, dose):
+        """ Run an Import movies protocol. """
+        protImport = cls.newProtocol(ProtImportMovies,
+                                     filesPath=pattern,
+                                     magnification=mag,
+                                     samplingRate=samplingRate,
+                                     dosePerFrame=dose)
+        cls.launchProtocol(protImport)
+        return protImport
+
 
 class TestRelionClassify2D(TestRelionBase):
     @classmethod
@@ -815,3 +826,33 @@ class TestRelionExpandSymmetry(TestRelionBase):
                                "Number of output particles is %d and"
                                " must be %d" % (sizeOut, sizeIn * 4))
 
+
+class TestRelionExtractMovieParticles(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+        cls.partRef3dFn = cls.ds.getFile('import/refine3d_case2/relion_data.star')
+        cls.movies = DataSet.getDataSet('movies').getFile('ribo/*.mrcs')
+        cls.protImportMovies = cls.runImportMovies(cls.movies, 50000, 3.54, 1.0)
+        cls.protImportParts = cls.runImportParticlesStar(cls.partRef3dFn,
+                                                         50000, 3.54)
+
+    def test_extractMovieParticles(self):
+        if not isVersion2():
+            raise Exception('Extract movie particles protocol exists only for Relion v2.0 or higher!')
+
+        prot = self.newProtocol(ProtRelionExtractMovieParticles,
+                                boxSize=100, frame0=1, frameN=0,
+                                avgFrames=3, doInvert=True)
+        prot.inputMovies.set(self.protImportMovies.outputMovies)
+        prot.inputParticles.set(self.protImportParts.outputParticles)
+        self.launchProtocol(prot)
+
+        self.assertIsNotNone(prot.outputParticles,
+                             "There was a problem with extract movie particles protocol")
+        sizeIn = prot.inputParticles.getSize()
+        sizeOut = prot.outputParticles.getSize()
+        self.assertAlmostEqual(sizeIn * 16, sizeOut, 0.0001,
+                               "Number of output movie particles is %d and"
+                               " must be %d" % (sizeOut, sizeIn * 4))
