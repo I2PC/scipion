@@ -26,15 +26,20 @@
 
 import os
 
+from pyworkflow import VERSION_1_1
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
-from pyworkflow import VERSION_1_1
+from pyworkflow.em.constants import RELATION_CTF
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol import STEPS_PARALLEL
 
 from convert import (readSetOfCoordinates, runGautomatch, getProgram,
                      writeDefectsFile, writeMicCoords)
+
+# Option for input micrographs for wizard
+MICS_ALL = 0
+MICS_SUBSET = 1
 
 
 class ProtGautomatch(em.ProtParticlePickingAuto):
@@ -74,6 +79,30 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         form.addParam('angStep', params.IntParam, default=5,
                       label='Angular step size',
                       help='Angular step size for picking, in degrees')
+        form.addParam('micrographsSelection', params.EnumParam, default=MICS_ALL,
+                      choices=['All', 'Subset'],
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      label='Micrographs for wizard',
+                      help='Select which micrographs will be used for '
+                           'optimizing the parameters in the wizard. '
+                           'By default, ALL micrograph are used. '
+                           'You can select to use a subset based on '
+                           'defocus values (where micrographs will be '
+                           'taken from different defocus). ')
+        form.addParam('micrographsNumber', params.IntParam, default='10',
+                       condition='micrographsSelection==%d' % MICS_SUBSET,
+                      label='Micrographs for optimization:',
+                      help='Select the number of micrographs that you want'
+                           'to be used for the parameters optimization. ')
+        form.addParam('ctfRelations', params.RelationParam,
+                      relationName=RELATION_CTF,
+                      attributeName='getInputMicrographs',
+                      condition='micrographsSelection==%d' % MICS_SUBSET,
+                      label='CTF estimation',
+                      help='Choose some CTF estimation related to the '
+                           'input micrographs to create the subset'
+                           'by defocus values.')
+
         form.addParam('threshold', params.FloatParam, default=0.1,
                       label='Threshold',
                       help='Particles with CCC above the threshold will be '
