@@ -561,10 +561,9 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         # The command will be launched from the working dir
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
-        if self._useCTF() and not img.hasCTF():
-            img.setCTF(self.ctfDict[img.getMicName()])
 
         if self._useCTF():
+            img.setCTF(self.ctfDict[img.getMicName()])
             # add phaseShift to micrograph Row
             ctf = img.getCTF()
             if ctf is not None and ctf.getPhaseShift():
