@@ -296,6 +296,9 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         else:
             summary.append("Movie particles extracted: %d" %
                            self.outputParticles.getSize())
+            if self.avgFrames > 1:
+                summary.append("Averaged every %d frames." %
+                               self.avgFrames.get())
             
         return summary
     
@@ -385,6 +388,10 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
 
     def _preprocessMovieRow(self, img, imgRow):
         newName = pwutils.replaceBaseExt(img.getFileName(), 'mrcs')
+        # movie name should end with "_aligned_movie.mrcs"
+        # to match with new rlnImageName
+        if '_aligned_movie.mrcs' not in newName:
+            newName = newName.replace('.mrcs', '_aligned_movie.mrcs')
         newPath = self._getExtraPath(newName)
 
         # If the movies are in 'mrcs' format just create a link
@@ -404,6 +411,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         imgName = partRow.getValue(md.RLN_IMAGE_NAME)
         newImgName = imgName.replace('_aligned_mic_DW.', '_aligned.')
         newImgName = newImgName.replace('_aligned_mic.', '_aligned.')
+
         partRow.setValue(md.RLN_IMAGE_NAME, newImgName)
 
         if part.hasAttribute('_rlnGroupName'):

@@ -851,8 +851,8 @@ class TestRelionExtractMovieParticles(TestRelionBase):
 
         self.assertIsNotNone(prot.outputParticles,
                              "There was a problem with extract movie particles protocol")
-        sizeIn = prot.inputParticles.getSize()
+        sizeIn = prot.inputParticles.get().getSize()
         sizeOut = prot.outputParticles.getSize()
-        self.assertAlmostEqual(sizeIn * 16, sizeOut, 0.0001,
+        self.assertAlmostEqual(sizeIn * 6, sizeOut, 0.0001,
                                "Number of output movie particles is %d and"
-                               " must be %d" % (sizeOut, sizeIn * 4))
+                               " must be %d" % (sizeOut, sizeIn * 6))
