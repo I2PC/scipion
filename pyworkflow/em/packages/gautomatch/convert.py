@@ -86,6 +86,10 @@ def rowToCoordinate(coordRow):
     if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
+        # Gautomatch starts _rlnClassNumber at 0, but relion at 1
+        # so let's increment its value
+        if coord.hasAttribute('_rlnClassNumber'):
+            coord._rlnClassNumber.increment()
 
         # FIXME: THE FOLLOWING IS NOT CLEAN
         try:
@@ -216,6 +220,8 @@ def runGautomatch(micNameList, refStack, workDir, extraArgs, env=None,
     """
     args = ''
 
+    ih = em.ImageHandler()
+
     for micName in micNameList:
         # We convert the input micrograph on demand if not in .mrc
         outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
@@ -223,7 +229,7 @@ def runGautomatch(micNameList, refStack, workDir, extraArgs, env=None,
         if micName.endswith('.mrc'):
             pwutils.createLink(micName, outMic)
         else:
-            em.ImageHandler().convert(micName, outMic)
+            ih.convert(micName, outMic)
 
     if refStack is not None:
         args += ' -T %s' % refStack
