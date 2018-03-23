@@ -89,7 +89,7 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 		double offset, double sampling, double x_origin, double y_origin, double z_origin) {
 	// list of numbers smaller than 10000 which have prime decomposition
 	// that does not contain prime number greater than 19
-	// This is the greates prime number that can handle ccp4 fft routine
+	// This is the greatest prime number that can handle ccp4 fft routine
 
 	this->rmin = rmin; //delete voxels closer to the center than this radius
 	this->rmax = rmax; //delete voxels more far away to the center than this radius
@@ -888,9 +888,9 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre,
 		MDRow MD;
 		out3DDmap.setDataMode(_DATA_ALL);
 		//CCP save routine multiplies by sampling rate
-		MD.setValue(MDL_ORIGIN_X, -(double) (iMinX - x_offset) );
-		MD.setValue(MDL_ORIGIN_Y, -(double) (iMinY - y_offset) );
-		MD.setValue(MDL_ORIGIN_Z, -(double) (iMinZ - z_offset) );
+		MD.setValue(MDL_ORIGIN_X, (double) (iMinX - x_offset) );
+		MD.setValue(MDL_ORIGIN_Y, (double) (iMinY - y_offset) );
+		MD.setValue(MDL_ORIGIN_Z, (double) (iMinZ - z_offset) );
 
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
 
