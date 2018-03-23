@@ -30,6 +30,7 @@ This module contains converter functions that will serve to:
 """
 
 import os
+import re
 import numpy
 from collections import OrderedDict
 
