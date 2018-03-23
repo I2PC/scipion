@@ -23,6 +23,7 @@ Protocols SPA = [
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [
 		{"tag": "protocol", "value": "XmippProtMovieCorr", "text": "default"},
 		{"tag": "protocol", "value": "XmippProtOFAlignment", "text": "default"},
+		{"tag": "protocol", "value": "XmippProtMovieMaxShift", "text": "default"},
 		{"tag": "protocol", "value": "XmippProtMovieAverage", "text": "default"},
 		{"tag": "protocol", "value": "ProtUnblur", "text": "default"},
 		{"tag": "protocol", "value": "ProtSummovie", "text": "default"},
@@ -108,6 +109,8 @@ Protocols SPA = [
 		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "XmippProtCL2D",   "text": "default"},
 			{"tag": "protocol", "value": "ProtRelionClassify2D",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtGpuCrrCL2D",   "text": "default"},
+	        {"tag": "protocol", "value": "XmippProtStrGpuCrrSimple",   "text": "default"},
 			{"tag": "section", "text": "mda", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "SpiderProtCAPCA", "text": "default"},
 				{"tag": "protocol", "value": "SpiderProtClassifyWard", "text": "default"},
@@ -220,13 +223,13 @@ Protocols SPA = [
 		]},
 		{"tag": "protocol_group", "text": "Calculators", "openItem": "False", "children": [
         	{"tag": "protocol", "value": "XmippProtImageOperateParticles", "text": "default"},
-            {"tag": "protocol", "value": "XmippProtImageOperateVolumes", "text": "default"},
-	        {"tag": "protocol", "value": "ChimeraProtOperate", "text": "default"}
+                {"tag": "protocol", "value": "XmippProtImageOperateVolumes", "text": "default"},
+	        {"tag": "protocol", "value": "ChimeraProtOperate", "text": "default"},
+                {"tag": "protocol", "value": "ChimeraProtRestore", "text": "default"}
 		]}
     ]},
 	{"tag": "section", "text": "Model Building", "openItem": "False", "children": [
         {"tag": "protocol", "value": "XmippProtExtractUnit",   "text": "default"},
-        {"tag": "protocol", "value": "PowerfitProtRigidFit",   "text": "default"},
         {"tag": "protocol", "value": "ChimeraProtRigidFit",   "text": "default"},
         {"tag": "protocol", "value": "CootRefine",   "text": "default"},
         {"tag": "protocol", "value": "CCP4ProtRunRefmac",   "text": "default"},

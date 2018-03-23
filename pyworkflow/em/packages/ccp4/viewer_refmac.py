@@ -375,7 +375,7 @@ and rmsCHIRAL (root mean square of chiral index.""")
         if fnVolName.endswith(":mrc"):
             fnVolName= fnVolName.split(":")[0]
         f.write("open %s\n" % fnVolName)
-        x, y, z = fnVol.getOrigin(returnInitIfNone=True).getShifts()
+        x, y, z = fnVol.getOrigin(force=True).getShifts()
         sampling = fnVol.getSamplingRate()
         f.write("volume #%d style surface voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, x, y, z))

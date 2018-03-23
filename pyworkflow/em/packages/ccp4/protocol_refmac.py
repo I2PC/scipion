@@ -157,7 +157,7 @@ class CCP4ProtRunRefmac(EMProtocol):
 
         # create local copy of 3Dmap (tmp3DMapFile.mrc)
         localInFileName = self._getVolumeFileName()
-        origin = fnVol.getOrigin(returnInitIfNone=True).getShifts()
+        origin = fnVol.getOrigin(force=True).getShifts()
         sampling = fnVol.getSamplingRate()
         adaptFileToCCP4(inFileName, localInFileName, origin, sampling,
                         START)

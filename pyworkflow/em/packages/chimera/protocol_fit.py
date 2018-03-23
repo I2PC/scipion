@@ -27,11 +27,11 @@
 # **************************************************************************
 
 from protocol_operate import ChimeraProtOperate
-from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
-    StringParam
+from pyworkflow.em.packages.chimera.protocol_base import ChimeraProtBase
 
 
-class ChimeraProtRigidFit(ChimeraProtOperate):
+
+class ChimeraProtRigidFit(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]
         [saverefmodel 0|1]* from command line in order to transferm fitted

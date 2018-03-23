@@ -196,6 +196,30 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(60, prot3.outputVolumes.getDim()[0])
 
 
+        #  """ 8)To test old data where volumes have no origin at all"""
+        args = {'filesPath': self.dsXmipp.getFile('volumes/'),
+                'filesPattern': 'volume_1_iter_002.mrc',
+                # 'setOrigCoord': False,
+                'samplingRate': 2.1,
+                }
+
+        prot4 = self.newProtocol(ProtImportVolumes, **args)
+        prot4.setObjLabel('import vol,\n no origin at all, legacy data,'
+                          '\n chimera show '
+                          'axis,\n vol origin in coord origin')
+        self.launchProtocol(prot4)
+        volume = prot4.outputVolume
+        volume.setOrigin(None)
+        # The volume has no origin
+        t = volume.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        # x, y, z in Angstroms
+        # Chimera will show (x, y, z) divided by the samplingRate
+        # in pixels = (32, 32, 32)
+        self.assertEqual(-67.2, x)
+        self.assertEqual(-67.2, y)
+        self.assertEqual(-67.2, z)
+
         ## TODO: associate origen coordinates from header file
         # args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
         #         'samplingRate': 1.5,

@@ -85,7 +85,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     AUTOMATIC_ALIGNMENT = 2
     
     GLOBAL_SIGNIFICANT = 0
-    GLOBAL_PROJMATCH = 1
+    GLOBAL_GPU_SIGNIFICANT = 1
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -156,6 +156,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED,
                       help="You may generate redudant galleries by setting this angle to 180, this may help if c1 symmetry is considered")
         form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local','Automatic'], default=self.GLOBAL_ALIGNMENT)
+
         form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations', condition='alignmentMethod!=2')
         form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False, expertLevel=LEVEL_ADVANCED,
                       help="You may reconstruct only with those images falling on a certain range. This is particularly useful for helices where "\
@@ -167,16 +168,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line.addParam('angularMaxTiltReconstruct', FloatParam, label="Max.", default=92, condition="restrictReconstructionAngles",
                       help = "Perform an angular assignment and only use those images whose angles are within these limits")
 
-        form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
-                  expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
+        form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Gpu Signficant'], 
+                      default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0', expertLevel=LEVEL_ADVANCED)
         form.addParam('maximumTargetResolution', NumericListParam, label="Max. Target Resolution", default="15 8 4",
                       condition='multiresolution',
                       help="In Angstroms. The actual maximum resolution will be the maximum between this number of 0.5 * previousResolution, meaning that"
                       "in a single step you cannot increase the resolution more than 1/2")
-        form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod!=1 and globalMethod==1',
-                  expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
-        form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod!=1 and globalMethod==1', 
-	              expertLevel=LEVEL_ADVANCED, help="In pixels")
         form.addParam('numberOfPerturbations', IntParam, label="Number of Perturbations", default=1, condition='alignmentMethod!=1',
                   expertLevel=LEVEL_ADVANCED, help="The gallery of reprojections is randomly perturbed this number of times")
         form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=1, condition='alignmentMethod!=1',
@@ -794,15 +791,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                     cleanPath(join(fnDirSignificant,"images_iter001_00.xmd"))
                                     #cleanPath(join(fnDirSignificant,"angles_iter001_00.xmd"))
                                     cleanPath(join(fnDirSignificant,"images_significant_iter001_00.xmd"))
-                            else:
-                                args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0 --number_orientations %d'%\
-                                     (fnGroup,join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get(),
-                                      self.numberOfReplicates.get())
-                                if ctfPresent:
-                                    args+=" --ctf %d@%s"%(j,fnCTFs)
-                                if self.numberOfMpi>1:
-                                    args+=" --mpi_job_size 2"
-                                self.runJob('xmipp_angular_projection_matching',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+                            elif self.globalMethod.get() == self.GLOBAL_GPU_SIGNIFICANT:
+                                args = '-i_ref %s -i_exp %s -o %s --keep_best %d --maxShift %f'%\
+                                       (fnGalleryGroupMd,fnGroup,fnAnglesGroup,self.numberOfReplicates,maxShift)
+                                self.runJob("xmipp_cuda_correlation", args, numberOfMpi=1)
                             if exists(fnAnglesGroup):
                                 if not exists(fnAngles) and exists(fnAnglesGroup):
                                     copyFile(fnAnglesGroup, fnAngles)
@@ -1432,7 +1424,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         summary.append("Symmetry: %s" % self.symmetryGroup.get())
         summary.append("Number of iterations: "+str(self.numberOfIterations))
         if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
-            summary.append("Global alignment, shift search: %f in steps of %f"%(self.shiftSearch5d.get(), self.shiftStep5d.get()))
+            summary.append("Global alignment, max shift=%f"%self.angularMaxShift.get())
         else:
             auxStr="Local alignment, refining: "
             if self.contShift:
@@ -1470,7 +1462,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 strline+="We imposed %s symmetry. "%self.symmetryGroup
             strline += "We performed %d iterations of "%self.numberOfIterations.get()
             if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
-                strline+=" global alignment (shift search: %f in steps of %f pixels)"%(self.shiftSearch5d.get(), self.shiftStep5d.get())
+                strline+=" global alignment (max. shift=%f)"%self.angularMaxShift
             else:
                 strline+=" local alignment, refining "
                 if self.contShift:

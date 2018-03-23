@@ -89,7 +89,7 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 		double offset, double sampling, double x_origin, double y_origin, double z_origin) {
 	// list of numbers smaller than 10000 which have prime decomposition
 	// that does not contain prime number greater than 19
-	// This is the greates prime number that can handle ccp4 fft routine
+	// This is the greatest prime number that can handle ccp4 fft routine
 
 	this->rmin = rmin; //delete voxels closer to the center than this radius
 	this->rmax = rmax; //delete voxels more far away to the center than this radius

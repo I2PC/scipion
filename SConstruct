@@ -31,24 +31,19 @@
 
 
 import os
-from os.path import join, abspath, splitext
-import sys
+from os.path import join
 from itertools import izip
-
-from subprocess import STDOUT, check_call, CalledProcessError
 from glob import glob
-import tarfile
 import fnmatch
 import platform
-import SCons.Script
 import SCons.SConf
-
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
 
 # URL where we have most of our tgz files for libraries, modules and packages.
 URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
+SCIPION_SW = os.environ['SCIPION_SOFTWARE']
 
 # Define our builders
 if LINUX:
@@ -223,7 +218,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     targetName = join(basedir, target if target else prefix + name)
     sources = []
 
-    _libpath.append(Dir('#software/lib').abspath)
+    _libpath.append(Dir(SCIPION_SW + '/lib').abspath)
     
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
@@ -255,7 +250,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     
 
     _incs.append(env['CPPPATH'])
-    _incs.append('#software/include')
+    _incs.append(SCIPION_SW + '/include')
 
     library = env2.SharedLibrary(
               target=targetName,
@@ -559,8 +554,8 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     else: cxxCopy = env['CXX']  
 
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy += env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, 
-                                        Dir('#software/include/python2.7').abspath]
+    incsCopy += env['CPPPATH'] + ['libraries', Dir(SCIPION_SW + '/include').abspath,
+                                        Dir(SCIPION_SW + '/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
@@ -710,7 +705,7 @@ env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-xmippPath = Dir('#software/em/xmipp').abspath
+xmippPath = Dir(SCIPION_SW + '/em/xmipp').abspath
 env['PACKAGE'] = {'NAME': 'xmipp',
                   'SCONSCRIPT': xmippPath
                   }

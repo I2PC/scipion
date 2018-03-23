@@ -312,9 +312,8 @@ def getObjectLabel(pobj, mapper):
 
     label = label.replace("\n"," ")
     if obj is not None:
-        id = obj.getObjId()
-        return label + " (%d)"%obj.getObjId()
-    return label 
+        return label + " (%d)" % obj.getObjId()
+    return label
 
     
 class SubclassesTreeProvider(TreeProvider):
