@@ -1405,7 +1405,7 @@ class FormWindow(Window):
             r += 1
 
         if allowGpu:
-            self._createHeaderLabel(runFrame, "GPUs", bold=True,
+            self._createHeaderLabel(runFrame, "GPU IDs", bold=True,
                                     sticky='ne', row=r, column=0, pady=0)
             gpuFrame = tk.Frame(runFrame, bg='white')
             gpuFrame.grid(row=r, column=1, sticky='new', columnspan=2)
