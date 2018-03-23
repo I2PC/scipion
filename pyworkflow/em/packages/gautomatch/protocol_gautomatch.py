@@ -31,6 +31,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
+from pyworkflow.protocol import STEPS_PARALLEL
 
 from convert import (readSetOfCoordinates, runGautomatch, getProgram,
                      writeDefectsFile, writeMicCoords)
@@ -44,6 +45,10 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
     """
     _label = 'auto-picking'
     _lastUpdateVersion = VERSION_1_1
+
+    def __init__(self, **kwargs):
+        em.ProtParticlePickingAuto.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     # --------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
@@ -76,9 +81,11 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         form.addParam('particleSize', params.IntParam, default=250,
                       label='Particle radius (A)',
                       help="Particle radius in Angstrom")
-        form.addParam('GPUId', params.IntParam, default=0,
-                      label='GPU ID',
-                      help='GPU ID, normally it is 0')
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Choose GPU IDs",
+                      help="GPU ID, normally it is 0. "
+                           "TODO: Document better GPU IDs and threads. ")
 
         form.addSection(label='Advanced')
         form.addParam('advanced', params.BooleanParam, default=True,
@@ -255,6 +262,9 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
 
         self._defineStreamingParams(form)
 
+        # Allow many threads if we can put more than one in a GPU or several GPUs
+        form.addParallelSection(threads=1, mpi=1)
+
     # --------------------------- INSERT steps functions ----------------------
     def _insertInitialSteps(self):
         convId = self._insertFunctionStep('convertInputStep')
@@ -275,21 +285,31 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
             writeDefectsFile(self.inputDefects.get(), self._getDefectsFn())
 
     def _pickMicrograph(self, mic, args):
-        micFn = mic.getFileName()
-        # The coordinates conversion is done for each micrograph
-        # and not in convertInputStep, this is needed for streaming
-        badCoords = self.inputBadCoords.get()
+        self._pickMicrographList([mic], args)
 
-        if self.exclusive and badCoords:
-            fnCoords = os.path.join(self.getMicrographsDir(), '%s_rubbish.star'
-                                    % pwutils.removeBaseExt(micFn))
-            writeMicCoords(mic, badCoords.iterCoordinates(mic), fnCoords)
+    def _pickMicrographList(self, micList, args):
+        """ Pick several micrographs at once, probably a bit more efficient."""
+        micFnList = []
+
+        for mic in micList:
+            micFn = mic.getFileName()
+            micFnList.append(micFn)
+            # The coordinates conversion is done for each micrograph
+            # and not in convertInputStep, this is needed for streaming
+            badCoords = self.inputBadCoords.get()
+
+            if self.exclusive and badCoords:
+                fnCoords = os.path.join(self.getMicrographsDir(), '%s_rubbish.star'
+                                        % pwutils.removeBaseExt(micFn))
+                writeMicCoords(mic, badCoords.iterCoordinates(mic), fnCoords)
+
         # We convert the input micrograph on demand if not in .mrc
-        runGautomatch(micFn,
+        runGautomatch(micFnList,
                       self._getReferencesFn(),
                       self.getMicrographsDir(),
                       args,
-                      env=self._getEnviron())
+                      env=self._getEnviron(),
+                      runJob=self.runJob)
 
     def createOutputStep(self):
         pass
@@ -324,6 +344,9 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
                 errors.append("You have to provide at least "
                               "one set of coordinates ")
                 errors.append("for exclusive picking!")
+
+        # TODO: Validate that not more than one GPU is assigned to a thread
+        # since Gautomatch does not use more than one GPU
 
         return errors
 
@@ -433,7 +456,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         args += ' --diameter %d' % (2 * self.particleSize.get())
         args += ' --lp %d' % self.lowPass
         args += ' --hp %d' % self.highPass
-        args += ' --gid %d' % self.GPUId
+        args += ' --gid %(GPU)s'
 
         if self.inputReferences.get():
             args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()

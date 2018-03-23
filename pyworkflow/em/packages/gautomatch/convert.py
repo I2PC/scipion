@@ -208,18 +208,36 @@ def getProgram():
                         os.path.basename(os.environ['GAUTOMATCH']))
 
 
-def runGautomatch(micName, refStack, workDir, args, env=None):
-    # We convert the input micrograph on demand if not in .mrc
-    outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
-    if micName.endswith('.mrc'):
-        pwutils.createLink(micName, outMic)
-    else:
-        em.ImageHandler().convert(micName, outMic)
+def runGautomatch(micNameList, refStack, workDir, extraArgs, env=None,
+                  runJob=None):
+    """ Run Gautomatch with the given parameters.
+    If micrographs are not .mrc, they will be converted.
+    If runJob=None, it will use pwutils.runJob.
+    """
+    args = ''
+
+    for micName in micNameList:
+        # We convert the input micrograph on demand if not in .mrc
+        outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
+        args += ' %s' % outMic
+        if micName.endswith('.mrc'):
+            pwutils.createLink(micName, outMic)
+        else:
+            em.ImageHandler().convert(micName, outMic)
+
     if refStack is not None:
-        args = ' %s --T %s %s' % (outMic, refStack, args)
-    else:
-        args = ' %s %s' % (outMic, args)
+        args += ' -T %s' % refStack
+
+    args += ' %s' % extraArgs
+
     environ = env if env is not None else getEnviron()
-    pwutils.runJob(None, getProgram(), args, env=environ)
-    # After picking we can remove the temporary file.
-    pwutils.cleanPath(outMic)
+    if runJob is None:
+        pwutils.runJob(None, getProgram(), args, env=environ)
+    else:
+        runJob(getProgram(), args, env=environ)
+
+    for micName in micNameList:
+        # We convert the input micrograph on demand if not in .mrc
+        outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
+        # After picking we can remove the temporary file.
+        pwutils.cleanPath(outMic)
