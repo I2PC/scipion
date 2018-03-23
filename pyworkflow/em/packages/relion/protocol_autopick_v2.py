@@ -34,6 +34,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.utils.properties import Message
 import pyworkflow.utils as pwutils
 import pyworkflow.em.metadata as md
+from pyworkflow.em import getSubsetByDefocus
 
 from protocol_base import ProtRelionBase
 from convert import (writeSetOfMicrographs, writeReferences,
@@ -633,35 +634,10 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
             return inputMics
 
         if self.micrographsSelection == MICS_AUTO:
-            # Lets sort micrograph by defocus and take the equally-space
-            # number of them from the list
-            inputCTFs = self.ctfRelations.get()
-            sortedMicIds = []
-
-            for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
-                itemId = ctf.getObjId()
-                if itemId in inputMics:
-                    sortedMicIds.append(itemId)
-
-            nMics = self.micrographsNumber.get()
-            space = len(sortedMicIds) / (nMics - 1)
-
-            micIds = [sortedMicIds[0], sortedMicIds[-1]]
-            pos = 0
-            while len(micIds) < nMics:  # just add first and last
-                pos += space
-                micIds.insert(1, sortedMicIds[pos])
-        else: # Subset selection
-            micIds = [mic.getObjId() for mic in self.micrographsSubset.get()]
-
-        mics = []
-        for micId in micIds:
-            mic = inputMics[micId]
-
-            if mic is None:
-                raise Exception('Invalid micrograph id: %s' % micId)
-
-            mics.append(mic.clone())
+            mics = getSubsetByDefocus(self.ctfRelations.get(), inputMics,
+                                      self.micrographsNumber.get())
+        else:  # Subset selection
+            mics = [mic.clone() for mic in self.micrographsSubset.get()]
 
         return mics
 
