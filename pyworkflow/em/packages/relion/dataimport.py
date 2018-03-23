@@ -241,6 +241,7 @@ class RelionImport():
                 if micName is None:
                     micName = self.protocol._getExtraPath('fake_micrograph%6d' % micId)
                 mic.setFileName(micName)
+                mic.setMicName(os.path.basename(micName))
                 self.micSet.append(mic)
                 # Update dict with new Micrograph
                 self.micDict[micKey] = mic
@@ -258,7 +259,7 @@ class RelionImport():
             if img.hasCoordinate():
                 coord = img.getCoordinate()
                 coord.setMicId(micId)
-                coord.setMicName(micName)
+                coord.setMicName(os.path.basename(micName))
     
     def loadAcquisitionInfo(self):
         """ Return a dictionary with acquisition values and 

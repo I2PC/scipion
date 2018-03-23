@@ -68,7 +68,6 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
-       ("_phaseShift", xmipp.RLN_CTF_PHASESHIFT),
        ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
        ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
@@ -228,6 +227,17 @@ def objectToRow(obj, row, attrDict, extraLabels=[]):
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
+            value = getattr(obj, attr).get()
+            try:
+                row.setValue(label, valueType(value))
+            except Exception as e:
+                print e
+                print "Problems found converting metadata: "
+                print "Label id = %s" % label
+                print "Attribute = %s" % attr
+                print "Value = %s" % value
+                print "Value type = %s" % valueType
+                raise e
             row.setValue(label, valueType(getattr(obj, attr).get()))
             
     attrLabels = attrDict.values()
@@ -637,7 +647,7 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
-        ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
+
 
     else:
         ctfModel = None

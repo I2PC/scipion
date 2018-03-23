@@ -224,8 +224,13 @@ class TestBrandeisCtffind4(TestBrandeisBase):
         protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
-        
-        valuesList = [[23861, 23664, 53], [22383, 22153, 48.5], [22716, 22526, 54.3]]
+
+        if getVersion(CTFFIND4_APP) == V4_1_10:
+            astigmatism = 91.68
+        else:
+            astigmatism = 54.3
+
+        valuesList = [[23861, 23664, 53], [22383, 22153, 48.5], [22716, 22526, astigmatism]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
