@@ -178,9 +178,6 @@ class ThreadStepExecutor(StepExecutor):
                 for node, gpu in zip(nodes, self.gpuList):
                     self.gpuDict[node] = [gpu]
 
-            import pyworkflow.utils as pwutils
-            pwutils.prettyDict(self.gpuDict)
-
     def getGpuList(self):
         """ Return the GPU list assigned to current thread
         or empty list if not using GPUs. """
