@@ -1,5 +1,6 @@
 /***************************************************************************
- * Authors:     Tomas Majtner (tmajtner@cnb.csic.es)
+ *
+ * Authors:    Amaya Jimenez      ajimenez@cnb.csic.es (2017)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -22,47 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _PROG_ELIMINATE_EMPTY_PARTICLES
-#define _PROG_ELIMINATE_EMPTY_PARTICLES
 
-#include <data/xmipp_program.h>
+#include "xmipp_gpu_utils.h"
 
-class ProgEliminateEmptyParticles: public XmippProgram
-{
-public:
-	/// Name of the input metadata
-    FileName fnIn;
-
-    /// Name of the output metadata
-    FileName fnOut;
-
-    /// Name of the eliminated particle metadata
-    FileName fnElim;
-
-    /// Threshold for variance of variance
-    float threshold;
-
-    /// Add features
-    bool addFeatures;
-
-    /// Turning on denoising
-    bool useDenoising;
-
-    /// Param for denoising
-    int denoise;
-
-public:
-    /// Read input parameters
-    void readParams();
-
-    /// Show
-    void show();
-
-    /// Define input parameters
-    void defineParams();
-
-    /// Execute
-    void run();
-};
-
-#endif

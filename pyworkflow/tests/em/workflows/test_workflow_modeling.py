@@ -24,13 +24,11 @@
 
 # general protocol to test the model building workflow starting from a whole
 # volume or a unit cell extracted from a map volume. Here we are going to test
-# two protocols of rigid fitting (powerfit and chimera) and two protocols of
+# a protocol of rigid fitting (chimera) and two protocols of
 # flexible fitting (coot and refmac), as well as validation programs such as
 # emringer and molprobity
 
 from pyworkflow.em.packages.chimera.protocol_fit import ChimeraProtRigidFit
-from pyworkflow.em.packages.powerfit.protocol_powerfit import \
-    PowerfitProtRigidFit
 from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
     ProtImportVolumes
 from pyworkflow.em.packages.ccp4.protocol_coot import CootRefine
@@ -53,10 +51,11 @@ class TestImportData(TestImportBase):
     def _importVolume(self):
         args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
                 'samplingRate': 1.5,
-                'setDefaultOrigin': True
+                'setOrigCoord': False
                 }
         protImportVol = self.newProtocol(ProtImportVolumes, **args)
-        protImportVol.setObjLabel('volume 1ake_4-5A\n')
+        protImportVol.setObjLabel('import volume 1ake_4-5A\n with default '
+                                  'origin\n')
         self.launchProtocol(protImportVol)
         volume = protImportVol.outputVolume
         return volume
@@ -64,13 +63,14 @@ class TestImportData(TestImportBase):
     def _importVolume2(self):
         args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
                 'samplingRate': 1.5,
-                'setDefaultOrigin': False,
+                'setOrigCoord': True,
                 'x': 11.994,
                 'y': -7.881,
                 'z': 10.91
                 }
         protImportVol = self.newProtocol(ProtImportVolumes, **args)
-        protImportVol.setObjLabel('volume 1ake_4-5A\n')
+        protImportVol.setObjLabel('import volume 1ake_4-5A\n set origin in 11 '
+                                  '-7 10\n')
         self.launchProtocol(protImportVol)
         volume2 = protImportVol.outputVolume
         return volume2
@@ -81,7 +81,7 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/1ake_start.pdb'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('pdb 1ake_start')
+        protImportPDB.setObjLabel('import pdb\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure1_PDB = protImportPDB.outputPdb
         return structure1_PDB
@@ -92,7 +92,7 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/1ake_start.pdb.cif'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('mmCIF 1ake_start')
+        protImportPDB.setObjLabel('import mmCIF\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure1_mmCIF = protImportPDB.outputPdb
         self.assertTrue(structure1_mmCIF.getFileName())
@@ -105,7 +105,7 @@ class TestImportData(TestImportBase):
                 'inputVolume': self._importVolume()
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('pdb 1ake_start')
+        protImportPDB.setObjLabel('import pdb\n volume associated\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure2_PDB = protImportPDB.outputPdb
         self.assertTrue(structure2_PDB.getFileName())
@@ -118,7 +118,8 @@ class TestImportData(TestImportBase):
                 'inputVolume': self._importVolume()
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('mmCIF 1ake_start')
+        protImportPDB.setObjLabel('import mmCIF\n volume associated\n '
+                                  '1ake_start')
         self.launchProtocol(protImportPDB)
         structure2_mmCIF = protImportPDB.outputPdb
         self.assertTrue(structure2_mmCIF.getFileName())
@@ -130,7 +131,7 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/1ake_mut1.pdb'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('pdb 1ake_mut1')
+        protImportPDB.setObjLabel('import pdb\n 1ake_mut1')
         self.launchProtocol(protImportPDB)
         structure3_PDB = protImportPDB.outputPdb
         return structure3_PDB
@@ -141,7 +142,7 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/1ake_mut2.pdb'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('pdb 1ake_mut2')
+        protImportPDB.setObjLabel('import pdb\n 1ake_mut2')
         self.launchProtocol(protImportPDB)
         structure4_PDB = protImportPDB.outputPdb
         return structure4_PDB
@@ -152,138 +153,23 @@ class TestImportData(TestImportBase):
                         'PDBx_mmCIF/scipionOut0001.pdb')
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('pdb_coot')
+        protImportPDB.setObjLabel('import pdb\n coot')
         self.launchProtocol(protImportPDB)
         structureCoot_PDB = protImportPDB.outputPdb
         self.assertTrue(structureCoot_PDB.getFileName())
         return structureCoot_PDB
 
-
-class TestPowerFit(TestImportData):
-    """ Test the rigid fit of power fit protocol
-    """
-
-    def testPowerFitFromVolAndPDB(self):
-        print "Run powerfit from imported volume and pdb file"
-        # This test checks that powerfit runs with a volume provided
-        # directly as inputVol
-
-        args = {'resolution': 2.,
-                'angleStep': 10.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        volume = self._importVolume()
-        protPower.inputVol.set(volume)
-        structure1_PDB = self._importStructurePDBWoVol()
-        protPower.inputPDB.set(structure1_PDB)
-        self.launchProtocol(protPower)
-        self.assertIsNotNone(protPower.outputPDBs.getFileName(),
-                             "There was a problem with the alignment")
-
-    def testPowerFitFromVolAndmmCIF(self):
-        print "Run powerfit from imported volume and mmCIF file"
-        # This test checks that powerfit runs with a volume provided
-        # directly as inputVol
-
-        args = {'resolution': 2.,
-                'angleStep': 10.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        volume = self._importVolume()
-        protPower.inputVol.set(volume)
-        structure1_mmCIF = self._importStructuremmCIFWoVol()
-        protPower.inputPDB.set(structure1_mmCIF)
-        self.launchProtocol(protPower)
-        self.assertIsNotNone(protPower.outputPDBs.getFileName(),
-                             "There was a problem with the alignment")
-
-    def testPowerFitFromVolAssocToPDB(self):
-        print "Run powerfit from imported pdb file and volume associated"
-        # This test checks that powerfit runs when a volume is provided
-        # associated to the imput PDB and not directly as inputVol
-
-        args = {'resolution': 2.,
-                'angleStep': 10.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        structure2_PDB = self._importStructurePDBWithVol()
-        protPower.inputPDB.set(structure2_PDB)
-        self.launchProtocol(protPower)
-        self.assertIsNotNone(protPower.outputPDBs.getFileName(),
-                             "There was a problem with the alignment")
-
-    def testPowerFitFromVolAssocTommCIF(self):
-        print "Run powerfit from imported mmCIF file and volume associated"
-        # This test checks that powerfit runs when a volume is provided
-        # associated to the imputPDB and not directly as inputVol
-
-        args = {'resolution': 2.,
-                'angleStep': 10.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        structure2_mmCIF = self._importStructuremmCIFWithVol()
-        protPower.inputPDB.set(structure2_mmCIF)
-        self.launchProtocol(protPower)
-        self.assertIsNotNone(protPower.outputPDBs.getFileName(),
-                             "There was a problem with the alignment")
-
-    def testPowerFitFromPDBWithoutVol(self):
-        print "Run powerfit from imported pdb file without imported or " \
-              "pdb-associated volume"
-        # This test corroborates that powerfit does not run unless a volume
-        # is provided (directly as inputVol or associated to the imputPDB)
-
-        structure1_PDB = self._importStructurePDBWoVol()
-        self.assertTrue(structure1_PDB.getFileName())
-        self.assertFalse(structure1_PDB.getVolume())
-
-        args = {'resolution': 2.,
-                'angleStep': 10.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        protPower.inputPDB.set(structure1_PDB)
-
-        try:
-            self.launchProtocol(protPower)
-        except Exception as e:
-            self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - rigid fit"
-
-            return
-        self.assertTrue(False)
-
-    def testPowerFitFrommmCIFWithoutVol(self):
-        print "Run powerfit from imported mmCIF file without imported or " \
-              "mmCIF-associated volume"
-        # This test corroborates that powerfit does not run unless a volume
-        # is provided (directly as inputVol or associated to the imputPDB)
-
-        structure1_mmCIF = self._importStructuremmCIFWoVol()
-        self.assertTrue(structure1_mmCIF.getFileName())
-        self.assertFalse(structure1_mmCIF.getVolume())
-
-        args = {'resolution': 2.,
-                'angleStep': 10.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        protPower.inputPDB.set(structure1_mmCIF)
-
-        try:
-            self.launchProtocol(protPower)
-        except Exception as e:
-            self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - rigid fit"
-
-            return
-        self.assertTrue(False)
+    def _createExtraCommandLine(self, x, y, z):
+        if (x != 0. or y != 0. or z != 0.):
+            return """translate_molecule_by(0, %f, %f, %f)
+fit_molecule_to_map_by_random_jiggle(0,7000,2)
+scipion_write()
+coot_real_exit(0)
+""" % (x, y, z)
+        else:
+            return """scipion_write()
+coot_real_exit(0)
+"""
 
 
 class TestChimeraFit(TestImportData):
@@ -316,6 +202,8 @@ class TestChimeraFit(TestImportData):
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit,
                                        **args)
+        protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
+                                'and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
@@ -343,6 +231,8 @@ class TestChimeraFit(TestImportData):
                 'pdbFileToBeRefined': structure1_mmCIF
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume and mmCIF\n save volume '
+                                'and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
@@ -367,6 +257,8 @@ class TestChimeraFit(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
+                                'save volume and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
@@ -391,6 +283,8 @@ class TestChimeraFit(TestImportData):
                 'pdbFileToBeRefined': structure2_mmCIF
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n mmCIF and associated volume\n '
+                                'save volume and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
@@ -410,6 +304,7 @@ class TestChimeraFit(TestImportData):
 
         protChimera = self.newProtocol(ChimeraProtRigidFit)
         protChimera.pdbFileToBeRefined.set(structure1_PDB)
+        protChimera.setObjLabel('chimera fit\n no volume\n associated to pdb')
 
         try:
             self.launchProtocol(protChimera)
@@ -433,6 +328,7 @@ class TestChimeraFit(TestImportData):
         self.assertFalse(structure1_mmCIF.getVolume())
         protChimera = self.newProtocol(ChimeraProtRigidFit)
         protChimera.pdbFileToBeRefined.set(structure1_mmCIF)
+        protChimera.setObjLabel('chimera fit\n no volume\n associated to mmCIF')
 
         try:
             self.launchProtocol(protChimera)
@@ -443,45 +339,6 @@ class TestChimeraFit(TestImportData):
 
             return
         self.assertTrue(False)
-
-    def testChimeraFitFromPDBFromPowerFitWithSavingVol(self):
-        # This test checks that chimera runs when a volume is provided
-        # associated to the input PDB file and not directly as inputVol
-        # PDB file created by powerfit as a set of PDBs
-        print "Run Chimera fit from PDB file saved from PowerFit"
-
-        # Powerfit
-        args = {'resolution': 2.,
-                'angleStep': 45.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        volume = self._importVolume()
-        protPower.inputVol.set(volume)
-        structure1_PDB = self._importStructurePDBWoVol()
-        protPower.inputPDB.set(structure1_PDB)
-        self.launchProtocol(protPower)
-
-        # chimera fit
-        structure2_PDB = protPower.outputPDBs.getFirstItem()
-
-        # trick to save a single PDB from the set of PDBs
-        protPower._defineOutputs(outputPDB2s=structure2_PDB)
-
-        extraCommands = ""
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "saverefmodel 1')\n"
-        extraCommands += "runCommand('stop')\n"
-
-        args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': structure2_PDB
-                }
-
-        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
-        self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
-                             "There was a problem with the alignment")
 
     def testChimeraFitFromVolAssocToPDBPlusPDBsWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
@@ -511,6 +368,8 @@ class TestChimeraFit(TestImportData):
                 'inputPdbFiles': _pdbFiles
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
+                                'plus other pdbs\n save volume and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
@@ -538,6 +397,8 @@ class TestChimeraFit(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel("chimera fit \npdb and volume\n save volume "
+                                "and model")
         self.launchProtocol(protChimera)
         structure2_PDB = protChimera.outputPdb_01
 
@@ -551,6 +412,11 @@ class TestChimeraFit(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel("chimera fit\n pdb and associated volume\n ("
+                                "just moves the structure\nto "
+                                "the starting position) "
+                                "\nsave "
+                                "volume and model")
         self.launchProtocol(protChimera)
         structure3_PDB = protChimera.outputPdb_01
         extraCommands = ""
@@ -558,85 +424,39 @@ class TestChimeraFit(TestImportData):
                          "coord #1')\n"
         extraCommands += "runCommand('fitmap #2 #1')\n"
         extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "saverefmodel 1')\n"
+                         "saverefmodel 0')\n"
         extraCommands += "runCommand('stop')\n"
         args = {'extraCommands': extraCommands,
-                'inputVolume': volume,
                 'pdbFileToBeRefined': structure3_PDB,
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel("chimera fit\n pdb and associated volume\n "
+                                "save only model")
+        self.launchProtocol(protChimera)
+
+        structure4_PDB = protChimera.outputPdb_01
+        extraCommands = ""
+        extraCommands += "runCommand('volume #1 voxelSize 1.55')\n"
+        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
+                         "saverefmodel 1')\n"
+        extraCommands += "runCommand('stop')\n"
+        args = {'extraCommands': extraCommands,
+                'pdbFileToBeRefined': structure4_PDB,
+                }
+        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel("chimera fit \n pdb and associated "
+                                "volume\n volume resampled\n save volume "
+                                "and model\n")
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protChimera.outputPdb_01.
                                        getVolume().getFileName()))
 
-    def testChimeraFitFromVolAssocToPDBPlusPDBsFromPowerfit(self):
-        # This test checks that chimera runs when a volume is provided
-        # associated to the input PDB and several PDB files are added,
-        # one of them generated from powerfit rigid fit protocol
-        print "Run Chimera fit from imported pdb file and volume associated " \
-              "and addition of other three pdb files (one of them generated " \
-              "by Powerfit)"
-
-        structure2_PDB = self._importStructurePDBWithVol()
-        structure3_PDB = self._importMut1StructurePDBWoVol()
-        structure4_PDB = self._importMut2StructurePDBWoVol()
-
-        # Powerfit
-        args = {'resolution': 2.,
-                'angleStep': 45.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        volume = self._importVolume()
-        protPower.inputVol.set(volume)
-        structure1_PDB = self._importStructurePDBWoVol()
-        protPower.inputPDB.set(structure1_PDB)
-        self.launchProtocol(protPower)
-
-        # chimera fit
-        structure5_PDB = protPower.outputPDBs.getFirstItem()
-        protPower._defineOutputs(outputPDB2s=structure5_PDB)
-
-        _pdbFiles = []
-        _pdbFiles.append(structure3_PDB)
-        _pdbFiles.append(structure4_PDB)
-        _pdbFiles.append(structure5_PDB)
-
-        extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "saverefmodel 1')\n"
-        extraCommands += "runCommand('stop')\n"
-
-        args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': structure2_PDB,
-                'inputPdbFiles': _pdbFiles
-                }
-        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
-        self.launchProtocol(protChimera)
-        self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
-                             "There was a problem with the alignment")
-
 
 class TestCootRefinement(TestImportData):
     """ Test the flexible fitting of coot refinement protocol
     """
-
-    def _createExtraCommandLine(self, x, y, z):
-        if (x != 0. or y != 0. or z != 0.):
-            return """translate_molecule_by(0, %f, %f, %f)
-fit_molecule_to_map_by_random_jiggle(0,7000,2)
-scipion_write()
-coot_real_exit(0)
-""" % (x, y, z)
-        else:
-            return """scipion_write()
-coot_real_exit(0)
-"""
 
     def testCootFlexibleFitFromPDB(self):
         """ This test checks that coot runs with an atomic structure;
@@ -654,6 +474,7 @@ coot_real_exit(0)
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n no volume\n associated to pdb')
 
         try:
             self.launchProtocol(protCoot)
@@ -685,6 +506,8 @@ coot_real_exit(0)
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and unfitted pdb\n '
+                             'save model')
         self.launchProtocol(protCoot)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
                              "There was a problem with the alignment")
@@ -717,6 +540,8 @@ coot_real_exit(0)
                 'pdbFileToBeRefined': structure_PDB
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume and pdb\n '
+                             'save volume and model')
         self.launchProtocol(protChimera)
 
         structure2_PDB = protChimera.outputPdb_01
@@ -729,6 +554,8 @@ coot_real_exit(0)
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and fitted pdb\n '
+                             'save model')
 
         self.launchProtocol(protCoot)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
@@ -763,6 +590,8 @@ coot_real_exit(0)
                 'pdbFileToBeRefined': structure_PDB
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume and pdb\n '
+                             'save volume and model')
         self.launchProtocol(protChimera)
 
         structure2_PDB = protChimera.outputPdb_01
@@ -772,6 +601,8 @@ coot_real_exit(0)
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n pdb and associated volume\n '
+                             'save model')
 
         self.launchProtocol(protCoot)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
@@ -805,6 +636,8 @@ coot_real_exit(0)
                 'pdbFileToBeRefined': structure_PDB
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume and pdb\n save '
+                                'volume and model')
         self.launchProtocol(protChimera)
 
         volume2 = protChimera.output3Dmap
@@ -818,6 +651,8 @@ coot_real_exit(0)
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n two volumes and pdb\n '
+                             'save model')
 
         self.launchProtocol(protCoot)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
@@ -826,85 +661,17 @@ coot_real_exit(0)
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
-    def testCootFitFromPDBFromPowerFitAndChimera(self):
-        # This test checks that coot runs when a volume is provided
-        # associated to the input PDB file after Powerfit and Chimera
-        # workflow, and not directly as inputVol
-        print "Run Coot fit from PDB file saved from PowerFit/Chimera"
-
-        # Powerfit
-        args = {'resolution': 2.,
-                'angleStep': 45.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
-        volume = self._importVolume()
-        protPower.inputVol.set(volume)
-        structure1_PDB = self._importStructurePDBWoVol()
-        protPower.inputPDB.set(structure1_PDB)
-        self.launchProtocol(protPower)
-
-        # chimera fit
-        structure2_PDB = protPower.outputPDBs.getFirstItem()
-
-        # trick to save a single PDB from the set of PDBs
-        protPower._defineOutputs(outputPDB2s=structure2_PDB)
-
-        extraCommands = ""
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "saverefmodel 1')\n"
-        extraCommands += "runCommand('stop')\n"
-
-        args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': structure2_PDB
-                }
-
-        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
-        self.launchProtocol(protChimera)
-
-        structure3_PDB = protChimera.outputPdb_01
-        volume = protChimera.output3Dmap
-
-        listVolCoot = [volume]
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
-                'inputVolumes': listVolCoot,
-                'pdbFileToBeRefined': structure3_PDB,
-                'doInteractive': False
-                }
-        protCoot = self.newProtocol(CootRefine, **args)
-
-        self.launchProtocol(protCoot)
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
-                             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
-        self.assertTrue(
-            os.path.exists(protCoot.output3DMap_0001.getFileName()))
-
-    def testCootFitFromPDBFromPowerFitAndChimera_2(self):
-        # This test checks that coot runs when a volume is provided
-        # associated to the input PDB file after Powerfit and Chimera
+    def testCootFitFromPDBFromChimera_2(self):
+        # This test checks that coot runs once when a volume is provided
+        # associated to the input PDB file after Chimera
         # workflow, and not directly as inputVol
         # starting volume with a different coordinate origin
-        print "Run Coot fit from PDB file saved from PowerFit/Chimera_2"
+        print "Run Coot fit from PDB file saved from Chimera_2"
 
-        # Powerfit
-        args = {'resolution': 2.,
-                'angleStep': 45.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
         volume2 = self._importVolume2()
-        protPower.inputVol.set(volume2)
         structure1_PDB = self._importStructurePDBWoVol()
-        protPower.inputPDB.set(structure1_PDB)
-        self.launchProtocol(protPower)
 
         # chimera fit
-        structure2_PDB = protPower.outputPDBs.getFirstItem()
-
-        # trick to save a single PDB from the set of PDBs
-        protPower._defineOutputs(outputPDB2s=structure2_PDB)
 
         extraCommands = ""
         extraCommands += "runCommand('fitmap #2 #1')\n"
@@ -913,10 +680,13 @@ coot_real_exit(0)
         extraCommands += "runCommand('stop')\n"
 
         args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': structure2_PDB
+                'inputVolume': volume2,
+                'pdbFileToBeRefined': structure1_PDB
                 }
 
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n pdb and volume associated\n '
+                             'save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -929,6 +699,8 @@ coot_real_exit(0)
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n '
+                             'save model')
 
         self.launchProtocol(protCoot)
         self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
@@ -938,29 +710,16 @@ coot_real_exit(0)
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
     def testMultipleCootFit(self):
-        # This test checks that coot runs when a volume is provided
-        # associated to the input PDB file after Powerfit and Chimera
+        # This test checks that coot runs twice when a volume is provided
+        # associated to the input PDB file after Chimera
         # workflow, and not directly as inputVol
         # starting volume with a different coordinate origin
-        print "Run Coot fit from PDB file saved from PowerFit/Chimera_2"
+        print "Run Coot fit from PDB file saved from Chimera_2"
 
-        # Powerfit
-        args = {'resolution': 2.,
-                'angleStep': 45.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
         volume2 = self._importVolume2()
-        protPower.inputVol.set(volume2)
         structure1_PDB = self._importStructurePDBWoVol()
-        protPower.inputPDB.set(structure1_PDB)
-        self.launchProtocol(protPower)
 
         # chimera fit
-        structure2_PDB = protPower.outputPDBs.getFirstItem()
-
-        # trick to save a single PDB from the set of PDBs
-        protPower._defineOutputs(outputPDB2s=structure2_PDB)
 
         extraCommands = ""
         extraCommands += "runCommand('fitmap #2 #1')\n"
@@ -969,10 +728,13 @@ coot_real_exit(0)
         extraCommands += "runCommand('stop')\n"
 
         args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': structure2_PDB
+                'inputVolume': volume2,
+                'pdbFileToBeRefined': structure1_PDB
                 }
 
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
+                             'save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -985,6 +747,8 @@ coot_real_exit(0)
                 'doInteractive': True
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume pdb\n '
+                             'save model twice')
         try:
             self.launchProtocol(protCoot)
         except:
@@ -1018,8 +782,12 @@ class TestRefmacRefinement(TestImportData):
         structure_PDB = self._importStructurePDBWoVol()
         self.assertTrue(structure_PDB.getFileName())
         self.assertFalse(structure_PDB.getVolume())
+        args = {'inputStructure': structure_PDB
+                }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n no volume associated '
+                               'to pdb\n save model')
 
         try:
             self.launchProtocol(protRefmac)
@@ -1054,6 +822,7 @@ class TestRefmacRefinement(TestImportData):
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
 
         # refmac
@@ -1061,8 +830,10 @@ class TestRefmacRefinement(TestImportData):
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB
                 }
-
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
+                               'model')
+        self.launchProtocol(protRefmac)
         self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
@@ -1093,6 +864,8 @@ class TestRefmacRefinement(TestImportData):
                 'pdbFileToBeRefined': structure_PDB
                 }
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
+                                'and model')
         self.launchProtocol(protChimera)
 
         structure2_PDB = protChimera.outputPdb_01
@@ -1105,7 +878,7 @@ class TestRefmacRefinement(TestImportData):
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
-
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
 
         # refmac
@@ -1115,35 +888,25 @@ class TestRefmacRefinement(TestImportData):
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
+                               'model')
+        self.launchProtocol(protRefmac)
         self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
 
     def testRefmacRefinementAfterMultipleCootFit(self):
         # This test checks that refmac runs when a volume provided
-        # by (Powerfit and Chimera) workflow
+        # by Chimera workflow
         # the PDB is provided by Coot
         # starting volume with a different coordinate origin
         print "Run Refmac refinement from PDB file saved from " \
-              "PowerFit/Chimera_2/Coot"
+              "Chimera_2/Coot"
 
-        # Powerfit
-        args = {'resolution': 2.,
-                'angleStep': 45.,
-                'nModels': 3.
-                }
-        protPower = self.newProtocol(PowerfitProtRigidFit, **args)
         volume2 = self._importVolume2()
-        protPower.inputVol.set(volume2)
         structure1_PDB = self._importStructurePDBWoVol()
-        protPower.inputPDB.set(structure1_PDB)
-        self.launchProtocol(protPower)
 
         # chimera fit
-        structure2_PDB = protPower.outputPDBs.getFirstItem()
-
-        # trick to save a single PDB from the set of PDBs
-        protPower._defineOutputs(outputPDB2s=structure2_PDB)
 
         extraCommands = ""
         extraCommands += "runCommand('fitmap #2 #1')\n"
@@ -1152,10 +915,13 @@ class TestRefmacRefinement(TestImportData):
         extraCommands += "runCommand('stop')\n"
 
         args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': structure2_PDB
+                'inputVolume': volume2,
+                'pdbFileToBeRefined': structure1_PDB
                 }
 
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume associated '
+                               'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -1168,6 +934,8 @@ class TestRefmacRefinement(TestImportData):
                 'doInteractive': True
                 }
         protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
+                             'save model')
         try:
             self.launchProtocol(protCoot)
         except:
@@ -1188,6 +956,9 @@ class TestRefmacRefinement(TestImportData):
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and '
+                               'pdb\n save model')
+        self.launchProtocol(protRefmac)
         self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))

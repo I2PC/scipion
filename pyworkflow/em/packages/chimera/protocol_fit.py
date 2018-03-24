@@ -27,9 +27,11 @@
 # **************************************************************************
 
 from protocol_operate import ChimeraProtOperate
+from pyworkflow.em.packages.chimera.protocol_base import ChimeraProtBase
 
 
-class ChimeraProtRigidFit(ChimeraProtOperate):
+
+class ChimeraProtRigidFit(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]
         [saverefmodel 0|1]* from command line in order to transferm fitted
@@ -37,6 +39,17 @@ class ChimeraProtRigidFit(ChimeraProtOperate):
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
     _label = 'chimera rigid fit'
+
+    def _defineParams(self, form):
+        super(ChimeraProtRigidFit, self)._defineParams(form)
+        param = form.getParam('pdbFileToBeRefined')
+        param.label.set('PDBx/mmCIF file to be refined')
+        param.help.set('PDBx/mmCIF file to be refined. ')
+        param = form.getParam('inputPdbFiles')
+        param.label.set('Other reference PDBx/mmCIF files')
+        param.help.set('Other PDBx/mmCIF files used as reference.')
+
+        # --------------------------- INSERT steps functions --------------------
 
     def prerequisitesStep(self):
         """

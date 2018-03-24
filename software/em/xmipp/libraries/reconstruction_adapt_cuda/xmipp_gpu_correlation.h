@@ -1,5 +1,6 @@
 /***************************************************************************
- * Authors:     Tomas Majtner (tmajtner@cnb.csic.es)
+ *
+ * Authors:    Amaya Jimenez      ajimenez@cnb.csic.es (2017)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -21,48 +22,43 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
-#ifndef _PROG_ELIMINATE_EMPTY_PARTICLES
-#define _PROG_ELIMINATE_EMPTY_PARTICLES
+#ifndef _PROG_GPU_CORRELATION
+#define _PROG_GPU_CORRELATION
 
 #include <data/xmipp_program.h>
 
-class ProgEliminateEmptyParticles: public XmippProgram
+class ProgGpuCorrelation: public XmippProgram
 {
-public:
-	/// Name of the input metadata
-    FileName fnIn;
+private:
+    //Input file
+	FileName fn_ref, fn_exp, fn_out, fnDir, fn_classes_out;
 
-    /// Name of the output metadata
-    FileName fnOut;
+	bool generate_out;
 
-    /// Name of the eliminated particle metadata
-    FileName fnElim;
-
-    /// Threshold for variance of variance
-    float threshold;
-
-    /// Add features
-    bool addFeatures;
-
-    /// Turning on denoising
-    bool useDenoising;
-
-    /// Param for denoising
-    int denoise;
+	int n_keep;
+	bool significance, keepN, simplifiedMd;
+	double alpha;
+	int maxShift;
+	int sizePad;
 
 public:
-    /// Read input parameters
+    //Input metadata file
+    MetaData SF, SFexp;
+
+    /// Read argument from command line
     void readParams();
 
     /// Show
     void show();
 
-    /// Define input parameters
+    /// Define parameters
     void defineParams();
 
-    /// Execute
-    void run();
-};
+    //void preProcess();
 
+    /** processImage */
+    void run();
+
+};
+//@}
 #endif

@@ -72,6 +72,10 @@ from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
+#AJ
+from protocol_classification_gpuCorr import XmippProtGpuCrrCL2D
+from protocol_classification_gpuCorr_semi import XmippProtStrGpuCrrSimple
+#END
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
 from protocol_compare_angles import XmippProtCompareAngles
@@ -117,6 +121,7 @@ from protocol_rotational_symmetry import XmippProtRotationalSymmetry
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_solid_angles import XmippProtSolidAngles
 from protocol_split_volume import XmippProtSplitvolume
+from protocol_trigger_data import XmippProtTriggerData
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting
 # from protocol_validate_tilt import XmippProtValidateTilt

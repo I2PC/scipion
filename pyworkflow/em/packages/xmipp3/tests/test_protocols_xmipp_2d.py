@@ -428,6 +428,53 @@ class TestXmippPreprocessParticles(TestXmippBase):
         self.assertIsNotNone(protPreproc.outputParticles,
                              "There was a problem with preprocess particles")
 
+from pyworkflow.protocol import getProtocolFromDb
+class TestXmippTriggerParticles(TestXmippBase):
+    """This class check if the protocol to trigger particles in Xmipp works properly."""
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+
+    def _updateProtocol(self, prot):
+        prot2 = getProtocolFromDb(prot.getProject().path,
+                                  prot.getDbPath(),
+                                  prot.getObjId())
+        # Close DB connections
+        prot2.getProject().closeMapper()
+        prot2.closeMappers()
+        return prot2
+
+    def test_triggerPart(self):
+        print("Start Streaming Particles")
+        protStream = self.newProtocol(ProtCreateStreamData, setof=3,
+                                      creationInterval=2, nDim=76, groups=10)
+        protStream.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protStream, wait=False)
+
+        while not protStream.hasAttribute('outputParticles'):
+            time.sleep(3)
+            protStream = self._updateProtocol(protStream)
+
+        print("Run Trigger Particles")
+        protTrigger = self.newProtocol(XmippProtTriggerData,
+                                       allParticles=False, outputSize=50,
+                                       checkInterval=2)
+        protTrigger.inputParticles.set(protStream.outputParticles)
+        self.proj.launchProtocol(protTrigger, wait=False)
+
+        protTrigger2 = self.newProtocol(XmippProtTriggerData,
+                                       allParticles=True, outputSize=50,
+                                       checkInterval=2)
+        protTrigger2.inputParticles.set(protStream.outputParticles)
+        self.launchProtocol(protTrigger2)
+
+        protTrigger = self._updateProtocol(protTrigger)
+        self.assertEqual(protTrigger.outputParticles.getSize(), 50)
+        self.assertEqual(protTrigger2.outputParticles.getSize(), 76)
+
 
 class TestXmippCropResizeParticles(TestXmippBase):
     """Check protocol crop/resize particles from Xmipp."""
