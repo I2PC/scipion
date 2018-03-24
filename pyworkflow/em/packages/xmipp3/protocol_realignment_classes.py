@@ -54,6 +54,12 @@ class XmippProtReAlignClasses(ProtClassify2D):
                       important=True,
                       label="Input Classes",
                       help='Set of classes to be realing')
+        form.addParam('inputMics', params.PointerParam,
+                      pointerClass='SetOfMicrographs',
+                      important=True,
+                      label="Set of micrographs",
+                      help='Set of micrographs related to the selected input '
+                           'classes')
         form.addParallelSection(threads=0, mpi=0)
 
     # --------------------------- INSERT steps functions -----------------------
@@ -157,6 +163,8 @@ class XmippProtReAlignClasses(ProtClassify2D):
 
 
     def createOutputStep(self):
+        import time
+        time.sleep(15)
         inputParticles = self.inputClasses.get().getImages()
         outputClasses = self._createSetOfClasses2D(inputParticles) # ??
         self._fillClasses(outputClasses)  # Tendre que crear mi propia funcion para rellenar clases??
@@ -166,10 +174,15 @@ class XmippProtReAlignClasses(ProtClassify2D):
 
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
-        self._fillParticles(outputParticles)
+        outputCoords = self._createSetOfCoordinates(self.inputMics.get())
+        self._fillParticles(outputParticles, outputCoords)
         result = {'outputParticles': outputParticles}
         self._defineOutputs(**result)
         self._defineSourceRelation(self.inputClasses, outputParticles)
+
+        result = {'outputCoordinates': outputCoords}
+        self._defineOutputs(**result)
+        self._defineSourceRelation(self.inputClasses, outputCoords)
 
 
     # --------------------------- UTILS functions ------------------------------
@@ -208,13 +221,15 @@ class XmippProtReAlignClasses(ProtClassify2D):
                 newClass.setAlignment2D()
                 outputClasses.update(newClass)
 
-    def _fillParticles(self, outputParticles):
+    def _fillParticles(self, outputParticles, outputCoords):
         """ Create the SetOfParticles """
         myParticles = md.MetaData(self._getExtraPath('final_images.xmd'))
         outputParticles.enableAppend()
+        outputCoords.enableAppend()
         for row in md.iterRows(myParticles):
             p = rowToParticle(row)
             outputParticles.append(p)
+            outputCoords.append(p.getCoordinate())
 
 
 
