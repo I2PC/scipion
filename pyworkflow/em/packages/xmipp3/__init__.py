@@ -122,6 +122,7 @@ from protocol_rotational_symmetry import XmippProtRotationalSymmetry
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_solid_angles import XmippProtSolidAngles
 from protocol_split_volume import XmippProtSplitvolume
+from protocol_trigger_data import XmippProtTriggerData
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting
 # from protocol_validate_tilt import XmippProtValidateTilt
