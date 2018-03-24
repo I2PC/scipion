@@ -38,7 +38,7 @@ from os.path import join, exists
 from os import mkdir, remove, listdir
 import pyworkflow.protocol.constants as const
 from pyworkflow.em import SetOfClasses2D, ALIGN_2D, ALIGN_NONE
-from pyworkflow.em.data import Class2D, Particle
+from pyworkflow.em.data import Class2D, Particle, Coordinate
 import numpy as np
 
 
@@ -175,7 +175,8 @@ class XmippProtReAlignClasses(ProtClassify2D):
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
         outputCoords = self._createSetOfCoordinates(self.inputMics.get())
-        self._fillParticles(outputParticles, outputCoords)
+
+        self._fillParticles(outputParticles, outputCoords, inputParticles)
         result = {'outputParticles': outputParticles}
         self._defineOutputs(**result)
         self._defineSourceRelation(self.inputClasses, outputParticles)
@@ -221,19 +222,50 @@ class XmippProtReAlignClasses(ProtClassify2D):
                 newClass.setAlignment2D()
                 outputClasses.update(newClass)
 
-    def _fillParticles(self, outputParticles, outputCoords):
-        """ Create the SetOfParticles """
+    def _fillParticles(self, outputParticles, outputCoords, inputParticles):
+        """ Create the SetOfParticles and SetOfCoordinates"""
         myParticles = md.MetaData(self._getExtraPath('final_images.xmd'))
         outputParticles.enableAppend()
         outputCoords.enableAppend()
+
+        scale = inputParticles.getSamplingRate() / \
+                self.inputMics.get().getSamplingRate()
+        micDictname = {}
+        micDictId = {}
+        for mic in self.inputMics.get():
+            micKey = mic.getMicName()
+            micDictname[micKey] = mic.clone()
+            micKey2 = mic.getObjId()
+            micDictId[micKey2] = mic.clone()
+
         for row in md.iterRows(myParticles):
             p = rowToParticle(row)
             outputParticles.append(p)
-            outputCoords.append(p.getCoordinate())
+
+            newCoord = Coordinate()
+            coord = p.getCoordinate()
+            if coord.getMicName() is not None:
+                micKey = coord.getMicName()
+                micDict = micDictname
+            else:
+                micKey = coord.getMicId()
+                micDict = micDictId
+            mic = micDict.get(micKey, None)
+            if mic is None:
+                print "Skipping particle, key %s not found" % micKey
+            else:
+                newCoord.copyObjId(p)
+                x, y = coord.getPosition()
+                newCoord.setPosition(x * scale, y * scale)
+                newCoord.setMicrograph(mic)
+                outputCoords.append(newCoord)
+
+        boxSize = inputParticles.getXDim() * scale
+        outputCoords.setBoxSize(boxSize)
 
 
 
-    # --------------------------- INFO functions -------------------------------
+            # --------------------------- INFO functions -------------------------------
     def _validate(self):
         pass
 
