@@ -844,14 +844,14 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                 system('cat %s %s >> %s'%(dataHeader, aux, fnOut))
                 if num==1:
                     system('cat %s >> %s' % (fn,
-                                             self._getExtraPath('last_images.xmd')))
+                                        self._getExtraPath('last_images.xmd')))
                 else:
                     system('cat %s >> %s' %(aux,
-                                            self._getExtraPath('last_images.xmd')))
+                                        self._getExtraPath('last_images.xmd')))
                 cleanPath(aux)
                 cleanPath(dataHeader)
                 system('cat %s >> %s' % (fnOut,
-                                         self._getExtraPath('last_classes.xmd')))
+                                        self._getExtraPath('last_classes.xmd')))
 
 
     def _unionDataClass(self, fn, refOld, refNew):
