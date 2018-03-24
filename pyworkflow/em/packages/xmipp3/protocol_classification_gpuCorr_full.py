@@ -97,7 +97,7 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
                       help='The threshold in the number of images assigned '
                            'to one class to make a spliting of that class',
                       expertLevel=const.LEVEL_ADVANCED)
-        form.addParam('blockSize', params.IntParam, default=4000,
+        form.addParam('blockSize', params.IntParam, default=5000,
                       label='Block size',
                       help='The inputs will be processed in a block-by-block '
                            'basis of this size',
@@ -114,6 +114,8 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
         """" Mainly prepare the command line for calling cuda corrrelation
         program"""
 
+        import time
+        time.sleep(15)
         self._readingCheckPoint()
 
         self.listInFn = []
