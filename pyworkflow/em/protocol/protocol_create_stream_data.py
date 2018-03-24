@@ -244,6 +244,8 @@ class ProtCreateStreamData(EMProtocol):
             newObjSet.setFramesRange(self.inputMovies.get().getFramesRange())
 
         # check if end ....
+        if self.setof != SET_OF_PARTICLES:
+            self.nDims = self.nDim.get()
         endObjs = newObjSet.getSize() == self.nDims
 
         if newObj:
