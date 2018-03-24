@@ -113,9 +113,6 @@ class XmippProtStrGpuCrrCL2D(ProtAlign2D):
     def _insertAllSteps(self):
         """" Mainly prepare the command line for calling cuda corrrelation
         program"""
-
-        import time
-        time.sleep(15)
         self._readingCheckPoint()
 
         self.listInFn = []
