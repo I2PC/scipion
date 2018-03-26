@@ -399,6 +399,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	size_t volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
 	parent->tempVolumeGPU = new float[volumeSize * 2];
 	parent->tempWeightsGPU = new float[volumeSize];
+	parent->tempVolumeGPUtmp = new float[volumeSize * 2];
+	parent->tempWeightsGPUtmp = new float[volumeSize];
 	RecFourierProjectionTraverseSpace dummy;
 
 	// Add new arguments to tuner, argument data is copied from std::vector containers
@@ -503,7 +505,38 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 //			ktt::ArgumentOutputDescriptor(volId, parent->tempVolumeGPU),
 //			ktt::ArgumentOutputDescriptor(weightId, parent->tempWeightsGPU)});
 //	}
-	tuner.tuneKernel(kernelId);
+    RecFourierWorkThread refThread;
+    refThread.parent = threadParams->parent;
+    refThread.selFile = threadParams->selFile;
+    refThread.buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
+       		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
+   			parent->bufferSize, (int)parent->R_repository.size());
+    refThread.gpuStream = 0;
+    int startLoadIndex = threadParams->startImageIndex;
+    int lastLoadIndex = threadParams->endImageIndex;
+    for(int bIndex = startLoadIndex;
+		bIndex <= lastLoadIndex;
+		bIndex += parent->bufferSize) {
+		// load data
+		threadParams->startImageIndex = bIndex;
+		threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
+		refThread.startImageIndex = bIndex;
+		refThread.endImageIndex = threadParams->endImageIndex;
+//		refThread.
+		prepareBuffer(threadParams, parent, false, objId);
+		prepareBuffer(&refThread, parent, false, objId);
+    	tuner.tuneKernelByStep(kernelId, {
+			ktt::OutputDescriptor(volId, parent->tempVolumeGPUtmp),
+			ktt::OutputDescriptor(weightId, parent->tempWeightsGPUtmp)});
+    	for(size_t i = 0; i < volumeSize; i++) {
+    		parent->tempVolumeGPU[2*i] += parent->tempVolumeGPUtmp[2*i];
+    		parent->tempVolumeGPU[2*i + 1] += parent->tempVolumeGPUtmp[2*i + 1];
+    		parent->tempVolumeGPUtmp[2*i] = 0;
+    		parent->tempVolumeGPUtmp[2*i + 1] = 0;
+    		parent->tempWeightsGPU[i] += parent->tempWeightsGPUtmp[i];
+    		parent->tempWeightsGPUtmp[i]  = 0;
+    	}
+    }
 	tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
 	size_t lastindex = parent->fn_out.getString().find_last_of(".");
 	std::string rawname = parent->fn_out.getString().substr(0, lastindex);

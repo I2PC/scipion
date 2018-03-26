@@ -170,15 +170,15 @@ public:
 
 
 			// main work routine
-			int startLoadIndex = firstImgIndex;
-			int lastLoadIndex = lastImgIndex;
-			for(int bIndex = startLoadIndex;
-				bIndex <= lastLoadIndex;
-				bIndex += parent->bufferSize) {
-				// load data
-				threadParams->startImageIndex = bIndex;
-				threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
-				prepareBuffer(threadParams, parent, false, objId);
+//			int startLoadIndex = firstImgIndex;
+//			int lastLoadIndex = lastImgIndex;
+//			for(int bIndex = startLoadIndex;
+//				bIndex <= lastLoadIndex;
+//				bIndex += parent->bufferSize) {
+//				// load data
+//				threadParams->startImageIndex = bIndex;
+//				threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
+//				prepareBuffer(threadParams, parent, false, objId);
 				// send them for processing
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
 						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
@@ -209,7 +209,7 @@ public:
 
 				}
 				// once the processing finished, buffer can be reused
-			}
+//			}
 
 
 
@@ -271,16 +271,16 @@ public:
 
 
 			// main work routine
-			int startLoadIndex = firstImgIndex;
-			int lastLoadIndex = lastImgIndex;
-			for(int bIndex = startLoadIndex;
-				bIndex <= lastLoadIndex;
-				bIndex += parent->bufferSize) {
-				// load data
-				threadParams->startImageIndex = bIndex;
-				threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
-				prepareBuffer(threadParams, parent, false, objId);
-				// send them for processing
+//			int startLoadIndex = firstImgIndex;
+//			int lastLoadIndex = lastImgIndex;
+//			for(int bIndex = startLoadIndex;
+//				bIndex <= lastLoadIndex;
+//				bIndex += parent->bufferSize) {
+//				// load data
+//				threadParams->startImageIndex = bIndex;
+//				threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
+//				prepareBuffer(threadParams, parent, false, objId);
+//				// send them for processing
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
 						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
 						updateArgumentVector(spaceId, buffer->spaces, noOfSpaces);
@@ -292,7 +292,7 @@ public:
 						parent->logProgress(buffer->noOfImages);
 				}
 				// once the processing finished, buffer can be reused
-			}
+//			}
 	    }
 
 	private:
@@ -376,6 +376,22 @@ protected:
 	 * Valid for GPU, i.e. it is equivalent to tempWeights, which has been flattened
 	 */
 	float* tempWeightsGPU = NULL;
+
+	/**
+	 * 3D volume holding the cropped (without high frequencies) Fourier space.
+	 * Lowest frequencies are in the center, i.e. Fourier space creates a
+	 * sphere within a cube.
+	 * Valid for GPU, i.e. it is equivalent to tempVolume, which has been flattened
+	 * Each two successive values represent one complex number
+	 */
+	float* tempVolumeGPUtmp = NULL;
+
+	/**
+	 * 3D volume holding the weights of the Fourier coefficients stored
+	 * in tempVolume.
+	 * Valid for GPU, i.e. it is equivalent to tempWeights, which has been flattened
+	 */
+	float* tempWeightsGPUtmp = NULL;
 
 //	METHODS
 
