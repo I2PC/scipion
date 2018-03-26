@@ -83,6 +83,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     GLOBAL_ALIGNMENT = 0
     LOCAL_ALIGNMENT = 1
     AUTOMATIC_ALIGNMENT = 2
+    STOCHASTIC_ALIGNMENT = 3
     
     GLOBAL_SIGNIFICANT = 0
     GLOBAL_GPU_SIGNIFICANT = 1
@@ -155,9 +156,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help="Side views are around 90 degrees, top views around 0")
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED,
                       help="You may generate redudant galleries by setting this angle to 180, this may help if c1 symmetry is considered")
-        form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local','Automatic'], default=self.GLOBAL_ALIGNMENT)
+        form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local','Automatic','Stochastic'],
+                      default=self.GLOBAL_ALIGNMENT)
 
         form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations', condition='alignmentMethod!=2')
+        form.addParam('NimgsSGD', IntParam, default=250, label='Random subset size', condition='alignmentMethod==3',
+                      expertLevel=LEVEL_ADVANCED, help="Stochastic alignment is performed by taking random subsets of images of this size")
         form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False, expertLevel=LEVEL_ADVANCED,
                       help="You may reconstruct only with those images falling on a certain range. This is particularly useful for helices where "\
                          "you may want to use projections very close to 90 degrees")
@@ -285,6 +289,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     
     def insertIteration(self,iteration):
         if self.alignmentMethod==self.GLOBAL_ALIGNMENT or \
+           self.alignmentMethod==self.STOCHASTIC_ALIGNMENT or \
            (self.alignmentMethod==self.AUTOMATIC_ALIGNMENT and iteration<=3):
             self._insertFunctionStep('globalAssignment',iteration)
         else:
@@ -614,6 +619,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 self.runJob('xmipp_metadata_utilities','-i %s --set intersection %s/images%02d.xmd particleId particleId -o %s'%\
                             (fnSource,fnDir0,i,fnImagesi),numberOfMpi=1)
         cleanPath(fnSource)
+
+        if self.alignmentMethod==self.STOCHASTIC_ALIGNMENT:
+            for i in range(1,3):
+                fnImagesi=join(fnDir,"images%02d.xmd"%i)
+                self.runJob('xmipp_metadata_utilities','-i %s --operate random_subset %d'%\
+                            (fnImagesi,self.NimgsSGD),numberOfMpi=1)
         
         if getShiftsFrom!="":
             fnPreviousAngles=join(getShiftsFrom,"angles.xmd")
@@ -698,7 +709,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         makePath(fnDirCurrent)
         previousResolution=self.readInfoField(fnDirPrevious,"resolution",xmipp.MDL_RESOLUTION_FREQREAL)
 
-        if self.alignmentMethod==self.GLOBAL_ALIGNMENT or self.alignmentMethod==self.AUTOMATIC_ALIGNMENT:
+        if self.alignmentMethod==self.GLOBAL_ALIGNMENT or self.alignmentMethod==self.AUTOMATIC_ALIGNMENT or \
+           self.alignmentMethod==self.STOCHASTIC_ALIGNMENT:
             fnGlobal=join(fnDirCurrent,"globalAssignment")
             makePath(fnGlobal)
     
@@ -993,7 +1005,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column weightSSNR"%fnAngles,numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%\
                             (fnAngles,self._getExtraPath("ssnrWeights.xmd")),numberOfMpi=1)
-            if iteration>1:
+            if iteration>1 and self.alignmentMethod!=self.STOCHASTIC_ALIGNMENT:
                 fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
                 if self.splitMethod == self.SPLIT_FIXED:
                     fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
@@ -1228,8 +1240,22 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 else:
                     self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                 
+                # If stochastic gradient descent
+                if self.alignmentMethod==self.STOCHASTIC_ALIGNMENT:
+                    Nimgs = self.inputParticles.get().getSize()
+                    alpha = float(self.NimgsSGD.get())/Nimgs
+                    newXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
+                    fnAuxVol=join(fnDirCurrent,"volume%02d_aux.vol"%i)
+                    fnPreviousVol=join(fnDirPrevious,"volume%02d.vol"%i)
+                    self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%(fnPreviousVol,fnAuxVol,newXdim))
+                    self.runJob("xmipp_image_operate","-i %s --mult %f"%(fnVol,alpha))
+                    self.runJob("xmipp_image_operate","-i %s --mult %f"%(fnAuxVol,1-alpha))
+                    self.runJob("xmipp_image_operate","-i %s --plus %s"%(fnVol,fnAuxVol))
+                    cleanPath(fnAuxVol)
                 if deleteStack:
                     cleanPath(deletePattern)
+                    
+                    
         if grayAdjusted:
             fnAngles=join(fnDirCurrent,"angles.xmd")
             fnAnglesAux=join(fnDirCurrent,"anglesAux.xmd")
