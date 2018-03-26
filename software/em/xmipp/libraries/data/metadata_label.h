@@ -383,6 +383,8 @@ enum MDLabel
     MDL_SCORE_BY_RAMP,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_SCREENING, ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_VARIANCE,  ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_VAR, /// < Particle variance (double)
+    MDL_SCORE_BY_GINI, /// < Micrographs Gini Coeff. (double)
     MDL_SCORE_BY_ZERNIKE,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
@@ -1832,6 +1834,8 @@ private:
         MDL::addLabel(MDL_SCORE_BY_RAMP, LABEL_VECTOR_DOUBLE, "rampCoefficients");
         MDL::addLabel(MDL_SCORE_BY_SCREENING, LABEL_VECTOR_DOUBLE, "screenFeatures");
         MDL::addLabel(MDL_SCORE_BY_VARIANCE, LABEL_VECTOR_DOUBLE, "varianceFeatures");
+        MDL::addLabel(MDL_SCORE_BY_VAR, LABEL_DOUBLE, "scoreByVariance");
+        MDL::addLabel(MDL_SCORE_BY_GINI, LABEL_DOUBLE, "scoreByGiniCoeff");
         MDL::addLabel(MDL_SCORE_BY_ZERNIKE, LABEL_VECTOR_DOUBLE, "zernikeMoments");
 		MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 

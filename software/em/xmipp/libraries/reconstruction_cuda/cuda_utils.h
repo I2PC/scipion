@@ -48,10 +48,8 @@ static const char *_cudaGetErrorEnum(cufftResult error)
     return "<unknown>";
 }
 
-
 #define gpuErrchkFFT(ans) { gpuAssertFFT((ans), __FILE__, __LINE__); }
 void gpuAssertFFT(cufftResult_t code, const char *file, int line, bool abort=true);
-
 
 template<typename T>
 void hostRegister(T* srcArray, size_t bytes, unsigned int flags=0) {
@@ -68,5 +66,8 @@ void hostUnregister(T* srcArray) {
 		gpuErrchk( cudaPeekAtLastError() );
 	}
 }
+
+cudaPitchedPtr CopyVolumeHostToDevice(const float* host, uint width, uint height, uint depth);
+void CopyVolumeDeviceToHost(float* host, const cudaPitchedPtr device, uint width, uint height, uint depth);
 
 #endif

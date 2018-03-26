@@ -34,25 +34,19 @@ class TestImportBase(BaseTest):
         cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         cls.dsEmx = DataSet.getDataSet('emx')
         cls.dsMda = DataSet.getDataSet('mda')
+        cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
 
 
 class TestImportVolumes(TestImportBase):
 
     def test_import_volume(self):
-        """ 1) Import single volume and set origin in default position
-                center volume in center of coordinates
-            2) Import single volume and set origin in userDefined position
-            3) Import two volumes and set default position, chimera will not
-            show axis
-            4) Import three volumes and set origin in user defined  position,
-            chimera will not show axis
-            5) Import two volumes and set de in user defined  position,
-            chimera will not show axis
+        """ 1) Import single volume and set origin in default position (the
+            volume will be centered in the center of coordinates)
         """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
+                'setOrigCoord': False,
                 'samplingRate': 2.1,
-                'setDefaultOrigin': True
                 }
 
         # Id's should be set increasing from 1 if ### is not in the
@@ -67,14 +61,16 @@ class TestImportVolumes(TestImportBase):
         # x, y, z in Angstroms
         # Chimera will show (x, y, z) divided by the samplingRate
         # in pixels = (32, 32, 32)
-        self.assertEqual(67.2, x)
-        self.assertEqual(67.2, y)
-        self.assertEqual(67.2, z)
+        self.assertEqual(-67.2, x)
+        self.assertEqual(-67.2, y)
+        self.assertEqual(-67.2, z)
 
+        # """ 2) Import single volume and set origin in userDefined position
+        # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
+                'setOrigCoord': True,
                 'samplingRate': 2.1,
-                'setDefaultOrigin': False,
                 'x': 16.8,
                 'y': 33.6,
                 'z': 50.4
@@ -88,17 +84,49 @@ class TestImportVolumes(TestImportBase):
         volume = prot2.outputVolume
         t = volume.getOrigin()
         x, y, z = t.getShifts()
+
         # x, y, z in Angstroms
         # in Chimera we will see (x, y, z) divided by the samplingRate
         # in pixels = (8, 16, 24)
-        self.assertEqual(16.8, x)
-        self.assertEqual(33.6, y)
-        self.assertEqual(50.4, z)
+        self.assertEqual(-16.8, x)
+        self.assertEqual(-33.6, y)
+        self.assertEqual(-50.4, z)
 
+        # """ 3) Import single volume and set origin in userDefined position (the
+        #     volume will be centered in the center of coordinates because
+        #     coordinates are the default ones)
+        # """
+        args = {'filesPath': self.dsXmipp.getFile('volumes/'),
+                'filesPattern': 'volume_1_iter_002.mrc',
+                'setOrigCoord': True,
+                'samplingRate': 2.1,
+                'x': 67.2,
+                'y': 67.2,
+                'z': 67.2
+                }
+
+        # Id's should be set increasing from 1 if ### is not in the
+        # pattern
+        prot2 = self.newProtocol(ProtImportVolumes, **args)
+        prot2.setObjLabel('import vol,\n user origin,\n chimera show axis')
+        self.launchProtocol(prot2)
+        volume = prot2.outputVolume
+        t = volume.getOrigin()
+        x, y, z = t.getShifts()
+
+        # x, y, z in Angstroms
+        # in Chimera we will see (x, y, z) divided by the samplingRate
+        # in pixels = (8, 16, 24)
+        self.assertEqual(-67.2, x)
+        self.assertEqual(-67.2, y)
+        self.assertEqual(-67.2, z)
+
+        # """ 4) Import two volumes and set origin in default position
+        # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
+                'setOrigCoord': False,
                 'samplingRate': 2.1,
-                'setDefaultOrigin': True
                 }
 
         # Id's should be set increasing from 1 if ### is not in the
@@ -110,14 +138,16 @@ class TestImportVolumes(TestImportBase):
         for volume in prot3.outputVolumes:
             t = volume.getOrigin()
             x, y, z = t.getShifts()
-            self.assertEqual(67.2, x)
-            self.assertEqual(67.2, y)
-            self.assertEqual(67.2, z)
+            self.assertEqual(-67.2, x)
+            self.assertEqual(-67.2, y)
+            self.assertEqual(-67.2, z)
 
+        # """ 5) Import two volumes and set origin in userDefined position
+        # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
+                'setOrigCoord': True,
                 'samplingRate': 2.1,
-                'setDefaultOrigin': False,
                 'x': 16.8,
                 'y': 33.6,
                 'z': 50.4
@@ -126,35 +156,91 @@ class TestImportVolumes(TestImportBase):
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
         prot4 = self.newProtocol(ProtImportVolumes, **args)
-        prot4.setObjLabel('import 3 vols,\n user origin,\n chimera no axis')
+        prot4.setObjLabel('import 2 vols,\n user origin,\n chimera no axis')
         self.launchProtocol(prot4)
         for volume in prot4.outputVolumes:
             t = volume.getOrigin()
             x, y, z = t.getShifts()
-            self.assertEqual(16.8, x)
-            self.assertEqual(33.6, y)
-            self.assertEqual(50.4, z)
+            self.assertEqual(-16.8, x)
+            self.assertEqual(-33.6, y)
+            self.assertEqual(-50.4, z)
 
+        # """ 6) Import three volumes (mrc stack) and set origin in userDefined
+        # position
+        # """
         # Id's should be taken from filename
         args['filesPath'] = self.dsRelion.getFile('import/case2/'
                                                   'relion_volumes.mrc')
         args['filesPattern'] = ''
         prot2 = self.newProtocol(ProtImportVolumes, **args)
-        prot2.setObjLabel('import 3 vols from mrc stack,\n default origin,'
+        prot2.setObjLabel('import 3 vols from mrc stack,\n user origin,'
                           '\n chimera no axis')
         self.launchProtocol(prot2)
         # Check the number of output volumes and dimensions
         self.assertEqual(3, prot2.outputVolumes.getSize())
         self.assertEqual(60, prot2.outputVolumes.getDim()[0])
 
+        # """ 7) Import three volumes (spider stack) and set origin in
+        # userDefined position
+        # """
         # Id's should be taken from filename
         args['filesPath'] = self.dsRelion.getFile('import/case2/'
                                                   'relion_volumes.stk')
         args['filesPattern'] = ''
         prot3 = self.newProtocol(ProtImportVolumes, **args)
-        prot3.setObjLabel('import 3 vols from spider stack\n default origin,'
+        prot3.setObjLabel('import 3 vols from spider stack\n user origin,'
                           '\n chimera no axis')
         self.launchProtocol(prot3)
         # Check the number of output volumes and dimensions
         self.assertEqual(3, prot3.outputVolumes.getSize())
         self.assertEqual(60, prot3.outputVolumes.getDim()[0])
+
+
+        #  """ 8)To test old data where volumes have no origin at all"""
+        args = {'filesPath': self.dsXmipp.getFile('volumes/'),
+                'filesPattern': 'volume_1_iter_002.mrc',
+                # 'setOrigCoord': False,
+                'samplingRate': 2.1,
+                }
+
+        prot4 = self.newProtocol(ProtImportVolumes, **args)
+        prot4.setObjLabel('import vol,\n no origin at all, legacy data,'
+                          '\n chimera show '
+                          'axis,\n vol origin in coord origin')
+        self.launchProtocol(prot4)
+        volume = prot4.outputVolume
+        volume.setOrigin(None)
+        # The volume has no origin
+        t = volume.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        # x, y, z in Angstroms
+        # Chimera will show (x, y, z) divided by the samplingRate
+        # in pixels = (32, 32, 32)
+        self.assertEqual(-67.2, x)
+        self.assertEqual(-67.2, y)
+        self.assertEqual(-67.2, z)
+
+        ## TODO: associate origen coordinates from header file
+        # args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
+        #         'samplingRate': 1.5,
+        #         'setDefaultOrigin': False,
+        #         'x': ,
+        #         'y': ,
+        #         'z':
+        #         }
+        #
+        # protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        # protImportVol.setObjLabel('import vol 1ake_4-5A,\n header origin,\n chimera show axis')
+        # self.launchProtocol(protImportVol)
+        # volume = protImportVol.outputVolume
+        #
+        # # Id's should be set increasing from 1 if ### is not in the
+        # # pattern
+        #
+        # t = volume.getOrigin()
+        # x, y, z = t.getShifts()
+        # # x, y, z in Angstroms
+        # # in Chimera we will see (x, y, z) divided by the samplingRate
+        # self.assertEqual(-11.99, x)
+        # self.assertEqual(7.88, y)
+        # self.assertEqual(-10.90, z)
