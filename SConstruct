@@ -227,7 +227,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
-    _libs.append(['ktt'])
+    _libs.append(['ktt_0_6'])
 
     mpiArgs = {}
     if mpi:
@@ -328,7 +328,7 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
-    _libs.append(['ktt'])
+    _libs.append(['ktt_0_6'])
     mpiArgs = {}
     if mpi:
         _libpath.append(env['MPI_LIBDIR'])
@@ -559,7 +559,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     libs = libs or []
     libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incsCopy = list(incs) or []
-    libs.append(['ktt'])
+    libs.append(['ktt_0_6'])
     if cuda or nvcc:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt']
         incsCopy += [env['NVCC_INCLUDE']]

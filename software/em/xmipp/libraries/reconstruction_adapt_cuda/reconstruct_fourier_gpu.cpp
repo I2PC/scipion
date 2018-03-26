@@ -381,12 +381,13 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 //	prepareBuffer(threadParams, parent, false, objId);
 //	int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
 
-    size_t deviceIndex = 0;
-	std::string kernelFile = "/home/david/GIT/Scipion/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier.cu";
-	std::string referenceKernelFile = "/home/david/GIT/Scipion/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier_ref.cu";
+    ktt::DeviceIndex deviceIndex = 0;
+    ktt::PlatformIndex platformIndex = 0;
+	std::string kernelFile = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier.cu";
+	std::string referenceKernelFile = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier_ref.cu";
 
 	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
-	ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
+	ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
 
 	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
 	ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "processBufferKernel", ktt::DimensionVector(1), ktt::DimensionVector(1));
@@ -416,11 +417,11 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	ktt::ArgumentId startSpaceIndexId = tuner.addArgumentScalar(0);
 
 
-	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
-	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,12,16,20,24,28,32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
+	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,12,16,20,24,28,32}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
+	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,12,16,20,24,28,32}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
 	tuner.addParameter(kernelId, "TILE", {1,2,4,8});
 
-	tuner.addParameter(kernelId, "GRID_DIM_Z", {1,4,8,16}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Z);
+	tuner.addParameter(kernelId, "GRID_DIM_Z", {1,4,8,16}, ktt::ModifierType::Global, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Z);
 
 	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
 	tuner.addParameter(kernelId, "SHARED_IMG", {0, 1});
