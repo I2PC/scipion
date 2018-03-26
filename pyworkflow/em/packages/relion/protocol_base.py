@@ -194,12 +194,24 @@ class ProtRelionBase(EMProtocol):
                            'the first iteration.')
         group = form.addGroup('Reference 3D map',
                               condition='not doContinue and not is2D')
+        group.addParam('useMultipleVolumes', BooleanParam, default=False,
+                      label="Use multiple volumes")
         group.addParam('referenceVolume', PointerParam, pointerClass='Volume',
                        important=True,
                        label="Input volume",
-                       condition='not doContinue and not is2D',
+                       condition='not doContinue and not is2D and not '
+                                 'useMultipleVolumes',
                        help='Initial reference 3D map, it should have the same '
-                           'dimensions and the same pixel size as your input '
+                            'dimensions and the same pixel size as your input '
+                            'particles.')
+        group.addParam('referenceVolumeSet', PointerParam,
+                       pointerClass='SetOfVolumes',
+                       important=True,
+                       label="Set of multiple input volumes",
+                       condition='not doContinue and not is2D and '
+                                 'useMultipleVolumes',
+                       help='Initial reference 3D maps should have the same '
+                            'dimensions and the same pixel size as your input '
                             'particles.')
         group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                        label="Is initial 3D map on absolute greyscale?",
@@ -973,7 +985,7 @@ class ProtRelionBase(EMProtocol):
     
         if self.maskZero == MASK_FILL_ZERO:
             args['--zero_mask'] = ''
-    
+
         if self.IS_CLASSIFY:
             args['--K'] = self.numberOfClasses.get()
             if self.limitResolEStep > 0:
@@ -981,8 +993,21 @@ class ProtRelionBase(EMProtocol):
     
         if self.IS_3D:
             if not self.IS_3D_INIT:
-                args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
-                                                 self._getTmpPath())
+                if self.useMultipleVolumes:
+                    starFile = open(self._getExtraPath('references.star'),'w')
+                    starFile.write('data_references\n')
+                    starFile.write('loop_\n')
+                    starFile.write('_rlnReferenceImage #1\n')
+                    for volume in self.referenceVolumeSet.get():
+                        newFn = convertBinaryVol(volume, self._getExtraPath())
+                        starFile.write(str(newFn) + '\n')
+                    starFile.close()
+
+                    args['--ref'] = str(self._getExtraPath('references.star'))
+
+                else:
+                    args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
+                                                    self._getTmpPath())
                 if not self.isMapAbsoluteGreyScale:
                     args['--firstiter_cc'] = ''
                 args['--ini_high'] = self.initialLowPassFilterA.get()
