@@ -237,6 +237,8 @@ class ProtGctf(em.ProtCTFMicrographs):
                       help='Phase shift target in the search: CCC or '
                            'resolution limit')
 
+        self._defineStreamingParams(form)
+
         form.addParallelSection(threads=1, mpi=1)
 
     # -------------------------- STEPS functions ------------------------------
@@ -248,6 +250,7 @@ class ProtGctf(em.ProtCTFMicrographs):
             return
 
         try:
+            ih = em.ImageHandler()
             # Create micrograph dir
             pwutils.makePath(micDir)
             downFactor = self.ctfDownFactor.get()
@@ -258,15 +261,10 @@ class ProtGctf(em.ProtCTFMicrographs):
             if downFactor != 1:
                 # Replace extension by 'mrc' cause there are some formats
                 # that cannot be written (such as dm3)
-                import pyworkflow.em.packages.xmipp3 as xmipp3
-                self.runJob("xmipp_transform_downsample",
-                            "-i %s -o %s --step %f --method fourier"
-                            % (micFn, micFnMrc, downFactor),
-                            env=xmipp3.getEnviron())
+                ih.scaleFourier(micFn, micFnMrc, downFactor)
                 sps = self.inputMicrographs.get().getScannedPixelSize() * downFactor
                 self._params['scannedPixelSize'] = sps
             else:
-                ih = em.ImageHandler()
                 if ih.existsLocation(micFn):
                     ih.convert(micFn, micFnMrc, em.DT_FLOAT)
                 else:
@@ -284,7 +282,6 @@ class ProtGctf(em.ProtCTFMicrographs):
 
         try:
             args = self._args % self._params
-            args += " --gid %(GPU)s "
             self.runJob(self._getProgram(), args,  env=self._getEnviron())
         except:
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
@@ -368,8 +365,18 @@ class ProtGctf(em.ProtCTFMicrographs):
                           "and set GCTF variables properly."
                           % self._getProgram())
         if self.doPhShEst and getVersion() == '0.50':
-            errors.append('This version of Gctf (0.50) does not support phase shift estimation!'
-                          ' Please update to a newer version.')
+            errors.append('This version of Gctf (0.50) does not support phase '
+                          'shift estimation! Please update to a newer version.')
+
+        nprocs = max(self.numberOfMpi.get(), self.numberOfThreads.get())
+
+        if nprocs < len(self.getGpuList()):
+            errors.append("Multiple GPUs can not be used by a single process. "
+                          "Make sure you specify more processors than GPUs. ")
+
+        if self._getStreamingBatchSize() > 1:
+            errors.append("Batch steps are not implemented yet for Gctf. ")
+
         return errors
 
     def _citations(self):
@@ -438,6 +445,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--do_EPA %d " % (1 if self.doEPA else 0)
         self._args += "--boxsize %d " % self._params['windowSize']
         self._args += "--plot_res_ring %d " % (1 if self.plotResRing else 0)
+        self._args += "--gid %%(GPU)s "  # Use %% to escape when formatting
         self._args += "--bfac %d " % self.bfactor.get()
         self._args += "--B_resH %f " % (2 * self._params['sampling'])
         self._args += "--overlap %f " % self.overlap.get()
