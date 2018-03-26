@@ -64,8 +64,11 @@ class ProtRelionExportParticles(ProtProcessParticles, ProtRelionBase):
                                "Write multiple stacks",
                                "Write a single stack"], default=STACK_MULT,
                       display=params.EnumParam.DISPLAY_LIST,
-                      label="Iteration to visualize",
-                      help="")
+                      label="Binary stack files",
+                      help="If *Don't write stacks* is choose, only the star "
+                           "files will be written out. Alternatively, you can "
+                           "select to write images into a single stack file or"
+                           " several stacks (one per micrograph). ")
 
     # --------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
