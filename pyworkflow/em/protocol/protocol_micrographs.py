@@ -131,19 +131,6 @@ class ProtCTFMicrographs(ProtMicrographs):
         to add other parameter relatives to the specific operation."""
         pass
 
-    def _defineStreamingParams(self, form):
-        """ Define some common parameters for streaming behaviour. """
-        form.addSection("Streaming")
-        form.addParam("streamingWarning", LabelParam, important=True,
-                      label="The following params are related to how "
-                            "streaming is done in Scipion.")
-        form.addParam("streamingSleepOnWait", IntParam, default=0,
-                      label="Sleep when waiting (secs)",
-                      help="If you specify a value greater than zero, "
-                           "it will be the number of seconds that the "
-                           "protocol will sleep when waiting for new "
-                           "input data in streaming mode. ")
-
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         """ Insert the steps to perform CTF estimation, or re-estimation,

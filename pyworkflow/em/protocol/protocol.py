@@ -27,6 +27,7 @@
 from itertools import izip
 
 from pyworkflow.protocol import Protocol
+import pyworkflow.protocol.params as params
 from pyworkflow.object import Set
 from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates,
                                 SetOfParticles, SetOfImages,
@@ -189,4 +190,48 @@ class EMProtocol(Protocol):
             return True
         return False
         
-    
+    # ------ Methods for Streaming picking --------------
+
+    def _defineStreamingParams(self, form):
+        """ This function can be called during the _defineParams method
+        of some protocols that support stream processing.
+        It will add an Streaming section together with the following
+        params:
+            streamingSleepOnWait: Some streaming protocols are quite fast,
+                so, checking input/ouput updates creates an IO overhead.
+                This params allows them to sleep (without consuming resources)
+                to wait for new work to be done.
+            streamingBatchSize: For some programs it is more efficient to process
+                many items at once and not one by one. So this parameter will
+                allow to group a number of items to be processed in the same
+                protocol step. This can also reduce some IO overhead and spawing
+                new OS processes.
+        """
+        form.addSection("Streaming")
+        form.addParam("streamingWarning", params.LabelParam, important=True,
+                      label="The following params are related to how "
+                            "streaming is done in Scipion.")
+        form.addParam("streamingSleepOnWait", params.IntParam, default=0,
+                      label="Sleep when waiting (secs)",
+                      help="If you specify a value greater than zero, "
+                           "it will be the number of seconds that the "
+                           "protocol will sleep when waiting for new "
+                           "input data in streaming mode. ")
+        form.addParam("streamingBatchSize", params.IntParam, default=1,
+                      label="Batch size",
+                      help="This value allows to group several items to be "
+                           "processed inside the same protocol step. You can "
+                           "use the following values: \n"
+                           "*1*    The default behavior, the items will be "
+                           "processed one by one.\n"
+                           "*0*    Put in the same step all the items "
+                           "available. If the sleep time is short, it could be "
+                           "practically the same of one by one. If not, you "
+                           "could have steps with more items. If the steps will "
+                           "be executed in parallel, it is better not to use "
+                           "this option.\n"
+                           "*>1*   The number of items that will be grouped into "
+                           "a step.")
+
+    def _getStreamingBatchSize(self):
+        return self.getAttributeValue('streamingBatchSize', 1)
