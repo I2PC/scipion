@@ -374,8 +374,11 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
                               "one set of coordinates ")
                 errors.append("for exclusive picking!")
 
-        # TODO: Validate that not more than one GPU is assigned to a thread
-        # since Gautomatch does not use more than one GPU
+        nprocs = max(self.numberOfMpi.get(), self.numberOfThreads.get())
+
+        if nprocs < len(self.getGpuList()):
+            errors.append("Multiple GPUs can not be used by a single process. "
+                          "Make sure you specify more processors than GPUs. ")
 
         return errors
 
