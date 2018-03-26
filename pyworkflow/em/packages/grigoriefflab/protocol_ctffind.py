@@ -248,6 +248,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 0.10 <= valueMax <= 3.15):
             errors.append('Wrong values for phase shift search.')
 
+        if self._getStreamingBatchSize() > 1:
+            errors.append("Batch steps are not implemented yet for Ctffind. ")
+
         return errors
 
     def _citations(self):
