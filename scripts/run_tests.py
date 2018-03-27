@@ -44,6 +44,8 @@ from pyworkflow import HOME
 
 from pyworkflow.tests import *
 
+from pyworkflow import HOME
+
 PATH_PATTERN = {'model': ('tests/model tests/em/data', 'test*.py'),
                 'convert': ('em/packages', 'test_convert*.py'),
                 'protocols': ('em/packages' 'tests/em/protocols',

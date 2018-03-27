@@ -1140,7 +1140,7 @@ class SqliteFlatDb(SqliteDb):
              special columns such as: id or RANDOM(), and
              getting the mapping translation otherwise.
             """
-            if colName in ['id', 'RANDOM()']:
+            if colName in ['id', 'RANDOM()', 'creation']:
                 return colName
             else:
                 return self._columnsMapping[colName]
