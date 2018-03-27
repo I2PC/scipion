@@ -93,6 +93,9 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         self._defineSourceRelation(self.inputParticles, volumes)
         
         if not self.doContinue:
+            if self.useMultipleVolumes:
+                self.referenceVolume = self.referenceVolumeSet
+
             self._defineSourceRelation(self.referenceVolume, classes3D)
             self._defineSourceRelation(self.referenceVolume, volumes)
     
@@ -102,8 +105,13 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
-        self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
-                          errors, 'Input particles', 'Reference volume')
+        if not self.useMultipleVolumes:
+            self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
+                              errors, 'Input particles', 'Reference volume')
+        else:
+            self._validateDim(self._getInputParticles(),
+                              self.referenceVolumeSet.get().getFirstItem(),
+                              errors, 'Input particles', 'Set of multiple input volumes')
         return errors
     
     def _validateContinue(self):
