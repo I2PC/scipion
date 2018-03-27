@@ -26,7 +26,7 @@
 # **************************************************************************
 
 from protocol_base import createScriptFile
-from pyworkflow.protocol.params import  PointerParam, StringParam
+from pyworkflow.protocol.params import PointerParam, StringParam
 import os
 from pyworkflow.em.viewers.chimera_utils import \
     runChimeraProgram,\
@@ -37,7 +37,7 @@ from pyworkflow.em.packages.chimera.protocol_base import ChimeraProtBase
 class ChimeraProtRestore(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transferm fitted
+        [saverefmodel 0|1]* from command line in order to transfer fitted
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
@@ -47,7 +47,7 @@ class ChimeraProtRestore(ChimeraProtBase):
         form.addSection(label='Input')
         form.addParam('inputProtocol', PointerParam,
                   label="Input protocols", important=True,
-                  pointerClass='ChimeraProtOperate',
+                  pointerClass='ChimeraProtOperate, ChimeraProtRigidFit',
                   help="protocol to be reloaded")
 
         form.addParam('extraCommands', StringParam,
@@ -110,7 +110,7 @@ class ChimeraProtRestore(ChimeraProtBase):
         runChimeraProgram(program, args)
 
     def createOutput(self):
-        super(ChimeraProtRestore,self).createOutput()
+        super(ChimeraProtRestore, self).createOutput()
 
     def _validate(self):
         errors = super(ChimeraProtRestore, self)._validate()
