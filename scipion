@@ -39,17 +39,15 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'V1.2.beta'
+__version__ = 'v1.2'
 __nickname__ = 'Caligula'
-__releasedate__ = '26-12-2017'
-
+__releasedate__ = '2017-03-15'
 
 
 # This script tries to run ok with any python version. So we cannot
 # use some of the cool syntax of modern Python (no "with" statement,
 # no inline "if ... else ...", etc.), and we better avoid things like
 # "print" (we use sys.stdout.write()) and be careful with exceptions.
-
 
 SCIPION_HOME = dirname(os.path.realpath(__file__))
 
@@ -79,7 +77,12 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         sys.exit('Unknown argument: %s' % arg)
 
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
-SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
+
+# Allow the name of the host configuration to be changed.
+# This is useful for having the same central installation that
+# could be used from different environments (cluster vs workstations)
+SCIPION_HOSTS = join(dirname(SCIPION_CONFIG),
+                     os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf'))
 
 
 # Check for old configuration files and tell the user to update.
@@ -101,10 +104,10 @@ any doubt.
 
 
 #
-# Check the version if in devel mode
+# Check the version if in devel mode (i.e no release date yet)
 #
 
-if __version__ == 'devel':
+if not __releasedate__:
     # Find out if the is a .git directory
     if exists(join(SCIPION_HOME, '.git')):
         def call(cmd):
@@ -112,14 +115,14 @@ if __version__ == 'devel':
         if call('which git > /dev/null') == 0: # Means git command is found
 
             gitBranch = str(subprocess.check_output("git branch | grep \\* ", cwd=SCIPION_HOME, shell=True))
-            gitBranch = gitBranch.split("*")[1]
-            __version__ = gitBranch.replace("\n", "")
+            gitBranch = gitBranch.split("*")[1].strip()
             commitLine = str(subprocess.check_output(['git', 'log', '-1',
                                                   '--pretty=format:%h %ci'],
                                                  cwd=SCIPION_HOME))
-            __nickname__, __releasedate__ = commitLine.split()[:2]
-            if __nickname__.startswith("b'"):
-               __nickname__=__nickname__[2:]
+            gitCommit, __releasedate__ = commitLine.split()[:2]
+            if gitCommit.startswith("b'"):
+                gitCommit = gitCommit[2:]
+            __nickname__ += ' (%s %s)' % (gitBranch, gitCommit)
 
 
     # If in a future we release  a nightly build, we could add the .devel_version

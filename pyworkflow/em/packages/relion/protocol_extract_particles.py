@@ -55,7 +55,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
     def __init__(self, **kwargs):
         em.ProtExtractParticles.__init__(self, **kwargs)
 
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _definePreprocessParams(self, form):
         form.addParam('boxSize', params.IntParam,
                       label='Particle box size (px)',
@@ -120,7 +120,8 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                            'Use negative value to switch off dust removal.')
 
         form.addParallelSection(threads=0, mpi=4)
-    #--------------------------- INSERT steps functions ------------------------
+
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         inputMics = self.getInputMicrographs()
         # self.doFlip is important because in _updateOutputPartSet is used
@@ -214,7 +215,6 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         with the coordinates is not present. """
         
         micsStar, partStar = self._getStarFiles(mic)
-        print "params: ", params
         args = params % locals()
         self.runJob(self._getProgram('relion_preprocess'), args,
                     cwd=self.getWorkingDir())
@@ -262,9 +262,19 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             # micrograph stack
             lastMicName = None
             count = 0 # Counter for the particles of a given micrograph
-    
+            # Check missing mics to report error once
+            missingMics = set()
+ 
             for coord in inputCoords.iterItems(orderBy='_micId'):
-                micName = coordMics[coord.getMicId()].getMicName()
+                micId = coord.getMicId()
+                mic = coordMics[micId] 
+                if mic is None:
+                    if not micId in missingMics:
+                        print("Ignoring wrong micId: ", micId)
+                        missingMics.add(micId)
+                    micName = None
+                else:
+                    micName = coordMics[coord.getMicId()].getMicName()
                 # If Micrograph Source is "other" and extract from a subset
                 # of micrographs, micName key should be checked if it exists.
                 if micName in micDict.keys():
@@ -295,13 +305,18 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             if self._useCTF():
                 self._defineSourceRelation(self.ctfRelations.get(), partSet)
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
-
+        
+        self.validatePackageVersion('RELION_HOME', errors)
         if self.doNormalize and self.backDiameter > self.boxSize:
             errors.append("Background diameter for normalization should "
                           "be equal or less than the box size.")
+
+        if self.doRescale and self.rescaledSize.get() % 2 == 1:
+            errors.append("Only re-scaling to even-sized images is allowed "
+                          "in RELION.")
 
         # We cannot check this if the protocol is in streaming.
         
@@ -358,7 +373,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
         return methodsMsgs
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _setupBasicProperties(self):
         # Set sampling rate (before and after doDownsample) and inputMics
         # according to micsSource type
@@ -418,15 +433,46 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         return [params]
 
     def readPartsFromMics(self, micList, outputParts):
-        pass
-    
+        """ Read the particles extract for the given list of micrographs
+        and update the outputParts set with new items.
+        """
+        p = em.Particle()
+        for mic in micList:
+            # We need to make this dict because there is no ID in the
+            # coord.star file
+            coordDict = {}
+            for coord in self.coordDict[mic.getObjId()]:
+                coordDict[self._getPos(coord)] = coord
+        
+            _, partStarFn = self._getStarFiles(mic)
+        
+            for row in md.iterRows(self._getPath(partStarFn)):
+                pos = (row.getValue(md.RLN_IMAGE_COORD_X),
+                       row.getValue(md.RLN_IMAGE_COORD_Y))
+            
+                coord = coordDict.get(pos, None)
+                if coord is not None:
+                    # scale the coordinates according to particles dimension.
+                    coord.scale(self.getBoxScale())
+                    p.copyObjId(coord)
+                    idx, fn = relionToLocation(row.getValue(md.RLN_IMAGE_NAME))
+                    p.setLocation(idx, self._getPath(fn[2:]))
+                    p.setCoordinate(coord)
+                    p.setMicId(mic.getObjId())
+                    p.setCTF(mic.getCTF())
+                    outputParts.append(p)
+        
+            # Release the list of coordinates for this micrograph since it
+            # will not be longer needed
+            del self.coordDict[mic.getObjId()]
+
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """
         return self.downsampleType == OTHER
 
     def _getDownFactor(self):
         if self.doRescale:
-            return self.boxSize.get() / self.rescaledSize.get()
+            return float(self.boxSize.get()) / self.rescaledSize.get()
         return 1
 
     def _doDownsample(self):
@@ -444,25 +490,6 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             newSampling *= self._getDownFactor()
 
         return newSampling
-
-    # def _setupCtfProperties(self):
-    #     inputMics = self.getInputMicrographs()
-    #     if self._useCTF():
-    #         # Load CTF dictionary for all micrographs, all CTF should be present
-    #         self.ctfDict = {}
-    #
-    #         for ctf in self.ctfRelations.get():
-    #             ctfMic = ctf.getMicrograph()
-    #             newCTF = ctf.clone()
-    #             self.ctfDict[ctfMic.getMicName()] = newCTF
-    #             self.ctfDict[ctfMic.getObjId()] = newCTF
-    #
-    #         if all(mic.getMicName() in self.ctfDict for mic in inputMics):
-    #             self.micKey = lambda mic: mic.getMicName()
-    #         elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
-    #             self.micKey = lambda mic: mic.getObjId()
-    #         else:
-    #             self.micKey = None # some problem matching CTF
             
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or
@@ -534,10 +561,9 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         # The command will be launched from the working dir
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
-        if self._useCTF() and not img.hasCTF():
-            img.setCTF(self.ctfDict[img.getMicName()])
 
         if self._useCTF():
+            img.setCTF(self.ctfDict[img.getMicName()])
             # add phaseShift to micrograph Row
             ctf = img.getCTF()
             if ctf is not None and ctf.getPhaseShift():
@@ -581,37 +607,3 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         
         return (self.getInputMicrographs().isStreamOpen() or
                 ctfStreamOpen or self.getCoords().isStreamOpen())
-
-    def readPartsFromMics(self, micList, outputParts):
-        """ Read the particles extract for the given list of micrographs
-        and update the outputParts set with new items.
-        """
-        p = em.Particle()
-        for mic in micList:
-            # We need to make this dict because there is no ID in the
-            # coord.star file
-            coordDict = {}
-            for coord in self.coordDict[mic.getObjId()]:
-                coordDict[self._getPos(coord)] = coord
-            
-            _, partStarFn = self._getStarFiles(mic)
-
-            for row in md.iterRows(self._getPath(partStarFn)):
-                pos = (row.getValue(md.RLN_IMAGE_COORD_X),
-                       row.getValue(md.RLN_IMAGE_COORD_Y))
-                
-                coord = coordDict.get(pos, None)
-                if coord is not None:
-                    # scale the coordinates according to particles dimension.
-                    coord.scale(self.getBoxScale())
-                    p.copyObjId(coord)
-                    idx, fn = relionToLocation(row.getValue(md.RLN_IMAGE_NAME))
-                    p.setLocation(idx, self._getPath(fn[1:]))
-                    p.setCoordinate(coord)
-                    p.setMicId(mic.getObjId())
-                    p.setCTF(mic.getCTF())
-                    outputParts.append(p)
-        
-            # Release the list of coordinates for this micrograph since it
-            # will not be longer needed
-            del self.coordDict[mic.getObjId()]
