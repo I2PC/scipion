@@ -28,16 +28,11 @@ from pyworkflow.em.protocol import ProtClassify2D
 import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
 from pyworkflow.em.data import Transform
-from pyworkflow.em.metadata.utils import iterRows, getSize
 from xmipp import MD_APPEND
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment, \
-    xmippToLocation, alignmentToRow, rowToParticle
-from convert import writeSetOfParticles, writeSetOfClasses2D
-from shutil import copy
-from os.path import join, exists
-from os import mkdir, remove, listdir
-import pyworkflow.protocol.constants as const
-from pyworkflow.em import SetOfClasses2D, ALIGN_2D, ALIGN_NONE
+    alignmentToRow, rowToParticle
+from convert import writeSetOfClasses2D
+from pyworkflow.em import ALIGN_2D
 from pyworkflow.em.data import Class2D, Particle, Coordinate
 import numpy as np
 
@@ -65,7 +60,6 @@ class XmippProtReAlignClasses(ProtClassify2D):
     # --------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         """Mainly prepare the command line for call cuda corrrelation program"""
-
         self._insertFunctionStep('realignStep')
         self._insertFunctionStep('createOutputStep')
 
@@ -89,16 +83,10 @@ class XmippProtReAlignClasses(ProtClassify2D):
         centeredStack = md.MetaData(centeredStackName)
 
         listName = []
-        #listShiftX=[]
-        #listShiftY=[]
-        #listPsi=[]
         listTransform=[]
         for rowStk in md.iterRows(centeredStack):
             listName.append(rowStk.getValue(md.MDL_IMAGE))
         for rowMd in md.iterRows(centeredMd):
-            #listShiftX.append(rowMd.getValue(md.MDL_SHIFT_X))
-            #listShiftY.append(rowMd.getValue(md.MDL_SHIFT_Y))
-            #listPsi.append(rowMd.getValue(md.MDL_ANGLE_PSI))
             listTransform.append(rowToAlignment(rowMd, ALIGN_2D))
 
         mdNewClasses = md.MetaData()
@@ -116,25 +104,24 @@ class XmippProtReAlignClasses(ProtClassify2D):
         mdImages = md.MetaData()
         i=0
         mdBlocks = md.getBlocksInMetaDataFile(inputMdName)
+        resultMat = Transform()
         for block in mdBlocks:
             if block.startswith('class00'):
                 newMat = listTransform[i]
                 newMatrix = newMat.getMatrix()
-                #print "repMatrix",newMatrix
                 mdClass = md.MetaData(block + "@" + inputMdName)
                 mdNewClass = md.MetaData()
                 i+=1
                 for rowIn in md.iterRows(mdClass):
+                    #To create the transformation matrix (and its parameters)
+                    #  for the realigned particles
                     if rowIn.getValue(md.MDL_ANGLE_PSI)!=0:
                         flag_psi=True
                     if rowIn.getValue(md.MDL_ANGLE_ROT)!=0:
                         flag_psi=False
                     inMat = rowToAlignment(rowIn, ALIGN_2D)
                     inMatrix = inMat.getMatrix()
-                    #print "partMat",inMatrix
                     resultMatrix = np.dot(newMatrix,inMatrix)
-                    #print "resultMat",resultMatrix
-                    resultMat = Transform()
                     resultMat.setMatrix(resultMatrix)
                     rowOut=md.Row()
                     rowOut.copyFromRow(rowIn)
@@ -144,16 +131,14 @@ class XmippProtReAlignClasses(ProtClassify2D):
                         rowOut.setValue(md.MDL_ANGLE_PSI, 0.)
                         rowOut.setValue(md.MDL_ANGLE_ROT, newAngle)
 
-                    #AJ testing
+                    #To create the new coordinates for the realigned particles
                     inPoint = np.array([[0.],[0.],[0.],[1.]])
                     invResultMat = np.linalg.inv(resultMatrix)
                     centerPoint = np.dot(invResultMat,inPoint)
-                    #print "centerPoint",centerPoint
                     rowOut.setValue(md.MDL_XCOOR, rowOut.getValue(
                         md.MDL_XCOOR)+int(centerPoint[0]))
                     rowOut.setValue(md.MDL_YCOOR, rowOut.getValue(
                         md.MDL_YCOOR)+int(centerPoint[1]))
-                    #END AJ
 
                     rowOut.addToMd(mdNewClass)
                 mdNewClass.write(block + "@" + self._getExtraPath(
@@ -163,11 +148,9 @@ class XmippProtReAlignClasses(ProtClassify2D):
 
 
     def createOutputStep(self):
-        import time
-        time.sleep(15)
         inputParticles = self.inputClasses.get().getImages()
-        outputClasses = self._createSetOfClasses2D(inputParticles) # ??
-        self._fillClasses(outputClasses)  # Tendre que crear mi propia funcion para rellenar clases??
+        outputClasses = self._createSetOfClasses2D(inputParticles)
+        self._fillClasses(outputClasses)
         result = {'outputClasses': outputClasses}
         self._defineOutputs(**result)
         self._defineSourceRelation(self.inputClasses, outputClasses)
@@ -228,8 +211,11 @@ class XmippProtReAlignClasses(ProtClassify2D):
         outputParticles.enableAppend()
         outputCoords.enableAppend()
 
+        #Calculating the scale that relates the coordinates with the actual
+        # position in the mic
         scale = inputParticles.getSamplingRate() / \
                 self.inputMics.get().getSamplingRate()
+        #Dictionary with the name and id of the inpt mics
         micDictname = {}
         micDictId = {}
         for mic in self.inputMics.get():
@@ -239,9 +225,11 @@ class XmippProtReAlignClasses(ProtClassify2D):
             micDictId[micKey2] = mic.clone()
 
         for row in md.iterRows(myParticles):
+            #To create the new particle
             p = rowToParticle(row)
             outputParticles.append(p)
 
+            #To create the new coordinate
             newCoord = Coordinate()
             coord = p.getCoordinate()
             if coord.getMicName() is not None:
@@ -265,7 +253,7 @@ class XmippProtReAlignClasses(ProtClassify2D):
 
 
 
-            # --------------------------- INFO functions -------------------------------
+    # --------------------------- INFO functions -------------------------------
     def _validate(self):
         pass
 
