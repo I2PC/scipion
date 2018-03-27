@@ -499,6 +499,7 @@ class ProtExtractParticles(ProtParticles):
         self.debug(' is finished? %s ' % self.finished)
         self.debug(' is stream closed? %s ' % streamClosed)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
         if newDone:
             self._updateOutputPartSet(newDone, streamMode)
             self._writeDoneList(newDone)
@@ -506,6 +507,12 @@ class ProtExtractParticles(ProtParticles):
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
+
+            # Maybe it would be good idea to take a snap to avoid
+            # so much IO if this protocol does not have much to do now
+            if allDone == len(self.micDict):
+                self._streamingSleepOnWait()
+
             return
 
         self.debug('   finished: %s ' % self.finished)

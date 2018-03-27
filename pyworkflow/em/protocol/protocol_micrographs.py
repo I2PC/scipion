@@ -518,14 +518,11 @@ class ProtCTFMicrographs(ProtMicrographs):
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
 
-            # JMRT: Maybe it would be good idea to take a snap to avoid
+            # Maybe it would be good idea to take a snap to avoid
             # so much IO if this protocol does not have much to do now
             if allDone == nMics:
-                sleepOnWait = self.getAttributeValue('streamingSleepOnWait', 0)
-                if sleepOnWait > 0:
-                    self.info("Not much work to do now, sleeping %s seconds."
-                              % sleepOnWait)
-                    time.sleep(sleepOnWait)
+                self._streamingSleepOnWait()
+
             return
 
         self.debug('   finished: %s ' % self.finished)

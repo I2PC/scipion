@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+import time
 from itertools import izip
 
 from pyworkflow.protocol import Protocol
@@ -233,8 +234,22 @@ class EMProtocol(Protocol):
                            "*>1*   The number of items that will be grouped into "
                            "a step.")
 
+    def _getStreamingSleepOnWait(self):
+        return self.getAttributeValue('streamingSleepOnWait', 0)
+
     def _getStreamingBatchSize(self):
         return self.getAttributeValue('streamingBatchSize', 1)
+
+    def _streamingSleepOnWait(self):
+        """ This method should be used by protocols that want to sleep
+        when there is not more work to do.
+        """
+        sleepOnWait = self._getStreamingSleepOnWait()
+        if sleepOnWait > 0:
+            self.info("Not much work to do now, sleeping %s seconds."
+                      % sleepOnWait)
+            time.sleep(sleepOnWait)
+
 
     def _insertNewMics(self, inputMics, getMicKeyFunc,
                        insertStepFunc, insertStepListFunc, *args):
