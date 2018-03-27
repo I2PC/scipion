@@ -235,3 +235,63 @@ class EMProtocol(Protocol):
 
     def _getStreamingBatchSize(self):
         return self.getAttributeValue('streamingBatchSize', 1)
+
+    def _insertNewMics(self, inputMics, getMicKeyFunc,
+                       insertStepFunc, insertStepListFunc, *args):
+        """ Insert steps of new micrographs taking into account the batch size.
+        It is assumed that a self.micDict exists mapping between micKey and mic.
+        It is also assumed that self.streamClosed is defined...with True value
+        if the input stream is closed.
+        This function can be used from several base protocols that support
+        streaming and batch:
+
+        - Prot
+        - ProtParticlePickingAuto
+        - ProtExtractParticles
+        Params:
+            inputMics: the input micrographs to be inserted into steps
+            getMicKeyFunc: function to get the key of a micrograph
+                (usually mic.getMicName()
+            insertStepFunc: function used to insert a single step
+            insertStepListFunc: function used to insert many steps.
+            *args: argument list to be passed to step functions
+        Returns:
+            The list of step Ids that can be used as dependencies.
+        """
+        deps = []
+        insertedMics = inputMics
+
+        # Despite this function only should insert new micrographs
+        # let's double check that they are not inserted already
+        micList = [mic for mic in inputMics
+                   if getMicKeyFunc(mic) not in self.micDict]
+
+        def _insertSubset(micSubset):
+            stepId = insertStepListFunc(micSubset, self.initialIds, *args)
+            deps.append(stepId)
+
+        # Now handle the steps depending on the streaming batch size
+        batchSize = self._getStreamingBatchSize()
+
+        if batchSize == 1: # This is one by one, as before the batch size
+            for mic in micList:
+                stepId = insertStepFunc(mic, self.initialIds, *args)
+                deps.append(stepId)
+        elif batchSize == 0:  # Greedy, take all available ones
+            _insertSubset(micList)
+        else:  # batchSize > 0, insert only batches of this size
+            n = len(inputMics)
+            d = n / batchSize # number of batches to insert
+            nd = d * batchSize
+            for i in range(d):
+                _insertSubset(micList[i*batchSize:(i+1)*batchSize])
+
+            if n > nd and self.streamClosed:  # insert last ones
+                _insertSubset(micList[nd:])
+            else:
+                insertedMics = micList[:nd]
+
+        for mic in insertedMics:
+            self.micDict[getMicKeyFunc(mic)] = mic
+
+        return deps

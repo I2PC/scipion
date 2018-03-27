@@ -306,46 +306,11 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             insertedDict: contains already processed mics
             inputMics: input mics set to be check
         """
-        deps = []
-        insertedMics = inputMics
-
-        # Despite this function only should insert new micrographs
-        # let's double check that they are not inserted already
-        micList = [mic for mic in inputMics
-                   if mic.getMicName() not in self.micDict]
-
-        def _insertSubset(micSubset):
-            stepId = self._insertPickMicrographListStep(micSubset,
-                                                        self.initialIds,
-                                                        *self._getPickArgs())
-            deps.append(stepId)
-
-        # Now handle the steps depending on the streaming batch size
-        batchSize = self._getStreamingBatchSize()
-
-        if batchSize == 1: # This is one by one, as before the batch size
-            for mic in micList:
-                stepId = self._insertPickMicrographStep(mic, self.initialIds,
-                                                        *self._getPickArgs())
-                deps.append(stepId)
-        elif batchSize == 0: # Greedy, take all available ones
-            _insertSubset(micList)
-        else:  # batchSize > 0, insert only batches of this size
-            n = len(inputMics)
-            d = n / batchSize # number of batches to insert
-            nd = d * batchSize
-            for i in range(d):
-                _insertSubset(micList[i*batchSize:(i+1)*batchSize])
-
-            if n > nd and self.streamClosed:  # insert last ones
-                _insertSubset(micList[nd:])
-            else:
-                insertedMics = micList[:nd]
-
-        for mic in insertedMics:
-            self.micDict[mic.getMicName()] = mic
-
-        return deps
+        return self._insertNewMics(inputMics,
+                                   lambda mic: mic.getMicName(),
+                                   self._insertPickMicrographStep,
+                                   self._insertPickMicrographListStep,
+                                   *self._getPickArgs())
 
     def _loadSet(self, inputSet, SetClass, getKeyFunc):
         """ Load a given input set if their items are not already present

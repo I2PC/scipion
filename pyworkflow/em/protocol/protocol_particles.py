@@ -186,21 +186,11 @@ class ProtExtractParticles(ProtParticles):
         Params:
             inputMics: input mics set to be check
         """
-        deps = []
-        #  TODO: We must check if the new inserted micrographs has associated
-        #  coordinates. If not, we cannot extract particles. This is mandatory
-        # if the inputMics are from "other" option.
-    
-        # For each mic insert the step to process it
-        for mic in inputMics:
-            micKey = mic.getMicName()
-            if micKey not in self.micDict:
-                args = self._getExtractArgs()
-                stepId = self._insertExtractMicrographStep(mic, self.initialIds,
-                                                           *args)
-                deps.append(stepId)
-                self.micDict[micKey] = mic
-        return deps
+        return self._insertNewMics(inputMics,
+                                   lambda mic: mic.getMicName(),
+                                   self._insertExtractMicrographStep,
+                                   self._insertExtractMicrographListStep,
+                                   *self._getExtractArgs())
 
     def _insertFinalSteps(self, micSteps):
         """ Override this function to insert some steps after the
@@ -217,6 +207,8 @@ class ProtExtractParticles(ProtParticles):
         return micStepId
     
     # -------------------------- STEPS functions ------------------------------
+
+
     def extractMicrographStep(self, micKey, *args):
         """ Step function that will be common for all extraction protocols.
         It will take an id and will grab the micrograph from a micDict map.
@@ -226,8 +218,6 @@ class ProtExtractParticles(ProtParticles):
         # Retrieve the corresponding micrograph with this key and the
         # associated list of coordinates
         mic = self.micDict[micKey]
-        coordList = self.coordDict[mic.getObjId()]
-        self._convertCoordinates(mic, coordList)
 
         micDoneFn = self._getMicDone(mic)
         micFn = mic.getFileName()
@@ -235,6 +225,9 @@ class ProtExtractParticles(ProtParticles):
         if self.isContinued() and os.path.exists(micDoneFn):
             self.info("Skipping micrograph: %s, seems to be done" % micFn)
             return
+
+        coordList = self.coordDict[mic.getObjId()]
+        self._convertCoordinates(mic, coordList)
 
         # Clean old finished files
         pwutils.cleanPath(micDoneFn)
@@ -250,7 +243,46 @@ class ProtExtractParticles(ProtParticles):
         to picking the given micrograph. """
         pass
 
-    # --------------------------- UTILS functions ------------------------------
+    # ---------- Methods to extract many micrographs at once ------------------
+
+    def _insertExtractMicrographListStep(self, micList, prerequisites, *args):
+        """ Basic method to insert a picking step for a given micrograph. """
+        return self._insertFunctionStep('extractMicrographListStep',
+                                        [mic.getMicName() for mic in micList],
+                                        *args, prerequisites=prerequisites)
+
+    def extractMicrographListStep(self, micKeyList, *args):
+        micList = []
+
+        for micName in micKeyList:
+            mic = self.micDict[micName]
+            micDoneFn = self._getMicDone(mic)
+            micFn = mic.getFileName()
+            if self.isContinued() and os.path.exists(micDoneFn):
+                self.info("Skipping micrograph: %s, seems to be done" % micFn)
+
+            else:
+                # Clean old finished files
+                pwutils.cleanPath(micDoneFn)
+                self.info("Extracting micrograph: %s " % micFn)
+                micList.append(mic)
+
+        self._extractMicrographList(micList, *args)
+
+        for mic in micList:
+            # Mark this mic as finished
+            open(self._getMicDone(mic), 'w').close()
+
+    def _extractMicrographList(self, micList, *args):
+        """ Extract more than one micrograph at once.
+        Here the default implementation is to iterate through the list and
+        call the single extract, but it could be re-implemented on each
+        subclass to provide a more efficient implementation.
+        """
+        for mic in micList:
+            self._extractMicrograph(mic, *args)
+
+    # --------------------------- UTILS functions -----------------------------
     def _convertCoordinates(self, mic, coordList):
         """ This function should be implemented by subclasses. """
         pass
@@ -358,6 +390,9 @@ class ProtExtractParticles(ProtParticles):
         # Now load the coordinates for the newly detected micrographs. If
         # microgrpahs does not have coordinates, is not processed.
         micDict = self._loadInputCoords(micDict)
+
+        # Store this value to be used when inserting new steps and batch mode
+        self.streamClosed = self._isStreamClosed()
 
         return micDict
 
@@ -484,9 +519,9 @@ class ProtExtractParticles(ProtParticles):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
 
-    def readCoordsFromMics(self, outputDir, micDoneList, outputCoords):
+    def readPartsFromMics(self, micDoneList, outputParts):
         """ This method should be implemented in subclasses to read
-        the coordinates from a given list of micrographs.
+        the particles from a given list of micrographs.
         """
         pass
 
@@ -500,7 +535,8 @@ class ProtExtractParticles(ProtParticles):
             outputParts = self._createSetOfParticles()
             outputParts.copyInfo(inputMics)
             outputParts.setCoordinates(self.getCoords())
-            if self.doFlip:
+
+            if self.getAttributeValue('doFlip', False):
                 outputParts.setIsPhaseFlipped(not inputMics.isPhaseFlipped())
 
             outputParts.setSamplingRate(self._getNewSampling())
