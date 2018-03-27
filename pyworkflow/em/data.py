@@ -815,7 +815,7 @@ class PdbFile(EMFile):
         if self.hasOrigin():
             return self._origin
         else:
-            if returnInitIfNone:
+            if force:
                 t = Transform()
                 t.setShifts(0., 0., 0.)
                 return t  # The identity matrix
