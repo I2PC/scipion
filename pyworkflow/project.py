@@ -1068,10 +1068,10 @@ class Project(object):
         The check will only be done for protocols that have not been sent
         to a queue system.
         """
-        from pyworkflow.protocol.launch import _isLocal
+        from pyworkflow.protocol.launch import _runsLocally
         pid = protocol.getPid()
 
-        if (protocol.isRunning() and _isLocal(protocol)
+        if (protocol.isRunning() and _runsLocally(protocol)
             and not protocol.useQueue()
             and not pwutils.isProcessAlive(pid)):
             protocol.setFailed("Process %s not found running on the machine. "
@@ -1079,7 +1079,6 @@ class Project(object):
                                "reporting the status to Scipion. Logs might "
                                "have information about what happened to this "
                                "process." % pid)
-
 
     def iterSubclasses(self, classesName, objectFilter=None):
         """ Retrieve all objects from the project that are instances

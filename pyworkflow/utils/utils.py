@@ -287,11 +287,20 @@ def getLocalUserName():
 
 
 def getLocalHostName():
-    """ Recover local machine name.
-    returns: Local machine name.
-    """
+    return getHostName()
+
+
+def getHostName():
+    """ Return the name of the local machine. """
     import socket
     return socket.gethostname()
+
+
+def getHostFullName():
+    """ Return the fully-qualified name of the local machine. """
+    import socket
+    return socket.getfqdn()
+
 
 
 def isInFile(text, filePath):
