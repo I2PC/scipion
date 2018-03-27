@@ -99,11 +99,12 @@ class TestRealignmentClasses(BaseTest):
 
     def runClassify(self, inputParts):
         numClasses = int(inputParts.getSize()/1000)
-        if numClasses<2:
+        if numClasses<=2:
             numClasses=4
         protClassify = self.newProtocol(XmippProtCL2D,
                                         numberOfIterations = 2,
-                                        numberOfClasses=numClasses)
+                                        numberOfClasses=numClasses,
+                                        numberOfInitialClasses=numClasses)
         protClassify.inputParticles.set(inputParts)
         self.launchProtocol(protClassify)
 
