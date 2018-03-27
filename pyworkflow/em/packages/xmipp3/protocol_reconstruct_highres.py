@@ -134,6 +134,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='Remove from the next reference all negative values')
         form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
+        form.addParam('nextDropout', FloatParam, label="Dropout", default=0.0, expertLevel=LEVEL_ADVANCED,
+                      help='This is the probability with which voxels are dropped (set to 0.0) inside the binary mask')
         form.addParam('nextReferenceScript', StringParam, label="Next reference command", default="", expertLevel=LEVEL_ADVANCED, 
                       help='A command template that is used to generate next reference. The following variables can be used ' 
                            '%(sampling)s %(dim)s %(volume)s %(iterDir)s. The command should read Spider volumes and modify the input volume.'
@@ -162,6 +164,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations', condition='alignmentMethod!=2')
         form.addParam('NimgsSGD', IntParam, default=250, label='Random subset size', condition='alignmentMethod==3',
                       expertLevel=LEVEL_ADVANCED, help="Stochastic alignment is performed by taking random subsets of images of this size")
+        form.addParam('alphaSGD', FloatParam, default=0.1, label='Step size', condition='alignmentMethod==3',
+                      expertLevel=LEVEL_ADVANCED, help="The update is performed as V(k+1)=(1-alpha)*V(k)+alpha*R(k+1), that is, the previous "
+                                                       "volume weights 1-alpha, while the new one weights alpha")
         form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False, expertLevel=LEVEL_ADVANCED,
                       help="You may reconstruct only with those images falling on a certain range. This is particularly useful for helices where "\
                          "you may want to use projections very close to 90 degrees")
@@ -679,6 +684,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 self.runJob('xmipp_transform_threshold','-i %s --select below 0 --substitute value 0'%fnReferenceVol,numberOfMpi=1)
             if fnMask!='':
                 self.runJob('xmipp_image_operate','-i %s --mult %s'%(fnReferenceVol,fnMask),numberOfMpi=1)
+            if self.nextDropout.get()>0.0:
+                self.runJob('xmipp_image_operate','-i %s --dropout %f'%(fnReferenceVol,self.nextDropout),numberOfMpi=1)
             if self.nextReferenceScript!="":
                 scriptArgs = {'volume': fnReferenceVol,
                               'sampling': TsCurrent,
@@ -1242,14 +1249,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 
                 # If stochastic gradient descent
                 if self.alignmentMethod==self.STOCHASTIC_ALIGNMENT:
-                    Nimgs = self.inputParticles.get().getSize()
-                    alpha = float(self.NimgsSGD.get())/Nimgs
                     newXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
                     fnAuxVol=join(fnDirCurrent,"volume%02d_aux.vol"%i)
                     fnPreviousVol=join(fnDirPrevious,"volume%02d.vol"%i)
                     self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%(fnPreviousVol,fnAuxVol,newXdim))
-                    self.runJob("xmipp_image_operate","-i %s --mult %f"%(fnVol,alpha))
-                    self.runJob("xmipp_image_operate","-i %s --mult %f"%(fnAuxVol,1-alpha))
+                    self.runJob("xmipp_image_operate","-i %s --mult %f"%(fnVol,self.alphaSGD.get()))
+                    self.runJob("xmipp_image_operate","-i %s --mult %f"%(fnAuxVol,1-self.alphaSGD.get()))
                     self.runJob("xmipp_image_operate","-i %s --plus %s"%(fnVol,fnAuxVol))
                     cleanPath(fnAuxVol)
                 if deleteStack:
