@@ -38,6 +38,8 @@ from phenix import  *
 from pyworkflow.utils.path import createLink
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.packages.xmipp3 as xmipp3
+from pyworkflow.em.convert_header.CCP4.convert import (
+    adaptFileToCCP4, runCCP4Program, START, getProgram)
 
 OUTPUT_SHARP = 'outputvolume'
 OUTPUT_HALF1 = 'outputhalf1'
@@ -122,7 +124,8 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
                       " to maximize sharpening target (kurtosis or adjusted_sa)."
                       " b_iso_to_d_cut applies b_iso only up to resolution specified,"
                       " with fall-over of k_sharpen. Resolution dependent adjusts 3 parameters"
-                      " to sharpen variably over resolution range. Default is b_iso_to_d_cut" )        
+                      " to sharpen variably over resolution range. Default is b_iso_to_d_cut" )     
+    
 
         form.addParam('sharpTarget', EnumParam, choices=['adjusted_sa', 'kurtosis'],
                       label='sharpening_target', default=self.METHOD_ADJUSTED,                    
@@ -170,23 +173,42 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
              em.downloadPdb(self.pdbId.get(), self._getPdbFileName(), self._log)
        
     def convertInputStep(self):
-        img = ImageHandler()
+        fnVol = self.inputMap.get()
+        inFileName = fnVol.getFileName()
+        if inFileName.endswith(":mrc"):
+            inFileName.replace(":mrc", "")
         self.vol0Fn = self._getTmpPath("inputMap.mrc")
-        img.convert(self.inputMap.get(), self.vol0Fn)
-        xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
-                               %(self.vol0Fn+":mrc",self.inputMap.get().getSamplingRate()))
-
-        if self.useSplitVolumes.get() is True or self.sharpSplitVolumes.get() is True:  
+        origin = fnVol.getOrigin(force=True).getShifts()
+        sampling = fnVol.getSamplingRate()
+        adaptFileToCCP4(inFileName, self.vol0Fn, origin, sampling,
+                        START)
+        
+        if self.useSplitVolumes.get() is True or self.sharpSplitVolumes.get() is True:          
              self.vol1Fn, self.vol2Fn = self.inputMap.get().getHalfMaps()
-             self.vol1FnM = self._getTmpPath("halfMap1.mrc")
-             img.convert(self.vol1Fn, self.vol1FnM)            
-             self.vol2FnM = self._getTmpPath("halfMap2.mrc")  
-             img.convert(self.vol2Fn, self.vol2FnM) 
-             
-             xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
-                                   %(self.vol1FnM+":mrc",self.inputMap.get().getSamplingRate()))           
-             xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
-                                   %(self.vol2FnM+":mrc",self.inputMap.get().getSamplingRate()))                    
+             halfFilename1=self.vol1Fn
+             if halfFilename1.endswith(":mrc"):
+                 halfFilename1.replace(":mrc", "")
+             halfFilename2=self.vol2Fn
+             if halfFilename2.endswith(":mrc"):
+                 halfFilename2.replace(":mrc", "")                        
+             self.vol1FnM = self._getTmpPath("halfMap1.mrc")       
+             self.vol2FnM = self._getTmpPath("halfMap2.mrc")       
+             adaptFileToCCP4(halfFilename1, self.vol1FnM, origin, sampling,
+                        START)   
+             adaptFileToCCP4(halfFilename2, self.vol2FnM, origin, sampling,
+                        START)                    
+        
+#         if self.useSplitVolumes.get() is True or self.sharpSplitVolumes.get() is True:  
+#              self.vol1Fn, self.vol2Fn = self.inputMap.get().getHalfMaps()
+#              self.vol1FnM = self._getTmpPath("halfMap1.mrc")
+#              img.convert(self.vol1Fn, self.vol1FnM)            
+#              self.vol2FnM = self._getTmpPath("halfMap2.mrc")  
+#              img.convert(self.vol2Fn, self.vol2FnM) 
+#              
+#              xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
+#                                    %(self.vol1FnM+":mrc",self.inputMap.get().getSamplingRate()))           
+#              xmipp3.runXmippProgram("xmipp_image_header","-i %s --sampling_rate %f"
+#                                    %(self.vol2FnM+":mrc",self.inputMap.get().getSamplingRate()))                    
                 
         if self.usePDB:  
              self.pdbFn = self._getPdbFileName()                           
@@ -200,7 +222,10 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
              params += ' pdb_file=%s' % self.pdbFn  
         if self.resolution.get() != -1:              
              params += ' resolution=%f' % self.resolution.get()  
+d={}
+d[self.SHARP_ISOCUT]='b_iso_to_d_cut'
 
+d[self.sharpening]
           #auto_sharpen_methods        
         if self.sharpening == self.SHARP_ISOCUT:                                            
              params += ' auto_sharpen_methods=b_iso_to_d_cut'                  
@@ -216,7 +241,7 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
              params += ' auto_sharpen_methods=model_sharpening'             
         elif self.sharpening == self.SHARP_NOSHARP:                                             
              params += ' auto_sharpen_methods=no_sharpening'         
-            
+              
             
         if self.sharpTarget == self.METHOD_ADJUSTED:              
              params += ' sharpening_target=adjusted_sa  residual_target=adjusted_sa'    
@@ -249,13 +274,18 @@ class PhenixProtAutomatedSharpening(ProtPreprocessVolumes):
                                     %self._getFileName(OUTPUT_HALF2))
              xmipp3.runXmippProgram("xmipp_transform_geometry","-i %s --rotate_volume euler 180 90 0"
                                     %self._getFileName(OUTPUT_HALF2))
-        
+ 
+       
     def createOutputStep(self):
         inputMap = self.inputMap.get()
                
         vol = em.Volume()          
-        vol.setFileName(self._getFileName(OUTPUT_SHARP))        
-        vol.setSamplingRate(inputMap.getSamplingRate())       
+        vol.setLocation(self._getFileName(OUTPUT_SHARP))        
+        vol.setSamplingRate(inputMap.getSamplingRate())     
+        
+        fnVol = self.inputMap.get()
+        origin = fnVol.getOrigin(force=True)
+        vol.setOrigin(origin)
         self._defineOutputs(outputVol=vol)       
         self._defineSourceRelation(self.inputMap, vol)    
         

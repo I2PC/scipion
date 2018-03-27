@@ -32,6 +32,7 @@ wrapping Phenix programs
 from bibtex import _bibtex # Load bibtex dict with references
 from protocol_automated_sharpening import PhenixProtAutomatedSharpening
 from phenix import *
+from viewer import viewerPhenixAutoSharpen
 #from convert import getEnviron
 
 # _environ = getEnviron()
