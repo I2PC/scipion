@@ -35,6 +35,20 @@ __device__ __constant__ float cBlobAlpha = 0.f;
 __device__ __constant__ float cIw0 = 0.f;
 __device__ __constant__ float cIDeltaSqrt = 0.f;
 
+
+#define MB(bytes) (bytes)/1048576.f
+
+size_t getFreeMemory(FILE* __restrict __stream) {
+    size_t free, total;
+    cudaMemGetInfo(&free, &total);
+    if (__stream)
+        fprintf(__stream,
+        		"Free:\t%0.1f MB"
+        		"\tallocated:\t%0.1f MB"
+        		"\ttotal:\t%0.1f MB\n", MB(free), MB(total-free), MB(total));
+    return free;
+}
+
 float* devBlobTableSqrt = NULL;
 
 // Holding streams used for calculation. Present on CPU

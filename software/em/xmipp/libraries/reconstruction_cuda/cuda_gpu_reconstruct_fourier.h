@@ -65,6 +65,10 @@ struct FRecBufferDataGPUWrapper {
 	RecFourierBufferDataGPU* gpuCopy;
 };
 
+#define MB(bytes) (bytes)/1048576.f
+
+size_t getFreeMemory(FILE* __restrict __stream=NULL);
+
 /**
  * Method will allocate buffer wrapper for given stream
  * 'buffer' is used for size references, i.e. it has to have the same

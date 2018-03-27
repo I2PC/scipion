@@ -356,6 +356,8 @@ void ProgRecFourierGPU::prepareBuffer(RecFourierWorkThread* threadParams,
 }
 
 
+
+
 void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	XMIPP_TRY // in case some method throws a xmipp exception
 
@@ -397,10 +399,10 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "processBufferKernelReference", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
 
 	size_t volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
-	parent->tempVolumeGPU = new float[volumeSize * 2];
-	parent->tempWeightsGPU = new float[volumeSize];
-	parent->tempVolumeGPUtmp = new float[volumeSize * 2];
-	parent->tempWeightsGPUtmp = new float[volumeSize];
+	parent->tempVolumeGPU = new float[volumeSize * 2]();
+	parent->tempWeightsGPU = new float[volumeSize]();
+	parent->tempVolumeGPUtmp = new float[volumeSize * 2]();
+	parent->tempWeightsGPUtmp = new float[volumeSize]();
 	RecFourierProjectionTraverseSpace dummy;
 
 	// Add new arguments to tuner, argument data is copied from std::vector containers
@@ -419,17 +421,17 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	ktt::ArgumentId startSpaceIndexId = tuner.addArgumentScalar(0);
 
 
-	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8,12,16,20,24,28,32}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
-	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8,12,16,20,24,28,32}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
-	tuner.addParameter(kernelId, "TILE", {1,2,4,8});
+	tuner.addParameter(kernelId, "BLOCK_DIM_X", {8}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
+	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {8}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
+	tuner.addParameter(kernelId, "TILE", {1});
 
-	tuner.addParameter(kernelId, "GRID_DIM_Z", {1,4,8,16}, ktt::ModifierType::Global, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Z);
+	tuner.addParameter(kernelId, "GRID_DIM_Z", {1}, ktt::ModifierType::Global, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Z);
 
-	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0,1});
-	tuner.addParameter(kernelId, "SHARED_IMG", {0, 1});
+	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {0});
+	tuner.addParameter(kernelId, "SHARED_IMG", {0});
 	tuner.addParameter(kernelId, "USE_ATOMICS", {0, 1});
 	tuner.addParameter(kernelId, "BLOB_TABLE_SIZE_SQRT", {BLOB_TABLE_SIZE_SQRT});
-	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {0,1});
+	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {0});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
 	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
 	tuner.addParameter(kernelId, "blobOrder", {parent->blob.order});
@@ -487,6 +489,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<ktt::ArgumentId>{volId,
         weightId});
 
+//    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.5});
+
 
         // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
         // provide list of arguments which will be validated
@@ -517,6 +521,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     for(int bIndex = startLoadIndex;
 		bIndex <= lastLoadIndex;
 		bIndex += parent->bufferSize) {
+    	getFreeMemory(stdout);
 		// load data
 		threadParams->startImageIndex = bIndex;
 		threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
@@ -542,6 +547,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	std::string rawname = parent->fn_out.getString().substr(0, lastindex);
 	tuner.setInvalidResultPrinting(true);
 	tuner.printResult(kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
+	delete[] parent->tempVolumeGPUtmp;
+	delete[] parent->tempWeightsGPUtmp;
 
     // clean after itself
     releaseWrapper(threadParams->gpuStream);
