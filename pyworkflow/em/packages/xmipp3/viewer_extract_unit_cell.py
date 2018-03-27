@@ -89,7 +89,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             return self._showVolumesXmipp()
 
     def _createSetOfVolumes(self):
-        if not exists(self.protocol._getTmpPath() + '/tmpVolumes.sqlite'):
+        if not exists(self.protocol._getTmpPath('tmpVolumes.sqlite')):
             tmpFileName = self.protocol._getTmpPath("tmpVolumes.sqlite")
             _inputVol = self.protocol.inputVolumes.get()
             _outputVol = self.protocol.outputVolume
@@ -98,7 +98,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             setOfVolumes.append(_outputVol)
             setOfVolumes.write()
         else:
-            tmpFileName = self.protocol._getTmpPath()+'/tmpVolumes.sqlite'
+            tmpFileName = self.protocol._getTmpPath('tmpVolumes.sqlite')
             setOfVolumes = SetOfVolumes(filename=tmpFileName)
         return setOfVolumes
 
