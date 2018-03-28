@@ -538,7 +538,7 @@ Examples:
         else:
             for it in self._iterations:
                 for ref3d in self._refsList:
-                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref3d=ref3d)
+                    volFn = self.protocol._getFileName('iter_vol_class', iter=it, ref=ref3d)
                     volumes.append(volFn)
         return volumes
 

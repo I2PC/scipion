@@ -185,17 +185,21 @@ enum MDLabel
     MDL_CTF_CRIT_PSDPCA1VARIANCE, ///< Variance in the first principal component of the PSDs
     MDL_CTF_CRIT_PSDPCARUNSTEST, ///< Runs test on the projection of the PSD on the first principal component
     MDL_CTF_CRIT_NORMALITY, ///< Normality test between histogram of micrography and gaussian distribution
+    MDL_CTF_CRIT_ICENESS, ///< Iceness of the micrograph
     MDL_CTF_DOWNSAMPLE_PERFORMED, ///< Downsampling performed to estimate the CTF
     MDL_CTF_DIMENSIONS, // Size in pixels of the 3D PSF to be created (Xdim, Ydim, Zdim)
     MDL_CTF_LAMBDA, /// Wavelength (nm)
     MDL_CTF_XRAY_LENS_TYPE, ///Algorithm used to generate Xray PSF
     MDL_CTF_XRAY_OUTER_ZONE_WIDTH, /// Outermost zone width of the X-ray Fresnel lens (nm)
     MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
+	MDL_CTF_PHASE_SHIFT,	//Volta Phase Plate phase shift
+	MDL_CTF_VPP_RADIUS,    //Phase Plate radius
     MDL_CUMULATIVE_SSNR, ///<Cumulative SSNR (double)
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
     MDL_DIMRED, ///< Projection onto a reduced manifold (vector double)
     MDL_DIRECTION, ///< Direction in 3D
+
 
     MDL_DM3_IDTAG,
     MDL_DM3_NODEID,
@@ -379,6 +383,8 @@ enum MDLabel
     MDL_SCORE_BY_RAMP,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_SCREENING, ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_VARIANCE,  ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_VAR, /// < Particle variance (double)
+    MDL_SCORE_BY_GINI, /// < Micrographs Gini Coeff. (double)
     MDL_SCORE_BY_ZERNIKE,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
@@ -1481,6 +1487,8 @@ private:
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN_K, LABEL_DOUBLE, "ctfBgGaussianK");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN_SIGMAU, LABEL_DOUBLE, "ctfBgGaussianSigmaU");
         MDL::addLabel(MDL_CTF_BG_GAUSSIAN_SIGMAV, LABEL_DOUBLE, "ctfBgGaussianSigmaV");
+        MDL::addLabel(MDL_CTF_PHASE_SHIFT, LABEL_DOUBLE, "ctfVPPphaseshift");
+        MDL::addLabel(MDL_CTF_VPP_RADIUS, LABEL_DOUBLE, "ctfVPPRadius");
 
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_CU, "CTFBG_Gaussian2_CU");//3.0
         MDL::addLabelAlias(MDL_CTF_BG_GAUSSIAN2_CV, "CTFBG_Gaussian2_CV");//3.0
@@ -1523,6 +1531,7 @@ private:
         MDL::addLabel(MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO, LABEL_DOUBLE, "ctfCritCtfMargin");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGCORR13, LABEL_DOUBLE, "ctfCritCorr13");
         MDL::addLabel(MDL_CTF_CRIT_FITTINGSCORE, LABEL_DOUBLE, "ctfCritFitting");
+        MDL::addLabel(MDL_CTF_CRIT_ICENESS, LABEL_DOUBLE, "ctfCritIceness");
         MDL::addLabel(MDL_CTF_CRIT_NORMALITY, LABEL_DOUBLE, "ctfCritNormality");
         MDL::addLabel(MDL_CTF_CRIT_PSDCORRELATION90, LABEL_DOUBLE, "ctfCritPsdCorr90");
         MDL::addLabel(MDL_CTF_CRIT_PSDPCA1VARIANCE, LABEL_DOUBLE, "ctfCritPsdPCA1");
@@ -1825,6 +1834,8 @@ private:
         MDL::addLabel(MDL_SCORE_BY_RAMP, LABEL_VECTOR_DOUBLE, "rampCoefficients");
         MDL::addLabel(MDL_SCORE_BY_SCREENING, LABEL_VECTOR_DOUBLE, "screenFeatures");
         MDL::addLabel(MDL_SCORE_BY_VARIANCE, LABEL_VECTOR_DOUBLE, "varianceFeatures");
+        MDL::addLabel(MDL_SCORE_BY_VAR, LABEL_DOUBLE, "scoreByVariance");
+        MDL::addLabel(MDL_SCORE_BY_GINI, LABEL_DOUBLE, "scoreByGiniCoeff");
         MDL::addLabel(MDL_SCORE_BY_ZERNIKE, LABEL_VECTOR_DOUBLE, "zernikeMoments");
 		MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 

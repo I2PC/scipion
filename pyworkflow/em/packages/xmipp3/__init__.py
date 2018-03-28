@@ -61,6 +61,8 @@ from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
+#ROB no file protocol_3dbionotes in devel
+#from protocol_3dbionotes import XmippProt3DBionotes
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
@@ -70,6 +72,10 @@ from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
+#AJ
+from protocol_classification_gpuCorr import XmippProtGpuCrrCL2D
+from protocol_classification_gpuCorr_semi import XmippProtStrGpuCrrSimple
+#END
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
 from protocol_compare_angles import XmippProtCompareAngles
@@ -92,6 +98,7 @@ from protocol_mltomo import XmippProtMLTomo
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
+from protocol_movie_max_shift import XmippProtMovieMaxShift
 from protocol_multiple_fscs import XmippProtMultipleFSCs
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_normalize_strain import XmippProtNormalizeStrain
@@ -114,6 +121,7 @@ from protocol_rotational_symmetry import XmippProtRotationalSymmetry
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_solid_angles import XmippProtSolidAngles
 from protocol_split_volume import XmippProtSplitvolume
+from protocol_trigger_data import XmippProtTriggerData
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting
 # from protocol_validate_tilt import XmippProtValidateTilt

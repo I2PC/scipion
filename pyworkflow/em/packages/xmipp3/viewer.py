@@ -80,6 +80,7 @@ class XmippViewer(Viewer):
                 SetOfImages,
                 SetOfMovies,
                 SetOfNormalModes,
+                SetOfPDBs,
                 XmippProtCompareReprojections,
                 XmippProtCompareAngles,
                 XmippParticlePickingAutomatic,
@@ -151,6 +152,14 @@ class XmippViewer(Viewer):
                                           fn, obj.strId(),
                                           viewParams={OBJCMDS: objCommands},
                                           **kwargs))
+
+        elif issubclass(cls, SetOfPDBs):
+            fn = obj.getFileName()
+            labels = 'id _filename '
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
+                                          viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
+                                                      MODE: MODE_MD, RENDER: "no"}))
 
         elif issubclass(cls, SetOfMovies):
             fn = obj.getFileName()
@@ -286,6 +295,13 @@ class XmippViewer(Viewer):
                     xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
                     xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                     xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
+                    self._views.append(xplotter)
+                # If VARscore on output images plot VARscore particle sorting
+                if md.containsLabel(xmipp.MDL_SCORE_BY_VAR):
+                    from plotter import XmippPlotter
+                    xplotter = XmippPlotter(windowTitle="Variance particles sorting")
+                    xplotter.createSubPlot("Variance Histogram", "Variance", "Number of particles")
+                    xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_SCORE_BY_VAR, nbins=100)
                     self._views.append(xplotter)
 
         elif issubclass(cls, XmippProtMovieGain):

@@ -447,13 +447,14 @@ class Image(EMObject):
         # this matrix can be used for 2D/3D alignment or
         # to represent projection directions
         self._transform = None
-        # default orign by default is box center =
-        # (Xdim/2, Ydim/2,Zdim/2)
+        # default origin by default is box center =
+        # (Xdim/2, Ydim/2,Zdim/2)*sampling
         # origin stores a matrix that using as input the point (0,0,0)
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
-        # _origin is an object of the class Transformor shifts
-        # units are pixels
+        # _origin is an object of the class Transform shifts
+        # units are A.
+        # Origin coordinates follow the MRC convention
         self._origin = None
         if location:
             self.setLocation(location)
@@ -578,22 +579,45 @@ class Image(EMObject):
     def hasOrigin(self):
         return self._origin is not None
 
-    def getOrigin(self, returnInitIfNone=False):
+    def getOrigin(self, force=False):
+        """shifts in A"""
         if self.hasOrigin():
             return self._origin
         else:
-            if returnInitIfNone:
-                t = Transform()
-                x, y, z = self.getDim()
-                if z > 1:
-                    z = z/2
-                t.setShifts(x/2, y/2, z)
-                return t  # The identity matrix
+            if force:
+                return self._getDefaultOrigin()
             else:
                 return None
 
+    def _getDefaultOrigin(self):
+        sampling = self.getSamplingRate()
+        t = Transform()
+        x, y, z = self.getDim()
+        if z > 1:
+            z = z / -2.
+        t.setShifts(x / -2. * sampling, y / -2. * sampling, z * sampling)
+        return t  # The identity matrix
+
+    def getVolOriginAsTuple(self):
+        origin = self.getOrigin(force=True).getShifts()
+        x = origin[0]
+        y = origin[1]
+        z = origin[2]
+        return x, y, z
+        # x, y, z are floats in Angstroms
+
     def setOrigin(self, newOrigin):
+        """shifts in A"""
         self._origin = newOrigin
+
+    def originResampled(self, originNotResampled, oldSampling):
+        factor = self.getSamplingRate() / oldSampling
+        shifts = originNotResampled.getShifts()
+        origin = self.getOrigin(force=True)
+        origin.setShifts(shifts[0] * factor,
+                         shifts[1] * factor,
+                         shifts[2] * factor)
+        return origin
 
     def __str__(self):
         """ String representation of an Image. """
@@ -748,10 +772,17 @@ class EMFile(EMObject):
 
 class PdbFile(EMFile):
     """Represents an PDB file. """
+
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
         self._volume = None
+        # origin stores a matrix that using as input the point (0,0,0)
+        # provides  the position of the actual origin in the system of
+        # coordinates of the default origin.
+        # _origin is an object of the class Transformor shifts
+        # units are Angstroms (in Image units are A)
+        self._origin = None
 
     def getPseudoAtoms(self):
         return self._pseudoatoms.get()
@@ -762,12 +793,37 @@ class PdbFile(EMFile):
     def getVolume(self):
         return self._volume
 
+    def hasVolume(self):
+        return self._volume is not None
+
     def setVolume(self, volume):
-        self._volume = volume
+        if type(volume) is Volume:
+            self._volume = volume
+        else:
+            raise Exception('TypeError', 'ERROR: SetVolume, This is not a '
+                                         'volume')
 
     def __str__(self):
-        return "%s (pseudoatoms=%s)" % \
-               (self.getClassName(), self.getPseudoAtoms())
+        return "%s (pseudoatoms=%s, volume=%s)" % \
+               (self.getClassName(), self.getPseudoAtoms(),
+                self.hasVolume())
+
+    def hasOrigin(self):
+        return self._origin is not None
+
+    def getOrigin(self, force=False):
+        if self.hasOrigin():
+            return self._origin
+        else:
+            if force:
+                t = Transform()
+                t.setShifts(0., 0., 0.)
+                return t  # The identity matrix
+            else:
+                return None
+
+    def setOrigin(self, newOrigin):
+        self._origin = newOrigin
 
 
 class EMSet(Set, EMObject):
@@ -1011,9 +1067,11 @@ class SetOfImages(EMSet):
         """ Return the string representing the dimensions. """
         return str(self._firstDim)
 
-    def iterItems(self, orderBy='id', direction='ASC'):
+    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None):
         """ Redefine iteration to set the acquisition to images. """
-        for img in Set.iterItems(self, orderBy=orderBy, direction=direction):
+        for img in Set.iterItems(self, orderBy=orderBy, direction=direction,
+                                 where=where, limit=limit):
+
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
             # don't want to override with the set acquisition for this case
@@ -1447,7 +1505,10 @@ class Transform(EMObject):
         m[0, 3] = x
         m[1, 3] = y
         m[2, 3] = z
-                
+
+    def setShiftsTuple(self, shifts):
+        self.setShifts(shifts[0], shifts[1], shifts[2])
+
     def composeTransform(self, matrix):
         '''Apply a transformation matrix to the current matrix '''            
         new_matrix = matrix * self.getMatrix()

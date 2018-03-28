@@ -50,3 +50,5 @@ from protocol_image_operate import OP_PLUS, OP_MINUS, OP_MULTIPLY, \
 from protocol_create_mask3d import XmippProtCreateMask3D
 from protocol_create_mask2d import XmippProtCreateMask2D
 
+from protocol_movie_resize import XmippProtMovieResize
+

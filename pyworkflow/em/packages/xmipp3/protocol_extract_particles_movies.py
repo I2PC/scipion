@@ -77,7 +77,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                       important=True,
                       label='Input coordinates')
         form.addParam('boxSize', IntParam, default=0,
-                      label='Particle box size', validators=[Positive],
+                      label='Particle box size (px)', validators=[Positive],
                       help='In pixels. The box size is the size of the boxed '
                            'particles, actual particles may be smaller than '
                            'this.')
@@ -150,7 +150,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                            'Ramp (subtract background+NewXmipp).')
         form.addParam('backRadius', IntParam, default=-1,
                       condition='doNormalize',
-                      label='Background radius',
+                      label='Background radius (px)',
                       help='Pixels outside this circle are assumed to be '
                            'noise and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
@@ -347,6 +347,10 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
+        
+        if self.doNormalize and self.backRadius > self.boxSize.get() / 2:
+            errors.append("Background radius for normalization should "
+                          "be equal or less than the box size.")
         
         inputSet = self.inputMovies.get()
         

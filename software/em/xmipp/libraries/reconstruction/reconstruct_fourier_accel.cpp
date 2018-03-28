@@ -135,6 +135,7 @@ void ProgRecFourierAccel::run()
 
 void ProgRecFourierAccel::createLoadingThread() {
 	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
+	loadThread.buffer1 = loadThread.buffer2 = NULL;
 	loadThread.parent = this;
 	loadThread.selFile = &SF;
 	pthread_create( &loadThread.id , NULL, loadImageThread, (void *)(&loadThread) );

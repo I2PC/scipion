@@ -205,25 +205,25 @@ addLib('XmippRecons',
 
 # Reconstruction CUDA
 if cuda:
-       addLib('XmippReconsCuda',
+    addLib('XmippReconsCuda',
        dirs=['libraries'],
        patterns=['reconstruction_cuda/*.cpp'],
        incs=bilib_incs, cuda=True,
        libs=['pthread'])
        
-       addLib('XmippReconsAdaptCuda',
+    addLib('XmippReconsAdaptCuda',
        dirs=['libraries'],
        patterns=['reconstruction_adapt_cuda/*.cpp'],
        incs=bilib_incs,
        libs=['pthread'])
        
-       addLib('XmippParallelAdaptCuda',
+    addLib('XmippParallelAdaptCuda',
        dirs=['libraries'],
        patterns=['parallel_adapt_cuda/*.cpp'],
        incs=bilib_incs,
        libs=['pthread', 'XmippData', 'XmippClassif', 'XmippRecons', 'XmippBilib', 'XmippReconsCuda', 'XmippReconsAdaptCuda'],
        mpi=True)
-  
+
 
 # Interface
 python_incs = ['#software/include/python2.7',
@@ -540,14 +540,15 @@ for p in ['angular_break_symmetry',
           'classify_extract_features',
           'classify_first_split',
           'classify_kerdensom',
-			
-	  'ctf_correct_wiener2d',
+          'coordinates_noisy_zones_filter',
+	        'ctf_correct_wiener2d',
           'ctf_correct_wiener3d',
           'ctf_correct_idr',
           'ctf_create_ctfdat',
           'ctf_enhance_psd',
           'ctf_estimate_from_micrograph',
           'ctf_estimate_from_psd',
+          'ctf_estimate_from_psd_fast',
           'ctf_group',
           'ctf_phase_flip',
           'ctf_show',
@@ -627,7 +628,7 @@ for p in ['angular_break_symmetry',
           'work_test',
 
           'transform_add_noise',
-	  'transform_adjust_image_grey_levels',
+	        'transform_adjust_image_grey_levels',
           'transform_adjust_volume_grey_levels',
           'transform_center_image',
           ('transform_dimred', ['XmippDimred']),
@@ -641,7 +642,7 @@ for p in ['angular_break_symmetry',
           'transform_randomize_phases',
           'transform_range_adjust',
           'transform_symmetrize',
-          'transform_threshold',
+	      'transform_threshold',
           'transform_window',
           'tomo_align_dual_tilt_series',
           'tomo_align_refinement',
@@ -740,6 +741,7 @@ for p in ['angular_break_symmetry',
           'test_sampling',
           'test_symmetries',
           'test_transformation',
+          'test_transform_window',
           'test_wavelets'
           ]:
     # Allow to add specific libs for indiviual programs
@@ -773,7 +775,9 @@ if opencv:
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
 
+
 if cuda:
+    addProg('cuda_correlation')
     addProg('cuda_reconstruct_fourier')
     addProg('mpi_cuda_reconstruct_fourier')
 
@@ -889,4 +893,3 @@ XmippAlias = env.Alias('xmipp', ['xmipp-libs',
 
 
 Return('XmippAlias')
-

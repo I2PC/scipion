@@ -1041,10 +1041,12 @@ class Set(OrderedObject):
         """ element in Set """
         return self._getMapper().selectById(itemId) != None
 
-    def iterItems(self, orderBy='id', direction='ASC', where='1'):
+    def iterItems(self, orderBy='id', direction='ASC', where='1',
+                  limit=None):
         return self._getMapper().selectAll(orderBy=orderBy,
                                            direction=direction,
-                                           where=where)#has flat mapper, iterate is true
+                                           where=where,
+                                           limit=limit)#has flat mapper, iterate is true
 
     def getFirstItem(self):
         """ Return the first item in the Set. """
@@ -1233,7 +1235,7 @@ class Set(OrderedObject):
     def enableAppend(self):
         """ By default, when a Set is loaded, it is opened
         in read-only mode, so no new insertions are allowed.
-        This function will allow to apppend more items
+        This function will allow to append more items
         to an existing set.
         """
         self._getMapper().enableAppend()

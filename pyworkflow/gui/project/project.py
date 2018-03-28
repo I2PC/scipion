@@ -44,7 +44,7 @@ import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
-from pyworkflow.project import Project
+from pyworkflow.project import Project, PROJECT_CONFIG_HOSTS
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
@@ -85,7 +85,7 @@ class ProjectWindow(ProjectBaseWindow):
                             icon='fa-trash-o.png')
         projMenu.addSubMenu('Manage project labels', 'labels',
                             icon=Icon.TAGS)
-        projMenu.addSubMenu('Toogle color mode', 'color_mode',
+        projMenu.addSubMenu('Toggle color mode', 'color_mode',
                             shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
         projMenu.addSubMenu('Select all protocols', 'select all',
                             shortCut="Ctrl+a")
@@ -245,7 +245,7 @@ class ProjectWindow(ProjectBaseWindow):
     def onManageProjectLabels(self):
         self.manageLabels()
 
-    def onToogleColorMode(self):
+    def onToggleColorMode(self):
         self.getViewWidget()._toggleColorScheme(None)
 
     def onSelectAllProtocols(self):
@@ -394,7 +394,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
     def onHosts(self):
         # Config -> Hosts
-        self._openConfigFile('hosts.conf')
+        self._openConfigFile(PROJECT_CONFIG_HOSTS)
 
     def onProtocols(self):
         self._openConfigFile('protocols.conf')
