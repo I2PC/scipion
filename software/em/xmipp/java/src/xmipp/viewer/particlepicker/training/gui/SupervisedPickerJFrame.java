@@ -45,12 +45,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.particlepicker.*;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
-import xmipp.viewer.particlepicker.training.model.MicrographState;
-import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.*;
 
 public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
@@ -97,8 +92,12 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             this.ppicker = picker;
             initComponents();
             setChanged(false);
-            if(!ppicker.getClassifier().needsTraining())
-            	ppicker.autopick(this, getMicrograph());
+            Classifier c = ppicker.getClassifier();
+            if(c instanceof GenericClassifier) {
+                GenericClassifier gc = (GenericClassifier)c;
+                if (!gc.hasInitialCoordinates())
+                    ppicker.autopick(this, getMicrograph());
+            }
         } catch (IllegalArgumentException ex) {
             //close();
             throw ex;
@@ -190,7 +189,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         String result = "";
 
         if (new File(dir).isDirectory()) {
-            //System.err.println("JM_DEBUG: ============= import from Folder ============");
             result = ppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale, invertx, inverty);
             boolean resize = ((Integer)sizetf.getValue()).intValue() != ppicker.getSize();
             sizetf.setValue(ppicker.getSize());
@@ -207,6 +205,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         return result;
 
     }
+
 
     protected void initializeCanvas() {
 
@@ -270,16 +269,14 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
     public void updateMicrographsModel(boolean all) {
 
-        if (particlesdialog != null) {
+        if (particlesdialog != null)
             loadParticles(false);
-        }
-
         int index = ppicker.getMicrographIndex();
-        if (all) {
+
+        if (all)
             micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1);
-        } else {
+         else
             micrographsmd.fireTableRowsUpdated(index, index);
-        }
 
         micrographstb.setRowSelectionInterval(index, index);
         manuallb.setText(Integer.toString(ppicker.getManualParticlesNumber()));
@@ -736,8 +733,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         }
         ppicker.setMicrograph(next);
         ppicker.saveConfig();
-        
-        if (ppicker.getMode() == Mode.Supervised) {
+        Mode mode = ppicker.getMode();
+
+        if (mode == Mode.Supervised) {
             resetbt.setEnabled(next.getState() != MicrographState.Manual);
             double threshold = next.getThreshold();
             if(threshold == 0 && next.getAutomaticParticlesNumber() == 0)
@@ -751,6 +749,10 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             thresholdsl.setValue((int) (threshold * 100));
             thresholdtf.setValue(threshold);
         }
+        else if (mode == Mode.Automatic) {
+            resetbt.setEnabled(false);
+        }
+
         initializeCanvas();
         if(ppicker.containsPSD())
             iconbt.setIcon(next.getCTFIcon());
@@ -936,7 +938,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 			});
     		tf.addActionListener(new ActionListener()
 			{
-				
 				@Override
 				public void actionPerformed(ActionEvent e)
 				{
@@ -945,7 +946,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 					for(SupervisedPickerMicrograph m: ppicker.getMicrographs())
 						ppicker.resetMicrograph(m);
 					ppicker.autopick(SupervisedPickerJFrame.this, getMicrograph());
-					
+
 				}
 			});
     		gpickerpn.add(tf);

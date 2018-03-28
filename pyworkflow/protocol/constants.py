@@ -47,9 +47,7 @@ STATUS_SCHEDULED = "scheduled"
 ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_INTERACTIVE,
                  STATUS_SCHEDULED]
 
-
-# Execution modes             
-
+# Execution modes
 MODE_RESUME = 0    # Try to starting at the first changed step, skipping unchanged ones
 MODE_RESTART = 1   # Restart the protocol from the beginning, deleting all previous results
 MODE_CONTINUE = 2  # Continue from specific step, not widely used //DEPRECATED.
@@ -60,12 +58,12 @@ MODE_CHOICES = ('Continue', 'Restart')#, 'Continue')
 STEPS_SERIAL = 0      # Execute steps serially, some of the steps can be mpi programs
 STEPS_PARALLEL = 1    # Execute steps in parallel, through threads or mpi
 
-
 # Level of expertise for the input parameters, mainly used in the protocol form
-         
 LEVEL_NORMAL = 0
 LEVEL_ADVANCED = 1
 LEVEL_CHOICES = ('Normal', 'Advanced')
 
-                
+# Param names for GPU processing
+USE_GPU = 'useGpu'
+GPU_LIST = 'gpuList'
                 

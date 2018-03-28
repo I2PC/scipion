@@ -355,6 +355,9 @@ class Protocol(Step):
         if not hasattr(self, 'hostName'):
             self.hostName = String(kwargs.get('hostName', 'localhost'))
 
+        if not hasattr(self, 'hostFullName'):
+            self.hostFullName = String()
+
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
@@ -621,6 +624,23 @@ class Protocol(Step):
                 if attr.isStreamOpen():
                     return True
         return False
+
+    def allowsGpu(self):
+        """ Returns True if this protocol allows GPU computation. """
+        return self.hasAttribute(GPU_LIST)
+
+    def requiresGpu(self):
+        """ Return True if this protocol can only be executed in GPU. """
+        return self.allowsGpu() and not self.hasAttribute(USE_GPU)
+
+    def usesGpu(self):
+        return self.allowsGpu() and self.getAttributeValue(USE_GPU, True)
+
+    def getGpuList(self):
+        if not self.allowsGpu():
+            return []
+
+        return pwutils.getListFromRangeString(self.gpuList.get())
 
     def getOutputsSize(self):
         return sum(1 for _ in self.iterOutputEM())
@@ -1144,8 +1164,14 @@ class Protocol(Step):
         self.__initLogs()
 
         self.info(pwutils.greenStr('RUNNING PROTOCOL -----------------'))
+
+        # Store the full machine name where the protocol is running
+        # and also its PID
         self.setPid(os.getpid())
-        self.info('          PID: %s' % self._pid)
+        self.setHostFullName(pwutils.getHostFullName())
+
+        self.info('     HostName: %s' % self.getHostFullName())
+        self.info('          PID: %s' % self.getPid())
         self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: %s' % self.workingDir)
@@ -1310,12 +1336,21 @@ class Protocol(Step):
         return resultFiles | pwutils.getFiles(self.workingDir.get())
 
     def getHostName(self):
-        """ Get the execution host name """
+        """ Get the execution host name.
+         This value is only the key of the host in the configuration file.
+        """
         return self.hostName.get()
 
     def setHostName(self, hostName):
-        """ Set the execution host name """
+        """ Set the execution host name (the host key in the config file) """
         self.hostName.set(hostName)
+
+    def getHostFullName(self):
+        """ Return the full machine name where the protocol is running. """
+        return self.hostFullName.get()
+
+    def setHostFullName(self, hostFullName):
+        self.hostFullName.set(hostFullName)
 
     def getHostConfig(self):
         """ Return the configuration host. """
@@ -1839,6 +1874,7 @@ def runProtocolMain(projectPath, protDbPath, protId):
 
     # Create the steps executor
     executor = None
+
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
             # Handle special case to execute in parallel
@@ -1851,11 +1887,15 @@ def runProtocolMain(projectPath, protDbPath, protId):
                                      numberOfMpi=protocol.numberOfMpi.get(),
                                      hostConfig=hostConfig)
             sys.exit(retcode)
+
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,
-                                          protocol.numberOfThreads.get() - 1)
+                                          protocol.numberOfThreads.get()-1,
+                                          gpuList=protocol.getGpuList())
     if executor is None:
-        executor = StepExecutor(hostConfig)
+        executor = StepExecutor(hostConfig,
+                                gpuList=protocol.getGpuList())
+
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
     protocol.run()
@@ -1869,8 +1909,8 @@ def runProtocolMainMPI(projectPath, protDbPath, protId, mpiComm):
     protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=True)
     hostConfig = protocol.getHostConfig()
     # Create the steps executor
-    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get() - 1,
-                               mpiComm)
+    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get()-1,
+                               mpiComm, gpuList=protocol.getGpuList())
 
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
