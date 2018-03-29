@@ -32,7 +32,8 @@ import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from grigoriefflab import (CTFFIND_PATH, CTFFINDMP_PATH,
                            CTFFIND4_PATH, getVersion,
-                           CTFFIND4_HOME, CTFFIND_HOME)
+                           CTFFIND4_HOME, CTFFIND_HOME, CTFFIND4_APP, V4_0_15,
+                           V4_1_10)
 from convert import (readCtfModel, parseCtffindOutput,
                      parseCtffind4Output)
 
@@ -63,6 +64,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                                 " - %s or %s" % (CTFFIND_HOME, CTFFIND4_HOME,
                                                  CTFFIND_PATH, CTFFIND4_PATH))
         return missingPaths
+
+    def _defineParams(self, form):
+        em.ProtCTFMicrographs._defineParams(self, form)
+        # Define the streaming parameters at the end
+        self._defineStreamingParams(form)
 
     def _defineProcessParams(self, form):
         form.addParam('useCtffind4', params.BooleanParam, default=True,
@@ -117,8 +123,8 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                            "faster 1D search was significantly less accurate "
                            "(thanks Rado Danev & Tim Grant). "
                            "Set this parameters to *No* to get faster fits.")
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
+
+    # -------------------------- STEPS functions ------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run ctffind, 3 or 4, with required parameters """
 
@@ -223,7 +229,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     def _createOutputStep(self):
         pass
 
-    #--------------------------- INFO functions ----------------------------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         thr = self.numberOfThreads.get()
@@ -242,6 +248,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 0.10 <= valueMax <= 3.15):
             errors.append('Wrong values for phase shift search.')
 
+        if self._getStreamingBatchSize() > 1:
+            errors.append("Batch steps are not implemented yet for Ctffind. ")
+
         return errors
 
     def _citations(self):
@@ -256,12 +265,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
 
         return [methods]
 
-    #--------------------------- UTILS functions ---------------------------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _isNewCtffind4(self):
-        if self.useCtffind4 and getVersion('CTFFIND4') != '4.0.15':
-            return True
-        else:
-            return False
+        return self.useCtffind4 and getVersion('CTFFIND4') != V4_0_15
 
     def _prepareCommand(self):
         sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
@@ -363,7 +369,7 @@ eof
 %(maxDefocus)f
 %(step_focus)f"""
 
-        if getVersion('CTFFIND4') in ['4.1.5', '4.1.8']:
+        if getVersion(CTFFIND4_APP) in ['4.1.5', '4.1.8', V4_1_10]:
             if self.findPhaseShift:
                 self._args += """
 no
@@ -389,7 +395,7 @@ yes
 %(resamplePix)s
 eof
 """
-        elif getVersion('CTFFIND4') == '4.0.15':
+        elif getVersion(CTFFIND4_APP) == V4_0_15:
             if self.findPhaseShift:
                 self._args += """
 %(astigmatism)f
@@ -431,8 +437,9 @@ eof
     def _summary(self):
         summary = em.ProtCTFMicrographs._summary(self)
         if self.useCtffind4 and getVersion('CTFFIND4') == '4.1.5':
-            summary.append("NOTE: ctffind4.1.5 finishes correctly (all output is generated properly),"
-                           " but returns an error code. Disregard error messages until this is fixed."
+            summary.append("NOTE: ctffind4.1.5 finishes correctly (all output "
+                           "is generated properly), but returns an error code. "
+                           "Disregard error messages until this is fixed."
                            "http://grigoriefflab.janelia.org/node/5421")
         return summary
 

@@ -85,6 +85,11 @@ void ProgCTFEstimateFromPSD::assignCTFfromParameters(double *p, CTFDescription &
 
 	ctfmodel.Tm = Tm;
 
+    /*
+        ¡¡ BE CAREFULL in add new parameters between the existing ones !!
+             below in the core of the program we set step(i) = 0 or 1 
+        if you change here the value of certain param, change it everywhere!
+    */
     ASSIGN_CTF_PARAM(0, DeltafU);
     ASSIGN_CTF_PARAM(1, DeltafV);
     ASSIGN_CTF_PARAM(2, azimuthal_angle);
@@ -172,6 +177,11 @@ void ProgCTFEstimateFromPSD::assignCTFfromParameters(double *p, CTFDescription &
 void ProgCTFEstimateFromPSD::assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
                              int l, int modelSimplification)
 {
+    /*
+        ¡¡ BE CAREFULL in add new parameters between the existing ones !!
+             below in the core of the program we set step(i) to 0 or 1 
+        if you change here the value of certain param, change it everywhere!
+    */
     ASSIGN_PARAM_CTF(0, DeltafU);
     ASSIGN_PARAM_CTF(1, DeltafV);
     ASSIGN_PARAM_CTF(2, azimuthal_angle);

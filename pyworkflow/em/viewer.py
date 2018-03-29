@@ -67,6 +67,7 @@ from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
 from viewer_monitor_summary import ViewerMonitorSummary
 
+# ------------------------ Some common Views ------------------
 
 
 class DataView(View):
@@ -289,6 +290,8 @@ class Classes3DView(ClassesView):
 
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
+    MODE_AUTOMATIC = 'Automatic'
+
     def __init__(self, project, path, outputdir, protocol, pickerProps=None,
                  inTmpFolder=False, **kwargs):
         DataView.__init__(self, path, **kwargs)
@@ -297,10 +300,10 @@ class CoordinatesObjectView(DataView):
         self.protocol = protocol
         self.pickerProps = pickerProps
         self.inTmpFolder = inTmpFolder
-
+        self.mode = kwargs.get('mode', None)
     def show(self):
         return showj.launchSupervisedPickerGUI(self._path, self.outputdir,
-                                               self.protocol,
+                                               self.protocol, mode=self.mode,
                                                pickerProps=self.pickerProps,
                                                inTmpFolder=self.inTmpFolder)
 
@@ -955,10 +958,10 @@ class LocalResolutionViewer(ProtocolViewer):
 
     """
     binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
-    
+
     def __init__(self, *args, **kwargs):
         ProtocolViewer.__init__(self, *args, **kwargs)
-    
+
     def getImgData(self, imgFile):
         import numpy as np
         img = ImageHandler().read(imgFile)
@@ -981,26 +984,26 @@ class LocalResolutionViewer(ProtocolViewer):
         else:
             imgSlice = volumeData[sliceNumber, :, :]
         return imgSlice
-    
+
     def createChimeraScript(self, scriptFile, fnResVol, fnOrigMap, sampRate):
         import pyworkflow.gui.plotter as plotter
         import os
         from itertools import izip
         fhCmd = open(scriptFile, 'w')
         imageFile = os.path.abspath(fnResVol)
-        
+
         _, minRes, maxRes = self.getImgData(imageFile)
-        
+
         stepColors = self._getStepColors(minRes, maxRes)
         colorList = plotter.getHexColorList(stepColors, self._getColorName())
-        
+
         fnVol = os.path.abspath(fnOrigMap)
 
         fhCmd.write("background solid white\n")
-        
+
         fhCmd.write("open %s\n" % fnVol)
         fhCmd.write("open %s\n" % (imageFile))
-        
+
         fhCmd.write("volume #0 voxelSize %s\n" % (str(sampRate)))
         fhCmd.write("volume #1 voxelSize %s\n" % (str(sampRate)))
         fhCmd.write("volume #1 hide\n")
@@ -1023,19 +1026,19 @@ class LocalResolutionViewer(ProtocolViewer):
                 + scolorStr2 + " \n")
         fhCmd.write(line)
         fhCmd.close()
-        
+
     def _getStepColors(self, minRes, maxRes, numberOfColors=13):
         inter = (maxRes - minRes) / (numberOfColors - 1)
         rangeList = []
         for step in range(0, numberOfColors):
             rangeList.append(round(minRes + step * inter, 2))
         return rangeList
-    
+
     def _getColorName(self):
         if self.colorMap.get() != COLOR_OTHER:
             return COLOR_CHOICES[self.colorMap.get()]
         else:
-            return self.otherColorMap.get()    
+            return self.otherColorMap.get()
 
 
 class VmdView(CommandView):

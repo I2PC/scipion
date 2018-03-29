@@ -23,9 +23,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol base class for Relion protocols
-"""
 
 import re
 from glob import glob
@@ -35,7 +32,7 @@ from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
                                         IntParam, EnumParam, StringParam, 
                                         LabelParam, PathParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, replaceBaseExt
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -135,8 +132,7 @@ class ProtRelionBase(EMProtocol):
         # and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
         
-        
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         self.IS_3D = not self.IS_2D
         form.addSection(label='Input')
@@ -153,13 +149,28 @@ class ProtRelionBase(EMProtocol):
                       pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
-                      label="Input particles",  
+                      label="Input particles",
                       help='Select the input images from the project.')
         form.addParam('copyAlignment', BooleanParam, default=False,
                       label='Consider previous alignment?',
                       condition='not doContinue',
-                      help='If set to Yes, then alignment information from input'
-                           ' particles will be considered.')
+                      help='If set to Yes, then alignment information from'
+                           ' input particles will be considered.')
+        form.addParam('alignmentAsPriors', BooleanParam, default=False,
+                      condition='not doContinue and copyAlignment',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Consider alignment as priors?',
+                      help='If set to Yes, then alignment information from '
+                           'input particles will be considered as PRIORS. This '
+                           'option is mandatory if you want to do local '
+                           'searches')
+        form.addParam('fillRandomSubset', BooleanParam, default=False,
+                      condition='not doContinue and copyAlignment',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Consider random subset value?',
+                      help='If set to Yes, then random subset value '
+                           'of input particles will be put into the'
+                           'star file that is generated.')
         form.addParam('maskDiameterA', IntParam, default=-1,
                       condition='not doContinue',
                       label='Particle mask diameter (A)',
@@ -192,14 +203,31 @@ class ProtRelionBase(EMProtocol):
                            'unsupervised manner from a single reference by '
                            'division of the data into random subsets during '
                            'the first iteration.')
+        form.addParam('referenceAverages', PointerParam,
+                      pointerClass='SetOfAverages', allowsNull=True,
+                      condition='not doContinue and isClassify and is2D',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Reference averages',
+                      help='This option is not recommended and should be used '
+                           'with care. The provided averages will be used as '
+                           'initial 2D references. If this option is used, '
+                           'the number of classes will be ignored. '
+                      )
         group = form.addGroup('Reference 3D map',
                               condition='not doContinue and not is2D')
-        group.addParam('referenceVolume', PointerParam, pointerClass='Volume',
+        referenceClass = 'Volume'
+        referenceLabel = 'Input volume'
+        if self.IS_CLASSIFY:  # allow SetOfVolumes as references for 3D
+            referenceClass += ', SetOfVolumes'
+            referenceLabel += '(s)'
+
+        group.addParam('referenceVolume', PointerParam,
+                       pointerClass=referenceClass,
                        important=True,
-                       label="Input volume",
+                       label=referenceLabel,
                        condition='not doContinue and not is2D',
                        help='Initial reference 3D map, it should have the same '
-                           'dimensions and the same pixel size as your input '
+                            'dimensions and the same pixel size as your input '
                             'particles.')
         group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                        label="Is initial 3D map on absolute greyscale?",
@@ -336,7 +364,6 @@ class ProtRelionBase(EMProtocol):
             if getVersion() != V2_0:  # version 2.1+ only
                 form.addParam('doSubsets', BooleanParam, default=False,
                               condition='not doContinue',
-                              expertLevel=LEVEL_ADVANCED,
                               label='Use subsets for initial updates?',
                               help='If set to True, multiple maximization updates '
                                    '(as many as defined by the _Number of subset '
@@ -357,7 +384,6 @@ class ProtRelionBase(EMProtocol):
                                    'this option may be less useful.')
                 form.addParam('subsetSize', IntParam, default=10000,
                               condition='doSubsets and not doContinue',
-                              expertLevel=LEVEL_ADVANCED,
                               label='Initial subset size',
                               help='Number of individual particles after which one '
                                    'will perform a maximization update in the first '
@@ -365,7 +391,6 @@ class ProtRelionBase(EMProtocol):
                                    'in the order of ten thousand particles.')
                 form.addParam('subsetUpdates', IntParam, default=3,
                               condition='doSubsets and not doContinue',
-                              expertLevel=LEVEL_ADVANCED,
                               label='Number of subset updates',
                               help='This option is only used when a positive '
                                    'number is given for the _Initial subset size_. '
@@ -753,7 +778,7 @@ class ProtRelionBase(EMProtocol):
                                 ' http://xmipp.cnb.csic.es/twiki/bin/view/'
                                 'Xmipp/WebHome?topic=Symmetry')
 
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._initialize()
         self._insertFunctionStep('convertInputStep',
@@ -781,7 +806,7 @@ class ProtRelionBase(EMProtocol):
         
         self._insertFunctionStep('runRelionStep', params)
     
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions -------------------------------
     def convertInputStep(self, particlesId, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
@@ -797,21 +822,31 @@ class ProtRelionBase(EMProtocol):
                       (imgSet.getFileName(), imgStar))
     
             # Pass stack file as None to avoid write the images files
-            # If copyAlignmet is set to False pass alignType to ALIGN_NONE
-            if copyAlignment:
-                alignType = imgSet.getAlignment()
-            else:
-                alignType = em.ALIGN_NONE
-    
+            # If copyAlignment is set to False pass alignType to ALIGN_NONE
+            alignType = imgSet.getAlignment() if copyAlignment \
+                        else em.ALIGN_NONE
+            hasAlign = alignType != em.ALIGN_NONE
+            alignToPrior = hasAlign and getattr(self, 'alignmentAsPriors', False)
+            fillRandomSubset = hasAlign and getattr(self, 'fillRandomSubset', False)
+
             writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
                                 alignType=alignType,
-                                postprocessImageRow=self._postprocessParticleRow)
+                                postprocessImageRow=self._postprocessParticleRow,
+                                fillRandomSubset=fillRandomSubset)
             
+            if alignToPrior:
+                mdParts = md.MetaData(imgStar)
+                self._copyAlignAsPriors(mdParts, alignType)
+                mdParts.write(imgStar)
+
             if self.doCtfManualGroups:
                 self._splitInCTFGroups(imgStar)
         else:
             self.info("In continue mode is not necessary convert the input "
                       "particles")
+
+        if self._getRefArg():
+            self._convertRef()
         
         # if self.realignMovieFrames, self.IS_CLASSIFY must be False.
         if getattr(self, 'realignMovieFrames', False):
@@ -836,22 +871,12 @@ class ProtRelionBase(EMProtocol):
             mdMovies = md.MetaData(movieFn)
             continueRun = self.continueRun.get()
             continueIter = self._getContinueIter()
-            mdParts = md.MetaData(continueRun._getFileName('data',
-                                                           iter = continueIter))
+            mdFile = continueRun._getFileName('data', iter = continueIter)
+            mdParts = md.MetaData(mdFile)
+            
+            self._copyAlignAsPriors(mdParts, em.ALIGN_PROJ)
             mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
             mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
-            
-            # set priors equal to orig. values
-            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR,
-                               md.RLN_ORIENT_ORIGIN_X)
-            mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR,
-                               md.RLN_ORIENT_ORIGIN_Y)
-            mdParts.copyColumn(md.RLN_ORIENT_PSI_PRIOR,
-                               md.RLN_ORIENT_PSI)
-            mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR,
-                               md.RLN_ORIENT_ROT)
-            mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR,
-                               md.RLN_ORIENT_TILT)
             
             mdAux = md.MetaData()
             mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
@@ -958,7 +983,7 @@ class ProtRelionBase(EMProtocol):
         """
         return []
     
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _setNormalArgs(self, args):
         maskDiameter = self.maskDiameterA.get()
         if maskDiameter <= 0:
@@ -981,8 +1006,6 @@ class ProtRelionBase(EMProtocol):
     
         if self.IS_3D:
             if not self.IS_3D_INIT:
-                args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
-                                                 self._getTmpPath())
                 if not self.isMapAbsoluteGreyScale:
                     args['--firstiter_cc'] = ''
                 args['--ini_high'] = self.initialLowPassFilterA.get()
@@ -990,6 +1013,10 @@ class ProtRelionBase(EMProtocol):
         
         if not isVersion2():
             args['--memory_per_thread'] = self.memoryPreThreads.get()
+
+        refArg = self._getRefArg()
+        if refArg:
+            args['--ref'] = refArg
     
         self._setBasicArgs(args)
 
@@ -1051,7 +1078,6 @@ class ProtRelionBase(EMProtocol):
     
         self._setSamplingArgs(args)
         self._setMaskArgs(args)
-
 
     def _setCTFArgs(self, args):
         # CTF stuff
@@ -1180,7 +1206,72 @@ class ProtRelionBase(EMProtocol):
         frames = inputMovies.getFirstItem().getNumberOfFrames()
 
         return frames
-    
+
+    def _getRefArg(self):
+        """ Return the filename that will be used for the --ref argument.
+        The value will depend if in 2D and 3D or if input references will
+        be used.
+        It will return None if no --ref should be used. """
+        if self.IS_3D:
+            if not self.IS_3D_INIT:
+                inputObj = self.referenceVolume.get()
+                if isinstance(inputObj, em.Volume):
+                    return self._convertVolFn(inputObj)
+                else:  # input SetOfVolumes as references
+                    return self._getRefStar()
+        else:  # 2D
+            if self.referenceAverages.get():
+                return self._getRefStar()
+        return None  # No --ref should be used at this point
+
+    def _convertVolFn(self, inputVol):
+        """ Return a new name if the inputFn is not .mrc """
+        index, fn = inputVol.getLocation()
+        return self._getTmpPath(replaceBaseExt(fn, '%02d.mrc' % index))
+
+    def _convertVol(self, ih, inputVol):
+        outputFn = self._convertVolFn(inputVol)
+
+        if outputFn:
+            xdim = self._getInputParticles().getXDim()
+            img = ih.read(inputVol)
+            img.scale(xdim, xdim, xdim)
+            img.write(outputFn)
+
+        return outputFn
+
+    def _getRefStar(self):
+        return self._getTmpPath("input_references.star")
+
+    def _convertRef(self):
+        ih = em.ImageHandler()
+
+        if self.IS_3D:
+            if not self.IS_3D_INIT:
+                inputObj = self.referenceVolume.get()
+                if isinstance(inputObj, em.Volume):
+                    self._convertVol(ih, inputObj)
+                else:  # input SetOfVolumes as references
+                    row = md.Row()
+                    refMd = md.MetaData()
+                    for vol in inputObj:
+                        newVolFn = self._convertVol(ih, vol)
+                        row.setValue(md.RLN_MLMODEL_REF_IMAGE, newVolFn)
+                        row.addToMd(refMd)
+                    refMd.write(self._getRefStar())
+        else:  # 2D
+            inputAvgs = self.referenceAverages.get()
+            if inputAvgs:
+                row = md.Row()
+                refMd = md.MetaData()
+                refStack = self._getTmpPath('input_references.mrcs')
+                for i, avg in enumerate(inputAvgs):
+                    newAvgLoc = (i+1, refStack)
+                    ih.convert(avg, newAvgLoc)
+                    row.setValue(md.RLN_MLMODEL_REF_IMAGE, "%05d@%s" % newAvgLoc)
+                    row.addToMd(refMd)
+                refMd.write(self._getRefStar())
+
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
@@ -1205,3 +1296,14 @@ class ProtRelionBase(EMProtocol):
         # Since 'doSubsets' property is only valid for 2.1+ protocols
         # we need provide a default value for backward compatibility
         return self.getAttributeValue('doSubsets', False)
+    
+    def _copyAlignAsPriors(self, mdParts, alignType):
+        # set priors equal to orig. values
+        mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR, md.RLN_ORIENT_ORIGIN_X)
+        mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR, md.RLN_ORIENT_ORIGIN_Y)
+        mdParts.copyColumn(md.RLN_ORIENT_PSI_PRIOR, md.RLN_ORIENT_PSI)
+        
+        if alignType == em.ALIGN_PROJ:
+            mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
+            mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
+        

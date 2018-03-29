@@ -32,6 +32,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.viewer import CoordinatesObjectView
 from pyworkflow.em.constants import *
+from pyworkflow.em import getSubsetByDefocus
 
 from protocol_gautomatch import ProtGautomatch
 
@@ -123,12 +124,35 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         prot = form.protocol
         micSet = prot.getInputMicrographs()
 
+        gpus = prot.getGpuList()
+
+        if not gpus:
+            form.showWarning("You should select at least one GPU.")
+            return
+
         if not micSet:
-            print 'must specify input micrographs'
+            form.showWarning("You should select input micrographs "
+                             "before opening the wizard.")
             return
 
         project = prot.getProject()
-        micfn = micSet.getFileName()
+
+        if prot.micrographsSelection == 0:  # all micrographs
+            micFn = micSet.getFileName()
+        else:
+            # Create a subset based on defocus values
+            ctfs = prot.ctfRelations.get()
+            if ctfs is None:
+                form.showWarning("You should select CTFs if using a defocus "
+                                 "subset. ")
+                return
+            micSubset = prot._createSetOfMicrographs(suffix='subset')
+            for mic in getSubsetByDefocus(ctfs, micSet,
+                                          prot.micrographsNumber.get()):
+                micSubset.append(mic)
+            micSubset.write()
+            micSubset.close()
+            micFn = micSubset.getFileName()
 
         # Prepare a temporary folder to convert some input files
         # and put some of the intermediate result files
@@ -139,26 +163,28 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         prot.convertReferences(refStack)
 
         # Get current values of the properties
-#         micfn = os.path.join(coordsDir, 'micrographs.xmd')
-#         writeSetOfMicrographs(micSet, micfn)
+#         micFn = os.path.join(coordsDir, 'micrographs.xmd')
+#         writeSetOfMicrographs(micSet, micFn)
         pickerConfig = os.path.join(coordsDir, 'picker.conf')
         f = open(pickerConfig, "w")
 
         pickScript = pw.join('em', 'packages', 'gautomatch',
                              'run_gautomatch.py')
 
-        pickCmd = prot.getArgs(threshold=False, mindist=False)
+        # Let use the first selected gpu for the wizard
+        pickCmd = prot.getArgs(threshold=False,
+                               mindist=False) % {'GPU': gpus[0]}
         convertCmd = pw.join('apps', 'pw_convert.py')
 
         args = {
-                "pickScript": pickScript,
-                "pickCmd": pickCmd,
-                "convertCmd": convertCmd,
-                'coordsDir': coordsDir,
-                'micsSqlite': micSet.getFileName(),
-                'threshold': prot.threshold.get(),
-                "mindist": prot.minDist.get(),
-                "refStack": refStack
+            "pickScript": pickScript,
+            "pickCmd": pickCmd,
+            "convertCmd": convertCmd,
+            'coordsDir': coordsDir,
+            'micsSqlite': micSet.getFileName(),
+            'threshold': prot.threshold.get(),
+            "mindist": prot.minDist.get(),
+            "refStack": refStack
           }
 
         # If Gautomatch will guess advanced parameter we don't need to send
@@ -188,7 +214,7 @@ class GautomatchPickerWizard(emwiz.EmWizard):
 
         f.close()
 
-        process = CoordinatesObjectView(project, micfn, coordsDir, prot,
+        process = CoordinatesObjectView(project, micFn, coordsDir, prot,
                                         pickerProps=pickerConfig).show()
         process.wait()
         myprops = pwutils.readProperties(pickerConfig)
