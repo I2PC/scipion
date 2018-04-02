@@ -121,7 +121,6 @@ void ProgValidationNonTilt::run()
 
 			tempMd.importObjects(md, MDExpression(expression));
 
-
 			if (tempMd.size()==0)
 				continue;
 

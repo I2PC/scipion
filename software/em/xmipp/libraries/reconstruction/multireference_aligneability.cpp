@@ -89,7 +89,7 @@ void MultireferenceAligneability::run()
     SL.readSymmetryFile(fnSym.c_str());
 
 	mdInputParticles.read(fnParticles);
-	mdInputParticlesRef.read(fnParticles);
+	mdInputParticlesRef.read(fnParticlesRef); //AJ change: fnParticle for fnParticlesRef
 	mdProj.read(finRef);
 	mdExp.read(fin);
 	mdGallery.read(fnGallery);
@@ -151,7 +151,7 @@ void MultireferenceAligneability::run()
 			tempMdExp.importObjects(mdExp, MDExpression(expression));
 			tempMdProj.importObjects(mdProj, MDExpression(expression));
 			mdInputParticles.getRow(rowInput,i+1);
-			mdInputParticles.getRow(rowInputRef,i+1);
+			mdInputParticlesRef.getRow(rowInputRef,i+1); //AJ change mdInputParticles for mdInputParticlesRef
 
 
 			if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))

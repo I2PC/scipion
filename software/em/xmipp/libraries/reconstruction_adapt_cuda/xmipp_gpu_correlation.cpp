@@ -714,6 +714,11 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 	MDIterator *iter = new MDIterator();
 	MDRow row;
 
+	//size_t countImg=0;
+	//size_t prevImgId=-1;
+
+
+	//std::cerr << mdExpSize << std::endl;
 	for(int i=0; i<mdExpSize; i++){
 
 		iter->init(SF);
@@ -735,15 +740,6 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				}
 				//END AJ
 
-				size_t itemId;
-				SFexp.getRow(rowExp, iterExp->objId);
-				//rowExp.getValue(MDL_IMAGE, nameImg);
-				//rowExp.getValue(MDL_ITEM_ID, itemId);
-				//rowOut
-				//rowExp.setValue(MDL_ITEM_ID, itemId);
-				//rowExp.setValue(MDL_IMAGE,nameImg);
-				rowExp.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, i, j));
-				rowExp.setValue(MDL_MAXCC, (double)DIRECT_A2D_ELEM(corrTotalRow, i, j));
 				if(j<mdInSize){
 					flip = false;
 					matrixTransCpu[j].getSlice(i, out2); //matrixTransCpu[i].getSlice(j, out2);
@@ -777,9 +773,6 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 					continue;
 				}
 
-				//rowOut
-				rowExp.setValue(MDL_FLIP, flip);
-
 				double scale;
 				/*MAT_ELEM(bestM,0,0)=MAT_ELEM(out2Matrix,0,0);//DIRECT_A2D_ELEM(out2,0,0);
 				MAT_ELEM(bestM,0,1)=MAT_ELEM(out2Matrix,0,1);//DIRECT_A2D_ELEM(out2,0,1);
@@ -810,7 +803,21 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				}
 				//FIN AJ NEW
 
+				size_t itemId;
+				SFexp.getRow(rowExp, iterExp->objId);
+				rowExp.getValue(MDL_IMAGE, nameImg);
+				rowExp.getValue(MDL_ITEM_ID, itemId);
+				//if (prevImgId!=itemId){
+				//	prevImgId = itemId;
+				//	countImg++;
+				//}
+				//std::cerr << itemId << ". Image: " << nameImg << std::endl;
 				//rowOut
+				//rowExp.setValue(MDL_ITEM_ID, itemId);
+				//rowExp.setValue(MDL_IMAGE,nameImg);
+				rowExp.setValue(MDL_WEIGHT, (double)DIRECT_A2D_ELEM(weights, i, j));
+				rowExp.setValue(MDL_WEIGHT_SIGNIFICANT, (double)DIRECT_A2D_ELEM(weights, i, j));
+				rowExp.setValue(MDL_MAXCC, (double)DIRECT_A2D_ELEM(corrTotalRow, i, j));
 				rowExp.setValue(MDL_SHIFT_X, -shiftX);
 				rowExp.setValue(MDL_SHIFT_Y, -shiftY);
 				//rowExp.setValue(MDL_SHIFT_Z, 0.0);
@@ -820,11 +827,14 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				rowExp.setValue(MDL_ANGLE_TILT, tilt);
 				rowExp.setValue(MDL_ANGLE_PSI, psi);
 				//rowOut
+				rowExp.setValue(MDL_FLIP, flip);
 				if(row.containsLabel(MDL_ITEM_ID))
 					row.getValue(MDL_ITEM_ID, refNum);
 				else
 					refNum = idxJ+1;
 				rowExp.setValue(MDL_REF, (int)refNum);
+				rowExp.setValue(MDL_IMAGE_IDX, (size_t)(i+1));
+
 				mdOut.addRow(rowExp);
 			}
 			if(iter->hasNext())
