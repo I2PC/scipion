@@ -1,11 +1,16 @@
 package xmipp.viewer.particlepicker.training.gui;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import xmipp.jni.Classifier;
+import xmipp.jni.Classifier.Parameter;
+import xmipp.utils.*;
+import xmipp.viewer.ctf.CTFAnalyzerJFrame;
+import xmipp.viewer.particlepicker.*;
+import xmipp.viewer.particlepicker.training.model.*;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.text.NumberFormat;
@@ -13,39 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.JToggleButton;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-
-import xmipp.jni.Classifier;
-import xmipp.jni.Classifier.Parameter;
-import xmipp.utils.ColorIcon;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippFileChooser;
-import xmipp.utils.XmippMessage;
-import xmipp.utils.XmippQuestionDialog;
-import xmipp.utils.XmippResource;
-import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.ctf.CTFAnalyzerJFrame;
-import xmipp.viewer.particlepicker.*;
-import xmipp.viewer.particlepicker.training.model.*;
 
 public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
@@ -768,7 +740,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     private int tryCorrectAndAutopick(SupervisedPickerMicrograph current, SupervisedPickerMicrograph next) {
         int result = 3;
 
-        boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
+        boolean isautopick = (ppicker.getMode() == Mode.Supervised || ppicker.getMode() == Mode.Automatic) && next.getState() == MicrographState.Available;
         if (ppicker.isCorrectPending()) {
             // Do not ask...always correct ans autopick.
             // String msg = String.format("Would you like to correct training with added and deleted particles from micrograph %s?", current.getName());
