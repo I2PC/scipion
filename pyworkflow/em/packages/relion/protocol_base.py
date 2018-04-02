@@ -1207,6 +1207,20 @@ class ProtRelionBase(EMProtocol):
 
         return frames
 
+    def _getReferenceVolumes(self):
+        """ Return a list with all input references.
+        (Could be one or more volumes. ).
+        """
+        inputObj = self.referenceVolume.get()
+
+        if isinstance(inputObj, em.Volume):
+            return [inputObj]
+        elif isinstance(inputObj, em.SetOfVolumes):
+            return [vol.clone() for vol in inputObj]
+        else:
+            raise Exception("Invalid input reference of class: %s"
+                            % inputObj.getClassName())
+
     def _getRefArg(self):
         """ Return the filename that will be used for the --ref argument.
         The value will depend if in 2D and 3D or if input references will
@@ -1214,9 +1228,9 @@ class ProtRelionBase(EMProtocol):
         It will return None if no --ref should be used. """
         if self.IS_3D:
             if not self.IS_3D_INIT:
-                inputObj = self.referenceVolume.get()
-                if isinstance(inputObj, em.Volume):
-                    return self._convertVolFn(inputObj)
+                refVols = self._getReferenceVolumes()
+                if len(refVols) == 1:
+                    return self._convertVolFn(refVols[0])
                 else:  # input SetOfVolumes as references
                     return self._getRefStar()
         else:  # 2D
@@ -1248,13 +1262,13 @@ class ProtRelionBase(EMProtocol):
 
         if self.IS_3D:
             if not self.IS_3D_INIT:
-                inputObj = self.referenceVolume.get()
-                if isinstance(inputObj, em.Volume):
-                    self._convertVol(ih, inputObj)
+                refVols = self._getReferenceVolumes()
+                if len(refVols) == 1:
+                    self._convertVol(ih, refVols[0])
                 else:  # input SetOfVolumes as references
                     row = md.Row()
                     refMd = md.MetaData()
-                    for vol in inputObj:
+                    for vol in refVols:
                         newVolFn = self._convertVol(ih, vol)
                         row.setValue(md.RLN_MLMODEL_REF_IMAGE, newVolFn)
                         row.addToMd(refMd)
