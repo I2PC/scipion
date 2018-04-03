@@ -291,19 +291,28 @@ def setPsdFiles(ctfModel, ctfRow):
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
+    # Refresh phase shift!
+    phaseShift = ctfModel.getPhaseShift()
+
+    if phaseShift is not None:
+        ctfRow.setValue(md.RLN_CTF_PHASESHIFT, phaseShift)
+
     objectToRow(ctfModel, ctfRow, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
-    
+
 
 def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a meta """
     if ctfRow.containsAll(CTF_DICT):
         ctfModel = em.CTFModel()
+
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
+        if ctfRow.hasLabel(md.RLN_CTF_PHASESHIFT):
+            ctfModel.setPhaseShift(ctfRow.getValue(md.RLN_CTF_PHASESHIFT, 0))
         ctfModel.standardize()
         setPsdFiles(ctfModel, ctfRow)
     else:
         ctfModel = None
-        
+
     return ctfModel
 
 
@@ -499,6 +508,10 @@ def particleToRow(part, partRow, **kwargs):
                              'fake_micrograph_%06d.mrc' % part.getMicId())
     if part.hasAttribute('_rlnParticleId'):
         partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
+
+    if kwargs.get('fillRandomSubset') and part.hasAttribute('_rlnRandomSubset'):
+        partRow.setValue(md.RLN_PARTICLE_RANDOM_SUBSET, int(part._rlnRandomSubset.get()))
+
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
 
 
