@@ -255,7 +255,7 @@ class ProjectCreateWindow(Window):
         if not path:
             path = self.projectsPath
 
-        browser = FileBrowserWindow("Browsing", self, path=path, onSelect=onSelect)
+        browser = FileBrowserWindow("Browsing", self, path=path, onSelect=onSelect, onlyFolders=True)
         browser.show()
 
     def _select(self):
@@ -385,7 +385,10 @@ class ProjectImportWindow(Window):
         if not path:
             path = self.projectsPath
 
-        browser = FileBrowserWindow("Browsing", self, path=path, onSelect=onSelect)
+        browser = FileBrowserWindow("Browsing",
+                                    self, path=path,
+                                    onSelect=onSelect,
+                                    onlyFolders=True)
         browser.show()
 
     def _select(self):

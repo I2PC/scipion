@@ -337,6 +337,9 @@ def getColorStr(text, color, bold=False):
         attr.append('1')
     return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), text)
 
+def yellowStr(text):
+    return getColorStr(text, color='yellow')
+
 def greenStr(text):
     return getColorStr(text, color='green')
 
@@ -594,7 +597,6 @@ class Environ(dict):
         else:
             print "Some paths do not exist in: % s" % libraryPath
 
-
 def existsVariablePaths(variableValue):
     """ Check if the path (or paths) in variableValue exists.
     Multiple paths are allowed if separated by os."""
@@ -697,7 +699,7 @@ def printTraceBack():
     traceback.print_stack()
 
 
-def getEnvVariable(variableName, exceptionMsg=None):
+def getEnvVariable(variableName, default=None, exceptionMsg=None):
     """ Returns the value of an environment variable or raise an exception message.
     Useful when adding variable to the config file and report accurate messages"""
     value = os.getenv(variableName)
@@ -707,7 +709,9 @@ def getEnvVariable(variableName, exceptionMsg=None):
                        "config." % variableName
 
     if value is None:
-        raise Exception(exceptionMsg)
-
+        if default is None:
+            raise Exception(exceptionMsg)
+        else:
+            return  default
     else:
         return value

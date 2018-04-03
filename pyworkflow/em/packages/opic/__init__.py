@@ -30,7 +30,23 @@ wrapping Localized recontruction of subunits.
 from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "opic_logo.png"
+LOCALREC_HOME = 'LOCALREC_HOME'
+RELION_HOME = 'RELION_HOME'
+TMP_RELION_HOME = 'TMP_RELION_HOME'
+LOCALREC_RELION_HOME = 'LOCALREC_RELION_HOME'
 
 from convert import *
 from protocol_localized import ProtLocalizedRecons
 from protocol_localized_extraction import ProtLocalizedExtraction
+
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, os.environ[var])
+                    for var in [LOCALREC_HOME, LOCALREC_RELION_HOME]
+                    if not os.path.exists(os.environ[var])]
+
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors
