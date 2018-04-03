@@ -583,24 +583,27 @@ class Image(EMObject):
     def hasOrigin(self):
         return self._origin is not None
 
-    def getOrigin(self, returnInitIfNone=False):
+    def getOrigin(self, force=False):
         """shifts in A"""
         if self.hasOrigin():
             return self._origin
         else:
-            if returnInitIfNone:
-                sampling = self.getSamplingRate()
-                t = Transform()
-                x, y, z = self.getDim()
-                if z > 1:
-                    z = z/2.
-                t.setShifts(x/2. * sampling, y/2. * sampling, z * sampling)
-                return t  # The identity matrix
+            if force:
+                return self._getDefaultOrigin()
             else:
                 return None
 
+    def _getDefaultOrigin(self):
+        sampling = self.getSamplingRate()
+        t = Transform()
+        x, y, z = self.getDim()
+        if z > 1:
+            z = z / -2.
+        t.setShifts(x / -2. * sampling, y / -2. * sampling, z * sampling)
+        return t  # The identity matrix
+
     def getVolOriginAsTuple(self):
-        origin = self.getOrigin(returnInitIfNone=True).getShifts()
+        origin = self.getOrigin(force=True).getShifts()
         x = origin[0]
         y = origin[1]
         z = origin[2]
@@ -610,6 +613,15 @@ class Image(EMObject):
     def setOrigin(self, newOrigin):
         """shifts in A"""
         self._origin = newOrigin
+
+    def originResampled(self, originNotResampled, oldSampling):
+        factor = self.getSamplingRate() / oldSampling
+        shifts = originNotResampled.getShifts()
+        origin = self.getOrigin(force=True)
+        origin.setShifts(shifts[0] * factor,
+                         shifts[1] * factor,
+                         shifts[2] * factor)
+        return origin
 
     def __str__(self):
         """ String representation of an Image. """
@@ -803,11 +815,11 @@ class PdbFile(EMFile):
     def hasOrigin(self):
         return self._origin is not None
 
-    def getOrigin(self, returnInitIfNone=False):
+    def getOrigin(self, force=False):
         if self.hasOrigin():
             return self._origin
         else:
-            if returnInitIfNone:
+            if force:
                 t = Transform()
                 t.setShifts(0., 0., 0.)
                 return t  # The identity matrix
@@ -1497,7 +1509,10 @@ class Transform(EMObject):
         m[0, 3] = x
         m[1, 3] = y
         m[2, 3] = z
-                
+
+    def setShiftsTuple(self, shifts):
+        self.setShifts(shifts[0], shifts[1], shifts[2])
+
     def composeTransform(self, matrix):
         '''Apply a transformation matrix to the current matrix '''            
         new_matrix = matrix * self.getMatrix()

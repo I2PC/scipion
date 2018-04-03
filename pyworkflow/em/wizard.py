@@ -58,6 +58,7 @@ from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
 
 
 import xmipp
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 #===============================================================================
 #    Wizard EM base class
@@ -867,11 +868,40 @@ class ImportCoordinatesBoxSizeWizard(Wizard):
 
 
 class ImportOriginVolumeWizard(Wizard):
+
     _targets = [(ProtImportVolumes, ['x', 'y', 'z'])]
 
     def show(self, form, *params):
         protocol = form.protocol
-        filesPattern = protocol.filesPattern
-        filesPath = protocol.filesPath
-        print "wwwwwwwwwwwwwwwww", filesPattern, filesPath
-        form.setVar('x', 53)
+        filesPath = protocol.filesPath.get()
+        filesPattern = protocol.filesPattern.get()
+        if filesPattern:
+            fullPattern = os.path.join(filesPath, filesPattern)
+        else:
+            fullPattern = filesPath
+
+        sampling = protocol.samplingRate.get()
+        for fileName, fileId in protocol.iterFiles():
+            inputVol = Volume()
+            inputVol.setFileName(fileName)
+            if ((str(fullPattern)).endswith('mrc') or
+                (str(fullPattern)).endswith('map')):
+                ccp4header = Ccp4Header(fileName, readHeader=True)
+                x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
+            else:
+                x, y, z = self._halfOriginCoordinates(inputVol, sampling)
+
+            form.setVar('x', x)
+            form.setVar('y', y)
+            form.setVar('z', z)
+
+    def _halfOriginCoordinates(self, volume, sampling):
+        xdim, ydim, zdim = volume.getDim()
+        if zdim > 1:
+            zdim = zdim / 2.
+        x = xdim / 2. * sampling
+        y = ydim / 2. * sampling
+        z = zdim * sampling
+        return x, y, z
+
+

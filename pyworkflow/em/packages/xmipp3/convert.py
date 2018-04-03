@@ -959,9 +959,9 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
     if 'alignType' not in kwargs:
         kwargs['alignType'] = imgSet.getAlignment()
 
-    if 'firstId' in kwargs:
-        firstId = kwargs['firstId']
-        for img in imgSet.iterItems(where="id>%d"% firstId):
+    if 'where' in kwargs:
+        where = kwargs['where']
+        for img in imgSet.iterItems(where=where):
             objId = md.addObject()
             imgRow = XmippMdRow()
             imgToFunc(img, imgRow, **kwargs)
