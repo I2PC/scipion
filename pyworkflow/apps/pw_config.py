@@ -436,7 +436,7 @@ def guessMPI():
     for d in os.environ.get('PATH', '').split(':'):
         if not os.path.isdir(d) or 'mpicc' not in os.listdir(d):
             continue
-        mpiBin = os.path.realpath(join(d, 'mpicc'))
+        mpiBin = join(d, 'mpicc')
         if 'MPI_BINDIR' not in options:
             options['MPI_BINDIR'] = os.path.dirname(mpiBin)
         if mpiBin.endswith('/bin/mpicc'):
