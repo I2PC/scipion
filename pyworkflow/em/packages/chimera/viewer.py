@@ -32,9 +32,8 @@ from protocol_fit import ChimeraProtRigidFit
 from protocol_operate import ChimeraProtOperate
 from protocol_restore import ChimeraProtRestore
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, runChimeraProgram, getProgram
+    createCoordinateAxisFile, runChimeraProgram, getProgram, sessionFile
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-
 
 
 class ChimeraViewerBase(Viewer):
@@ -87,7 +86,6 @@ class ChimeraViewerBase(Viewer):
             f.write("volume #1 style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
                     % (outputVol.getSamplingRate(), x, y, z))
-
         for filename in os.listdir(directory):
             if filename.endswith(".pdb"):
                 path = os.path.join(directory, filename)
@@ -99,18 +97,25 @@ class ChimeraViewerBase(Viewer):
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []
 
-class ChimeraRestoreViewer(ChimeraViewerBase):
+class ChimeraRestoreViewer(Viewer):
     """ Visualize the output of protocols protocol_fit and protocol_operate """
     _label = 'viewer restore'
     _targets = [ChimeraProtRestore]
 
-    def _visualize(self, obj, **args):#inputProtocol
+    def _visualize(self, obj, **args):
+        path1 = os.path.join(self.protocol._getExtraPath(), sessionFile)
+        if os.path.exists(path1):
+            #restored SESSION
+            path = os.path.abspath(path1)
+        else:
+            # SESSION from inputProtocol
+            path2 = os.path.join(
+                self.protocol.inputProtocol.get()._getExtraPath(), sessionFile)
+            path = os.path.abspath(path2)
 
-        parentProt = self.protocol.inputProtocol.get()
-        self.inputVolume = parentProt.inputVolume
-        self.pdbFileToBeRefined = parentProt.pdbFileToBeRefined
-        self.inputPdbFiles = parentProt.inputPdbFiles
-        super(ChimeraRestoreViewer, self)._visualize(obj, **args)
+        runChimeraProgram(getProgram(), path  + "&")
+        return []
+
 
 class ChimeraProtRigidFitViewer(ChimeraViewerBase):
     _label = 'viewer fit'

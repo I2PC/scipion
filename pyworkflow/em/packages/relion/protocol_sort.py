@@ -312,11 +312,18 @@ class ProtRelionSortParticles(ProtParticles):
         else:
             args['--o'] = 'sorted'
             
-        #if inputReferences is a volume, convert it to mrc here
+        angpixRef = None
+
         if self.isInputAutoRefine():
             args['--ref'] = self._getFileName('input_refvol')
+            angpixRef = self.referenceVolume.get().getSamplingRate()
         else:
             args['--ref'] = self._getFileName('input_refs')
+            if self.referenceAverages.hasValue():
+                angpixRef = self.referenceAverages.get().getSamplingRate()
+
+        if isVersion2() and angpixRef is not None:
+            args['--angpix_ref'] = '%0.3f' % angpixRef
 
         if self.doInvert:
             args['--invert'] = ''

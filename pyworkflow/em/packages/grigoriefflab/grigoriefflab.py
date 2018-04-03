@@ -27,6 +27,12 @@
 import os
 from os.path import join, exists
 
+# Program common names
+FREALIGN_APP = 'FREALIGN'
+CTFFIND4_APP = 'CTFFIND4'
+V4_0_15 = '4.0.15'
+V4_1_10 = '4.1.10'
+
 MAGDIST_HOME_VAR = 'MAGDIST_HOME'
 
 SUMMOVIE_HOME = 'SUMMOVIE_HOME'
@@ -51,7 +57,7 @@ UNBLUR = 'unblur_openmp.exe'
 SUMMOVIE = 'sum_movie_openmp.exe'
 
 
-def getVersion(var='FREALIGN'):
+def getVersion(var=FREALIGN_APP):
     varHome = var + '_HOME'
     path = os.environ[varHome]
     for v in getSupportedVersions(var):
@@ -60,11 +66,11 @@ def getVersion(var='FREALIGN'):
     return ''
 
 
-def getSupportedVersions(var='FREALIGN'):
+def getSupportedVersions(var=FREALIGN_APP):
     if var == 'UNBLUR':
         return ['1.0_150529', '1.0.2']
-    elif var == 'CTFFIND4':
-        return ['4.0.15', '4.1.5', '4.1.8']
+    elif var == CTFFIND4_APP:
+        return ['4.0.15', '4.1.5', '4.1.8', V4_1_10]
     else:  # FREALIGN
         return ['9.07']
 
