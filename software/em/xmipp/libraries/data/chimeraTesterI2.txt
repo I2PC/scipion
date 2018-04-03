@@ -1,0 +1,143 @@
+		#ifdef DEBUG
+    {
+        	#include <iostream>
+	        #include <fstream>
+	        //Debug chimera file
+                std::ofstream testFile;
+ 
+		//Reference points: 5f, 3f and 2f
+		testFile.open ("icosahedral.bild");
+		testFile << ".comment five fold\n.color red\n";
+		testFile << ".sphere " << _5f(0)*scale*74  << " " << _5f(1)*scale*74   << " "<< _5f(2)*scale*74   << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << _5fp(0)*scale*74  << " " << _5fp(1)*scale*74  << " "<< _5fp(2)*scale*74  << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << _5fpp(0)*scale*74 << " " << _5fpp(1)*scale*74 << " "<< _5fpp(2)*scale*74 << " " << .05*scale*10 <<"\n";
+		
+		testFile << ".color green\n";
+		testFile << ".sphere " << _2f(0)*scale*74   << " " << _2f(1)*scale*74   << " "<< _2f(2)*scale*74   << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << _2fp(0)*scale*74  << " " << _2fp(1)*scale*74  << " "<< _2fp(2)*scale*74  << " " << .05*scale*10 <<"\n";
+
+		testFile << ".color yellow\n";
+		testFile << ".sphere " << _3f(0)*scale*74   << " " << _3f(1)*scale*74   << " "<< _3f(2)*scale*74   << " " << .05*scale*10 <<"\n";
+        
+        //cilinders joining the reference points
+		testFile << ".color blue\n";
+		testFile << ".cylinder " << _5f(0)*scale*74   << " " << _5f(1)*scale*74   << " "<< _5f(2)*scale*74
+		         << " " << _5fp(0)*scale*74   << " " << _5fp(1)*scale*74   << " "<< _5fp(2)*scale*74 << " " << .01*scale*10 <<"\n";
+		testFile << ".cylinder " << _5fp(0)*scale*74   << " " << _5fp(1)*scale*74   << " "<< _5fp(2)*scale*74
+		         << " " << _5fpp(0)*scale*74   << " " << _5fpp(1)*scale*74   << " "<< _5fpp(2)*scale*74 << " " << .01*scale*10 <<"\n";
+		testFile << ".cylinder " << _5fpp(0)*scale*74   << " " << _5fpp(1)*scale*74   << " "<< _5fpp(2)*scale*74
+		         << " " << _5f(0)*scale*74   << " " << _5f(1)*scale*74   << " "<< _5f(2)*scale*74 << " " << .01*scale*10 <<"\n";
+		testFile << ".cylinder " << _2f(0)*scale*74   << " " << _2f(1)*scale*74   << " "<< _2f(2)*scale*74
+		         << " " << _3f(0)*scale*74   << " " << _3f(1)*scale*74   << " "<< _3f(2)*scale*74 << " " << .01*scale*10 <<"\n";
+		testFile << ".cylinder " << _3f(0)*scale*74   << " " << _3f(1)*scale*74   << " "<< _3f(2)*scale*74
+		         << " " << _2fp(0)*scale*74   << " " << _2fp(1)*scale*74   << " "<< _2fp(2)*scale*74 << " " << .01*scale*10 <<"\n";
+		
+		//Vectors that join those points
+		Matrix1D<double> t = _5f + _5f_to_2f/4.;
+		t *= scale*74;
+		testFile << ".color cyan\n";
+		testFile << ".arrow " << _5f(0)*scale*74   << " " << _5f(1)*scale*74   << " "<< _5f(2)*scale*74;
+		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+		t = _2f + _2f_to_3f/4.;
+		t *= scale*74;
+		testFile << ".arrow " << _2f(0)*scale*74   << " " << _2f(1)*scale*74   << " "<< _2f(2)*scale*74;
+		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+		t = _3f + _3f_to_2fp/4.;
+		t *= scale*74;
+		testFile << ".arrow " << _3f(0)*scale*74   << " " << _3f(1)*scale*74   << " "<< _3f(2)*scale*74;
+		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+		t = _2fp + _2fp_to_5f/4.;
+		t *= scale*74;
+		testFile << ".arrow " << _2fp(0)*scale*74   << " " << _2fp(1)*scale*74   << " "<< _2fp(2)*scale*74;
+		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+
+		//Vectors perpendicular to previous one in the plane of the triangle
+		//defined by 5f 5fp 5fpp
+		if (expanded != 0){
+			testFile << ".color purple\n";
+			vectExpansion[0].selfNormalize();
+			t = _5f + vectExpansion[0] * 0.1;
+			t *= scale*74;
+			testFile << ".arrow " << _5f(0)*scale*74   << " " << _5f(1)*scale*74   << " "<< _5f(2)*scale*74
+		         	 << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+		    vectExpansion[1].selfNormalize();
+			t = _2f + vectExpansion[1] * 0.1;
+			t *= scale*74;
+			testFile << ".arrow " << _2f(0)*scale*74   << " " << _2f(1)*scale*74   << " "<< _2f(2)*scale*74;
+			testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+			vectExpansion[2].selfNormalize();
+			t = _3f + vectExpansion[2] * 0.1;
+			t *= scale*74;
+			testFile << ".arrow " << _3f(0)*scale*74   << " " << _3f(1)*scale*74   << " "<< _3f(2)*scale*74;
+			testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+			vectExpansion[3].selfNormalize();
+			t = _2fp + vectExpansion[3] * 0.1;
+			t *= scale*74;
+			testFile << ".arrow " << _2fp(0)*scale*74   << " " << _2fp(1)*scale*74   << " "<< _2fp(2)*scale*74;
+			testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale*10 <<"\n";
+			}
+
+		//Expanded points: newOriginAfterExpansion, expandedUnitCell[0], expandedUnitCell[1], expandedUnitCell[2], expandedUnitCell[3]
+		testFile << ".comment five fold\n.color green\n";
+		testFile << ".sphere " << newOriginAfterExpansion(0)*scale*74 << " " << newOriginAfterExpansion(1)*scale*74 << " "<< newOriginAfterExpansion(2)*scale*74  << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << expandedUnitCell[0](0)*scale*74  << " " << expandedUnitCell[0](1)*scale*74  << " "<< expandedUnitCell[0](2)*scale*74   << " " << .05*scale*10  <<"\n";
+		testFile << ".sphere " << expandedUnitCell[1](0)*scale*74  << " " << expandedUnitCell[1](1)*scale*74  << " "<< expandedUnitCell[1](2)*scale*74   << " " << .05*scale*10  <<"\n";
+		testFile << ".sphere " << expandedUnitCell[2](0)*scale*74  << " " << expandedUnitCell[2](1)*scale*74  << " "<< expandedUnitCell[2](2)*scale*74  << " " << .05*scale*10 <<"\n";
+		testFile << ".sphere " << expandedUnitCell[3](0)*scale*74  << " " << expandedUnitCell[3](1)*scale*74  << " "<< expandedUnitCell[3](2)*scale*74   << " " << .05*scale*10  <<"\n";
+		
+		//new expanded perimeter 
+		Matrix1D<double> aux;
+		Matrix1D<double> tt;
+		testFile << ".color red\n";
+		t = expandedUnitCell[0];
+		tt = expandedUnitCell[1];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = expandedUnitCell[1];
+		tt = expandedUnitCell[2];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = expandedUnitCell[2];
+		tt = expandedUnitCell[3];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = expandedUnitCell[3];
+		tt = expandedUnitCell[0];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = newOriginAfterExpansion;
+		tt = expandedUnitCell[0];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = newOriginAfterExpansion;
+		tt = expandedUnitCell[1];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = newOriginAfterExpansion;
+		tt = expandedUnitCell[2];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+		t = newOriginAfterExpansion;
+		tt = expandedUnitCell[3];
+		t *= scale*74;
+		tt *= scale*74;
+		testFile << ".cylinder " << t(0) << " " << t(1) << " "<< t(2);
+		testFile << " " << tt(0)   << " " << tt(1)   << " "<< tt(2) << " " << .008*scale*10 <<"\n";
+                testFile.close();
+    }
+		#endif
+

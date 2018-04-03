@@ -23,7 +23,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+"""
+This module contains the protocol for 3d refinement with Relion.
+"""
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume, FSC

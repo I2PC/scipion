@@ -29,17 +29,14 @@
 import pyworkflow.em.metadata as md
 from pyworkflow.object import String, Float
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_ADVANCED, FloatParam)
+                                        LEVEL_ADVANCED, FloatParam, BooleanParam)
 from pyworkflow.em.protocol import ProtProcessParticles
 from convert import writeSetOfParticles, setXmippAttributes
-
-
-
 
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order
     to detect outliers. """
-    
+
     _label = 'screen particles'
 
     # Automatic Particle rejection enum
@@ -97,7 +94,14 @@ class XmippProtScreenParticles(ProtProcessParticles):
                            'SSNR are automatically disabled.',
                       validators=[Range(0, 100, error="Percentage must be "
                                                       "between 0 and 100.")])
+        form.addParam('addFeatures', BooleanParam, default=False,
+                      label='Add features', expertLevel=LEVEL_ADVANCED,
+                      help='Add features used for the ranking to each one of the input particles')
         form.addParallelSection(threads=0, mpi=0)
+
+    def _getDefaultParallel(self):
+        """This protocol doesn't have mpi version"""
+        return (0, 0)
 
     # --------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
@@ -119,6 +123,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
         
         elif self.autoParRejection == self.REJ_PERCENTAGE:
             args += "--percent " + str(self.percentage.get())
+
+        if self.addFeatures:
+            args += "--addFeatures "
 
         self.runJob("xmipp_image_sort_by_statistics", args)
         
@@ -216,6 +223,8 @@ class XmippProtScreenParticles(ProtProcessParticles):
         setXmippAttributes(item, row, md.MDL_ZSCORE, md.MDL_ZSCORE_SHAPE1,
                            md.MDL_ZSCORE_SHAPE2, md.MDL_ZSCORE_SNR1,
                            md.MDL_ZSCORE_SNR2, md.MDL_CUMULATIVE_SSNR)
+        if self.addFeatures:
+            setXmippAttributes(item, row, md.MDL_SCORE_BY_SCREENING)
         if row.getValue(md.MDL_ENABLED) <= 0:
             item._appendItem = False
         else:

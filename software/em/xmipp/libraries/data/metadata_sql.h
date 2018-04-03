@@ -107,10 +107,10 @@ Multi-thread. In this mode, SQLite can be safely used by multiple threads provid
 Serialized. In serialized mode, SQLite can be safely used by multiple threads with no restriction.
 
  */
-    static bool  deactivateThreadMuting(void);
+    bool  deactivateThreadMuting(void);
     /** activate SAFED serialized mode mode
 */
-    static bool  activateThreadMuting(void);
+    bool  activateThreadMuting(void);
 
 private:
     /** write metadata in sqlite table
@@ -246,6 +246,10 @@ private:
     /** Function to dump DB to file */
     bool operate(const String &expression);
 
+    /** If true, all queries to database will be synchronized by mutex */
+    // FIXME this should not be necessary, as sqlite is build with multi-thread support. However, multiple access
+    // to database from multiple threads causes application crash
+    bool beThreadSafe;
 
 
     /** Constructor of MDSql

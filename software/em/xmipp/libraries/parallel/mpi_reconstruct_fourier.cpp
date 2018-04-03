@@ -690,8 +690,3 @@ int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalS
 
     return err;
 }
-
-
-
-
-

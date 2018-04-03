@@ -248,7 +248,8 @@ class MPIStepExecutor(ThreadStepExecutor):
     def runSteps(self, steps, 
                  stepStartedCallback, 
                  stepFinishedCallback,
-                 checkStepsCallback):
+                 checkStepsCallback,
+                 stepsCheckSecs=3):
         ThreadStepExecutor.runSteps(self, steps, 
                                     stepStartedCallback, 
                                     stepFinishedCallback,
