@@ -54,14 +54,22 @@ class ChimeraViewerBase(Viewer):
             try:
                 _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
             except:
-                _inputVol = self.protocol.inputProtocol.get().pdbFileToBeRefined.get().getVolume()
+                _inputVol = self.protocol.inputProtocol.get().\
+                    pdbFileToBeRefined.get().getVolume()
+
         if _inputVol is not None:
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
         else:
-            # To show pdbs only
-            dim = 150.
-            sampling = 1.
+            try:
+                outputVol = self.protocol.output3Dmap
+                dim = outputVol.getDim()[0]
+                sampling = outputVol.getSamplingRate()
+                _inputVol = outputVol
+            except:
+                # To show pdbs only
+                dim = 150.
+                sampling = 1.
 
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
@@ -73,7 +81,7 @@ class ChimeraViewerBase(Viewer):
         f.write("open %s\n" % bildFileName)
 
         if _inputVol is not None:
-        # In case we have PDBs only, the _inputVolume is None:
+        # In case we have PDBs only, the _inputVol is None:
             try:
                 outputVol = self.protocol.output3Dmap
                 outputVolFileName = os.path.abspath(outputVol.getFileName())
@@ -82,10 +90,15 @@ class ChimeraViewerBase(Viewer):
                 outputVolFileName = os.path.abspath(
                         ImageHandler.removeFileType(outputVol.getFileName()))
             f.write("open %s\n" % outputVolFileName)
-            x, y, z = outputVol.getOrigin(force=True).getShifts()
+            if outputVol.hasOrigin():
+                x, y, z = outputVol.getOrigin().getShifts()
+            else:
+                x, y, z = outputVol.getOrigin(force=True).getShifts()
+
             f.write("volume #1 style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
                     % (outputVol.getSamplingRate(), x, y, z))
+
         for filename in os.listdir(directory):
             if filename.endswith(".pdb"):
                 path = os.path.join(directory, filename)
