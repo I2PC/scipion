@@ -5,6 +5,7 @@ import sys
 
 cleanAll = 'all' in sys.argv
 
+python = 'python' in sys.argv
 
 def cmd(command):
     print command
@@ -19,8 +20,15 @@ if cleanAll:
     cmd('rm -rf software/tmp/*')
     cmd('rm -rf software/log/*')
 
-for ext in ['so', 'os', 'o']:
-    cmd('find software/em/xmipp -name "*.%s" -exec rm -rf {} \;' % ext)
+elif python:
+    cmd('rm -rf software/bin/python* ')
+    cmd('rm -rf software/lib/python* ')
+    cmd('rm -rf software/include/python* ')
+
+# Clean xmipp, default for empty args.
+else:
+    for ext in ['so', 'os', 'o']:
+        cmd('find software/em/xmipp -name "*.%s" -exec rm -rf {} \;' % ext)
 #force pyc refresh even if .pyc's timestamp is not older than the corresponding .py's timestamp 
 #to trigger a recompilation. 
 cmd('find . -iname "*.pyc" -delete')

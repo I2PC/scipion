@@ -116,9 +116,11 @@ DataSet(name='relion_tutorial', folder='relion_tutorial',
                'posAllDir': 'pickingXmipp',
                'relion_it020_data': 'gold/relion_it020_data.star',
                'volume': 'volumes/reference.mrc',
-               'import1_data_star':
-               'import/case1/classify3d_small_it038_data.star',
-               'import2_data_star': 'import/case2/relion_it015_data.star'})
+               'import1_data_star': 'import/case1/classify3d_small_it038_data.star',
+               'import2_data_star': 'import/case2/relion_it015_data.star',
+               'particles_binary': '006.stk'
+        })
+
 
 DataSet(name='ribo_movies', folder='ribo_movies',
         files={

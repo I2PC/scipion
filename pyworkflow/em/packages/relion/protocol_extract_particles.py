@@ -55,7 +55,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
     def __init__(self, **kwargs):
         em.ProtExtractParticles.__init__(self, **kwargs)
 
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _definePreprocessParams(self, form):
         form.addParam('boxSize', params.IntParam,
                       label='Particle box size (px)',
@@ -120,7 +120,8 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                            'Use negative value to switch off dust removal.')
 
         form.addParallelSection(threads=0, mpi=4)
-    #--------------------------- INSERT steps functions ------------------------
+
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         inputMics = self.getInputMicrographs()
         # self.doFlip is important because in _updateOutputPartSet is used
@@ -304,7 +305,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             if self._useCTF():
                 self._defineSourceRelation(self.ctfRelations.get(), partSet)
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         
@@ -313,6 +314,9 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             errors.append("Background diameter for normalization should "
                           "be equal or less than the box size.")
 
+        if self.doRescale and self.rescaledSize.get() % 2 == 1:
+            errors.append("Only re-scaling to even-sized images is allowed "
+                          "in RELION.")
 
         # We cannot check this if the protocol is in streaming.
         
@@ -369,7 +373,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
         return methodsMsgs
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _setupBasicProperties(self):
         # Set sampling rate (before and after doDownsample) and inputMics
         # according to micsSource type
@@ -468,7 +472,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
     def _getDownFactor(self):
         if self.doRescale:
-            return self.boxSize.get() / self.rescaledSize.get()
+            return float(self.boxSize.get()) / self.rescaledSize.get()
         return 1
 
     def _doDownsample(self):
@@ -486,25 +490,6 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
             newSampling *= self._getDownFactor()
 
         return newSampling
-
-    # def _setupCtfProperties(self):
-    #     inputMics = self.getInputMicrographs()
-    #     if self._useCTF():
-    #         # Load CTF dictionary for all micrographs, all CTF should be present
-    #         self.ctfDict = {}
-    #
-    #         for ctf in self.ctfRelations.get():
-    #             ctfMic = ctf.getMicrograph()
-    #             newCTF = ctf.clone()
-    #             self.ctfDict[ctfMic.getMicName()] = newCTF
-    #             self.ctfDict[ctfMic.getObjId()] = newCTF
-    #
-    #         if all(mic.getMicName() in self.ctfDict for mic in inputMics):
-    #             self.micKey = lambda mic: mic.getMicName()
-    #         elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
-    #             self.micKey = lambda mic: mic.getObjId()
-    #         else:
-    #             self.micKey = None # some problem matching CTF
             
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or
@@ -576,10 +561,9 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         # The command will be launched from the working dir
         # so, let's make the micrograph path relative to that
         img.setFileName(os.path.join('extra', newName))
-        if self._useCTF() and not img.hasCTF():
-            img.setCTF(self.ctfDict[img.getMicName()])
 
         if self._useCTF():
+            img.setCTF(self.ctfDict[img.getMicName()])
             # add phaseShift to micrograph Row
             ctf = img.getCTF()
             if ctf is not None and ctf.getPhaseShift():
