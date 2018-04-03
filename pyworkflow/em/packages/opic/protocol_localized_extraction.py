@@ -1,8 +1,8 @@
-# *****************************************************************************
+# **************************************************************************
 # *
-# * Authors:    J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
-# *****************************************************************************
+# **************************************************************************
 
 import numpy as np
 
@@ -34,12 +34,11 @@ from pyworkflow.em.protocol import ProtParticles, IntParam
 
 
 class ProtLocalizedExtraction(ProtParticles):
-    """ Extract computed sub-particles from a SetOfParticles.
-    """
-    
+    """ Extract computed sub-particles from a SetOfParticles. """
     _label = 'localized extraction'
     _lastUpdateVersion = VERSION_1_1
-    #--------------------------- DEFINE param functions -----------------------
+
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam,
@@ -61,7 +60,7 @@ class ProtLocalizedExtraction(ProtParticles):
 
         form.addParallelSection(threads=0, mpi=0)
 
-    #--------------------------- INSERT steps functions -----------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         partsId = self.inputParticles.get().getObjId()
         self._insertFunctionStep('createOutputStep',
@@ -69,7 +68,7 @@ class ProtLocalizedExtraction(ProtParticles):
                                  self.inputCoordinates.get().getObjId(),
                                  self.boxSize.get())
     
-    #--------------------------- STEPS functions ------------------------------
+    # -------------------------- STEPS functions ------------------------------
     def createOutputStep(self, particlesId, coordsId, boxSize):
         """ Create the input file in STAR format as expected by Relion.
         Params:
@@ -147,7 +146,7 @@ class ProtLocalizedExtraction(ProtParticles):
         self._defineOutputs(outputParticles=outputSet)
         self._defineSourceRelation(self.inputParticles, outputSet)
 
-    #--------------------------- INFO functions -------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         inputCoords = self.inputCoordinates.get()
@@ -169,7 +168,6 @@ class ProtLocalizedExtraction(ProtParticles):
     def _methods(self):
         return []
     
-    #--------------------------- UTILS functions ------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _getInputParticles(self):
         return self.inputParticles.get()
-    

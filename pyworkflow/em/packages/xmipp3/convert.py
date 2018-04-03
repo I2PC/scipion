@@ -653,6 +653,7 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
+        ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
 
     else:
         ctfModel = None
@@ -888,7 +889,7 @@ def readPosCoordinates(posFile, readDiscarded=False):
     particles_auto: with automatically picked particles.
     If posFile doesn't exist, the metadata will be empty
     readDiscarded: read only the coordinates in the particles_auto DB
-                   with the MDL_ENABLE set at -1 and a positive cost  
+                   with the MDL_ENABLE set at -1 and a positive cost
     """
     mData = md.MetaData()
 
