@@ -23,10 +23,7 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.JMetaDataIO;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.particlepicker.Format;
-import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.ParticlePickerParams;
+import xmipp.viewer.particlepicker.*;
 import xmipp.viewer.particlepicker.training.AutopickRunnable;
 import xmipp.viewer.particlepicker.training.CorrectAndAutopickRunnable;
 import xmipp.viewer.particlepicker.training.TrainRunnable;
@@ -63,6 +60,7 @@ public class SupervisedParticlePicker extends ParticlePicker
     private TemplatesJDialog dialog;
     private boolean isautopick;
     private boolean existspsd;
+    private boolean hasDefocusU;
 
 	// private String reviewfile;
 
@@ -361,6 +359,10 @@ public class SupervisedParticlePicker extends ParticlePicker
         return existspsd;
     }
 
+    public boolean hasDefocusU() {
+	    return hasDefocusU;
+    }
+
     @Override
 	public void loadEmptyMicrographs()
 	{
@@ -395,16 +397,27 @@ public class SupervisedParticlePicker extends ParticlePicker
 				throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
 			existspsd = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
 			boolean existsctf = md.containsLabel(MDLabel.MDL_CTF_MODEL);
+			hasDefocusU = md.containsLabel(MDLabel.MDL_CTF_DEFOCUSV);
+
+			boolean hasctfinfo = existsctf || existspsd || hasDefocusU;
+
 			long[] ids = md.findObjects();
+			CtfInfo ctfInfo;
+
 			for (long id : ids)
 			{
+				ctfInfo = hasctfinfo ? new CtfInfo() : null;
 
 				filename = md.getValueString(fileLabel, id);
 				if (existspsd)
-					psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+					ctfInfo.psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				if (existsctf)
-					ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
-				micrograph = new SupervisedPickerMicrograph(filename, psd, ctf);
+					ctfInfo.ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
+				if (hasDefocusU)
+				    ctfInfo.defocusU = new Float(md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id));
+
+				micrograph = new SupervisedPickerMicrograph(filename, ctfInfo);
+
 				micrographs.add(micrograph);
 			}
 			if (micrographs.isEmpty())
@@ -441,7 +454,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				{
 
 					filename = md.getValueString(ci.label, id);
-					micrograph = new SupervisedPickerMicrograph(filename, null, null);
+					micrograph = new SupervisedPickerMicrograph(filename, null);
 					micrographs.add(micrograph);
 				}
 			}

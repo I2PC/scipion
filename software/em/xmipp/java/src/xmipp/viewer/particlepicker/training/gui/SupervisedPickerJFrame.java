@@ -10,6 +10,7 @@ import xmipp.viewer.particlepicker.training.model.*;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -190,18 +191,30 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     }
 
     protected void formatMicrographsTable() {
-        int width = 515;
-        micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        micrographstb.getColumnModel().getColumn(0).setPreferredWidth(40);
-        micrographstb.getColumnModel().getColumn(1).setPreferredWidth(325);
-        if(!ppicker.containsPSD())
+        int totalWidth = 630;
+        int micWidth = 440;
+
+        if (ppicker.containsPSD()) // shrink columns to make space for PSD
         {
-            micrographstb.getColumnModel().getColumn(1).setPreferredWidth(440);
-            width = 630;
+            totalWidth -= 115;
+            micWidth -= 115;
         }
-        micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
-        micrographstb.getColumnModel().getColumn(3).setPreferredWidth(80);
-        micrographstb.setPreferredScrollableViewportSize(new Dimension(width, 304));
+
+        micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        TableColumnModel tcm = micrographstb.getColumnModel();
+        tcm.getColumn(0).setPreferredWidth(40);
+
+        if (ppicker.hasDefocusU())
+        {
+            micWidth -= 70;
+            tcm.getColumn(4).setPreferredWidth(70);
+        }
+        
+        tcm.getColumn(1).setPreferredWidth(micWidth);
+        tcm.getColumn(2).setPreferredWidth(70);
+        tcm.getColumn(3).setPreferredWidth(80);
+        micrographstb.setPreferredScrollableViewportSize(new Dimension(totalWidth, 304));
         micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         int index = ppicker.getMicrographIndex();
         if (index != -1) {
