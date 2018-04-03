@@ -185,8 +185,9 @@ class ImageHandler(object):
         over the whole stack. If the input format is ".dm4" or  ".img" only is
         allowed the conversion of the whole stack.
         """
-        if (inputFn.lower().endswith('.dm4') or
-            outputFn.lower().endswith('.img')):
+        inputLower = inputFn.lower()
+        outputLower = outputFn.lower()
+        if inputLower.endswith('.dm4') or outputLower.endswith('.img'):
             if (firstImg and lastImg) is None:
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
@@ -197,6 +198,14 @@ class ImageHandler(object):
                 ext = os.path.splitext(outputFn)[1]
                 raise Exception("if convert from %s, firstImg and lastImg "
                                 "must be None" % ext)
+        # elif inputLower.endswith('.tif'):
+        #     # FIXME: It seems that we have some flip problem with compressed
+        #     # tif files, we need to check that
+        #     if outputLower.endswith('.mrc'):
+        #         self.runJob('tif2mrc', '%s %s' % (inputFn, outputFn))
+        #     else:
+        #         raise Exception("Conversion from tif to %s is not "
+        #                         "implemented yet. " % pwutils.getExt(outputFn))
         else:
             # get input dim
             (x, y, z, n) = xmipp.getImageSize(inputFn)
@@ -334,6 +343,13 @@ class ImageHandler(object):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
         xmipp3.runXmippProgram(program, args)
+
+    def __runEman2Program(self, program, args):
+        """ Internal workaround to launch an EMAN2 program. """
+        import pyworkflow.em.packages.eman2 as eman2
+        from pyworkflow.utils.process import runJob
+        runJob(None, eman2.getEmanProgram(program), args,
+               env=eman2.getEnviron())
     
     def createCircularMask(self, radius, refImage, outputFile):
         """ Create a circular mask with the given radius (pixels)
@@ -370,7 +386,7 @@ class ImageHandler(object):
         """
         self.__runXmippProgram('xmipp_transform_threshold',
                                '-i %s -o %s --select below 0 --substitute '
-                               'value 1' % (inputFile, outputFile))
+                               'value 0' % (inputFile, outputFile))
         
         self.__runXmippProgram('xmipp_transform_threshold',
                                '-i %s --select above 1 --substitute '
@@ -381,7 +397,26 @@ class ImageHandler(object):
         is implemented in the Xmipp binding.
         """
         return xmipp.FileName(imgFn).isImage()
-    
+
+    def computeThumbnail(self, inputFn, outputFn, scaleFactor=6):
+        """ Compute a thumbnail of inputFn, save to ouptutFn.
+        Optionally choose a scale factor eg scaleFactor=6 will make
+        a thumbnail 6 times smaller.
+        """
+        outputFn = outputFn or self.getThumbnailFn(inputFn)
+        args = "%s %s " % (inputFn, outputFn)
+        args += "--fouriershrink %s --process normalize" % scaleFactor
+
+        self.__runEman2Program('e2proc2d.py', args)
+
+        return outputFn
+
+
+    @staticmethod
+    def getThumbnailFn(inputFn):
+        """Replace the extension in inputFn with thumb.png"""
+        return pwutils.replaceExt(inputFn, "thumb.png")
+
     @classmethod
     def getVolFileName(cls, location):
         if isinstance(location, tuple):

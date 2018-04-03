@@ -204,9 +204,13 @@ def readCtfModel(ctfModel, filename, ctf4=False):
         else:
             defocusU, defocusV, defocusAngle, ctfPhaseShift, ctfFit, ctfResolution = result
             ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
-        ctfModel._ctffind4_crossCorrelation = Float(ctfFit)
-        ctfModel._ctffind4_ctfResolution = Float(ctfResolution)
-        ctfModel._ctffind4_ctfPhaseShift = Float(ctfPhaseShift)
+        ctfModel.setFitQuality(ctfFit)
+        ctfModel.setResolution(ctfResolution)
+
+        # Avoid creation of phaseShift
+        ctfPhaseShiftDeg = rad2deg(ctfPhaseShift)
+        if ctfPhaseShiftDeg != 0:
+            ctfModel.setPhaseShift(ctfPhaseShiftDeg)
 
 
 def geometryFromMatrix(matrix, inverseTransform=True):

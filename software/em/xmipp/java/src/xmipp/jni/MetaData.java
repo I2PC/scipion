@@ -488,6 +488,9 @@ public class MetaData {
 	/** Add new column to MetaData */
 	public native void addLabel(int label);
 
+	/** Rename a MetaData column */
+	public native void renameColumn(int oldLabel, int newLabel);
+
 	/** Get the average and std images, result is left on input image */
 	public native void getStatsImages(ImageGeneric imageAvg,
 			ImageGeneric imageStd, boolean applyGeo, boolean wrap, int label);
@@ -512,6 +515,8 @@ public class MetaData {
 	 * @
 	 */
 	public native void fillConstant(int label, String value);
+
+
 
 	/**
 	 * Fill column in a random way

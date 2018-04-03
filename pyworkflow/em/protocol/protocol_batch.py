@@ -535,9 +535,9 @@ class ProtCreateFSC(BatchProtocol):
 
     def _summary(self):
         summary = []
-        summary.append('From input %s created fsc %s'
+        summary.append('From input %s created FSC %s'
                        % (self.getObjectTag("inputObj"),
-                          self.getObjectTag("outputMask")))
+                          self.getObjectTag("outputFSCs")))
         return summary
 
     def _methods(self):

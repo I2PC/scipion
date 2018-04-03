@@ -27,6 +27,7 @@
 
 import pyworkflow.object as pwobj
 from pyworkflow.gui.tree import TreeProvider
+from pyworkflow.protocol import getUpdatedProtocol
 
 
 class SummaryProvider(TreeProvider):
@@ -45,45 +46,46 @@ class SummaryProvider(TreeProvider):
 
     def refreshObjects(self):
         objects = []
+        objIds = []  # need to store ids too to avoid duplication in runs table
 
         def addObj(objId, name, output='', size='', parent=None):
-            obj = pwobj.Object(objId=objId)
-            obj.name = name
-            obj.output = output
-            obj.outSize = size
-            obj._objParent = parent
-            objects.append(obj)
-            return obj
+            if objId not in objIds:
+                obj = pwobj.Object(objId=objId)
+                obj.name = name
+                obj.output = output
+                obj.outSize = size
+                obj._objParent = parent
+                objIds.append(objId)
+                objects.append(obj)
+                return obj
+            else:
+                return None
 
-        runs = [p.get() for p in self.protocol.inputProtocols]
-        g = self.protocol.getProject().getGraphFromRuns(runs)
+        prots = [getUpdatedProtocol(p) for p in self.protocol.getInputProtocols()]
 
-        nodes = g.getRoot().iterChildsBreadth()
-
-        for n in nodes:
-            prot = n.run
+        for prot in prots:
             pobj = addObj(prot.getObjId(),
                           '%s (id=%s)' % (prot.getRunName(), prot.strId()))
-
             for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
                 outSet.load()
                 outSet.loadAllProperties()
-                addObj(outSet.getObjId(), '', outName, outSet.getSize(), pobj)
+                # outSetId needs to be compound id to avoid duplicate ids
+                outSetId = '%s.%s' % (outSet.getObjId(), prot.getObjId())
+                addObj(outSetId, '', outName, outSet.getSize(), pobj)
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
                 from pyworkflow.em import ProtImportImages
-                #NOTE by rmarabini do not use the angstrom symbol instead of A
-                #it breaks html production in the monitor:
-                #UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 
+                # NOTE by Yaiza: we force the string containing the Å to be unicode
+                # because this is the encoding used when generating report in report_html.py
                 if isinstance(prot, ProtImportImages):
-                    self.acquisition = [("Microscope Voltage: ",
+                    self.acquisition = [("Microscope Voltage (kV): ",
                                          prot.voltage.get()),
-                                        ("Spherical aberration: ",
+                                        ("Spherical aberration (mm): ",
                                          prot.sphericalAberration.get()),
                                         ("Magnification: ",
                                          prot.magnification.get()),
-                                        ("Pixel Size (A/px): ",
-                                         outSet.getSamplingRate())
+                                        (u"Pixel Size (Å/px): ",
+                                         round(outSet.getSamplingRate(),2))
                                         ]
 
         self._objects = objects

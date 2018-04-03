@@ -281,6 +281,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         ctffitFile = self._getCtfFitOutPath(micDir)
         pwutils.moveFile(micFnCtf, psdFile)
         pwutils.moveFile(micFnCtfFit, ctffitFile)
+        pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
         # Let's notify that this micrograph has been processed
         # just creating an empty file at the end (after success or failure)
@@ -319,6 +320,7 @@ class ProtGctf(em.ProtCTFMicrographs):
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
         pwutils.moveFile(micFnCtf, psdFile)
         pwutils.moveFile(micFnCtfFit, ctffitFile)
+        pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
         pwutils.cleanPattern(micFnMrc)
 
     def _createCtfModel(self, mic, updateSampling=True):
@@ -353,6 +355,9 @@ class ProtGctf(em.ProtCTFMicrographs):
                           "~/.config/scipion/scipion.conf\n"
                           "and set GCTF variables properly."
                           % self._getProgram())
+        if self.doPhShEst and getVersion() == '0.50':
+            errors.append('This version of Gctf (0.50) does not support phase shift estimation!'
+                          ' Please update to a newer version.')
         return errors
 
     def _citations(self):

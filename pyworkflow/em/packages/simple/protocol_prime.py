@@ -28,16 +28,33 @@ import os
 from glob import glob
 
 import pyworkflow.protocol.params as params
+from pyworkflow.utils import commandExists
 from pyworkflow.utils.path import cleanPath, cleanPattern
 
 import pyworkflow.em as em  
 import simple
 
+SIMPLE_HOME = 'SIMPLE_HOME'
+
+SIMPLE_PRIME = "simple_prime"
 
 
 class ProtPrime(em.ProtInitialVolume):
     """ Produces one or several initial volumes using simple prime """
     _label = 'prime'
+
+    @classmethod
+    def validateInstallation(cls):
+        """ This function will be used to check if package is properly installed."""
+        missingPaths = ["%s: %s" % (var, os.environ[var])
+                        for var in [SIMPLE_HOME]
+                        if not os.path.exists(os.environ[var])]
+
+        if missingPaths:
+            return ["Missing variables:"] + missingPaths
+        else:
+            return []  # No errors
+
 
     #--------------------------- DEFINE param functions --------------------------------------------
     
@@ -133,7 +150,7 @@ class ProtPrime(em.ProtInitialVolume):
         if self.molecularWeight > 0:
             args += " mw=%f" % self.molecularWeight
         
-        self.runJob("simple_prime", args, cwd=self._getExtraPath())
+        self.runJob(SIMPLE_PRIME, args, cwd=self._getExtraPath())
 
     def getLastIteration(self):
         lastIter = 1
@@ -181,7 +198,7 @@ class ProtPrime(em.ProtInitialVolume):
         from simple import getEnviron
         errors = []
         getEnviron()
-        prime = os.environ['SIMPLE_HOME']
+        prime = os.environ[SIMPLE_HOME]
         if not os.path.exists(prime):
             errors.append('Missing %s' % prime)
         return errors
