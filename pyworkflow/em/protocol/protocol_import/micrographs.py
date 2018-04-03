@@ -485,11 +485,16 @@ class ProtImportMovies(ProtImportMicBase):
                         self.debug("Data received in socket:")
                         self.debug(files)
                         for fileName in files:
-                            uniqueFn = self._getUniqueFileName(fileName, files)
-                            if uniqueFn in self.importedFiles:
-                                self._spreadMessage('WARNING: Not importing,'
-                                                    ' already imported file %s '
-                                                    '\n' % fileName, sock)
+                            if os.path.exists(fileName):
+                                if fileName in self.importedFiles:
+                                    self._spreadMessage('WARNING: Not importing, already imported file %s \n' % fileName, sock)
+                                    continue
+                                else:
+                                    self._spreadMessage('OK: Importing file %s \n' % fileName, sock)
+                                    fileId = None
+                                    yield fileName, fileId
+                            else:
+                                self._spreadMessage('WARNING: Not importing, path does not exist %s \n' % fileName, sock)
                                 continue
                             else:
                                 if os.path.exists(fileName):
@@ -521,7 +526,7 @@ class ProtImportMovies(ProtImportMicBase):
             self.debug(message)
         except:
             pass
-    
+
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
         for the case when input are individual frames and we want to create
