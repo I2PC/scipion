@@ -41,6 +41,7 @@ from pyworkflow.utils import  Environ
 chimeraPdbTemplateFileName = "chimeraOut%04d.pdb"
 chimeraMapTemplateFileName = "chimeraOut%04d.mrc"
 chimeraScriptFileName = "chimeraScript.py"
+sessionFile = "SESSION.py"
 
 symMapperScipionchimera = {}
 symMapperScipionchimera[SYM_CYCLIC] = "Cn"
@@ -90,8 +91,10 @@ def createCoordinateAxisFile(dim, bildFileName="/tmp/axis.bild",
              arrowDict)
     ff.close()
 
-def adaptOriginFromCCP4ToChimera(origin):
-    return tuple(-1.0*x for x in origin)
+#def adaptOriginFromCCP4ToChimera(origin):
+#    print "Do not use this"
+#    exit(0)
+#    return tuple(-1.0*x for x in origin)
 
 
 def getChimeraEnviron():

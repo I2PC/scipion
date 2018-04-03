@@ -37,7 +37,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import (SetOfVolumes)
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, symMapperScipionchimera, getProgram
+    symMapperScipionchimera, getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 
 VOLUME_SLICES = 1
@@ -89,7 +89,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             return self._showVolumesXmipp()
 
     def _createSetOfVolumes(self):
-        if not exists(self.protocol._getTmpPath() + '/tmpVolumes.sqlite'):
+        if not exists(self.protocol._getTmpPath('tmpVolumes.sqlite')):
             tmpFileName = self.protocol._getTmpPath("tmpVolumes.sqlite")
             _inputVol = self.protocol.inputVolumes.get()
             _outputVol = self.protocol.outputVolume
@@ -98,7 +98,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             setOfVolumes.append(_outputVol)
             setOfVolumes.write()
         else:
-            tmpFileName = self.protocol._getTmpPath()+'/tmpVolumes.sqlite'
+            tmpFileName = self.protocol._getTmpPath('tmpVolumes.sqlite')
             setOfVolumes = SetOfVolumes(filename=tmpFileName)
         return setOfVolumes
 
@@ -119,8 +119,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             _inputVol.getFileName()))
 
         # input vol origin coordinates
-        x_input, y_input, z_input = adaptOriginFromCCP4ToChimera(
-            _inputVol.getVolOriginAsTuple())
+        x_input, y_input, z_input = _inputVol.getVolOriginAsTuple()
         f.write("open %s\n" % inputVolFileName)
         f.write("volume #1 style mesh level 0.001 voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n"
@@ -130,8 +129,7 @@ class viewerXmippProtExtractUnit(ProtocolViewer):
             _outputVol.getFileName()))
 
         # output vol origin coordinates
-        x_output, y_output, z_output = adaptOriginFromCCP4ToChimera(
-            _outputVol.getVolOriginAsTuple())
+        x_output, y_output, z_output = _outputVol.getVolOriginAsTuple()
         f.write("open %s\n" % outputVolFileName)
         f.write("volume #2 style surface level 0.001 voxelSize %f origin "
                 "%0.2f,%0.2f,%0.2f\n"

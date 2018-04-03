@@ -43,6 +43,7 @@ from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
 RELION_HOME = 'RELION_HOME'
+
 ACQUISITION_DICT = OrderedDict([ 
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
@@ -290,6 +291,12 @@ def setPsdFiles(ctfModel, ctfRow):
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
+    # Refresh phase shift!
+    phaseShift = ctfModel.getPhaseShift()
+
+    if phaseShift is not None:
+        ctfRow.setValue(md.RLN_CTF_PHASESHIFT, phaseShift)
+
     objectToRow(ctfModel, ctfRow, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
     
 
@@ -297,7 +304,10 @@ def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a meta """
     if ctfRow.containsAll(CTF_DICT):
         ctfModel = em.CTFModel()
+
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
+        if ctfRow.hasLabel(md.RLN_CTF_PHASESHIFT):
+            ctfModel.setPhaseShift(ctfRow.getValue(md.RLN_CTF_PHASESHIFT, 0))
         ctfModel.standardize()
         setPsdFiles(ctfModel, ctfRow)
     else:
@@ -352,15 +362,10 @@ def alignmentToRow(alignment, alignmentRow, alignType):
 
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X, shifts[0])
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y, shifts[1])
-    # Also set the priors
-    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X_PRIOR, shifts[0])
-    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y_PRIOR, shifts[1])
     
     if is2D:
         angle = angles[0] + angles[2]
         alignmentRow.setValue(md.RLN_ORIENT_PSI, -angle)
-        # Also set the prior
-        alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, -angle)
 
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
@@ -377,10 +382,6 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
         alignmentRow.setValue(md.RLN_ORIENT_TILT, angles[1])
         alignmentRow.setValue(md.RLN_ORIENT_PSI,  angles[2])
-        # Also set the priors
-        alignmentRow.setValue(md.RLN_ORIENT_ROT_PRIOR, angles[0])
-        alignmentRow.setValue(md.RLN_ORIENT_TILT_PRIOR, angles[1])
-        alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, angles[2])
         
 
 def rowToAlignment(alignmentRow, alignType):
@@ -507,6 +508,10 @@ def particleToRow(part, partRow, **kwargs):
                              'fake_micrograph_%06d.mrc' % part.getMicId())
     if part.hasAttribute('_rlnParticleId'):
         partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
+
+    if kwargs.get('fillRandomSubset') and part.hasAttribute('_rlnRandomSubset'):
+        partRow.setValue(md.RLN_PARTICLE_RANDOM_SUBSET, int(part._rlnRandomSubset.get()))
+
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
 
 
