@@ -44,7 +44,7 @@ HAND = 1
 
 
 class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
-    """ This class cointains a re-implementation to a method for the
+    """ This class contains a re-implementation to a method for the
     localized three-dimensional reconstruction of such subunits. 
     After determining the particle orientations, local areas 
     corresponding to the subunits can be extracted and treated as 
@@ -58,9 +58,8 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
         ProtParticles.__init__(self, **args)
         self.allowMpi = False
         self.allowThreads = False
-        
-    
-    #--------------------------- DEFINE param functions -----------------------
+
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam,
@@ -143,11 +142,11 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
 
         form.addParallelSection(threads=0, mpi=0)
     
-    #--------------------------- INSERT steps functions -----------------------
+    # -------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions ------------------------------
+    # -------------------------- STEPS functions -----------------------------
     def createOutputStep(self):
         setEnviron() # Set the environment to access localrec modules
         import localrec
@@ -197,11 +196,14 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
                 rowToSubcoordinate(subpart, coord, part)
                 coord.setObjId(None) # Force to insert as a new item
                 outputSet.append(coord)
+                if part.hasAttribute('_rlnRandomSubset'):
+                    coord._subparticle.copyAttributes(part, '_rlnRandomSubset')
+
         restituteRelionHome()
         self._defineOutputs(outputCoordinates=outputSet)
         self._defineSourceRelation(self.inputParticles, outputSet)
     
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         relionPath = os.environ['LOCALREC_RELION_HOME']
@@ -224,13 +226,13 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     def _methods(self):
         return []
     
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _getInputParticles(self):
         return self.getInputParticlesPointer().get()
     
     def _getSymMatrices(self):
         pass
-        #matricesObjs = lr.matrix_from_symmetry(self.symmetryGroup.get())
+        # matricesObjs = lr.matrix_from_symmetry(self.symmetryGroup.get())
         # We implement the binding to remove the dependency with relion. When
         # we test the new implementation (code below) and the results were
         # different. THe nunmber of particles removed are diverge in dependency
