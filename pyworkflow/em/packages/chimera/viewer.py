@@ -60,16 +60,18 @@ class ChimeraViewerBase(Viewer):
         if _inputVol is not None:
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
+            _showVol = _inputVol
         else:
-            try:
-                outputVol = self.protocol.output3Dmap
+            outputVol = self.protocol.output3Dmap
+            if outputVol is not None:
                 dim = outputVol.getDim()[0]
                 sampling = outputVol.getSamplingRate()
-                _inputVol = outputVol
-            except:
+                _showVol = outputVol
+            else:
                 # To show pdbs only
                 dim = 150.
                 sampling = 1.
+                _showVol = None
 
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
@@ -80,27 +82,22 @@ class ChimeraViewerBase(Viewer):
         f = open(fnCmd, 'w')
         f.write("open %s\n" % bildFileName)
 
-        if _inputVol is not None:
+        if _showVol is not None:
         # In case we have PDBs only, the _inputVol is None:
-            try:
-                outputVol = self.protocol.output3Dmap
-                outputVolFileName = os.path.abspath(outputVol.getFileName())
-            except:
-                outputVol =  _inputVol
-                outputVolFileName = os.path.abspath(
-                        ImageHandler.removeFileType(outputVol.getFileName()))
-            f.write("open %s\n" % outputVolFileName)
-            if outputVol.hasOrigin():
-                x, y, z = outputVol.getOrigin().getShifts()
+            showVolFileName = os.path.abspath(
+                        ImageHandler.removeFileType(_showVol.getFileName()))
+            f.write("open %s\n" % showVolFileName)
+            if _showVol.hasOrigin():
+                x, y, z = _showVol.getOrigin().getShifts()
             else:
-                x, y, z = outputVol.getOrigin(force=True).getShifts()
+                x, y, z = _showVol.getOrigin(force=True).getShifts()
 
             f.write("volume #1 style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
-                    % (outputVol.getSamplingRate(), x, y, z))
+                    % (_showVol.getSamplingRate(), x, y, z))
 
         for filename in os.listdir(directory):
-            if filename.endswith(".pdb"):
+            if filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
                 f.write("open %s\n" % os.path.abspath(path))
 
