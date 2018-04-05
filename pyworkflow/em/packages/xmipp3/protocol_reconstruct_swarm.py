@@ -86,6 +86,7 @@ class XmippProtReconstructSwarm(ProtRefine3D):
         
         form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
+        form.addParam('useGPU', BooleanParam, default=False, label="Use GPU")
 
         form.addParam('numberOfIterations', IntParam, default=15, label='Number of iterations', expertLevel=LEVEL_ADVANCED)
         form.addParam('targetResolution', FloatParam, label="Max. Target Resolution", default="12", expertLevel=LEVEL_ADVANCED,
@@ -228,9 +229,17 @@ class XmippProtReconstructSwarm(ProtRefine3D):
             self.runJob("xmipp_angular_project_library",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
             
             # Assign angles
-            args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct --useForValidation 1'%\
-                 (fnTest,fnGalleryMd,maxShift,fnDir)
-            self.runJob('xmipp_reconstruct_significant',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+            #############################################
+            if not self.useGPU:
+                args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct --useForValidation 1'%\
+                     (fnTest,fnGalleryMd,maxShift,fnDir)
+                self.runJob('xmipp_reconstruct_significant',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+            else:# DUDA useForValidation es keep_best??
+                args = '-i_exp %s -i_ref %s --maxShift %d -o %s --keep_best 1'%\
+                       (fnTest, fnGalleryMd, maxShift,
+                        fnDir+'/angles_iter001_00.xmd')
+                self.runJob('xmipp_cuda_correlation', args, numberOfMpi=1,
+                    numberOfThreads=1)
             
             # Evaluate 
             fnAngles = join(fnDir,"angles_iter001_00.xmd")
@@ -351,16 +360,32 @@ class XmippProtReconstructSwarm(ProtRefine3D):
             self.runJob("xmipp_angular_project_library",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
             
             # Assign angles
-            args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct --useForValidation 1'%\
-                 (fnTrain,fnGalleryMd,maxShift,fnDir)
-            self.runJob('xmipp_reconstruct_significant',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-            fnAngles = join(fnDir,"angles_iter001_00.xmd")
+            ######################################3
+            if not self.useGPU:
+                args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct --useForValidation 1'%\
+                     (fnTrain,fnGalleryMd,maxShift,fnDir)
+                self.runJob('xmipp_reconstruct_significant',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+            else:# DUDA useForValidation es keep_best??
+                args = '-i_exp %s -i_ref %s --maxShift %d -o %s --keep_best 1'%\
+                       (fnTrain, fnGalleryMd, maxShift,
+                        fnDir+'/angles_iter001_00.xmd')
+                self.runJob('xmipp_cuda_correlation', args, numberOfMpi=1,
+                    numberOfThreads=1)
 
+            fnAngles = join(fnDir, "angles_iter001_00.xmd")
             # Reconstruct
             if exists(fnAngles):
                 # Significant may decide not to write it if no image is significant
-                args="-i %s -o %s --sym %s --weight --thr %d"%(fnAngles,fnVol,self.symmetryGroup,self.numberOfThreads.get())
-                self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get())
+                # args="-i %s -o %s --sym %s --weight --thr %d"%(fnAngles,fnVol,self.symmetryGroup,self.numberOfThreads.get())
+                # self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get())
+                ########################DUDA poner aqui tmb la opcion cuda ???
+                if self.useGPU:
+                    args = "-i %s -o %s --sym %s --weight" % (fnAngles, fnVol, self.symmetryGroup)
+                    self.runJob('xmipp_cuda_reconstruct_fourier', args,numberOfMpi=1)
+                else:
+                    args = "-i %s -o %s --sym %s --weight --thr %d" % (fnAngles, fnVol, self.symmetryGroup,self.numberOfThreads.get())
+                    self.runJob("xmipp_reconstruct_fourier", args,numberOfMpi=self.numberOfMpi.get())
+
                 args="-i %s --mask circular %f"%(fnVol,-R)
                 self.runJob("xmipp_transform_mask",args,numberOfMpi=1)
                 args="-i %s --select below 0 --substitute value 0"%fnVol

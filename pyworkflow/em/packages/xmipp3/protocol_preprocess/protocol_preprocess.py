@@ -26,7 +26,7 @@
 # ******************************************************************************
 
 from pyworkflow.em import *
-from pyworkflow.utils import *  
+from pyworkflow.utils import *
 from pyworkflow.protocol.params import *
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
@@ -34,14 +34,16 @@ from ..constants import *
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from ..convert import locationToXmipp, writeSetOfParticles
 from pyworkflow.em import Volume
+from pyworkflow.em.metadata import Row
+
 
 class XmippPreprocessHelper():
     """ 
     Helper class that contains some Protocol utilities methods
     used by both  XmippProtPreprocessParticles and XmippProtPreprocessVolumes.
     """
-    
-    #--------------------------- DEFINE param functions ------------------------
+
+    # --------------------------- DEFINE param functions ------------------------
     @classmethod
     def _defineProcessParams(cls, form):
         # Invert Contrast
@@ -74,7 +76,7 @@ class XmippPreprocessHelper():
                       help=' Substitute selected pixels by this value.',
                       label='Fill value')
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ------------------------
     @classmethod
     def _insertCommonSteps(cls, protocol, changeInserts):
         if protocol.doInvert:
@@ -85,41 +87,41 @@ class XmippPreprocessHelper():
             args = protocol._argsThreshold()
             protocol._insertFunctionStep("thresholdStep", args, changeInserts)
 
-    #--------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions -------------------------------
     @classmethod
     def _argsCommonInvert(cls):
         args = ' --mult -1'
         return args
-    
+
     @classmethod
     def _argsCommonThreshold(cls, protocol):
         args = " --select %s %f" % (protocol.getEnumText('thresholdType'),
                                     protocol.threshold)
         fillStr = protocol.getEnumText('fillType')
         args += " --substitute %s " % fillStr
-        
+
         if protocol.fillType == MASK_FILL_VALUE:
             args += " %f" % protocol.fillValue
         return args
-    
+
 
 class XmippProtPreprocessParticles(XmippProcessParticles):
-    """ Preprocess a set of particles. You can remove dust, normalize, 
+    """ Preprocess a set of particles. You can remove dust, normalize,
         apply threshold, etc """
     _label = 'preprocess particles'
 
     # Normalization enum constants
     NORM_OLD = 0
     NORM_NEW = 1
-    NORM_RAMP =2
-    
+    NORM_RAMP = 2
+
     def __init__(self, **kwargs):
         XmippProcessParticles.__init__(self, **kwargs)
-    
-    #--------------------------- DEFINE param functions ------------------------
+
+    # --------------------------- DEFINE param functions ------------------------
     def _defineProcessParams(self, form):
         form.addParam('doRemoveDust', BooleanParam, default=False,
-                      label='Dust removal', 
+                      label='Dust removal',
                       help='Sets pixels with unusually large values to'
                            'random values from a Gaussian '
                            'with zero-mean and unity-standard deviation.')
@@ -132,18 +134,19 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
                            'For high-contrast negative stain, the signal itself'
                            'may be affected so that a higher value may be preferable.')
         form.addParam('doNormalize', BooleanParam, default=False,
-                      label='Normalize', 
+                      label='Normalize',
                       help='It subtract a ramp in the gray values and normalizes'
                            'so that in the background there is 0 mean and'
                            'standard deviation 1.')
         form.addParam('normType', EnumParam, condition='doNormalize',
                       label='Normalization type', expertLevel=LEVEL_ADVANCED,
-                      choices=['OldXmipp','NewXmipp','Ramp'],
-                      default=self.NORM_RAMP,display=EnumParam.DISPLAY_COMBO, 
+                      choices=['OldXmipp', 'NewXmipp', 'Ramp'],
+                      default=self.NORM_RAMP, display=EnumParam.DISPLAY_COMBO,
                       help='OldXmipp: mean(Image)=0, stddev(Image)=1\n'
                            'NewXmipp: mean(background)=0, stddev(background)=1\n'
                            'Ramp: subtract background + NewXmipp')
-        form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
+        form.addParam('backRadius', IntParam, default=-1,
+                      condition='doNormalize',
                       label='Background radius', expertLevel=LEVEL_ADVANCED,
                       help='Pixels outside this circle are assumed to be noise and'
                            'their stddev is set to 1. Radius for background'
@@ -152,90 +155,92 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         form.addParam('doCenter', BooleanParam, default=False,
                       label='Center images')
         XmippPreprocessHelper._defineProcessParams(form)
-    
-    #--------------------------- INSERT steps functions ------------------------
+
+    # --------------------------- INSERT steps functions ------------------------
     def _insertProcessStep(self):
         self.isFirstStep = True
         # this is for when the options selected has changed and the protocol is resumed
         changeInserts = [self.doRemoveDust, self.doNormalize, self.doInvert,
                          self.doThreshold, self.doCenter]
-        
+
         if self.doRemoveDust:
             args = self._argsRemoveDust()
             self._insertFunctionStep("removeDustStep", args, changeInserts)
-        
+
         if self.doNormalize:
             args = self._argsNormalize()
             self._insertFunctionStep("normalizeStep", args, changeInserts)
-        
+
         if self.doCenter:
             args = self._argsCenter()
             self._insertFunctionStep("centerStep", args, changeInserts)
-        
+
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
-        
-    #--------------------------- STEPS functions -------------------------------
+
+    # --------------------------- STEPS functions -------------------------------
     def invertStep(self, args, changeInserts):
         self.runJob('xmipp_image_operate', args)
 
     def thresholdStep(self, args, changeInserts):
         self.runJob("xmipp_transform_threshold", args)
-        
+
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
-    
+
     def normalizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_normalize", args)
-    
+
     def centerStep(self, args, changeInserts):
         self.runJob("xmipp_transform_center_image", args % locals())
-    
+
     def sortImages(self, outputFn, outputMd):
         pass
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions --------------------------------
     def _validate(self):
         validateMsgs = []
-        
+
         if self.doNormalize.get() and self.normType.get() != 0:
             size = self._getSize()
             if self.backRadius.get() > size:
                 validateMsgs.append('Set a valid Background radius less than %d'
-                                                                         % size)
+                                    % size)
         return validateMsgs
-    
+
     def _summary(self):
         summary = []
         summary.append("Input particles: %s"
-                        % self.inputParticles.get().getFileName())
-        
+                       % self.inputParticles.get().getFileName())
+
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
             summary.append("Dust removal: %s" % self.doRemoveDust)
             summary.append("Normalize the background: %s" % self.doNormalize)
             summary.append("Invert contrast: %s" % self.doInvert)
-            summary.append("Remove voxels with threshold: %s" %self.doThreshold)
+            summary.append(
+                "Remove voxels with threshold: %s" % self.doThreshold)
         return summary
-    
+
     def _methods(self):
         methods = []
         if hasattr(self, 'outputParticles'):
             methods.append("Input particles %s of %s elements"
-                            % (self.getObjectTag('inputParticles'),
-                               self.inputParticles.get().getSize()))
+                           % (self.getObjectTag('inputParticles'),
+                              self.inputParticles.get().getSize()))
             if self.doNormalize:
                 methods.append("The background was normalized with %s method."
-                                % self.getEnumText('normType'))
+                               % self.getEnumText('normType'))
             if self.doInvert:
                 methods.append("The contrast was inverted")
             if self.doThreshold:
                 methods.append("Pixels with values below %f was removed"
                                % self.threshold.get())
-            methods.append('Output set: %s'%self.getObjectTag('outputParticles'))
+            methods.append(
+                'Output set: %s' % self.getObjectTag('outputParticles'))
         return methods
-    
-    #--------------------------- UTILS functions -------------------------------
+
+    # --------------------------- UTILS functions -------------------------------
     def _argsRemoveDust(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" \
@@ -245,7 +250,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s" % self.outputStk
         args += " --bad_pixels outliers %f" % self.thresholdDust.get()
         return args
-    
+
     def _argsNormalize(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" \
@@ -253,7 +258,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
-        
+
         normType = self.normType.get()
         bgRadius = self.backRadius.get()
         radii = self._getSize()
@@ -267,7 +272,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         else:
             args += " --method Ramp --background circle %d" % bgRadius
         return args
-    
+
     def _argsInvert(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" \
@@ -277,7 +282,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s" % self.outputStk
         args += XmippPreprocessHelper._argsCommonInvert()
         return args
-    
+
     def _argsThreshold(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" \
@@ -287,7 +292,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s" % self.outputStk
         args += XmippPreprocessHelper._argsCommonThreshold(self)
         return args
-    
+
     def _argsCenter(self):
         if self.isFirstStep:
             args = "-i %s -o %s --save_metadata_stack %s" \
@@ -296,59 +301,60 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         else:
             args = "-i %s" % self.outputStk
         return args
-    
+
     def _getSize(self):
         """ get the size of SetOfParticles object"""
         Xdim = self.inputParticles.get().getDimensions()[0]
-        size = int(Xdim/2)
+        size = int(Xdim / 2)
         return size
-    
+
     def _setFalseFirstStep(self):
         if self.isFirstStep:
-                self.isFirstStep = False
+            self.isFirstStep = False
 
 
 class XmippProtPreprocessVolumes(XmippProcessVolumes):
     """ Protocol for Xmipp-based preprocess for volumes """
     import pyworkflow.em.metadata as md
-    
-    _label = 'preprocess volumes'
-    
-    # Aggregation constants
-    AGG_AVERAGE=0
-    AGG_SUM=1
-    
-    # Segmentation type
-    SEG_VOXEL=0
-    SEG_AMIN=1
-    SEG_DALTON=2
-    SEG_AUTO=3
 
+    _label = 'preprocess volumes'
+
+    # Aggregation constants
+    AGG_AVERAGE = 0
+    AGG_SUM = 1
+
+    # Segmentation type
+    SEG_VOXEL = 0
+    SEG_AMIN = 1
+    SEG_DALTON = 2
+    SEG_AUTO = 3
 
     def __init__(self, **kwargs):
         XmippProcessVolumes.__init__(self, **kwargs)
-    
-    #--------------------------- DEFINE param functions ------------------------
+
+    # --------------------------- DEFINE param functions ------------------------
     def _defineProcessParams(self, form):
         # Change hand
         form.addParam('doChangeHand', BooleanParam, default=False,
-                      label="Change hand", 
+                      label="Change hand",
                       help='Change hand by applying a mirror along X.')
         # Change from one icosahedral standard orientation to another
         form.addParam('doRotateIco', BooleanParam, default=False,
-                      label="Change icosahedral orientation", 
+                      label="Change icosahedral orientation",
                       help='Change from one icosahedral standard orientation to another.')
-        form.addParam('rotateFromIco', EnumParam, choices=['i1','i2','i3','i4'],
-                       display=EnumParam.DISPLAY_COMBO, default=0,
-                       label='from', condition='doRotateIco', 
-                       help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]] '
-                            'for a description of the symmetry groups format.')
-        form.addParam('rotateToIco', EnumParam, choices=['i1','i2','i3','i4'],
-                       label='to', default=1, display=EnumParam.DISPLAY_COMBO,
-                       condition='doRotateIco')
+        form.addParam('rotateFromIco', EnumParam,
+                      choices=['i1', 'i2', 'i3', 'i4'],
+                      display=EnumParam.DISPLAY_COMBO, default=0,
+                      label='from', condition='doRotateIco',
+                      help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]] '
+                           'for a description of the symmetry groups format.')
+        form.addParam('rotateToIco', EnumParam,
+                      choices=['i1', 'i2', 'i3', 'i4'],
+                      label='to', default=1, display=EnumParam.DISPLAY_COMBO,
+                      condition='doRotateIco')
         # Randomize the phases
         form.addParam('doRandomize', BooleanParam, default=False,
-                      label="Randomize phases", 
+                      label="Randomize phases",
                       help='Randomize phases beyond a certain frequency.')
         # ToDo: add wizard
         form.addParam('maxResolutionRandomize', FloatParam, default=40,
@@ -356,16 +362,16 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                       help='Angstroms.')
         # Symmetrization
         form.addParam('doSymmetrize', BooleanParam, default=False,
-                      label="Symmetrize", 
+                      label="Symmetrize",
                       help='Symmetrize the input model.')
         form.addParam('symmetryGroup', TextParam, default='i1',
                       label="Symmetry group", condition='doSymmetrize',
                       help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]] '
-                      'for a description of the symmetry groups format.'
-                      'If no symmetry is present, set the Symmetrize field to not.')
-        form.addParam('aggregation', EnumParam, choices=['Average', 'Sum'], 
-                      display=EnumParam.DISPLAY_COMBO, condition = 'doSymmetrize',
-                      default=0, label='Aggregation mode', 
+                           'for a description of the symmetry groups format.'
+                           'If no symmetry is present, set the Symmetrize field to not.')
+        form.addParam('aggregation', EnumParam, choices=['Average', 'Sum'],
+                      display=EnumParam.DISPLAY_COMBO, condition='doSymmetrize',
+                      default=0, label='Aggregation mode',
                       help='Symmetrized volumes can be averaged or summed.')
         form.addParam('doWrap', BooleanParam, default=True,
                       label="Wrap", condition='doSymmetrize',
@@ -374,14 +380,15 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         form.addParam('doLaplacian', BooleanParam, default=False,
                       help="Laplacian denoising", label="Apply Laplacian")
         form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask',
-                      label='Mask volume', condition='doSymmetrize or doLaplacian',
+                      label='Mask volume',
+                      condition='doSymmetrize or doLaplacian',
                       allowsNull=True)
 
         # Adjust gray values
         form.addParam('doAdjust', BooleanParam, default=False,
-                      label="Adjust gray values", 
+                      label="Adjust gray values",
                       help='Adjust input gray values so that it is compatible'
-                           'with a set of projections.') 
+                           'with a set of projections.')
         form.addParam('inputImages', PointerParam,
                       pointerClass='SetOfParticles, SetOfAverages, SetOfClasses2D',
                       label="Set of particles", condition='doAdjust',
@@ -392,34 +399,39 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                       label="Symmetry group", condition='doAdjust',
                       help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
                            'for a description of the symmetry groups format.'
-                           'If no symmetry is present, give c1.')  
+                           'If no symmetry is present, give c1.')
+        form.addParam('useGPU', BooleanParam, default=False, label="Use GPU",
+                      condition='doAdjust')
+
         # Segment
         form.addParam('doSegment', BooleanParam,
-                      default=False, label="Segment", 
+                      default=False, label="Segment",
                       help='Separate the molecule from its background.')
         form.addParam('segmentationType', EnumParam, condition='doSegment',
-                      choices=['Voxel mass', 'Aminoacid mass','Dalton mass','Automatic'],
+                      choices=['Voxel mass', 'Aminoacid mass', 'Dalton mass',
+                               'Automatic'],
                       default=3, display=EnumParam.DISPLAY_COMBO,
                       label="Segmentation Type", help='Type of segmentation.')
         form.addParam('segmentationMass', FloatParam, label="Molecule Mass",
-                      default=-1, condition='doSegment and segmentationType != 3',
+                      default=-1,
+                      condition='doSegment and segmentationType != 3',
                       help='In automatic segmentation, set it to -1.')
         # Normalize background
         form.addParam('doNormalize', BooleanParam, default=False,
-                      label="Normalize background", 
+                      label="Normalize background",
                       help='Set background to have zero mean and standard deviation 1.')
         form.addParam('backRadius', FloatParam, default=-1,
                       label="Mask Radius", condition='doNormalize',
                       help='In pixels. Set to -1 for half of the size of the volume.')
         XmippPreprocessHelper._defineProcessParams(form)
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ------------------------
     def _insertProcessStep(self):
         self.isFirstStep = True
         # this is for when the options selected has changed and the protocol is resumed
-        changeInserts = [self.doChangeHand, self.doRotateIco, self.doRandomize, 
-                         self.doSymmetrize, self.doLaplacian, self.doAdjust, 
-                         self.doSegment, self.doInvert, self.doNormalize, 
+        changeInserts = [self.doChangeHand, self.doRotateIco, self.doRandomize,
+                         self.doSymmetrize, self.doLaplacian, self.doAdjust,
+                         self.doSegment, self.doInvert, self.doNormalize,
                          self.doThreshold]
 
         if self.doChangeHand:
@@ -428,23 +440,24 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
 
         if self.doRotateIco:
             args = self._argsRotateIco()
-            self._insertFunctionStep("rotateIcoStep", args, changeInserts)   
-        
+            self._insertFunctionStep("rotateIcoStep", args, changeInserts)
+
         if self.doRandomize:
             args = self._argsRandomize()
             self._insertFunctionStep("randomizeStep", args, changeInserts)
-        
+
         if self.doSymmetrize:
             args = self._argsSymmetrize()
             self._insertFunctionStep("symmetrizeStep", args, changeInserts)
-        
+
         if self.doLaplacian:
             args = self._argsLaplacian()
             self._insertFunctionStep("laplacianStep", args, changeInserts)
-        
+
         if self.doAdjust:
             self._insertFunctionStep("projectionStep", changeInserts)
-            self._insertFunctionStep("adjustStep",self.isFirstStep,changeInserts)
+            self._insertFunctionStep("adjustStep", self.isFirstStep,
+                                     changeInserts)
             if self.isFirstStep:
                 self.isFirstStep = False
 
@@ -453,63 +466,84 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             self._insertFunctionStep("segmentStep", args, changeInserts)
             if self.isFirstStep:
                 self.isFirstStep = False
-        
+
         if self.doNormalize:
             args = self._argsNormalize()
             self._insertFunctionStep("normalizeStep", args, changeInserts)
-        
+
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -------------------------------
     def invertStep(self, args, changeInserts):
         self.runJob('xmipp_image_operate', args)
-    
+
     def thresholdStep(self, args, changeInserts):
         self.runJob("xmipp_transform_threshold", args)
-        
+
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
-    
+
     def normalizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_normalize", args)
-        
+
     def changeHandStep(self, args, changeInserts):
         self.runJob("xmipp_transform_mirror", args)
 
     def rotateIcoStep(self, args, changeInserts):
-        self.runJob("xmipp_transform_geometry", args)  
-    
+        self.runJob("xmipp_transform_geometry", args)
+
     def randomizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_randomize_phases", args)
-    
+
     def symmetrizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_symmetrize", args)
-    
+
     def laplacianStep(self, args, changeInserts):
         self.runJob("xmipp_transform_filter", args, numberOfMpi=1)
-    
+
     def projectionStep(self, changeInserts):
         partSet = self.inputImages.get()
         imgsFn = self._getTmpPath('input_images.xmd')
-        
+
         if partSet.getSize() > 200:
             newPartSet = self._getRandomSubset(partSet, 200)
         else:
             newPartSet = partSet
-            
+
         writeSetOfParticles(newPartSet, imgsFn)
-        
+
         if not partSet.hasAlignmentProj():
-            params = {'imgsFn': imgsFn,
-                      'dir': self._getTmpPath(),
-                      'vols': self.inputFn,
-                      'symmetryGroup': self.sigSymGroup.get(),
-                      }
-            sigArgs = '-i %(imgsFn)s --initvolumes %(vols)s --odir %(dir)s'\
-                      ' --sym %(symmetryGroup)s --alpha0 0.005 --dontReconstruct' \
-                      % params
-            self.runJob("xmipp_reconstruct_significant", sigArgs)
-    
+            if not self.useGPU:
+                params = {'imgsFn': imgsFn,
+                          'dir': self._getTmpPath(),
+                          'vols': self.inputFn,
+                          'symmetryGroup': self.sigSymGroup.get(),
+                          }
+                sigArgs = '-i %(imgsFn)s --initvolumes %(vols)s --odir %(dir)s' \
+                          ' --sym %(symmetryGroup)s --alpha0 0.005 --dontReconstruct' \
+                          % params
+                self.runJob("xmipp_reconstruct_significant", sigArgs)
+            else:  #############################################
+                volMd = md.MetaData(self.inputFn)
+                i = 0
+                for objId in volMd:
+                    # Generate projections
+                    inputVol = volMd.getValue(md.MDL_IMAGE, objId)
+                    fnGalleryRoot = join(self._getTmpPath(), "gallery")
+                    args = "-i %s -o %s.stk --sym %s " \
+                           "--compute_neighbors --angular_distance -1 " \
+                           "--experimental_images %s -v 0 " % \
+                           (inputVol, fnGalleryRoot, self.sigSymGroup.get(),
+                            imgsFn)
+                    self.runJob("xmipp_angular_project_library ", args)
+
+                    # Align
+                    outDir = self._getTmpPath("images_iter001_%02d.xmd" % i)
+                    sigArgs = '-i_ref %s.doc -i_exp %s -o %s --simplifiedMd' % \
+                              (fnGalleryRoot, imgsFn, outDir)
+                    self.runJob("xmipp_cuda_correlation ", sigArgs)
+                    i += 1
+
     def adjustStep(self, isFirstStep, changeInserts):
         if isFirstStep:
             inputFn = self.inputFn
@@ -524,15 +558,24 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             localArgs = self._adjustLocalArgs(inputFn, self.outputStk, args)
             self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
         else:
+            ##################AJ problemas antes
             volMd = md.MetaData(self.inputFn)
-            outVolMd = md.MetaData(self.outputMd)
+            outVolMd = md.MetaData()
+            row = Row()
             for objId in volMd:
-                args = self._argsAdjust(objId-1)
+                args = self._argsAdjust(objId - 1)
                 inputVol = volMd.getValue(md.MDL_IMAGE, objId)
-                outputVol = outVolMd.getValue(md.MDL_IMAGE, objId)
+                #outputVol = outVolMd.getValue(md.MDL_IMAGE, objId)
+                outputVol = '%06d@'%objId + self.outputStk
                 localArgs = self._adjustLocalArgs(inputVol, outputVol, args)
-                self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
-    
+                self.runJob("xmipp_transform_adjust_volume_grey_levels",
+                            localArgs)
+                row.setValue(md.MDL_IMAGE, outputVol)
+                row.addToMd(outVolMd)
+
+            ############mas datos en el MD?
+            outVolMd.write(self.outputMd)
+
     def segmentStep(self, args, changeInserts):
         fnMask = self._getTmpPath("mask.vol")
         if self.isFirstStep:
@@ -542,7 +585,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 inputFn = self.outputStk
             else:
                 inputFn = self.outputMd
-        
+
         if self._isSingleInput():
             localArgs = self._segmentLocalArgs(inputFn, fnMask, args)
             maskArgs = self._segMentMaskArgs(inputFn, self.outputStk, fnMask)
@@ -556,14 +599,14 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 localArgs = self._segmentLocalArgs(inputVol, fnMask, args)
                 maskArgs = self._segMentMaskArgs(inputVol, outputVol, fnMask)
                 self._segmentVolume(localArgs, maskArgs, fnMask)
-    
+
     def _segmentVolume(self, localArgs, maskArgs, fnMask):
         self.runJob("xmipp_volume_segment", localArgs)
         if exists(fnMask):
             self.runJob("xmipp_transform_mask", maskArgs)
             cleanPath(fnMask)
-    
-    #--------------------------- INFO functions --------------------------------
+
+    # --------------------------- INFO functions --------------------------------
     def _argsChangeHand(self):
         if self.isFirstStep:
             if self._isSingleInput():
@@ -575,7 +618,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         else:
             args = "-i %s" % self.outputStk
         args += " --flipX"
-        
+
         return args
 
     def _argsRotateIco(self):
@@ -589,10 +632,10 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         else:
             args = "-i %s" % self.outputStk
         args += " --rotate_volume icosahedral i%d i%s --dont_wrap" \
-                % (self.rotateFromIco.get()+1, self.rotateToIco.get()+1)
+                % (self.rotateFromIco.get() + 1, self.rotateToIco.get() + 1)
 
         return args
-    
+
     def _argsRandomize(self):
         if self.isFirstStep:
             if self._isSingleInput():
@@ -603,12 +646,12 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
-        
+
         samplingRate = self.inputVolumes.get().getSamplingRate()
         resol = self.maxResolutionRandomize.get()
-        args += " --freq continuous %f %f" % (float(resol),samplingRate)
+        args += " --freq continuous %f %f" % (float(resol), samplingRate)
         return args
-    
+
     def _argsSymmetrize(self):
         if self.isFirstStep:
             if self._isSingleInput():
@@ -620,8 +663,8 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         else:
             args = "-i %s" % self.outputStk
 
-        symmetry   = self.symmetryGroup.get()
-        doWrap     = self.doWrap.get()
+        symmetry = self.symmetryGroup.get()
+        doWrap = self.doWrap.get()
         if self.volumeMask.get() is not None:
             fnVolumeMask = self.volumeMask.get().getFileName()
             doVolumeMask = True
@@ -643,11 +686,11 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
 
         if doVolumeMask:
             if exists(fnVolumeMask):
-                args += " --mask_in %s "%fnVolumeMask
+                args += " --mask_in %s " % fnVolumeMask
             else:
-                print('Error: mask %s does not exists'%fnVolumeMask)
+                print('Error: mask %s does not exists' % fnVolumeMask)
         return args
-    
+
     def _argsLaplacian(self):
         args = ""
         if self._isSingleInput():
@@ -657,10 +700,10 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         if self.volumeMask.get() is not None:
             fnVolumeMask = self.volumeMask.get().getFileName()
             if exists(fnVolumeMask):
-                args += " %s"%fnVolumeMask
+                args += " %s" % fnVolumeMask
 
         return args
-    
+
     def _argsAdjust(self, number):
         if self.inputImages.get().hasAlignmentProj():
             fn = "input_images.xmd"
@@ -668,30 +711,30 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             fn = "images_iter001_%02d.xmd" % number
         args = " -m %s" % self._getTmpPath(fn)
         return args
-    
+
     def _adjustLocalArgs(self, inputVol, outputVol, args):
-            localArgs = "-i %s -o %s" % (inputVol, outputVol) + args
-            return localArgs
-    
+        localArgs = "-i %s -o %s" % (inputVol, outputVol) + args
+        return localArgs
+
     def _argsSegment(self):
         segmentationType = self.segmentationType.get()
         segmentationMass = self.segmentationMass.get()
         ts = self._getSize()
-        
+
         args = " --method "
         if segmentationType == "Voxel mass":
             args += "voxel_mass %d" % (int(segmentationMass))
         elif segmentationType == "Aminoacid mass":
-            args += "aa_mass %d %f" % (int(segmentationMass),float(ts))
+            args += "aa_mass %d %f" % (int(segmentationMass), float(ts))
         elif segmentationType == "Dalton mass":
-            args += "dalton_mass %d %f" % (int(segmentationMass),float(ts))
+            args += "dalton_mass %d %f" % (int(segmentationMass), float(ts))
         else:
             args += "otsu"
         return args
-    
+
     def _segmentLocalArgs(self, inputVol, fnMask, args):
         return "-i %s -o %s " % (inputVol, fnMask) + args
-    
+
     def _segMentMaskArgs(self, inputVol, outputVol, fnMask):
         print "self.isFirstStep, ", self.isFirstStep
         if self.isFirstStep:
@@ -701,7 +744,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             maskArgs = "-i %s" % outputVol
         maskArgs += " --mask binary_file %s" % fnMask
         return maskArgs
-    
+
     def _argsNormalize(self):
         if self.isFirstStep:
             if self._isSingleInput():
@@ -712,15 +755,15 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             self._setFalseFirstStep()
         else:
             args = "-i %s" % self.outputStk
-        
+
         maskRadius = self.backRadius.get()
         if maskRadius <= 0:
             size = self._getSize()
-            maskRadius = size/2
-        
+            maskRadius = size / 2
+
         args += " --method NewXmipp --background circle %d" % int(maskRadius)
         return args
-    
+
     def _argsInvert(self):
         if self.isFirstStep:
             if self._isSingleInput():
@@ -733,7 +776,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             args = "-i %s" % self.outputStk
         args += XmippPreprocessHelper._argsCommonInvert()
         return args
-    
+
     def _argsThreshold(self):
         if self.isFirstStep:
             if self._isSingleInput():
@@ -748,44 +791,45 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
 
     def _validate(self):
         validateMsgs = []
-        
+
         if not self.inputVolumes.hasValue():
             validateMsgs.append('Please provide an initial volume(s).')
-            
+
         if self.doNormalize.get():
-            size = int(self._getSize()/2)
-            
+            size = int(self._getSize() / 2)
+
             if self.backRadius.get() > size:
                 validateMsgs.append('Set a valid Background radius less than %d'
-                                                                         % size)
-        
+                                    % size)
+
         if self.doSymmetrize.get():
             if self.symmetryGroup.get() == 'c1':
                 validateMsgs.append('c1 is not a valid symmetry group.'
                                     'If you do not want to symmetrize set'
                                     'the field Symmetrize to not.')
-                
+
         return validateMsgs
-    
+
     def _summary(self):
         summary = []
 
         if self.inputVolumes.get() is None:
             return summary
 
-        summary.append("Input volumes:  %s"%self.inputVolumes.get().getNameId())
-        
+        summary.append(
+            "Input volumes:  %s" % self.inputVolumes.get().getNameId())
+
         if not hasattr(self, 'outputVol'):
             summary.append("Output volumes not ready yet.")
         else:
             summary.append("Output volumes: %s" % self.outputVol)
-        
+
         return summary
-    
+
     def _methods(self):
         return self._summary()
 
-    #--------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions -------------------------------
     def _getSize(self):
         """ get the size of either Volume or SetOfVolumes object"""
         if isinstance(self.inputVolumes.get(), Volume):
@@ -793,10 +837,10 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         else:
             Xdim = self.inputVolumes.get().getDimensions()[0]
         return Xdim
-    
+
     def _setFalseFirstStep(self):
         if self.isFirstStep:
-                self.isFirstStep = False
+            self.isFirstStep = False
 
     def _getRandomSubset(self, imgSet, numOfParts):
         if isinstance(imgSet, SetOfClasses2D):
@@ -804,13 +848,14 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             for i, cls in enumerate(imgSet):
                 img = cls.getRepresentative()
                 img.setSamplingRate(cls.getSamplingRate())
-                img.setObjId(i+1)
+                img.setObjId(i + 1)
                 partSet.append(img)
         else:
             partSet = imgSet
-        
+
         if partSet.getSize() > numOfParts:
-            newPartSet = SetOfParticles(filename=self._getTmpPath("particles_tmp.sqlite"))
+            newPartSet = SetOfParticles(
+                filename=self._getTmpPath("particles_tmp.sqlite"))
             counter = 0
             for part in partSet.iterItems(orderBy='RANDOM()', direction='ASC'):
                 if counter < numOfParts:
@@ -820,6 +865,5 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                     break
         else:
             newPartSet = partSet
-        
+
         return newPartSet
-    
