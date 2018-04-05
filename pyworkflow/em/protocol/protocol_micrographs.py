@@ -578,10 +578,11 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         if firstTime:
             outputCtf = self._createSetOfCTF()
+            outputCtf.setMicrographs(self.getInputMicrographsPointer())
         else:
             outputCtf.enableAppend()
 
-        outputCtf.setMicrographs(self.getInputMicrographs())
+
 
         for micFn, micDir, mic in self._iterMicrographs(micList):
             ctf = self._createCtfModel(mic)
