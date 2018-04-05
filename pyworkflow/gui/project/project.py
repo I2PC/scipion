@@ -39,7 +39,7 @@ import subprocess
 import uuid
 import SocketServer
 import tempfile
-
+import webbrowser
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.manager import Manager
@@ -93,6 +93,8 @@ class ProjectWindow(ProjectBaseWindow):
                             shortCut="Ctrl+f")
         projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow',
+                            icon='fa-download.png')
+        projMenu.addSubMenu('Search workflow', 'search_workflow',
                             icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '')  # add separator
@@ -220,7 +222,11 @@ class ProjectWindow(ProjectBaseWindow):
             self.getViewWidget().updateRunsGraph(True, reorganize=True)
         except Exception, ex:
             self.showError(str(ex))
-            
+
+    def onSearchWorkflow(self):
+        search_url='http://127.0.0.1:8000'
+        webbrowser.open(search_url)
+
     def onImportWorkflow(self):
         FileBrowserWindow("Select workflow .json file",
                           self, self.project.getPath(''),
