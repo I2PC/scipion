@@ -118,7 +118,8 @@ class ObjectBrowser(tk.Frame):
         self.label.grid(row=0, column=0, sticky='news')
         
     def _fillRightBottom(self, bottom):
-        self.text = TaggedText(bottom, width=40, height=15, bg='white', takefocus=0)
+        self.text = TaggedText(bottom, width=40, height=15, bg='white',
+                               takefocus=0)
         self.text.grid(row=0, column=0, sticky='news')
         
     def _itemClicked(self, obj):
@@ -143,7 +144,7 @@ class ObjectBrowser(tk.Frame):
         return self._lastSelected
       
 
-#------------- Classes and Functions related to File browsing --------------
+# ------------ Classes and Functions related to File browsing --------------
 
 class FileInfo(object):
     """ This class will store some information about a file.
@@ -270,11 +271,13 @@ class ImageFileHandler(FileHandler):
 class ParticleFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_image.gif'
-    
+
+
 class VolFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_vol.gif'
-    
+
+
 class StackHandler(ImageFileHandler):
     _index = '1@'
     

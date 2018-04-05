@@ -355,6 +355,9 @@ class Protocol(Step):
         if not hasattr(self, 'hostName'):
             self.hostName = String(kwargs.get('hostName', 'localhost'))
 
+        if not hasattr(self, 'hostFullName'):
+            self.hostFullName = String()
+
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
@@ -1161,8 +1164,14 @@ class Protocol(Step):
         self.__initLogs()
 
         self.info(pwutils.greenStr('RUNNING PROTOCOL -----------------'))
+
+        # Store the full machine name where the protocol is running
+        # and also its PID
         self.setPid(os.getpid())
-        self.info('          PID: %s' % self._pid)
+        self.setHostFullName(pwutils.getHostFullName())
+
+        self.info('     HostName: %s' % self.getHostFullName())
+        self.info('          PID: %s' % self.getPid())
         self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: %s' % self.workingDir)
@@ -1327,12 +1336,21 @@ class Protocol(Step):
         return resultFiles | pwutils.getFiles(self.workingDir.get())
 
     def getHostName(self):
-        """ Get the execution host name """
+        """ Get the execution host name.
+         This value is only the key of the host in the configuration file.
+        """
         return self.hostName.get()
 
     def setHostName(self, hostName):
-        """ Set the execution host name """
+        """ Set the execution host name (the host key in the config file) """
         self.hostName.set(hostName)
+
+    def getHostFullName(self):
+        """ Return the full machine name where the protocol is running. """
+        return self.hostFullName.get()
+
+    def setHostFullName(self, hostFullName):
+        self.hostFullName.set(hostFullName)
 
     def getHostConfig(self):
         """ Return the configuration host. """

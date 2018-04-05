@@ -145,7 +145,7 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
                 args += ' --or_not %s' % self.inputVol2Fn
 
         if self.doInvert:
-            args += '--invert'
+            args += ' --invert'
 
         self.runJob("relion_mask_create", args)
 

@@ -94,10 +94,9 @@ class ProtMotionCorr(ProtAlignMovies):
     def _getConvertExtension(self, filename):
         """ Check wether it is needed to convert to .mrc or not """
         ext = pwutils.getExt(filename).lower()
-        print "_getConvertExtension: ", ext
         return None if ext in ['.mrc', '.mrcs', '.tiff', '.tif'] else 'mrc'
 
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineAlignmentParams(self, form):
         form.addParam('gpuMsg', params.LabelParam, default=True,
                       label='WARNING! You need to have installed CUDA'
@@ -186,6 +185,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if self.versionGE('1.0.1'): # Patch overlap was introduced in 1.0.1
             form.addParam('patchOverlap', params.IntParam, default=0,
+                          condition='useMotioncor2',
                           label='Patches Overlap (%)',
                           help='In versions > 1.0.1 it is possible to specify'
                                  'the overlapping between patches. '

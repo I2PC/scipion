@@ -1,7 +1,6 @@
 package xmipp.viewer.particlepicker.training.model;
 
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,10 +23,7 @@ import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.JMetaDataIO;
 import xmipp.viewer.models.ColumnInfo;
-import xmipp.viewer.particlepicker.Format;
-import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.ParticlePickerParams;
+import xmipp.viewer.particlepicker.*;
 import xmipp.viewer.particlepicker.training.AutopickRunnable;
 import xmipp.viewer.particlepicker.training.CorrectAndAutopickRunnable;
 import xmipp.viewer.particlepicker.training.TrainRunnable;
@@ -64,6 +60,7 @@ public class SupervisedParticlePicker extends ParticlePicker
     private TemplatesJDialog dialog;
     private boolean isautopick;
     private boolean existspsd;
+    private boolean hasDefocusU;
 
 	// private String reviewfile;
 
@@ -97,7 +94,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 			if(params.classifierProperties != null)
 			{
 				classifier = new GenericClassifier(params.classifierProperties);
-				setMode(Mode.Supervised);
 				for (SupervisedPickerMicrograph m : micrographs)
 					loadMicrographData(m);
 			}
@@ -363,6 +359,10 @@ public class SupervisedParticlePicker extends ParticlePicker
         return existspsd;
     }
 
+    public boolean hasDefocusU() {
+	    return hasDefocusU;
+    }
+
     @Override
 	public void loadEmptyMicrographs()
 	{
@@ -397,16 +397,27 @@ public class SupervisedParticlePicker extends ParticlePicker
 				throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
 			existspsd = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
 			boolean existsctf = md.containsLabel(MDLabel.MDL_CTF_MODEL);
+			hasDefocusU = md.containsLabel(MDLabel.MDL_CTF_DEFOCUSV);
+
+			boolean hasctfinfo = existsctf || existspsd || hasDefocusU;
+
 			long[] ids = md.findObjects();
+			CtfInfo ctfInfo;
+
 			for (long id : ids)
 			{
+				ctfInfo = hasctfinfo ? new CtfInfo() : null;
 
 				filename = md.getValueString(fileLabel, id);
 				if (existspsd)
-					psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+					ctfInfo.psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				if (existsctf)
-					ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
-				micrograph = new SupervisedPickerMicrograph(filename, psd, ctf);
+					ctfInfo.ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
+				if (hasDefocusU)
+				    ctfInfo.defocusU = new Float(md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id));
+
+				micrograph = new SupervisedPickerMicrograph(filename, ctfInfo);
+
 				micrographs.add(micrograph);
 			}
 			if (micrographs.isEmpty())
@@ -443,7 +454,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				{
 
 					filename = md.getValueString(ci.label, id);
-					micrograph = new SupervisedPickerMicrograph(filename, null, null);
+					micrograph = new SupervisedPickerMicrograph(filename, null);
 					micrographs.add(micrograph);
 				}
 			}
@@ -551,13 +562,13 @@ public class SupervisedParticlePicker extends ParticlePicker
             
             dtemplatesnum = md.getValueInt(MDLabel.MDL_PICKING_TEMPLATES, id);
             if (dtemplatesnum == 0)
-                    dtemplatesnum = 1;// for compatibility with previous
-                                                            // projects
+                    dtemplatesnum = 1;// for compatibility with previous projects
             configmode = Mode.valueOf(md.getValueString(MDLabel.MDL_PICKING_STATE, id));
             isautopick = configmode == Mode.Supervised || configmode == Mode.Review;
             
             if (mode == Mode.Review && configmode == Mode.Manual)//Review mode makes no sense if manual mode
                 throw new IllegalArgumentException("Cannot review picking in manual mode, use manual mode instead");
+
             if (mode != Mode.ReadOnly && mode != Mode.Review)
             	mode = configmode;
             
@@ -1334,5 +1345,28 @@ public class SupervisedParticlePicker extends ParticlePicker
     {
         return getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && isChanged();
     }
+
+	public Color getAutomaticColor() {
+		return getMode() == Mode.Automatic ? getColor() : moveColorHue(getColor(), 0.66f);
+	}
+
+	public Color getDeletedColor() {
+
+		return moveColorHue(getColor(), 0.33f);
+	}
+
+	private Color moveColorHue(Color color, float hueValue){
+		// Get saturation and brightness.
+		float[] hsbVals = new float[3];
+		Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
+
+		// Pass .5 (= 180 degrees) as HUE
+		float newHue = hsbVals[0] - hueValue;
+
+		if (newHue < 0) newHue = newHue + 1f;
+
+		Color newColor = new Color(Color.HSBtoRGB(newHue, hsbVals[1], hsbVals[2]));
+		return newColor;
+	}
 
 }

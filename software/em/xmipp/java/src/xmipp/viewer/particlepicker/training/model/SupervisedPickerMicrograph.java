@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
+import xmipp.viewer.particlepicker.CtfInfo;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.PickerParticle;
 import java.awt.Rectangle;
@@ -32,14 +33,15 @@ public class SupervisedPickerMicrograph extends Micrograph
 
 
 
-	public SupervisedPickerMicrograph(String file, String psd, String ctf)
+	public SupervisedPickerMicrograph(String file, CtfInfo ctfInfo)
 	{
-		super(file, psd, ctf);
+		super(file, ctfInfo);
                 
 		this.manualparticles = new ArrayList<ManualParticle>();
 		this.autoparticles = new ArrayList<AutomaticParticle>();
 		state = MicrographState.Available;
 	}
+
 
 
 

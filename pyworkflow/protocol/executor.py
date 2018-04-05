@@ -165,16 +165,18 @@ class ThreadStepExecutor(StepExecutor):
             nodes = range(nThreads)
             nGpu = len(self.gpuList)
 
-            # Expand gpuList repeating until reach nThreads items
-            if nThreads > nGpu:
-                newList = self.gpuList * (nThreads/nGpu+1)
-                self.gpuList = newList[:nThreads]
+            if nGpu > nThreads:
+                chunk = nGpu / nThreads
+                for i, node in enumerate(nodes):
+                    self.gpuDict[node] = list(self.gpuList[i*chunk:(i+1)*chunk])
+            else:
+                # Expand gpuList repeating until reach nThreads items
+                if nThreads > nGpu:
+                    newList = self.gpuList * (nThreads/nGpu+1)
+                    self.gpuList = newList[:nThreads]
 
-            for node, gpu in zip(nodes, self.gpuList):
-                self.gpuDict[node] = [gpu]
-
-            import pyworkflow.utils as pwutils
-            pwutils.prettyDict(self.gpuDict)
+                for node, gpu in zip(nodes, self.gpuList):
+                    self.gpuDict[node] = [gpu]
 
     def getGpuList(self):
         """ Return the GPU list assigned to current thread

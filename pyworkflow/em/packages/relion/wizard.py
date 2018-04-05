@@ -212,13 +212,15 @@ class RelionAutopickParams(EmWizard):
           'protDir': autopickFomProt.getWorkingDir()
           }
 
-        autopickCommand = '%(picker)s --i extra/%%(micrographName).star --o autopick --particle_diameter %(diameter)s --angpix %(apix)s --ref %(ref)s --ang %(ang)s --lowpass %(lowpass)s --threshold %%(threshold) --min_distance %%(ipd) --read_fom_maps'%args
+        autopickCmd = '%(picker)s --i extra/%%(micrographName).star --o autopick --particle_diameter %(diameter)s '
+        autopickCmd += '--angpix %(apix)s --ref %(ref)s --ang %(ang)s --lowpass %(lowpass)s --threshold %%(threshold) '
+        autopickCmd += '--min_distance %%(ipd) --read_fom_maps' % args
         if autopickFomProt.refsHaveInvertedContrast:
-            autopickCommand += ' --invert'
+            autopickCmd += ' --invert'
         
         if autopickFomProt.refsCtfCorrected:
-            autopickCommand += ' --ctf'
-        args['autopickCommand'] = autopickCommand
+            autopickCmd += ' --ctf'
+        args['autopickCmd'] = autopickCmd
         f.write("""
         parameters = ipd,threshold
         ipd.value = %(min_distance)s
@@ -228,7 +230,7 @@ class RelionAutopickParams(EmWizard):
         threshold.label = Threshold
         threshold.help = some help
         runDir = %(protDir)s
-        autopickCommand = %(autopickCommand)s 
+        autopickCmd = %(autopickCmd)s
         convertCommand = %(convert)s --coordinates --from relion --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s --extra %(protDir)s/extra
         """ % args)
         f.close()
@@ -260,6 +262,20 @@ class Relion2AutopickParams(EmWizard):
         coordsDir = project.getTmpPath(micSet.getName())
         cleanPath(coordsDir)
         makePath(coordsDir)
+
+        from pyworkflow.em.packages.xmipp3.convert import writeSetOfMicrographs
+        micStarFn = os.path.join(coordsDir, 'micrographs.xmd')
+
+        # Set CTF information to the micrographs to be displayed in the
+        # picking list
+        autopickProt.micDict = OrderedDict()
+        micDict, _ = autopickProt._loadInputList()
+
+        def _preprocessMic(mic, micRow):
+            mic.setCTF(micDict[mic.getMicName()].getCTF())
+
+        writeSetOfMicrographs(micSet, micStarFn,
+                              preprocessImageRow=_preprocessMic)
 
         # Create a folder in extra to backup the original autopick star files
         backupDir = autopickProt._getExtraPath('wizard-backup')
@@ -298,7 +314,7 @@ class Relion2AutopickParams(EmWizard):
         f.write("""
         parameters = ipd,threshold,maxStddevNoise
         ipd.value = %(min_distance)s
-        ipd.label = Inter-particles distance
+        ipd.label = Inter-particles distance (A)
         ipd.help = Minimum distance (in Angstroms) between particles
         threshold.value =  %(threshold)s
         threshold.label = Threshold
@@ -314,8 +330,9 @@ class Relion2AutopickParams(EmWizard):
         doPickAll = true
         """ % args)
         f.close()
-        process = CoordinatesObjectView(autopickProt.getProject(), micfn,
+        process = CoordinatesObjectView(autopickProt.getProject(), micStarFn,
                                         coordsDir, autopickProt,
+                                        mode=CoordinatesObjectView.MODE_AUTOMATIC,
                                         pickerProps=pickerProps).show()
         process.wait()
         myprops = pwutils.readProperties(pickerProps)
