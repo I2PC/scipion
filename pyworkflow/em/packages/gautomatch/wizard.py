@@ -215,6 +215,7 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         f.close()
 
         process = CoordinatesObjectView(project, micFn, coordsDir, prot,
+                                        mode=CoordinatesObjectView.MODE_AUTOMATIC,
                                         pickerProps=pickerConfig).show()
         process.wait()
         myprops = pwutils.readProperties(pickerConfig)

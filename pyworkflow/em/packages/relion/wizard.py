@@ -263,6 +263,20 @@ class Relion2AutopickParams(EmWizard):
         cleanPath(coordsDir)
         makePath(coordsDir)
 
+        from pyworkflow.em.packages.xmipp3.convert import writeSetOfMicrographs
+        micStarFn = os.path.join(coordsDir, 'micrographs.xmd')
+
+        # Set CTF information to the micrographs to be displayed in the
+        # picking list
+        autopickProt.micDict = OrderedDict()
+        micDict, _ = autopickProt._loadInputList()
+
+        def _preprocessMic(mic, micRow):
+            mic.setCTF(micDict[mic.getMicName()].getCTF())
+
+        writeSetOfMicrographs(micSet, micStarFn,
+                              preprocessImageRow=_preprocessMic)
+
         # Create a folder in extra to backup the original autopick star files
         backupDir = autopickProt._getExtraPath('wizard-backup')
         cleanPath(backupDir)
@@ -316,7 +330,7 @@ class Relion2AutopickParams(EmWizard):
         doPickAll = true
         """ % args)
         f.close()
-        process = CoordinatesObjectView(autopickProt.getProject(), micfn,
+        process = CoordinatesObjectView(autopickProt.getProject(), micStarFn,
                                         coordsDir, autopickProt,
                                         mode=CoordinatesObjectView.MODE_AUTOMATIC,
                                         pickerProps=pickerProps).show()
