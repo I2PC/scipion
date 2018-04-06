@@ -89,7 +89,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
             volume = self.inputVol.get()
             print "Volume: Input volume %s\n" % volume
         sampling = volume.getSamplingRate()
-        origin = volume.getOrigin(returnInitIfNone=True).getShifts()
+        origin = volume.getOrigin(force=True).getShifts()
 
         # powerfit needs offset in origin
         adaptFileToCCP4(volume.getFileName(), localInputVol,
