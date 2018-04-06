@@ -55,6 +55,8 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
     def __init__(self, **kwargs):
         ProtExtractMovieParticles.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_SERIAL
+        self.movieDict = {}
+        self.ptclDict = {}
 
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -199,10 +201,45 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         # convert particle set to star file
         writeSetOfParticles(self.inputParts,
                             self._getPath(self._getFileName('inputParts')),
-                            self._getExtraPath(),
+                            None,  # do not convertBinaryFiles here, do it later
                             fillMagnification=True,
                             alignType=self.inputParts.getAlignment(),
                             postprocessImageRow=self._postprocessParticleRow)
+
+        # We have to change rlnImageName in inputParts star file to match
+        # rlnMicrographMovieName from inputMovies star file.
+
+        # Create a dict with old and new image names
+        imgNameDict = {}
+
+        for movie in self.movieDict:
+            for img in self.ptclDict:
+                micName = self.ptclDict[img]
+                if micName in movie:
+                    newImgName = pwutils.removeBaseExt(self.movieDict[movie])
+                    newImgName = newImgName.replace('_movie', '.mrcs')
+                    if img not in imgNameDict:
+                        imgNameDict[img] = newImgName
+
+        mData = md.MetaData(self._getPath(self._getFileName('inputParts')))
+        imgNames = mData.getColumnValues(md.RLN_IMAGE_NAME)
+
+        for index, img in enumerate(imgNames):
+            loc, name = img.split('@')
+            imgNames[index] = "%s@%s" % (loc, self._getExtraPath(imgNameDict[name]))
+
+        mData.setColumnValues(md.RLN_IMAGE_NAME, imgNames)
+        mData.write(self._getPath(self._getFileName('inputParts')))
+
+        # link new particle stacks
+        for oldName in imgNameDict:
+            newName = self._getExtraPath(imgNameDict[oldName])
+            if oldName.endswith('mrcs'):
+                pwutils.createLink(oldName, newName)
+            else:
+                img = tuple(oldName.split('@'))
+                self._ih.convert(img, newName)
+
 
     def extractNoStreamParticlesStep(self, args):
         """ Run relion extract particles job. """
@@ -214,53 +251,84 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         movieParticles.copyInfo(self.inputParts)
         movieParticles.setSamplingRate(self._getNewSampling())
 
+        print self.movieDict, "\n\n"
+        print self.ptclDict
+
         mData = md.MetaData()
         mdAll = md.MetaData()
+        movDict = {}
 
-        for movie in self.inputMovieSet:
-            movieName = movie.getMicName()
-            # 'aligned_movie' suffix comes from protocol_align_movies
-            movieParts = movieName.replace('.mrcs',
-                                           '_aligned_movie_extract.star')
-            moviePartsStar = pwutils.join(self._getExtraPath('output/extra'),
-                                          movieParts)
-            # Join output star files with movie particles
-            if pwutils.exists(moviePartsStar):
-                mData.read(moviePartsStar)
+        # Move output movie particle stacks and join output star files
+        for movieKey in self.movieDict:
+            movie = self.movieDict[movieKey]
+            outStar = os.path.basename(movie).replace('.mrcs', '_extract.star')
+            outStar = self._getExtraPath('output/extra/%s' % outStar)
+
+            if pwutils.exists(outStar):
+                mData.read(outStar)
                 mData.removeLabel(md.RLN_IMAGE_ID)
                 mdAll.unionAll(mData)
                 mdAll.addItemId()
 
-        # move output movie particle stacks and change rlnImageName in star file
-        from convert import relionToLocation, locationToRelion
-        for objId in mdAll:
-            index, imgPath = relionToLocation(mdAll.getValue(md.RLN_IMAGE_NAME, objId))
-            baseFn = os.path.basename(imgPath)
-            newPath = pwutils.join(self._getExtraPath('output'), baseFn)
-            newLoc = locationToRelion(index, newPath)
-            if not pwutils.exists(newPath):
-                pwutils.moveFile(self._getPath(imgPath), newPath)
-            mdAll.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
-            # set particleId=index from originalParticleName and frameId=index from micName
-            frameId, _ = relionToLocation(mdAll.getValue(md.RLN_MICROGRAPH_NAME, objId))
-            mdAll.setValue(md.MDL_FRAME_ID, long(frameId), objId)
-            particleId, _ = relionToLocation(mdAll.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
-            mdAll.setValue(md.MDL_PARTICLE_ID, long(particleId), objId)
+            outStack = self._getExtraPath('output/extra/%s' % os.path.basename(movie))
+            newOutStack = self._getExtraPath('output/' +
+                                             pwutils.removeBaseExt(movieKey) +
+                                             '_ptcls.mrcs')
+            pwutils.moveFile(outStack, newOutStack)
+            if outStack not in movDict:
+                movDict[outStack] = newOutStack
 
-        # delete old imgPath
-        pwutils.cleanPath(self._getExtraPath('output/extra'))
+        # Modify rlnMicrographName, rlnOriginalParticleName back to original values
+        # Move output movie particle stacks and change rlnImageName in star file
+        changesDict = {}
 
-        particleMd = self._getFileName('outputParts')
+        imgNames = mdAll.getColumnValues(md.RLN_IMAGE_NAME)
+        micNames = mdAll.getColumnValues(md.RLN_MICROGRAPH_NAME)
+        ptclNames = mdAll.getColumnValues(md.RLN_PARTICLE_ORI_NAME)
 
-        mdAll.write(particleMd)
-        readSetOfMovieParticles(particleMd, movieParticles,
-                                removeDisabled=False,
-                                alignType=ALIGN_PROJ,
-                                extraLabels=MOVIE_EXTRA_LABELS,
-                                postprocessImageRow=self._postprocessImageRow)
+        print movDict
+        for ind, item in enumerate(imgNames):
+            loc, name = item.split('@')
+            name = os.path.basename(name)
+            imgNames[ind] = movDict[item]
 
-        self._defineOutputs(outputParticles=movieParticles)
-        self._defineSourceRelation(self.inputMovies, movieParticles)
+
+
+        mdAll.write(self._getExtraPath('test.star'))
+        raise Exception('LOLD!')
+
+
+        #
+        ## move output movie particle stacks and change rlnImageName in star file
+        #from convert import relionToLocation, locationToRelion
+        #for objId in mdAll:
+        #    index, imgPath = relionToLocation(mdAll.getValue(md.RLN_IMAGE_NAME, objId))
+        #    baseFn = os.path.basename(imgPath)
+        #    newPath = pwutils.join(self._getExtraPath('output'), baseFn)
+        #    newLoc = locationToRelion(index, newPath)
+        #    if not pwutils.exists(newPath):
+        #        pwutils.moveFile(self._getPath(imgPath), newPath)
+        #    mdAll.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
+        #    # set particleId=index from originalParticleName and frameId=index from micName
+        #    frameId, _ = relionToLocation(mdAll.getValue(md.RLN_MICROGRAPH_NAME, objId))
+        #    mdAll.setValue(md.MDL_FRAME_ID, long(frameId), objId)
+        #    particleId, _ = relionToLocation(mdAll.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
+        #    mdAll.setValue(md.MDL_PARTICLE_ID, long(particleId), objId)
+        #
+        ## delete old imgPath
+        #pwutils.cleanPath(self._getExtraPath('output/extra'))
+        #
+        #particleMd = self._getFileName('outputParts')
+        #
+        #mdAll.write(particleMd)
+        #readSetOfMovieParticles(particleMd, movieParticles,
+        #                        removeDisabled=False,
+        #                        alignType=ALIGN_PROJ,
+        #                        extraLabels=MOVIE_EXTRA_LABELS,
+        #                        postprocessImageRow=self._postprocessImageRow)
+        #
+        #self._defineOutputs(outputParticles=movieParticles)
+        #self._defineSourceRelation(self.inputMovies, movieParticles)
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -387,32 +455,31 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
             return None
 
     def _preprocessMovieRow(self, img, imgRow):
-        newName = pwutils.replaceBaseExt(img.getFileName(), 'mrcs')
-        # movie name should end with "_aligned_movie.mrcs"
-        # to match with new rlnImageName
-        if '_aligned_movie.mrcs' not in newName:
-            newName = newName.replace('.mrcs', '_aligned_movie.mrcs')
-        newPath = self._getExtraPath(newName)
-
+        oldName = img.getFileName()
+        movId = img.getObjId()
+        # 'movie' suffix in newName is required for Relion
+        newName = self._getExtraPath('file_%06d_movie.mrcs' % movId)
+        if oldName not in self.movieDict:
+            self.movieDict[oldName] = newName
         # If the movies are in 'mrcs' format just create a link
         # if not, convert to 'mrcs'
-        if img.getFileName().endswith('mrcs'):
-            pwutils.createLink(img.getFileName(), newPath)
+        if oldName.endswith('mrcs'):
+            pwutils.createLink(oldName, newName)
         else:
-            self._ih.convert(img, newPath)
+            self._ih.convert(img, newName)
         # The command will be launched from the working dir
         # so, let's make the movie path relative to that
-        img.setFileName(pwutils.join('extra', newName))
+        img.setFileName(pwutils.join('extra', 'file_%06d_movie.mrcs' % movId))
 
     def _postprocessParticleRow(self, part, partRow):
-        # we need to remove the suffix (from protocol_align_movies) so that
-        # Relion can match the rlnImageName (from particle set) and
-        # the rlnMicrographMovieName (from movie set)
-        imgName = partRow.getValue(md.RLN_IMAGE_NAME)
-        newImgName = imgName.replace('_aligned_mic_DW.', '_aligned.')
-        newImgName = newImgName.replace('_aligned_mic.', '_aligned.')
+        oldImgName = partRow.getValue(md.RLN_IMAGE_NAME)
+        oldImgName = str(oldImgName).split('@')[1]
+        micName = partRow.getValue(md.RLN_MICROGRAPH_NAME)
+        micBase = pwutils.removeBaseExt(micName)
 
-        partRow.setValue(md.RLN_IMAGE_NAME, newImgName)
+        # fill in ptclDict[rlnImageName] = rlnMicrographName
+        if oldImgName not in self.ptclDict:
+            self.ptclDict[oldImgName] = micBase
 
         if part.hasAttribute('_rlnGroupName'):
             partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
