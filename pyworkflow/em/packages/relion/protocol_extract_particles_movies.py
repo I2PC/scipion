@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import os
+from os.path import relpath
 
 from pyworkflow.protocol.constants import STATUS_FINISHED, STEPS_SERIAL
 from pyworkflow.em.protocol import ProtExtractMovieParticles
@@ -170,15 +171,14 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
 
         form.addParallelSection(threads=0, mpi=4)
 
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._createFilenameTemplates()
-        inputMovies = self.getInputMovies()
-        firstStepId = self._insertFunctionStep('convertInputStep',
-                                               inputMovies.getObjId())
+        self._insertFunctionStep('convertInputStep',
+                                 self.getInputMovies().getObjId(),
+                                 self.getParticles().getObjId())
         args = self._getExtractArgs()
-        self._insertFunctionStep('extractNoStreamParticlesStep', args,
-                                 prerequisites=[firstStepId])
+        self._insertFunctionStep('extractNoStreamParticlesStep', args)
         self._insertFunctionStep('createOutputStep')
 
         # Disable streaming functions:
@@ -188,57 +188,65 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
     def _doNothing(self, *args):
         pass  # used to avoid some streaming functions
 
-    # -------------------------- STEPS functions -------------------------------
-    def convertInputStep(self, moviesId):
+    # -------------------------- STEPS functions ------------------------------
+    def convertInputStep(self, moviesId, partsId):
         self._ih = em.ImageHandler()  # used to convert movies
-        self.inputMovieSet = self.getInputMovies()
-        self.inputParts = self.getParticles()
+        inputMovies = self.getInputMovies()
+        firstMovie = inputMovies.getFirstItem()
+        self._linkOrConvertMovie = self._getConvertFunc(firstMovie)
+
         # convert movies to mrcs and write a movie star file
-        writeSetOfMovies(self.inputMovieSet,
+        writeSetOfMovies(inputMovies,
                          self._getPath(self._getFileName('inputMovies')),
                          preprocessImageRow=self._preprocessMovieRow)
 
+        inputParts = self.getParticles()
+        firstPart = inputParts.getFirstItem()
+        self._linkOrConvertPart = self._getConvertFunc(firstPart)
         # convert particle set to star file
-        writeSetOfParticles(self.inputParts,
+        # we avoid to use the defaul convertBinaryFiles because we want
+        # to set a different naming convention to map between movie mrcs
+        # and particles stack mrcs
+        writeSetOfParticles(inputParts,
                             self._getPath(self._getFileName('inputParts')),
-                            None,  # do not convertBinaryFiles here, do it later
+                            None,  # do not use convertBinaryFiles
                             fillMagnification=True,
-                            alignType=self.inputParts.getAlignment(),
+                            alignType=inputParts.getAlignment(),
                             postprocessImageRow=self._postprocessParticleRow)
 
         # We have to change rlnImageName in inputParts star file to match
         # rlnMicrographMovieName from inputMovies star file.
 
-        # Create a dict with old and new image names
-        imgNameDict = {}
-
-        for movie in self.movieDict:
-            for img in self.ptclDict:
-                micName = self.ptclDict[img]
-                if micName in movie:
-                    newImgName = pwutils.removeBaseExt(self.movieDict[movie])
-                    newImgName = newImgName.replace('_movie', '.mrcs')
-                    if img not in imgNameDict:
-                        imgNameDict[img] = newImgName
-
-        mData = md.MetaData(self._getPath(self._getFileName('inputParts')))
-        imgNames = mData.getColumnValues(md.RLN_IMAGE_NAME)
-
-        for index, img in enumerate(imgNames):
-            loc, name = img.split('@')
-            imgNames[index] = "%s@%s" % (loc, self._getExtraPath(imgNameDict[name]))
-
-        mData.setColumnValues(md.RLN_IMAGE_NAME, imgNames)
-        mData.write(self._getPath(self._getFileName('inputParts')))
-
-        # link new particle stacks
-        for oldName in imgNameDict:
-            newName = self._getExtraPath(imgNameDict[oldName])
-            if oldName.endswith('mrcs'):
-                pwutils.createLink(oldName, newName)
-            else:
-                img = tuple(oldName.split('@'))
-                self._ih.convert(img, newName)
+        # # Create a dict with old and new image names
+        # imgNameDict = {}
+        #
+        # for movie in self.movieDict:
+        #     for img in self.ptclDict:
+        #         micName = self.ptclDict[img]
+        #         if micName in movie:
+        #             newImgName = pwutils.removeBaseExt(self.movieDict[movie])
+        #             newImgName = newImgName.replace('_movie', '.mrcs')
+        #             if img not in imgNameDict:
+        #                 imgNameDict[img] = newImgName
+        #
+        # mData = md.MetaData(self._getPath(self._getFileName('inputParts')))
+        # imgNames = mData.getColumnValues(md.RLN_IMAGE_NAME)
+        #
+        # for index, img in enumerate(imgNames):
+        #     loc, name = img.split('@')
+        #     imgNames[index] = "%s@%s" % (loc, self._getExtraPath(imgNameDict[name]))
+        #
+        # mData.setColumnValues(md.RLN_IMAGE_NAME, imgNames)
+        # mData.write(self._getPath(self._getFileName('inputParts')))
+        #
+        # # link new particle stacks
+        # for oldName in imgNameDict:
+        #     newName = self._getExtraPath(imgNameDict[oldName])
+        #     if oldName.endswith('mrcs'):
+        #         pwutils.createLink(oldName, newName)
+        #     else:
+        #         img = tuple(oldName.split('@'))
+        #         self._ih.convert(img, newName)
 
 
     def extractNoStreamParticlesStep(self, args):
@@ -247,6 +255,8 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                     cwd=self.getWorkingDir())
 
     def createOutputStep(self):
+        return
+
         movieParticles = self._createSetOfMovieParticles()
         movieParticles.copyInfo(self.inputParts)
         movieParticles.setSamplingRate(self._getNewSampling())
@@ -426,7 +436,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         return self.doRescale and self.rescaledSize != self.boxSize
 
     def getInputMovies(self):
-            return self.inputMovies.get()
+        return self.inputMovies.get()
 
     def getParticles(self):
         return self.inputParticles.get()
@@ -438,32 +448,55 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         else:
             return None
 
-    def _preprocessMovieRow(self, img, imgRow):
-        oldName = img.getFileName()
-        movId = img.getObjId()
-        # 'movie' suffix in newName is required for Relion
-        newName = self._getExtraPath('file_%06d_movie.mrcs' % movId)
-        if oldName not in self.movieDict:
-            self.movieDict[oldName] = newName
-        # If the movies are in 'mrcs' format just create a link
-        # if not, convert to 'mrcs'
-        if oldName.endswith('mrcs'):
-            pwutils.createLink(oldName, newName)
+    def _getConvertFunc(self, img):
+        """ Return a function that will link or convert the input
+        file depending if the input img has a format valid for Relion.
+        """
+        srcFile = img.getFileName()
+
+        if srcFile.endswith('mrcs'):
+            return lambda s, d: pwutils.createLink(s, d)
         else:
-            self._ih.convert(img, newName)
+            return lambda s, d: self._ih.convert(s, d)
+
+    def _preprocessMovieRow(self, movie, movieRow):
+        # 'movie' suffix in newName is required for Relion
+        micBase = pwutils.removeBaseExt(movie.getMicName())
+        newName = self._getExtraPath('%s_movie.mrcs' % micBase)
+        self._linkOrConvertMovie(movie.getFileName(), newName)
         # The command will be launched from the working dir
         # so, let's make the movie path relative to that
-        img.setFileName(pwutils.join('extra', 'file_%06d_movie.mrcs' % movId))
+        movie.setFileName(relpath(newName, self._getPath()))
 
     def _postprocessParticleRow(self, part, partRow):
-        oldImgName = partRow.getValue(md.RLN_IMAGE_NAME)
-        oldImgName = str(oldImgName).split('@')[1]
-        micName = partRow.getValue(md.RLN_MICROGRAPH_NAME)
-        micBase = pwutils.removeBaseExt(micName)
+        # Keep a map of the already converted files
+        self._stackDict = getattr(self, '_stackDict', {})
+        micBase = pwutils.removeBaseExt(part.getCoordinate().getMicName())
 
-        # fill in ptclDict[rlnImageName] = rlnMicrographName
-        if oldImgName not in self.ptclDict:
-            self.ptclDict[oldImgName] = micBase
+        if micBase not in self._stackDict:
+            # Same convention without '_movie' suffix
+            newName = self._getExtraPath('%s.mrcs' % micBase)
+            self._linkOrConvertPart(part.getFileName(), newName)
+            self._stackDict[micBase] = newName
+        else:
+            newName = self._stackDict[micBase]
+
+        #
+        # oldImgName = partRow.getValue(md.RLN_IMAGE_NAME)
+        # oldImgName = str(oldImgName).split('@')[1]
+        # micName = partRow.getValue(md.RLN_MICROGRAPH_NAME)
+        # micBase = pwutils.removeBaseExt(micName)
+        #
+        # # fill in ptclDict[rlnImageName] = rlnMicrographName
+        # if oldImgName not in self.ptclDict:
+        #     self.ptclDict[oldImgName] = micBase
+
+        from convert import locationToRelion
+        # The command will be launched from the working dir
+        # so, let's make the stack path relative to that
+        newPath = locationToRelion(part.getIndex(),
+                                   relpath(newName, self._getPath()))
+        partRow.setValue(md.RLN_IMAGE_NAME, newPath)
 
         if part.hasAttribute('_rlnGroupName'):
             partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
