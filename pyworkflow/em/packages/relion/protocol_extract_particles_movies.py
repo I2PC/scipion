@@ -251,12 +251,11 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         movieParticles.copyInfo(self.inputParts)
         movieParticles.setSamplingRate(self._getNewSampling())
 
-        print self.movieDict, "\n\n"
-        print self.ptclDict
+        print "movieDict = ", self.movieDict, "\n\n"
+        print "ptclsDict = ", self.ptclDict, "\n\n"
 
         mData = md.MetaData()
         mdAll = md.MetaData()
-        movDict = {}
 
         # Move output movie particle stacks and join output star files
         for movieKey in self.movieDict:
@@ -275,49 +274,34 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                                              pwutils.removeBaseExt(movieKey) +
                                              '_ptcls.mrcs')
             pwutils.moveFile(outStack, newOutStack)
-            if outStack not in movDict:
-                movDict[outStack] = newOutStack
 
         # Modify rlnMicrographName, rlnOriginalParticleName back to original values
-        # Move output movie particle stacks and change rlnImageName in star file
-        changesDict = {}
+        # Change rlnImageName to point to newOutStack
 
-        imgNames = mdAll.getColumnValues(md.RLN_IMAGE_NAME)
-        micNames = mdAll.getColumnValues(md.RLN_MICROGRAPH_NAME)
-        ptclNames = mdAll.getColumnValues(md.RLN_PARTICLE_ORI_NAME)
+        # reverse movieDict and ptclsDict
+        revMovieDict = dict((v, k) for k, v in self.movieDict.iteritems())
+        revPtclDict = dict((v, k) for k, v in self.ptclDict.iteritems())
 
-        print movDict
-        for ind, item in enumerate(imgNames):
-            loc, name = item.split('@')
-            name = os.path.basename(name)
-            imgNames[ind] = movDict[item]
-
+        for row in md.iterRows(mdAll):
+            micInd = row.getValue(md.RLN_MICROGRAPH_NAME).split('@')[0]
+            imgStr = row.getValue(md.RLN_IMAGE_NAME).split('@')
+            ptclInd = row.getValue(md.RLN_PARTICLE_ORI_NAME).split('@')[0]
+            name = os.path.basename(imgStr[1])
+            fnPath = self._getExtraPath(name)
+            origMicName = revMovieDict[fnPath]
+            row.setValue(md.RLN_MICROGRAPH_NAME, "%s@%s" % (micInd, origMicName))  # restore orig movie name
+            row.setValue(md.RLN_PARTICLE_ORI_NAME, "%s@%s" % (ptclInd, revPtclDict[pwutils.removeBaseExt(origMicName)]))  # restore origPtclname
+            row.setValue(md.RLN_IMAGE_NAME, "%s@extra/output/%s_ptcls.mrcs" % (imgStr[0], pwutils.removeBaseExt(origMicName)))
+            row.setValue(md.MDL_FRAME_ID, long(micInd))
+            row.setValue(md.MDL_PARTICLE_ID, long(ptclInd))
 
 
         mdAll.write(self._getExtraPath('test.star'))
-        raise Exception('LOLD!')
+        raise Exception('Debugging in progress!')
 
+        # delete old imgPath
+        pwutils.cleanPath(self._getExtraPath('output/extra'))
 
-        #
-        ## move output movie particle stacks and change rlnImageName in star file
-        #from convert import relionToLocation, locationToRelion
-        #for objId in mdAll:
-        #    index, imgPath = relionToLocation(mdAll.getValue(md.RLN_IMAGE_NAME, objId))
-        #    baseFn = os.path.basename(imgPath)
-        #    newPath = pwutils.join(self._getExtraPath('output'), baseFn)
-        #    newLoc = locationToRelion(index, newPath)
-        #    if not pwutils.exists(newPath):
-        #        pwutils.moveFile(self._getPath(imgPath), newPath)
-        #    mdAll.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
-        #    # set particleId=index from originalParticleName and frameId=index from micName
-        #    frameId, _ = relionToLocation(mdAll.getValue(md.RLN_MICROGRAPH_NAME, objId))
-        #    mdAll.setValue(md.MDL_FRAME_ID, long(frameId), objId)
-        #    particleId, _ = relionToLocation(mdAll.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
-        #    mdAll.setValue(md.MDL_PARTICLE_ID, long(particleId), objId)
-        #
-        ## delete old imgPath
-        #pwutils.cleanPath(self._getExtraPath('output/extra'))
-        #
         #particleMd = self._getFileName('outputParts')
         #
         #mdAll.write(particleMd)
