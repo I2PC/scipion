@@ -38,13 +38,12 @@ import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 
 from convert import (writeSetOfMovies, isVersion2,
-                     writeSetOfParticles, readSetOfMovieParticles,
-                     MOVIE_EXTRA_LABELS)
+                     writeSetOfParticles, locationToRelion)
 from protocol_base import ProtRelionBase
 
 
-
-class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase):
+class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
+                                      ProtRelionBase):
     """Protocol to extract particles from a set of coordinates"""
     _label = 'movie particles extraction'
     _lastUpdateVersion = VERSION_1_2
@@ -69,7 +68,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
 
         self._updateFilenamesDict(myDict)
 
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
         form.addParam('inputMovies', params.PointerParam,
@@ -214,117 +213,81 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
                             alignType=inputParts.getAlignment(),
                             postprocessImageRow=self._postprocessParticleRow)
 
-        # We have to change rlnImageName in inputParts star file to match
-        # rlnMicrographMovieName from inputMovies star file.
-
-        # # Create a dict with old and new image names
-        # imgNameDict = {}
-        #
-        # for movie in self.movieDict:
-        #     for img in self.ptclDict:
-        #         micName = self.ptclDict[img]
-        #         if micName in movie:
-        #             newImgName = pwutils.removeBaseExt(self.movieDict[movie])
-        #             newImgName = newImgName.replace('_movie', '.mrcs')
-        #             if img not in imgNameDict:
-        #                 imgNameDict[img] = newImgName
-        #
-        # mData = md.MetaData(self._getPath(self._getFileName('inputParts')))
-        # imgNames = mData.getColumnValues(md.RLN_IMAGE_NAME)
-        #
-        # for index, img in enumerate(imgNames):
-        #     loc, name = img.split('@')
-        #     imgNames[index] = "%s@%s" % (loc, self._getExtraPath(imgNameDict[name]))
-        #
-        # mData.setColumnValues(md.RLN_IMAGE_NAME, imgNames)
-        # mData.write(self._getPath(self._getFileName('inputParts')))
-        #
-        # # link new particle stacks
-        # for oldName in imgNameDict:
-        #     newName = self._getExtraPath(imgNameDict[oldName])
-        #     if oldName.endswith('mrcs'):
-        #         pwutils.createLink(oldName, newName)
-        #     else:
-        #         img = tuple(oldName.split('@'))
-        #         self._ih.convert(img, newName)
-
-
     def extractNoStreamParticlesStep(self, args):
         """ Run relion extract particles job. """
         self.runJob(self._getProgram('relion_preprocess'), args,
                     cwd=self.getWorkingDir())
 
     def createOutputStep(self):
-        return
+        inputMovies = self.getInputMovies()
+        nFrames = inputMovies.getFirstItem().getNumberOfFrames()
 
+        inputParts = self.getParticles()
         movieParticles = self._createSetOfMovieParticles()
-        movieParticles.copyInfo(self.inputParts)
+        movieParticles.copyInfo(inputParts)
         movieParticles.setSamplingRate(self._getNewSampling())
 
-        print "movieDict = ", self.movieDict, "\n\n"
-        print "ptclsDict = ", self.ptclDict, "\n\n"
+        lastMicName = None
+        partList = []
 
-        mData = md.MetaData()
-        mdAll = md.MetaData()
+        for part in inputParts.iterItems(orderBy='_micId'):
+            micName = part.getCoordinate().getMicName()
 
-        # Move output movie particle stacks and join output star files
-        for movieKey in self.movieDict:
-            movie = self.movieDict[movieKey]
-            outStar = os.path.basename(movie).replace('.mrcs', '_extract.star')
-            outStar = self._getExtraPath('output/extra/%s' % outStar)
+            if micName != lastMicName:
+                if lastMicName is not None:  # do some actions for this mic
+                    # To avoid parsing the Relion star files...we are assuming here
+                    # the order in which Relion is generating the movie-particles per stack
+                    # it start part 1, 2, N of frame 1, then 1, 2..N of frame 2 and so on.
+                    # If this way changes in the future, the following code could break.
+                    # For the sake of performace, I will take the risk now.
+                    count = 0
+                    for frame in range(1, nFrames+1, self.avgFrames.get()):
+                        for mPart in partList:
+                            mPart.setObjId(None)  # clear objId to insert a new one
+                            mPart.setFrameId(frame)
+                            count += 1
+                            mPart.setIndex(count)
+                            movieParticles.append(mPart)
 
-            if pwutils.exists(outStar):
-                mData.read(outStar)
-                mData.removeLabel(md.RLN_IMAGE_ID)
-                mdAll.unionAll(mData)
-                mdAll.addItemId()
+                    del partList  # free unnecessary particle list memory
+                    partList = []
 
-            outStack = self._getExtraPath('output/extra/%s' % os.path.basename(movie))
-            newOutStack = self._getExtraPath('output/' +
-                                             pwutils.removeBaseExt(movieKey) +
-                                             '_ptcls.mrcs')
-            pwutils.moveFile(outStack, newOutStack)
+                lastMicName = micName
+                movieBase = '%s_movie.mrcs' % pwutils.removeBaseExt(micName)
 
-        # Modify rlnMicrographName, rlnOriginalParticleName back to original values
-        # Change rlnImageName to point to newOutStack
+                def _replaceSuffix(suffix):
+                    return movieBase.replace('_movie.mrcs', suffix)
 
-        # reverse movieDict and ptclsDict
-        revMovieDict = dict((v, k) for k, v in self.movieDict.iteritems())
-        revPtclDict = dict((v, k) for k, v in self.ptclDict.iteritems())
+                # Clean up intermediate files (either links or converted)
+                # plus generated files not needed anymore
+                toClean = [
+                    self._getExtraPath(movieBase),
+                    self._getExtraPath(_replaceSuffix('.mrcs')),
+                    self._getExtraPath('output', 'extra',
+                                       _replaceSuffix('_movie_extract.star'))
+                ]
 
-        for row in md.iterRows(mdAll):
-            micInd = row.getValue(md.RLN_MICROGRAPH_NAME).split('@')[0]
-            imgStr = row.getValue(md.RLN_IMAGE_NAME).split('@')
-            ptclInd = row.getValue(md.RLN_PARTICLE_ORI_NAME).split('@')[0]
-            name = os.path.basename(imgStr[1])
-            fnPath = self._getExtraPath(name)
-            origMicName = revMovieDict[fnPath]
-            row.setValue(md.RLN_MICROGRAPH_NAME, "%s@%s" % (micInd, origMicName))  # restore orig movie name
-            row.setValue(md.RLN_PARTICLE_ORI_NAME, "%s@%s" % (ptclInd, revPtclDict[pwutils.removeBaseExt(origMicName)]))  # restore origPtclname
-            row.setValue(md.RLN_IMAGE_NAME, "%s@extra/output/%s_ptcls.mrcs" % (imgStr[0], pwutils.removeBaseExt(origMicName)))
-            row.setValue(md.MDL_FRAME_ID, long(micInd))
-            row.setValue(md.MDL_PARTICLE_ID, long(ptclInd))
+                pwutils.cleanPath(*toClean)
 
+                # Move the resulting stack of movie-particles to extra directly
+                movieStack = self._getExtraPath('output', 'extra', movieBase)
+                newMovieStack = self._getExtraPath(_replaceSuffix('_ptcls.mrcs'))
+                pwutils.moveFile(movieStack, newMovieStack)
 
-        mdAll.write(self._getExtraPath('test.star'))
-        raise Exception('Debugging in progress!')
+            # Create a movie particles based on that one and
+            # store in the list of this movie
+            mPart = em.MovieParticle()
+            mPart.copy(part)  # copy all information from part
+            mPart.setParticleId(part.getObjId())
 
-        # delete old imgPath
-        pwutils.cleanPath(self._getExtraPath('output/extra'))
+            mPart.setFileName(newMovieStack)
+            partList.append(mPart)
 
-        #particleMd = self._getFileName('outputParts')
-        #
-        #mdAll.write(particleMd)
-        #readSetOfMovieParticles(particleMd, movieParticles,
-        #                        removeDisabled=False,
-        #                        alignType=ALIGN_PROJ,
-        #                        extraLabels=MOVIE_EXTRA_LABELS,
-        #                        postprocessImageRow=self._postprocessImageRow)
-        #
-        #self._defineOutputs(outputParticles=movieParticles)
-        #self._defineSourceRelation(self.inputMovies, movieParticles)
+        self._defineOutputs(outputParticles=movieParticles)
+        self._defineSourceRelation(self.inputMovies, movieParticles)
+        self._defineSourceRelation(self.inputParticles, movieParticles)
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         
@@ -382,7 +345,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
 
         return methodsMsgs
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _getExtractArgs(self):
         params = ' --i %s' % self._getFileName('inputMovies')
         params += ' --reextract_data_star %s' % self._getFileName('inputParts')
@@ -481,17 +444,6 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles, ProtRelionBase)
         else:
             newName = self._stackDict[micBase]
 
-        #
-        # oldImgName = partRow.getValue(md.RLN_IMAGE_NAME)
-        # oldImgName = str(oldImgName).split('@')[1]
-        # micName = partRow.getValue(md.RLN_MICROGRAPH_NAME)
-        # micBase = pwutils.removeBaseExt(micName)
-        #
-        # # fill in ptclDict[rlnImageName] = rlnMicrographName
-        # if oldImgName not in self.ptclDict:
-        #     self.ptclDict[oldImgName] = micBase
-
-        from convert import locationToRelion
         # The command will be launched from the working dir
         # so, let's make the stack path relative to that
         newPath = locationToRelion(part.getIndex(),
