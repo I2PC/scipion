@@ -25,7 +25,8 @@
 # *
 # **************************************************************************
 from __future__ import print_function
-
+from constants import WORKFLOW_REPOSITORY_SERVER, \
+    WORKFLOW_PROG_STEP1, WORKFLOW_PROG_STEP2
 
 INIT_REFRESH_SECONDS = 3
 
@@ -1868,9 +1869,10 @@ class ProtocolsView(tk.Frame):
             # version hack end
             fileNameUrl = "?jsonFileName=%s&versionInit=%s"%\
                           (_dict['jsonFileName'], version) # use GET
-            # open browser to fill metadata, fileNAme will be saved as session variable
-            # note that I cannot save the file nave in the session in the first
-            # conection beacause the broeser changes from urlib2 to an actual browser
+            # open browser to fill metadata, fileNAme will be saved as session
+            # variable. Note that I cannot save the file nave in the
+            # session in the first conection because the browser changes
+            # from urlib2 to an actual browser
             # so sessions are different
             webbrowser.open(upload_metadata_url+fileNameUrl)
             #delete temporary file
@@ -1879,13 +1881,13 @@ class ProtocolsView(tk.Frame):
 
         protocols = self._getSelectedProtocols()
         jsonFileName = os.path.join(tempfile.mkdtemp(), 'workflow.json')
-        upload_file_url = "http://127.0.0.1:8000/workflowFile_add/"
-        upload_metadata_url = "http://127.0.0.1:8000/workflowModel_add/"
+        upload_file_url = WORKFLOW_REPOSITORY_SERVER + WORKFLOW_PROG_STEP1
+        upload_metadata_url = WORKFLOW_REPOSITORY_SERVER + WORKFLOW_PROG_STEP2
         try:
-	    self.project.exportProtocols(protocols, jsonFileName)
+            self.project.exportProtocols(protocols, jsonFileName)
             uploadWorkflow(upload_file_url, upload_metadata_url, jsonFileName)
         except Exception as ex:
-	    self.windows.showError(str(ex))
+            self.windows.showError(str(ex))
 
     def _stopProtocol(self, prot):
         if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM,

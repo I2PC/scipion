@@ -55,6 +55,7 @@ from labels import LabelsDialog
 
 # Import possible Object commands to be handled
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
+from constants import WORKFLOW_REPOSITORY_SERVER
 
 
 
@@ -224,7 +225,7 @@ class ProjectWindow(ProjectBaseWindow):
             self.showError(str(ex))
 
     def onSearchWorkflow(self):
-        search_url='http://127.0.0.1:8000'
+        search_url = WORKFLOW_REPOSITORY_SERVER
         webbrowser.open(search_url)
 
     def onImportWorkflow(self):
