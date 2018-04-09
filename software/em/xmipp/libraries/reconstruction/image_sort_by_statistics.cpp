@@ -36,7 +36,7 @@ void ProgSortByStatistics::readParams()
     fn_out = getParam("-o");
     addToInput = checkParam("--addToInput");
     addFeatures = checkParam("--addFeatures");
-    fn_train = getParam("--train");
+    fn_train = getParam("-t");
     cutoff = getDoubleParam("--zcut");
     per = getDoubleParam("--percent");
     targetXdim = getIntParam("--dim");
@@ -63,7 +63,7 @@ void ProgSortByStatistics::defineParams()
     addParamsLine("                         : rootname.xmd contains the list of sorted images with their Z-score");
     addParamsLine("                         : rootname_vectors.xmd (if verbose>=2) contains the vectors associated to each image");
     addParamsLine("                         : If no rootname is given, these two files are not created");
-    addParamsLine(" [--train <selfile=\"\">]: Train on selfile with good particles");
+    addParamsLine(" [-t <selfile=\"\">]:    : Train on selfile with good particles");
     addParamsLine(" [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) ");
     addParamsLine("                         : Images whose Z-score is larger than the cutoff are disabled");
     addParamsLine(" [--addFeatures]         : Add calculated features to the output metadata");
@@ -171,8 +171,6 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
 
     Image<double> img;
     FourierTransformer transformer(FFTW_BACKWARD);
-
-    FileName fn_tmp = fn.substr(fn.find_last_of("@") + 1);
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -342,16 +340,18 @@ void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
             progress_bar(imgno);
     }
 
-    tempPcaAnalyzer0.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
-        "_tempPcaAnalyzer0").c_str(),numDescriptors0);
-    tempPcaAnalyzer1.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
-        "_tempPcaAnalyzer1").c_str(),numDescriptors1);
-    tempPcaAnalyzer2.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
-        "_tempPcaAnalyzer2").c_str(),numDescriptors2);
-    tempPcaAnalyzer3.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
-        "_tempPcaAnalyzer3").c_str(),numDescriptors3);
-    tempPcaAnalyzer4.evaluateZScore(2,20,trained,(fn_tmp.withoutExtension() +
-        "_tempPcaAnalyzer4").c_str(),numDescriptors4);
+    std::size_t beg = fn.find_last_of("@") + 1;
+    std::size_t end = fn.find_last_of("/") + 1;
+    tempPcaAnalyzer0.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca0").c_str(), numDescriptors0);
+    tempPcaAnalyzer1.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca1").c_str(), numDescriptors1);
+    tempPcaAnalyzer2.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca2").c_str(), numDescriptors2);
+    tempPcaAnalyzer3.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca3").c_str(), numDescriptors3);
+    tempPcaAnalyzer4.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca4").c_str(), numDescriptors4);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);

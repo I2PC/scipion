@@ -423,8 +423,8 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained,
 
     if (!trained)
     {
-        std::ofstream fhOutPCA(fileName);
     	learnPCABasis(NPCA, Niter);
+    	std::ofstream fhOutPCA(fileName);
         if (fhOutPCA.is_open())
         {
             for (int n=0; n<NPCA; n++)
@@ -435,7 +435,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained,
             }
             fhOutPCA.close();
         }
-        else std::cerr << "Unable to open file.\n";
+        else std::cerr << "Unable to open file " << fileName << std::endl;
     }
     else
     {
@@ -452,7 +452,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained,
             }
             fhOutPCA.close();
         }
-        else std::cerr << "Unable to open file.\n";
+        else std::cerr << "Unable to open file " << fileName << std::endl;
     }
 
 #ifdef DEBUG

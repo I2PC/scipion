@@ -29,6 +29,7 @@
 
 import os
 import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 import pyworkflow.protocol.constants as cons
 from datetime import datetime
 from pyworkflow.em.data import SetOfParticles
@@ -37,7 +38,7 @@ from pyworkflow.object import String, Set, Float
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive,
                                         Range, LEVEL_ADVANCED, FloatParam,
                                         BooleanParam)
-from convert import readSetOfParticles, writeSetOfParticles
+from convert import readSetOfParticles, writeSetOfParticles, setXmippAttributes
 
 
 class XmippProtScreenParticles(ProtProcessParticles):
@@ -114,11 +115,10 @@ class XmippProtScreenParticles(ProtProcessParticles):
 
     #--------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
-        self.insertedDict = {}
         self._initializeZscores()
-        self.currentParts = [m.clone() for m in self.inputParticles.get()]
-        partsSteps = self._insertNewPartsSteps(self.insertedDict,
-                                               self.currentParts)
+        self.outputSize = 0
+        self.check = None
+        partsSteps = self._insertNewPartsSteps()
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=partsSteps, wait=True)
 
@@ -138,28 +138,14 @@ class XmippProtScreenParticles(ProtProcessParticles):
                 return s
         return None
 
-    def _insertNewPartsSteps(self, insertedDict, inputParts):
+    def _insertNewPartsSteps(self):
         deps = []
-        writeSetOfParticles([p.clone() for p in inputParts
-                             if int(p.getObjId()) not in insertedDict],
-                            self._getExtraPath('newParts.xmd'),
-                            alignType=em.ALIGN_NONE)
-        writeSetOfParticles([p.clone() for p in inputParts
-                             if int(p.getObjId()) in insertedDict],
-                            self._getExtraPath("oldParts.xmd"),
-                            alignType=em.ALIGN_NONE)
-        ProcessedParticles = [p.clone() for p in inputParts
-                               if int(p.getObjId()) in insertedDict]
         stepId = self._insertFunctionStep('sortImages',
-                                          self._getExtraPath('newParts.xmd'),
-                                          self._getExtraPath("oldParts.xmd"),
-                                          len(ProcessedParticles),
+                                          self._getExtraPath("input.xmd"),
+                                          self._getExtraPath("inputOld.xmd"),
+                                          self._getExtraPath("output.xmd"),
                                           prerequisites=[])
-
         deps.append(stepId)
-        for p in inputParts:
-            if int(p.getObjId()) not in insertedDict:
-                insertedDict[p.getObjId()] = stepId
         return deps
 
     def _stepsCheck(self):
@@ -171,53 +157,31 @@ class XmippProtScreenParticles(ProtProcessParticles):
     def _checkNewInput(self):
         # Check if there are new particles to process from the input set
         partsFile = self.inputParticles.get().getFileName()
-        self.lastCheck = getattr(self, 'lastCheck', datetime.now())
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
         mTime = datetime.fromtimestamp(os.path.getmtime(partsFile))
         # If the input movies.sqlite have not changed since our last check,
         # it does not make sense to check for new input data
-        if self.lastCheck > mTime and hasattr(self, 'currentParts'):
+        if self.lastCheck > mTime:
             return None
-
-        partsSet = SetOfParticles(filename=partsFile)
-        partsSet.loadAllProperties()
-        self.currentParts = [m.clone() for m in partsSet]
-        self.streamClosed = partsSet.isStreamClosed()
-        partsSet.close()
-        newParts = any(m.getObjId() not in self.insertedDict
-                       for m in self.currentParts)
+        self.lastCheck = now
         outputStep = self._getFirstJoinStep()
-        if newParts:
-            fDeps = self._insertNewPartsSteps(self.insertedDict,
-                                              self.currentParts)
-            if outputStep is not None:
-                outputStep.addPrerequisites(*fDeps)
-            self.updateSteps()
-
+        fDeps = self._insertNewPartsSteps()
+        if outputStep is not None:
+            outputStep.addPrerequisites(*fDeps)
+        self.updateSteps()
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
             return
-        # Load previously done items (from text file)
-        doneList = self._readDoneList()
-        # Check for newly done items
-        newDone = [m.clone() for m in self.currentParts
-                   if m.getObjId() not in doneList]
-        self.finished = getattr(self, 'streamClosed', True) \
-                        and (len(doneList) == len(self.insertedDict))
-        if newDone:
-            self._writeDoneList(newDone)
-        elif not self.finished:
-            # If we are not finished and no new output have been produced
-            # it does not make sense to proceed and updated the outputs
-            # so we exit from the function here
-            return
+        self.finished = self.streamClosed and \
+                        self.outputSize == len(self.outputParticles)
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    def _loadOutputSet(self, SetClass, baseName, fnInputMd):
-
+    def _loadOutputSet(self, SetClass, baseName, fnMd):
         setFile = self._getPath(baseName)
         if os.path.exists(setFile):
             outputSet = SetClass(filename=setFile)
@@ -227,16 +191,19 @@ class XmippProtScreenParticles(ProtProcessParticles):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        partsSet = self._createSetOfParticles()
-        readSetOfParticles(fnInputMd, partsSet)
         inputs = self.inputParticles.get()
         outputSet.copyInfo(inputs)
+        partsSet = self._createSetOfParticles()
+        readSetOfParticles(fnMd, partsSet)
+        os.remove(fnMd)
+        self.outputSize = self.outputSize + len(partsSet)
         outputSet.copyItems(partsSet)
         for item in partsSet:
             self._calculateSummaryValues(item)
-        # Persist zScore values for summary and testing
-        self._store()
-
+        self._store()   # Persist zScore values for summary and testing
+        writeSetOfParticles(outputSet.iterItems(orderBy='_xmipp_zScore'),
+                            self._getPath("images.xmd"),
+                            alignType=em.ALIGN_NONE)
         return outputSet
 
 
@@ -257,38 +224,44 @@ class XmippProtScreenParticles(ProtProcessParticles):
         outputSet.close()
 
     #--------------------------- STEPS functions -----------------------------
-    def sortImages(self, fnInputMd, fnInputOldMd, lenfnInputOldMd):
-
-        args = "-i Particles@%s -o %s --addToInput " % (
-        fnInputMd, self._getPath("images.xmd"))
-
-        if lenfnInputOldMd > 0:
-            args += "--train Particles@%s " % fnInputOldMd
-
+    def sortImages(self, fnInputMd, fnInputOldMd, fnOutputMd):
+        partsFile = self.inputParticles.get().getFileName()
+        self.outputParticles = SetOfParticles(filename=partsFile)
+        self.outputParticles.loadAllProperties()
+        self.streamClosed = self.outputParticles.isStreamClosed()
+        if self.check == None:
+            writeSetOfParticles(self.outputParticles, fnInputMd,
+                                alignType=em.ALIGN_NONE, orderBy='creation')
+        else:
+            writeSetOfParticles(self.outputParticles, fnInputMd,
+                                alignType=em.ALIGN_NONE, orderBy='creation',
+                                where='creation>"' + str(self.check) + '"')
+            writeSetOfParticles(self.outputParticles, fnInputOldMd,
+                                alignType=em.ALIGN_NONE, orderBy='creation',
+                                where='creation<"' + str(self.check) + '"')
+        if (self.outputSize >= len(self.outputParticles)):
+            return
+        args = "-i Particles@%s -o %s --addToInput " % (fnInputMd, fnOutputMd)
+        if self.check != None:
+            args += "-t Particles@%s " % fnInputOldMd
+        self.check = self.outputParticles[
+            len(self.outputParticles) - 1].getObjCreation()
         if self.autoParRejection == self.REJ_MAXZSCORE:
             args += "--zcut " + str(self.maxZscore.get())
-        
         elif self.autoParRejection == self.REJ_PERCENTAGE:
             args += "--percent " + str(self.percentage.get())
-
         if self.addFeatures:
             args += "--addFeatures "
-
         self.runJob("xmipp_image_sort_by_statistics", args)
 
-        self.outputMd = String(fnInputMd)
-
-        args = "-i Particles@%s " % fnInputMd
-        
+        args = "-i Particles@%s -o %s" % (fnInputMd, fnOutputMd)
         if self.autoParRejectionSSNR == self.REJ_PERCENTAGE_SSNR:
             args += "--ssnrpercent " + str(self.percentageSSNR.get())
-
         self.runJob("xmipp_image_ssnr", args)
-
         streamMode = Set.STREAM_CLOSED \
             if getattr(self, 'finished', False) else Set.STREAM_OPEN
         outSet = self._loadOutputSet(SetOfParticles, 'outputParticles.sqlite',
-                                     fnInputMd)
+                                     fnOutputMd)
         self._updateOutputSet('outputParticles', outSet, streamMode)
 
     def _initializeZscores(self):
@@ -359,23 +332,3 @@ class XmippProtScreenParticles(ProtProcessParticles):
             methods.append('Output set is %s.'
                            % self.getObjectTag('outputParticles'))
         return methods
-    
-    # --------------------------- UTILS functions ----------------------------
-    def _readDoneList(self):
-        """ Read from a file the id's of the items that have been done. """
-        doneFile = self._getAllDone()
-        doneList = []
-        # Check what items have been previously done
-        if os.path.exists(doneFile):
-            with open(doneFile) as f:
-                doneList += [int(line.strip()) for line in f]
-        return doneList
-
-    def _getAllDone(self):
-        return self._getExtraPath('DONE_all.TXT')
-
-    def _writeDoneList(self, partList):
-        """ Write to a file the items that have been done. """
-        with open(self._getAllDone(), 'a') as f:
-            for part in partList:
-                f.write('%d\n' % part.getObjId())
