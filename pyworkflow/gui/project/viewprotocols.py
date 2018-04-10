@@ -1865,7 +1865,7 @@ class ProtocolsView(tk.Frame):
             currentDir = os.path.dirname(os.path.abspath(__file__))
             currentFile = os.path.join(currentDir,'../../../scipion')
             mod = imp.load_source('scipion', currentFile)
-            version = mod.getVersion()
+            version = mod.getVersion(False)
             # version hack end
             fileNameUrl = "?jsonFileName=%s&versionInit=%s"%\
                           (_dict['jsonFileName'], version) # use GET
