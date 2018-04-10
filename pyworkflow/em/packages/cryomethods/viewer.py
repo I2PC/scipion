@@ -202,19 +202,6 @@ Examples:
         elif self.displayVol == VOLUME_SLICES:
             return self._showVolumesSqlite()
 
-
-
-
-            v = self.createScipionView(fn)
-            views.append(v)
-        else:
-            for it in self._iterations:
-                fn = self.protocol._getIterClasses(it)
-                v = self.createScipionView(fn)
-                views.append(v)
-
-        return views
-
     def _showVolumesSqlite(self):
         """ Write (if it is needed) an sqlite with all volumes selected for
         visualization. """
@@ -442,12 +429,22 @@ Examples:
 #===============================================================================
 # Utils Functions
 #===============================================================================
+    def _getZoom(self):
+        # Ensure that classes are shown at least at 128 px to
+        # properly see the rlnClassDistribution label.
+        dim = self.protocol.inputParticles.get().getDim()[0]
+        if dim < 128:
+            zoom = 128*100/dim
+        else:
+            zoom = 100
+        return zoom
+
     def _validate(self):
         if self.lastIter is None:
             return ['There are not iterations completed.']
 
     def _getViewParams(self):
-        labels = 'enabled id _rlnclassDistribution'
+        labels = 'enabled id _filename _rlnclassDistribution'
         viewParams = {showj.ORDER: labels,
                       showj.VISIBLE: labels,
                       showj.RENDER: '_filename',
