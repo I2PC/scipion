@@ -3,7 +3,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Josue Gomez Blanco     (jgomez@cnb.csic.es)
+# *              Josue Gomez Blanco     (josue.gomez-blanco@mcgill.ca)
 # *              I. Foche Perez         (ifoche@cnb.csic.es)
 # *              J. Burguet Castell     (jburguet@cnb.csic.es)
 # *

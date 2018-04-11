@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco ()
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *              Javier Vargas Balbuena (javier.vargasbalbuena@mcgill.ca)
 # *
 # * Department of Anatomy and Cell Biology, McGill University
