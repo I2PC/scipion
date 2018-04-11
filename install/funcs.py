@@ -304,6 +304,9 @@ class Environment:
     def getEmPackagesFolder():
         return "pyworkflow/em/packages"
 
+    def getTargetList(self):
+        return self._targetList
+
     def addTarget(self, name, *commands, **kwargs):
 
         if name in self._targetDict:

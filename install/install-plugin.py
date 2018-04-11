@@ -25,9 +25,9 @@
 # **************************************************************************
 
 import sys
-from install.funcs import Environment
-from install.plugin_funcs import PluginRepository
+from install.plugin_funcs import PluginRepository, PluginInfo
 import argparse
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                       External (EM) Plugins                          *
@@ -50,75 +50,56 @@ subparsers = parser.add_subparsers(help='mode "install_plugin" or "uninstall_plu
 installParser = subparsers.add_parser("install_plugin", formatter_class=argparse.RawTextHelpFormatter,
                                       usage="%s  [-h] [--noBin] [-p pluginName [binVersion ...]]" %
                                             (' '.join(args[:2])),
-                                      epilog="Example: %s -p ctffind -p relion 0 -p eman 2.11  \n\n%s" %
+                                      epilog="Example: %s -p ctffind 2.0.4 -p relion -p eman \n\n%s" %
                                       (' '.join(args[:2]), pluginRepo.printPluginInfo()))
+
 installParser.add_argument('--noBin', action='store_true',
                             help='Optional flag to install plugins only as a python module,\n'
                                  'without installing the plugin binaries. This will affect\n'
                                  'all plugins specified in the command.')
+
 installParser.add_argument('-p', '--plugin', action='append', nargs='+',
-                           metavar=('pluginName', 'binVersion'),
+                           metavar=('pluginName', 'pluginVersion'),
                            help='- pluginName: the name of the plugin to install from the list\n'
-                                 '              of available plugins shown below.\n'
-                                 '- binVersion: is an optional param to control the binary version\n'
-                                 '              installed. Its possible values are:\n'
-                                 "              - None: latest version will be automatically installed\n"
-                                 "                      (See example for ctffind below).\n"
-                                 "              - 0:    prevents the installation of the plugin binaries\n"
-                                 "                      (See example for relion below)\n"
-                                 "              - N:    will install the specified version. Available\n"
-                                 "                      (See example for eman below)\n"
-                                 "Several plugins may be specified in a single command, \n"
-                                 'each following the "-p pluginName [binVersion]" pattern. \n')
+                                 '             of available plugins shown below.\n'
+                                 '- pluginVersion: (optional) pip version to install')
 
 uninstallParser = subparsers.add_parser("uninstall_plugin", formatter_class=argparse.RawTextHelpFormatter,
                                         usage="%s  [-h] [-p pluginName [binVersion ...]]" %
                                               (' '.join(args[:2])),
-                                        epilog="Example: %s -p ctffind -p eman 2.11  \n\n%s" %
+                                        epilog="Example: %s ctffind eman \n\n%s" %
                                                (' '.join(args[:2]), pluginRepo.printPluginInfo()))
-uninstallParser.add_argument('-p', '--plugin', action='append', nargs='+',
-                             metavar=('pluginName', 'binVersion'),
-                             help='- pluginName: Name of the plugin to uninstall from the list of\n'
-                                  '              installed plugins shown below. \n'
-                                  '- binVersion: optional param to control the binary version uninstalled\n'
-                                  "              - If none given, will uninstall all binaries installed and\n"
-                                  "                the plugin's python package. (See ctffind example below)\n"
-                                  "              - If binVersion specified, it will only uninstall this one, \n"
-                                  "                leaving the python module intact.(See eman example below)\n"
-                                  'Several plugins may be specified in a single command, \n'
-                                  'each following the "-p pluginName [binVersion]" pattern. \n')
+uninstallParser.add_argument('--noBin', action='store_true',
+                            help='Optional flag to uninstall plugins only as a python module,\n'
+                                 'without uninstalling the plugin binaries. This will affect\n'
+                                 'all plugins specified in the command.')
+uninstallParser.add_argument('-p', '--plugin', action='append',
+                             metavar='pluginName',
+                             help='- pluginName: the name of the plugin to uninstall from the list\n'
+                                  '             of available plugins shown below.\n')
 
 
 parsedArgs = parser.parse_args(args[1:])
-# if parsedArgs.mode == MODE_INSTALL_PLUGIN:
-for cmdTarget in parsedArgs.plugin:
-    pluginName = cmdTarget[0]
-    plugin = pluginRepo.pluginDict.get(pluginName, None)
-    if plugin:
-        binVersion = "" if len(cmdTarget) <= 1 else cmdTarget[1]
-        if parsedArgs.mode == MODE_INSTALL_PLUGIN:
-            plugin.installPipModule()
-            if not parsedArgs.noBin and binVersion != '0':
-                binArgs = [Environment._getExtName(pluginName, binVersion)] if binVersion else []
-                plugin.installBin(args=binArgs)
-        elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
-            plugin.uninstallBin(version=binVersion)
-            if not binVersion:  # only remove pip plugin if no version specified
-                plugin.uninstallPip()
+if parsedArgs.mode == MODE_INSTALL_PLUGIN:
+    pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0], getPipData=True)
+    if not pluginDict:
+        print('\n' + installParser.epilog)
     else:
-        print("Can't (un)install %s plugin because it is not installed or doesn't exist." % pluginName)
+        for cmdTarget in parsedArgs.plugin:
+            pluginName = cmdTarget[0]
+            pluginVersion = "" if len(cmdTarget) == 1 else cmdTarget[1]
+            plugin = pluginDict.get(pluginName, None)
+            if plugin:
+                installed = plugin.installPipModule(version=pluginVersion)
+                if installed and not parsedArgs.noBin:
+                    plugin.installBin()
 
-# elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
-#     for cmdTarget in parsedArgs.plugin:
-#         pluginName = cmdTarget[0]
-#         plugin = pluginRepo.pluginDict.get(pluginName, None)
-#         if plugin:
-#             binVersion = "" if len(cmdTarget) <= 1 else cmdTarget[1]
-#             plugin.uninstallBin(version=binVersion)
-#             if not binVersion: # only remove pip plugin if no version specified
-#                 plugin.uninstallPip()
-#         else:
-#             print("Can't uninstall %s plugin because it is not installed or doesn't exist.")
-
-
-
+elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
+    for pluginName in parsedArgs.plugin:
+        plugin = PluginInfo(pluginName, remote=False)
+        if plugin.isInstalled():
+            if not parsedArgs.noBin:
+                plugin.uninstallBins()
+            plugin.uninstallPip()
+        else:
+            print("Plugin %s is not installed" % pluginName)

@@ -158,6 +158,7 @@ VARS = {
     'SCIPION_HOME': SCIPION_HOME,
     'SCIPION_CWD': SCIPION_CWD,
     'SCIPION_VERSION': getVersion(),
+    'SCIPION_SHORT_VERSION': getVersion(long=False),
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_INSTALL': join(SCIPION_HOME, 'install'),
     'SCIPION_PYTHON': 'python',

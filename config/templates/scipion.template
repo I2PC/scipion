@@ -15,6 +15,7 @@ SCIPION_SOFTWARE = software
 SCIPION_URL = http://scipion.cnb.csic.es/downloads/scipion
 SCIPION_URL_SOFTWARE = %(SCIPION_URL)s/software
 SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
+SCIPION_PLUGIN_REPO_URL = http://scipion.i2pc.es/getplugins/
 
 [PACKAGES]
 EM_ROOT = software/em
