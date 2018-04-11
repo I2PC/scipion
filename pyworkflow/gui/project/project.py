@@ -96,7 +96,7 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('Import workflow', 'load_workflow',
                             icon='fa-download.png')
         projMenu.addSubMenu('Search workflow', 'search_workflow',
-                            icon='fa-download.png')
+                            icon='fa-search.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
