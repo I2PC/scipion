@@ -496,10 +496,9 @@ class Environment:
         self._addTargetDeps(t, ['pip','python'] + deps)
 
         # Install using pip
-        t.addCommand('python %s/pip install -U -I %s==%s' % (self.getPythonPackagesFolder(), name, version),
+        t.addCommand('python pip install -I %s==%s' % (name, version),
                      final=True,
                      targets=self.getPythonPackagesFolder() + '/' + target)
-        print(self.getPythonPackagesFolder())
         return t
 
     def addModule(self, name, **kwargs):
