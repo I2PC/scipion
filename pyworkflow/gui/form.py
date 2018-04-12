@@ -1574,25 +1574,26 @@ class FormWindow(Window):
         r = 0
         sectionsFrame = tk.Frame(parent) 
         configureWeigths(sectionsFrame)
-        tab = ttk.Notebook(sectionsFrame) 
-        tab.grid(row=0, column=0, sticky='news',
+        tabs = ttk.Notebook(sectionsFrame)
+        tabs.grid(row=0, column=0, sticky='news',
                  padx=5, pady=5)
         self._sections = []
         
         for section in self.protocol.iterDefinitionSections():
             label = section.getLabel()
             if label != 'General' and label != 'Parallelization':
-                frame = SectionWidget(self, tab, section, height=150,
+                frame = SectionWidget(self, tabs, section, height=150,
                                       callback=self._checkChanges,
                                       headerBgColor=self.headerBgColor)
                 
-                tab.add(frame, text=section.getLabel())
+                tabs.add(frame, text=section.getLabel())
                 frame.columnconfigure(0, minsize=400)
                 self._fillSection(section, frame)
                 self._sections.append(frame)
                 r += 1
+
         self._checkAllChanges()
-        
+        self._checkTabsVisibility()
         return sectionsFrame    
         
     def _createButtons(self, parent):
@@ -1828,6 +1829,7 @@ class FormWindow(Window):
     def _fillGroup(self, groupParam, groupWidget):
         parent = groupWidget.content
         r = 0
+
         for paramName, param in groupParam.iterParams():
             if isinstance (param, params.Line):
                 widget = LineWidget(r, paramName, param, self, parent, None)
@@ -1899,9 +1901,19 @@ class FormWindow(Window):
     def _checkAllChanges(self):
         for paramName in self.widgetDict:
             self._checkCondition(paramName)
-            
+
+    def _checkTabsVisibility(self):
+        for index, sectionW in enumerate(self._sections):
+            tabs = sectionW.master
+            if sectionW.section.isExpert():
+                if self.protocol.expertLevel.get() == params.LEVEL_NORMAL:
+                    tabs.hide(index)
+                else:
+                    tabs.add(sectionW)
+
     def _onExpertLevelChanged(self, *args):
         self._checkAllChanges()
+        self._checkTabsVisibility()
         self.root.update_idletasks()
         for s in self._sections:
             s.adjustContent()
