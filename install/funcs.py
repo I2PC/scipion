@@ -496,7 +496,7 @@ class Environment:
         self._addTargetDeps(t, ['pip','python'] + deps)
 
         # Install using pip
-        t.addCommand('python %s/pip install %s==%s' % (self.getPythonPackagesFolder(), name, version),
+        t.addCommand('python %s/pip install -U %s==%s' % (self.getPythonPackagesFolder(), name, version),
                      final=True,
                      targets=self.getPythonPackagesFolder() + '/' + target)
         print(self.getPythonPackagesFolder())
