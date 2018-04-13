@@ -75,10 +75,11 @@ def send(command, comm, dest, tag):
 
 def runJobMPI(programname, params, mpiComm, mpiDest,
               numberOfMpi=1, hostConfig=None,
-              env=None, cwd=None):
+              env=None, cwd=None, gpuList=None):
     """ Send the command to the MPI node in which it will be executed. """
 
-    command = buildRunCommand(programname, params, numberOfMpi, hostConfig, env)
+    command = buildRunCommand(programname, params, numberOfMpi, hostConfig,
+                              env, gpuList=gpuList)
     if cwd is not None:
         send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
     if env is not None:

@@ -23,6 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.object import Integer
 """
 This module contains the protocol for 3d refinement with Relion.
 """
@@ -159,8 +160,10 @@ leads to objective and high-quality results.
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
-        self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
-                          errors, 'Input particles', 'Reference volume')
+        # We we scale the input volume to have the same size as the particles...
+        # so no need to validate the following
+        # self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
+        #                   errors, 'Input particles', 'Reference volume')
 
         if isVersion2() and self.IS_3D:
             if self.solventFscMask and not self.referenceMask.get():
@@ -235,7 +238,7 @@ leads to objective and high-quality results.
                          updateItemCallback=self._createItemMatrix,
                          itemDataIterator=md.iterRows(outImgsFn,
                                                       sortByLabel=md.RLN_IMAGE_ID))
-    
+
     def _createItemMatrix(self, particle, row):
         createItemMatrix(particle, row, align=ALIGN_PROJ)
         setRelionAttributes(particle, row, md.RLN_PARTICLE_RANDOM_SUBSET)
