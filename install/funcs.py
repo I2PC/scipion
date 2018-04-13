@@ -493,7 +493,7 @@ class Environment:
         t = self.addTarget(name, default=default)
 
         # Add the dependencies
-        self._addTargetDeps(t, ['python'] + deps)
+        self._addTargetDeps(t, ['pip','python'] + deps)
 
         # Install using pip
         t.addCommand('python -m pip install %s==%s' % (name, version),
