@@ -285,9 +285,9 @@ nfft3 = env.addLibrary(
 # directory with the name of package, and we use that as a target.
 
 # Add pip to our python
-pip = env.addTarget('pip')
-pip.addCommand('python scripts/get-pip.py -I', targets=SW_PYT_PACK + '/pip',
-               default=True, final=True)
+# pip = env.addTarget('pip')
+# pip.addCommand('python scripts/get-pip.py -I', targets=SW_PYT_PACK + '/pip',
+#                default=True, final=True)
 
 # Scons has a different pattern: it is expected to be in bin..TODO
 scons = env.addModule(
