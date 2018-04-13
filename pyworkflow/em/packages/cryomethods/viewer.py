@@ -40,21 +40,14 @@ from convert import relionToLocation
 ITER_LAST = 0
 ITER_SELECTION = 1
 
-ANGDIST_2DPLOT = 0
-ANGDIST_CHIMERA = 1
-
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
 
 CHIMERADATAVIEW = 0
 
-FSC_CORRECTED = 0
-FSC_UNMASKEDMAPS = 1
-FSC_MASKEDMAPS = 2
-FSC_RANDOMIZED = 3
-FSC_ALL = 4
-
-
+CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS,
+                 md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS,
+                 md.RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES]
 
 class VolSelPlotter(EmPlotter):
     """ Class to create several plots with Xmipp utilities"""
@@ -105,21 +98,21 @@ class VolumeSelectorViewer(ProtocolViewer):
                       choices=['last', 'selection'], default=ITER_LAST,
                       display=params.EnumParam.DISPLAY_LIST,
                       label="Iteration to visualize",
-                      help="""
-*last*: only the last iteration will be visualized.
-*selection*: you may specify a range of iterations.
-Examples:
-"1,5-8,10" -> [1,5,6,7,8,10]
-"2,6,9-11" -> [2,6,9,10,11]
-"2 5, 6-8" -> [2,5,6,7,8]                      
-                           """)
+                      help='*last*: only the last iteration will be '
+                           'visualized.\n'
+                           '*selection*: you may specify a range of '
+                           'iterations.\n'
+                           'Examples:\n'
+                           '"1,5-8,10" -> [1,5,6,7,8,10]\n'
+                           '"2,6,9-11" -> [2,6,9,10,11]\n'
+                           '"2 5, 6-8" -> [2,5,6,7,8] ')
+
         form.addParam('iterSelection', params.NumericRangeParam,
                       condition='viewIter==%d' % ITER_SELECTION,
                       label="Iterations list",
                       help="Write the iteration list to visualize.")
 
         group = form.addGroup('Volumes')
-
         group.addParam('displayVol', params.EnumParam,
                        choices=['slices', 'chimera'], default=VOLUME_SLICES,
                        display=params.EnumParam.DISPLAY_HLIST,
@@ -128,6 +121,7 @@ Examples:
                             'axis.\n'
                             '*chimera*: display volumes as surface with '
                             'Chimera.')
+
         group = form.addGroup('Resolution')
         group.addParam('figure', params.EnumParam, default=0,
                        choices=['new', 'active'],
@@ -135,17 +129,16 @@ Examples:
         group.addParam('resolutionPlotsSSNR', params.LabelParam, default=True,
                        label='Display SSNR plots',
                        help='Display signal to noise ratio plots (SSNR)')
-
-        form.addSection('Overall')
-        form.addParam('showPMax', params.LabelParam, default=True,
+        group = form.addGroup('Overall')
+        group.addParam('showPMax', params.LabelParam, default=True,
                       label="Show average PMax",
-                      help='Average (per class) of the maximum value\n '
-                           'of normalized probability function')
-        form.addParam('showChanges', params.LabelParam, default=True,
+                      help='Average (per class) of the maximum value of '
+                           'normalized probability function')
+        group.addParam('showChanges', params.LabelParam, default=True,
                       label='Changes in Offset, Angles and Classes',
-                      help='Visualize changes in orientation, offset and\n '
+                      help='Visualize changes in orientation, offset and '
                            'number images assigned to each class')
-        form.addParam('plotClassDistribution', params.LabelParam, default=True,
+        group.addParam('plotClassDistribution', params.LabelParam, default=True,
                       label='Plot class distribution over iterations',
                       help='Plot each class distribution over iterations as '
                            'bar plots.')
@@ -354,7 +347,7 @@ Examples:
             #agregar por ref3D
             fn = self.protocol._getFileName('optimiser', iter=it )
             mdOptimiser = md.RowMetaData(fn)
-            for label in self.protocol.CHANGE_LABELS:
+            for label in CHANGE_LABELS:
                 mdIters.setValue(label, mdOptimiser.getValue(label), objId)
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
@@ -364,7 +357,6 @@ Examples:
 #===============================================================================
 # plotSSNR
 #===============================================================================
-
     def _getFigure(self):
         return None if self.figure == 0 else 'active'
 
@@ -374,12 +366,14 @@ Examples:
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
         md.activateMathExtensions()
-        xplotter = VolSelPlotter(x=gridsize[0], y=gridsize[1], figure=self._getFigure())
+        xplotter = VolSelPlotter(x=gridsize[0], y=gridsize[1],
+                                 figure=self._getFigure())
 
         for prefix in prefixes:
             for ref3d in self._refsList:
                 plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
-                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'log(SSNR)', yformat=False)
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1',
+                                           'log(SSNR)', yformat=False)
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
                     fn = self._getModelStar(prefix, it)
@@ -406,7 +400,7 @@ Examples:
 #===============================================================================
     def _getZoom(self):
         # Ensure that classes are shown at least at 128 px to
-        # properly see the rlnClassDistribution label.
+        # properly see the rlnClassDistribution label.[[
         dim = self.protocol.inputParticles.get().getDim()[0]
         if dim < 128:
             zoom = 128*100/dim
@@ -519,43 +513,5 @@ Examples:
                 vols.append(volFn)
         return vols
 
-    def _getMdOut(self, it, prefix, ref3d):
-        randomSet = self._getRandomSet(prefix)
-        dataStar = self._getDataStar(prefix, it)
-
-        if randomSet > 0 and  randomSet < 3:
-            mdAll = md.MetaData(dataStar)
-            mdTmp = md.MetaData()
-            mdTmp.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_RANDOM_SUBSET, randomSet))
-        else:
-            mdTmp = md.MetaData(dataStar)
-
-        mdOut = md.MetaData()
-        mdOut.importObjects(mdTmp, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
-        return mdOut
-
-    def _getDataStar(self, prefix, it):
-        randomSet = self._getRandomSet(prefix)
-        if randomSet > 0 or self.protocol.IS_3D_INIT:
-            return self.protocol._getFileName('data', iter=it)
-        else:
-            return self.protocol._getFileName('dataFinal')
-
     def _getModelStar(self, prefix, it):
-        randomSet = self._getRandomSet(prefix)
-        if self.protocol.IS_3D_INIT:
-            return self.protocol._getFileName('model', iter=it)
-        if randomSet > 0:
-            return self.protocol._getFileName(prefix + 'model', iter=it)
-        else:
-            return self.protocol._getFileName('modelFinal')
-
-    def _getRandomSet(self, prefix):
-        if prefix == "final":
-            return 0
-        elif prefix == "half1_":
-            return 1
-        elif prefix == "half2_":
-            return 2
-        else:
-            return 3
+        return self.protocol._getFileName(prefix + 'model', iter=it)
