@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco ()
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *              Javier Vargas Balbuena (javier.vargasbalbuena@mcgill.ca)
 # *
 # * Department of Anatomy and Cell Biology, McGill University
@@ -31,14 +31,9 @@ from os.path import exists
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
 import pyworkflow.em.metadata as md
-from pyworkflow.em.viewer import LocalResolutionViewer
-from pyworkflow.em.data import SetOfParticles, SetOfImages
 from pyworkflow.em.plotter import EmPlotter
-from pyworkflow.em.constants import *
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params
-from pyworkflow.viewer import (Viewer, ProtocolViewer, DESKTOP_TKINTER,
-                               WEB_DJANGO)
+from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
 from initial_volume_selector import ProtInitialVolumeSelector
 from convert import relionToLocation
 
@@ -61,50 +56,37 @@ FSC_ALL = 4
 
 
 
-class RelionPlotter(EmPlotter):
+class VolSelPlotter(EmPlotter):
     """ Class to create several plots with Xmipp utilities"""
-    pass
-    # def __init__(self, x=1, y=1, mainTitle="", **kwargs):
-    #     EmPlotter.__init__(self, x, y, mainTitle, **kwargs)
-    #
-    # def plotMdAngularDistribution(self, title, angularMd, color='blue'):
-    #     """Create an special type of subplot, representing the angular
-    #     distribution of weight projections. A metadata should be provided containing
-    #     labels: RLN_ORIENT_ROT, RLN_ORIENT_TILT, MDL_WEIGHT """
-    #     from math import radians
-    #
-    #     rot = [radians(angularMd.getValue(md.RLN_ORIENT_ROT, objId)) for objId in angularMd]
-    #     tilt = [angularMd.getValue(md.RLN_ORIENT_TILT, objId) for objId in angularMd]
-    #     weight = [angularMd.getValue(md.MDL_WEIGHT, objId) for objId in angularMd]
-    #
-    #     self.plotAngularDistribution(title, rot, tilt, weight)
-    #
-    # def plotMd(self, mdObj, mdLabelX, mdLabelY, color='g',**args):
-    #     """ plot metadata columns mdLabelX and mdLabelY
-    #         if nbins is in args then and histogram over y data is made
-    #     """
-    #     if mdLabelX:
-    #         xx = []
-    #     else:
-    #         xx = range(1, mdObj.size() + 1)
-    #     yy = []
-    #     for objId in mdObj:
-    #         if mdLabelX:
-    #             xx.append(mdObj.getValue(mdLabelX, objId))
-    #         yy.append(mdObj.getValue(mdLabelY, objId))
-    #
-    #     nbins = args.pop('nbins', None)
-    #     if nbins is None:
-    #         self.plotData(xx, yy, color, **args)
-    #     else:
-    #         self.plotHist(yy, nbins, color, **args)
-    #
-    # def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
-    #     """ plot metadataFile columns mdLabelX and mdLabelY
-    #         if nbins is in args then and histogram over y data is made
-    #     """
-    #     mdObj = md.MetaData(mdFilename)
-    #     self.plotMd(mdObj, mdLabelX, mdLabelY, color='g',**args)
+    def __init__(self, x=1, y=1, mainTitle="", **kwargs):
+        EmPlotter.__init__(self, x, y, mainTitle, **kwargs)
+
+    def plotMd(self, mdObj, mdLabelX, mdLabelY, color='g',**args):
+        """ plot metadata columns mdLabelX and mdLabelY
+            if nbins is in args then and histogram over y data is made
+        """
+        if mdLabelX:
+            xx = []
+        else:
+            xx = range(1, mdObj.size() + 1)
+        yy = []
+        for objId in mdObj:
+            if mdLabelX:
+                xx.append(mdObj.getValue(mdLabelX, objId))
+            yy.append(mdObj.getValue(mdLabelY, objId))
+
+        nbins = args.pop('nbins', None)
+        if nbins is None:
+            self.plotData(xx, yy, color, **args)
+        else:
+            self.plotHist(yy, nbins, color, **args)
+
+    def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
+        """ plot metadataFile columns mdLabelX and mdLabelY
+            if nbins is in args then and histogram over y data is made
+        """
+        mdObj = md.MetaData(mdFilename)
+        self.plotMd(mdObj, mdLabelX, mdLabelY, color='g',**args)
 
 
 class VolumeSelectorViewer(ProtocolViewer):
@@ -206,25 +188,18 @@ Examples:
         """ Write (if it is needed) an sqlite with all volumes selected for
         visualization. """
 
+        view = []
         if (self.viewIter == ITER_LAST and
-            getattr(self.protocol, 'outputVolumes', None) is not None):
+                getattr(self.protocol, 'outputVolumes', None) is not None):
             fn = self.protocol.outputVolumes.getFileName()
 
-            view = [self.createDataView(filename=fn,
-                                        viewParams=self._getViewParams())]
+            view.append(self.createView(filename=fn,
+                                        viewParams=self._getViewParams()))
         else:
-            path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
-            samplingRate = self.protocol.inputParticles.get().getSamplingRate()
-
-            files = []
-            volumes = self._getVolumeNames()
-            for volFn in volumes:
-                if exists(volFn.replace(':mrc', '')):
-                    files.append(volFn)
-            self.createVolumesSqlite(files, path, samplingRate,
-                                     updateItemCallback=self._updateVolume)
-
-            return [em.ObjectView(self._project, self.protocol.strId(), path)]
+            for it in self._iterations:
+                volSqlte = self.protocol._getIterVolumes(it)
+                view.append(self.createView(filename=volSqlte,
+                                            viewParams=self._getViewParams()))
         return view
 
     def _showVolumesChimera(self):
@@ -274,7 +249,7 @@ Examples:
 
         colors = ['g', 'b']
 
-        xplotter = RelionPlotter()
+        xplotter = VolSelPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
 
         for label, color in zip(labels, colors):
@@ -283,7 +258,7 @@ Examples:
         if len(self.protocol.PREFIXES) > 1:
             xplotter.showLegend(self.protocol.PREFIXES)
 
-        return [self.createDataView(fn), xplotter]
+        return [self.createView(fn), xplotter]
 
 # ==============================================================================
 # Get classes info per iteration
@@ -317,7 +292,7 @@ Examples:
                 for l in labels:
                     classInfo[index][l].append(row.getValue(l))
 
-        xplotter = RelionPlotter()
+        xplotter = VolSelPlotter()
         xplotter.createSubPlot("Classes distribution over iterations",
                                "Iterations", "Classes Distribution")
 
@@ -384,7 +359,7 @@ Examples:
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
 
-        return [self.createDataView(fn)]
+        return [self.createView(fn)]
 
 #===============================================================================
 # plotSSNR
@@ -399,7 +374,7 @@ Examples:
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
         md.activateMathExtensions()
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], figure=self._getFigure())
+        xplotter = VolSelPlotter(x=gridsize[0], y=gridsize[1], figure=self._getFigure())
 
         for prefix in prefixes:
             for ref3d in self._refsList:
@@ -444,39 +419,22 @@ Examples:
             return ['There are not iterations completed.']
 
     def _getViewParams(self):
-        labels = 'enabled id _filename _rlnclassDistribution'
+        labels = ('enabled id _filename _rlnClassDistribution '
+                 '_rlnAccuracyRotations _rlnAccuracyTranslations '
+                  '_rlnEstimatedResolution')
         viewParams = {showj.ORDER: labels,
+                      showj.MODE: showj.MODE_MD,
                       showj.VISIBLE: labels,
                       showj.RENDER: '_filename',
-                      showj.SORT_BY: '_rlnclassDistribution desc',
+                      showj.SORT_BY: '_rlnClassDistribution desc',
                       showj.ZOOM: str(self._getZoom())
                       }
         return viewParams
 
 
-    def createDataView(self, filename, viewParams={}):
-        return em.DataView(filename, env=self._env, viewParams=viewParams)
-
-    def createScipionView(self, filename):
-        inputParticlesId = self.protocol.inputParticles.get().strId()
-        ViewClass = em.Classes3DView
-        view = ViewClass(self._project, self.protocol.strId(), filename,
-                         other=inputParticlesId, env=self._env,
-                          viewParams=self._getViewParams())
-
-        return view
-
-    def createScipionPartView(self, filename, viewParams={}):
-        inputParticlesId = self.protocol._getInputParticles().strId()
-
-        labels = 'enabled id _size _filename _transform._matrix'
-        viewParams = {showj.ORDER:labels,
-                      showj.VISIBLE: labels, showj.RENDER:'_filename',
-                      'labels': 'id',
-                      }
-        return em.ObjectView(self._project, self.protocol.strId(), filename,
-                             other=inputParticlesId, env=self._env,
-                             viewParams=viewParams)
+    def createView(self, filename, viewParams={}):
+        return em.ObjectView(self._project, self.protocol.strId(),
+                             filename, viewParams=viewParams)
 
     def _getRange(self, var, label):
         """ Check if the range is not empty.

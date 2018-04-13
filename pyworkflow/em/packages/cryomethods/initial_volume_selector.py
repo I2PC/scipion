@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco ()
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *              Javier Vargas Balbuena (javier.vargasbalbuena@mcgill.ca)
 # *
 # * Department of Anatomy and Cell Biology, McGill University
@@ -27,7 +27,7 @@
 
 import re
 from glob import glob
-from os.path import exists
+from os.path import exists, basename, join
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
                                         IntParam, EnumParam, StringParam,
@@ -37,7 +37,7 @@ from pyworkflow.utils.path import cleanPath, replaceBaseExt
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.em.data import SetOfClasses3D
+from pyworkflow.em.data import SetOfVolumes
 from pyworkflow.em.protocol import EMProtocol
 
 from convert import (writeSetOfParticles, isVersion2, convertMask)
@@ -56,16 +56,10 @@ class ProtInitialVolumeSelector(EMProtocol):
     some of the function have a template pattern approach to define the behaviour
     depending on the case.
     """
-    _label = 'Initial Volume Selector'
+    _label = 'volume selector'
 
-    IS_CLASSIFY = True
-    IS_2D = False
-    OUTPUT_TYPE = SetOfClasses3D
+    OUTPUT_TYPE = SetOfVolumes
     FILE_KEYS = ['data', 'optimiser', 'sampling']
-    CLASS_LABEL = md.RLN_PARTICLE_CLASS
-    CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS,
-                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS,
-                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES]
     PREFIXES = ['']
 
     def __init__(self, **args):
@@ -88,7 +82,7 @@ class ProtInitialVolumeSelector(EMProtocol):
             'input_mrcs': self._getPath('input_particles.mrcs'),
             'data_scipion': self.extraIter + 'data_scipion.sqlite',
             'projections': self.extraIter + '%(half)sclass%(ref3d)03d_projections.sqlite',
-            'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
+            'volumes_scipion': self.extraIter + 'volumes.sqlite',
             'data': self.extraIter + 'data.star',
             'model': self.extraIter + 'model.star',
             'shiny': self._getExtraPath('shiny/shiny.star'),
@@ -159,6 +153,12 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'The same diameter will also be used for a '
                            'spherical mask of the reference structures if no '
                            'user-provided mask is specified.')
+        form.addParam('targetResol', FloatParam, default=10,
+                       label='Target Resolution (A)',
+                       help='In order to save time, you could rescale both '
+                            'particles and maps to a pisel size = resol/2. '
+                            'If set to 0, no rescale will be applied to the '
+                            'initial references.')
 
         group = form.addGroup('Reference 3D map')
 
@@ -197,12 +197,13 @@ class ProtInitialVolumeSelector(EMProtocol):
 
         self.addSymmetry(group)
 
-        group.addParam('targetResol', FloatParam, default=10,
-                       label='Target Resolution (A)',
-                       help='In order to save time, you could rescale both '
-                            'particles and maps to a pisel size = resol/2. '
-                            'If set to 0, no rescale will be applied to the '
-                            'initial references.')
+        group.addParam('initialLowPassFilterA', FloatParam, default=40,
+                       label='Initial low-pass filter (A)',
+                       help='It is recommended to strongly low-pass filter your '
+                            'initial reference map. If it has not yet been '
+                            'low-pass filtered, it may be done internally using '
+                            'this option. If set to 0, no low-pass filter will '
+                            'be applied to the initial reference(s).')
 
         form.addSection('CTF')
         form.addParam('doCTF', BooleanParam, default=True,
@@ -496,11 +497,12 @@ class ProtInitialVolumeSelector(EMProtocol):
         self._initialize()
         partsId = self._getInputParticles().getObjId()
         volsId = self.inputVolumes.get().getObjId()
-        self._insertFunctionStep('convertInputStep', partsId, volsId)
-        self._insertRelionStep()
+        self._insertFunctionStep('convertInputStep', partsId, volsId,
+                                 self.targetResol.get())
+        self._insertClassifyStep()
         self._insertFunctionStep('createOutputStep')
 
-    def _insertRelionStep(self):
+    def _insertClassifyStep(self):
         """ Prepare the command line arguments before calling Relion. """
         # Join in a single line all key, value pairs of the args dict
         args = {}
@@ -510,10 +512,10 @@ class ProtInitialVolumeSelector(EMProtocol):
 
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
 
-        self._insertFunctionStep('runRelionStep', params)
+        self._insertFunctionStep('runClassifyStep', params)
 
     # -------------------------- STEPS functions -------------------------------
-    def convertInputStep(self, particlesId, volumesId):
+    def convertInputStep(self, particlesId, volumesId, tgResol):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
         Params:
@@ -521,51 +523,36 @@ class ProtInitialVolumeSelector(EMProtocol):
             convert if either the input particles and/or input volumes are
             changed.
         """
+        self._imgFnList = []
         imgSet = self._getInputParticles()
         imgStar = self._getFileName('input_star')
 
         subset = em.SetOfParticles(filename=":memory:")
-        subset.copyInfo(imgSet)
 
+        newIndex = 1
         for img in imgSet.iterItems(orderBy='RANDOM()', direction='ASC'):
+            self._scaleImages(newIndex, img)
+            newIndex += 1
             subset.append(img)
             subsetSize = self.subsetSize.get()
-
-            if subsetSize > 0:
-                if subset.getSize() == min(subsetSize, imgSet.getSize()):
-                    break
-
-        self.info("Converting set from '%s' into '%s'" %
-                  (imgSet.getFileName(), imgStar))
-
+            minSize = min(subsetSize, imgSet.getSize())
+            if subsetSize   > 0 and subset.getSize() == minSize:
+                break
         writeSetOfParticles(subset, imgStar, self._getExtraPath(),
                             alignType=em.ALIGN_NONE,
                             postprocessImageRow=self._postprocessParticleRow)
+        self._convertInput(subset)
         self._convertRef()
 
-    def runRelionStep(self, params):
+    def runClassifyStep(self, params):
         """ Execute the relion steps with the give params. """
         params += ' --j %d' % self.numberOfThreads.get()
         self.runJob(self._getProgram(), params)
 
     def createOutputStep(self):
-        partSet = self.inputParticles.get()
-
         # create a SetOfVolumes and define its relations
         volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(partSet.getSamplingRate())
-
-        modelStar = md.MetaData('model_classes@' +
-                                self._getFileName('model', iter=self._lastIter()))
-
-        for row in md.iterRows(modelStar):
-            fn = row.getValue('rlnReferenceImage') + ":mrc"
-            classDistrib = row.getValue('rlnClassDistribution')
-            if classDistrib > 0:
-                vol = em.Volume()
-                vol.setFileName(fn)
-                vol._rlnClassDistribution = em.Float(classDistrib)
-                volumes.append(vol)
+        self._fillVolSetFromIter(volumes, self._lastIter())
 
         self._defineOutputs(outputVolumes=volumes)
         self._defineSourceRelation(self.inputVolumes, volumes)
@@ -635,7 +622,7 @@ class ProtInitialVolumeSelector(EMProtocol):
 
         args.update({'--i': self._getFileName('input_star'),
                      '--particle_diameter': maskDiameter,
-                     '--angpix': self._getInputParticles().getSamplingRate(),
+                     '--angpix': self._getPixeSize(),
                      })
         self._setCTFArgs(args)
 
@@ -649,7 +636,7 @@ class ProtInitialVolumeSelector(EMProtocol):
             args['--strict_highres_exp'] = self.limitResolEStep.get()
 
         args['--firstiter_cc'] = ''
-        args['--ini_high'] = self.targetResol.get()
+        args['--ini_high'] = self.initialLowPassFilterA.get()
         args['--sym'] = self.symmetryGroup.get()
 
         refArg = self._getRefArg()
@@ -752,7 +739,8 @@ class ProtInitialVolumeSelector(EMProtocol):
             f = files[index]
             s = self._iterRegex.search(f)
             if s:
-                result = int(s.group(1))  # group 1 is 3 digits iteration number
+                result = long(s.group(1))  # group 1 is 3 digits iteration
+                # number
         return result
 
     def _lastIter(self):
@@ -761,37 +749,44 @@ class ProtInitialVolumeSelector(EMProtocol):
     def _firstIter(self):
         return self._getIterNumber(0) or 1
 
-    def _getIterClasses(self, it, clean=False):
-        """ Return a classes .sqlite file for this iteration.
+    def _getIterVolumes(self, it, clean=False):
+        """ Return a volumes .sqlite file for this iteration.
         If the file doesn't exists, it will be created by
         converting from this iteration data.star file.
         """
-        data_classes = self._getFileName('classes_scipion', iter=it)
+        sqlteVols = self._getFileName('volumes_scipion', iter=it)
 
         if clean:
-            cleanPath(data_classes)
+            cleanPath(sqlteVols)
 
-        if not exists(data_classes):
-            clsSet = self.OUTPUT_TYPE(filename=data_classes)
-            clsSet.setImages(self.inputParticles.get())
-            self._fillClassesFromIter(clsSet, it)
-            clsSet.write()
-            clsSet.close()
+        if not exists(sqlteVols):
+            volSet = self.OUTPUT_TYPE(filename=sqlteVols)
+            self._fillVolSetFromIter(volSet, it)
+            volSet.write()
+            volSet.close()
 
-        return data_classes
+        return sqlteVols
 
-    def _getIterData(self, it, **kwargs):
-        """ Sort the it??.data.star file by the maximum likelihood. """
-        data_sqlite = self._getFileName('data_scipion', iter=it)
+    def _fillVolSetFromIter(self, volSet, it):
+        volSet.setSamplingRate(self._getInputParticles().getSamplingRate())
+        modelStar = md.MetaData('model_classes@' +
+                                self._getFileName('model', iter=it))
+        for row in md.iterRows(modelStar):
+            fn = row.getValue('rlnReferenceImage') + ":mrc"
+            classDistrib = row.getValue('rlnClassDistribution')
+            accurracyRot = row.getValue('rlnAccuracyRotations')
+            accurracyTras = row.getValue('rlnAccuracyTranslations')
+            resol = row.getValue('rlnEstimatedResolution')
 
-        if not exists(data_sqlite):
-            iterImgSet = em.SetOfParticles(filename=data_sqlite)
-            iterImgSet.copyInfo(self._getInputParticles())
-            self._fillDataFromIter(iterImgSet, it)
-            iterImgSet.write()
-            iterImgSet.close()
-
-        return data_sqlite
+            if classDistrib > 0:
+                vol = em.Volume()
+                self._invertScaleVol(fn)
+                vol.setFileName(self._getOutputVolFn(fn))
+                vol._rlnClassDistribution = em.Float(classDistrib)
+                vol._rlnAccuracyRotations = em.Float(accurracyRot)
+                vol._rlnAccuracyTranslations = em.Float(accurracyTras)
+                vol._rlnEstimatedResolution = em.Float(resol)
+                volSet.append(vol)
 
     def _splitInCTFGroups(self, imgStar):
         """ Add a new column in the image star to separate the particles
@@ -825,7 +820,7 @@ class ProtInitialVolumeSelector(EMProtocol):
         outputFn = self._convertVolFn(inputVol)
 
         if outputFn:
-            xdim = self._getInputParticles().getXDim()
+            xdim = self._getNewDim()
             img = ih.read(inputVol)
             img.scale(xdim, xdim, xdim)
             img.write(outputFn)
@@ -852,7 +847,7 @@ class ProtInitialVolumeSelector(EMProtocol):
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
                         "%06d@fake_movie_%06d.mrcs"
-                        % (img.getFrameId(), img.getMicId()))  # fix relion-2.1
+                        % (img.getFrameId(), img.getMicId()))
 
     def _postprocessParticleRow(self, part, partRow):
         if part.hasAttribute('_rlnGroupName'):
@@ -866,3 +861,66 @@ class ProtInitialVolumeSelector(EMProtocol):
 
         if ctf is not None and ctf.getPhaseShift():
             partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
+
+    def _getNewDim(self):
+        tgResol = self.targetResol.get()
+        partSet = self._getInputParticles()
+        size = partSet.getXDim()
+        nyquist = 2 * partSet.getSamplingRate()
+
+        if tgResol > nyquist:
+            newSize = long(round(size * nyquist / tgResol))
+            if newSize % 2 == 1:
+                newSize += 1
+            return newSize
+        else:
+            return size
+
+    def _getPixeSize(self):
+        partSet = self._getInputParticles()
+        oldSize = partSet.getXDim()
+        newSize  = self._getNewDim()
+        pxSize = partSet.getSamplingRate() * oldSize / newSize
+        return pxSize
+
+    def _scaleImages(self,indx, img):
+        fn = img.getFileName()
+        index = img.getIndex()
+        newFn = self._getTmpPath('particles_subset.mrcs')
+        xdim = self._getNewDim()
+
+        ih = em.ImageHandler()
+        image = ih.read((index, fn))
+        image.scale(xdim, xdim)
+
+        image.write((indx, newFn))
+
+        img.setFileName(newFn)
+        img.setIndex(indx)
+        img.setSamplingRate(self._getPixeSize())
+
+    def _convertInput(self, imgSet):
+        newDim = self._getNewDim()
+        bg = newDim / 2
+
+        args = '--operate_on %s --operate_out %s --norm --bg_radius %d'
+
+        params = args % (self._getFileName('input_star'),
+                         self._getFileName('preprocess_particles_star'), bg)
+        self.runJob(self._getProgram(program='relion_preprocess'), params)
+
+        from pyworkflow.utils import moveFile
+
+        moveFile(self._getFileName('preprocess_particles'),
+                 self._getTmpPath('particles_subset.mrcs'))
+
+    def _invertScaleVol(self, fn):
+        xdim = self._getInputParticles().getXDim()
+        outputFn = self._getOutputVolFn(fn)
+        ih = em.ImageHandler()
+        img = ih.read(fn)
+        img.scale(xdim, xdim, xdim)
+        img.write(outputFn)
+
+    def _getOutputVolFn(self, fn):
+        return self._getExtraPath(replaceBaseExt(fn, '_origSize.mrc'))
