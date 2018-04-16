@@ -13,7 +13,7 @@ from pyworkflow.utils.utils import envVarOn, redStr, greenStr
 from pyworkflow.object import Object, Float
 from pyworkflow.protocol import MODE_RESTART
 
-TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
+TESTS_INPUT = os.environ['SCIPION_TESTS']
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
 
 
