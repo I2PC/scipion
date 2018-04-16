@@ -199,23 +199,3 @@ class XmippProtTriggerData(ProtProcessParticles):
 
     def _validate(self):
         pass
-
-    # --------------------------- UTILS functions -----------------------------
-    def _readDoneList(self):
-        """ Read from a file the id's of the items that have been done. """
-        doneFile = self._getAllDone()
-        doneList = []
-        # Check what items have been previously done
-        if os.path.exists(doneFile):
-            with open(doneFile) as f:
-                doneList += [int(line.strip()) for line in f]
-        return doneList
-
-    def _getAllDone(self):
-        return self._getExtraPath('DONE_all.TXT')
-
-    def _writeDoneList(self, partList):
-        """ Write to a file the items that have been done. """
-        with open(self._getAllDone(), 'a') as f:
-            for part in partList:
-                f.write('%d\n' % part.getObjId())
