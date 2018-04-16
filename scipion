@@ -213,7 +213,7 @@ try:
     )
 
     CUDA_BIN = BUILD['CUDA_BIN'] if BUILD['CUDA'] else ''
-
+    print(CUDA_BIN)
     PYTHONPATH_LIST = [SCIPION_HOME,
                        join(SCIPION_SOFTWARE,
                             'lib', 'python2.7', 'site-packages'),
