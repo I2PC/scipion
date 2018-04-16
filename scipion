@@ -204,12 +204,13 @@ try:
         [join(SCIPION_SOFTWARE, 'bin'),
          BUILD['JAVA_BINDIR'],
          BUILD['MPI_BINDIR'],
-         os.environ.get('PATH', '')]
+         os.environ.get('PATH', ''),
+         CUDA_BIN]
     )
     LD_LIBRARY_PATH = os.pathsep.join(
         [join(SCIPION_SOFTWARE, 'lib'),
          BUILD['MPI_LIBDIR'],
-         BUILD['CUDA_BIN'],               #  IT IS A 'True' or 'False' not a PATH    !!!!!!
+         BUILD['CUDA'],               #  IT IS A 'True' or 'False' not a PATH  !!!!!!
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
 
