@@ -62,12 +62,12 @@ class ChimeraViewerBase(Viewer):
             sampling = _inputVol.getSamplingRate()
             _showVol = _inputVol
         else:
-            outputVol = self.protocol.output3Dmap
-            if outputVol is not None:
+            try:
+                outputVol = self.protocol.output3Dmap
                 dim = outputVol.getDim()[0]
                 sampling = outputVol.getSamplingRate()
                 _showVol = outputVol
-            else:
+            except:
                 # To show pdbs only
                 dim = 150.
                 sampling = 1.
