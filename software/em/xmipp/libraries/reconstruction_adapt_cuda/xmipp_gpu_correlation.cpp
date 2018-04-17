@@ -833,7 +833,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 				else
 					refNum = idxJ+1;
 				rowExp.setValue(MDL_REF, (int)refNum);
-				rowExp.setValue(MDL_IMAGE_IDX, (size_t)(i+1));
+				rowExp.setValue(MDL_IMAGE_IDX, (size_t)(i));
 
 				mdOut.addRow(rowExp);
 			}
