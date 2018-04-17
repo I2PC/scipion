@@ -47,6 +47,10 @@ size_t gettypesize(DataType type)
     case DT_Int:
         size = sizeof(int);
         break;
+    case DT_ULong:
+    case DT_Long:
+        size = sizeof(long);
+        break;
     case DT_Float:
         size = sizeof(float);
         break;

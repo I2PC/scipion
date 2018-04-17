@@ -778,6 +778,7 @@ protected:
     /// @ingroup Images
     // Functions belonging to this topic are commented in rw*.h
 #include "rwDM3.h"
+#include "rwDM4.h"
 #include "rwIMAGIC.h"
 #include "rwMRC.h"
 #include "rwINF.h"
