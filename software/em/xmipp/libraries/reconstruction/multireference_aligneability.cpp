@@ -154,7 +154,7 @@ void MultireferenceAligneability::run()
 			mdInputParticlesRef.getRow(rowInputRef,i+1); //AJ change mdInputParticles for mdInputParticlesRef
 
 
-			if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
+			if ((tempMdExp.size()==0) || (tempMdProj.size()==0))//AJ DUDA: tienen sentido estos calculos con 1 sola imagen en exp o proj? (exp mas probable) sum_w_exp, error_mirror_exp se hacen 0
 				continue;
 
 			calc_sumu(tempMdExp, sum_w_exp, error_mirror_exp);
