@@ -205,7 +205,7 @@ class ProtImportVolumes(ProtImportImages):
         if extension is not None: 
             baseFileName="import_" + basename(fileName).split(".")[0] + ".%s"%extension
         else:
-            baseFileName="import_" + basename(fileName)
+            baseFileName="import_" + basename(fileName).split(":")[0]
 
         return self._getExtraPath(baseFileName)
 
