@@ -42,6 +42,10 @@ from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    writeSetOfVolumes,
                                                    getImageLocation)
 
+#######AJ NEW
+from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes
+import xmipp
+
 
 class XmippProtMultiRefAlignability(ProtAnalysis3D):
     """    
@@ -327,10 +331,12 @@ _noisePixelLevel   '0 0'""" % (newXdim, newXdim, pathParticles,
             # DUDA useForValidation es keep_best??
             inputFile = params.split('-i')[1]
             inputFile = inputFile.split('--sym')[0]
+            max_shift=20
             cuda_params = ' -i_ref %s' % fnGallery
             cuda_params += ' -i_exp %s' % inputFile
             cuda_params += ' -o %s' % self._getTmpPath(anglesPath)
             cuda_params += ' --keep_best %d' % self.numOrientations.get()
+            cuda_params += ' --maxShift %d' % int(max_shift)
             self.runJob("xmipp_cuda_correlation", cuda_params)
 
     def alignabilityStep(self, volName, volDir, sym):
@@ -392,8 +398,8 @@ _noisePixelLevel   '0 0'""" % (newXdim, newXdim, pathParticles,
 
     def createOutputStep(self):
 
-        # import time
-        # time.sleep(15)
+        #import time
+        #time.sleep(15)
 
         outputVols = self._createSetOfVolumes()
 
@@ -405,7 +411,7 @@ _noisePixelLevel   '0 0'""" % (newXdim, newXdim, pathParticles,
             m_pruned = md.MetaData()
             m_pruned.read(volDir + '/pruned_particles_alignability.xmd')
             prunedMd = self._getExtraPath(
-                volPrefix + 'pruned_particles_alignability.xmd')
+                 volPrefix + 'pruned_particles_alignability.xmd')
 
 
             moveFile(join(volDir, 'pruned_particles_alignability.xmd'),
@@ -413,7 +419,7 @@ _noisePixelLevel   '0 0'""" % (newXdim, newXdim, pathParticles,
             m_volScore = md.MetaData()
             m_volScore.read(volDir + '/validationAlignability.xmd')
             validationMd = self._getExtraPath(
-                volPrefix + 'validation_alignability.xmd')
+                 volPrefix + 'validation_alignability.xmd')
             moveFile(join(volDir, 'validationAlignability.xmd'), validationMd)
 
             imgSet = self.inputParticles.get()
@@ -427,26 +433,23 @@ _noisePixelLevel   '0 0'""" % (newXdim, newXdim, pathParticles,
                                     itemDataIterator=md.iterRows(prunedMd,
                                                                  sortByLabel=md.MDL_ITEM_ID))
             else: ###################AJ new
-                for p in imgSet:
-                    idxPart = p.getObjId()
-                    for row in md.iterRows(prunedMd, sortByLabel=md.MDL_ITEM_ID):
-                        idxRow = row.getValue(md.MDL_ITEM_ID)
-                        if idxRow > idxPart:
-                            break
-                        if idxPart == idxRow:
-                            self._setWeight(p, row)
-                            outImgSet.append(p)
-                            break
+                imgSet = self.inputParticles.get()
+                outImgSet = self._createSetOfParticles()
+                outImgSet.copyInfo(imgSet)
+                outImgSet.setAlignmentProj()
+                self.iterMd = md.iterRows(prunedMd, md.MDL_ITEM_ID)
+                self.lastRow = next(self.iterMd)
+                outImgSet.copyItems(imgSet, updateItemCallback=self._updateItem)
 
-            mdValidatoin = md.getFirstRow(validationMd)
+            mdValidation = md.getFirstRow(validationMd)
 
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_ALIGNABILITY)
+            weight = mdValidation.getValue(md.MDL_WEIGHT_PRECISION_ALIGNABILITY)
             volume.weightAlignabilityPrecision = Float(weight)
 
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT_ACCURACY_ALIGNABILITY)
+            weight = mdValidation.getValue(md.MDL_WEIGHT_ACCURACY_ALIGNABILITY)
             volume.weightAlignabilityAccuracy = Float(weight)
 
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_MIRROR)
+            weight = mdValidation.getValue(md.MDL_WEIGHT_PRECISION_MIRROR)
             volume.weightMirror = Float(weight)
 
             volume.cleanObjId()  # clean objects id to assign new ones inside the set
@@ -457,6 +460,38 @@ _noisePixelLevel   '0 0'""" % (newXdim, newXdim, pathParticles,
 
         outputVols.setSamplingRate(volume.getSamplingRate())
         self._defineOutputs(outputVolumes=outputVols)
+
+    def _updateItem(self, particle, row): #####################AJ new
+        count = 0
+        while self.lastRow and particle.getObjId() == self.lastRow.getValue(
+                md.MDL_ITEM_ID):
+            count += 1
+            if count:
+                if self.lastRow.containsLabel(
+                        xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION)
+                if self.lastRow.containsLabel(xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY)
+                if self.lastRow.containsLabel(xmipp.MDL_SCORE_BY_MIRROR):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_MIRROR)
+                if self.lastRow.containsLabel(xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP)
+                if self.lastRow.containsLabel(xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF)
+                if self.lastRow.containsLabel(xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP)
+                if self.lastRow.containsLabel(xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF)
+                if self.lastRow.containsLabel(xmipp.MDL_SCORE_BY_ALIGNABILITY_NOISE):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_SCORE_BY_ALIGNABILITY_NOISE)
+                if self.lastRow.containsLabel(xmipp.MDL_WEIGHT):
+                    setXmippAttributes(particle, self.lastRow, xmipp.MDL_WEIGHT)
+            try:
+                self.lastRow = next(self.iterMd)
+            except StopIteration:
+                self.lastRow = None
+
+        particle._appendItem = count > 0
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
