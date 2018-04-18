@@ -88,10 +88,26 @@ the pdb file from coot  to scipion '
                       help="""Makes coot an interactive protocol""")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot '
-                     'to scipion')
-        form.addLine("You may also execute (from script -> python) the "
-                     "command scipion_write(imol)")
-        form.addLine("where imol is the PDB id")
+                     'to scipion.\nYou may also execute (from script -> '
+                     'python) the command scipion_write(imol).\nimol is the '
+                     'PDB id.\nPress "x" in coot to change from one chain to '
+                     'the previous one.\nPress "X" in coot to change from one '
+                     'chain to the next one.\nPress "U" in coot to initiate '
+                     'global variables.\nYou have to set in advance the '
+                     '/tmp/coot.ini text file:\n[myvars]\nimol: '
+                     '0\naa_main_chain: '
+                     'X\naa_auxiliary_chain: XX\naaNumber: 160\nstep: 15\nIn '
+                     'this case global variables will initiate in '
+                     'aminoacid number 160\nand each shift over the '
+                     'sequence will include a segment of 15 aminoacids.\n'
+                     'Press "z" in coot to refine those upstream 15 '
+                     'aminoacids included in each step.\nPress "Z" in coot ' \
+                     'to refine those downstream 15 aminoacids included in ' \
+                     'each step.\nPress "E" in coot to print the ' \
+                     'environment.\nPress "e" in coot to finish your ' \
+                     'project. Then your project will not be interactive ' \
+                     'anymore.')
+
         # --------------------------- INSERT steps functions ---------------
 
     def _insertAllSteps(self):
