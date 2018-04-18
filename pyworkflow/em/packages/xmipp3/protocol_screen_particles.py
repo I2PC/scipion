@@ -244,8 +244,11 @@ class XmippProtScreenParticles(ProtProcessParticles):
         args = "-i Particles@%s -o %s --addToInput " % (fnInputMd, fnOutputMd)
         if self.check != None:
             args += "-t Particles@%s " % fnInputOldMd
-        self.check = self.outputParticles[
-            len(self.outputParticles) - 1].getObjCreation()
+        for p in self.outputParticles.iterItems(orderBy='creation',
+                                                direction='DESC'):
+            self.check = p.getObjCreation()
+            break
+        self.outputParticles.close()
         if self.autoParRejection == self.REJ_MAXZSCORE:
             args += "--zcut " + str(self.maxZscore.get())
         elif self.autoParRejection == self.REJ_PERCENTAGE:
