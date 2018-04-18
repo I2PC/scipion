@@ -40,6 +40,7 @@ from pyworkflow.em.viewers.chimera_utils import \
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     StringParam
 from pyworkflow.utils.properties import Message
+from pyworkflow.em.data import Transform
 
 
 class ChimeraProtBase(EMProtocol):
@@ -186,44 +187,73 @@ class ChimeraProtBase(EMProtocol):
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
         """
+
+        # outvolName, this volume may or may not exists
         volFileName = self._getExtraPath((chimeraMapTemplateFileName) % 1)
+
+        # if we have outvol
         if os.path.exists(volFileName):
+            # if we do not have an explicit inputvol check if it
+            # is a volume associated to the  pdb
             if self.inputVolume.get() is None:
                 _inputVol = self.pdbFileToBeRefined.get().getVolume()
             else:
                 _inputVol = self.inputVolume.get()
-            oldSampling = _inputVol.getSamplingRate()
-            vol = Volume()
+            if _inputVol is not None: # we have inputVol
+                oldSampling = _inputVol.getSamplingRate()
+
+            vol = Volume()  # this is an output volume object
             vol.setLocation(volFileName)
 
+            # fix mrc header
             ccp4header = Ccp4Header(volFileName, readHeader=True)
             sampling = ccp4header.computeSampling()
             vol.setSamplingRate(sampling)
-            if self.inputVolume.get() is None:
-                origin = self.pdbFileToBeRefined.get().getVolume(). \
-                    getOrigin(force=True)
-            else:
-                origin = self.inputVolume.get().getOrigin(
-                    force=True)
 
-            newOrigin = vol.originResampled(origin, oldSampling)
-            vol.setOrigin(newOrigin)
+            #find origin
+            if _inputVol is not None:
+                if self.inputVolume.get() is None:
+                    origin = self.pdbFileToBeRefined.get().getVolume(). \
+                        getOrigin(force=True)
+                else:
+                    origin = self.inputVolume.get().getOrigin(
+                        force=True)
+
+                newOrigin = vol.originResampled(origin, oldSampling)
+                vol.setOrigin(newOrigin)
+
+            else: # in this case there is no inputvol
+                  # but there is outputvol.
+                if self.pdbFileToBeRefined.get().hasOrigin():
+                    origin = self.pdbFileToBeRefined.get().getOrigin()
+                else:
+                    origin = Transform()
+                    shifts = ccp4header.getOrigin()
+                    origin.setShiftsTuple(shifts)
+
+                if origin is None:
+                    origin = vol.getOrigin(force=True)
+                vol.setOrigin(origin)
 
             self._defineOutputs(output3Dmap=vol)
+
             if self.inputVolume.get() is None:
                 self._defineSourceRelation(
                     self.pdbFileToBeRefined.get(), vol)
             else:
                 self._defineSourceRelation(self.inputVolume.get(), vol)
+        #we do not have output volume
         else:
             if self.inputVolume.get() is None:
                 vol = self.pdbFileToBeRefined.get().getVolume()
             else:
                 vol = self.inputVolume.get()
+
+        # Now check pdb files
         directory = self._getExtraPath()
         counter = 1
         for filename in sorted(os.listdir(directory)):
-            if filename.endswith(".pdb"):
+            if filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
                 pdb = PdbFile()
                 pdb.setFileName(path)
@@ -236,12 +266,6 @@ class ChimeraProtBase(EMProtocol):
                 self._defineSourceRelation(self.pdbFileToBeRefined.get(), pdb)
                 for pdbFile in self.inputPdbFiles:
                     self._defineSourceRelation(pdbFile.get(), pdb)
-                # if self.inputVolume.get() is None:
-                #     if self.pdbFileToBeRefined.get().getVolume() is not None:
-                #         self._defineSourceRelation(
-                #             self.pdbFileToBeRefined.get().getVolume(), pdb)
-                # else:
-                #     self._defineSourceRelation(self.inputVolume.get(), pdb)
 
     # --------------------------- INFO functions ----------------------------
     def _validate(self):
@@ -347,7 +371,7 @@ chimeraScriptMain = '''
          f = open ('/tmp/chimera_error.txt','w')
          f.write(e.message)
          f.close()
-
+         
      modelId = int(model[1:])# model to write  1
      refModelId = int(refmodel[1:])# coordenate system refers to this model 0
 
