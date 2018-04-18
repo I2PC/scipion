@@ -127,6 +127,14 @@ class ElementGroup(FormElement):
         for name in self._paramList:
             yield (name, self._form.getParam(name))
 
+    def isExpert(self):
+
+        for name, param in self.iterParams():
+            if not param.isExpert():
+                return False
+
+        return True
+
     def addParam(self, paramName, ParamClass, **kwargs):
         """Add a new param to the group"""
         param = ParamClass(**kwargs)
