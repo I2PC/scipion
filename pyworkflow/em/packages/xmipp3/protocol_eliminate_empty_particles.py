@@ -132,6 +132,7 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         for p in self.partsSet.iterItems(orderBy='creation', direction='DESC'):
             self.check = p.getObjCreation()
             break
+        self.partsSet.close()
         args = "-i %s -o %s -e %s -t %f" % (
         fnInputMd, self.fnOutputMd, self.fnElimMd, self.threshold.get())
         if self.addFeatures:
