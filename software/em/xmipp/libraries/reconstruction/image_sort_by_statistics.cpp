@@ -36,7 +36,7 @@ void ProgSortByStatistics::readParams()
     fn_out = getParam("-o");
     addToInput = checkParam("--addToInput");
     addFeatures = checkParam("--addFeatures");
-    fn_train = getParam("--train");
+    fn_train = getParam("-t");
     cutoff = getDoubleParam("--zcut");
     per = getDoubleParam("--percent");
     targetXdim = getIntParam("--dim");
@@ -63,7 +63,7 @@ void ProgSortByStatistics::defineParams()
     addParamsLine("                         : rootname.xmd contains the list of sorted images with their Z-score");
     addParamsLine("                         : rootname_vectors.xmd (if verbose>=2) contains the vectors associated to each image");
     addParamsLine("                         : If no rootname is given, these two files are not created");
-    addParamsLine(" [--train <selfile=\"\">]: Train on selfile with good particles");
+    addParamsLine(" [-t <selfile=\"\">]:    : Train on selfile with good particles");
     addParamsLine(" [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) ");
     addParamsLine("                         : Images whose Z-score is larger than the cutoff are disabled");
     addParamsLine(" [--addFeatures]         : Add calculated features to the output metadata");
@@ -76,7 +76,7 @@ void ProgSortByStatistics::defineParams()
 
 
 //majorAxis and minorAxis is the estimated particle size in px
-void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool trained)
+void ProgSortByStatistics::processInputPrepareSPTH(MetaData &SF, bool trained)
 {
     //#define DEBUG
     PCAMahalanobisAnalyzer tempPcaAnalyzer0;
@@ -97,15 +97,18 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
     double sign = 1;//;-1;
     int numNorm = 3;
     int numDescriptors0=numNorm;
+    int numDescriptors1;
     int numDescriptors2=4;
     int numDescriptors3=11;
-    int numDescriptors4 = 10;
+    int numDescriptors4=10;
 
     MultidimArray<float> v0(numDescriptors0);
     MultidimArray<float> v2(numDescriptors2);
     MultidimArray<float> v3(numDescriptors3);
     MultidimArray<float> v4(numDescriptors4);
     std::vector<double> v04;
+    std::vector<std::vector<double> > v04all;
+    v04all.clear();
 
     if (verbose>0)
     {
@@ -191,7 +194,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         mI.statisticsAdjust(0,1);
         mask.setXmippOrigin();
         //The size of v1 depends on the image size and must be declared here
-        int numDescriptors1 = XSIZE(mI)/2; //=100;
+        numDescriptors1 = XSIZE(mI)/2; //=100;
         MultidimArray<float> v1(numDescriptors1);
         v1.initZeros(numDescriptors1);
         v04.reserve(numDescriptors0+numDescriptors1+numDescriptors2+numDescriptors3+numDescriptors4);
@@ -205,6 +208,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         tempM = (modI*modI);
 
         A1D_ELEM(v0,0) = (tempM*ROI).sum();
+        v04.push_back(A1D_ELEM(v0,0));
         int index = 1;
         var+=2;
         while (index < numNorm)
@@ -250,13 +254,13 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
 
         if (img.name()==name2)
         {
-            FileName fpName    = "test_1.txt";
+            FileName fpName = "test_1.txt";
             mI.write(fpName);
-            fpName    = "test_2.txt";
+            fpName = "test_2.txt";
             nI.write(fpName);
-            fpName    = "test_3.txt";
+            fpName = "test_3.txt";
             tempM.write(fpName);
-            fpName    = "test_4.txt";
+            fpName = "test_4.txt";
             ROI.write(fpName);
             //exit(1);
         }
@@ -317,14 +321,15 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         tempPcaAnalyzer4.addVector(v4);
         if (addFeatures)
         	SF.setValue(MDL_SCORE_BY_SCREENING,v04,__iter.objId);
+        v04all.push_back(v04);
 
 #ifdef DEBUG
 
         if (img.name()==name1)
         {
-            FileName fpName    = "test.txt";
+            FileName fpName = "test.txt";
             mI.write(fpName);
-            fpName    = "test3.txt";
+            fpName = "test3.txt";
             nI.write(fpName);
         }
 #endif
@@ -335,11 +340,18 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
             progress_bar(imgno);
     }
 
-    tempPcaAnalyzer0.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer1.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer2.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer3.evaluateZScore(2,20,trained);
-    tempPcaAnalyzer4.evaluateZScore(2,20,trained);
+    std::size_t beg = fn.find_last_of("@") + 1;
+    std::size_t end = fn.find_last_of("/") + 1;
+    tempPcaAnalyzer0.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca0").c_str(), numDescriptors0);
+    tempPcaAnalyzer1.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca1").c_str(), numDescriptors1);
+    tempPcaAnalyzer2.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca2").c_str(), numDescriptors2);
+    tempPcaAnalyzer3.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca3").c_str(), numDescriptors3);
+    tempPcaAnalyzer4.evaluateZScore(2, 20, trained, (fn.substr(beg, end-beg)
+        + "_tmpPca4").c_str(), numDescriptors4);
 
     pcaAnalyzer.push_back(tempPcaAnalyzer0);
     pcaAnalyzer.push_back(tempPcaAnalyzer1);
@@ -347,90 +359,6 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
     pcaAnalyzer.push_back(tempPcaAnalyzer3);
     pcaAnalyzer.push_back(tempPcaAnalyzer4);
 
-}
-
-void ProgSortByStatistics::processInputPrepare(MetaData &SF)
-{
-    PCAMahalanobisAnalyzer tempPcaAnalyzer;
-    tempPcaAnalyzer.clear();
-
-    Image<double> img;
-    MultidimArray<double> img2;
-    MultidimArray<int> radial_count;
-    MultidimArray<double> radial_avg;
-    Matrix1D<int> center(2);
-    center.initZeros();
-
-    if (verbose>0)
-        std::cout << " Processing training set ..." << std::endl;
-
-    int nr_imgs = SF.size();
-    if (verbose>0)
-        init_progress_bar(nr_imgs);
-    int c = XMIPP_MAX(1, nr_imgs / 60);
-    int imgno = 0, imgnoPCA=0;
-    MultidimArray<float> v;
-    MultidimArray<int> distance;
-    int dim;
-
-    bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
-    bool first=true;
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
-    {
-        if (thereIsEnable)
-        {
-            int enabled;
-            SF.getValue(MDL_ENABLED,enabled,__iter.objId);
-            if (enabled==-1)
-                continue;
-        }
-        img.readApplyGeo(SF,__iter.objId);
-        if (targetXdim!=-1 && targetXdim!=XSIZE(img()))
-        	selfScaleToSize(LINEAR,img(),targetXdim,targetXdim,1);
-        MultidimArray<double> &mI=img();
-        mI.setXmippOrigin();
-        mI.statisticsAdjust(0,1);
-
-        // Overall statistics
-        Histogram1D hist;
-        compute_hist(mI,hist,-4,4,31);
-
-        // Radial profile
-        img2.resizeNoCopy(mI);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img2)
-        {
-            double val=DIRECT_MULTIDIM_ELEM(mI,n);
-            DIRECT_MULTIDIM_ELEM(img2,n)=val*val;
-        }
-        if (first)
-        {
-            radialAveragePrecomputeDistance(img2, center, distance, dim);
-            first=false;
-        }
-        fastRadialAverage(img2, distance, dim, radial_avg, radial_count);
-
-        // Build vector
-        v.initZeros(XSIZE(hist)+XSIZE(img2)/2);
-        int idx=0;
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
-        v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
-        for (size_t i=0; i<XSIZE(img2)/2; i++)
-            v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
-
-        tempPcaAnalyzer.addVector(v);
-
-        if (imgno % c == 0 && verbose>0)
-            progress_bar(imgno);
-        imgno++;
-        imgnoPCA++;
-    }
-    if (verbose>0)
-        progress_bar(nr_imgs);
-
-    MultidimArray<double> vavg,vstddev;
-    tempPcaAnalyzer.computeStatistics(vavg,vstddev);
-    tempPcaAnalyzer.evaluateZScore(2,20,false);
-    pcaAnalyzer.insert(pcaAnalyzer.begin(), tempPcaAnalyzer);
 }
 
 void ProgSortByStatistics::run()
@@ -441,17 +369,14 @@ void ProgSortByStatistics::run()
     MetaData SF2 = SF;
     SF = SF2;
 
-    bool trained = false;
-
     if (fn_train != "")
     {
         SFtrain.read(fn_train);
-        processInprocessInputPrepareSPTH(SFtrain,trained);
-        trained = true;
-        processInprocessInputPrepareSPTH(SF,trained);
+        //processInputPrepareSPTH(SFtrain,trained);
+        processInputPrepareSPTH(SF,true);
     }
     else
-        processInprocessInputPrepareSPTH(SF,trained);
+        processInputPrepareSPTH(SF,false);
 
     int imgno = 0;
     int numPCAs = pcaAnalyzer.size();
@@ -684,8 +609,17 @@ void ProgSortByStatistics::run()
     if (!fn_out.empty())
     {
         MetaData SFsorted;
+        if (fn_out.exists()) SFsorted.read(fn_out);
+        int countItems = 0;
+        MDRow row;
+        FOR_ALL_OBJECTS_IN_METADATA(SFsorted)
+        {
+            countItems++;
+    	    SFsorted.getRow(row, countItems);
+    	    SFout.addRow(row);
+    	}
         SFsorted.sort(SFout,MDL_ZSCORE);
-        SFout.write(fn_out,MD_OVERWRITE);
+        SFsorted.write(formatString("@%s", fn_out.c_str()), MD_APPEND);
     }
     if (addToInput)
     {
