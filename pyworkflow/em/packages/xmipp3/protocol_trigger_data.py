@@ -112,7 +112,10 @@ class XmippProtTriggerData(ProtProcessParticles):
 
         self.particles = self.particles + self.newParticles
         if len(self.newParticles) > 0:
-            self.check = self.partsSet[len(self.particles)-1].getObjCreation()
+            for p in self.partsSet.iterItems(orderBy='creation',
+                                             direction='DESC'):
+                self.check = p.getObjCreation()
+                break
 
         self.lastCheck = datetime.now()
         self.streamClosed = self.partsSet.isStreamClosed()
