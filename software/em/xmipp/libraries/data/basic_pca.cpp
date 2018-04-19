@@ -25,6 +25,8 @@
 
 #include "basic_pca.h"
 #include "matrix2d.h"
+#include <iostream>
+#include <fstream>
 
 /* Subtract average ------------------------------------------------------- */
 void PCAMahalanobisAnalyzer::subtractAvg()
@@ -377,7 +379,8 @@ void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
 
 /* Evaluate score --------------------------------------------------------- */
 //#define DEBUG
-void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
+void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained,
+    const char* fileName, int numdesc)
 {
 
     int N=v.size();
@@ -419,7 +422,38 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
 #endif
 
     if (!trained)
+    {
     	learnPCABasis(NPCA, Niter);
+    	std::ofstream fhOutPCA(fileName);
+        if (fhOutPCA.is_open())
+        {
+            for (int n=0; n<NPCA; n++)
+            {
+                for (int i=0; i<numdesc; i++)
+                    fhOutPCA << DIRECT_A1D_ELEM(PCAbasis[n],i) << " ";
+                fhOutPCA << std::endl;
+            }
+            fhOutPCA.close();
+        }
+        else std::cerr << "Unable to open file " << fileName << std::endl;
+    }
+    else
+    {
+        PCAbasis.clear();
+        PCAbasis.resize(NPCA, numdesc);
+        std::ifstream fhOutPCA;
+        fhOutPCA.open(fileName);
+        if (fhOutPCA.is_open())
+        {
+            for (int n=0; n<NPCA; n++)
+            {
+                for (int i=0; i<numdesc; i++)
+                    fhOutPCA >> DIRECT_A1D_ELEM(PCAbasis[n],i);
+            }
+            fhOutPCA.close();
+        }
+        else std::cerr << "Unable to open file " << fileName << std::endl;
+    }
 
 #ifdef DEBUG
 
