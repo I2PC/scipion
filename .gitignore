@@ -62,7 +62,6 @@ gmon.out
 # Static Path & Web stuff
 /pyworkflow/web/static
 /pyworkflow/resources/uploads
-/pyworkflow/tests/em/data
 /data
 downloads.sqlite
 foo.txt

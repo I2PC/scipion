@@ -1402,7 +1402,7 @@ void centerImageRotationally(MultidimArray<double> &I, RotationalCorrelationAux 
  * with its mirrored (X, Y, XY) versions. The image is aligned translationally
  * and then rotationally Niter times.
  */
-void centerImage(MultidimArray<double> &I, CorrelationAux &aux,
+Matrix2D<double> centerImage(MultidimArray<double> &I, CorrelationAux &aux,
                  RotationalCorrelationAux &aux2,
                  int Niter=10, bool limitShift=true);
 
