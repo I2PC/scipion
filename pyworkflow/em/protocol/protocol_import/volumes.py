@@ -286,6 +286,6 @@ class ProtImportPdb(ProtImportFiles):
         if (self.inputPdbData == self.IMPORT_FROM_FILES and not exists(
                 self.pdbFile.get())):
             errors.append("Atomic structure not found at *%s*" %
-                          self.pdbPath.get())
+                          self.pdbFile.get())
         # TODO: maybe also validate that if exists is a valid PDB file
         return errors
