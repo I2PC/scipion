@@ -301,6 +301,7 @@ env.addPipModule('setuptools', '38.2.5')
 numpy = env.addPipModule('numpy','1.14.1')
 matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
 env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
+env.addPipModule('poster', '0.8.1', target='poster-0.8.1*')
 env.addPipModule('mpi4py', '1.3.1')
 scipy = env.addPipModule('scipy', '0.14.0',
                      default=not noScipy, deps=[lapack, matplotlib])

@@ -25,7 +25,8 @@
 # *
 # **************************************************************************
 from __future__ import print_function
-
+from constants import WORKFLOW_REPOSITORY_SERVER, \
+    WORKFLOW_PROG_STEP1, WORKFLOW_PROG_STEP2
 
 INIT_REFRESH_SECONDS = 3
 
@@ -55,6 +56,9 @@ from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
 
 from constants import STATUS_COLORS
 from pyworkflow.gui.project.utils import getStatusColorFromNode
+import poster.streaminghttp
+import urllib2
+import webbrowser
 
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
@@ -73,6 +77,7 @@ ACTION_DEFAULT = Message.LABEL_DEFAULT
 ACTION_CONTINUE = Message.LABEL_CONTINUE
 ACTION_RESULTS = Message.LABEL_ANALYZE
 ACTION_EXPORT = Message.LABEL_EXPORT
+ACTION_EXPORT_UPLOAD = Message.LABEL_EXPORT_UPLOAD
 ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
@@ -100,6 +105,7 @@ ActionIcons = {
     ACTION_CONTINUE: Icon.ACTION_CONTINUE,
     ACTION_RESULTS: Icon.ACTION_RESULTS,
     ACTION_EXPORT: Icon.ACTION_EXPORT,
+    ACTION_EXPORT_UPLOAD: Icon.ACTION_EXPORT_UPLOAD,
     ACTION_COLLAPSE: 'fa-minus-square.png',
     ACTION_EXPAND: 'fa-plus-square.png',
     ACTION_LABELS: Icon.TAGS
@@ -190,6 +196,7 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                 (ACTION_DB, single),
                 (ACTION_STOP, stoppable and single),
                 (ACTION_EXPORT, not single),
+                (ACTION_EXPORT_UPLOAD, not single),
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
                 (ACTION_LABELS, True),
@@ -840,8 +847,8 @@ class ProtocolsView(tk.Frame):
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE,
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
                            ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS,
-                           ACTION_EXPORT, ACTION_COLLAPSE, ACTION_EXPAND,
-                           ACTION_LABELS]
+                           ACTION_EXPORT, ACTION_EXPORT_UPLOAD, ACTION_COLLAPSE, 
+                           ACTION_EXPAND, ACTION_LABELS]
         self.actionButtons = {}
 
         def addButton(action, text, toolbar):
@@ -1826,6 +1833,62 @@ class ProtocolsView(tk.Frame):
             entryLabel='File', entryValue='workflow.json')
         browser.show()
 
+    def _exportUploadProtocols(self):
+
+        def uploadWorkflow(upload_file_url, upload_metadata_url, jsonFileName):
+            """ Upload workflow 'jsonFileName'to server upload_file_url
+                First the file is uploaded, then the metadata is uploaded.
+                The script uploads the file and then opens a browser for the metadata
+                Note that the two steps are needed since noinitial value can be passed
+                to a file field. poster module is needed. Poster is pure python
+                so it may be added to the directory rather than installed if needed.
+
+                The server is django a uses filefield and csrf_exempt.
+                csrf_exempt disable csrf checking. filefield
+            """
+            # json file to upload
+            params =  dict(json=open(jsonFileName, 'rb'))
+            # we are going to upload a file so this is a multipart 
+            # connection
+            datagen, headers = poster.encode.multipart_encode(params)
+            opener = poster.streaminghttp.register_openers()
+            # create request and connect to server
+            response = opener.open(urllib2.Request(upload_file_url,
+                                   datagen, headers))
+            # server returns dictionary as json with remote name of the saved file
+            _dict = json.loads(response.read())
+            # server has stored file in file named _dict['jsonFileName']
+            # TODO: This version thing is a horrible hack but it is not
+            # my fault. Scipion does not offer a better way to know the
+            # version
+            import imp
+            currentDir = os.path.dirname(os.path.abspath(__file__))
+            currentFile = os.path.join(currentDir,'../../../scipion')
+            mod = imp.load_source('scipion', currentFile)
+            version = mod.getVersion(False)
+            # version hack end
+            fileNameUrl = "?jsonFileName=%s&versionInit=%s"%\
+                          (_dict['jsonFileName'], version) # use GET
+            # open browser to fill metadata, fileNAme will be saved as session
+            # variable. Note that I cannot save the file nave in the
+            # session in the first conection because the browser changes
+            # from urlib2 to an actual browser
+            # so sessions are different
+            webbrowser.open(upload_metadata_url+fileNameUrl)
+            #delete temporary file
+            os.remove(jsonFileName) if os.path.exists(jsonFileName) \
+                                    else None
+
+        protocols = self._getSelectedProtocols()
+        jsonFileName = os.path.join(tempfile.mkdtemp(), 'workflow.json')
+        upload_file_url = WORKFLOW_REPOSITORY_SERVER + WORKFLOW_PROG_STEP1
+        upload_metadata_url = WORKFLOW_REPOSITORY_SERVER + WORKFLOW_PROG_STEP2
+        try:
+            self.project.exportProtocols(protocols, jsonFileName)
+            uploadWorkflow(upload_file_url, upload_metadata_url, jsonFileName)
+        except Exception as ex:
+            self.windows.showError(str(ex))
+
     def _stopProtocol(self, prot):
         if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM,
                                  Message.LABEL_STOP_FORM, self.root):
@@ -1929,6 +1992,8 @@ class ProtocolsView(tk.Frame):
                     self._analyzeResults(prot)
                 elif action == ACTION_EXPORT:
                     self._exportProtocols()
+                elif action == ACTION_EXPORT_UPLOAD:
+                    self._exportUploadProtocols()
                 elif action == ACTION_COLLAPSE:
                     nodeInfo = self.settings.getNodeById(prot.getObjId())
                     nodeInfo.setExpanded(False)

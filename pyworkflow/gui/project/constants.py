@@ -41,3 +41,8 @@ STATUS_COLORS = {
                STATUS_SCHEDULED: '#F3F5CB'
                }
 
+WORKFLOW_REPOSITORY_SERVER='http://workflows.scipion.i2pc.es/'
+#WORKFLOW_REPOSITORY_SERVER='https://warm-sea-81539.herokuapp.com/'
+#WORKFLOW_REPOSITORY_SERVER='http://127.0.0.1:8000/'
+WORKFLOW_PROG_STEP1='workflowProgStep1_add/'
+WORKFLOW_PROG_STEP2='workflowProgStep2_add/'
