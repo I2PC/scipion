@@ -227,32 +227,34 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
         movieParticles.copyInfo(inputParts)
         movieParticles.setSamplingRate(self._getNewSampling())
 
-        lastMicName = None
-        partList = []
+        self.lastMicName = None
+        self.partList = []
+
+        def _addPartsFromMic():
+            # To avoid parsing the Relion star files...we are assuming here
+            # the order in which Relion is generating the movie-particles per stack
+            # it start part 1, 2, N of frame 1, then 1, 2..N of frame 2 and so on.
+            # If this way changes in the future, the following code could break.
+            # For the sake of performace, I will take the risk now.
+            count = 0
+            for frame in range(1, nFrames + 1, self.avgFrames.get()):
+                for mPart in self.partList:
+                    mPart.setObjId(None)  # clear objId to insert a new one
+                    mPart.setFrameId(frame)
+                    count += 1
+                    mPart.setIndex(count)
+                    movieParticles.append(mPart)
+
+            del self.partList  # free unnecessary particle list memory
+            self.partList = []
 
         for part in inputParts.iterItems(orderBy='_micId'):
             micName = part.getCoordinate().getMicName()
 
-            if micName != lastMicName:
-                if lastMicName is not None:  # do some actions for this mic
-                    # To avoid parsing the Relion star files...we are assuming here
-                    # the order in which Relion is generating the movie-particles per stack
-                    # it start part 1, 2, N of frame 1, then 1, 2..N of frame 2 and so on.
-                    # If this way changes in the future, the following code could break.
-                    # For the sake of performace, I will take the risk now.
-                    count = 0
-                    for frame in range(1, nFrames+1, self.avgFrames.get()):
-                        for mPart in partList:
-                            mPart.setObjId(None)  # clear objId to insert a new one
-                            mPart.setFrameId(frame)
-                            count += 1
-                            mPart.setIndex(count)
-                            movieParticles.append(mPart)
-
-                    del partList  # free unnecessary particle list memory
-                    partList = []
-
-                lastMicName = micName
+            if micName != self.lastMicName:
+                if self.lastMicName is not None:
+                    _addPartsFromMic()
+                self.lastMicName = micName
                 movieBase = '%s_movie.mrcs' % pwutils.removeBaseExt(micName)
 
                 def _replaceSuffix(suffix):
@@ -267,12 +269,13 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
                                        _replaceSuffix('_movie_extract.star'))
                 ]
 
-                pwutils.cleanPath(*toClean)
+                if not pwutils.envVarOn("SCIPION_DEBUG_NOCLEAN"):
+                    pwutils.cleanPath(*toClean)
 
                 # Move the resulting stack of movie-particles to extra directly
                 movieStack = self._getExtraPath('output', 'extra', movieBase)
-                newMovieStack = self._getExtraPath(_replaceSuffix('_ptcls.mrcs'))
-                pwutils.moveFile(movieStack, newMovieStack)
+                self.newMovieStack = self._getExtraPath(_replaceSuffix('_ptcls.mrcs'))
+                pwutils.moveFile(movieStack, self.newMovieStack)
 
             # Create a movie particles based on that one and
             # store in the list of this movie
@@ -280,8 +283,10 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
             mPart.copy(part)  # copy all information from part
             mPart.setParticleId(part.getObjId())
 
-            mPart.setFileName(newMovieStack)
-            partList.append(mPart)
+            mPart.setFileName(self.newMovieStack)
+            self.partList.append(mPart)
+
+        _addPartsFromMic()
 
         self._defineOutputs(outputParticles=movieParticles)
         self._defineSourceRelation(self.inputMovies, movieParticles)
