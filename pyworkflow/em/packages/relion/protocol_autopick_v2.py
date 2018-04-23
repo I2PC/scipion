@@ -28,12 +28,13 @@ import os
 from os.path import relpath
 
 import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePickingAuto
+from pyworkflow.em.protocol import ProtParticlePickingAuto
 from pyworkflow.em.constants import RELATION_CTF, ALIGN_NONE
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.utils.properties import Message
 import pyworkflow.utils as pwutils
 import pyworkflow.em.metadata as md
+from pyworkflow.em import getSubsetByDefocus
 
 from protocol_base import ProtRelionBase
 from convert import (writeSetOfMicrographs, writeReferences,
@@ -195,7 +196,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                            'of the in-plane rotations for all references.')
 
         form.addParam('refsHaveInvertedContrast', params.BooleanParam,
-                      default=False,
+                      default=True,
                       label='References have inverted contrast?',
                       help='Set to Yes to indicate that the reference have '
                            'inverted contrast with respect to the particles '
@@ -288,22 +289,11 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                       important=True,
                       label='Helix processing is not implemented still.')
 
+        self._defineStreamingParams(form)
+
         form.addParallelSection(threads=0, mpi=4)
 
-    #--------------------------- STEPS functions -------------------------------
-
-    def _pickMicrograph(self, micStarFile, params, threshold,
-                               minDistance, maxStddevNoise, fom):
-        """ Launch the 'relion_autopick' for all micrographs. """
-        params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
-        params += ' --max_stddev_noise %0.3f' % maxStddevNoise
-        params += ' --threshold %0.3f ' % threshold
-        params += ' --min_distance %0.3f %s' % (minDistance, fom)
-
-        self.runJob(self._getProgram('relion_autopick'), params,
-                    cwd=self.getWorkingDir())
-
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self.inputStreaming = self.getInputMicrographs().isStreamOpen()
 
@@ -357,7 +347,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         # Return the updated micDict and the closed status
         return micDict, micClose and ctfClosed
 
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions ------------------------------
 
     def convertInputStep(self, micsId, refsId, runType):
         # runType is passed as parameter to force a re-execute of this step
@@ -373,8 +363,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         micStar = self._getPath('input_micrographs.star')
         writeSetOfMicrographs(self.getMicrographList(), micStar,
                               alignType=ALIGN_NONE,
-                              preprocessImageRow=self._preprocessMicrographRow,
-                              postprocessImageRow=self._postprocessMicrographRow)
+                              preprocessImageRow=self._preprocessMicrographRow)
 
         if self.useInputReferences():
             writeReferences(self.getInputReferences(),
@@ -444,16 +433,21 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
     def _pickMicrograph(self, mic, params, threshold, minDistance, fom):
         """ This method should be invoked only when working in streaming mode.
         """
-        # We need to write the needed star files
-        # TODO: We need to check when working in real streaming, not all
-        # TODO: CTF will be available and this needs to be taken into account
         micRow = md.Row()
         self._preprocessMicrographRow(mic, micRow)
         micrographToRow(mic, micRow)
         self._postprocessMicrographRow(mic, micRow)
-        print micRow
         self._pickMicrographsFromStar(self._getMicStarFile(mic), params,
                                       threshold, minDistance, fom)
+
+    def _pickMicrographList(self, micList, params, threshold, minDistance, fom):
+        micStar = self._getPath('input_micrographs_%s-%s.star' %
+                                (micList[0].strId(), micList[-1].strId()))
+        writeSetOfMicrographs(micList, micStar,
+                              alignType=ALIGN_NONE,
+                              preprocessImageRow=self._preprocessMicrographRow)
+        self._pickMicrographsFromStar(micStar, params, threshold, minDistance,
+                                      fom)
 
     def _createSetOfCoordinates(self, micSet, suffix=''):
         """ Override this method to set the box size. """
@@ -640,35 +634,10 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
             return inputMics
 
         if self.micrographsSelection == MICS_AUTO:
-            # Lets sort micrograph by defocus and take the equally-space
-            # number of them from the list
-            inputCTFs = self.ctfRelations.get()
-            sortedMicIds = []
-
-            for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
-                itemId = ctf.getObjId()
-                if itemId in inputMics:
-                    sortedMicIds.append(itemId)
-
-            nMics = self.micrographsNumber.get()
-            space = len(sortedMicIds) / (nMics - 1)
-
-            micIds = [sortedMicIds[0], sortedMicIds[-1]]
-            pos = 0
-            while len(micIds) < nMics:  # just add first and last
-                pos += space
-                micIds.insert(1, sortedMicIds[pos])
-        else: # Subset selection
-            micIds = [mic.getObjId() for mic in self.micrographsSubset.get()]
-
-        mics = []
-        for micId in micIds:
-            mic = inputMics[micId]
-
-            if mic is None:
-                raise Exception('Invalid micrograph id: %s' % micId)
-
-            mics.append(mic.clone())
+            mics = getSubsetByDefocus(self.ctfRelations.get(), inputMics,
+                                      self.micrographsNumber.get())
+        else:  # Subset selection
+            mics = [mic.clone() for mic in self.micrographsSubset.get()]
 
         return mics
 

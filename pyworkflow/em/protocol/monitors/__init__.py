@@ -8,3 +8,5 @@ from summary_provider import SummaryProvider
 from protocol_monitor_ctf import ProtMonitorCTF, CtfMonitorPlotter, MonitorCTF
 from protocol_monitor_system import ProtMonitorSystem, SystemMonitorPlotter
 from protocol_monitor_movie_gain import ProtMonitorMovieGain, MovieGainMonitorPlotter, MonitorMovieGain
+
+from protocol_monitor_2d_streamer import ProtMonitor2dStreamer
