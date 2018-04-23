@@ -837,13 +837,13 @@ class TestRelionExtractMovieParticles(TestRelionBase):
         cls.protImportParts = cls.runImportParticlesStar(cls.partRef3dFn,
                                                          50000, 3.54)
 
-    def test_extractMovieParticles(self):
+    def _runExtract(self, boxsize, frame0, frameN, avgFrames, doInvert):
         if not isVersion2():
             raise Exception('Extract movie particles protocol exists only for Relion v2.0 or higher!')
 
         prot = self.newProtocol(ProtRelionExtractMovieParticles,
-                                boxSize=100, frame0=1, frameN=0,
-                                avgFrames=3, doInvert=True)
+                                boxSize=boxsize, frame0=frame0, frameN=frameN,
+                                avgFrames=avgFrames, doInvert=doInvert)
         prot.inputMovies.set(self.protImportMovies.outputMovies)
         prot.inputParticles.set(self.protImportParts.outputParticles)
         self.launchProtocol(prot)
@@ -852,9 +852,18 @@ class TestRelionExtractMovieParticles(TestRelionBase):
                              "There was a problem with extract movie particles protocol")
         sizeIn = prot.inputParticles.get().getSize()
         sizeOut = prot.outputParticles.getSize()
-        self.assertAlmostEqual(sizeIn * 6, sizeOut, 0.0001,
-                               "Number of output movie particles is %d and"
-                               " must be %d" % (sizeOut, sizeIn * 6))
+        factor = (frameN - frame0 + 1) / avgFrames
+        if factor % avgFrames > 0:
+            factor += 1
+        self.assertEqual(sizeIn * factor, sizeOut,
+                         "Number of output movie particles is %d and must be "
+                         "%d" % (sizeOut, sizeIn * factor))
+
+    def test_extractMovieParticlesAvg1(self):
+        self._runExtract(100, 1, 16, 1, True)
+
+    def test_extractMovieParticlesAvg3(self):
+        self._runExtract(100, 1, 16, 3, True)
 
         
 class TestRelionCreate3dMask(TestRelionBase):

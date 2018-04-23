@@ -237,10 +237,12 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
             # If this way changes in the future, the following code could break.
             # For the sake of performace, I will take the risk now.
             count = 0
-            for frame in range(1, nFrames + 1, self.avgFrames.get()):
+            avgFrames = self.avgFrames.get()
+
+            for frame in range(0, nFrames, avgFrames):
                 for mPart in self.partList:
                     mPart.setObjId(None)  # clear objId to insert a new one
-                    mPart.setFrameId(frame)
+                    mPart.setFrameId(frame + avgFrames)
                     count += 1
                     mPart.setIndex(count)
                     movieParticles.append(mPart)
