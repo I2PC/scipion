@@ -422,7 +422,8 @@ def coordinateToRow(coord, coordRow, copyId=True):
         setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
     if coord.getMicName():
-        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicName()))
+        micName = coord.getMicName()
+        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(micName.replace(" ", "")))
     else:
         if coord.getMicId():
             coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
