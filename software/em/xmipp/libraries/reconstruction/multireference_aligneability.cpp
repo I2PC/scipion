@@ -89,7 +89,7 @@ void MultireferenceAligneability::run()
     SL.readSymmetryFile(fnSym.c_str());
 
 	mdInputParticles.read(fnParticles);
-	mdInputParticlesRef.read(fnParticlesRef); //AJ change: fnParticle for fnParticlesRef
+	mdInputParticlesRef.read(fnParticlesRef); //AJ change: fnParticles for fnParticlesRef
 	mdProj.read(finRef);
 	mdExp.read(fin);
 	mdGallery.read(fnGallery);
@@ -154,14 +154,18 @@ void MultireferenceAligneability::run()
 			mdInputParticlesRef.getRow(rowInputRef,i+1); //AJ change mdInputParticles for mdInputParticlesRef
 
 
-			if ((tempMdExp.size()==0) || (tempMdProj.size()==0))//AJ DUDA: tienen sentido estos calculos con 1 sola imagen en exp o proj? (exp mas probable) sum_w_exp, error_mirror_exp se hacen 0
+			if ((tempMdExp.size()==0) || (tempMdProj.size()==0))//AJ DUDA: tienen sentido estos calculos con 1 sola imagen? sum_w_exp, error_mirror_exp se hacen 0
 				continue;
 
 			calc_sumu(tempMdExp, sum_w_exp, error_mirror_exp);
+			std::cout << i << " Exp: sum_w_exp= " << sum_w_exp << " error_mirror_exp= " << error_mirror_exp << " sum_noise= " << sum_noise << std::endl;
 			calc_sumu(tempMdProj, sum_w_proj, error_mirror_proj);
+			std::cout << i << " Proj: sum_w_proj= " << sum_w_proj << " error_mirror_proj= " << error_mirror_proj << " sum_noise= " << sum_noise << std::endl;
 
 			obtainAngularAccuracy(tempMdExp, rowInput, accuracy, accuracyMirror);
+			std::cout << i << "Exp: accuracy= " << accuracy << " accuracyMirror= " << accuracyMirror << " sum_noise= " << sum_noise << std::endl;
 			obtainAngularAccuracy(tempMdProj, rowInputRef, accuracyRef, accuracyMirrorRef);
+			std::cout << i << "Proj: accuracyRef= " << accuracyRef << " accuracyMirrorRef= " << accuracyMirrorRef << " sum_noise= " << sum_noise << std::endl;
 
 #ifdef DEBUG
 
@@ -178,6 +182,8 @@ void MultireferenceAligneability::run()
 			rankPrec = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
 			rankAccMirror = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
 			rankAccNoMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
+
+			std::cout << i << "rankPrec= " << rankPrec << " rankAccMirror= " << rankAccMirror << " rankAccNoMirror= " << rankAccNoMirror << std::endl;
 
 			tempMdExp.getValue(MDL_IMAGE,imagePath,1);
 			rowInput.setValue(MDL_IMAGE,imagePath);
@@ -200,6 +206,7 @@ void MultireferenceAligneability::run()
 
 			if (rank==0)
 				progress_bar(i+1);
+
 		}
 	}
 
@@ -224,6 +231,7 @@ void MultireferenceAligneability::run()
 			validationMirror += (rankAccNoMirror> 0.5);
 
 		}
+		std::cout << "validationAlignabilityPrecision= " << validationAlignabilityPrecision << " validationAlignabilityAccuracy= " << validationAlignabilityAccuracy << " validationAlignability= " << validationAlignability << " validationMirror= " << validationMirror << std::endl;
 
 		validationAlignabilityPrecision /= (maxNImg+1);
 		validationAlignabilityAccuracy /= (maxNImg+1);

@@ -331,12 +331,11 @@ _noisePixelLevel   '0 0'""" % (newXdim, newXdim, pathParticles,
             # DUDA useForValidation es keep_best??
             inputFile = params.split('-i')[1]
             inputFile = inputFile.split('--sym')[0]
-            max_shift=20
             cuda_params = ' -i_ref %s' % fnGallery
             cuda_params += ' -i_exp %s' % inputFile
             cuda_params += ' -o %s' % self._getTmpPath(anglesPath)
             cuda_params += ' --keep_best %d' % self.numOrientations.get()
-            cuda_params += ' --maxShift %d' % int(max_shift)
+            cuda_params += ' --maxShift 100'
             self.runJob("xmipp_cuda_correlation", cuda_params)
 
     def alignabilityStep(self, volName, volDir, sym):

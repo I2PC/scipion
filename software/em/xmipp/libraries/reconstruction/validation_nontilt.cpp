@@ -121,7 +121,7 @@ void ProgValidationNonTilt::run()
 
 			tempMd.importObjects(md, MDExpression(expression));
 
-			if (tempMd.size()==0 || tempMd.size()==1)//AJ incluyo tempMd.size()==1 porque me parece que con 1 imagen no tienen sentido los calculos
+			if (tempMd.size()==0 || tempMd.size()==1)//AJ incluyo tempMd.size()==1 porque me parece que con 1 imagen no saldrian bien los calculos
 				continue;
 
 			//compute H_0 from noise

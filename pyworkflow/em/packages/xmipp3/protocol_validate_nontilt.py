@@ -182,7 +182,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         else:  ######################
             # DUDA useForValidation es keep_best??
             params["output"] = self._getAnglesMd(volId)
-            args = '-i_ref %(gallery)s -i_exp %(inputParts)s -o %(output)s --keep_best %(orientations)d'
+            args = '-i_ref %(gallery)s -i_exp %(inputParts)s -o %(output)s --keep_best %(orientations)d --maxShift 100'
             self.runJob("xmipp_cuda_correlation", args % params, numberOfMpi=1,
                     numberOfThreads=1)
 
