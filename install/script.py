@@ -250,7 +250,7 @@ scipy = env.addPipModule('scipy', '0.14.0',
 env.addPipModule('bibtexparser', '0.6.2')
 env.addPipModule('django', '1.5.5', default=False)
 env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
-    deps=[jpeg], default=False)
+    deps=[jpeg])
 
 
 # Optional python modules
@@ -511,6 +511,6 @@ env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
                targetDir='xmipp-18.5',
                commands=[('./xmipp_installer','bin/xmipp_reconstruct_significant')],
-               deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv])
+               deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment])
 
 env.execute()
