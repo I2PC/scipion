@@ -449,7 +449,7 @@ env.addPackage('cryoEF', version='1.1.0',
 #      'scons',
 #      targets=[env.getBin('scons')],
 #      tar='scons-2.3.4.tgz')
-env.addPipModule('scons','2.3.6', target='scons-2.3.6')
+scons = env.addPipModule('scons','2.3.6', target='scons-2.3.6')
 
 hdf5 = env.addLibrary(
      'hdf5',
