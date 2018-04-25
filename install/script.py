@@ -249,7 +249,7 @@ scipy = env.addPipModule('scipy', '0.14.0',
                      default=False, deps=[lapack, matplotlib])
 env.addPipModule('bibtexparser', '0.6.2')
 env.addPipModule('django', '1.5.5', default=False)
-env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',default=False,
+pillow = env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',default=False,
     deps=[jpeg])
 
 
