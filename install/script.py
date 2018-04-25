@@ -36,10 +36,6 @@ get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
 env = Environment(args=sys.argv)
 
-noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
-noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
-
-
 #  *******************************
 #  *  PATHS
 #  *******************************
@@ -213,18 +209,6 @@ python = env.addLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
-if get('CUDA'):
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
-else:
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
-opencv = env.addLibrary(
-    'opencv',
-    tar='opencv-2.4.13.tgz',
-    targets=[env.getLib('opencv_core')],
-    flags=opencvFlags,
-    cmake=True,
-    default=not noOpencv)
-
 # ---------- Libraries required by PyTom 
 
 boost = env.addLibrary(
@@ -262,11 +246,11 @@ matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
 env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
 env.addPipModule('mpi4py', '1.3.1')
 scipy = env.addPipModule('scipy', '0.14.0',
-                     default=not noScipy, deps=[lapack, matplotlib])
+                     default=False, deps=[lapack, matplotlib])
 env.addPipModule('bibtexparser', '0.6.2')
-env.addPipModule('django', '1.5.5')
+env.addPipModule('django', '1.5.5', default=False)
 env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
-    deps=[jpeg])
+    deps=[jpeg], default=False)
 
 
 # Optional python modules
@@ -456,7 +440,7 @@ env.addPackage('cryoEF', version='1.1.0',
 #      'scons',
 #      targets=[env.getBin('scons')],
 #      tar='scons-2.3.4.tgz')
-scons = env.addPipModule('scons','2.3.6', target='scons-2.3.6')
+scons = env.addPipModule('scons','2.3.6', target='scons-2.3.6', default=False)
 
 hdf5 = env.addLibrary(
      'hdf5',
@@ -511,10 +495,22 @@ nma = env.addPackage('nma',
 scikit = env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
              default=False, deps=[scipy, cython])
 
+if get('CUDA'):
+    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
+else:
+    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
+opencv = env.addLibrary(
+    'opencv',
+    tar='opencv-2.4.13.tgz',
+    targets=[env.getLib('opencv_core')],
+    flags=opencvFlags,
+    cmake=True,
+    default=False)
+
 env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
                targetDir='xmipp-18.5',
                commands=[('./xmipp_installer','bin/xmipp_reconstruct_significant')],
-               deps=[scons, fftw3, scikit, nma, tiff, sqlite])
+               deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv])
 
 env.execute()
