@@ -128,6 +128,7 @@ fftw3 = env.addLibrary(
     'fftw3',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared'],
+    default=False,
     clean=True) # We need to clean to configure again with --enable-float
     
 fftw3f = env.addLibrary(
