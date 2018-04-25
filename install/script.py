@@ -514,7 +514,8 @@ xmipp = env.addPackage('xmipp', version='18.5',
                deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment, hdf5])
 
 # EM Environment
-emDomain = env.addTarget('emDomain', deps=[pillow])
+emDomain = env.addTarget('emDomain')
+emDomain.addDep(pillow)
 emDomain.addCommand('touch %s/emDomain'%SW_TMP, targets=SW_TMP+"/emDomain", default=True, final=True)
         
 env.execute()
