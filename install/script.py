@@ -464,6 +464,7 @@ hdf5 = env.addLibrary(
      flags=['--enable-cxx', '--enable-shared'],
      targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
      configAlways=True,
+     default=False,
      deps=[zlib])
 
 pcre = env.addLibrary(
