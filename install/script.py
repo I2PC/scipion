@@ -514,7 +514,7 @@ xmipp = env.addPackage('xmipp', version='18.5',
                deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment, hdf5])
 
 # EM Environment
-em = env.addTarget()
-em.addCommand('', targets=SCIPION, default=True, deps=[pillow], final=True)
+emDomain = env.addTarget('emDomain')
+emDomain.addCommand('', targets=SCIPION, default=True, deps=[pillow], final=True)
 
 env.execute()
