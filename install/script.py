@@ -249,7 +249,7 @@ scipy = env.addPipModule('scipy', '0.14.0',
                      default=False, deps=[lapack, matplotlib])
 env.addPipModule('bibtexparser', '0.6.2')
 env.addPipModule('django', '1.5.5', default=False)
-env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
+env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',default=False,
     deps=[jpeg])
 
 
@@ -507,10 +507,14 @@ opencv = env.addLibrary(
     cmake=True,
     default=False)
 
-env.addPackage('xmipp', version='18.5',
+xmipp = env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
                targetDir='xmipp-18.5',
                commands=[('./xmipp_installer','bin/xmipp_reconstruct_significant')],
-               deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment])
+               deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment, hdf5])
+
+# EM Environment
+em = env.addTarget()
+em.addCommand('', targets=SCIPION, default=True, deps=[pillow], final=True)
 
 env.execute()

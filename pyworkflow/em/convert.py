@@ -27,7 +27,6 @@
 import os
 import sys
 from itertools import izip
-import PIL
 
 import xmipp
 import pyworkflow.utils as pwutils
@@ -238,6 +237,7 @@ class ImageHandler(object):
             ext = pwutils.getExt(fn).lower()
             
             if ext == '.png' or ext == '.jpg':
+                import PIL
                 im = PIL.Image.open(fn)
                 x, y = im.size # (width,height) tuple
                 return x, y, 1, 1
