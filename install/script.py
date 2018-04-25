@@ -135,6 +135,15 @@ fftw3f = env.addLibrary(
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared', '--enable-float'])
 
+lapack = env.addLibrary(
+    'lapack',
+    tar='lapack-3.5.0.tgz',
+    flags=['-DBUILD_SHARED_LIBS:BOOL=ON',
+           '-DLAPACKE:BOOL=ON'],
+    cmake=True,
+    neededProgs=['gfortran'],
+    default=False)
+
 osBuildDir = 'tcl8.6.1/unix'
 osFlags = ['--enable-threads']
 
@@ -190,62 +199,12 @@ sqlite = env.addLibrary(
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
-hdf5 = env.addLibrary(
-     'hdf5',
-     tar='hdf5-1.8.14.tgz',
-     flags=['--enable-cxx', '--enable-shared'],
-     targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
-     configAlways=True,
-     deps=[zlib])
-
 python = env.addLibrary(
     'python',
     tar='Python-2.7.14.tgz',
     targets=[env.getLib('python2.7'), env.getBin('python')],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
-
-pcre = env.addLibrary(
-    'pcre',
-    tar='pcre-8.36.tgz',
-    targets=[env.getBin('pcretest')],
-    default=False)
-
-swig = env.addLibrary(
-    'swig',
-    tar='swig-3.0.2.tgz',
-    targets=[env.getBin('swig')],
-    makeTargets=['Source/Swig/tree.o'],
-    deps=[pcre],
-    default=False)
-
-sh_alignment = env.addLibrary(
-    'sh_alignment',
-    tar='sh_alignment.tgz',
-    commands=[('cd ' + SW_TMP + '/sh_alignment; make install',
-               SW_PYT_PACK + '/sh_alignment/frm.py')],
-    deps=[python, swig],
-    default=False)
-
-lapack = env.addLibrary(
-    'lapack',
-    tar='lapack-3.5.0.tgz',
-    flags=['-DBUILD_SHARED_LIBS:BOOL=ON',
-           '-DLAPACKE:BOOL=ON'],
-    cmake=True,
-    neededProgs=['gfortran'],
-    default=False)
-
-arpack = env.addLibrary(
-    'arpack',
-    tar='arpack-96.tgz',
-    neededProgs=['gfortran'],
-    commands=[('cd ' + SW_BIN + '; ln -s $(which gfortran) f77',
-               SW_BIN + '/f77'),
-              ('cd ' + SW_TMP + '/arpack-96; make all',
-               SW_LIB +'libarpack.a')],
-    default=False)
-# See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
 if get('CUDA'):
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
@@ -289,13 +248,6 @@ pip = env.addTarget('pip')
 pip.addCommand('python scripts/get-pip.py -I', targets=SW_PYT_PACK + '/pip',
                default=True, final=True)
 
-# Scons has a different pattern: it is expected to be in bin..TODO
-scons = env.addModule(
-     'scons',
-     targets=[env.getBin('scons')],
-     tar='scons-2.3.4.tgz')
-#env.addPipModule('scons','2.3.6', target='scons-2.3.6')
-
 # Required python modules
 env.addPipModule('setuptools', '38.2.5')
 numpy = env.addPipModule('numpy','1.14.1')
@@ -327,8 +279,6 @@ cython = env.addPipModule('cython', '0.22', target='Cython-0.22*', default=False
 cythongsl = env.addPipModule('cythongsl','0.2.1',
                          target='CythonGSL-0.2.1*',
                          default=False, deps=[cython])
-env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
-             default=False, deps=[scipy, cython])
 
 
 #  ************************************************************************
@@ -453,13 +403,6 @@ env.addPackage('chimera', version='1.10.1',
 env.addPackage('dogpicker', version='0.2.1',
                tar='dogpicker-0.2.1.tgz')
 
-env.addPackage('nma',
-               tar='nma.tgz',
-               commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
-                         ('cd NMA_cart; LDFLAGS=-L%s make; mv nma_* ..' %
-                          Environment.getLibFolder(), 'nma_diag_arpack')],
-               deps=['arpack'])
-
 env.addPackage('cryoem', version='1.0',
                 tar='cryoem-1.0.tgz',
                 pythonMod=True, default=False,
@@ -500,5 +443,70 @@ env.addPackage('nysbc-3DFSC', version='2.5',
 
 env.addPackage('cryoEF', version='1.1.0',
                tar='cryoEF_v1.1.0.tgz')
+
+# Scons has a different pattern: it is expected to be in bin..TODO
+# scons = env.addModule(
+#      'scons',
+#      targets=[env.getBin('scons')],
+#      tar='scons-2.3.4.tgz')
+env.addPipModule('scons','2.3.6', target='scons-2.3.6')
+
+hdf5 = env.addLibrary(
+     'hdf5',
+     tar='hdf5-1.8.14.tgz',
+     flags=['--enable-cxx', '--enable-shared'],
+     targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
+     configAlways=True,
+     deps=[zlib])
+
+pcre = env.addLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=[env.getBin('pcretest')],
+    default=False)
+
+swig = env.addLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=[env.getBin('swig')],
+    makeTargets=['Source/Swig/tree.o'],
+    deps=[pcre],
+    default=False)
+
+sh_alignment = env.addLibrary(
+    'sh_alignment',
+    tar='sh_alignment.tgz',
+    commands=[('cd ' + SW_TMP + '/sh_alignment; make install',
+               SW_PYT_PACK + '/sh_alignment/frm.py')],
+    deps=[python, swig],
+    default=False)
+
+arpack = env.addLibrary(
+    'arpack',
+    tar='arpack-96.tgz',
+    neededProgs=['gfortran'],
+    commands=[('cd ' + SW_BIN + '; ln -s $(which gfortran) f77',
+               SW_BIN + '/f77'),
+              ('cd ' + SW_TMP + '/arpack-96; make all',
+               SW_LIB +'libarpack.a')],
+    deps = [lapack], 
+    default=False)
+# See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
+
+nma = env.addPackage('nma',
+               tar='nma.tgz',
+               commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
+                         ('cd NMA_cart; LDFLAGS=-L%s make; mv nma_* ..' %
+                          Environment.getLibFolder(), 'nma_diag_arpack')],
+               deps=['arpack'])
+
+scikit = env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
+             default=False, deps=[scipy, cython])
+
+env.addPackage('xmipp', version='18.5',
+               tar='xmipp-18.5.tgz',
+               targetDir='xmipp-18.5',
+               commands=[('./xmipp_installer','bin/xmipp_reconstruct_significant')],
+               deps=[scons, fftw3, scikit, nma])
 
 env.execute()

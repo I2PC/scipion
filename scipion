@@ -438,48 +438,7 @@ Example: scipion install eman-2.12
         def build(args):
             # Just importing the script will launch the install actions
             import install.script as script
-            # Remove targets names from environment, that are
-            # not recognized by Scons.
-            # TODO: think more deeply in a way to separate
-            # options for scons and our own install script
-            sconsArgs = [a for a in args if not script.env.hasTarget(a)]
-
-            # Special argument to skip Xmipp compilation, mainly for debugging
-            if '--no-xmipp' in args:
-                return 0
-
-            # Get xmipp source code file
-            xmippArgsSource = join(SCIPION_HOME, SCIPION_SOFTWARE, 'em', 'xmipp',
-                                   'libraries', 'data', 'args.h')
-            if not os.path.exists(xmippArgsSource):
-                print ("Xmipp source code file %s not found. It seems you have" \
-                      " downloaded the binaries. Skipping Xmipp compilation."\
-                      % xmippArgsSource)
-                return 0
-
-            cmd = 'install/scons.py %s' % ' '.join(sconsArgs)
-            from install.funcs import green, yellow
-            print(green('Compiling Xmipp ...'))
-            print(cmd)
-
-            # If using some kind of show, do not compile Xmipp
-            if '--show' in args or '--show-tree' in args:
-                return 0
-
-            # Write xmipp.bashrc, xmipp.csh and xmipp.fish
-            # TODO: maybe consider moving this logic to an script
-            # under install/ module
-            tDir = join(SCIPION_HOME, 'config', 'templates')
-            for fname in os.listdir(tDir):
-                if fname.startswith('xmipp.') and fname.endswith('.template'):
-                    out = join(PACKAGES['XMIPP_HOME'], fname[:-len('.template')])
-                    if exists(out):
-                        print(yellow("Keeping existing file: %s" % out))
-                        continue
-                    print(yellow("Writing sourceable shell file: %s" % out))
-                    open(out, 'w').write(open(join(tDir, fname)).read() % VARS)
-
-            return os.system(cmd)
+            return 0
 
         if args and args[0] == '--binary':
             assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
