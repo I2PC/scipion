@@ -262,10 +262,10 @@ env.addPipModule('lxml', '3.4.1', target='lxml-3.4.1*', default=False)
 env.addPipModule('requests', '2.18.4', default=False)
 
 # These were dependencies of iPython
-env.addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
-env.addPipModule('jinja2', '2.7.3', default=False)
-env.addPipModule('tornado', '4.0.2', default=False)
-env.addPipModule('ipython', '2.1.0', target='IPython', default=False)
+pyzmq = env.addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
+jinja2 = env.addPipModule('jinja2', '2.7.3', default=False)
+tornado = env.addPipModule('tornado', '4.0.2', default=False)
+env.addPipModule('ipython', '2.1.0', target='IPython', default=False, deps=[pyzmq, jinja2, tornado])
 cython = env.addPipModule('cython', '0.22', target='Cython-0.22*', default=False)
 cythongsl = env.addPipModule('cythongsl','0.2.1',
                          target='CythonGSL-0.2.1*',
@@ -515,6 +515,6 @@ xmipp = env.addPackage('xmipp', version='18.5',
 
 # EM Environment
 emDomain = env.addTarget('emDomain')
-emDomain.addCommand('', targets=SCIPION, default=True, deps=[pillow], final=True)
+emDomain.addCommand('touch %s/emDomain'%SW_TMP, targets=SW_TMP+"/emDomain", default=True, deps=[pillow], final=True)
 
 env.execute()
