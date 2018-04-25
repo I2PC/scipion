@@ -178,28 +178,33 @@ zlib = env.addLibrary(
     'zlib',
     targets=[env.getLib('z')],
     tar='zlib-1.2.8.tgz',
-    configTarget='zlib.pc')
+    configTarget='zlib.pc',
+    default=False)
 
 jpeg = env.addLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
-    flags=['--without-simd'])
+    flags=['--without-simd'],
+    default=False)
 
 png = env.addLibrary(
     'png',
     tar='libpng-1.6.16.tgz',
-    deps=[zlib])
+    deps=[zlib],
+    default=False)
 
 tiff = env.addLibrary(
      'tiff',
      tar='tiff-3.9.4.tgz',
-     deps=[zlib, jpeg])
+     deps=[zlib, jpeg],
+     default=False)
 
 sqlite = env.addLibrary(
     'sqlite3',
     tar='SQLite-1a584e49.tgz',
     flags=['CPPFLAGS=-w',
-           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'],
+    default=False)
 
 python = env.addLibrary(
     'python',
@@ -509,6 +514,6 @@ env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
                targetDir='xmipp-18.5',
                commands=[('./xmipp_installer','bin/xmipp_reconstruct_significant')],
-               deps=[scons, fftw3, scikit, nma])
+               deps=[scons, fftw3, scikit, nma, tiff, sqlite])
 
 env.execute()
