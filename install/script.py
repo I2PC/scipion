@@ -133,7 +133,8 @@ fftw3 = env.addLibrary(
 fftw3f = env.addLibrary(
     'fftw3f',
     tar='fftw-3.3.4.tgz',
-    flags=['--enable-threads', '--enable-shared', '--enable-float'])
+    flags=['--enable-threads', '--enable-shared', '--enable-float'],
+    default=False)
 
 lapack = env.addLibrary(
     'lapack',
