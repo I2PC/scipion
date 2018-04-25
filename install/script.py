@@ -515,7 +515,7 @@ xmipp = env.addPackage('xmipp', version='18.5',
 
 # EM Environment
 emDomain = env.addTarget('emDomain')
-emDomain.addDep(pillow)
+env._addTargetDeps(emDomain,[pillow])
 emDomain.addCommand('touch %s/emDomain'%SW_TMP, targets=SW_TMP+"/emDomain", default=True, final=True)
         
 env.execute()
