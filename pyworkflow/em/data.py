@@ -595,6 +595,8 @@ class Image(EMObject):
 
     def _getDefaultOrigin(self):
         sampling = self.getSamplingRate()
+        if self.getSamplingRate() is None:
+            sampling = 1.
         t = Transform()
         x, y, z = self.getDim()
         if z > 1:
