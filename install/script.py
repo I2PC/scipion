@@ -470,7 +470,7 @@ sh_alignment = env.addLibrary(
     tar='sh_alignment.tgz',
     commands=[('cd ' + SW_TMP + '/sh_alignment; make install',
                SW_PYT_PACK + '/sh_alignment/frm.py')],
-    deps=[python, swig],
+    deps=[python, swig, fftw3],
     default=False)
 
 arpack = env.addLibrary(
@@ -480,7 +480,7 @@ arpack = env.addLibrary(
     commands=[('cd ' + SW_BIN + '; ln -s $(which gfortran) f77',
                SW_BIN + '/f77'),
               ('cd ' + SW_TMP + '/arpack-96; make all',
-               SW_LIB +'libarpack.a')],
+               SW_LIB +'/libarpack.a')],
     deps = [lapack], 
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
@@ -515,7 +515,7 @@ xmipp = env.addPackage('xmipp', version='18.5',
 
 # EM Environment
 emDomain = env.addTarget('emDomain')
-env._addTargetDeps(emDomain,[pillow])
+env._addTargetDeps(emDomain,[pillow, xmipp])
 emDomain.addCommand('touch %s/emDomain'%SW_TMP, targets=SW_TMP+"/emDomain", default=True, final=True)
         
 env.execute()
