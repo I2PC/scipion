@@ -356,7 +356,8 @@ class ProtocolViewer(Protocol, Viewer):
                 values += map(int, e.split())
         return values
 
-    def createVolumesSqlite(self, files, path, samplingRate):
+    def createVolumesSqlite(self, files, path, samplingRate,
+                            updateItemCallback=None):
         from em import SetOfVolumes, Volume
         cleanPath(path)
         volSet = SetOfVolumes(filename=path)
@@ -365,6 +366,8 @@ class ProtocolViewer(Protocol, Viewer):
         for volFn in files:
             vol = Volume()
             vol.setFileName(volFn)
+            if updateItemCallback:
+                updateItemCallback(vol)
             volSet.append(vol)
         volSet.write()
         volSet.close()
