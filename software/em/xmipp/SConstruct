@@ -47,8 +47,6 @@ MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
 
-# COSS SCIPION_SW = os.environ['SCIPION_SOFTWARE']
-
 # Define our builders
 if LINUX:
     download = Builder(action='wget -nv -c -O $TARGET $SOURCE')
@@ -222,8 +220,6 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     targetName = join(basedir, target if target else prefix + name)
     sources = []
 
-    # COSS _libpath.append(Dir(SCIPION_SW + '/lib').abspath)
-    
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
         
@@ -253,7 +249,6 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     
 
     _incs.append(env['CPPPATH'])
-    # COSS _incs.append(SCIPION_SW + '/include')
 
     library = env2.SharedLibrary(
               target=targetName,
@@ -264,8 +259,8 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
               LIBS=_libs,
               SHLIBPREFIX=prefix,
               SHLIBSUFFIX=suffix,
-              CXXFLAGS=env['CXXFLAGS'],
-              LINKFLAGS=env['LINKFLAGS'],
+              CXXFLAGS=env['CXXFLAGS']+env['INCLUDEFLAGS'],
+              LINKFLAGS=env['LINKFLAGS']+env['LIBFLAGS'],
               **mpiArgs
               )
     SideEffect('dummy', library)
@@ -557,11 +552,10 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     else: cxxCopy = env['CXX']  
 
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy += env['CPPPATH'] # COSS + ['libraries', Dir(SCIPION_SW + '/include').abspath,
-                               # COSS         Dir(SCIPION_SW + '/include/python2.7').abspath]
+    incsCopy += env['CPPPATH']
     libsCopy = libs
-    cxxflagsCopy = cxxflags + env['CXXFLAGS']
-    linkflagsCopy = linkflags + env['LINKFLAGS']
+    cxxflagsCopy = cxxflags + env['CXXFLAGS']+env['INCDIRFLAGS']
+    linkflagsCopy = linkflags + env['LINKFLAGS']+env['LIBDIRFLAGS']
     ldLibraryPathCopy = [env['LIBPATH']]
     appendUnique(libPathsCopy, env.get('LIBPATH', '').split(":"))
     env2 = Environment()

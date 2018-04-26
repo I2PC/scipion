@@ -84,6 +84,8 @@ SCIPION_NOTIFY = False
 CC = gcc
 CXX = g++
 LINKERFORPROGRAMS = g++
+INCDIRFLAGS = -I/usr/lib/include
+LIBDIRFLAGS = -L/usr/lib
 CCFLAGS = -std=c99
 CXXFLAGS = 
 LINKFLAGS = 
