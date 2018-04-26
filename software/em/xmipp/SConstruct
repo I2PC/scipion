@@ -32,6 +32,7 @@
 
 import os
 import sys
+import shutil
 from os.path import join
 from itertools import izip
 from glob import glob
@@ -652,7 +653,9 @@ env.AddMethod(targetInBuild, 'TargetInBuild')
 cf = ConfigParser()
 cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
 try:
-    cf.read("install/xmipp.conf")
+    if not os.path.exists("install/xmipp.conf"):
+        shutil.copy("install/xmipp.template", "install/xmipp.conf")
+    cf.read("install/xmipp.conf")        
 except ParsingError:
     sys.exit("%s\nPlease fix the configuration file install/xmipp.conf." % sys.exc_info()[1])
 if not 'BUILD' in cf.sections():
