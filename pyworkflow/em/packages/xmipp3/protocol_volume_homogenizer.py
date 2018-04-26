@@ -405,13 +405,13 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         return ['**********????????????????????************']
     
     def _setHalf1(self, item, row):
-        if (item._rln_halfId == 1):
+        if (item._rlnRandomSubset == 1):
             item._appendItem=False
 
     def _setHalf2(self, item, row):
-        if (item._rln_halfId == 2):
+        if (item._rlnRandomSubset == 2):
             item._appendItem=False
-            
+
     def _validate(self):
         errors=[]
                  
