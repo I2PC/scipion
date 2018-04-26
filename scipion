@@ -422,8 +422,6 @@ Arguments:
   --show        just show what would be done, without actually installing
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
-  --no-xmipp    use this option only after a successful compilation of Xmipp
-                to save some time when installing other packages
 
 Example: scipion install eman-2.12
 
