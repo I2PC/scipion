@@ -127,7 +127,6 @@ class ProtImportVolumes(ProtImportImages):
         volSet.setSamplingRate(samplingRate)
 
         for fileName, fileId in self.iterFiles():
-            newFileName = abspath(self._getVolumeFileName(fileName))
             x, y, z, n = imgh.getDimensions(fileName)
             if fileName.endswith('.mrc') or fileName.endswith('.map'):
                 fileName += ':mrc'
@@ -136,6 +135,8 @@ class ProtImportVolumes(ProtImportImages):
                     n = 1
                 else:
                     zDim = z
+            else:
+                zDim = z
             origin = Transform()
             if setOrigCoord:
                 origin.setShiftsTuple(self._getOrigCoord())
@@ -147,10 +148,13 @@ class ProtImportVolumes(ProtImportImages):
             vol.setOrigin(origin)  # read origin from form
 
             if self.copyFiles or setOrigCoord:
+                newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
                 adaptFileToCCP4(fileName, newFileName, origin.getShifts(),
                                 samplingRate,
                                 ORIGIN)
             else:
+                newFileName = abspath(self._getVolumeFileName(fileName))
+
                 if fileName.endswith(':mrc'):
                     fileName = fileName[:-4]
                 createAbsLink(fileName, newFileName)
@@ -197,8 +201,12 @@ class ProtImportVolumes(ProtImportImages):
                            (self._getVolMessage(), self.samplingRate.get()),)
         return methods
 
-    def _getVolumeFileName(self, fileName):
-        baseFileName="import_" + basename(fileName).split(".")[0] + ".mrc"
+    def _getVolumeFileName(self, fileName, extension=None):
+        if extension is not None:
+            baseFileName="import_" + basename(fileName).split(".")[0] + ".%s"%extension
+        else:
+            baseFileName="import_" + basename(fileName).split(":")[0]
+
         return self._getExtraPath(baseFileName)
 
     def _getOrigCoord(self):

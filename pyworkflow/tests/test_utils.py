@@ -5,17 +5,12 @@ Created on Mar 25, 2014
 
 @author: airen
 '''
-import os, time
-import unittest
-from os.path import join, dirname, exists
-from StringIO import StringIO
-from bibtexparser.bparser import BibTexParser   
-from pyworkflow.tests import *
 import pyworkflow as pw
 
 from subprocess import Popen
 from pyworkflow.utils.process import killWithChilds
 from pyworkflow.tests import *
+from pyworkflow.utils import utils, prettyDict
 
 
     
@@ -59,13 +54,9 @@ keywords = "Single particle analysis; Electron microscopy; Image processing; 3D 
 author = "Sorzano, CarlosOscar and Rosa Trevín, J.M. and Otón, J. and Vega, J.J. and Cuenca, J. and Zaldívar-Peraza, A. and Gómez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, JoséMaría",
 pages = "171-193",
 }
-"""        
-        f = StringIO()
-        f.write(bibtex)
-        f.seek(0, 0)
-        parser = BibTexParser(f)
-        from pyworkflow.utils import prettyDict
-        prettyDict(parser.get_entry_dict())
+"""
+
+        prettyDict(utils.parseBibTex(bibtex))
         
         
         
