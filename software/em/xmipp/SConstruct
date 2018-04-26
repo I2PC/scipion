@@ -720,7 +720,7 @@ env['PACKAGE'] = {'NAME': 'xmipp',
                   'SCONSCRIPT': xmippPath
                   }
 
-# COSS env.SConscript(join(xmippPath, 'scipion_sconscript'), exports='env')
+env.SConscript(join(xmippPath, 'SConscript'), exports='env')
 
 # Add original help (the one that we would have if we didn't use
 # Help() before). But remove the "usage:" part (first line).
