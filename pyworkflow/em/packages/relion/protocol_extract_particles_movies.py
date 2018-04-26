@@ -284,7 +284,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
             mPart.setFileName(self.newMovieStack)
             self.partList.append(mPart)
 
-        pwutils.cleanPath(self._getExtraPath('output', 'extra'))
+        pwutils.cleanPath(self._getExtraPath('output'))
 
         _addPartsFromMic()
 
