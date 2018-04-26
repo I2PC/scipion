@@ -348,41 +348,6 @@ env.addPackage('bsoft', version='1.8.8',
 env.addPackage('bsoft', version='1.9.0',
                tar='bsoft1_9_0_Fedora_20.tgz')
 
-env.addPackage('ctffind', version='3.6',
-               tar='ctffind_V3.5.tgz')
-
-env.addPackage('ctffind4', version='4.0.15',
-               tar='ctffind_V4.0.15.tgz')
-
-env.addPackage('ctffind4', version='4.1.5',
-               tar='ctffind_V4.1.5.tgz')
-
-env.addPackage('ctffind4', version='4.1.8',
-               tar='ctffind_V4.1.8.tgz')
-
-env.addPackage('summovie', version='1.0.2',
-               tar='summovie_1.0.2.tgz')
-
-env.addPackage('unblur', version='1.0.15',
-               tar='unblur_1.0_150529.tgz')
-
-env.addPackage('unblur', version='1.0.2',
-               tar='unblur_1.0.2.tgz')
-
-# eman2_commands = [('./eman2-installer',
-#                    'eman2.*rc')]
-#
-# env.addPackage('eman', version='2.11',
-#                tar='eman2.11.linux64.tgz',
-#                commands=eman2_commands)
-#
-# env.addPackage('eman', version='2.12',
-#                tar='eman2.12.linux64.tgz',
-#                commands=eman2_commands)
-
-env.addPackage('frealign', version='9.07',
-               tar='frealign_v9.07.tgz')
-
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion_refine'])]
@@ -487,9 +452,6 @@ env.addPackage('gctf', version='1.06',
 
 env.addPackage('gautomatch', version='0.53',
                tar='Gautomatch_v0.53.tgz')
-
-env.addPackage('mag_distortion', version='1.0.1',
-               tar='mag_distortion-1.0.1.tgz')
 
 env.addPackage('ethan', version='1.2',
                tar='ethan-1.2.tgz',

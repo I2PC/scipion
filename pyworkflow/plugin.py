@@ -29,19 +29,25 @@ This modules handles Plugin management
 
 import os
 from pyworkflow.utils import Environ
-from pyworkflow import findResource
-
 
 class Plugin(object):
 
     def __init__(self, name, version=None, configVars=None,
                  logo=None, references=None, registerFunction=None):
+        # Plugin name - only mandatory attribute
         self.name = name
+        # Plugin version
         self.version = version
+        # dict with default values for env vars needed
         self.configVars = configVars
+        # path to the logo, relative to each plugin's plugin.py file
         self.logo = logo
+        # List with the default plugin references e.g. []
         self.references = references
+        #  The function that adds packages, libraries, etc to be installed
         self.registerFunction = registerFunction
+        # Set default env vars
+        self.setDefaultEnviron()
 
     def setDefaultEnviron(self):
         for k in self.configVars:

@@ -10,8 +10,7 @@ from pyworkflow import LAST_VERSION, OLD_VERSIONS
 from install.funcs import Environment
 import pip
 
-REPOSITORY_URL = os.environ['SCIPION_PLUGIN_REPO_URL']
-REPOSITORY_URL = 'http://localhost:8000/getplugins'
+REPOSITORY_URL = os.environ.get('SCIPION_PLUGIN_JSON', None) or os.environ['SCIPION_PLUGIN_REPO_URL']
 PIP_BASE_URL = 'http://pypi.python.org/pypi/'
 PIP_CMD = 'python {}/pip install %(installSrc)s'.format(Environment.getPythonPackagesFolder())
 
@@ -75,7 +74,10 @@ class PluginInfo(object):
             for release, releaseData in pipData['releases'].iteritems():
                 releaseData = releaseData[0]
                 scipionVersions = [parse_version(v) for v in re.findall(reg, releaseData['comment_text'])]
-                if any([v <= parse_version(SCIPION_VERSION) for v in scipionVersions]):
+                if len(scipionVersions) == 0:
+                    print("WARNING: %s's release %s did not specify a compatible Scipion version" % (self.pipName,
+                                                                                                     release))
+                elif any([v <= parse_version(SCIPION_VERSION) for v in scipionVersions]):
                     if parse_version(latestCompRelease) < parse_version(release):
                         latestCompRelease = release
                     releases[release] = releaseData
@@ -89,21 +91,38 @@ class PluginInfo(object):
 
     def setLocalPluginInfo(self):
         if self.isInstalled():
-            metadata = json.loads(pkg_resources.get_distribution(self.pipName).get_metadata('metadata.json'))
-            self.pipVersion = metadata['version']
+            # metadata = json.loads(pkg_resources.get_distribution(self.pipName).get_metadata('metadata.json'))
+            package = pkg_resources.get_distribution(self.pipName)
+            keys = ['Name', 'Version', 'Summary', 'Home-page', 'Author', 'Author-email']
+            pattern = r'(.*): (.*)'
+            metadata = {}
+            for line in package._get_metadata(package.PKG_INFO):
+                match = re.match(pattern, line)
+                if match:
+                    key = match.group(1)
+                    if key in keys:
+                        metadata[key] = match.group(2)
+                        keys.remove(key)
+                        if not len(keys):
+                            break
+
+            self.pipVersion = metadata.get('Version', "")
             self.dirName = self.getDirName()
             self.pipPath = self.getPipPath()
             self.emLink = self.getEmPackagesLink()
             self.binVersions = self.getBinVersions()
 
             if not self.remote:
-                from time import sleep
                 # if we don't already have this info from remote, load it from metadata.json
-                self.homePage = metadata['extensions']['python.details'].get('project_urls', {}).get('Home', "")
-                self.summary = metadata['summary']
-                contacts = metadata['extensions']['python.details'].get('contacts', None)
-                self.author = contacts[0]['name'] if contacts else ""
-                self.email = contacts[0]['email'] if contacts else ""
+                # self.homePage = metadata['extensions']['python.details'].get('project_urls', {}).get('Home', "")
+                # self.summary = metadata['summary']
+                # contacts = metadata['extensions']['python.details'].get('contacts', None)
+                # self.author = contacts[0]['name'] if contacts else ""
+                # self.email = contacts[0]['email'] if contacts else ""
+                self.homePage = metadata.get('Home-page', "")
+                self.summary = metadata.get('Summary', "")
+                self.author = metadata.get('Author', "")
+                self.email = metadata.get('Author-email', "")
 
     def getBinVersions(self, env=None):
         if env:
@@ -186,14 +205,13 @@ class PluginInfo(object):
         if binList is None:
             binList = self.binVersions
 
+        binFolder = Environment.getEmFolder()
         for binVersion in binList:
-            binFolder = Environment.getEmFolder()
-            files = ["%s" % os.path.join(binFolder, binVersion) for binVersion in binList]
-            for f in files:
-                if os.path.exists(f):
-                    print('Removing %s binaries...' % binVersion)
-                    realPath = os.path.realpath(f)  # in case its a link
-                    cleanPath(f, realPath)
+            f = "%s" % os.path.join(binFolder, binVersion)
+            if os.path.exists(f):
+                print('Removing %s binaries...' % binVersion)
+                realPath = os.path.realpath(f)  # in case its a link
+                cleanPath(f, realPath)
         return
 
     def uninstallPip(self):
@@ -209,29 +227,37 @@ class PluginRepository(object):
         self.repoUrl = repoUrl
 
     def getPlugins(self, pluginList=None, getPipData=False):
-        r = requests.get(self.repoUrl)
+
+        pluginsJson = {}
         pluginDict = {}
 
-        if r.ok:
-            pluginsJson = r.json()
-            availablePlugins = pluginsJson.keys()
-
-            if pluginList is None:
-                targetPlugins = availablePlugins
-            else:
-                targetPlugins = set(availablePlugins).intersection(set(pluginList))
-                if len(targetPlugins) < len(pluginList):
-                    wrongPluginNames = set(pluginList) - set(availablePlugins)
-                    print("WARNING - The following plugins didn't match available plugin names:")
-                    print(" ".join(wrongPluginNames))
-
-            for pluginName in targetPlugins:
-                pluginsJson[pluginName].update(remote=getPipData)
-                pluginDict[pluginName] = PluginInfo(**pluginsJson[pluginName])
-            return pluginDict
+        if os.path.isfile(self.repoUrl):
+            with open(self.repoUrl) as f:
+                pluginsJson = json.load(f)
         else:
-            print("WARNING: Can't get scipion's plugin list, the plugin repository is not available")
-            return pluginDict
+            r = requests.get(self.repoUrl)
+            if r.ok:
+                pluginsJson = r.json()
+            else:
+                print("WARNING: Can't get scipion's plugin list, the plugin repository is not available")
+                return pluginDict
+
+        availablePlugins = pluginsJson.keys()
+
+        if pluginList is None:
+            targetPlugins = availablePlugins
+        else:
+            targetPlugins = set(availablePlugins).intersection(set(pluginList))
+            if len(targetPlugins) < len(pluginList):
+                wrongPluginNames = set(pluginList) - set(availablePlugins)
+                print("WARNING - The following plugins didn't match available plugin names:")
+                print(" ".join(wrongPluginNames))
+
+        for pluginName in targetPlugins:
+            pluginsJson[pluginName].update(remote=getPipData)
+            pluginDict[pluginName] = PluginInfo(**pluginsJson[pluginName])
+        return pluginDict
+
 
     def printPluginInfo(self):
         printStr = ""
