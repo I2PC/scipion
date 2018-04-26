@@ -714,10 +714,10 @@ env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-# COSS xmippPath = Dir(SCIPION_SW + '/em/xmipp').abspath
-# COSS env['PACKAGE'] = {'NAME': 'xmipp',
-# COSS                  'SCONSCRIPT': xmippPath
-# COSS                  }
+xmippPath = Dir('.').abspath
+env['PACKAGE'] = {'NAME': 'xmipp',
+                  'SCONSCRIPT': xmippPath
+                 }
 
 env.SConscript('SConscript', exports='env')
 
