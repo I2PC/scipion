@@ -681,7 +681,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			return false;
 		if (SwingUtilities.isRightMouseButton(e))
 			return false;
-		if (getParticlePicker().getMode() == Mode.ReadOnly)
+		if (getParticlePicker().getMode() == Mode.ReadOnly ||
+                getParticlePicker().getMode() == Mode.Automatic)
 			return false;
 		if (e.isControlDown())
 			return false;
@@ -703,7 +704,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			JDialog dialog = JColorChooser.createDialog(colorbt, "Pick a Color", true, // modal
 			colorChooser, new ActionListener()
 			{
-
 				@Override
 				public void actionPerformed(ActionEvent e)
 				{
@@ -1080,7 +1080,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizepn = new JPanel();
         sizepn.setOpaque(false);
 		int size = getParticlePicker().getSize();
-		sizelb = new JLabel("Size:");
+		sizelb = new JLabel("Size (px):");
 		sizepn.add(sizelb);
 		sizesl = new JSlider(10, ParticlePicker.sizemax, size);
         sizesl.setOpaque(false);
