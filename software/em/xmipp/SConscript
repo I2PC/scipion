@@ -266,9 +266,9 @@ addLib('XmippJNI',
 #  ***********************************************************************
 
 # Helper functions so we don't write so much.
-fpath = lambda path: File('#software/em/xmipp/%s' % path).abspath
-dpath = lambda path: Dir('#software/em/xmipp/%s' % path).abspath
-epath = lambda path: Entry('#software/em/xmipp/%s' % path).abspath
+fpath = lambda path: File('%s' % path).abspath
+dpath = lambda path: Dir('%s' % path).abspath
+epath = lambda path: Entry('%s' % path).abspath
 
 javaEnumDict = {
     'ImageWriteMode': [fpath('libraries/data/xmipp_image_base.h'), 'WRITE_'],
@@ -383,17 +383,6 @@ xmippViewer = env.AddJavaLibrary(
 xmippTest = env.AddJavaLibrary(
     'XmippTest', 'xmipp/test',
     deps=[xmippViewer])
-
-# xmippIJPlugin = env.AddJavaLibrary(
-#               'XmippIJPlugin_MasksToolbar',
-#               dirs=[Entry('#software/em/xmipp/java/src/xmipp/ij/plugins/maskstoolbar').abspath],
-#               deps=['XmippJNI']
-#               )
-
-#env.Depends(xmippIJPlugin, ijLink)
-#pluginLink = env.SymLink(Entry('#software/em/xmipp/external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar').abspath, xmippIJPlugin)
-#env.Depends(pluginLink, ijLink)
-#env.Default(pluginLink)
 
 
 # FIXME: the environment used for the rest of SCons is imposible to
