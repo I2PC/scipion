@@ -664,9 +664,7 @@ except ParsingError:
     sys.exit("%s\nPlease fix the configuration file install/xmipp.conf." % sys.exc_info()[1])
 if not 'BUILD' in cf.sections():
     print("Cannot find section BUILD in install/xmipp.conf")
-BUILD = dict(cf.items('BUILD'))
-print(BUILD)
-
+os.environ.update(dict(cf.items('BUILD')))
 
 env['SCIPION_HOME'] = os.environ['SCIPION_HOME']
 
