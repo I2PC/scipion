@@ -240,9 +240,11 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
             avgFrames = self.avgFrames.get()
 
             for frame in range(0, nFrames, avgFrames):
+                frameId = min(frame + avgFrames, nFrames)
+
                 for mPart in self.partList:
                     mPart.setObjId(None)  # clear objId to insert a new one
-                    mPart.setFrameId(frame + avgFrames)
+                    mPart.setFrameId(frameId)
                     count += 1
                     mPart.setIndex(count)
                     movieParticles.append(mPart)
@@ -262,22 +264,16 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
                 def _replaceSuffix(suffix):
                     return movieBase.replace('_movie.mrcs', suffix)
 
-                # Clean up intermediate files (either links or converted)
-                # plus generated files not needed anymore
-                toClean = [
-                    self._getExtraPath(movieBase),
-                    self._getExtraPath(_replaceSuffix('.mrcs')),
-                    self._getExtraPath('output', 'extra',
-                                       _replaceSuffix('_movie_extract.star'))
-                ]
-
-                if not pwutils.envVarOn("SCIPION_DEBUG_NOCLEAN"):
-                    pwutils.cleanPath(*toClean)
-
                 # Move the resulting stack of movie-particles to extra directly
                 movieStack = self._getExtraPath('output', 'extra', movieBase)
                 self.newMovieStack = self._getExtraPath(_replaceSuffix('_ptcls.mrcs'))
                 pwutils.moveFile(movieStack, self.newMovieStack)
+
+                # Clean up intermediate files (either links or converted)
+                # plus generated files not needed anymore
+                if not pwutils.envVarOn("SCIPION_DEBUG_NOCLEAN"):
+                    pwutils.cleanPath(self._getExtraPath(movieBase),
+                                      self._getExtraPath(_replaceSuffix('.mrcs')))
 
             # Create a movie particles based on that one and
             # store in the list of this movie
@@ -288,13 +284,15 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
             mPart.setFileName(self.newMovieStack)
             self.partList.append(mPart)
 
+        pwutils.cleanPath(self._getExtraPath('output', 'extra'))
+
         _addPartsFromMic()
 
         self._defineOutputs(outputParticles=movieParticles)
         self._defineSourceRelation(self.inputMovies, movieParticles)
         self._defineSourceRelation(self.inputParticles, movieParticles)
 
-    # -------------------------- INFO functions -------------------------------
+            # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         
