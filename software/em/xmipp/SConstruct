@@ -260,8 +260,8 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
               LIBS=_libs,
               SHLIBPREFIX=prefix,
               SHLIBSUFFIX=suffix,
-              CXXFLAGS=env['CXXFLAGS']+env['INCLUDEFLAGS'],
-              LINKFLAGS=env['LINKFLAGS']+env['LIBFLAGS'],
+              CXXFLAGS=env['CXXFLAGS']+env['INCDIRFLAGS'],
+              LINKFLAGS=env['LINKFLAGS']+env['LIBDIRFLAGS'],
               **mpiArgs
               )
     SideEffect('dummy', library)
