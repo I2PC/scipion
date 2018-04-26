@@ -45,7 +45,7 @@ SCIPION = os.path.realpath(SCIPION)
 SCIPION = os.path.dirname(SCIPION)
 SCIPION = os.path.abspath(SCIPION)
 
-
+SW_EM = env.getEmFolder()
 SW_BIN = env.getBinFolder()
 SW_LIB = env.getLibFolder()
 SW_INC = env.getIncludeFolder()
@@ -509,8 +509,8 @@ opencv = env.addLibrary(
 
 xmipp = env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
-               commands=[('cp %s/config/scipion.conf %s/xmipp-18.5/install/xmipp.conf; %s/scons'%(SCIPION,SW_TMP,SW_BIN),
-                          '%s/xmipp-18.5/bin/xmipp_reconstruct_significant'%SW_TMP)],
+               commands=[('cp %s/config/scipion.conf %s/xmipp-18.5/install/xmipp.conf; %s/scons'%(SCIPION,SW_EM,SW_BIN),
+                          '%s/xmipp-18.5/bin/xmipp_reconstruct_significant'%SW_EM)],
                deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment, hdf5])
 
 # EM Environment
