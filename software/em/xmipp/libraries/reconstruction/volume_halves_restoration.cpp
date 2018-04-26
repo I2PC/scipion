@@ -352,7 +352,7 @@ void ProgVolumeHalvesRestoration::filterBand(const MultidimArray< std::complex<d
 //#define DEBUG
 void ProgVolumeHalvesRestoration::filterBank()
 {
-	MultidimArray<double> sumWeight, weight, Vfiltered1, Vfiltered2;
+	MultidimArray<double> Vfiltered1, Vfiltered2;
 	Vfiltered1.initZeros(V1r());
 	Vfiltered2.initZeros(V2r());
 
@@ -362,7 +362,6 @@ void ProgVolumeHalvesRestoration::filterBank()
 	FourierTransformer bank1, bank2;
 	bank1.setReal(Vfiltered1);
 	bank2.setReal(Vfiltered2);
-	sumWeight.initZeros(Vfiltered2);
 	double filterStep = bankStep*(1-bankOverlap);
 	MultidimArray<double> &mV1r=V1r();
 	MultidimArray<double> &mV2r=V2r();
@@ -392,7 +391,6 @@ void ProgVolumeHalvesRestoration::filterBank()
 		cdfN.calculateCDF(mN);
 
 		// Compute weights
-		weight.initZeros(mN);
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mN)
 		{
 			double e1=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)*DIRECT_MULTIDIM_ELEM(Vfiltered1,n);
@@ -401,21 +399,23 @@ void ProgVolumeHalvesRestoration::filterBank()
 			double e2=DIRECT_MULTIDIM_ELEM(Vfiltered2,n)*DIRECT_MULTIDIM_ELEM(Vfiltered2,n);
 			double w2=cdfN.getProbability(e2);
 
+			double weight;
 			switch (weightFun)
 			{
-			case 0: DIRECT_MULTIDIM_ELEM(weight,n)=0.5*(w1+w2); break;
-			case 1: DIRECT_MULTIDIM_ELEM(weight,n)=std::min(w1,w2); break;
-			case 2: DIRECT_MULTIDIM_ELEM(weight,n)=0.5*(w1+w2)*(1-fabs(w1-w2)/(w1+w2)); break;
+			case 0: weight=0.5*(w1+w2); break;
+			case 1: weight=std::min(w1,w2); break;
+			case 2: weight=0.5*(w1+w2)*(1-fabs(w1-w2)/(w1+w2)); break;
 			}
-			DIRECT_MULTIDIM_ELEM(weight,n)=pow(DIRECT_MULTIDIM_ELEM(weight,n),weightPower);
-			DIRECT_MULTIDIM_ELEM(sumWeight,n)+=DIRECT_MULTIDIM_ELEM(weight,n);
+			weight=pow(weight,weightPower);
 
-			DIRECT_MULTIDIM_ELEM(mV1r,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)*DIRECT_MULTIDIM_ELEM(weight,n);
-			DIRECT_MULTIDIM_ELEM(mV2r,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered2,n)*DIRECT_MULTIDIM_ELEM(weight,n);
+			double Vf1w=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)*weight;
+			double Vf2w=DIRECT_MULTIDIM_ELEM(Vfiltered2,n)*weight;
+			DIRECT_MULTIDIM_ELEM(mV1r,n)+=Vf1w;
+			DIRECT_MULTIDIM_ELEM(mV2r,n)+=Vf2w;
 			if (e1>e2)
-				DIRECT_MULTIDIM_ELEM(mS,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)*DIRECT_MULTIDIM_ELEM(weight,n);
+				DIRECT_MULTIDIM_ELEM(mS,n)+=Vf1w;
 			else
-				DIRECT_MULTIDIM_ELEM(mS,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered2,n)*DIRECT_MULTIDIM_ELEM(weight,n);
+				DIRECT_MULTIDIM_ELEM(mS,n)+=Vf2w;
 		}
 		progress_bar(++i);
 
@@ -440,7 +440,10 @@ void ProgVolumeHalvesRestoration::filterBank()
 #endif
 	}
 	progress_bar(imax);
-	S()/=sumWeight;
+
+	S()  *= 1-bankOverlap;
+	mV1r *= 1-bankOverlap;
+	mV2r *= 1-bankOverlap;
 	S.write(fnRoot+"_filterBank.vol");
 }
 
