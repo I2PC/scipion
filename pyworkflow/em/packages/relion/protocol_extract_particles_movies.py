@@ -247,6 +247,7 @@ class ProtRelionExtractMovieParticles(ProtExtractMovieParticles,
                     mPart.setFrameId(frameId)
                     count += 1
                     mPart.setIndex(count)
+                    mPart._rlnAverageNrOfFrames = em.Integer(avgFrames)
                     movieParticles.append(mPart)
 
             del self.partList  # free unnecessary particle list memory

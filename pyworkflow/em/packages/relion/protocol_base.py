@@ -36,6 +36,7 @@ from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
                                         LabelParam, PathParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils import removeBaseExt
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -867,10 +868,8 @@ class ProtRelionBase(EMProtocol):
                         md.RLN_IMAGE_ID, md.INNER_JOIN)
             mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES,
                                self._getNumberOfFrames())
-            if isVersion2():
-                if not mdMovies.containsLabel(md.RLN_PARTICLE_NR_FRAMES_AVG):
-                    # set to 1 till frame averaging is implemented in xmipp
-                    mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
+            if not isVersion2():
+                mdAux.removeLabel(md.RLN_PARTICLE_NR_FRAMES_AVG)
 
             mdAux.write(movieFn, md.MD_OVERWRITE)
             cleanPath(auxMovieParticles.getFileName())
@@ -1193,10 +1192,15 @@ class ProtRelionBase(EMProtocol):
     
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
+        micBase = removeBaseExt(img.getCoordinate().getMicName())
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
-                        "%06d@fake_movie_%06d.mrcs"
-                        % (img.getFrameId(), img.getMicId()))
+                        "%06d@%s.mrcs" % (img.getFrameId(), micBase))
+        if img.hasAttribute('_rlnAverageNrOfFrames'):
+            avgFrames = int(img._rlnAverageNrOfFrames.get())
+            imgRow.setValue(md.RLN_PARTICLE_NR_FRAMES_AVG, avgFrames)
+        else:
+            imgRow.setValue(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
 
     def _postprocessParticleRow(self, part, partRow):
         if part.hasAttribute('_rlnGroupName'):
