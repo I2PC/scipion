@@ -509,9 +509,10 @@ opencv = env.addLibrary(
 
 xmipp = env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
-               commands=[('SCIPION_HOME=%s; cp %s/config/scipion.conf %s/xmipp-18.5/install/xmipp.conf; %s/scons'%(SCIPION,SCIPION,SW_EM,SW_BIN),
+               commands=[('cp %s/config/scipion.conf %s/xmipp-18.5/install/xmipp.conf; %s/scons'%(SCIPION,SW_EM,SW_BIN),
                           '%s/xmipp-18.5/bin/xmipp_reconstruct_significant'%SW_EM)],
-               deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment, hdf5])
+               deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment, hdf5],
+               vars=[('SCIPION_HOME', SCIPION)])
 
 # EM Environment
 emDomain = env.addTarget('emDomain')
