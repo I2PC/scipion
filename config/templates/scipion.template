@@ -84,8 +84,9 @@ SCIPION_NOTIFY = False
 CC = gcc
 CXX = g++
 LINKERFORPROGRAMS = g++
-INCDIRFLAGS = -I$SCIPION_HOME/%(SCIPION_SOFTWARE)/include
-LIBDIRFLAGS = -L$SCIPION_HOME/%(SCIPION_SOFTWARE)/lib
+INCDIRFLAGS = -I$SCIPION_HOME/software/include
+LIBDIRFLAGS = -L$SCIPION_HOME/software/lib
+PYTHONINCFLAGS = -I$SCIPION_HOME/software/include/python2.7 -I$SCIPION_HOME/software/lib/python2.7/site-packages -I$SCIPION_HOME/software/lib/python2.7/site-packages/numpy/core/include
 CCFLAGS = -std=c99
 CXXFLAGS = 
 LINKFLAGS = 
