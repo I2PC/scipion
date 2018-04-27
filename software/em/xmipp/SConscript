@@ -821,9 +821,8 @@ def compileMatlabBinding(target, source, env):
     matlabDir = join(XMIPP_PATH, 'libraries', 'bindings', 'matlab')
 
     incStr = ' '.join('-I%s' % p for p in [os.path.join(XMIPP_PATH, 'libraries'),
-                                            os.path.join(XMIPP_PATH, 'external'),
-                                            Dir('#software/include').abspath] )
-    libStr = ' '.join('-L%s' % p for p in [Dir('#software/lib').abspath])
+                                            os.path.join(XMIPP_PATH, 'external')]+env['EXTERNAL_INCDIRS'] )
+    libStr = ' '.join('-L%s' % p for p in env['EXTERNAL_LIBDIRS'])
 
     libs = ' '.join('-l%s' % lib for lib in ['XmippData',
                                              'XmippRecons',
@@ -831,7 +830,7 @@ def compileMatlabBinding(target, source, env):
                                              'XmippAlglib'])
 
     mex = join(env['MATLAB_DIR'], 'bin', 'mex')
-    command = '%s -O -outdir %s %s %s %s %s ' % (mex, matlabDir, incStr, libStr, libs, source[0])
+    command = '%s -O CFLAGS="\$CFLAGS -std=c99 -fpermissive" -outdir %s %s %s %s %s ' % (mex, matlabDir, incStr, libStr, libs, source[0])
     print command
     os.system(command)
 
@@ -848,7 +847,7 @@ def addMatlabBinding(name):
     return cmdTarget
 
 if matlab:
-    bindings = ['tom_xmipp_adjust_ctf',
+    bindings = [#'tom_xmipp_adjust_ctf',
                 'tom_xmipp_align2d',
                 'tom_xmipp_ctf_correct_phase',
                 'tom_xmipp_mask',

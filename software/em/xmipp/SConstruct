@@ -275,6 +275,9 @@ if len(env["LIBDIRFLAGS"])>0:
 else:
     external_libdirs = []    
 
+env['EXTERNAL_INCDIRS'] = external_incdirs
+env['EXTERNAL_LIBDIRS'] = external_libdirs
+
 def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[], 
                       libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
                       mpi=False, cuda=False, default=True, target=None):
