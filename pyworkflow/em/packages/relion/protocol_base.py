@@ -1192,7 +1192,12 @@ class ProtRelionBase(EMProtocol):
     
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
-        micBase = removeBaseExt(img.getCoordinate().getMicName())
+        hasMicName = img.getCoordinate().getMicName() is not None
+        if hasMicName:
+            micBase = removeBaseExt(img.getCoordinate().getMicName())
+        else:
+            micBase = "fake_movie_%06d" % img.getCoordinate().getMicId()
+
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
                         "%06d@%s.mrcs" % (img.getFrameId(), micBase))
