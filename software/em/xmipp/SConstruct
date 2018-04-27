@@ -266,12 +266,12 @@ env['INCDIRFLAGS'] = os.environ.get('INCDIRFLAGS', '').split()
 env['LIBDIRFLAGS'] = os.environ.get('LIBDIRFLAGS', '').split()
 
 if len(env["INCDIRFLAGS"])>0:
-    external_incdirs = [remove_prefix(os.path.expandvars(x),"-I") for x in env["INCDIRFLAGS"][0].split()]
+    external_incdirs = [remove_prefix(os.path.expandvars(x),"-I") for x in env["INCDIRFLAGS"]]
 else:
     external_incdirs = []
 
 if len(env["LIBDIRFLAGS"])>0:
-    external_libdirs = [remove_prefix(os.path.expandvars(x),"-L") for x in env["LIBDIRFLAGS"][0].split()]
+    external_libdirs = [remove_prefix(os.path.expandvars(x),"-L") for x in env["LIBDIRFLAGS"]]
 else:
     external_libdirs = []    
 
