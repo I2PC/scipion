@@ -229,7 +229,7 @@ def remove_prefix(text, prefix):
     return text[text.startswith(prefix) and len(prefix):]
 env['PYTHONINCFLAGS'] = os.environ.get('PYTHONINCFLAGS', '').split()
 if len(env["PYTHONINCFLAGS"])>0:
-    python_incdirs = [remove_prefix(os.path.expandvars(x),"-I") for x in env["PYTHONINCFLAGS"][0].split()]
+    python_incdirs = [remove_prefix(os.path.expandvars(x),"-I") for x in env["PYTHONINCFLAGS"]]
 else:
     python_incdirs = []
 
