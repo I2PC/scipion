@@ -1,8 +1,9 @@
 # **************************************************************************
 # *
 # * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
+# *              Javier Vargas Balbuena (javier.vargasbalbuena@mcgill.ca)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Department of Anatomy and Cell Biology, McGill University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -24,48 +25,30 @@
 # *
 # **************************************************************************
 """
-This modules contains constants related to Brandeis packages protocols
+This sub-package contains cryoMethods protocols and tools.
 """
 
-#------------------ Constants values --------------------------------------
+# from bibtex import _bibtex # Load bibtex dict with references
+_logo = "cryomethods_logo.png"
+_references = []
+import os
+from convert import getSupportedVersions, getVersion, getEnviron
+from initial_volume_selector import ProtInitialVolumeSelector
+#
+# # Wizards
+# from wizard import *
+from viewer import *
+#
+_environ = getEnviron()
 
-#Modes of search/refinement/reconstruction
-MOD_RECONSTRUCTION = 0
-MOD_REFINEMENT = 1
-MOD_RANDOM_SEARCH_REFINEMENT = 2
-MOD_SIMPLE_SEARCH_REFINEMENT = 3
-MOD_SEARCH_REFINE_RANDOMISE = 4
 
-#Modes for the first iteration
-MOD2_SIMPLE_SEARCH_REFINEMENT = 0
-MOD2_SEARCH_REFINE_RANDOMISE = 1
+def validateInstallation():
+    """ This function will be used to check if RELION is properly installed. """
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in ['RELION_HOME']
+                    if not os.path.exists(_environ[var])]
 
-
-# Methods to correct the Ewald sphere
-EWA_DISABLE = 0
-EWA_SIMPLE = 1
-EWA_REFERENCE = 2
-EWA_SIMPLE_HAND = 3
-EWA_REFERENCE_HAND = 4
-
-# FSC calculation
-FSC_CALC = 0
-FSC_3DR_ODD = 1
-FSC_3DR_EVEN = 2
-FSC_3DR_ALL = 3
-
-# Memory Usage
-MEM_0 = 0
-MEM_1 = 1
-MEM_2 = 2
-MEM_3 = 3
-
-# Interpolation
-INTERPOLATION_0 = 0
-INTERPOLATION_1 = 1
-
-# Parameters to Refine
-REF_ALL = 0
-REF_ANGLES = 1
-REF_SHIFTS = 2
-REF_NONE = 3
+    if missingPaths:
+        return ["Missing variables:"] + missingPaths
+    else:
+        return [] # No errors
