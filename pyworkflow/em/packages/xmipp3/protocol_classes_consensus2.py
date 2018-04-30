@@ -29,19 +29,17 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import MultiPointerParam
 
 from pyworkflow.em import EMSet, Class3D
-from protocol import EMProtocol
+from pyworkflow.em.protocol.protocol import EMProtocol
 
 # For the viewer part
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import DataView
 
 
-class ProtClassesConsensus3(EMProtocol):
+class ProtClassesConsensus2(EMProtocol):
     """ Compare several SetOfClasses
     """
-    _label = 'consensus 3Dclasses (new)'
-
-    interDB = []
+    _label = 'consensus 3Dclasses'
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -51,95 +49,59 @@ class ProtClassesConsensus3(EMProtocol):
                       help='Select several sets of classes where '
                            'to evaluate the consensus.')
 
-        form.addParallelSection(threads=4, mpi=0)
+        # form.addParallelSection(threads=0, mpi=0)
 
 #--------------------------- INSERT steps functions --------------------------------------------
+
     def _insertAllSteps(self):
-        """ Inserting one step for each couple of setOfClasses comparision
+        """for each ctf insert the steps to compare it
         """
 
-        self.setsLengths = []
-        combiList = []
+        self._insertFunctionStep('compareClassesStep')
 
-        indx1 = 0
-        for pointer1 in self.inputMultiClasses:
-            indx1 += 1
-            set1 = pointer1.get()
+    def compareClassesStep(self):
 
-            idSet1 = set1.getObjId()
-            
-            self.setsLengths.append(set1.getSize())
-            indx2 = 0
-            for pointer2 in self.inputMultiClasses:
-                indx2 += 1
-                set2 = pointer2.get()
-
-                idSet2 = set2.getObjId()
-                
-                idsTup = (indx1,indx2)
-
-                if not (idsTup in combiList or idsTup[::-1] in combiList or 
-                        idsTup[0]==idsTup[1]):
-                    
-                    combiList.append(idsTup)
-
-                    self._insertFunctionStep('compareClassesStep', indx1, indx2)
-
-                
-            
-            
-
-        self._insertFunctionStep('createOutputStep')
-
-    def compareClassesStep(self, idxSetCls1, idxSetCls2):
-
-        print('idxSetCls1 = %d'%(idxSetCls1))
-        print('idxSetCls2 = %d'%(idxSetCls2))
-        
-        set1 = self.inputMultiClasses[idxSetCls1-1].get()
-        set2 = self.inputMultiClasses[idxSetCls2-1].get()
-
+        coinDict = []
+        setLengths = []
         inx = 0
-        for cls1 in set1:
-            ids1 = cls1.getIdSet()
-            cl1Id = cls1.getObjId()
-            ind1Tuple = (idxSetCls1, cl1Id)
-            for cls2 in set2:
-                ids2 = cls2.getIdSet()
 
-                inter = ids1.intersection(ids2)
-                interPop = len(inter)
+        # crate a multidim matrix with the numbers of coincidences
+        for pointer1 in self.inputMultiClasses:
+            set1 = pointer1.get()
+            if set1 is None:
+                break
+            idSet1 = set1.getObjId()
 
-                if interPop/len(ids1)>interPop/len(ids2):
-                    repCls = cls1
-                else:
-                    repCls = cls2
+            setLengths.append(set1.getSize())
 
-                cl2Id = cls2.getObjId()
-                ind2Tuple = (idxSetCls2, cl2Id)
-                interTuple = (len(inter), inter, ind1Tuple, ind2Tuple, repCls)
-                self.interDB.append(interTuple)
-                inx += 1
+            for pointer2 in self.inputMultiClasses:
+                set2 = pointer2.get()
+                if set2 is None:
+                    break
+                idSet2 = set2.getObjId()
+                if idSet2 <= idSet1:
+                    break
+
+                for cls1 in set1:
+                    ids1 = cls1.getIdSet()
+                    for cls2 in set2:
+                        ids2 = cls2.getIdSet()
+
+                        inter = ids1.intersection(ids2)
+                        interPop = len(inter)
+
+                        if interPop/len(ids1)>interPop/len(ids2):
+                            repCls = cls1
+                        else:
+                            repCls = cls2
+
+                        interTuple = (inx, len(inter), inter, repCls)
+                        coinDict.append(interTuple)
+                        inx += 1
 
 
-    def createOutputStep(self):
+        coinDict.sort(key=lambda e: e[1], reverse=True)
 
-        for iii in range(0,len(self.interDB)):
-
-            printTuple = (self.interDB[iii][0], self.interDB[iii][2], 
-                          self.interDB[iii][3], self.interDB[iii][4])
-            print(printTuple)
-
-        print(len(self.interDB))
-
-
-        self.interDB.sort(key=lambda e: e[0], reverse=True)
-
-        for iii in range(0,len(self.interDB)):
-
-            printTuple = (self.interDB[iii][0], self.interDB[iii][2], 
-                          self.interDB[iii][3], self.interDB[iii][4])
-            print(printTuple)
 
 
 
@@ -147,7 +109,7 @@ class ProtClassesConsensus3(EMProtocol):
         cleanPath(outputFn)
         outputSet = EMSet(filename=outputFn)
 
-        for clInx in range(0, min(self.setsLengths)):
+        for clInx in range(0, min(setLengths)):
 
             partIds = coinDict[clInx][2]
 
@@ -180,7 +142,7 @@ class ProtClassesConsensus3(EMProtocol):
     
 class ViewerClassesConsensus(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtClassesConsensus3]
+    _targets = [ProtClassesConsensus2]
     
     def _visualize(self, obj, **kwargs):
         labels = 'class1.id class1._representative._filename class2.id class2._representative._filename jaccard intersection union'

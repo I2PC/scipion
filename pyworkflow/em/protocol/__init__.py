@@ -44,9 +44,6 @@ from protocol_alignment_assign import ProtAlignmentAssign
 from protocol_batch import *
 from protocol_classes_consensus import ProtClassesConsensus, \
     ViewerClassesConsensus
-from protocol_classes_consensus2 import ProtClassesConsensus2
-from protocol_classes_consensus3 import ProtClassesConsensus3
-from protocol_classes_consensus4 import ProtClassesConsensus4
 from protocol_extract_coordinates import ProtExtractCoords
 from protocol_stress import ProtStress
 from protocol_create_stream_data import ProtCreateStreamData

@@ -29,7 +29,7 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import MultiPointerParam
 
 from pyworkflow.em import EMSet, Class3D
-from protocol import EMProtocol
+from pyworkflow.em.protocol.protocol import EMProtocol
 
 # For the viewer part
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -58,15 +58,12 @@ class ProtClassesConsensus4(EMProtocol):
         """ Inserting one step for each couple of setOfClasses comparision
         """
 
-        combiList = []
+        self._insertFunctionStep('compareFirstStep', 0, 1)
 
-        self._insertFunctionStep('compareFirstStep', 1, 2)
+        if len(self.inputMultiClasses)>2:
+            for i in range(2,len(self.inputMultiClasses)):
+                self._insertFunctionStep('compareOthersStep', i, self.interDB)
 
-        for i in range(0,len(self.inputMultiClasses)-2):
-            self._insertFunctionStep('compareOthersStep', i+3, self.interDB)
-
-       
-            
 
         self._insertFunctionStep('createOutputStep')
 
@@ -76,8 +73,8 @@ class ProtClassesConsensus4(EMProtocol):
         print('idxSetCls1 = %d'%(idxSetCls1))
         print('idxSetCls2 = %d'%(idxSetCls2))
         
-        set1 = self.inputMultiClasses[idxSetCls1-1].get()
-        set2 = self.inputMultiClasses[idxSetCls2-1].get()
+        set1 = self.inputMultiClasses[idxSetCls1].get()
+        set2 = self.inputMultiClasses[idxSetCls2].get()
 
         for cls1 in set1:
             ids1 = cls1.getIdSet()
@@ -86,9 +83,8 @@ class ProtClassesConsensus4(EMProtocol):
                 ids2 = cls2.getIdSet()
 
                 inter = ids1.intersection(ids2)
-                interPop = len(inter)
 
-                if interPop/len(ids1)>interPop/len(ids2):
+                if len(ids1) < len(ids2):
                     repCls = cls1
                 else:
                     repCls = cls2
@@ -98,8 +94,8 @@ class ProtClassesConsensus4(EMProtocol):
 
 
     def compareOthersStep(self, idxSetCls1, currDB):
-         
-        set1 = self.inputMultiClasses[idxSetCls1-1].get()
+
+        set1 = self.inputMultiClasses[idxSetCls1].get()
 
         print('idxSetCls1 = %d'%(idxSetCls1))
 
@@ -112,9 +108,8 @@ class ProtClassesConsensus4(EMProtocol):
                 ids2 = cls2[1]
 
                 inter = ids1.intersection(cls2[1])
-                interPop = len(inter)
 
-                if interPop/len(ids1)>interPop/len(ids2):
+                if len(ids1) < len(ids2):
                     repCls = cls1
                 else:
                     repCls = cls2[2]
@@ -129,50 +124,105 @@ class ProtClassesConsensus4(EMProtocol):
 
     def createOutputStep(self):
 
+        # numberOfPart = 0
+        # for iii in range(0,len(self.interDB)):
+        #
+        #     printTuple = (self.interDB[iii][0], self.interDB[iii][2])
+        #     print(printTuple)
+        #     numberOfPart += self.interDB[iii][0]
+
+        self.interDB.sort(key=lambda e: e[0], reverse=True)
+
+        print("   ---   S O R T E D:   ---")
         numberOfPart = 0
-        for iii in range(0,len(self.interDB)):
+        for iii in range(0, len(self.interDB)):
 
             printTuple = (self.interDB[iii][0], self.interDB[iii][2])
             print(printTuple)
             numberOfPart += self.interDB[iii][0]
 
-        print('Number of classes: %d' % len(self.interDB))
+        print('Number of intersections: %d' % len(self.interDB))
         print('Total of particles: %d' % numberOfPart)
-        # print(self.interDB[:][0])
-        # print('Total of particles: %d' % self.interDB[:][0].sum())
 
-        self.interDB.sort(key=lambda e: e[0], reverse=True)
+        # outputFn = self._getPath('consensus.sqlite')
+        # cleanPath(outputFn)
+        inputParticles = self.inputMultiClasses[0].get().getImages()
+        outputClasses = self._createSetOfClasses3D(inputParticles)
+        classesIds = []
 
-        print("   ---   S O R T E D:   ---")
+        for clInx in range(0, len(self.interDB)):
+            partIds = self.interDB[clInx][1]
+            clasRep = self.interDB[clInx][2]
 
-        for iii in range(0,len(self.interDB)):
+            newClass = Class3D()
+            newClass.copyInfo(clasRep)
+            newClass.setAcquisition(clasRep.getAcquisition())
+            newClass.setRepresentative(clasRep.getRepresentative())
 
-            printTuple = (self.interDB[iii][0], self.interDB[iii][2])
-            print(printTuple)
+            outputClasses.append(newClass)
 
-
-
-        outputFn = self._getPath('consensus.sqlite')
-        cleanPath(outputFn)
-        outputSet = EMSet(filename=outputFn)
-
-        for clInx in range(0, min(setLengths)):
-
-            partIds = coinDict[clInx][2]
-
-            cl = Class3D()
-            cl.copyInfo(coinDict[clInx][3])
-            cl.setRepresentative(coinDict[clInx][3].getRepresentative())
-
-            for i, elem in enumerate(coinDict[clInx][3]):
+            enabledClass = outputClasses[newClass.getObjId()]
+            enabledClass.enableAppend()
+            for i, elem in enumerate(clasRep):
                 if i in partIds:
-                    cl.append(elem)
+                    enabledClass.append(elem)
+
+            outputClasses.update(enabledClass)
 
 
-            outputSet.append(cl)
+        print("   ---   O U T P U T:   ---")
+        numberOfPart = 0
+        for iii in range(0, len(outputClasses)):
 
-                
-        self._defineOutputs(outputConsensus=outputSet)
+            printTuple = (outputClasses[iii].get(), self.interDB[iii][2])
+            print(printTuple)
+            numberOfPart += self.interDB[iii][0]
+
+        print('Number of intersections: %d' % len(self.interDB))
+        print('Total of particles: %d' % numberOfPart)
+
+
+        self._defineOutputs(outputConsensus=outputClasses)
+        for i in range(0,len(self.inputMultiClasses)):
+            self._defineSourceRelation(self.inputMultiClasses[i], outputClasses)
+
+        #
+        # for clInx in range(0, len(self.interDB)):
+        #     partIds = self.interDB[clInx][1]
+        #     clasRep = self.interDB[clInx][2]
+
+
+
+
+        #     newClass = Class2D(objId=repId)
+        #     newClass.setAlignment2D()
+        #     newClass.copyInfo(inputSet)
+        #     newClass.setAcquisition(inputSet.getAcquisition())
+        #     newClass.setRepresentative(rep)
+        #     outputClasses.append(newClass)
+        #
+        # i = 1
+        # mdBlocks = md.getBlocksInMetaDataFile(self._getExtraPath(
+        #     'final_classes.xmd'))
+        # for block in mdBlocks:
+        #     if block.startswith('class00'):
+        #         mdClass = md.MetaData(block + "@" + self._getExtraPath(
+        #             'final_classes.xmd'))
+        #         imgClassId = i
+        #         newClass = outputClasses[imgClassId]
+        #         newClass.enableAppend()
+        #         for row in md.iterRows(mdClass):
+        #             part = rowToParticle(row)
+        #             newClass.append(part)
+        #         i += 1
+        #         newClass.setAlignment2D()
+        #         outputClasses.update(newClass)
+        #
+
+
+
+
+
 
     def _summary(self):
         summary = []
