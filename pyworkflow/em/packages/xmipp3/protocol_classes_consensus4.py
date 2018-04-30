@@ -131,26 +131,27 @@ class ProtClassesConsensus4(EMProtocol):
         #     print(printTuple)
         #     numberOfPart += self.interDB[iii][0]
 
-        self.interDB.sort(key=lambda e: e[0], reverse=True)
+        # self.interDB.sort(key=lambda e: e[0], reverse=True)
 
-        print("   ---   S O R T E D:   ---")
-        numberOfPart = 0
-        for iii in range(0, len(self.interDB)):
+        # print("   ---   S O R T E D:   ---")
+        # numberOfPart = 0
+        # for iii in range(0, len(self.interDB)):
 
-            printTuple = (self.interDB[iii][0], self.interDB[iii][2])
-            print(printTuple)
-            numberOfPart += self.interDB[iii][0]
+        #     printTuple = (self.interDB[iii][0], self.interDB[iii][2])
+        #     print(printTuple)
+        #     numberOfPart += self.interDB[iii][0]
 
-        print('Number of intersections: %d' % len(self.interDB))
-        print('Total of particles: %d' % numberOfPart)
+        # print('Number of intersections: %d' % len(self.interDB))
+        # print('Total of particles: %d' % numberOfPart)
 
         # outputFn = self._getPath('consensus.sqlite')
         # cleanPath(outputFn)
         inputParticles = self.inputMultiClasses[0].get().getImages()
         outputClasses = self._createSetOfClasses3D(inputParticles)
-        classesIds = []
+        # classesIds = []
 
         for clInx in range(0, len(self.interDB)):
+            numOfPart = self.interDB[clInx][0]
             partIds = self.interDB[clInx][1]
             clasRep = self.interDB[clInx][2]
 
@@ -162,30 +163,32 @@ class ProtClassesConsensus4(EMProtocol):
             outputClasses.append(newClass)
 
             enabledClass = outputClasses[newClass.getObjId()]
+            # classesIds.append(newClass.getObjId())
             enabledClass.enableAppend()
-            for i, elem in enumerate(clasRep):
-                if i in partIds:
-                    enabledClass.append(elem)
+            for itemId in partIds:
+                enabledClass.append(inputParticles[itemId])
 
             outputClasses.update(enabledClass)
-
-
-        print("   ---   O U T P U T:   ---")
-        numberOfPart = 0
-        for iii in range(0, len(outputClasses)):
-
-            printTuple = (outputClasses[iii].get(), self.interDB[iii][2])
-            print(printTuple)
-            numberOfPart += self.interDB[iii][0]
-
-        print('Number of intersections: %d' % len(self.interDB))
-        print('Total of particles: %d' % numberOfPart)
-
 
         self._defineOutputs(outputConsensus=outputClasses)
         for i in range(0,len(self.inputMultiClasses)):
             self._defineSourceRelation(self.inputMultiClasses[i], outputClasses)
 
+
+        # print("   ---   O U T P U T:   ---")
+        # numberOfPart = 0
+        # print(outputClasses)
+        # for iii in classesIds:
+        #     classe = outputClasses[iii]
+        #     printTuple = (classe.getSize(), classe)
+        #     print(printTuple)
+        #     numberOfPart += classe.getSize()
+
+        # print('Number of intersections: %d' % len(outputClasses))
+        # print('Total of particles: %d' % numberOfPart)
+
+
+        
         #
         # for clInx in range(0, len(self.interDB)):
         #     partIds = self.interDB[clInx][1]
@@ -234,21 +237,27 @@ class ProtClassesConsensus4(EMProtocol):
 
     def _validate(self):
         errors = []
+        # numPart = self.inputMultiClasses[0].get().getSize()
+        # for inClassId in range(0,len(self.inputMultiClasses)):
+        #     if self.inputMultiClasses[inClassId].get().getSize() == numPart:
+        #         errors.append('All classes should come from the same original '
+        #                       'set of particles. Class %d has different size' 
+        #                       %inClassId)
         return errors
     
     
-class ViewerClassesConsensus(Viewer):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtClassesConsensus4]
+# class ViewerClassesConsensus(Viewer):
+#     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+#     _targets = [ProtClassesConsensus4]
     
-    def _visualize(self, obj, **kwargs):
-        labels = 'class1.id class1._representative._filename class2.id class2._representative._filename jaccard intersection union'
-        return [DataView(obj.outputConsensus.getFileName(), 
-                         viewParams={'order': labels, 'mode': 'metadata',
-                                     'visible': labels,
-                                     'render': 'class1._representative._filename class2._representative._filename'
-                                     })
-                ]
+#     def _visualize(self, obj, **kwargs):
+#         labels = 'class1.id class1._representative._filename class2.id class2._representative._filename jaccard intersection union'
+#         return [DataView(obj.outputConsensus.getFileName(), 
+#                          viewParams={'order': labels, 'mode': 'metadata',
+#                                      'visible': labels,
+#                                      'render': 'class1._representative._filename class2._representative._filename'
+#                                      })
+#                 ]
     
-    def visualize(self, obj, **kwargs):
-        self._visualize(obj, **kwargs)[0].show()
+#     def visualize(self, obj, **kwargs):
+#         self._visualize(obj, **kwargs)[0].show()
