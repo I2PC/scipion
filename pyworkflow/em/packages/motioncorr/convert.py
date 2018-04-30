@@ -40,16 +40,18 @@ def _getHome(key, default):
     """
     return os.environ.get(key, join(os.environ['EM_ROOT'], default))
 
-
+# For some reason all variables end up with SCIPION HOME prepended %&%#!
 MOTIONCORR = getEnvVariable('MOTIONCORR')
 MOTIONCORR = os.path.basename(MOTIONCORR)
-MOTIONCOR2 = 'motioncor2'
+
+MOTIONCOR2_BIN = getEnvVariable('MOTIONCOR2_BIN', 'motioncor2')
+MOTIONCOR2_BIN = os.path.basename(MOTIONCOR2_BIN)
 
 MOTIONCORR_PATH = join(_getHome('MOTIONCORR_HOME', 'motioncorr'),
                        'bin', MOTIONCORR)
 
 MOTIONCOR2_PATH = join(_getHome('MOTIONCOR2_HOME', 'motioncor2'),
-                       'bin', MOTIONCOR2)
+                       'bin', MOTIONCOR2_BIN)
 
 
 def getEnviron(useMC2=False):
@@ -93,7 +95,7 @@ def getSupportedVersions(var):
     if var == 'MOTIONCORR':
         return ['2.1']
     elif var == 'MOTIONCOR2':
-        return ['01302017', '1.0.0', '1.0.2']
+        return ['01302017', '1.0.0', '1.0.2', '1.0.4', '1.0.5']
 
 
 def parseMovieAlignment(logFile):

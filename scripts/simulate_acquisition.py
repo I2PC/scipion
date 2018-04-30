@@ -18,7 +18,7 @@ def usage(error):
     print """
     ERROR: %s
     
-    Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER
+    Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER TIME
         INPUT_PATTERN: input pattern matching input files.
         OUTPUT_FOLDER: where to create the output links.
         [DELAY, default 30]: delay in seconds between file appearance
@@ -50,7 +50,7 @@ pwutils.makePath(outputDir)
 aTime = int(delay)
 n = 5
 t = aTime / n
-print "t=%s" % t
+print "t=%s" % aTime
 
 for f in inputFiles:
     outputPath = os.path.join(outputDir, os.path.basename(f))

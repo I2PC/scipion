@@ -89,9 +89,9 @@ class PowerfitProtRigidFit(ProtFitting3D):
             volume = self.inputVol.get()
             print "Volume: Input volume %s\n" % volume
         sampling = volume.getSamplingRate()
-        origin = volume.getOrigin(returnInitIfNone=True).getShifts()
+        origin = volume.getOrigin(force=True).getShifts()
 
-        # powerfit needs offset in start
+        # powerfit needs offset in origin
         adaptFileToCCP4(volume.getFileName(), localInputVol,
                         origin, sampling, ORIGIN)
         args = "%s %f %s -d %s -p %d -a %f -n %d" % (localInputVol,
@@ -116,8 +116,8 @@ class PowerfitProtRigidFit(ProtFitting3D):
                                  bildFileName=bildFileName,
                                  sampling=sampling)
 
-        for n in range(1, self.nModels.get()+1):
-            fnPdb = self._getExtraPath("powerfit_%d.pdb" % n)
+        for n in range(1, self.nModels.get() + 1):
+            fnPdb = self._getExtraPath("fit_%d.pdb" % n)
             if exists(fnPdb):
                 fnCmd = self._getExtraPath("chimera_%d.cmd" % n)
                 fhCmd = open(fnCmd, 'w')
@@ -151,7 +151,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
         setOfPDBs = self._createSetOfPDBs()
 
         for n in range(self.nModels.get()):
-            fnPdb = self._getExtraPath("fit_%d.pdb" % (n+1))
+            fnPdb = self._getExtraPath("fit_%d.pdb" % (n + 1))
             if exists(fnPdb):
                 pdb = PdbFile(fnPdb)
                 pdb.setVolume(volume)

@@ -336,7 +336,7 @@ class ProjectDataView(tk.Frame):
         self._deselectAll()
 
         if e.node.pointer:
-            self.toogleItemSelection(e, True)
+            self.toggleItemSelection(e, True)
             self._selectObject(e.node.pointer)
 
     def _invertSelection(self):
@@ -352,22 +352,22 @@ class ProjectDataView(tk.Frame):
         self._loopData(self._selectItemAction)
 
     def _selectItemAction(self, item):
-        self.toogleItemSelection(item, True)
+        self.toggleItemSelection(item, True)
 
     def _selectItemByClass(self, item, className):
 
         if not item.node.isRoot():
 
             data = item.node.pointer.get()
-            self.toogleItemSelection(item, isinstance(data, getObjects()[className]))
+            self.toggleItemSelection(item, isinstance(data, getObjects()[className]))
 
     def _invertAction(self, item):
-        self.toogleItemSelection(item, not item.getSelected())
+        self.toggleItemSelection(item, not item.getSelected())
 
     def _deselectItemAction(self, item):
-        self.toogleItemSelection(item, False)
+        self.toggleItemSelection(item, False)
 
-    def toogleItemSelection(self, item, select):
+    def toggleItemSelection(self, item, select):
 
         if item.node.isRoot(): return
 

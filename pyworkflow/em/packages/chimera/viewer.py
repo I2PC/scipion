@@ -30,36 +30,51 @@ import os
 from pyworkflow.em.convert import ImageHandler
 from protocol_fit import ChimeraProtRigidFit
 from protocol_operate import ChimeraProtOperate
+from protocol_restore import ChimeraProtRestore
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, \
-    adaptOriginFromCCP4ToChimera, runChimeraProgram, \
-    getProgram, chimeraPdbTemplateFileName
+    createCoordinateAxisFile, runChimeraProgram, getProgram, sessionFile
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
-class ChimeraProtRigidFitViewer(Viewer):
+class ChimeraViewerBase(Viewer):
     """ Visualize the output of protocols protocol_fit and protocol_operate """
-    _label = 'viewer fit'
-    _targets = [ChimeraProtRigidFit, ChimeraProtOperate]
     _environments = [DESKTOP_TKINTER]
 
     def _visualize(self, obj, **args):
-        # Construct the coordinate file and visualization
+        # THe input map or pdb may be a parameter from the protocol
+        # or from the parent protocol.
+        try:
+            _inputVol = self.protocol.inputVolume.get()
+            directory = self.protocol._getExtraPath()
+        except:
+            _inputVol = self.protocol.inputProtocol.get().inputVolume.get()
+            directory = self.protocol.inputProtocol.get()._getExtraPath()
+
+        if _inputVol is None:
+            try:
+                _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+            except:
+                _inputVol = self.protocol.inputProtocol.get().\
+                    pdbFileToBeRefined.get().getVolume()
+
+        if _inputVol is not None:
+            dim = _inputVol.getDim()[0]
+            sampling = _inputVol.getSamplingRate()
+            _showVol = _inputVol
+        else:
+            try:
+                outputVol = self.protocol.output3Dmap
+                dim = outputVol.getDim()[0]
+                sampling = outputVol.getSamplingRate()
+                _showVol = outputVol
+            except:
+                # To show pdbs only
+                dim = 150.
+                sampling = 1.
+                _showVol = None
+
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
-        if self.protocol.inputVolume.get() is None:
-            _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
-            if _inputVol is None:
-                dim = 150  # eventually we will create a PDB library that
-                # computes PDB dim
-                sampling = 1.
-            else:
-                dim = _inputVol.getDim()[0]
-                sampling = _inputVol.getSamplingRate()
-
-        else:
-            dim = self.protocol.inputVolume.get().getDim()[0]
-            sampling = self.protocol.inputVolume.get().getSamplingRate()
         createCoordinateAxisFile(dim,
                                  bildFileName=bildFileName,
                                  sampling=sampling)
@@ -67,31 +82,22 @@ class ChimeraProtRigidFitViewer(Viewer):
         f = open(fnCmd, 'w')
         f.write("open %s\n" % bildFileName)
 
-        try:
-            outputVol = self.protocol.output3Dmap
-            outputVolFileName = os.path.abspath(outputVol.getFileName())
-            f.write("open %s\n" % outputVolFileName)
-            f.write("volume #1 style surface\n")
-        except:
-            if self.protocol.inputVolume.get() is None:
-                outputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
-
+        if _showVol is not None:
+        # In case we have PDBs only, the _inputVol is None:
+            showVolFileName = os.path.abspath(
+                        ImageHandler.removeFileType(_showVol.getFileName()))
+            f.write("open %s\n" % showVolFileName)
+            if _showVol.hasOrigin():
+                x, y, z = _showVol.getOrigin().getShifts()
             else:
-                outputVol = self.protocol.inputVolume.get()
-            if outputVol is not None:
-                outputVolFileName = os.path.abspath(
-                    ImageHandler.removeFileType(outputVol.getFileName()))
-                x, y, z = adaptOriginFromCCP4ToChimera(
-                    outputVol.getOrigin().getShifts())
-                f.write("open %s\n" % outputVolFileName)
-                f.write("volume #1 style surface voxelSize %f origin "
-                        "%0.2f,%0.2f,%0.2f\n"
-                        % (outputVol.getSamplingRate(), x, y, z))
+                x, y, z = _showVol.getOrigin(force=True).getShifts()
 
-        directory = self.protocol._getExtraPath()
-        counter = 0
+            f.write("volume #1 style surface voxelSize %f origin "
+                    "%0.2f,%0.2f,%0.2f\n"
+                    % (_showVol.getSamplingRate(), x, y, z))
+
         for filename in os.listdir(directory):
-            if filename.endswith(".pdb"):
+            if filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
                 f.write("open %s\n" % os.path.abspath(path))
 
@@ -100,3 +106,31 @@ class ChimeraProtRigidFitViewer(Viewer):
         # run in the background
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []
+
+class ChimeraRestoreViewer(Viewer):
+    """ Visualize the output of protocols protocol_fit and protocol_operate """
+    _label = 'viewer restore'
+    _targets = [ChimeraProtRestore]
+
+    def _visualize(self, obj, **args):
+        path1 = os.path.join(self.protocol._getExtraPath(), sessionFile)
+        if os.path.exists(path1):
+            #restored SESSION
+            path = os.path.abspath(path1)
+        else:
+            # SESSION from inputProtocol
+            path2 = os.path.join(
+                self.protocol.inputProtocol.get()._getExtraPath(), sessionFile)
+            path = os.path.abspath(path2)
+
+        runChimeraProgram(getProgram(), path  + "&")
+        return []
+
+
+class ChimeraProtRigidFitViewer(ChimeraViewerBase):
+    _label = 'viewer fit'
+    _targets = [ChimeraProtRigidFit]
+
+class ChimeraProtOperateViewer(ChimeraViewerBase):
+    _label = 'viewer operate'
+    _targets = [ChimeraProtOperate]

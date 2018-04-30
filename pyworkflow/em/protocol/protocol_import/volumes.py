@@ -29,9 +29,9 @@ In this module are protocol base classes related to EM imports of Micrographs,
 Particles, Volumes...
 """
 
-from os.path import exists, basename
+from os.path import exists, basename, abspath
 from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import copyFile
+from pyworkflow.utils.path import createAbsLink, copyFile
 import pyworkflow.protocol.constants as const
 import pyworkflow.protocol.params as params
 from pyworkflow.em import Volume, ImageHandler, PdbFile
@@ -39,7 +39,9 @@ from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
 from base import ProtImportFiles
 from images import ProtImportImages
-from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header, \
+    adaptFileToCCP4, ORIGIN
+
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -56,39 +58,60 @@ class ProtImportVolumes(ProtImportImages):
         """
         form.addParam('samplingRate', params.FloatParam,
                       label=Message.LABEL_SAMP_RATE)
-        form.addParam('setDefaultOrigin', params.BooleanParam,
-                      label="setDefaultOrigin",
-                      help="Set origin of coordinates in the 3D map center "
-                           "by default (True) or provide it. Only Modeling "
-                           "related programs support this feature so far",
-                      default=True)
-        # form.addParam('acquisitionWizard', params.LabelParam, important=True,
-        #                condition=self._acquisitionWizardCondition(),
-        #                label='Use the wizard button to import acquisition.',
-        #                help='Depending on the import Format, the wizard\n'
-        #                     'will try to import the acquisition values.\n'
-        #                     'If not found, required ones should be provided.')
+        form.addParam('setOrigCoord', params.BooleanParam,
+                      label="Set origin of coordinates",
+                      help="Option YES: A new volume will be created with the "
+                           "given ORIGIN of coordinates. This ORIGIN will be "
+                           "set in the map file header.\n"
+                           # Option YES: The binary of the object volume will 
+                           # be saved with its header modified. 
+                           # Option NO: The binary of the object volume will 
+                           # saved without any modifications. Then, the volume
+                           # is the input volume itself with other filename.
+                           # In this case the coordinates of the origin will
+                           # be saved as SCIPION object, not in the header 
+                           # volume. 
+                           # Volumes are not copied by default. They are only
+                           # copied if the user has selected the option YES in
+                           # the advanced question form "Copy files?"
+                           "Option NO: The ORIGIN of coordinates will be " 
+                           "placed at the center of the whole volume. This "
+                           "ORIGIN will NOT be set in the map file header. \n"
+                           "WARNING: In case you want to process "
+                           "the volume with programs requiring a specific "
+                           "symmetry regarding the origin of coordinates, "
+                           "for example the protocol extract unit "
+                           "cell, check carefully that the coordinates of the "
+                           "origin preserve the symmetry of the whole volume. "
+                           "This is particularly relevant for loading "
+                           "fragments/subunits of the whole volume.\n",
+                      default=False)
         line = form.addLine('Offset',
-                            help= "You have to provide the map center "
-                            "coordinates in Angstroms (pixels x sampling). "
-                            "We follow the same convention than CCP4. Chimera"
-                            " considers the same magnitude and opposite sign "
-                            "than CCP4.", condition='not setDefaultOrigin')
-        line.addParam('x', params.FloatParam, condition='not setDefaultOrigin',
-                      label="x", help="offset along x axis (A)")
-        line.addParam('y', params.FloatParam, condition='not setDefaultOrigin',
-                      label="y", help="offset along y axis (A)")
-        line.addParam('z', params.FloatParam, condition='not setDefaultOrigin',
-                      label="z", help="offset along z axis (A)")
+                            help= "A wizard will suggest you possible "
+                                  "coordinates for the ORIGIN. In MRC volume "
+                                  "files, the ORIGIN coordinates will be "
+                                  "obtained from the file header.\n "
+                                  "In case you prefer set your own ORIGIN "
+                                  "coordinates, write them here. You have to "
+                                  "provide the map center coordinates in "
+                                  "Angstroms (pixels x sampling).\n",
+                            condition='setOrigCoord')
+        line.addParam('x', params.FloatParam, condition='setOrigCoord',
+                      label="x", help="offset along x axis (Angstroms)")
+        line.addParam('y', params.FloatParam, condition='setOrigCoord',
+                      label="y", help="offset along y axis (Angstroms)")
+        line.addParam('z', params.FloatParam, condition='setOrigCoord',
+                      label="z", help="offset along z axis (Angstroms)")
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumesStep', self.getPattern(),
+        self._insertFunctionStep('importVolumesStep',
+                                 self.getPattern(),
                                  self.samplingRate.get(),
-                                 self.setDefaultOrigin.get())
+                                 self.setOrigCoord.get())
 
     # --------------------------- STEPS functions -----------------------------
 
-    def importVolumesStep(self, pattern, samplingRate, setDefaultOrigin=True):
+    def importVolumesStep(self, pattern, samplingRate, setOrigCoord=False):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -97,53 +120,59 @@ class ProtImportVolumes(ProtImportImages):
         # Create a Volume template object
         vol = Volume()
         vol.setSamplingRate(samplingRate)
-        copyOrLink = self.getCopyOrLink()
+
         imgh = ImageHandler()
 
         volSet = self._createSetOfVolumes()
         volSet.setSamplingRate(samplingRate)
 
         for fileName, fileId in self.iterFiles():
-            dst = self._getExtraPath(basename(fileName))
-            copyOrLink(fileName, dst)
-            x, y, z, n = imgh.getDimensions(dst)
-            # First case considers when reading mrc without volume flag
-            # Second one considers single volumes (not in stack)
-            if (z == 1 and n != 1) or (z != 1 and n == 1):
-                vol.setObjId(fileId)
-                if dst.endswith('.mrc'):
-                    dst += ':mrc'
-                vol.setLocation(dst)
-                t = Transform()
-                if setDefaultOrigin:
-                    if (z == 1 and n != 1):
-                        zDim = n
-                    else:
-                        zDim = z
-                    t.setShifts(x/2. * samplingRate,
-                                y/2. * samplingRate,
-                                zDim/2. * samplingRate)
+            x, y, z, n = imgh.getDimensions(fileName)
+            if fileName.endswith('.mrc') or fileName.endswith('.map'):
+                fileName += ':mrc'
+                if (z == 1 and n != 1):
+                    zDim = n
+                    n = 1
                 else:
-                    t.setShifts(self.x, self.y, self.z)
-                vol.setOrigin(t)
+                    zDim = z
+            else:
+                zDim = z
+            origin = Transform()
+            if setOrigCoord:
+                origin.setShiftsTuple(self._getOrigCoord())
+            else:
+                origin.setShifts(x/-2. * samplingRate,
+                            y/-2. * samplingRate,
+                            zDim/-2. * samplingRate)
+
+            vol.setOrigin(origin)  # read origin from form
+
+            if self.copyFiles or setOrigCoord:
+                newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
+                adaptFileToCCP4(fileName, newFileName, origin.getShifts(),
+                                samplingRate,
+                                ORIGIN)
+            else:
+                newFileName = abspath(self._getVolumeFileName(fileName))
+
+                if fileName.endswith(':mrc'):
+                    fileName = fileName[:-4]
+                createAbsLink(fileName, newFileName)
+            if n == 1:
+                vol.cleanObjId()
+                vol.setFileName(newFileName)
                 volSet.append(vol)
             else:
                 for index in range(1, n+1):
                     vol.cleanObjId()
-                    vol.setLocation(index, dst)
-                    if setDefaultOrigin:
-                        t = Transform()
-                        if setDefaultOrigin:
-                            t.setShifts(x / 2., y / 2., z / 2.)
-                        else:
-                            t.setShifts(self.x, self.y, self.z)
-                        vol.setOrigin(t)
+                    vol.setLocation(index, newFileName)
                     volSet.append(vol)
 
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
             self._defineOutputs(outputVolume=vol)
+
 
     # --------------------------- INFO functions ------------------------------
 
@@ -171,6 +200,17 @@ class ProtImportVolumes(ProtImportImages):
             methods.append(" %s imported with a sampling rate *%0.2f*" %
                            (self._getVolMessage(), self.samplingRate.get()),)
         return methods
+
+    def _getVolumeFileName(self, fileName, extension=None):
+        if extension is not None:
+            baseFileName="import_" + basename(fileName).split(".")[0] + ".%s"%extension
+        else:
+            baseFileName="import_" + basename(fileName).split(":")[0]
+
+        return self._getExtraPath(baseFileName)
+
+    def _getOrigCoord(self):
+        return -1.*self.x.get(), -1.*self.y.get(), -1.*self.z.get()
 
 
 class ProtImportPdb(ProtImportFiles):

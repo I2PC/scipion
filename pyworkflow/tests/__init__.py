@@ -52,6 +52,7 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'boxingFile': 'pickingEman/info/BPV_1386_info.json',
                'coordsGoldSqlite': 'gold/coordinates_gold.sqlite',
                'ctfGold': 'gold/xmipp_ctf.ctfparam',
+               'ctf': 'ctfs/ctfs.sqlite',
                'images10': 'gold/images10.xmd',
                'mic1': 'micrographs/BPV_1386.mrc',
                'mic2': 'micrographs/BPV_1387.mrc',
@@ -62,6 +63,8 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'micsSqlite': 'micrographs/micrographs.sqlite',
                'particles': 'particles/*.hdf',
                'particles1': 'particles/BPV_1386_ptcls.hdf',
+               'particles2': 'particles/BPV_particles.sqlite',
+               'particles3': 'particles/BPV_particles_aligned.sqlite',
                'posAllDir': 'pickingXmipp/pickedAll',
                'posSupervisedDir': 'pickingXmipp/pickedSupervised',
                'rctCoords': 'rct/pickingXmipp',
@@ -113,9 +116,11 @@ DataSet(name='relion_tutorial', folder='relion_tutorial',
                'posAllDir': 'pickingXmipp',
                'relion_it020_data': 'gold/relion_it020_data.star',
                'volume': 'volumes/reference.mrc',
-               'import1_data_star':
-               'import/case1/classify3d_small_it038_data.star',
-               'import2_data_star': 'import/case2/relion_it015_data.star'})
+               'import1_data_star': 'import/case1/classify3d_small_it038_data.star',
+               'import2_data_star': 'import/case2/relion_it015_data.star',
+               'particles_binary': '006.stk'
+        })
+
 
 DataSet(name='ribo_movies', folder='ribo_movies',
         files={
