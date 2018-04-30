@@ -82,7 +82,6 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
-        self.insertedDict = 0
         self.outputSize = 0
         self.check = None
         self.fnOutputMd = self._getExtraPath("output.xmd")
@@ -129,7 +128,10 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
             writeSetOfParticles(self.partsSet, fnInputMd,
                                 alignType=em.ALIGN_NONE, orderBy='creation',
                                 where='creation>"' + str(self.check) + '"')
-        self.check = self.partsSet[len(self.partsSet) - 1].getObjCreation()
+        for p in self.partsSet.iterItems(orderBy='creation', direction='DESC'):
+            self.check = p.getObjCreation()
+            break
+        self.partsSet.close()
         args = "-i %s -o %s -e %s -t %f" % (
         fnInputMd, self.fnOutputMd, self.fnElimMd, self.threshold.get())
         if self.addFeatures:

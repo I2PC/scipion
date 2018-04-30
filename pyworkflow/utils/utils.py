@@ -699,7 +699,7 @@ def printTraceBack():
     traceback.print_stack()
 
 
-def getEnvVariable(variableName, exceptionMsg=None):
+def getEnvVariable(variableName, default=None, exceptionMsg=None):
     """ Returns the value of an environment variable or raise an exception message.
     Useful when adding variable to the config file and report accurate messages"""
     value = os.getenv(variableName)
@@ -709,7 +709,9 @@ def getEnvVariable(variableName, exceptionMsg=None):
                        "config." % variableName
 
     if value is None:
-        raise Exception(exceptionMsg)
-
+        if default is None:
+            raise Exception(exceptionMsg)
+        else:
+            return  default
     else:
         return value

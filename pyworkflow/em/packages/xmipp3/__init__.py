@@ -75,6 +75,7 @@ from protocol_cltomo import XmippProtCLTomo
 #AJ
 from protocol_classification_gpuCorr import XmippProtGpuCrrCL2D
 from protocol_classification_gpuCorr_semi import XmippProtStrGpuCrrSimple
+from protocol_classification_gpuCorr_full import XmippProtStrGpuCrrCL2D
 #END
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
@@ -130,6 +131,8 @@ from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
 from protocol_ctf_selection import XmippProtCTFSelection
+#AJ
+from protocol_realignment_classes import XmippProtReAlignClasses
 # Wizards
 from wizard import *
 

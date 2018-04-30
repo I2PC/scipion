@@ -176,11 +176,13 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
 
         first = outputParts.getFirstItem()
         ctfModel = first.getCTF()
+
+        ctfModelExpected = self.protCTF.outputCTF.getFirstItem()
         
         self.assertEqual(first.getDim(), (dim, dim, 1))
         self.assertAlmostEqual(first.getSamplingRate(), sampling, delta=0.001)
-        self.assertAlmostEqual(ctfModel.getDefocusU(), 25000, delta=10)
-        self.assertAlmostEqual(ctfModel.getDefocusV(), 24779, delta=10)
+        self.assertAlmostEqual(ctfModel.getDefocusU(), ctfModelExpected.getDefocusU())
+        self.assertAlmostEqual(ctfModel.getDefocusV(), ctfModelExpected.getDefocusV())
 
     def test_ribo(self):
         """ Reimplement this test to run several extract cases. """
