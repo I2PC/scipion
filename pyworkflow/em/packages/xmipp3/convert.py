@@ -194,6 +194,8 @@ IMAGE_EXTRA_LABELS = [
     xmipp.MDL_CUMULATIVE_SSNR,
     xmipp.MDL_PARTICLE_ID,
     xmipp.MDL_FRAME_ID,
+    xmipp.MDL_SCORE_BY_VAR,
+    xmipp.MDL_SCORE_BY_GINI,
     ]
 
 ANGLES_DICT = OrderedDict([
@@ -651,6 +653,7 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
+        ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
 
     else:
         ctfModel = None
@@ -886,7 +889,7 @@ def readPosCoordinates(posFile, readDiscarded=False):
     particles_auto: with automatically picked particles.
     If posFile doesn't exist, the metadata will be empty
     readDiscarded: read only the coordinates in the particles_auto DB
-                   with the MDL_ENABLE set at -1 and a positive cost  
+                   with the MDL_ENABLE set at -1 and a positive cost
     """
     mData = md.MetaData()
 
@@ -956,11 +959,19 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
     if 'alignType' not in kwargs:
         kwargs['alignType'] = imgSet.getAlignment()
 
-    for img in imgSet:
-        objId = md.addObject()
-        imgRow = XmippMdRow()
-        imgToFunc(img, imgRow, **kwargs)
-        imgRow.writeToMd(md, objId)
+    if 'where' in kwargs:
+        where = kwargs['where']
+        for img in imgSet.iterItems(where=where):
+            objId = md.addObject()
+            imgRow = XmippMdRow()
+            imgToFunc(img, imgRow, **kwargs)
+            imgRow.writeToMd(md, objId)
+    else:
+        for img in imgSet:
+            objId = md.addObject()
+            imgRow = XmippMdRow()
+            imgToFunc(img, imgRow, **kwargs)
+            imgRow.writeToMd(md, objId)
 
 
 def readAnglesFromMicrographs(micFile, anglesSet):

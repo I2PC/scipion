@@ -134,11 +134,11 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f " % sampling
         origin = self.inputVolumes.get().getVolOriginAsTuple()
         # x origin coordinate (from Angstroms to pixels)
-        args += " %f " % (origin[0] / sampling)
+        args += " %f " % (origin[0] / (-1. * sampling))
         # y origin coordinate (from Angstroms to pixels)
-        args += " %f " % (origin[1] / sampling)
+        args += " %f " % (origin[1] / (-1. * sampling))
         # z origin coordinate (from Angstroms to pixels)
-        args += " %f " % (origin[2] / sampling)
+        args += " %f " % (origin[2] / (-1. * sampling))
 
         self.runJob("xmipp_transform_window", args)
 

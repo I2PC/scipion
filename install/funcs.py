@@ -285,12 +285,12 @@ class Environment:
         return '%s/bin' % Environment.getSoftware()
 
     @staticmethod
-    def getTmpFolder():
-        return '%s/tmp' % Environment.getSoftware()
-
-    @staticmethod
     def getBin(name):
         return '%s/%s' % (Environment.getBinFolder(), name)
+
+    @staticmethod
+    def getTmpFolder():
+        return '%s/tmp' % Environment.getSoftware()
 
     @staticmethod
     def getEmFolder():
@@ -639,7 +639,7 @@ class Environment:
             target.addCommand(
                 cmd, targets=[join(target.targetPath, t) for t in tgt],
                 cwd=target.buildPath, final=True, environ=environ)
-
+        
         target.addCommand(Command(self, Link(extName, targetDir),
                                   targets=[self.getEm(extName),
                                            self.getEm(targetDir)],

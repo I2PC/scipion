@@ -31,14 +31,10 @@ for EM data objects like: Image, SetOfImage and others
 
 import os
 import json
-
 from pyworkflow.object import *
-import pyworkflow.utils as pwutils
-
 from constants import *
 from convert import ImageHandler
 import numpy as np
-# import xmipp
 
 
 class EMObject(OrderedObject):
@@ -119,27 +115,30 @@ class Acquisition(EMObject):
 
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._defocusU = Float(kwargs.get('defocusU', None))
         self._defocusV = Float(kwargs.get('defocusV', None))
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
-        self._phaseShift = Float()
+        self._phaseShift = None if not 'phaseShift' in kwargs \
+            else Float(kwargs.get('phaseShift', None))
+        self._defocusRatio = Float()
         self._psdFile = String()
-#         self._micFile = String()
         self._micObj = None
         self._resolution = Float()
         self._fitQuality = Float()
 
     def __str__(self):
         if self._resolution.hasValue():
+            phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
             ctfStr = "defocus(U,V,a,psh,re,fit) = " \
                      "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
                      (self._defocusU.get(),
                       self._defocusV.get(),
                       self._defocusAngle.get(),
-                      self._phaseShift.get(),
+                      phaseShift,
                       self._resolution.get(),
                       self._fitQuality.get()
                       )
@@ -157,17 +156,20 @@ class CTFModel(EMObject):
     def getPhaseShift(self):
         # this is an awful hack to read phase shift from ctffind or gctf
         # It should be eventually removed
-        if self._phaseShift.hasValue():
+        if self._phaseShift is not None:
             return self._phaseShift.get()
         elif hasattr(self, '_ctffind4_ctfPhaseShift'):
             return self._ctffind4_ctfPhaseShift.get()
         elif hasattr(self, '_gctf_ctfPhaseShift'):
             return self._gctf_ctfPhaseShift.get()
         else:
-            return self._phaseShift.get()
+            return None
 
     def setPhaseShift(self, value):
-        self._phaseShift.set(value)
+        self._phaseShift = Float(value)
+
+    def hasPhaseShift(self):
+        return False if self.getPhaseShift() is None else True
 
     def getResolution(self):
         # this is an awful hack to read freq either from ctffid/gctf or xmipp
@@ -232,7 +234,9 @@ class CTFModel(EMObject):
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV', '_defocusAngle',
                                    '_defocusRatio', '_psdFile', '_micFile',
-                                   '_resolution', '_fitQuality', '_phaseShift')
+                                   '_resolution', '_fitQuality')
+        if other.hasPhaseShift():
+            self.setPhaseShift(other.getPhaseShift())
 
     def getPsdFile(self):
         return self._psdFile.get()
@@ -579,24 +583,27 @@ class Image(EMObject):
     def hasOrigin(self):
         return self._origin is not None
 
-    def getOrigin(self, returnInitIfNone=False):
+    def getOrigin(self, force=False):
         """shifts in A"""
         if self.hasOrigin():
             return self._origin
         else:
-            if returnInitIfNone:
-                sampling = self.getSamplingRate()
-                t = Transform()
-                x, y, z = self.getDim()
-                if z > 1:
-                    z = z/2.
-                t.setShifts(x/2. * sampling, y/2. * sampling, z * sampling)
-                return t  # The identity matrix
+            if force:
+                return self._getDefaultOrigin()
             else:
                 return None
 
+    def _getDefaultOrigin(self):
+        sampling = self.getSamplingRate()
+        t = Transform()
+        x, y, z = self.getDim()
+        if z > 1:
+            z = z / -2.
+        t.setShifts(x / -2. * sampling, y / -2. * sampling, z * sampling)
+        return t  # The identity matrix
+
     def getVolOriginAsTuple(self):
-        origin = self.getOrigin(returnInitIfNone=True).getShifts()
+        origin = self.getOrigin(force=True).getShifts()
         x = origin[0]
         y = origin[1]
         z = origin[2]
@@ -606,6 +613,15 @@ class Image(EMObject):
     def setOrigin(self, newOrigin):
         """shifts in A"""
         self._origin = newOrigin
+
+    def originResampled(self, originNotResampled, oldSampling):
+        factor = self.getSamplingRate() / oldSampling
+        shifts = originNotResampled.getShifts()
+        origin = self.getOrigin(force=True)
+        origin.setShifts(shifts[0] * factor,
+                         shifts[1] * factor,
+                         shifts[2] * factor)
+        return origin
 
     def __str__(self):
         """ String representation of an Image. """
@@ -799,11 +815,11 @@ class PdbFile(EMFile):
     def hasOrigin(self):
         return self._origin is not None
 
-    def getOrigin(self, returnInitIfNone=False):
+    def getOrigin(self, force=False):
         if self.hasOrigin():
             return self._origin
         else:
-            if returnInitIfNone:
+            if force:
                 t = Transform()
                 t.setShifts(0., 0., 0.)
                 return t  # The identity matrix
@@ -1055,9 +1071,11 @@ class SetOfImages(EMSet):
         """ Return the string representing the dimensions. """
         return str(self._firstDim)
 
-    def iterItems(self, orderBy='id', direction='ASC'):
+    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None):
         """ Redefine iteration to set the acquisition to images. """
-        for img in Set.iterItems(self, orderBy=orderBy, direction=direction):
+        for img in Set.iterItems(self, orderBy=orderBy, direction=direction,
+                                 where=where, limit=limit):
+
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
             # don't want to override with the set acquisition for this case
@@ -1491,7 +1509,10 @@ class Transform(EMObject):
         m[0, 3] = x
         m[1, 3] = y
         m[2, 3] = z
-                
+
+    def setShiftsTuple(self, shifts):
+        self.setShifts(shifts[0], shifts[1], shifts[2])
+
     def composeTransform(self, matrix):
         '''Apply a transformation matrix to the current matrix '''            
         new_matrix = matrix * self.getMatrix()

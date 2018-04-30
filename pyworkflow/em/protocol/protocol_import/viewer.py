@@ -40,7 +40,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile,  adaptOriginFromCCP4ToChimera, getProgram
+    createCoordinateAxisFile, getProgram
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
@@ -71,7 +71,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         }
 
     def _validate(self):
-        if find_executable(getProgram()) is None:
+        if self.displayVol == VOLUME_CHIMERA and find_executable(getProgram()) is None:
             return ["chimera is not available. "
                     "Either install it or choose option 'slices'. "]
         return []
@@ -134,7 +134,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         if len(_setOfVolumes) > 1:
             f.write('tile\n')
         else:
-            x, y, z = adaptOriginFromCCP4ToChimera(vol.getVolOriginAsTuple())
+            x, y, z = vol.getVolOriginAsTuple()
             f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
         f.close()
         import pyworkflow.em as em

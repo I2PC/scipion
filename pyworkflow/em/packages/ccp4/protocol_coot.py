@@ -42,8 +42,7 @@ from pyworkflow.em.convert_header.CCP4.convert import (getProgram,
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam, StringParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.data import Transform
-
+from pyworkflow.protocol.constants import STATUS_FINISHED
 
 class CootRefine(EMProtocol):
     """Coot is an interactive graphical application for
@@ -89,10 +88,26 @@ the pdb file from coot  to scipion '
                       help="""Makes coot an interactive protocol""")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot '
-                     'to scipion')
-        form.addLine("You may also execute (from script -> python) the "
-                     "command scipion_write(imol)")
-        form.addLine("where imol is the PDB id")
+                     'to scipion.\nYou may also execute (from script -> '
+                     'python) the command scipion_write(imol).\nimol is the '
+                     'PDB id.\nPress "x" in coot to change from one chain to '
+                     'the previous one.\nPress "X" in coot to change from one '
+                     'chain to the next one.\nPress "U" in coot to initiate '
+                     'global variables.\nYou have to set in advance the '
+                     '/tmp/coot.ini text file:\n[myvars]\nimol: '
+                     '0\naa_main_chain: '
+                     'X\naa_auxiliary_chain: XX\naaNumber: 160\nstep: 15\nIn '
+                     'this case global variables will initiate in '
+                     'aminoacid number 160\nand each shift over the '
+                     'sequence will include a segment of 15 aminoacids.\n'
+                     'Press "z" in coot to refine those upstream 15 '
+                     'aminoacids included in each step.\nPress "Z" in coot ' \
+                     'to refine those downstream 15 aminoacids included in ' \
+                     'each step.\nPress "E" in coot to print the ' \
+                     'environment.\nPress "e" in coot to finish your ' \
+                     'project. Then your project will not be interactive ' \
+                     'anymore.')
+
         # --------------------------- INSERT steps functions ---------------
 
     def _insertAllSteps(self):
@@ -116,7 +131,7 @@ the pdb file from coot  to scipion '
                                              self.inVolumes,
                                              self.norVolumesNames)
 
-        self._insertFunctionStep('runCootStep', self.inVolumes,
+        self.step = self._insertFunctionStep('runCootStep', self.inVolumes,
                                  self.norVolumesNames,
                                  prerequisites=[convertId],
                                  interactive=self.doInteractive)
@@ -146,7 +161,7 @@ the pdb file from coot  to scipion '
                 else:
                     ImageHandler().convert(inVolName, norVolName)
                 copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
-                              returnInitIfNone=True).getShifts(),
+                              force=True).getShifts(),
                               inVol.getSamplingRate(), originField=START)
 
     def runCootStep(self, inVolumes, norVolumesNames):
@@ -220,7 +235,7 @@ the pdb file from coot  to scipion '
                 outVol = Volume()
                 sampling = inVol.getSamplingRate()
                 origin = inVol.getOrigin(
-                    returnInitIfNone=True).getShifts()
+                    force=True)
                 outVol.setSamplingRate(sampling)
                 outVol.setOrigin(origin)
 
@@ -232,6 +247,11 @@ the pdb file from coot  to scipion '
                 counter += 1
                 self._defineOutputs(**outputs)
                 self._defineSourceRelation(inVol, outVol)
+        if os.path.isfile(self._getExtraPath('STOPPROTCOL')):
+            self.setStatus(STATUS_FINISHED)
+            # NOTE: (ROB) can a derthy way to make an interactive process finish but I do not
+            # think there is a clean one
+            self._steps[self.step-1].setInteractive(False)
 
     # --------------------------- INFO functions ---------------------------
     def _validate(self):
@@ -362,6 +382,7 @@ def _updateMol():
     aa_main_chain: A
     aa_auxiliary_chain: AA
     aaNumber: 82
+    step: 15
     called /tmp/coot.ini"""
     global mydict
     config = ConfigParser.ConfigParser()
@@ -375,7 +396,6 @@ def _updateMol():
         mydict['outfile']            = config.get("myvars", "outfile")
     except ConfigParser.NoOptionError:
         pass
-    print ("reading:", "/tmp/coot.ini", mydict)
     beep(0.1)
 
 def getOutPutFileName(template):
@@ -415,6 +435,14 @@ def _printEnv():
     for key in os.environ.keys():
        print "%30s %s \\n" % (key,os.environ[key])
 
+def _finishProj():
+    global mydict
+    filenName = mydict['outfile']%1
+    dirPath = os.path.dirname(filenName)
+    fileName = os.path.join(dirPath,"STOPPROTCOL")
+    open(fileName,"w").close()
+    beep(0.1)
+
 #change chain id
 add_key_binding("change_chain_id_down","x", lambda: _change_chain_id(-1))
 add_key_binding("change_chain_id_down","X", lambda: _change_chain_id(1))
@@ -430,7 +458,10 @@ add_key_binding("init global variables","U", lambda: _updateMol())
 add_key_binding("write pdb file","w", lambda: _write())
 
 #print environ
-add_key_binding("print enviroment","e", lambda: _printEnv())
+add_key_binding("print enviroment","E", lambda: _printEnv())
+
+#finish project
+add_key_binding("finish project","e", lambda: _finishProj())
 
 '''
 
