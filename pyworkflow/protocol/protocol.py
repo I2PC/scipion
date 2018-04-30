@@ -368,9 +368,8 @@ class Protocol(Step):
         # Use queue system?
         self._useQueue = Boolean(False)
         # Store a json string with queue name
-        # and queue parameters (only meanful if _useQueue=True)
+        # and queue parameters (only meaningful if _useQueue=True)
         self._queueParams = String()
-
         self._jobId = String()  # Store queue job id
         self._pid = Integer()
         self._stepsExecutor = None
@@ -429,7 +428,7 @@ class Protocol(Step):
             if self.hasAttribute(outputName):
                 outputSet.write()  # Write to commit changes
                 outputAttr = getattr(self, outputName)
-                # Copy the properties to the object contained in the protcol
+                # Copy the properties to the object contained in the protocol
                 outputAttr.copy(outputSet, copyId=False)
                 # Persist changes
                 self._store(outputAttr)

@@ -455,8 +455,17 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-    def scheduleProtocol(self, protocol):
+    def scheduleProtocol(self, protocol, prerequisites=[]):
+        """ Schedule a new protocol that will run when the input data
+        is available and the prerequisited finished.
+        Params:
+            protocol: the protocol that will be scheduled.
+            prerequisites: a list with protocols ids that the scheduled
+                protocol will wait for.
+        """
         protocol.setStatus(pwprot.STATUS_SCHEDULED)
+        protocol.addPrerequisites(*prerequisites)
+
         self._setupProtocol(protocol)
         # protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean()  # Create working dir if necessary
