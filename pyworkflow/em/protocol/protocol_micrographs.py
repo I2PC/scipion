@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez BLanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez BLanco (josue.gomez-blanco@mcgill.ca)
 # *              Roberto Marabini (roberto@cnb.csic.es)
 # *              Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
 # *
