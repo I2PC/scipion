@@ -85,8 +85,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     AUTOMATIC_ALIGNMENT = 2
     STOCHASTIC_ALIGNMENT = 3
     
-    #GLOBAL_SIGNIFICANT = 0
-    #GLOBAL_GPU_SIGNIFICANT = 1
+    GLOBAL_SIGNIFICANT = 0
+    GLOBAL_GPU_SIGNIFICANT = 1
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -177,11 +177,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line.addParam('angularMaxTiltReconstruct', FloatParam, label="Max.", default=92, condition="restrictReconstructionAngles",
                       help = "Perform an angular assignment and only use those images whose angles are within these limits")
 
-        #form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Gpu Signficant'], 
-        #              default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0', expertLevel=LEVEL_ADVANCED)
-        form.addParam('useGpuSignificant', BooleanParam, label="Use GPU Significant", default = False,
-                      expertLevel=LEVEL_ADVANCED, help='Use GPU for significant step',
-                      condition='alignmentMethod==0 or alignmentMethod==2 or alignmentMethod==3')
+        form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Gpu Signficant'],
+                      default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0 or alignmentMethod==2 or alignmentMethod==3',
+                      expertLevel=LEVEL_ADVANCED)
         form.addParam('maximumTargetResolution', NumericListParam, label="Max. Target Resolution", default="15 8 4",
                       condition='multiresolution',
                       help="In Angstroms. The actual maximum resolution will be the maximum between this number of 0.5 * previousResolution, meaning that"
@@ -801,7 +799,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             if R<=0:
                                 R=self.inputParticles.get().getDimensions()[0]/2
                             R=R*self.TsOrig/TsCurrent
-                            if not self.useGpuSignificant:
+                            if self.globalMethod.get() == self.GLOBAL_SIGNIFICANT:
                                 args='-i %s --initgallery %s --maxShift %d --odir %s --dontReconstruct --useForValidation %d'%\
                                      (fnGroup,fnGalleryGroupMd,maxShift,fnDirSignificant,self.numberOfReplicates.get()-1)
                                 # Falta Wiener y filtrar
@@ -813,7 +811,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                     cleanPath(join(fnDirSignificant,"images_iter001_00.xmd"))
                                     #cleanPath(join(fnDirSignificant,"angles_iter001_00.xmd"))
                                     cleanPath(join(fnDirSignificant,"images_significant_iter001_00.xmd"))
-                            else:
+                            elif self.globalMethod.get() == self.GLOBAL_GPU_SIGNIFICANT:
                                 args = '-i_ref %s -i_exp %s -o %s --keep_best %d --maxShift %f'%\
                                        (fnGalleryGroupMd,fnGroup,fnAnglesGroup,self.numberOfReplicates,maxShift)
                                 self.runJob("xmipp_cuda_correlation", args, numberOfMpi=1)
