@@ -55,18 +55,27 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
                                'prior to binarization. To calculate solvent masks, a '
                                'lowpass filter of 15-20A may work well.')
         # TODO: add wizard
-        form.addParam('threshold', params.FloatParam, default=0.01,
-                      label='Threshold',
-                      help='Select a threshold value for input volume binarization')
+        form.addParam('threshold', params.FloatParam, default=0.02,
+                      label='Initial binarisation threshold',
+                      help="This threshold is used to make an initial binary "
+                           "mask from the average of the two unfiltered "
+                           "half-reconstructions. If you don't know what "
+                           "value to use, display one of the unfiltered "
+                           "half-maps in a 3D surface rendering viewer and "
+                           "find the lowest threshold that gives no noise "
+                           "peaks outside the reconstruction.")
+
         form.addParam('doCompare', params.BooleanParam, default=False,
                       expertLevel=params.LEVEL_ADVANCED,
                       label='Compare with another volume to produce a mask?',
                       help='Logical comparison of two input volumes to produce a mask')
+
         form.addParam('inputVolume2', params.PointerParam, pointerClass="Volume",
                       condition='doCompare',
                       expertLevel=params.LEVEL_ADVANCED,
                       label="Input volume (second)",
                       help="Select the volume that will be compared to the first one")
+
         form.addParam('operation', params.EnumParam, default=AND,
                       condition='doCompare',
                       expertLevel=params.LEVEL_ADVANCED,
@@ -81,12 +90,17 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
                            'is below it.\n*OR_NOT*: pixels in the initial mask will be '
                            'one if the input is above the threshold OR the second '
                            'volume is below it.')
-        form.addParam('extend', params.IntParam, default=0,
-                      label='Extend the mask by (px)',
-                      help='Extend initial binary mask this number of pixels')
-        form.addParam('edge', params.IntParam, default=0,
-                      label='Soft edge (px)',
-                      help='Width (in pixels) of the additional soft edge on the binary mask')
+
+        form.addParam('extend', params.IntParam, default=3,
+                      label='Extend binary mask by (px)',
+                      help='The initial binary mask is extended this number of '
+                           'pixels in all directions.')
+
+        form.addParam('edge', params.IntParam, default=3,
+                      label='Add a soft-edge (px)',
+                      help='The extended binary mask is further extended with '
+                           'a raised-cosine soft edge of the specified width.')
+
         form.addParam('doInvert', params.BooleanParam, default=False,
                       expertLevel=params.LEVEL_ADVANCED,
                       label='Invert final mask',
@@ -101,10 +115,12 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
     
     # --------------------------- STEPS functions -------------------------------
     def convertInputStep(self, volId):
-        self.inputVolFn = convertBinaryVol(self.inputVolume.get(), self._getTmpPath())
+        self.inputVolFn = convertBinaryVol(self.inputVolume.get(),
+                                           self._getTmpPath())
 
         if self.doCompare:
-            self.inputVol2Fn = convertBinaryVol(self.inputVolume2.get(), self._getTmpPath())
+            self.inputVol2Fn = convertBinaryVol(self.inputVolume2.get(),
+                                                self._getTmpPath())
 
     def createMaskStep(self):
         argsDict = {'--i ': self.inputVolFn,
@@ -129,7 +145,7 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
                 args += ' --or_not %s' % self.inputVol2Fn
 
         if self.doInvert:
-            args += '--invert'
+            args += ' --invert'
 
         self.runJob("relion_mask_create", args)
 
@@ -158,13 +174,16 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
         return errors
 
     def _summary(self):
-        messages = []
-        messages.append("Created a mask from input volume using threshold %0.3f" % self.threshold.get())
-        messages.append("*Mask processing*")
-        messages.append("   Extend by %d pixels" % self.extend.get())
-        messages.append("   Apply soft edge of %d pixels" % self.edge.get())
+        messages = [
+            "Created a mask from input volume using threshold %0.3f"
+            % self.threshold.get(),
+            "*Mask processing*",
+            "   Extend by %d pixels" % self.extend,
+            "   Apply soft edge of %d pixels" % self.edge,
+            "   Logical operation: %s" % self.getEnumText('operation')
+        ]
         if self.doCompare:
-            messages.append("   Logical operation: %s" % self.getEnumText('operation'))
+            messages.append()
         if self.doInvert:
             messages.append("   Inverted")
 
@@ -174,18 +193,20 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
         return []
 
     def _methods(self):
-        messages = []
-
-        messages.append("*Mask creation*")
-        messages.append('We processed the volume %s.' % self.inputVolume.get().getNameId())
-        messages.append("We binarized it at threshold of %0.3f. " % self.threshold.get())
-        messages.append("We extended binary mask by %d voxels." % self.extend.get())
-        messages.append("And, we smoothed it by applying a soft edge of %d voxels." % self.edge.get())
-
+        messages = [
+            "*Mask creation*",
+            "We processed the volume %s." % self.inputVolume.get().getNameId(),
+            "We binarized it at threshold of %0.3f. " % self.threshold,
+            "We extended binary mask by %d voxels." % self.extend,
+            "And, we smoothed it by applying a soft edge of %d voxels."
+            % self.edge.get()
+        ]
         if self.doInvert:
             messages.append("We inverted the mask. ")
-            messages.append("And, we smoothed it by applying a soft edge of %d voxels." % self.edge.get())
+            messages.append("And, we smoothed it by applying a soft edge of "
+                            "%d voxels." % self.edge)
         if self.hasAttribute('outputMask'):
-            messages.append('We refer to the output mask as %s.' % self.outputMask.getNameId())
+            messages.append('We refer to the output mask as %s.'
+                            % self.outputMask.getNameId())
 
         return messages

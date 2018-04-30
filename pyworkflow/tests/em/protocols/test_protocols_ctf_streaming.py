@@ -35,7 +35,7 @@ from pyworkflow.em.packages.xmipp3.protocol_ctf_micrographs import\
 from pyworkflow.em.packages.gctf import ProtGctf
 from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
 # Load the number of movies for the simulation, by default equal 5, but
-# can be modified in the environement
+# can be modified in the environment
 MICS = os.environ.get('SCIPION_TEST_MICS', 3)
 CTF_SQLITE = "ctfs.sqlite"
 
@@ -69,13 +69,14 @@ class TestCtfStreaming(BaseTest):
                     if ctfSet.getSize() > counter:
                         counter += 1
                         for ctf in ctfSet:
-                            self.assertNotEqual(ctf._phaseShift.get(), None)
                             self.assertNotEqual(ctf._resolution.get(), None)
                             self.assertNotEqual(ctf._fitQuality.get(), None)
                             self.assertNotEqual(ctf.isEnabled(), None)
                             self.assertNotEqual(ctf._defocusU.get(), None)
                             self.assertNotEqual(ctf._defocusV.get(), None)
                             self.assertNotEqual(ctf._defocusRatio.get(), None)
+                            if ctf.getPhaseShift():
+                                self.assertNotEqual(ctf.getPhaseShift(), None)
             self.assertIsNotNone(prot.outputCTF,
                                  "Error: outputCTF is not produced "
                                  "in %s." % prot.getClassName())
@@ -110,6 +111,8 @@ class TestCtfStreaming(BaseTest):
         #time.sleep(10)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
+        protCTF.findPhaseShift.set(True)
+        protCTF.slowSearch.set(False)
         protCTF.highRes.set(0.4)
         protCTF.lowRes.set(0.05)
         protCTF.numberOfThreads.set(4)
@@ -157,7 +160,7 @@ class TestCtfStreaming(BaseTest):
         self.assertSetSize(ctfSet, MICS, "Ctffind4 output size does not match")
 
         for ctf in ctfSet:
-            self.assertNotEqual(ctf._phaseShift.get(), None)
+            self.assertNotEqual(ctf.getPhaseShift(), None)
             self.assertNotEqual(ctf._resolution.get(), None)
             self.assertNotEqual(ctf._fitQuality.get(), None)
             self.assertNotEqual(ctf.isEnabled(), None)

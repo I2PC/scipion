@@ -64,7 +64,8 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "XmippProtConsensusPicking",   "text": "default"},
 			{"tag": "protocol", "value": "ProtExtractCoords",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtParticlePickingPairs",  "text": "default"},
-			{"tag": "protocol", "value": "ProtLocalizedRecons", "text": "default"}
+			{"tag": "protocol", "value": "ProtLocalizedRecons", "text": "default"},
+			{"tag": "protocol", "value": "XmippProtReAlignClasses", "text": "default"}
 		]},
 		{"tag": "protocol_group", "text": "Extract", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "XmippProtExtractParticles",   "text": "default"},
@@ -111,6 +112,7 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "ProtRelionClassify2D",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtGpuCrrCL2D",   "text": "default"},
 	        {"tag": "protocol", "value": "XmippProtStrGpuCrrSimple",   "text": "default"},
+	        {"tag": "protocol", "value": "XmippProtStrGpuCrrCL2D",   "text": "default"},
 			{"tag": "section", "text": "mda", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "SpiderProtCAPCA", "text": "default"},
 				{"tag": "protocol", "value": "SpiderProtClassifyWard", "text": "default"},
