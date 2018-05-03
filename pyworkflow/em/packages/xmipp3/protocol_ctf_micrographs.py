@@ -36,6 +36,7 @@ import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as pwconst
 import pyworkflow.utils as pwutils
+import time
 
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 from pyworkflow.em.packages.xmipp3.convert import mdToCTFModel, readCTFModel
@@ -58,7 +59,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                   "ctfCritFirstMinFirstZeroRatio!=1000 OR "
                   "ctfCritNonAstigmaticValidty<=0 OR " 
                   "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussian2SigmaU>70000 "
-                  "OR ctfCritIceness>1")
+                  "OR ctfCritIceness>1.01")
 
     def __init__(self, **args):
 
@@ -311,17 +312,21 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
     def getPreviousParameters(self):
         if self.ctfRelations.hasValue():
             self.ctfDict = {}
+            flagDegrees = 0
             for ctf in self.ctfRelations.get():
                 ctfName = ctf.getMicrograph().getMicName()
                 phaseShift0 = 0
                 if self.findPhaseShift:
-                    if hasattr(ctf,"_gctf_ctfPhaseShift"):
-                        phaseShift0=ctf._gctf_ctfPhaseShift
-                    elif hasattr(ctf,"_ctffind4_ctfPhaseShift"):
-                        phaseShift0=ctf._ctffind4_ctfPhaseShift
+                    if hasattr(ctf,"_phaseShift") and ctf._phaseShift.get() != None:
+                        phaseShift0=ctf._phaseShift.get()
+                        radians = phaseShift0/3.14
+                        if radians > 1 or flagDegrees == 1:
+                            flagDegrees == 1
+                            phaseShift0 = (phaseShift0*3.14)/180
+
                     else:
                         phaseShift0 = 1.57079 # pi/2
-                    self.ctfDict[ctfName] = (ctf.getDefocusU(),phaseShift0.get())
+                    self.ctfDict[ctfName] = (ctf.getDefocusU(),phaseShift0)
                 else:
                     self.ctfDict[ctfName] = (ctf.getDefocusU(), phaseShift0)
         if self.findPhaseShift and not self.ctfRelations.hasValue():

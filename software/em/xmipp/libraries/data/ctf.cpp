@@ -1118,6 +1118,10 @@ void CTFDescription1D::forcePhysicalMeaning()
         {
         	phase_shift = phase_shift/floor(phase_shift/3.14) - 3.14;
         }
+        if (phase_shift < 0)
+        {
+        	phase_shift = phase_shift + 3.14;
+        }
     }
 }
 #undef DEBUG
@@ -1805,7 +1809,7 @@ void CTFDescription::forcePhysicalMeaning()
             if (cV2*Tm < 0.01)
                 cV2 = 0.011 / Tm;
         }
-    }
+}
 }
 #undef DEBUG
 
