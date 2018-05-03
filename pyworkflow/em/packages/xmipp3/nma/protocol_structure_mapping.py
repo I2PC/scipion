@@ -195,8 +195,10 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         for i in range(self.numberOfModes.get() + 1):
             if i==0:
                 i += 1 
-            copyFile (self._getPath("modes/vec.%d"%i),
-                      self._getExtraPath("modes%d/vec.%d"%(nVoli, i)))
+            fnMode = self._getPath("modes/vec.%d"%i)
+            if os.path.exists(fnMode):
+                copyFile (self._getPath("modes/vec.%d"%i),
+                          self._getExtraPath("modes%d/vec.%d"%(nVoli, i)))
             
         mdVol = xmipp.MetaData()
         fnOutMeta = self._getExtraPath('RigidAlignVol_%d_To_Vol_%d.xmd' % (nVolj, nVoli))
