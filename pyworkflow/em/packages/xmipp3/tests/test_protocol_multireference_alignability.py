@@ -94,21 +94,41 @@ class TestMultireferenceAlignability(BaseTest):
         
         '''NO CTF'''
         protValidateNoCTF = self.newProtocol(XmippProtMultiRefAlignability,
-                                objLabel='validate alignability',
+                                objLabel='validate alignability no ctf',
                                 angularSampling=10,
                                 doWiener = 'False',
                                 numberOfMpi=4, numberOfThreads=1)
         protValidateNoCTF.inputParticles.set(protImportPars.outputParticles)
         protValidateNoCTF.inputVolumes.set(protImportVols.outputVolume)
 
+        '''NO CTF WITH GPU'''
+        protValidateNoCTF2 = self.newProtocol(XmippProtMultiRefAlignability,
+                                             objLabel='validate alignability no ctf gpu',
+                                             angularSampling=10,
+                                             doWiener='False',
+                                             useGPU=True,
+                                             numberOfMpi=1, numberOfThreads=1)
+        protValidateNoCTF2.inputParticles.set(protImportPars.outputParticles)
+        protValidateNoCTF2.inputVolumes.set(protImportVols.outputVolume)
+
         '''CTF'''
         protValidateCTF = self.newProtocol(XmippProtMultiRefAlignability,
-                                objLabel='validate alignability',
+                                objLabel='validate alignability ctf',
                                 angularSampling=10,
                                 doWiener = 'True',
                                 numberOfMpi=4, numberOfThreads=1)
         protValidateCTF.inputParticles.set(protImportParsCTF.outputParticles)
         protValidateCTF.inputVolumes.set(protImportVols.outputVolume)
+
+        '''CTF WITH GPU'''
+        protValidateCTF2 = self.newProtocol(XmippProtMultiRefAlignability,
+                                           objLabel='validate alignability ctf gpu',
+                                           angularSampling=10,
+                                           doWiener='True',
+                                           useGPU=True,
+                                           numberOfMpi=1, numberOfThreads=1)
+        protValidateCTF2.inputParticles.set(protImportParsCTF.outputParticles)
+        protValidateCTF2.inputVolumes.set(protImportVols.outputVolume)
         
         self.launchProtocol(protValidateNoCTF)      
         self.checkOutput(protValidateNoCTF, 'outputParticles')
@@ -117,10 +137,24 @@ class TestMultireferenceAlignability(BaseTest):
         self.assertTrue(firstVol.weightAlignabilityPrecision > 0.6)
         self.assertTrue(firstVol.weightAlignabilityAccuracy > 0.2)
 
+        self.launchProtocol(protValidateNoCTF2)
+        self.checkOutput(protValidateNoCTF2, 'outputParticles')
+        self.checkOutput(protValidateNoCTF2, 'outputVolumes')
+        firstVol2 = protValidateNoCTF2.outputVolumes.getFirstItem()
+        self.assertTrue(firstVol2.weightAlignabilityPrecision > 0.6)
+        self.assertTrue(firstVol2.weightAlignabilityAccuracy > 0.2)
+
         self.launchProtocol(protValidateCTF)      
         self.checkOutput(protValidateCTF, 'outputParticles')
         self.checkOutput(protValidateCTF, 'outputVolumes')        
         firstVolCTF = protValidateCTF.outputVolumes.getFirstItem()
         self.assertTrue(firstVolCTF.weightAlignabilityPrecision > 0.6)
         self.assertTrue(firstVolCTF.weightAlignabilityAccuracy > 0.2)
+
+        self.launchProtocol(protValidateCTF2)
+        self.checkOutput(protValidateCTF2, 'outputParticles')
+        self.checkOutput(protValidateCTF2, 'outputVolumes')
+        firstVolCTF2 = protValidateCTF2.outputVolumes.getFirstItem()
+        self.assertTrue(firstVolCTF2.weightAlignabilityPrecision > 0.6)
+        self.assertTrue(firstVolCTF2.weightAlignabilityAccuracy > 0.2)
 

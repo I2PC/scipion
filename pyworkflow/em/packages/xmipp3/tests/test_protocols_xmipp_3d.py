@@ -1086,6 +1086,15 @@ class TestXmippValidateNonTilt(TestXmippBase):
         protValidate.inputVolumes.set(protImportVol.outputVolume)
         self.launchProtocol(protValidate)
         self.assertIsNotNone(protValidate.outputVolumes, "There was a problem with Validate Non-Tilt")
+
+        print "Run Validate Non-Tilt significant with GPU"
+        protValidate = self.newProtocol(XmippProtValidateNonTilt)
+        protValidate.inputParticles.set(protSubset.outputParticles)
+        protValidate.inputVolumes.set(protImportVol.outputVolume)
+        protValidate.useGPU.set(True)
+        self.launchProtocol(protValidate)
+        self.assertIsNotNone(protValidate.outputVolumes,
+                             "There was a problem with Validate Non-Tilt GPU")
         
         print "Run Validate Non-Tilt projection matching"
         protValidate = self.newProtocol(XmippProtValidateNonTilt, alignmentMethod=1)
