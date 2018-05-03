@@ -37,7 +37,8 @@ from pyworkflow.em.viewer import DataView
 
 
 class ProtClassesConsensus4(EMProtocol):
-    """ Compare several SetOfClasses
+    """ Compare several SetOf3DClasses.
+        Return the intersection of the input classes.
     """
     _label = 'consensus 3Dclasses (new 2)'
 
@@ -51,7 +52,6 @@ class ProtClassesConsensus4(EMProtocol):
                       help='Select several sets of classes where '
                            'to evaluate the consensus.')
 
-        form.addParallelSection(threads=4, mpi=0)
 
 #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -62,7 +62,7 @@ class ProtClassesConsensus4(EMProtocol):
 
         if len(self.inputMultiClasses)>2:
             for i in range(2,len(self.inputMultiClasses)):
-                self._insertFunctionStep('compareOthersStep', i, self.interDB)
+                self._insertFunctionStep('compareOthersStep', i)
 
 
         self._insertFunctionStep('createOutputStep')
@@ -76,6 +76,8 @@ class ProtClassesConsensus4(EMProtocol):
         set1 = self.inputMultiClasses[idxSetCls1].get()
         set2 = self.inputMultiClasses[idxSetCls2].get()
 
+        listDB = []
+
         for cls1 in set1:
             ids1 = cls1.getIdSet()
 
@@ -85,36 +87,70 @@ class ProtClassesConsensus4(EMProtocol):
                 inter = ids1.intersection(ids2)
 
                 if len(ids1) < len(ids2):
-                    repCls = cls1
+                    idxSet = idxSetCls1
+                    clsId = cls1.getObjId()
                 else:
-                    repCls = cls2
-
-                interTuple = (len(inter), inter, repCls)
-                self.interDB.append(interTuple)
+                    idxSet = idxSetCls2
+                    clsId = cls2.getObjId()
 
 
-    def compareOthersStep(self, idxSetCls1, currDB):
+                print(" ")
+                print(" - Intersection of cl%d of set%d and cl%d of set%d"
+                       % (cls1.getObjId(), idxSetCls1,
+                          cls2.getObjId(), idxSetCls2))
+                print("\tlen(ids1)=%d > len(ids2)=%d = %s" 
+                       % (len(ids1), len(ids2), len(ids1)>len(ids2)))
+                print("\t\t\tfrom set %d calss %d, with %d part. in the intersection." 
+                       % (idxSet, clsId, len(inter)))
+                print(" -  -  -  -  -  -  -  -  -  -")
+
+
+                interTuple = (len(inter), inter, idxSet, clsId)
+                listDB.append(interTuple)
+
+        self.interDB = listDB
+
+
+    def compareOthersStep(self, idxSetCls1):
 
         set1 = self.inputMultiClasses[idxSetCls1].get()
 
         print('idxSetCls1 = %d'%(idxSetCls1))
 
         newDB = []
+        currDB = self.interDB
 
         for cls1 in set1:
             ids1 = cls1.getIdSet()
+            clsId1 = cls1.getObjId()
 
-            for cls2 in currDB:
-                ids2 = cls2[1]
+            for currTuple in currDB:
+                ids2 = currTuple[1]
+                idxSetCls2 = currTuple[2]
+                clsId2 = currTuple[3]
 
-                inter = ids1.intersection(cls2[1])
+                inter = ids1.intersection(ids2)
 
                 if len(ids1) < len(ids2):
-                    repCls = cls1
+                    idxSet = idxSetCls1
+                    clsId = clsId1
                 else:
-                    repCls = cls2[2]
+                    idxSet = idxSetCls2
+                    clsId = clsId2
 
-                interTuple = (len(inter), inter, repCls)
+
+                print(" ")
+                print(" - Intersection of cl%d of set%d and cl%d of set%d"
+                       % (clsId1, idxSetCls1,
+                          clsId2, idxSetCls2))
+                print("\tlen(ids1)=%d > len(ids2)=%d = %s" 
+                       % (len(ids1), len(ids2), len(ids1)>len(ids2)))
+                print("\t\t\tfrom set %d calss %d, with %d part. in the intersection." 
+                      % (idxSet, clsId, len(inter)))
+                print(" -  -  -  -  -  -  -  -  -  -")
+
+
+                interTuple = (len(inter), inter, idxSet, clsId)
                 newDB.append(interTuple)
                 
         self.interDB = newDB
@@ -144,26 +180,32 @@ class ProtClassesConsensus4(EMProtocol):
         # print('Number of intersections: %d' % len(self.interDB))
         # print('Total of particles: %d' % numberOfPart)
 
-        # outputFn = self._getPath('consensus.sqlite')
-        # cleanPath(outputFn)
+        
         inputParticles = self.inputMultiClasses[0].get().getImages()
         outputClasses = self._createSetOfClasses3D(inputParticles)
-        # classesIds = []
+        
 
         for clInx in range(0, len(self.interDB)):
             numOfPart = self.interDB[clInx][0]
             partIds = self.interDB[clInx][1]
-            clasRep = self.interDB[clInx][2]
+            setRepId = self.interDB[clInx][2]
+            clsRepId = self.interDB[clInx][3]
+
+            print(setRepId)
+            setRep = self.inputMultiClasses[setRepId].get()
+            print(setRep)
+            clRep = setRep[clsRepId]
+
+            # classRep = self.inputMultiClasses[setRep].get()[clsRep]
 
             newClass = Class3D()
-            newClass.copyInfo(clasRep)
-            newClass.setAcquisition(clasRep.getAcquisition())
-            newClass.setRepresentative(clasRep.getRepresentative())
+            newClass.copyInfo(clRep)
+            newClass.setAcquisition(clRep.getAcquisition())
+            newClass.setRepresentative(clRep.getRepresentative())
 
             outputClasses.append(newClass)
 
             enabledClass = outputClasses[newClass.getObjId()]
-            # classesIds.append(newClass.getObjId())
             enabledClass.enableAppend()
             for itemId in partIds:
                 enabledClass.append(inputParticles[itemId])
