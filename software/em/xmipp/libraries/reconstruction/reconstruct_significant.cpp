@@ -215,18 +215,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //					double corr=alignImagesConsideringMirrors(mGalleryProjection,
 //							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					M=M.inv();
-					double scale, shiftX, shiftY, anglePsi;
-					bool flip;
-					transformationMatrix2Parameters2D(M,flip,scale,shiftX,shiftY,anglePsi);
-
-					double imed;
-					if (maxShift<0 || (maxShift>0 && fabs(shiftX)<maxShift && fabs(shiftY)<maxShift))
-						imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
-					else
-					{
-						corr=-1.01;
-						imed=1000;
-					}
+					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
 
 //					//if (corr>0.99)
 //					//{
