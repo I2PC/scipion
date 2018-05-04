@@ -50,8 +50,11 @@ subparsers = parser.add_subparsers(help='mode "install_plugin" or "uninstall_plu
 installParser = subparsers.add_parser("install_plugin", formatter_class=argparse.RawTextHelpFormatter,
                                       usage="%s  [-h] [--noBin] [-p pluginName [binVersion ...]]" %
                                             (' '.join(args[:2])),
-                                      epilog="Example: %s -p ctffind 2.0.4 -p relion -p eman \n\n%s" %
-                                      (' '.join(args[:2]), pluginRepo.printPluginInfo()))
+                                      epilog="Example: %s -p ctffind 2.0.4 -p relion -p eman \n\n" %
+                                      ' '.join(args[:2]),
+                                      add_help=False)
+installParser.add_argument('-h', '--help', action='store_true', help='show help')
+
 
 installParser.add_argument('--noBin', action='store_true',
                             help='Optional flag to install plugins only as a python module,\n'
@@ -67,8 +70,10 @@ installParser.add_argument('-p', '--plugin', action='append', nargs='+',
 uninstallParser = subparsers.add_parser("uninstall_plugin", formatter_class=argparse.RawTextHelpFormatter,
                                         usage="%s  [-h] [-p pluginName [binVersion ...]]" %
                                               (' '.join(args[:2])),
-                                        epilog="Example: %s ctffind eman \n\n%s" %
-                                               (' '.join(args[:2]), pluginRepo.printPluginInfo()))
+                                        epilog="Example: %s ctffind eman \n\n" %
+                                               ' '.join(args[:2]),
+                                        add_help=False)
+uninstallParser.add_argument('-h', '--help', action='store_true', help='show help')
 uninstallParser.add_argument('--noBin', action='store_true',
                             help='Optional flag to uninstall plugins only as a python module,\n'
                                  'without uninstalling the plugin binaries. This will affect\n'
@@ -80,7 +85,13 @@ uninstallParser.add_argument('-p', '--plugin', action='append',
 
 
 parsedArgs = parser.parse_args(args[1:])
-if parsedArgs.mode == MODE_INSTALL_PLUGIN:
+mode = parsedArgs.mode
+if parsedArgs.help:
+    parserUsed = installParser if mode == MODE_INSTALL_PLUGIN else uninstallParser
+    parserUsed.epilog += pluginRepo.printPluginInfo()
+    parserUsed.print_help()
+    parserUsed.exit(0)
+elif mode == MODE_INSTALL_PLUGIN:
     pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0], getPipData=True)
     if not pluginDict:
         print('\n' + installParser.epilog)
@@ -95,6 +106,10 @@ if parsedArgs.mode == MODE_INSTALL_PLUGIN:
                     plugin.installBin()
 
 elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
+    if parsedArgs.help:
+        uninstallParser.epilog += pluginRepo.printPluginInfo()
+        uninstallParser.print_help()
+        uninstallParser.exit(0)
     for pluginName in parsedArgs.plugin:
         plugin = PluginInfo(pluginName, remote=False)
         if plugin.isInstalled():

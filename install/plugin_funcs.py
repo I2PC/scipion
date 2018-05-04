@@ -11,7 +11,7 @@ from install.funcs import Environment
 import pip
 
 REPOSITORY_URL = os.environ.get('SCIPION_PLUGIN_JSON', None) or os.environ['SCIPION_PLUGIN_REPO_URL']
-PIP_BASE_URL = 'http://pypi.python.org/pypi/'
+PIP_BASE_URL = 'https://pypi.python.org/pypi'
 PIP_CMD = 'python {}/pip install %(installSrc)s'.format(Environment.getPythonPackagesFolder())
 
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
@@ -216,9 +216,13 @@ class PluginInfo(object):
 
     def uninstallPip(self):
         print('Removing %s plugin...' % self.pipName)
+        try:
+            from pip import main as pipmain
+        except:
+            from pip._internal import main as pipmain
         if os.path.exists(self.emLink):
             os.remove(self.emLink)
-        pip.main(['uninstall', '-y', self.pipName])
+        pipmain(['uninstall', '-y', self.pipName])
         return
 
 class PluginRepository(object):
