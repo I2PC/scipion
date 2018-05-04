@@ -8,7 +8,6 @@ from pkg_resources import parse_version
 from pyworkflow.utils.path import cleanPath
 from pyworkflow import LAST_VERSION, OLD_VERSIONS
 from install.funcs import Environment
-import pip
 
 REPOSITORY_URL = os.environ.get('SCIPION_PLUGIN_JSON', None) or os.environ['SCIPION_PLUGIN_REPO_URL']
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
