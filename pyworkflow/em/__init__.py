@@ -26,23 +26,16 @@
 """
 This modules contains classes related with EM
 """
-import os
-import sys
-
-import pyworkflow as pw
-import pyworkflow.utils as pwutils
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
 from data_tiltpairs import *
 from protocol import *
 from constants import *
 from convert import *
-#from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 from viewer import *
-#from pprint import pprint
 import transformations
-#from packages import *
+import pdb_handler
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
 _emPackagesDict = None
