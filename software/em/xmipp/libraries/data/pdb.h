@@ -187,7 +187,7 @@ public:
     }
 
     /// Read from PDB file
-    void read(const FileName &fnPDB);
+    void read(const FileName &fnPDB, double threshold = 0.0);
 
     /// Write to PDB file
     void write(const FileName &fnPDB);
