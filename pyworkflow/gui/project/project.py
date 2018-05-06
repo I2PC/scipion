@@ -39,6 +39,7 @@ import subprocess
 import uuid
 import SocketServer
 import tempfile
+import webbrowser
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
@@ -55,6 +56,10 @@ from labels import LabelsDialog
 
 # Import possible Object commands to be handled
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
+from workflowRepository import searchWorkflow
+
+sys.path.append(os.path.join(os.environ['SCIPION_HOME'], 'config'))
+from config.config import WORKFLOW_REPOSITORY_SERVER
 
 
 
@@ -94,6 +99,8 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow',
                             icon='fa-download.png')
+        projMenu.addSubMenu('Search workflow', 'search_workflow',
+                            icon = 'fa-search.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
@@ -227,6 +234,9 @@ class ProjectWindow(ProjectBaseWindow):
                           onSelect=self._loadWorkflow,
                           selectButton='Import'
                           ).show()
+
+    def onSearchWorkflow(self):
+        searchWorkflow()
 
     def onExportTreeGraph(self):
         runsGraph = self.project.getRunsGraph(refresh=True)

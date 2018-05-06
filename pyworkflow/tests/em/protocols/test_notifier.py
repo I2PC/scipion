@@ -28,9 +28,7 @@ import json
 import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtStress, ProtMonitorSystem
-from pyworkflow.gui.project.notifier import ProjectNotifier, \
-    SCIPION_STATS_WORKFLOW_APP
-
+from pyworkflow.gui.project.notifier import ProjectNotifier
 
 class TestNotifier(BaseTest):
     @classmethod
@@ -38,6 +36,13 @@ class TestNotifier(BaseTest):
         setupTestProject(cls)
 
     def _getUrl(self):
+        # TODO: I do not know why but if a make this import public
+        # ./scipion test --show  --grep test_notifier   fails although
+        # scipion test tests.em.protocols.test_notifier executes
+        # properlly
+        import sys
+        sys.path.append(os.path.join(os.environ['SCIPION_HOME'], 'config'))
+        from config.config import SCIPION_STATS_WORKFLOW_APP
         return os.environ.get('SCIPION_NOTIFY_URL', SCIPION_STATS_WORKFLOW_APP).strip()
 
     def test_projectNotifier(self):

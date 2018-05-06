@@ -33,8 +33,10 @@ import time
 from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
-SCIPION_STATS_SERVER = 'http://scipion.i2pc.es'
-SCIPION_STATS_WORKFLOW_APP = SCIPION_STATS_SERVER + '/report_protocols/api/workflow/workflow/'
+
+import sys
+sys.path.append(os.path.join(os.environ['SCIPION_HOME'], 'config'))
+from config.config import SCIPION_STATS_WORKFLOW_APP
 
 
 class ProjectNotifier(object):
