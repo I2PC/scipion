@@ -29,6 +29,6 @@ This package contains the protocols and data for LocScale
 from locscale import *
 from bibtex import _bibtex # Load bibtex dict with references
 
-# _logo = "locsacle_logo.png"
+_logo = "locscale_logo.jpg"
 
 from protocol_locscale import ProtLocScale
