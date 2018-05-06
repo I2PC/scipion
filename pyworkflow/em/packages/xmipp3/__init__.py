@@ -84,9 +84,7 @@ from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
-from protocol_classes_consensus2 import ProtClassesConsensus2   #   ---------------------------------------- DAVID
-from protocol_classes_consensus3 import ProtClassesConsensus3
-from protocol_classes_consensus4 import ProtClassesConsensus4
+from protocol_consensus_classes3D import XmippProtConsensusClasses3D
 from protocol_subtract_projection import XmippProtSubtractProjection
 from protocol_denoise_particles import XmippProtDenoiseParticles
 from protocol_eliminate_empty_particles import XmippProtEliminateEmptyParticles
