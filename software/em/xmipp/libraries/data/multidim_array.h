@@ -243,6 +243,26 @@ extern String floatToString(float F, int _width, int _prec);
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr) \
     for ((n)=0, (ptr)=(v).data; (n)<NZYXSIZE(v); ++(n), ++(ptr))
 
+/** For a random direct elements in the array, pointer version
+ *
+ * This macro is used to generate loops for the array in an easy manner. It
+ * defines an internal index 'k' which goes over the slices and 'n' that
+ * goes over the pixels in each slice. Each element can be accessed through
+ * an external pointer called ptr.
+ *
+ * @code
+ * T* ptr=NULL;
+ * size_t n;
+ * int randN;
+ * FOR_RAND_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,randN,ptr)
+ * {
+ *     std::cout << *ptr << " ";
+ * }
+ * @endcode
+ */
+// #define FOR_RAND_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,randN,ptr) \
+//     for ((n)=0, (ptr)=(v).data; (n)<NZYXSIZE(v); ++(n), ++(ptr))
+
 /** Access to a direct element.
  * v is the array, k is the slice (Z), i is the Y index and j is the X index.
  */
@@ -4996,6 +5016,32 @@ public:
         size_t n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         *ptr = ABS(*ptr);
+    }
+
+    /** Normalize the percentil interval values between -1 to 1
+     * the normalization is done over a Npix number of pixels chosen at random
+     *
+     * v_sorted(minPerc) = -1
+     * v_sorted(maxPerc) =  1
+     */
+    void selfNormalizeInterval(double minPerc=0.25, double maxPerc=0.75, int Npix=1000)
+    {
+        std::vector<double> randValues; // Vector with random chosen values
+
+        for(int i=0; i<Npix; i++)
+        {
+            size_t indx = (size_t)rnd_unif(0, MULTIDIM_SIZE(*this));
+            randValues.push_back(DIRECT_MULTIDIM_ELEM(*this,indx));
+        }
+        std::sort(randValues.begin(),randValues.end());
+
+        double m = randValues[(size_t)(minPerc*Npix)];
+        double M = randValues[(size_t)(maxPerc*Npix)];
+
+        T* ptr=NULL;
+        size_t n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+        *ptr = 2/(M-m)*(*ptr-m)-1;
     }
 
     /** MAX

@@ -43,7 +43,7 @@ from pyworkflow.em.protocol.protocol_sets import (
     ProtSplitSet, ProtSubSet, ProtUnionSet, ProtSubSetByMic)
 
 # Used by Roberto's test, where he creates the particles "by hand"
-from pyworkflow.em.data import Particle, SetOfParticles, Acquisition
+from pyworkflow.em.data import Particle, SetOfParticles, Acquisition, CTFModel
 from pyworkflow.utils.utils import prettyDict
 from pyworkflow.object import Float
 
@@ -217,7 +217,6 @@ class TestSets(BaseTest):
                     self.assertTrue(elem.getObjId() in setFullIds)
                     self.assertTrue(elem.getObjId() not in setSubIds)
                 
-                
             self.assertTrue(n >= n1)
             self.assertTrue(n >= n2)            
             self.assertEqual(n, n1+n2)
@@ -308,7 +307,6 @@ class TestSets(BaseTest):
         """Test that the union operation works as expected.
         Even if the order of the columns do not match.
         That is, M1(a,b,c) U M2(a,c,b)"""
-
         #create two set of particles
         inFileNameMetadata1 = self.proj.getTmpPath('particles1.sqlite')
         inFileNameMetadata2 = self.proj.getTmpPath('particles2.sqlite')
@@ -318,28 +316,29 @@ class TestSets(BaseTest):
         inFileNameData = self.proj.getTmpPath('particles.stk')
         img1 = Particle()
         img2 = Particle()
-        attrb1=[11,12,13,14]
-        attrb2=[21,22,23,24]
-        counter=0
+        attrb1 = [11, 12, 13, 14]
+        attrb2 = [21, 22, 23, 24]
+        counter = 0
+
         for i in range(1, 3):
             img1.cleanObjId()
             img1.setLocation(i, inFileNameData)
-            img1.setMicId(i%3)
-            img1.setClassId(i%5)
+            img1.setMicId(i % 3)
+            img1.setClassId(i % 5)
             img1.setSamplingRate(1.)
-            img1._attrb1= Float(attrb1[counter])
-            img1._attrb2= Float(attrb2[counter])
+            img1._attrb1 = Float(attrb1[counter])
+            img1._attrb2 = Float(attrb2[counter])
             imgSet1.append(img1)
             counter +=1
 
         for i in range(1, 3):
             img2.cleanObjId()
             img2.setLocation(i, inFileNameData)
-            img2.setClassId(i%5)
-            img2.setMicId(i%3)
+            img2.setClassId(i % 5)
+            img2.setMicId(i % 3)
             img2.setSamplingRate(2.)
-            img2._attrb2= Float(attrb2[counter])
             img2._attrb1= Float(attrb1[counter])
+            img2._attrb2= Float(attrb2[counter])
             imgSet2.append(img2)
             counter +=1
 
@@ -394,30 +393,37 @@ class TestSets(BaseTest):
         inFileNameData = self.proj.getTmpPath('particles.stk')
         img1 = Particle()
         img2 = Particle()
-        attrb1=[11,12,13,14]
-        attrb2=[21,22,23,24]
-        attrb3=[31,32]
-        counter=0
+        attrb1 = [11, 12, 13, 14]
+        attrb2 = [21, 22, 23, 24]
+        attrb3 = [31, 32]
+        counter = 0
+        # Test the join handles different attributes at a second level
+        ctf1 = CTFModel(defocusU=1000, defocusV=1000, defocusAngle=0)
+        ctf2 = CTFModel(defocusU=2000, defocusV=2000, defocusAngle=0)
+        ctf2._myOwnQuality = Float(1.)
+        img1.setCTF(ctf1)
+        img2.setCTF(ctf2)
+
         for i in range(1, 3):
             img1.cleanObjId()
             img1.setLocation(i, inFileNameData)
-            img1.setMicId(i%3)
-            img1.setClassId(i%5)
+            img1.setMicId(i % 3)
+            img1.setClassId(i % 5)
             img1.setSamplingRate(1.)
-            img1._attrb1= Float(attrb1[counter])
-            img1._attrb2= Float(attrb2[counter])
-            img1._attrb3= Float(attrb3[counter])
+            img1._attrb1 = Float(attrb1[counter])
+            img1._attrb2 = Float(attrb2[counter])
+            img1._attrb3 = Float(attrb3[counter])
             imgSet1.append(img1)
-            counter +=1
+            counter += 1
 
         for i in range(1, 3):
             img2.cleanObjId()
             img2.setLocation(i, inFileNameData)
-            img2.setClassId(i%5)
-            img2.setMicId(i%3)
+            img2.setClassId(i % 5)
+            img2.setMicId(i % 3)
             img2.setSamplingRate(2.)
-            img2._attrb1= Float(attrb1[counter])
-            img2._attrb2= Float(attrb2[counter])
+            img2._attrb1 = Float(attrb1[counter])
+            img2._attrb2 = Float(attrb2[counter])
             imgSet2.append(img2)
             counter +=1
 
@@ -447,22 +453,26 @@ class TestSets(BaseTest):
 
         #create merge protocol
         p_union = self.newProtocol(ProtUnionSet,
-                       objLabel='join diff column order',
+                       objLabel='join different attrs',
                        ignoreExtraAttributes=True)
         p_union.inputSets.append(protImport1.outputParticles)
         p_union.inputSets.append(protImport2.outputParticles)
         self.proj.launchProtocol(p_union, wait=True)
-        #assert
-        counter=0
-        for img in p_union.outputSet:
-            self.assertAlmostEqual(attrb1[counter],img._attrb1,4)
-            self.assertAlmostEqual(attrb2[counter],img._attrb2,4)
-            if hasattr(img, '_attrb3'):
-                self.assertTrue(False,"join should not have attrb3")
-            if not hasattr(img, '_attrb2'):
-                self.assertTrue(False,"join should have attrb2")
-            counter += 1
 
+        counter = 0
+
+        for img in p_union.outputSet:
+            self.assertAlmostEqual(attrb1[counter], img._attrb1, 4)
+            self.assertAlmostEqual(attrb2[counter], img._attrb2, 4)
+            self.assertFalse(hasattr(img, '_attrb3'),
+                             "join should not have attrb3")
+            self.assertTrue(hasattr(img, '_attrb2'),
+                            "join should have attrb2")
+            ctf = img.getCTF()
+            self.assertIsNotNone(ctf, "Image should have CTF after join")
+            self.assertFalse(hasattr(ctf, '_myOwnQuality'),
+                             "CTF should not have non common attributes")
+            counter += 1
 
     def testOrderBy(self):
         """ create set of particles and orderby a given attribute
@@ -488,8 +498,8 @@ class TestSets(BaseTest):
 
         for i in range(1, 10):
             img.setLocation(i, inFileNameData)
-            img.setMicId(i%3)
-            img.setClassId(i%5)
+            img.setMicId(i % 3)
+            img.setClassId(i % 5)
             imgSet.append(img)
             img.cleanObjId()
 

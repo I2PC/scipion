@@ -29,9 +29,10 @@ import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 import pyworkflow.protocol.constants as cons
 import pyworkflow.protocol.params as param
+from datetime import datetime
 from pyworkflow.em.protocol import ProtClassify2D
 from pyworkflow.em.data import SetOfParticles
-from pyworkflow.object import Set, String
+from pyworkflow.object import Set
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, \
     readSetOfParticles, setXmippAttributes
@@ -66,21 +67,30 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
                       label='Add features', expertLevel=param.LEVEL_ADVANCED,
                       help='Add features used for the ranking to each '
                            'one of the input particles')
-        form.addParam('noDenoising', param.BooleanParam, default=False,
-                      label='Turning off denoising',
+        form.addParam('useDenoising', param.BooleanParam, default=False,
+                      label='Turning on denoising',
                       expertLevel=param.LEVEL_ADVANCED,
-                      help='Option for turning of denoising method '
+                      help='Option for turning on denoising method '
                            'while computing emptiness feature')
+        form.addParam('denoising', param.IntParam, default=50,
+                      expertLevel=param.LEVEL_ADVANCED,
+                      condition='useDenoising',
+                      label='Denoising factor:',
+                      help='Factor to be used during denoising operation.'
+                           'Higher value applies stronger denoising,'
+                           'could be more precise by also very slow.')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
-        self.insertedDict = {}
-        self.finished = False
-        self.SetOfParticles = [m.clone() for m in self.inputParticles.get()]
-        partsSteps = self._insertNewPartsSteps(self.insertedDict,
-                                               self.SetOfParticles)
+        self.outputSize = 0
+        self.check = None
+        self.fnOutputMd = self._getExtraPath("output.xmd")
+        self.fnElimMd = self._getExtraPath("eliminated.xmd")
+        self.fnOutMdTmp = self._getExtraPath("outTemp.xmd")
+        self.fnElimMdTmp = self._getExtraPath("elimTemp.xmd")
+        checkStep = self._insertNewPartsSteps()
         self._insertFunctionStep('createOutputStep',
-                                 prerequisites=partsSteps, wait=True)
+                                 prerequisites=checkStep, wait=True)
 
     def createOutputStep(self):
         pass
@@ -98,48 +108,49 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
                 return s
         return None
 
-    def _insertNewPartsSteps(self, insertedDict, inputParticles):
-        """ Insert steps to process new movies (from streaming)
-        Param:
-            insertedDict: contains already processed movies
-            inputParticles: input particles set to be checked
-        """
+    def _insertNewPartsSteps(self):
         deps = []
-        writeSetOfParticles([m.clone() for m in inputParticles],
-                            self._getExtraPath("allDone.xmd"),
-                            alignType=em.ALIGN_NONE)
-        writeSetOfParticles([m.clone() for m in inputParticles
-                             if int(m.getObjId()) not in insertedDict],
-                            self._getExtraPath("newDone.xmd"),
-                            alignType=em.ALIGN_NONE)
-        stepId = \
-            self._insertFunctionStep('eliminationStep',
-                                     self._getExtraPath("newDone.xmd"),
-                                     self._getExtraPath("newOutput.xmd"),
-                                     self._getExtraPath("newEliminated.xmd"),
-                                     prerequisites=[])
+        stepId = self._insertFunctionStep('eliminationStep',
+                                          self._getExtraPath("input.xmd"),
+                                          prerequisites=[])
         deps.append(stepId)
-        for m in inputParticles:
-            if int(m.getObjId()) not in insertedDict:
-                insertedDict[m.getObjId()] = stepId
         return deps
 
-    def eliminationStep(self, fnInputMd, fnOutputMd, fnElimMd):
+    def eliminationStep(self, fnInputMd):
+        partsFile = self.inputParticles.get().getFileName()
+        self.partsSet = SetOfParticles(filename=partsFile)
+        self.partsSet.loadAllProperties()
+        self.streamClosed = self.partsSet.isStreamClosed()
+        if self.check == None:
+            writeSetOfParticles(self.partsSet, fnInputMd,
+                                alignType=em.ALIGN_NONE, orderBy='creation')
+        else:
+            writeSetOfParticles(self.partsSet, fnInputMd,
+                                alignType=em.ALIGN_NONE, orderBy='creation',
+                                where='creation>"' + str(self.check) + '"')
+        for p in self.partsSet.iterItems(orderBy='creation', direction='DESC'):
+            self.check = p.getObjCreation()
+            break
+        self.partsSet.close()
         args = "-i %s -o %s -e %s -t %f" % (
-        fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
+        fnInputMd, self.fnOutputMd, self.fnElimMd, self.threshold.get())
         if self.addFeatures:
             args+=" --addFeatures"
-        if self.noDenoising:
-            args += " --noDenoising"
+        if self.useDenoising:
+            args += " --useDenoising -d %d" % self.denoising.get()
         self.runJob("xmipp_image_eliminate_empty_particles", args)
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-        if os.path.exists(fnOutputMd):
+        os.remove(fnInputMd)
+        streamMode = Set.STREAM_CLOSED \
+            if getattr(self, 'finished', False) else Set.STREAM_OPEN
+        if os.path.exists(self.fnOutMdTmp):
             outSet = self._loadOutputSet(SetOfParticles,
-                                         'outputParticles.sqlite', fnOutputMd)
+                                         'outputParticles.sqlite',
+                                         self.fnOutMdTmp)
             self._updateOutputSet('outputParticles', outSet, streamMode)
-        if os.path.exists(fnElimMd):
+        if os.path.exists(self.fnElimMdTmp):
             outSet = self._loadOutputSet(SetOfParticles,
-                                     'eliminatedParticles.sqlite', fnElimMd)
+                                         'eliminatedParticles.sqlite',
+                                         self.fnElimMdTmp)
             self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
     def _stepsCheck(self):
@@ -151,41 +162,23 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
     def _checkNewInput(self):
         # Check if there are new particles to process from the input set
         partsFile = self.inputParticles.get().getFileName()
-        partsSet = SetOfParticles(filename=partsFile)
-        partsSet.loadAllProperties()
-        self.SetOfParticles = [m.clone() for m in partsSet]
-        self.streamClosed = partsSet.isStreamClosed()
-        partsSet.close()
-        partsSet = self._createSetOfParticles()
-        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
-        newParts = any(m.getObjId() not in partsSet
-                       for m in self.SetOfParticles)
+        self.lastCheck = getattr(self, 'lastCheck', datetime.now())
+        mTime = datetime.fromtimestamp(os.path.getmtime(partsFile))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime:
+            return None
         outputStep = self._getFirstJoinStep()
-        if newParts:
-            fDeps = self._insertNewPartsSteps(self.insertedDict,
-                                              self.SetOfParticles)
-            if outputStep is not None:
-                outputStep.addPrerequisites(*fDeps)
-            self.updateSteps()
+        fDeps = self._insertNewPartsSteps()
+        if outputStep is not None:
+            outputStep.addPrerequisites(*fDeps)
+        self.updateSteps()
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
             return
-        # Load previously done items (from text file)
-        doneList = self._readDoneList()
-        # Check for newly done items
-        partsSet = self._createSetOfParticles()
-        readSetOfParticles(self._getExtraPath("allDone.xmd"), partsSet)
-        newDone = [m.clone() for m in self.SetOfParticles
-                   if m.getObjId() not in doneList]
-        self.finished = self.streamClosed and (len(doneList) == len(partsSet))
-        if newDone:
-            self._writeDoneList(newDone)
-        elif not self.finished:
-            # If we are not finished and no new output have been produced
-            # it does not make sense to proceed and updated the outputs
-            # so we exit from the function here
-            return
+        self.finished = self.streamClosed and \
+                        self.outputSize == len(self.partsSet)
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
@@ -205,10 +198,12 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         outputSet.copyInfo(inputs)
         partsSet = self._createSetOfParticles()
         readSetOfParticles(fnMd, partsSet)
+        self.outputSize = self.outputSize + len(partsSet)
         outputSet.copyItems(partsSet,
                           updateItemCallback=self._updateParticle,
                           itemDataIterator=
                             md.iterRows(fnMd, sortByLabel=md.MDL_ITEM_ID))
+        os.remove(fnMd)
         return outputSet
 
     def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
@@ -228,25 +223,6 @@ class XmippProtEliminateEmptyParticles(ProtClassify2D):
         outputSet.close()
 
     # --------------------------- UTILS functions -----------------------------
-    def _readDoneList(self):
-        """ Read from a file the id's of the items that have been done. """
-        doneFile = self._getAllDone()
-        doneList = []
-        # Check what items have been previously done
-        if os.path.exists(doneFile):
-            with open(doneFile) as f:
-                doneList += [int(line.strip()) for line in f]
-        return doneList
-
-    def _getAllDone(self):
-        return self._getExtraPath('DONE_all.TXT')
-
-    def _writeDoneList(self, partList):
-        """ Write to a file the items that have been done. """
-        with open(self._getAllDone(), 'a') as f:
-            for part in partList:
-                f.write('%d\n' % part.getObjId())
-
     def _updateParticle(self, item, row):
         setXmippAttributes(item, row, md.MDL_SCORE_BY_EMPTINESS)
         if row.getValue(md.MDL_ENABLED) <= 0:
