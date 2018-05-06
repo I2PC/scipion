@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-#   -+-+-+- C H A N G E   T H I S   S T R I N G -+-+-+-
 _bibtexStr = """
 @article {Jakobi2017,
 article_type 	= {journal},

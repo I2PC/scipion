@@ -47,7 +47,7 @@ class ProtLocScale(ProtRefine3D):
                       important=True, label='Input volume',
                       help='Input EM volume')
         
-        form.addParam('refObj', params.PointerParam, allowsNull=True,
+        form.addParam('refObj', params.PointerParam,
                       label="Reference Volume", pointerClass='Volume',
                       help='Choose a model to take it as refference '
                            '(usually this volume should come from a PDB).')
@@ -106,7 +106,7 @@ class ProtLocScale(ProtRefine3D):
         if self.binaryMask.hasValue() and self.binaryMask.get().getDim() != \
                                           self.inputVolume.get().getDim():
             warnings.append('Input volume and binary mask should be '
-                          'of the same size')
+                            'of the same size')
 
         return warnings
     
@@ -129,7 +129,6 @@ class ProtLocScale(ProtRefine3D):
                            self.getObjectTag('refObj'),
                            self.patchSize))
         return methods
-
 
     def _citations(self):
         return ['Jakobi2017']
