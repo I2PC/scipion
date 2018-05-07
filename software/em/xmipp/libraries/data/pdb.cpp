@@ -317,7 +317,6 @@ void PDBRichPhantom::read(const FileName &fnPDB, double threshold)
     // Process all lines of the file
     std::string line, kind;
     RichAtom atom;
-    int cont = 0;
     while (!fh_in.eof())
     {
         // Read an ATOM line
@@ -345,15 +344,12 @@ void PDBRichPhantom::read(const FileName &fnPDB, double threshold)
 			atom.occupancy = textToFloat(line.substr(54,6));
 			atom.bfactor = textToFloat(line.substr(60,6));
 			if(atom.bfactor > threshold)
-			{
-				cont = cont + 1;
 				atomList.push_back(atom);
-			}
+
 
         } else if (kind == "REMA")
         	remarks.push_back(line);
     }
-    std::cout << cont << std::endl;
 
     // Close files
     fh_in.close();
