@@ -78,6 +78,7 @@ class TestImage(unittest.TestCase):
         fn = self.mic1
         mic = Micrograph()
         mic.setFileName(fn)
+        mic.setSamplingRate(1.)
 
         referenceT = Transform()
         referenceT.setShifts(-4608.,-4720.,1)
