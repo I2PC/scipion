@@ -39,7 +39,6 @@ import subprocess
 import uuid
 import SocketServer
 import tempfile
-import webbrowser
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
