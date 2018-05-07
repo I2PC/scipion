@@ -340,7 +340,7 @@ class ProtMotionCorr(ProtAlignMovies):
             if self.doSaveMovie:
                 args += ' -fct "%s" -ssc 1' % outputMovieFn
 
-            args += '-gpu %(GPU)s'
+            args += ' -gpu %(GPU)s'
             args += ' ' + self.extraParams.get()
             program = MOTIONCORR_PATH
 
