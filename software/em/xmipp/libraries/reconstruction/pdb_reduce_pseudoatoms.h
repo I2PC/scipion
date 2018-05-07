@@ -48,10 +48,6 @@ public:
 		might show a usage message. */
 	void readParams();
 
-	/** Produce side information.
-		Produce the atomic profiles. */
-	/*void produceSideInfo();*/
-
 	/** Show parameters. */
 	void show();
 

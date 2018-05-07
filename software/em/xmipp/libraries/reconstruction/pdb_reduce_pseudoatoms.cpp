@@ -55,8 +55,6 @@ void ProgPdbReduce::readParams()
 /* Show -------------------------------------------------------------------- */
 void ProgPdbReduce::show()
 {
-    if (verbose==0)
-        return;
     std::cout << "PDB file:           " << fn_volume           << std::endl
     << "Threshold:      " << thresh               << std::endl;
 }
