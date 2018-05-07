@@ -54,7 +54,7 @@ from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
 
 from constants import STATUS_COLORS
 from pyworkflow.gui.project.utils import getStatusColorFromNode
-from workflowRepository import exportUploadProtocols
+from workflow_repository import exportUploadProtocols
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
 ACTION_EDIT = Message.LABEL_EDIT

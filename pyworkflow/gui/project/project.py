@@ -39,7 +39,6 @@ import subprocess
 import uuid
 import SocketServer
 import tempfile
-import webbrowser
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
@@ -56,7 +55,7 @@ from labels import LabelsDialog
 
 # Import possible Object commands to be handled
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-from workflowRepository import searchWorkflow
+from workflow_repository import searchWorkflow
 
 sys.path.append(os.path.join(os.environ['SCIPION_HOME'], 'config'))
 from config.config import WORKFLOW_REPOSITORY_SERVER
