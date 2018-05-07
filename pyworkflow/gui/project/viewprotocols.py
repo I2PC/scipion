@@ -1809,7 +1809,7 @@ class ProtocolsView(tk.Frame):
         project = self.project
         message = exportUploadProtocols(project, protocols)
         if message:
-            self.windows.showError("Error conecting to workflow repository:\n" +  str(message))
+            self.windows.showError("Error connecting to workflow repository:\n" +  str(message))
 
     def _stopProtocol(self, prot):
         if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM,
