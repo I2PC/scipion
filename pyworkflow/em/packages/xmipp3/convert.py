@@ -642,6 +642,8 @@ def rowToCtfModel(ctfRow):
         # Case for metadata coming with Xmipp resolution label
         # Populate Scipion CTF from metadata row (using mapping dictionary
         # plus extra labels
+        if ctfRow.hasLabel(md.MDL_CTF_PHASE_SHIFT):
+            ctfModel.setPhaseShift(ctfRow.getValue(md.MDL_CTF_PHASE_SHIFT, 0))
         if ctfRow.containsLabel(xmipp.label2Str(xmipp.MDL_CTF_CRIT_MAXFREQ)):
             rowToObject(ctfRow, ctfModel, CTF_DICT,
                         extraLabels=CTF_EXTRA_LABELS)

@@ -315,26 +315,24 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             flagDegrees = 0
             for ctf in self.ctfRelations.get():
                 ctfName = ctf.getMicrograph().getMicName()
-                phaseShift0 = 0
+                phaseShift0 = 0.0
                 if self.findPhaseShift:
-                    if hasattr(ctf,"_phaseShift") and ctf._phaseShift.get() != None:
-                        phaseShift0=ctf._phaseShift.get()
+                    if ctf.hasPhaseShift(): #hasattr(ctf,"_phaseShift") and ctf._phaseShift.get() != None:
+                        phaseShift0=ctf.getPhaseShift()#_phaseShift.get()
                         radians = phaseShift0/3.14
                         if radians > 1 or flagDegrees == 1:
                             flagDegrees == 1
                             phaseShift0 = (phaseShift0*3.14)/180
-
                     else:
                         phaseShift0 = 1.57079 # pi/2
                     self.ctfDict[ctfName] = (ctf.getDefocusU(),phaseShift0)
                 else:
                     self.ctfDict[ctfName] = (ctf.getDefocusU(), phaseShift0)
+
         if self.findPhaseShift and not self.ctfRelations.hasValue():
             self._params['phaseShift0'] = 1.57079
 
     def _prepareCommand(self):
-        # phase_shift0 does not work
-        # with self.ctfRelations.hasValue()
         if not hasattr(self, "ctfDict") and self.ctfRelations.hasValue():
             self.getPreviousParameters()
 
