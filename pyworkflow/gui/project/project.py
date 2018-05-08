@@ -50,16 +50,11 @@ from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.gui.text import _open_cmd, openTextFileEditor
+from pyworkflow.webservices import ProjectWorkflowNotifier, WorkflowRepository
 
 from labels import LabelsDialog
-
 # Import possible Object commands to be handled
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-from workflow_repository import searchWorkflow
-
-sys.path.append(os.path.join(os.environ['SCIPION_HOME'], 'config'))
-from config.config import WORKFLOW_REPOSITORY_SERVER
-
 
 
 class ProjectWindow(ProjectBaseWindow):
@@ -133,10 +128,7 @@ class ProjectWindow(ProjectBaseWindow):
 
         self.initProjectTCPServer()  # Socket thread to communicate with clients
 
-        from notifier import ProjectNotifier
-
-        ProjectNotifier(self.project).notifyWorkflow()
-
+        ProjectWorkflowNotifier(self.project).notifyWorkflow()
 
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
@@ -201,7 +193,7 @@ class ProjectWindow(ProjectBaseWindow):
             if os.environ.get('SCIPION_NOTES_ARGS', None):
                 args.append(os.environ['SCIPION_NOTES_ARGS'])
             args.append(notesFile)
-            subprocess.Popen(args) #nonblocking
+            subprocess.Popen(args)  #nonblocking
         else:
             openTextFileEditor(notesFile)
 
@@ -235,7 +227,7 @@ class ProjectWindow(ProjectBaseWindow):
                           ).show()
 
     def onSearchWorkflow(self):
-        searchWorkflow()
+        WorkflowRepository().search()
 
     def onExportTreeGraph(self):
         runsGraph = self.project.getRunsGraph(refresh=True)

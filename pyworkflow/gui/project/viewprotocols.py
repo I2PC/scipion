@@ -40,21 +40,22 @@ from collections import OrderedDict
 import Tkinter as tk
 import ttk
 import datetime as dt
+
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
-from pyworkflow.config import isAFinalProtocol, getProtocolTag, \
-    PROTOCOL_DISABLED_TAG, PROTOCOL_TAG
+from pyworkflow.config import (isAFinalProtocol, getProtocolTag,
+                               PROTOCOL_DISABLED_TAG, PROTOCOL_TAG)
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
-
 from constants import STATUS_COLORS
 from pyworkflow.gui.project.utils import getStatusColorFromNode
-from workflow_repository import exportUploadProtocols
+from pyworkflow.webservices import WorkflowRepository
+
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
 ACTION_EDIT = Message.LABEL_EDIT
@@ -1805,11 +1806,13 @@ class ProtocolsView(tk.Frame):
         browser.show()
 
     def _exportUploadProtocols(self):
-        protocols = self._getSelectedProtocols()
-        project = self.project
-        message = exportUploadProtocols(project, protocols)
-        if message:
-            self.windows.showError("Error connecting to workflow repository:\n" +  str(message))
+        try:
+            jsonFn = os.path.join(tempfile.mkdtemp(), 'workflow.json')
+            self.project.exportProtocols(self._getSelectedProtocols(), jsonFn)
+            WorkflowRepository().upload(jsonFn)
+            pwutils.cleanPath(jsonFn)
+        except Exception as ex:
+            self.windows.showError("Error connecting to workflow repository:\n" +  str(ex))
 
     def _stopProtocol(self, prot):
         if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM,
