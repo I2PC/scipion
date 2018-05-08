@@ -462,6 +462,7 @@ public:
 		double E = Eespr * EdeltaF * EdeltaR * Ealpha + envR0+envR1*precomputed.u+envR2*precomputed.u2;
 		if (E < 0)
 			E	= 0;
+
 		if (show)
 		{
 			std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -476,6 +477,7 @@ public:
 			<< std::endl;
 			std::cout << "   Total atenuation(E)= " << E << std::endl;
 			std::cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
+			std::cout << "   VPP=" << VPP << std::endl;
 			std::cout << "   CTF="
 			<< -K*(Ksin*sine_part - Kcos*cosine_part)*E << std::endl;
 		}

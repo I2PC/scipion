@@ -1444,6 +1444,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		prm2D->saveIntermediateResults("step05b_estimate_2D_parameters", true);
 	}
 
+	//prm2D->saveIntermediateResults("/home/javiermota/Documents/MATLAB/VPP/step05b_estimate_2D_parameters", true);
 	/************************************************************************/
 	/* STEP 13: Produce output                                              */
 	/************************************************************************/
@@ -1467,11 +1468,13 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 
 		}
 #endif
+		//prm2D->saveIntermediateResults("/home/javiermota/Documents/MATLAB/VPP/step06_estimate_2D_parameters", true);
         XX(u)=1; YY(u)=0;
         prm2D->current_ctfmodel.lookFor(3, u, z3, 0);
         prm2D->current_ctfmodel.lookFor(1, u, z1, 0);
         double z1m = z1.module();
         double z3m = z3.module();
+
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(prm2D->mask_between_zeroes)
 		{
 			double wn=DIRECT_MULTIDIM_ELEM(prm2D->w_contfreq, n);
@@ -1482,7 +1485,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		CTF_fitness(prm2D->adjust_params->adaptForNumericalRecipes(), prm2D);
 		// Save results
 		FileName fn_rootCTFPARAM = prm2D->fn_psd.withoutExtension();
-
 		FileName fn_rootMODEL = fn_rootCTFPARAM;
 		size_t atPosition=fn_rootCTFPARAM.find('@');
 

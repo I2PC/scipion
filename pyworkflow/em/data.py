@@ -122,7 +122,8 @@ class CTFModel(EMObject):
         self._defocusV = Float(kwargs.get('defocusV', None))
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
-        self._phaseShift = Float(kwargs.get('phaseShift', None))
+        self._phaseShift = None if not 'phaseShift' in kwargs \
+                           else Float(kwargs.get('phaseShift', None))
         self._defocusRatio = Float()
         self._psdFile = String()
         self._micObj = None

@@ -1114,13 +1114,13 @@ void CTFDescription1D::forcePhysicalMeaning()
             if (Gc2*Tm < 0.01)
                 Gc2 = 0.011 / Tm;
         }
-        if (phase_shift > 3.14) //6.28
+        if (phase_shift > 3.14) //Normalize phase shift between 0-PI
         {
-        	phase_shift = phase_shift/floor(phase_shift/3.14) - 3.14;
+        	phase_shift = phase_shift - floor(phase_shift/3.14)*3.14;
         }
         if (phase_shift < 0)
         {
-        	phase_shift = phase_shift + 3.14;
+        	phase_shift = 3.14 + phase_shift - ceil(phase_shift/3.14)*3.14;
         }
     }
 }
