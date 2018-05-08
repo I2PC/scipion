@@ -455,8 +455,17 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-    def scheduleProtocol(self, protocol):
+    def scheduleProtocol(self, protocol, prerequisites=[]):
+        """ Schedule a new protocol that will run when the input data
+        is available and the prerequisited finished.
+        Params:
+            protocol: the protocol that will be scheduled.
+            prerequisites: a list with protocols ids that the scheduled
+                protocol will wait for.
+        """
         protocol.setStatus(pwprot.STATUS_SCHEDULED)
+        protocol.addPrerequisites(*prerequisites)
+
         self._setupProtocol(protocol)
         # protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean()  # Create working dir if necessary
@@ -1069,10 +1078,10 @@ class Project(object):
         The check will only be done for protocols that have not been sent
         to a queue system.
         """
-        from pyworkflow.protocol.launch import _isLocal
+        from pyworkflow.protocol.launch import _runsLocally
         pid = protocol.getPid()
 
-        if (protocol.isRunning() and _isLocal(protocol)
+        if (protocol.isRunning() and _runsLocally(protocol)
             and not protocol.useQueue()
             and not pwutils.isProcessAlive(pid)):
             protocol.setFailed("Process %s not found running on the machine. "
@@ -1080,7 +1089,6 @@ class Project(object):
                                "reporting the status to Scipion. Logs might "
                                "have information about what happened to this "
                                "process." % pid)
-
 
     def iterSubclasses(self, classesName, objectFilter=None):
         """ Retrieve all objects from the project that are instances

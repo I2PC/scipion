@@ -284,9 +284,10 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 
 		List<ManualParticle> particles;
 		int index;
+		SupervisedParticlePicker picker = getParticlePicker();
 		Color color = picker.getColor();
-        Color autoColor = getAutomaticColor(color);
-        Color delColor = getDeletedColor(color);
+        Color autoColor = picker.getAutomaticColor();
+        Color delColor = picker.getDeletedColor();
         if (!getMicrograph().isEmpty()) {
             particles = getMicrograph().getManualParticles();
             g2.setColor(color);
@@ -323,33 +324,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		}
 	}
 
-    private Color getAutomaticColor(Color color) {
 
-	    return moveColorHue(color, 0.66f);
-
-//	    return color.darker();
-    }
-
-    private Color getDeletedColor(Color color) {
-
-        return moveColorHue(color, 0.33f);
-
-//	    return color.darker();
-    }
-
-    private Color moveColorHue(Color color, float hueValue){
-        // Get saturation and brightness.
-        float[] hsbVals = new float[3];
-            Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsbVals);
-
-        // Pass .5 (= 180 degrees) as HUE
-        float newHue = hsbVals[0] - hueValue;
-
-            if (newHue < 0) newHue = newHue + 1f;
-
-        Color newColor = new Color(Color.HSBtoRGB(newHue, hsbVals[1], hsbVals[2]));
-        return newColor;
-    }
 
     @Override
 	public void refreshActive(PickerParticle p)

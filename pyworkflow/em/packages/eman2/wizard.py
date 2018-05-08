@@ -57,8 +57,14 @@ class SparxGaussianPickerWizard(EmWizard):
         project = autopickProt.getProject()
         micfn = micSet.getFileName()
         coordsDir = project.getTmpPath(micSet.getName())
+
         cleanPath(coordsDir)
         makePath(coordsDir)
+
+        from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
+        micMdFn = os.path.join(coordsDir, "micrographs.xmd")
+        writeSetOfMicrographs(micSet, micMdFn)
+
         
         pickerProps = os.path.join(coordsDir, 'picker.conf')
         f = open(pickerProps, "w")
@@ -98,7 +104,8 @@ class SparxGaussianPickerWizard(EmWizard):
         convertCommand = %(convert)s --coordinates --from eman2 --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         f.close()
-        process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt,
+        process = CoordinatesObjectView(project, micMdFn, coordsDir, autopickProt,
+                                        mode=CoordinatesObjectView.MODE_AUTOMATIC,
                                         pickerProps=pickerProps).show()
         process.wait()
         myprops = readProperties(pickerProps)

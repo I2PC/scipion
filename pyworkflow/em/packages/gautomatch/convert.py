@@ -86,6 +86,10 @@ def rowToCoordinate(coordRow):
     if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
+        # Gautomatch starts _rlnClassNumber at 0, but relion at 1
+        # so let's increment its value
+        if coord.hasAttribute('_rlnClassNumber'):
+            coord._rlnClassNumber.increment()
 
         # FIXME: THE FOLLOWING IS NOT CLEAN
         try:
@@ -127,16 +131,11 @@ def readCoordinates(mic, fileName, coordsSet):
             coordsSet.append(coord)
 
 
-def writeSetOfCoordinates(workDir, coordSet, isGlobal=False):
-    """ Write set of coordinates from md to star file.
-    Used only for exclusive picking. Creates .star files with
-    bad coordinates (for each mic) and/or a single .star file with
-    global detector defects.
-    """
+class CoordStarWriter():
+    """ Helper class to write a star file containing coordinates. """
     # Gautomatch cannot read default star header (with # XMIPP_STAR_1 *),
     # so we write directly to file
-
-    header = """
+    HEADER = """
 data_
 
 loop_
@@ -145,38 +144,57 @@ _rlnCoordinateY #2
 _rlnAnglePsi #3
 _rlnClassNumber #4
 _rlnAutopickFigureOfMerit #5
-"""
+    """
 
-    if isGlobal:
-        fnOut = os.path.join(workDir, 'defects.star')
-        f = open(fnOut, 'w')
-        f.write(header)
-        for coord in coordSet:
-            f.write("%0.6f %0.6f %0.6f %d %0.6f\n" %
-                    (coord.getX(), coord.getY(), 0, 0, 0))
-        f.close()
+    def __init__(self, filename):
+        self._file = open(filename, 'w')
+        # Write header
+        self._file.write(self.HEADER)
 
-    else:
-        for mic in coordSet.iterMicrographs():
-            micId = mic.getObjId()
-            micBase = pwutils.removeBaseExt(mic.getFileName())
-            fnCoords = os.path.join(workDir, micBase + '_rubbish.star')
-            f = open(fnCoords, 'w')
-            f.write(header)
-            for coord in coordSet:
-                if coord.getMicId() == micId:
-                    f.write("%0.6f %0.6f %0.6f %d %0.6f\n"
-                            % (coord.getX(), coord.getY(),
-                               coord.getAttributeValue('_rlnAnglePsi', 0.0),
-                               coord.getAttributeValue('_rlnClassNumber', 0),
-                               coord.getAttributeValue('_rlnAutopickFigureOfMerit', 0.0)))
-            f.close()
+    def writeRow(self, x, y, psi=0, classNumber=0, autopickFom=0):
+        self._file.write("%0.6f %0.6f %0.6f %d %0.6f\n"
+                         % (x, y, psi, classNumber, autopickFom))   
+
+    def close(self):
+        self._file.close()
+
+
+def writeDefectsFile(coordSet, outputFn):
+    """ Write all coordinates in coordSet as the defects.star file
+    as expected by Gautomatch. """
+    csw = CoordStarWriter(outputFn)
+    for coord in coordSet:
+        csw.writeRow(coord.getX(), coord.getY())
+    csw.close()
+
+
+def writeMicCoords(mic, coordSet, outputFn):
+    """ Write all the coordinates in coordSet as star file for
+    micrograph mic. """
+    csw = CoordStarWriter(outputFn)
+    for coord in coordSet:
+        csw.writeRow(coord.getX(), coord.getY(),
+                     coord.getAttributeValue('_rlnAnglePsi', 0.0),
+                     coord.getAttributeValue('_rlnClassNumber', 0),
+                     coord.getAttributeValue('_rlnAutopickFigureOfMerit', 0.0))
+    csw.close()
+
+
+def writeSetOfCoordinates(workDir, coordSet, isGlobal=False):
+    """ Write set of coordinates from md to star file.
+    Used only for exclusive picking. Creates .star files with
+    bad coordinates (for each mic) and/or a single .star file with
+    global detector defects.
+    """
+    for mic in coordSet.iterMicrographs():
+        micBase = pwutils.removeBaseExt(mic.getFileName())
+        fnCoords = os.path.join(workDir, micBase + '_rubbish.star')
+        writeMicCoords(mic, coordSet.iterCoordinates(mic), fnCoords)
 
 
 def getEnviron():
     """ Return the environ settings to run gautomatch programs. """
     environ = pwutils.Environ(os.environ)
-
     # Take Scipion CUDA library path
     cudaLib = environ.getFirst(('GAUTOMATCH_CUDA_LIB', 'CUDA_LIB'))
     environ.addLibrary(cudaLib)
@@ -194,18 +212,38 @@ def getProgram():
                         os.path.basename(os.environ['GAUTOMATCH']))
 
 
-def runGautomatch(micName, refStack, workDir, args, env=None):
-    # We convert the input micrograph on demand if not in .mrc
-    outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
-    if micName.endswith('.mrc'):
-        pwutils.createLink(micName, outMic)
-    else:
-        em.ImageHandler().convert(micName, outMic)
+def runGautomatch(micNameList, refStack, workDir, extraArgs, env=None,
+                  runJob=None):
+    """ Run Gautomatch with the given parameters.
+    If micrographs are not .mrc, they will be converted.
+    If runJob=None, it will use pwutils.runJob.
+    """
+    args = ''
+
+    ih = em.ImageHandler()
+
+    for micName in micNameList:
+        # We convert the input micrograph on demand if not in .mrc
+        outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
+        args += ' %s' % outMic
+        if micName.endswith('.mrc'):
+            pwutils.createLink(micName, outMic)
+        else:
+            ih.convert(micName, outMic)
+
     if refStack is not None:
-        args = ' %s --T %s %s' % (outMic, refStack, args)
-    else:
-        args = ' %s %s' % (outMic, args)
+        args += ' -T %s' % refStack
+
+    args += ' %s' % extraArgs
+
     environ = env if env is not None else getEnviron()
-    pwutils.runJob(None, getProgram(), args, env=environ)
-    # After picking we can remove the temporary file.
-    pwutils.cleanPath(outMic)
+    if runJob is None:
+        pwutils.runJob(None, getProgram(), args, env=environ)
+    else:
+        runJob(getProgram(), args, env=environ)
+
+    for micName in micNameList:
+        # We convert the input micrograph on demand if not in .mrc
+        outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
+        # After picking we can remove the temporary file.
+        pwutils.cleanPath(outMic)
