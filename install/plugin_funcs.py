@@ -130,7 +130,7 @@ class PluginInfo(object):
             environment = Environment()
             if os.path.exists(os.path.join(environment.getPythonPackagesFolder(), self.dirName, 'plugin.py')):
                 plugin = getattr(import_module('%s.plugin' % self.dirName), '_plugin')
-                plugin.registerFunction(environment)
+                plugin.registerPluginBinaries(environment)
                 # read binVersions here
             else:
                 print("Cant find plugin.py for %s" % self.dirName)
@@ -181,9 +181,13 @@ class PluginInfo(object):
                                              ignoreDefaultDeps=True)
         environment.execute()
 
-        # link pip module to em/packages
+        # we already have a dir for the plugin:
         self.dirName = self.getDirName()
-        os.symlink(self.getPipPath(), self.getEmPackagesLink())
+
+        # link pip module in em/packages
+        if not os.path.exists(self.getEmPackagesLink()):
+            os.symlink(self.getPipPath(), self.getEmPackagesLink())
+
         return True
 
     def installBin(self, args=None):
@@ -193,7 +197,7 @@ class PluginInfo(object):
         # install binaries
         if os.path.exists(os.path.join(environment.getPythonPackagesFolder(), self.dirName, 'plugin.py')):
             plugin = getattr(import_module('%s.plugin' % self.dirName), '_plugin')
-            plugin.registerFunction(environment)
+            plugin.registerPluginBinaries(environment)
         else:
             print("Can't find plugin.py for %s" % self.dirName)
 

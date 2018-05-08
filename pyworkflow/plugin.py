@@ -33,7 +33,7 @@ from pyworkflow.utils import Environ
 class Plugin(object):
 
     def __init__(self, name, version=None, configVars=None,
-                 logo=None, references=None, registerFunction=None):
+                 logo=None, bibtex=None):
         # Plugin name - only mandatory attribute
         self.name = name
         # Plugin version
@@ -43,9 +43,7 @@ class Plugin(object):
         # path to the logo, relative to each plugin's plugin.py file
         self.logo = logo
         # List with the default plugin references e.g. []
-        self.references = references
-        #  The function that adds packages, libraries, etc to be installed
-        self.registerFunction = registerFunction
+        self.bibtex = bibtex
         # Set default env vars
         self.setDefaultEnviron()
 
@@ -54,3 +52,7 @@ class Plugin(object):
             os.environ.setdefault(k, self.configVars[k])
         environ = Environ(os.environ)
         return environ
+
+    def registerPluginBinaries(self, env):
+        """Overwrite in subclass"""
+        pass

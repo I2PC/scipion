@@ -24,7 +24,6 @@ BSOFT_HOME = %(EM_ROOT)s/bsoft-1.9.0
 CRYOEF_HOME = %(EM_ROOT)s/cryoEF-1.1.0
 CCP4_HOME =  %(EM_ROOT)s/ccp4-6.5
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker-0.2.1
-EMAN2DIR = %(EM_ROOT)s/eman-2.12
 ETHAN_HOME = %(EM_ROOT)s/ethan-1.2
 GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch-0.53
 GAUTOMATCH = Gautomatch-v0.53_sm_20_cu7.5_x86_64
