@@ -186,6 +186,26 @@ void keepBiggestComponent(MultidimArray< double >& I,
  */
 void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
 
+/** Applays a variance filter to an image
+ * @ingroup Filters
+ *
+ * If relative=True, the filter is normalized to the mean (coeficient of variation) 
+ */
+void varianceFilter(MultidimArray<double> &I, int kernelSize = 10, bool relative=false);
+
+/** Transforms I to a binary mask with 0 where both variance and mean are high.
+ * @ingroup Filters
+ *
+ */
+void noisyZonesFilter(MultidimArray<double> &I, int kernelSize = 10);
+
+/** Returns the Gini coefficient of an image. This is related to the Entropy.
+ * It also applies a variance filter to the input Image
+ * @ingroup Filters
+ *
+ */
+double giniCoeff(MultidimArray<double> &I, int varKernelSize = 50);
+
 /** Segment an object using Otsu's method
  * @ingroup Filters
  *
@@ -194,7 +214,7 @@ void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
  *
  * http://www.biomecardio.com/matlab/otsu.html
  */
-void OtsuSegmentation(MultidimArray<double> &V);
+double OtsuSegmentation(MultidimArray<double> &V);
 
 /** Segment an object using Entropy method
  * @ingroup Filters
@@ -204,7 +224,7 @@ void OtsuSegmentation(MultidimArray<double> &V);
  *
  * http://rsbweb.nih.gov/ij/plugins/download/Entropy_Threshold.java
  */
-void EntropySegmentation(MultidimArray<double> &V);
+double EntropySegmentation(MultidimArray<double> &V);
 
 /** Segment an object using a combination of Otsu and Entropy method
  * @ingroup Filters
@@ -1382,7 +1402,7 @@ void centerImageRotationally(MultidimArray<double> &I, RotationalCorrelationAux 
  * with its mirrored (X, Y, XY) versions. The image is aligned translationally
  * and then rotationally Niter times.
  */
-void centerImage(MultidimArray<double> &I, CorrelationAux &aux,
+Matrix2D<double> centerImage(MultidimArray<double> &I, CorrelationAux &aux,
                  RotationalCorrelationAux &aux2,
                  int Niter=10, bool limitShift=true);
 
@@ -1512,6 +1532,15 @@ void logFilter(MultidimArray< T > &V, double a, double b, double c)
     }
 }
 
+/** Compute Total Variation denoising.
+ * See method at B. Bajic, J. Lindblad, N. Sladoje. Blind Restoration of Images Degraded
+ * with Mixed Poisson-Gaussian Noise with Application in Transmission Electron Microscopy.
+ * In Proceedings of the 2016 IEEE Intern. Symposium on Biomedical Imaging, ISBI2016, Prague,
+ * Czech Republic, April 2016, pp. 123-127
+ * */
+void denoiseTVFilter(MultidimArray<double> &V, int maxIter);
+
+
 /** Compute edges with Sobel */
 void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
 
@@ -1570,6 +1599,18 @@ public:
     //4.431-0.4018*LN(ABS(P1+336.6))
     //a-b*ln(x+c)
     double a,b,c;
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
+class DenoiseTVFilter: public XmippFilter
+{
+public:
+    int maxIter;
     /** Define the parameters for use inside an Xmipp program */
     static void defineParams(XmippProgram * program);
     /** Read from program command line */
@@ -1663,5 +1704,21 @@ public:
     void apply(MultidimArray<double> &img);
 };
 
+class RetinexFilter: public XmippFilter
+{
+public:
+    double percentile; // Percentile of noise derivative energies filtered out
+    double eps; 
+    Image<int> *mask; // for the case of mask bad pixels
+
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+    /** Compute Laplacian */
+    void laplacian(const MultidimArray<double> &img, MultidimArray< std::complex<double> > &fimg, bool direct);
+};
 
 #endif

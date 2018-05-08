@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers aroung Xmipp CL2D protocol
+This module implement the wrappers aroung Xmipp CLtomo protocol
 visualization program.
 """
 
@@ -51,14 +51,14 @@ class XmippCLTomoViewer(ProtocolViewer):
               help='Create a  list of levels like: 0,1,3 or 0-3 ')    
     
     def _getVisualizeDict(self):
-        return {'doShowLastLevel': self._viewLevelFiles}        
+        return {'doShowLastLevel': self._viewLevelFiles,
+                'showSeveralLevels': self._viewLevelFiles}
 
     def _viewLevelFiles(self, e=None):
         views = []
         errors = []
         levelFiles = glob.glob(self.protocol._getExtraPath("results_classes_level*.xmd"))
-        
-        
+
         if levelFiles:
             levelFiles.sort()
             lastLevelFile = levelFiles[-1]
@@ -85,4 +85,3 @@ class XmippCLTomoViewer(ProtocolViewer):
             self.errorList(errors, views)
                 
         return views      
-        

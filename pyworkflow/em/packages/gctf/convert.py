@@ -36,8 +36,7 @@ from collections import OrderedDict
 
 from pyworkflow.em.packages.gctf import GCTF_HOME
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pyworkflow.object import Float, ObjectWrap
-import pyworkflow.em as em
+from pyworkflow.object import ObjectWrap
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 

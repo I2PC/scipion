@@ -154,10 +154,13 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         else:
             consensus = self.consensus.get()
         consensusCoords = allCoords[votes>=consensus,:]
-        jaccardIdx = float(len(consensusCoords))/(float(len(allCoords))/len(self.inputCoordinates))
-        # COSS: Possible problem with concurrent writes
-        with open(self._getExtraPath('jaccard.txt'), "a") as fhJaccard:
-            fhJaccard.write("%d %f\n"%(micId,jaccardIdx))
+        try:
+            jaccardIdx = float(len(consensusCoords))/(float(len(allCoords))/len(self.inputCoordinates))
+            # COSS: Possible problem with concurrent writes
+            with open(self._getExtraPath('jaccard.txt'), "a") as fhJaccard:
+                fhJaccard.write("%d %f\n"%(micId,jaccardIdx))
+        except:
+            pass
         
         # Write the consensus file only if there
         # are some coordinates (size > 0)

@@ -96,7 +96,7 @@ class XmippProtNMABase(EMProtocol):
     def computeModesStep(self, fnPseudoatoms, numberOfModes, cutoffStr):
         (baseDir,fnBase)=os.path.split(fnPseudoatoms)
         fnBase=fnBase.replace(".pdb","")
-        fnDistanceHist=os.path.join(baseDir,'extra',fnBase+'_distance.hist')
+        fnDistanceHist=os.path.join(baseDir,'extra','atoms_distance.hist')
         rc = self._getRc(fnDistanceHist)
         self._enterWorkingDir()
         self.runJob('nma_record_info.py', "%d %s.pdb %d" % (numberOfModes, fnBase, rc),env=getNMAEnviron())
@@ -214,7 +214,7 @@ class XmippProtNMABase(EMProtocol):
             if collectivity < collectivityThreshold:
                 mdOut.setValue(xmipp.MDL_ENABLED,-1,objId)
         fh.close()
-        idxSorted = [i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1])]
+        idxSorted = [i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1], reverse=True)]
         
         score = []
         for j in range(len(fnVec)):
@@ -228,8 +228,7 @@ class XmippProtNMABase(EMProtocol):
         
         #score = [0]*numberOfModes
         for i in range(len(fnVec)):
-            score[i] += i+1
-            score[idxSorted[i]] += modeNum[i] - i
+	    score[idxSorted[i]] = idxSorted[i] + modeNum[i] + 2
         i = 0
         for objId in mdOut:
             score_i = float(score[i])/(2.0*l)

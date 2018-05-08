@@ -199,6 +199,22 @@ public:
     std::vector<double> freqContFSC, FSC;
 };
 
+class SoftNegativeFilter: public XmippFilter
+{
+public:
+    double K; // K*sigma
+    FileName fnFSC;
+    Image<int> mask; // for the case of mask bad pixels
+    double Ts; // Sampling rate
+
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
 /** Fast access to bandpass filter.
  * Frequencies are normalized to 0.5 */
 void bandpassFilter(MultidimArray<double> &img, double w1, double w2, double raised_w);

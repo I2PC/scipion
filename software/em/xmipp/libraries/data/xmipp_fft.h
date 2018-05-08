@@ -47,6 +47,10 @@
     freq = (size<=1)? 0:(( (((int)idx) <= (((int)(size)) >> 1)) ? ((int)(idx)) : -((int)(size)) + ((int)(idx))) / \
            (double)(size));
 
+#define FFT_IDX2DIGFREQ_DOUBLE(idx, size, freq) \
+    freq = (size<=1)? 0:(( (((double)idx) <= (((double)(size)) / 2.0)) ? ((double)(idx)) : -((double)(size)) + ((double)(idx))) / \
+           (double)(size));
+
 #define FFT_IDX2DIGFREQ_FAST(idx, size, size_2, isize, freq) \
     freq = ( ((idx) <= (size_2)) ? (idx) : -(size) + (idx) ) * (isize);
 /** Frequency to index (int)
