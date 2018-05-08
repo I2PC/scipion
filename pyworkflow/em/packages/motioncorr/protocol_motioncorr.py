@@ -202,6 +202,7 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
+
         if self._supportsMagCorrection():
             group = form.addGroup('Magnification correction')
             group.addParam('doMagCor', params.BooleanParam, default=False,
@@ -281,6 +282,16 @@ class ProtMotionCorr(ProtAlignMovies):
                               1 - flip upside down, 2 - flip left right.
         -Tilt      0 0        Tilt angle range for a dose fractionated tomographic
                               tilt series, e.g. *-60 60*
+    Since version *1.1.0*:
+        -GpuMemUsage 0.5      Specify how much GPU memory is used to buffer movie frames.
+                              It is recommended when running side by side processes in
+                              the same card. By default is 50% (i. e 0.5)
+        -InFmMotion 1         Takes into account of motion-induced blurring of
+                              each frame. It has shown resolution improvement
+                              in some test cases. By default this option is off.
+        -Bft 500 150          Since version 1.1.0 this option can take two arguments.
+                              First one is used in global-motion measurement and the
+                              second one is for local-motion. (default 500 150).
                               """)
 
         form.addParam('doSaveUnweightedMic', params.BooleanParam, default=True,
