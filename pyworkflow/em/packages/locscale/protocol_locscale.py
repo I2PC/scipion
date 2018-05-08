@@ -24,19 +24,16 @@
 # *
 # **************************************************************************
 
-import os
-from pyworkflow.em import ProtRefine3D
-import pyworkflow.protocol.params as params
-from pyworkflow.em.data import Volume
-from pyworkflow.utils import replaceBaseExt, removeBaseExt, removeExt
 from locscale import *
-
+from pyworkflow.em import Prot3D
+from pyworkflow.protocol import params
+from pyworkflow.em.data import Volume
+from pyworkflow.utils import removeBaseExt
                                
-class ProtLocScale(ProtRefine3D):
+class ProtLocScale(Prot3D):
     """ This Protocol computes contrast-enhanced cryo-EM maps 
         by local amplitude scaling using a reference model.
     """
-    
     _label = 'local scale'
 
     #--------------------------- DEFINE param functions ------------------------
@@ -57,9 +54,9 @@ class ProtLocScale(ProtRefine3D):
                       label='3D mask', allowsNull=True,
                       help='Binary mask: 0 to ignore that voxel and 1 to process it.')
 
-        form.addParam('patchSize', params.IntParam,
-                      label='Patch size', help='Window size for local scale.\n'
-                            'Recomended: 7 * average_map_resolution / pixel_size')
+        form.addParam('patchSize', params.IntParam, label='Patch size', 
+                      help='Window size for local scale.\n'
+                           'Recommended: 7 * average_map_resolution / pixel_size')
 
         form.addParallelSection(threads=0, mpi=4)
     
@@ -76,18 +73,23 @@ class ProtLocScale(ProtRefine3D):
         self.info("Launching LocScale method")
         args = self.prepareParams()
 
-        python, program_args = getProgram('locscale_mpi.py', args)
+        python, program = getEmanPythonProgram('locscale_mpi.py')
+        program_args = program + ' ' + args
         self.runJob(python, program_args)
     
     def createOutputStep(self):
-        volume = Volume()
-        volume.setSamplingRate(self.getSampling())
-        volume.setFileName(self.getOutputFn())
-        self._defineOutputs(outputVolume=volume)
-        self._defineTransformRelation(self.inputVolume, volume)
+        """ Create the output volume 
+        """
+        outputVolume = Volume()
+        outputVolume.setSamplingRate(self.getSampling())
+        outputVolume.setFileName(self.getOutputFn())
+        self._defineOutputs(outputVolume=outputVolume)
+        self._defineTransformRelation(self.inputVolume, outputVolume)
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
+        """ We validate if eman is installed and if inputs make sense
+        """
         errors = []
         errors = validateEmanVersion(self, errors)
 
@@ -101,13 +103,15 @@ class ProtLocScale(ProtRefine3D):
         return errors
 
     def _warnings(self):
+        """ The input volume and the mask should be of the same size
+            but the progran can run.
+        """
         warnings = []
 
-        if self.binaryMask.hasValue() and self.binaryMask.get().getDim() != \
-                                          self.inputVolume.get().getDim():
+        if self.binaryMask.hasValue() and \
+            self.binaryMask.get().getDim() != self.inputVolume.get().getDim():
             warnings.append('Input volume and binary mask should be '
                             'of the same size')
-
         return warnings
     
     def _summary(self):
@@ -135,7 +139,7 @@ class ProtLocScale(ProtRefine3D):
     
     #--------------------------- UTILS functions -------------------------------
     def prepareParams(self):
-        """ The input params of the program are as follows:
+        """ The input params of the program are as follows (from source):
         '-em', '--em_map', required=True, help='Input filename EM map')
         '-mm', '--model_map', required=True, help='Input filename PDB map')
         '-p', '--apix', type=float, required=True, help='pixel size in Angstrom')
@@ -145,25 +149,33 @@ class ProtLocScale(ProtRefine3D):
         '-mpi', '--mpi', action='store_true', default=False,
                          help='MPI version call by: \"{0}\"'.format(mpi_cmd)
         """
+
+        # Input volume
         args  =  "--em_map '%s'" % self.getInputFn()
         self.info("Input file: " + self.getInputFn())
 
+        # Reference volume
         args += " --model_map '%s'" % self.getRefFn()
         self.info("Model file: " + self.getRefFn())
 
+        # Samplig rate
         args += " --apix %f" % self.getSampling()
         self.info("Samplig rate: %f" % self.getSampling())
         
+        # Mask
         if self.binaryMask.hasValue():
             args += " --mask '%s'" % self.binaryMask.get().getFileName()
             self.info("Mask file: " + self.binaryMask.get().getFileName())
 
+        # Windows size
         args += " --window_size %d" % self.patchSize
         self.info("Window size: %d" % self.patchSize)
 
+        # MPI flag
         if self.numberOfMpi>1:
             args += " -mpi"
 
+        # Output file
         args += " -o '%s'" % self.getOutputFn()
         self.info("Output file: " + self.getOutputFn())
 
@@ -173,9 +185,11 @@ class ProtLocScale(ProtRefine3D):
         return self.inputVolume.get().getSamplingRate()
 
     def getInputFn(self):
+        """ We replace the posible ':mrc' extension termination. """
         return self.inputVolume.get().getFileName().replace(":mrc","")
 
     def getRefFn(self):
+        """ We replace the posible ':mrc' extension termination. """
         return self.refObj.get().getFileName().replace(":mrc","")
 
     def getOutputFn(self):

@@ -1,6 +1,6 @@
 # ***************************************************************************
-# * Authors:     David Maluenda (dmaluenda@cnb.csic.es) (2018)
 # *
+# * Authors:     David Maluenda (dmaluenda@cnb.csic.es) (2018)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -42,27 +42,27 @@ class TestProtLocscale(BaseTest):
         # Volume
         print magentaStr("\nImporting Volume:")
         pImpVolume = new(ProtImportVolumes, samplingRate=1,
-                         filesPath=cls.dataSet.getFile('volumes/volume_1_iter_002.mrc'))
+                         filesPath=cls.dataSet.getFile('vol2'))
         launch(pImpVolume, wait=True)
         cls.inputVol = pImpVolume.outputVolume
 
         # Reference
         print magentaStr("\nImporting Reference:")
         pImpRef = new(ProtImportVolumes, samplingRate=1,
-                         filesPath=cls.dataSet.getFile('volumes/volume_2_iter_002.mrc'))
+                      filesPath=cls.dataSet.getFile('vol3'))
         launch(pImpRef, wait=True)
         cls.inputRef = pImpRef.outputVolume
 
         # Mask
         print magentaStr("\nImporting Mask:")
         pImpMask = new(ProtImportMask,
-                       maskPath=cls.dataSet.getFile('masks/mask.vol'),
+                       maskPath=cls.dataSet.getFile('mask3d'),
                        samplingRate=1)
         launch(pImpMask, wait=True)
         cls.mask = pImpMask.outputMask
 
         
-    def testLocscaleSimple(self):
+    def testLocscale(self):
         """ Check that an output was generated and the condition is valid.
             In addition, returns the size of the set.
         """
@@ -79,7 +79,7 @@ class TestProtLocscale(BaseTest):
             self.proj.launchProtocol(pLocScale, wait=True)
 
             self.assertIsNotNone(pLocScale.outputVolume,
-                                  "outputVolume is None for %s test." % label)
+                                 "outputVolume is None for %s test." % label)
 
             self.assertEqual(self.inputVol.getDim(),
                              pLocScale.outputVolume.getDim(),
@@ -92,13 +92,13 @@ class TestProtLocscale(BaseTest):
                              "inputVol for %s test" % label)
 
         # default test
-        launchTest('with MPI')
+        launchTest('with MPI + noMask')
 
         # with mask test
-        launchTest('with mask + MPI', mask=self.mask)
+        launchTest('with MPI + Mask', mask=self.mask)
 
         # with mask test
-        launchTest('with mask + noMPI', mask=self.mask, mpi=1)
+        launchTest('with Mask + noMPI', mask=self.mask, mpi=1)
 
         # without MPI
-        launchTest('without MPI', mpi=1)
+        launchTest('noMask + noMPI', mpi=1)

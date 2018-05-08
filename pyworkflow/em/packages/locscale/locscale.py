@@ -26,14 +26,16 @@
 
 import os
 import sys
-from os.path import join#, exist
 from pyworkflow.utils import Environ
 
+# we declarate global constants to multiple usage
+LOCSCALE_HOME = os.environ['LOCSCALE_HOME']
+EMAN2DIR = os.environ['EMAN2DIR']
+
 def getVersion():
-    path = os.environ['LOCSCALE_HOME']
     version = ''
     for v in getSupportedVersions():
-        if v in path:
+        if v in LOCSCALE_HOME:
             version = v
     return version
 
@@ -41,14 +43,18 @@ def getSupportedVersions():
     return ['0.1']
 
 def getSupportedEmanVersions():
-    return ['2.11, 2.12, 2.2']
+    """ LocScale needs eman to work.
+    """
+    return ['2.11', '2.12', '2.2']
 
 def getEmanVersion():
-    path = os.environ['EMAN2DIR']
+    """ Returns a valid eman version installed or an empty string.
+    """
     emanVersion = ''
-    for v in getSupportedEmanVersions():
-        if v in path:
-            emanVersion = v
+    if os.path.exists(EMAN2DIR):
+        for supV in ['eman-'+v for v in getSupportedEmanVersions()]:
+            if supV in EMAN2DIR:
+                emanVersion = supV
     return emanVersion
 
 def validateEmanVersion(protocol, errors):
@@ -58,45 +64,33 @@ def validateEmanVersion(protocol, errors):
         protocol: the input protocol calling to validate
         errors: a list that will be used to add the error message.
     """
-    if getEmanVersion == '':
-        errors.append('Eman%s is needed to execute this protocol'
-                      % getSupportedEmanVersions())
+    if getEmanVersion() == '':
+        errors.append('Eman (v: %s) is needed to execute this protocol'
+                      % ', '.join(getSupportedEmanVersions()))
     return errors
 
-def getEmanEnviron():
-    """ Setup the environment variables needed to launch Eman. """
-    environ = Environ(os.environ)
-    EMAN2DIR = os.environ['EMAN2DIR']
+def setEmanEnviron():
+    """ Setup the environment variables needed to launch Eman and 
+        use its modules.
+    """
+    env = Environ(os.environ)
     pathList = [os.path.join(EMAN2DIR, d)
                 for d in ['lib', 'bin', 'extlib/site-packages']]
 
-    # This environment variable is used to setup OpenGL (Mesa)
-    # library in remote desktops
-    if 'REMOTE_MESA_LIB' in os.environ:
-        pathList.append(os.environ['REMOTE_MESA_LIB'])
+    env.update({'PATH': os.path.join(EMAN2DIR, 'bin'),
+                'LD_LIBRARY_PATH': os.pathsep.join(pathList),
+                'PYTHONPATH': os.pathsep.join(pathList),
+                'EMAN_PYTHON': os.path.join(EMAN2DIR, 'Python/bin/python')}, 
+                position=Environ.BEGIN)
 
-    environ.update({
-            'PATH': join(EMAN2DIR, 'bin'),
-            'LD_LIBRARY_PATH': os.pathsep.join(pathList),
-            'PYTHONPATH': os.pathsep.join(pathList),
-            'EMAN_PYTHON': os.path.join(EMAN2DIR, 'Python/bin/python')
-            }, position=Environ.BEGIN)
-    return environ
+    os.environ.update(env)
 
-def setEnviron():
-    """ Setup the environment variables needed to import localrec classes. """
-    os.environ.update(getEmanEnviron())
-    sys.path.append(os.path.join(os.environ["LOCSCALE_HOME"], "source"))
-    if 'EMAN_PYTHON' in os.environ:
-        os.environ['EMAN_PYTHON'] = os.path.join(os.environ['EMAN2DIR'],
-                                                 'Python/bin/python')
-
-def getProgram(program, args):
-    # For localscale python scripts, join the path to source
+def getEmanPythonProgram(program):
     if not 'EMAN_PYTHON' in os.environ:
-        setEnviron()
+        setEmanEnviron()
 
-    program = os.path.join(os.environ['LOCSCALE_HOME'], 'source', program)
+    # locscale scripts are in $LOCSCALE_HOME/source
+    program = os.path.join(LOCSCALE_HOME, 'source', program)
     python = os.environ['EMAN_PYTHON']
 
-    return python, '%s %s'%(program, args)
+    return python, program

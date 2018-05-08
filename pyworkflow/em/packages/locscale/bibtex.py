@@ -25,26 +25,22 @@
 # **************************************************************************
 
 _bibtexStr = """
-@article {Jakobi2017,
-article_type 	= {journal},
-title 			= {Model-based local density sharpening of cryo-EM maps},
-author 			= {Jakobi, Arjen J and Wilmanns, Matthias and Sachse, Carsten},
-editor 			= {Brunger, Axel T},
-volume 			= 6,
-year 			= 2017,
-month 			= {oct},
-pub_date 		= {2017-10-23},
-pages 			= {e27131},
-citation 		= {eLife 2017;6:e27131},
-doi 			= {10.7554/eLife.27131},
-url 			= {https://doi.org/10.7554/eLife.27131},
-keywords 		= {cryo-EM, model building, B-factor sharpening, contrast improvement, amplitude scaling},
-journal 		= {eLife},
-issn 			= {2050-084X},
-publisher 		= {eLife Sciences Publications, Ltd},
-}
-"""
 
+@Article{Jakobi2017,
+  Title                    = {Model-based local density sharpening of cryo-EM maps},
+  Author                   = {Jakobi, Arjen J and Wilmanns, Matthias and Sachse, Carsten},
+  Journal                  = {eLife},
+  Year                     = {2017},
+  Month                    = {October},
+  Volume                   = {6},
+  Doi                      = {http://doi.org/10.7554/eLife.27131},
+  Url                      = {http://elifesciences.org/articles/27131},
+  Citation                 = {eLife 2017;6:e27131},
+  Issn                     = {2050-084X},
+  Publisher                = {eLife Sciences Publications, Ltd}
+}
+
+"""
 
 from pyworkflow.utils import parseBibTex
 
