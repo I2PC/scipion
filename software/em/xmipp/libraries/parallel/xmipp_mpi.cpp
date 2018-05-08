@@ -341,4 +341,29 @@ bool MpiMetadataProgram::getTaskToProcess(size_t &objId, size_t &objIndex)
     return false;
 }
 
-
+void xmipp_MPI_Reduce(
+    void* send_data,
+    void* recv_data,
+    size_t count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    int root,
+    MPI_Comm communicator,
+	size_t blockSize)
+{
+	int type_size;
+	MPI_Type_size(datatype,&type_size);
+	size_t quotient=count/blockSize;
+	if (quotient>0)
+	{
+		for (size_t c=0; c<quotient; c++)
+			MPI_Reduce((unsigned char*)(send_data)+c*blockSize*size_t(type_size),
+					   (unsigned char*)(recv_data)+c*blockSize*size_t(type_size),
+					   blockSize,datatype,op,root,communicator);
+	}
+	size_t remainder=count%blockSize;
+	if (remainder>0)
+		MPI_Reduce((unsigned char*)(send_data)+quotient*blockSize*size_t(type_size),
+				   (unsigned char*)(recv_data)+quotient*blockSize*size_t(type_size),
+				   remainder,datatype,op,root,communicator);
+}
