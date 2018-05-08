@@ -278,5 +278,18 @@ public:\
     }\
 };\
 
+/** MPI Reduce with memory constraint.
+ * MPI_Reduce may give a segmentation fault when sharing large objects
+ */
+void xmipp_MPI_Reduce(
+    void* send_data,
+    void* recv_data,
+    size_t count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    int root,
+    MPI_Comm communicator,
+	size_t blockSize=1048576);
+
 /** @} */
 #endif /* XMIPP_MPI_H_ */
