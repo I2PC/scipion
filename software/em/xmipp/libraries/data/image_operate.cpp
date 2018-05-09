@@ -84,6 +84,18 @@ void imageDotProduct(Image<double> &op1, const Image<double> &op2)
     std::cout << "<" << op1.name() << "," << op2.name() << ">=" << dot << std::endl;
 }
 
+double pDropout;
+void dropOut(Image<double> &op1)
+{
+	if (pDropout>0.0 && pDropout<1.0)
+	{
+		MultidimArray<double> &mOp1 = op1();
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mOp1)
+			if (rnd_unif()<pDropout)
+				dAi(mOp1, n) = 0.0;
+	}
+}
+
 void plus(Image<double> &op1, const Image<double> &op2)
 {
     op1() += op2();
@@ -292,6 +304,7 @@ void ProgOperate::defineParams()
     addParamsLine("or --max <file_or_value>     :Maximum of two images, volumes, or number (pixel-wise)");
     addParamsLine("or --compare <file_or_value> :Returns -1 if the left value is less, 0 if are equal or 1 if greater.(pixel-wise)");
     addParamsLine("or --dot_product <file>      :Dot product between two images or volumes");
+    addParamsLine("or --dropout <p>             :Set to 0.0 the values of the input with probability p");
     addParamsLine("==+ Relational operations: ==");
     addParamsLine("or --eq <file_or_value>      :Returns 1 if the pixels values are equal, 0 otherwise (pixel-wise)");
     addParamsLine("or --le <file_or_value>      :Returns 1 if the pixels values are less or equal, 0 otherwise (pixel-wise)");
@@ -385,6 +398,11 @@ void ProgOperate::readParams()
     {
         file_or_value = getParam("--dot_product");
         binaryOperator = imageDotProduct;
+    }
+    else if (checkParam("--dropout"))
+    {
+        pDropout = getDoubleParam("--dropout");
+        unaryOperator = dropOut;
     }
     ///Relational operations
     else if (checkParam("--eq"))
