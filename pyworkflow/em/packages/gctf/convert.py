@@ -30,6 +30,7 @@ This module contains converter functions that will serve to:
 """
 
 import os
+import re
 import numpy
 from collections import OrderedDict
 
@@ -110,16 +111,13 @@ def readCtfModel(ctfModel, filename, ctf4=False):
     result = parseGctfOutput(filename)
     if result is None:
         setWrongDefocus(ctfModel)
-        ctfFit, ctfResolution, ctfPhaseShift = -999, -999, 0
+        ctfFit, ctfResolution, ctfPhaseShift = -999, -999, -999
     else:
         defocusU, defocusV, defocusAngle, ctfFit, ctfPhaseShift, ctfResolution = result
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     ctfModel.setFitQuality(ctfFit)
     ctfModel.setResolution(ctfResolution)
-
-    # Avoid creation of phaseShift
-    if ctfPhaseShift != 0:
-        ctfModel.setPhaseShift(ctfPhaseShift)
+    ctfModel.setPhaseShift(ctfPhaseShift)
 
 
 def getEnviron():

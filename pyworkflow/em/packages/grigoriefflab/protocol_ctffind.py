@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez BLanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez BLanco (josue.gomez-blanco@mcgill.ca)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -65,6 +65,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                                                  CTFFIND_PATH, CTFFIND4_PATH))
         return missingPaths
 
+    def _defineParams(self, form):
+        em.ProtCTFMicrographs._defineParams(self, form)
+        # Define the streaming parameters at the end
+        self._defineStreamingParams(form)
+
     def _defineProcessParams(self, form):
         form.addParam('useCtffind4', params.BooleanParam, default=True,
                       label="Use ctffind4 to estimate the CTF?",
@@ -118,8 +123,8 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                            "faster 1D search was significantly less accurate "
                            "(thanks Rado Danev & Tim Grant). "
                            "Set this parameters to *No* to get faster fits.")
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
+
+    # -------------------------- STEPS functions ------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run ctffind, 3 or 4, with required parameters """
 
@@ -224,7 +229,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     def _createOutputStep(self):
         pass
 
-    #--------------------------- INFO functions ----------------------------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         thr = self.numberOfThreads.get()
@@ -243,6 +248,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 0.10 <= valueMax <= 3.15):
             errors.append('Wrong values for phase shift search.')
 
+        if self._getStreamingBatchSize() > 1:
+            errors.append("Batch steps are not implemented yet for Ctffind. ")
+
         return errors
 
     def _citations(self):
@@ -257,12 +265,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
 
         return [methods]
 
-    #--------------------------- UTILS functions ---------------------------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _isNewCtffind4(self):
-        if self.useCtffind4 and getVersion('CTFFIND4') != V4_0_15:
-            return True
-        else:
-            return False
+        return self.useCtffind4 and getVersion('CTFFIND4') != V4_0_15
 
     def _prepareCommand(self):
         sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
@@ -432,8 +437,9 @@ eof
     def _summary(self):
         summary = em.ProtCTFMicrographs._summary(self)
         if self.useCtffind4 and getVersion('CTFFIND4') == '4.1.5':
-            summary.append("NOTE: ctffind4.1.5 finishes correctly (all output is generated properly),"
-                           " but returns an error code. Disregard error messages until this is fixed."
+            summary.append("NOTE: ctffind4.1.5 finishes correctly (all output "
+                           "is generated properly), but returns an error code. "
+                           "Disregard error messages until this is fixed."
                            "http://grigoriefflab.janelia.org/node/5421")
         return summary
 

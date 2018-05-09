@@ -34,7 +34,8 @@ This module contains protocols related to Set operations such us:
 import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
-from pyworkflow.object import Boolean
+import pyworkflow.utils as pwutils
+from pyworkflow.object import Boolean, Object
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
@@ -297,7 +298,7 @@ class ProtSplitSet(ProtSets):
                       label="Randomize elements",
                       help='Put the elements at random in the different '
                            'subsets.')
-    
+
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')

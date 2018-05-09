@@ -422,7 +422,8 @@ def coordinateToRow(coord, coordRow, copyId=True):
         setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
     if coord.getMicName():
-        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicName()))
+        micName = coord.getMicName()
+        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(micName.replace(" ", "")))
     else:
         if coord.getMicId():
             coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
@@ -535,7 +536,7 @@ def rowToParticle(partRow, **kwargs):
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(partRow))
         
-    # alignment is mandatory at this point, it shoud be check
+    # alignment is mandatory at this point, it should be check
     # and detected defaults if not passed at readSetOf.. level
     alignType = kwargs.get('alignType') 
     
@@ -1045,7 +1046,7 @@ def writeMicCoordinates(mic, coordList, outputFn, getPosFunc=None):
             it can be useful for scaling the coordinates if needed.
     """
     if getPosFunc is None:
-        getPosFunc = lambda coord: coord.getPostion()
+        getPosFunc = lambda coord: coord.getPosition()
    
     extraLabels = coordList[0].hasAttribute('_rlnClassNumber')
     f = openStar(outputFn, extraLabels)
