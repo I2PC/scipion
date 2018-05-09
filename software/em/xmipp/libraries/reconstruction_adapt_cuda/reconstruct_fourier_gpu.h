@@ -182,12 +182,15 @@ public:
 				// send them for processing
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
 						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
+						printf("spaces: %d ffts: %d\n", noOfSpaces, buffer->getNoOfElements(threadParams->buffer->FFTs));
 						updateArgumentVector(spaceId, buffer->spaces, noOfSpaces);
 						updateArgumentVector(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs));
 						updateArgumentScalar(spaceNoId, &noOfSpaces);
 
 					if (useAtomics == 1) {
-						runKernel(kernelId, globalSize, localSize);
+						clock_t begin = clock();
+						runKernelAsync(kernelId, globalSize, localSize, getDefaultDeviceQueue());
+						printf("kernel time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
 						parent->logProgress(buffer->noOfImages);
 					} else {
 						int noOfSpaces = buffer->getNoOfElements(buffer->spaces);
@@ -200,7 +203,7 @@ public:
 //							updateArgumentVector(FFTsId, buffer->getNthItem(buffer->FFTs, space->projectionIndex), buffer->getNoOfElements(buffer->FFTs) / buffer->noOfImages);
 							updateArgumentScalar(spaceNoId, &one);
 
-							runKernel(kernelId, globalSize, localSize);
+							runKernelAsync(kernelId, globalSize, localSize, getDefaultDeviceQueue());
 							parent->logProgress(1);
 						}
 					}
@@ -282,14 +285,14 @@ public:
 //				prepareBuffer(threadParams, parent, false, objId);
 //				// send them for processing
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
-						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
-						updateArgumentVector(spaceId, buffer->spaces, noOfSpaces);
-						updateArgumentVector(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs));
-						updateArgumentScalar(spaceNoId, &noOfSpaces);
+					int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
+					updateArgumentVector(spaceId, buffer->spaces, noOfSpaces);
+					updateArgumentVector(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs));
+					updateArgumentScalar(spaceNoId, &noOfSpaces);
 
 
-						runKernel(kernelId, globalSize, localSize);
-						parent->logProgress(buffer->noOfImages);
+					runKernel(kernelId, globalSize, localSize);
+					parent->logProgress(buffer->noOfImages);
 				}
 				// once the processing finished, buffer can be reused
 //			}
