@@ -1,5 +1,5 @@
-#include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/reconstruct_fourier_projection_traverse_space.h"
-#include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/point3D.h"
+#include "data/reconstruct_fourier_projection_traverse_space.h"
+#include "data/point3D.h"
 
 
 
@@ -570,6 +570,7 @@ void processVoxelBlob(
 			}
 		}
 	}
+
 #if USE_ATOMICS
 	// use atomic as two blocks can write to same voxel
 	atomicAdd(&tempVolumeGPU[index3D].x, vol.x);
@@ -579,6 +580,7 @@ void processVoxelBlob(
 	tempVolumeGPU[index3D] += vol;
 	tempWeightsGPU[index3D] += w;
 #endif
+
 }
 
 /**

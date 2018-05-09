@@ -389,8 +389,11 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 
     ktt::DeviceIndex deviceIndex = 0;
     ktt::PlatformIndex platformIndex = 0;
-	std::string kernelFile = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier.cu";
-	std::string referenceKernelFile = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/reconstruction_cuda/reconstruct_fourier_ref.cu";
+
+    std::string srcPath = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/";
+
+	std::string kernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier.cu";
+	std::string referenceKernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier_ref.cu";
 
 	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
 	ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
@@ -445,7 +448,7 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
 	tuner.addParameter(kernelId, "blobOrder", {parent->blob.order});
 
-	tuner.setCompilerOptions("-lineinfo -use_fast_math");
+	tuner.setCompilerOptions("-lineinfo -use_fast_math -I" + srcPath);
 
 //	tuner.addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
 //	tuner.addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});

@@ -1,5 +1,5 @@
-#include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/reconstruct_fourier_projection_traverse_space.h"
-#include "/home/david/GIT/Scipion/software/em/xmipp/libraries/data/point3D.h"
+#include "data/reconstruct_fourier_projection_traverse_space.h"
+#include "data/point3D.h"
 
 __device__ __constant__ float cBlobRadius = 1.900000f;
 __device__ __constant__ float cIDeltaSqrt = 2769.806152f;
