@@ -64,6 +64,7 @@ class Message():
     LABEL_NEW = 'New'
     LABEL_NEW_ACTION = 'New     '
     LABEL_EDIT = 'Edit'
+    LABEL_RENAME = 'Rename '
     LABEL_EDIT_ACTION = 'Edit     '
     LABEL_COPY = 'Copy'
     LABEL_COPY_ACTION = 'Copy   '

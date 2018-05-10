@@ -31,7 +31,7 @@ from os.path import join, exists
 
 from pyworkflow.protocol.params import IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import removeBaseExt
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePicking
 import xmipp
         
 from base import ProtImportFiles
