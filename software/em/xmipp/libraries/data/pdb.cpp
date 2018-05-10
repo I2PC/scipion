@@ -306,7 +306,7 @@ void PDBPhantom::shift(double x, double y, double z)
 }
 
 /* Read phantom from PDB --------------------------------------------------- */
-void PDBRichPhantom::read(const FileName &fnPDB)
+void PDBRichPhantom::read(const FileName &fnPDB, double threshold)
 {
     // Open file
     std::ifstream fh_in;
@@ -343,7 +343,10 @@ void PDBRichPhantom::read(const FileName &fnPDB)
 			atom.z = textToFloat(line.substr(46,8));
 			atom.occupancy = textToFloat(line.substr(54,6));
 			atom.bfactor = textToFloat(line.substr(60,6));
-			atomList.push_back(atom);
+			if(atom.bfactor > threshold)
+				atomList.push_back(atom);
+
+
         } else if (kind == "REMA")
         	remarks.push_back(line);
     }
