@@ -158,7 +158,8 @@ Protocols SPA = [
 		]},
 		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "ProtRelionClassify3D",   "text": "default"},
-			{"tag": "protocol", "value": "ProtFrealignClassify",   "text": "default"}
+			{"tag": "protocol", "value": "ProtFrealignClassify",   "text": "default"},
+			{"tag": "protocol", "value": "XmippProtConsensusClassify3D", "text": "default"}
 		]},
 		{"tag": "protocol_group", "text": "Refine", "openItem": "False", "children": [
         	{"tag": "protocol", "value": "ProtRelionRefine3D",   "text": "default"},

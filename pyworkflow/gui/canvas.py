@@ -56,6 +56,7 @@ class Canvas(tk.Canvas, Scrollable):
         
         self.lastItem = None # Track last item selected
         self.lastPos = (0, 0) # Track last clicked position
+        self.eventPos = (0, 0)
         self.firstPos = None  # Track first clicked position (for a drag action)
         self.items = {} # Keep a dictionary with high-level items
         self.cleanSelected = True
@@ -171,6 +172,9 @@ class Canvas(tk.Canvas, Scrollable):
         return None
              
     def _handleMouseEvent(self, event, callback):
+        # Store last event coordinates
+        self.eventPos = (event.x, event.y)
+        # Retrieve the coordinates relative to the Canvas
         xc, yc = self.getCoordinates(event)
         self.lastItem = self._findItem(xc, yc)
         self.callbackResults = None

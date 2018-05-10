@@ -30,13 +30,13 @@ This module contains converter functions that will serve to:
 """
 
 import os
+import re
 import numpy
 from collections import OrderedDict
 
 from pyworkflow.em.packages.gctf import GCTF_HOME
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pyworkflow.object import Float, ObjectWrap
-import pyworkflow.em as em
+from pyworkflow.object import ObjectWrap
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 
@@ -110,7 +110,7 @@ def readCtfModel(ctfModel, filename, ctf4=False):
     result = parseGctfOutput(filename)
     if result is None:
         setWrongDefocus(ctfModel)
-        ctfFit, ctfResolution, ctfPhaseShift = -999, -999, 0
+        ctfFit, ctfResolution, ctfPhaseShift = -999, -999, -999
     else:
         defocusU, defocusV, defocusAngle, ctfFit, ctfPhaseShift, ctfResolution = result
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
