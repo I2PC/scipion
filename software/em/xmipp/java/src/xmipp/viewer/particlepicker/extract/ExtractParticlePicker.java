@@ -12,11 +12,7 @@ import xmipp.ij.commons.XmippImageJ;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
-import xmipp.viewer.particlepicker.ColorHelper;
-import xmipp.viewer.particlepicker.Format;
-import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.ParticlePickerParams;
+import xmipp.viewer.particlepicker.*;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -60,6 +56,8 @@ public class ExtractParticlePicker extends ParticlePicker
 		boolean existspsd = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
 		boolean existsctf = md.containsLabel(MDLabel.MDL_CTF_MODEL);
 		String psd = null, ctf = null;
+        CtfInfo ctfInfo;
+
 		for (long id : md.findObjects())
 		{
 			exists = false;
@@ -73,11 +71,12 @@ public class ExtractParticlePicker extends ParticlePicker
 				}
 			if (!exists)
 			{
+			    ctfInfo = (existsctf || existspsd) ? new CtfInfo() : null;
 				if (existspsd)
-					psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+					ctfInfo.psd = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
 				if (existsctf)
-					ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
-				current = new ExtractMicrograph(fileiter, psd, ctf);
+					ctfInfo.ctf = md.getValueString(MDLabel.MDL_CTF_MODEL, id);
+				current = new ExtractMicrograph(fileiter, ctfInfo);
 
 				micrographs.add(current);
 			}
