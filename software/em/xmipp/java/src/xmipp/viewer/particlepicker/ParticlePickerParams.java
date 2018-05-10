@@ -84,8 +84,8 @@ public class ParticlePickerParams {
         {
 	        String str = cmdLine.getOptionValue(MODEOPT);
 	        mode = Mode.getMode(str);
-	        if(!(mode == Mode.Review || mode == Mode.ReadOnly))
-	        	throw new IllegalArgumentException("Only Review or ReadOnly modes can be specified from the command line");
+	        if(mode != Mode.Review && mode != Mode.ReadOnly && mode != Mode.Automatic)
+	        	throw new IllegalArgumentException("Only modes Automatic, Review, ReadOnly can be specified from the command line");
         }
         if (cmdLine.hasOption(THREADSOPT)) 
             threads = Integer.parseInt(cmdLine.getOptionValue(THREADSOPT));
