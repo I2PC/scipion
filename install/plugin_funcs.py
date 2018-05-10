@@ -123,19 +123,25 @@ class PluginInfo(object):
                 self.author = metadata.get('Author', "")
                 self.email = metadata.get('Author-email', "")
 
-    def getBinVersions(self, env=None):
-        if env:
-            environment = env
+    def getPluginObj(self):
+        if os.path.exists(os.path.join(Environment.getPythonPackagesFolder(), self.dirName, 'plugin.py')):
+            plugin = getattr(import_module('%s.plugin' % self.dirName), '_plugin')
         else:
-            environment = Environment()
-            if os.path.exists(os.path.join(environment.getPythonPackagesFolder(), self.dirName, 'plugin.py')):
-                plugin = getattr(import_module('%s.plugin' % self.dirName), '_plugin')
-                plugin.registerPluginBinaries(environment)
-                # read binVersions here
-            else:
-                print("Cant find plugin.py for %s" % self.dirName)
-                return []
+            print("Warning: couldn't find _plugin in %s" % self.dirName)
+            plugin = None
+        return plugin
 
+    def getInstallenv(self, envArgs=None):
+        if envArgs is None:
+            envArgs = []
+        environment = Environment(args=envArgs)
+        plugin = self.getPluginObj()
+        if plugin:
+            plugin.registerPluginBinaries(environment)
+        return environment
+
+    def getBinVersions(self):
+        environment = self.getInstallenv()
         binVersions = [target.getName() for target in environment.getTargetList()]
         return binVersions
 
@@ -191,16 +197,7 @@ class PluginInfo(object):
         return True
 
     def installBin(self, args=None):
-        if args is None:
-            args = []
-        environment = Environment(args=args)
-        # install binaries
-        if os.path.exists(os.path.join(environment.getPythonPackagesFolder(), self.dirName, 'plugin.py')):
-            plugin = getattr(import_module('%s.plugin' % self.dirName), '_plugin')
-            plugin.registerPluginBinaries(environment)
-        else:
-            print("Can't find plugin.py for %s" % self.dirName)
-
+        environment = self.getInstallenv(envArgs=args)
         environment.execute()
         self.setLocalPluginInfo()
 
@@ -210,7 +207,7 @@ class PluginInfo(object):
 
         binFolder = Environment.getEmFolder()
         for binVersion in binList:
-            f = "%s" % os.path.join(binFolder, binVersion)
+            f = os.path.join(binFolder, binVersion)
             if os.path.exists(f):
                 print('Removing %s binaries...' % binVersion)
                 realPath = os.path.realpath(f)  # in case its a link
@@ -227,6 +224,10 @@ class PluginInfo(object):
             os.remove(self.emLink)
         pipmain(['uninstall', '-y', self.pipName])
         return
+
+    def printBinInfo(self):
+        env = self.getInstallenv()
+        return env.printHelp()
 
 class PluginRepository(object):
 
@@ -266,19 +267,24 @@ class PluginRepository(object):
         return pluginDict
 
 
-    def printPluginInfo(self):
+    def printPluginInfo(self, withBins=False):
         printStr = ""
         pluginDict = self.getPlugins()
         if pluginDict:
-            printStr += ("Available plugins: "
-                         "([ ] not installed, [X] seems already installed)\n\n")
+            withBinsStr = "Installed plugins and their binaries" if withBins else "Available plugins"
+            printStr += ("%s: "
+                         "([ ] not installed, [X] seems already installed)\n\n" % withBinsStr)
             keys = sorted(pluginDict.keys())
             for name in keys:
-                printStr += "%15s " % name
                 plugin = pluginDict[name]
+                if withBins and not plugin.isInstalled():
+                    continue
+                printStr += "%23s " % name
                 vInfo = '[%s]' % ('X' if plugin.isInstalled() else ' ')
                 printStr += '%13s' % vInfo
                 printStr += "\n"
+                if withBins:
+                    printStr += plugin.printBinInfo().split('\n', 1)[1]
         else:
             printStr = "List of available plugins in plugin repository unaccessible at this time."
         return printStr

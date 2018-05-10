@@ -36,41 +36,42 @@ import argparse
 
 MODE_INSTALL_PLUGIN = 'install_plugin'
 MODE_UNINSTALL_PLUGIN = 'uninstall_plugin'
+MODE_LIST_BINS = 'list_plugin_bins'
+MODE_INSTALL_BINS = 'install_bins'
+MODE_UNINSTALL_BINS = 'uninstall_bins'
 
 args = sys.argv[1:]
 
 pluginRepo = PluginRepository()
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-subparsers = parser.add_subparsers(help='mode "install_plugin" or "uninstall_plugin"',
+subparsers = parser.add_subparsers(help='mode "install_plugin", "uninstall_plugin" or "list_plugin_bins"',
                                    dest='mode',
                                    title='Mode',
                                    description='available modes are "install_plugin" or "uninstall_plugin"')
 
 installParser = subparsers.add_parser("install_plugin", formatter_class=argparse.RawTextHelpFormatter,
-                                      usage="%s  [-h] [--noBin] [-p pluginName [binVersion ...]]" %
+                                      usage="%s  [-h] [--noBin] [-p pluginName [pipVersion ...]]" %
                                             (' '.join(args[:2])),
-                                      epilog="Example: %s -p ctffind 2.0.4 -p relion -p eman \n\n" %
+                                      epilog="Example: %s -p grigoriefflab 1.0.1 -p relion -p eman \n\n" %
                                       ' '.join(args[:2]),
                                       add_help=False)
 installParser.add_argument('-h', '--help', action='store_true', help='show help')
-
-
 installParser.add_argument('--noBin', action='store_true',
                             help='Optional flag to install plugins only as a python module,\n'
                                  'without installing the plugin binaries. This will affect\n'
                                  'all plugins specified in the command.')
-
 installParser.add_argument('-p', '--plugin', action='append', nargs='+',
                            metavar=('pluginName', 'pluginVersion'),
-                           help='- pluginName: the name of the plugin to install from the list\n'
-                                 '             of available plugins shown below.\n'
-                                 '- pluginVersion: (optional) pip version to install')
+                           help='- pluginName:     the name of the plugin to install from the list\n'
+                                 '                 of available plugins shown below.\n'
+                                 '- pluginVersion: (optional) pip version to install. If not specified,'
+                                 '                 will install the latest compatible with current Scipion.')
 
 uninstallParser = subparsers.add_parser("uninstall_plugin", formatter_class=argparse.RawTextHelpFormatter,
                                         usage="%s  [-h] [-p pluginName [binVersion ...]]" %
                                               (' '.join(args[:2])),
-                                        epilog="Example: %s ctffind eman \n\n" %
+                                        epilog="Example: %s grigoriefflab eman \n\n" %
                                                ' '.join(args[:2]),
                                         add_help=False)
 uninstallParser.add_argument('-h', '--help', action='store_true', help='show help')
@@ -80,17 +81,49 @@ uninstallParser.add_argument('--noBin', action='store_true',
                                  'all plugins specified in the command.')
 uninstallParser.add_argument('-p', '--plugin', action='append',
                              metavar='pluginName',
-                             help='- pluginName: the name of the plugin to uninstall from the list\n'
-                                  '             of available plugins shown below.\n')
+                             help='The name of the plugin to uninstall from the list\n'
+                                  'of available plugins shown below.\n')
 
+
+installBinParser = subparsers.add_parser("install_bins", formatter_class=argparse.RawTextHelpFormatter,
+                                      usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
+                                            (' '.join(args[:2])),
+                                      epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
+                                             (' '.join(args[:2]), pluginRepo.printPluginInfo(withBins=True)))
+installBinParser.add_argument('pluginName', metavar='pluginName',
+                              help='The name of the plugin whose bins we want to uninstall.\n')
+installBinParser.add_argument('binName', nargs='+',
+                              metavar='binName(s)',
+                              help='The name(s) of the bins we want install, optionally with \n'
+                                   'version in the form name-version. If no version is specified,\n'
+                                   'will install the last one.')
+
+uninstallBinParser = subparsers.add_parser("uninstall_bins", formatter_class=argparse.RawTextHelpFormatter,
+                                           usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
+                                           (' '.join(args[:2])),
+                                           epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
+                                           (' '.join(args[:2]), pluginRepo.printPluginInfo(withBins=True)))
+uninstallBinParser.add_argument('pluginName', metavar='pluginName',
+                                help='The name of the plugin whose bins we want to uninstall.\n')
+uninstallBinParser.add_argument('binName', nargs='+',
+                                metavar='binName(s)',
+                                help='The name(s) of the bins we want to uninstall\n'
+                                     '(optionally with version in the form name-version)\n')
+
+modeToParser = {MODE_INSTALL_BINS: installBinParser,
+                MODE_UNINSTALL_BINS: uninstallBinParser,
+                MODE_INSTALL_PLUGIN: installParser,
+                MODE_UNINSTALL_PLUGIN: uninstallParser}
 
 parsedArgs = parser.parse_args(args[1:])
 mode = parsedArgs.mode
-if parsedArgs.help:
-    parserUsed = installParser if mode == MODE_INSTALL_PLUGIN else uninstallParser
+
+if mode not in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS] and parsedArgs.help:
+    parserUsed = modeToParser[mode]
     parserUsed.epilog += pluginRepo.printPluginInfo()
     parserUsed.print_help()
     parserUsed.exit(0)
+
 elif mode == MODE_INSTALL_PLUGIN:
     pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0], getPipData=True)
     if not pluginDict:
@@ -106,10 +139,6 @@ elif mode == MODE_INSTALL_PLUGIN:
                     plugin.installBin()
 
 elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
-    if parsedArgs.help:
-        uninstallParser.epilog += pluginRepo.printPluginInfo()
-        uninstallParser.print_help()
-        uninstallParser.exit(0)
     for pluginName in parsedArgs.plugin:
         plugin = PluginInfo(pluginName, remote=False)
         if plugin.isInstalled():
@@ -117,4 +146,15 @@ elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
                 plugin.uninstallBins()
             plugin.uninstallPip()
         else:
-            print("Plugin %s is not installed" % pluginName)
+            print("WARNING: Plugin %s is not installed" % pluginName)
+
+elif parsedArgs.mode == MODE_INSTALL_BINS:
+    plugin = PluginInfo(parsedArgs.pluginName, remote=False)
+    if plugin.isInstalled():
+        plugin.installBin(args=parsedArgs.binName)
+
+elif parsedArgs.mode == MODE_UNINSTALL_BINS:
+
+    plugin = PluginInfo(parsedArgs.pluginName, remote=False)
+    if plugin.isInstalled():
+        plugin.uninstallBins(parsedArgs.binName)

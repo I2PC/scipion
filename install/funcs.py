@@ -257,7 +257,6 @@ class Environment:
     
     @staticmethod
     def getSoftware():
-
         return os.environ.get('SCIPION_SOFTWARE', 'software')
 
     @staticmethod
@@ -715,22 +714,30 @@ class Environment:
         return (exists(join(self.getEmFolder(), extName)) or
                 extName in [x[:len(extName)] for x in os.listdir(pydir)])
 
+    def printHelp(self):
+        printStr = ""
+        if self._packages:
+            printStr=("Available binaries: "
+                  "([ ] not installed, [X] seems already installed)\n")
+
+            keys = sorted(self._packages.keys())
+            for k in keys:
+                pVersions = self._packages[k]
+                # sys.stdout.write("%15s " % k)
+                printStr += "\t%15s " % k
+                for name, version in pVersions:
+                    installed = self._isInstalled(name, version)
+                    vInfo = '%s [%s]' % (version, 'X' if installed else ' ')
+                    # sys.stdout.write('%13s' % vInfo)
+                    printStr += '%13s' % vInfo
+                # sys.stdout.write("\n")
+                printStr += '\n'
+        return printStr
+
     def execute(self):
         if '--help' in self._args:
-            if self._packages:
-                print("Available packages: "
-                      "([ ] not installed, [X] seems already installed)")
-
-                keys = sorted(self._packages.keys())
-                for k in keys:
-                    pVersions = self._packages[k]
-                    sys.stdout.write("%15s " % k)
-                    for name, version in pVersions:
-                        installed = self._isInstalled(name, version)
-                        vInfo = '%s [%s]' % (version, 'X' if installed else ' ')
-                        sys.stdout.write('%13s' % vInfo)
-                    sys.stdout.write("\n")
-            sys.exit()
+            print(self.printHelp())
+            return
 
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'

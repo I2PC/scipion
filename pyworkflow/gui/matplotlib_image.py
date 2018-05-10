@@ -32,7 +32,7 @@ import matplotlib
 import numpy as np
 
 try:
-    matplotlib.use('TkAgg')
+    matplotlib.use('TkAgg', warn=False)
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
     import matplotlib.pyplot as plt
 except:
