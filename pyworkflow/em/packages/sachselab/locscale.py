@@ -120,3 +120,4 @@ def convertBinaryVol(vol, outputDir):
         volFn = convertToMrc(volFn)
 
     return volFn
+    

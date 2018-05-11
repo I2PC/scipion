@@ -61,7 +61,7 @@ class TestProtLocscale(BaseTest):
         pImpRef2 = new(ProtImportVolumes, samplingRate=1,
                        filesPath=cls.dataSet.getFile('vol1'))
         launch(pImpRef2, wait=True)
-        cls.inputRef = pImpRef2.outputVolume
+        cls.inputRef2 = pImpRef2.outputVolume
 
         # Masks
         print magentaStr("\nImporting Mask:")
