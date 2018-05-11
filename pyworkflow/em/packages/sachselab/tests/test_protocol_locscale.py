@@ -23,7 +23,7 @@
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportVolumes, ProtImportMask
-from pyworkflow.em.packages.locscale import ProtLocScale
+from pyworkflow.em.packages.sachselab import ProtLocScale
 from pyworkflow.utils import magentaStr
 
 class TestProtLocscale(BaseTest):
@@ -48,8 +48,8 @@ class TestProtLocscale(BaseTest):
         cls.inputVol = pImpVolume.outputVolume
         pImpVolume2 = new(ProtImportVolumes, samplingRate=1,
                           filesPath=cls.dataSet.getFile('vol1'))
-        launch(pImpVolume, wait=True)
-        cls.inputVol = pImpVolume.outputVolume
+        launch(pImpVolume2, wait=True)
+        cls.inputVol2 = pImpVolume2.outputVolume
 
         # References
         print magentaStr("\nImporting References:")
@@ -60,8 +60,8 @@ class TestProtLocscale(BaseTest):
         cls.inputRef = pImpRef.outputVolume
         pImpRef2 = new(ProtImportVolumes, samplingRate=1,
                        filesPath=cls.dataSet.getFile('vol1'))
-        launch(pImpRef, wait=True)
-        cls.inputRef = pImpRef.outputVolume
+        launch(pImpRef2, wait=True)
+        cls.inputRef = pImpRef2.outputVolume
 
         # Masks
         print magentaStr("\nImporting Mask:")

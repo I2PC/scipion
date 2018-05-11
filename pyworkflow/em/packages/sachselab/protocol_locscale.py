@@ -34,7 +34,7 @@ class ProtLocScale(Prot3D):
     """ This Protocol computes contrast-enhanced cryo-EM maps 
         by local amplitude scaling using a reference model.
     """
-    _label = 'local scale'
+    _label = 'locscale'
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
