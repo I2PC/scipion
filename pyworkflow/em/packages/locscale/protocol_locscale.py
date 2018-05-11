@@ -62,10 +62,18 @@ class ProtLocScale(Prot3D):
     
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
+        self._insertFunctionStep('convertStep')
         self._insertFunctionStep('refineStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions -------------------------------
+    def convertStep(self):
+        tmpFn = self._getTmpPath()
+        self.inputVolFn = convertBinaryVol(self.inputVolume.get(), tmpFn)
+        self.refVolFn = convertBinaryVol(self.refObj.get(), tmpFn)
+        if self.binaryMask.hasValue():
+            self.maskVolFn = convertBinaryVol(self.binaryMask.get(), tmpFn)
+
     def refineStep(self):
         """ Run the LocScale program (with EMAN enviroment)
             to refine a volume. 
@@ -151,12 +159,12 @@ class ProtLocScale(Prot3D):
         """
 
         # Input volume
-        args  =  "--em_map '%s'" % self.getInputFn()
-        self.info("Input file: " + self.getInputFn())
+        args  =  "--em_map '%s'" % self.inputVolFn
+        self.info("Input file: " + self.inputVolFn)
 
         # Reference volume
-        args += " --model_map '%s'" % self.getRefFn()
-        self.info("Model file: " + self.getRefFn())
+        args += " --model_map '%s'" % self.refVolFn
+        self.info("Model file: " + self.refVolFn)
 
         # Samplig rate
         args += " --apix %f" % self.getSampling()
@@ -164,8 +172,8 @@ class ProtLocScale(Prot3D):
         
         # Mask
         if self.binaryMask.hasValue():
-            args += " --mask '%s'" % self.binaryMask.get().getFileName()
-            self.info("Mask file: " + self.binaryMask.get().getFileName())
+            args += " --mask '%s'" % self.maskVolFn
+            self.info("Mask file: " + self.maskVolFn)
 
         # Windows size
         args += " --window_size %d" % self.patchSize
@@ -184,14 +192,8 @@ class ProtLocScale(Prot3D):
     def getSampling(self):
         return self.inputVolume.get().getSamplingRate()
 
-    def getInputFn(self):
-        """ We replace the posible ':mrc' extension termination. """
-        return self.inputVolume.get().getFileName().replace(":mrc","")
-
-    def getRefFn(self):
-        """ We replace the posible ':mrc' extension termination. """
-        return self.refObj.get().getFileName().replace(":mrc","")
-
     def getOutputFn(self):
-        outputFnBase = removeBaseExt(self.getInputFn())
+        """ Returns the scaled output file name
+        """
+        outputFnBase = removeBaseExt(self.inputVolFn)
         return self._getExtraPath(outputFnBase) + '_scaled.mrc'

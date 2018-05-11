@@ -39,21 +39,31 @@ class TestProtLocscale(BaseTest):
         new = cls.proj.newProtocol  # short notation
         launch = cls.proj.launchProtocol
 
-        # Volume
-        print magentaStr("\nImporting Volume:")
+        # Volumes
+        print magentaStr("\nImporting Volumes:")
         pImpVolume = new(ProtImportVolumes, samplingRate=1,
                          filesPath=cls.dataSet.getFile('vol2'))
         launch(pImpVolume, wait=True)
+        #   volume.vol
+        cls.inputVol = pImpVolume.outputVolume
+        pImpVolume2 = new(ProtImportVolumes, samplingRate=1,
+                          filesPath=cls.dataSet.getFile('vol1'))
+        launch(pImpVolume, wait=True)
         cls.inputVol = pImpVolume.outputVolume
 
-        # Reference
-        print magentaStr("\nImporting Reference:")
+        # References
+        print magentaStr("\nImporting References:")
         pImpRef = new(ProtImportVolumes, samplingRate=1,
                       filesPath=cls.dataSet.getFile('vol3'))
         launch(pImpRef, wait=True)
+        #   reference.vol 
+        cls.inputRef = pImpRef.outputVolume
+        pImpRef2 = new(ProtImportVolumes, samplingRate=1,
+                       filesPath=cls.dataSet.getFile('vol1'))
+        launch(pImpRef, wait=True)
         cls.inputRef = pImpRef.outputVolume
 
-        # Mask
+        # Masks
         print magentaStr("\nImporting Mask:")
         pImpMask = new(ProtImportMask,
                        maskPath=cls.dataSet.getFile('mask3d'),
@@ -67,12 +77,12 @@ class TestProtLocscale(BaseTest):
             In addition, returns the size of the set.
         """
         print magentaStr("\n==> Testing locscale:")
-        def launchTest(label, mpi=4, mask=None):
+        def launchTest(label, vol, ref, mask=None, mpi=4):
             print magentaStr("\nTest %s:" % label)
             pLocScale = self.proj.newProtocol(ProtLocScale,
                                               objLabel='locscale - ' + label,
-                                              inputVolume=self.inputVol,
-                                              refObj=self.inputRef,
+                                              inputVolume=vol,
+                                              refObj=ref,
                                               patchSize=16,
                                               binaryMask=mask,
                                               numberOfMpi=mpi)
@@ -92,13 +102,22 @@ class TestProtLocscale(BaseTest):
                              "inputVol for %s test" % label)
 
         # default test
-        launchTest('with MPI + noMask')
+        launchTest('with MPI + noMask', vol=self.inputVol, ref=self.inputRef)
 
         # with mask test
-        launchTest('with MPI + Mask', mask=self.mask)
+        launchTest('with MPI + Mask', vol=self.inputVol, ref=self.inputRef, 
+                   mask=self.mask)
 
         # with mask test
-        launchTest('with Mask + noMPI', mask=self.mask, mpi=1)
+        launchTest('with Mask + noMPI', vol=self.inputVol, ref=self.inputRef, 
+                   mask=self.mask, mpi=1)
 
         # without MPI
-        launchTest('noMask + noMPI', mpi=1)
+        launchTest('noMask + noMPI', vol=self.inputVol, ref=self.inputRef, mpi=1)
+
+        # convert input volume
+        launchTest('convert inputVol', vol=self.inputVol2, ref=self.inputRef)
+
+        # convert reference volume 
+        launchTest('convert reference', vol=self.inputVol, ref=self.inputRef2, 
+                   mask=self.mask)

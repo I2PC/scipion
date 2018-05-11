@@ -26,7 +26,8 @@
 
 import os
 import sys
-from pyworkflow.utils import Environ
+from pyworkflow.utils import Environ, replaceBaseExt
+from pyworkflow.em.convert import ImageHandler
 
 # we declarate global constants to multiple usage
 LOCSCALE_HOME = os.environ['LOCSCALE_HOME']
@@ -94,3 +95,28 @@ def getEmanPythonProgram(program):
     python = os.environ['EMAN_PYTHON']
 
     return python, program
+
+def convertBinaryVol(vol, outputDir):
+    """ Convert binary volume to a mrc format.
+    Params:
+        vol: input volume object to be converted.
+        outputDir: where to put the converted file(s)
+    Return:
+        new file name of the volume (converted or not).
+    """
+    ih = ImageHandler()
+
+    def convertToMrc(fn):
+        """ Convert from a format that is not read by Relion
+        to mrc format.
+        """
+        newFn = os.path.join(outputDir, replaceBaseExt(fn, 'mrc'))
+        ih.convert(fn, newFn)
+        return newFn
+        
+    volFn = ih.removeFileType(vol.getFileName())
+    
+    if not volFn.endswith('.mrc'):
+        volFn = convertToMrc(volFn)
+
+    return volFn
