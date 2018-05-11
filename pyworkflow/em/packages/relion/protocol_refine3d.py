@@ -159,8 +159,10 @@ leads to objective and high-quality results.
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
-        self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
-                          errors, 'Input particles', 'Reference volume')
+        # We we scale the input volume to have the same size as the particles...
+        # so no need to validate the following
+        # self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
+        #                   errors, 'Input particles', 'Reference volume')
 
         if isVersion2() and self.IS_3D:
             if self.solventFscMask and not self.referenceMask.get():
