@@ -15,14 +15,9 @@ import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 public class SupervisedPickerRunner implements Runnable {
     private ParticlePickerParams params;
 
-   
-
     public SupervisedPickerRunner(String[] args) {
-
         params = new ParticlePickerParams(args);
-
     }
-
 
     @Override
     public void run() {
@@ -30,7 +25,8 @@ public class SupervisedPickerRunner implements Runnable {
     	try {
             SupervisedParticlePicker ppicker = null;
             
-            ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore, params);
+            ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads,
+                                                   params.fast, params.incore, params);
             if(params.isScipion())
                 XmippApplication.setIsScipion(true);
             new SupervisedPickerJFrame(ppicker);
@@ -38,16 +34,11 @@ public class SupervisedPickerRunner implements Runnable {
     		ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
     		if (!e.getMessage().isEmpty())
     			XmippDialog.showException(null, e);
-    		
     	}
-       
-
     }
 
     public static void main(String[] args) {
             SupervisedPickerRunner spr = new SupervisedPickerRunner(args);
             SwingUtilities.invokeLater(spr);
-
     }
-
 }

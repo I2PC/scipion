@@ -1,7 +1,7 @@
 # ******************************************************************************
 # *
 # * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
