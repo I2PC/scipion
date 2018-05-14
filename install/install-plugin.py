@@ -99,10 +99,10 @@ uninstallParser.add_argument('-p', '--plugin', action='append',
 ############################################################################
 
 installBinParser = subparsers.add_parser("install_bins", formatter_class=argparse.RawTextHelpFormatter,
-                                      usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
+                                         usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
                                             (' '.join(args[:2])),
-                                      epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
-                                             (' '.join(args[:2]), pluginRepo.printPluginInfo(withBins=True)))
+                                         epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
+                                             (' '.join(args[:2]), pluginRepo.printPluginInfoStr(withBins=True)))
 installBinParser.add_argument('pluginName', metavar='pluginName',
                               help='The name of the plugin whose bins we want to uninstall.\n')
 installBinParser.add_argument('binName', nargs='+',
@@ -119,7 +119,7 @@ uninstallBinParser = subparsers.add_parser("uninstall_bins", formatter_class=arg
                                            usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
                                            (' '.join(args[:2])),
                                            epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
-                                           (' '.join(args[:2]), pluginRepo.printPluginInfo(withBins=True)))
+                                           (' '.join(args[:2]), pluginRepo.printPluginInfoStr(withBins=True)))
 uninstallBinParser.add_argument('pluginName', metavar='pluginName',
                                 help='The name of the plugin whose bins we want to uninstall.\n')
 uninstallBinParser.add_argument('binName', nargs='+',
@@ -137,14 +137,16 @@ mode = parsedArgs.mode
 
 if mode not in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS] and parsedArgs.help:
     parserUsed = modeToParser[mode]
-    parserUsed.epilog += pluginRepo.printPluginInfo()
+    parserUsed.epilog += pluginRepo.printPluginInfoStr()
     parserUsed.print_help()
     parserUsed.exit(0)
 
 elif mode == MODE_INSTALL_PLUGIN:
+
     if parsedArgs.checkUpdates:
-        print(pluginRepo.printPluginInfo(withUpdates=True))
+        print(pluginRepo.printPluginInfoStr(withUpdates=True))
         installParser.exit(0)
+
     pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0], getPipData=True)
     if not pluginDict:
         print('\n' + installParser.epilog)
