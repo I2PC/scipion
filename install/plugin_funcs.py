@@ -321,5 +321,5 @@ class PluginRepository(object):
                 if withBins:
                     printStr += plugin.printBinInfo().split('\n', 1)[1]
         else:
-            printStr = "List of available plugins in plugin repository unaccessible at this time."
+            printStr = "List of available plugins in plugin repository inaccessible at this time."
         return printStr
