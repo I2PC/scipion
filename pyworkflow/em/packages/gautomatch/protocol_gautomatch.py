@@ -26,15 +26,20 @@
 
 import os
 
+from pyworkflow import VERSION_1_1
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
-from pyworkflow import VERSION_1_1
+from pyworkflow.em.constants import RELATION_CTF
 from pyworkflow.utils.properties import Message
+from pyworkflow.protocol import STEPS_PARALLEL
 
-from convert import (readSetOfCoordinates, writeSetOfCoordinates,
-                     runGautomatch, getProgram)
+from convert import (readSetOfCoordinates, runGautomatch, getProgram,
+                     writeDefectsFile, writeMicCoords)
 
+# Option for input micrographs for wizard
+MICS_ALL = 0
+MICS_SUBSET = 1
 
 
 class ProtGautomatch(em.ProtParticlePickingAuto):
@@ -45,6 +50,10 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
     """
     _label = 'auto-picking'
     _lastUpdateVersion = VERSION_1_1
+
+    def __init__(self, **kwargs):
+        em.ProtParticlePickingAuto.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     # --------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
@@ -60,7 +69,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
                            "auto-generated. This is fine for *spherical "
                            "particles* like virus or ribosome.")
         form.addParam('invertTemplatesContrast',
-                      params.BooleanParam, default=False,
+                      params.BooleanParam, default=True,
                       label='References have inverted contrast',
                       help='Set to Yes to indicate that the reference have '
                            'inverted contrast with respect to the particles '
@@ -70,6 +79,30 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         form.addParam('angStep', params.IntParam, default=5,
                       label='Angular step size',
                       help='Angular step size for picking, in degrees')
+        form.addParam('micrographsSelection', params.EnumParam, default=MICS_ALL,
+                      choices=['All', 'Subset'],
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      label='Micrographs for wizard',
+                      help='Select which micrographs will be used for '
+                           'optimizing the parameters in the wizard. '
+                           'By default, ALL micrograph are used. '
+                           'You can select to use a subset based on '
+                           'defocus values (where micrographs will be '
+                           'taken from different defocus). ')
+        form.addParam('micrographsNumber', params.IntParam, default='10',
+                       condition='micrographsSelection==%d' % MICS_SUBSET,
+                      label='Micrographs for optimization:',
+                      help='Select the number of micrographs that you want'
+                           'to be used for the parameters optimization. ')
+        form.addParam('ctfRelations', params.RelationParam,
+                      relationName=RELATION_CTF,
+                      attributeName='getInputMicrographs',
+                      condition='micrographsSelection==%d' % MICS_SUBSET,
+                      label='CTF estimation',
+                      help='Choose some CTF estimation related to the '
+                           'input micrographs to create the subset'
+                           'by defocus values.')
+
         form.addParam('threshold', params.FloatParam, default=0.1,
                       label='Threshold',
                       help='Particles with CCC above the threshold will be '
@@ -77,9 +110,11 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         form.addParam('particleSize', params.IntParam, default=250,
                       label='Particle radius (A)',
                       help="Particle radius in Angstrom")
-        form.addParam('GPUId', params.IntParam, default=0,
-                      label='GPU ID',
-                      help='GPU ID, normally it is 0')
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Choose GPU IDs",
+                      help="GPU ID, normally it is 0. "
+                           "TODO: Document better GPU IDs and threads. ")
 
         form.addSection(label='Advanced')
         form.addParam('advanced', params.BooleanParam, default=True,
@@ -194,7 +229,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         form.addSection(label='Exclusive picking')
         form.addParam('exclusive', params.BooleanParam, default=False,
                       label='Exclusive picking?',
-                      help='Exclude user-providedareas. This can be useful in '
+                      help='Exclude user-provided areas. This can be useful in '
                            'the following cases:\n\n'
                            '(a) Another cycle of auto-picking after 2D '
                            'classification: in this case, usually you are '
@@ -254,41 +289,61 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
                       help='Specify to write out the auto-detected mask (ice, '
                            'contamination, aggregation, carbon edges etc.)')
 
-    # --------------------------- INSERT steps functions -----------------------
+        self._defineStreamingParams(form)
+
+        # Allow many threads if we can put more than one in a GPU or several GPUs
+        form.addParallelSection(threads=1, mpi=1)
+
+    # --------------------------- INSERT steps functions ----------------------
     def _insertInitialSteps(self):
         convId = self._insertFunctionStep('convertInputStep')
         return [convId]
 
-    # --------------------------- STEPS functions ------------------------------
-
+    # --------------------------- STEPS functions -----------------------------
     def convertInputStep(self):
         """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format,
             converted otherwise.
         References: will always be converted to '.mrcs' format
         """
-        micDir = self.getMicrographsDir()  # put output and mics in extra dir
-        pwutils.makePath(micDir)
+        pwutils.makePath(self.getMicrographsDir())  # put output and mics in extra dir
         # We will always convert the templates to mrcs stack
-        self.convertReferences(self._getExtraPath('references.mrcs'))
-        # Convert input coords for exclusive picking
-        self.convertCoordinates(micDir)
+        self.convertReferences(self._getReferencesFn())
+        # Write defects star file if necessary
+        if self.exclusive and self.inputDefects.get():
+            writeDefectsFile(self.inputDefects.get(), self._getDefectsFn())
 
     def _pickMicrograph(self, mic, args):
-        micName = mic.getFileName()
-        if self.inputReferences.get():
-            refStack = self._getExtraPath('references.mrcs')
-        else:
-            refStack = None
+        self._pickMicrographList([mic], args)
+
+    def _pickMicrographList(self, micList, args):
+        """ Pick several micrographs at once, probably a bit more efficient."""
+        micFnList = []
+
+        for mic in micList:
+            micFn = mic.getFileName()
+            micFnList.append(micFn)
+            # The coordinates conversion is done for each micrograph
+            # and not in convertInputStep, this is needed for streaming
+            badCoords = self.inputBadCoords.get()
+
+            if self.exclusive and badCoords:
+                fnCoords = os.path.join(self.getMicrographsDir(), '%s_rubbish.star'
+                                        % pwutils.removeBaseExt(micFn))
+                writeMicCoords(mic, badCoords.iterCoordinates(mic), fnCoords)
+
         # We convert the input micrograph on demand if not in .mrc
-        runGautomatch(micName, refStack, self.getMicrographsDir(), args,
-                      env=self._getEnviron())
+        runGautomatch(micFnList,
+                      self._getReferencesFn(),
+                      self.getMicrographsDir(),
+                      args,
+                      env=self._getEnviron(),
+                      runJob=self.runJob)
 
     def createOutputStep(self):
         pass
         
-
-    # --------------------------- INFO functions -------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
@@ -312,11 +367,18 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
 
         if not self.localAvgMin < self.localAvgMax:
             errors.append('Wrong values of local average cut-off!')
+
         if self.exclusive:
             if not self.inputBadCoords.get() and not self.inputDefects.get():
                 errors.append("You have to provide at least "
                               "one set of coordinates ")
                 errors.append("for exclusive picking!")
+
+        nprocs = max(self.numberOfMpi.get(), self.numberOfThreads.get())
+
+        if nprocs < len(self.getGpuList()):
+            errors.append("Multiple GPUs can not be used by a single process. "
+                          "Make sure you specify more processors than GPUs. ")
 
         return errors
 
@@ -378,6 +440,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         readSetOfCoordinates(self.getMicrographsDir(), micList,
                              coordSetAux, suffix='_rejected.star')
         coordSetAux.write()
+        coordSetAux.close()
     
         # debug output
         if self.writeCC:
@@ -425,7 +488,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         args += ' --diameter %d' % (2 * self.particleSize.get())
         args += ' --lp %d' % self.lowPass
         args += ' --hp %d' % self.highPass
-        args += ' --gid %d' % self.GPUId
+        args += ' --gid %(GPU)s'
 
         if self.inputReferences.get():
             args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
@@ -455,8 +518,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
             if self.inputBadCoords.get():
                 args += ' --exclusive_picking --excluded_suffix _rubbish.star'
             if self.inputDefects.get():
-                args += (' --global_excluded_box %s'
-                         % self._getExtraPath('micrographs/defects.star'))
+                args += (' --global_excluded_box %s' % self._getDefectsFn())
 
         if self.writeCC:
             args += ' --write_ccmax_mic'
@@ -484,18 +546,8 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
 
     def convertReferences(self, refStack):
         """ Write input references as an .mrcs stack. """
-        inputRefs = self.inputReferences.get()
-        if inputRefs:
+        if refStack:  # refStack should be None when not using references
             self.inputReferences.get().writeStack(refStack)
-
-    def convertCoordinates(self, workingDir):
-        if self.exclusive:
-            if self.inputBadCoords.get():
-                writeSetOfCoordinates(workingDir, self.inputBadCoords.get(),
-                                      isGlobal=False)
-            if self.inputDefects.get():
-                writeSetOfCoordinates(workingDir, self.inputDefects.get(),
-                                      isGlobal=True)
 
     def getOutputName(self, fn, key):
         """ Give a key, append the mrc extension
@@ -504,3 +556,12 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         template = pwutils.removeBaseExt(fn) + key + '.mrc'
 
         return pwutils.join(self.getMicrographsDir(), template)
+
+    def _getDefectsFn(self):
+        """ Return the filename for the defects star file. """
+        return self._getExtraPath('micrographs', 'defects.star')
+
+    def _getReferencesFn(self):
+        if self.inputReferences.get():
+            return self._getExtraPath('references.mrcs')
+        return None

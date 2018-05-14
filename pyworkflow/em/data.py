@@ -1514,7 +1514,7 @@ class Transform(EMObject):
         self.setShifts(shifts[0], shifts[1], shifts[2])
 
     def composeTransform(self, matrix):
-        '''Apply a transformation matrix to the current matrix '''            
+        '''Apply a transformation matrix to the current matrix '''
         new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
 

@@ -50,67 +50,66 @@ public class GenericClassifier extends Classifier
 				param = new Parameter(paramName, label, help, value);
 				params.add(param);
 			}
+			if (hasInitialCoordinates())
+				convert();
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-	
-	
+
+	/** Execute a command and print it if in DEBUG mode */
+	private void execute(String name, String cmd, String runDir) throws Exception
+	{
+		if(cmd == null)
+		{
+			if (DEBUG.hasScipionDebug())
+				System.out.println(name + " command: NULL\n");
+			return;
+		}
+
+		if (DEBUG.hasScipionDebug())
+			System.out.println(name + " command: \n" + cmd + "\n");
+
+		String output = (runDir == null) ? XmippWindowUtil.executeCommand(cmd, true) :
+				                           XmippWindowUtil.executeCommand(cmd, true, runDir);
+		if (DEBUG.hasScipionDebug())
+			System.out.println(name + " output: \n" + output + "\n");
+	}
+
+	private void convert() throws Exception {
+		String convertCommand = properties.getProperty("convertCommand");
+		execute("Convert", convertCommand, null);
+	}
+
 	public void autopick(SupervisedPickerMicrograph micrograph)
 	{
 		String preprocessCommand = properties.getProperty("preprocessCommand");
 		String autopickCommand = properties.getProperty("autopickCommand");
-		String convertCommand = properties.getProperty("convertCommand");
 		String runDir = properties.getProperty("runDir");
+
 		for(Classifier.Parameter param: params)
 		{
 			if(preprocessCommand != null)
 				preprocessCommand = preprocessCommand.replace("%(" + param.name + ")", param.value);
 			autopickCommand = autopickCommand.replace("%(" + param.name + ")", param.value);
 		}
+
 		String micPath = micrograph.getFile();
-		if(runDir != null)
+
+		if (runDir != null)
 			micPath = new File(runDir).toURI().relativize(new File(micPath).toURI()).getPath();
+
 		String name = micrograph.getName();
 		autopickCommand = autopickCommand.replace("%(micrograph)", micPath);
 		autopickCommand = autopickCommand.replace("%(micrographName)", name);
-		String output;
+
 		try
 		{
-			if(runDir != null)
-			{
-				if(preprocessCommand != null)
-				{
-					output = XmippWindowUtil.executeCommand(preprocessCommand, true, runDir);
-					//System.out.println("preprocess output \n" + output);
-				}
-				output = XmippWindowUtil.executeCommand(autopickCommand, true, runDir);
-				if (DEBUG.hasScipionDebug()) {
-				    System.out.println("Autopick command: \n" + autopickCommand + "\n");
-				    System.out.println("Autopick output: \n" + output);
-				}
-			}
-			else
-			{
-				if(preprocessCommand != null)
-				{
-					output = XmippWindowUtil.executeCommand(preprocessCommand, true);
-					//System.out.println("preprocess output \n" + output);
-				}
-				output = XmippWindowUtil.executeCommand(autopickCommand, true);
-				if (DEBUG.hasScipionDebug()) {
-				    System.out.println("Autopick command: \n" + autopickCommand + "\n");
-				    System.out.println("Autopick output: \n" + output);
-				}
-			}
-			
-			output = XmippWindowUtil.executeCommand(convertCommand, true);
-			if (DEBUG.hasScipionDebug()) {
-			    System.out.println("Convert command: \n" + convertCommand + "\n");
-			    System.out.println("Convert output \n" + output);
-			}
+			execute("Preprocess", preprocessCommand, runDir);
+			execute("Autopick", autopickCommand, runDir);
+			convert();
 			writeProperties();
 		}
 		catch (Exception e)
@@ -131,9 +130,7 @@ public class GenericClassifier extends Classifier
 	public void setSize(int psize)
 	{
 		// TODO Auto-generated method stub
-		
 	}
-
 
 	@Override
 	public boolean needsTraining()
@@ -166,6 +163,14 @@ public class GenericClassifier extends Classifier
 	public void setApplyChanges(boolean applyChanges) {
 		super.setApplyChanges(applyChanges);
 		writeProperties();
+	}
+
+	public boolean hasInitialCoordinates() {
+		return properties.getProperty("hasInitialCoordinates", "").equals("true");
+	}
+
+	public boolean doPickAll() {
+		return properties.getProperty("doPickAll", "").equals("true");
 	}
 
 }
