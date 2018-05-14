@@ -146,6 +146,12 @@ def cleanPattern(pattern):
     cleanPath(*files)
 
 
+def copyPattern(pattern, destFolder):
+    """ Copy all files matching the pattern to the given destination folder."""
+    for file in glob(pattern):
+        copyFile(file, destFolder)
+
+
 def makePath(*paths):
     """ Create a list of paths if they don't exists.
     Recursively create all folder needed in a path.

@@ -364,12 +364,12 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
     else:
         lastTarget = library
     env.Default(lastTarget)
-    
+
     for dep in deps:
         env.Depends(sources, dep)
-    
+
     env.Alias(name, lastTarget)
-    
+
     return lastTarget
 
 
@@ -547,11 +547,11 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
 
     if mpi: ccCopy = env['MPI_CC']
     elif nvcc: ccCopy = env['NVCC']
-    else: ccCopy = env['CC']  
+    else: ccCopy = env['CC']
 
     if mpi: cxxCopy = env['MPI_CXX']
     elif nvcc: cxxCopy = env['NVCC']
-    else: cxxCopy = env['CXX']  
+    else: cxxCopy = env['CXX']
 
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
     incsCopy += env['CPPPATH'] + ['libraries', Dir(SCIPION_SW + '/include').abspath,
@@ -560,7 +560,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
     ldLibraryPathCopy = [env['LIBPATH']]
-    appendUnique(libPathsCopy, env.get('LIBPATH', '').split(":"))
+    appendUnique(libPathsCopy, env.get('LIBPATH', '').split(os.pathsep))
     env2 = Environment()
     if mpi: 
         appendUnique(incsCopy, env['MPI_INCLUDE'])
@@ -569,7 +569,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
         appendUnique(ldLibraryPathCopy, env['MPI_LIBDIR'])
     env2['ENV']['LD_LIBRARY_PATH'] = env['ENV'].get('LD_LIBRARY_PATH', '')
     env2['ENV']['PATH'] = env['ENV']['PATH']
-    
+
     program = env2.Program(
                           File(join(installDir, name)).abspath,
                           source=sources,

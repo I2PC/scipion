@@ -81,7 +81,9 @@ class DogPickerWizard(EmWizard):
         convertCommand = %(convert)s --coordinates --from dogpicker --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         f.close()
-        process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt, pickerProps=dogpickerProps).show()
+        process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt,
+                                        mode=CoordinatesObjectView.MODE_AUTOMATIC,
+                                        pickerProps=dogpickerProps).show()
         process.wait()
         myprops = readProperties(dogpickerProps)
         form.setVar('diameter', myprops['diameter.value'])

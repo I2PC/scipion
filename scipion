@@ -30,7 +30,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, expanduser
 import subprocess
 
 DEVEL = 'devel'
@@ -41,9 +41,8 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-# Update this values before any new release
-__version__ = DEVEL
-__nickname__ = DEVEL
+__version__ = ''
+__nickname__ = ''
 __releasedate__ = ''
 
 
@@ -65,7 +64,8 @@ SCIPION_CWD = os.path.abspath(os.getcwd())
 
 # Default values for configuration files.
 SCIPION_CONFIG = join(SCIPION_HOME, 'config', 'scipion.conf')
-SCIPION_LOCAL_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
+SCIPION_LOCAL_CONFIG = expanduser(os.environ.get('SCIPION_LOCAL_CONFIG',
+                                                 '~/.config/scipion/scipion.conf'))
 
 # Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):

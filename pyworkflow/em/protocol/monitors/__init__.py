@@ -9,6 +9,8 @@ from protocol_monitor_ctf import ProtMonitorCTF, CtfMonitorPlotter, MonitorCTF
 from protocol_monitor_system import ProtMonitorSystem, SystemMonitorPlotter
 from protocol_monitor_movie_gain import ProtMonitorMovieGain, MovieGainMonitorPlotter, MonitorMovieGain
 
+from protocol_monitor_2d_streamer import ProtMonitor2dStreamer
+
 # Viewers
 from protocol_monitor_ctf import ProtMonitorCTFViewer
 from protocol_monitor_system import ProtMonitorSystemViewer
