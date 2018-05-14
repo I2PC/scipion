@@ -1348,6 +1348,128 @@ template<typename T>
       return;
     }
 
+
+
+
+      /** Read the raw data from compressed 4bit images
+      */
+      void
+      readData4bit(FILE* fimg, size_t select_img, DataType datatype, size_t pad)
+      {
+
+        if (dataMode < DATA)
+          return;
+
+        // If only half of a transform is stored, it needs to be handled
+        if (transform == Hermitian || transform == CentHerm)
+          data.setXdim(XSIZE(data) / 2 + 1);
+
+        size_t selectImgOffset; //4Mb
+        size_t datatypesize = gettypesize(datatype);
+        size_t itemSize = ZYXSIZE(data);
+        size_t itemSizeHalf = itemSize/2;
+        size_t pagesize = itemSize * datatypesize;
+        size_t pagesizeHalf = pagesize/2;
+        size_t haveread_n = 0;
+
+        selectImgOffset = offset + IMG_INDEX(select_img) * (pagesizeHalf + pad);
+
+        // Flag to know that data is not going to be mapped although mmapOn is true
+        if (mmapOnRead && (!checkMmapT(datatype) || swap > 0))
+        {
+          String warnMessage;
+          if (swap > 0)
+            reportWarning("Image::readData: File endianness is swapped and not "
+                                  "compatible with mmap. Loading into memory.");
+          else
+            reportWarning(
+                    "Image::readData: File datatype and image declaration not "
+                            "compatible with mmap. Loading into memory.");
+
+          mmapOnRead = false;
+          mFd = -1;
+        }
+
+        if (mmapOnRead)
+        {
+          // Image mmapOn is not compatible with Multidimarray mmapOn
+          if (data.mmapOn)
+            REPORT_ERROR(ERR_MULTIDIM_DIM,
+                         "Image Class::ReadData: mmap option can not be selected simultaneously\
+                             for both Image class and its Multidimarray.");
+          if ( NSIZE(data) > 1)
+          {
+            REPORT_ERROR(ERR_MMAP, "Image Class::ReadData: mmap with multiple "
+                    "images file not compatible. Try selecting a unique image.");
+          }
+          mappedOffset = selectImgOffset;
+          mappedSize = mappedOffset + pagesizeHalf;
+          mmapFile();
+        }
+        else
+        {
+          char* page = NULL;    // Compressed
+
+          // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+          //if memory already allocated use it (no resize allowed)
+          data.coreAllocateReuse();
+
+          page = (char *) askMemory(pagesize * sizeof(char));
+
+          if (fseek(fimg, selectImgOffset, SEEK_SET) == -1)
+            REPORT_ERROR(ERR_IO_SIZE, "readData: can not seek the file pointer");
+          for (size_t myn = 0; myn < NSIZE(data); myn++)
+          {
+
+            //Read page from disc
+            if (fread(page+pagesizeHalf, pagesizeHalf, 1, fimg) != 1)
+              REPORT_ERROR(ERR_IO_NOREAD, "Cannot read the whole page");
+            //swap per page
+            if (swap)
+              swapPage(page, pagesizeHalf, datatype, swap);
+            // cast to T per page
+
+              size_t start = itemSizeHalf;
+              uint8_t mask = 15; // 00001111
+
+              for (size_t i = 0, j = start; i < itemSize - 1; i += 2, ++j)
+              {
+                  char& value = *(page+j);
+                  page[i] = value & mask; // take the lower 4 bits
+                  page[i+1] = value >> 4; // take the upper 4 bits
+              }
+
+            castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype,
+                       itemSize);
+            haveread_n += itemSize;
+
+            if (pad > 0)
+              //fread( padpage, pad, 1, fimg);
+              if (fseek(fimg, pad, SEEK_CUR) == -1)
+                REPORT_ERROR(ERR_IO_SIZE,
+                             "readData: can not seek the file pointer");
+          }
+          //if ( pad > 0 )
+          //    freeMemory(padpage, pad*sizeof(char));
+          if (page > 0)
+            freeMemory(page, pagesize * sizeof(char));
+
+#ifdef DEBUG
+
+          printf("DEBUG img_read_data: Finished reading and converting data\n");
+#endif
+
+        }
+        return;
+      }
+
+
+
+
+
+
+
+
     /* Write the raw date after a data type casting.
      */
     void

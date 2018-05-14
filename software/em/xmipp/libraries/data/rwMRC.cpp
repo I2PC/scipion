@@ -188,9 +188,6 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         _nDim = 1;
     }
 
-    replaceNsize = _nDim;
-    setDimensions(_xDim, _yDim, _zDim, _nDim);
-
     DataType datatype;
     switch ( header->mode )
     {
@@ -212,11 +209,20 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     case 6:
         datatype = DT_UShort;
         break;
+    case 101:
+        datatype = DT_UChar;
+        break;
+
     default:
         datatype = DT_Unknown;
         errCode = -1;
         break;
     }
+
+    replaceNsize = _nDim;
+    setDimensions(_xDim, _yDim, _zDim, _nDim);
+
+
     offset = MRCSIZE + header->nsymbt;
     size_t datasize_n;
     datasize_n = _xDim*_yDim*_zDim;
@@ -229,6 +235,15 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
             _xDim = (2 * (_xDim - 1));
         if ( header->mx%2 == 1 )
             _xDim += 1;     // Quick fix for odd x-size maps
+        setDimensions(_xDim, _yDim, _zDim, _nDim);
+    }
+
+    // 4-bits mode: If only the header is read, we pass the expanded value
+    // of columns number here, else, we keep the compressed value for reading
+    // purposes
+    if (header->mode == 101)
+    {
+        _xDim *= 2;
         setDimensions(_xDim, _yDim, _zDim, _nDim);
     }
 
@@ -296,7 +311,14 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if ( dataMode < DATA )   // Don't read the individual header and the data if not necessary
         return errCode;
 
-    readData(fimg, select_img, datatype, 0);
+
+    // Lets read the data
+
+    // 4-bits mode: Here is the magic to expand the compressed images
+    if (header->mode == 101)
+        readData4bit(fimg, select_img, datatype, 0);
+    else
+        readData(fimg, select_img, datatype, 0);
 
     return errCode;
 }

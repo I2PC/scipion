@@ -821,6 +821,10 @@ protected:
       */
     virtual void readData(FILE* fimg, size_t select_img, DataType datatype, size_t pad) = 0;
 
+    /** Read the raw data in MRC 4bit mode
+  */
+    virtual void readData4bit(FILE* fimg, size_t select_img, DataType datatype, size_t pad) = 0;
+
     /** Write the raw date after a data type casting.
      */
     virtual void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
