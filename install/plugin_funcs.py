@@ -62,31 +62,56 @@ class PluginInfo(object):
     def isInstalled(self):
         return self.hasPipPackage()
 
-    def setRemotePluginInfo(self):
-        reg = r'scipion-([\d.]*\d)'
+    def getPipJsonData(self):
+        """"Request json data from pypi, return json content"""
         pipData = requests.get("%s/%s/json" % (PIP_BASE_URL, self.pipName))
         if pipData.ok:
             pipData = pipData.json()
-            pluginInfo = pipData['info']
-            releases = {}
-            latestCompRelease = "0.0.0"
-            for release, releaseData in pipData['releases'].iteritems():
-                releaseData = releaseData[0]
-                scipionVersions = [parse_version(v) for v in re.findall(reg, releaseData['comment_text'])]
-                if len(scipionVersions) == 0:
-                    print("WARNING: %s's release %s did not specify a compatible Scipion version" % (self.pipName,
-                                                                                                     release))
-                elif any([v <= parse_version(SCIPION_VERSION) for v in scipionVersions]):
-                    if parse_version(latestCompRelease) < parse_version(release):
-                        latestCompRelease = release
-                    releases[release] = releaseData
+            return pipData
+        else:
+            print("Warning: Couldn't get remote plugin data for %s" % self.pipName)
+            return {}
 
-            self.homePage = pluginInfo['home_page']
-            self.summary = pluginInfo['summary']
-            self.author = pluginInfo['author']
-            self.email = pluginInfo['author_email']
-            self.compatibleReleases = releases
-            self.latestRelease = latestCompRelease
+    def getCompatiblePipReleases(self, pipJsonData=None):
+        """Get pip releases of this plugin that are compatible with
+         current Scipion version. Returns dict with all compatible releases and
+         a special key "latest" with the most recent one."""
+        if pipJsonData is None:
+            pipJsonData = self.getPipJsonData()
+
+        reg = r'scipion-([\d.]*\d)'
+        releases = {}
+        latestCompRelease = "0.0.0"
+
+        for release, releaseData in pipJsonData['releases'].iteritems():
+            releaseData = releaseData[0]
+            scipionVersions = [parse_version(v) for v in re.findall(reg, releaseData['comment_text'])]
+            if len(scipionVersions) == 0:
+                print("WARNING: %s's release %s did not specify a compatible Scipion version" % (self.pipName,
+                                                                                                 release))
+            elif any([v <= parse_version(SCIPION_VERSION) for v in scipionVersions]):
+                if parse_version(latestCompRelease) < parse_version(release):
+                    latestCompRelease = release
+                releases[release] = releaseData
+
+        releases['latest'] = latestCompRelease
+
+        return releases
+
+    def setRemotePluginInfo(self):
+        reg = r'scipion-([\d.]*\d)'
+        pipData = self.getPipJsonData()
+        if not pipData:
+            return
+        info = pipData['info']
+        releases = self.getCompatiblePipReleases(pipJsonData=pipData)
+
+        self.homePage = info['home_page']
+        self.summary = info['summary']
+        self.author = info['author']
+        self.email = info['author_email']
+        self.compatibleReleases = releases
+        self.latestRelease = releases['latest']
 
     def setLocalPluginInfo(self):
         if self.isInstalled():
@@ -267,9 +292,16 @@ class PluginRepository(object):
         return pluginDict
 
 
-    def printPluginInfo(self, withBins=False):
+    def printPluginInfo(self, withBins=False, withUpdates=False):
+
+        def ansi(n):
+            "Return function that escapes text with ANSI color n."
+            return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
+
+        black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
+
         printStr = ""
-        pluginDict = self.getPlugins()
+        pluginDict = self.getPlugins(getPipData=withUpdates)
         if pluginDict:
             withBinsStr = "Installed plugins and their binaries" if withBins else "Available plugins"
             printStr += ("%s: "
@@ -279,9 +311,12 @@ class PluginRepository(object):
                 plugin = pluginDict[name]
                 if withBins and not plugin.isInstalled():
                     continue
-                printStr += "%23s " % name
-                vInfo = '[%s]' % ('X' if plugin.isInstalled() else ' ')
-                printStr += '%13s' % vInfo
+                printStr += "%23s" % name
+                vInfo = '%s [%s]' % (plugin.pipVersion, 'X' if plugin.isInstalled() else ' ')
+                printStr += '%15s' % vInfo
+                if withUpdates and plugin.isInstalled():
+                    if plugin.latestRelease != plugin.pipVersion:
+                        printStr += yellow('\t(%s available)' % plugin.latestRelease)
                 printStr += "\n"
                 if withBins:
                     printStr += plugin.printBinInfo().split('\n', 1)[1]

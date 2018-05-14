@@ -50,6 +50,10 @@ subparsers = parser.add_subparsers(help='mode "install_plugin", "uninstall_plugi
                                    title='Mode',
                                    description='available modes are "install_plugin" or "uninstall_plugin"')
 
+############################################################################
+#                               Install parser                             #
+############################################################################
+
 installParser = subparsers.add_parser("install_plugin", formatter_class=argparse.RawTextHelpFormatter,
                                       usage="%s  [-h] [--noBin] [-p pluginName [pipVersion ...]]" %
                                             (' '.join(args[:2])),
@@ -61,12 +65,18 @@ installParser.add_argument('--noBin', action='store_true',
                             help='Optional flag to install plugins only as a python module,\n'
                                  'without installing the plugin binaries. This will affect\n'
                                  'all plugins specified in the command.')
+installParser.add_argument('--checkUpdates', action='store_true',
+                           help='Optional flag to check which plugins have new releases.\n')
 installParser.add_argument('-p', '--plugin', action='append', nargs='+',
                            metavar=('pluginName', 'pluginVersion'),
                            help='- pluginName:     the name of the plugin to install from the list\n'
                                  '                 of available plugins shown below.\n'
                                  '- pluginVersion: (optional) pip version to install. If not specified,'
                                  '                 will install the latest compatible with current Scipion.')
+
+############################################################################
+#                             Uninstall parser                             #
+############################################################################
 
 uninstallParser = subparsers.add_parser("uninstall_plugin", formatter_class=argparse.RawTextHelpFormatter,
                                         usage="%s  [-h] [-p pluginName [binVersion ...]]" %
@@ -84,6 +94,9 @@ uninstallParser.add_argument('-p', '--plugin', action='append',
                              help='The name of the plugin to uninstall from the list\n'
                                   'of available plugins shown below.\n')
 
+############################################################################
+#                           Install Bins parser                            #
+############################################################################
 
 installBinParser = subparsers.add_parser("install_bins", formatter_class=argparse.RawTextHelpFormatter,
                                       usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
@@ -97,6 +110,10 @@ installBinParser.add_argument('binName', nargs='+',
                               help='The name(s) of the bins we want install, optionally with \n'
                                    'version in the form name-version. If no version is specified,\n'
                                    'will install the last one.')
+
+############################################################################
+#                          Uninstall Bins parser                           #
+############################################################################
 
 uninstallBinParser = subparsers.add_parser("uninstall_bins", formatter_class=argparse.RawTextHelpFormatter,
                                            usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
@@ -125,6 +142,9 @@ if mode not in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS] and parsedArgs.help:
     parserUsed.exit(0)
 
 elif mode == MODE_INSTALL_PLUGIN:
+    if parsedArgs.checkUpdates:
+        print(pluginRepo.printPluginInfo(withUpdates=True))
+        installParser.exit(0)
     pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0], getPipData=True)
     if not pluginDict:
         print('\n' + installParser.epilog)
