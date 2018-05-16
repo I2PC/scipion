@@ -62,12 +62,12 @@ class ChimeraViewerBase(Viewer):
             sampling = _inputVol.getSamplingRate()
             _showVol = _inputVol
         else:
-            outputVol = self.protocol.output3Dmap
-            if outputVol is not None:
+            try:
+                outputVol = self.protocol.output3Dmap
                 dim = outputVol.getDim()[0]
                 sampling = outputVol.getSamplingRate()
                 _showVol = outputVol
-            else:
+            except:
                 # To show pdbs only
                 dim = 150.
                 sampling = 1.
@@ -90,7 +90,7 @@ class ChimeraViewerBase(Viewer):
             if _showVol.hasOrigin():
                 x, y, z = _showVol.getOrigin().getShifts()
             else:
-                x, y, z = _showVol.getOrigin(force=True).getShifts()
+                x, y, z = outputVol.getOrigin(force=True).getShifts()
 
             f.write("volume #1 style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
