@@ -446,7 +446,7 @@ public:
 		double VPP;
 		double check_VPP = round(VPP_radius*1000);
 		if(check_VPP != 0)
-			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
+			VPP = -phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
 		double argument = VPP + K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
@@ -490,7 +490,7 @@ public:
 		double VPP;
 		double check_VPP = round(VPP_radius*1000);
 		if(check_VPP != 0)
-			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
+			VPP = -phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
 		double argument = VPP + K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
@@ -552,7 +552,7 @@ public:
 		double VPP;
 		double check_VPP = round(VPP_radius*1000);
 		if(check_VPP != 0)
-			VPP = phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
+			VPP = -phase_shift*(1-exp(-precomputed.u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
 		double argument = VPP + K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
@@ -567,6 +567,7 @@ public:
 			std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
 			<< std::endl;
 			std::cout << "   Q0=" << Q0 << std::endl;
+			std::cout << " VPP =" << VPP << std::endl;
 			std::cout << "   CTF without damping="
 			<< -(Ksin*sine_part - Kcos*cosine_part) << std::endl;
 		}
@@ -583,7 +584,7 @@ public:
 		double VPP;
 		double check_VPP = round(VPP_radius*1000);
 		if(check_VPP != 0)
-			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
+			VPP = -phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
 		double argument = VPP + K1 * deltaf * u2 + K2 * u4;
@@ -1063,7 +1064,7 @@ public:
         double VPP;
         double check_VPP = round(VPP_radius*1000);
 		if(check_VPP != 0)
-			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
+			VPP = -phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
         double argument = VPP + K1 * deltaf * u2 + K2 * u4;
@@ -1109,7 +1110,7 @@ public:
         double VPP;
         double check_VPP = round(VPP_radius*1000);
 		if(check_VPP != 0)
-			VPP = phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
+			VPP = -phase_shift*(1-exp(-u2/(2*pow(VPP_radius,2.0))));
 		else
 			VPP = 0;
         double argument = VPP + K1 * deltaf * u2 + K2 * u4;

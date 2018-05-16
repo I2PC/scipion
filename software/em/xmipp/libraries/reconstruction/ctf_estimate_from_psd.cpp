@@ -724,6 +724,14 @@ double ProgCTFEstimateFromPSD::CTF_fitness_object(double *p)
         }
     }
 
+    if ((initial_ctfmodel.phase_shift != 0.0 || initial_ctfmodel.phase_shift != 1.57079) && action >= 5)
+        {
+        	if (fabs(initial_ctfmodel.phase_shift - current_ctfmodel.phase_shift) > 0.05)
+        	{
+        		return heavy_penalization;
+        	}
+        }
+
     // Now the 2D error
     double distsum = 0;
     int N = 0, Ncorr = 0;

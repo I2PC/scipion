@@ -289,7 +289,6 @@ void ProgCTFEstimateFromPSDFast::saveIntermediateResults_fast(const FileName &fn
 double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 {
 	double retval;
-
     // Generate CTF model
     switch (action)
     {
@@ -371,12 +370,12 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
         }
         break;
     }
-
     current_ctfmodel.produceSideInfo();
+
     if (show_inf >= 2)
         std::cout << "Model:\n" << current_ctfmodel << std::endl;
     if (!current_ctfmodel.hasPhysicalMeaning())
-    {
+    {//std::cout << current_ctfmodel << std::endl;
         if (show_inf >= 2)
             std::cout << "Does not have physical meaning\n";
         return heavy_penalization;
@@ -389,13 +388,15 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
             std::cout << "Too large defocus\n";
         return heavy_penalization;
     }
-
     if (initial_ctfmodel.Defocus != 0 && action >= 3)
     {
         // If there is an initial model, the true solution
         // cannot be too far
+    	//std::cout << "idef =" << initial_ctfmodel.Defocus << std::endl;
+    	//std::cout << "cdef =" << current_ctfmodel.Defocus << std::endl;
         if (fabs(initial_ctfmodel.Defocus - current_ctfmodel.Defocus) > defocus_range)
         {
+        	//std::cout << "Entra" << std::endl;
             if (show_inf >= 2)
             {
                 std::cout << "Too far from hint: Initial (" << initial_ctfmodel.Defocus << ")"
@@ -403,11 +404,15 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
                 << defocus_range << std::endl;
             }
             return heavy_penalization;
-
-
         }
     }
-
+    if ((initial_ctfmodel.phase_shift != 0.0 || initial_ctfmodel.phase_shift != 1.57079) && action >= 5)
+    {
+    	if (fabs(initial_ctfmodel.phase_shift - current_ctfmodel.phase_shift) > 0.05)
+    	{
+    		return heavy_penalization;
+    	}
+    }
     // Now the 1D error
     double distsum = 0;
     int N = 0, Ncorr = 0;
@@ -448,7 +453,15 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 		case 6:
 		case 7:
 			envelope = current_ctfmodel.getValueDampingAt();
+			//std::cout<<"Llega" << std::endl;
+			//std::cout << action << std::endl;
+			/*if(action==5)
+			{std::cout << "Entra1" << std::endl;
+				ctf_without_damping = current_ctfmodel.getValuePureWithoutDampingAt(true);
+			}
+			else*/
 			ctf_without_damping = current_ctfmodel.getValuePureWithoutDampingAt();
+
 			ctf_with_damping = envelope * ctf_without_damping;
 			ctf2_th = bg + ctf_with_damping * ctf_with_damping;
 			break;
@@ -465,8 +478,8 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 			dist = fabs(ctf2 - bg);
 			if (penalize && bg > ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
 				dist *= current_penalty;
-			if (penalize && bg < ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
-				dist *= 5;
+			/*if (penalize && bg < ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
+				dist *= 5;*/
 			break;
 		case 2:
 			dist = fabs(ctf2 - ctf2_th);
@@ -698,13 +711,11 @@ void ProgCTFEstimateFromPSDFast::estimate_background_sqrt_parameters_fast()
         base_line += psd_exp_radial(i);
     }
     current_ctfmodel.base_line = base_line / N;
-
     // Find the linear least squares solution for the sqrt part
     Matrix2D<double> A(2, 2);
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
-
     FOR_ALL_ELEMENTS_IN_ARRAY1D(w_digfreq)
     {
         if (mask(i) <= 0)
@@ -735,7 +746,6 @@ void ProgCTFEstimateFromPSDFast::estimate_background_sqrt_parameters_fast()
     current_ctfmodel.sq = b(0);
     current_ctfmodel.sqrt_K = exp(b(1));
     COPY_ctfmodel_TO_CURRENT_GUESS;
-
     if (show_optimization)
     {
         std::cout << "First SQRT Fit:\n" << current_ctfmodel << std::endl;
@@ -997,7 +1007,6 @@ void ProgCTFEstimateFromPSDFast::estimate_background_gauss_parameters_fast()
             saveIntermediateResults_fast("step01c_first_background_fit_fast", true);
         }
         center_optimization_focus_fast(false, true, 1.5);
-
     }
 }
 
@@ -1030,6 +1039,7 @@ void ProgCTFEstimateFromPSDFast::estimate_envelope_parameters_fast()
     steps.initConstant(1);
 
     steps(1) = 0; // Do not optimize Cs
+    //steps(2) = 0;
     steps(5) = 0; // Do not optimize for alpha, since Ealpha depends on the defocus
 
     if (modelSimplification >= 1)
@@ -1075,7 +1085,6 @@ void ProgCTFEstimateFromPSDFast::estimate_envelope_parameters_fast()
         std::cout << "Best envelope Fit:\n" << current_ctfmodel << std::endl;
         saveIntermediateResults_fast("step02b_best_penalized_envelope_fit_fast", true);
     }
-
 }
 
 // Estimate defoci ---------------------------------------------------------
@@ -1103,8 +1112,6 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 		std::cout << "First defocus Fit:\n" << ctfmodel_defoci << std::endl;
 		saveIntermediateResults_fast("step03a_first_defocus_fit_fast", true);
 	}
-	//saveIntermediateResults_fast("/home/javiermota/scipion/step03a_first_defocus_fit_fast", true);
-
 }
 
 // Estimate second gaussian parameters -------------------------------------
@@ -1259,6 +1266,7 @@ void ProgCTFEstimateFromPSDFast::estimate_background_gauss_parameters2_fast()
         << std::endl;
         saveIntermediateResults_fast("step04a_first_background2_fit_fast", true);
     }
+    //saveIntermediateResults_fast("/home/javiermota/Documents/MATLAB/VPP/step01b_best_penalized_sqrt_fit_fast", true);
 }
 
 #undef DEBUG
@@ -1369,6 +1377,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	/************************************************************************/
 	/* STEPs 9, 10 and 11: all parameters included second Gaussian          */
 	/************************************************************************/
+	//prm.saveIntermediateResults_fast("/home/javiermota/Documents/MATLAB/VPP/step05a_estimate_1D_parameters", true);
 	prm.action = 5;
 	if (prm.modelSimplification < 2)
 		prm.estimate_background_gauss_parameters2_fast();
@@ -1377,6 +1386,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	steps.initConstant(1);
 	steps(1) = 0; // kV
 	steps(3) = 0; // The spherical aberration (Cs) is not optimized
+	//steps(4) = 0;
 	steps(27) = 0; //VPP radius not optimized
 	if (prm.initial_ctfmodel.Q0 != 0)
 		steps(13) = 0; // Q0
@@ -1397,7 +1407,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		<< std::endl;
 		prm.saveIntermediateResults_fast("step04b_best_fit_with_gaussian2_fast", true);
 	}
-
+	//prm.saveIntermediateResults_fast("/home/javiermota/Documents/MATLAB/VPP/step05b_estimate_1D_parameters", true);
 	/************************************************************************/
 	/* STEP 12: 2D estimation parameters          							*/
 	/************************************************************************/
@@ -1407,6 +1417,7 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	steps.initConstant(1);
 	steps(3) = 0; // kV
 	steps(5) = 0; // The spherical aberration (Cs) is not optimized
+	//steps(6) = 0;
 	steps(37) = 0; //VPP radius not optimized
 	if (prm2D->initial_ctfmodel.Q0 != 0)
 	    steps(15) = 0; // Q0
@@ -1443,7 +1454,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		std::cout << "Best fit with 2D parameters:\n" << prm2D->current_ctfmodel << std::endl;
 		prm2D->saveIntermediateResults("step05b_estimate_2D_parameters", true);
 	}
-
 	//prm2D->saveIntermediateResults("/home/javiermota/Documents/MATLAB/VPP/step05b_estimate_2D_parameters", true);
 	/************************************************************************/
 	/* STEP 13: Produce output                                              */
@@ -1468,7 +1478,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 
 		}
 #endif
-		//prm2D->saveIntermediateResults("/home/javiermota/Documents/MATLAB/VPP/step06_estimate_2D_parameters", true);
         XX(u)=1; YY(u)=0;
         prm2D->current_ctfmodel.lookFor(3, u, z3, 0);
         prm2D->current_ctfmodel.lookFor(1, u, z1, 0);
@@ -1497,10 +1506,10 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		}
 		else
 			fn_rootCTFPARAM=(String)"fullMicrograph@"+fn_rootCTFPARAM;
-
 		prm2D->saveIntermediateResults(fn_rootMODEL, false);
 		prm2D->current_ctfmodel.Tm /= prm2D->downsampleFactor;
 		prm2D->current_ctfmodel.azimuthal_angle = std::fmod(prm2D->current_ctfmodel.azimuthal_angle,360.);
+		prm2D->current_ctfmodel.phase_shift = (prm2D->current_ctfmodel.phase_shift*180)/3.14;
 		prm2D->current_ctfmodel.write(fn_rootCTFPARAM + ".ctfparam_tmp");
 		MetaData MD;
 		MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");

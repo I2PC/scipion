@@ -55,11 +55,11 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
     _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
-                  "ctfCritCorr13==0 OR ctfCritFirstMinFirstZeroRatio>10 AND "
+                  "ctfCritFirstMinFirstZeroRatio>10 AND "
                   "ctfCritFirstMinFirstZeroRatio!=1000 OR "
-                  "ctfCritNonAstigmaticValidty<=0 OR " 
-                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussian2SigmaU>70000 "
-                  "OR ctfCritIceness>1.01")
+                  "ctfCritNonAstigmaticValidty<0 OR ctfCritFitting>1 OR " 
+                  "ctfCritNonAstigmaticValidty>25 "
+                  "OR ctfCritIceness>1.01")  #OR ctfBgGaussian2SigmaU>70000 ctfCritCorr13==0 OR
 
     def __init__(self, **args):
 
@@ -137,7 +137,10 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
     def _calculateDownsampleList(self, samplingRate):
         
         if self.AutoDownsampling:
-            ctfDownFactor = self.calculateAutodownsampling(samplingRate)
+            if self.findPhaseShift:
+                ctfDownFactor = self.calculateAutodownsampling(samplingRate, 1.0)
+            else:
+                ctfDownFactor = self.calculateAutodownsampling(samplingRate)
         else:
             ctfDownFactor = self.ctfDownFactor.get()
         downsampleList = [ctfDownFactor]
@@ -160,7 +163,10 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             if self.ctfDict[micName] > 0:
                 localParams['defocusU'], localParams['phaseShift0'] = \
                     self.ctfDict[micName]
-                localParams['defocus_range'] = 0.1 * localParams['defocusU']
+                if self.findPhaseShift:
+                    localParams['defocus_range'] = 0.15 * localParams['defocusU']
+                else:
+                    localParams['defocus_range'] = 0.1 * localParams['defocusU']
 
         else:
             ma = self._params['maxDefocus']

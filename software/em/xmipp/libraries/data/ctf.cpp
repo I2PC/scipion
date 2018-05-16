@@ -946,7 +946,9 @@ bool CTFDescription1D::hasPhysicalMeaning()
             gaussian_K2 >= 0     &&
             sigma2 >= 0          &&
             sigma2 <= 100e3      &&
-            Gc2 >= 0;
+            Gc2 >= 0             &&
+			phase_shift >= 0.0 && phase_shift <= 3.14
+			;
 
         if (min_sigma > 0)
             retval2 = retval2 && sigma1 / min_sigma <= 3;
@@ -960,6 +962,7 @@ bool CTFDescription1D::hasPhysicalMeaning()
             retval2 = retval2 && Gc2 / min_c2 <= 3;
         if (gaussian_K2 != 0)
             retval2 = retval2 && (Gc2 * Tm >= 0.01);
+
 #ifdef DEBUG
 
         if (retval2 == false)
@@ -1002,7 +1005,7 @@ bool CTFDescription1D::hasPhysicalMeaning()
 #ifdef DEBUG
 
 #endif
-
+    //std::cout << "retval " << retval << " " << "retval2 =" << retval2 << std::endl;
     return retval && retval2;
 }
 #undef DEBUG
@@ -1120,7 +1123,7 @@ void CTFDescription1D::forcePhysicalMeaning()
         }
         if (phase_shift < 0)
         {
-        	phase_shift = 3.14 + phase_shift - ceil(phase_shift/3.14)*3.14;
+        	phase_shift = -(phase_shift - ceil(phase_shift/3.14)*3.14);//3.14 + phase_shift - ceil(phase_shift/3.14)*3.14;
         }
     }
 }
@@ -1637,7 +1640,8 @@ bool CTFDescription::hasPhysicalMeaning()
             cU2 >= 0             && cV2 >= 0              &&
             gaussian_angle >= 0  && gaussian_angle <= 90  &&
             sqrt_angle >= 0      && sqrt_angle <= 90      &&
-            gaussian_angle2 >= 0 && gaussian_angle2 <= 90
+            gaussian_angle2 >= 0 && gaussian_angle2 <= 90 &&
+			phase_shift >= 0.0   && phase_shift <= 3.14
             ;
         if (min_sigma > 0)
             retval2 = retval2 && ABS(sigmaU - sigmaV) / min_sigma <= 3;
