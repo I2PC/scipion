@@ -29,7 +29,7 @@ import stat
 import pyworkflow.protocol.constants as const
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
-from pyworkflow.em.packages.ccp4.refmac_template_mask import \
+from pyworkflow.em.packages.ccp4.refmac_template_map2mtz import \
     template_map_mtz
 from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
 from pyworkflow.em.protocol import EMProtocol
