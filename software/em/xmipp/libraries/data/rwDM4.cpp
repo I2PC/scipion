@@ -503,7 +503,7 @@ int ImageBase::readDM4(size_t select_img,bool isStack)
     for (int n=1;n<=header->nTags;n++)
         readTagDM4(fimg, header, parentID, nodeID, isLE, swap);
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     header->tags.write("images.txt");
