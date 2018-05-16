@@ -84,6 +84,7 @@ from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
+from protocol_consensus_classes3D import XmippProtConsensusClasses3D
 from protocol_subtract_projection import XmippProtSubtractProjection
 from protocol_denoise_particles import XmippProtDenoiseParticles
 from protocol_eliminate_empty_particles import XmippProtEliminateEmptyParticles
@@ -131,6 +132,8 @@ from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
 from protocol_ctf_selection import XmippProtCTFSelection
+#AJ
+from protocol_realignment_classes import XmippProtReAlignClasses
 # Wizards
 from wizard import *
 

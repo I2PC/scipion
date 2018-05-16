@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
-# *             Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *             Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *             Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -309,7 +309,16 @@ class TestXmippScreenParticles(TestXmippBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
         cls.samplingRate = cls.protImport.outputParticles.getSamplingRate()
         cls.size = 20
-    
+
+    def _updateProtocol(self, prot):
+        prot2 = getProtocolFromDb(prot.getProject().path,
+                                  prot.getDbPath(),
+                                  prot.getObjId())
+        # Close DB connections
+        prot2.getProject().closeMapper()
+        prot2.closeMappers()
+        return prot2
+
     def test_screenPart(self):
         from itertools import izip
         print('Running Screen particles test')
@@ -356,9 +365,8 @@ class TestXmippScreenParticles(TestXmippBase):
         self.assertIsNotNone(protScreenZScore.outputParticles,
                              "Output has not been produced")
         print('\t --> Output is not None')
-        self.assertEqual(len(protScreenZScore.outputParticles),
-                         69,
-                         "Output Set Of Particles must be 71, but %s found" %
+        self.assertEqual(len(protScreenZScore.outputParticles), 69,
+                         "Output Set Of Particles must be 69, but %s found" %
                          len(protScreenZScore.outputParticles))
         print('\t --> Output set size is correct (%s)' % len(
             protScreenZScore.outputParticles))
@@ -392,6 +400,25 @@ class TestXmippScreenParticles(TestXmippBase):
             self.assertEqual(x.getObjId(), y.getObjId(), "Particles differ")
         print(
         '\t --> Particles rejected using maxZScore(2.5) method and percentage(5%) one are the same')
+
+        print("Start Streaming Particles")
+        protStream = self.newProtocol(ProtCreateStreamData, setof=3,
+                                      creationInterval=2, nDim=76,
+                                      groups=10)
+        protStream.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protStream, wait=False)
+
+        while not protStream.hasAttribute('outputParticles'):
+            time.sleep(3)
+            protStream = self._updateProtocol(protStream)
+
+        print("Run Screen Particles")
+        protScreen = self.newProtocol(xpsp)
+        protScreen.inputParticles.set(protStream.outputParticles)
+        self.launchProtocol(protScreen)
+
+        protScreen = self._updateProtocol(protScreen)
+        self.assertEqual(protScreen.outputParticles.getSize(), 76)
 
 
 class TestXmippPreprocessParticles(TestXmippBase):

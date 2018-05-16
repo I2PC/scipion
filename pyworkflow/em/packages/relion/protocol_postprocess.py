@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco     (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco     (josue.gomez-blanco@mcgill.ca)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -51,8 +51,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
 
         self._updateFilenamesDict(myDict)
 
-    
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         
         form.addSection(label='Input')
@@ -62,6 +61,16 @@ class ProtRelionPostprocess(ProtAnalysis3D):
                       help='Select any previous refinement protocol to get the '
                            '3D half maps. Note that it is recommended that the '
                            'refinement protocol uses a gold-standard method.')
+        form.addParam('calibratedPixelSize', FloatParam, default=0,
+                      label='Calibrated pixel size (A)',
+                      help="Provide the final, calibrated pixel size in "
+                           "Angstroms. If 0, the input pixel size will be used. "
+                           "This value may be different from the pixel-size "
+                           "used thus far, e.g. when you have recalibrated "
+                           "the pixel size using the fit to a PDB model. "
+                           "The X-axis of the output FSC plot will use this "
+                           "calibrated value.")
+
         form.addSection(label='Masking')
         form.addParam('doAutoMask', BooleanParam, default=True,
                       label='Perform automated masking?',
@@ -161,7 +170,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
         
         form.addParallelSection(threads=0, mpi=0)
     
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         objId = self.protRefine.get().getObjId()
         self._createFilenameTemplates()
@@ -170,7 +179,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
         self._insertFunctionStep('postProcessStep', self.paramDict)
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions -------------------------------
     def initializeStep(self, protId):
         protRef = self.protRefine.get()
         protClassName = protRef.getClassName()
@@ -246,7 +255,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
             self._defineOutputs(outputMask=mask)
             self._defineSourceRelation(vol, mask)
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions --------------------------------
     def _validate(self):
         """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION.
@@ -280,13 +289,16 @@ class ProtRelionPostprocess(ProtAnalysis3D):
         
         return summary
         
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions -------------------------------
     def _defineParamDict(self):
         """ Define all parameters to run relion_postprocess"""
         volume = self.protRefine.get().outputVolume
+        cps = self.calibratedPixelSize.get()
+        angpix = cps if cps > 0 else volume.getSamplingRate()
+
         self.paramDict = {'--i': self._getTmpPath("relion"),
                           '--o': self._getExtraPath('postprocess'),
-                          '--angpix': volume.getSamplingRate(),
+                          '--angpix': angpix,
                           # Expert params
                           '--filter_edge_width': self.filterEdgeWidth.get(),
                           '--randomize_at_fsc': self.randomizeAtFsc.get()

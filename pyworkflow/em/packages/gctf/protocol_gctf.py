@@ -33,6 +33,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from convert import readCtfModel, parseGctfOutput, getVersion
+from pyworkflow.protocol import STEPS_PARALLEL
 
 
 # Phase shift target type
@@ -50,6 +51,10 @@ class ProtGctf(em.ProtCTFMicrographs):
     """
     _label = 'CTF estimation on GPU'
     _lastUpdateVersion = VERSION_1_1
+
+    def __init__(self, **kwargs):
+        em.ProtCTFMicrographs.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)
@@ -124,12 +129,15 @@ class ProtGctf(em.ProtCTFMicrographs):
                       help='Whether to plot an estimated resolution ring '
                            'on the power spectrum',
                       expertLevel=params.LEVEL_ADVANCED)
-        form.addParam('GPUCore', params.IntParam, default=0,
+
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
                       expertLevel=params.LEVEL_ADVANCED,
-                      label="Choose GPU core",
-                      help='GPU may have several cores. Set it to zero if '
-                           'you do not know what we are talking about. '
-                           'First core index is 0, second 1 and so on.')
+                      label="Choose GPU IDs",
+                      help="GPU may have several cores. Set it to zero"
+                           " if you do not know what we are talking about."
+                           " First core index is 0, second 1 and so on."
+                           " Motioncor2 can use multiple GPUs - in that case"
+                           " set to i.e. *0 1 2*.")
 
         form.addSection(label='Advanced')
         form.addParam('doEPA', params.BooleanParam, default=False,
@@ -229,7 +237,11 @@ class ProtGctf(em.ProtCTFMicrographs):
                       help='Phase shift target in the search: CCC or '
                            'resolution limit')
 
-    #--------------------------- STEPS functions -------------------------------
+        self._defineStreamingParams(form)
+
+        form.addParallelSection(threads=1, mpi=1)
+
+    # -------------------------- STEPS functions ------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run Gctf with required parameters """
         doneFile = os.path.join(micDir, 'done.txt')
@@ -238,6 +250,7 @@ class ProtGctf(em.ProtCTFMicrographs):
             return
 
         try:
+            ih = em.ImageHandler()
             # Create micrograph dir
             pwutils.makePath(micDir)
             downFactor = self.ctfDownFactor.get()
@@ -248,15 +261,10 @@ class ProtGctf(em.ProtCTFMicrographs):
             if downFactor != 1:
                 # Replace extension by 'mrc' cause there are some formats
                 # that cannot be written (such as dm3)
-                import pyworkflow.em.packages.xmipp3 as xmipp3
-                self.runJob("xmipp_transform_downsample",
-                            "-i %s -o %s --step %f --method fourier"
-                            % (micFn, micFnMrc, downFactor),
-                            env=xmipp3.getEnviron())
+                ih.scaleFourier(micFn, micFnMrc, downFactor)
                 sps = self.inputMicrographs.get().getScannedPixelSize() * downFactor
                 self._params['scannedPixelSize'] = sps
             else:
-                ih = em.ImageHandler()
                 if ih.existsLocation(micFn):
                     ih.convert(micFn, micFnMrc, em.DT_FLOAT)
                 else:
@@ -273,7 +281,8 @@ class ProtGctf(em.ProtCTFMicrographs):
             traceback.print_exc()
 
         try:
-            self.runJob(self._getProgram(), self._args % self._params,  env=self._getEnviron())
+            args = self._args % self._params
+            self.runJob(self._getProgram(), args,  env=self._getEnviron())
         except:
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
 
@@ -345,7 +354,7 @@ class ProtGctf(em.ProtCTFMicrographs):
     def _createOutputStep(self):
         pass
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
@@ -356,8 +365,18 @@ class ProtGctf(em.ProtCTFMicrographs):
                           "and set GCTF variables properly."
                           % self._getProgram())
         if self.doPhShEst and getVersion() == '0.50':
-            errors.append('This version of Gctf (0.50) does not support phase shift estimation!'
-                          ' Please update to a newer version.')
+            errors.append('This version of Gctf (0.50) does not support phase '
+                          'shift estimation! Please update to a newer version.')
+
+        nprocs = max(self.numberOfMpi.get(), self.numberOfThreads.get())
+
+        if nprocs < len(self.getGpuList()):
+            errors.append("Multiple GPUs can not be used by a single process. "
+                          "Make sure you specify more processors than GPUs. ")
+
+        if self._getStreamingBatchSize() > 1:
+            errors.append("Batch steps are not implemented yet for Gctf. ")
+
         return errors
 
     def _citations(self):
@@ -376,7 +395,7 @@ class ProtGctf(em.ProtCTFMicrographs):
 
         return [methods]
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _prepareCommand(self):
         sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
         # Convert digital frequencies to spatial frequencies
@@ -426,7 +445,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--do_EPA %d " % (1 if self.doEPA else 0)
         self._args += "--boxsize %d " % self._params['windowSize']
         self._args += "--plot_res_ring %d " % (1 if self.plotResRing else 0)
-        self._args += "--gid %d " % self.GPUCore.get()
+        self._args += "--gid %%(GPU)s "  # Use %% to escape when formatting
         self._args += "--bfac %d " % self.bfactor.get()
         self._args += "--B_resH %f " % (2 * self._params['sampling'])
         self._args += "--overlap %f " % self.overlap.get()

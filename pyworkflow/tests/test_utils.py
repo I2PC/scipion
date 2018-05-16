@@ -5,17 +5,13 @@ Created on Mar 25, 2014
 
 @author: airen
 '''
-import os, time
-import unittest
-from os.path import join, dirname, exists
-from StringIO import StringIO
-from bibtexparser.bparser import BibTexParser   
-from pyworkflow.tests import *
 import pyworkflow as pw
 
 from subprocess import Popen
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.process import killWithChilds
 from pyworkflow.tests import *
+from pyworkflow.utils import utils, prettyDict
 
 
     
@@ -59,16 +55,11 @@ keywords = "Single particle analysis; Electron microscopy; Image processing; 3D 
 author = "Sorzano, CarlosOscar and Rosa Trevín, J.M. and Otón, J. and Vega, J.J. and Cuenca, J. and Zaldívar-Peraza, A. and Gómez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, JoséMaría",
 pages = "171-193",
 }
-"""        
-        f = StringIO()
-        f.write(bibtex)
-        f.seek(0, 0)
-        parser = BibTexParser(f)
-        from pyworkflow.utils import prettyDict
-        prettyDict(parser.get_entry_dict())
+"""
+
+        prettyDict(utils.parseBibTex(bibtex))
         
-        
-        
+
 class TestProccess(BaseTest):
     """ Some tests for utils.process module. """
 
@@ -83,6 +74,18 @@ class TestProccess(BaseTest):
         time.sleep(5)
         killWithChilds(p.pid)
 
+
+class TestGetListFromRangeString(BaseTest):
+
+    def test_getListFromRangeString(self):
+        inputStrings = ["1,5-8,10",         "2,6,9-11",        "2 5, 6-8"]
+        outputLists = [[1, 5, 6, 7, 8, 10], [2, 6, 9, 10, 11], [2, 5, 6, 7, 8]]
+
+        for s, o in zip(inputStrings, outputLists):
+            self.assertEqual(o, pwutils.getListFromRangeString(s))
+            # Check that also works properly with spaces as delimiters
+            s2 = s.replace(',', ' ')
+            self.assertEqual(o, pwutils.getListFromRangeString(s2))
 
 
 if __name__ == '__main__':
