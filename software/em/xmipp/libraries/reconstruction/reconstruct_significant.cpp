@@ -215,7 +215,16 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //					double corr=alignImagesConsideringMirrors(mGalleryProjection,
 //							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					M=M.inv();
+					double scale, shiftX, shiftY, anglePsi;
+					bool flip;
+					transformationMatrix2Parameters2D(M,flip,scale,shiftX,shiftY,anglePsi);
+
 					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
+					if (maxShift>0 && (fabs(shiftX)>maxShift || fabs(shiftY)>maxShift))
+					{
+						corr/=3;
+						imed*=3;
+					}
 
 //					//if (corr>0.99)
 //					//{
@@ -245,9 +254,8 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						bestVolume=(int)nVolume;
 						bestRot=mdGallery[nVolume][nDir].rot;
 						bestTilt=mdGallery[nVolume][nDir].tilt;
-
 						// std::cout << "nDir=" << nDir << " bestCorr=" << bestCorr << " imed=" << imed << " (bestImed=" << bestImed << ") M=" << M << std::endl;
-					}
+                    }
 
 					if (imed<bestImed)
 						bestImed=imed;

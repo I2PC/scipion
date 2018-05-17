@@ -43,8 +43,8 @@ import os
 import re
 from subprocess import Popen, PIPE
 import pyworkflow as pw
-from pyworkflow.utils import redStr, greenStr, makeFilePath, join
-from pyworkflow.utils import process
+from pyworkflow.utils import (redStr, greenStr, makeFilePath, join, process,
+                              getHostFullName)
 
 UNKNOWN_JOBID = -1
 LOCALHOST = 'localhost'
@@ -100,6 +100,13 @@ def schedule(protocol, wait=False):
 # ******************************************************************
 def _isLocal(protocol):
     return protocol.getHostName() == LOCALHOST
+
+
+def _runsLocally(protocol):
+    """ Return True if this protocol is running in this machine,
+    where the PID makes sense.
+    """
+    return protocol.getHostFullName() == getHostFullName()
     
 
 # ******************************************************************
@@ -110,6 +117,7 @@ def _getAppsProgram(prog):
     And also using a different python if configured in SCIPION_PYTHON var.
     """
     return os.environ.get('SCIPION_PYTHON', 'python') + ' ' + pw.join('apps', prog)
+
 
 def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
     # Check first if we need to launch with MPI or not
