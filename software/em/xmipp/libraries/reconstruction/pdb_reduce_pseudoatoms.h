@@ -36,6 +36,8 @@ class ProgPdbReduce: public XmippProgram
 
 	double thresh;
 
+	int num;
+
 public:
 	/*Empty constructor*/
 	ProgPdbReduce();

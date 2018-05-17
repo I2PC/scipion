@@ -32,6 +32,7 @@
 ProgPdbReduce::ProgPdbReduce()
 {
 	thresh = 0.0;
+	num = -1.0;
 }
 
 void ProgPdbReduce::defineParams()
@@ -41,6 +42,7 @@ void ProgPdbReduce::defineParams()
 
 	addParamsLine("   -i <pdb_file>                          : File to process");
 	addParamsLine("  [-o <fn_root>]                          : Root name for output");
+	addParamsLine("  [--number <num=-1.0>]                : Sampling rate (Angstroms/pixel)");
 	addParamsLine("  [--threshold <thresh=0.0>]                : Sampling rate (Angstroms/pixel)");
 }
 
@@ -48,6 +50,7 @@ void ProgPdbReduce::readParams()
 {
 	fn_volume = getParam("-i");
 	fn_out = checkParam("-o") ? getParam("-o") : fn_volume.withoutExtension();
+	num = getDoubleParam("--number");
 	thresh = getDoubleParam("--threshold");
 
 }
@@ -56,13 +59,24 @@ void ProgPdbReduce::readParams()
 void ProgPdbReduce::show()
 {
     std::cout << "PDB file:           " << fn_volume           << std::endl
-    << "Threshold:      " << thresh               << std::endl;
+    		  << "Number:             " << num                 << std::endl
+              << "Threshold:          " << thresh              << std::endl;
 }
 
 void ProgPdbReduce::reduceNumberPseudoatoms()
 {
 	PDBRichPhantom pdb;
-	pdb.read(fn_volume, thresh);
+	if(thresh != 0.0)
+		pdb.read(fn_volume, -1.0, thresh);
+	else
+	{
+		pdb.read(fn_volume, num);
+		std::sort(pdb.intensities.rbegin(), pdb.intensities.rend());
+		thresh = pdb.intensities.at(num);
+		pdb.atomList.clear();
+		pdb.remarks.clear();
+		pdb.read(fn_volume, -1.0, thresh);
+	}
 	pdb.write(fn_out);
 }
 
