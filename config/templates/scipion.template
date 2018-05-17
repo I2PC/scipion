@@ -103,7 +103,7 @@ CUDA_LIB = /usr/local/cuda-8.0/lib64
 CUDA_BIN = /usr/local/cuda-8.0/bin
 NVCC = nvcc --x cu -D_FORCE_INLINES -Xcompiler -fPIC -Wno-deprecated-gpu-targets
 NVCC_INCLUDE = /usr/local/cuda-8.0/include
-NVCC_LIBDIR = CUDA_LIB
+NVCC_LIBDIR = %(CUDA_LIB)s
 
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 
