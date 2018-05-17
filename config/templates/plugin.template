@@ -1,0 +1,31 @@
+from pyworkflow.plugin import Plugin
+from bibtex import _bibtex
+
+
+class YourPluginClass(Plugin):  #### Extend plugin class, change class name!!!
+
+    def __init__(self):
+        # change your default configVars!!!
+        configVars = {SOME_BIN_VAR: os.path.join(os.environ['EM_ROOT'], 'some_bin-1.0.1') }
+
+        Plugin.__init__(self, 'somePluginName', # change plugin Name!!
+                              version="1.2.3", # change version
+                              logo="some_logo.png", # change logo!
+                              configVars=configVars, # change your default env vars!!!
+                              bibtex=_bibtex # if you don't have bibtex, remove this!
+                        )
+    def registerPluginBinaries(self, env):
+        # We need to overwrite this function in our class. Put here
+        # the installation code belonging to your plugin from install/script.py.
+        # Remove the code from install/script.py when you're done. The code
+        # that needs to be added here looks like this example:
+        #
+        #env.addPackage('somebin',
+        #               version='1.0.1',
+        #               url="http://scipion.cnb.csic.es/downloads/scipion/software/em/some_bin_1.0.1.tgz",
+        #               default=True  # Optional: install this binary by default
+        #               tar='some_bin_1.0.1.tgz'
+        #               )
+
+# VERY IMPORTANT TO LEAVE THE VARIABLE NAME "_plugin" !!!!
+_plugin = YourPluginClass()  # Instantiate your class as named above :)
