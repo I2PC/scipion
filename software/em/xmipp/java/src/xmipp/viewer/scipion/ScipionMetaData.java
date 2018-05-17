@@ -40,7 +40,7 @@ public class ScipionMetaData extends MetaData {
     protected List<EMObject> emobjects;
     protected ScipionMetaData parent;
     protected boolean haschilds;
-    protected static int labelscount = 0;
+    protected int labelscount = 0;
     protected ColumnInfo idci, labelci, commentci, enabledci;
     protected String preffix = "";
     protected String[] blocks;
