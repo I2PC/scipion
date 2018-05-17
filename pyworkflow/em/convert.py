@@ -149,13 +149,13 @@ class ImageHandler(object):
         return os.path.exists(fn)
     
     @classmethod
-    def adaptDataType(cls, inDataType, outputFilename):
-
+    def getSupportedDataType(cls, inDataType, outputFilename):
+        """ Returns the most simmilar data type supported by the output format"""
         outDataType = inDataType
 
         if outputFilename.endswith(".mrc") or outputFilename.endswith(".mrcs"):
             if inDataType == cls.DT_SCHAR:
-                outDataType = cls.DT_FLOAT
+                outDataType = cls.DT_USHORT
 
         return outDataType
 
@@ -168,15 +168,21 @@ class ImageHandler(object):
         inputLoc = self._convertToLocation(inputObj)
         outputLoc = self._convertToLocation(outputObj)
         
-        # Read from input
-        self._img.read(inputLoc)
+        if outputLoc[1].lower().endswith('.img'):
+            # FIXME Since now we can not read dm4 format in Scipion natively
+            # we are opening an Eman2 process to read the dm4 file
+            from pyworkflow.em.packages.eman2.convert import convertImage
+            convertImage(inputLoc, outputLoc)
+        else:
+            # Read from input
+            self._img.read(inputLoc)
 
-        if dataType is not None:
-            self._img.convert2DataType(dataType)
-        if transform is not None:
-            self._img.applyTransforMatScipion(transform.getMatrixAsList())
-        # Write to output
-        self._img.write(outputLoc)
+            if dataType is not None:
+                self._img.convert2DataType(dataType)
+            if transform is not None:
+                self._img.applyTransforMatScipion(transform.getMatrixAsList())
+            # Write to output
+            self._img.write(outputLoc)
     
     def convertStack(self, inputFn, outputFn, firstImg=None, lastImg=None,
                      inFormat=None, outFormat=None):
@@ -217,7 +223,7 @@ class ImageHandler(object):
             location = self._convertToLocation(inputFn)
             self._img.read(location, xmipp.HEADER)
 
-            dataType = self.adaptDataType(self._img.getDataType(), outputLower)
+            dataType = self.getSupportedDataType(self._img.getDataType(), outputLower)
             
             if (firstImg and lastImg) is None:
                 n = max(z, n)
