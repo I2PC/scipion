@@ -328,7 +328,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
     def resolutionMonogenicSignalStep(self):
         # Number of frequencies
-        if (not self.maxRes.get().hasValue()):
+        if (not self.maxRes.hasValue()):
             self.resolutionMonogenicAuto()
             imageFile = self._getFileName(OUTPUT_RESOLUTION_FILE)
             min_, max_ = self.getMinMax(imageFile)
