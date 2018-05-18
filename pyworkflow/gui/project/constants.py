@@ -40,4 +40,3 @@ STATUS_COLORS = {
                STATUS_ABORTED: '#F5CCCB',
                STATUS_SCHEDULED: '#F3F5CB'
                }
-

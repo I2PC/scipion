@@ -1029,7 +1029,14 @@ class Project(object):
             self.runs = self.mapper.selectAllBatch(objectFilter=lambda o: isinstance(o, pwprot.Protocol))
 
             for r in self.runs:
-                self._setProtocolMapper(r)
+
+                # Tolerate loading errors. For support.
+                # When only having the sqlite, sometime there are exceptions here
+                # due to the absence of a set.
+                try:
+                    self._setProtocolMapper(r)
+                except Exception as e:
+                    print("Protocol %s couldn't be loaded. %s" % (r, e))
 
                 # Check for run warnings
                 r.checkSummaryWarnings()
