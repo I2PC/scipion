@@ -61,8 +61,10 @@ class HashTableDict:
 
 
 class XmippProtStrGpuCrrCL2D(ProtAlign2D):
-    """ 2D alignment in full streaming using Xmipp GPU Correlation. """
-    _label = 'align with GPU Correlation in full streaming'
+    """ 2D alignment in full streaming using Xmipp GPU Correlation.
+    The set of classes will be growing whilst new particle images are
+    received."""
+    _label = 'gl2d streaming'
     _lastUpdateVersion = VERSION_1_2
     _stepsCheckSecs = 10
 
