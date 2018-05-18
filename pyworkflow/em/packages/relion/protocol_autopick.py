@@ -30,12 +30,12 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, RelationParam,
                                         IntParam, BooleanParam, LEVEL_ADVANCED, 
                                         LabelParam)
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePicking
 from pyworkflow.em.constants import RELATION_CTF
 
 from protocol_base import ProtRelionBase
-from convert import writeSetOfMicrographs, writeReferences, readSetOfCoordinates, \
-    isVersion2
+from convert import (writeSetOfMicrographs, writeReferences, isVersion2,
+                     readSetOfCoordinates)
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils

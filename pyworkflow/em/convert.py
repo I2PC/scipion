@@ -526,3 +526,32 @@ def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
         success = False
         
     return success
+
+
+def getSubsetByDefocus(inputCTFs, inputMics, nMics):
+    """ Return a subset of inputMics that covers the whole range of defocus
+    from the inputCtfs set.
+    This function can be used from picking wizards that wants to optimize the
+    parameters for micrographs with different defocus values.
+    Params:
+        nMics is the number of micrographs that will be in the subset.
+    """
+    sortedMicIds = []
+
+    # Sort CTFs by defocus and select only those that match with inputMics
+    for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
+        ctfId = ctf.getObjId()
+        if ctfId in inputMics:
+            sortedMicIds.append(ctfId)
+
+    # Take an equally spaced subset of micrographs
+    space = len(sortedMicIds) / (nMics - 1)
+    micIds = [sortedMicIds[0], sortedMicIds[-1]]
+    pos = 0
+    while len(micIds) < nMics:  # just add first and last
+        pos += space
+        micIds.insert(1, sortedMicIds[pos])
+
+    # Return the list with selected micrographs
+    return [inputMics[micId].clone() for micId in micIds]
+

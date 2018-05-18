@@ -59,6 +59,7 @@ from pyworkflow.gui.project.utils import getStatusColorFromNode
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
 ACTION_EDIT = Message.LABEL_EDIT
+ACTION_RENAME = Message.LABEL_RENAME
 ACTION_SELECT_TO = Message.LABEL_SELECT_TO
 ACTION_COPY = Message.LABEL_COPY
 ACTION_DELETE = Message.LABEL_DELETE
@@ -183,6 +184,7 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                                pwprot.STATUS_LAUNCHED] 
 
         return [(ACTION_EDIT, single),
+                (ACTION_RENAME, single),
                 (ACTION_COPY, True),
                 (ACTION_DELETE, status != pwprot.STATUS_RUNNING),
                 (ACTION_STEPS, single),
@@ -573,6 +575,7 @@ class ProtocolsView(tk.Frame):
         self._lastSelectedProtId = None
         self._lastStatus = None
         self.selectingArea = False
+        self._lastRightClickPos = None  # Keep last right-clicked position
 
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
@@ -1277,6 +1280,7 @@ class ProtocolsView(tk.Frame):
             self.runsGraphCanvas.frame.grid_remove()
             self.updateRunsTreeSelection()
             self.viewButtons[ACTION_TREE].grid_remove()
+            self._lastRightClickPos = None
         else:
             self.runsTree.grid_remove()
             self.updateRunsGraph(reorganize=(previousView != VIEW_LIST))
@@ -1431,6 +1435,8 @@ class ProtocolsView(tk.Frame):
         if n <= 1:
             self._deselectItems(item)
             self._selectItemProtocol(prot)
+            self._lastRightClickPos = self.runsGraphCanvas.eventPos
+
         return self.provider.getObjectActions(prot)
 
     def _runItemControlClick(self, item=None):
@@ -1903,6 +1909,17 @@ class ProtocolsView(tk.Frame):
 
         return
 
+    def _renameProtocol(self, prot):
+        """ Open the EditObject dialog to edit the protocol name. """
+        kwargs = {}
+        if self._lastRightClickPos:
+            kwargs['position'] = self._lastRightClickPos
+
+        dlg = pwgui.dialog.EditObjectDialog(self.runsGraphCanvas, Message.TITLE_EDIT_OBJECT,
+                                            prot, self.project.mapper, **kwargs)
+        if dlg.resultYes():
+            self._updateProtocol(prot)
+
     def _runActionClicked(self, action):
         prot = self.getSelectedProtocol()
         if prot:
@@ -1911,6 +1928,8 @@ class ProtocolsView(tk.Frame):
                     pass
                 elif action == ACTION_EDIT:
                     self._openProtocolForm(prot)
+                elif action == ACTION_RENAME:
+                    self._renameProtocol(prot)
                 elif action == ACTION_COPY:
                     self._copyProtocols()
                 elif action == ACTION_DELETE:
