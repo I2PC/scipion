@@ -88,7 +88,7 @@ else:
     pwutils.copyFile(os.path.join(templatesFolder, 'setup.template'),
                      os.path.join(pluginDir, 'setup.py'))
     pwutils.copyFile(os.path.join(templatesFolder, 'plugin.template'),
-                     os.path.join(pluginDir, 'plugin.py'))
+                     os.path.join(pluginDir, packageName, 'plugin.py'))
 
     # 6. Copy pip files
     for f in pipEmptyFiles:
