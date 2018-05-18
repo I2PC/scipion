@@ -107,7 +107,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
         line = group.addLine('Resolution Range (Å)',
                             help="If the user knows the range of resolutions or"
-                                " only a range of frequency needs to be analysed")
+                                " only a range of frequencies needs to be analysed." 
+                                "If Low is empty MonoRes will try to estimate the range. "
+                                "it should be better if a range is provided")
         
         group.addParam('significance', FloatParam, default=0.95, 
                        expertLevel=LEVEL_ADVANCED,
