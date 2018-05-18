@@ -85,7 +85,8 @@ class Message():
     LABEL_CONTINUE = 'Continue'
     LABEL_CONTINUE_ACTION = 'Approve continue'
     LABEL_EXPORT = 'Export'
-    
+    LABEL_EXPORT_UPLOAD = 'Export & upload'
+
     #-- Tabs --
     LABEL_DATA = 'Data'
     LABEL_SUMMARY = 'Summary'
@@ -355,7 +356,8 @@ class Icon():
     ACTION_HELP = 'fa-question-circle.png'
     ACTION_REFERENCES = 'fa-external-link.png'
     ACTION_EXPORT = 'fa-external-link.png'
-    
+    ACTION_EXPORT_UPLOAD = 'fa-upload.png'
+
     ACTION_SEARCH = 'fa-search.png'
     ACTION_EXECUTE = 'fa-cogs.png'
     ACTION_IN = 'fa-sign-in.png'

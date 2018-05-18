@@ -293,6 +293,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         summary.append("Particle box size: %d" % self.boxSize)
         
         if not hasattr(self, 'outputParticles'):
+
             summary.append("Output images not ready yet.") 
         else:
             summary.append("Particles extracted: %d" %
