@@ -324,6 +324,9 @@ class Environment:
     def getTarget(self, name):
         return self._targetDict[name]
     
+    def getTargetNames(self):
+        return list(self._targetDict.keys())
+    
     def hasTarget(self, name):
         return name in self._targetDict
     

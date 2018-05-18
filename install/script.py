@@ -508,12 +508,7 @@ opencv = env.addLibrary(
     cmake=True,
     default=False)
 
-validTargets=["cmake","fftw3","fftw3f","lapack","tcl","tk","zlib","jpeg","png","tiff","sqlite3","python","boost","nfft3","pip","setuptools",
-              "numpy","matplotlib","psutil","mpi4py","scipy","bibtexparser","django","Pillow","paramiko","winpdb","lxml","requests","pyzmq",
-              "jinja2","tornado","ipython","cython","cythonsgl", "bsoft","ctffind4","summovie","unblur","eman","frealign","relion","localrec",
-              "resmap","spider","motioncorr","motioncor2","simple","chimera","dogpicker","cryoem","powerfit","gEMpicker","gctf","gautomatch",
-              "mag_distortion","nysbc-3DFSC","cryoEF","scons","hdf5","pcre","swig","sh_alignment","arpack","nma","opencv","xmipp","emDomain"]
-sconsArgs = " ".join([a for a in sys.argv[2:] if not a in validTargets])
+sconsArgs = " ".join([a for a in sys.argv[2:] if not a in env.getTargetNames()])
 xmipp = env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
                commands=[('set SCIPION_HOME=%s; cp %s/config/scipion.conf %s/xmipp-18.5/install/xmipp.conf; %s/scons %s'%(SCIPION,SCIPION,SW_EM,SW_BIN,sconsArgs),
