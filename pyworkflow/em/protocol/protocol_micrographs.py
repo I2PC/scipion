@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez BLanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez BLanco (josue.gomez-blanco@mcgill.ca)
 # *              Roberto Marabini (roberto@cnb.csic.es)
 # *              Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
 # *
@@ -28,6 +28,7 @@
 # **************************************************************************
 
 from os.path import exists, dirname, join, getmtime
+import time
 from datetime import datetime
 from collections import OrderedDict
 
@@ -36,7 +37,7 @@ from pyworkflow.object import Set, Boolean, Pointer
 from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
                                            STATUS_NEW)
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
-                                        BooleanParam, FileParam)
+                                        BooleanParam, FileParam, LabelParam)
 from pyworkflow.utils.path import copyTree, removeBaseExt, makePath, makeFilePath
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.utils import prettyTime
@@ -56,7 +57,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         self.stepsExecutionMode = STEPS_PARALLEL
         self.isFirstTime = Boolean(False)
 
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)
         form.addParam('recalculate', BooleanParam, default=False,
@@ -134,7 +135,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         to add other parameter relatives to the specific operation."""
         pass
 
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         """ Insert the steps to perform CTF estimation, or re-estimation,
         on a set of micrographs.
@@ -519,6 +520,12 @@ class ProtCTFMicrographs(ProtMicrographs):
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
+
+            # Maybe it would be good idea to take a snap to avoid
+            # so much IO if this protocol does not have much to do now
+            if allDone == nMics:
+                self._streamingSleepOnWait()
+
             return
 
         self.debug('   finished: %s ' % self.finished)
@@ -574,10 +581,11 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         if firstTime:
             outputCtf = self._createSetOfCTF()
+            outputCtf.setMicrographs(self.getInputMicrographsPointer())
         else:
             outputCtf.enableAppend()
 
-        outputCtf.setMicrographs(self.getInputMicrographs())
+
 
         for micFn, micDir, mic in self._iterMicrographs(micList):
             ctf = self._createCtfModel(mic)

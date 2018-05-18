@@ -1128,3 +1128,86 @@ class TestRelionExtractParticles(TestRelionBase):
                              "There was a problem generating the output.")
         self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
         self._checkSamplingConsistency(outputParts)
+
+
+class TestRelionCenterAverages(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('mda')
+
+    def test_basic(self):
+        """ Run an Import particles protocol. """
+        protImport = self.newProtocol(ProtImportAverages,
+                                     filesPath=self.ds.getFile('averages/averages.stk'),
+                                     samplingRate=5.04)
+        self.launchProtocol(protImport)
+        inputAvgs = protImport.outputAverages
+        protCenter = self.newProtocol(ProtRelionCenterAverages)
+        protCenter.inputAverages.set(inputAvgs)
+        self.launchProtocol(protCenter)
+
+        conditions = ['outputAverages.getSize()==%d' % inputAvgs.getSize(),
+                      'outputAverages.getSamplingRate() - %f < 0.00001'
+                      % inputAvgs.getSamplingRate()]
+        self.checkOutput(protCenter, 'outputAverages', conditions)
+
+
+class TestRelionExportParticles(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('xmipp_tutorial')
+        cls.particlesFn = cls.ds.getFile('particles')
+        cls.runImportParticles(cls.particlesFn, 1.237, True)
+
+    @classmethod
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False,
+                           phaseFlip=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportParticles,
+                                         filesPath=pattern,
+                                         samplingRate=samplingRate,
+                                         checkStack=checkStack,
+                                         haveDataBeenPhaseFlipped=phaseFlip)
+        print('_label: ', cls.protImport._label)
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        return cls.protImport
+
+    def test_basic(self):
+        """ Run an Import particles protocol. """
+
+        inputParts = self.protImport.outputParticles
+
+        stackNames = set(pwutils.removeBaseExt(p.getFileName()) for p in inputParts)
+
+        paramsList = [
+            {'stackType': 0, 'useAlignment': True},
+            {'stackType': 0, 'useAlignment': False},
+            {'stackType': 1, 'useAlignment': True},
+            {'stackType': 1, 'useAlignment': False},
+            {'stackType': 2, 'useAlignment': True},
+            {'stackType': 2, 'useAlignment': False}
+        ]
+
+        def _checkProt(prot, params):
+            stackFiles = glob(prot._getPath('Particles', '*mrcs'))
+            n = len(stackFiles)
+            if params['stackType'] == 0:
+                self.assertEqual(n, 0)
+            elif params['stackType'] == 1:
+                self.assertGreaterEqual(n, 1)
+            else:
+                self.assertEqual(n, 1)
+
+        for i, params in enumerate(paramsList):
+            exportProt = self.newProtocol(ProtRelionExportParticles,
+                                          objectLabel='export %d' % (i+1),
+                                          **params)
+            exportProt.inputParticles.set(inputParts)
+            self.launchProtocol(exportProt)
+            _checkProt(exportProt, params)
+

@@ -29,11 +29,11 @@ There should be sub-classes in the different packages from
 each EM-software package.
 """
 from protocol import *
-from protocol_import import *
 from protocol_micrographs import *
 from protocol_movies import *
 from protocol_align_movies import ProtAlignMovies, ProtAverageFrames
 from protocol_particles import *
+from protocol_particles_picking import *
 from protocol_2d import *
 from protocol_3d import *
 from protocol_sets import *
@@ -48,7 +48,8 @@ from protocol_extract_coordinates import ProtExtractCoords
 from protocol_stress import ProtStress
 from protocol_create_stream_data import ProtCreateStreamData
 from parallel import ProtTestParallel
-from protocol_picking_difference import ProtPickingDifference
+
+from protocol_import import *
 
 from monitors import *
 from protocol_export import *

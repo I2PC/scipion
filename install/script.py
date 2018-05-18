@@ -286,8 +286,9 @@ nfft3 = env.addLibrary(
 
 # Add pip to our python
 pip = env.addTarget('pip')
-pip.addCommand('python scripts/get-pip.py -I', targets=SW_PYT_PACK + '/pip',
-               default=True, final=True)
+# we will install a certain version of setuptools
+pip.addCommand('python scripts/get-pip.py -I --no-setuptools',
+               targets=SW_PYT_PACK + '/pip', default=True, final=True)
 
 # Scons has a different pattern: it is expected to be in bin..TODO
 scons = env.addModule(
@@ -297,10 +298,11 @@ scons = env.addModule(
 #env.addPipModule('scons','2.3.6', target='scons-2.3.6')
 
 # Required python modules
-env.addPipModule('setuptools', '38.2.5')
+env.addPipModule('setuptools', '39.0.1')
 numpy = env.addPipModule('numpy','1.14.1')
 matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
 env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
+env.addPipModule('biopython', '1.71', target='biopython-1.71*')
 env.addPipModule('mpi4py', '1.3.1')
 scipy = env.addPipModule('scipy', '0.14.0',
                      default=not noScipy, deps=[lapack, matplotlib])

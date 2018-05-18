@@ -41,9 +41,14 @@ import constants as cts
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
-    def __init__(self, hostConfig):
-        self.hostConfig = hostConfig 
-    
+    def __init__(self, hostConfig, **kwargs):
+        self.hostConfig = hostConfig
+        self.gpuList = kwargs.get(cts.GPU_LIST, None)
+
+    def getGpuList(self):
+        """ Return the GPU list assigned to current thread. """
+        return self.gpuList
+
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
            env=None, cwd=None):
@@ -53,7 +58,7 @@ class StepExecutor():
         process.runJob(log, programName, params,
                        numberOfMpi, numberOfThreads, 
                        self.hostConfig,
-                       env=env, cwd=cwd)
+                       env=env, cwd=cwd, gpuList=self.getGpuList())
         
     def _getRunnable(self, steps, n=1):
         """ Return the n steps that are 'new' and all its
@@ -149,9 +154,34 @@ class StepThread(threading.Thread):
 
 class ThreadStepExecutor(StepExecutor):
     """ Run steps in parallel using threads. """
-    def __init__(self, hostConfig, nThreads):
-        StepExecutor.__init__(self, hostConfig)
+    def __init__(self, hostConfig, nThreads, **kwargs):
+        StepExecutor.__init__(self, hostConfig, **kwargs)
         self.numberOfProcs = nThreads
+        # If the gpuList was specified, we need to distribute GPUs among
+        # all the threads
+        self.gpuDict = {}
+
+        if self.gpuList:
+            nodes = range(nThreads)
+            nGpu = len(self.gpuList)
+
+            if nGpu > nThreads:
+                chunk = nGpu / nThreads
+                for i, node in enumerate(nodes):
+                    self.gpuDict[node] = list(self.gpuList[i*chunk:(i+1)*chunk])
+            else:
+                # Expand gpuList repeating until reach nThreads items
+                if nThreads > nGpu:
+                    newList = self.gpuList * (nThreads/nGpu+1)
+                    self.gpuList = newList[:nThreads]
+
+                for node, gpu in zip(nodes, self.gpuList):
+                    self.gpuDict[node] = [gpu]
+
+    def getGpuList(self):
+        """ Return the GPU list assigned to current thread
+        or empty list if not using GPUs. """
+        return self.gpuDict.get(threading.currentThread().thId, [])
         
     def runSteps(self, steps, 
                  stepStartedCallback, 
@@ -169,7 +199,7 @@ class ThreadStepExecutor(StepExecutor):
         sharedLock = threading.Lock()
 
         runningSteps = {}  # currently running step in each node ({node: step})
-        freeNodes = range(self.numberOfProcs)  # available nodes to send mpi jobs
+        freeNodes = range(self.numberOfProcs)  # available nodes to send jobs
 
         while True:
             # See which of the runningSteps are not really running anymore.
@@ -232,8 +262,8 @@ class MPIStepExecutor(ThreadStepExecutor):
     """ Run steps in parallel using threads.
     But call runJob through MPI workers.
     """
-    def __init__(self, hostConfig, nMPI, comm):
-        ThreadStepExecutor.__init__(self, hostConfig, nMPI)
+    def __init__(self, hostConfig, nMPI, comm, **kwargs):
+        ThreadStepExecutor.__init__(self, hostConfig, nMPI, **kwargs)
         self.comm = comm
     
     def runJob(self, log, programName, params,
@@ -243,7 +273,8 @@ class MPIStepExecutor(ThreadStepExecutor):
         from pyworkflow.utils.mpi import runJobMPI
         node = threading.current_thread().thId + 1
         runJobMPI(programName, params, self.comm, node,
-                  numberOfMpi, hostConfig=self.hostConfig, env=env, cwd=cwd)
+                  numberOfMpi, hostConfig=self.hostConfig, env=env, cwd=cwd,
+                  gpuList=self.getGpuList())
 
     def runSteps(self, steps, 
                  stepStartedCallback, 
@@ -253,7 +284,8 @@ class MPIStepExecutor(ThreadStepExecutor):
         ThreadStepExecutor.runSteps(self, steps, 
                                     stepStartedCallback, 
                                     stepFinishedCallback,
-                                    checkStepsCallback)
+                                    checkStepsCallback,
+                                    stepsCheckSecs=stepsCheckSecs)
 
         # Import mpi here so if MPI4py was not properly compiled
         # we can still run in parallel with threads.
