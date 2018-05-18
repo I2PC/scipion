@@ -612,13 +612,6 @@ class TestXmippEliminatingEmptyParticles(TestXmippBase):
         cls.protImport1 = cls.runImportMicrographBPV(cls.micsFn)
         cls.protDown1 = cls.runDownsamplingMicrographs(
             cls.protImport1.outputMicrographs, 5)
-        cls.protCTF = \
-            cls.newProtocol(ProtImportCTF,
-                            importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
-                            filesPath=cls.dataset.getFile('ctfsDir'),
-                            filesPattern='*.ctfparam')
-        cls.protCTF.inputMicrographs.set(cls.protImport.outputMicrographs)
-        cls.proj.launchProtocol(cls.protCTF, wait=True)
         cls.protPP = cls.runFakedPicking(cls.protDown.outputMicrographs,
                                          cls.allCrdsDir)
 
@@ -681,7 +674,78 @@ class TestXmippEliminatingEmptyParticles(TestXmippBase):
                         "Output sets size does not much the input set size.")
 
 
-            # Sorting particles is not possible in streaming mode. Thus, all params
+class TestXmippParticlesPickConsensus(TestXmippBase):
+    """This class check if the protocol for particle
+    picking consensus in Xmipp works properly."""
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport = cls.runImportMicrographBPV(cls.micsFn)
+        cls.protDown = cls.runDownsamplingMicrographs(
+            cls.protImport.outputMicrographs, 5)
+        cls.protFaPi = cls.runFakedPicking(cls.protDown.outputMicrographs,
+                                           cls.allCrdsDir)
+
+    def _updateProtocol(self, prot):
+        prot2 = getProtocolFromDb(prot.getProject().path,
+                                  prot.getDbPath(),
+                                  prot.getObjId())
+        # Close DB connections
+        prot2.getProject().closeMapper()
+        prot2.closeMappers()
+        return prot2
+
+    def testStreamingAndNonStreaming(self):
+        protAutomaticPP = XmippParticlePickingAutomatic()
+        protAutomaticPP.xmippParticlePicking.set(self.protFaPi)
+        protAutomaticPP.inputMicrographs.set(self.protDown.outputMicrographs)
+        protAutomaticPP.micsToPick.set(1)
+        self.proj.launchProtocol(protAutomaticPP, wait=True)
+
+        protCons1 = self.newProtocol(XmippProtConsensusPicking)
+        protCons1.inputCoordinates.set([self.protFaPi.outputCoordinates,
+                                        protAutomaticPP.outputCoordinates])
+        self.launchProtocol(protCons1)
+
+        self.assertTrue(protCons1.isFinished(), "Consensus failed")
+        self.assertTrue(protCons1.consensusCoordinates.getSize() == 390,
+                        "Output coordinates size does not is wrong.")
+
+        kwargs = {'nDim': 3,  # 3 objects
+                  'creationInterval': 20,  # wait 1 sec. after creation
+                  'setof': 1,  # create SetOfMicrographs
+                  'inputMics': self.protDown.outputMicrographs
+                  }
+
+        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        self.proj.launchProtocol(protStream, wait=False)
+
+        while not protStream.hasAttribute('outputMicrographs'):
+            time.sleep(1)
+            protStream = self._updateProtocol(protStream)
+
+        protAutoPP = XmippParticlePickingAutomatic()
+        protAutoPP.xmippParticlePicking.set(self.protFaPi)
+        protAutoPP.micsToPick.set(1)
+        protAutoPP.inputMicrographs.set(protStream.outputMicrographs)
+        self.proj.launchProtocol(protAutoPP, wait=False)
+
+        while not protAutoPP.hasAttribute('outputCoordinates'):
+            time.sleep(1)
+            protAutoPP = self._updateProtocol(protAutoPP)
+
+        protCons2 = self.newProtocol(XmippProtConsensusPicking)
+        protCons2.inputCoordinates.set([self.protFaPi.outputCoordinates,
+                                        protAutoPP.outputCoordinates])
+        self.launchProtocol(protCons2)
+        self.assertTrue(protCons2.isFinished(), "Consensus failed")
+        self.assertTrue(protCons2.consensusCoordinates.getSize() == 390,
+                        "Output coordinates size does not is wrong.")
+
+
+    # Sorting particles is not possible in streaming mode. Thus, all params
     # related with was removed from extract particle protocol. There exists
     # another protocol (screen particles) to do it.
 

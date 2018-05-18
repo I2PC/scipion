@@ -27,9 +27,9 @@
 """
 Consensus picking protocol
 """
-import os
+import os, time
 from math import sqrt
-from pyworkflow.object import Set
+from pyworkflow.object import Set, String
 import pyworkflow.protocol.constants as cons
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
@@ -87,7 +87,9 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         
 #--------------------------- INSERT steps functions ---------------------------
     def _insertAllSteps(self):
-        self.check = None
+        self.check = []
+        for c in enumerate(self.inputCoordinates):
+            self.check.append("")
         self.mics = []
         self.setOfCoords = []
         self.inputs = min([coor.get() for coor in self.inputCoordinates])
@@ -124,30 +126,36 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         self._checkNewOutput()
 
     def _checkNewInput(self):
-        coordsFile = self.inputs.getFileName()
-        coordsSet = SetOfCoordinates(filename=coordsFile)
-        self.streamClosed = coordsSet.isStreamClosed()
-        if self.check == None:
-            self.newMics = [c.clone() for c in self.inputs.getMicrographs()]
-        else:
-            self.newMics = [c.clone() for c in
-                            self.inputs.getMicrographs().iterItems(
-                                orderBy='creation',
-                                where='creation>"' + str(self.check) + '"')]
-        if len(self.newMics) < 1:
-            return
-        else:
-            for p in self.inputs.iterItems(orderBy='creation',
-                                           direction='DESC'):
-                self.check = p.getObjCreation()
-                break
-        coordsSet.close()
-        fDeps = self.insertNewCoorsSteps(self.newMics)
-        outputStep = self._getFirstJoinStep()
-        if outputStep is not None:
-            outputStep.addPrerequisites(*fDeps)
-        self.updateSteps()
+        self.streamClosed = True
+        newMics = []
+        for idx, coor in enumerate(self.inputCoordinates):
+            coorSet = SetOfCoordinates(filename=coor.get().getFileName())
+            coorSet._xmippMd = String()
+            coorSet.loadAllProperties()
+            self.streamClosed = self.streamClosed and coorSet.isStreamClosed()
+            coorSet.close()
+            if self.check[idx] == "":
+                newMics.append(
+                    [c.clone() for c in coor.get().getMicrographs()])
+            else:
+                newMics.append([c.clone() for c in
+                           coor.get().getMicrographs().iterItems(
+                               orderBy='creation', where='creation>"' + str(
+                                   self.check[idx]) + '"')])
+            if len(newMics[idx]) < 1: continue
+            else:
+                for p in coor.get().getMicrographs().iterItems(
+                        orderBy='creation', direction='DESC'):
+                    self.check[idx] = p.getObjCreation()
+                    break
 
+        newMics[:] = [item for item in newMics if len(item) > 0]
+        if len(newMics) > 0:
+            fDeps = self.insertNewCoorsSteps(min(newMics, key=len))
+            outputStep = self._getFirstJoinStep()
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
@@ -176,6 +184,7 @@ class XmippProtConsensusPicking(ProtParticlePicking):
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
         outputSet.setBoxSize(self.inputs.getBoxSize())
+        outputSet.setMicrographs(self.inputs.getMicrographs())
         outputSet.copyInfo(self.inputs)
         outputSet.copyItems(self.setOfCoords)
         self.setOfCoords = []
@@ -200,6 +209,12 @@ class XmippProtConsensusPicking(ProtParticlePicking):
 
     
     def calculateConsensusStep(self, micrograph):
+        for coordinates in self.inputCoordinates:
+            while len([x.getPosition() for x in
+                       coordinates.get().iterCoordinates(
+                               micrograph.getObjId())]) < 1:
+                time.sleep(1)
+
         # Take the sampling rates
         Tm = []
         for coordinates in self.inputCoordinates:
