@@ -297,27 +297,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         freq_step = 1
 
         xdim = self.maskRadius(self.halfVolumes, self.isPremasked)
-#         
-#         if self.halfVolumes:
-#             if self.isPremasked:
-#                 if self.volumeRadiusHalf == -1:
-#                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
-#                     xdim = xdim*0.5
-#                 else:
-#                     xdim = self.volumeRadiusHalf.get()
-#             else:
-#                 xdim, _ydim, _zdim = self.inputVolume.get().getDim()
-#                 xdim = xdim*0.5
-#         else:
-#             if self.isPremasked:
-#                 if self.volumeRadius == -1:
-#                     xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
-#                     xdim = xdim*0.5
-#                 else:
-#                     xdim = self.volumeRadius.get()
-#             else:
-#                 xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
-#                 xdim = xdim*0.5
+
 
         if self.halfVolumes:
             params = ' --vol %s' % self.vol1Fn
