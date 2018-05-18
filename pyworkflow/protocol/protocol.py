@@ -592,8 +592,21 @@ class Protocol(Step):
         emptyPointers = []
 
         for paramName, attr in self.iterInputPointers():
-            condition = self.evalParamCondition(paramName)
+
             param = self.getParam(paramName)
+            # Issue #1597: New data loaded with old code.
+            # If the input pointer is not a param:
+            # This could happen in backward incompatibility cases,
+            # Protocol has an attribute (inputPointer) but class does not define
+            # if in the define params.
+            if param is None:
+                print("%s attribute is not defined as parameter. "
+                      "This could happen when loading new code with older "
+                      "scipion versions." % paramName)
+                continue
+
+            condition = self.evalParamCondition(paramName)
+
             obj = attr.get()
             if condition and obj is None and not param.allowsNull:
                 if attr.hasValue():
