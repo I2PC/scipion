@@ -28,7 +28,7 @@ from pyworkflow.gui.plotter import Plotter
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, DataView
-from protocol_resolution_monogenic_signal import XmippProtMonoRes, OUTPUT_RESOLUTION_FILE
+from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
 import numpy as np
@@ -133,7 +133,7 @@ class XmippMonoResViewer(ProtocolViewer):
                 }
        
     def _showVolumeSlices(self, param=None):
-        cm = DataView(self.protocol.outputVolume.getFileName())
+        cm = DataView(self.protocol.resolution_Volume.getFileName())
         
         return [cm]
     
@@ -148,7 +148,7 @@ class XmippMonoResViewer(ProtocolViewer):
         
     
     def _showVolumeColorSlices(self, param=None):
-        imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        imageFile = self.protocol.resolution_Volume.getFileName()
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         max_Res = np.amax(imgData)
