@@ -39,7 +39,7 @@ from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam,
                                         IntParam, BooleanParam, Positive, GE)
 from pyworkflow.em.protocol import ProtExtractParticlesPair
-from convert import writeSetOfCoordinates, readSetOfParticles
+from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
 from pyworkflow.em.data import SetOfMicrographs, SetOfParticles
 
@@ -52,7 +52,7 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         ProtExtractParticlesPair.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
 
-    # --------------------------- DEFINE param functions -----------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputCoordinatesTiltedPairs', PointerParam,
@@ -78,6 +78,22 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
                       important=True, label='Input tilt pair micrographs',
                       help='Select the tilt pair micrographs from which to '
                            'extract.')
+        form.addParam('ctfUntilt', PointerParam, allowsNull=True,
+                      # expertLevel=LEVEL_ADVANCED,
+                      pointerClass='SetOfCTF',
+                      label='CTF estimation (untilted mics)',
+                      help='Choose some CTF estimation related to input '
+                           'UNTILTED micrographs. \n CTF estimation is needed '
+                           'if you want to do phase flipping or you want to '
+                           'associate CTF information to the particles.')
+        form.addParam('ctfTilt', PointerParam, allowsNull=True,
+                      # expertLevel=LEVEL_ADVANCED,
+                      pointerClass='SetOfCTF',
+                      label='CTF estimation (tilted mics)',
+                      help='Choose some CTF estimation related to input '
+                           'TILTED micrographs. \n CTF estimation is needed '
+                           'if you want to do phase flipping or you want to '
+                           'associate CTF information to the particles.')
 
         # downFactor should always be 1.0 or greater
         geOne = GE(1.0, error='Value should be greater or equal than 1.0')
@@ -125,6 +141,16 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
                            'and Eman require white particles over a black '
                            'background, Frealign (up to v9.07) requires black '
                            'particles over a white background')
+        form.addParam('doFlip', BooleanParam, default=False,
+                      # expertLevel=LEVEL_ADVANCED,
+                      label='Phase flipping',
+                      help='Use the information from the CTF to compensate for '
+                           'phase reversals.\n'
+                           'Phase flip is recommended in Xmipp or Eman\n'
+                           '(even Wiener filtering and bandpass filter are '
+                           'recommended for obtaining better 2D classes)\n'
+                           'Otherwise (Frealign, Relion, Spider, ...), '
+                           'phase flip is not recommended.')
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize (Recommended)',
                       help='It subtract a ramp in the gray values and '
@@ -148,15 +174,15 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
                            'value is 0, then half the box size is used.')
         form.addParallelSection(threads=4, mpi=1)
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._setupBasicProperties()
-        # Write pos files for each micrograph
+        # Write pos files for all micrographs
         firstStepId = self._insertFunctionStep('writePosFilesStep')
-
         # For each micrograph insert the steps, run in parallel
         deps = []
-        for mic in self.inputMics:
+
+        def _insertMicStep(mic):
             localDeps = [firstStepId]
             fnLast = mic.getFileName()
             micName = pwutils.removeBaseExt(mic.getFileName())
@@ -185,15 +211,34 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
                                args % (fnLast, fnNoDust, self.thresholdDust)))
                 fnLast = fnNoDust
 
-            # TODO: implement CTF
+            if self._useCTF() and self.ctfDict[mic] is not None:
+                # We need to write a Xmipp ctfparam file
+                # to perform the phase flip on the micrograph
+                fnCTF = self._getTmpPath("%s.ctfParam" % micName)
+                mic.setCTF(self.ctfDict[mic])
+                micrographToCTFParam(mic, fnCTF)
+                # Insert step to flip micrograph
+                if self.doFlip:
+                    fnFlipped = getMicTmp('_flipped.xmp')
+                    args = " -i %s -o %s --ctf %s --sampling %f"
+                    micOps.append(('xmipp_ctf_phase_flip',
+                                   args % (fnLast, fnFlipped, fnCTF,
+                                           self._getNewSampling())))
+                    fnLast = fnFlipped
+            else:
+                fnCTF = None
+
             # Actually extract
             deps.append(self._insertFunctionStep('extractParticlesStep',
                                                  mic.getObjId(), micName,
-                                                 None, fnLast, micOps,
+                                                 fnCTF, fnLast, micOps,
                                                  self.doInvert.get(),
                                                  self._getNormalizeArgs(),
                                                  self.doBorders.get(),
                                                  prerequisites=localDeps))
+
+        for mic in self.ctfDict:
+            _insertMicStep(mic)
 
         metaDeps = self._insertFunctionStep('createMetadataImageStep',
                                             prerequisites=deps)
@@ -202,7 +247,7 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=[metaDeps], wait=False)
 
-    # --------------------------- STEPS functions ------------------------------
+    # --------------------------- STEPS functions -----------------------------
     def writePosFilesStep(self):
         """ Write the pos file for each micrograph in metadata format
         (both untilted and tilted). """
@@ -217,30 +262,23 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         #  micrographs in the SetOfCoordinates and the Other micrographs
         if self._micsOther():
             micDict = {}
-            # create tmp set with all mics from coords set
-            coordMics = SetOfMicrographs(filename=':memory:')
-            coordMics.copyInfo(self.inputCoords.getUntilted().getMicrographs())
-
             for micU, micT in izip(self.inputCoords.getUntilted().getMicrographs(),
                                    self.inputCoords.getTilted().getMicrographs()):
-                micU.cleanObjId()
-                micT.cleanObjId()
-                coordMics.append(micU)
-                coordMics.append(micT)
+                micBaseU = pwutils.removeBaseExt(micU.getFileName())
+                micPosU = self._getExtraPath(micBaseU + ".pos")
+                micDict[pwutils.removeExt(micU.getMicName())] = micPosU
+                micBaseT = pwutils.removeBaseExt(micT.getFileName())
+                micPosT = self._getExtraPath(micBaseT + ".pos")
+                micDict[pwutils.removeExt(micT.getMicName())] = micPosT
 
-            for mic in coordMics:
-                micBase = pwutils.removeBaseExt(mic.getFileName())
-                micPos = self._getExtraPath(micBase + ".pos")
-                micDict[pwutils.removeExt(mic.getMicName())] = micPos
-
-            # now match micDict and inputMics
-            if any(pwutils.removeExt(mic.getMicName()) in micDict for mic in self.inputMics):
+            # now match micDict and other mics (in self.ctfDict)
+            if any(pwutils.removeExt(mic.getMicName()) in micDict for mic in self.ctfDict):
                 micKey = lambda mic: pwutils.removeExt(mic.getMicName())
             else:
                 raise Exception('Could not match input micrographs and coordinates '
                                 'by micName.')
 
-            for mic in self.inputMics:  # micrograph from input (other)
+            for mic in self.ctfDict:
                 mk = micKey(mic)
                 if mk in micDict:
                     micPosCoord = micDict[mk]
@@ -257,32 +295,32 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         """ Extract particles from one micrograph """
         outputRoot = str(self._getExtraPath(baseMicName))
         fnPosFile = self._getExtraPath(baseMicName + ".pos")
-    
+
         # If it has coordinates extract the particles
         particlesMd = 'particles@%s' % fnPosFile
         boxSize = self.boxSize.get()
         boxScale = self.getBoxScale()
         print "boxScale: ", boxScale
-    
+
         if exists(fnPosFile):
             # Apply first all operations required for the micrograph
             for program, args in micOps:
                 self.runJob(program, args)
-        
+
             args = " -i %s --pos %s" % (micrographToExtract, particlesMd)
             args += " -o %s --Xdim %d" % (outputRoot, boxSize)
-        
+
             if doInvert:
                 args += " --invert"
-        
+
             if fnCTF:
                 args += " --ctfparam " + fnCTF
-        
+
             if doBorders:
                 args += " --fillBorders"
-        
+
             self.runJob("xmipp_micrograph_scissor", args)
-        
+
             # Normalize
             if normalizeArgs:
                 self.runJob('xmipp_transform_normalize',
@@ -291,7 +329,7 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
             self.warning("The micrograph %s hasn't coordinate file! "
                          % baseMicName)
             self.warning("Maybe you picked over a subset of micrographs")
-    
+
         # Let's clean the temporary mrc micrographs
         if not pwutils.envVarOn("SCIPION_DEBUG_NOCLEAN"):
             pwutils.cleanPattern(self._getTmpPath(baseMicName) + '*')
@@ -334,7 +372,7 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         imgSetT = self._createSetOfParticles(suffix="Tilted")
         imgSetT.copyInfo(self.tMics)
 
-        sampling = self.samplingMics if self._micsOther() else self.samplingInput
+        sampling = self.getMicSampling() if self._micsOther() else self.getCoordSampling()
         if self._doDownsample():
             sampling *= self.downFactor.get()
         imgSetU.setSamplingRate(sampling)
@@ -358,9 +396,9 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         if self._doDownsample():
             factor /= self.downFactor.get()
 
-        coordsT = self.inputCoordinatesTiltedPairs.get().getTilted()
+        coordsT = self.getCoords().getTilted()
         # For each untilted particle retrieve micId from SetOfCoordinates untilted
-        for imgU, coordU in izip(imgSetAuxU, self.inputCoordinatesTiltedPairs.get().getUntilted()):
+        for imgU, coordU in izip(imgSetAuxU, self.getCoords().getUntilted()):
             # FIXME: Remove this check when sure that objIds are equal
             id = imgU.getObjId()
             if id != coordU.getObjId():
@@ -378,6 +416,11 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
                 imgT.setCoordinate(coordT)
                 imgSetT.append(imgT)
 
+        if self.doFlip:
+            imgSetU.setIsPhaseFlipped(self.ctfUntilt.hasValue())
+            imgSetU.setHasCTF(self.ctfUntilt.hasValue())
+            imgSetT.setIsPhaseFlipped(self.ctfTilt.hasValue())
+            imgSetT.setHasCTF(self.ctfTilt.hasValue())
         imgSetU.write()
         imgSetT.write()
 
@@ -392,9 +435,14 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         self._defineOutputs(outputParticlesTiltPair=outputset)
         self._defineSourceRelation(self.inputCoordinatesTiltedPairs, outputset)
 
-    # --------------------------- INFO functions --------------------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
+        # doFlip can only be selected if CTF information
+        # is available on picked micrographs
+        if self.doFlip and not self._useCTF():
+            errors.append('Phase flipping cannot be performed unless '
+                          'CTF information is provided.')
 
         if self.doNormalize:
             if self.backRadius > int(self.boxSize.get() / 2):
@@ -417,16 +465,25 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
             summary.append("Particle pairs extracted: %d" %
                            self.outputParticlesTiltPair.getSize())
 
+        if self.doFlip:
+            if self.ctfTilt.hasValue() and self.ctfUntilt.hasValue():
+                summary.append('Phase flipped for both untilted and tilted particles.')
+            elif self.ctfUntilt.hasValue():
+                summary.append('Phase flipped only for untilted particles.')
+            else:
+                summary.append('Phase flipped only for tilted particles.')
+
         return summary
 
     def _methods(self):
         methodsMsgs = []
 
         if self.getStatus() == STATUS_FINISHED:
-            msg = "A total of %d particle pairs of size %d were extracted" % (self.getOutput().getSize(),
-                                                                              self.boxSize)
+            msg = "A total of %d particle pairs of size %d were extracted" % \
+                  (self.getOutput().getSize(), self.boxSize)
             if self._micsOther():
-                msg += " from another set of micrographs: %s" % self.getObjectTag('inputMicrographsTiltedPair')
+                msg += " from another set of micrographs: %s" % \
+                       self.getObjectTag('inputMicrographsTiltedPair')
 
             msg += " using coordinates %s" % self.getObjectTag('inputCoordinatesTiltedPairs')
             msg += self.methodsVar.get('')
@@ -439,35 +496,53 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
             if self._doDownsample():
                 methodsMsgs.append("Particles downsampled by a factor of %0.2f." % self.downFactor)
             if self.doNormalize:
-                methodsMsgs.append("Normalization performed of type %s." % (self.getEnumText('normType')))
+                methodsMsgs.append("Normalization performed of type %s." %
+                                   (self.getEnumText('normType')))
+            if self.doFlip:
+                methodsMsgs.append("Phase flipping was performed.")
 
         return methodsMsgs
 
-    # --------------------------- UTILS functions ------------------------------
+    # --------------------------- UTILS functions -----------------------------
     def _setupBasicProperties(self):
         # Get sampling rate and inputMics according to micsSource type
         self.inputCoords = self.getCoords()
         self.uMics, self.tMics = self.getInputMicrographs()
-        self.samplingInput = self.inputCoords.getUntilted().getMicrographs().getSamplingRate()
-        self.samplingMics = self.uMics.getSamplingRate()
-        self.samplingFactor = float(self.samplingMics / self.samplingInput)
+        ctfUntilt = self.ctfUntilt.get() if self.ctfUntilt.hasValue() else None
+        ctfTilt = self.ctfTilt.get() if self.ctfTilt.hasValue() else None
+        self.samplingFactor = float(self.getMicSampling() / self.getCoordSampling())
 
-        # create tmp set with all mic pairs
-        self.inputMics = SetOfMicrographs(filename=':memory:')
-        self.inputMics.copyInfo(self.uMics)
-        self.inputMics.setStore(False)
+        # create a ctf dict with unt/tilt mics
+        self.ctfDict = {}
+        for micU in self.uMics:
+            if ctfUntilt is not None:
+                micBase = pwutils.removeExt(self.getMicNameOrId(micU))
+                for ctf in ctfUntilt:
+                    ctfMicName = self.getMicNameOrId(ctf.getMicrograph())
+                    ctfMicBase = pwutils.removeExt(ctfMicName)
+                    if micBase == ctfMicBase:
+                        self.ctfDict[micU.clone()] = ctf.clone()
+                        break
+            else:
+                self.ctfDict[micU.clone()] = None
 
-        for micU, micT in izip(self.uMics, self.tMics):
-            micU.cleanObjId()
-            micT.cleanObjId()
-            self.inputMics.append(micU)
-            self.inputMics.append(micT)
+        for micT in self.tMics:
+            if ctfTilt is not None:
+                micBase = pwutils.removeExt(self.getMicNameOrId(micT))
+                for ctf in ctfTilt:
+                    ctfMicName = self.getMicNameOrId(ctf.getMicrograph())
+                    ctfMicBase = pwutils.removeExt(ctfMicName)
+                    if micBase == ctfMicBase:
+                        self.ctfDict[micT.clone()] = ctf.clone()
+                        break
+            else:
+                self.ctfDict[micT.clone()] = None
 
     def getInputMicrographs(self):
         """ Return pairs of micrographs associated to the SetOfCoordinates or
         Other micrographs. """
         if not self._micsOther():
-            
+
             return self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs(), \
                    self.inputCoordinatesTiltedPairs.get().getTilted().getMicrographs()
         else:
@@ -488,6 +563,16 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
 
     def getMicSampling(self):
         return self.getInputMicrographs()[0].getSamplingRate()
+
+    def _getNewSampling(self):
+        newSampling = self.getMicSampling()
+
+        if self._doDownsample():
+            # Set new sampling, it should be the input sampling of the used
+            # micrographs multiplied by the downFactor
+            newSampling *= self.downFactor.get()
+
+        return newSampling
 
     def notOne(self, value):
         return abs(value - 1) > 0.0001
@@ -516,11 +601,15 @@ class XmippProtExtractParticlesPairs(ProtExtractParticlesPair, XmippProtocol):
         micrographs used for picking and the ones used for extraction.
         The downsampling factor could also affect the resulting scale.
         """
-        samplingPicking = self.getCoordSampling()
-        samplingExtract = self.getMicSampling()
-        f = samplingPicking / samplingExtract
+        f = self.getCoordSampling() / self.getMicSampling()
         return f / self.downFactor.get() if self._doDownsample() else f
 
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """
         return self.downsampleType == OTHER
+
+    def _useCTF(self):
+        return self.ctfUntilt.hasValue() or self.ctfTilt.hasValue()
+
+    def getMicNameOrId(self, mic):
+        return mic.getMicName() or mic.getObjId()

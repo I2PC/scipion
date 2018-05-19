@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,23 +27,32 @@
 This module implement the first version of viewers using 
 around xmipp_showj visualization program.
 """
-import os
+import os, math
 
 from pyworkflow.gui.project import ProjectWindow
+import pyworkflow.gui.text as text
+from pyworkflow.gui.dialog import askYesNo
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER,
-                               WEB_DJANGO, Viewer)
+                               WEB_DJANGO)
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 import pyworkflow.em.showj as showj
 from pyworkflow.em.viewer import (ObjectView, DataView,
                                   ChimeraView, ChimeraClientView)
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.protocol.executor import StepExecutor
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
-                                        EnumParam, FloatParam, IntParam)
+                                        EnumParam, FloatParam, IntParam,
+                                        BooleanParam)
+import pyworkflow.utils as pwutils
 
 from protocol_boxing import EmanProtBoxing
+from protocol_ctf import EmanProtCTFAuto
 from protocol_initialmodel import EmanProtInitModel
 from protocol_refineasy import EmanProtRefine
+from protocol_tiltvalidate import EmanProtTiltValidate
+from convert import loadJson
+from eman2 import getEmanProgram
 
 LAST_ITER = 0
 ALL_ITERS = 1
@@ -51,6 +60,9 @@ SELECTED_ITERS = 2
 
 ANGDIST_2DPLOT = 0
 ANGDIST_CHIMERA = 1
+
+TILT_SCATTER = 0
+TILT_CONTOUR = 1
 
 VOLUME_SLICES = 0
 VOLUME_CHIMERA = 1
@@ -135,11 +147,9 @@ class RefineEasyViewer(ProtocolViewer):
         form.addSection(label='Results per Iteration')
         form.addParam('iterToShow', EnumParam,
                       label="Which iteration do you want to visualize?",
-                      default=0,
-                      choices=['last', 'all', 'selection'],
+                      default=0, choices=['last', 'all', 'selection'],
                       display=EnumParam.DISPLAY_LIST)
-        form.addParam('iterSelection', NumericRangeParam,
-                      default='1',
+        form.addParam('iterSelection', NumericRangeParam, default='1',
                       label='Selected iterations',
                       condition='iterToShow==%d' % SELECTED_ITERS,
                       help="""
@@ -196,18 +206,25 @@ Examples:
                        label='Threshold in resolution plots',
                        help='')
 
+        form.addParam('showHtmlReport', LabelParam,
+                      label='Show HTML report',
+                      help='An HTML report file will be generated as this '
+                           'program runs, telling you exactly what it decided '
+                           'to do and why, as well as giving information about '
+                           'runtime, etc while the job is still running.')
+
     def _getVisualizeDict(self):
         self._load()
-        return {
-            'showImagesAngularAssignment': self._showImagesAngularAssignment,
-            'displayVol': self._showVolumes,
-            'displayAngDist': self._showAngularDistribution,
-            'resolutionPlotsFSC': self._showFSC
-            }
+        return {'showImagesAngularAssignment': self._showImagesAngularAssignment,
+                'displayVol': self._showVolumes,
+                'displayAngDist': self._showAngularDistribution,
+                'resolutionPlotsFSC': self._showFSC,
+                'showHtmlReport': self._showHtmlReport
+                }
 
-    # ==============================================================================
+    # ===============================================================================
     # showImagesAngularAssignment
-    # ==============================================================================
+    # ===============================================================================
 
     def _showImagesAngularAssignment(self, paramName=None):
         views = []
@@ -221,7 +238,6 @@ Examples:
 
     def createScipionPartView(self, filename, viewParams={}):
         inputParticlesId = self.protocol.inputParticles.get().strId()
-
         labels = 'enabled id _size _filename _transform._matrix'
         viewParams = {showj.ORDER: labels,
                       showj.VISIBLE: labels, showj.RENDER: '_filename',
@@ -232,9 +248,9 @@ Examples:
                           other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
 
-    # ==============================================================================
+    # ===============================================================================
     # ShowVolumes
-    # ==============================================================================
+    # ===============================================================================
     def _showVolumes(self, paramName=None):
         if self.displayVol == VOLUME_CHIMERA:
             return self._showVolumesChimera()
@@ -250,7 +266,7 @@ Examples:
             f = open(cmdFile, 'w+')
             for vol in volumes:
                 # We assume that the chimera script will be generated
-                # at the same folder than relion volumes
+                # at the same folder than eman volumes
                 if os.path.exists(vol):
                     localVol = os.path.relpath(vol,
                                                self.protocol._getExtraPath())
@@ -351,8 +367,8 @@ Examples:
                 sqliteFn = self.protocol._getFileName('projections', iter=it,
                                                       half=prefix)
                 self.createAngDistributionSqlite(sqliteFn, nparts,
-                                             itemDataIterator=self._iterAngles(
-                                                it, prefix))
+                                                 itemDataIterator=self._iterAngles(
+                                                     it, prefix))
                 xplotter.plotAngularDistributionFromMd(sqliteFn, title)
 
             if self.showHalves.get() == HALF_EVEN:
@@ -391,7 +407,7 @@ Examples:
                 if os.path.exists(fscUnmask):
                     show = True
                     self._plotFSC(a, fscUnmask)
-                    legends.append('unmasked map iter %d' % it)
+                    legends.append('unmasked map run %d' % it)
                 xplotter.showLegend(legends)
 
             elif self.resolutionPlotsFSC.get() == FSC_MASK:
@@ -401,7 +417,7 @@ Examples:
                 if os.path.exists(fscMask):
                     show = True
                     self._plotFSC(a, fscMask)
-                    legends.append('masked map iter %d' % it)
+                    legends.append('masked map run %d' % it)
                 xplotter.showLegend(legends)
 
             elif self.resolutionPlotsFSC.get() == FSC_MASKTIGHT:
@@ -411,26 +427,26 @@ Examples:
                 if os.path.exists(fscMaskTight):
                     show = True
                     self._plotFSC(a, fscMaskTight)
-                    legends.append('masked tight map iter %d' % it)
+                    legends.append('masked tight map run %d' % it)
                 xplotter.showLegend(legends)
             elif self.resolutionPlotsFSC.get() == FSC_ALL:
                 fscUnmask = self.protocol._getFileName('fscUnmasked',
-                                                run=self.protocol._getRun(),
-                                                iter=it)
+                                                       run=self.protocol._getRun(),
+                                                       iter=it)
                 fscMask = self.protocol._getFileName('fscMasked',
-                                                run=self.protocol._getRun(),
-                                                iter=it)
+                                                     run=self.protocol._getRun(),
+                                                     iter=it)
                 fscMaskTight = self.protocol._getFileName('fscMaskedTight',
-                                                run=self.protocol._getRun(),
-                                                iter=it)
+                                                          run=self.protocol._getRun(),
+                                                          iter=it)
                 if os.path.exists(fscUnmask):
                     show = True
                     self._plotFSC(a, fscUnmask)
-                    legends.append('unmasked map iter %d' % it)
+                    legends.append('unmasked map run %d' % it)
                     self._plotFSC(a, fscMask)
-                    legends.append('masked map iter %d' % it)
+                    legends.append('masked map run %d' % it)
                     self._plotFSC(a, fscMaskTight)
-                    legends.append('masked tight map iter %d' % it)
+                    legends.append('masked tight map run %d' % it)
                 xplotter.showLegend(legends)
 
         if show:
@@ -452,6 +468,14 @@ Examples:
         a.plot(resolution_inv, frc)
         a.xaxis.set_major_formatter(self._plotFormatter)
         a.set_ylim([-0.1, 1.1])
+
+    def _showHtmlReport(self, paramName=None):
+        reportPath = self.protocol._getFileName('reportHtml',
+                                                run=self.protocol._getRun())
+        if pwutils.exists(reportPath):
+            text._open_cmd(reportPath, self.getTkRoot())
+        else:
+            self.showInfo('Your html report is not ready yet. Please try again in a minute.')
 
     # ===============================================================================
     # Utils Functions
@@ -557,10 +581,244 @@ Examples:
         rest = 0 if half == 'even' else 1
 
         for i, line in enumerate(f):
-            angles = map(float, line.split())
-            rot = float("{0:.2f}".format(angles[1]))
-            tilt = float("{0:.2f}".format(angles[2]))
-            if half == 'full' or i % 2 == rest:
-                yield rot, tilt
+            if '#' not in line:
+                angles = map(float, line.split())
+                if angles[1] != 0:  # skip disabled images
+                    rot = float("{0:.2f}".format(angles[2]))
+                    tilt = float("{0:.2f}".format(angles[3]))
+                    if half == 'full' or i % 2 == rest:
+                        yield rot, tilt
 
         f.close()
+
+
+class TiltValidateViewer(ProtocolViewer):
+    """ Visualization of Eman2 tilt validate protocol."""
+
+    _targets = [EmanProtTiltValidate]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _label = 'viewer tilt validate'
+
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        form.addParam('radcut', FloatParam,
+                      default=45.0,
+                      label='Max radius (deg.)',
+                      help='Truncate the polar plt at this radius value. '
+                           '-1 means no limit.')
+        form.addParam('planethres', FloatParam,
+                      default=360.0,
+                      label='Max out of plane threshold (deg.)',
+                      help='Maximum out of plane threshold for the tilt axis. '
+                           '0 = perfectly in plane, 360 = normal to plane.')
+        form.addParam('displayPlot', EnumParam,
+                      choices=['scatter plot', 'contour plot'],
+                      default=TILT_SCATTER, display=EnumParam.DISPLAY_HLIST,
+                      label='Display tilt geometry plot',
+                      help='*scatter plot*: display polar plot of computed '
+                           ' tilt geometry per particle pair.\n'
+                           '*contour plot*: display contour plot similar '
+                           'to fig.6 in Henderson paper.')
+        form.addParam('displayEmanPlot', LabelParam,
+                      label='Display scatter plot with EMAN2 GUI')
+        form.addParam('colozaxis', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
+                      condition='displayPlot == 0',  # scatter plot
+                      label='Color Z-axis',
+                      help='Color scatter dots by Z axis')
+
+    def _getVisualizeDict(self):
+        self._load()
+        return {'displayPlot': self._showPlot,
+                'displayEmanPlot': self._showEmanPlot}
+
+    def _showPlot(self, paramName=None):
+        views = []
+        color = self.colozaxis
+        rmax = self.radcut.get()
+
+        if self.displayPlot == TILT_SCATTER:
+            views.append(self._createScatterPlot(rmax, colorzaxis=color))
+        elif self.displayPlot == TILT_CONTOUR:
+            plotFn = self.protocol._getFileName('outputContourPlot')
+            if pwutils.exists(plotFn):
+                views.append(DataView(plotFn))
+            else:
+                raise Exception("Contour plot file not found: %s" % plotFn)
+
+        return views
+
+    def _createScatterPlot(self, rmax, colorzaxis=False):
+        gridsize = self._getGridSize(1)
+        xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                             windowTitle='Tilt geometry plot')
+        plot_title = 'Tilt pair parameter plot'
+        a = xplotter.createSubPlot(plot_title, 'Tilt axis', 'Tilt angle',
+                                   projection='polar')
+
+        datap, r, theta, zaxis = self._getValues()
+
+        if colorzaxis:
+            a.scatter(theta, r, c=zaxis)
+        else:
+            a.scatter(theta, r)
+        a.set_rmax(rmax)
+
+        return xplotter
+
+    def _showEmanPlot(self, paramName=None):
+        program = getEmanProgram('e2tiltvalidate.py')
+        args = "--path=TiltValidate_01 --radcut=%0.2f --gui --planethres=%0.2f" % (
+            self.radcut.get(), self.planethres.get())
+        if self.colozaxis:
+            args += " --colorzaxis"
+
+        hostConfig = self.protocol.getHostConfig()
+        # Create the steps executor
+        executor = StepExecutor(hostConfig)
+        self.protocol.setStepsExecutor(executor)
+        # Finally run the protocol
+
+        self.protocol.runJob(program, args, cwd=self.protocol._getExtraPath(),
+                             numberOfMpi=1, numberOfThreads=1)
+
+        return []
+
+    # ===============================================================================
+    # Utils Functions
+    # ===============================================================================
+    def _load(self):
+        """ Load selected iterations and classes 3D for visualization mode. """
+        self.protocol._createFilenameTemplates()
+
+    def _getValues(self):
+        fileName = self.protocol._getFileName('outputAngles')
+        planethres = self.planethres.get()
+
+        r = []
+        theta = []
+        datap = []
+        zaxis = []
+
+        if pwutils.exists(fileName):
+            jsonPosDict = loadJson(fileName)
+            if jsonPosDict.has_key("particletilt_list"):
+                tiltpairs = jsonPosDict["particletilt_list"]
+                maxcolorval = max(tiltpairs, key=lambda x: x[3])[3]
+
+                for tp in tiltpairs:
+                    if tp[3] > planethres:
+                        continue
+                    datap.append(tp[0])
+                    r.append(tp[1])
+                    theta.append(math.radians(tp[2]))
+                    # Color the Z axis out of planeness
+                    zaxis.append(self._computeRGBcolor(tp[3], 0, maxcolorval))
+
+                return datap, r, theta, zaxis
+
+    def _computeRGBcolor(self, value, minval, maxval):
+        """ From e2tiltvalidate.py:
+    Author: John Flanagan (jfflanag@bcm.edu)
+    Copyright (c) 2000-2011 Baylor College of Medicine
+    Modified by Stephen Murray (scmurray@bcm.edu) 3/28/13
+    Compute a RGB value to represent a data range.
+    Basically convert Hue to GSB with I=0.33 and S=1.0
+   """
+        # Normalize from 0 to 1
+        normval = (value - minval) / (maxval - minval)
+        radval = normval * 2 * math.pi
+        if radval < 2 * math.pi / 3:
+            B = 0.0
+            R = 0.33 * (1 + math.cos(radval) / math.cos(math.pi / 3 - radval))
+            G = 1.0 - R
+            return "#%02x%02x%02x" % (255 * R, 255 * G, 255 * B)
+        if 2 * math.pi / 3 < radval < 4 * math.pi / 3:
+            hue = radval - 2 * math.pi / 3
+            R = 0.0
+            G = 0.33 * (1 + math.cos(hue) / math.cos(math.pi / 3 - hue))
+            B = 1.0 - G
+            return "#%02x%02x%02x" % (255 * R, 255 * G, 255 * B)
+        if radval > 4 * math.pi / 3:
+            hue = radval - 4 * math.pi / 3
+            G = 0
+            B = 0.33 * (1 + math.cos(hue) / math.cos(math.pi / 3 - hue))
+            R = 1.0 - B
+            return "#%02x%02x%02x" % (255 * R, 255 * G, 255 * B)
+
+    def _getGridSize(self, n=None):
+        """ Figure out the layout of the plots given the number of references."""
+        if n is None or n == 1:
+            gridsize = [1, 1]
+        elif n == 2:
+            gridsize = [2, 1]
+        else:
+            gridsize = [(n + 1) / 2, 2]
+
+        return gridsize
+
+
+class CtfViewer(ProtocolViewer):
+    """ Visualization of Eman2 ctf auto protocol."""
+
+    _targets = [EmanProtCTFAuto]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _label = 'viewer ctf'
+
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        form.addParam('outputType', EnumParam,
+                      default=0,
+                      choices=self._getOutputs(),
+                      label='Select output set',
+                      help='Choose output particle set to display')
+        form.addParam('displayCtf', LabelParam,
+                      label='Display particle set with Scipion')
+        form.addParam('displayEmanCtf', LabelParam,
+                      label='Display all results with EMAN2 GUI')
+
+    def _getVisualizeDict(self):
+        self._load()
+        return {'displayCtf': self._showCtf,
+                'displayEmanCtf': self._showEmanCtf}
+
+    def _showCtf(self, paramName=None):
+        views = []
+        obj = "obj = self.protocol." + self.getEnumText('outputType')
+        exec (obj)
+        strId = obj.strId()
+        fn = obj.getFileName()
+        particlesView = ObjectView(self._project, strId, fn)
+        views.append(particlesView)
+        return views
+
+    def _showEmanCtf(self, paramName=None):
+        program = getEmanProgram('e2ctf.py')
+        args = '--allparticles --minptcl=0 --minqual=0'
+        args += ' --gui --constbfactor=-1.0 --sf=auto'
+
+        hostConfig = self.protocol.getHostConfig()
+        # Create the steps executor
+        executor = StepExecutor(hostConfig)
+        self.protocol.setStepsExecutor(executor)
+        # Finally run the protocol
+
+        self.protocol.runJob(program, args, cwd=self.protocol._getExtraPath(),
+                             numberOfMpi=1, numberOfThreads=1)
+
+        # Open dialog to request confirmation to overwrite output
+        saveChanges = askYesNo("Save output changes?",
+                               "Do you want to overwrite output particles with new CTF values?",
+                               self.getTkRoot())
+        if saveChanges:
+            self.protocol.createOutputStep()
+
+    def _load(self):
+        """ Load selected iterations and classes 3D for visualization mode. """
+        self.protocol._createFilenameTemplates()
+
+    def _getOutputs(self):
+        outputList = []
+        for attrName, _ in self.protocol.iterOutputEM():
+            outputList.append(attrName)
+        return outputList

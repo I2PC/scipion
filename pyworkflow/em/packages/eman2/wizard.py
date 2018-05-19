@@ -31,23 +31,24 @@ import os
 
 import pyworkflow as pw
 from pyworkflow.em.wizard import EmWizard
-from protocol_autopick import SparxGaussianProtPicking
+from protocol_autopick_sparx import SparxGaussianProtPicking
 from pyworkflow.em import CoordinatesObjectView
 from pyworkflow.em.showj import CLASSIFIER
 from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
 from pyworkflow.utils import makePath, cleanPath
 from pyworkflow.utils.utils import readProperties
+from eman2 import getBoxerCommand, getVersion
 
-#===============================================================================
+
+# ===============================================================================
 # PICKER
-#===============================================================================
+# ===============================================================================
 
 class SparxGaussianPickerWizard(EmWizard):
     _targets = [(SparxGaussianProtPicking, ['boxSize',
                                             'lowerThreshold', 'higherThreshold',
                                             'gaussWidth'])]
-    
-    
+
     def show(self, form):
         autopickProt = form.protocol
         micSet = autopickProt.getInputMicrographs()
@@ -65,24 +66,23 @@ class SparxGaussianPickerWizard(EmWizard):
         micMdFn = os.path.join(coordsDir, "micrographs.xmd")
         writeSetOfMicrographs(micSet, micMdFn)
 
-        
         pickerProps = os.path.join(coordsDir, 'picker.conf')
         f = open(pickerProps, "w")
         params = ['boxSize', 'lowerThreshold', 'higherThreshold', 'gaussWidth']
+        program = getBoxerCommand(getVersion(), boxerVersion='old')
         args = {
-          "params": ','.join(params),
-          "preprocess" : "%s sxprocess.py" % pw.getScipionScript(),
-          "picker" : "%s e2boxer.py" % pw.getScipionScript(),
-          "convert" : pw.join('apps', 'pw_convert.py'),
-          'coordsDir': coordsDir,
-          'micsSqlite': micSet.getFileName(),
-          "boxSize": autopickProt.boxSize,
-          "lowerThreshold": autopickProt.lowerThreshold,
-          "higherThreshold": autopickProt.higherThreshold,
-          "gaussWidth": autopickProt.gaussWidth,
-          "extraParams":autopickProt.extraParams
-          }
-
+            "params": ','.join(params),
+            "preprocess": "%s sxprocess.py" % pw.getScipionScript(),
+            "picker": "%s %s" % (pw.getScipionScript(), program),
+            "convert": pw.join('apps', 'pw_convert.py'),
+            'coordsDir': coordsDir,
+            'micsSqlite': micSet.getFileName(),
+            "boxSize": autopickProt.boxSize,
+            "lowerThreshold": autopickProt.lowerThreshold,
+            "higherThreshold": autopickProt.higherThreshold,
+            "gaussWidth": autopickProt.gaussWidth,
+            "extraParams": autopickProt.extraParams
+        }
 
         f.write("""
         parameters = %(params)s
@@ -113,4 +113,3 @@ class SparxGaussianPickerWizard(EmWizard):
         if myprops['applyChanges'] == 'true':
             for param in params:
                 form.setVar(param, myprops[param + '.value'])
-

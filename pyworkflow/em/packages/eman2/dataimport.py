@@ -1,8 +1,10 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es)
+# * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es) [1]
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk) [2]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [2] MRC Laboratory of Molecular Biology (MRC-LMB)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -24,35 +26,58 @@
 # *
 # **************************************************************************
 
-from os.path import  exists, join, dirname
-
-from pyworkflow.utils.path import getExt
-from pyworkflow.em.data import Coordinate
-from pyworkflow.em.packages.eman2.convert import loadJson
-from pyworkflow.em.metadata import MetaData, MDL_XCOOR, MDL_YCOOR, MDL_PICKING_PARTICLE_SIZE
+import pyworkflow.utils as pwutils
+from pyworkflow.em.data import Coordinate, CTFModel
+from pyworkflow.em.data_tiltpairs import Angles
+from pyworkflow.em.metadata import (MetaData, MDL_XCOOR, MDL_YCOOR,
+                                    MDL_PICKING_PARTICLE_SIZE)
+from convert import loadJson, readCTFModel
 
 
 class EmanImport():
 
-    def __init__(self, protocol):
+    def __init__(self, protocol, lstFile):
         self.protocol = protocol
+        self._lstFile = lstFile
+        self.copyOrLink = protocol.getCopyOrLink()
+
+    def importAngles(self, fileName, addAngles):
+        if pwutils.exists(fileName):
+            ext = pwutils.getExt(fileName)
+
+            if ext == ".json":
+                fnBase = pwutils.replaceBaseExt(fileName, 'hdf')
+                keyName = 'tiltparams_micrographs/' + fnBase.replace('_info', '')
+                jsonAngDict = loadJson(fileName)
+                if jsonAngDict.has_key(keyName):
+                    angles = jsonAngDict[keyName]
+                    tilt, y2, y = angles[:3]  # y2=tilted, y=gamma(untilted)
+                    ang = Angles()
+                    # TODO: check this conversion
+                    ang.setAngles(y, y2, tilt)
+                    addAngles(ang)
+            else:
+                raise Exception('Unknown extension "%s" to import Eman tilt pair angles' % ext)
 
     def importCoordinates(self, fileName, addCoordinate):
-        if exists(fileName):
-            ext = getExt(fileName)
-            
+        if pwutils.exists(fileName):
+            ext = pwutils.getExt(fileName)
+
             if ext == ".json":
                 jsonPosDict = loadJson(fileName)
-                
+                boxes = []
+
                 if jsonPosDict.has_key("boxes"):
                     boxes = jsonPosDict["boxes"]
-
+                elif jsonPosDict.has_key("boxes_rct"):
+                    boxes = jsonPosDict["boxes_rct"]
+                if boxes:
                     for box in boxes:
                         x, y = box[:2]
                         coord = Coordinate()
                         coord.setPosition(x, y)
                         addCoordinate(coord)
-                        
+
             elif ext == ".box":
                 md = MetaData()
                 md.readPlain(fileName, "xcoor ycoor particleSize")
@@ -66,11 +91,11 @@ class EmanImport():
                         x = md.getValue(MDL_XCOOR, objId)
                         y = md.getValue(MDL_YCOOR, objId)
                         coord = Coordinate()
-                        coord.setPosition(x+half, y+half)
+                        coord.setPosition(x + half, y + half)
                         addCoordinate(coord)
             else:
                 raise Exception('Unknown extension "%s" to import Eman coordinates' % ext)
-            
+
     def getBoxSize(self, coordFile):
         """ Try to infer the box size from the given coordinate file.
         In the case of .box files, the size is the 3rd column
@@ -80,15 +105,31 @@ class EmanImport():
             md = MetaData()
             md.readPlain(coordFile, "xcoor ycoor particleSize")
             return md.getValue(MDL_PICKING_PARTICLE_SIZE, md.firstObject())
-        
+
         elif coordFile.endswith('.json'):
-            infoDir = dirname(coordFile)
+            infoDir = pwutils.dirname(coordFile)
             # Still go one level up of info dir
-            jsonBase = join(dirname(infoDir), 'e2boxercache', 'base.json')
-            if exists(jsonBase):
+            jsonBase = pwutils.join(pwutils.dirname(infoDir), 'e2boxercache', 'base.json')
+            jsonBase2 = pwutils.join(infoDir, 'project.json')
+            if pwutils.exists(jsonBase):
                 jsonDict = loadJson(jsonBase)
                 if jsonDict.has_key('box_size'):
                     return int(jsonDict["box_size"])
-                
+            elif pwutils.exists(jsonBase2):
+                jsonDict = loadJson(jsonBase2)
+                if jsonDict.has_key('global.boxsize'):
+                    return int(jsonDict["global.boxsize"])
+
         return None
-                
+
+    def importCTF(self, mic, fileName):
+        ctf = CTFModel()
+        ctf.setMicrograph(mic)
+        readCTFModel(ctf, fileName)
+        return ctf
+
+    def importParticles(self, fileName):
+        """ Import particles from 'imageSet.lst' file. """
+        pass
+        partSet = self.protocol._createSetOfParticles()
+        partSet.setObjComment('Particles imported from EMAN lst file:\n%s' % self._lstFile)

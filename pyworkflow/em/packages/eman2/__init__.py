@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -35,13 +35,20 @@ EMAN_DIR_VAR = 'EMAN2DIR'
 
 from eman2 import *
 from protocol_boxing import EmanProtBoxing
+from protocol_ctf import EmanProtCTFAuto
 from protocol_initialmodel import EmanProtInitModel
 from protocol_reconstruct import EmanProtReconstruct
+from protocol_refine2d import EmanProtRefine2D
+from protocol_refine2d_bispec import EmanProtRefine2DBispec
 from protocol_refineasy import EmanProtRefine
-from protocol_autopick import SparxGaussianProtPicking
-from viewer import EmanViewer, RefineEasyViewer
+from protocol_tiltvalidate import EmanProtTiltValidate
+from protocol_autopick_boxer import EmanProtAutopick
+from protocol_autopick_sparx import SparxGaussianProtPicking
+from viewer import (EmanViewer, RefineEasyViewer,
+                    TiltValidateViewer, CtfViewer)
 from wizard import SparxGaussianPickerWizard
 _environ = getEnviron()
+
 
 def validateInstallation():
     """ This function will be used to check if package is properly installed."""

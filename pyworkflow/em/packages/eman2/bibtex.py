@@ -1,7 +1,7 @@
 # coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,7 +25,7 @@
 # *
 # **************************************************************************
 """
-Bibtex string file for Xmipp package.
+Bibtex string file for Eman package.
 """
 
 _bibtexStr = """

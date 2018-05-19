@@ -250,10 +250,11 @@ MDA workflow = [
 		{"tag": "protocol_base", "value": "SpiderProtClassify",   "text": "Classify", "openItem": true}
 	]}]
 Random Conical Tilt = [
-	{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "Import micrograph pairs", "icon": "bookmark.png"},
+	{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "Import micrograph pairs"},
+	{"tag": "protocol", "value": "ProtImportCoordinatesPairs", "text": "Import coordinate pairs"},
 	{"tag": "protocol", "value": "XmippProtParticlePickingPairs",  "text": "Picking micrograph pairs"},
 	{"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "Extract particle pairs"},
-	{"tag": "protocol", "value": "XmippProtRCT",                   "text": "Random Conical Tilt"}]
+	{"tag": "protocol", "value": "XmippProtRCT", "text": "Random Conical Tilt", "icon": "bookmark.png"}]
 HEMNMA = [
 	{"tag": "section", "text": "1. PDB structure", "children": [
 		{"tag": "protocol", "value": "ProtImportPdb", "text": " a. Import PDB", "icon": "bookmark.png"},

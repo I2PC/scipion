@@ -29,26 +29,26 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportCTF, ProtImportMicrographs
 
 
-
 class TestImportCTFs(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dsGrigorieff = DataSet.getDataSet('grigorieff')
+        cls.dsEman2 = DataSet.getDataSet('eman')
 
         # First, import a set of micrographs that will be used
         # from all ctf test cases
         cls.protImport = cls.newProtocol(ProtImportMicrographs,
-                                      filesPath=cls.dsXmipp.getFile('allMics'),
-                                      samplingRate=1.237, voltage=300)
+                                         filesPath=cls.dsXmipp.getFile('allMics'),
+                                         samplingRate=1.237, voltage=300)
         cls.launchProtocol(cls.protImport)
 
     def testImportCTFFromXmipp(self):
         protCTF = self.newProtocol(ProtImportCTF,
-                                 importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
-                                 filesPath=self.dsXmipp.getFile('ctfsDir'),
-                                 filesPattern='*.ctfparam')
+                                   importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
+                                   filesPath=self.dsXmipp.getFile('ctfsDir'),
+                                   filesPattern='*.ctfparam')
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import ctfs from xmipp ')
         self.launchProtocol(protCTF)
@@ -58,21 +58,21 @@ class TestImportCTFs(BaseTest):
 
     def testImportCtffind3(self):
         protCTF = self.newProtocol(ProtImportCTF,
-                                 importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                 filesPath=self.dsGrigorieff.getFile('ctffind3'),
-                                 filesPattern='BPV*/*txt')
+                                   importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                   filesPath=self.dsGrigorieff.getFile('ctffind3'),
+                                   filesPattern='BPV*/*txt')
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import from ctffind3')
         self.launchProtocol(protCTF)
 
         self.assertIsNotNone(protCTF.outputCTF,
                              "There was a problem when importing ctfs.")
-        
+
     def testImportCtffind4(self):
         protCTF = self.newProtocol(ProtImportCTF,
-                                 importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                 filesPath=self.dsGrigorieff.getFile('ctffind4'),
-                                 filesPattern='BPV*/*txt')
+                                   importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                   filesPath=self.dsGrigorieff.getFile('ctffind4'),
+                                   filesPattern='BPV*/*txt')
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import from ctffind4')
         self.launchProtocol(protCTF)
@@ -80,9 +80,8 @@ class TestImportCTFs(BaseTest):
         self.assertIsNotNone(protCTF.outputCTF,
                              "There was a problem when importing ctfs.")
 
-
     def testImportFromScipion(self):
-        ctfSqlite =  self.dsGrigorieff.getFile('ctffind3/ctfs.sqlite')
+        ctfSqlite = self.dsGrigorieff.getFile('ctffind3/ctfs.sqlite')
 
         protCTF = self.newProtocol(ProtImportCTF,
                                    objLabel='import from scipion',
@@ -134,12 +133,24 @@ class TestImportCTFs(BaseTest):
         self.launchProtocol(protImport2)
 
         protCTF2 = self.newProtocol(ProtImportCTF,
-                                   importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                   filesPath=ctfsPath,
-                                   filesPattern='mic*/*txt')
+                                    importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                    filesPath=ctfsPath,
+                                    filesPattern='mic*/*txt')
         protCTF2.inputMicrographs.set(protImport2.outputMicrographs)
         protCTF2.setObjLabel('import from ctffind3 - match')
         self.launchProtocol(protCTF2)
 
         # The whole set (3 items) should find its corresponding CTF
         self.assertEqual(protCTF2.outputCTF.getSize(), 3)
+
+    def testImportEman2(self):
+        protCTF = self.newProtocol(ProtImportCTF,
+                                   importFrom=ProtImportCTF.IMPORT_FROM_EMAN2,
+                                   filesPath=self.dsEman2.getFile('ctfs'),
+                                   filesPattern='BPV*json')
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.setObjLabel('import from eman2')
+        self.launchProtocol(protCTF)
+
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem when importing ctfs.")

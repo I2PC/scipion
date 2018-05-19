@@ -36,7 +36,6 @@ import eman2
 from convert import readSetOfCoordinates
 
 
-
 class SparxGaussianProtPicking(ProtParticlePickingAuto):
     """
     Protocol to pick particles automatically in a set of micrographs
@@ -45,13 +44,13 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
     """
     _label = 'sparx gaussian picker'
     _lastUpdateVersion = VERSION_1_1
-        
+
     def __init__(self, **kwargs):
         ProtParticlePickingAuto.__init__(self, **kwargs)
         self.extraParams = ('pixel_input=1:pixel_output=1:invert_contrast'
                             '=True:use_variance=True')
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtParticlePickingAuto._defineParams(self, form)
         form.addParam('boxSize', IntParam, default=100,
@@ -67,15 +66,15 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
                       label='Gauss Width',
                       help='Width of the Gaussian kernel used')
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ------------------------
     def _insertInitialSteps(self):
         initId = self._insertFunctionStep('initSparxDb',
-                                 self.lowerThreshold.get(),
-                                 self.higherThreshold.get(),
-                                 self.boxSize.get(), self.gaussWidth.get())
+                                          self.lowerThreshold.get(),
+                                          self.higherThreshold.get(),
+                                          self.boxSize.get(), self.gaussWidth.get())
         return [initId]
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -------------------------------
     def initSparxDb(self, lowerThreshold, higherThreshold, boxSize, gaussWidth):
         args = {"lowerThreshold": lowerThreshold,
                 "higherThreshold": higherThreshold,
@@ -92,18 +91,20 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         micFile = os.path.relpath(mic.getFileName(), self.getCoordsDir())
         params = ('--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s'
                   % (self.boxSize, micFile))
-        self.runJob('e2boxer.py', params, cwd=self.getCoordsDir())
+        program = eman2.getBoxerCommand(eman2.getVersion(), boxerVersion='old')
+
+        self.runJob(program, params, cwd=self.getCoordsDir())
 
     def createOutputStep(self):
         pass
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         eman2.validateVersion(self, errors)
         return errors
 
-    #--------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions -------------------------------
     def getCoordsDir(self):
         return self._getExtraPath()
 
@@ -113,4 +114,4 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
 
     def readCoordsFromMics(self, workingDir, micList, coordSet):
         coordSet.setBoxSize(self.boxSize.get())
-        readSetOfCoordinates(workingDir, micList, coordSet)
+        readSetOfCoordinates(workingDir, micList, coordSet, newBoxer=False)

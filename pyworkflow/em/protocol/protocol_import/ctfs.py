@@ -31,7 +31,6 @@ from pyworkflow.utils.path import removeBaseExt
 from base import ProtImportFiles
 
 
-
 class ProtImportCTF(ProtImportFiles):
     """Common protocol to import a set of ctfs into the project"""
     # This label should be set in subclasses
@@ -43,9 +42,10 @@ class ProtImportCTF(ProtImportFiles):
     IMPORT_FROM_XMIPP3 = 1
     IMPORT_FROM_GRIGORIEFF = 2
     IMPORT_FROM_GCTF = 3
-    IMPORT_FROM_SCIPION = 4
+    IMPORT_FROM_EMAN2 = 4
+    IMPORT_FROM_SCIPION = 5
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ------------------------
 
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters.
@@ -61,10 +61,10 @@ class ProtImportCTF(ProtImportFiles):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp', 'grigorieff', 'gctf', 'scipion']
+        return ['auto', 'xmipp', 'grigorieff', 'gctf', 'eman2', 'scipion']
 
     def _getDefaultChoice(self):
-        return  self.IMPORT_FROM_AUTO
+        return self.IMPORT_FROM_AUTO
 
     def _getFilesCondition(self):
         """ Return an string representing the condition
@@ -73,11 +73,10 @@ class ProtImportCTF(ProtImportFiles):
         """
         return True
 
-    #--------------------------- INSERT functions ------------------------------
+    # --------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         self._insertFunctionStep('importCTFStep', importFrom)
-
 
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
@@ -95,13 +94,16 @@ class ProtImportCTF(ProtImportFiles):
         elif importFrom == self.IMPORT_FROM_GCTF:
             from pyworkflow.em.packages.gctf.dataimport import GctfImportCTF
             return GctfImportCTF(self)
+        elif importFrom == self.IMPORT_FROM_EMAN2:
+            from pyworkflow.em.packages.eman2.dataimport import EmanImport
+            return EmanImport(self, None)
         elif importFrom == self.IMPORT_FROM_SCIPION:
             from dataimport import ScipionImport
             return ScipionImport(self, self.filesPath.get('').strip())
         else:
             return None
-        
-    #--------------------------- STEPS functions -------------------------------
+
+    # --------------------------- STEPS functions -------------------------------
     def importCTFStep(self, importFrom):
         """ Copy ctfs matching the filename pattern. """
         ci = self.getImportClass()
@@ -114,7 +116,7 @@ class ProtImportCTF(ProtImportFiles):
         SetOfMicrographs.copyInfo(outputMics, inputMics)
 
         createOutputMics = False
-        
+
         files = [f for f, _ in self.iterFiles()]
         n = len(files)
         if n == 0:
@@ -154,10 +156,11 @@ class ProtImportCTF(ProtImportFiles):
             else:
                 for fileName, fileId in self.iterFiles():
                     if (fileId == mic.getObjId() or
-                                micBase in fileName or micName in fileName):
+                            micBase in fileName or micName in fileName):
                         return ci.importCTF(mic, fileName)
 
             return None
+
         # Check if the CTF import class has a method to retrieve the CTF
         # from a given micrograph. If not, we will try to associated based
         # on matching the filename or id
@@ -183,8 +186,8 @@ class ProtImportCTF(ProtImportFiles):
         else:
             self._defineCtfRelation(inputMics, ctfSet)
 
-    #--------------------------- INFO functions --------------------------------
-    
+    # --------------------------- INFO functions --------------------------------
+
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputCTF'):
@@ -198,12 +201,12 @@ class ProtImportCTF(ProtImportFiles):
             summary.append("from %s" % self.getPattern())
 
         return summary
-    
+
     def _methods(self):
         methods = []
 
         return methods
-    
+
     def _validate(self):
         errors = []
         files = [f for f, _ in self.iterFiles()]
@@ -211,18 +214,16 @@ class ProtImportCTF(ProtImportFiles):
             errors.append("No files where found in path: '%s'\n"
                           "matching the pattern: '%s'" % (self.filesPath, self.filesPattern))
         return errors
-    
-    #--------------------------- UTILS functions -------------------------------
+
+    # --------------------------- UTILS functions -------------------------------
     def getFormat(self):
         for fileName, _ in self.iterFiles():
-            if (fileName.endswith('.log') or 
-                fileName.endswith('.txt') or
-                fileName.endswith('.out')):
+            if (fileName.endswith('.log') or
+                    fileName.endswith('.txt') or
+                    fileName.endswith('.out')):
                 return self.IMPORT_FROM_GRIGORIEFF
             if fileName.endswith('.ctfparam'):
                 return self.IMPORT_FROM_XMIPP3
+            if fileName.endswith('.json'):
+                return self.IMPORT_FROM_EMAN2
         return -1
-
-
-
-
