@@ -466,6 +466,7 @@ eof
         first, _ = self._getFrameRange(movie.getNumberOfFrames(), 'align')
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY, first)
         plotter.savefig(self._getPlotGlobal(movie))
+        plotter.close()
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
     """ Create a plotter with the shift per frame. """

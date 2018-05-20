@@ -193,6 +193,7 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         
         plotFile = join(self.plotsDir, 'spectra_%s%06d.png' % (label, objId))
         plotter.savefig(plotFile)
+        plotter.close()
         
         return plotFile
         
