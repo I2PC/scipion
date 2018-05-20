@@ -227,6 +227,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
         meanX, meanY = self._loadMeanShifts(movie)
         plotter = createAlignmentPlot(meanX, meanY)
         plotter.savefig(self._getPlotCart(movie))
+        plotter.close()
 
     def _setAlignmentInfo(self, movie, obj):
         """ Set alignment info such as plot and psd filename, and

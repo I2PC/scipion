@@ -353,6 +353,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         meanX, meanY = self._loadMeanShifts(movie)
         plotter = createAlignmentPlot(meanX, meanY)
         plotter.savefig(self._getPlotCart(movie))
+        plotter.close()
 
     def _createOutputMicrographs(self):
         createWeighted = self._createOutputWeightedMicrographs()
