@@ -377,8 +377,8 @@ env.addPackage('unblur', version='1.0.2',
 eman2_commands = [('./eman2-installer',
                    'eman2.*rc')]
 
-eman22_commands = [('bash ./eman2.21.linux64.centos7.sh -b -p "%s/eman2.21.linux64.centos7"' %
-                    SW_EM, 'bin/python')]
+eman22_commands = [('./eman2.21.linux64.centos7.sh -b -p "%s/eman-2.21"' %
+                    SW_EM, '%s/eman-2.21/bin/python' % SW_EM)]
 
 env.addPackage('eman', version='2.11',
                tar='eman2.11.linux64.tgz',
@@ -390,10 +390,7 @@ env.addPackage('eman', version='2.12',
 
 env.addPackage('eman', version='2.21',
                tar='eman2.21.linux64.centos7.tgz',
-               buildDir='%s' % SW_EM,
-               targetDir='eman2.21.linux64.centos7',
-               commands=eman22_commands,
-               neededProgs=['bash'])
+               commands=eman22_commands)
 
 env.addPackage('frealign', version='9.07',
                tar='frealign_v9.07.tgz')
