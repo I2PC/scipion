@@ -1081,14 +1081,16 @@ class TestXmippValidateNonTilt(TestXmippBase):
         self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
         
         print "Run Validate Non-Tilt significant"
-        protValidate = self.newProtocol(XmippProtValidateNonTilt)
+        protValidate = self.newProtocol(XmippProtValidateNonTilt,
+                                        objLabel='validate non-tilt Significant CPU')
         protValidate.inputParticles.set(protSubset.outputParticles)
         protValidate.inputVolumes.set(protImportVol.outputVolume)
         self.launchProtocol(protValidate)
         self.assertIsNotNone(protValidate.outputVolumes, "There was a problem with Validate Non-Tilt")
 
         print "Run Validate Non-Tilt significant with GPU"
-        protValidate = self.newProtocol(XmippProtValidateNonTilt)
+        protValidate = self.newProtocol(XmippProtValidateNonTilt,
+                                        objLabel='validate non-tilt Significant GPU')
         protValidate.inputParticles.set(protSubset.outputParticles)
         protValidate.inputVolumes.set(protImportVol.outputVolume)
         protValidate.useGPU.set(True)
@@ -1097,7 +1099,8 @@ class TestXmippValidateNonTilt(TestXmippBase):
                              "There was a problem with Validate Non-Tilt GPU")
         
         print "Run Validate Non-Tilt projection matching"
-        protValidate = self.newProtocol(XmippProtValidateNonTilt, alignmentMethod=1)
+        protValidate = self.newProtocol(XmippProtValidateNonTilt, alignmentMethod=1,
+                                        objLabel='validate non-tilt projection matching')
         protValidate.inputParticles.set(protSubset.outputParticles)
         protValidate.inputVolumes.set(protImportVol.outputVolume)
         self.launchProtocol(protValidate)

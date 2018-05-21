@@ -568,7 +568,8 @@ int check_gpu_memory(size_t Xdim, size_t Ydim, int percent){
 
 
 void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float> &matrixCorrCpu_mirror, MultidimArray<float> &corrTotalRow,
-		MultidimArray<float> &weights, int Nref, size_t mdExpSize, size_t mdInSize, MultidimArray<float> &weightsMax, bool simplifiedMd){
+		MultidimArray<float> &weights, int Nref, size_t mdExpSize, size_t mdInSize, MultidimArray<float> &weightsMax, bool simplifiedMd,
+		MultidimArray<float> *matrixTransCpu, MultidimArray<float> *matrixTransCpu_mirror, int maxShift){
 
 	MultidimArray<float> colAux;
 	for(int i=0; i<2*mdInSize; i++){
@@ -656,6 +657,12 @@ void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float>
 	MultidimArray<float> rowWeights;
 	MultidimArray<int> rowIndexOrderWeights;
 	MultidimArray<int> weightsOrderByRowIndex(1,1,mdExpSize, 2*mdInSize);
+	int howManyInMd=0;
+	bool flip;
+	double maxShift2 = maxShift*maxShift;
+	Matrix2D<double> bestM(3,3);
+	MultidimArray<float> out2(3,3);
+
 	for (size_t i=0; i<mdExpSize; i++){
 		weights.getRow(i, rowWeights);
 		rowWeights.indexSort(rowIndexOrderWeights);
@@ -663,16 +670,56 @@ void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float>
 	}
 	weightsOrderByRowIndex.selfReverseX();
 	for(int i=0; i<mdExpSize; i++){
-		int idxMax = DIRECT_A2D_ELEM(weightsOrderByRowIndex,i,0)-1;
-		for(int j=Nref; j<2*mdInSize; j++){
+		howManyInMd=0;
+
+		for(int j=0; j<2*mdInSize; j++){
 			int idx = DIRECT_A2D_ELEM(weightsOrderByRowIndex,i,j)-1;
-			DIRECT_A2D_ELEM(weights, i, idx) = 0;
+
+			if(simplifiedMd && howManyInMd==1){
+				DIRECT_A2D_ELEM(weights, i, idx) = 0;
+				continue;
+			}
+
+			if(!simplifiedMd && howManyInMd==Nref){
+				DIRECT_A2D_ELEM(weights, i, idx) = 0;
+				continue;
+			}
+
+			if(idx<mdInSize){
+				flip = false;
+				matrixTransCpu[idx].getSlice(i, out2);
+			}else{
+				flip = true;
+				matrixTransCpu_mirror[idx-mdInSize].getSlice(i, out2);
+			}
+			MAT_ELEM(bestM,0,0) = DIRECT_A2D_ELEM(out2,0,0);
+			MAT_ELEM(bestM,0,1)=DIRECT_A2D_ELEM(out2,0,1);
+			MAT_ELEM(bestM,0,2)=DIRECT_A2D_ELEM(out2,0,2);
+
+			MAT_ELEM(bestM,1,0)=DIRECT_A2D_ELEM(out2,1,0);
+			MAT_ELEM(bestM,1,1)=DIRECT_A2D_ELEM(out2,1,1);
+			MAT_ELEM(bestM,1,2)=DIRECT_A2D_ELEM(out2,1,2);
+
+			MAT_ELEM(bestM,2,0)=0.0;
+			MAT_ELEM(bestM,2,1)=0.0;
+			MAT_ELEM(bestM,2,2)=1.0;
+			bestM = bestM.inv();
+
+			double shiftX = MAT_ELEM(bestM,0,2);
+			double shiftY = MAT_ELEM(bestM,1,2);
+			if (shiftX*shiftX + shiftY*shiftY > maxShift2){
+				DIRECT_A2D_ELEM(weights, i, idx) = 0;
+			}
+			else{
+				howManyInMd++;
+			}
+
 		}
 	}
 	//END AJ
 
 
-	//AJ new to store the maximum weight for every exp image
+	/*/AJ new to store the maximum weight for every exp image
 	if(simplifiedMd && Nref>1){
 		weightsMax.resize(mdExpSize);
 		for(int i=0; i<mdInSize; i++){
@@ -688,7 +735,7 @@ void calculate_weights(MultidimArray<float> &matrixCorrCpu, MultidimArray<float>
 			}
 		}
 	}
-	//END AJ
+	//END AJ/*/
 
 }
 
@@ -730,7 +777,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 
 			if(DIRECT_A2D_ELEM(weights,i,j)!=0){
 
-				//AJ new to store the maximum weight for every exp image
+				/*/AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,i,j)!=DIRECT_A1D_ELEM(weightsMax,i)){
 						if(iter->hasNext())
@@ -738,7 +785,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 						continue;
 					}
 				}
-				//END AJ
+				//END AJ/*/
 
 				if(j<mdInSize){
 					flip = false;
@@ -926,12 +973,12 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 			if(DIRECT_A2D_ELEM(weights,j,i)!=0){
 
-				//AJ new to store the maximum weight for every exp image
+				/*/AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ
+				//END AJ/*/
 
 				if(!skip_image){
 					matrixTransCpu[i].getSlice(j, auxtr); //matrixTransCpu[j].getSlice(i, auxtr);
@@ -992,12 +1039,12 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			skip_image=false;
 			if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
 
-				//AJ new to store the maximum weight for every exp image
+				/*/AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ
+				//END AJ/*/
 
 				if(!skip_image){
 					matrixTransCpu_mirror[i].getSlice(j, auxtr); //matrixTransCpu_mirror[j].getSlice(i, auxtr);
@@ -1148,12 +1195,12 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 			if(DIRECT_A2D_ELEM(weights,j,i)!=0){
 
-				//AJ new to store the maximum weight for every exp image
+				/*/AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,j,i)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ
+				//END AJ/*/
 
 				if(!skip_image){
 					matrixTransCpu[i].getSlice(j, out2); //matrixTransCpu[j].getSlice(i, out2);
@@ -1227,12 +1274,12 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 			skip_image=false;
 			if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=0){
 
-				//AJ new to store the maximum weight for every exp image
+				/*/AJ new to store the maximum weight for every exp image
 				if(simplifiedMd && Nref>1){
 					if(DIRECT_A2D_ELEM(weights,j,i+mdInSize)!=DIRECT_A1D_ELEM(weightsMax,j))
 						skip_image=true;
 				}
-				//END AJ
+				//END AJ/*/
 
 				if(!skip_image){
 					matrixTransCpu_mirror[i].getSlice(j, out2); //matrixTransCpu_mirror[j].getSlice(i, out2);
@@ -1693,7 +1740,8 @@ void ProgGpuCorrelation::run()
 			Nref=1;
 	}
 
-	calculate_weights(matrixCorrCpu, matrixCorrCpu_mirror, corrTotalRow, weights, Nref, mdExpSize, mdInSize, weightsMax, simplifiedMd);
+	calculate_weights(matrixCorrCpu, matrixCorrCpu_mirror, corrTotalRow, weights, Nref, mdExpSize, mdInSize, weightsMax, simplifiedMd,
+			matrixTransCpu, matrixTransCpu_mirror, maxShift);
 
 	std::cerr << "Creating output metadatas..." << std::endl;
 
