@@ -57,6 +57,7 @@ void ProgValidationTiltPairs::readParams()
 void ProgValidationTiltPairs::quaternion2Paulibasis(double rot, double tilt, double psi, std::complex<double> (&L)[4])
 {
 	double cr, ct, cp, sr, st, sp;
+	std::complex<double> I(0,1);
 
 	cr = cos(rot/2);
 	ct = cos(tilt/2);
@@ -66,9 +67,9 @@ void ProgValidationTiltPairs::quaternion2Paulibasis(double rot, double tilt, dou
 	sp = sin(psi/2);
 
 	L[0] = cr*ct*cp - sr*ct*sp;
-	L[1] = 1i*(sr*st*cp - cr*st*sp);
-	L[2] = 1i*(cr*st*cp + sr*st*sp);
-	L[3] = 1i*(sr*ct*cp+cr*ct*sp);
+	L[1] = I*(sr*st*cp - cr*st*sp);
+	L[2] = I*(cr*st*cp + sr*st*sp);
+	L[3] = I*(sr*ct*cp+cr*ct*sp);
 }
 
 
@@ -77,7 +78,7 @@ void ProgValidationTiltPairs::matrix2Paulibasis(std::complex<double> M[4],
 {
 	//M[0] = m11; M[1]=m12; M[2]=m21; M[3]=m22
 
-	std::complex<double> I=1i;
+	std::complex<double> I(0,1);
 	std::complex<double> aux=0.5;
 	P[0]=(M[0]+M[3])*aux;
 	P[1]=(M[1]+M[2])*aux;
@@ -125,7 +126,7 @@ void ProgValidationTiltPairs::inverse_matrixSU2(std::complex<double> Original[4]
 
 void ProgValidationTiltPairs::Paulibasis2matrix(std::complex<double> P[4], std::complex<double> (&M)[4])
 {
-	std::complex<double> I=1i;
+	std::complex<double> I(0,1);
 	M[0] = (P[0]+P[3]);
 	M[1] = (P[1]-I*P[2]);
 	M[2] = (P[1]+I*P[2]);
@@ -150,7 +151,7 @@ void ProgValidationTiltPairs::Pauliproduct(std::complex<double> A[4], std::compl
 
 void ProgValidationTiltPairs::extrarotationangles(std::complex<double> R[4], double &alpha_x, double &alpha_y)
 {
-	std::complex<double> I=1i;
+	std::complex<double> I(0,1);
 	std::complex<double> aux1 = I*R[1]/R[0],  aux2 = I*R[2]/R[0], alpha_aux_x, alpha_aux_y;
 
 	if ((aux1.imag() == 0) && (aux2.imag() == 0))
