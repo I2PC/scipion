@@ -87,7 +87,7 @@ CC = gcc
 CXX = g++
 LINKERFORPROGRAMS = g++
 CCFLAGS = -std=c99
-CXXFLAGS = 
+CXXFLAGS = -std=c++11
 LINKFLAGS = 
 
 # MPI variables
