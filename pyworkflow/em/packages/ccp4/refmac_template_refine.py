@@ -39,8 +39,8 @@ template_refine="""#!/bin/sh
 # The radius is given in Angstrom and is can be user-defined (SFCALC MRAD 3). 
 #
 
-# set generateMaskedVolume to True if you want to see the mask using chimera
-generateMaskedVolume=%(MASKED_VOLUME)s
+# 3D map
+MAPFILE=%(MAPFILE)s
 
 # PDB molecule without extension or path just the basename
 MOL=%(PDBFILE)s
@@ -53,8 +53,8 @@ OUTPUTDIR=%(OUTPUTDIR)s
 # CCP4 PATH
 PATHCCP4=%(CCP4_HOME)s
 
-PATHMRCENV=$PATHCCP4/setup-scripts/ccp4.setup-sh
 PATHMRCBIN=$PATHCCP4/bin
+PATHMRCENV=$PATHMRCBIN/ccp4.setup-sh
 . $PATHMRCENV
 
 #refmac binary
@@ -65,54 +65,43 @@ refmac=%(REFMAC_BIN)s
 
 # refine the structure
 
-$refmac HKLIN ${OUTPUTDIR}_masked_fs.mtz \\
-        HKLOUT ${OUTPUTDIR}refmac-refined.mtz \\
-        XYZIN  ${OUTPUTDIR}refmac-mask.pdb \\
+$refmac HKLIN ${OUTPUTDIR}map2mtz.mtz \\
+        XYZIN  ${OUTPUTDIR}pdbset.pdb \\
         XYZOUT ${OUTPUTDIR}refmac-refined.pdb\\
-        atomsf ${PATHCCP4}/bin/atomsf_electron.lib \\
+        atomsf ${PATHCCP4}/lib/data/atomsf_electron.lib \\
         > ${OUTPUTDIR}refine.log <<EOF  
 
 LABIN FP=Fout0 PHIB=Pout0
 
 # set resolution limits. The FSC=0.143 cutoff is recommended. 
-RESO = (%(RESOMIN)f  %(RESOMAX)f)
+RESO = %(RESOMIN)f  %(RESOMAX)f
 
 # set B-factors at prior to refinement:
 BFACTOR_SET=%(BFACTOR_SET)s
-
-# specify map sharpening to be used during refinement:
-REFI_SHARPEN=%(REFI_SHARPEN)s
 
 # specify number of refinement cycles:
 NCYCLE = %(NCYCLE)d
 
 # set refinement weight:
-WEIGHT MATRIX = %(WEIGHT MATRIX)f
+WEIGHT MATRIX = %(WEIGHT MATRIX)s
 
 #specify any other keyword:
 ##MAKE CISP NO
 ##MAKE SS NO
-#MAKE HYDR N #remove to use hydrogens
+MAKE HYDR NO #remove to use hydrogens
+SOLVENT NO
 
-source em 
-#pdbout format mmcif #remove to output mmcif
-@shifts.txt
-
+source EM MB
 
 ###specify external restraints below###
 
-EXTERNAL USE MAIN
-EXTERNAL DMAX 4.2
-EXTERNAL WEIGHT SCALE 5
-EXTERNAL WEIGHT GMWT 0.1
-@external.restraints
+ridge dist sigma 0.01
+ridge dist dmax 4.2
 
-MONI DIST 1000000
 END
 EOF
-          echo Output ${OUTPUTDIR}refmac-refined.pdb  
-          #fi
-          #cd - 
+          echo Output ${OUTPUTDIR}refmac-refined.pdb 
+
       #fi
 #done
 """

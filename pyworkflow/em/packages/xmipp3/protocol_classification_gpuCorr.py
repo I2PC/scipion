@@ -41,7 +41,7 @@ from pyworkflow.em import SetOfClasses2D, ALIGN_2D, ALIGN_NONE
 
 class XmippProtGpuCrrCL2D(ProtAlign2D):
     """ 2D alignment using Xmipp GPU Correlation algorithm. """
-    _label = 'align with GPU Correlation'
+    _label = 'gl2d'
 
 
     # --------------------------- DEFINE param functions -----------------------
