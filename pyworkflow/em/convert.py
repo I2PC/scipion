@@ -495,7 +495,7 @@ def __downloadPdb(pdbId, pdbGz, log):
         
     return success
 
-# TODO unzip may go to utilities, indeed
+# TODO unzip may go to utilities
 def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
     """
     Unzip a pdb file.
