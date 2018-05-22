@@ -123,5 +123,8 @@ DEBUG = False
 MATLAB = False
 OPENCV = True
 
+# two version of opencv are allowed: 2.4.13 (Ubuntu <=16), 3.4.1 (Ubuntu >16)
+OPENCV_VER = 2.4.13
+
 # This variable is needed to set openGL library to work with remote desktops
 REMOTE_MESA_LIB = /services/guacamole/usr/mesa/lib/

@@ -251,19 +251,28 @@ if get('CUDA'):
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
 else:
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
-opencvFlags.append('-DCMAKE_INSTALL_PREFIX=' + env.getSoftware())
 
-opencv = env.addLibrary(
-    'opencv',
-    tar='opencv-3.4.1.tgz',
-    targets=[env.getLib('opencv_core')],
-    flags=opencvFlags,
-    # cmake=True,  # the instalation protocol have changed (e.g. mkdir build)
-    commands=[('cd ' + SW_TMP + '/opencv-3.4.1; mkdir build; cd build; '
-               'cmake ' + ' '.join(opencvFlags) + ' .. ; '
-               'make -j ' + str(env.getProcessors()) + '; '
-               'make install', SW_LIB +'/libopencv_core.so')],
-    default=not noOpencv)
+if os.environ.get('OPENCV_VER') == '3.4.1':
+    opencvFlags.append('-DCMAKE_INSTALL_PREFIX=' + env.getSoftware())
+    opencv = env.addLibrary(
+        'opencv',
+        tar='opencv-3.4.1.tgz',
+        targets=[env.getLib('opencv_core')],
+        flags=opencvFlags,
+        # cmake=True,  # the instalation protocol have changed (e.g. mkdir build)
+        commands=[('cd ' + SW_TMP + '/opencv-3.4.1; mkdir build; cd build; '
+                   'cmake ' + ' '.join(opencvFlags) + ' .. ; '
+                   'make -j ' + str(env.getProcessors()) + '; '
+                   'make install', SW_LIB +'/libopencv_core.so')],
+        default=not noOpencv)
+else:
+    opencv = env.addLibrary(
+        'opencv',
+        tar='opencv-2.4.13.tgz',
+        targets=[env.getLib('opencv_core')],
+        flags=opencvFlags,
+        cmake=True,
+        default=not noOpencv)
 
 # ---------- Libraries required by PyTom 
 
