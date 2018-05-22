@@ -124,8 +124,9 @@ class DataView(View):
             showj.ZOOM,
             showj.ORDER,
             showj.RENDER,
-            showj.SORT_BY}
-
+            showj.SORT_BY
+        }
+        
         params = {}
 
         for key, value in self._viewParams.items():
@@ -299,6 +300,8 @@ class CoordinatesObjectView(DataView):
         self.protocol = protocol
         self.pickerProps = pickerProps
         self.inTmpFolder = inTmpFolder
+        self.mode = kwargs.get('mode', None)
+
         self.mode = kwargs.get('mode', None)
 
     def show(self):

@@ -41,9 +41,8 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-# Update this values before any new release
-__version__ = DEVEL
-__nickname__ = DEVEL
+__version__ = ''
+__nickname__ = ''
 __releasedate__ = ''
 
 
