@@ -322,7 +322,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					condition=condition && cdfccthis>=one_alpha;
 					if (condition)
 					{
-//						std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
+						// std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
 						if (useForValidation && dontCheckMirrors)

@@ -90,7 +90,7 @@ class ChimeraViewerBase(Viewer):
             if _showVol.hasOrigin():
                 x, y, z = _showVol.getOrigin().getShifts()
             else:
-                x, y, z = outputVol.getOrigin(force=True).getShifts()
+                x, y, z = _showVol.getOrigin(force=True).getShifts()
 
             f.write("volume #1 style surface voxelSize %f origin "
                     "%0.2f,%0.2f,%0.2f\n"
