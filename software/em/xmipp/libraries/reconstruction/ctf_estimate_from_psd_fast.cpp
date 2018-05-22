@@ -375,7 +375,7 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
     if (show_inf >= 2)
         std::cout << "Model:\n" << current_ctfmodel << std::endl;
     if (!current_ctfmodel.hasPhysicalMeaning())
-    {//std::cout << current_ctfmodel << std::endl;
+    {
         if (show_inf >= 2)
             std::cout << "Does not have physical meaning\n";
         return heavy_penalization;
@@ -392,11 +392,8 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
     {
         // If there is an initial model, the true solution
         // cannot be too far
-    	//std::cout << "idef =" << initial_ctfmodel.Defocus << std::endl;
-    	//std::cout << "cdef =" << current_ctfmodel.Defocus << std::endl;
         if (fabs(initial_ctfmodel.Defocus - current_ctfmodel.Defocus) > defocus_range)
         {
-        	//std::cout << "Entra" << std::endl;
             if (show_inf >= 2)
             {
                 std::cout << "Too far from hint: Initial (" << initial_ctfmodel.Defocus << ")"
@@ -408,7 +405,7 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
     }
     if ((initial_ctfmodel.phase_shift != 0.0 || initial_ctfmodel.phase_shift != 1.57079) && action >= 5)
     {
-    	if (fabs(initial_ctfmodel.phase_shift - current_ctfmodel.phase_shift) > 0.05)
+    	if (fabs(initial_ctfmodel.phase_shift - current_ctfmodel.phase_shift) > 0.26)
     	{
     		return heavy_penalization;
     	}
@@ -437,37 +434,6 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 
 		double envelope=0, ctf_without_damping, ctf_with_damping=0, current_envelope = 0;
 		double ctf2_th=0;
-		switch (action)
-		{
-		case 0:
-		case 1:
-			ctf2_th = bg;
-			break;
-		case 2:
-			envelope = current_ctfmodel.getValueDampingAt();
-			ctf2_th = bg + envelope * envelope;
-			break;
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-		case 7:
-			envelope = current_ctfmodel.getValueDampingAt();
-			//std::cout<<"Llega" << std::endl;
-			//std::cout << action << std::endl;
-			/*if(action==5)
-			{std::cout << "Entra1" << std::endl;
-				ctf_without_damping = current_ctfmodel.getValuePureWithoutDampingAt(true);
-			}
-			else*/
-			ctf_without_damping = current_ctfmodel.getValuePureWithoutDampingAt();
-
-			ctf_with_damping = envelope * ctf_without_damping;
-			ctf2_th = bg + ctf_with_damping * ctf_with_damping;
-			break;
-
-		}
-		// Compute distance
 		double ctf2 = DIRECT_A1D_ELEM(psd_exp_radial, i);
 		double dist = 0;
 		double ctf_with_damping2;
@@ -475,13 +441,14 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 		{
 		case 0:
 		case 1:
+			ctf2_th = bg;
 			dist = fabs(ctf2 - bg);
 			if (penalize && bg > ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
 				dist *= current_penalty;
-			/*if (penalize && bg < ctf2 && DIRECT_A1D_ELEM(w_digfreq, i) > max_gauss_freq)
-				dist *= 5;*/
 			break;
 		case 2:
+			envelope = current_ctfmodel.getValueDampingAt();
+			ctf2_th = bg + envelope * envelope;
 			dist = fabs(ctf2 - ctf2_th);
 			if (penalize && ctf2_th < ctf2 && DIRECT_A1D_ELEM(w_digfreq, i)	> max_gauss_freq)
 				dist *= current_penalty;
@@ -491,8 +458,14 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 		case 5:
 		case 6:
 		case 7:
+			envelope = current_ctfmodel.getValueDampingAt();
+			ctf_without_damping = current_ctfmodel.getValuePureWithoutDampingAt();
+
+			ctf_with_damping = envelope * ctf_without_damping;
+			ctf2_th = bg + ctf_with_damping * ctf_with_damping;
+
 			if (DIRECT_A1D_ELEM(w_digfreq,i) < upperLimit
-				&& DIRECT_A1D_ELEM(w_digfreq,i) > lowerLimit)
+							&& DIRECT_A1D_ELEM(w_digfreq,i) > lowerLimit)
 			{
 				if  (action == 3 ||
 					 (action == 4 && DIRECT_A1D_ELEM(mask_between_zeroes,i) == 1) ||
@@ -528,7 +501,9 @@ double ProgCTFEstimateFromPSDFast::CTF_fitness_object_fast(double *p)
 			//   ------- - ------- = -------
 			//    env^2     env^2     env^2
 			break;
+
 		}
+
 		distsum += dist * DIRECT_A1D_ELEM(mask,i);
 		N++;
 	}
@@ -1438,7 +1413,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 						prm2D, 0.01, fitness, iter, steps, prm2D->show_optimization);
 
 	prm2D->current_ctfmodel.forcePhysicalMeaning();
-
 	//We adopt that always  DeltafU > DeltafV so if this is not the case we change the values and the angle
 	if ( prm2D->current_ctfmodel.DeltafV > prm2D->current_ctfmodel.DeltafU)
 	{
@@ -1510,6 +1484,8 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 		prm2D->current_ctfmodel.Tm /= prm2D->downsampleFactor;
 		prm2D->current_ctfmodel.azimuthal_angle = std::fmod(prm2D->current_ctfmodel.azimuthal_angle,360.);
 		prm2D->current_ctfmodel.phase_shift = (prm2D->current_ctfmodel.phase_shift*180)/3.14;
+		if(prm2D->current_ctfmodel.phase_shift<0.0)
+			prm2D->current_ctfmodel.phase_shift = 0.0;
 		prm2D->current_ctfmodel.write(fn_rootCTFPARAM + ".ctfparam_tmp");
 		MetaData MD;
 		MD.read(fn_rootCTFPARAM + ".ctfparam_tmp");

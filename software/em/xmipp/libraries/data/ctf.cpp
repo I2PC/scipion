@@ -537,7 +537,10 @@ void CTFDescription1D::readParams(XmippProgram * program)
 	if (program->checkParam("--Q0"))
 		Q0=program->getDoubleParam("--Q0");
 	if (program->checkParam("--phase_shift"))
+	{
 		phase_shift=program->getDoubleParam("--phase_shift");
+		phase_shift=(phase_shift*PI)/180;
+	}
 	else
 		phase_shift = 0.0;
 	if (program->checkParam("--VPP_radius"))
@@ -600,7 +603,7 @@ std::ostream & operator << (std::ostream &out, const CTFDescription1D &ctf)
 
 
 /* Default values ---------------------------------------------------------- */
-void CTFDescription1D::clear()  // Esta parte es nueva
+void CTFDescription1D::clear()
 {
 	enable_CTF = true;
 	enable_CTFnoise = false;
@@ -897,7 +900,7 @@ bool CTFDescription1D::hasPhysicalMeaning()
             espr >= 0    && espr <= 20      &&
             ispr >= 0    && ispr <= 20      &&
             Cs >= 0      && Cs <= 20        &&
-            Ca >= 0      && Ca <= 3         &&
+            Ca >= 0      && Ca <= 7         &&
             alpha >= 0   && alpha <= 5      &&
             DeltaF >= 0  && DeltaF <= 1000  &&
             DeltaR >= 0  && DeltaR <= 100   &&
@@ -1117,14 +1120,14 @@ void CTFDescription1D::forcePhysicalMeaning()
             if (Gc2*Tm < 0.01)
                 Gc2 = 0.011 / Tm;
         }
-        if (phase_shift > 3.14) //Normalize phase shift between 0-PI
+        if (phase_shift > PI || phase_shift < -PI) //Normalize phase shift between 0-PI
         {
-        	phase_shift = phase_shift - floor(phase_shift/3.14)*3.14;
+        	phase_shift = realWRAP(phase_shift,-PI,PI);//phase_shift - floor(phase_shift/3.14)*3.14;
         }
-        if (phase_shift < 0)
+        /*if (phase_shift < 0)
         {
         	phase_shift = -(phase_shift - ceil(phase_shift/3.14)*3.14);//3.14 + phase_shift - ceil(phase_shift/3.14)*3.14;
-        }
+        }*/
     }
 }
 #undef DEBUG
@@ -1587,8 +1590,8 @@ bool CTFDescription::hasPhysicalMeaning()
             espr >= 0    && espr <= 20      &&
             ispr >= 0    && ispr <= 20      &&
             Cs >= 0      && Cs <= 20        &&
-            Ca >= 0      && Ca <= 3         &&
-            alpha >= 0   && alpha <= 5      &&
+            Ca >= 0      && Ca <= 7         &&
+            alpha >= 0   && alpha <= 9      &&
             DeltaF >= 0  && DeltaF <= 1000  &&
             DeltaR >= 0  && DeltaR <= 100   &&
             Q0 >= 0      && Q0 <= 0.40      &&
@@ -1604,7 +1607,7 @@ bool CTFDescription::hasPhysicalMeaning()
             << "espr>=0    && espr<=20      " << (espr >= 0    && espr <= 20)     << std::endl
             << "ispr>=0    && ispr<=20      " << (ispr >= 0    && ispr <= 20)     << std::endl
             << "Cs>=0      && Cs<=20        " << (Cs >= 0      && Cs <= 20)       << std::endl
-            << "Ca>=0      && Ca<=3         " << (Ca >= 0      && Ca <= 3)        << std::endl
+            << "Ca>=0      && Ca<=3         " << (Ca >= 0      && Ca <= 7)        << std::endl
             << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << std::endl
             << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << std::endl
             << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
@@ -1641,7 +1644,7 @@ bool CTFDescription::hasPhysicalMeaning()
             gaussian_angle >= 0  && gaussian_angle <= 90  &&
             sqrt_angle >= 0      && sqrt_angle <= 90      &&
             gaussian_angle2 >= 0 && gaussian_angle2 <= 90 &&
-			phase_shift >= 0.0   && phase_shift <= 3.14
+			phase_shift >= -PI   && phase_shift <= PI
             ;
         if (min_sigma > 0)
             retval2 = retval2 && ABS(sigmaU - sigmaV) / min_sigma <= 3;
@@ -1697,7 +1700,6 @@ bool CTFDescription::hasPhysicalMeaning()
 #ifdef DEBUG
 
 #endif
-
     return retval && retval2;
 }
 #undef DEBUG

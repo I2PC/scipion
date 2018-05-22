@@ -55,11 +55,11 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
     _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
-                  "ctfCritFirstMinFirstZeroRatio>10 AND "
-                  "ctfCritFirstMinFirstZeroRatio!=1000 OR "
-                  "ctfCritNonAstigmaticValidty<0 OR ctfCritFitting>1 OR " 
+                  "ctfCritFirstMinFirstZeroRatio>12 AND "
+                  "ctfCritFirstMinFirstZeroRatio!=1000 OR ctfCritCorr13==0 OR "
+                  "ctfCritNonAstigmaticValidty<=0 OR ctfVPPphaseshift>140 OR " 
                   "ctfCritNonAstigmaticValidty>25 "
-                  "OR ctfCritIceness>1.01")  #OR ctfBgGaussian2SigmaU>70000 ctfCritCorr13==0 OR
+                  "OR ctfCritIceness>1.03")  #OR ctfBgGaussian2SigmaU>70000
 
     def __init__(self, **args):
 
@@ -138,7 +138,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         
         if self.AutoDownsampling:
             if self.findPhaseShift:
-                ctfDownFactor = self.calculateAutodownsampling(samplingRate, 1.0)
+                ctfDownFactor = self.calculateAutodownsampling(samplingRate, 1.2)
             else:
                 ctfDownFactor = self.calculateAutodownsampling(samplingRate)
         else:
@@ -164,7 +164,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                 localParams['defocusU'], localParams['phaseShift0'] = \
                     self.ctfDict[micName]
                 if self.findPhaseShift:
-                    localParams['defocus_range'] = 0.15 * localParams['defocusU']
+                    localParams['defocus_range'] = 0.1 * localParams['defocusU']
                 else:
                     localParams['defocus_range'] = 0.1 * localParams['defocusU']
 
@@ -323,12 +323,8 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                 ctfName = ctf.getMicrograph().getMicName()
                 phaseShift0 = 0.0
                 if self.findPhaseShift:
-                    if ctf.hasPhaseShift(): #hasattr(ctf,"_phaseShift") and ctf._phaseShift.get() != None:
-                        phaseShift0=ctf.getPhaseShift()#_phaseShift.get()
-                        radians = phaseShift0/3.14
-                        if radians > 1 or flagDegrees == 1:
-                            flagDegrees == 1
-                            phaseShift0 = (phaseShift0*3.14)/180
+                    if ctf.hasPhaseShift():
+                        phaseShift0=ctf.getPhaseShift()
                     else:
                         phaseShift0 = 1.57079 # pi/2
                     self.ctfDict[ctfName] = (ctf.getDefocusU(),phaseShift0)
