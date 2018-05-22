@@ -59,7 +59,7 @@ opencv = env.GetOption('opencv') and get('OPENCV')
 
 if opencv:
     opencvLibs = ['opencv_core',
-                  'opencv_legacy',
+                  # 'opencv_legacy',
                   'opencv_imgproc',
                   'opencv_video',
                   'libopencv_calib3d']
