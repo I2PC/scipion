@@ -795,26 +795,50 @@ void SoftNegativeFilter::readParams(XmippProgram * program)
 /** Apply the filter to an image or volume*/
 void SoftNegativeFilter::apply(MultidimArray<double> &img)
 {
-	// Invert the mask
+	// Invert the mask and measure stddev outside the mask
 	MultidimArray<int> &mMask=mask();
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
-		DIRECT_MULTIDIM_ELEM(mMask,n)=1-DIRECT_MULTIDIM_ELEM(mMask,n);
+	mMask.setXmippOrigin();
+	img.setXmippOrigin();
+	double sum=0, sum2=0, N=0, R2max=(XSIZE(img)/2)*(XSIZE(img)/2);
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(mMask)
+	{
+		A3D_ELEM(mMask,k,i,j)=1-A3D_ELEM(mMask,k,i,j);
+		if (A3D_ELEM(mMask,k,i,j))
+		{
+			double R2=i*i+j*j+k*k;
+			if (R2<R2max)
+			{
+				double val=A3D_ELEM(img,k,i,j);
+				sum+=val;
+				sum2+=val*val;
+				N+=1;
+			}
+		}
+	}
+	double avg=sum/N;
+	double stddev=sqrt(sum2/N-avg*avg);
 
 	// Measure the stddev outside the structure
-	double avg, stddev;
-	img.computeAvgStdev_within_binary_mask(mMask,avg,stddev);
+	// double avg, stddev;
+	// img.computeAvgStdev_within_binary_mask(mMask,avg,stddev);
 
 	// Find the too negative values
 	double threshold=-K*stddev;
+	if (avg<0)
+		threshold+=avg;
+	// std::cout << "avg=" << avg << " sigma=" << stddev << " threshold=" << threshold << std::endl;
 	MultidimArray<double> softMask, imgThresholded;
 	softMask.initZeros(mMask);
 	imgThresholded.initZeros(mMask);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
-		if (DIRECT_MULTIDIM_ELEM(img,n)<threshold)
+		if (DIRECT_MULTIDIM_ELEM(img,n)>=threshold)
+		{
 			DIRECT_MULTIDIM_ELEM(softMask,n)=1;
-		else
 			DIRECT_MULTIDIM_ELEM(imgThresholded,n)=DIRECT_MULTIDIM_ELEM(img,n);
+		}
 	mask.clear(); // Free memory
+//	Image<double> save;
+//	save()=softMask; save.write("PPPsoftmask.vol");
 
     FourierFilter filter;
     filter.FilterBand=filter.FilterShape=FSCPROFILE;
@@ -823,8 +847,15 @@ void SoftNegativeFilter::apply(MultidimArray<double> &img)
     filter.generateMask(softMask);
     filter.applyMaskSpace(softMask);
     filter.applyMaskSpace(imgThresholded);
+    softMask+=1;
+//	save()=softMask; save.write("PPPsoftmaskFiltered.vol");
+//	save()=imgThresholded; save.write("PPPthresholded.vol");
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
-		DIRECT_MULTIDIM_ELEM(img,n)=(1-DIRECT_MULTIDIM_ELEM(softMask,n))*DIRECT_MULTIDIM_ELEM(img,n)+
-		   DIRECT_MULTIDIM_ELEM(softMask,n)*DIRECT_MULTIDIM_ELEM(imgThresholded,n);
+	{
+		DIRECT_MULTIDIM_ELEM(softMask,n)=CLIP(DIRECT_MULTIDIM_ELEM(softMask,n),0,1);
+		DIRECT_MULTIDIM_ELEM(img,n)=DIRECT_MULTIDIM_ELEM(softMask,n)*DIRECT_MULTIDIM_ELEM(img,n)+
+		   (1-DIRECT_MULTIDIM_ELEM(softMask,n))*DIRECT_MULTIDIM_ELEM(imgThresholded,n);
+	}
+//	save()=softMask; save.write("PPPsoftmaskFilteredClipped.vol");
 }

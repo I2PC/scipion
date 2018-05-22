@@ -173,10 +173,8 @@ class MicrographsView(ObjectView):
     def __init__(self, project, micSet, other='', **kwargs):
         first = micSet.getFirstItem()
 
-        first.printAll()
-
         def existingLabels(labelList):
-            print("labelList: ", labelList)
+
             return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
         renderLabels = existingLabels(self.RENDER_LABELS)
@@ -207,6 +205,7 @@ class CtfView(ObjectView):
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
                     '_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
+                    '_ctftilt_tiltAxis', '_ctftilt_tiltAngle',
                     '_xmipp_ctfCritFirstZero',
                     '_xmipp_ctfCritCorr13', '_xmipp_ctfCritIceness','_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
@@ -301,6 +300,7 @@ class CoordinatesObjectView(DataView):
         self.pickerProps = pickerProps
         self.inTmpFolder = inTmpFolder
         self.mode = kwargs.get('mode', None)
+
     def show(self):
         return showj.launchSupervisedPickerGUI(self._path, self.outputdir,
                                                self.protocol, mode=self.mode,
@@ -316,29 +316,6 @@ class ImageView(View):
 
     def getImagePath(self):
         return self._imagePath
-# TODO: delete class TextFileView
-        '''
-class TextFileView(View):
-
-    def __init__(self, path, tkRoot):
-        self.path = path
-        self.tkRoot=tkRoot#message box will be painted ABOVE this window
-
-    def show(self):
-        """Show text file in default editor, If file does not exists return
-        error message"""
-        if not os.path.isfile(self.path):
-            tkMessageBox.showerror("Refamc Viewer Error",#bar title
-                                   "refmac log file not found\n(%s)"
-                                   % self.path,#message
-                                   parent=self.tkRoot)
-            return
-        editor = os.getenv('EDITOR')
-        if editor:
-            os.system(editor + ' ' + self.path)
-        else:
-            webbrowser.open(self.path)
-'''
 
 
 class TableView(View):

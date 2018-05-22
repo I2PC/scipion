@@ -292,6 +292,11 @@ class Ccp4Header():
         self._header['Ylength'] = self._header['NY'] * sampling
         self._header['Zlength'] = self._header['NZ'] * sampling
 
+    def getSampling(self):
+        return  self._header['Xlength'] / self._header['NX'],\
+                self._header['Ylength'] / self._header['NY'],\
+                self._header['Zlength'] / self._header['NZ']
+
     def setStartPixel(self, originTransformShift):  # PIXEL
         """input pixels"""
         self._header['originX'] = 0.  # originTransformShift[0]
