@@ -23,7 +23,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.object import Integer
 """
 This module contains the protocol for 3d refinement with Relion.
 """

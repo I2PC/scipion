@@ -302,8 +302,6 @@ class CoordinatesObjectView(DataView):
         self.inTmpFolder = inTmpFolder
         self.mode = kwargs.get('mode', None)
 
-        self.mode = kwargs.get('mode', None)
-
     def show(self):
         return showj.launchSupervisedPickerGUI(self._path, self.outputdir,
                                                self.protocol, mode=self.mode,

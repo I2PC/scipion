@@ -34,8 +34,7 @@ This module contains protocols related to Set operations such us:
 import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
-import pyworkflow.utils as pwutils
-from pyworkflow.object import Boolean, Object
+from pyworkflow.object import Boolean
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
