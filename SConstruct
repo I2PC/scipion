@@ -670,7 +670,7 @@ else:
         cxxFlags += " -O3"
 cxxFlags += ' -std=c++11'
 env['CXXFLAGS'] = cxxFlags.split()
-# os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
+os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
 env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
 
 
