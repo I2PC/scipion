@@ -369,6 +369,20 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
             writeReferences(self.getInputReferences(),
                             self._getPath('input_references'), useBasename=True)
 
+        # FIXME: (JMRT-20180523) The following code does not seems to work
+        # here it has been worked around by changing the name of the wizard
+        # output but this seems to reflect a deeper problem of deleting
+        # already existing output objects in a protocol. Maybe when updating
+        # from run.db to project.sqlite?
+
+        # Clean up if previously created the outputMicrographs and Coordinates
+        # in the wizard - optimization run
+        # if self.hasAttribute('outputMicrographs'):
+        #     self._deleteChild('outputMicrographs', self.outputMicrographs)
+        # if self.hasAttribute('outputCoordinates'):
+        #     self._deleteChild('outputCoordinates', self.outputCoordinates)
+        # self._store()
+
     def getAutopickParams(self):
         # Return the autopicking parameters except for the interative ones:
         # - threshold
@@ -474,6 +488,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
+        outputCoordinatesName = 'outputCoordinates'
 
         # If in optimization phase, let's create a subset of the micrographs
         if self.isRunOptimize():
@@ -481,14 +496,11 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
             micSubSet.copyInfo(micSet)
             for mic in self.getMicrographList():
                 micSubSet.append(mic)
-            self._defineOutputs(outputMicrographs=micSubSet)
+            self._defineOutputs(outputMicrographsSubset=micSubSet)
             self._defineTransformRelation(self.getInputMicrographsPointer(),
                                           micSubSet)
             micSet = micSubSet
-        else:
-            # Clean up if previously created the outputMicrographs
-            if self.hasAttribute('outputMicrographs'):
-                self._deleteChild('outputMicrographs', self.outputMicrographs)
+            outputCoordinatesName = 'outputCoordinatesSubset'
 
         coordSet = self._createSetOfCoordinates(micSet)
         template = self._getExtraPath("%s_autopick.star")
@@ -496,7 +508,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                      for mic in micSet]
         readSetOfCoordinates(coordSet, starFiles, micSet)
 
-        self._defineOutputs(outputCoordinates=coordSet)
+        self._defineOutputs(**{outputCoordinatesName: coordSet})
         self._defineSourceRelation(self.getInputMicrographsPointer(),
                                    coordSet)
 
@@ -690,7 +702,6 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         #     img.setCTF(self.ctfDict[img.getMicName()])
 
     def _postprocessMicrographRow(self, img, imgRow):
-        print "Writing md to: ", self._getMicStarFile(img)
         imgRow.writeToFile(self._getMicStarFile(img))
 
     def _getMicStarFile(self, mic):
