@@ -995,9 +995,22 @@ class Project(object):
 
     def _setProtocolMapper(self, protocol):
         """ Set the project and mapper to the protocol. """
-        protocol.setProject(self)
-        protocol.setMapper(self.mapper)
-        self._setHostConfig(protocol)
+
+        # Tolerate loading errors. For support.
+        # When only having the sqlite, sometime there are exceptions here
+        # due to the absence of a set.
+        from pyworkflow.mapper.sqlite import SqliteFlatMapperException
+        try:
+
+            protocol.setProject(self)
+            protocol.setMapper(self.mapper)
+            self._setHostConfig(protocol)
+
+        except SqliteFlatMapperException:
+            protocol.addSummaryWarning(
+                "*Protocol loading problem*: A set related to this "
+                "protocol couldn't be loaded.")
+
 
     def _setupProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
@@ -1030,13 +1043,7 @@ class Project(object):
 
             for r in self.runs:
 
-                # Tolerate loading errors. For support.
-                # When only having the sqlite, sometime there are exceptions here
-                # due to the absence of a set.
-                try:
-                    self._setProtocolMapper(r)
-                except Exception as e:
-                    print("Protocol %s couldn't be loaded. %s" % (r, e))
+                self._setProtocolMapper(r)
 
                 # Check for run warnings
                 r.checkSummaryWarnings()
