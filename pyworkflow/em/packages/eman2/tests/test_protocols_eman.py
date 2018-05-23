@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-import unittest, sys
+
 from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.eman2 import *
@@ -67,12 +67,6 @@ class TestEmanBase(BaseTest):
         return cls.protImport
 
     @classmethod
-    def runImportMicrographBPV(cls, pattern):
-        """ Run an Import micrograph protocol. """
-        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2,
-                                       scannedPixelSize=None, magnification=56000)
-
-    @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles,
@@ -104,15 +98,15 @@ class TestEmanBase(BaseTest):
         cls.launchProtocol(protImport)
         return protImport
 
-
-#     @classmethod
-#     def runClassify(cls, particles):
-#         cls.ProtClassify = cls.newProtocol(XmippProtML2D,
-#                                            numberOfClasses=8, maxIters=4, doMlf=False,
-#                                            numberOfMpi=2, numberOfThreads=2)
-#         cls.ProtClassify.inputParticles.set(particles)
-#         cls.launchProtocol(cls.ProtClassify)
-#         return cls.ProtClassify
+    @classmethod
+    def runImportAverages(cls, pattern, samplingRate):
+        """ Run an Import averages protocol. """
+        cls.protImportAvg = cls.newProtocol(ProtImportAverages,
+                                            filesPath=pattern,
+                                            samplingRate=samplingRate,
+                                            checkStack=True)
+        cls.launchProtocol(cls.protImportAvg)
+        return cls.protImportAvg
 
 
 class TestEmanInitialModelMda(TestEmanBase):
@@ -121,23 +115,18 @@ class TestEmanInitialModelMda(TestEmanBase):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('mda')
         cls.averages = cls.dataset.getFile('averages')
-        cls.samplingRate = 3.5
         cls.symmetry = 'd6'
         cls.numberOfIterations = 5
         cls.numberOfModels = 2
+        cls.protImportAvg = cls.runImportAverages(cls.averages, 3.5)
 
     def test_initialmodel(self):
-        # Import a set of averages
-        print "Import Set of averages"
-        protImportAvg = self.newProtocol(ProtImportAverages, filesPath=self.averages, checkStack=True, samplingRate=2.1)
-        self.launchProtocol(protImportAvg)
-        self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
-
         print "Run Initial model"
         protIniModel = self.newProtocol(EmanProtInitModel,
-                                        symmetry=self.symmetry, numberOfIterations=self.numberOfIterations,
+                                        symmetry=self.symmetry,
+                                        numberOfIterations=self.numberOfIterations,
                                         numberOfModels=self.numberOfModels, numberOfThreads=4)
-        protIniModel.inputSet.set(protImportAvg.outputAverages)
+        protIniModel.inputSet.set(self.protImportAvg.outputAverages)
         self.launchProtocol(protIniModel)
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with eman initial model protocol")
 
@@ -148,10 +137,10 @@ class TestEmanInitialModelGroel(TestEmanInitialModelMda):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('groel')
         cls.averages = cls.dataset.getFile('averages')
-        cls.samplingRate = 2.1
         cls.symmetry = 'd7'
         cls.numberOfIterations = 10
         cls.numberOfModels = 10
+        cls.protImportAvg = cls.runImportAverages(cls.averages, 2.1)
 
 
 class TestEmanReconstruct(TestEmanBase):
@@ -304,6 +293,34 @@ class TestEmanCtfAuto(TestEmanBase):
         protCtf.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protCtf)
         self.assertIsNotNone(protCtf.outputParticles_flip_fullRes, "There was a problem with eman ctf auto protocol")
+
+
+class TestEmanAutopick(TestEmanBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestEmanBase.setData('igbmc_gempicker')
+        cls.micsFn = cls.dataset.getFile('micrographs/*.mrc')
+        cls.avgFn = cls.dataset.getFile('templates/*.mrc')
+        cls.protImportMics = cls.runImportMicrograph(cls.micsFn,
+                                                     samplingRate=4.4,
+                                                     voltage=120,
+                                                     sphericalAberration=2.0,
+                                                     scannedPixelSize=None,
+                                                     magnification=60000)
+        cls.protImportAvg = cls.runImportAverages(cls.avgFn, 4.4)
+
+    def test_AutopickEman(self):
+        if not isNewVersion():
+            raise Exception('This protocol exists only for EMAN2.21 or higher!')
+        print "Run Eman auto picking"
+        protPick = self.newProtocol(EmanProtAutopick,
+                                    boxerMode=1,  # by_ref
+                                    goodRefs=self.protImportAvg.outputAverages,
+                                    numberOfThreads=2)
+        protPick.inputMicrographs.set(self.protImportMics.outputMicrographs)
+        self.launchProtocol(protPick)
+        self.assertIsNotNone(protPick.outputCoordinates, "There was a problem with eman boxer auto protocol")
 
 
 if __name__ == "__main__":

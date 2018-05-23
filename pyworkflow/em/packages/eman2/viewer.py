@@ -407,7 +407,7 @@ Examples:
                 if os.path.exists(fscUnmask):
                     show = True
                     self._plotFSC(a, fscUnmask)
-                    legends.append('unmasked map run %d' % it)
+                    legends.append('unmasked map it %d' % it)
                 xplotter.showLegend(legends)
 
             elif self.resolutionPlotsFSC.get() == FSC_MASK:
@@ -417,7 +417,7 @@ Examples:
                 if os.path.exists(fscMask):
                     show = True
                     self._plotFSC(a, fscMask)
-                    legends.append('masked map run %d' % it)
+                    legends.append('masked map it %d' % it)
                 xplotter.showLegend(legends)
 
             elif self.resolutionPlotsFSC.get() == FSC_MASKTIGHT:
@@ -427,7 +427,7 @@ Examples:
                 if os.path.exists(fscMaskTight):
                     show = True
                     self._plotFSC(a, fscMaskTight)
-                    legends.append('masked tight map run %d' % it)
+                    legends.append('masked tight map it %d' % it)
                 xplotter.showLegend(legends)
             elif self.resolutionPlotsFSC.get() == FSC_ALL:
                 fscUnmask = self.protocol._getFileName('fscUnmasked',
@@ -442,11 +442,11 @@ Examples:
                 if os.path.exists(fscUnmask):
                     show = True
                     self._plotFSC(a, fscUnmask)
-                    legends.append('unmasked map run %d' % it)
+                    legends.append('unmasked map it %d' % it)
                     self._plotFSC(a, fscMask)
-                    legends.append('masked map run %d' % it)
+                    legends.append('masked map it %d' % it)
                     self._plotFSC(a, fscMaskTight)
-                    legends.append('masked tight map run %d' % it)
+                    legends.append('masked tight map it %d' % it)
                 xplotter.showLegend(legends)
 
         if show:
