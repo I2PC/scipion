@@ -419,7 +419,7 @@ relion_vars = [('FFTW_LIB', SW_LIB),
                ('FFTW_INCLUDE', SW_INC)]
 
 relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
-                    ('make VERBOSE=1 -j %d' % env.getProcessors(), ['bin/relion_refine'])]
+                    ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
 env.addPackage('relion', version='2.0',
                tar='relion-2.0.4.tgz',
