@@ -24,31 +24,31 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains cryoMethods protocols and tools.
-"""
+import pyworkflow.em.metadata as md
 
-# from bibtex import _bibtex # Load bibtex dict with references
-_logo = "cryomethods_logo.png"
-_references = []
-import os
-from convert import getSupportedVersions, getVersion, getEnviron
-from protocol_volume_selector import ProtInitialVolumeSelector
-#
-# # Wizards
-# from wizard import *
-from viewer import *
-#
-_environ = getEnviron()
+#------------------ Constants values --------------------------------------
 
+#Protocols constants
+MASK_FILL_ZERO = 0
+MASK_FILL_NOISE = 1
 
-def validateInstallation():
-    """ This function will be used to check if RELION is properly installed. """
-    missingPaths = ["%s: %s" % (var, _environ[var])
-                    for var in ['RELION_HOME']
-                    if not os.path.exists(_environ[var])]
+ANGULAR_SAMPLING_LIST = ['30', '15', '7.5', '3.7', '1.8', '0.9', '0.5',
+                         '0.2', '0.1']
 
-    if missingPaths:
-        return ["Missing variables:"] + missingPaths
-    else:
-        return [] # No errors
+CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS,
+                 md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS,
+                 md.RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES]
+
+#Viewer Constants
+ITER_LAST = 0
+ITER_SELECTION = 1
+
+VOLUME_SLICES = 0
+VOLUME_CHIMERA = 1
+
+CHIMERADATAVIEW = 0
+
+# Relion Supported versions:
+V2_0 = '2.0'
+V2_1 = '2.1'
+
