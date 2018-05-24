@@ -237,7 +237,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         # both 3Dmap and PDB
 
 
-        doTest = True
+        doTest = False
 
         if not doTest:
 
