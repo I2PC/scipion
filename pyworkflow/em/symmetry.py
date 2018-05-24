@@ -1,3 +1,4 @@
+# coding=utf-8
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini
@@ -28,12 +29,41 @@ This module returns the matrices related with the different
 point symmetries. Code based on chiomera file sym.py
 """
 from constants import SYM_CYCLIC, SYM_DIHEDRAL, SYM_OCTAHEDRAL, \
-    SYM_TETRAHEDRAL, SYM_I222, SYM_I222r, SYM_In25, SYM_In25r
-from math import sin, cos, pi
+    SYM_TETRAHEDRAL, SYM_TETRAHEDRAL_Z3, SYM_I222, SYM_I222r, \
+    SYM_In25, SYM_In25r
+from math import sin, cos, pi, acos, sqrt
 from numpy import array, zeros, float, append
 from numpy.linalg import inv as matrix_inverse
 from numpy import dot as matrix_multiply
 
+
+def __length(v):
+  d = sqrt(sum([e*e for e in v]))
+  return d
+
+def __normalize_vector(v):
+  d = __length(v)
+  if d == 0:
+    d = 1
+  return tuple([e/d for e in v])
+
+def __rotation_transform(axis, angle, center = (0,0,0)):
+    """ Angle is in degrees. """
+    axis = __normalize_vector(axis)
+
+    arad = angle*pi/180.0
+    sa = sin(arad)
+    ca = cos(arad)
+    k = 1 - ca
+    ax, ay, az = axis
+    tf = ((1 + k*(ax*ax-1), -az*sa+k*ax*ay, ay*sa+k*ax*az, 0),
+          (az*sa+k*ax*ay, 1 + k*(ay*ay-1), -ax*sa+k*ay*az, 0),
+          (-ay*sa+k*ax*az, ax*sa+k*ay*az, 1 + k*(az*az-1), 0))
+    cx, cy, cz = center
+    c_tf = ((1,0,0,cx), (0,1,0,cy), (0,0,1,cz))
+    inv_c_tf = ((1,0,0,-cx), (0,1,0,-cy), (0,0,1,-cz))
+    rtf = __multiply_matrices(c_tf, tf, inv_c_tf)
+    return rtf
 
 def __translation_matrix(shift):
 
@@ -85,7 +115,7 @@ def __matrix_products(mlist1, mlist2):
 
 def __coordinate_transform_list(tflist, ctf):
 
-  ctfinv = invert_matrix(ctf)
+  ctfinv = __invert_matrix(ctf)
   return [__multiply_matrices(ctfinv, tf, ctf) for tf in tflist]
 
 
@@ -107,9 +137,9 @@ def getSymmetryMatrices(sym=SYM_CYCLIC, n=1, center = (0,0,0)):
     elif sym == SYM_DIHEDRAL:
         matrices = __dihedralSymmetryMatrices(n, center)
     elif sym == SYM_OCTAHEDRAL:
-        pass
-    elif sym == SYM_TETRAHEDRAL:
-        pass
+        matrices = __octahedral_symmetry_matrices(center)
+    elif sym == SYM_TETRAHEDRAL or sym == SYM_TETRAHEDRAL_Z3:
+        matrices = __tetrahedralSymmetryMatrices(sym, center)
     elif sym == SYM_I222:
         pass
     elif sym == SYM_I222r:
@@ -127,7 +157,9 @@ def getSymmetryMatrices(sym=SYM_CYCLIC, n=1, center = (0,0,0)):
     return array(matrices)
 
 def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
-    """ Rotation about z axis."""
+    """ Rotation about z axis.
+    This is a local method. do not access directly to it
+    """
     tflist = []
     for k in range(n):
         a = 2*pi * float(k) / n
@@ -140,6 +172,17 @@ def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
     tflist = __recenter_symmetries(tflist, center)
     return tflist
 
+def __octahedral_symmetry_matrices(center = (0,0,0)):
+    """ 4-folds along x, y, z axes. """
+    c4 = (((0,0,1),0), ((0,0,1),90), ((0,0,1),180), ((0,0,1),270))
+    cube = (((1,0,0),0), ((1,0,0),90), ((1,0,0),180), ((1,0,0),270),
+            ((0,1,0),90), ((0,1,0),270))
+    c4syms = [__rotation_transform(axis, angle) for axis, angle in c4]
+    cubesyms = [__rotation_transform(axis, angle) for axis, angle in cube]
+    syms = __matrix_products(cubesyms, c4syms)
+    syms = __recenter_symmetries(syms, center)
+    return syms
+
 def __dihedralSymmetryMatrices(n, center = (0, 0, 0)):
     """ Rotation about z axis, reflection about x axis. """
     clist = __cyclicSymmetrySatrices(n)
@@ -149,3 +192,27 @@ def __dihedralSymmetryMatrices(n, center = (0, 0, 0)):
     return tflist
 
 
+def __tetrahedralSymmetryMatrices(orientation = SYM_TETRAHEDRAL, center = (0,0,0)):
+    """
+    identity
+    4 × rotation by 120 clockwise (seen from a vertex): (234), (143), (412), (321)
+    4 × rotation by 120 counterclockwise (ditto)
+    3 × rotation by 180
+    """
+    aa = (((0,0,1),0), ((1,0,0),180), ((0,1,0),180), ((0,0,1),180),
+          ((1,1,1),120), ((1,1,1),240), ((-1,-1,1),120), ((-1,-1,1),240),
+          ((-1,1,-1),120), ((-1,1,-1),240), ((1,-1,-1),120), ((1,-1,-1),240))
+    syms = [__rotation_transform(axis, angle) for axis, angle in aa]
+
+    if orientation == SYM_TETRAHEDRAL_Z3:
+        # EMAN convention, 3-fold on z, 3-fold in yz plane along neg y.
+        tf = __multiply_matrices(
+            __rotation_transform((0,0,1), -45.0),
+            __rotation_transform((1,0,0), -acos(1/sqrt(3))*180/pi))
+        syms = __coordinate_transform_list(syms, tf)
+
+    syms = __recenter_symmetries(syms, center)
+    return syms
+
+def __icosahedralSymmetryMatrices(orientation = SYM_I222, center = (0,0,0)):
+    pass
