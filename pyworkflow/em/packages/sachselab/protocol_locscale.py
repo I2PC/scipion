@@ -52,9 +52,9 @@ class ProtLocScale(Prot3D):
         form.addParam('binaryMask', params.PointerParam,
                       pointerClass='VolumeMask',
                       label='3D mask', allowsNull=True,
-                      help='Binary mask: 0 to ignore that voxel and 1 to process it.')
+                      help='Binary mask (optional)')
 
-        form.addParam('patchSize', params.IntParam, label='Patch size', 
+        form.addParam('patchSize', params.IntParam, label='Patch size',
                       help='Window size for local scale.\n'
                            'Recommended: 7 * average_map_resolution / pixel_size')
 
@@ -99,15 +99,18 @@ class ProtLocScale(Prot3D):
         """ We validate if eman is installed and if inputs make sense
         """
         errors = []
-        errors = validateEmanVersion(self, errors)
+        errors = validateEmanVersion(errors)
 
-        inputSize = self.inputVolume.get().getDim()
-        refSize = self.refObj.get().getDim()
-        refSamp = self.refObj.get().getSamplingRate()
+        input = self.inputVolume.get()
+        reference = self.refObj.get()
+        if input is not None and reference is not None:
+            inputSize = input.getDim()
+            refSize = reference.getDim()
+            refSamp = reference.getSamplingRate()
 
-        if inputSize != refSize or self.getSampling() != refSamp:
-            errors.append('Input volume and reference volume should be '
-                          'of the same size and samplig rate')
+            if inputSize != refSize or self.getSampling() != refSamp:
+                errors.append('Input volume and reference volume should be '
+                              'of the same size and samplig rate')
         return errors
 
     def _warnings(self):

@@ -32,3 +32,15 @@ from bibtex import _bibtex # Load bibtex dict with references
 _logo = "locscale_logo.jpg"
 
 from protocol_locscale import ProtLocScale
+
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, os.environ[var])
+                    for var in [LOCSCALE_HOME_VAR, EMAN2DIR_VAR]
+                    if not os.path.exists(os.environ[var])]
+
+    if missingPaths:
+        return ["Required software not found in the system:"] + missingPaths + \
+               ["Try to install the package following: scipion install --help"]
+    else:
+        return [] # No errors

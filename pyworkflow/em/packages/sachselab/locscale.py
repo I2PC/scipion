@@ -25,13 +25,15 @@
 # **************************************************************************
 
 import os
-import sys
+
 from pyworkflow.utils import Environ, replaceBaseExt
 from pyworkflow.em.convert import ImageHandler
 
 # we declarate global constants to multiple usage
-LOCSCALE_HOME = os.environ['LOCSCALE_HOME']
-EMAN2DIR = os.environ['EMAN2DIR']
+LOCSCALE_HOME_VAR = 'LOCSCALE_HOME'
+EMAN2DIR_VAR = 'EMAN2DIR'
+LOCSCALE_HOME = os.environ[LOCSCALE_HOME_VAR]
+EMAN2DIR = os.environ[EMAN2DIR_VAR]
 
 def getVersion():
     version = ''
@@ -58,7 +60,7 @@ def getEmanVersion():
                 emanVersion = supV
     return emanVersion
 
-def validateEmanVersion(protocol, errors):
+def validateEmanVersion(errors):
     """ Validate if eman version is set properly according
      to installed version and the one set in the config file.
      Params:
