@@ -42,6 +42,7 @@ GCTF = Gctf-v1.06_sm_20_cu8.0_x86_64
 IMAGIC_HOME = %(EM_ROOT)s/imagic
 LOCALREC_HOME = %(EM_ROOT)s/localrec-1.2.0
 LOCALREC_RELION_HOME = %(EM_ROOT)s/relion-1.4
+LOCSCALE_HOME = %(EM_ROOT)s/locscale-0.1
 MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
