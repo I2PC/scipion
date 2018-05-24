@@ -442,7 +442,8 @@ class ProtocolRelionBase(em.EMProtocol):
                            'in the range of 7-12 Angstroms have proven '
                            'useful.')
 
-    def _defineSamplingParams(self, form, expertLev=em.LEVEL_ADVANCED, cond=''):
+    def _defineSamplingParams(self, form,
+                              expertLev=em.LEVEL_ADVANCED, cond='True'):
         form.addSection('Sampling')
         form.addParam('angularSamplingDeg', params.EnumParam, default=1,
                       choices=ANGULAR_SAMPLING_LIST,
