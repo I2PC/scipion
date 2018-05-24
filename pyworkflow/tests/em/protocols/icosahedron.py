@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import operator
-
+#TODO, move this to tests, use symmetry if possible, ROB
 ###
 
 def apply_matrix(tf, points):
