@@ -235,15 +235,29 @@ class TestAtomicStructHandler(unittest.TestCase):
 
         # retrieve "Structure of the human TRPC3
         # both 3Dmap and PDB
+
+
+        doTest = False
+
+        if not doTest:
+
+            print "This test is to be tested manually since it opens chimera afterwards"
+            print "For testing this, edit this file and set doTest = True"
+            return
+
+
         PDBID = '6CUD'
         EMDBID = '7620'
-        if False:  # set to False if you aready have the 3dmap file
+
+        doAll = False
+
+        if False or doAll:  # set to False if you aready have the 3dmap file
             url = 'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%s/map/emd_%s.map.gz' % \
                   (EMDBID, EMDBID)
             import urllib
             urllib.urlretrieve(url, 'emd_%s.map.gz' % EMDBID)
             os.system("gunzip emd_%s.map.gz" % EMDBID)  # file is gzipped
-        if False:  # set to False if you aready have the PDB file
+        if False or doAll:  # set to False if you aready have the PDB file
             aSH = AtomicStructHandler()
             pdbFileName = aSH.readFromPDBDatabase(PDBID, type='pdb',
                                                   dir=os.getcwd())
@@ -340,7 +354,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             runChimeraProgram(chimera_get_program(), args)
 
         # shift atomic structure
-        doAll = False
+        doAll = True
         if False or doAll:
             shift = [20., 0., 0.]
             angles = [0., 0., 0.]
