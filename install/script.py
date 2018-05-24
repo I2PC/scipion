@@ -243,7 +243,7 @@ arpack = env.addLibrary(
     commands=[('cd ' + SW_BIN + '; ln -s $(which gfortran) f77',
                SW_BIN + '/f77'),
               ('cd ' + SW_TMP + '/arpack-96; make all',
-               SW_LIB +'libarpack.a')],
+               SW_LIB +'/libarpack.a')],
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
