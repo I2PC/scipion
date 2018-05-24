@@ -295,7 +295,6 @@ class ProtCreateStreamData(EMProtocol):
         ProtCreateStreamData.object.write(destFn)
         self.dictObj[destFn] = True
         time.sleep(self.creationInterval.get())
-        self._stepsCheck()
 
     def createParticlesStep(self):
         self.name = "particle"
@@ -309,7 +308,6 @@ class ProtCreateStreamData(EMProtocol):
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
         time.sleep(self.creationInterval.get())
-        self._stepsCheck()
 
     def createRandomMicAtep(self, mic):
         from pyworkflow.em.packages.xmipp3 import getEnviron
@@ -356,7 +354,6 @@ class ProtCreateStreamData(EMProtocol):
         self.runJob("xmipp_transform_filter", args, env=getEnviron())
         self.dictObj[baseFnImageCTF] = True
         time.sleep(self.creationInterval.get())
-        self._stepsCheck()
 
     # -------------------------- INFO functions ------------------------------
     def _validate(self):
