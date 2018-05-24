@@ -105,12 +105,12 @@ class TestVolumeSelector(TestBase):
                                                            "Initial Volume "
                                                            "Selector")
 
-        volSelNoGPU = _runVolumeSelector(False, "Volume Selector No GPU")
-        _checkAsserts(volSelNoGPU)
-
         environ = Environ(os.environ)
         cudaPath = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
 
         if cudaPath is not None and os.path.exists(cudaPath):
             volSelGpu = _runVolumeSelector(True, "Run Volume Selector GPU")
             _checkAsserts(volSelGpu)
+        else:
+            volSelNoGPU = _runVolumeSelector(False, "Volume Selector No GPU")
+            _checkAsserts(volSelNoGPU)

@@ -56,7 +56,8 @@ class ProtocolRelionBase(em.EMProtocol):
         (maybe after recovery from mapper)
         """
         self._createFilenameTemplates()
-        self._createIterTemplates()
+        self._createTemplates()
+        self._createVolDict()
 
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -91,16 +92,21 @@ class ProtocolRelionBase(em.EMProtocol):
             myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
             myDict['%svolume' % p] = self.extraIter + p + \
                                      'class%(ref3d)03d.mrc:mrc'
-
         self._updateFilenamesDict(myDict)
 
-    def _createIterTemplates(self):
+    def _createTemplates(self):
         """ Setup the regex on how to find iterations. """
         self._iterTemplate = self._getFileName('data', iter=0).replace('000',
                                                                        '???')
         # Iterations will be identify by _itXXX_ where XXX is the iteration
         # number and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
+        self._classRegex = re.compile('_class(\d{3,3}).')
+
+    def _createVolDict(self):
+        self.volDict = {}
+        for i, vol in enumerate(self.inputVolumes.get()):
+            self.volDict[i+1] = vol.getObjId()
 
     # -------------------------- DEFINE param functions -----------------------
     def _defineInputParams(self, form):
@@ -607,6 +613,7 @@ class ProtocolRelionBase(em.EMProtocol):
 
     # -------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
+        self.volDict = {}
         self._initialize()
         self._insertFunctionStep('convertInputStep', self._getResetDeps())
         self._insertClassifyStep()
@@ -908,9 +915,9 @@ class ProtocolRelionBase(em.EMProtocol):
         modelStar = md.MetaData('model_classes@' +
                                 self._getFileName('model', iter=it))
         for row in md.iterRows(modelStar):
-            fn = row.getValue('rlnReferenceImage') + ":mrc"
-
-            itemId = "as"
+            fn = row.getValue('rlnReferenceImage')
+            fnMrc = fn + ":mrc"
+            itemId = self._getClassId(fn)
             classDistrib = row.getValue('rlnClassDistribution')
             accurracyRot = row.getValue('rlnAccuracyRotations')
             accurracyTras = row.getValue('rlnAccuracyTranslations')
@@ -918,8 +925,9 @@ class ProtocolRelionBase(em.EMProtocol):
 
             if classDistrib > 0:
                 vol = em.Volume()
-                self._invertScaleVol(fn)
-                vol.setFileName(self._getOutputVolFn(fn))
+                self._invertScaleVol(fnMrc)
+                vol.setFileName(self._getOutputVolFn(fnMrc))
+                vol.setObjId(itemId)
                 vol._rlnClassDistribution = em.Float(classDistrib)
                 vol._rlnAccuracyRotations = em.Float(accurracyRot)
                 vol._rlnAccuracyTranslations = em.Float(accurracyTras)
@@ -958,8 +966,8 @@ class ProtocolRelionBase(em.EMProtocol):
         return self._getTmpPath("input_references.star")
 
     def _convertRef(self):
-        ih = em.ImageHandler()
 
+        ih = em.ImageHandler()
         inputObj = self.inputVolumes.get()
         row = md.Row()
         refMd = md.MetaData()
