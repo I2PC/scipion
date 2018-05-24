@@ -773,3 +773,89 @@ void realGaussianFilter(MultidimArray<double> &img, double sigma)
     Filter.generateMask(img);
     Filter.applyMaskSpace(img);
 }
+
+/** Define the parameters for use inside an Xmipp program */
+void SoftNegativeFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Soft negative pixels ==");
+    program->addParamsLine(
+        "  [ --softnegative <mask_file> <fsc> <Ts=1> <K=2>] : Removes strong negative values inside the mask");
+    program->addParamsLine(" : Ts is the sampling rate in A/pix");
+}
+
+/** Read from program command line */
+void SoftNegativeFilter::readParams(XmippProgram * program)
+{
+	mask.read(program->getParam("--softnegative",0));
+	fnFSC=program->getParam("--softnegative",1);
+    Ts = program->getDoubleParam("--softnegative",2);
+    K = program->getDoubleParam("--softnegative",3);
+}
+
+/** Apply the filter to an image or volume*/
+void SoftNegativeFilter::apply(MultidimArray<double> &img)
+{
+	// Invert the mask and measure stddev outside the mask
+	MultidimArray<int> &mMask=mask();
+	mMask.setXmippOrigin();
+	img.setXmippOrigin();
+	double sum=0, sum2=0, N=0, R2max=(XSIZE(img)/2)*(XSIZE(img)/2);
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(mMask)
+	{
+		A3D_ELEM(mMask,k,i,j)=1-A3D_ELEM(mMask,k,i,j);
+		if (A3D_ELEM(mMask,k,i,j))
+		{
+			double R2=i*i+j*j+k*k;
+			if (R2<R2max)
+			{
+				double val=A3D_ELEM(img,k,i,j);
+				sum+=val;
+				sum2+=val*val;
+				N+=1;
+			}
+		}
+	}
+	double avg=sum/N;
+	double stddev=sqrt(sum2/N-avg*avg);
+
+	// Measure the stddev outside the structure
+	// double avg, stddev;
+	// img.computeAvgStdev_within_binary_mask(mMask,avg,stddev);
+
+	// Find the too negative values
+	double threshold=-K*stddev;
+	if (avg<0)
+		threshold+=avg;
+	// std::cout << "avg=" << avg << " sigma=" << stddev << " threshold=" << threshold << std::endl;
+	MultidimArray<double> softMask, imgThresholded;
+	softMask.initZeros(mMask);
+	imgThresholded.initZeros(mMask);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mMask)
+		if (DIRECT_MULTIDIM_ELEM(img,n)>=threshold)
+		{
+			DIRECT_MULTIDIM_ELEM(softMask,n)=1;
+			DIRECT_MULTIDIM_ELEM(imgThresholded,n)=DIRECT_MULTIDIM_ELEM(img,n);
+		}
+	mask.clear(); // Free memory
+//	Image<double> save;
+//	save()=softMask; save.write("PPPsoftmask.vol");
+
+    FourierFilter filter;
+    filter.FilterBand=filter.FilterShape=FSCPROFILE;
+    filter.fnFSC=fnFSC;
+    filter.sampling_rate=Ts;
+    filter.generateMask(softMask);
+    filter.applyMaskSpace(softMask);
+    filter.applyMaskSpace(imgThresholded);
+    softMask+=1;
+//	save()=softMask; save.write("PPPsoftmaskFiltered.vol");
+//	save()=imgThresholded; save.write("PPPthresholded.vol");
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+	{
+		DIRECT_MULTIDIM_ELEM(softMask,n)=CLIP(DIRECT_MULTIDIM_ELEM(softMask,n),0,1);
+		DIRECT_MULTIDIM_ELEM(img,n)=DIRECT_MULTIDIM_ELEM(softMask,n)*DIRECT_MULTIDIM_ELEM(img,n)+
+		   (1-DIRECT_MULTIDIM_ELEM(softMask,n))*DIRECT_MULTIDIM_ELEM(imgThresholded,n);
+	}
+//	save()=softMask; save.write("PPPsoftmaskFilteredClipped.vol");
+}

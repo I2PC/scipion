@@ -43,7 +43,6 @@ from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from images import ProtImportImages
 
 
-
 class ProtImportMicBase(ProtImportImages):
     """ Just to have a base class to both 
     ProtImportMicrographs and ProtImportMovies

@@ -181,18 +181,16 @@ class XmippDimredNMAViewer(ProtocolViewer):
         prot = self.protocol
         animationName = obj.getFileName() # assumes that obj.getFileName is the folder of animation
         animationPath = prot._getExtraPath(animationName)
-        #animationName = animationPath.split('animation_')[-1]
-        animationRoot = join(animationPath, animationName)
         
-        animationSuffixes = ['.vmd', '.pdb', 'trajectory.txt']
-        for s in animationSuffixes:
-            f = animationRoot + s
+        animationFiles = [animationName+'.vmd', animationName+'.pdb', 'trajectory.txt']
+        for s in animationFiles:
+            f = join(animationPath,s)
             if not exists(f):
                 self.errorMessage('Animation file "%s" not found. ' % f)
                 return
         
         # Load animation trajectory points
-        trajectoryPoints = np.loadtxt(animationRoot + 'trajectory.txt')
+        trajectoryPoints = np.loadtxt(join(animationPath,'trajectory.txt'))
         data = PathData(dim=trajectoryPoints.shape[1])
         
         for i, row in enumerate(trajectoryPoints):
@@ -203,7 +201,7 @@ class XmippDimredNMAViewer(ProtocolViewer):
         self.trajectoriesWindow._onUpdateClick()
         
         def _showVmd():
-            vmdFn = animationRoot + '.vmd'
+            vmdFn = join(animationPath,animationName+'.vmd')
             VmdView(' -e %s' % vmdFn).show()        
             
         self.getTkRoot().after(500, _showVmd)
@@ -227,12 +225,12 @@ class XmippDimredNMAViewer(ProtocolViewer):
         makePath(animationPath)
         animationRoot = join(animationPath, 'animation_%s' % animation)
         
-        trajectoryPoints = np.array([p.getData() for p in self.trajectoriesWindow.pathData])
+        trajectoryPoints = np.array([p.getData() for p in self.trajectoriesWindow.pathData])        
+        np.savetxt(join(animationPath,'trajectory.txt'), trajectoryPoints)
         
         if projectorFile:
             M = np.loadtxt(projectorFile)
             deformations = np.dot(trajectoryPoints, np.linalg.pinv(M))
-            np.savetxt(animationRoot + 'trajectory.txt', trajectoryPoints)
         else:
             Y = np.loadtxt(prot.getOutputMatrixFile())
             X = np.loadtxt(prot.getDeformationFile())

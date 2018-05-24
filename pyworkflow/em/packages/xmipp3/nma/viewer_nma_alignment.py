@@ -62,10 +62,10 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         form.addParam('displayRawDeformation', StringParam, default='7',
                       label='Display raw deformation',
-                      help='Type 1 to see the histogram of raw deformation number 1; \n'
-                           'type 2 to see the histogram of raw deformation number 2, etc.\n'
-                           'Type 1 2 to see the 2D plot of raw deformations number 1 vs 2.\n'
-                           'Type 1 2 3 to see the 3D plot of raw deformations 1, 2 and 3; etc.'
+                      help='Type 7 to see the histogram of raw deformation along mode 7; \n'
+                           'type 8 to see the histogram of raw deformation along mode 8, etc.\n'
+                           'Type 7 8 to see the 2D plot of raw deformations along modes 7 vs 8.\n'
+                           'Type 7 8 9 to see the 3D plot of raw deformations along modes 7, 8 and 9; etc.'
                            )
     
     def _getVisualizeDict(self):

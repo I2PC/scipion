@@ -423,6 +423,24 @@ void MultidimArray<double>::computeAvgStdev(double& avg, double& stddev) const
         stddev = 0;
 }
 
+// void MultidimArray<double>::selfNormalizeInterval(double minPerc, double maxPerc, int Npix)
+// {
+//     std::vector<double> randValues; // Vector with random chosen values
+
+//     for(int i=0, i<Npix, i++)
+//     {
+//         size_t indx = (size_t)rnd_unif(0, MULTIDIM_SIZE(*this));
+//         randValues.push_back(DIRECT_MULTIDIM_ELEM(*this,indx))
+//     }
+//     std::sort(randValues.begin(),randValues.end());
+
+//     double m = randValues[(size_t)(minPerc*Npix)];
+//     double M = randValues[(size_t)(minPerc*Npix)];
+
+//     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+//     *ptr = 2/(M-m)*(*ptr-m)-1;
+
+// }
 
 template<>
 bool operator==(const MultidimArray< std::complex< double > >& op1, const MultidimArray< std::complex< double > >& op2)

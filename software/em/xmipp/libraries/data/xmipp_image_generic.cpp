@@ -577,6 +577,18 @@ void ImageGeneric::multiply(const double value)
 
 }
 
+void ImageGeneric::divide(const ImageGeneric &img)
+{
+
+#define DIVIDEIMG(type) MultidimArray<type> & kk = *((MultidimArray<type>*) data->im);\
+                     MultidimArray<type> & pp = *((MultidimArray<type>*) img.data->im);\
+                     kk /= pp;
+
+    SWITCHDATATYPE(datatype, DIVIDEIMG);
+#undef DIVIDEIMG
+
+}
+
 void ImageGeneric::divide(const double value)
 {
 
