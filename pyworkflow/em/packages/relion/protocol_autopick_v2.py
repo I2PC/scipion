@@ -489,10 +489,13 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
         outputCoordinatesName = 'outputCoordinates'
+        outputSuffix = ''
 
         # If in optimization phase, let's create a subset of the micrographs
         if self.isRunOptimize():
-            micSubSet = self._createSetOfMicrographs()
+            outputSuffix = '_subset'
+            outputCoordinatesName = 'outputCoordinatesSubset'
+            micSubSet = self._createSetOfMicrographs(suffix=outputSuffix)
             micSubSet.copyInfo(micSet)
             for mic in self.getMicrographList():
                 micSubSet.append(mic)
@@ -500,7 +503,6 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
             self._defineTransformRelation(self.getInputMicrographsPointer(),
                                           micSubSet)
             micSet = micSubSet
-            outputCoordinatesName = 'outputCoordinatesSubset'
 
         coordSet = self._createSetOfCoordinates(micSet)
         template = self._getExtraPath("%s_autopick.star")
