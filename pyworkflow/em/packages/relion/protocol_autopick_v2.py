@@ -497,7 +497,9 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
             outputCoordinatesName = 'outputCoordinatesSubset'
             micSubSet = self._createSetOfMicrographs(suffix=outputSuffix)
             micSubSet.copyInfo(micSet)
-            for mic in self.getMicrographList():
+            # Use previously written star file for reading the subset of micrographs,
+            for row in md.iterRows(self._getPath('input_micrographs.star')):
+                mic = micSet[row.getValue('rlnImageId')]
                 micSubSet.append(mic)
             self._defineOutputs(outputMicrographsSubset=micSubSet)
             self._defineTransformRelation(self.getInputMicrographsPointer(),
