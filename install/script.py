@@ -342,12 +342,6 @@ env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
 # 'commands' is a list of (command, [targets]) to run after installation.
 
 
-#env.addPackage('bsoft', version='1.8.8',
-#               tar='bsoft1_8_8_Fedora_12.tgz')
-
-#env.addPackage('bsoft', version='1.9.0',
-#               tar='bsoft1_9_0_Fedora_20.tgz')
-
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion_refine'])]
