@@ -607,8 +607,11 @@ def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
     # TODO: compatibility check remove eventually
     if ctfModel.hasResolution():
+
         objectToRow(ctfModel, ctfRow, CTF_DICT,
                     extraLabels=CTF_EXTRA_LABELS)
+        if ctfModel.hasPhaseShift():
+            ctfRow.setValue(xmipp.MDL_CTF_PHASE_SHIFT, ctfModel.getPhaseShift())
     else:
         objectToRow(ctfModel, ctfRow, CTF_DICT_NORESOLUTION,
                     extraLabels=CTF_EXTRA_LABELS)
@@ -643,7 +646,9 @@ def rowToCtfModel(ctfRow):
         # Populate Scipion CTF from metadata row (using mapping dictionary
         # plus extra labels
         if ctfRow.hasLabel(md.MDL_CTF_PHASE_SHIFT):
-            ctfModel.setPhaseShift(ctfRow.getValue(md.MDL_CTF_PHASE_SHIFT, 0))
+
+            ctfModel.setPhaseShift(ctfRow.getValue(md.MDL_CTF_PHASE_SHIFT, 0.0))
+
         if ctfRow.containsLabel(xmipp.label2Str(xmipp.MDL_CTF_CRIT_MAXFREQ)):
             rowToObject(ctfRow, ctfModel, CTF_DICT,
                         extraLabels=CTF_EXTRA_LABELS)

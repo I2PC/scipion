@@ -99,7 +99,6 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 	ctf.enable_CTF = true;
 	ctf.enable_CTFnoise = false;
 	ctf.produceSideInfo();
-
 	MultidimArray<std::complex<double> > ctfComplex;
 	MultidimArray<double> ctfIm;
 
@@ -206,6 +205,7 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 
 	img.read(fnImg);
 	ctf.readFromMdRow(rowIn);
+	ctf.phase_shift = (ctf.phase_shift*PI)/180;
 	img().setXmippOrigin();
 	Ydim = YSIZE(img());
 	Xdim = XSIZE(img());

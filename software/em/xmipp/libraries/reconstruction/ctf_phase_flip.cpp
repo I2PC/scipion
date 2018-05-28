@@ -96,6 +96,8 @@ void actualPhaseFlip(MultidimArray<double> &I, CTFDescription ctf)
     int yDim=YSIZE(I);
     int xDim=XSIZE(I);
     double iTm=1.0/ctf.Tm;
+    ctf.phase_shift = (ctf.phase_shift*PI)/180;
+
     for (size_t i=0; i<YSIZE(M_inFourier); ++i)
     {
     	FFT_IDX2DIGFREQ(i, yDim, YY(freq));

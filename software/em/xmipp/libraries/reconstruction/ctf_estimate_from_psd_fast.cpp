@@ -1361,7 +1361,6 @@ double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &ou
 	steps.initConstant(1);
 	steps(1) = 0; // kV
 	steps(3) = 0; // The spherical aberration (Cs) is not optimized
-	//steps(4) = 0;
 	steps(27) = 0; //VPP radius not optimized
 	if (prm.initial_ctfmodel.Q0 != 0)
 		steps(13) = 0; // Q0
