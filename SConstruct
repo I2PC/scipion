@@ -634,7 +634,6 @@ def libraryTest(env, name, lang='c'):
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
-
 # Add methods so SConscript can call them.
 env.AddMethod(untar, 'Untar')
 env.AddMethod(compilerConfig, 'CompilerConfig')
@@ -669,6 +668,7 @@ if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
 else:
     if cxxFlags.find("-O")==-1:
         cxxFlags += " -O3"
+cxxFlags += ' -std=c++11'
 env['CXXFLAGS'] = cxxFlags.split()
 os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
 env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()

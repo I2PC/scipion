@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     David Maluenda (dmaluenda@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,19 +24,26 @@
 # *
 # **************************************************************************
 
+_bibtexStr = """
 
-from pyworkflow.protocol import (STATUS_SAVED, STATUS_LAUNCHED, STATUS_RUNNING,
-                                 STATUS_FINISHED, STATUS_FAILED,
-                                 STATUS_INTERACTIVE, STATUS_ABORTED,
-                                 STATUS_SCHEDULED)
+@Article{Jakobi2017,
+  Title                    = {Model-based local density sharpening of cryo-EM maps},
+  Author                   = {Jakobi, Arjen J and Wilmanns, Matthias and Sachse, Carsten},
+  Journal                  = {eLife},
+  Year                     = {2017},
+  Month                    = {October},
+  Volume                   = {6},
+  Doi                      = {http://doi.org/10.7554/eLife.27131},
+  Url                      = {http://elifesciences.org/articles/27131},
+  Citation                 = {eLife 2017;6:e27131},
+  Issn                     = {2050-084X},
+  Publisher                = {eLife Sciences Publications, Ltd}
+}
 
-STATUS_COLORS = {
-               STATUS_SAVED: '#D9F1FA',
-               STATUS_LAUNCHED: '#D9F1FA',
-               STATUS_RUNNING: '#FCCE62',
-               STATUS_FINISHED: '#D2F5CB',
-               STATUS_FAILED: '#F5CCCB',
-               STATUS_INTERACTIVE: '#F3F5CB',
-               STATUS_ABORTED: '#F5CCCB',
-               STATUS_SCHEDULED: '#F3F5CB'
-               }
+"""
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  
+
+

@@ -42,12 +42,13 @@ GCTF = Gctf-v1.06_sm_20_cu8.0_x86_64
 IMAGIC_HOME = %(EM_ROOT)s/imagic
 LOCALREC_HOME = %(EM_ROOT)s/localrec-1.2.0
 LOCALREC_RELION_HOME = %(EM_ROOT)s/relion-1.4
+LOCSCALE_HOME = %(EM_ROOT)s/locscale-0.1
 MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
 MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1
 MOTIONCORR = dosefgpu_driftcorr_7.5
-# MOTIONCORR_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
+MOTIONCORR_CUDA_LIB = /usr/local/cuda-7.5/lib64
 MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-1.0.5
 MOTIONCOR2_BIN = MotionCor2_Cuda8.0_v1.0.5
 MOTIONCOR2_CUDA_LIB = /usr/local/cuda-8.0/lib64 
@@ -87,7 +88,7 @@ CC = gcc
 CXX = g++
 LINKERFORPROGRAMS = g++
 CCFLAGS = -std=c99
-CXXFLAGS = 
+CXXFLAGS =
 LINKFLAGS = 
 
 # MPI variables
@@ -122,6 +123,9 @@ CUDA = False
 DEBUG = False
 MATLAB = False
 OPENCV = True
+
+# two version of opencv are allowed: 2.4.13 (Ubuntu <=16), 3.4.1 (Ubuntu >16)
+OPENCV_VER = 2.4.13
 
 # This variable is needed to set openGL library to work with remote desktops
 REMOTE_MESA_LIB = /services/guacamole/usr/mesa/lib/

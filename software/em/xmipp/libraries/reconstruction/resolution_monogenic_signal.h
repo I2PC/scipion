@@ -57,13 +57,13 @@ public:
 	double sampling, minRes, maxRes, R;
 
 	/** Is the volume previously masked?*/
-	int NVoxelsOriginalMask, Nvoxels;
+	int NVoxelsOriginalMask, Nvoxels, nthrs;
 
 	/** Step in digital frequency */
-	double N_freq, trimBound, significance;
+	double freq_step, trimBound, significance;
 
 	/** The search for resolutions is linear or inverse**/
-	bool exactres, noiseOnlyInHalves;
+	bool exactres, noiseOnlyInHalves, automaticMode;
 
 public:
 
@@ -74,8 +74,12 @@ public:
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-    		double w1, double w1l, MultidimArray<double> &amplitude,
+    		double freq, double freqH, double freqL, MultidimArray<double> &amplitude,
     		int count, FileName fnDebug);
+    void firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
+    		double freq, double freqH, double freqL, MultidimArray<double> &amplitude,
+    		int count, FileName fnDebug, double &mean_Signal,
+			double &mean_noise, double &thresholdFirstEstimation);
     void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
     		std::vector<double> &list, MultidimArray<double> &resolutionChimera,
     		double &cut_value, MultidimArray<int> &pMask);

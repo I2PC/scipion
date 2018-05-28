@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     David Maluenda (dmaluenda@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,20 +23,24 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This package contains the protocols and data for LocScale
+"""
+from locscale import *
+from bibtex import _bibtex # Load bibtex dict with references
 
+_logo = "locscale_logo.jpg"
 
-from pyworkflow.protocol import (STATUS_SAVED, STATUS_LAUNCHED, STATUS_RUNNING,
-                                 STATUS_FINISHED, STATUS_FAILED,
-                                 STATUS_INTERACTIVE, STATUS_ABORTED,
-                                 STATUS_SCHEDULED)
+from protocol_locscale import ProtLocScale
 
-STATUS_COLORS = {
-               STATUS_SAVED: '#D9F1FA',
-               STATUS_LAUNCHED: '#D9F1FA',
-               STATUS_RUNNING: '#FCCE62',
-               STATUS_FINISHED: '#D2F5CB',
-               STATUS_FAILED: '#F5CCCB',
-               STATUS_INTERACTIVE: '#F3F5CB',
-               STATUS_ABORTED: '#F5CCCB',
-               STATUS_SCHEDULED: '#F3F5CB'
-               }
+def validateInstallation():
+    """ This function will be used to check if package is properly installed."""
+    missingPaths = ["%s: %s" % (var, os.environ[var])
+                    for var in [LOCSCALE_HOME_VAR, EMAN2DIR_VAR]
+                    if not os.path.exists(os.environ[var])]
+
+    if missingPaths:
+        return ["Required software not found in the system:"] + missingPaths + \
+               ["Try to install the package following: scipion install --help"]
+    else:
+        return [] # No errors
