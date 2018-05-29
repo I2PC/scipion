@@ -34,11 +34,13 @@ _references = []
 import os
 from convert import getSupportedVersions, getVersion, getEnviron
 from protocol_volume_selector import ProtInitialVolumeSelector
-#
-# # Wizards
-# from wizard import *
+
+# Wizards
+from wizard import *
+
+#Viewer
 from viewer import *
-#
+
 _environ = getEnviron()
 
 
