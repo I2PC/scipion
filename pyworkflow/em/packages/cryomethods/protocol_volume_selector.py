@@ -30,13 +30,11 @@ from convert import writeSetOfParticles
 
 
 class ProtInitialVolumeSelector(ProtocolRelionBase):
-    """ This class contains the common functions for all Relion protocols.
-    In subclasses there should be little changes about how to create the command
-    line and the files produced.
-
-    Most of the Relion protocols, have two modes: NORMAL or CONTINUE. That's why
-    some of the function have a template pattern approach to define the behaviour
-    depending on the case.
+    """
+    Protocol to obtain a better initial volume using as input a set of
+    volumes and particles. This method employs an empirical Bayesian approach
+    to refinement of multiple 3D reconstructions in electron cryo-microscopy
+    (cryo-EM).
     """
     _label = 'volume selector'
 
