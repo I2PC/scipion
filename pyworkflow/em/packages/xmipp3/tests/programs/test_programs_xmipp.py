@@ -1514,6 +1514,6 @@ class MlTomoMpi(XmippProgramTest):
     def test_case1(self):
         self.runCase("-i input/Ml_tomo/short.xmd --oroot %o/test1/iter22 --ref input/Ml_tomo/vir_norm.spi --missing input/Ml_tomo/wedgenew.doc --ang 5 --sym i3 --maxres .45 --dim 16 --iter 1 --maxCC",random=True,
                 preruns=["mkdir %o/test1" ],
-                outputs=["test1/iter22_img.xmd","test1/iter22_it000001_ref.xmd","test1/iter22_ref000001_img.xmd","test1/iter22_ref.xmd"])
+                outputs=["test1/iter22_img.xmd","test1/iter22_it000001_ref.xmd","test1/iter22_ref.xmd"])
 
 

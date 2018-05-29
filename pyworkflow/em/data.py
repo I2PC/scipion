@@ -1123,7 +1123,7 @@ class SetOfMicrographsBase(SetOfImages):
         self._samplingRate.set(samplingRate)
         mag = self._acquisition.getMagnification()
         if mag is None:
-            self._scannedPixelSize.set(None)
+            self._scannedPixelSize.set(samplingRate)
         else:
             self._scannedPixelSize.set(1e-4 * samplingRate * mag)
 
