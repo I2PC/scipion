@@ -226,7 +226,7 @@ void ProgRecFourierGPU::produceSideinfo()
     }
 
     // query the system on the number of cores
-	noOfCores = 1;//std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
+	noOfCores = std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
 }
 
 void ProgRecFourierGPU::cropAndShift(
@@ -356,11 +356,174 @@ void ProgRecFourierGPU::prepareBuffer(RecFourierWorkThread* threadParams,
 		buffer->noOfImages++; // new image added to buffer
 	}
 	time += clock() - begin;
-	printf("time: %f\n", double(time) / CLOCKS_PER_SEC);
+	printf("prepare buffer %d time: %f\n",threadParams->gpuStream, double(time) / CLOCKS_PER_SEC);
 }
 
 
+void runKTT(ktt::Tuner* tuner, RecFourierWorkThread* thr) {
+	static pthread_mutex_t mutex;
+	pthread_mutex_lock(&mutex);
+	printf("processing stream %d, imgs %d-%d\n", thr->gpuStream, thr->startImageIndex, thr->endImageIndex);
+	fflush(stdout);
+	sleep(2);
 
+//	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(threadParams, this,objId, buffer,
+//				imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, startImageIndex, endImageIndex));
+//	//	tuner.setTuningManipulator(referenceKernelId, std::make_unique<ReferenceManipulator>(threadParams, this,objId,threadParams->buffer,
+//	//				imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
+//
+//		tuner.setTuningManipulatorSynchronization(kernelId, false);
+
+//	if (refThread.endImageIndex >= lastLoadIndex) {
+//		printf("ukladam\n");
+//	tuner.tuneKernelByStep(kernelId, {
+//		ktt::OutputDescriptor(volId, parent->tempVolumeGPU),
+//		ktt::OutputDescriptor(weightId, parent->tempWeightsGPU)});
+//	} else {
+//		printf("neukladam\n");
+//		tuner.tuneKernelByStep(kernelId, {});
+//	}
+
+	pthread_mutex_unlock(&mutex);
+}
+
+ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageIndex) {
+//	RecFourierWorkThread* threadParams = (RecFourierWorkThread *) threadArgs;
+//	ProgRecFourierGPU* parent = threadParams->parent;
+//	std::vector<size_t> objId;
+//
+//	threadParams->selFile = &parent->SF;
+//	threadParams->selFile->findObjects(objId);
+//	bool hasCTF = useCTF
+//			&& (selFile->containsLabel(MDL_CTF_MODEL)
+//					|| selFile->containsLabel(MDL_CTF_DEFOCUSU));
+
+//	// allocate buffer
+	RecFourierBufferData* buffer = new RecFourierBufferData( ! fftOnGPU, false,
+			maxVolumeIndexX / 2, maxVolumeIndexYZ, paddedImgSize,
+			bufferSize, (int)R_repository.size());
+//	// allocate GPU
+//	allocateWrapper(threadParams->buffer, threadParams->gpuStream);
+//
+//
+////	threadParams->endImageIndex = std::min(threadParams->endImageIndex+1, threadParams->startImageIndex+parent->bufferSize);
+////	prepareBuffer(threadParams, parent, false, objId);
+////	int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
+
+	ktt::DeviceIndex deviceIndex = 0;
+	ktt::PlatformIndex platformIndex = 0;
+
+	std::string srcPath = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/";
+
+	std::string kernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier.cu";
+	std::string referenceKernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier_ref.cu";
+
+	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
+	ktt::Tuner* tuner = new ktt::Tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+
+	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
+	kernelId = tuner->addKernelFromFile(kernelFile, "processBufferKernel", ktt::DimensionVector(1), ktt::DimensionVector(1));
+	int localSize = 16;
+	int size2D = maxVolumeIndexX + 1;
+	int globalSize = ceil(size2D/(float)localSize);
+	ktt::KernelId referenceKernelId = tuner->addKernelFromFile(referenceKernelFile, "processBufferKernelReference", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
+
+	size_t volumeSize = std::pow(maxVolumeIndexYZ + 1, 3);
+	RecFourierProjectionTraverseSpace dummy;
+
+	// Add new arguments to tuner, argument data is copied from std::vector containers
+	ktt::ArgumentId volId = tuner->addArgumentVector(std::vector<float>(tempVolumeGPU, tempVolumeGPU+volumeSize*2), ktt::ArgumentAccessType::ReadWrite);
+	tuner->persistArgument(volId, true);
+	ktt::ArgumentId weightId = tuner->addArgumentVector(std::vector<float>(tempWeightsGPU, tempWeightsGPU +volumeSize), ktt::ArgumentAccessType::ReadWrite);
+	tuner->persistArgument(weightId, true);
+	ktt::ArgumentId spaceId = tuner->addArgumentVector(std::vector<RecFourierProjectionTraverseSpace>{dummy}, ktt::ArgumentAccessType::ReadOnly);
+	tuner->persistArgument(spaceId, true);
+	ktt::ArgumentId spaceNoId = tuner->addArgumentScalar(0);
+	ktt::ArgumentId FFTsId = tuner->addArgumentVector(std::vector<float>{0.0f}, ktt::ArgumentAccessType::ReadOnly);
+	tuner->persistArgument(FFTsId, true);
+	ktt::ArgumentId fftSizeXId = tuner->addArgumentScalar(buffer->fftSizeX);
+	ktt::ArgumentId fftSizeYId = tuner->addArgumentScalar(buffer->fftSizeY);
+	ktt::ArgumentId blobTableId = tuner->addArgumentVector(std::vector<float>((float*)blobTableSqrt, (float*)blobTableSqrt+BLOB_TABLE_SIZE_SQRT), ktt::ArgumentAccessType::ReadOnly);
+	tuner->persistArgument(blobTableId, true);
+	ktt::ArgumentId imgCacheId = tuner->addArgumentScalar(0);
+	ktt::ArgumentId sharedMemId = tuner->addArgumentLocal<std::complex<float> >(1); // will be set eventually
+	ktt::ArgumentId maxVolIndexXId = tuner->addArgumentScalar(maxVolumeIndexX);
+	ktt::ArgumentId maxVolIndexYZId = tuner->addArgumentScalar(maxVolumeIndexYZ);
+	ktt::ArgumentId startSpaceIndexId = tuner->addArgumentScalar(0);
+
+	tuner->addParameter(kernelId, "BLOCK_DIM_X", {16}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
+	tuner->addParameter(kernelId, "BLOCK_DIM_Y", {16}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
+	tuner->addParameter(kernelId, "TILE", {2});
+	tuner->addParameter(kernelId, "FAKE", {1,2,3,4,5,6});
+
+	tuner->addParameter(kernelId, "GRID_DIM_Z", {1}, ktt::ModifierType::Global, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Z);
+
+	tuner->addParameter(kernelId, "SHARED_BLOB_TABLE", {1});
+	tuner->addParameter(kernelId, "SHARED_IMG", {0});
+	tuner->addParameter(kernelId, "USE_ATOMICS", {1});
+	tuner->addParameter(kernelId, "BLOB_TABLE_SIZE_SQRT", {BLOB_TABLE_SIZE_SQRT});
+	tuner->addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {1});
+	tuner->addParameter(kernelId, "cMaxVolumeIndexX", {maxVolumeIndexX});
+	tuner->addParameter(kernelId, "cMaxVolumeIndexYZ", {maxVolumeIndexYZ});
+	tuner->addParameter(kernelId, "blobOrder", {blob.order});
+
+	tuner->setCompilerOptions("-lineinfo -use_fast_math -I" + srcPath);
+
+//	tuner->addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
+//	tuner->addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});
+//	tuner->addParameter(kernelId, "cIw0", {parent->iw0});
+//	tuner->addParameter(kernelId, "cIDeltaSqrt", {parent->iDeltaSqrt});
+
+	auto blocksDimEqConstr = [](const std::vector<size_t> vector) {return vector.at(0)== vector.at(1);};
+	tuner->addConstraint(kernelId, blocksDimEqConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y"});
+
+	auto tileMultXConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
+	tuner->addConstraint(kernelId, tileMultXConstr, std::vector<std::string>{"BLOCK_DIM_X", "TILE"});
+
+	auto tileMultYConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
+	tuner->addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"BLOCK_DIM_Y", "TILE"});
+
+	auto tileSharedImgConstr = [](std::vector<size_t> vector) {return vector.at(0) == 0 || vector.at(1) == 1;};
+	tuner->addConstraint(kernelId, tileSharedImgConstr, std::vector<std::string>{"SHARED_IMG", "TILE"});
+
+	auto useAtomicsZDimConstr = [](std::vector<size_t> vector) {return !(vector.at(0) == 0 && vector.at(1) != 1);};
+	tuner->addConstraint(kernelId, useAtomicsZDimConstr, std::vector<std::string>{"USE_ATOMICS", "GRID_DIM_Z"});
+
+	auto tileSmallerThanBlockConstr = [](std::vector<size_t> vector) {return vector.at(0) > vector.at(2) && vector.at(1) > vector.at(2);};
+	tuner->addConstraint(kernelId, tileSmallerThanBlockConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y", "TILE"});
+
+	auto tooMuchSharedMemConstr = [](std::vector<size_t> vector) {return !(vector.at(0)==1 && vector.at(1)==1);};
+	tuner->addConstraint(kernelId, tooMuchSharedMemConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "SHARED_IMG"});
+
+	auto blobTableConstr = [](std::vector<size_t> vector) {return vector.at(0)==0 || (vector.at(0)==1 && vector.at(1)==1);};
+	tuner->addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
+
+//	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(threadParams, this,objId, buffer,
+//			imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, startImageIndex, endImageIndex));
+////	tuner.setTuningManipulator(referenceKernelId, std::make_unique<ReferenceManipulator>(threadParams, this,objId,threadParams->buffer,
+////				imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
+//
+//	tuner.setTuningManipulatorSynchronization(kernelId, false);
+
+	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
+	tuner->setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
+		spaceId, startSpaceIndexId, spaceNoId,
+		FFTsId,
+		fftSizeXId, fftSizeYId, blobTableId, imgCacheId, sharedMemId});
+	tuner->setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{volId, weightId,
+		spaceId, spaceNoId,
+		FFTsId,
+		fftSizeXId, fftSizeYId, blobTableId, maxVolIndexXId, maxVolIndexYZId});
+
+
+	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
+//	tuner.setValidationMethod(ktt::ValidationMethod::SideBySideRelativeComparison, 0.001f);
+//    tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<ktt::ArgumentId>{volId,
+//        weightId});
+	printf("tuner hotov\n");
+	return tuner;
+
+}
 
 void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 	XMIPP_TRY // in case some method throws a xmipp exception
@@ -382,157 +545,8 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
     // allocate GPU
     allocateWrapper(threadParams->buffer, threadParams->gpuStream);
 
-
-//	threadParams->endImageIndex = std::min(threadParams->endImageIndex+1, threadParams->startImageIndex+parent->bufferSize);
-//	prepareBuffer(threadParams, parent, false, objId);
-//	int noOfSpaces = threadParams->buffer->getNoOfElements(threadParams->buffer->spaces);
-
-    ktt::DeviceIndex deviceIndex = 0;
-    ktt::PlatformIndex platformIndex = 0;
-
-    std::string srcPath = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/";
-
-	std::string kernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier.cu";
-	std::string referenceKernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier_ref.cu";
-
-	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
-	ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
-
-	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
-	ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "processBufferKernel", ktt::DimensionVector(1), ktt::DimensionVector(1));
-	int localSize = 16;
-	int size2D = parent->maxVolumeIndexX + 1;
-	int globalSize = ceil(size2D/(float)localSize);
-	ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "processBufferKernelReference", ktt::DimensionVector(globalSize, globalSize), ktt::DimensionVector(localSize, localSize));
-
-	size_t volumeSize = std::pow(parent->maxVolumeIndexYZ + 1, 3);
-	parent->tempVolumeGPU = new float[volumeSize * 2]();
-	parent->tempWeightsGPU = new float[volumeSize]();
-	parent->tempVolumeGPUtmp = new float[volumeSize * 2]();
-	parent->tempWeightsGPUtmp = new float[volumeSize]();
-	RecFourierProjectionTraverseSpace dummy;
-
-	// Add new arguments to tuner, argument data is copied from std::vector containers
-	ktt::ArgumentId volId = tuner.addArgumentVector(std::vector<float>(parent->tempVolumeGPU, parent->tempVolumeGPU+volumeSize*2), ktt::ArgumentAccessType::ReadWrite);
-	tuner.persistArgument(volId, true);
-	ktt::ArgumentId weightId = tuner.addArgumentVector(std::vector<float>(parent->tempWeightsGPU, parent->tempWeightsGPU +volumeSize), ktt::ArgumentAccessType::ReadWrite);
-	tuner.persistArgument(weightId, true);
-	ktt::ArgumentId spaceId = tuner.addArgumentVector(std::vector<RecFourierProjectionTraverseSpace>{dummy}, ktt::ArgumentAccessType::ReadOnly);
-	tuner.persistArgument(spaceId, true);
-	ktt::ArgumentId spaceNoId = tuner.addArgumentScalar(0);
-	ktt::ArgumentId FFTsId = tuner.addArgumentVector(std::vector<float>{0.0f}, ktt::ArgumentAccessType::ReadOnly);
-	tuner.persistArgument(FFTsId, true);
-	ktt::ArgumentId fftSizeXId = tuner.addArgumentScalar(threadParams->buffer->fftSizeX);
-	ktt::ArgumentId fftSizeYId = tuner.addArgumentScalar(threadParams->buffer->fftSizeY);
-	ktt::ArgumentId blobTableId = tuner.addArgumentVector(std::vector<float>((float*)parent->blobTableSqrt, (float*)parent->blobTableSqrt+BLOB_TABLE_SIZE_SQRT), ktt::ArgumentAccessType::ReadOnly);
-	tuner.persistArgument(blobTableId, true);
-	ktt::ArgumentId imgCacheId = tuner.addArgumentScalar(0);
-	ktt::ArgumentId sharedMemId = tuner.addArgumentLocal<std::complex<float> >(1); // will be set eventually
-	ktt::ArgumentId maxVolIndexXId = tuner.addArgumentScalar(parent->maxVolumeIndexX);
-	ktt::ArgumentId maxVolIndexYZId = tuner.addArgumentScalar(parent->maxVolumeIndexYZ);
-	ktt::ArgumentId startSpaceIndexId = tuner.addArgumentScalar(0);
-
-	tuner.addParameter(kernelId, "BLOCK_DIM_X", {16}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
-	tuner.addParameter(kernelId, "BLOCK_DIM_Y", {16}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
-	tuner.addParameter(kernelId, "TILE", {2});
-	tuner.addParameter(kernelId, "FAKE", {1,2,3,4,5,6});
-
-	tuner.addParameter(kernelId, "GRID_DIM_Z", {1}, ktt::ModifierType::Global, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Z);
-
-	tuner.addParameter(kernelId, "SHARED_BLOB_TABLE", {1});
-	tuner.addParameter(kernelId, "SHARED_IMG", {0});
-	tuner.addParameter(kernelId, "USE_ATOMICS", {1});
-	tuner.addParameter(kernelId, "BLOB_TABLE_SIZE_SQRT", {BLOB_TABLE_SIZE_SQRT});
-	tuner.addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {1});
-	tuner.addParameter(kernelId, "cMaxVolumeIndexX", {parent->maxVolumeIndexX});
-	tuner.addParameter(kernelId, "cMaxVolumeIndexYZ", {parent->maxVolumeIndexYZ});
-	tuner.addParameter(kernelId, "blobOrder", {parent->blob.order});
-
-	tuner.setCompilerOptions("-lineinfo -use_fast_math -I" + srcPath);
-
-//	tuner.addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
-//	tuner.addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});
-//	tuner.addParameter(kernelId, "cIw0", {parent->iw0});
-//	tuner.addParameter(kernelId, "cIDeltaSqrt", {parent->iDeltaSqrt});
-
-	auto blocksDimEqConstr = [](const std::vector<size_t> vector) {return vector.at(0)== vector.at(1);};
-	tuner.addConstraint(kernelId, blocksDimEqConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y"});
-
-	auto tileMultXConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
-	tuner.addConstraint(kernelId, tileMultXConstr, std::vector<std::string>{"BLOCK_DIM_X", "TILE"});
-
-	auto tileMultYConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
-	tuner.addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"BLOCK_DIM_Y", "TILE"});
-
-	auto tileSharedImgConstr = [](std::vector<size_t> vector) {return vector.at(0) == 0 || vector.at(1) == 1;};
-	tuner.addConstraint(kernelId, tileSharedImgConstr, std::vector<std::string>{"SHARED_IMG", "TILE"});
-
-	auto useAtomicsZDimConstr = [](std::vector<size_t> vector) {return !(vector.at(0) == 0 && vector.at(1) != 1);};
-	tuner.addConstraint(kernelId, useAtomicsZDimConstr, std::vector<std::string>{"USE_ATOMICS", "GRID_DIM_Z"});
-
-	auto tileSmallerThanBlockConstr = [](std::vector<size_t> vector) {return vector.at(0) > vector.at(2) && vector.at(1) > vector.at(2);};
-	tuner.addConstraint(kernelId, tileSmallerThanBlockConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y", "TILE"});
-
-	auto tooMuchSharedMemConstr = [](std::vector<size_t> vector) {return !(vector.at(0)==1 && vector.at(1)==1);};
-	tuner.addConstraint(kernelId, tooMuchSharedMemConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "SHARED_IMG"});
-
-	auto blobTableConstr = [](std::vector<size_t> vector) {return vector.at(0)==0 || (vector.at(0)==1 && vector.at(1)==1);};
-	tuner.addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
-
-	tuner.setTuningManipulator(kernelId, std::make_unique<Manipulator>(threadParams, parent,objId,threadParams->buffer,
-			imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
-	tuner.setTuningManipulator(referenceKernelId, std::make_unique<ReferenceManipulator>(threadParams, parent,objId,threadParams->buffer,
-				imgCacheId,startSpaceIndexId,spaceNoId, sharedMemId, spaceId, FFTsId, threadParams->startImageIndex, threadParams->endImageIndex));
-
-	tuner.setTuningManipulatorSynchronization(kernelId, false);
-
-	// Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
-	tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{volId, weightId,
-		spaceId, startSpaceIndexId, spaceNoId,
-		FFTsId,
-		fftSizeXId, fftSizeYId, blobTableId, imgCacheId, sharedMemId});
-	tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{volId, weightId,
-		spaceId, spaceNoId,
-		FFTsId,
-		fftSizeXId, fftSizeYId, blobTableId, maxVolIndexXId, maxVolIndexYZId});
-
-
-	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-	tuner.setValidationMethod(ktt::ValidationMethod::SideBySideRelativeComparison, 0.001f);
-//    tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<ktt::ArgumentId>{volId,
-//        weightId});
-    printf("vypis development \n");
-
-//    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.1});
-
-
-        // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
-        // provide list of arguments which will be validated
-    //    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(data, dataId), std::vector<ktt::ArgumentId>{dataId});
-
-
-
-    //    tuner.setArgumentComparator(dataId, compareData);
-
-
-	// Print tuning results to standard output and to output.csv file
-	// Launch kernel tuning
-//	for (auto i = 0; i < 2; i++) {
-//		std::cout << "run no " << i << std::endl;
-//	tuner.tuneKernelByStep(kernelId, {
-//			ktt::ArgumentOutputDescriptor(volId, parent->tempVolumeGPU),
-//			ktt::ArgumentOutputDescriptor(weightId, parent->tempWeightsGPU)});
-//	}
-    RecFourierWorkThread refThread;
-    refThread.parent = threadParams->parent;
-    refThread.selFile = threadParams->selFile;
-    refThread.buffer = new RecFourierBufferData( ! parent->fftOnGPU, hasCTF,
-       		parent->maxVolumeIndexX / 2, parent->maxVolumeIndexYZ, parent->paddedImgSize,
-   			parent->bufferSize, (int)parent->R_repository.size());
-    refThread.gpuStream = 0;
     int startLoadIndex = threadParams->startImageIndex;
     int lastLoadIndex = threadParams->endImageIndex;
-    std::cout << "lastLoadindex " << lastLoadIndex <<std::endl;
     for(int bIndex = startLoadIndex;
 		bIndex <= lastLoadIndex;
 		bIndex += parent->bufferSize) {
@@ -541,22 +555,9 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 		// load data
 		threadParams->startImageIndex = bIndex;
 		threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
-		refThread.startImageIndex = bIndex;
-		refThread.endImageIndex = threadParams->endImageIndex;
-//		refThread.
 		prepareBuffer(threadParams, parent, false, objId);
-		prepareBuffer(&refThread, parent, false, objId);
-		std::cout << "endImageIndex " << refThread.endImageIndex << std::endl;
 
-		if (refThread.endImageIndex >= lastLoadIndex) {
-    		printf("ukladam\n");
-		tuner.tuneKernelByStep(kernelId, {
-			ktt::OutputDescriptor(volId, parent->tempVolumeGPU),
-			ktt::OutputDescriptor(weightId, parent->tempWeightsGPU)});
-    	} else {
-    		printf("neukladam\n");
-    		tuner.tuneKernelByStep(kernelId, {});
-    	}
+		runKTT(parent->tuner, threadParams);
 
 /*
 		tuner.tuneKernelByStep(kernelId, {ktt::OutputDescriptor(volId, parent->tempVolumeGPUtmp),
@@ -573,19 +574,13 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 //    	printf("mem after: ");
 //		getFreeMemory(stdout);
     }
-	tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-	size_t lastindex = parent->fn_out.getString().find_last_of(".");
-	std::string rawname = parent->fn_out.getString().substr(0, lastindex);
-	tuner.setInvalidResultPrinting(true);
-	tuner.printResult(kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
-	delete[] parent->tempVolumeGPUtmp;
-	delete[] parent->tempWeightsGPUtmp;
 
     // clean after itself
     releaseWrapper(threadParams->gpuStream);
     delete threadParams->buffer;
     threadParams->buffer = NULL;
     threadParams->selFile = NULL;
+
     barrier_wait( &parent->barrier );// notify that thread finished
 
 	XMIPP_CATCH // catch possible exception
@@ -1002,12 +997,21 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //    if (NULL == tempWeightsGPU) {
 //    	allocateTempVolumeGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
 //    }
+
+	size_t volumeSize = std::pow(maxVolumeIndexYZ + 1, 3);
+		tempVolumeGPU = new float[volumeSize * 2]();
+		tempWeightsGPU = new float[volumeSize]();
+		tempVolumeGPUtmp = new float[volumeSize * 2]();
+		tempWeightsGPUtmp = new float[volumeSize]();
+
     createStreams(noOfCores);
 //    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
 //    		blob.radius, blob.alpha, iDeltaSqrt, iw0);
     if ( ! useFast) {
     	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     }
+
+    tuner = createTuner(firstImageIndex, lastImageIndex);
 
 	// create threads
 	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
@@ -1021,6 +1025,18 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 
 	// Waiting for threads to finish
 	barrier_wait( &barrier );
+
+	tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+	size_t lastindex = fn_out.getString().find_last_of(".");
+	std::string rawname = fn_out.getString().substr(0, lastindex);
+	tuner->setInvalidResultPrinting(true);
+	tuner->printResult(kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
+	delete[] tempVolumeGPUtmp;
+	delete[] tempWeightsGPUtmp;
+
+
+
+
 
 	// clean threads and GPU
 	for (int i = 0; i < noOfCores; i++) {

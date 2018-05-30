@@ -122,6 +122,10 @@ class ProgRecFourierGPU : public ProgReconsBase
 {
 public:
 
+	ktt::Tuner* tuner;
+	ktt::KernelId kernelId;
+
+	ktt::Tuner* createTuner(int startImageIndex, int endImageIndex);
 
 	class Manipulator : public ktt::TuningManipulator
 	{
