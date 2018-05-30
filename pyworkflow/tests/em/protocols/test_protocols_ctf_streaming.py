@@ -36,7 +36,7 @@ from pyworkflow.em.packages.gctf import ProtGctf
 from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
-MICS = os.environ.get('SCIPION_TEST_MICS', 3)
+MICS = os.environ.get('SCIPION_TEST_MICS', 6)
 CTF_SQLITE = "ctfs.sqlite"
 
 
@@ -99,13 +99,12 @@ class TestCtfStreaming(BaseTest):
                                  "in %s." % prot.getClassName())
             self.assertEqual(prot.outputCTF.getSize(), MICS)
 
-
         # Simulate streaming with create stream data protocol
         kwargs = {'xDim': 4096,
                   'yDim': 4096,
                   'nDim': MICS,
                   'samplingRate': 1.25,
-                  'creationInterval': 10,
+                  'creationInterval': 15,
                   'delay': 0,
                   'setof': SET_OF_RANDOM_MICROGRAPHS}  # SetOfMicrographs
 
@@ -113,8 +112,6 @@ class TestCtfStreaming(BaseTest):
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
-
-
 
         # 1st ctf - ctffind4 in streaming
         protCTF = ProtCTFFind(useCftfind4=True)
@@ -131,7 +128,7 @@ class TestCtfStreaming(BaseTest):
 
         # 2nd ctf - Xmipp CTF
         kwargs = {'ctfDownFactor': 2,
-                  'numberOfThreads': 3
+                  'numberOfThreads': 4
                   }
         protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
         protCTF2.inputMicrographs.set(protStream)
@@ -148,23 +145,11 @@ class TestCtfStreaming(BaseTest):
             protCTF3.inputMicrographs.set(protStream)
             protCTF3.inputMicrographs.setExtended('outputMicrographs')
             protCTF3.ctfDownFactor.set(2)
-            self.proj.scheduleProtocol(protCTF3, wait=False)
+            self.proj.scheduleProtocol(protCTF3)
 
         except NVMLError, err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
-
-
-        # # run xmipp ctf. Since this is the slower method wait until finish
-        # # before running asserts
-        # kwargs = {
-        #     'numberOfThreads': MICS + 1}
-        # protCTF4 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
-        # protCTF4.inputMicrographs.set(protStream)
-        # protCTF4.inputMicrographs.setExtended('outputMicrographs')
-        # protCTF4.ctfDownFactor.set(2)
-        #
-        # self.proj.scheduleProtocol(protCTF4)
 
         # Check first ctf output - Ctffind
         checkOutputs(protCTF)
@@ -175,22 +160,3 @@ class TestCtfStreaming(BaseTest):
         # If GPU and therefore GCTF protocl
         if protCTF3 is not None:
             checkOutputs(protCTF3)
-
-
-        # Check last ctf output - Ctffind
-        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
-
-        baseFn = protCTF._getPath(CTF_SQLITE)
-        self.assertTrue(os.path.isfile(baseFn))
-
-        self.assertSetSize(ctfSet, MICS, "Ctffind4 output size does not match")
-
-        for ctf in ctfSet:
-            self.assertNotEqual(ctf.getPhaseShift(), None)
-            self.assertNotEqual(ctf._resolution.get(), None)
-            self.assertNotEqual(ctf._fitQuality.get(), None)
-            self.assertNotEqual(ctf.isEnabled(), None)
-            self.assertNotEqual(ctf._defocusU.get(), None)
-            self.assertNotEqual(ctf._defocusV.get(), None)
-            self.assertNotEqual(ctf._defocusRatio.get(), None)
-
