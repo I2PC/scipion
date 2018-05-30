@@ -1124,10 +1124,6 @@ void CTFDescription1D::forcePhysicalMeaning()
         {
         	phase_shift = realWRAP(phase_shift,-PI,PI);//phase_shift - floor(phase_shift/3.14)*3.14;
         }
-        /*if (phase_shift < 0)
-        {
-        	phase_shift = -(phase_shift - ceil(phase_shift/3.14)*3.14);//3.14 + phase_shift - ceil(phase_shift/3.14)*3.14;
-        }*/
     }
 }
 #undef DEBUG
