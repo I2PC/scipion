@@ -124,6 +124,9 @@ public:
 
 	ktt::Tuner* tuner;
 	ktt::KernelId kernelId;
+	ktt::ArgumentId volId;
+	ktt::ArgumentId weightId;
+	void runKTT(ktt::Tuner* tuner, RecFourierWorkThread* thr);
 
 	ktt::Tuner* createTuner(int startImageIndex, int endImageIndex);
 
@@ -131,10 +134,8 @@ public:
 	{
 	public:
 	    Manipulator(
-		RecFourierWorkThread* threadParams,
 		ProgRecFourierGPU* parent,
-	    std::vector<size_t> objId,
-	    RecFourierBufferData* buffer,
+//	    std::vector<size_t> objId,
 	    ktt::ArgumentId imgCacheId,
 	    ktt::ArgumentId startSpaceIndexId,
 	    ktt::ArgumentId spaceNoId,
@@ -142,7 +143,7 @@ public:
 	    ktt::ArgumentId spaceId,
 		ktt::ArgumentId FFTsId,
 	    int firstImgIndex, int lastImgIndex) :
-		threadParams(threadParams), parent(parent), objId(objId), buffer(buffer),
+		parent(parent), //objId(objId),
 	    imgCacheId(imgCacheId),startSpaceIndexId(startSpaceIndexId), spaceNoId(spaceNoId), sharedMemId(sharedMemId),
 	    spaceId(spaceId),FFTsId(FFTsId),
 	    firstImgIndex(firstImgIndex), lastImgIndex(lastImgIndex){}
@@ -222,10 +223,15 @@ public:
 
 	    }
 
+	    void setThread(RecFourierWorkThread* thr) {
+	    	threadParams = thr;
+	    	buffer = thr->buffer;
+	    }
+
 	private:
 	    ProgRecFourierGPU* parent;
 	    RecFourierWorkThread* threadParams;
-	    std::vector<size_t> objId;
+//	    std::vector<size_t> objId;
 	    RecFourierBufferData* buffer;
 	    ktt::ArgumentId imgCacheId;
 	    ktt::ArgumentId startSpaceIndexId;
@@ -237,6 +243,9 @@ public:
 	    int firstImgIndex;
 	    int lastImgIndex;
 	};
+
+
+	Manipulator* manipulator;
 
 	class ReferenceManipulator : public ktt::TuningManipulator
 	{
