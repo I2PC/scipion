@@ -64,8 +64,10 @@ class HashTableDict:
 
 
 class XmippProtStrGpuCrrSimple(ProtAlign2D):
-    """ 2D alignment in semi streaming using Xmipp GPU Correlation. """
-    _label = 'align with GPU Correlation using previous classes'
+    """ 2D alignment in semi streaming using Xmipp GPU Correlation.
+    A previous set of classes must be provided to include the new images in the
+    corresponding class although the representatives will be maintained."""
+    _label = 'gl2d static'
     _lastUpdateVersion = VERSION_1_2
 
 

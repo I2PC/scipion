@@ -23,29 +23,32 @@ BSOFT_HOME = %(EM_ROOT)s/bsoft-1.9.0
 CRYOEF_HOME = %(EM_ROOT)s/cryoEF-1.1.0
 CTFFIND_HOME = %(EM_ROOT)s/ctffind-3.6
 CTFFIND4_HOME = %(EM_ROOT)s/ctffind4-4.1.10
-CCP4_HOME =  %(EM_ROOT)s/ccp4-6.5
+CCP4_HOME =  %(EM_ROOT)s/ccp4-7.0
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker-0.2.1
 EMAN2DIR = %(EM_ROOT)s/eman-2.12
 ETHAN_HOME = %(EM_ROOT)s/ethan-1.2
 FREALIGN_HOME = %(EM_ROOT)s/frealign-9.07
-GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch-0.53
-GAUTOMATCH = Gautomatch-v0.53_sm_20_cu7.5_x86_64
+GAUTOMATCH_HOME = %(EM_ROOT)s/gautomatch-0.53
+# replace '_cuX.Y_' to certain installed cuda
+GAUTOMATCH = Gautomatch-v0.53_sm_20_cu8.0_x86_64
 # GAUTOMATCH_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
 GEMPICKER_HOME = %(EM_ROOT)s/gEMpicker-1.1
 GEMPICKER = gEMpicker_nocuda_Ubuntu_14.04.x64
 GEMPICKER_CUDA = None # gEMpicker_cuda_75.x64
-GCTF_HOME = %(EM_ROOT)s/Gctf-1.06
-GCTF = Gctf-v1.06_sm_20_cu7.5_x86_64
+GCTF_HOME = %(EM_ROOT)s/gctf-1.06
+# replace '_cuX.Y_' to certain installed cuda
+GCTF = Gctf-v1.06_sm_20_cu8.0_x86_64
 # GCTF_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
 IMAGIC_HOME = %(EM_ROOT)s/imagic
 LOCALREC_HOME = %(EM_ROOT)s/localrec-1.2.0
 LOCALREC_RELION_HOME = %(EM_ROOT)s/relion-1.4
+LOCSCALE_HOME = %(EM_ROOT)s/locscale-0.1
 MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
 MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1
 MOTIONCORR = dosefgpu_driftcorr_7.5
-# MOTIONCORR_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
+MOTIONCORR_CUDA_LIB = /usr/local/cuda-7.5/lib64
 MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-1.0.5
 MOTIONCOR2_BIN = MotionCor2_Cuda8.0_v1.0.5
 MOTIONCOR2_CUDA_LIB = /usr/local/cuda-8.0/lib64 
@@ -85,7 +88,7 @@ CC = gcc
 CXX = g++
 LINKERFORPROGRAMS = g++
 CCFLAGS = -std=c99
-CXXFLAGS = 
+CXXFLAGS =
 LINKFLAGS = 
 
 # MPI variables
@@ -99,11 +102,11 @@ MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
 
 # NVCC (CUDA) variables
 # Default CUDA path if not defined for a certain package
-CUDA_LIB = /usr/local/cuda-7.5/lib64
-CUDA_BIN = /usr/local/cuda-7.5/bin
+CUDA_LIB = /usr/local/cuda-8.0/lib64
+CUDA_BIN = /usr/local/cuda-8.0/bin
 NVCC = nvcc --x cu -D_FORCE_INLINES -Xcompiler -fPIC -Wno-deprecated-gpu-targets
-NVCC_INCLUDE = /usr/local/cuda/include
-NVCC_LIBDIR = CUDA_LIB
+NVCC_INCLUDE = /usr/local/cuda-8.0/include
+NVCC_LIBDIR = %(CUDA_LIB)s
 
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 
@@ -120,6 +123,9 @@ CUDA = False
 DEBUG = False
 MATLAB = False
 OPENCV = True
+
+# two version of opencv are allowed: 2.4.13 (Ubuntu <=16), 3.4.1 (Ubuntu >16)
+OPENCV_VER = 2.4.13
 
 # This variable is needed to set openGL library to work with remote desktops
 REMOTE_MESA_LIB = /services/guacamole/usr/mesa/lib/

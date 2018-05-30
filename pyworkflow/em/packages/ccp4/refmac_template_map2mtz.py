@@ -25,7 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-template_mask="""#!/bin/sh
+template_map_mtz="""#!/bin/sh
 # This  script will run REFMAC for a model against an EM map. 
 # # 
 # Prerequistes:
@@ -41,11 +41,11 @@ template_mask="""#!/bin/sh
 # The radius is given in Angstrom and is can be user-defined (SFCALC MRAD 3). 
 #
 
-# set generateMaskedVolume to True if you want to see the mask using chimera
-generateMaskedVolume=%(MASKED_VOLUME)s
-
 #refmac binary
 refmac=%(REFMAC_BIN)s
+
+#pdbset binary
+pdbset=%(PDBSET_BIN)s
 
 #PATH to PDB file
 PDBDIR=%(PDBDIR)s
@@ -67,41 +67,42 @@ OUTPUTDIR=%(OUTPUTDIR)s
 # Delete some temporary files. Otherwise if the script is executed
 # two times there will be conflicts
 RM='rm -f'
-${RM} ${OUTPUTDIR}average_for_refmac.mtz ${OUTPUTDIR}mask.log 
+${RM} ${OUTPUTDIR}map2mtz.mtz ${OUTPUTDIR}map2mtz.log 
 ${RM} ${OUTPUTDIR}_orig_data_start.txt
-${RM} ${OUTPUTDIR}refmac-mask.pdb ${OUTPUTDIR}masked_fs.mtz
-${RM} ${OUTPUTDIR}shifts.txt
+${RM} ${OUTPUTDIR}pdbset.pdb
 ${RM} ${OUTPUTDIR}refmac-refined.mtz ${OUTPUTDIR}refmac-refined.pdb
-${RM} ${OUTPUTDIR}refine.log ${OUTPUTDIR}ifft.log
-${RM} ${OUTPUTDIR}masked_fs.map
 
 #################################################################
 # Nothing to be changed below (unless you know what you are doing)
 ##################################################################
 #load ccp4 enviroment
-###TODO: MOVE tHIS INITIALIZATION TO convert.getEnv
-PATHMRCENV=$PATHCCP4/setup-scripts/ccp4.setup-sh
+###TODO: MOVE THIS INITIALIZATION TO convert.getEnv
 PATHMRCBIN=$PATHCCP4/bin
+PATHMRCENV=$PATHMRCBIN/ccp4.setup-sh
 . $PATHMRCENV
 
 # create a mask by calculating complex structure factors around a given radius 
 # taken from the input model 
 pdb_in=${PDBDIR}/${PDBFILE}
-if [ "$generateMaskedVolume" = True ] ; then
-    echo we will work on $pdb_in
-    $refmac MAPIN ${MAPFILE} \\
-   	    HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \\
-   	    XYZIN $pdb_in \\
-   	    XYZOUT ${OUTPUTDIR}refmac-mask.pdb \\
-   	    > ${OUTPUTDIR}mask.log \\
-   	        << eof
-        MODE SFCALC 
-        SFCALC mapradius %(SFCALC_mapradius)f
-        SFCALC mradius %(SFCALC_mradius)f
-        SFCALC shift
-        END
+
+echo we will work on $pdb_in
+$refmac MAPIN ${MAPFILE} \\
+    HKLOUT ${OUTPUTDIR}map2mtz.mtz \\
+    > ${OUTPUTDIR}map2mtz.log \\
+    << eof
+    MODE SFCALC 
+    RESO %(RESOMAX)f
+    SOURCE EM MB
+    END
 eof
-fi
+
+$pdbset XYZIN  $pdb_in \\
+    XYZOUT ${OUTPUTDIR}pdbset.pdb  > ${OUTPUTDIR}pdbset.log \\
+    << eof
+    CELL %(Xlength)f %(Ylength)f %(Zlength)f  90.0 90.0 90.0
+    END
+eof
 
 #done
 """
+
