@@ -138,7 +138,7 @@ class ProtCreateStreamData(EMProtocol):
         elif self.setof == SET_OF_MICROGRAPHS:
             step = 'createStep'
         elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
-            step = 'createRandomMicAtep'
+            step = 'createRandomMicStep'
         elif self.setof == SET_OF_PARTICLES:
             step = 'createParticlesStep'
         else:
@@ -182,6 +182,7 @@ class ProtCreateStreamData(EMProtocol):
                     self.inputMics.get().getAcquisition().getSphericalAberration())
                 acquisition.setAmplitudeContrast(
                     self.inputMics.get().getAcquisition().getAmplitudeContrast())
+                objSet.setAcquisition(acquisition)
                 objSet.setSamplingRate(self.inputMics.get().getSamplingRate())
             elif self.setof == SET_OF_MOVIES:
                 acquisition.setMagnification(
@@ -192,6 +193,7 @@ class ProtCreateStreamData(EMProtocol):
                     self.inputMovies.get().getAcquisition().getSphericalAberration())
                 acquisition.setAmplitudeContrast(
                     self.inputMovies.get().getAcquisition().getAmplitudeContrast())
+                objSet.setAcquisition(acquisition)
                 objSet.setSamplingRate(
                     self.inputMovies.get().getSamplingRate())
             else:
@@ -199,9 +201,10 @@ class ProtCreateStreamData(EMProtocol):
                 acquisition.setVoltage(self._voltage)
                 acquisition.setSphericalAberration(self._sphericalAberration)
                 acquisition.setAmplitudeContrast(self._amplitudeContrast)
+                objSet.setAcquisition(acquisition)
                 objSet.setSamplingRate(self.samplingRate.get())
 
-            objSet.setAcquisition(acquisition)
+
         if self.setof == SET_OF_MOVIES:
             obj = Movie()
         elif self.setof == SET_OF_MICROGRAPHS:
@@ -309,7 +312,7 @@ class ProtCreateStreamData(EMProtocol):
                 self.dictObj[destFn] = True
         time.sleep(self.creationInterval.get())
 
-    def createRandomMicAtep(self, mic):
+    def createRandomMicStep(self, mic):
         from pyworkflow.em.packages.xmipp3 import getEnviron
 
         # create image
