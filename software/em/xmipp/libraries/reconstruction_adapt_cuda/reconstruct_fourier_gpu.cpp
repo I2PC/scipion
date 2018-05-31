@@ -173,24 +173,43 @@ void* ProgRecFourierGPU::tunerRoutine(void* threadArgs) {
 		// create threads
 	    printf("pred tuner cyklem\n"); fflush(stdout);
 //	    sleep(1);
+
+
+	    bool tune = true;
+	    ktt::ComputationResult bestConf;
+	    int counter = 0;
+
 	    while(threadParams->keepWorking || !threadParams->queue.empty()) {
+//	    	clock_t begin = clock();
 //				printf("zamykam while cyklus: %d\n", pthread_mutex_lock(&threadParams->mutex));
 	    	if (!threadParams->queue.empty()) {
 				 pthread_mutex_lock(&threadParams->mutex);
+				 counter++;
 	    		RecFourierWorkThread* t = threadParams->queue.front();
 	    		threadParams->queue.pop();
+	    		if (tune && counter > 50) {
+	    			tune = false;
+	    			bestConf = parent->tuner->getBestComputationResult(parent->kernelId);
+					parent->tuner->setTuningManipulatorSynchronization(parent->kernelId, false);
+	    		}
 				pthread_mutex_unlock(&threadParams->mutex);
 //	    		printf("processing thread %d\n", t->gpuStream );
 //	    		sleep(1);
+//				clock_t begin2 = clock();
 	    		parent->manipulator->setThread(t);
-				parent->tuner->tuneKernelByStep(parent->kernelId, {});
 
-
+	    		if (tune) {
+	    			parent->tuner->tuneKernelByStep(parent->kernelId, {});
+	    		} else {
+	    			parent->tuner->runKernel(parent->kernelId, bestConf.getConfiguration(), {});
+	    		}
 	    		t->isReady = false;
+//	    		printf("tunerKernelByStep time: %f\n", double(clock() - begin2) / CLOCKS_PER_SEC);
 //	    		printf("thread %d processed \n", t->gpuStream );
 //				printf("tuner about to unlock mutex\n"); fflush(stdout);
 	    	}
 				pthread_cond_broadcast(&threadParams->condition);
+//				printf("loop time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
 //	    	printf("%d vlaken ceka\n", threadParams->queue.size());fflush(stdout);
 //		    	pthread_cond_wait(&threadParams->conditionCons, &threadParams->mutex);
 	    }

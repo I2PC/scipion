@@ -208,12 +208,13 @@ public:
 						updateArgumentVectorAsync(spaceId, buffer->spaces, noOfSpaces, threadParams->gpuStream);
 						updateArgumentVectorAsync(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs), threadParams->gpuStream);
 						updateArgumentScalar(spaceNoId, &noOfSpaces);
+//						printf("noOfSpaces %d\n", noOfSpaces);
 
 					if (useAtomics == 1) {
 						clock_t begin = clock();
 //						printf("mel bych pouzit stream %d\n ", threadParams->gpuStream);
 						runKernelAsync(kernelId, globalSize, localSize, getAllDeviceQueues().at(threadParams->gpuStream));
-//						printf("kernel time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
+						printf("kernel time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
 //						parent->logProgress(buffer->noOfImages);
 					} else {
 						int noOfSpaces = buffer->getNoOfElements(buffer->spaces);
