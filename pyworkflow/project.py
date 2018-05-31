@@ -1268,7 +1268,8 @@ class Project(object):
 
         return self._sourceGraph
 
-    def getRelatedObjects(self, relation, obj, direction=em.RELATION_CHILDS):
+    def getRelatedObjects(self, relation, obj, direction=em.RELATION_CHILDS,
+                          refresh=False):
         """ Get all objects related to obj by a give relation.
         Params:
             relation: the relation name to search for.
@@ -1277,7 +1278,7 @@ class Project(object):
                 to this one by the RELATION_TRANSFORM.
             direction: this say if search for childs or parents in the relation.
         """
-        graph = self.getTransformGraph()
+        graph = self.getTransformGraph(refresh)
         relations = self.mapper.getRelationsByName(relation)
         connection = self._getConnectedObjects(obj, graph)
 

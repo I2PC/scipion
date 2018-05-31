@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
                                         IntParam, EnumParam, StringParam, 
                                         LabelParam, PathParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.utils.path import cleanPath, replaceBaseExt
+from pyworkflow.utils.path import cleanPath, replaceBaseExt, removeBaseExt
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -841,12 +841,12 @@ class ProtRelionBase(EMProtocol):
 
             if self.doCtfManualGroups:
                 self._splitInCTFGroups(imgStar)
+
+            if self._getRefArg():
+                self._convertRef()
         else:
             self.info("In continue mode is not necessary convert the input "
                       "particles")
-
-        if self._getRefArg():
-            self._convertRef()
         
         # if self.realignMovieFrames, self.IS_CLASSIFY must be False.
         if getattr(self, 'realignMovieFrames', False):
@@ -1288,10 +1288,15 @@ class ProtRelionBase(EMProtocol):
 
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
+        hasMicName = img.getCoordinate().getMicName() is not None
+        if hasMicName:
+            micBase = removeBaseExt(img.getCoordinate().getMicName())
+        else:
+            micBase = "fake_movie_%06d" % img.getCoordinate().getMicId()
+
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
-                        "%06d@fake_movie_%06d.mrcs"
-                        % (img.getFrameId(), img.getMicId()))  # fix relion-2.1
+                        "%06d@%s.mrcs" % (img.getFrameId(), micBase))
 
     def _postprocessParticleRow(self, part, partRow):
         if part.hasAttribute('_rlnGroupName'):
@@ -1320,4 +1325,4 @@ class ProtRelionBase(EMProtocol):
         if alignType == em.ALIGN_PROJ:
             mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
             mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
-        
+ 

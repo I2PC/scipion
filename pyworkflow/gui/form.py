@@ -510,8 +510,9 @@ class RelationsTreeProvider(SubclassesTreeProvider):
         objects = []
         if self.item is not None:
             project = self.protocol.getProject()
-            for pobj in project.getRelatedObjects(self.relationParam.getName(), 
-                                                 self.item, self.direction):
+            for pobj in project.getRelatedObjects(self.relationParam.getName(),
+                                                  self.item, self.direction,
+                                                  refresh=True):
                 objects.append(pobj.clone())
 
         # Sort objects
