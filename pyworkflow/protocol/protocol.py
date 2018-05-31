@@ -1528,6 +1528,9 @@ class Protocol(Step):
         MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
 
+    def hasSummaryWarnings(self):
+        return len(self.summaryWarnings) != 0
+
     def addSummaryWarning(self, warningDescription):
         """Appends the warningDescription param to the list of summaryWarnings.
         Will be printed in the protocol summary."""
@@ -1536,16 +1539,14 @@ class Protocol(Step):
 
     def checkSummaryWarnings(self):
         """ Checks for warnings that we want to tell the user about by adding a
-        warning sign to the run box and a description to the run summary. Returns
-        summaryWarnings with any changes made to it during the check.
+        warning sign to the run box and a description to the run summary.
         List of warnings checked:
         1. If the folder for this protocol run exists.
         """
         if not self.isSaved() and not os.path.exists(self.workingDir.get()):
-            self.addSummaryWarning((
-                                   "*Missing run data*: The directory for this run is missing, so it won't be"
-                                   "possible to use its outputs in other protocols."))
-        return self.summaryWarnings
+            self.addSummaryWarning("*Missing run data*: The directory for this "
+                                   "run is missing, so it won't be possible to "
+                                   "use its outputs in other protocols.")
 
     def isContinued(self):
         """ Return if running in continue mode (MODE_RESUME). """
