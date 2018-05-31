@@ -204,17 +204,17 @@ public:
 				// send them for processing
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
 						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
-						printf("spaces: %d ffts: %d\n", noOfSpaces, buffer->getNoOfElements(threadParams->buffer->FFTs));
+//						printf("spaces: %d ffts: %d\n", noOfSpaces, buffer->getNoOfElements(threadParams->buffer->FFTs));
 						updateArgumentVectorAsync(spaceId, buffer->spaces, noOfSpaces, threadParams->gpuStream);
 						updateArgumentVectorAsync(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs), threadParams->gpuStream);
 						updateArgumentScalar(spaceNoId, &noOfSpaces);
 
 					if (useAtomics == 1) {
 						clock_t begin = clock();
-						printf("mel bych pouzit stream %d\n ", threadParams->gpuStream);
+//						printf("mel bych pouzit stream %d\n ", threadParams->gpuStream);
 						runKernelAsync(kernelId, globalSize, localSize, getAllDeviceQueues().at(threadParams->gpuStream));
-						printf("kernel time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
-						parent->logProgress(buffer->noOfImages);
+//						printf("kernel time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
+//						parent->logProgress(buffer->noOfImages);
 					} else {
 						int noOfSpaces = buffer->getNoOfElements(buffer->spaces);
 						for (int i = 0; i < noOfSpaces; i++) {

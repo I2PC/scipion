@@ -180,18 +180,18 @@ void* ProgRecFourierGPU::tunerRoutine(void* threadArgs) {
 	    		RecFourierWorkThread* t = threadParams->queue.front();
 	    		threadParams->queue.pop();
 				pthread_mutex_unlock(&threadParams->mutex);
-	    		printf("processing thread %d\n", t->gpuStream );
+//	    		printf("processing thread %d\n", t->gpuStream );
 //	    		sleep(1);
 	    		parent->manipulator->setThread(t);
 				parent->tuner->tuneKernelByStep(parent->kernelId, {});
 
 
 	    		t->isReady = false;
-	    		printf("thread %d processed \n", t->gpuStream );
+//	    		printf("thread %d processed \n", t->gpuStream );
 //				printf("tuner about to unlock mutex\n"); fflush(stdout);
-				pthread_cond_broadcast(&threadParams->condition);
 	    	}
-	    	printf("%d vlaken ceka\n", threadParams->queue.size());fflush(stdout);
+				pthread_cond_broadcast(&threadParams->condition);
+//	    	printf("%d vlaken ceka\n", threadParams->queue.size());fflush(stdout);
 //		    	pthread_cond_wait(&threadParams->conditionCons, &threadParams->mutex);
 	    }
 
@@ -637,24 +637,24 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 		prepareBuffer(threadParams, parent, false, objId);
 
 		threadParams->isReady = true;
-		printf("thread %d is ready\n", threadParams->gpuStream); fflush(stdout);
+//		printf("thread %d is ready\n", threadParams->gpuStream); fflush(stdout);
 		pthread_mutex_lock(&parent->tunerThread.mutex);
 		parent->tunerThread.queue.push(threadParams);
 //		pthread_mutex_unlock(&parent->tunerThread.mutex);
 //		pthread_cond_broadcast(&parent->tunerThread.conditionCons);
-		printf("thread %d bude cekat mutex\n", threadParams->gpuStream); fflush(stdout);
+//		printf("thread %d bude cekat mutex\n", threadParams->gpuStream); fflush(stdout);
 //		pthread_mutex_lock(&parent->tunerThread.mutex);
 		while(threadParams->isReady)
 		{	//
 //			printf("thread %d isReady %d\n", threadParams->gpuStream, threadParams->isReady);
 		    pthread_cond_wait(&parent->tunerThread.condition, &parent->tunerThread.mutex);
-			printf("thread %d is up, isReady %d\n", threadParams->gpuStream, threadParams->isReady); fflush(stdout);
+//			printf("thread %d is up, isReady %d\n", threadParams->gpuStream, threadParams->isReady); fflush(stdout);
 //			printf("thread %d isReady %d\n", threadParams->gpuStream, threadParams->isReady);
 			fflush(stdout);
 		}
 		pthread_mutex_unlock(&parent->tunerThread.mutex);
 //		pthread_mutex_unlock(&parent->tunerThread.mutex);
-		printf("thread %d new iteration\n", threadParams->gpuStream); fflush(stdout);
+//		printf("thread %d new iteration\n", threadParams->gpuStream); fflush(stdout);
 /*
 		tuner.tuneKernelByStep(kernelId, {ktt::OutputDescriptor(volId, parent->tempVolumeGPUtmp),
 				ktt::OutputDescriptor(weightId, parent->tempWeightsGPUtmp)});
