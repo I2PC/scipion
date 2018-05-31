@@ -34,7 +34,7 @@ from protocol_volume_selector import ProtInitialVolumeSelector
 # MASKS
 #===============================================================================
 
-class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
+class BackRadiusWizard(ParticleMaskRadiusWizard):
     _unit = UNIT_ANGSTROM
     
     def _getProtocolImages(self, protocol):
@@ -62,11 +62,11 @@ class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
                                       _label, units=self._unit)
 
 
-class MaskDiameterWizard(RelionBackRadiusWizard):
+class MaskDiameterWizard(BackRadiusWizard):
     _targets = [(ProtInitialVolumeSelector, ['maskDiameterA'])]
 
     def _getParameters(self, protocol):
-        protParams = RelionBackRadiusWizard._getParameters(self, protocol)
+        protParams = BackRadiusWizard._getParameters(self, protocol)
         # adjust to from diameter to radius
         protParams['value'] = protParams['value'] / 2
 
