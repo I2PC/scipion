@@ -181,7 +181,11 @@ void* ProgRecFourierGPU::tunerRoutine(void* threadArgs) {
 	    		threadParams->queue.pop();
 				pthread_mutex_unlock(&threadParams->mutex);
 	    		printf("processing thread %d\n", t->gpuStream );
-	    		sleep(1);
+//	    		sleep(1);
+	    		parent->manipulator->setThread(t);
+				parent->tuner->tuneKernelByStep(parent->kernelId, {});
+
+
 	    		t->isReady = false;
 	    		printf("thread %d processed \n", t->gpuStream );
 //				printf("tuner about to unlock mutex\n"); fflush(stdout);
@@ -483,7 +487,7 @@ ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageInde
 
 	printf("u tuneru\n"); fflush(stdout);
 	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
-	ktt::Tuner* tuner = new ktt::Tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+	ktt::Tuner* tuner = new ktt::Tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA, noOfCores);
 	printf("za tunerem\n"); fflush(stdout);
 
 	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
@@ -537,7 +541,7 @@ ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageInde
 	tuner->addParameter(kernelId, "blobOrder", {blob.order});
 
 	printf("u set compiler\n"); fflush(stdout);
-	tuner->setCompilerOptions("-g -lineinfo -use_fast_math -I" + srcPath);
+	tuner->setCompilerOptions("-lineinfo -use_fast_math -I" + srcPath);
 
 //	tuner->addParameter(kernelId, "cBlobRadius", {parent->blob.radius});
 //	tuner->addParameter(kernelId, "cBlobAlpha", {parent->blob.alpha});

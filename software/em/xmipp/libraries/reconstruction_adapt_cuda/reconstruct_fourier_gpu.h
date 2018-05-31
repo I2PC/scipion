@@ -205,13 +205,14 @@ public:
 				if (buffer->noOfImages > 0) { // it can happen that all images are skipped
 						int noOfSpaces = buffer->getNoOfElements(threadParams->buffer->spaces);
 						printf("spaces: %d ffts: %d\n", noOfSpaces, buffer->getNoOfElements(threadParams->buffer->FFTs));
-						updateArgumentVector(spaceId, buffer->spaces, noOfSpaces);
-						updateArgumentVector(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs));
+						updateArgumentVectorAsync(spaceId, buffer->spaces, noOfSpaces, threadParams->gpuStream);
+						updateArgumentVectorAsync(FFTsId, buffer->FFTs, buffer->getNoOfElements(threadParams->buffer->FFTs), threadParams->gpuStream);
 						updateArgumentScalar(spaceNoId, &noOfSpaces);
 
 					if (useAtomics == 1) {
 						clock_t begin = clock();
-						runKernelAsync(kernelId, globalSize, localSize, getDefaultDeviceQueue());
+						printf("mel bych pouzit stream %d\n ", threadParams->gpuStream);
+						runKernelAsync(kernelId, globalSize, localSize, getAllDeviceQueues().at(threadParams->gpuStream));
 						printf("kernel time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
 						parent->logProgress(buffer->noOfImages);
 					} else {
@@ -224,8 +225,8 @@ public:
 //							updateArgumentScalar(startFFTIndexId, &space->projectionIndex);
 //							updateArgumentVector(FFTsId, buffer->getNthItem(buffer->FFTs, space->projectionIndex), buffer->getNoOfElements(buffer->FFTs) / buffer->noOfImages);
 							updateArgumentScalar(spaceNoId, &one);
-
-							runKernelAsync(kernelId, globalSize, localSize, getDefaultDeviceQueue());
+							printf("mel bych pouzit stream %d\n ", threadParams->gpuStream);
+							runKernelAsync(kernelId, globalSize, localSize, getAllDeviceQueues().at(threadParams->gpuStream));
 							parent->logProgress(1);
 						}
 					}
@@ -256,6 +257,7 @@ public:
 	    ktt::ArgumentId sharedMemId;
 	    ktt::ArgumentId spaceId;
 	    ktt::ArgumentId FFTsId;
+
 
 	    int firstImgIndex;
 	    int lastImgIndex;
