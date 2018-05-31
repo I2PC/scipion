@@ -140,6 +140,71 @@ void ProgRecFourierGPU::createWorkThread(int gpuStream, int startIndex, int endI
 	pthread_create( &thread.id , NULL, threadRoutine, (void *)(&thread) );
 }
 
+void ProgRecFourierGPU::createTunerThread(RecFourierTunerThread& thread, size_t begin, size_t end) {
+	thread.keepWorking = true;
+	thread.parent = this;
+	thread.firstImageIndex = begin;
+	thread.lastImageIndex = end;
+	thread.queue = std::queue<RecFourierWorkThread*>();
+	pthread_mutex_init(&thread.mutex, NULL);
+	pthread_cond_init(&thread.condition, NULL);
+	pthread_cond_init(&thread.conditionCons, NULL);
+
+	pthread_create( &thread.id , NULL, tunerRoutine, (void *)(&thread) );
+}
+
+void* ProgRecFourierGPU::tunerRoutine(void* threadArgs) {
+    RecFourierTunerThread* threadParams = (RecFourierTunerThread*) threadArgs;
+    ProgRecFourierGPU* parent = threadParams->parent;
+    std::vector<size_t> objId;
+    size_t firstImageIndex = threadParams->firstImageIndex;
+    size_t lastImageIndex = threadParams->lastImageIndex;;
+
+		printf("about to make streams\n"); fflush(stdout);
+	    createStreams(parent->noOfCores);
+	//    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
+	//    		blob.radius, blob.alpha, iDeltaSqrt, iw0);
+	    if ( ! parent->useFast) {
+	    	copyBlobTable(parent->blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
+	    }
+
+	    printf("about to make tuner\n"); fflush(stdout);
+	    parent->tuner = parent->createTuner(firstImageIndex, lastImageIndex);
+		// create threads
+	    printf("pred tuner cyklem\n"); fflush(stdout);
+//	    sleep(1);
+	    while(threadParams->keepWorking || !threadParams->queue.empty()) {
+//				printf("zamykam while cyklus: %d\n", pthread_mutex_lock(&threadParams->mutex));
+	    	if (!threadParams->queue.empty()) {
+				 pthread_mutex_lock(&threadParams->mutex);
+	    		RecFourierWorkThread* t = threadParams->queue.front();
+	    		threadParams->queue.pop();
+				pthread_mutex_unlock(&threadParams->mutex);
+	    		printf("processing thread %d\n", t->gpuStream );
+	    		sleep(1);
+	    		t->isReady = false;
+	    		printf("thread %d processed \n", t->gpuStream );
+//				printf("tuner about to unlock mutex\n"); fflush(stdout);
+				pthread_cond_broadcast(&threadParams->condition);
+	    	}
+	    	printf("%d vlaken ceka\n", threadParams->queue.size());fflush(stdout);
+//		    	pthread_cond_wait(&threadParams->conditionCons, &threadParams->mutex);
+	    }
+
+		printf("ukladam\n");
+		parent->tuner->downloadPersistentArgument(ktt::OutputDescriptor(parent->volId, parent->tempVolumeGPU));
+		parent->tuner->downloadPersistentArgument(ktt::OutputDescriptor(parent->weightId, parent->tempWeightsGPU));
+
+		parent->tuner->printResult(parent->kernelId, std::cout, ktt::PrintFormat::Verbose);
+		size_t lastindex = parent->fn_out.getString().find_last_of(".");
+		parent->tuner->setInvalidResultPrinting(true);
+		std::string rawname = parent->fn_out.getString().substr(0, lastindex);
+		parent->tuner->printResult(parent->kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
+
+		releaseBlobTable();
+		deleteStreams(parent->noOfCores);
+}
+
 
 void ProgRecFourierGPU::produceSideinfo()
 {
@@ -567,8 +632,25 @@ void* ProgRecFourierGPU::threadRoutine(void* threadArgs) {
 		threadParams->endImageIndex = std::min(lastLoadIndex+1, bIndex+parent->bufferSize);
 		prepareBuffer(threadParams, parent, false, objId);
 
-		parent->runKTT(parent->tuner, threadParams);
-
+		threadParams->isReady = true;
+		printf("thread %d is ready\n", threadParams->gpuStream); fflush(stdout);
+		pthread_mutex_lock(&parent->tunerThread.mutex);
+		parent->tunerThread.queue.push(threadParams);
+//		pthread_mutex_unlock(&parent->tunerThread.mutex);
+//		pthread_cond_broadcast(&parent->tunerThread.conditionCons);
+		printf("thread %d bude cekat mutex\n", threadParams->gpuStream); fflush(stdout);
+//		pthread_mutex_lock(&parent->tunerThread.mutex);
+		while(threadParams->isReady)
+		{	//
+//			printf("thread %d isReady %d\n", threadParams->gpuStream, threadParams->isReady);
+		    pthread_cond_wait(&parent->tunerThread.condition, &parent->tunerThread.mutex);
+			printf("thread %d is up, isReady %d\n", threadParams->gpuStream, threadParams->isReady); fflush(stdout);
+//			printf("thread %d isReady %d\n", threadParams->gpuStream, threadParams->isReady);
+			fflush(stdout);
+		}
+		pthread_mutex_unlock(&parent->tunerThread.mutex);
+//		pthread_mutex_unlock(&parent->tunerThread.mutex);
+		printf("thread %d new iteration\n", threadParams->gpuStream); fflush(stdout);
 /*
 		tuner.tuneKernelByStep(kernelId, {ktt::OutputDescriptor(volId, parent->tempVolumeGPUtmp),
 				ktt::OutputDescriptor(weightId, parent->tempWeightsGPUtmp)});
@@ -1014,18 +1096,9 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 		tempVolumeGPUtmp = new float[volumeSize * 2]();
 		tempWeightsGPUtmp = new float[volumeSize]();
 
-	printf("about to make streams\n"); fflush(stdout);
-    createStreams(noOfCores);
-//    copyConstants(maxVolumeIndexX, maxVolumeIndexYZ,
-//    		blob.radius, blob.alpha, iDeltaSqrt, iw0);
-    if ( ! useFast) {
-    	copyBlobTable(blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
-    }
-
-    printf("about to make tuner\n"); fflush(stdout);
-    tuner = createTuner(firstImageIndex, lastImageIndex);
-	// create threads
 	int imgPerThread = ceil((lastImageIndex-firstImageIndex+1) / (float)noOfCores);
+	tunerThread = RecFourierTunerThread();
+	createTunerThread(tunerThread, firstImageIndex, lastImageIndex);
 	workThreads = new RecFourierWorkThread[noOfCores];
 	barrier_init( &barrier, noOfCores + 1 ); // + main thread
 	for (int i = 0; i < noOfCores; i++) {
@@ -1038,15 +1111,10 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	// Waiting for threads to finish
 	barrier_wait( &barrier );
 
-	printf("ukladam\n");
-	tuner->downloadPersistentArgument(ktt::OutputDescriptor(volId, tempVolumeGPU));
-	tuner->downloadPersistentArgument(ktt::OutputDescriptor(weightId, tempWeightsGPU));
+	tunerThread.keepWorking = false;
+	pthread_join(tunerThread.id, NULL);
 
-	tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-	size_t lastindex = fn_out.getString().find_last_of(".");
-	std::string rawname = fn_out.getString().substr(0, lastindex);
-	tuner->setInvalidResultPrinting(true);
-	tuner->printResult(kernelId, rawname + "_results.csv", ktt::PrintFormat::CSV);
+
 	delete[] tempVolumeGPUtmp;
 	delete[] tempWeightsGPUtmp;
 
@@ -1060,8 +1128,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	}
 	barrier_destroy( &barrier );
 	delete[] workThreads;
-	releaseBlobTable();
-	deleteStreams(noOfCores);
+
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {

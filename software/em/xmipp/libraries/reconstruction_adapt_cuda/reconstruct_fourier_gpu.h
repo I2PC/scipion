@@ -58,6 +58,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <queue>
 #include "tuner_api.h"
 
 
@@ -76,6 +77,20 @@ struct RecFourierWorkThread
     MetaData* selFile; // used for loading data
     RecFourierBufferData* buffer; // where data are loaded
     int gpuStream; // index of stream on GPU device
+    bool isReady;
+};
+
+struct RecFourierTunerThread
+{
+    pthread_t id;
+    ProgRecFourierGPU * parent;
+    pthread_mutex_t mutex;
+    size_t firstImageIndex;
+    size_t lastImageIndex;
+    std::queue<RecFourierWorkThread*> queue;
+    bool keepWorking;
+    pthread_cond_t condition;
+    pthread_cond_t conditionCons;
 };
 
 
@@ -127,7 +142,9 @@ public:
 	ktt::ArgumentId volId;
 	ktt::ArgumentId weightId;
 	void runKTT(ktt::Tuner* tuner, RecFourierWorkThread* thr);
-
+	RecFourierTunerThread tunerThread;
+	void createTunerThread(RecFourierTunerThread& thread, size_t begin, size_t end);
+	static void* tunerRoutine(void* threadArgs);
 	ktt::Tuner* createTuner(int startImageIndex, int endImageIndex);
 
 	class Manipulator : public ktt::TuningManipulator
