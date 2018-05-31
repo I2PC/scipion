@@ -37,7 +37,7 @@ from pyworkflow.em.packages.cryomethods.constants import (CHANGE_LABELS, V2_0,
     ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO)
 import convert as conv
 
-class ProtocolRelionBase(em.EMProtocol):
+class ProtocolBase(em.EMProtocol):
     """ This class contains the common functions for protocols developed by
     cryomethods that uses Relion programs.
     """

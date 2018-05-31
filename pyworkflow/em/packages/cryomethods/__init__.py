@@ -36,10 +36,11 @@ from convert import getSupportedVersions, getVersion, getEnviron
 from protocol_volume_selector import ProtInitialVolumeSelector
 
 # Wizards
-from wizard import *
+from wizard import (TargetFilterWizard, InitialPassFilterWizard,
+                    MaskDiameterWizard)
 
 #Viewer
-from viewer import *
+from viewer import VolumeSelectorViewer
 
 _environ = getEnviron()
 

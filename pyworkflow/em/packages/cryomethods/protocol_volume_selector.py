@@ -25,23 +25,24 @@
 # *
 # **************************************************************************
 import pyworkflow.em as em
-from pyworkflow.em.packages.cryomethods.protocol_base import ProtocolRelionBase
+from pyworkflow.em.packages.cryomethods.protocol_base import ProtocolBase
 from convert import writeSetOfParticles
 
 
-class ProtInitialVolumeSelector(ProtocolRelionBase):
+class ProtInitialVolumeSelector(ProtocolBase):
     """
     Protocol to obtain a better initial volume using as input a set of
-    volumes and particles. This method employs an empirical Bayesian approach
-    to refinement of multiple 3D reconstructions in electron cryo-microscopy
-    (cryo-EM).
+    volumes and particles. The protocol uses a small subset (usually 1000/2000)
+    particles from the input set of particles to estimate a better and reliable
+    volume(s) to use as initial volume in an automatic way.
     """
+
     _label = 'volume selector'
 
     IS_VOLSELECTOR = True
 
     def __init__(self, **args):
-        ProtocolRelionBase.__init__(self, **args)
+        ProtocolBase.__init__(self, **args)
 
     # -------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
