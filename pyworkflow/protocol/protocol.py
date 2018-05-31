@@ -592,8 +592,21 @@ class Protocol(Step):
         emptyPointers = []
 
         for paramName, attr in self.iterInputPointers():
-            condition = self.evalParamCondition(paramName)
+
             param = self.getParam(paramName)
+            # Issue #1597: New data loaded with old code.
+            # If the input pointer is not a param:
+            # This could happen in backward incompatibility cases,
+            # Protocol has an attribute (inputPointer) but class does not define
+            # if in the define params.
+            if param is None:
+                print("%s attribute is not defined as parameter. "
+                      "This could happen when loading new code with older "
+                      "scipion versions." % paramName)
+                continue
+
+            condition = self.evalParamCondition(paramName)
+
             obj = attr.get()
             if condition and obj is None and not param.allowsNull:
                 if attr.hasValue():
@@ -1515,6 +1528,9 @@ class Protocol(Step):
         MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
 
+    def hasSummaryWarnings(self):
+        return len(self.summaryWarnings) != 0
+
     def addSummaryWarning(self, warningDescription):
         """Appends the warningDescription param to the list of summaryWarnings.
         Will be printed in the protocol summary."""
@@ -1523,16 +1539,14 @@ class Protocol(Step):
 
     def checkSummaryWarnings(self):
         """ Checks for warnings that we want to tell the user about by adding a
-        warning sign to the run box and a description to the run summary. Returns
-        summaryWarnings with any changes made to it during the check.
+        warning sign to the run box and a description to the run summary.
         List of warnings checked:
         1. If the folder for this protocol run exists.
         """
         if not self.isSaved() and not os.path.exists(self.workingDir.get()):
-            self.addSummaryWarning((
-                                   "*Missing run data*: The directory for this run is missing, so it won't be"
-                                   "possible to use its outputs in other protocols."))
-        return self.summaryWarnings
+            self.addSummaryWarning("*Missing run data*: The directory for this "
+                                   "run is missing, so it won't be possible to "
+                                   "use its outputs in other protocols.")
 
     def isContinued(self):
         """ Return if running in continue mode (MODE_RESUME). """
