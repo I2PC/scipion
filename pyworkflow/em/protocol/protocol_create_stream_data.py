@@ -301,6 +301,8 @@ class ProtCreateStreamData(EMProtocol):
 
     def createParticlesStep(self):
         self.name = "particle"
+        time.sleep(self.creationInterval.get())
+
         for idx, p in enumerate(self.inputParticles.get()):
             if ((idx > self.counter-1) and (idx < self.nDims) and
                     (idx <= self.counter-1 + self.group)):
@@ -310,7 +312,7 @@ class ProtCreateStreamData(EMProtocol):
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
-        time.sleep(self.creationInterval.get())
+
 
     def createRandomMicStep(self, mic):
         from pyworkflow.em.packages.xmipp3 import getEnviron

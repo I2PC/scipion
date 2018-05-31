@@ -65,7 +65,7 @@ class TestCtfStreaming(BaseTest):
 
                 # Time out 6 minutes, just in case
                 tdelta = time.time() -t0
-                if tdelta > 6*60*1000:
+                if tdelta > 6*60:
                     break
 
                 time.sleep(10)
