@@ -202,7 +202,11 @@ class ProtCreateStreamData(EMProtocol):
                 acquisition.setSphericalAberration(self._sphericalAberration)
                 acquisition.setAmplitudeContrast(self._amplitudeContrast)
                 objSet.setAcquisition(acquisition)
-                objSet.setSamplingRate(self.samplingRate.get())
+                if self.setof == SET_OF_PARTICLES:
+                    objSet.setSamplingRate(
+                        self.inputParticles.get().getSamplingRate())
+                else:
+                    objSet.setSamplingRate(self.samplingRate.get())
 
 
         if self.setof == SET_OF_MOVIES:
@@ -238,7 +242,7 @@ class ProtCreateStreamData(EMProtocol):
         elif self.setof == SET_OF_PARTICLES:
             self._defineOutputs(outputParticles=objSet)
 
-    def _stepsCheck(self):
+    def _checkProcessedData(self):
         if self.setof == SET_OF_MOVIES:
             objSet = SetOfMovies(filename=self._getPath('movies.sqlite'))
         elif self.setof == SET_OF_MICROGRAPHS:
@@ -269,7 +273,7 @@ class ProtCreateStreamData(EMProtocol):
         newObjSet.close()
 
     def createStep(self, counter):
-
+        time.sleep(self.creationInterval.get())
         if not ProtCreateStreamData.object or self.setof == \
                 SET_OF_MICROGRAPHS or self.setof == SET_OF_MOVIES:
 
@@ -297,7 +301,7 @@ class ProtCreateStreamData(EMProtocol):
         destFn = self._getExtraPath("%s_%05d" % (self.name, counter))
         ProtCreateStreamData.object.write(destFn)
         self.dictObj[destFn] = True
-        time.sleep(self.creationInterval.get())
+        self._checkProcessedData()
 
     def createParticlesStep(self):
         self.name = "particle"
@@ -312,9 +316,11 @@ class ProtCreateStreamData(EMProtocol):
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
+        self._checkProcessedData()
 
 
     def createRandomMicStep(self, mic):
+        time.sleep(self.creationInterval.get())
         from pyworkflow.em.packages.xmipp3 import getEnviron
 
         # create image
@@ -358,7 +364,7 @@ class ProtCreateStreamData(EMProtocol):
         args += " --sampling %f" % self.samplingRate
         self.runJob("xmipp_transform_filter", args, env=getEnviron())
         self.dictObj[baseFnImageCTF] = True
-        time.sleep(self.creationInterval.get())
+        self._checkProcessedData()
 
     # -------------------------- INFO functions ------------------------------
     def _validate(self):

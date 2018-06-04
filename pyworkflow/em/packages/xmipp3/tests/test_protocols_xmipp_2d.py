@@ -477,7 +477,7 @@ class TestXmippTriggerParticles(TestXmippBase):
     def test_triggerPart(self):
         print("Start Streaming Particles")
         protStream = self.newProtocol(ProtCreateStreamData, setof=3,
-                                      creationInterval=2, nDim=76, groups=10)
+                                      creationInterval=8, nDim=76, groups=10)
         protStream.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protStream, wait=False)
 
@@ -509,12 +509,11 @@ class TestXmippTriggerParticles(TestXmippBase):
 
             # Time out 4 minutes, just in case
             tdelta = time.time() - t0
-            print (str(tdelta))
             if tdelta > 4 * 60:
                 break
 
             prot = self._updateProtocol(prot)
-            time.sleep(10)
+            time.sleep(2)
 
         self.assertSetSize(prot.outputParticles, size)
 
