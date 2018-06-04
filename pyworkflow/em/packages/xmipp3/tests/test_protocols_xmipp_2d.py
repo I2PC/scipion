@@ -27,6 +27,8 @@
 # **************************************************************************
 
 from __future__ import print_function
+
+from pyworkflow.tests.test_utils import wait
 from pyworkflow.utils import magentaStr
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
@@ -408,15 +410,14 @@ class TestXmippScreenParticles(TestXmippBase):
         protStream.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protStream, wait=False)
 
-        while not protStream.hasAttribute('outputParticles'):
-            time.sleep(3)
-            protStream = self._updateProtocol(protStream)
 
         print("Run Screen Particles")
         protScreen = self.newProtocol(xpsp)
-        protScreen.inputParticles.set(protStream.outputParticles)
-        self.launchProtocol(protScreen)
+        protScreen.inputParticles.set(protStream)
+        protScreen.inputParticles.setExtended("outputParticles")
+        self.proj.scheduleProtocol(protScreen)
 
+        wait(lambda: not self._updateProtocol(protScreen).isFinished(), timeout=300)
         protScreen = self._updateProtocol(protScreen)
         self.assertEqual(protScreen.outputParticles.getSize(), 76)
 
