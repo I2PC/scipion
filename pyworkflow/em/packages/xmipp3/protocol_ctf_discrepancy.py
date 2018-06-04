@@ -29,6 +29,7 @@
 import os
 import convert
 import xmipp
+from datetime import datetime
 from pyworkflow.em.data import SetOfCTF
 from pyworkflow.object import Set, Float
 import pyworkflow.protocol.constants as cons
@@ -68,8 +69,10 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
 # --------------------------- INSERT steps functions -------------------------
     def _insertAllSteps(self):
         self.finished = False
-        self.insertedDict = {}
         self.processedDict = []
+        self.outputDict = []
+        self.allCtf1 = []
+        self.allCtf2 = []
         ctfSteps = self._checkNewInput()
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=ctfSteps, wait=True)
@@ -90,20 +93,12 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
                 return s
         return None
 
-    def _insertNewCtfsSteps(self, insertedDict, SetOfCtf1, SetOfCtf2):
+    def _insertNewCtfsSteps(self, SetOfCtf1, SetOfCtf2):
         deps = []
         stepId = self._insertFunctionStep("computeCTFDiscrepancyStep",
                                           SetOfCtf1, SetOfCtf2,
                                           prerequisites=[])
         deps.append(stepId)
-        if len(SetOfCtf1) < len(SetOfCtf2):
-            for ctf in SetOfCtf1:
-                if ctf.getObjId() not in insertedDict:
-                    insertedDict[ctf.getObjId()] = stepId
-        else:
-            for ctf in SetOfCtf2:
-                if ctf.getObjId() not in insertedDict:
-                    insertedDict[ctf.getObjId()] = stepId
         return deps
 
     def _stepsCheck(self):
@@ -114,26 +109,50 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         # Check if there are new ctf to process from the input set
         ctfsFile1 = self.inputCTF1.get().getFileName()
         ctfsFile2 = self.inputCTF2.get().getFileName()
+        self.lastCheck = getattr(self, 'lastCheck', datetime.now())
+        mTime = max(datetime.fromtimestamp(os.path.getmtime(ctfsFile1)),
+                    datetime.fromtimestamp(os.path.getmtime(ctfsFile2)))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'SetOfCtf1'):
+            return None
         ctfsSet1 = SetOfCTF(filename=ctfsFile1)
         ctfsSet2 = SetOfCTF(filename=ctfsFile2)
         ctfsSet1.loadAllProperties()
         ctfsSet2.loadAllProperties()
-        self.SetOfCtf1 = [m.clone() for m in ctfsSet1]
-        self.SetOfCtf2 = [m.clone() for m in ctfsSet2]
+        if len(self.allCtf1) > 0:
+            newCtf1 = [ctf.clone() for ctf in
+                       ctfsSet1.iterItems(orderBy='creation',
+                                          where='creation>"' + str(
+                                              self.checkCtf1) + '"')]
+        else:
+            newCtf1 = [ctf.clone() for ctf in ctfsSet1]
+        self.allCtf1 = self.allCtf1 + newCtf1
+        if len(newCtf1) > 0:
+            for ctf in ctfsSet1.iterItems(orderBy='creation', direction='DESC'):
+                self.checkCtf1 = ctf.getObjCreation()
+                break
+        if len(self.allCtf2) > 0:
+            newCtf2 = [ctf.clone() for ctf in
+                       ctfsSet2.iterItems(orderBy='creation',
+                                          where='creation>"' + str(
+                                              self.checkCtf2) + '"')]
+        else:
+            newCtf2 = [ctf.clone() for ctf in ctfsSet2]
+        self.allCtf2 = self.allCtf2 + newCtf2
+        if len(newCtf2) > 0:
+            for ctf in ctfsSet2.iterItems(orderBy='creation', direction='DESC'):
+                self.checkCtf2 = ctf.getObjCreation()
+                break
+        self.lastCheck = datetime.now()
         self.streamClosed = ctfsSet1.isStreamClosed() \
                             and ctfsSet2.isStreamClosed()
         ctfsSet1.close()
         ctfsSet2.close()
-        if len(self.SetOfCtf1) < len(self.SetOfCtf2):
-            ctfsSet = self.SetOfCtf1
-        else:
-            ctfsSet = self.SetOfCtf2
-        newCtfs = any(m.getObjId() not in self.insertedDict
-                      for m in ctfsSet)
         outputStep = self._getFirstJoinStep()
-        if newCtfs:
-            fDeps = self._insertNewCtfsSteps(self.insertedDict,
-                                             ctfsSet1, ctfsSet2)
+        if len(set(self.allCtf1)) > len(set(self.processedDict)) and \
+           len(set(self.allCtf2)) > len(set(self.processedDict)):
+            fDeps = self._insertNewCtfsSteps(ctfsSet1, ctfsSet2)
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
@@ -145,10 +164,10 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         # Load previously done items (from text file)
         doneList = self._readDoneList()
         # Check for newly done items
-        if len(self.SetOfCtf1) < len(self.SetOfCtf2):
-            SetOfCtf = self.SetOfCtf1
+        if len(self.allCtf1) < len(self.allCtf2):
+            SetOfCtf = self.allCtf1
         else:
-            SetOfCtf = self.SetOfCtf2
+            SetOfCtf = self.allCtf2
         newDone = [m.clone() for m in SetOfCtf
                    if int(m.getObjId()) not in doneList]
         self.finished = self.streamClosed and \
@@ -176,7 +195,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        outputSet.copyInfo(self.SetOfCtf1)
+        outputSet.copyInfo(self.allCtf1)
         return outputSet
 
 
@@ -194,9 +213,8 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
             inputCTF = self.inputCTF1.get()
             ctfs.copyInfo(inputCTF)
             ctfs.setMicrographs(inputCTF.getMicrographs())
-            for ctf in inputCTF:
-                if ctf.getObjId() > len(self.inputCTF2.get()):
-                    break
+            for ctf in min(self.allCtf1, self.allCtf2):
+                self.outputDict.append(ctf.getObjId())
                 ctfAux = ctf.clone()
                 ctfId = ctf.getObjId()
                 resolution = self._freqResol[ctfId]
@@ -229,13 +247,19 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
 
         for ctf1 in method1:  # reference CTF
             ctfId = ctf1.getObjId()
-            if ctfId in self.processedDict or ctfId > len(method2):
+            if ctfId in self.processedDict:
                 continue
-            self.processedDict.append(ctfId)
-            self._ctfToMd(ctf1, md1)
-            ctf2 = method2[ctfId]  # .target
-            self._ctfToMd(ctf2, md2)
-            self._freqResol[ctfId] = xmipp.errorMaxFreqCTFs2D(md1, md2)
+            for ctf2 in method2:
+                ctfId2 = ctf2.getObjId()
+                if ctfId2 != ctfId:
+                    continue
+                print("..........................")
+                print(ctf1.getObjId())
+                print(ctf2.getObjId())
+                self.processedDict.append(ctfId)
+                self._ctfToMd(ctf1, md1)
+                self._ctfToMd(ctf2, md2)
+                self._freqResol[ctfId] = xmipp.errorMaxFreqCTFs2D(md1, md2)
 
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
         outSet = self._loadOutputSet(SetOfCTF, 'ctfs.sqlite')
