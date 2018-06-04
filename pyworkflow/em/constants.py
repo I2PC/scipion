@@ -82,7 +82,8 @@ AX_Z = 2
 # UsersGuide/midas/sym.html
 SYM_CYCLIC = 0  # CN
 SYM_DIHEDRAL = 1  # DN
-SYM_TETRAHEDRAL = 2  # T
+SYM_TETRAHEDRAL = 2  # T 222
+SYM_TETRAHEDRAL_Z3 = 2  # T  EMAN convention, 3-fold on z, 3-fold in yz plane along neg y.
 SYM_OCTAHEDRAL = 3  # O
 
 # icosahedric IXXX
