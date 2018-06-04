@@ -80,6 +80,10 @@ class Step(OrderedObject):
         for p in newPrerequisites:
             self._prerequisites.append(p)
 
+    def setPrerequisites(self, *newPrerequisites):
+        self._prerequisites.clear()
+        self.addPrerequisites(*newPrerequisites)
+
     def _preconditions(self):
         """ Check if the necessary conditions to
         step execution are met"""
@@ -1606,8 +1610,20 @@ class Protocol(Step):
                     paramErrors = param.validate(attr.get())
             label = param.label.get()
             errors += ['*%s* %s' % (label, err) for err in paramErrors]
-            # Validate specific for the subclass
+
         try:
+            # Check that all ids specified in the 'Wait for' form entry
+            # are valid protocol ids
+            proj = self.getProject()
+            for protId in self.getPrerequisites():
+                try:
+                    prot = proj.getProtocol(int(protId))
+                except Exception:
+                    prot = None
+                if prot is None:
+                    errors.append('*%s* is not a valid protocol id.' % protId)
+
+            # Validate specific for the subclass
             installErrors = self.validateInstallation()
             if installErrors:
                 errors += installErrors
