@@ -57,10 +57,12 @@ class Message():
     
     # Project Content Template
     LABEL_PROJECT = 'Project '
-    #-- Protocol Treeview --
+
+    # -- Protocol Treeview --
     LABEL_WORKFLOW = 'Workflow View: '
     LABEL_PROTTREE_NONE = 'None'
-    #-- Toolbar --
+
+    # -- Toolbar --
     LABEL_NEW = 'New'
     LABEL_NEW_ACTION = 'New     '
     LABEL_EDIT = 'Edit'
@@ -87,7 +89,7 @@ class Message():
     LABEL_EXPORT = 'Export'
     LABEL_EXPORT_UPLOAD = 'Export & upload'
 
-    #-- Tabs --
+    # -- Tabs --
     LABEL_DATA = 'Data'
     LABEL_SUMMARY = 'Summary'
     LABEL_INPUT = 'Input'
@@ -115,7 +117,7 @@ class Message():
     NO_INFO_LOGS = 'No logs information.'
     NO_SAVE_SETTINGS = 'Error trying to save settings.'
     
-    #-------- Protocol Form messages ----------
+    # ------- Protocol Form messages ----------
     LABEL_CITE = 'Cite'
     LABEL_HELP = 'Help'
     TEXT_HELP = 'The file selected will be uploaded to the project folder. If the file was uploaded before, It will be replaced.'
@@ -125,6 +127,7 @@ class Message():
     LABEL_THREADS = 'Threads'
     LABEL_MPI = 'MPI'
     LABEL_QUEUE = 'Use queue?'
+    LABEL_WAIT_FOR = 'Wait for'
     
     LABEL_EXPERT = 'Expert Level'
     LABEL_EXPERT_NORMAL = 'Normal'
@@ -138,7 +141,8 @@ the *Continue* execution mode will try to continue from the
 last completed step. On the other hand, the *Restart* mode
 will clean the whole run directory and start from scratch.    
     """    
-    HELP_MPI_THREADS = """  
+
+    HELP_MPI_THREADS = """
 Define the number of processors to be used in the execution.
 *MPI*: This is a number of independent processes
        that communicate through message passing
@@ -147,12 +151,19 @@ Define the number of processors to be used in the execution.
        in the same process that can share memory. They run in
        the same computer.     
     """
+
     HELP_USEQUEUE = """  
 Select *Yes* if you want to submit the job to a Queue system.
 The queue commands for launch and stop jobs should be configured
 for the current host in the _hosts.conf_ file.    
-    """     
-    
+    """
+
+    HELP_WAIT_FOR = """
+    Specify a comma separated list of protocol IDs if you want
+that this protocol starts after the input protocols in the list
+are finished. This function will allow you to "schedule" many
+runs that will be executed after each other.
+    """
     
     TITLE_NAME_RUN = ' Protocol Run: '
     TITLE_RUN = 'Run'
