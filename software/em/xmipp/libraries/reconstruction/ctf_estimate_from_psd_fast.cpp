@@ -32,6 +32,7 @@
 #include <data/histogram.h>
 #include <data/filters.h>
 #include <data/xmipp_fft.h>
+#include <data/xmipp_fftw.h>
 
 /* prototypes */
 double CTF_fitness_fast(double *, void *);
@@ -1066,18 +1067,173 @@ void ProgCTFEstimateFromPSDFast::estimate_envelope_parameters_fast()
 void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 {
 	double fitness;
-    int iter;
+	int iter;
 	Matrix1D<double> steps(DEFOCUS_PARAMETERS);
 	steps.initConstant(1);
 	steps(1) = 0; // Do not optimize kV
 	steps(2) = 0; // Do not optimize K
-	(*adjust_params)(0) = initial_ctfmodel.Defocus;
-	(*adjust_params)(2) = current_ctfmodel.K;
-	powellOptimizer(*adjust_params, FIRST_DEFOCUS_PARAMETER + 1,
+	if(!selfEstimation)
+	{
+		(*adjust_params)(0) = initial_ctfmodel.Defocus;
+		(*adjust_params)(2) = current_ctfmodel.K;
+		powellOptimizer(*adjust_params, FIRST_DEFOCUS_PARAMETER + 1,
 								DEFOCUS_PARAMETERS, CTF_fitness_fast, global_prm, 0.05,
 								fitness, iter, steps, false);
+	}
+	else
+	{
+		/*if (show_optimization)
+				std::cout << "Looking for first defoci ...\n";
+		double best_defocus, best_K=1;
+		double best_error = heavy_penalization * 1.1;
+		bool first = true;
+		int i;
+		double defocus;
+
+		double defocus0 = 1e3;
+		double defocusF = 100e3;
+		double initial_defocusStep = 8e3;
+		MultidimArray<double> error;
+
+		// Check if there is no initial guess
+		double min_allowed_defocus = 1e3, max_allowed_defocus = 100e3;
+		initial_defocusStep = std::min(defocus_range,20000.0);
+		defocus0 = std::max(1e3,initial_ctfmodel.Defocus- defocus_range);
+		double maxDeviation = std::max(defocus_range,  0.25 * initial_ctfmodel.Defocus);
+		max_allowed_defocus = std::min(100e3,initial_ctfmodel.Defocus + maxDeviation);
+		defocusF = std::min(150e3,initial_ctfmodel.Defocus+ defocus_range);
+		min_allowed_defocus = std::max(1e3,initial_ctfmodel.Defocus - maxDeviation);
+
+		double K_so_far = current_ctfmodel.K;
+		Matrix1D<double> steps(DEFOCUS_PARAMETERS);
+		steps.initConstant(1);
+		steps(1) = 0; // Do not optimize kV
+		steps(2) = 0; // Do not optimize K
+		for (double defocusStep = initial_defocusStep;
+			 defocusStep >= std::min(5000., defocus_range / 2);
+			 defocusStep /= 2)
+		{
+			error.resize(CEIL((defocusF - defocus0) / defocusStep + 1));
+			error.initConstant(heavy_penalization);
+			if (show_optimization)
+				std::cout <<"U=[" << defocus0 << "," << defocusF << "]\n"
+				<< "Defocus step=" << defocusStep << std::endl;
+			for (defocus = defocus0, i = 0; defocus <= defocusF; defocus +=
+					 defocusStep, i++)
+			{
+
+					if (defocus > 30e3)
+					{
+						error(i) = heavy_penalization;
+						continue;
+					}
+
+						int iter;
+
+						(*adjust_params)(0) = defocus;
+						(*adjust_params)(2) = K_so_far;
+
+						powellOptimizer(*adjust_params, FIRST_DEFOCUS_PARAMETER + 1,
+										DEFOCUS_PARAMETERS, CTF_fitness_fast, global_prm, 0.05,
+										fitness, iter, steps, false);
+
+						if (current_ctfmodel.Defocus >= min_allowed_defocus
+								&& current_ctfmodel.Defocus
+								<= max_allowed_defocus)
+						{
+							error(i) = fitness;
+							if (error(i) < best_error || first)
+							{
+								best_error = error(i);
+								best_defocus = current_ctfmodel.Defocus;
+								best_K = current_ctfmodel.K;
+								first = false;
+
+							}
+						}
+				}
+			// Compute the range of the errors
+			double errmin = error(0), errmax = error(0);
+			bool aValidErrorHasBeenFound=false;
+			for (int ii = STARTINGY(error); ii <= FINISHINGY(error); ii++)
+			{
+				if (error(ii) != heavy_penalization)
+				{
+					aValidErrorHasBeenFound=true;
+					if (error(ii) < errmin)
+						errmin = error(ii);
+					else if (errmax == heavy_penalization)
+						errmax = error(ii);
+					else if (error(ii) > errmax)
+						errmax = error(ii);
+				}
+			}
+			if (show_optimization)
+				std::cout << "Error matrix\n" << error << std::endl;
+
+			// Find those defoci which are within a 10% of the maximum
+			if (show_inf >= 2)
+				std::cout << "Range=" << errmax - errmin << std::endl;
+			double best_defocusmin = best_defocus, best_defocusmax = best_defocus;
+			for (defocus = defocus0, i = 0; defocus <= defocusF; defocus +=
+					 defocusStep, i++)
+			{
+					if (fabs((error(i) - errmin) / (errmax - errmin)) <= 0.1)
+					{
+						if (defocus < best_defocusmin)
+							best_defocusmin = defocus;
+						if (defocus > best_defocusmax)
+							best_defocusmax = defocus;
+					}
+			}
+
+			defocusF = std::min(max_allowed_defocus,
+								 best_defocusmax + defocusStep);
+			defocus0 = std::max(min_allowed_defocus,
+								 best_defocusmin - defocusStep);
+
+			i = 0;
+			if (show_inf >= 2)
+			{
+				Image<double> save;
+				save() = error;
+				save.write("error.xmp");
+				std::cout << "Press any key: Error saved\n";
+				char c;
+				std::cin >> c;
+			}
+		}
+
+		current_ctfmodel.Defocus = best_defocus;
+		current_ctfmodel.K = best_K;
+
+		// Keep the result in adjust
+		current_ctfmodel.forcePhysicalMeaning();
+		COPY_ctfmodel_TO_CURRENT_GUESS;
+		ctfmodel_defoci = current_ctfmodel;
+
+		if  (show_optimization)
+		{
+			std::cout << "First defocus Fit:\n" << ctfmodel_defoci << std::endl;
+			saveIntermediateResults_fast("step03a_first_defocus_fit_fast", true);
+		}*/
+		FourierTransformer FourierPSD;
+		FourierPSD.FourierTransform(psd_exp_enhanced_radial, psd_fft, false);
+		for(int i = 0; i <= psd_fft.xdim; i++)
+		{
+			amplitud.push_back(sqrt(std::real(psd_fft[i])*std::real(psd_fft[i])+std::imag(psd_fft[i])*std::imag(psd_fft[i])));
+
+		}
+		current_ctfmodel.Defocus = (*max_element(amplitud.rbegin(),amplitud.rend()))*100000;
+		/*(*adjust_params)(0) = initial_ctfmodel.Defocus;
+		(*adjust_params)(2) = current_ctfmodel.K;
+		powellOptimizer(*adjust_params, FIRST_DEFOCUS_PARAMETER + 1,
+								DEFOCUS_PARAMETERS, CTF_fitness_fast, global_prm, 0.05,
+								fitness, iter, steps, false);*/
+	}
 
 	// Keep the result in adjust
+	std::cout << current_ctfmodel.Defocus << std::endl;
 	current_ctfmodel.forcePhysicalMeaning();
 	COPY_ctfmodel_TO_CURRENT_GUESS;
 	ctfmodel_defoci = current_ctfmodel;
@@ -1087,6 +1243,7 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 		std::cout << "First defocus Fit:\n" << ctfmodel_defoci << std::endl;
 		saveIntermediateResults_fast("step03a_first_defocus_fit_fast", true);
 	}
+
 }
 
 // Estimate second gaussian parameters -------------------------------------

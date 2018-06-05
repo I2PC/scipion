@@ -44,6 +44,7 @@ void ProgCTFBasicParams::readBasicParams(XmippProgram *program)
     modelSimplification = program->getIntParam("--model_simplification");
     bootstrap = program->checkParam("--bootstrapFit");
     fastDefocusEstimate = program->checkParam("--fastDefocus");
+    selfEstimation = program->checkParam("--selfEstimation");
     if (fastDefocusEstimate)
     {
         lambdaPhase=program->getDoubleParam("--fastDefocus",0);
@@ -156,6 +157,8 @@ void ProgCTFBasicParams::defineBasicParams(XmippProgram * program)
         "                                : If fmax<0.35, f1 default=0.02");
     program->addParamsLine(
         "   [--enhance_max_freq <f2>]    : Bandpass cutoff. Normalized to 0.5.");
+    program->addParamsLine(
+        "   [--selfEstimation]           : Estimate defocus without previous estimation");
     program->addParamsLine(
         "                                : If fmax>0.35, f2 default=0.08");
     program->addParamsLine(
@@ -282,8 +285,12 @@ void ProgCTFBasicParams::produceSideInfo()
 		if (w_digfreq(i,j)>min_freq && w_digfreq(i,j)<max_freq)
 		{
 			int r = w_digfreq_r(i, j);
+			//int r2 = w_digfreq_r(i,j)*w_digfreq_r(i,j);
+			//std::cout << "r =" << r << std::endl;
+			//std::cout << "r2 =" << r2 << std::endl;
 			w_digfreq_r_iN(r)+=1;
 			psd_exp_enhanced_radial(r) += enhanced_ctftomodel(i, j);
+			//psd_exp_enhanced_radial_2(r2) += enhanced_ctftomodel(i, j);
 			psd_exp_radial(r) += ctftomodel(i, j);
 		}
 	}

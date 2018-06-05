@@ -49,17 +49,17 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                   "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
                   "ctfCritFirstMinFirstZeroRatio>10 OR ctfCritCorr13<0 OR "
                   "ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0 OR "
-                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>50000 "
+                  "ctfCritNonAstigmaticValidty>25 OR ctfBgGaussianSigmaU>75000 "
                   "OR ctfBgGaussianSigmaU<1000 OR "
                   "ctfCritIceness>1")
 
     _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
-                  "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
+                  "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.10 OR "
                   "ctfCritFirstMinFirstZeroRatio>12 AND "
                   "ctfCritFirstMinFirstZeroRatio!=1000 OR ctfCritCorr13==0 OR "
                   "ctfCritNonAstigmaticValidty<=0 OR ctfVPPphaseshift>140 OR " 
                   "ctfCritNonAstigmaticValidty>25 "
-                  "OR ctfCritIceness>1.03")  #OR ctfBgGaussian2SigmaU>70000
+                  "OR ctfCritIceness>1.03")
 
     def __init__(self, **args):
 
@@ -112,7 +112,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                            'Downsample factor; and if it fails, +1; '
                            'and if it fails, -1.')
 
-        form.addParam('doFastDefocus', params.BooleanParam, default=True,
+        form.addParam('doFastDefocus', params.BooleanParam, default=False,
                       label="Fast defocus estimate",
                       expertLevel=pwconst.LEVEL_ADVANCED,
                       help='Perform fast defocus estimate.')
@@ -138,7 +138,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         
         if self.AutoDownsampling:
             if self.findPhaseShift:
-                ctfDownFactor = self.calculateAutodownsampling(samplingRate, 1.2)
+                ctfDownFactor = self.calculateAutodownsampling(samplingRate, 1.0)
             else:
                 ctfDownFactor = self.calculateAutodownsampling(samplingRate)
         else:
@@ -164,12 +164,12 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                 localParams['defocusU'], localParams['phaseShift0'] = \
                     self.ctfDict[micName]
                 localParams['defocus_range'] = 0.1 * localParams['defocusU']
-
         else:
             ma = self._params['maxDefocus']
             mi = self._params['minDefocus']
             localParams['defocusU'] = (ma + mi) / 2
             localParams['defocus_range'] = (ma - mi) / 2
+
             if self.findPhaseShift:
                 localParams['phaseShift0'] = self._params['phaseShift0']
 
@@ -209,9 +209,15 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
             # CTF estimation with Xmipp
             try:
-                self.runJob(self._program,
+                if self.doInitialCTF:
+                    self.runJob(self._program,
                             self._args % localParams +
                             " --downSamplingPerformed %f" % downFactor)
+                else:
+                    self.runJob(self._program,
+                                self._args % localParams +
+                                " --downSamplingPerformed %f" % downFactor
+                                + " --selfEstimation")
 
             except Exception, ex:
                 print >> sys.stderr, "xmipp_ctf_estimate_from_micrograph has " \
@@ -298,24 +304,23 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             self._args = ("--micrograph %(micFn)s --oroot %(micDir)s "
                           "--sampling_rate %(samplingRate)s --defocusU %("
                           "defocusU)f --defocus_range %(defocus_range)f "
-                          "--overlap 0.7 --acceleration1D")
+                          "--overlap 0.7 --acceleration1D ")
         else:
             self._args = ("--micrograph %(micFn)s --oroot %(micDir)s "
                           "--sampling_rate %(samplingRate)s --defocusU %("
                           "defocusU)f --defocus_range %(defocus_range)f "
-                          "--overlap 0.7 --acceleration1D --phase_shift "
-                          "%(phaseShift0)f --VPP_radius 0.005")
+                          "--overlap 0.7 --acceleration1D "
+                          "--phase_shift %(phaseShift0)f --VPP_radius 0.005")
 
         for par, val in params.iteritems():
             self._args += " --%s %s" % (par, str(val))
 
-        if self.doFastDefocus and not self.doInitialCTF:
-            self._args += " --fastDefocus"
+        #if self.doFastDefocus and not self.doInitialCTF:
+            #self._args += " --fastDefocus"
 
     def getPreviousParameters(self):
         if self.ctfRelations.hasValue():
             self.ctfDict = {}
-            flagDegrees = 0
             for ctf in self.ctfRelations.get():
                 ctfName = ctf.getMicrograph().getMicName()
                 phaseShift0 = 0.0
@@ -332,10 +337,9 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             self._params['phaseShift0'] = 1.57079
 
     def _prepareCommand(self):
-        if not hasattr(self, "ctfDict") and self.ctfRelations.hasValue():
+        if not hasattr(self, "ctfDict"): #and self.ctfRelations.hasValue():
             self.getPreviousParameters()
 
-            
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'
 
