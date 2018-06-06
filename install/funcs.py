@@ -368,6 +368,8 @@ class Environment:
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
 
+        createBuildDir = kwargs.get('createBuildDir', False)
+
         deps = kwargs.get('deps', [])
         
         # Download library tgz
@@ -388,8 +390,18 @@ class Environment:
         else:
             t.addCommand(self._downloadCmd % {'tar': tarFile, 'url': url},
                          targets=tarFile)
-        t.addCommand(self._tarCmd % tar,
-                     targets=buildPath,
+
+        if createBuildDir:
+            tarCmd = '{} -C {}'.format(self._tarCmd % tar, buildDir)
+            t.addCommand('mkdir %s' % buildPath,
+                         targets=[buildPath],
+                         cwd=downloadDir)
+        else:
+            tarCmd = self._tarCmd % tar
+
+        finalTarget = join(downloadDir, kwargs.get('target', buildDir))
+        t.addCommand(tarCmd,
+                     targets=finalTarget,
                      cwd=downloadDir)
         
         return t          
@@ -427,7 +439,7 @@ class Environment:
 
         # If passing a command list (of tuples (command, target)) those actions
         # will be performed instead of the normal ./configure / cmake + make
-        commands = kwargs.get('commands', []) 
+        commands = kwargs.get('commands', [])
 
         t = self._addDownloadUntar(name, **kwargs)
         configDir = kwargs.get('configDir', t.buildDir)
@@ -625,7 +637,7 @@ class Environment:
   
         libArgs = {'downloadDir': self.getEmFolder(),
                    'urlSuffix': 'em',
-                   'default': False} # This will be updated with value in kwargs
+                   'default': False}  # This will be updated with value in kwargs
         libArgs.update(kwargs)
 
         target = self._addDownloadUntar(extName, **libArgs)
