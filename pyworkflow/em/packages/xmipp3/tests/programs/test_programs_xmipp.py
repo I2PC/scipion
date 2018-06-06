@@ -775,6 +775,19 @@ class RunMpi(XmippProgramTest):
                 outputs=["file1.txt","file2.txt","file3.txt","file4.txt"])
 
 
+class PdbReducePseudoatoms(XmippProgramTest):
+    _owner = COSS
+    @classmethod
+    def getProgram(cls):
+        return 'xmipp_pdb_reduce_pseudoatoms'
+
+    def test_case1(self):
+        self.runCase("-i pseudoatoms.pdb -o pdbreduced.pdb --number 500",
+                     preruns=["cp input/pseudoatoms.pdb %o"],
+                     outputs=["pdbreduced.pdb"],
+                     changeDir=True)
+
+
 class PdbNmaDeform(XmippProgramTest):
     _owner = COSS
     @classmethod
