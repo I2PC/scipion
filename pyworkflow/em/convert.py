@@ -398,14 +398,20 @@ class ImageHandler(object):
         """
         return xmipp.FileName(imgFn).isImage()
 
-    def computeThumbnail(self, inputFn, outputFn, scaleFactor=6):
+    def computeThumbnail(self, inputFn, outputFn, scaleFactor=6, flipOnY=False,
+                         flipOnX=False):
         """ Compute a thumbnail of inputFn, save to ouptutFn.
         Optionally choose a scale factor eg scaleFactor=6 will make
         a thumbnail 6 times smaller.
         """
         outputFn = outputFn or self.getThumbnailFn(inputFn)
         args = "%s %s " % (inputFn, outputFn)
-        args += "--fouriershrink %s --process normalize" % scaleFactor
+
+        process = "--process normalize"
+        process += '' if not flipOnY else " --process=xform.flip:axis=y"
+        process += '' if not flipOnX else " --process=xform.flip:axis=x"
+
+        args += "--fouriershrink %s %s" % (scaleFactor, process)
 
         self.__runEman2Program('e2proc2d.py', args)
 
