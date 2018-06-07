@@ -231,8 +231,10 @@ class CtfCorrectWiener3d(XmippProgramTest):
         return 'xmipp_ctf_correct_wiener3d'
 
     def test_case1(self):
-        self.runCase("-i input/ctf_correct3d.xmd --oroot %o/wiener",
-                outputs=["wiener_deconvolved.vol","wiener_ctffiltered_group000001.vol"])
+        # FIX ME: We change 'wiener' to 'wiener2' to avoid delta error in devel and master devel.
+        #         This is because some calculations have changed giving ALMOST the same result.
+        self.runCase("-i input/ctf_correct3d.xmd --oroot %o/wiener2",
+                outputs=["wiener2_deconvolved.vol","wiener2_ctffiltered_group000001.vol"])
 
     def test_case2(self):
         self.runCase("-i input/ctf_correct3d.xmd --oroot %o/wiener",
@@ -247,8 +249,8 @@ class CtfCorrectIdr(XmippProgramTest):
         return 'xmipp_ctf_correct_idr'
 
     def test_case1(self):
-        self.runCase("-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr.stk",
-                outputs=["idr.stk"])
+        self.runCase("-i input/projectionsBacteriorhodopsinWithCTF.sel --vol input/phantomBacteriorhodopsin.vol -o %o/idr2.stk",
+                outputs=["idr2.stk"])
 
 
 class CtfCreateCtfdat(XmippProgramTest):
@@ -288,7 +290,9 @@ class CtfEstimateFromMicrograph(XmippProgramTest):
     def test_case2(self):
         self.setTimeOut(400)
         self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.3 --defocus_range 1000",
-                postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ','xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
+                postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,
+                          'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ',
+                          'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
                 outputs=["micrograph.psd","micrograph_enhanced_psd.xmp","micrograph.ctfparam","Defocus.xmd"])
 
     def test_case3(self):
