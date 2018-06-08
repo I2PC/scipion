@@ -140,9 +140,11 @@ class ProgramTest(unittest.TestCase):
         args = self._parseArgs(args)
         
         if changeDir:
-            cmd = "cd %s ; %s %s > stdout.txt 2> stderr.txt" % (self.outputDir, cmd, args)
+            stderr = "stderr.txt"
+            cmd = "cd %s ; %s %s > stdout.txt 2> %s" % (self.outputDir, cmd, args, stderr)
         else:
-            cmd = "%s %s > %s/stdout.txt 2> %s/stderr.txt" % (cmd, args, self.outputDir, self.outputDir)
+            stderr = "%s/stderr.txt" % self.outputDir
+            cmd = "%s %s > %s/stdout.txt 2> %s" % (cmd, args, self.outputDir, stderr)
         print "    Command: "
         print "       ", pwutils.green(cmd)
             
@@ -153,7 +155,13 @@ class ProgramTest(unittest.TestCase):
             command.run(timeout=self._timeout)
         except KeyboardInterrupt:
             command.terminate()
-        
+
+        errFile = open(stderr, 'r')
+        errStr = errFile.read()
+        errFile.close()
+        if 'XMIPP_ERROR' in errStr:
+            print errStr
+
         if postruns:
             self._runCommands(postruns, 'postruns')
             
