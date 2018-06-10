@@ -202,6 +202,18 @@ def getEnviron():
     return environ
 
 
+def getVersion():
+    path = os.environ[GAUTOMATCH_HOME]
+    for v in getSupportedVersions():
+        if v in path or v in os.path.realpath(path):
+            return v
+    return ''
+
+
+def getSupportedVersions():
+    return ['0.53', '0.56']
+
+
 def getProgram():
     """ Return the program binary that will be used. """
     if (not 'GAUTOMATCH' in os.environ or

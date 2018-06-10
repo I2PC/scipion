@@ -58,7 +58,7 @@ def getVersion():
 
 
 def getSupportedVersions():
-    return ['0.50', '1.06']
+    return ['0.50', '1.06', '1.18']
 
 
 def parseGctfOutput(filename):
