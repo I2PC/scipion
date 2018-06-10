@@ -210,10 +210,15 @@ class ProtResMap(ProtAnalysis3D):
         # This is needed right now because we are having
         # some memory problem with matplotlib plots right now in web
         Plotter.setBackend('Agg')
-        self._plotVolumeSlices().savefig(self._getExtraPath('volume1.map.png'))
+        plot = self._plotVolumeSlices()
+        plot.savefig(self._getExtraPath('volume1.map.png'))
+        plot.close()
         plot = self._plotResMapSlices(results['resTOTALma'])
         plot.savefig(self._getExtraPath('volume1_resmap.map.png'))
-        self._plotHistogram().savefig(self._getExtraPath('histogram.png'))
+        plot.close()
+        plot = self._plotHistogram()
+        plot.savefig(self._getExtraPath('histogram.png'))
+        plot.close()
 
     #--------------------------- INFO functions --------------------------------------------
     

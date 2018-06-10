@@ -232,6 +232,7 @@ def _saveAlignmentPlots(self, movie):
     meanX, meanY = self._loadMeanShifts(movie)
     plotter = createAlignmentPlot(meanX, meanY)
     plotter.savefig(self._getPlotCart(movie))
+    plotter.close()
 
 
 def createAlignmentPlot(meanX, meanY):

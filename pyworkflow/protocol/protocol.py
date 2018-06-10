@@ -1694,7 +1694,7 @@ class Protocol(Step):
                 label = cite['ID']
             else:
                 label = cite['author'].split(' and ')[0].split(',')[0].strip()
-                label += ', et al., %s, %s' % (cite['journal'], cite['year'])
+                label += ' et al., %s, %s' % (cite['journal'], cite['year'])
 
             if len(cite['doi'].strip()) > 0:
                 text = '[[%s][%s]] ' % (cite['doi'].strip(), label)
