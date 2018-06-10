@@ -44,8 +44,8 @@ from protocol_refineasy import EmanProtRefine
 from protocol_tiltvalidate import EmanProtTiltValidate
 from protocol_autopick_boxer import EmanProtAutopick
 from protocol_autopick_sparx import SparxGaussianProtPicking
-from viewer import (EmanViewer, RefineEasyViewer,
-                    TiltValidateViewer, CtfViewer)
+from viewer import (EmanViewer, Refine2DViewer,
+                    RefineEasyViewer, TiltValidateViewer, CtfViewer)
 from wizard import SparxGaussianPickerWizard
 _environ = getEnviron()
 

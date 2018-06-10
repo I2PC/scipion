@@ -35,7 +35,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         EnumParam, StringParam,
                                         BooleanParam, LabelParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.utils.path import makePath
+from pyworkflow.utils.path import makePath, cleanPath
 
 
 from convert import (rowToAlignment, createEmanProcess,
@@ -77,13 +77,15 @@ class EmanProtRefine2D(em.ProtClassify2D):
         """ Centralize the names of the files. """
 
         myDict = {
-            'partSet': 'sets/inputSet.lst',
             'partFlipSet': 'sets/inputSet__ctf_flip.lst',
             'initialAvgSet': self._getExtraPath('initial_averages.hdf'),
-            #'data_scipion': self._getExtraPath('data_scipion_it%(iter)02d.sqlite'),
+            'classes_scipion': self._getExtraPath('classes_scipion_it%(iter)02d.sqlite'),
             'classes': 'r2d_01/classes_%(iter)02d.hdf',
             'cls': 'r2d_01/classmx_%(iter)02d.hdf',
-            'results': self._getExtraPath('results_it%(iter)02d.txt')
+            'results': self._getExtraPath('results_it%(iter)02d.txt'),
+            'allrefs': self._getExtraPath('r2d_01/allrefs_%(iter)02d.hdf'),
+            'alirefs': self._getExtraPath('r2d_01/aliref_%(iter)02d.hdf'),
+            'basis': self._getExtraPath('r2d_01/basis_%(iter)02d.hdf')
         }
         self._updateFilenamesDict(myDict)
 
@@ -407,7 +409,7 @@ class EmanProtRefine2D(em.ProtClassify2D):
                         numberOfMpi=1, numberOfThreads=1)
 
         program = getEmanProgram('e2buildsets.py')
-        args = " --setname=inputSet --allparticles --minhisnr=-1"
+        args = " --setname=inputSet__ctf_flip --allparticles --minhisnr=-1"
         self.runJob(program, args, cwd=self._getExtraPath(),
                     numberOfMpi=1, numberOfThreads=1)
 
@@ -517,13 +519,7 @@ class EmanProtRefine2D(em.ProtClassify2D):
         return os.path.basename(self._getFileName(key, **args))
 
     def _getParticlesStack(self):
-        if self._getInputParticles().hasCTF():
-            if self._getInputParticles().isPhaseFlipped():
-                return self._getFileName("partSet")
-            else:
-                return self._getFileName("partFlipSet")
-        else:
-            return self._getFileName("partSet")
+            return self._getFileName("partFlipSet")
 
     def _iterTextFile(self, iterN):
         f = open(self._getFileName('results', iter=iterN))
@@ -552,17 +548,24 @@ class EmanProtRefine2D(em.ProtClassify2D):
     def _firstIter(self):
         return self._getIterNumber(0) or 1
 
-    def _getIterData(self, it):
-        #TODO: the viewer is not implemented yet
-        data_sqlite = self._getFileName('data_scipion', iter=it)
-        if not exists(data_sqlite):
-            iterImgSet = em.SetOfParticles(filename=data_sqlite)
-            iterImgSet.copyInfo(self._getInputParticles())
-            self._fillDataFromIter(iterImgSet, it)
-            iterImgSet.write()
-            iterImgSet.close()
+    def _getIterClasses(self, it, clean=False):
+        """ Return a classes .sqlite file for this iteration.
+        If the file doesn't exists, it will be created by
+        converting from this iteration data.star file.
+        """
+        data_classes = self._getFileName('classes_scipion', iter=it)
 
-        return data_sqlite
+        if clean:
+            cleanPath(data_classes)
+
+        if not exists(data_classes):
+            clsSet = em.SetOfClasses2D(filename=data_classes)
+            clsSet.setImages(self.inputParticles.get())
+            self._fillClassesFromIter(clsSet, it)
+            clsSet.write()
+            clsSet.close()
+
+        return data_classes
 
     def _getInputParticles(self):
         return self.inputParticles.get()

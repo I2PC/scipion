@@ -26,7 +26,7 @@
 
 import os
 import re
-from os.path import exists
+from os.path import exists, basename
 from glob import glob
 
 import pyworkflow.em as em
@@ -34,7 +34,7 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         EnumParam, StringParam, BooleanParam,
                                         LabelParam)
-from pyworkflow.utils.path import makePath
+from pyworkflow.utils import makePath, createLink, join
 
 
 from convert import rowToAlignment, createEmanProcess, writeSetOfParticles
@@ -71,12 +71,12 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         """ Centralize the names of the files. """
 
         myDict = {
-            'partSet': 'sets/inputSet.lst',
             'partFlipSet': 'sets/inputSet__ctf_flip.lst',
-            #'data_scipion': self._getExtraPath('data_scipion_it%(iter)02d.sqlite'),
+            'partBispecSet': self._getExtraPath('sets/inputSet__ctf_flip_bispec.lst'),
             'classes': 'r2db_01/classes_%(iter)02d.hdf',
             'cls': 'r2db_01/classmx_%(iter)02d.hdf',
-            'results': self._getExtraPath('results_it%(iter)02d.txt')
+            'results': self._getExtraPath('results_it%(iter)02d.txt'),
+            'basis': self._getExtraPath('r2db_01/basis_%(iter)02d.hdf')
         }
         self._updateFilenamesDict(myDict)
 
@@ -94,6 +94,15 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         form.addParam('inputParticles', PointerParam, label="Input particles",
                       important=True, pointerClass='SetOfParticles',
                       help='Select the input particles.')
+        form.addParam('useInputBispec', BooleanParam, default=False,
+                      label='Provide input bispectra?',
+                      help='The bispectra are produced by *e2ctf auto* program. '
+                           'If not provided, they will be automatically generated.')
+        form.addParam('inputBispec', PointerParam,
+                      condition='useInputBispec',
+                      label='Choose e2ctf auto protocol',
+                      pointerClass='EmanProtCTFAuto',
+                      help='Important: bispectra should match input particles!')
         form.addParam('numberOfClassAvg', IntParam, default=32,
                       label='Number of class-averages',
                       help='Number of class-averages to generate. Normally you '
@@ -270,9 +279,26 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
                         numberOfMpi=1, numberOfThreads=1)
 
         program = getEmanProgram('e2buildsets.py')
-        args = " --setname=inputSet --allparticles --minhisnr=-1"
+        args = " --setname=inputSet__ctf_flip --allparticles --minhisnr=-1"
         self.runJob(program, args, cwd=self._getExtraPath(),
                     numberOfMpi=1, numberOfThreads=1)
+
+        if self.useInputBispec:
+            prot = self.inputBispec.get()
+            prot._createFilenameTemplates()
+            bispec = prot.outputParticles_flip_bispec
+            if not bispec.getSize() == partSet.getSize():
+                raise  Exception('Input particles and bispectra sets have different size!')
+            # link bispec hdf files and lst file
+            pattern = prot._getExtraPath('particles/*__ctf_flip_bispec.hdf')
+            print "\nLinking bispectra input files..."
+            for fn in sorted(glob(pattern)):
+                newFn = join(self._getExtraPath('particles'), basename(fn))
+                createLink(fn, newFn)
+                print "    %s -> %s" % (fn, newFn)
+            lstFn = prot._getFileName('partSetFlipBispec')
+            newLstFn = self._getFileName('partBispecSet')
+            createLink(lstFn, newLstFn)
 
     def refineStep(self, args):
         """ Run the EMAN program to refine 2d. """
@@ -358,13 +384,7 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         return os.path.basename(self._getFileName(key, **args))
 
     def _getParticlesStack(self):
-        if self._getInputParticles().hasCTF():
-            if self._getInputParticles().isPhaseFlipped():
-                return self._getFileName("partSet")
-            else:
-                return self._getFileName("partFlipSet")
-        else:
-            return self._getFileName("partSet")
+            return self._getFileName("partFlipSet")
 
     def _iterTextFile(self, iterN):
         f = open(self._getFileName('results', iter=iterN))

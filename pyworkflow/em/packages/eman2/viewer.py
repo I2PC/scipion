@@ -37,7 +37,7 @@ from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER,
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 import pyworkflow.em.showj as showj
 from pyworkflow.em.viewer import (ObjectView, DataView,
-                                  ChimeraView, ChimeraClientView)
+                                  ChimeraView, ChimeraClientView, ClassesView)
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.executor import StepExecutor
@@ -49,6 +49,8 @@ import pyworkflow.utils as pwutils
 from protocol_boxing import EmanProtBoxing
 from protocol_ctf import EmanProtCTFAuto
 from protocol_initialmodel import EmanProtInitModel
+from protocol_refine2d import EmanProtRefine2D
+from protocol_refine2d_bispec import EmanProtRefine2DBispec
 from protocol_refineasy import EmanProtRefine
 from protocol_tiltvalidate import EmanProtTiltValidate
 from convert import loadJson
@@ -134,9 +136,123 @@ ProjectWindow.registerObjectCommand(OBJCMD_CLASSAVG_PROJS, showClassAvgProjs)
 ProjectWindow.registerObjectCommand(OBJCMD_PROJS, showProjs)
 ProjectWindow.registerObjectCommand(OBJCMD_INITVOL, showInitialRandomVolume)
 
+class Refine2DViewer(ProtocolViewer):
+    """ Visualization of e2refine2d results. """
+
+    _targets = [EmanProtRefine2D, EmanProtRefine2DBispec]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _label = 'viewer refine 2d'
+
+    def _defineParams(self, form):
+        self._env = os.environ.copy()
+        form.addSection(label='Results per Iteration')
+        form.addParam('iterToShow', EnumParam,
+                      label="Which iteration do you want to visualize?",
+                      default=0, choices=['last', 'all', 'selection'],
+                      display=EnumParam.DISPLAY_LIST)
+        form.addParam('iterSelection', NumericRangeParam, default='1',
+                      label='Selected iterations',
+                      condition='iterToShow==%d' % SELECTED_ITERS,
+                      help="""
+*last*: only the last iteration will be visualized.
+*all*: all iterations  will be visualized.
+*selection*: you may specify a range of iterations.
+Examples:
+"1,5-8,10" -> [1,5,6,7,8,10]
+"2,6,9-11" -> [2,6,9,10,11]
+"2 5, 6-8" -> [2,5,6,7,8]
+                   """)
+        form.addParam('showClasses', LabelParam,
+                      label='Show classification in Scipion',
+                      help='Display final unaligned class averages')
+        form.addParam('showAllRef', LabelParam,
+                      condition='_protocolIsNotBispec',
+                      label='Show sorted and aligned class averages',
+                      help='')
+        form.addParam('showBasis', LabelParam,
+                      label='Show MSA vectors',
+                      help='Display MSA basis vectors, which may be useful '
+                           'if looking for signs of specific symmetries, etc.')
+        form.addParam('showAliRef', LabelParam,
+                      condition='_protocolIsNotBispec',
+                      label='Show alignment references',
+                      help='May be useful to look at which averages were '
+                           'used as 2-D alignment references')
+
+    def _getVisualizeDict(self):
+        self._load()
+        return {'showClasses': self._showClasses,
+                'showAllRef': lambda paramName: self._showMisc(key='allrefs'),
+                'showBasis': lambda paramName: self._showMisc(key='basis'),
+                'showAliRef': lambda paramName: self._showMisc(key='alirefs')
+                }
+
+    def _showClasses(self, paramName=None):
+        views = []
+        if (self.iterToShow == LAST_ITER and
+                getattr(self.protocol, 'outputClasses', None) is not None):
+            fn = self.protocol.outputClasses.getFileName()
+            v = self.createScipionView(fn)
+            views.append(v)
+        else:
+            for it in self._iterations:
+                fn = self.protocol._getIterClasses(it)
+                v = self.createScipionView(fn)
+                views.append(v)
+
+        return views
+
+    def createScipionView(self, filename):
+        labels =  'enabled id _size _representative._filename '
+        viewParams = {showj.ORDER: labels,
+                      showj.VISIBLE: labels,
+                      showj.RENDER:'_representative._filename',
+                      showj.SORT_BY: '_size desc'
+                      }
+        inputParticlesId = self.protocol.inputParticles.get().strId()
+        view = ClassesView(self._project,
+                           self.protocol.strId(), filename, other=inputParticlesId,
+                           env=self._env,
+                           viewParams=viewParams)
+
+        return view
+
+    def _showMisc(self, key):
+        views = []
+        if self.iterToShow.get() == LAST_ITER:
+            last = self.protocol._lastIter()
+            fn = self.protocol._getFileName(key, iter=last)
+            v = self.createScipionView(fn)
+            views.append(v)
+        else:
+            for it in self._iterations:
+                fn = self.protocol._getFileName(key, iter=it)
+                v = self.createScipionView(fn)
+                views.append(v)
+
+        return views
+
+    def _load(self):
+        """ Load selected iterations and classes 2D for visualization mode. """
+        self.protocol._createFilenameTemplates()
+        self.protocol._createIterTemplates()
+        self.firstIter = self.protocol._firstIter()
+        self.lastIter = self.protocol._lastIter()
+
+        if self.iterToShow.get() == LAST_ITER:
+            self._iterations = [self.lastIter]
+        elif self.iterToShow.get() == ALL_ITERS:
+            self._iterations = range(1, self.lastIter + 1)
+        elif self.iterToShow.get() == SELECTED_ITERS:
+            self._iterations = self._getListFromRangeString(
+                self.iterSelection.get())
+
+    def _protocolIsNotBispec(self):
+        return self.protocol.getClassName() == 'EmanProtRefine2D'
+
 
 class RefineEasyViewer(ProtocolViewer):
-    """ Visualization of Refine Easy."""
+    """ Visualization of e2refine_easy results. """
 
     _targets = [EmanProtRefine]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
