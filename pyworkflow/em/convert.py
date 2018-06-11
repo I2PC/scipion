@@ -338,7 +338,7 @@ class ImageHandler(object):
         self._img.inplaceMultiply(-1)
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
-    
+
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
@@ -450,12 +450,14 @@ class ImageHandler(object):
 DT_FLOAT = ImageHandler.DT_FLOAT
 
 
+#TODO: use biopython and move this fuction to convert_Atom_struct
 def downloadPdb(pdbId, pdbFile, log=None):
     pdbGz = pdbFile + ".gz"
     result = (__downloadPdb(pdbId, pdbGz, log) and 
               __unzipPdb(pdbGz, pdbFile, log))
     return result
     
+#TODO: use biopython and move this fuction to convert_Atom_struct
 def __downloadPdb(pdbId, pdbGz, log):
     import ftplib
     """Download a pdb file given its id. """

@@ -85,7 +85,8 @@ class Message():
     LABEL_CONTINUE = 'Continue'
     LABEL_CONTINUE_ACTION = 'Approve continue'
     LABEL_EXPORT = 'Export'
-    
+    LABEL_EXPORT_UPLOAD = 'Export & upload'
+
     #-- Tabs --
     LABEL_DATA = 'Data'
     LABEL_SUMMARY = 'Summary'
@@ -343,6 +344,7 @@ class Icon():
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
+    ACTION_RENAME = 'rename.png'
     # TODO: change action_steps icon - fa-codefork?
     ACTION_STEPS = 'fa-list-ul.png'
     ACTION_BROWSE = 'fa-folder-open.png'
@@ -359,7 +361,8 @@ class Icon():
     ACTION_HELP = 'fa-question-circle.png'
     ACTION_REFERENCES = 'fa-external-link.png'
     ACTION_EXPORT = 'fa-external-link.png'
-    
+    ACTION_EXPORT_UPLOAD = 'fa-upload.png'
+
     ACTION_SEARCH = 'fa-search.png'
     ACTION_EXECUTE = 'fa-cogs.png'
     ACTION_IN = 'fa-sign-in.png'

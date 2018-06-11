@@ -719,7 +719,6 @@ def libraryTest(env, name, lang='c'):
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
-
 # Add methods so SConscript can call them.
 env.AddMethod(untar, 'Untar')
 env.AddMethod(compilerConfig, 'CompilerConfig')

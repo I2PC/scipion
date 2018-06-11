@@ -306,7 +306,7 @@ void PDBPhantom::shift(double x, double y, double z)
 }
 
 /* Read phantom from PDB --------------------------------------------------- */
-void PDBRichPhantom::read(const FileName &fnPDB)
+void PDBRichPhantom::read(const FileName &fnPDB, double pseudoatoms, double threshold)
 {
     // Open file
     std::ifstream fh_in;
@@ -316,7 +316,9 @@ void PDBRichPhantom::read(const FileName &fnPDB)
 
     // Process all lines of the file
     std::string line, kind;
+
     RichAtom atom;
+    int num = 0;
     while (!fh_in.eof())
     {
         // Read an ATOM line
@@ -343,7 +345,12 @@ void PDBRichPhantom::read(const FileName &fnPDB)
 			atom.z = textToFloat(line.substr(46,8));
 			atom.occupancy = textToFloat(line.substr(54,6));
 			atom.bfactor = textToFloat(line.substr(60,6));
-			atomList.push_back(atom);
+			if(pseudoatoms != -1)
+				intensities.push_back(atom.bfactor);
+
+			if(atom.bfactor >= threshold && pseudoatoms == -1)
+				atomList.push_back(atom);
+
         } else if (kind == "REMA")
         	remarks.push_back(line);
     }
@@ -366,7 +373,7 @@ void PDBRichPhantom::write(const FileName &fnPDB)
     {
     	const RichAtom &atom=atomList[i];
     	fprintf (fh_out,"ATOM  %5lu %4s%c%-4s%c%4d%c   %8.3f%8.3f%8.3f%6.2f%6.2f      %4s\n",
-    			(unsigned long int)i,atom.name.c_str(),
+    			(unsigned long int)i+1,atom.name.c_str(),
     			atom.altloc,atom.resname.c_str(),atom.chainid,
     			atom.resseq,atom.icode,atom.x,atom.y,atom.z,atom.occupancy,atom.bfactor,
     			atom.name.c_str());

@@ -68,7 +68,7 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
-       ("_phaseShift", xmipp.MDL_CTF_PHASE_SHIFT),
+       # ("_phaseShift", xmipp.MDL_CTF_PHASE_SHIFT),
        ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
        ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
@@ -642,6 +642,8 @@ def rowToCtfModel(ctfRow):
         # Case for metadata coming with Xmipp resolution label
         # Populate Scipion CTF from metadata row (using mapping dictionary
         # plus extra labels
+        if ctfRow.hasLabel(md.MDL_CTF_PHASE_SHIFT):
+            ctfModel.setPhaseShift(ctfRow.getValue(md.MDL_CTF_PHASE_SHIFT, 0))
         if ctfRow.containsLabel(xmipp.label2Str(xmipp.MDL_CTF_CRIT_MAXFREQ)):
             rowToObject(ctfRow, ctfModel, CTF_DICT,
                         extraLabels=CTF_EXTRA_LABELS)
@@ -653,7 +655,7 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
-        ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
+        # ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
 
     else:
         ctfModel = None

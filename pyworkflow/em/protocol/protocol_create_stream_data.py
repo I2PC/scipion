@@ -173,21 +173,35 @@ class ProtCreateStreamData(EMProtocol):
         else:
             objSet.setStreamState(objSet.STREAM_OPEN)
             acquisition = Acquisition()
-            acquisition.setMagnification(self._magnification)
-            acquisition.setVoltage(self._voltage)
-            acquisition.setSphericalAberration(self._sphericalAberration)
-            acquisition.setAmplitudeContrast(self._amplitudeContrast)
-            objSet.setAcquisition(acquisition)
-            if self.setof != SET_OF_MICROGRAPHS:
-                objSet.setSamplingRate(self.samplingRate.get())
-            else:
+            if self.setof == SET_OF_MICROGRAPHS:
+                acquisition.setMagnification(
+                    self.inputMics.get().getAcquisition().getMagnification())
+                acquisition.setVoltage(
+                    self.inputMics.get().getAcquisition().getVoltage())
+                acquisition.setSphericalAberration(
+                    self.inputMics.get().getAcquisition().getSphericalAberration())
+                acquisition.setAmplitudeContrast(
+                    self.inputMics.get().getAcquisition().getAmplitudeContrast())
                 objSet.setSamplingRate(self.inputMics.get().getSamplingRate())
-            if self.setof != SET_OF_MOVIES:
-                objSet.setSamplingRate(self.samplingRate.get())
-            else:
+            elif self.setof == SET_OF_MOVIES:
+                acquisition.setMagnification(
+                    self.inputMovies.get().getAcquisition().getMagnification())
+                acquisition.setVoltage(
+                    self.inputMovies.get().getAcquisition().getVoltage())
+                acquisition.setSphericalAberration(
+                    self.inputMovies.get().getAcquisition().getSphericalAberration())
+                acquisition.setAmplitudeContrast(
+                    self.inputMovies.get().getAcquisition().getAmplitudeContrast())
                 objSet.setSamplingRate(
                     self.inputMovies.get().getSamplingRate())
+            else:
+                acquisition.setMagnification(self._magnification)
+                acquisition.setVoltage(self._voltage)
+                acquisition.setSphericalAberration(self._sphericalAberration)
+                acquisition.setAmplitudeContrast(self._amplitudeContrast)
+                objSet.setSamplingRate(self.samplingRate.get())
 
+            objSet.setAcquisition(acquisition)
         if self.setof == SET_OF_MOVIES:
             obj = Movie()
         elif self.setof == SET_OF_MICROGRAPHS:
@@ -276,21 +290,11 @@ class ProtCreateStreamData(EMProtocol):
                     ImageHandler().read(newMic.getLocation())
                 self.name = "micro"
 
-
-            elif self.setof == SET_OF_PARTICLES:
-                for idx, p in enumerate(self.inputParticles.get()):
-                    if idx == counter:
-                        particle = p.clone()
-                ProtCreateStreamData.object = \
-                    ImageHandler().read(particle.getLocation())
-                self.name = "particle"
-
         # save file
         destFn = self._getExtraPath("%s_%05d" % (self.name, counter))
         ProtCreateStreamData.object.write(destFn)
         self.dictObj[destFn] = True
         time.sleep(self.creationInterval.get())
-
 
     def createParticlesStep(self):
         self.name = "particle"
@@ -304,7 +308,6 @@ class ProtCreateStreamData(EMProtocol):
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
         time.sleep(self.creationInterval.get())
-        self._stepsCheck()
 
     def createRandomMicAtep(self, mic):
         from pyworkflow.em.packages.xmipp3 import getEnviron

@@ -244,6 +244,9 @@ pip.addCommand('python scripts/get-pip.py -I --no-setuptools',
 env.addPipModule('setuptools', '39.0.1')
 numpy = env.addPipModule('numpy','1.14.1')
 matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
+
+
+env.addPipModule('poster', '0.8.1', target='poster-0.8.1*')
 env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
 env.addPipModule('biopython', '1.71', target='biopython-1.71*')
 env.addPipModule('mpi4py', '1.3.1')
@@ -363,6 +366,9 @@ env.addPackage('localrec', version='1.1.0',
 
 env.addPackage('localrec', version='1.2.0',
                tar='localrec-1.2.0.tgz')
+
+env.addPackage('locscale', version='0.1',
+               tar='locscale-0.1.tgz')
 
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',

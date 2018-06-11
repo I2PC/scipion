@@ -25,117 +25,376 @@
 # **************************************************************************
 #
 from pyworkflow.tests import *
-from tempfile  import NamedTemporaryFile
+from tempfile import NamedTemporaryFile
 from pyworkflow.em.convert_atom_struct import AtomicStructHandler
+from pyworkflow.em.transformations import euler_matrix, \
+    translation_matrix, concatenate_matrices
+from copy import deepcopy
+import numpy
 
 
 class TestAtomicStructHandler(unittest.TestCase):
 
     def testIntToChain(self):
-        aSH = AtomicStructHandler()
-        solString =['A',  'B',  'C',  'D',  'E',  'F',  'G',
-                    'H',  'I',  'J',  'K',  'L',  'M',  'N',
-                    'O',  'P',  'Q',  'R',  'S',  'T',  'U',
-                    'V',  'W',  'X',  'Y',  'Z',  '0',  '1',
-                    '2',  '3',  '4',  '5',  '6',  '7',  '8',
-                    '9',  'a',  'b',  'c',  'd',  'e',  'f',
-                    'g',  'h',  'i',  'j',  'k',  'l',  'm',
-                    'n',  'o',  'p',  'q',  'r',  's',  't',
-                    'u',  'v',  'w',  'x',  'y',  'z', "AA"]
+        aSH = AtomicStructHandler(self.PDBFileName)
+        solString = ['A',  'B',  'C',  'D',  'E',  'F',  'G',
+                     'H',  'I',  'J',  'K',  'L',  'M',  'N',
+                     'O',  'P',  'Q',  'R',  'S',  'T',  'U',
+                     'V',  'W',  'X',  'Y',  'Z',  '0',  '1',
+                     '2',  '3',  '4',  '5',  '6',  '7',  '8',
+                     '9',  'a',  'b',  'c',  'd',  'e',  'f',
+                     'g',  'h',  'i',  'j',  'k',  'l',  'm',
+                     'n',  'o',  'p',  'q',  'r',  's',  't',
+                     'u',  'v',  'w',  'x',  'y',  'z', "AA"]
         for i in range(63):
             self.assertEqual(solString[i], aSH._intToChain(i))
 
     def testReadPDB(self):
-        aSH = AtomicStructHandler()
-        structure = aSH.read(self.PDBFileName)
+        aSH = AtomicStructHandler(self.PDBFileName)
+        structure = aSH.getStructure()
 
-        solDict={}
+        solDict = {}
         solDict['structure_method'] = 'x-ray diffraction'
         solDict['head'] = 'extracellular matrix'
-        solDict['name'] = 'x-ray crystallographic determination of a collagen-like peptide with the repeating sequence (pro-pro-gly)'
-        solDict['author'] = 'R.Z.Kramer,L.Vitagliano,J.Bella,R.Berisio,L.Mazzarella,B.Brodsky,A.Zagari,H.M.Berman'
+        solDict['name'] = 'x-ray crystallographic determination ' \
+                          'of a collagen-like peptide with the ' \
+                          'repeating sequence (pro-pro-gly)'
+        solDict['author'] = 'R.Z.Kramer,L.Vitagliano,J.Bella,R.Berisio,' \
+                            'L.Mazzarella,B.Brodsky,A.Zagari,H.M.Berman'
         solDict['deposition_date'] = '1998-01-22'
-        for k, v in solDict.iteritems(): #structure.header.iteritems():
+        for k, v in solDict.iteritems():
             self.assertEqual(structure.header[k].strip(), v)
 
-        solList=['N', 'CA', 'C', 'O', 'CB']
-        counter=0
+        solList = ['N', 'CA', 'C', 'O', 'CB']
+        counter = 0
         for atom in structure.get_atoms():
-            self.assertEqual(solList[counter],atom.get_name())
+            self.assertEqual(solList[counter], atom.get_name())
             counter += 1
 
     def testReadCIF(self):
-        aSH = AtomicStructHandler()
-        structure = aSH.read(self.CIFFileName)
+        aSH = AtomicStructHandler(self.CIFFileName)
+        structure = aSH.getStructure()
 
-        solList=['N', 'CA', 'C', 'O', 'CB']
-        counter=0
+        solList = ['N', 'CA', 'C', 'O', 'CB']
+        counter = 0
         for atom in structure.get_atoms():
-            self.assertEqual(solList[counter],atom.get_name())
+            self.assertEqual(solList[counter], atom.get_name())
             counter += 1
 
-        solDict={}
+        solDict = {}
         solDict['_exptl.method'] = 'x-ray diffraction'
         solDict['_struct_keywords.pdbx_keywords'] = 'extracellular matrix'
-        solDict['_struct.title'] = 'x-ray crystallographic determination of a collagen-like peptide with the repeating sequence (pro-pro-gly)'
+        solDict['_struct.title'] = 'x-ray crystallographic determination ' \
+                                   'of a collagen-like peptide with the ' \
+                                   'repeating sequence (pro-pro-gly)'
         _dict = aSH.readLowLevel(self.CIFFileName)
 
         for k, v in solDict.iteritems():
             self.assertEqual(_dict[k].strip().lower(), v.lower())
 
     def testRenameToChains(self):
-        aSH = AtomicStructHandler()
-        structure = aSH.read(self.PDBFileName)
+        aSH = AtomicStructHandler(self.PDBFileName)
+        structure = aSH.getStructure()
 
         model = structure[0]
         chain = model['B']
         chain.id = 'CC'
         aSH.renameChains(structure)
         for chain in structure.get_chains():
-            self.assertEqual(chain.id,'C')
+            self.assertEqual(chain.id, 'C')
 
     def testWritePDB(self):
-        aSH = AtomicStructHandler()
-        structure1 = aSH.read(self.PDBFileName)
-        PDBFileName2 = self.PDBFileName.replace(".pdb","_2.pdb")
-        aSH.write(PDBFileName2, structure1)
-        structure2 = aSH.read(PDBFileName2)
+        aSH = AtomicStructHandler(self.PDBFileName)
+        PDBFileName2 = self.PDBFileName.replace(".pdb", "_2.pdb")
+        aSH._write(PDBFileName2)
+        aSH2 = AtomicStructHandler(PDBFileName2)
+        structure1 = aSH.getStructure()
+        structure2 = aSH2.getStructure()
 
-        for atom1, atom2 in zip(structure1.get_atoms(), structure2.get_atoms()):
+        for atom1, atom2 in zip(structure1.get_atoms(),
+                                structure2.get_atoms()):
             self.assertEqual(atom1.get_name(), atom2.get_name())
         os.unlink(PDBFileName2)
 
     def testWriteCIF(self):
-        aSH = AtomicStructHandler()
-        structure1 = aSH.read(self.CIFFileName)
-        CIFFileName2 = self.CIFFileName.replace(".cif","_2.cif")
-        aSH.write(CIFFileName2, structure1)
-        structure2 = aSH.read(CIFFileName2)
+        aSH = AtomicStructHandler(self.PDBFileName)
+        CIFFileName2 = self.CIFFileName.replace(".cif", "_2.cif")
+        aSH._write(CIFFileName2)
+        aSH2 = AtomicStructHandler(CIFFileName2)
+        structure1 = aSH.getStructure()
+        structure2 = aSH2.getStructure()
 
-        for atom1, atom2 in zip(structure1.get_atoms(), structure2.get_atoms()):
+        for atom1, atom2 in zip(structure1.get_atoms(),
+                                structure2.get_atoms()):
             self.assertEqual(atom1.get_name(), atom2.get_name())
         os.unlink(CIFFileName2)
 
     def testCIFToPDB(self):
-        aSH = AtomicStructHandler()
-        PDBFileName2 = self.PDBFileName.replace(".pdb","_2.pdb")
-        aSH.cifToPdb(self.CIFFileName, PDBFileName2)
-        structure1 = aSH.read(self.CIFFileName)
-        structure2 = aSH.read(PDBFileName2)
-        for atom1, atom2 in zip(structure1.get_atoms(), structure2.get_atoms()):
+        aSH = AtomicStructHandler(self.CIFFileName)
+        structure1 = aSH.getStructure()
+        PDBFileName2 = self.PDBFileName.replace(".pdb", "_2.pdb")
+        aSH.write(PDBFileName2)
+        aSH.read(PDBFileName2)
+        structure2 = aSH.getStructure()
+        for atom1, atom2 in zip(structure1.get_atoms(),
+                                structure2.get_atoms()):
             self.assertEqual(atom1.get_name(), atom2.get_name())
         os.unlink(PDBFileName2)
 
     def testPDBToCIF(self):
-        aSH = AtomicStructHandler()
-        CIFFileName2 = self.CIFFileName.replace(".cif","_2.cif")
-        aSH.pdbToCif(self.PDBFileName, CIFFileName2)
-        structure1 = aSH.read(self.PDBFileName)
-        structure2 = aSH.read(CIFFileName2)
-        for atom1, atom2 in zip(structure1.get_atoms(), structure2.get_atoms()):
+        aSH1 = AtomicStructHandler(self.PDBFileName)
+        CIFFileName2 = self.CIFFileName.replace(".cif", "_2.cif")
+        aSH1.write(CIFFileName2)
+        aSH2 = AtomicStructHandler(CIFFileName2)
+
+        structure1 = aSH1.getStructure()
+        structure2 = aSH2.getStructure()
+        for atom1, atom2 in zip(structure1.get_atoms(),
+                                structure2.get_atoms()):
             self.assertEqual(atom1.get_name(), atom2.get_name())
         os.unlink(CIFFileName2)
 
+    def testCenterOfMass(self):
+        aSH = AtomicStructHandler()
+        structure = aSH.read(self.CIFFileName)
+        x, y, z = aSH.centerOfMass(structure)
+        self.assertAlmostEqual(x,  8.1593891597, 2)
+        self.assertAlmostEqual(y, 21.1833304818, 2)
+        self.assertAlmostEqual(z, 20.0177924407, 2)
+
+    def testTransformTranslation(self):
+        aSHSource = AtomicStructHandler(self.PDBFileName)
+        structure = aSHSource.getStructure()
+        structure_copy = deepcopy(aSHSource.getStructure())
+        shift = [100., 50., 25.]
+        #        rotation_matrix = euler_matrix(deg2rad(45.), 0., 0., 'szyz')
+        rotation_matrix = euler_matrix(0., 0., 0., 'szyz')
+        translation = translation_matrix(shift)
+        M = concatenate_matrices(rotation_matrix, translation)
+        aSHSource.transform(M)
+        for atom1, atom2 in zip(structure.get_atoms(),
+                                structure_copy.get_atoms()):
+            coord1 = atom1.get_coord()
+            coord2 = [sum(x) for x in zip(atom2.get_coord(), shift)]
+            for i in range(3):
+                self.assertAlmostEqual(coord1[i], coord2[i], 2)
+
+    def testTransformRotation(self):
+        aSHSource = AtomicStructHandler(self.PDBFileName)
+        structure = aSHSource.getStructure()
+        structure_copy = deepcopy(structure)
+        rot = numpy.deg2rad(10)
+        theta = numpy.deg2rad(20.)
+        psi = numpy.deg2rad(30.)
+        rotation_matrix = euler_matrix(rot, theta, psi, 'szyz')
+        translation = translation_matrix([0., 0., 0.])
+        M = concatenate_matrices(rotation_matrix, translation)
+        aSHSource.transform(M)
+        m = M[:3, :3]
+        for atom1, atom2 in zip(structure.get_atoms(),
+                                structure_copy.get_atoms()):
+            coord1 = atom1.get_coord()
+            coord2 = m.dot(atom2.get_coord())
+            for i in range(3):
+                self.assertAlmostEqual(coord1[i], coord2[i], 2)
+
+    def testTransformRotationAndTranslation(self):
+        aSHSource = AtomicStructHandler(self.PDBFileName)
+        structure = aSHSource.getStructure()
+        structure_copy = deepcopy(structure)
+        rot = numpy.deg2rad(10)
+        theta = numpy.deg2rad(20.)
+        psi = numpy.deg2rad(30.)
+        rotation_matrix = euler_matrix(rot, theta, psi, 'szyz')
+        shift = [100., 50., 25.]
+        translation = translation_matrix(shift)
+        M = concatenate_matrices(rotation_matrix, translation)
+        aSHSource.transform(M)
+        m = M[:3, :3]
+        for atom1, atom2 in zip(structure.get_atoms(),
+                                structure_copy.get_atoms()):
+            coord1 = atom1.get_coord()
+            coord2 = atom2.get_coord()
+            coord2 = [sum(x) for x in zip(coord2, shift)]
+            coord2 = m.dot(coord2)
+            for i in range(3):
+                self.assertAlmostEqual(coord1[i], coord2[i], 2)
+
+    def testTransformTranslationCoherence(self):
+        """
+        Question: If I transform the PDB and the 3D map with matrix T
+        do they move in the same direction?
+        I do not know how to make an automatic test to check this
+        The following code perform all operations but check that
+        the PDB and 3D map match. This should be check using
+        your eye.
+
+        change False to True (in the following if) to
+        perform all or some of the checks
+        """
+
+        # retrieve "Structure of the human TRPC3
+        # both 3Dmap and PDB
+
+
+        doTest = False
+
+        if not doTest:
+
+            print "This test is to be tested manually since it opens chimera afterwards"
+            print "For testing this, edit this file and set doTest = True"
+            return
+
+
+        PDBID = '6CUD'
+        EMDBID = '7620'
+
+        doAll = False
+
+        if False or doAll:  # set to False if you aready have the 3dmap file
+            url = 'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%s/map/emd_%s.map.gz' % \
+                  (EMDBID, EMDBID)
+            import urllib
+            urllib.urlretrieve(url, 'emd_%s.map.gz' % EMDBID)
+            os.system("gunzip emd_%s.map.gz" % EMDBID)  # file is gzipped
+        if False or doAll:  # set to False if you aready have the PDB file
+            aSH = AtomicStructHandler()
+            pdbFileName = aSH.readFromPDBDatabase(PDBID, type='pdb',
+                                                  dir=os.getcwd())
+        else:
+            pdbFileName = 'pdb%s.ent' % PDBID.lower()
+
+        # get 3D map sampling
+        from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
+        header = Ccp4Header("emd_%s.map" % EMDBID, readHeader=True)
+        sampling, y, z = header.getSampling()
+
+        def __runXmippProgram(program, args):
+            """ Internal function to launch a Xmipp program. """
+            import pyworkflow.em.packages.xmipp3 as xmipp3
+            xmipp3.runXmippProgram(program, args)
+
+        def __getXmippEulerAngles(matrix):
+            """ Internal fuction to convert scipion to xmipp angles"""
+            from pyworkflow.em.packages.xmipp3.convert \
+                import geometryFromMatrix
+
+            return geometryFromMatrix(matrix, False)
+
+        def __applyTransform(suffix, pdbFileName, shift, angles, sampling):
+            """ auxiliary function, transform PDB and 3dmap files"""
+            # create a Scipion transformation matrix
+            from numpy import deg2rad
+            rotation_matrix = euler_matrix(deg2rad(angles[0]),
+                                           deg2rad(angles[1]),
+                                           deg2rad(angles[2]), 'szyz')
+            translation = translation_matrix(shift)
+            M = concatenate_matrices(rotation_matrix, translation)
+
+            # apply it to the pdb file
+            # if rotation move to center
+            aSH = AtomicStructHandler(pdbFileName)
+            if (angles[0] != 0. or angles[1] != 0. or angles[2] != 0.):
+                from pyworkflow.em.convert import ImageHandler
+                ih = ImageHandler()
+                x, y, z, n = ih.getDimensions("emd_%s.map" % EMDBID)
+                x /= 2.
+                y /= 2.
+                z /= 2.
+                localShift = [-x, -y, -z]
+                rotation_matrix = euler_matrix(0., 0., 0., 'szyz')
+                translation = translation_matrix(localShift)
+                localM = concatenate_matrices(rotation_matrix, translation)
+                aSH.transform(localM, sampling=sampling)
+
+            aSH.transform(M, sampling=sampling)
+
+            if (angles[0] != 0. or angles[1] != 0. or angles[2] != 0.):
+                localShift = [x, y, z]
+                rotation_matrix = euler_matrix(0., 0., 0., 'szyz')
+                translation = translation_matrix(localShift)
+                localM = concatenate_matrices(rotation_matrix, translation)
+                aSH.transform(localM, sampling=sampling)
+
+            aSH.write("%s_%s_transformed.ent" % (suffix, PDBID.lower()))
+
+            # get equivalent xmipp transformation
+            shift, angles = __getXmippEulerAngles(M)
+            # shift 3map and set sampling
+            __runXmippProgram("xmipp_transform_geometry",
+                              '-i emd_%s.map '
+                              '-o %s_emd_%s_transform.map '
+                              '--interp linear '
+                              '--shift %f %f %f '
+                              '--rotate_volume euler %f %f %f ' % (
+                                  EMDBID,
+                                  suffix,
+                                  EMDBID,
+                                  shift[0], shift[1], shift[2],
+                                  angles[0], angles[1], angles[2]
+                              )
+                              )
+            header = Ccp4Header("%s_emd_%s_transform.map" % (suffix, EMDBID),
+                                readHeader=True)
+            header.setSampling(sampling)
+            # put the sampling back, xmipp_transform_geometry erased it
+            header.writeHeader()
+
+            # view the results with chimera
+            from pyworkflow.em.viewers.chimera_utils \
+                import runChimeraProgram
+            from pyworkflow.em.viewers.chimera_utils \
+                import getProgram as chimera_get_program
+            args = "%s %s %s %s" % (
+                   pdbFileName,
+                   "emd_%s.map" % EMDBID,
+                   "%s_%s_transformed.ent" % (suffix, PDBID.lower()),
+                   "%s_emd_%s_transform.map" % (suffix, EMDBID)
+            )
+            runChimeraProgram(chimera_get_program(), args)
+
+        # shift atomic structure
+        doAll = True
+        if False or doAll:
+            shift = [20., 0., 0.]
+            angles = [0., 0., 0.]
+            __applyTransform("Xshift", pdbFileName, shift, angles, sampling)
+
+        # repeat test this time  rotation one angle
+        # problem, xmipp rotates with respect the volume center
+        # pdb with respect the origin of coordinates (much better convention)
+        # in order to compare both I need to
+        # move pdb to origin, rotate it, put it back in the possition
+        if False or doAll:
+            shift = [0., 0., 0.]
+            angles = [30., 0., 0.]
+            __applyTransform("Rot2D", pdbFileName, shift, angles, sampling)
+
+        # repeat test this time  rotation in 3 angles
+        # problem, xmipp rotates with respect the volume center
+        # pdb with respect the origin of coordinates (much better convention)
+        if False or doAll:
+            shift = [0., 0., 0.]
+            angles = [10., 20., 30.]
+            __applyTransform("Rot3D", pdbFileName, shift, angles, sampling)
+
+        # repeat test this time  rotation in 3 angles and shift
+        # problem, xmipp rotates with respect the volume center
+        # pdb with respect the origin of coordinates (much better convention)
+        if False or doAll:
+            shift = [5., 10., 15.]
+            angles = [10., 20., 30.]
+            __applyTransform("Rot3DShift", pdbFileName,
+                             shift, angles, sampling)
+
+    def testReadFromPDBDatabase(self):
+        PDBID = '6CUD'
+        aSH = AtomicStructHandler()
+        # EMD-7620
+        fileName = aSH.readFromPDBDatabase(PDBID, type='pdb', dir='/tmp')
+        self.assertTrue(os.path.exists(fileName))
+
+        os.unlink(fileName)
 
     @classmethod
     def tearDownClass(cls):
