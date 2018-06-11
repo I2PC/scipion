@@ -36,6 +36,7 @@ COSS = 'coss'
 JMRT = 'delarosatrevin'
 JOTON = 'joton'
 DISCONTINUED = 'nobody'
+JMOTA = 'javimota'
 
 
 
@@ -776,7 +777,7 @@ class RunMpi(XmippProgramTest):
 
 
 class PdbReducePseudoatoms(XmippProgramTest):
-    _owner = COSS
+    _owner = JMOTA
     @classmethod
     def getProgram(cls):
         return 'xmipp_pdb_reduce_pseudoatoms' 
