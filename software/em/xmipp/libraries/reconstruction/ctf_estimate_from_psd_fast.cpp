@@ -1219,6 +1219,12 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 		}*/
 
 		MultidimArray<double> psd_exp_enhanced_radial2;
+		/*MultidimArray<double> background;
+		generateModelSoFar_fast(background, false);
+		FOR_ALL_ELEMENTS_IN_ARRAY1D(background)
+		{
+			A1D_ELEM(background,i)= background(i)-psd_exp_enhanced_radial(i);
+		}*/
 		psd_exp_enhanced_radial2.initZeros(psd_exp_enhanced_radial);
 		double deltaW=1.0/XSIZE(w_digfreq);
 		double wmax=(XSIZE(w_digfreq)/2.0-1)/XSIZE(w_digfreq);
@@ -1236,7 +1242,7 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 		}
 		std::cout<< "psd_exp_enhanced_radial  " <<psd_exp_enhanced_radial  << std::endl;
 		std::cout<< "psd_exp_enhanced_radial2 " <<psd_exp_enhanced_radial2 << std::endl;
-		exit(1);
+		//exit(1);
 		FourierTransformer FourierPSD;
 		FourierPSD.FourierTransform(psd_exp_enhanced_radial2, psd_fft, false);
 
@@ -1245,11 +1251,7 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 			amplitud.push_back(sqrt(std::real(psd_fft[i])*std::real(psd_fft[i])+std::imag(psd_fft[i])*std::imag(psd_fft[i])));
 		}
 		current_ctfmodel.Defocus = (*max_element(amplitud.rbegin(),amplitud.rend()))*100000;
-		/*(*adjust_params)(0) = initial_ctfmodel.Defocus;
-		(*adjust_params)(2) = current_ctfmodel.K;
-		powellOptimizer(*adjust_params, FIRST_DEFOCUS_PARAMETER + 1,
-								DEFOCUS_PARAMETERS, CTF_fitness_fast, global_prm, 0.05,
-								fitness, iter, steps, false);*/
+
 	}
 
 	// Keep the result in adjust
