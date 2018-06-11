@@ -289,14 +289,14 @@ void ProgCTFEstimateFromPSD::readParams()
 /* Usage ------------------------------------------------------------------- */
 void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
 {
-	 CTFDescription::defineParams(program);
-
+    ProgCTFBasicParams::defineBasicParams(program);
+	CTFDescription::defineParams(program);
 }
 
 void ProgCTFEstimateFromPSD::defineParams()
 {
     defineBasicParams(this);
-    ProgCTFBasicParams::defineParams();
+//    ProgCTFBasicParams::defineParams();
 }
 
 /* Produce side information ------------------------------------------------ */
