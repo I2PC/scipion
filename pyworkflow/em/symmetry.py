@@ -1,27 +1,102 @@
-import math
-import numpy as np
+# **************************************************************************
+# *
+# * Authors:     Roberto Marabini
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'scipion@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+This module returns the matrices related with the different
+point symmetries. Code based on chiomera file sym.py
+"""
+from constants import SYM_CYCLIC, SYM_DIHEDRAL, SYM_OCTAHEDRAL, \
+    SYM_TETRAHEDRAL, SYM_TETRAHEDRAL_Z3, SYM_I222, SYM_I222r, \
+    SYM_In25, SYM_In25r
+from math import sin, cos, pi, acos, sqrt, asin
+from numpy import array, zeros, float, append, transpose, add
+from numpy.linalg import inv as matrix_inverse
+from numpy import dot as matrix_multiply
 import operator
 
-###
+def _applyMatrix(tf, points):
+    """
+    Args:multiply point by a matrice list """
 
-def apply_matrix(tf, points):
-    tf = np.array(tf)
-    r = np.dot(points, np.transpose(tf[:, :3])) ##dot is OK; from numpy import dot as matrix_multiply
-    np.add(r, tf[:, 3], r)
+    tf = array(tf)
+    r = matrix_multiply(points, transpose(tf[:, :3]))
+    add(r, tf[:, 3], r)
     return r
 
-# -----------------------------------------------------------------------------
-# Transpose the rotation part.
-#
-def transpose_matrix(tf):
+def __length(v):
+  d = sqrt(sum([e*e for e in v]))
+  return d
 
-  return ((tf[0][0], tf[1][0], tf[2][0], tf[0][3]),
-          (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
-          (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
+def _normalizeVector(v):
+  d = __length(v)
+  if d == 0:
+    d = 1
+  return tuple([e/d for e in v])
 
-# -----------------------------------------------------------------------------
-#
-def multiply_matrices(*mlist):
+def _rotationTransform(axis, angle, center = (0, 0, 0)):
+    """ Angle is in degrees. """
+    axis = _normalizeVector(axis)
+
+    arad = angle*pi/180.0
+    sa = sin(arad)
+    ca = cos(arad)
+    k = 1 - ca
+    ax, ay, az = axis
+    tf = ((1 + k*(ax*ax-1), -az*sa+k*ax*ay, ay*sa+k*ax*az, 0),
+          (az*sa+k*ax*ay, 1 + k*(ay*ay-1), -ax*sa+k*ay*az, 0),
+          (-ay*sa+k*ax*az, ax*sa+k*ay*az, 1 + k*(az*az-1), 0))
+    cx, cy, cz = center
+    c_tf = ((1,0,0,cx), (0,1,0,cy), (0,0,1,cz))
+    inv_c_tf = ((1,0,0,-cx), (0,1,0,-cy), (0,0,1,-cz))
+    rtf = _multiplyMatrices(c_tf, tf, inv_c_tf)
+    return rtf
+
+def _translationMatrix(shift):
+
+  tf = array(((1.0, 0, 0, shift[0]),
+              (0, 1.0, 0, shift[1]),
+              (0, 0, 1.0, shift[2])))
+  return tf
+
+def _identityMatrix():
+
+  return ((1.0,0,0,0), (0,1.0,0,0), (0,0,1.0,0))
+
+def _invertMatrix(tf):
+
+    tf = array(tf)
+    r = tf[:,:3]
+    t = tf[:,3]
+    tfinv = zeros((3,4), float)
+    rinv = tfinv[:,:3]
+    tinv = tfinv[:,3]
+    rinv[:,:] = matrix_inverse(r)
+    tinv[:] = matrix_multiply(rinv, -t)
+    return tfinv
+
+def _multiplyMatrices(*mlist):
 
   if len(mlist) == 2:
     m1, m2 = mlist
@@ -34,48 +109,148 @@ def multiply_matrices(*mlist):
         p[r][3] += m1[r][3]
     p = tuple(map(tuple, p))
   else:
-    p = multiply_matrices(*mlist[1:])
-    p = multiply_matrices(mlist[0], p)
+    p = _multiplyMatrices(*mlist[1:])
+    p = _multiplyMatrices(mlist[0], p)
   return p
 
-# -----------------------------------------------------------------------------
-#
-def identity_matrix():
-    return ((1.0, 0, 0, 0), (0, 1.0, 0, 0), (0, 0, 1.0, 0))
+def _matrixProducts(mlist1, mlist2):
+  plist = []
+  for m1 in mlist1:
+    for m2 in mlist2:
+      m1xm2 = _multiplyMatrices(m1, m2)
+      plist.append(m1xm2)
+  return plist
 
-# -----------------------------------------------------------------------------
+def _coordinateTransformList(tflist, ctf):
 
-def translation_matrix(shift):
-    tf = np.array(((1.0, 0, 0, shift[0]),
-                   (0, 1.0, 0, shift[1]),
-                   (0, 0, 1.0, shift[2])))
-    return tf
-# -----------------------------------------------------------------------------
+  ctfinv = _invertMatrix(ctf)
+  return [_multiplyMatrices(ctfinv, tf, ctf) for tf in tflist]
 
-def coordinate_transform_list(tflist, ctf):
 
-  ctfinv = invert_matrix(ctf)
-  return [multiply_matrices(ctfinv, tf, ctf) for tf in tflist]
-
-# -----------------------------------------------------------------------------
-
-def recenter_symmetries(tflist, center):
+def _recenterSymmetries(tflist, center):
 
     if center == (0,0,0):
-        return tflist
-    ctf = translation_matrix([-x for x in center])
-    return coordinate_transform_list(tflist, ctf)
+      return tflist
+    ctf = _translationMatrix([-x for x in center])
+    return _coordinateTransformList(tflist, ctf)
 
-# -----------------------------------------------------------------------------
+def _transposeMatrix(tf):
 
+  return ((tf[0][0], tf[1][0], tf[2][0], tf[0][3]),
+          (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
+          (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
+
+def getSymmetryMatrices(sym=SYM_CYCLIC, n=1, center = (0,0,0)):
+    """ interface between scipion and chimera code
+        chimera code uses tuples of tuples as matrices
+        but scipion uses np.arrays (lists of lists)
+        so let us convert them here
+    """
+    if sym == SYM_CYCLIC:
+        matrices = __cyclicSymmetrySatrices(n, center)
+    elif sym == SYM_DIHEDRAL:
+        matrices = __dihedralSymmetryMatrices(n, center)
+    elif sym == SYM_OCTAHEDRAL:
+        matrices = __octahedralSymmetryMatrices(center)
+    elif sym == SYM_TETRAHEDRAL or sym == SYM_TETRAHEDRAL_Z3:
+        matrices = __tetrahedralSymmetryMatrices(sym, center)
+    elif sym == SYM_I222 or sym == SYM_I222r or \
+        sym == SYM_In25 or sym == SYM_In25r:
+        matrices = __icosahedralSymmetryMatrices(sym, center)
+
+    # convert from 4x 3 to 4x4 matrix, Scipion standard
+    extraRow = (0., 0., 0., 1.)
+    for i in range(len(matrices)):
+        matrices[i] +=  (extraRow,)
+    # convert from sets to lists Scipion standard
+    return array(matrices)
+
+def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
+    """ Rotation about z axis.
+    This is a local method. do not access directly to it
+    """
+    tflist = []
+    for k in range(n):
+        a = 2*pi * float(k) / n
+        c = cos(a)
+        s = sin(a)
+        tf = ((c, -s, 0, 0),
+              (s, c, 0, 0),
+              (0,0,1,0))
+        tflist.append(tf)
+    tflist = _recenterSymmetries(tflist, center)
+    return tflist
+
+def __octahedralSymmetryMatrices(center = (0, 0, 0)):
+    """ 4-folds along x, y, z axes. """
+    c4 = (((0,0,1),0), ((0,0,1),90), ((0,0,1),180), ((0,0,1),270))
+    cube = (((1,0,0),0), ((1,0,0),90), ((1,0,0),180), ((1,0,0),270),
+            ((0,1,0),90), ((0,1,0),270))
+    c4syms = [_rotationTransform(axis, angle) for axis, angle in c4]
+    cubesyms = [_rotationTransform(axis, angle) for axis, angle in cube]
+    syms = _matrixProducts(cubesyms, c4syms)
+    syms = _recenterSymmetries(syms, center)
+    return syms
+
+def __dihedralSymmetryMatrices(n, center = (0, 0, 0)):
+    """ Rotation about z axis, reflection about x axis. """
+    clist = __cyclicSymmetrySatrices(n)
+    reflect = ((1,0,0,0),(0,-1,0,0),(0,0,-1,0))
+    tflist = _matrixProducts([_identityMatrix(), reflect], clist)
+    tflist = _recenterSymmetries(tflist, center)
+    return tflist
+
+
+def __tetrahedralSymmetryMatrices(orientation = SYM_TETRAHEDRAL,
+                                  center = (0,0,0)):
+    """
+    identity
+    4 * rotation by 120 clockwise (seen from a vertex):
+                           (234), (143), (412), (321)
+    4 * rotation by 120 counterclockwise (ditto)
+    3 * rotation by 180
+    """
+    aa = (((0,0,1),0), ((1,0,0),180), ((0,1,0),180), ((0,0,1),180),
+          ((1,1,1),120), ((1,1,1),240), ((-1,-1,1),120), ((-1,-1,1),240),
+          ((-1,1,-1),120), ((-1,1,-1),240), ((1,-1,-1),120),
+          ((1,-1,-1),240))
+    syms = [_rotationTransform(axis, angle) for axis, angle in aa]
+
+    if orientation == SYM_TETRAHEDRAL_Z3:
+        # EMAN convention, 3-fold on z, 3-fold in yz plane along neg y.
+        tf = _multiplyMatrices(
+            _rotationTransform((0, 0, 1), -45.0),
+            _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi))
+        syms = _coordinateTransformList(syms, tf)
+
+    syms = _recenterSymmetries(syms, center)
+    return syms
+
+
+def __icosahedralSymmetryMatrices(orientation = SYM_I222, center = (0,0,0)):
+    if orientation == SYM_I222:
+        sym = '222'
+    elif orientation == SYM_I222r:
+        sym = '222r'
+    elif orientation == SYM_In25:
+        sym = 'n25'
+    elif orientation == SYM_In25r:
+        sym = 'n25r'
+
+    i = Icosahedron(orientation=sym, center=center)
+    return list(i.icosahedralSymmetryMatrices())
+
+icos_matrices = {}  # Maps orientation name to 60 matrices.
 class Icosahedron(object):
 
-    def __init__(self, circumscribed_radius = 1, orientation = '2n5', center=(0, 0, 0)):
+    def __init__(self, circumscribed_radius = 1, orientation = '222', center=(
+            0, 0, 0)):
         """point = np.array([0, 1, PHI]"""
         self.circumscribed_radius = circumscribed_radius
         self.orientation = orientation
         self.center=center
-        self.e= math.sqrt(2 - 2 / math.sqrt(5))  # Triangle edge length of unit icosahedron.
+        # Triangle edge length of unit icosahedron.
+        self.e= sqrt(2 - 2 / sqrt(5))
         self.vertices = None  # icosahedron vertices
         self.triangles = None # icosahedron faces
         self._3foldAxis = [] #
@@ -92,31 +267,36 @@ class Icosahedron(object):
         # '2n3'         2-fold symmetry along x and 3-fold along z.
         # '2n3r'        '2n3' with 180 degree rotation about y.
         #
-        self.coordinate_system_names = ('222', '222r', '2n5', '2n5r', 'n25', 'n25r', '2n3', '2n3r')
-        self.icosahedron_edge_length = self.icosahedron_edge_length(circumscribed_radius)
-        self.angle23, self.angle25, self.angle35 = self.icosahedron_angles()
-        self.icosahedron_geometry()
+        self.coordinate_system_names = ('222', '222r', '2n5',
+                                        '2n5r', 'n25', 'n25r', '2n3', '2n3r')
+        self.icosahedronEdgeLength = \
+            self.icosahedronEdgeLength(circumscribed_radius)
+        self.angle23, self.angle25, self.angle35 = self.icosahedronAngles()
+        self.icosahedronGeometry()
 
     # ---------------------------------------------------------------------------------------------
     # 60 icosahedral symmetry matrices.
     #
-    def icosahedral_symmetry_matrices(self):
-        t = self.icosahedral_matrix_table()
-        tflist = recenter_symmetries(t.get(self.orientation, None), self.center)
+    def icosahedralSymmetryMatrices(self):
+        t = self.icosahedralMatrixTable()
+        tflist = _recenterSymmetries(t.get(self.orientation, None),
+                                     self.center)
         return tflist
 
 
-    # -----------------------------------------------------------------------------
-    # Edge length of icosahedron with a certain radio of the circumscribed sphere:
-    # According to Radio of the circumscribed sphere = 1 (vertices), the icosahedron_edge_length should be 1.0515
+    # -------------------------------------------------------------------------
+    # Edge length of icosahedron with a certain radio of the circumscribed
+    # sphere:
+    # According to Radio of the circumscribed sphere = 1 (vertices),
+    #  the icosahedronEdgeLength should be 1.0515
 
-    def icosahedron_edge_length(self, circumscribed_radius):
-        return 4 * circumscribed_radius / math.sqrt(10 + 2 * math.sqrt(5))
+    def icosahedronEdgeLength(self, circumscribed_radius):
+        return 4 * circumscribed_radius / sqrt(10 + 2 * sqrt(5))
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Matrices for mapping between different icosahedron coordinate frames.
     #
-    def coordinate_system_transform(self, from_cs, to_cs):
+    def coordinateSystemTransform(self, from_cs, to_cs):
 
         self.cst = {}
         if self.cst:
@@ -125,9 +305,10 @@ class Icosahedron(object):
         transform = self.cst
 
         s25 = self.e / 2  # Sin/Cos for angle between 2-fold and 5-fold axis
-        c25 = math.sqrt(1 - s25 * s25)
-        s35 = self.e / math.sqrt(3)  # Sin/Cos for angle between 3-fold and 5-fold axis
-        c35 = math.sqrt(1 - s35 * s35)
+        c25 = sqrt(1 - s25 * s25)
+        # Sin/Cos for angle between 3-fold and 5-fold axis
+        s35 = self.e / sqrt(3)
+        c35 = sqrt(1 - s35 * s35)
 
         transform[('2n5', '222')] = ((1, 0, 0, 0),
                                      (0, c25, -s25, 0),
@@ -137,17 +318,21 @@ class Icosahedron(object):
                                      (0, -s35, c35, 0))
 
         # Axes permutations.
-        transform[('222', '222r')] = ((0, 1, 0, 0),  # 90 degree rotation about z
+        # 90 degree rotation about z
+        transform[('222', '222r')] = ((0, 1, 0, 0),
                                       (-1, 0, 0, 0),
                                       (0, 0, 1, 0))
+        # 180 degree rotation about y
         transform[('2n3', '2n3r')] = \
-            transform[('2n5', '2n5r')] = ((-1, 0, 0, 0),  # 180 degree rotation about y
+            transform[('2n5', '2n5r')] = ((-1, 0, 0, 0),
                                           (0, 1, 0, 0),
                                           (0, 0, -1, 0))
-        transform[('n25', 'n25r')] = ((1, 0, 0, 0),  # 180 degree rotation about x
+        # 180 degree rotation about x
+        transform[('n25', 'n25r')] = ((1, 0, 0, 0),
                                       (0, -1, 0, 0),
                                       (0, 0, -1, 0))
-        transform[('n25', '2n5')] = ((0, 1, 0, 0),  # x <-> y and z -> -z
+        # x <-> y and z -> -z
+        transform[('n25', '2n5')] = ((0, 1, 0, 0),
                                      (1, 0, 0, 0),
                                      (0, 0, -1, 0))
 
@@ -160,33 +345,33 @@ class Icosahedron(object):
             # Add inverse transforms
             for f, t in tlist:
                 if not (t, f) in transform:
-                    transform[(t, f)] = transpose_matrix(transform[(f, t)])
+                    transform[(t, f)] = _transposeMatrix(transform[(f, t)])
 
             # Use transitivity
             for f1, t1 in tlist:
                 for f2, t2 in tlist:
                     if f2 == t1 and f1 != t2 and not (f1, t2) in transform:
-                        transform[(f1, t2)] = multiply_matrices(transform[(f2, t2)],
-                                                                transform[(f1, t1)])
+                        transform[(f1, t2)] = _multiplyMatrices(transform[(
+                            f2, t2)], transform[(f1, t1)])
 
-        i = identity_matrix()
+        i = _identityMatrix()
         for s in self.coordinate_system_names:
             transform[(s, s)] = i
 
         return transform[(from_cs, to_cs)]
 
     # ---------------------------------------------------------------------------------------
-    # Compute icosahedral transformation matrices for different coordinate systems.
+    # Compute icosahedral transformation matrices for different
+    # coordinate systems.
     #
-    icos_matrices = {}  # Maps orientation name to 60 matrices.
 
-    def icosahedral_matrix_table(self):
+    def icosahedralMatrixTable(self):
         global icos_matrices
         if icos_matrices:
             return icos_matrices
 
-        c = math.cos(2 * math.pi / 5)  # .309016994
-        c2 = math.cos(4 * math.pi / 5)  # -.809016994
+        c = cos(2 * pi / 5)  # .309016994
+        c2 = cos(4 * pi / 5)  # -.809016994
 
         icos_matrices['222'] = (
 
@@ -434,26 +619,28 @@ class Icosahedron(object):
 
         for cs in self.coordinate_system_names:
             if cs != '222':
-                t = self.coordinate_system_transform(cs, '222')
-                tinv = self.coordinate_system_transform('222', cs)
-                icos_matrices[cs] = [multiply_matrices(tinv, m, t)
+                t = self.coordinateSystemTransform(cs, '222')
+                tinv = self.coordinateSystemTransform('222', cs)
+                icos_matrices[cs] = [_multiplyMatrices(tinv, m, t)
                                      for m in icos_matrices['222']]
         return icos_matrices
 
     # -----------------------------------------------------------------------------
 
-    def icosahedron_angles(self):
-        #Angles between 2-fold, 3-fold and 5-fold symmetry axes of an icosahedron.
-        angle25 = math.asin(self.e/2)
-        angle35 = math.asin(self.e/math.sqrt(3))
-        angle23 = math.asin(self.e/(2*math.sqrt(3)))
+    def icosahedronAngles(self):
+        # Angles between 2-fold, 3-fold and 5-fold
+        # symmetry axes of an icosahedron.
+        angle25 = asin(self.e/2)
+        angle35 = asin(self.e/sqrt(3))
+        angle23 = asin(self.e/(2*sqrt(3)))
         return angle23, angle25, angle35
 
-    def icosahedron_geometry(self):
+    def icosahedronGeometry(self):
+
         a = 2 * self.angle25  # Angle spanned by edge from center
         # 5-fold symmetry axis along z
-        c5 = math.cos(2 * math.pi / 5)
-        s5 = math.sin(2 * math.pi / 5)
+        c5 = cos(2 * pi / 5)
+        s5 = sin(2 * pi / 5)
         tf5 = ((c5, -s5, 0, 0),
                (s5, c5, 0, 0),
                (0, 0, 1, 0))
@@ -463,17 +650,20 @@ class Icosahedron(object):
                (0, -1, 0, 0),
                (0, 0, -1, 0))
 
-        p = tuple(map(operator.add, self.center, (0, 0, self.circumscribed_radius)))
-        p50 = tuple(map(operator.add, self.center, (0, self.circumscribed_radius * math.sin(a), self.circumscribed_radius * math.cos(a))))
-        p51 = apply_matrix(tf5, p50)
-        p52 = apply_matrix(tf5, p51)
-        p53 = apply_matrix(tf5, p52)
-        p54 = apply_matrix(tf5, p53)
+        p = tuple(map(operator.add, self.center,
+                      (0, 0, self.circumscribed_radius)))
+        p50 = tuple(map(operator.add, self.center,
+                        (0, self.circumscribed_radius * sin(a),
+                         self.circumscribed_radius * cos(a))))
+        p51 = _applyMatrix(tf5, p50)
+        p52 = _applyMatrix(tf5, p51)
+        p53 = _applyMatrix(tf5, p52)
+        p54 = _applyMatrix(tf5, p53)
         self.vertices = [p, p50, p51, p52, p53, p54]
-        self.vertices.extend([apply_matrix(tf2, q) for q in self.vertices])
+        self.vertices.extend([_applyMatrix(tf2, q) for q in self.vertices])
         if self.orientation != '2n5':
-            self.tf = self.coordinate_system_transform('2n5', self.orientation)
-            self.vertices = [apply_matrix(self.tf, p) for p in self.vertices]
+            self.tf = self.coordinateSystemTransform('2n5', self.orientation)
+            self.vertices = [_applyMatrix(self.tf, p) for p in self.vertices]
 
             #
             # Vertex numbering
@@ -492,9 +682,9 @@ class Icosahedron(object):
 
         for triangle in self.triangles:
             self._3foldAxis.append( [(item1 + item2 + item3) /3. \
-                                             for item1,  item2,  item3 in zip(self.vertices[triangle[0]],
-                                                                              self.vertices[triangle[1]],
-                                                                              self.vertices[triangle[2]])])
+                for item1,  item2,  item3 in zip(self.vertices[triangle[0]],
+                                                 self.vertices[triangle[1]],
+                                                 self.vertices[triangle[2]])])
 
         self.edges = ((0, 1), (0, 2), (0, 3), (0, 4), (0, 5),
                       (1, 2), (2, 3), (3, 4), (4, 5), (5, 1),
@@ -505,185 +695,20 @@ class Icosahedron(object):
 
         for edge in self.edges:
             self._2foldAxis.append([(item1 + item2 ) / 2. \
-                                          for item1, item2 in zip(self.vertices[edge[0]],
-                                                                  self.vertices[edge[1]])])
+                for item1, item2 in zip(self.vertices[edge[0]],
+                                        self.vertices[edge[1]])])
 
-    def get_vertices(self):
-        return self.vertices
-
-    def get_triangles(self):
-        return self.triangles
-
-    def get_edges(self):
-        return self.edges
-
-    def get_3foldAxis(self):
-        return self._3foldAxis
-
-    def get_2foldAxis(self):
-        return self._2foldAxis
-
-
-
-
-
-"""
     def getVertices(self):
         return self.vertices
 
-    def getFaces(self):
-        return self.faces
+    def getTriangles(self):
+        return self.triangles
 
-    def getPairs(self):
-        return self.pairs
+    def getEdges(self):
+        return self.edges
 
-    def icosahedron_vertices(self):
-        
-        generate icosahedron vertices
-       
-        # used to permute for all 12 vertices
-        point = (self.point)
+    def get3foldAxis(self):
+        return self._3foldAxis
 
-        # normalize
-        point = point/distance(point)
-
-        # construct 12 vertices by cyclically permuting [0, +/-1, +/- PHI]
-        pqueue = collections.deque(point)
-
-        Vertice.clear()
-
-        for _ in range(3):
-            pqueue.rotate()
-            for i in [-1, 1]:
-                for j in [-1, 1]:
-                    for k in [-1, 1]:
-                        Vertice.make(np.multiply(pqueue, [i, j, k]))
-
-    def icosahedron_faces(self):
-        
-        generate icosahedron faces
-        
-        self.pairs = collections.defaultdict(set)
-        for vert in Vertice.vertices.values():
-            min_dist = min([vert.distance(other_vert) \
-                for other_vert in Vertice.vertices.values() if vert.distance(other_vert) > 0])
-
-            for other_vert in Vertice.vertices.values():
-                if vert.distance(other_vert) == min_dist:
-                    self.pairs[vert.key].add(other_vert.key)
-                    self.pairs[other_vert.key].add(vert.key)
-
-        Face.clear()
-
-        for vert, verts in self.pairs.iteritems():
-            for v1 in verts:
-                if v1 == vert:
-                    continue
-                for v2 in verts:
-                    if v2 == vert or v2 == v1:
-                        continue
-                    if v2 in self.pairs[v1] and v1 in self.pairs[v2] and vert in self.pairs[v1] and vert in self.pairs[v2]:
-                        key = tuple(sorted([vert, v1, v2]))
-
-                        face = Face.make([np.array(v, dtype=np.float64) for v in key])
-
-                        Vertice.vertices.get(vert).face = face
-                        Vertice.vertices.get(v1).face = face
-                        Vertice.vertices.get(v2).face = face
-
-    def icosahedron_bisect(self,level):
-        
-        bisect the faces "level" times
-        
-
-        l = 1
-        while l < level:
-            l += 1
-
-            faces = Face.faces
-
-            Vertice.clear()
-            Face.clear()
-
-            for fkey, face in faces.iteritems():
-                a = midpoint(face.v1, face.v2)
-                b = midpoint(face.v2, face.v3)
-                c = midpoint(face.v3, face.v1)
-
-                Face.make([a, face.v1, c])
-                Face.make([a, face.v2, b])
-                Face.make([a, b, c])
-                Face.make([b, face.v3, c])
-
-    def icosahedron_geojson(self):
-        
-        return geojson
-                json = {'type': 'FeatureCollection', 'features': []}
-
-        for fkey, face in Face.faces.iteritems():
-            vert = face.vertex
-            json['features'].append(dict(
-                type='Feature',
-                geometry=dict(
-                    type='Polygon',
-                    coordinates=[face.coordinates]
-                ),
-                properties=dict(
-                    x=vert[0], y=vert[1], z=vert[2]
-                )
-            ))
-
-        return json
-
-    def icosahedron_dual(self):
-        
-        convert icosahedron into its dual
-        
-
-        # build a mapping of vertices to the connecting faces
-        vertFaces = collections.defaultdict(set)
-        for vert in Vertice.vertices.values():
-            for fkey in vert.face:
-                vertFaces[vert.key].add(fkey)
-
-        # store the vertices and faces
-        vertices = Vertice.vertices
-        faces = Face.faces
-
-        # clear the vertices and faces for the dual
-        Vertice.clear()
-        Face.clear()
-
-        # build the new vertices and faces
-        for vkey, fkeys in vertFaces.iteritems():
-            # store the first face
-            face = faces[fkeys.pop()]
-            _faces = [face]
-            l = len(fkeys)
-
-            # loop through the other faces
-            # grabbing the nearest face (by its corresponding vertex)
-            while len(_faces) <= l:
-                fkey = sorted(fkeys, key = lambda fkey: distance(face.vertex, faces[fkey].vertex))[0]
-                face = faces[fkey]
-                fkeys.remove(fkey)
-                _faces.append(faces[fkey])
-
-            # build a new face from the plane -> vertices of the original faces
-            Face.make([face.vertex for face in _faces])
-
-def main():
-    
-    run the program
-    
-    icosahedron = Icosahedron( np.array([0, 1, PHI], dtype=np.float64) )
-    #for key, value in icosahedron.getVertices().iteritems():
-    #    print type(key), type(value)
-    #for key, value in icosahedron.getFaces().iteritems():
-    #    print key, value
-    for key, value in icosahedron.getPairs().iteritems():
-        print key, value
-
-if __name__ == '__main__':
-    main()
-"""
+    def get2foldAxis(self):
+        return self._2foldAxis
