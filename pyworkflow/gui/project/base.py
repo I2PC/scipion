@@ -32,6 +32,7 @@ import tkFont
 from pyworkflow import SCIPION_SUPPORT_EMAIL
 from pyworkflow.gui import Window, Message, Color
 from pyworkflow.gui.widgets import GradientFrame
+from pyworkflow.utils.properties import Icon
 
 from viewprojects import ProjectsView
 from viewprotocols import ProtocolsView
@@ -50,7 +51,7 @@ class ProjectBaseWindow(Window):
     It extends from Window and add some layout functions (header and footer)
     """
     def __init__(self, title, masterWindow=None, weight=True, minsize=(900, 500),
-                 icon="scipion_bn.xbm", **kwargs):
+                 icon=Icon.SCIPION_ICON, **kwargs):
         Window.__init__(self, title, masterWindow, weight=weight, 
                         icon=icon, minsize=minsize, enableQueue=True, **kwargs)
         

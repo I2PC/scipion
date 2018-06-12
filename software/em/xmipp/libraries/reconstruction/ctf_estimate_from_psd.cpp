@@ -289,14 +289,14 @@ void ProgCTFEstimateFromPSD::readParams()
 /* Usage ------------------------------------------------------------------- */
 void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
 {
-	ProgCTFBasicParams::defineBasicParams(program);
+    ProgCTFBasicParams::defineBasicParams(program);
 	CTFDescription::defineParams(program);
-
 }
 
 void ProgCTFEstimateFromPSD::defineParams()
 {
     defineBasicParams(this);
+//    ProgCTFBasicParams::defineParams();
 }
 
 /* Produce side information ------------------------------------------------ */
@@ -1122,6 +1122,8 @@ void ProgCTFEstimateFromPSD::estimate_background_sqrt_parameters()
     }
     A(1, 0) = A(0, 1);
 
+    std::cout << "( " << A(0,0) << " " << A(0,1) << " )" << std::endl <<
+                 "( " << A(1,0) << " " << A(1,1) << " )" << std::endl;
     b = A.inv() * b;
 
     current_ctfmodel.sqU = current_ctfmodel.sqV = b(0);
