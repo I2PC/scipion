@@ -25,25 +25,22 @@
 # **************************************************************************
 
 
-from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
-from pyworkflow.em import data
+from protocol_ctf_consensus import XmippProtCTFConsensus
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.em.viewer import ObjectView
 from pyworkflow.em.showj import MODE, MODE_MD, ORDER, VISIBLE
-from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam
+from pyworkflow.protocol.params import IntParam, LabelParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.utils.path import cleanPath
-import numpy as np
 
 
-class XmippCTFDiscrepancyViewer(ProtocolViewer):
+class XmippCTFConsensusViewer(ProtocolViewer):
     """ This protocol computes the maximum resolution up to which two
      CTF estimations would be ``equivalent'', defining ``equivalent'' as having
       a wave aberration function shift smaller than 90 degrees
     """
-    _label = 'viewer CTF Discrepancy'
+    _label = 'viewer CTF Consensus'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [XmippProtCTFDiscrepancy]
+    _targets = [XmippProtCTFConsensus]
     _memory = False
     resolutionThresholdOLD = -1
     # temporary metadata file with ctf that has some resolution greathan than X
@@ -54,8 +51,9 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         # group = form.addGroup('Overall results')
         form.addParam('visualizePairs', LabelParam,
                       label="Visualize ctf + max resolution.",
-                      help="""Reference CTF plus a new column with resolution up to which
-                      reference CTF and target reference  are similar""")
+                      help="""Reference CTF plus a new column with
+                      resolution up to which reference CTF and target
+                      reference are similar""")
         form.addParam('visualizeHistogram', IntParam, default=10,
                       label="Visualize Histogram (Bin size)",
                       help="Histogram of the resolution at which two methods"
@@ -72,23 +70,42 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
 
         # display metadata with selected variables
         labels = 'id enabled _psdFile _micObj_filename _resolution' \
-                 ' _discrepancy_astigmatism _defocusU _defocusV _defocusAngle'
-        views.append(ObjectView(self._project,
-                                self.protocol.strId(),
-                                self.protocol.outputCTF.getFileName(),
-                                viewParams={MODE: MODE_MD, ORDER: labels,
-                                            VISIBLE: labels}))
+                 ' _consensusResolution _discrepancy_astigmatism _defocusU' \
+                 ' _defocusV _defocusAngle'
+        if hasattr(self.protocol, "outputCTF"):
+            views.append(ObjectView(
+                self._project, self.protocol.strId(),
+                self.protocol.outputCTF.getFileName(),
+                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
+        if hasattr(self.protocol, "outputCTFDiscarded"):
+            views.append(ObjectView(
+                self._project, self.protocol.strId(),
+                self.protocol.outputCTFDiscarded.getFileName(),
+                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
         return views
 
     def _visualizeHistogram(self, e=None):
         views = []
         numberOfBins = self.visualizeHistogram.get()
-        numberOfBins = min(numberOfBins, self.protocol.outputCTF.getSize())
-        plotter = EmPlotter()
-        plotter.createSubPlot("Resolution Discrepancies histogram",
-                              "Resolution (A)", "# of Comparisons")
-        resolution = [ctf.getResolution() for ctf in self.protocol.outputCTF]
-        plotter.plotHist(resolution, nbins=numberOfBins)
-        # ROB: why do I need this show?
-        plotter.show()
-        return views.append(plotter)
+        if hasattr(self.protocol, "outputCTF"):
+            numberOfBins = min(numberOfBins, self.protocol.outputCTF.getSize())
+            plotter = EmPlotter()
+            plotter.createSubPlot("Resolution Discrepancies histogram",
+                                  "Resolution (A)", "# of Comparisons")
+            resolution = [ctf.getResolution() for ctf in
+                          self.protocol.outputCTF]
+            plotter.plotHist(resolution, nbins=numberOfBins)
+            views.append(plotter)
+
+        if hasattr(self.protocol, "outputCTFDiscarded"):
+            numberOfBins = min(numberOfBins,
+                               self.protocol.outputCTFDiscarded.getSize())
+            plotter = EmPlotter()
+            plotter.createSubPlot(
+                "Resolution Discrepancies histogram (discarded)",
+                "Resolution (A)", "# of Comparisons")
+            resolution = [ctf.getResolution() for ctf in
+                          self.protocol.outputCTFDiscarded]
+            plotter.plotHist(resolution, nbins=numberOfBins)
+            views.append(plotter)
+        return views

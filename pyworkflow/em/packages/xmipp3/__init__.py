@@ -44,7 +44,7 @@ from viewer import XmippViewer
 
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
-from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
+from viewer_ctf_consensus import XmippCTFConsensusViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_mltomo import XmippMLTomoViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
@@ -81,7 +81,7 @@ from protocol_classification_gpuCorr_full import XmippProtStrGpuCrrCL2D
 from protocol_compare_reprojections import XmippProtCompareReprojections
 from protocol_compare_angles import XmippProtCompareAngles
 from protocol_create_gallery import XmippProtCreateGallery
-from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
+from protocol_ctf_consensus import XmippProtCTFConsensus
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
 from protocol_consensus_classes3D import XmippProtConsensusClasses3D
@@ -131,7 +131,6 @@ from protocol_volume_strain import XmippProtVolumeStrain
 from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
-from protocol_ctf_selection import XmippProtCTFSelection
 #AJ
 from protocol_realignment_classes import XmippProtReAlignClasses
 # Wizards
