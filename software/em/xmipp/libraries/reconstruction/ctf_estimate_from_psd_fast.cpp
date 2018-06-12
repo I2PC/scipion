@@ -1082,8 +1082,6 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 	}
 	else
 	{
-		/*if (show_optimization)
-				std::cout << "Looking for first defoci ...\n";
 		double best_defocus, best_K=1;
 		double best_error = heavy_penalization * 1.1;
 		bool first = true;
@@ -1168,12 +1166,7 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 						errmax = error(ii);
 				}
 			}
-			if (show_optimization)
-				std::cout << "Error matrix\n" << error << std::endl;
-
 			// Find those defoci which are within a 10% of the maximum
-			if (show_inf >= 2)
-				std::cout << "Range=" << errmax - errmin << std::endl;
 			double best_defocusmin = best_defocus, best_defocusmax = best_defocus;
 			for (defocus = defocus0, i = 0; defocus <= defocusF; defocus +=
 					 defocusStep, i++)
@@ -1193,19 +1186,11 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 								 best_defocusmin - defocusStep);
 
 			i = 0;
-			if (show_inf >= 2)
-			{
-				Image<double> save;
-				save() = error;
-				save.write("error.xmp");
-				std::cout << "Press any key: Error saved\n";
-				char c;
-				std::cin >> c;
-			}
 		}
 
 		current_ctfmodel.Defocus = best_defocus;
 		current_ctfmodel.K = best_K;
+	}
 
 		// Keep the result in adjust
 		current_ctfmodel.forcePhysicalMeaning();
@@ -1216,55 +1201,8 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 		{
 			std::cout << "First defocus Fit:\n" << ctfmodel_defoci << std::endl;
 			saveIntermediateResults_fast("step03a_first_defocus_fit_fast", true);
-		}*/
-
-		MultidimArray<double> psd_exp_enhanced_radial2;
-		/*MultidimArray<double> background;
-		generateModelSoFar_fast(background, false);
-		FOR_ALL_ELEMENTS_IN_ARRAY1D(background)
-		{
-			A1D_ELEM(background,i)= background(i)-psd_exp_enhanced_radial(i);
-		}*/
-		psd_exp_enhanced_radial2.initZeros(psd_exp_enhanced_radial);
-		double deltaW=1.0/XSIZE(w_digfreq);
-		double wmax=(XSIZE(w_digfreq)/2.0-1)/XSIZE(w_digfreq);
-		std::cout << "deltaW" << deltaW << std::endl;
-		double deltaW2=(wmax*wmax)/(XSIZE(w_digfreq)/2.0-1);
-		FOR_ALL_ELEMENTS_IN_ARRAY1D(psd_exp_enhanced_radial2)
-		{
-			double w2=i*deltaW2;
-			double w=sqrt(w2);
-			double widx=w/deltaW;
-			size_t lowerIdx=floor(widx);
-			double weight=widx-floor(widx);
-			A1D_ELEM(psd_exp_enhanced_radial2,i)=(1-weight)*A1D_ELEM(psd_exp_enhanced_radial,lowerIdx)
-					                             +weight*A1D_ELEM(psd_exp_enhanced_radial,lowerIdx+1);
 		}
-		std::cout<< "psd_exp_enhanced_radial  " <<psd_exp_enhanced_radial  << std::endl;
-		std::cout<< "psd_exp_enhanced_radial2 " <<psd_exp_enhanced_radial2 << std::endl;
-		//exit(1);
-		FourierTransformer FourierPSD;
-		FourierPSD.FourierTransform(psd_exp_enhanced_radial2, psd_fft, false);
 
-		for (size_t i = 0; i <= XSIZE(psd_fft); i++)
-		{
-			amplitud.push_back(sqrt(std::real(psd_fft[i])*std::real(psd_fft[i])+std::imag(psd_fft[i])*std::imag(psd_fft[i])));
-		}
-		current_ctfmodel.Defocus = (*max_element(amplitud.rbegin(),amplitud.rend()))*100000;
-
-	}
-
-	// Keep the result in adjust
-	std::cout << current_ctfmodel.Defocus << std::endl;
-	current_ctfmodel.forcePhysicalMeaning();
-	COPY_ctfmodel_TO_CURRENT_GUESS;
-	ctfmodel_defoci = current_ctfmodel;
-
-	if  (show_optimization)
-	{
-		std::cout << "First defocus Fit:\n" << ctfmodel_defoci << std::endl;
-		saveIntermediateResults_fast("step03a_first_defocus_fit_fast", true);
-	}
 
 }
 

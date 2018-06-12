@@ -28,7 +28,6 @@
 
 import sys
 from os.path import join, exists, getmtime
-from datetime import datetime
 
 from pyworkflow.object import Set, String
 import pyworkflow.em as em
@@ -36,7 +35,6 @@ import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as pwconst
 import pyworkflow.utils as pwutils
-import time
 
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 from pyworkflow.em.packages.xmipp3.convert import mdToCTFModel, readCTFModel
@@ -138,7 +136,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         
         if self.AutoDownsampling:
             if self.findPhaseShift:
-                ctfDownFactor = self.calculateAutodownsampling(samplingRate, 1.0)
+                ctfDownFactor = self.calculateAutodownsampling(samplingRate, 1.1)
             else:
                 ctfDownFactor = self.calculateAutodownsampling(samplingRate)
         else:
