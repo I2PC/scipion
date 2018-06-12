@@ -173,6 +173,7 @@ public:
 public:
     /// List of atoms
     std::vector<RichAtom> atomList;
+    std::vector<double> intensities;
 
     /// Add Atom
     void addAtom(const RichAtom &atom)
@@ -187,7 +188,7 @@ public:
     }
 
     /// Read from PDB file
-    void read(const FileName &fnPDB);
+    void read(const FileName &fnPDB, double pseudoatoms = -1.0, double threshold = 0.0);
 
     /// Write to PDB file
     void write(const FileName &fnPDB);

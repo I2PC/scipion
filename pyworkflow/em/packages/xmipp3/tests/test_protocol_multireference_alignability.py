@@ -115,7 +115,7 @@ class TestMultireferenceAlignability(BaseTest):
         self.checkOutput(protValidateNoCTF, 'outputVolumes')        
         firstVol = protValidateNoCTF.outputVolumes.getFirstItem()
         self.assertTrue(firstVol.weightAlignabilityPrecision > 0.6)
-        self.assertTrue(firstVol.weightAlignabilityAccuracy > 0.2)
+        self.assertTrue(firstVol.weightAlignabilityAccuracy > 0.12)
 
         self.launchProtocol(protValidateCTF)      
         self.checkOutput(protValidateCTF, 'outputParticles')
