@@ -163,6 +163,7 @@ class ProtImportImages(ProtImportFiles):
                 img.setObjId(fileId)
                 img.setFileName(dst)
                 # Fill the micName if img is either Micrograph or Movie
+                uniqueFn = uniqueFn.replace(' ', '')
                 self._fillMicName(img, uniqueFn)
                 self._addImageToSet(img, imgSet)
 
@@ -215,6 +216,7 @@ class ProtImportImages(ProtImportFiles):
         n = 1
         copyOrLink = self.getCopyOrLink()
         outputName = self._getOutputName()
+        alreadyWarned = False  # Use this flag to warn only once
 
         finished = False
         # this is only used when creating stacks from frame files
@@ -243,6 +245,12 @@ class ProtImportImages(ProtImportFiles):
                 
                 dst = self._getExtraPath(uniqueFn)
                 self.importedFiles.add(uniqueFn)
+                if ' ' in dst:
+                    if not alreadyWarned:
+                        self.warning('Warning: your file names have white spaces!')
+                        self.warning('Removing white spaces from copies/symlinks.')
+                        alreadyWarned = True
+                    dst = dst.replace(' ', '')
                 copyOrLink(fileName, dst)
 
                 self.debug('Importing file: %s' % fileName)
@@ -268,6 +276,7 @@ class ProtImportImages(ProtImportFiles):
                     img.setObjId(fileId)
                     img.setFileName(dst)
                     # Fill the micName if img is either a Micrograph or a Movie
+                    uniqueFn = uniqueFn.replace(' ', '')
                     self.debug("FILENAME TO fillMicName: %s" % uniqueFn)
                     self._fillMicName(img, uniqueFn)
                     self._addImageToSet(img, imgSet)
@@ -549,3 +558,4 @@ class ProtImportImages(ProtImportFiles):
 
     def streamingHasFinished(self):
         return os.path.exists(self._getStopStreamingFilename())
+    

@@ -269,6 +269,11 @@ matplotlib = env.addModule(
     numpyIncludes=True,
     deps=[numpy, png, dateutil, pyparsing])
 
+poster = env.addModule(
+    'poster',
+    targets=['poster-0.8.1*'],
+    tar='poster-0.8.1.tgz')
+
 psutil = env.addModule(
     'psutil',
     targets=['psutil-2.1.1*'],

@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify

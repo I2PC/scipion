@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xmipp.jni.Particle;
+import xmipp.viewer.particlepicker.CtfInfo;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.PickerParticle;
@@ -13,9 +14,9 @@ public class ExtractMicrograph extends Micrograph
 
 	private ArrayList<ExtractParticle> particles;
 
-	public ExtractMicrograph(String file, String psd, String ctf)
+	public ExtractMicrograph(String file, CtfInfo ctfInfo)
 	{
-		super(file, psd, ctf);
+		super(file, ctfInfo);
 		particles = new ArrayList<ExtractParticle>();
 	}
 

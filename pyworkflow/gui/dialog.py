@@ -52,7 +52,7 @@ class Dialog(tk.Toplevel):
     An image name can be passed to display left to the message.
     """
     
-    def __init__(self, parent, title, **args):
+    def __init__(self, parent, title, **kwargs):
         """Initialize a dialog.
         Arguments:
             parent -- a parent window (the application window)
@@ -92,9 +92,9 @@ class Dialog(tk.Toplevel):
                       RESULT_NO: Icon.BUTTON_CLOSE,
                       RESULT_CANCEL: Icon.BUTTON_CANCEL}
         
-        self.buttons = args.get('buttons', [('OK', RESULT_YES),
-                                            ('Cancel', RESULT_CANCEL)])
-        self.defaultButton = args.get('default', 'OK')
+        self.buttons = kwargs.get('buttons', [('OK', RESULT_YES),
+                                              ('Cancel', RESULT_CANCEL)])
+        self.defaultButton = kwargs.get('default', 'OK')
         btnFrame = tk.Frame(self)
         # Create buttons 
         self.buttonbox(btnFrame)
@@ -103,25 +103,22 @@ class Dialog(tk.Toplevel):
         
         gui.configureWeigths(self)
 
-
         if self.initial_focus is None:
             self.initial_focus = self
 
         self.protocol("WM_DELETE_WINDOW", self.cancel)
 
         if self.parent is not None:
-            self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
-                                      parent.winfo_rooty()+50))
+            position = kwargs.get('position', (parent.winfo_rootx() + 50,
+                                               parent.winfo_rooty() + 50))
+            self.geometry("+%d+%d" % position)
 
         self.deiconify() # become visible now
-
         self.initial_focus.focus_set()
-
         # wait for window to appear on screen before calling grab_set
         self.wait_visibility()
         self.grab_set()
         self.wait_window(self)
-        
 
     def destroy(self):
         """Destroy the window"""
@@ -139,10 +136,10 @@ class Dialog(tk.Toplevel):
         """
         pass
 
-        
     def _createButton(self, frame, text, result):
         icon = self.icons[result]
-        return  tk.Button(frame, text=text, image=self.getImage(icon), compound=tk.LEFT,
+        return tk.Button(frame, text=text, image=self.getImage(icon),
+                         compound=tk.LEFT,
                          command=lambda: self._handleResult(result))
         
     def buttonbox(self, btnFrame):
@@ -160,7 +157,6 @@ class Dialog(tk.Toplevel):
         self.bind("<Return>", self._handleReturn)
         self.bind("<Escape>", lambda e: self._handleResult(RESULT_CANCEL))
 
-
     def _handleResult(self, resultValue):
         """This method will be called when any button is pressed.
         It will set the resultValue associated with the button
@@ -172,7 +168,6 @@ class Dialog(tk.Toplevel):
             self.initial_focus.focus_set() # put focus back
             return
         
-
         self.withdraw()
         self.update_idletasks()
 
@@ -304,7 +299,8 @@ class YesNoDialog(MessageDialog):
 
 class EntryDialog(Dialog):
     """Dialog to ask some entry"""
-    def __init__(self, parent, title, entryLabel, entryWidth=20, defaultValue='', headerLabel=None):
+    def __init__(self, parent, title, entryLabel, entryWidth=20,
+                 defaultValue='', headerLabel=None):
         self.entryLabel = entryLabel
         self.entryWidth = entryWidth
         self.headerLabel = headerLabel
@@ -324,7 +320,8 @@ class EntryDialog(Dialog):
             row += 1
         label = tk.Label(bodyFrame, text=self.entryLabel, bg='white', bd=0)
         label.grid(row=row, column=0, sticky='nw', padx=(15, 10), pady=15)
-        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth, textvariable=self.tkvalue)
+        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor,
+                              width=self.entryWidth, textvariable=self.tkvalue)
         self.entry.grid(row=row, column=1, sticky='new', padx=(0,15), pady=15)
         self.initial_focus = self.entry
         
@@ -355,7 +352,7 @@ class EditObjectDialog(Dialog):
         self.commentHeight = 15
         self.valueComment = self.obj.getObjComment()
         
-        Dialog.__init__(self, parent, title)
+        Dialog.__init__(self, parent, title, **kwargs)
         
     def body(self, bodyFrame):
         bodyFrame.config(bg='white')
@@ -375,13 +372,13 @@ class EditObjectDialog(Dialog):
         label_comment = tk.Label(bodyFrame, text=self.commentLabel, bg='white', bd=0)
         label_comment.grid(row=1, column=0, sticky='nw', padx=(15, 10), pady=15)
         # Comment box
-        self.textComment = Text(bodyFrame, height=self.commentHeight, 
-                         width=self.commentWidth)
+        self.textComment = Text(bodyFrame, height=self.commentHeight,
+                                width=self.commentWidth)
         self.textComment.setReadOnly(False)
         self.textComment.setText(self.valueComment)
         self.textComment.grid(row=1, column=1, sticky='news', padx=5, pady=5)
-        self.initial_focus = self.textComment
-        
+        self.initial_focus = self.textLabel
+
     def getLabel(self):
         return self.textLabel.get()
     
@@ -457,6 +454,7 @@ class ListDialog(Dialog):
         self.validateSelectionCallback = kwargs.get('validateSelectionCallback',
                                                     None)
         self._selectmode = kwargs.get('selectmode', 'extended')
+        self._selectOnDoubleClick = kwargs.get('selectOnDoubleClick', False)
         self._allowsEmptySelection = kwargs.get('allowsEmptySelection', False)
 
         buttons = []
@@ -464,21 +462,23 @@ class ListDialog(Dialog):
             buttons.append(('Select', RESULT_YES))
         buttons.append(('Cancel', RESULT_CANCEL))
 
-        Dialog.__init__(self, parent, title, buttons=buttons)
+        Dialog.__init__(self, parent, title, buttons=buttons, **kwargs)
         
     def body(self, bodyFrame):
-        bodyFrame.config(bg='white')
+        bodyFrame.config()
         gui.configureWeigths(bodyFrame)
         self._createTree(bodyFrame)
         if self.message:
-            label = tk.Label(bodyFrame, text=self.message, bg='white',
-                     image=self.getImage(Icon.LIGHTBULB), compound=tk.LEFT)
+            label = tk.Label(bodyFrame, text=self.message, compound=tk.LEFT,
+                             image=self.getImage(Icon.LIGHTBULB))
             label.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
         self.initial_focus = self.tree
         
     def _createTree(self, parent):
         self.tree = BoundTree(parent, self.provider, selectmode=self._selectmode)
-        
+        if self._selectOnDoubleClick:
+            self.tree.itemDoubleClick = lambda obj: self._handleResult(RESULT_YES)
+
     def apply(self):
         self.values = self.tree.getSelectedObjects()
     
