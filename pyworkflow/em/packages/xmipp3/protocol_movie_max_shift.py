@@ -25,22 +25,18 @@
 # *
 # **************************************************************************
 
-from os.path import getmtime, exists
-from datetime import datetime
+from os.path import exists
 import numpy as np
 
-import pyworkflow.em as em
 from pyworkflow.em.protocol.protocol_movies import ProtProcessMovies
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
-from pyworkflow.mapper import Mapper
 from pyworkflow.object import Set
 from pyworkflow.protocol.constants import (STATUS_NEW)
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
-                                Image, Movie)
+from pyworkflow.em.data import SetOfMovies, SetOfMicrographs
 
 
 class XmippProtMovieMaxShift(ProtProcessMovies):
@@ -105,6 +101,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         # to pass to the actual step that is gone to be executed later on
         # Note2: We are serializing the Movie as a dict that can be passed
         # as parameter for a functionStep
+        self.setInputMics()
         movieStepId = self._insertFunctionStep('_evaluateMovieAlign',
                                                movie.clone(),
                                                prerequisites=[])
@@ -192,37 +189,47 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             # so we exit from the function here
             return
 
-        if newDoneAccepted:
-            movieSetAccepted = self._loadOutputSet(SetOfMovies, 'movies.sqlite')
-            for movie in newDoneAccepted:
-                movie.setEnabled(True)
+        def fillOutput(newDoneList, firstTime, AccOrDisc):
+            if AccOrDisc:
+                suffix = ''
+            else:
+                suffix = 'Discarded'
+            movieSetAccepted = self._loadOutputSet(SetOfMovies,
+                                                   'movies%s.sqlite' % suffix)
+            micsSetAccepted = self._loadOutputSet(SetOfMicrographs,
+                                                  'micrographs%s.sqlite'%suffix)
+            for movie in newDoneList:
+                movie.setEnabled(AccOrDisc)
                 movieSetAccepted.append(movie)
-                
-            self._updateOutputSet('outputMovies', movieSetAccepted, streamMode)
-            if firstTimeAcc:
+                if self.inputMics is not None:
+                    mic = self.getMicFromMovie(movie)
+                    mic.setEnabled(AccOrDisc)
+                    micsSetAccepted.append(mic)
+
+            self._updateOutputSet('outputMovies%s' % suffix, movieSetAccepted,
+                                  streamMode)
+            if self.inputMics is not None:
+                self._updateOutputSet('outputMicrographs%s' % suffix,
+                                      micsSetAccepted, streamMode)
+            if firstTime:
                 # define relation just once
                 self._defineTransformRelation(self.inputMovies.get(),
-                                           movieSetAccepted)
+                                              movieSetAccepted)
+                if self.inputMics is not None:
+                    self._defineTransformRelation(self.inputMics,
+                                                  micsSetAccepted)
             movieSetAccepted.close()
 
-        # new subsets with discarded movies
-        if newDoneDiscarded:
-            movieSetDiscarded = self._loadOutputSet(SetOfMovies,
-                                                       'moviesDiscarded.sqlite')
-            for movie in newDoneDiscarded:
-                movie.setEnabled(False)
-                movieSetDiscarded.append(movie)
+        # We fill/update the output if there are something new or to close sets
+        if newDoneAccepted or self.finished:
+            fillOutput(newDoneAccepted, firstTimeAcc, AccOrDisc=True)
 
-            self._updateOutputSet('outputMoviesDiscarded',
-                                  movieSetDiscarded, streamMode)
-            if firstTimeDisc:
-                # define relation just once
-                self._defineTransformRelation(self.inputMovies.get(),
-                                              movieSetDiscarded)
-            movieSetDiscarded.close()
+        # new subsets with discarded movies
+        if newDoneDiscarded or self.finished:
+            fillOutput(newDoneDiscarded, firstTimeDisc, AccOrDisc=False)
 
         # Unlock createOutputStep if finished all jobs
-        if self.finished:  
+        if self.finished:
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)            
@@ -239,6 +246,9 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         fixSampling: correct the output sampling rate if binning was used,
         except for the case when the original movies are kept and shifts
         refers to that one. """
+        if SetClass == SetOfMicrographs:
+            if self.inputMics is None:
+                return None
         setFile = self._getPath(baseName)
 
         if exists(setFile):
@@ -262,6 +272,23 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             outputSet.setSamplingRate(newSampling)
 
         return outputSet
+
+    def setInputMics(self):
+        parentProt = self.inputMovies.clone()
+        parentProt.setExtended('outputMicrographs')
+        self.inputMics = parentProt.get()
+        if self.inputMics is None:
+            self.warning('Input movies are NOT inmediatelly from an alignment '
+                         'protocol. Therefore, no Mics will be returned, only '
+                         'movies.')
+
+    def getMicFromMovie(self, movie):
+        movieMicName = movie.getMicName()
+        for mic in self.inputMics:
+            if mic.getMicName() == movieMicName:
+                return mic
+        self.warning('Mic NOT found for movie "%s"' % movieMicName)
+
 
     # ---------------------- INFO functions ------------------------------------
     def _validate(self):
