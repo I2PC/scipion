@@ -221,11 +221,12 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             movieSetAccepted.close()
 
         # We fill/update the output if there are something new or to close sets
-        if newDoneAccepted or self.finished:
+        if newDoneAccepted or (self.finished and hasattr(self, 'outputMovies')):
             fillOutput(newDoneAccepted, firstTimeAcc, AccOrDisc=True)
 
         # new subsets with discarded movies
-        if newDoneDiscarded or self.finished:
+        if newDoneDiscarded or (self.finished and
+                                hasattr(self, 'outputMoviesDiscarded')):
             fillOutput(newDoneDiscarded, firstTimeDisc, AccOrDisc=False)
 
         # Unlock createOutputStep if finished all jobs
