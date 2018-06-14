@@ -101,8 +101,7 @@ class PluginInfo(object):
         self.dirName = self.getDirName()
 
         # link pip module in em/packages
-        if not os.path.exists(self.getEmPackagesLink()):
-            os.symlink(self.getPipPath(), self.getEmPackagesLink())
+        os.symlink(self.getPipPath(), self.getEmPackagesLink())
 
         return True
 
