@@ -33,6 +33,7 @@ import xmipp
 from datetime import datetime
 from pyworkflow.em.data import SetOfCTF
 from pyworkflow.object import Set, Float
+from convert import setXmippAttribute, prefixAttribute
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
@@ -345,9 +346,10 @@ class XmippProtCTFConsensus(em.ProtCTFMicrographs):
                 mic.setEnabled(self._getEnable(ctfId))
 
                 if self.calculateConsensus:
-                    ctf.setConsensusResolution(self._freqResol[ctfId])
-                    ctf._discrepancy_astigmatism = Float(ctf.getDefocusU() -
-                                                        ctf.getDefocusV())
+                    setattr(ctf, prefixAttribute('consensus_resolution'),
+                            Float(self._freqResol[ctfId]))
+                    setattr(ctf, prefixAttribute('discrepancy_astigmatism'),
+                            Float(ctf.getDefocusU() - ctf.getDefocusV()))
 
                 ctfSet.append(ctf)
                 micSet.append(mic)
@@ -360,9 +362,10 @@ class XmippProtCTFConsensus(em.ProtCTFMicrographs):
             for ctfId in newDoneDiscarded:
                 ctf = inputCtfSet[ctfId].clone()
                 if self.calculateConsensus:
-                    ctf.setConsensusResolution(self._freqResol[ctfId])
-                    ctf._discrepancy_astigmatism = Float(ctf.getDefocusU() -
-                                                        ctf.getDefocusV())
+                    setattr(ctf, prefixAttribute('consensus_resolution'),
+                            Float(self._freqResol[ctfId]))
+                    setattr(ctf, prefixAttribute('discrepancy_astigmatism'),
+                            Float(ctf.getDefocusU() - ctf.getDefocusV()))
                 mic = ctf.getMicrograph().clone()
                 micSetDiscarded.append(mic)
                 ctfSetDiscarded.append(ctf)
@@ -389,10 +392,10 @@ class XmippProtCTFConsensus(em.ProtCTFMicrographs):
         if (os.path.exists(self._getPath('ctfs.sqlite'))):
             if firstTimeAccepted:
                 # define relation just once
-                self._defineSourceRelation(
+                self._defineTransformRelation(
                     self.inputCTF.get().getMicrographs(), micSet)
-                self._defineSourceRelation(ctfSet, micSet)
-                self._defineSourceRelation(self.inputCTF, ctfSet)
+                self._defineTransformRelation(ctfSet, micSet)
+                self._defineTransformRelation(self.inputCTF, ctfSet)
                 self._defineCtfRelation(micSet, ctfSet)
             else:
                 ctfSet.close()
@@ -401,10 +404,10 @@ class XmippProtCTFConsensus(em.ProtCTFMicrographs):
         # AJ new subsets with discarded ctfs
         if (os.path.exists(self._getPath('ctfsDiscarded.sqlite'))):
             if firstTimeDiscarded:
-                self._defineSourceRelation(
+                self._defineTransformRelation(
                     self.inputCTF.get().getMicrographs(), micSetDiscarded)
-                self._defineSourceRelation(ctfSetDiscarded, micSetDiscarded)
-                self._defineSourceRelation(self.inputCTF, ctfSetDiscarded)
+                self._defineTransformRelation(ctfSetDiscarded, micSetDiscarded)
+                self._defineTransformRelation(self.inputCTF, ctfSetDiscarded)
                 self._defineCtfRelation(micSetDiscarded, ctfSetDiscarded)
             else:
                 micSetDiscarded.close()

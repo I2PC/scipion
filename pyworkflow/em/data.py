@@ -128,7 +128,6 @@ class CTFModel(EMObject):
         self._psdFile = String()
         self._micObj = None
         self._resolution = Float()
-        self._consensusResolution = Float()
         self._fitQuality = Float()
 
     def __str__(self):
@@ -192,9 +191,6 @@ class CTFModel(EMObject):
 
     def setResolution(self, value):
         self._resolution.set(value)
-
-    def setConsensusResolution(self, value):
-        self._consensusResolution.set(value)
 
     def getFitQuality(self):
         # this is an awful hack to read freq either from ctffind/gctf or xmipp

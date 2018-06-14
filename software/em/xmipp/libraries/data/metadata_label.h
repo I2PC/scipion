@@ -89,7 +89,6 @@ enum MDLabel
     MDL_COST_PERCENTILE, ///< Cost percentile for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_COUNT2, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
-    MDL_CONSENSUS_RESOLUTION, ///< Consensus resolution from ctf discrepancy
 
     MDL_CRYSTAL_CELLX, ///< Cell location for crystals
     MDL_CRYSTAL_CELLY, ///< Cell location for crystals
@@ -1442,7 +1441,6 @@ private:
         MDL::addLabel(MDL_COST_PERCENTILE, LABEL_DOUBLE, "costPerc");
         MDL::addLabel(MDL_COUNT2, LABEL_SIZET, "count2");
         MDL::addLabel(MDL_COUNT, LABEL_SIZET, "count");
-        MDL::addLabel(MDL_CONSENSUS_RESOLUTION, LABEL_DOUBLE, "consensusResolution");
 
         MDL::addLabel(MDL_CRYSTAL_CELLX, LABEL_INT, "crystalCellx");
         MDL::addLabel(MDL_CRYSTAL_CELLY, LABEL_INT, "crystalCelly");

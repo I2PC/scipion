@@ -69,9 +69,9 @@ class XmippCTFConsensusViewer(ProtocolViewer):
         views = []
 
         # display metadata with selected variables
-        labels = 'id enabled _psdFile _micObj_filename _resolution' \
-                 ' _consensusResolution _discrepancy_astigmatism _defocusU' \
-                 ' _defocusV _defocusAngle'
+        labels = 'id enabled _psdFile _micObj_filename _resolution ' \
+                 '_xmipp_consensus_resolution _xmipp_discrepancy_astigmatism' \
+                 ' _defocusU _defocusV _defocusAngle'
         if hasattr(self.protocol, "outputCTF"):
             views.append(ObjectView(
                 self._project, self.protocol.strId(),
