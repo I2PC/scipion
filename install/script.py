@@ -392,6 +392,17 @@ env.addPackage('relion', version='2.1',
               updateCuda=True,
               vars=relion_vars)
 
+eman2_commands = [('./eman2-installer',
+                   'eman2.*rc')]
+
+env.addPackage('eman', version='2.11',
+               tar='eman2.11.linux64.tgz',
+               commands=eman2_commands)
+
+env.addPackage('eman', version='2.12',
+               tar='eman2.12.linux64.tgz',
+               commands=eman2_commands)
+
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
 
