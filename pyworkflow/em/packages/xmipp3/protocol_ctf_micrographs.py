@@ -52,12 +52,12 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                   "ctfCritIceness>1")
 
     _criterion_phaseplate = ("ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR "
-                  "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.10 OR "
-                  "ctfCritFirstMinFirstZeroRatio>12 AND "
+                  "ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "
+                  "ctfCritFirstMinFirstZeroRatio>50 AND "
                   "ctfCritFirstMinFirstZeroRatio!=1000 OR ctfCritCorr13==0 OR "
                   "ctfCritNonAstigmaticValidty<=0 OR ctfVPPphaseshift>140 OR " 
                   "ctfCritNonAstigmaticValidty>25 "
-                  "OR ctfCritIceness>1.03")
+                  "OR ctfCritIceness>1.03") 
 
     def __init__(self, **args):
 
@@ -181,7 +181,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         downsampleList=self._calculateDownsampleList(
             self.inputMics.getSamplingRate())
         deleteTmp = ""
-        self.downsample = 0
+        #self.downsample = 0
         for downFactor in downsampleList:
             # Downsample if necessary
             if downFactor != 1:
@@ -222,7 +222,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                                      "failed with micrograph %s" % finalName
             # Check the quality of the estimation and reject it necessary
             good = self.evaluateSingleMicrograph(micFn, micDir)
-            self.downsample += 1
+            #self.downsample += 1
             if good:
                 break
 
@@ -461,7 +461,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             Iceness = mdCTFparam.getValue(md.MDL_CTF_CRIT_ICENESS, 1)
             mdCTFparam.setValue(md.MDL_ENABLED, -1, mdCTFparam.firstObject())
             mdCTFparam.write(fnEval)
-            if Iceness > 1:
+            if Iceness > 1.03:
                 retval = True
              
         pwutils.path.cleanPath(fnRejected)
