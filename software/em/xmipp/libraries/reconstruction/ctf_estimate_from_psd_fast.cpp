@@ -1015,7 +1015,6 @@ void ProgCTFEstimateFromPSDFast::estimate_envelope_parameters_fast()
     steps.initConstant(1);
 
     steps(1) = 0; // Do not optimize Cs
-    //steps(2) = 0;
     steps(5) = 0; // Do not optimize for alpha, since Ealpha depends on the defocus
 
     if (modelSimplification >= 1)
@@ -1082,7 +1081,7 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 	}
 	else
 	{
-		/*double best_defocus, best_K=1;
+		double best_defocus, best_K=1;
 		double best_error = heavy_penalization * 1.1;
 		bool first = true;
 		int i;
@@ -1189,65 +1188,8 @@ void ProgCTFEstimateFromPSDFast::estimate_defoci_fast()
 		}
 
 		current_ctfmodel.Defocus = best_defocus;
-		current_ctfmodel.K = best_K;*/
-		MultidimArray<double> psd_exp_radial2;
-		/*MultidimArray<double> background;
-		generateModelSoFar_fast(background, false);
-		FOR_ALL_ELEMENTS_IN_ARRAY1D(background)
-		{
-			A1D_ELEM(background,i)= background(i)-psd_exp_radial(i);
-		}*/
-		psd_exp_radial2.initZeros(psd_exp_radial);
-		double deltaW=1.0/XSIZE(w_digfreq);
-		double wmax=(XSIZE(w_digfreq)/2.0-1)/XSIZE(w_digfreq);
-		double deltaW2=(wmax*wmax)/(XSIZE(w_digfreq)/2.0-1);
-		FOR_ALL_ELEMENTS_IN_ARRAY1D(psd_exp_radial2)
-		{
-			double w2=i*deltaW2;
-			double w=sqrt(w2);
-			double widx=w/deltaW;
-			size_t lowerIdx=floor(widx);
-			double weight=widx-floor(widx);
-			A1D_ELEM(psd_exp_radial2,i)=(1-weight)*A1D_ELEM(psd_exp_radial,lowerIdx)
-												 +weight*A1D_ELEM(psd_exp_radial,lowerIdx+1);
-		}
-		//std::cout << "radial2 =" << psd_exp_radial2 << std::endl;
-		//exit(1);
-		FourierTransformer FourierPSD;
-		FourierPSD.FourierTransform(psd_exp_radial2, psd_fft, false);
-		int index = 0;
-		FOR_ALL_ELEMENTS_IN_ARRAY1D(psd_fft)
-		{
-			amplitud.push_back(sqrt(std::real(psd_fft[i])*std::real(psd_fft[i])+std::imag(psd_fft[i])*std::imag(psd_fft[i])));
-		}
-		for(size_t i=0;i<amplitud.size();i++)
-		{
-			double change = amplitud[i+1]-amplitud[i];
-			if(change > 0.0)
-			{
-				double initialIndex = index;
-				break;
-			}
-			index++;
-		}
+		current_ctfmodel.K = best_K;
 
-		amplitud.erase(amplitud.begin(),amplitud.begin()+index);
-		double maxValue = *max_element(amplitud.rbegin(),amplitud.rend());
-		int finalIndex = 0;
-		for(size_t i=0;i<amplitud.size();i++)
-		{
-			if(maxValue == amplitud[i])
-			{
-				current_ctfmodel.Defocus = (((current_ctfmodel.Tm*current_ctfmodel.Tm)*
-						(XSIZE(w_digfreq)/2-finalIndex+index))/
-						(XSIZE(w_digfreq)*2*PI*current_ctfmodel.lambda))*1000;
-				break;
-			}
-			finalIndex++;
-		}
-		std::cout << finalIndex << " " << index << std::endl;
-		std::cout << finalIndex+index+XSIZE(w_digfreq)/2 << std::endl;
-		std::cout << current_ctfmodel.Defocus << std::endl;
 	}
 		// Keep the result in adjust
 		current_ctfmodel.forcePhysicalMeaning();
