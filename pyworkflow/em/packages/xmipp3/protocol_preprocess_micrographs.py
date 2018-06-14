@@ -310,7 +310,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         else:
             # Here the defineOutputs function will call the write() method
             self._defineOutputs(**{outputName: outputSet})
-            self._defineSourceRelation(self.inputMicrographs, outputSet)
+            self._defineTransformRelation(self.inputMicrographs, outputSet)
             self._store(outputSet)
         # Close set databaset to avoid locking it
         outputSet.close()
