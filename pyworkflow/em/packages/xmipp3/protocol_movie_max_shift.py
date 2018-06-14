@@ -96,11 +96,8 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     #--------------------------- INSERT steps functions ------------------------
     def _insertMovieStep(self, movie):
         """ Insert the processMovieStep for a given movie. """
-        # Note1: At this point is safe to pass the movie, since this
-        # is not executed in parallel, here we get the params
-        # to pass to the actual step that is gone to be executed later on
-        # Note2: We are serializing the Movie as a dict that can be passed
-        # as parameter for a functionStep
+
+        # looking for a setOfMicrographs related to the inputMovies
         self.setInputMics()
         movieStepId = self._insertFunctionStep('_evaluateMovieAlign',
                                                movie.clone(),
@@ -147,6 +144,8 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                     self.discardedMoviesList.append(movie)
                 else:
                     self.acceptedMoviesList.append(movie)
+        else:
+            self.acceptedMoviesList.append(movie)
 
     def _checkNewOutput(self):
         """ Check for already selected Movies and update the output set. """
@@ -275,15 +274,18 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         return outputSet
 
     def setInputMics(self):
-        parentProt = self.inputMovies.clone()
-        parentProt.setExtended('outputMicrographs')
-        self.inputMics = parentProt.get()
+        """ Get the setOfMicrographs associated with the inputMovies.
+        """
+        parentProt = self.getMapper().getParent(self.inputMovies.get())
+        self.inputMics = getattr(parentProt, 'outputMicrographs', None)
         if self.inputMics is None:
-            self.warning('Input movies are NOT inmediatelly from an alignment '
-                         'protocol. Therefore, no Mics will be returned, only '
-                         'movies.')
+            self.warning('The creator of the inputMovies has NOT '
+                         'outputMicrographs. Therefore, no Mics will be '
+                         'returned, only movies.')
 
     def getMicFromMovie(self, movie):
+        """ Get the Micrographs related with the movie
+        """
         movieMicName = movie.getMicName()
         for mic in self.inputMics:
             if mic.getMicName() == movieMicName:
