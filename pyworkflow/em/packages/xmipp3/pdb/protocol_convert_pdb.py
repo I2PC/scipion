@@ -34,7 +34,8 @@ import sys
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as const
 import pyworkflow.em as em
-from pyworkflow.utils import replaceBaseExt, removeExt
+from pyworkflow.em.convert_atom_struct import cifToPdb
+from pyworkflow.utils import replaceBaseExt, removeExt, getExt
 
 
 
@@ -97,6 +98,11 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
         """
         pdbFn = self._getPdbFileName()
         outFile = removeExt(self._getVolName())
+        if getExt(pdbFn)==".cif":
+            pdbFn2=replaceBaseExt(pdbFn, 'pdb')
+            cifToPdb(pdbFn, pdbFn2)
+            pdbFn = pdbFn2
+
         args = '-i %s --sampling %f -o %s' % (pdbFn, self.sampling.get(), outFile)
         
         if self.centerPdb:
@@ -156,7 +162,7 @@ class XmippProtConvertPdb(em.ProtInitialVolume):
     #--------------------------- UTLIS functions --------------------------------------------
     def _getPdbFileName(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
-            return self._getExtraPath('%s.pdb' % self.pdbId.get())
+            return self._getExtraPath('%s.cif' % self.pdbId.get())
         elif self.inputPdbData == self.IMPORT_OBJ:
             return self.pdbObj.get().getFileName()
         else:

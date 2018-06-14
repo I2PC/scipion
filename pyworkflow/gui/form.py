@@ -1219,7 +1219,7 @@ class FormWindow(Window):
          protocol: protocol from which the form will be generated.
          callback: callback function to call when Save or Execute are press.
         """
-        Window.__init__(self, title, master, icon='scipion_bn.xbm', 
+        Window.__init__(self, title, master, icon=Icon.SCIPION_ICON,
                         weight=False, minsize=(600, 450), **kwargs)
 
         # Some initialization

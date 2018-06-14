@@ -262,8 +262,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help="It can only be used if there is a mask")
         form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", expertLevel=LEVEL_ADVANCED, default=True)
         form.addParam('postSoftNeg', BooleanParam, label="Attenuate undershooting", expertLevel=LEVEL_ADVANCED, default=True)
-        form.addParam('postSoftNegK', FloatParam, label="Attenuate undershooting (K)", expertLevel=LEVEL_ADVANCED, default=3,
-                      help="Values below K*sigma are attenuated")
+        form.addParam('postSoftNegK', FloatParam, label="Attenuate undershooting (K)", expertLevel=LEVEL_ADVANCED, default=9,
+                      help="Values below avg-K*sigma are attenuated")
         form.addParam('postDifference', BooleanParam, label="Evaluate difference", expertLevel=LEVEL_ADVANCED, default=True)
 
         form.addParallelSection(threads=1, mpi=8)
@@ -1395,6 +1395,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             cleanPath(fnFsc)
             if removeMask:
                 cleanPath(fnMask)
+                fnMask=""
 
         # Difference evaluation and production of a consensus average
         if self.postDifference:

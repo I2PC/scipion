@@ -355,22 +355,22 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         if not self.doGoldStandard.get():            
             fnDeformedParticles = self._getExtraPath('deformed_particles.xmd')
             outputSetOfParticles = self._createSetOfParticles()
-            readSetOfParticles(fnDeformedParticles, outputSetOfParticles)        
-            outputSetOfParticles.copyInfo(inputParticles)        
+            outputSetOfParticles.copyInfo(inputParticles)
+            readSetOfParticles(fnDeformedParticles, outputSetOfParticles)
             self._defineOutputs(outputParticles=outputSetOfParticles)              
         else:
             fnDeformedParticlesHalf1 = self._getExtraPath('deformed_particles_half1.xmd')
             outputSetOfParticlesHalf1 = self._createSetOfParticles(suffix="1")            
-            readSetOfParticles(fnDeformedParticlesHalf1, outputSetOfParticlesHalf1)                                
-            outputSetOfParticlesHalf1.copyInfo(inputParticles)                     
- 
+            outputSetOfParticlesHalf1.copyInfo(inputParticles)
+            readSetOfParticles(fnDeformedParticlesHalf1, outputSetOfParticlesHalf1)
+
             self._defineOutputs(**{key % 1: outputSetOfParticlesHalf1})            
             self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf1)
             
             fnDeformedParticlesHalf2 = self._getExtraPath('deformed_particles_half2.xmd')
             outputSetOfParticlesHalf2 = self._createSetOfParticles(suffix="2")                                  
+            outputSetOfParticlesHalf2.copyInfo(inputParticles)
             readSetOfParticles(fnDeformedParticlesHalf2, outputSetOfParticlesHalf2)
-            outputSetOfParticlesHalf2.copyInfo(inputParticles)            
 
             self._defineOutputs(**{key % 2: outputSetOfParticlesHalf2})  
             self._defineTransformRelation(inputParticles, outputSetOfParticlesHalf2)
@@ -405,12 +405,12 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         return ['**********????????????????????************']
     
     def _setHalf1(self, item, row):
-        if (item._rln_halfId == 1):
-            item._appendItem=False
+        if item._rlnRandomSubset == 1:
+            item._appendItem = False
 
     def _setHalf2(self, item, row):
-        if (item._rln_halfId == 2):
-            item._appendItem=False
+        if item._rlnRandomSubset == 2:
+            item._appendItem = False
             
     def _validate(self):
         errors=[]

@@ -272,8 +272,12 @@ class Window():
         if not icon is None:
             path = findResource(icon)          
             abspath = os.path.abspath(path)
-            self.root.iconbitmap("@" + abspath)
-            
+            if abspath.endswith('.xbm'):
+                self.root.iconbitmap("@" + abspath)
+            else:
+                img = tk.Image("photo", file=abspath)
+                self.root.tk.call('wm', 'iconphoto', self.root._w,img)
+
         self.root.protocol("WM_DELETE_WINDOW", self._onClosing)
         self._w, self._h, self._x, self._y = 0, 0, 0, 0
         self.root.bind("<Configure>", self._configure)
