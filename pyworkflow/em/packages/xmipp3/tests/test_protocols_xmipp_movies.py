@@ -3,7 +3,7 @@
 # * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
 # *             Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
-# * Unidad inputMovies of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
