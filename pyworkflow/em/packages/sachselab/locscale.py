@@ -32,8 +32,8 @@ from pyworkflow.em.convert import ImageHandler
 # we declarate global constants to multiple usage
 LOCSCALE_HOME_VAR = 'LOCSCALE_HOME'
 EMAN2DIR_VAR = 'EMAN2DIR'
-LOCSCALE_HOME = os.environ[LOCSCALE_HOME_VAR]
-EMAN2DIR = os.environ[EMAN2DIR_VAR]
+LOCSCALE_HOME = os.environ.get(LOCSCALE_HOME_VAR, '')
+EMAN2DIR = os.environ.get(EMAN2DIR_VAR, '')
 
 def getVersion():
     version = ''
