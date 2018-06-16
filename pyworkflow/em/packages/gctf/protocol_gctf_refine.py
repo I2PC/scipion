@@ -64,8 +64,6 @@ class ProtGctfRefine(em.ProtParticles):
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
-        self.allowMpi = False
-        self.allowThreads = False
         self._params = {}
         self.stepsExecutionMode = STEPS_PARALLEL
 
@@ -139,12 +137,15 @@ class ProtGctfRefine(em.ProtParticles):
                       help='Whether to plot an estimated resolution ring '
                            'on the power spectrum',
                       expertLevel=params.LEVEL_ADVANCED)
-        form.addParam('GPUCore', params.IntParam, default=0,
+
+        form.addHidden(params.GPU_LIST, params.StringParam, default='0',
                       expertLevel=params.LEVEL_ADVANCED,
-                      label="Choose GPU core",
-                      help='GPU may have several cores. Set it to zero if '
-                           'you do not know what we are talking about. '
-                           'First core index is 0, second 1 and so on.')
+                      label="Choose GPU IDs",
+                      help="GPU may have several cores. Set it to zero"
+                           " if you do not know what we are talking about."
+                           " First core index is 0, second 1 and so on."
+                           " Motioncor2 can use multiple GPUs - in that case"
+                           " set to i.e. *0 1 2*.")
 
         form.addSection(label='Advanced')
         form.addParam('doEPA', params.BooleanParam, default=False,
@@ -335,9 +336,9 @@ class ProtGctfRefine(em.ProtParticles):
                            "*>1*   The number of items that will be grouped into "
                            "a step.")
 
-        form.addParallelSection(threads=0, mpi=0)
+        form.addParallelSection(threads=1, mpi=1)
 
-# --------------------------- INSERT steps functions ------------------------
+# --------------------------- INSERT steps functions --------------------------
     def _insertAllSteps(self):
             self._insertFunctionStep('convertInputStep')
             self._defineValues()
@@ -380,7 +381,11 @@ class ProtGctfRefine(em.ProtParticles):
                                         [mic.getMicName() for mic in micList],
                                         *args, prerequisites=prerequisites)
 
-# -------------------------- STEPS functions ------------------------------
+# -------------------------- STEPS functions ----------------------------------
+    def _stepsCheck(self):
+        # Just to avoid the stream checking inherited from ProtParticles
+        pass
+
     def convertInputStep(self):
         inputParticles = self.inputParticles.get()
         inputMics = self._getMicrographs()
@@ -557,7 +562,7 @@ class ProtGctfRefine(em.ProtParticles):
         #pwutils.cleanPath(self.matchingMics.getFileName())
         #pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
-    # ---------- Methods to ctf refine many micrographs at once ------------------
+    # ---------- Methods to ctf refine many micrographs at once ---------------
     def refineCtfMicListStep(self, micKeyList, *args):
         micList = []
 
@@ -609,7 +614,7 @@ class ProtGctfRefine(em.ProtParticles):
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(inputSet, partSet)
 
-    # -------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
 
     def _validate(self):
         errors = []
@@ -622,6 +627,12 @@ class ProtGctfRefine(em.ProtParticles):
                           % self._getProgram())
         if self.useInputCtf and not self.ctfRelations.get():
             errors.append("Please provide input CTFs for refinement.")
+
+        nprocs = max(self.numberOfMpi.get(), self.numberOfThreads.get())
+
+        if nprocs < len(self.getGpuList()):
+            errors.append("Multiple GPUs can not be used by a single process. "
+                          "Make sure you specify more processors than GPUs. ")
 
         return errors
 
@@ -652,7 +663,7 @@ class ProtGctfRefine(em.ProtParticles):
 
         return [methods]
 
-    # -------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _defineValues(self):
         """ This function get some parameters of the micrographs"""
         self.inputMics = self._getMicrographs()
@@ -699,7 +710,7 @@ class ProtGctfRefine(em.ProtParticles):
         self._args += "--do_EPA %d " % (1 if self.doEPA else 0)
         self._args += "--boxsize %d " % self._params['windowSize']
         self._args += "--plot_res_ring %d " % (1 if self.plotResRing else 0)
-        self._args += "--gid %d " % self.GPUCore.get()
+        self._args += "--gid %%(GPU)s "  # Use %% to escape when formatting
         self._args += "--bfac %d " % self.bfactor.get()
         self._args += "--B_resH %f " % (2 * self._params['sampling'])
         self._args += "--overlap %f " % self.overlap.get()
