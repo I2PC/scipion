@@ -34,7 +34,7 @@ import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as params
 from pyworkflow.em.constants import RELATION_CTF
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import Coordinate
+from pyworkflow.em.data import Coordinate, SetOfMicrographs
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow import VERSION_1_2
 from convert import getVersion, writeSetOfCoordinates, rowToCtfModel, getShifts
@@ -344,9 +344,9 @@ class ProtGctfRefine(em.ProtParticles):
             self._prepareCommand()
 
             self.micDict = OrderedDict()
-            #micDict = self._loadInputList()
+            matchingMics = self.loadMics()
             self.initialIds = []
-            deps = self._insertNewMicsSteps(self.matchingMics.values())
+            deps = self._insertNewMicsSteps(matchingMics.values())
             self._insertFinalSteps(deps)
 
     def _insertNewMicsSteps(self, inputMics):
@@ -381,19 +381,18 @@ class ProtGctfRefine(em.ProtParticles):
                                         *args, prerequisites=prerequisites)
 
 # -------------------------- STEPS functions ------------------------------
-
     def convertInputStep(self):
         inputParticles = self.inputParticles.get()
         inputMics = self._getMicrographs()
         self.alignType = inputParticles.getAlignment()
-        self.downFactor = self.ctfDownFactor.get()
+        downFactor = self.ctfDownFactor.get()
 
         # create a tmp set for matching mics
         self.matchingMics = self._createSetOfMicrographs(suffix='_tmp')
         self.matchingMics.copyInfo(inputMics)
 
-        if self.downFactor != 1.:
-            self.matchingMics.setDownsample(self.downFactor)
+        if downFactor != 1.:
+            self.matchingMics.setDownsample(downFactor)
 
         # create a tmp set for coords
         coords = self._createSetOfCoordinates(inputMics, suffix='_tmp')
@@ -455,9 +454,9 @@ class ProtGctfRefine(em.ProtParticles):
             pwutils.makePath(micDir)
             outMic = pwutils.join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
 
-            if self.downFactor != 1.:
-                ih.scaleFourier(micName, outMic, self.downFactor)
-                sps = inputMics.getScannedPixelSize() * self.downFactor
+            if downFactor != 1.:
+                ih.scaleFourier(micName, outMic, downFactor)
+                sps = inputMics.getScannedPixelSize() * downFactor
                 self._params['scannedPixelSize'] = sps
             else:
                 if micName.endswith('.mrc'):
@@ -471,6 +470,16 @@ class ProtGctfRefine(em.ProtParticles):
         pwutils.cleanPath(coords.getFileName())
         self.matchingMics.write()
         self.matchingMics.close()
+
+    def loadMics(self):
+        setFn = self._getTmpPath('micrographs_tmp.sqlite')
+        micSet = SetOfMicrographs(filename=setFn)
+        newItemDict = OrderedDict()
+        for item in micSet:
+            newItemDict[item.getMicName()] = item.clone()
+        micSet.close()
+
+        return newItemDict
 
     def refineCtfMicStep(self, micKey, *args):
         mic = self.micDict[micKey]
@@ -664,7 +673,7 @@ class ProtGctfRefine(em.ProtParticles):
                         }
 
     def _prepareCommand(self):
-        sampling = self._getMicrographs().getSamplingRate() * self.downFactor
+        sampling = self._getMicrographs().getSamplingRate() * self.ctfDownFactor.get()
         # Convert digital frequencies to spatial frequencies
         self._params['sampling'] = sampling
         self._params['lowRes'] = sampling / self._params['lowRes']
