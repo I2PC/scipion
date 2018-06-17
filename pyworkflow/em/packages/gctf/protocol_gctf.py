@@ -169,6 +169,7 @@ class ProtGctf(em.ProtCTFMicrographs):
                        help='Boxsize to be used for smoothing, '
                             'suggested 1/5 ~ 1/20 of window size in pixel, '
                             'e.g. 99 for 512 window')
+
         if getVersion() not in ['0.50', '1.06']:
             group.addParam('smoothResL', params.IntParam, default=0,
                            expertLevel=params.LEVEL_ADVANCED,
@@ -260,6 +261,8 @@ class ProtGctf(em.ProtCTFMicrographs):
                                'phase shift search. Default approach is to do '
                                'refinement after search.')
             form.addParam('refine2DT', params.IntParam,
+                          validators=[params.Range(1, 3, "value should be "
+                                                         "1, 2 or 3. ")],
                           default=1, condition='doPhShEst',
                           label='Refinement type',
                           help='Refinement type: 1, 2, 3 allowed.\n NOTE:  '
