@@ -140,45 +140,49 @@ class ProtGctf(em.ProtCTFMicrographs):
                            " set to i.e. *0 1 2*.")
 
         form.addSection(label='Advanced')
-        form.addParam('doEPA', params.BooleanParam, default=True,
-                      label="Do EPA",
-                      help='Do Equiphase average used for output CTF file. '
-                           'Only for nice output, will NOT be used for CTF '
-                           'determination.')
-        form.addParam('EPAsmp', params.IntParam, default=4,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      condition='not _oldVersion',
-                      label="Over-sampling factor for EPA")
-        form.addParam('doBasicRotave', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      condition='_oldVersion',
-                      label="Do rotational average",
-                      help='Do rotational average used for output CTF file. '
-                           'Only for nice output, will NOT be used for CTF '
-                           'determination.')
+        group = form.addGroup('EPA')
+        group.addParam('doEPA', params.BooleanParam, default=True,
+                       label="Do EPA",
+                       help='Do Equiphase average used for output CTF file. '
+                            'Only for nice output, will NOT be used for CTF '
+                            'determination.')
+        group.addParam('EPAsmp', params.IntParam, default=4,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='not _oldVersion and doEPA',
+                       label="Over-sampling factor for EPA")
+        group.addParam('doBasicRotave', params.BooleanParam, default=False,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='_oldVersion and doEPA',
+                       help='Do rotational average used for output CTF file. '
+                            'Only for nice output, will NOT be used for CTF '
+                            'determination.')
+        group.addParam('overlap', params.FloatParam, default=0.5,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='doEPA',
+                       label="Overlap factor",
+                       help='Overlapping factor for grid boxes sampling, '
+                            'for windowsize=512, 0.5 means 256 pixels overlapping.')
+        group.addParam('convsize', params.IntParam, default=85,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='doEPA',
+                       label="Boxsize for smoothing",
+                       help='Boxsize to be used for smoothing, '
+                            'suggested 1/5 ~ 1/20 of window size in pixel, '
+                            'e.g. 99 for 512 window')
+        if getVersion() not in ['0.50', '1.06']:
+            group.addParam('smoothResL', params.IntParam, default=0,
+                           expertLevel=params.LEVEL_ADVANCED,
+                           condition='doEPA',
+                           label='Resolution for smoothing',
+                           help='Provide a reasonable resolution for low '
+                                'frequency background smoothing; 20 '
+                                'angstrom suggested, 10-50 is proper range')
+
         form.addParam('bfactor', params.IntParam, default=150,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label="B-factor",
                       help='B-factors used to decrease high resolution '
                            'amplitude, A^2; suggested range 50~300 except '
                            'using REBS method (see the paper for the details).')
-        form.addParam('overlap', params.FloatParam, default=0.5,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      label="Overlap factor",
-                      help='Overlapping factor for grid boxes sampling, '
-                      'for windowsize=512, 0.5 means 256 pixels overlapping.')
-        form.addParam('convsize', params.IntParam, default=85,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      label="Boxsize for smoothing",
-                      help='Boxsize to be used for smoothing, '
-                           'suggested 1/5 ~ 1/20 of window size in pixel, '
-                           'e.g. 99 for 512 window')
-        if getVersion() not in ['0.50', '1.06']:
-            form.addParam('smoothResL', params.IntParam, default=0,
-                          label='Resolution for smoothing',
-                          help='Provide a reasonable resolution for low '
-                               'frequency background smoothing; 20 '
-                               'angstrom suggested, 10-50 is proper range')
 
         group = form.addGroup('High-res refinement')
         group.addParam('doHighRes', params.BooleanParam, default=False,
@@ -230,11 +234,11 @@ class ProtGctf(em.ProtCTFMicrographs):
                       label="Max")
 
         form.addParam('phaseShiftS', params.FloatParam, default=10.0,
-                       condition='doPhShEst',
-                       label="Step",
-                       help='Phase shift search step. Do not worry about '
-                            'the accuracy; this is just the search step, '
-                            'Gctf will refine the phase shift anyway.')
+                      condition='doPhShEst',
+                      label="Step",
+                      help='Phase shift search step. Do not worry about '
+                           'the accuracy; this is just the search step, '
+                           'Gctf will refine the phase shift anyway.')
         form.addParam('phaseShiftT', params.EnumParam, default=CCC,
                       condition='doPhShEst',
                       label='Target',
@@ -257,7 +261,7 @@ class ProtGctf(em.ProtCTFMicrographs):
                                'refinement after search.')
             form.addParam('refine2DT', params.IntParam,
                           default=1, condition='doPhShEst',
-                          label='Refiniment type',
+                          label='Refinement type',
                           help='Refinement type: 1, 2, 3 allowed.\n NOTE:  '
                                'This parameter is different from Target and is'
                                'optional for different types of refinement algorithm, '
@@ -343,8 +347,16 @@ class ProtGctf(em.ProtCTFMicrographs):
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
         micDir = self._getMicrographDir(mic)
-        micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'ctf'))
-        micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
+
+        if getVersion() not in ['0.50', '1.06']:
+            ext = 'pow' if not self.doEPA else 'epa'
+            extEpa = ''  # this output does not exist anymore?
+        else:
+            ext = 'ctf'
+            extEpa = '_EPA.log'
+
+        micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, ext))
+        micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + extEpa)
 
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
@@ -367,7 +379,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         except:
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
         pwutils.moveFile(micFnCtf, psdFile)
-        pwutils.moveFile(micFnCtfFit, ctffitFile)
+        #pwutils.moveFile(micFnCtfFit, ctffitFile)
         pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
         pwutils.cleanPattern(micFnMrc)
 
