@@ -340,33 +340,26 @@ class ProtGctfRefine(em.ProtParticles):
 
 # --------------------------- INSERT steps functions --------------------------
     def _insertAllSteps(self):
-            self._insertFunctionStep('convertInputStep')
-            self._defineValues()
-            self._prepareCommand()
+        self._insertFunctionStep('convertInputStep')
+        self._defineValues()
+        self._prepareCommand()
 
-            self.micDict = OrderedDict()
-            matchingMics = self.loadMics()
-            self.initialIds = []
-            deps = self._insertNewMicsSteps(matchingMics.values())
-            self._insertFinalSteps(deps)
+        self.micDict = OrderedDict()
+        matchingMics = self.loadMics()
+        self.initialIds = []
+        refineSteps = self._insertNewMicsSteps(matchingMics.values())
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=refineSteps, wait=False)
+
+        self._insertFinalSteps = self._doNothing
+        self._stepsCheck = self._doNothing
 
     def _insertNewMicsSteps(self, inputMics):
-        """ Insert steps to process new mics (in batches or otherwise)
-        Params:
-            inputMics: input mics set to be check
-        """
+        """ Insert steps to process new mics (in batches). """
         return self._insertNewMics(inputMics,
                                    lambda mic: mic.getMicName(),
                                    self._insertRefineCtfStep,
-                                   self._insertRefineCtfListStep,
-                                   [])
-
-    def _insertFinalSteps(self, micSteps):
-        """ Override this function to insert some steps after the
-        ctf refine steps.
-        Receive the list of step ids of the refine steps. """
-        self._insertFunctionStep('createOutputStep',
-                                 prerequisites=micSteps, wait=True)
+                                   self._insertRefineCtfListStep)
 
     def _insertRefineCtfStep(self, mic, prerequisites, *args):
         """ Insert a ctf refine step for a given micrograph. """
@@ -381,11 +374,10 @@ class ProtGctfRefine(em.ProtParticles):
                                         [mic.getMicName() for mic in micList],
                                         *args, prerequisites=prerequisites)
 
-# -------------------------- STEPS functions ----------------------------------
-    def _stepsCheck(self):
-        # Just to avoid the stream checking inherited from ProtParticles
-        pass
+    def _doNothing(self, *args):
+        pass # used to avoid some streaming functions
 
+# -------------------------- STEPS functions ----------------------------------
     def convertInputStep(self):
         inputParticles = self.inputParticles.get()
         inputMics = self._getMicrographs()
@@ -393,11 +385,11 @@ class ProtGctfRefine(em.ProtParticles):
         downFactor = self.ctfDownFactor.get()
 
         # create a tmp set for matching mics
-        self.matchingMics = self._createSetOfMicrographs(suffix='_tmp')
-        self.matchingMics.copyInfo(inputMics)
+        matchingMics = self._createSetOfMicrographs(suffix='_tmp')
+        matchingMics.copyInfo(inputMics)
 
         if downFactor != 1.:
-            self.matchingMics.setDownsample(downFactor)
+            matchingMics.setDownsample(downFactor)
 
         # create a tmp set for coords
         coords = self._createSetOfCoordinates(inputMics, suffix='_tmp')
@@ -448,11 +440,11 @@ class ProtGctfRefine(em.ProtParticles):
 
                 if mic.getObjId() not in insertedMics:
                     insertedMics[mic.getObjId()] = mic
-                    self.matchingMics.append(mic)
+                    matchingMics.append(mic)
 
         ih = em.ImageHandler()
         # We convert matching micrographs if they are not *.mrc
-        for mic in self.matchingMics:
+        for mic in matchingMics:
             # Create micrograph dir
             micName = mic.getFileName()
             micDir = self._getTmpPath(pwutils.removeBaseExt(micName))
@@ -470,11 +462,11 @@ class ProtGctfRefine(em.ProtParticles):
                     ih.convert(micName, outMic)
 
         # Write out coordinate files and sets
-        writeSetOfCoordinates(self._getTmpPath(), coords, self.matchingMics)
+        writeSetOfCoordinates(self._getTmpPath(), coords, matchingMics)
         coords.clear()
         pwutils.cleanPath(coords.getFileName())
-        self.matchingMics.write()
-        self.matchingMics.close()
+        matchingMics.write()
+        matchingMics.close()
 
     def loadMics(self):
         setFn = self._getTmpPath('micrographs_tmp.sqlite')
@@ -483,6 +475,7 @@ class ProtGctfRefine(em.ProtParticles):
         for item in micSet:
             newItemDict[item.getMicName()] = item.clone()
         micSet.close()
+        pwutils.cleanPath(setFn)
 
         return newItemDict
 
@@ -559,8 +552,6 @@ class ProtGctfRefine(em.ProtParticles):
         pwutils.cleanPath(outMic)
         pwutils.cleanPath(micDirTmp)
 
-        #pwutils.cleanPath(self.matchingMics.getFileName())
-        #pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
     # ---------- Methods to ctf refine many micrographs at once ---------------
     def refineCtfMicListStep(self, micKeyList, *args):
@@ -570,9 +561,6 @@ class ProtGctfRefine(em.ProtParticles):
             mic = self.micDict[micName]
             micList.append(mic)
 
-        self._refineCtfMicList(micList, *args)
-
-    def _refineCtfMicList(self, micList, *args):
         for mic in micList:
             self._refineCtfMic(mic, *args)
 
@@ -595,8 +583,8 @@ class ProtGctfRefine(em.ProtParticles):
 
             micBase = pwutils.removeBaseExt(coord.getMicName())
 
-            for key in self.matchingMics:
-                micKey = pwutils.removeBaseExt(key.getFileName())
+            for key in self.micDict:
+                micKey = pwutils.removeBaseExt(self.micDict[key].getFileName())
                 if micBase in micKey:
                     # micName from mic and micName from coord may be different
                     ctfFn = pwutils.join(self._getExtraPath(micKey),
@@ -610,6 +598,8 @@ class ProtGctfRefine(em.ProtParticles):
                                 newPart = particle.clone()
                                 rowToCtfModel(row, newPart.getCTF())
                                 partSet.append(newPart)
+
+        pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(inputSet, partSet)
