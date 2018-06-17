@@ -171,7 +171,7 @@ class ProtGctf(em.ProtCTFMicrographs):
                             'e.g. 99 for 512 window')
 
         if getVersion() not in ['0.50', '1.06']:
-            group.addParam('smoothResL', params.IntParam, default=0,
+            group.addParam('smoothResL', params.IntParam, default=1000,
                            expertLevel=params.LEVEL_ADVANCED,
                            condition='doEPA',
                            label='Resolution for smoothing',
