@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
 # * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
@@ -140,7 +140,7 @@ class ProtGctf(em.ProtCTFMicrographs):
                            " set to i.e. *0 1 2*.")
 
         form.addSection(label='Advanced')
-        form.addParam('doEPA', params.BooleanParam, default=False,
+        form.addParam('doEPA', params.BooleanParam, default=True,
                       label="Do EPA",
                       help='Do Equiphase average used for output CTF file. '
                            'Only for nice output, will NOT be used for CTF '
@@ -161,7 +161,7 @@ class ProtGctf(em.ProtCTFMicrographs):
                       label="B-factor",
                       help='B-factors used to decrease high resolution '
                            'amplitude, A^2; suggested range 50~300 except '
-                           'using REBS method')
+                           'using REBS method (see the paper for the details).')
         form.addParam('overlap', params.FloatParam, default=0.5,
                       expertLevel=params.LEVEL_ADVANCED,
                       label="Overlap factor",
@@ -173,6 +173,12 @@ class ProtGctf(em.ProtCTFMicrographs):
                       help='Boxsize to be used for smoothing, '
                            'suggested 1/5 ~ 1/20 of window size in pixel, '
                            'e.g. 99 for 512 window')
+        if getVersion() not in ['0.50', '1.06']:
+            form.addParam('smoothResL', params.IntParam, default=0,
+                          label='Resolution for smoothing',
+                          help='Provide a reasonable resolution for low '
+                               'frequency background smoothing; 20 '
+                               'angstrom suggested, 10-50 is proper range')
 
         group = form.addGroup('High-res refinement')
         group.addParam('doHighRes', params.BooleanParam, default=False,
@@ -235,7 +241,32 @@ class ProtGctf(em.ProtCTFMicrographs):
                       choices=['CCC', 'Resolution limit'],
                       display=params.EnumParam.DISPLAY_HLIST,
                       help='Phase shift target in the search: CCC or '
-                           'resolution limit')
+                           'resolution limit. Second option might generate '
+                           'more accurate estimation if results are '
+                           'essentially correct, but it tends to overfit high '
+                           'resolution noise and might have the potential '
+                           'possibility to generate completely wrong results. '
+                           'The accuracy of CCC method might not be as '
+                           'good, but it is more stable in general cases.')
+        if getVersion() not in ['0.50', '1.06']:
+            form.addParam('coSearchRefine', params.BooleanParam,
+                          default=False, condition='doPhShEst',
+                          label='Search and refine simultaneously?',
+                          help='Specify this option to do refinement during '
+                               'phase shift search. Default approach is to do '
+                               'refinement after search.')
+            form.addParam('refine2DT', params.IntParam,
+                          default=1, condition='doPhShEst',
+                          label='Refiniment type',
+                          help='Refinement type: 1, 2, 3 allowed.\n NOTE:  '
+                               'This parameter is different from Target and is'
+                               'optional for different types of refinement algorithm, '
+                               'in general cases they work similar. In challenging '
+                               'case, they might converge to different results, '
+                               'try to see which works best in your case. '
+                               'My suggestion is running as default first, and '
+                               'then try new refinement on the micrographs '
+                               'which failed.')
 
         self._defineStreamingParams(form)
 
@@ -255,8 +286,16 @@ class ProtGctf(em.ProtCTFMicrographs):
             pwutils.makePath(micDir)
             downFactor = self.ctfDownFactor.get()
             micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
-            micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'ctf'))
-            micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
+
+            if getVersion() not in ['0.50', '1.06']:
+                ext = 'pow' if not self.doEPA else 'epa'
+                extEpa = ''  # this output does not exist anymore?
+            else:
+                ext = 'ctf'
+                extEpa = '_EPA.log'
+
+            micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, ext))
+            micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + extEpa)
 
             if downFactor != 1:
                 # Replace extension by 'mrc' cause there are some formats
@@ -289,7 +328,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         psdFile = self._getPsdPath(micDir)
         ctffitFile = self._getCtfFitOutPath(micDir)
         pwutils.moveFile(micFnCtf, psdFile)
-        pwutils.moveFile(micFnCtfFit, ctffitFile)
+        #pwutils.moveFile(micFnCtfFit, ctffitFile)
         pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
         # Let's notify that this micrograph has been processed
@@ -452,6 +491,9 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--convsize %d " % self.convsize.get()
         self._args += "--do_Hres_ref %d " % (1 if self.doHighRes else 0)
 
+        if getVersion() not in ['0.50', '1.06']:
+            self._args += "--smooth_resL %d " % self.smoothResL.get()
+
         if getVersion() == '0.50':
             self._args += "--do_basic_rotave %d " % (1 if self.doBasicRotave else 0)
         else:
@@ -462,6 +504,10 @@ class ProtGctf(em.ProtCTFMicrographs):
                 self._args += "--phase_shift_H %f " % self.phaseShiftH.get()
                 self._args += "--phase_shift_S %f " % self.phaseShiftS.get()
                 self._args += "--phase_shift_T %d " % (1 + self.phaseShiftT.get())
+
+                if getVersion() not in ['0.50', '1.06']:
+                    self._args += "--cosearch_refine_ps %d " % (1 if self.coSearchRefine else 0)
+                    self._args += "--refine_2d_T %d " % self.refine2DT.get()
 
         if self.doHighRes:
             self._args += "--Href_resL %d " % self.HighResL.get()
