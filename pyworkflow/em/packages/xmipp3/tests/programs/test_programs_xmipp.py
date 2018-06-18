@@ -335,12 +335,13 @@ class CtfGroup(XmippProgramTest):
     def getProgram(cls):
         return 'xmipp_ctf_group'
 
+    #  FIXME: replace ctf2_* to ctf_* from -o arg and outputs
     def test_case1(self):
-        self.runCase("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6",
-                outputs=["ctf_ctf.xmp","ctfInfo.xmd","ctf_wien.xmp"])
+        self.runCase("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf2 --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6",
+                outputs=["ctf2_ctf.xmp","ctf2Info.xmd","ctf2_wien.xmp"])
     def test_case2(self):
-        self.runCase("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc",
-                outputs=["ctf_ctf.xmp","ctfInfo.xmd","ctf_wien.xmp"])
+        self.runCase("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf2 --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc",
+                outputs=["ctf2_ctf.xmp","ctf2Info.xmd","ctf2_wien.xmp"])
 
 
 class CtfPhaseFlip(XmippProgramTest):
@@ -799,10 +800,10 @@ class PdbNmaDeform(XmippProgramTest):
     def getProgram(cls):
         return 'xmipp_pdb_nma_deform'
 
-    def test_case1(self):
-        self.runCase("--pdb 2tbv.pdb -o deformed.pdb --nma modelist.xmd --deformations 1000",
+    def test_case1(self):  # FIXME: change deformed2.pdb to deformed.pdb at -o arg and output
+        self.runCase("--pdb 2tbv.pdb -o deformed2.pdb --nma modelist.xmd --deformations 1000",
                 preruns=["cp input/2tbv* %o ; cp input/modelist.xmd %o ; cp input/mode0.mod0028 %o" ],
-                outputs=["deformed.pdb"],
+                outputs=["deformed2.pdb"],
 		changeDir=True)
 
 
