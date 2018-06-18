@@ -296,13 +296,11 @@ class ProtGctf(em.ProtCTFMicrographs):
 
             if getVersion() not in ['0.50', '1.06']:
                 ext = 'pow' if not self.doEPA else 'epa'
-                extEpa = ''  # this output does not exist anymore?
             else:
                 ext = 'ctf'
-                extEpa = '_EPA.log'
 
             micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, ext))
-            micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + extEpa)
+            micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
 
             if downFactor != 1:
                 # Replace extension by 'mrc' cause there are some formats
@@ -335,7 +333,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         psdFile = self._getPsdPath(micDir)
         ctffitFile = self._getCtfFitOutPath(micDir)
         pwutils.moveFile(micFnCtf, psdFile)
-        #pwutils.moveFile(micFnCtfFit, ctffitFile)
+        pwutils.moveFile(micFnCtfFit, ctffitFile)
         pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
         # Let's notify that this micrograph has been processed
@@ -353,13 +351,11 @@ class ProtGctf(em.ProtCTFMicrographs):
 
         if getVersion() not in ['0.50', '1.06']:
             ext = 'pow' if not self.doEPA else 'epa'
-            extEpa = ''  # this output does not exist anymore?
         else:
             ext = 'ctf'
-            extEpa = '_EPA.log'
 
         micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, ext))
-        micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + extEpa)
+        micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
 
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
@@ -382,7 +378,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         except:
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
         pwutils.moveFile(micFnCtf, psdFile)
-        #pwutils.moveFile(micFnCtfFit, ctffitFile)
+        pwutils.moveFile(micFnCtfFit, ctffitFile)
         pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
         pwutils.cleanPattern(micFnMrc)
 
