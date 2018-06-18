@@ -96,7 +96,7 @@ class XmippProtNMABase(EMProtocol):
     def computeModesStep(self, fnPseudoatoms, numberOfModes, cutoffStr):
         (baseDir,fnBase)=os.path.split(fnPseudoatoms)
         fnBase=fnBase.replace(".pdb","")
-        fnDistanceHist=os.path.join(baseDir,'extra','atoms_distance.hist')
+        fnDistanceHist=os.path.join(baseDir,'extra',fnBase+'_distance.hist')
         rc = self._getRc(fnDistanceHist)
         self._enterWorkingDir()
         self.runJob('nma_record_info.py', "%d %s.pdb %d" % (numberOfModes, fnBase, rc),env=getNMAEnviron())

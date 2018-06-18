@@ -385,6 +385,8 @@ class Icon():
     ROOT = 'root.png'
     ROCKET = 'fa-rocket.png'
 
+    SCIPION_ICON = 'scipion_bn_icon.png'
+
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
     LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
