@@ -165,6 +165,7 @@ class Target:
         self._env = env
         self._name = name
         self._default = kwargs.get('default', False)
+        self._always = kwargs.get('always', False)  # Adding always here to allow getting to Commands where always=True
         self._commandList = list(commands)  # copy the list/tuple of commands
         self._finalCommands = [] # their targets will be used to check if we need to re-build
         self._deps = [] # names of dependency targets
@@ -202,7 +203,7 @@ class Target:
         t1 = time.time()
 
         print(green("Building %s ..." % self._name))
-        if self._existsAll():
+        if not self._always and self._existsAll():
             print("  All targets exist, skipping.")
         else:
             for command in self._commandList:
@@ -511,7 +512,7 @@ class Environment:
 
         target = name if target is None else target
         pipCmd = pipCmd or self._pipCmd % (name, version)
-        t = self.addTarget(name, default=default)
+        t = self.addTarget(name, default=default, always=True)  # we set always=True to let pip decide if updating
 
         # Add the dependencies
         if ignoreDefaultDeps:
@@ -522,7 +523,9 @@ class Environment:
 
         t.addCommand(pipCmd,
                      final=True,
-                     targets="%s/%s" % (self.getPythonPackagesFolder(), target))
+                     targets="%s/%s" % (self.getPythonPackagesFolder(), target),
+                     always=True  # execute pip command always. Pip will handle target existence
+                     )
 
         return t
 

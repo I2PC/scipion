@@ -95,13 +95,22 @@ class PluginInfo(object):
                                              target="%s*" % self.pipName.replace('-', '_'),
                                              pipCmd=cmd,
                                              ignoreDefaultDeps=True)
+        reloadPkgRes = self.isInstalled()  # check if we're doing a version change of an already installed plugin
         environment.execute()
-
+        if reloadPkgRes:
+            # if plugin was already installed, pkg_resources has the old one so it needs a reload
+            reload(pkg_resources)
         # we already have a dir for the plugin:
         self.dirName = self.getDirName()
 
         # link pip module in em/packages
-        os.symlink(self.getPipPath(), self.getEmPackagesLink())
+        try:
+            os.symlink(self.getPipPath(), self.getEmPackagesLink())
+        except OSError:
+            if os.path.islink(self.getEmPackagesLink()):
+                return True
+            else:
+                raise
 
         return True
 
