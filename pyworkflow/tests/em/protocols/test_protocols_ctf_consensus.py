@@ -43,7 +43,7 @@ MIC_SQLITE = "micrographs.sqlite"
 MIC_DISCARDED_SQLITE = "micrographsDiscarded.sqlite"
 
 
-class TestCtfSelection(BaseTest):
+class TestCtfConsensus(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -131,7 +131,7 @@ class TestCtfSelection(BaseTest):
         }
 
         protCTFSel2 = self.newProtocol(XmippProtCTFSelection, **kwargs)
-        protCTFSel2.inputCTF.set(protCTFSel.outputCTF)
+        protCTFSel2.inputCTF.set(protCTFSel.outputCTFDiscarded)
         self.proj.launchProtocol(protCTFSel2)
 
         counter = 1
