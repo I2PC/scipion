@@ -336,7 +336,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                        row.getValue(md.RLN_IMAGE_COORD_Y))
 
                 if pos in posSet:
-                    print("Duplicate coordinate at: %s, IGNORED. " % pos)
+                    print("Duplicate coordinate at: %s, IGNORED. " % str(pos))
                     coord = None
                 else:
                     coord = coordDict.get(pos, None)
