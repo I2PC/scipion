@@ -132,7 +132,11 @@ class ProtUnionSet(ProtSets):
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
 
         # Read ClassName and create the corresponding EMSet (SetOfParticles...)
-        outputSet = getattr(self, "_create%s" % set1.getClassName())()
+        if set1.getClassName() == "SetOfClasses2D":
+            imgs = set1.getImages()
+            outputSet = getattr(self, "_create%s" % set1.getClassName())(imgs)
+        else:
+            outputSet = getattr(self, "_create%s" % set1.getClassName())()
 
         # Copy info from input sets (sampling rate, etc).
         outputSet.copyInfo(set1)  # all sets must have the same info as set1!
