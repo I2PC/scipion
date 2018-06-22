@@ -1399,7 +1399,7 @@ private:
         for (size_t myn = 0; myn < NSIZE(data); myn++)
         {
 
-            std::cout<<page+pagesizeHalf<<" "<<pagesizeHalf<<std::endl;
+            std::cout<<"ww: " << page+pagesizeHalf<<" "<<pagesizeHalf<<std::endl;
 
             //Read page from disc
             if (fread(page+pagesizeHalf, pagesizeHalf, 1, fimg) != 1)
