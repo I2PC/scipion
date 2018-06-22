@@ -303,11 +303,6 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
                 MD[i].setValue(MDL_ORIGIN_Z, -header->nzStart/aux);
         }
     }
-    //#define DEBUG
-#ifdef DEBUG
-    std::cout<<MDMainHeader<<std::endl;
-    std::cout<<MD<<std::endl;
-#endif
 
     delete header;
 
