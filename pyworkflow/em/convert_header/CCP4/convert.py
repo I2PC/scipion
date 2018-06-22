@@ -43,15 +43,24 @@ ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
 START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
 
+def deleteEnv(name):
+    if name in os.environ:
+        os.environ.pop(name)
+
 def getEnviron(ccp4First=True):
     environ = pwutils.Environ(os.environ)
     pos = pwutils.Environ.BEGIN if ccp4First else pwutils.Environ.END
     _ccp4_home = os.environ['CCP4_HOME']
     _ccp4_master, _dir = os.path.split(_ccp4_home)
     _username = getpass.getuser()
+    deleteEnv("CCP4_MASTER")
+
     environ.update({
             'PATH': os.path.join(_ccp4_home, 'bin'),
-            'LD_LIBRARY_PATH': os.path.join(_ccp4_home, 'lib'),
+            'LD_LIBRARY_PATH': os.path.join(_ccp4_home, 'lib')
+            }, position=pos)  # add to variable
+
+    environ.update({
             # # CCP4_MASTER is the location of the top-level directory
             # # containing ccp4-N.N.N.
             # export CCP4_MASTER=/home/roberto
@@ -121,7 +130,8 @@ def getEnviron(ccp4First=True):
             # # by (ip)mosflm
             # export CCP4_HELPDIR=$CCP4/help/            # NB trailing /
             'CCP4_HELPDIR': os.path.join(_ccp4_home, 'help'),
-            }, position=pos)
+            }, position=pwutils.Environ.REPLACE)  # replace
+
     return environ
 
 def runCCP4Program(program, args="", extraEnvDict=None):
