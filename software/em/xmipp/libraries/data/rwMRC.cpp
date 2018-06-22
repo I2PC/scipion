@@ -123,7 +123,7 @@ struct MRChead
 int ImageBase::readMRC(size_t select_img, bool isStack)
 {
 #undef DEBUG
-    //#define DEBUG
+    #define DEBUG
 #ifdef DEBUG
     printf("DEBUG readMRC: Reading MRC file\n");
 #endif
@@ -210,7 +210,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         datatype = DT_UShort;
         break;
     case 101:
-        datatype = DT_UChar;
+        datatype = DT_UHalfByte;
         break;
 
     default:
@@ -227,6 +227,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     size_t datasize_n;
     datasize_n = _xDim*_yDim*_zDim;
 
+    // If mode are fourier transforms (3,4)
     if ( header->mode > 2 && header->mode < 5 )
     {
         transform = CentHerm;
@@ -241,11 +242,13 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     // 4-bits mode: If only the header is read, we pass the expanded value
     // of columns number here, else, we keep the compressed value for reading
     // purposes
-    if (header->mode == 101)
-    {
-        _xDim *= 2;
-        setDimensions(_xDim, _yDim, _zDim, _nDim);
-    }
+
+//    Header has the final dimensions!
+//    if (header->mode == 101)
+//    {
+//        _xDim *= 2;
+//        setDimensions(_xDim, _yDim, _zDim, _nDim);
+//    }
 
     MDMainHeader.setValue(MDL_MIN,(double)header->amin);
     MDMainHeader.setValue(MDL_MAX,(double)header->amax);
@@ -302,8 +305,8 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     }
     //#define DEBUG
 #ifdef DEBUG
-    MDMainHeader.write("/dev/stderr");
-    MD.write("/dev/stderr");
+    std::cout<<MDMainHeader<<std::endl;
+    std::cout<<MD<<std::endl;
 #endif
 
     delete header;
@@ -365,6 +368,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             wDType = DT_CFloat;
             header->mode = 4;
             break;
+        //case DT_UHalfByte:
         default:
             wDType = DT_Unknown;
             REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: Unsupported data type by MRC format.");

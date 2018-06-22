@@ -53,12 +53,16 @@ typedef enum
     DT_CFloat = 13,      // Complex floating point (8-byte)
     DT_CDouble = 14,     // Complex floating point (16-byte)
     DT_Bool = 15,              // Boolean (1-byte?)
-    DT_LastEntry = 16          // This must be the last entry
+    DT_UHalfByte = 16,        // For 4-bit format (e.g. mrc 4bit file)
+    DT_LastEntry = 17          // This must be the last entry
 } DataType;
 
 
 /// Returns memory size of datatype
 size_t gettypesize(DataType type);
+
+/// Returns size of a datatype at reading time
+size_t getreadtypesize(DataType type);
 
 /** Convert datatype string to datatype enum */
 DataType str2Datatype(const std::string & str);

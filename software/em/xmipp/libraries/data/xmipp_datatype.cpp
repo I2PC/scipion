@@ -35,6 +35,7 @@ size_t gettypesize(DataType type)
 
     switch ( type )
     {
+    case DT_UHalfByte:
     case DT_UChar:
     case DT_SChar:
         size = sizeof(char);
@@ -79,6 +80,16 @@ size_t gettypesize(DataType type)
     return(size);
 }
 
+// Get size of datatype at reading time
+size_t getreadtypesize(DataType type)
+{
+
+    if (type == DT_UHalfByte)
+        return (size_t) 4;
+    else
+        return gettypesize(type);
+}
+
 /** Convert datatype string to datatypr enun */
 DataType str2Datatype(const std::string & str)
 {
@@ -86,6 +97,8 @@ DataType str2Datatype(const std::string & str)
 
     if(str=="uint8")
         datatype = DT_UChar;
+    else if (str == "uhalfint8")
+        datatype = DT_UHalfByte;
     else if (str=="int8")
         datatype = DT_SChar;
     else if (str=="uint16")
@@ -123,6 +136,8 @@ std::string datatype2Str(DataType datatype)
 {
     switch ( datatype )
     {
+    case DT_UHalfByte:
+        return "uhalfint8";
     case DT_UChar:
         return "uint8";
     case DT_SChar:
@@ -160,6 +175,9 @@ std::string datatype2StrLong(DataType datatype)
 {
     switch (datatype)
     {
+    case DT_UHalfByte:
+        return "Unsigned 4 bit type (UHalfInt8)";
+        break;
     case DT_UChar:
         return "Unsigned character or byte type (UInt8)";
         break;
