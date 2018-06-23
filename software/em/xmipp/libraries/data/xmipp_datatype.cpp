@@ -85,7 +85,7 @@ size_t getreadtypesize(DataType type)
 {
 
     if (type == DT_UHalfByte)
-        return (size_t) 4;
+        return (size_t) 0.5;
     else
         return gettypesize(type);
 }
