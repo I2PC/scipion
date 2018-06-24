@@ -36,6 +36,7 @@ from pyworkflow.em.packages.ccp4.protocol_refmac import CCP4ProtRunRefmac
 from pyworkflow.em.packages.phenix.protocol_emringer import PhenixProtRunEMRinger
 from pyworkflow.tests import *
 import os.path
+import json
 
 
 class TestImportBase(BaseTest):
@@ -992,6 +993,23 @@ class TestRefmacRefinement(TestImportData):
 class TestEMRingerValidation(TestImportData):
     """ Test the protocol of EMRinger validation
     """
+    def checkResults(self, optThresh, rotRatio, maxZscore, modLength,
+                     EMScore, protEMRinger):
+        # method to check EMRinger statistic results of the Final Results Table
+        textFileName = protEMRinger._getExtraPath(
+            protEMRinger.EMRINGERTRANSFERFILENAME.replace('py', 'txt'))
+        with open(textFileName, "r") as f:
+            self.resultsDict = json.loads(str(f.read()))
+            self.assertTrue(self.resultsDict[
+                                'Optimal Threshold'] == optThresh)
+            self.assertTrue(self.resultsDict[
+                                'Rotamer-Ratio'] == rotRatio)
+            self.assertTrue(self.resultsDict[
+                                'Max Zscore'] == maxZscore)
+            self.assertTrue(self.resultsDict[
+                                'Model Length'] == modLength)
+            self.assertTrue(self.resultsDict[
+                                'EMRinger Score'] == EMScore)
 
     def testEMRingerValidationFromPDB(self):
         """ This test checks that EMRinger validation protocol runs with an
@@ -1060,14 +1078,23 @@ class TestEMRingerValidation(TestImportData):
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
 
-        #EMRinger
+        # EMRinger
         refmac_PDB = protRefmac.outputPdb
         args = {'inputVolume': volume,
-                'inputStructure': refmac_PDB
+                'inputStructure': refmac_PDB,
+                'doTest': True
                 }
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
+
+        # check EMRinger results
+        self.checkResults(optThresh = 0.6404118588609814,
+                          rotRatio = 0.8202247191011236,
+                          maxZscore = 5.2741678087896515,
+                          modLength = 121,
+                          EMScore = 4.7946980079905925,
+                          protEMRinger = protEMRinger)
 
     def testEMRingerValidationAfterChimeraAndCootAndRefmac(self):
         """ This test checks that EMRinger validation protocol runs with a
@@ -1119,12 +1146,21 @@ class TestEMRingerValidation(TestImportData):
         # EMRinger
         coot_PDB = protCoot.outputPdb_0001
         args = {'inputVolume': volume2,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'doTest': True
                 }
 
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
+
+        # check EMRinger results
+        self.checkResults(optThresh=0.8904416297331501,
+                          rotRatio=0.9166666666666666,
+                          maxZscore=2.607144567760445,
+                          modLength=121,
+                          EMScore=2.370131425236768,
+                          protEMRinger=protEMRinger)
 
         # refmac
         coot_PDB = protCoot.outputPdb_0001
@@ -1143,12 +1179,21 @@ class TestEMRingerValidation(TestImportData):
         #EMRinger
         refmac_PDB = protRefmac.outputPdb
         args = {'inputVolume': volume2,
-                'inputStructure': refmac_PDB
+                'inputStructure': refmac_PDB,
+                'doTest': True
                 }
 
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
+
+        # check EMRinger results
+        self.checkResults(optThresh=0.6400030531433041,
+                          rotRatio=0.8202247191011236,
+                          maxZscore=5.2741678087896515,
+                          modLength=121,
+                          EMScore=4.7946980079905925,
+                          protEMRinger=protEMRinger)
 
     def testEMRingerValidationAfterMultipleCootAndRefmacFit(self):
         # This test checks that EMRinger runs when a volume provided
@@ -1207,11 +1252,20 @@ class TestEMRingerValidation(TestImportData):
         # EMRinger
         coot_PDB = protCoot.outputPdb_0002
         args = {'inputVolume': volume,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'doTest': True
                 }
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
+
+        # check EMRinger results
+        self.checkResults(optThresh=0.671007165163965,
+                          rotRatio=0.6756756756756757,
+                          maxZscore=2.313625586144688,
+                          modLength=121,
+                          EMScore=2.103295987404262,
+                          protEMRinger=protEMRinger)
 
         # refmac
         coot_PDB = protCoot.outputPdb_0002
@@ -1230,11 +1284,20 @@ class TestEMRingerValidation(TestImportData):
         #EMRinger
         refmac_PDB = protRefmac.outputPdb
         args = {'inputVolume': volume,
-                'inputStructure': refmac_PDB
+                'inputStructure': refmac_PDB,
+                'doTest': True
                 }
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
+
+        # check EMRinger results
+        self.checkResults(optThresh=0.6395777794584399,
+                          rotRatio=0.8089887640449438,
+                          maxZscore=5.061428266922506,
+                          modLength=121,
+                          EMScore=4.601298424475005,
+                          protEMRinger=protEMRinger)
 
     def testEMRingerValidationSeveralChains(self):
         """ This test checks that EMRinger validation protocol runs with a
@@ -1252,9 +1315,18 @@ class TestEMRingerValidation(TestImportData):
 
         #EMRinger
         args = {'inputVolume': volume3,
-                'inputStructure': structure5_PDB
+                'inputStructure': structure5_PDB,
+                'doTest': True
                 }
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
+
+        # check EMRinger results
+        self.checkResults(optThresh=0.016682716149338486,
+                          rotRatio=0.8158347676419966,
+                          maxZscore=26.526393559321498,
+                          modLength=2587,
+                          EMScore=5.21530839370391,
+                          protEMRinger=protEMRinger)
 
