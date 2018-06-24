@@ -29,7 +29,7 @@ import glob
 import json
 
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.protocol.params import PointerParam
+from pyworkflow.protocol.params import BooleanParam, PointerParam
 from convert import runPhenixProgram, getProgram
 from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4, START
 from pyworkflow.object import String
@@ -65,6 +65,11 @@ the atomic structure backbone has been perfectly fitted to the map.
                       pointerClass="PdbFile",
                       label='Input atomic structure',
                       help="PDBx/mmCIF to be validated against the volume. ")
+        form.addParam('doTest', BooleanParam, default=False,
+                      label='Test', condition='False',
+                      help="""Saves the temporary file 
+                      'emringer_transfer.py' in the extra folder. Use for 
+                      testing""")
         form.addSection(label='Help')
         form.addLine('')
 
@@ -105,8 +110,13 @@ the atomic structure backbone has been perfectly fitted to the map.
         # string to be run by phenix python
 
         # temporary file with emringer values
-        EMRINGERTRANSFERFILENAME = self._getTmpPath(
-            self.EMRINGERTRANSFERFILENAME)
+        test = self.doTest
+        if test == True:
+            EMRINGERTRANSFERFILENAME = self._getExtraPath(
+                self.EMRINGERTRANSFERFILENAME)
+        else:
+            EMRINGERTRANSFERFILENAME = self._getTmpPath(
+                self.EMRINGERTRANSFERFILENAME)
 
         # directory with files
         plots = glob.glob(self._getExtraPath("*_plots"))[0]
