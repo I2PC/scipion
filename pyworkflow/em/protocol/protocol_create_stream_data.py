@@ -138,7 +138,7 @@ class ProtCreateStreamData(EMProtocol):
         elif self.setof == SET_OF_MICROGRAPHS:
             step = 'createStep'
         elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
-            step = 'createRandomMicAtep'
+            step = 'createRandomMicStep'
         elif self.setof == SET_OF_PARTICLES:
             step = 'createParticlesStep'
         else:
@@ -173,20 +173,41 @@ class ProtCreateStreamData(EMProtocol):
         else:
             objSet.setStreamState(objSet.STREAM_OPEN)
             acquisition = Acquisition()
-            acquisition.setMagnification(self._magnification)
-            acquisition.setVoltage(self._voltage)
-            acquisition.setSphericalAberration(self._sphericalAberration)
-            acquisition.setAmplitudeContrast(self._amplitudeContrast)
-            objSet.setAcquisition(acquisition)
-            if self.setof != SET_OF_MICROGRAPHS:
-                objSet.setSamplingRate(self.samplingRate.get())
-            else:
+            if self.setof == SET_OF_MICROGRAPHS:
+                acquisition.setMagnification(
+                    self.inputMics.get().getAcquisition().getMagnification())
+                acquisition.setVoltage(
+                    self.inputMics.get().getAcquisition().getVoltage())
+                acquisition.setSphericalAberration(
+                    self.inputMics.get().getAcquisition().getSphericalAberration())
+                acquisition.setAmplitudeContrast(
+                    self.inputMics.get().getAcquisition().getAmplitudeContrast())
+                objSet.setAcquisition(acquisition)
                 objSet.setSamplingRate(self.inputMics.get().getSamplingRate())
-            if self.setof != SET_OF_MOVIES:
-                objSet.setSamplingRate(self.samplingRate.get())
-            else:
+            elif self.setof == SET_OF_MOVIES:
+                acquisition.setMagnification(
+                    self.inputMovies.get().getAcquisition().getMagnification())
+                acquisition.setVoltage(
+                    self.inputMovies.get().getAcquisition().getVoltage())
+                acquisition.setSphericalAberration(
+                    self.inputMovies.get().getAcquisition().getSphericalAberration())
+                acquisition.setAmplitudeContrast(
+                    self.inputMovies.get().getAcquisition().getAmplitudeContrast())
+                objSet.setAcquisition(acquisition)
                 objSet.setSamplingRate(
                     self.inputMovies.get().getSamplingRate())
+            else:
+                acquisition.setMagnification(self._magnification)
+                acquisition.setVoltage(self._voltage)
+                acquisition.setSphericalAberration(self._sphericalAberration)
+                acquisition.setAmplitudeContrast(self._amplitudeContrast)
+                objSet.setAcquisition(acquisition)
+                if self.setof == SET_OF_PARTICLES:
+                    objSet.setSamplingRate(
+                        self.inputParticles.get().getSamplingRate())
+                else:
+                    objSet.setSamplingRate(self.samplingRate.get())
+
 
         if self.setof == SET_OF_MOVIES:
             obj = Movie()
@@ -221,7 +242,7 @@ class ProtCreateStreamData(EMProtocol):
         elif self.setof == SET_OF_PARTICLES:
             self._defineOutputs(outputParticles=objSet)
 
-    def _stepsCheck(self):
+    def _checkProcessedData(self):
         if self.setof == SET_OF_MOVIES:
             objSet = SetOfMovies(filename=self._getPath('movies.sqlite'))
         elif self.setof == SET_OF_MICROGRAPHS:
@@ -252,7 +273,7 @@ class ProtCreateStreamData(EMProtocol):
         newObjSet.close()
 
     def createStep(self, counter):
-
+        time.sleep(self.creationInterval.get())
         if not ProtCreateStreamData.object or self.setof == \
                 SET_OF_MICROGRAPHS or self.setof == SET_OF_MOVIES:
 
@@ -276,24 +297,16 @@ class ProtCreateStreamData(EMProtocol):
                     ImageHandler().read(newMic.getLocation())
                 self.name = "micro"
 
-
-            elif self.setof == SET_OF_PARTICLES:
-                for idx, p in enumerate(self.inputParticles.get()):
-                    if idx == counter:
-                        particle = p.clone()
-                ProtCreateStreamData.object = \
-                    ImageHandler().read(particle.getLocation())
-                self.name = "particle"
-
         # save file
         destFn = self._getExtraPath("%s_%05d" % (self.name, counter))
         ProtCreateStreamData.object.write(destFn)
         self.dictObj[destFn] = True
-        time.sleep(self.creationInterval.get())
-
+        self._checkProcessedData()
 
     def createParticlesStep(self):
         self.name = "particle"
+        time.sleep(self.creationInterval.get())
+
         for idx, p in enumerate(self.inputParticles.get()):
             if ((idx > self.counter-1) and (idx < self.nDims) and
                     (idx <= self.counter-1 + self.group)):
@@ -303,10 +316,11 @@ class ProtCreateStreamData(EMProtocol):
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
-        time.sleep(self.creationInterval.get())
-        self._stepsCheck()
+        self._checkProcessedData()
 
-    def createRandomMicAtep(self, mic):
+
+    def createRandomMicStep(self, mic):
+        time.sleep(self.creationInterval.get())
         from pyworkflow.em.packages.xmipp3 import getEnviron
 
         # create image
@@ -350,7 +364,7 @@ class ProtCreateStreamData(EMProtocol):
         args += " --sampling %f" % self.samplingRate
         self.runJob("xmipp_transform_filter", args, env=getEnviron())
         self.dictObj[baseFnImageCTF] = True
-        time.sleep(self.creationInterval.get())
+        self._checkProcessedData()
 
     # -------------------------- INFO functions ------------------------------
     def _validate(self):

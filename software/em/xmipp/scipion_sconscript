@@ -59,7 +59,7 @@ opencv = env.GetOption('opencv') and get('OPENCV')
 
 if opencv:
     opencvLibs = ['opencv_core',
-                  'opencv_legacy',
+                  # 'opencv_legacy',
                   'opencv_imgproc',
                   'opencv_video',
                   'libopencv_calib3d']
@@ -606,6 +606,7 @@ for p in ['angular_break_symmetry',
           'pdb_construct_dictionary',
           'pdb_nma_deform',
           'pdb_restore_with_dictionary',
+          'pdb_reduce_pseudoatoms',
           'phantom_create',
           'phantom_project',
           'phantom_simulate_microscope',
