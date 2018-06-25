@@ -25,76 +25,68 @@
 # **************************************************************************
 
 import os
-
-import pyworkflow.utils as pwutils
-from pyworkflow import VERSION_1_2
-from pyworkflow.em import PdbFile
-from pyworkflow.em import Volume
-from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.convert_header.CCP4.convert import (getProgram,
-                                                       copyMRCHeader,
-                                                       runCCP4Program,
-                                                       cootPdbTemplateFileName,
-                                                       cootScriptFileName,
-                                                       START
-                                                       )
-from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
-    FloatParam, BooleanParam, StringParam
+from pyworkflow.protocol.params import PointerParam, FloatParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import STATUS_FINISHED
+from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4, START
 from convert import runPhenixProgram
 
 class PhenixProtRunMolprobity(EMProtocol):
-    """EMRinger is a Phenix application to validate the agreement between
-the initial map and the derived atomic structure.
+    """MolProbity is a Phenix application to validate the geometry of an
+atomic structure derived from a cryo-EM density map.
 """
     _label = 'molprobity: model validation'
     _program = ""
     #_version = VERSION_1_2
-    # MOLPROBITY = '/usr/local/phenix-1.13-2998/modules/cctbx_project' \
-    #            '/mmtbx/command_line/molprobity.py'
     MOLPROBITY = 'molprobity.py'
+    MOLPROBITYFILE = 'molprobity.mrc'
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputVolume', MultiPointerParam, pointerClass="Volume",
-                      label='Input Volume', allowsNull=False,
-                      help="Set the starting input volume")
+        form.addParam('inputVolume', PointerParam, pointerClass="Volume",
+                      label='Input Volume', allowsNull=True,
+                      help="Set the starting volume")
         form.addParam('resolution', FloatParam, allowsNull=False,
                       label='Resolution (A):',
                       help='Set the resolution of the input volume')
-        form.addParam('imputPdbFile', PointerParam,
+        form.addParam('inputStructure', PointerParam,
                       pointerClass="PdbFile", allowsNull=False,
                       label='Input atomic structure',
-                      help="Set the PDBx/mmCIF to be validated against the "
-                           "volume. ")
-        form.addSection(label='Help')
-        form.addLine('')
+                      help="Set the PDBx/mmCIF to be validated.")
 
-        # --------------------------- INSERT steps functions ---------------
+    # --------------------------- INSERT steps functions --------------------
 
     def _insertAllSteps(self):
+        self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('runMolprobityStep')
 
     # --------------------------- STEPS functions --------------------------
 
+    def convertInputStep(self):
+        """ convert 3D maps to MRC '.mrc' format
+        """
+        vol = self._getInputVolume()
+        inVolName = vol.getFileName()
+        newFn = self._getTmpPath(self.MOLPROBITYFILE)
+        origin = vol.getOrigin(force=True).getShifts()
+        sampling = vol.getSamplingRate()
+        adaptFileToCCP4(inVolName, newFn, origin, sampling, START)  # ORIGIN
+
     def runMolprobityStep(self):
 
-        args = ""
-
         # PDBx/mmCIF
-        pdb = os.path.abspath(self.imputPdbFile.get().getFileName())
+        pdb = os.path.abspath(self.inputStructure.get().getFileName())
         args = ""
         args += pdb
         # starting volume (.mrc)
-        vol = self.inputVolume().get()
+        vol = os.path.abspath(self._getTmpPath(self.MOLPROBITYFILE))
         inFileName = vol.getFileName()
         volume = os.path.abspath(inFileName)
-        args += volume
-        args += self.resolution
+        args += "map_file_name=" + volume
+        args += "d_min=" + self.resolution.get()
+        print "PROGRAM: ", (self.MOLPROBITY + ' ' + args)
 
         # script with auxiliary files
 
@@ -199,195 +191,9 @@ the initial map and the derived atomic structure.
 
     # --------------------------- UTILS functions --------------------------
 
-#     def _getVolumeFileName(self, inFileName):
-#         return os.path.join(self._getExtraPath(''),
-#                             pwutils.replaceBaseExt(inFileName, 'mrc'))
-#
-#     def replace_at_index(self, tup, ix, val):
-#         return tup[:ix] + (val,) + tup[ix+1:]
-#
-#     def getCounter(self):
-#         template = self._getExtraPath(cootPdbTemplateFileName)
-#         counter = 1
-#         while os.path.isfile(template % counter):
-#             counter += 1
-#         return counter  # returns next free
-#
-# cootScriptHeader = '''import ConfigParser
-# import os
-# from subprocess import call
-# mydict={}
-# mydict['imol']=%d
-# mydict['aa_main_chain']="B"
-# mydict['aa_auxiliary_chain']="BB"
-# mydict['aaNumber']=37
-# mydict['step']=5
-# mydict['outfile']='%s'
-# '''
-#
-# cootScriptBody = '''
-#
-# def beep(time):
-#    """I simply do not know how to create a portable beep sound.
-#       This system call seems to work pretty well if you have sox
-#       installed"""
-#    try:
-#       command = "play --no-show-progress -n synth %f sin 880"%time
-#       print command
-#       os.system(command)
-#    except:
-#       pass
-#
-# def _change_chain_id(signStep):
-#     """move a few aminoacid between chains"""
-#     global mydict
-#     dic = dict(mydict)
-#     if signStep < 0:
-#         dic['fromAaNumber'] = mydict['aaNumber'] - dic['step'] +1
-#         dic['toAaNumber']   = mydict['aaNumber']
-#         dic['fromAaChain']  = mydict['aa_auxiliary_chain']
-#         dic['toAaChain']    = mydict['aa_main_chain']
-#     else:
-#         dic['fromAaNumber'] = mydict['aaNumber']
-#         dic['toAaNumber']   = mydict['aaNumber'] + dic['step'] -1
-#         dic['fromAaChain']  = mydict['aa_main_chain']
-#         dic['toAaChain']    = mydict['aa_auxiliary_chain']
-#     mydict['aaNumber'] = mydict['aaNumber'] + (dic['step'] * signStep)
-#     command = "change_chain_id(%(imol)d, '%(fromAaChain)s', '%(toAaChain)s', 1, %(fromAaNumber)d, %(toAaNumber)d)"%dic
-#
-#     doIt(command)
-#
-# def _refine_zone(signStep):
-#     """Execute the refine command"""
-#     global  mydict
-#     dic = dict(mydict)
-#     if signStep <0:
-#         dic['fromAaNumber'] = mydict['aaNumber'] - dic['step']
-#         dic['toAaNumber']   = mydict['aaNumber'] + 2
-#         mydict['aaNumber']  = mydict['aaNumber'] - dic['step']
-#     else:
-#         dic['fromAaNumber'] = mydict['aaNumber'] - 2
-#         dic['toAaNumber']   = mydict['aaNumber'] + dic['step']
-#         mydict['aaNumber']  = mydict['aaNumber'] + dic['step']
-#     command = 'refine_zone(%(imol)s, "%(aa_main_chain)s", %(fromAaNumber)d, %(toAaNumber)d, "")'%dic
-#
-#     doIt(command)
-#
-# def _updateMol():
-#     """update global variable using a file as
-#     [myvars]
-#     imol: 0
-#     aa_main_chain: A
-#     aa_auxiliary_chain: AA
-#     aaNumber: 82
-#     step: 15
-#     called /tmp/coot.ini"""
-#     global mydict
-#     config = ConfigParser.ConfigParser()
-#     config.read(os.environ.get('COOT_INI',"/tmp/coot.ini"))
-#     try:
-#         mydict['imol']               = int(config.get("myvars", "imol"))
-#         mydict['aa_main_chain']      = config.get("myvars", "aa_main_chain")
-#         mydict['aa_auxiliary_chain'] = config.get("myvars","aa_auxiliary_chain")
-#         mydict['aaNumber']           = int(config.get("myvars", "aaNumber"))
-#         mydict['step']               = int(config.get("myvars", "step"))
-#         mydict['outfile']            = config.get("myvars", "outfile")
-#     except ConfigParser.NoOptionError:
-#         pass
-#     beep(0.1)
-#
-# def getOutPutFileName(template):
-#     """get name based on template that does not exists
-#     %04d will be incremented untill it does not exists"""
-#     counter=1
-#     if "%04d" in template:
-#         while os.path.isfile(template%counter):
-#              counter += 1
-#
-#     return template%counter
-#
-# def _write():
-#     """write pdb file, default names
-#        can be overwritted using coot.ini"""
-#     #imol = getOutPutFileName(mydict['imol'])
-#     #outFile = getOutPutFileName(mydict['outfile'])
-#     dic = dict(mydict)
-#     dic['outfile']=getOutPutFileName(dic['outfile'])
-#     command = "write_pdb_file(%(imol)s,'%(outfile)s')"%dic
-#     doIt(command)
-#     beep(0.1)
-#
-# def scipion_write(imol=0):
-#     """scipion utility for writting files
-#     args: model number, 0 by default"""
-#     global mydict
-#     mydict['imol']=imol
-#     _write()
-#
-# def doIt(command):
-#     """launch command"""
-#     eval(command)
-#     #beep(0.1)
-#
-# def _printEnv():
-#     for key in os.environ.keys():
-#        print "%30s %s \\n" % (key,os.environ[key])
-#
-# def _finishProj():
-#     global mydict
-#     filenName = mydict['outfile']%1
-#     dirPath = os.path.dirname(filenName)
-#     fileName = os.path.join(dirPath,"STOPPROTCOL")
-#     open(fileName,"w").close()
-#     beep(0.1)
-#
-# #change chain id
-# add_key_binding("change_chain_id_down","x", lambda: _change_chain_id(-1))
-# add_key_binding("change_chain_id_down","X", lambda: _change_chain_id(1))
-#
-# #refine aminoacid segment
-# add_key_binding("refine zone m","z", lambda: _refine_zone(1))
-# add_key_binding("refine zone m","Z", lambda: _refine_zone(-1))
-#
-# #update global variables
-# add_key_binding("init global variables","U", lambda: _updateMol())
-#
-# #write file
-# add_key_binding("write pdb file","w", lambda: _write())
-#
-# #print environ
-# add_key_binding("print enviroment","E", lambda: _printEnv())
-#
-# #finish project
-# add_key_binding("finish project","e", lambda: _finishProj())
-#
-# '''
-#
-#
-# def createScriptFile(imol,  # problem PDB id
-#                      scriptFile,  # name of temporary script file
-#                                   # loads pdbs, 3Dmap and commands defined
-#                                   # by the user
-#                      pdbFile,  # output PDB file
-#                      listOfMaps,  # 3Dmaps to be loaded, first one is the
-#                                   # reference
-#                      listOfPDBs,  # PDB to be loaded, first one
-#                                   # is the problem PDB
-#                      extraCommands=''  # extra commands to add at the
-#                                        # end of the file
-#                                        # mainly used for testing
-#                      ):
-#     f = open(scriptFile, "w")
-#     f.write(cootScriptHeader % (imol, pdbFile))
-#     f.write(cootScriptBody)
-#     # load PDB and MAP
-#     f.write("\n#load Atomic Structures\n")  # problem atomic structure must be
-#     # model 0
-#     for pdb in listOfPDBs:
-#         f.write("read_pdb('%s')\n" % pdb)
-#     f.write("\n#load 3D maps\n")
-#     for vol in listOfMaps:
-#         f.write("handle_read_ccp4_map('%s', 0)\n" % vol)
-#     f.write("\n#Extra Commands\n")
-#     f.write(extraCommands)
-#     f.close()
+    def _getInputVolume(self):
+        if self.inputVolume.get() is None:
+            fnVol = self.inputStructure.get().getVolume()
+        else:
+            fnVol = self.inputVolume.get()
+        return fnVol
