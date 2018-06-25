@@ -28,7 +28,7 @@ from pyworkflow.em.convert_header.CCP4.convert import getEnviron
 _logo = "phenix.png"
 
 from protocol_emringer import PhenixProtRunEMRinger
-from protocol_molprobity import PhenixProtRunMolprobity
+#from protocol_molprobity import PhenixProtRunMolprobity
 from viewer_emringer import PhenixProtRunEMRingerViewer
 
 _environ = getEnviron()
