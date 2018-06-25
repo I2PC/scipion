@@ -181,7 +181,7 @@ class PluginInfo(object):
             if len(scipionVersions) == 0:
                 print("WARNING: %s's release %s did not specify a compatible Scipion version" % (self.pipName,
                                                                                                  release))
-            elif any([v <= parse_version(SCIPION_VERSION) for v in scipionVersions]):
+            elif any([v <= parse_version(SCIPION_VERSION.strip('v')) for v in scipionVersions]):
                 if parse_version(latestCompRelease) < parse_version(release):
                     latestCompRelease = release
                 releases[release] = releaseData
