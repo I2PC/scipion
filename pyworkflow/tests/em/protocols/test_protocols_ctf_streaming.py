@@ -36,7 +36,7 @@ from pyworkflow.em.packages.gctf import ProtGctf
 from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
-MICS = os.environ.get('SCIPION_TEST_MICS', 3)
+MICS = os.environ.get('SCIPION_TEST_MICS', 6)
 CTF_SQLITE = "ctfs.sqlite"
 
 
@@ -58,9 +58,26 @@ class TestCtfStreaming(BaseTest):
         """ Import several Particles from a given pattern.
         """
         def checkOutputs(prot):
+
+            t0 = time.time()
+
             while not (prot.isFinished() or prot.isFailed()):
+
+                # Time out 6 minutes, just in case
+                tdelta = time.time() -t0
+                if tdelta > 6*60:
+                    break
+
                 time.sleep(10)
+
                 prot = self._updateProtocol(prot)
+
+                # Check if the protocol is still launched
+                if prot.isLaunched():
+                    break
+                elif prot.isScheduled():
+                    continue
+
                 if prot.hasAttribute("outputCTF"):
                     ctfSet = SetOfCTF(filename=prot._getPath(CTF_SQLITE))
                     baseFn = prot._getPath(CTF_SQLITE)
@@ -82,6 +99,7 @@ class TestCtfStreaming(BaseTest):
                                  "in %s." % prot.getClassName())
             self.assertEqual(prot.outputCTF.getSize(), MICS)
 
+        # Simulate streaming with create stream data protocol
         kwargs = {'xDim': 4096,
                   'yDim': 4096,
                   'nDim': MICS,
@@ -95,76 +113,50 @@ class TestCtfStreaming(BaseTest):
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
 
-        # wait until a micrograph has been created
-        counter = 1
-        while not protStream.hasAttribute('outputMicrographs'):
-            time.sleep(10)
-            protStream = self._updateProtocol(protStream)
-            if counter > 10:
-                break
-            counter += 1
-
-        # run ctffind4
-        # then introduce monitor, checking all the time ctf and saving to
-        # database
+        # 1st ctf - ctffind4 in streaming
         protCTF = ProtCTFFind(useCftfind4=True)
-        #time.sleep(10)
-        protCTF.inputMicrographs.set(protStream.outputMicrographs)
+
+        protCTF.inputMicrographs.set(protStream)
+        protCTF.inputMicrographs.setExtended('outputMicrographs')
         protCTF.ctfDownFactor.set(2)
         protCTF.findPhaseShift.set(True)
         protCTF.slowSearch.set(False)
         protCTF.highRes.set(0.4)
         protCTF.lowRes.set(0.05)
         protCTF.numberOfThreads.set(4)
-        self.proj.launchProtocol(protCTF, wait=True)
-        checkOutputs(protCTF)
+        self.proj.scheduleProtocol(protCTF)
 
+        # 2nd ctf - Xmipp CTF
         kwargs = {'ctfDownFactor': 2,
-                  'numberOfThreads': 3
+                  'numberOfThreads': 4
                   }
         protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
-        protCTF2.inputMicrographs.set(protStream.outputMicrographs)
-        self.proj.launchProtocol(protCTF2)
-        checkOutputs(protCTF2)
+        protCTF2.inputMicrographs.set(protStream)
+        protCTF2.inputMicrographs.setExtended('outputMicrographs')
+        self.proj.scheduleProtocol(protCTF2)
+
         
-        # run gctf
-        # check if box has nvidia cuda libs.
+        # 3rd ctf - Gctf
+        protCTF3 = None
         try:
+            # check if box has nvidia cuda libs.
             nvmlInit()  # fails if not GPU attached
             protCTF3 = ProtGctf()
-            protCTF3.inputMicrographs.set(protStream.outputMicrographs)
+            protCTF3.inputMicrographs.set(protStream)
+            protCTF3.inputMicrographs.setExtended('outputMicrographs')
             protCTF3.ctfDownFactor.set(2)
-            self.proj.launchProtocol(protCTF3, wait=False)
-            checkOutputs(protCTF3)
+            self.proj.scheduleProtocol(protCTF3)
 
         except NVMLError, err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
 
+        # Check first ctf output - Ctffind
+        checkOutputs(protCTF)
 
-        # run xmipp ctf. Since this is the slower method wait until finish
-        # before running asserts
-        kwargs = {
-            'numberOfThreads': MICS + 1}
-        protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
-        protCTF2.inputMicrographs.set(protStream.outputMicrographs)
-        protCTF2.ctfDownFactor.set(2)
+        # Check 2nd ctf output - Xmipp
+        checkOutputs(protCTF2)
 
-        self.proj.launchProtocol(protCTF2, wait=True)
-
-        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
-
-        baseFn = protCTF._getPath(CTF_SQLITE)
-        self.assertTrue(os.path.isfile(baseFn))
-
-        self.assertSetSize(ctfSet, MICS, "Ctffind4 output size does not match")
-
-        for ctf in ctfSet:
-            self.assertNotEqual(ctf.getPhaseShift(), None)
-            self.assertNotEqual(ctf._resolution.get(), None)
-            self.assertNotEqual(ctf._fitQuality.get(), None)
-            self.assertNotEqual(ctf.isEnabled(), None)
-            self.assertNotEqual(ctf._defocusU.get(), None)
-            self.assertNotEqual(ctf._defocusV.get(), None)
-            self.assertNotEqual(ctf._defocusRatio.get(), None)
-
+        # If GPU and therefore GCTF protocl
+        if protCTF3 is not None:
+            checkOutputs(protCTF3)

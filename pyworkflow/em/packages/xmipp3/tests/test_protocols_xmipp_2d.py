@@ -27,6 +27,8 @@
 # **************************************************************************
 
 from __future__ import print_function
+
+from pyworkflow.tests.test_utils import wait
 from pyworkflow.utils import magentaStr
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
@@ -408,15 +410,14 @@ class TestXmippScreenParticles(TestXmippBase):
         protStream.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protStream, wait=False)
 
-        while not protStream.hasAttribute('outputParticles'):
-            time.sleep(3)
-            protStream = self._updateProtocol(protStream)
 
         print("Run Screen Particles")
         protScreen = self.newProtocol(xpsp)
-        protScreen.inputParticles.set(protStream.outputParticles)
-        self.launchProtocol(protScreen)
+        protScreen.inputParticles.set(protStream)
+        protScreen.inputParticles.setExtended("outputParticles")
+        self.proj.scheduleProtocol(protScreen)
 
+        wait(lambda: not self._updateProtocol(protScreen).isFinished(), timeout=300)
         protScreen = self._updateProtocol(protScreen)
         self.assertEqual(protScreen.outputParticles.getSize(), 76)
 
@@ -477,31 +478,45 @@ class TestXmippTriggerParticles(TestXmippBase):
     def test_triggerPart(self):
         print("Start Streaming Particles")
         protStream = self.newProtocol(ProtCreateStreamData, setof=3,
-                                      creationInterval=2, nDim=76, groups=10)
+                                      creationInterval=8, nDim=76, groups=10)
         protStream.inputParticles.set(self.protImport.outputParticles)
         self.proj.launchProtocol(protStream, wait=False)
 
-        while not protStream.hasAttribute('outputParticles'):
-            time.sleep(3)
-            protStream = self._updateProtocol(protStream)
 
         print("Run Trigger Particles")
         protTrigger = self.newProtocol(XmippProtTriggerData,
                                        allParticles=False, outputSize=50,
                                        checkInterval=2)
-        protTrigger.inputParticles.set(protStream.outputParticles)
-        self.proj.launchProtocol(protTrigger, wait=False)
+        protTrigger.inputParticles.set(protStream)
+        protTrigger.inputParticles.setExtended("outputParticles")
+        self.proj.scheduleProtocol(protTrigger)
 
         protTrigger2 = self.newProtocol(XmippProtTriggerData,
                                        allParticles=True, outputSize=50,
                                        checkInterval=2)
-        protTrigger2.inputParticles.set(protStream.outputParticles)
-        self.launchProtocol(protTrigger2)
+        protTrigger2.inputParticles.set(protStream)
+        protTrigger2.inputParticles.setExtended("outputParticles")
+        self.proj.scheduleProtocol(protTrigger2)
 
-        protTrigger = self._updateProtocol(protTrigger)
-        self.assertEqual(protTrigger.outputParticles.getSize(), 50)
-        self.assertEqual(protTrigger2.outputParticles.getSize(), 76)
 
+        self.checkResults(protTrigger, 50)
+        self.checkResults(protTrigger2, 76)
+
+
+    def checkResults(self, prot, size):
+        t0 = time.time()
+
+        while not prot.isFinished():
+
+            # Time out 4 minutes, just in case
+            tdelta = time.time() - t0
+            if tdelta > 4 * 60:
+                break
+
+            prot = self._updateProtocol(prot)
+            time.sleep(2)
+
+        self.assertSetSize(prot.outputParticles, size)
 
 class TestXmippCropResizeParticles(TestXmippBase):
     """Check protocol crop/resize particles from Xmipp."""

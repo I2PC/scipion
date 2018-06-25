@@ -868,6 +868,11 @@ class TestRelionExtractMovieParticles(TestRelionBase):
         
 class TestRelionCreate3dMask(TestRelionBase):
 
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+
     def importVolume(self):
         volFn = self.ds.getFile('import/refine3d/extra/relion_class001.mrc')
         protVol = self.newProtocol(ProtImportVolumes,

@@ -243,7 +243,7 @@ arpack = env.addLibrary(
     commands=[('cd ' + SW_BIN + '; ln -s $(which gfortran) f77',
                SW_BIN + '/f77'),
               ('cd ' + SW_TMP + '/arpack-96; make all',
-               SW_LIB +'libarpack.a')],
+               SW_LIB +'/libarpack.a')],
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
@@ -251,13 +251,28 @@ if get('CUDA'):
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
 else:
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
-opencv = env.addLibrary(
-    'opencv',
-    tar='opencv-2.4.13.tgz',
-    targets=[env.getLib('opencv_core')],
-    flags=opencvFlags,
-    cmake=True,
-    default=not noOpencv)
+
+if os.environ.get('OPENCV_VER') == '3.4.1':
+    opencvFlags.append('-DCMAKE_INSTALL_PREFIX=' + env.getSoftware())
+    opencv = env.addLibrary(
+        'opencv',
+        tar='opencv-3.4.1.tgz',
+        targets=[env.getLib('opencv_core')],
+        flags=opencvFlags,
+        # cmake=True,  # the instalation protocol have changed (e.g. mkdir build)
+        commands=[('cd ' + SW_TMP + '/opencv-3.4.1; mkdir build; cd build; '
+                   'cmake ' + ' '.join(opencvFlags) + ' .. ; '
+                   'make -j ' + str(env.getProcessors()) + '; '
+                   'make install', SW_LIB +'/libopencv_core.so')],
+        default=not noOpencv)
+else:
+    opencv = env.addLibrary(
+        'opencv',
+        tar='opencv-2.4.13.tgz',
+        targets=[env.getLib('opencv_core')],
+        flags=opencvFlags,
+        cmake=True,
+        default=not noOpencv)
 
 # ---------- Libraries required by PyTom 
 
@@ -301,6 +316,9 @@ scons = env.addModule(
 env.addPipModule('setuptools', '39.0.1')
 numpy = env.addPipModule('numpy','1.14.1')
 matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
+
+
+env.addPipModule('poster', '0.8.1', target='poster-0.8.1*')
 env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
 env.addPipModule('biopython', '1.71', target='biopython-1.71*')
 env.addPipModule('mpi4py', '1.3.1')
@@ -423,6 +441,9 @@ env.addPackage('localrec', version='1.1.0',
 
 env.addPackage('localrec', version='1.2.0',
                tar='localrec-1.2.0.tgz')
+
+env.addPackage('locscale', version='0.1',
+               tar='locscale-0.1.tgz')
 
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
