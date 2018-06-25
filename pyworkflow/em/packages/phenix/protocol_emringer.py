@@ -69,9 +69,7 @@ the atomic structure backbone has been perfectly fitted to the map.
                       label='Test', condition='False',
                       help="""Saves the temporary file 
                       'emringer_transfer.py' in the extra folder. Use for 
-                      testing""")
-        form.addSection(label='Help')
-        form.addLine('')
+                      testing""")Reme
 
     # --------------------------- INSERT steps functions ---------------
 
