@@ -28,7 +28,12 @@ This modules handles Plugin management
 """
 
 import os
+import pkg_resources
+from email import message_from_string
+from collections import OrderedDict
+
 from pyworkflow.utils import Environ
+
 
 class Plugin(object):
 
@@ -46,6 +51,8 @@ class Plugin(object):
         self.bibtex = bibtex
         # Set default env vars
         self.setDefaultEnviron()
+        # plugin pip metadata
+        self.metadata = self.getMetadata()
 
     def setDefaultEnviron(self):
         for k in self.configVars:
@@ -56,3 +63,26 @@ class Plugin(object):
     def registerPluginBinaries(self, env):
         """Overwrite in subclass"""
         pass
+
+    def getMetadata(self):
+        pipPackage = pkg_resources.get_distribution(self.name)
+        metadataLines = [l for l in pipPackage._get_metadata(pipPackage.PKG_INFO)]
+        metadataTuples = message_from_string('\n'.join(metadataLines))
+        metadata = OrderedDict()
+        for v in metadataTuples.items():
+            if v[0] == 'Keywords':
+                break
+            metadata[v[0]] = v[1]
+        return metadata
+
+    def getAuthor(self):
+        return self.metadata.get('Author', "")
+
+    def getAuthorEmail(self):
+        return self.metadata.get('Author-email', '')
+
+    def getHomePage(self):
+        return self.metadata.get('Home-page', '')
+
+    def getKeywords(self):
+        return self.metadata.get('Keywords', '')

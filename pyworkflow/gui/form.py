@@ -1307,7 +1307,7 @@ class FormWindow(Window):
         
         _addButton(Message.LABEL_CITE, Icon.ACTION_REFERENCES,
                    self._showReferences, 2)
-        _addButton(Message.LABEL_HELP ,Icon.ACTION_HELP, self._showHelp, 3)
+        _addButton(Message.LABEL_HELP, Icon.ACTION_HELP, self._showHelp, 3)
         
         return headerFrame
         
@@ -1316,8 +1316,8 @@ class FormWindow(Window):
         self.showInfo('\n'.join(self.protocol.citations()), "References")
         
     def _showHelp(self, e=None):
-        """ Show the list of references of the protocol. """
-        self.showInfo(self.protocol.getDoc(), "Help")
+        """ Show the protocol help. """
+        self.showInfo(self.protocol.getHelpText(), "Help")
         
     def _createParallel(self, runFrame, r):
         """ Create the section for MPI, threads and GPU. """
