@@ -25,12 +25,13 @@
 # **************************************************************************
 
 import os
-from pyworkflow.em.data import EMObject
+import json
+import collections
+from pyworkflow.object import String, Float, Integer
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, FloatParam
-from pyworkflow.utils.properties import Message
 from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4, START
-from convert import runPhenixProgram
+from convert import runPhenixProgram, getProgram
 
 class PhenixProtRunMolprobity(EMProtocol):
     """MolProbity is a Phenix application to validate the geometry of an
@@ -41,6 +42,19 @@ atomic structure derived from a cryo-EM density map.
     #_version = VERSION_1_2
     MOLPROBITY = 'molprobity.py'
     MOLPROBITYFILE = 'molprobity.mrc'
+    MOLPROBITYOUTFILENAME = 'molprobity.out'
+    MOLPROBITYCOOTFILENAME = 'molprobity_coot.py'
+    MOLPROBITYTRANSFERFOLDER = 'results'
+    MOLPROBITYSUMMARYFILENAME = 'summary.txt'
+    MOLPROBITYBLRESTRAINTSFILENAME = 'blrestraints.txt'
+#    mapKeyToLabel={}
+#    mapKeyToLabel['ramachandranOutliers'] = 'Ramachandran outliers'
+#    mapKeyToLabel['ramachandranFavored'] = 'Ramachandran favored'
+#    mapKeyToLabel['rotamerOutliers'] = 'Rotamer outliers'
+#    mapKeyToLabel['cbetaOutliers'] = 'C-beta outliers'
+#    mapKeyToLabel['clashscore'] = 'Clashscore'
+#    mapKeyToLabel['overallScore'] = 'Overall score'
+
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
@@ -48,7 +62,7 @@ atomic structure derived from a cryo-EM density map.
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input Volume', allowsNull=True,
                       help="Set the starting volume")
-        form.addParam('resolution', FloatParam, allowsNull=False,
+        form.addParam('resolution', FloatParam, allowsNull=True,
                       label='Resolution (A):',
                       help='Set the resolution of the input volume')
         form.addParam('inputStructure', PointerParam,
@@ -61,6 +75,7 @@ atomic structure derived from a cryo-EM density map.
     def _insertAllSteps(self):
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('runMolprobityStep')
+        self._insertFunctionStep('createOutputStep')
 
     # --------------------------- STEPS functions --------------------------
 
@@ -80,75 +95,76 @@ atomic structure derived from a cryo-EM density map.
         pdb = os.path.abspath(self.inputStructure.get().getFileName())
         args = ""
         args += pdb
+        args += " "
         # starting volume (.mrc)
-        vol = os.path.abspath(self._getTmpPath(self.MOLPROBITYFILE))
-        inFileName = vol.getFileName()
-        volume = os.path.abspath(inFileName)
-        args += "map_file_name=" + volume
-        args += "d_min=" + self.resolution.get()
-        print "PROGRAM: ", (self.MOLPROBITY + ' ' + args)
+        volume = os.path.abspath(self._getTmpPath(self.MOLPROBITYFILE))
+        args += "map_file_name=%s" % volume
+        args += " "
+        args += "d_min=%f" % self.resolution.get()
 
         # script with auxiliary files
 
-        self._log.info('Launching: ' + runPhenixProgram(self.MOLPROBITY + ' ' +
-                       args))
+        runPhenixProgram(getProgram(self.MOLPROBITY), args,
+                         cwd=self._getExtraPath())
 
 
-    # def createOutputStep(self, inVolumes, norVolumesNames, init_counter=1):
-    #     """ Copy the PDB structure and register the output object.
-    #     """
-    #     template = self._getExtraPath(cootPdbTemplateFileName)
-    #     counter = init_counter
-    #     counter -= 1
-    #     while os.path.isfile(template % counter):
-    #         pdb = PdbFile()
-    #         pdb.setFileName(template % counter)
+    def createOutputStep(self):
+        MOLPROBITYOUTFILENAME = self._getExtraPath(
+            self.MOLPROBITYOUTFILENAME)
+        self._parseFile(MOLPROBITYOUTFILENAME)
+        self._store()
+
+
+        """
+        # get molprobity information
+
+        MOLPROBITYOUTFILENAME = self._getExtraPath(
+                    self.MOLPROBITYOUTFILENAME)
+
+        self.dictSummary, self.dictBLRestraints = self._parseFile(
+            MOLPROBITYOUTFILENAME)
+        MOLPROBITYSUMMARYFILENAME = self._getExtraPath(
+            self.MOLPROBITYTRANSFERFOLDER + "/" +
+            self.MOLPROBITYSUMMARYFILENAME)
+        with open(MOLPROBITYSUMMARYFILENAME, "w") as f:
+            f.write(json.dumps(self.dictSummary))
+        MOLPROBITYBLRESTRAINTSFILENAME = self._getExtraPath(
+            self.MOLPROBITYTRANSFERFOLDER + "/" +
+            self.MOLPROBITYBLRESTRAINTSFILENAME)
+        with open(MOLPROBITYBLRESTRAINTSFILENAME, "w") as f:
+            f.write(json.dumps(self.dictBLRestraints))
+        print "AAAAAAAAAAAAAAAAAAAA: ", self.dictBLRestraints
+
+        MOLPROBITYCOOTFILENAME = self._getExtraPath(
+            self.MOLPROBITYCOOTFILENAME)
+        """
+    #         command += """with open('%s',"w") as f:
+    #     f.write(json.dumps(dataDict))
+    # """ % (EMRINGERTRANSFERFILENAME)
     #
-    #         outputs = {"outputPdb_%04d" % counter: pdb}
-    #         self._defineOutputs(**outputs)
+    #         pythonFileName = EMRINGERTRANSFERFILENAME.replace('.txt', '.py')
+    #         # write script file
+    #         with open(pythonFileName, "w") as f:
+    #             f.write(command)
     #
-    #         # self._defineOutputs(outputPdb=pdb)
-    #         self._defineSourceRelation(self.inputPdbFiles, pdb)
-    #         # self._defineSourceRelation(self.inputVolumes, self.outputPdb)
+    #         # execute file with phenix.python
+    #         runPhenixProgram("", pythonFileName)
     #
-    #         for vol in inVolumes:
-    #             self._defineSourceRelation(vol, pdb)
-    #         counter += 1
+    #         # read file in scipion python
+    #         with open(EMRINGERTRANSFERFILENAME, "r") as f:
+    #             self.stringDataDict = String(f.read())
+    #             # self.dataDict = json.loads(f.read())
     #
-    #     if not os.path.isfile(template % 2):  # only the first time get inside
-    #         # here
-    #         counter = 1
-    #         for inVol, norVolName in zip(inVolumes, norVolumesNames):
-    #             outVol = Volume()
-    #             sampling = inVol.getSamplingRate()
-    #             origin = inVol.getOrigin(
-    #                 force=True)
-    #             outVol.setSamplingRate(sampling)
-    #             outVol.setOrigin(origin)
-    #
-    #             if norVolName.endswith('.mrc'):
-    #                 norVolName = norVolName + ":mrc"
-    #             outFileName = self._getVolumeFileName(norVolName)
-    #             outVol.setFileName(outFileName)
-    #             outputs = {"output3DMap_%04d" % counter: outVol}
-    #             counter += 1
-    #             self._defineOutputs(**outputs)
-    #             self._defineSourceRelation(inVol, outVol)
-    #     if os.path.isfile(self._getExtraPath('STOPPROTCOL')):
-    #         self.setStatus(STATUS_FINISHED)
-    #         # NOTE: (ROB) can a derthy way to make an interactive process finish but I do not
-    #         # think there is a clean one
-    #         self._steps[self.step-1].setInteractive(False)
+    #         self._store()
+
 
     # --------------------------- INFO functions ---------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
-        #program = getProgram(self.EMRINGER)
-        program = runPhenixProgram(self.MOLPROBITY)
+        program = getProgram(self.MOLPROBITY)
         if program is None:
             errors.append("Missing variables MOLPROBITY and/or PHENIX_HOME")
-            print "AAAAAAAAAAAAAAA: ", program, "  ", os.path(program)
         elif not os.path.exists(program):
             errors.append("Binary '%s' does not exists.\n" % program)
 
@@ -161,29 +177,43 @@ atomic structure derived from a cryo-EM density map.
             if program is not None:
                 errors.append("Current values:")
                 errors.append("PHENIX_HOME = %s" % os.environ['PHENIX_HOME'])
-                errors.append("MOLPROBITY= %s" % self.EMRINGER)
+                errors.append("MOLPROBITY = %s" % self.MOLPROBITY)
 
         # Check that the input volume exist
-        if (not self.imputPdbFile.get().hasVolume()) \
-                and self.inputVolume is None:
-            errors.append("Error: You should provide a volume.\n")
+        # if self._getInputVolume() is None:
+        #     errors.append("Error: You should provide a volume.\n")
 
         return errors
 
     def _summary(self):
         #  Think on how to update this summary with created PDB
         summary = []
-        if self.getOutputsSize() >= 1:
-            for key, output in self.iterOutputAttributes(EMObject):
-                summary.append("*%s:* \n %s " % (key, output.getObjComment()))
-        else:
-            summary.append(Message.TEXT_NO_OUTPUT_CO)
+        try:
+            summary.append("Ramachandran outliers: %0.2f %%   (Goal: < 0.2%%)  "\
+                           "Ramachandran favored: %0.2f %%   (Goal: > 98%%) " %\
+                           (self.ramachandranOutliers.get(),
+                            self.ramachandranFavored.get())
+                           )
+            summary.append("Rotamer outliers:           %0.2f"\
+                           " %%   (Goal: < 1%%)    "\
+                           "C-beta outliers:              %d"\
+                           " %%         (Goal: 0%%) " % \
+                            (self.rotamerOutliers.get(),
+                             self.cbetaOutliers.get()
+                            ))
+            summary.append("Clashscore:                   %0.2f"\
+                           "                             Overall "\
+                           "score:                %0.2f" %\
+                           (self.clashscore.get(), self.overallScore.get())
+                           )
+        except:
+            summary = ["Overall score not yet computed"]
+
         return summary
 
     def _methods(self):
         methodsMsgs = []
         methodsMsgs.append("TODO")
-
         return methodsMsgs
 
     def _citations(self):
@@ -197,3 +227,24 @@ atomic structure derived from a cryo-EM density map.
         else:
             fnVol = self.inputVolume.get()
         return fnVol
+
+    def _parseFile(self, fileName):
+        with open(fileName) as f:
+            line = f.readline()
+            while line:
+                words = line.strip().split()
+                if len(words) > 1:
+                    if (words[0] == 'Ramachandran' and words[1] == 'outliers'):
+                        self.ramachandranOutliers = Float(words[3])
+                    elif (words[0] == 'favored' and words[1] == '='):
+                        self.ramachandranFavored = Float(words[2])
+                    elif (words[0] == 'Rotamer' and words[1] == 'outliers'):
+                        self.rotamerOutliers = Float(words[3])
+                    elif (words[0] == 'C-beta' and words[1] == 'deviations'):
+                        self.cbetaOutliers = Integer(words[3])
+                    elif (words[0] == 'Clashscore' and words[1] == '='):
+                        self.clashscore = Float(words[2])
+                    elif (words[0] == 'MolProbity' and words[1] == 'score'):
+                        self.overallScore = Float(words[3])
+                line = f.readline()
+
