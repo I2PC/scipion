@@ -30,5 +30,5 @@ _logo = "phenix.png"
 from protocol_emringer import PhenixProtRunEMRinger
 from protocol_molprobity import PhenixProtRunMolprobity
 from viewer_emringer import PhenixProtRunEMRingerViewer
-
+from viewer_molprobity import PhenixProtRunMolprobityViewer
 _environ = getEnviron()
