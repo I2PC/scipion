@@ -187,22 +187,17 @@ public:
             case DT_UHalfByte:
             case DT_UChar:
             {
-                if (typeid(T) != typeid(unsigned char))
+                if (typeid(T) == typeid(unsigned char))
                 {
-                    std::cout<<"HOlaaaa if";
                     memcpy(ptrDest, page, pageSize * sizeof(T));
                 }
 
                 else
                 {
-                    std::cout<<"HOlaaaa else";
                     unsigned char * ptr = (unsigned char *) page;
                     for (size_t i = 0; i < pageSize; ++i, ++ptr)
                     {
                         ptrDest[i] = (T) *ptr;
-
-                        if (ptrDest[i] > 15)
-                            std::cout<<"*ptr= "<< (int)*ptr <<"; ptrDest = "<< (int)ptrDest[i]<<"; char *ptr = "<< (int) *ptr<<std::endl;
 
                     }
 

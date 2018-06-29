@@ -123,7 +123,7 @@ struct MRChead
 int ImageBase::readMRC(size_t select_img, bool isStack)
 {
 #undef DEBUG
-    #define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     printf("DEBUG readMRC: Reading MRC file\n");
 #endif
@@ -314,11 +314,9 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     // 4-bits mode: Here is the magic to expand the compressed images
     if (header->mode == 101){
-        std::cout << "readData4bit" << header->mode << " " << std::endl;
         readData4bit(fimg, select_img, datatype, 0);
     }
     else{
-        std::cout << "readData" << header->mode << " " << std::endl;
         readData(fimg, select_img, datatype, 0);
     }
 
