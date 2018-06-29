@@ -1439,7 +1439,7 @@ private:
 #endif
         }
         if (page > 0)
-            freeMemory(page, pagesize * sizeof(char));
+            freeMemory(page, pagesizeM * sizeof(char));
 
         return;
     }
