@@ -1381,7 +1381,6 @@ private:
 
         size_t selectImgOffset; //4Mb
         size_t itemSize = ZYXSIZE(data);
-        size_t itemSizeHalf = itemSize/2;
         size_t pagesizeF = itemSize /2;
         size_t pagesizeM = itemSize;
         //size_t pagesizeHalf = pagesize/2;
@@ -1411,7 +1410,7 @@ private:
 
             // cast to T per page
 
-            size_t start = itemSizeF;
+            size_t start = pagesizeF;
             uint8_t mask = 15; // 00001111
 
             for (size_t i = 0, j = start; i < itemSizeM - 1; i += 2, ++j)
