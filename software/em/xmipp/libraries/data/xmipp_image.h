@@ -1425,15 +1425,6 @@ private:
                     std::cout<<"Page i+1 = "<< i+1<<"= "<< page[i+1];
             }
 
-
-            for (size_t i = 0; i<7420; ++i)
-            {
-                for (size_t j = 0; j<; ++j)
-                {
-
-                }
-                std::cout<<std::endl;
-            }
             castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, DT_SChar,
                        pagesizeM);
             haveread_n += pagesizeM;
