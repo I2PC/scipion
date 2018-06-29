@@ -202,7 +202,7 @@ public:
                         ptrDest[i] = (T) *ptr;
 
                         if (ptrDest[i] > 15)
-                            std::cout<<"*ptr= "<< *ptr <<"; ptrDest = "<< ptrDest[i]<<"; char *ptr = "<< (char) *ptr;
+                            std::cout<<"*ptr= "<< (int)*ptr <<"; ptrDest = "<< (int)ptrDest[i]<<"; char *ptr = "<< (int) *ptr<<std::endl;
 
                     }
 
