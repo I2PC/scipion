@@ -187,7 +187,7 @@ public:
             case DT_UHalfByte:
             case DT_UChar:
             {
-                if (typeid(T) == typeid(unsigned char))
+                if (typeid(T) != typeid(unsigned char))
                 {
                     std::cout<<"HOlaaaa if";
                     memcpy(ptrDest, page, pageSize * sizeof(T));
