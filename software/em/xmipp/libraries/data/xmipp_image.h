@@ -1418,14 +1418,19 @@ private:
                 char& value = *(page+j);
                 page[i] = value & mask; // take the lower 4 bits
                 page[i+1] = value >> 4; // take the upper 4 bits
+
+                if (page[i] > 15)
+                    std::cout<<"Page i = "<< i<<"= "<< page[i];
+                if (page[i+1] > 15)
+                    std::cout<<"Page i+1 = "<< i+1<<"= "<< page[i+1];
             }
 
 
-            for (size_t i = 0; i<10; ++i)
+            for (size_t i = 0; i<7420; ++i)
             {
-                for (size_t j = 0; j<10; ++j)
+                for (size_t j = 0; j<; ++j)
                 {
-                    std::cout<<(unsigned int) page[i*7676+j]<<" ";
+
                 }
                 std::cout<<std::endl;
             }
