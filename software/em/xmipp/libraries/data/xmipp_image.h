@@ -1413,7 +1413,7 @@ private:
             size_t start = pagesizeF;
             uint8_t mask = 15; // 00001111
 
-            for (size_t i = 0, j = start; i < itemSizeM - 1; i += 2, ++j)
+            for (size_t i = 0, j = start; i < pagesizeM - 1; i += 2, ++j)
             {
                 char& value = *(page+j);
                 page[i] = value & mask; // take the lower 4 bits
@@ -1421,8 +1421,8 @@ private:
             }
 
             castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype,
-                       itemSizeM);
-            haveread_n += itemSizeM;
+                       pagesizeM);
+            haveread_n += pagesizeM;
 
             if (pad > 0)
                 //fread( padpage, pad, 1, fimg);
