@@ -188,9 +188,14 @@ public:
             case DT_UChar:
             {
                 if (typeid(T) == typeid(unsigned char))
+                {
+                    std::cout<<"HOlaaaa if";
                     memcpy(ptrDest, page, pageSize * sizeof(T));
+                }
+
                 else
                 {
+                    std::cout<<"HOlaaaa else";
                     unsigned char * ptr = (unsigned char *) page;
                     for (size_t i = 0; i < pageSize; ++i, ++ptr)
                     {
