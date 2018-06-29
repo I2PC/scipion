@@ -1425,7 +1425,7 @@ private:
             {
                 for (size_t j = 0; j<10; ++j)
                 {
-                    std::cout<<(unsigned char) page[i*7676+j]<<" ";
+                    std::cout<<(unsigned int) page[i*7676+j]<<" ";
                 }
                 std::cout<<std::endl;
             }
