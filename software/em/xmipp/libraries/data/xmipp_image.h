@@ -1427,7 +1427,7 @@ private:
             {
                 char& value = *(page+j);
                 page[i] = value & mask; // take the lower 4 bits
-                page[i+1] = value >> 4; // take the upper 4 bits
+                page[i+1] = (value >> 4) & mask; // take the upper 4 bits
 
             }
 
