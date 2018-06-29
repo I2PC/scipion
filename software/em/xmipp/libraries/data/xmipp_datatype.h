@@ -61,9 +61,6 @@ typedef enum
 /// Returns memory size of datatype
 size_t gettypesize(DataType type);
 
-/// Returns size of a datatype at reading time
-size_t getreadtypesize(DataType type);
-
 /** Convert datatype string to datatype enum */
 DataType str2Datatype(const std::string & str);
 

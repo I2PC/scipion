@@ -1363,6 +1363,7 @@ private:
 
 
     /** Read the raw data from compressed 4bit images
+     * We are assuming the values are stored in 4bits (2 values in 1 byte)
     */
     void
     readData4bit(FILE* fimg, size_t select_img, DataType datatype, size_t pad)
@@ -1374,17 +1375,17 @@ private:
         if (datatype != DT_UHalfByte){
             REPORT_ERROR(ERR_MMAP, "Image Class::readData4bit  not supported for  "
                                    "data type different than " + datatype2Str(DT_UHalfByte));
+        } else {
+            datatype = DT_UChar;
         }
 
         size_t selectImgOffset; //4Mb
-        size_t datatypesize = getreadtypesize(datatype);
         size_t itemSize = ZYXSIZE(data);
         size_t itemSizeHalf = itemSize/2;
-        size_t pagesize = itemSize * datatypesize;
-        size_t pagesizeHalf = pagesize/2;
+        size_t pagesizeF = itemSize /2;
+        size_t pagesizeM = itemSize;
+        //size_t pagesizeHalf = pagesize/2;
         size_t haveread_n = 0;
-
-        selectImgOffset = offset + IMG_INDEX(select_img) * (pagesizeHalf + pad);
 
         char* page = NULL;    // Compressed
 
@@ -1392,27 +1393,28 @@ private:
         //if memory already allocated use it (no resize allowed)
         data.coreAllocateReuse();
 
-        page = (char *) askMemory(pagesize * sizeof(char));
+        page = (char *) askMemory(pagesizeM);
+
+        // Calculate the staring reading pointer.
+        selectImgOffset = offset + IMG_INDEX(select_img) * (pagesizeF + pad);
 
         if (fseek(fimg, selectImgOffset, SEEK_SET) == -1)
             REPORT_ERROR(ERR_IO_SIZE, "readData: can not seek the file pointer");
         for (size_t myn = 0; myn < NSIZE(data); myn++)
         {
 
-            std::cout<<"ww: " << page+pagesizeHalf<<" "<<pagesizeHalf<<std::endl;
+            //std::cout<<"ww: " << page+pagesizeHalf<<" "<<pagesizeHalf<<std::endl;
 
             //Read page from disc
-            if (fread(page+pagesizeHalf, pagesizeHalf, 1, fimg) != 1)
+            if (fread(page+pagesizeF, pagesizeF, 1, fimg) != 1)
                 REPORT_ERROR(ERR_IO_NOREAD, "Cannot read the whole page");
-            //swap per page
-            if (swap)
-                swapPage(page, pagesizeHalf, datatype, swap);
+
             // cast to T per page
 
-            size_t start = itemSizeHalf;
+            size_t start = itemSizeF;
             uint8_t mask = 15; // 00001111
 
-            for (size_t i = 0, j = start; i < itemSize - 1; i += 2, ++j)
+            for (size_t i = 0, j = start; i < itemSizeM - 1; i += 2, ++j)
             {
                 char& value = *(page+j);
                 page[i] = value & mask; // take the lower 4 bits
@@ -1420,8 +1422,8 @@ private:
             }
 
             castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype,
-                       itemSize);
-            haveread_n += itemSize;
+                       itemSizeM);
+            haveread_n += itemSizeM;
 
             if (pad > 0)
                 //fread( padpage, pad, 1, fimg);
@@ -1431,15 +1433,15 @@ private:
 
             //if ( pad > 0 )
             //    freeMemory(padpage, pad*sizeof(char));
-            if (page > 0)
-                freeMemory(page, pagesize * sizeof(char));
 
 #ifdef DEBUG
 
             printf("DEBUG readData4bit: Finished reading and converting data\n");
 #endif
-
         }
+        if (page > 0)
+            freeMemory(page, pagesize * sizeof(char));
+
         return;
     }
 
