@@ -1429,7 +1429,7 @@ private:
                 }
                 std::cout<<std::endl;
             }
-            castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype,
+            castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, DT_SChar,
                        pagesizeM);
             haveread_n += pagesizeM;
 
