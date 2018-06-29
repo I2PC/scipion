@@ -193,7 +193,14 @@ public:
                 {
                     unsigned char * ptr = (unsigned char *) page;
                     for (size_t i = 0; i < pageSize; ++i, ++ptr)
+                    {
                         ptrDest[i] = (T) *ptr;
+
+                        if (ptrDest[i] > 15)
+                            std::cout<<"*ptr= "<< *ptr <<"; ptrDest = "<< ptrDest[i]<<"; char *ptr = "<< (char) *ptr;
+
+                    }
+
                 }
                 break;
             }
@@ -1375,8 +1382,6 @@ private:
         if (datatype != DT_UHalfByte){
             REPORT_ERROR(ERR_MMAP, "Image Class::readData4bit  not supported for  "
                                    "data type different than " + datatype2Str(DT_UHalfByte));
-        } else {
-            datatype = DT_UChar;
         }
 
         size_t selectImgOffset; //4Mb
@@ -1419,13 +1424,9 @@ private:
                 page[i] = value & mask; // take the lower 4 bits
                 page[i+1] = value >> 4; // take the upper 4 bits
 
-                if (page[i] > 15)
-                    std::cout<<"Page i = "<< i<<"= "<< page[i];
-                if (page[i+1] > 15)
-                    std::cout<<"Page i+1 = "<< i+1<<"= "<< page[i+1];
             }
 
-            castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, DT_SChar,
+            castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype,
                        pagesizeM);
             haveread_n += pagesizeM;
 
