@@ -35,7 +35,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         EnumParam, StringParam,
                                         BooleanParam, LabelParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.utils.path import makePath, cleanPath
+from pyworkflow.utils.path import makePath, cleanPath, createLink
 
 
 from convert import (rowToAlignment, createEmanProcess,
@@ -100,11 +100,25 @@ class EmanProtRefine2D(em.ProtClassify2D):
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
+        form.addParam('doContinue', BooleanParam, default=False,
+                      label='Continue from a previous run?',
+                      help='If you set to *Yes*, you should select a previous '
+                           'run of type *%s* class. The refinement will resume '
+                           'after the last completed iteration. It is ok to alter '
+                           'other parameters.' % self.getClassName())
+        form.addParam('continueRun', PointerParam,
+                      pointerClass=self.getClassName(),
+                      condition='doContinue', allowsNull=True,
+                      label='Select previous run',
+                      help='Select a previous run to continue from.')
         form.addParam('inputParticles', PointerParam,
                       label="Input particles",
+                      condition='not doContinue',
                       important=True, pointerClass='SetOfParticles',
+                      allowsNull=True,
                       help='Select the input particles.')
         form.addParam('inputClassAvg', PointerParam,
+                      condition='not doContinue',
                       expertLevel=LEVEL_ADVANCED,
                       allowsNull=True,
                       label="Input class averages",
@@ -126,7 +140,9 @@ class EmanProtRefine2D(em.ProtClassify2D):
                       help='Number of iterations of the overall 2-D refinement '
                            'process to run. For high contrast data, 4-5 iterations '
                            'may be more than enough, but for low contrast data '
-                           'it could take 10-12 iterations to converge well.')
+                           'it could take 10-12 iterations to converge well.\n'
+                           'If running in Continue mode, provide here a number '
+                           'of additional iterations to run.')
         form.addParam('nbasisfp', IntParam, default=8,
                       label='Number of MSA vectors to use',
                       help='Number of MSa basis vectors to use when '
@@ -363,12 +379,32 @@ class EmanProtRefine2D(em.ProtClassify2D):
     def _insertAllSteps(self):
         self._createFilenameTemplates()
         self._createIterTemplates()
-        self._insertFunctionStep('convertImagesStep')
-        args = self._prepareParams()
+        if self.doContinue:
+            self.inputParticles.set(None)
+            self.inputClassAvg.set(None)
+            self._insertFunctionStep('createLinkSteps')
+            args = self._prepareContinueParams()
+        else:
+            self._insertFunctionStep('convertImagesStep')
+            args = self._prepareParams()
         self._insertFunctionStep('refineStep', args)
         self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions -------------------------------
+    def createLinkSteps(self):
+        continueRun = self.continueRun.get()
+        prevPartDir = continueRun._getExtraPath("particles")
+        currPartDir = self._getExtraPath("particles")
+        runN= self._getRun()[0]
+        prevRefDir = continueRun._getExtraPath("r2d_%02d" % runN)
+        currRefDir = self._getExtraPath("r2d_%02d" % runN)
+        prevSetsDir = continueRun._getExtraPath("sets")
+        currSetsDir = self._getExtraPath("sets")
+
+        createLink(prevPartDir, currPartDir)
+        createLink(prevRefDir, currRefDir)
+        createLink(prevSetsDir, currSetsDir)
+
     def convertImagesStep(self):
         partSet = self._getInputParticles()
         partAlign = partSet.getAlignment()
@@ -453,6 +489,14 @@ class EmanProtRefine2D(em.ProtClassify2D):
 
         return args
 
+    def _prepareContinueParams(self):
+        lastRun, lastIt = self._getRun()
+        args = " --input=%s" % self._getParticlesStack()
+        args += " --initial=r2d_%02d/classes_%02d.hdf" % (lastRun, lastIt)
+        args += self._commonParams()
+
+        return args
+
     def _commonParams(self):
         args = " --ncls=%(ncls)d --iter=%(numberOfIterations)d --nbasisfp=%(nbasisfp)d"
         args += " --naliref=%(naliref)d"
@@ -496,6 +540,20 @@ class EmanProtRefine2D(em.ProtClassify2D):
         args = args % params
 
         return args
+
+    def _getRun(self):
+        runNumber, iterNumber = 1, 1
+        contRun = self.continueRun.get()
+        files = sorted(glob(contRun._getExtraPath("r2d_??")))
+        if files:
+            f = files[-1]
+            runNumber = int(f.split("_")[-1])
+            filesCls = sorted(glob(contRun._getExtraPath("r2d_%02d/classes_??.hdf" %
+                                                                        runNumber)))
+            if filesCls:
+                i = filesCls[-1]
+                iterNumber = int(i.split("_")[-1].replace('.hdf', ''))
+            return runNumber, iterNumber
 
     def _getBaseName(self, key, **args):
         """ Remove the folders and return the file from the filename. """
