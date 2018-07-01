@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
 # * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
@@ -58,7 +58,7 @@ def getVersion():
 
 
 def getSupportedVersions():
-    return ['0.50', '1.06']
+    return ['0.50', '1.06', '1.18']
 
 
 def parseGctfOutput(filename):

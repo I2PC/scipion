@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
 # * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
@@ -30,7 +30,7 @@ from os.path import join, exists, basename
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
-from pyworkflow import VERSION_1_1
+from pyworkflow import VERSION_1_2
 from pyworkflow.utils.properties import Message
 from convert import readCtfModel, parseGctfOutput, getVersion
 from pyworkflow.protocol import STEPS_PARALLEL
@@ -49,8 +49,8 @@ class ProtGctf(em.ProtCTFMicrographs):
     To find more information about Gctf go to:
     http://www.mrc-lmb.cam.ac.uk/kzhang
     """
-    _label = 'CTF estimation on GPU'
-    _lastUpdateVersion = VERSION_1_1
+    _label = 'ctf estimation'
+    _lastUpdateVersion = VERSION_1_2
 
     def __init__(self, **kwargs):
         em.ProtCTFMicrographs.__init__(self, **kwargs)
@@ -140,39 +140,50 @@ class ProtGctf(em.ProtCTFMicrographs):
                            " set to i.e. *0 1 2*.")
 
         form.addSection(label='Advanced')
-        form.addParam('doEPA', params.BooleanParam, default=False,
-                      label="Do EPA",
-                      help='Do Equiphase average used for output CTF file. '
-                           'Only for nice output, will NOT be used for CTF '
-                           'determination.')
-        form.addParam('EPAsmp', params.IntParam, default=4,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      condition='not _oldVersion',
-                      label="Over-sampling factor for EPA")
-        form.addParam('doBasicRotave', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      condition='_oldVersion',
-                      label="Do rotational average",
-                      help='Do rotational average used for output CTF file. '
-                           'Only for nice output, will NOT be used for CTF '
-                           'determination.')
+        group = form.addGroup('EPA')
+        group.addParam('doEPA', params.BooleanParam, default=True,
+                       label="Do EPA",
+                       help='Do Equiphase average used for output CTF file. '
+                            'Only for nice output, will NOT be used for CTF '
+                            'determination.')
+        group.addParam('EPAsmp', params.IntParam, default=4,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='not _oldVersion and doEPA',
+                       label="Over-sampling factor for EPA")
+        group.addParam('doBasicRotave', params.BooleanParam, default=False,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='_oldVersion and doEPA',
+                       help='Do rotational average used for output CTF file. '
+                            'Only for nice output, will NOT be used for CTF '
+                            'determination.')
+        group.addParam('overlap', params.FloatParam, default=0.5,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='doEPA',
+                       label="Overlap factor",
+                       help='Overlapping factor for grid boxes sampling, '
+                            'for windowsize=512, 0.5 means 256 pixels overlapping.')
+        group.addParam('convsize', params.IntParam, default=85,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='doEPA',
+                       label="Boxsize for smoothing",
+                       help='Boxsize to be used for smoothing, '
+                            'suggested 1/5 ~ 1/20 of window size in pixel, '
+                            'e.g. 99 for 512 window')
+
+        if getVersion() not in ['0.50', '1.06']:
+            group.addParam('smoothResL', params.IntParam, default=1000,
+                           expertLevel=params.LEVEL_ADVANCED,
+                           condition='doEPA',
+                           label='Resolution for smoothing',
+                           help='Provide a reasonable resolution for low '
+                                'frequency background smoothing; 20 '
+                                'angstrom suggested, 10-50 is proper range')
+
         form.addParam('bfactor', params.IntParam, default=150,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label="B-factor",
                       help='B-factors used to decrease high resolution '
                            'amplitude, A^2; suggested range 50~300 except '
-                           'using REBS method')
-        form.addParam('overlap', params.FloatParam, default=0.5,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      label="Overlap factor",
-                      help='Overlapping factor for grid boxes sampling, '
-                      'for windowsize=512, 0.5 means 256 pixels overlapping.')
-        form.addParam('convsize', params.IntParam, default=85,
-                      expertLevel=params.LEVEL_ADVANCED,
-                      label="Boxsize for smoothing",
-                      help='Boxsize to be used for smoothing, '
-                           'suggested 1/5 ~ 1/20 of window size in pixel, '
-                           'e.g. 99 for 512 window')
+                           'using REBS method (see the paper for the details).')
 
         group = form.addGroup('High-res refinement')
         group.addParam('doHighRes', params.BooleanParam, default=False,
@@ -224,18 +235,45 @@ class ProtGctf(em.ProtCTFMicrographs):
                       label="Max")
 
         form.addParam('phaseShiftS', params.FloatParam, default=10.0,
-                       condition='doPhShEst',
-                       label="Step",
-                       help='Phase shift search step. Do not worry about '
-                            'the accuracy; this is just the search step, '
-                            'Gctf will refine the phase shift anyway.')
+                      condition='doPhShEst',
+                      label="Step",
+                      help='Phase shift search step. Do not worry about '
+                           'the accuracy; this is just the search step, '
+                           'Gctf will refine the phase shift anyway.')
         form.addParam('phaseShiftT', params.EnumParam, default=CCC,
                       condition='doPhShEst',
                       label='Target',
                       choices=['CCC', 'Resolution limit'],
                       display=params.EnumParam.DISPLAY_HLIST,
                       help='Phase shift target in the search: CCC or '
-                           'resolution limit')
+                           'resolution limit. Second option might generate '
+                           'more accurate estimation if results are '
+                           'essentially correct, but it tends to overfit high '
+                           'resolution noise and might have the potential '
+                           'possibility to generate completely wrong results. '
+                           'The accuracy of CCC method might not be as '
+                           'good, but it is more stable in general cases.')
+        if getVersion() not in ['0.50', '1.06']:
+            form.addParam('coSearchRefine', params.BooleanParam,
+                          default=False, condition='doPhShEst',
+                          label='Search and refine simultaneously?',
+                          help='Specify this option to do refinement during '
+                               'phase shift search. Default approach is to do '
+                               'refinement after search.')
+            form.addParam('refine2DT', params.IntParam,
+                          validators=[params.Range(1, 3, "value should be "
+                                                         "1, 2 or 3. ")],
+                          default=1, condition='doPhShEst',
+                          label='Refinement type',
+                          help='Refinement type: 1, 2, 3 allowed.\n NOTE:  '
+                               'This parameter is different from Target and is'
+                               'optional for different types of refinement algorithm, '
+                               'in general cases they work similar. In challenging '
+                               'case, they might converge to different results, '
+                               'try to see which works best in your case. '
+                               'My suggestion is running as default first, and '
+                               'then try new refinement on the micrographs '
+                               'which failed.')
 
         self._defineStreamingParams(form)
 
@@ -255,7 +293,13 @@ class ProtGctf(em.ProtCTFMicrographs):
             pwutils.makePath(micDir)
             downFactor = self.ctfDownFactor.get()
             micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
-            micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'ctf'))
+
+            if getVersion() not in ['0.50', '1.06']:
+                ext = 'pow' if not self.doEPA else 'epa'
+            else:
+                ext = 'ctf'
+
+            micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, ext))
             micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
 
             if downFactor != 1:
@@ -290,7 +334,6 @@ class ProtGctf(em.ProtCTFMicrographs):
         ctffitFile = self._getCtfFitOutPath(micDir)
         pwutils.moveFile(micFnCtf, psdFile)
         pwutils.moveFile(micFnCtfFit, ctffitFile)
-        pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
         # Let's notify that this micrograph has been processed
         # just creating an empty file at the end (after success or failure)
@@ -304,7 +347,13 @@ class ProtGctf(em.ProtCTFMicrographs):
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
         micDir = self._getMicrographDir(mic)
-        micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'ctf'))
+
+        if getVersion() not in ['0.50', '1.06']:
+            ext = 'pow' if not self.doEPA else 'epa'
+        else:
+            ext = 'ctf'
+
+        micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, ext))
         micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
 
         out = self._getCtfOutPath(micDir)
@@ -329,7 +378,6 @@ class ProtGctf(em.ProtCTFMicrographs):
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
         pwutils.moveFile(micFnCtf, psdFile)
         pwutils.moveFile(micFnCtfFit, ctffitFile)
-        pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
         pwutils.cleanPattern(micFnMrc)
 
     def _createCtfModel(self, mic, updateSampling=True):
@@ -373,9 +421,6 @@ class ProtGctf(em.ProtCTFMicrographs):
         if nprocs < len(self.getGpuList()):
             errors.append("Multiple GPUs can not be used by a single process. "
                           "Make sure you specify more processors than GPUs. ")
-
-        if self._getStreamingBatchSize() > 1:
-            errors.append("Batch steps are not implemented yet for Gctf. ")
 
         return errors
 
@@ -452,6 +497,9 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--convsize %d " % self.convsize.get()
         self._args += "--do_Hres_ref %d " % (1 if self.doHighRes else 0)
 
+        if getVersion() not in ['0.50', '1.06']:
+            self._args += "--smooth_resL %d " % self.smoothResL.get()
+
         if getVersion() == '0.50':
             self._args += "--do_basic_rotave %d " % (1 if self.doBasicRotave else 0)
         else:
@@ -463,12 +511,16 @@ class ProtGctf(em.ProtCTFMicrographs):
                 self._args += "--phase_shift_S %f " % self.phaseShiftS.get()
                 self._args += "--phase_shift_T %d " % (1 + self.phaseShiftT.get())
 
+                if getVersion() not in ['0.50', '1.06']:
+                    self._args += "--cosearch_refine_ps %d " % (1 if self.coSearchRefine else 0)
+                    self._args += "--refine_2d_T %d " % self.refine2DT.get()
+
         if self.doHighRes:
             self._args += "--Href_resL %d " % self.HighResL.get()
             self._args += "--Href_resH %d " % self.HighResH.get()
             self._args += "--Href_bfac %d " % self.HighResBf.get()
 
-        self._args += "--do_validation %d " % (1 if self.doValidate else 0)
+        self._args += "--ctfstar NONE --do_validation %d " % (1 if self.doValidate else 0)
         self._args += "%(micFn)s "
         self._args += "> %(gctfOut)s"
 
