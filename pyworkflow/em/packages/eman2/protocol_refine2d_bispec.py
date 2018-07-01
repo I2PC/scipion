@@ -156,6 +156,15 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
                       label='Keep particles based on sigma?',
                       help='Change the *keep* criterion from fraction-based '
                       'to sigma-based')
+        form.addParam('classAveragerType', EnumParam,
+                      choices=['absmaxmin', 'ctf.auto', 'ctf.weight',
+                               'ctf.weight.autofilt', 'ctfw.auto', 'iteration',
+                               'localweight', 'mean', 'mean.tomo',
+                               'minmax', 'sigma', 'weightedfourier'],
+                      label='Class averager type: ',
+                      default=AVG_CTF_WEIGHT_AUTOFILT,
+                      display=EnumParam.DISPLAY_COMBO,
+                      help='The averager used to generated class-averages')
 
         line = form.addLine('classnormproc: ',
                             help='Normalization applied during class-averaging')
@@ -172,16 +181,6 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
                       display=EnumParam.DISPLAY_COMBO)
         line.addParam('classnormprocParams', StringParam,
                       default='', label='params')
-
-        form.addParam('classAveragerType', EnumParam,
-                      choices=['absmaxmin', 'ctf.auto', 'ctf.weight',
-                               'ctf.weight.autofilt', 'ctfw.auto', 'iteration',
-                               'localweight', 'mean', 'mean.tomo',
-                               'minmax', 'sigma', 'weightedfourier'],
-                      label='Class averager type: ',
-                      default=AVG_CTF_WEIGHT_AUTOFILT,
-                      display=EnumParam.DISPLAY_COMBO,
-                      help='The averager used to generated class-averages')
 
         line = form.addLine('classcmp: ')
         line.addParam('classcmpType', EnumParam,

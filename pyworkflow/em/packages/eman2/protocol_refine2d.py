@@ -270,23 +270,6 @@ class EmanProtRefine2D(em.ProtClassify2D):
                       expertLevel=LEVEL_ADVANCED,
                       help='Use setsfref option in class averaging to '
                            'produce better class averages')
-
-        line = form.addLine('classnormproc: ',
-                            help='Normalization applied during class-averaging')
-        line.addParam('classnormprocType', EnumParam,
-                      choices=['normalize', 'normalize.bymass',
-                               'normalize.circlemean', 'normalize.edgemean',
-                               'normalize.local', 'normalize.lredge',
-                               'normalize.mask', 'normalize.maxmin',
-                               'normalize.ramp.normvar', 'normalize.rows',
-                               'normalize.toimage', 'normalize.unitlen',
-                               'normalize.unitsum', 'None'],
-                      label='type',
-                      default=PROC_NORMALIZE_EDGEMEAN,
-                      display=EnumParam.DISPLAY_COMBO)
-        line.addParam('classnormprocParams', StringParam,
-                      default='', label='params')
-
         form.addParam('classAveragerType', EnumParam,
                       choices=['absmaxmin', 'ctf.auto', 'ctf.weight',
                                'ctf.weight.autofilt', 'ctfw.auto', 'iteration',

@@ -218,9 +218,6 @@ def writeSetOfParticles(partSet, path, **kwargs):
     This function should be called from a current dir where
     the images in the set are available.
     """
-    pathMrcs = path.split("/particles")[0]
-    isMrcs, fnDict = convertBinaryFiles(partSet, pathMrcs)
-
     firstCoord = partSet.getFirstItem().getCoordinate() or None
     hasMicName = False
     if firstCoord:
@@ -253,12 +250,7 @@ def writeSetOfParticles(partSet, path, **kwargs):
             # json fail if has -0 as value
             objDict['_shifts'] = shift.tolist()
             objDict['_angles'] = angles.tolist()
-        # fn = objDict['_filename']
-        # check if the is a file mapping
-        #         objDict['_filename'] = filesDict.get(fn, fn)
         objDict['_itemId'] = part.getObjId()
-        if isMrcs:
-            objDict['_filename'] = fnDict[objDict['_filename']]
 
         # the index in EMAN begins with 0
         if fileName != objDict['_filename']:
@@ -387,54 +379,6 @@ def rowToAlignment(alignmentList, alignType):
     alignment.setMatrix(matrix)
 
     return alignment
-
-
-def convertBinaryFiles(imgSet, outputDir):
-    """ Convert binary images files to a format read by EMAN.
-    Params:
-        imgSet: input image set to be converted.
-        outputDir: where to put the converted file(s)
-    Return:
-        A dictionary with old-file as key and new-file as value
-        If empty, not conversion was done.
-    """
-    filesDict = {}
-    ih = em.ImageHandler()
-
-    # This approach can be extended when
-    # converting from a binary file format that
-    # is not read from Relion
-    def linkMrcToMrcs(fn):
-        """ Just create a link named .mrc to Eman understand
-        that it is a mrc binary stack.
-        """
-        newFn = pwutils.join(outputDir, pwutils.replaceBaseExt(fn, 'mrcs'))
-        pwutils.createLink(fn, newFn)
-        return newFn
-
-    def convertStack(fn):
-        """ Convert from a format that is not read by Relion
-        to an spider stack.
-        """
-        newFn = pwutils.join(outputDir, pwutils.replaceBaseExt(fn, 'stk'))
-        ih.convertStack(fn, newFn)
-        return newFn
-
-    ext = imgSet.getFirstItem().getFileName()
-    if ext.endswith('.mrc'):
-        mapFunc = linkMrcToMrcs
-        ismrcs = True
-    #     elif ext.endswith('.hdf'): # assume eman .hdf format
-    #         mapFunc = convertStack
-    else:
-        mapFunc = None
-        ismrcs = False
-
-    if mapFunc is not None:
-        for fn in imgSet.getFiles():
-            filesDict[fn] = mapFunc(fn)  # convert and map new filename
-
-    return ismrcs, filesDict
 
 
 def iterParticlesByMic(partSet):
