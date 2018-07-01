@@ -30,7 +30,7 @@ from os.path import join, exists, basename
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
-from pyworkflow import VERSION_1_1
+from pyworkflow import VERSION_1_2
 from pyworkflow.utils.properties import Message
 from convert import readCtfModel, parseGctfOutput, getVersion
 from pyworkflow.protocol import STEPS_PARALLEL
@@ -49,8 +49,8 @@ class ProtGctf(em.ProtCTFMicrographs):
     To find more information about Gctf go to:
     http://www.mrc-lmb.cam.ac.uk/kzhang
     """
-    _label = 'CTF estimation on GPU'
-    _lastUpdateVersion = VERSION_1_1
+    _label = 'ctf estimation'
+    _lastUpdateVersion = VERSION_1_2
 
     def __init__(self, **kwargs):
         em.ProtCTFMicrographs.__init__(self, **kwargs)
@@ -421,9 +421,6 @@ class ProtGctf(em.ProtCTFMicrographs):
         if nprocs < len(self.getGpuList()):
             errors.append("Multiple GPUs can not be used by a single process. "
                           "Make sure you specify more processors than GPUs. ")
-
-        if self._getStreamingBatchSize() > 1:
-            errors.append("Batch steps are not implemented yet for Gctf. ")
 
         return errors
 
