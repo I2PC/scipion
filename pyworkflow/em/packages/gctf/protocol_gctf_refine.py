@@ -643,6 +643,13 @@ class ProtGctfRefine(em.ProtParticles):
                           "~/.config/scipion/scipion.conf\n"
                           "and set GCTF variables properly."
                           % self._getProgram())
+
+        if getVersion() == '1.18':
+            errors.append("Gctf v1.18 is a simplified version without "
+                          "several advanced features, such as local/movie "
+                          "CTF refinement, CTF validation etc. \nPlease switch "
+                          "to v1.06 if you want to use this protocol.")
+
         if self.doPhShEst and getVersion() == '0.50':
             errors.append('This version of Gctf (0.50) does not support phase '
                           'shift estimation! Please update to a newer version.')
