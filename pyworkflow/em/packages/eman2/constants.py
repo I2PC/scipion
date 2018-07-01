@@ -24,10 +24,10 @@
 # *
 # **************************************************************************
 """
-This modules contains constants related to EMAN2 protocols
+This file contains constants related to EMAN2 protocols
 """
 
-#------------------ Constants values --------------------------------------
+#------------------ Constants values ------------------------------------------
 
 # ctf processing type
 HIRES = 0
@@ -171,3 +171,31 @@ AUTO_GAUSS = 2
 AUTO_CONVNET = 3
 
 WIKI_URL = "[[http://blake.bcm.edu/emanwiki/EMAN2][Wiki]]"
+
+# viewer.py constants
+LAST_ITER = 0
+ALL_ITERS = 1
+SELECTED_ITERS = 2
+
+ANGDIST_2DPLOT = 0
+ANGDIST_CHIMERA = 1
+
+TILT_SCATTER = 0
+TILT_CONTOUR = 1
+
+VOLUME_SLICES = 0
+VOLUME_CHIMERA = 1
+
+FSC_UNMASK = 0
+FSC_MASK = 1
+FSC_MASKTIGHT = 2
+FSC_ALL = 3
+
+HALF_EVEN = 0
+HALF_ODD = 1
+FULL_MAP = 2
+ALL_MAPS = 3
+
+OBJCMD_CLASSAVG_PROJS = 'Show class-averages/projections'
+OBJCMD_PROJS = 'Show only projections'
+OBJCMD_INITVOL = 'Show initial random volume'

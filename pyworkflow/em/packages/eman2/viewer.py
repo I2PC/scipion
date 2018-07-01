@@ -42,8 +42,7 @@ from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.executor import StepExecutor
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
-                                        EnumParam, FloatParam, IntParam,
-                                        BooleanParam)
+                                        EnumParam, FloatParam, IntParam, BooleanParam)
 import pyworkflow.utils as pwutils
 
 from protocol_boxing import EmanProtBoxing
@@ -53,35 +52,10 @@ from protocol_refine2d import EmanProtRefine2D
 from protocol_refine2d_bispec import EmanProtRefine2DBispec
 from protocol_refineasy import EmanProtRefine
 from protocol_tiltvalidate import EmanProtTiltValidate
+from constants import *
 from convert import loadJson
 from eman2 import getEmanProgram
 
-LAST_ITER = 0
-ALL_ITERS = 1
-SELECTED_ITERS = 2
-
-ANGDIST_2DPLOT = 0
-ANGDIST_CHIMERA = 1
-
-TILT_SCATTER = 0
-TILT_CONTOUR = 1
-
-VOLUME_SLICES = 0
-VOLUME_CHIMERA = 1
-
-FSC_UNMASK = 0
-FSC_MASK = 1
-FSC_MASKTIGHT = 2
-FSC_ALL = 3
-
-HALF_EVEN = 0
-HALF_ODD = 1
-FULL_MAP = 2
-ALL_MAPS = 3
-
-OBJCMD_CLASSAVG_PROJS = 'Show class-averages/projections'
-OBJCMD_PROJS = 'Show only projections'
-OBJCMD_INITVOL = 'Show initial random volume'
 
 
 class EmanViewer(XmippViewer):
@@ -110,8 +84,7 @@ class EmanViewer(XmippViewer):
                                           viewParams={showj.MODE: showj.MODE_MD,
                                                       showj.VISIBLE: labels,
                                                       showj.RENDER: '_filename',
-                                                      showj.OBJCMDS: objCommands},
-                                          ))
+                                                      showj.OBJCMDS: objCommands}))
 
 
 def showExtraFile(volumeSet, volId, suffix):
@@ -135,6 +108,7 @@ def showInitialRandomVolume(volumeSet, volId):
 ProjectWindow.registerObjectCommand(OBJCMD_CLASSAVG_PROJS, showClassAvgProjs)
 ProjectWindow.registerObjectCommand(OBJCMD_PROJS, showProjs)
 ProjectWindow.registerObjectCommand(OBJCMD_INITVOL, showInitialRandomVolume)
+
 
 class Refine2DViewer(ProtocolViewer):
     """ Visualization of e2refine2d results. """
@@ -930,7 +904,6 @@ class CtfViewer(ProtocolViewer):
             self.protocol.createOutputStep()
 
     def _load(self):
-        """ Load selected iterations and classes 3D for visualization mode. """
         self.protocol._createFilenameTemplates()
 
     def _getOutputs(self):
