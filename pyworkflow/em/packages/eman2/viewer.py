@@ -183,6 +183,7 @@ Examples:
                       showj.RENDER:'_representative._filename',
                       showj.SORT_BY: '_size desc'
                       }
+
         inputParticlesId = self.protocol.inputParticles.get().strId()
         view = ClassesView(self._project,
                            self.protocol.strId(), filename, other=inputParticlesId,
@@ -195,12 +196,12 @@ Examples:
         views = []
         if self.iterToShow.get() == LAST_ITER:
             last = self.protocol._lastIter()
-            fn = self.protocol._getFileName(key, iter=last)
+            fn = self.protocol._getFileName(key, run=self.numRun, iter=last)
             v = self.createScipionView(fn)
             views.append(v)
         else:
             for it in self._iterations:
-                fn = self.protocol._getFileName(key, iter=it)
+                fn = self.protocol._getFileName(key, run=self.numRun, iter=it)
                 v = self.createScipionView(fn)
                 views.append(v)
 
@@ -209,7 +210,8 @@ Examples:
     def _load(self):
         """ Load selected iterations and classes 2D for visualization mode. """
         self.protocol._createFilenameTemplates()
-        self.protocol._createIterTemplates()
+        self.numRun = self.protocol._getRun()
+        self.protocol._createIterTemplates(self.numRun)
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
 

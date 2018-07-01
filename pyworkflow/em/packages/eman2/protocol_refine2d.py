@@ -80,18 +80,18 @@ class EmanProtRefine2D(em.ProtClassify2D):
             'partFlipSet': 'sets/inputSet__ctf_flip.lst',
             'initialAvgSet': self._getExtraPath('initial_averages.hdf'),
             'classes_scipion': self._getExtraPath('classes_scipion_it%(iter)02d.sqlite'),
-            'classes': 'r2d_01/classes_%(iter)02d.hdf',
-            'cls': 'r2d_01/classmx_%(iter)02d.hdf',
+            'classes': 'r2d_%(run)02d/classes_%(iter)02d.hdf',
+            'cls': 'r2d_%(run)02d/classmx_%(iter)02d.hdf',
             'results': self._getExtraPath('results_it%(iter)02d.txt'),
-            'allrefs': self._getExtraPath('r2d_01/allrefs_%(iter)02d.hdf'),
-            'alirefs': self._getExtraPath('r2d_01/aliref_%(iter)02d.hdf'),
-            'basis': self._getExtraPath('r2d_01/basis_%(iter)02d.hdf')
+            'allrefs': self._getExtraPath('r2d_%(run)02d/allrefs_%(iter)02d.hdf'),
+            'alirefs': self._getExtraPath('r2d_%(run)02d/aliref_%(iter)02d.hdf'),
+            'basis': self._getExtraPath('r2d_%(run)02d/basis_%(iter)02d.hdf')
         }
         self._updateFilenamesDict(myDict)
 
-    def _createIterTemplates(self):
+    def _createIterTemplates(self, currRun):
         """ Setup the regex on how to find iterations. """
-        clsFn = self._getExtraPath(self._getFileName('classes', iter=1))
+        clsFn = self._getExtraPath(self._getFileName('classes', run=currRun, iter=1))
         self._iterTemplate = clsFn.replace('classes_01', 'classes_??')
         # Iterations will be identify by classes_XX_ where XX is the iteration
         #  number and is restricted to only 2 digits.
@@ -378,7 +378,7 @@ class EmanProtRefine2D(em.ProtClassify2D):
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._createFilenameTemplates()
-        self._createIterTemplates()
+        self._createIterTemplates(self._getRun())
         if self.doContinue:
             self.inputParticles.set(None)
             self.inputClassAvg.set(None)
@@ -395,9 +395,9 @@ class EmanProtRefine2D(em.ProtClassify2D):
         continueRun = self.continueRun.get()
         prevPartDir = continueRun._getExtraPath("particles")
         currPartDir = self._getExtraPath("particles")
-        runN= self._getRun()[0]
-        prevRefDir = continueRun._getExtraPath("r2d_%02d" % runN)
-        currRefDir = self._getExtraPath("r2d_%02d" % runN)
+        runN = self._getRun()
+        prevRefDir = continueRun._getExtraPath("r2d_%02d" % (runN - 1))
+        currRefDir = self._getExtraPath("r2d_%02d" % (runN - 1))
         prevSetsDir = continueRun._getExtraPath("sets")
         currSetsDir = self._getExtraPath("sets")
 
@@ -490,9 +490,9 @@ class EmanProtRefine2D(em.ProtClassify2D):
         return args
 
     def _prepareContinueParams(self):
-        lastRun, lastIt = self._getRun()
         args = " --input=%s" % self._getParticlesStack()
-        args += " --initial=r2d_%02d/classes_%02d.hdf" % (lastRun, lastIt)
+        args += " --initial=r2d_%02d/classes_%02d.hdf" %\
+                (self._getRun() - 1, self._getIt())
         args += self._commonParams()
 
         return args
@@ -542,18 +542,27 @@ class EmanProtRefine2D(em.ProtClassify2D):
         return args
 
     def _getRun(self):
-        runNumber, iterNumber = 1, 1
+        if not self.doContinue:
+            return 1
+        else:
+            contRun = self.continueRun.get()
+            files = sorted(glob(contRun._getExtraPath("r2d_??")))
+            if files:
+                f = files[-1]
+                runNumber = int(f.split("_")[-1]) + 1
+                return runNumber
+
+    def _getIt(self):
         contRun = self.continueRun.get()
-        files = sorted(glob(contRun._getExtraPath("r2d_??")))
+        files = sorted(glob(contRun._getExtraPath("r2d_%02d/classes_??.hdf" %
+                                                  (self._getRun() - 1))))
+        print files
         if files:
-            f = files[-1]
-            runNumber = int(f.split("_")[-1])
-            filesCls = sorted(glob(contRun._getExtraPath("r2d_%02d/classes_??.hdf" %
-                                                                        runNumber)))
-            if filesCls:
-                i = filesCls[-1]
-                iterNumber = int(i.split("_")[-1].replace('.hdf', ''))
-            return runNumber, iterNumber
+            i = files[-1]
+            iterNumber = int(i.split("_")[-1].replace('.hdf', ''))
+            return iterNumber
+        else:
+            return 1
 
     def _getBaseName(self, key, **args):
         """ Remove the folders and return the file from the filename. """
@@ -601,18 +610,23 @@ class EmanProtRefine2D(em.ProtClassify2D):
 
         if not exists(data_classes):
             clsSet = em.SetOfClasses2D(filename=data_classes)
-            clsSet.setImages(self.inputParticles.get())
+            clsSet.setImages(self._getInputParticles())
             self._fillClassesFromIter(clsSet, it)
             clsSet.write()
             clsSet.close()
 
         return data_classes
 
+    def _getInputParticlesPointer(self):
+        if self.doContinue:
+            self.inputParticles.set(self.continueRun.get().inputParticles.get())
+        return self.inputParticles
+
     def _getInputParticles(self):
-        return self.inputParticles.get()
+        return self._getInputParticlesPointer().get()
 
     def _fillClassesFromIter(self, clsSet, iterN):
-        self._execEmanProcess(iterN)
+        self._execEmanProcess(self._getRun(), iterN)
         params = {'orderBy' : ['_micId', 'id'],
                   'direction' : 'ASC'
                   }
@@ -621,9 +635,9 @@ class EmanProtRefine2D(em.ProtClassify2D):
                              itemDataIterator=self._iterTextFile(iterN),
                              iterParams=params)
 
-    def _execEmanProcess(self, iterN):
-        clsFn = self._getFileName("cls", iter=iterN)
-        classesFn = self._getFileName("classes", iter=iterN)
+    def _execEmanProcess(self, numRun, iterN):
+        clsFn = self._getFileName("cls", run=numRun, iter=iterN)
+        classesFn = self._getFileName("classes", run=numRun, iter=iterN)
 
         proc = createEmanProcess(args='read %s %s %s %s 2d'
                                  % (self._getParticlesStack(), clsFn, classesFn,
