@@ -25,8 +25,6 @@
 # **************************************************************************
 
 import os
-import json
-import collections
 from pyworkflow.object import String, Float, Integer
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, FloatParam
@@ -44,9 +42,6 @@ atomic structure derived from a cryo-EM density map.
     MOLPROBITYFILE = 'molprobity.mrc'
     MOLPROBITYOUTFILENAME = 'molprobity.out'
     MOLPROBITYCOOTFILENAME = 'molprobity_coot.py'
-    MOLPROBITYTRANSFERFOLDER = 'results'
-    MOLPROBITYSUMMARYFILENAME = 'summary.txt'
-    MOLPROBITYBLRESTRAINTSFILENAME = 'blrestraints.txt'
 #    mapKeyToLabel={}
 #    mapKeyToLabel['ramachandranOutliers'] = 'Ramachandran outliers'
 #    mapKeyToLabel['ramachandranFavored'] = 'Ramachandran favored'
@@ -113,50 +108,6 @@ atomic structure derived from a cryo-EM density map.
             self.MOLPROBITYOUTFILENAME)
         self._parseFile(MOLPROBITYOUTFILENAME)
         self._store()
-
-
-        """
-        # get molprobity information
-
-        MOLPROBITYOUTFILENAME = self._getExtraPath(
-                    self.MOLPROBITYOUTFILENAME)
-
-        self.dictSummary, self.dictBLRestraints = self._parseFile(
-            MOLPROBITYOUTFILENAME)
-        MOLPROBITYSUMMARYFILENAME = self._getExtraPath(
-            self.MOLPROBITYTRANSFERFOLDER + "/" +
-            self.MOLPROBITYSUMMARYFILENAME)
-        with open(MOLPROBITYSUMMARYFILENAME, "w") as f:
-            f.write(json.dumps(self.dictSummary))
-        MOLPROBITYBLRESTRAINTSFILENAME = self._getExtraPath(
-            self.MOLPROBITYTRANSFERFOLDER + "/" +
-            self.MOLPROBITYBLRESTRAINTSFILENAME)
-        with open(MOLPROBITYBLRESTRAINTSFILENAME, "w") as f:
-            f.write(json.dumps(self.dictBLRestraints))
-        print "AAAAAAAAAAAAAAAAAAAA: ", self.dictBLRestraints
-
-        MOLPROBITYCOOTFILENAME = self._getExtraPath(
-            self.MOLPROBITYCOOTFILENAME)
-        """
-    #         command += """with open('%s',"w") as f:
-    #     f.write(json.dumps(dataDict))
-    # """ % (EMRINGERTRANSFERFILENAME)
-    #
-    #         pythonFileName = EMRINGERTRANSFERFILENAME.replace('.txt', '.py')
-    #         # write script file
-    #         with open(pythonFileName, "w") as f:
-    #             f.write(command)
-    #
-    #         # execute file with phenix.python
-    #         runPhenixProgram("", pythonFileName)
-    #
-    #         # read file in scipion python
-    #         with open(EMRINGERTRANSFERFILENAME, "r") as f:
-    #             self.stringDataDict = String(f.read())
-    #             # self.dataDict = json.loads(f.read())
-    #
-    #         self._store()
-
 
     # --------------------------- INFO functions ---------------------------
     def _validate(self):
