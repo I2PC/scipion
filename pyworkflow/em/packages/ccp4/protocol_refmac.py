@@ -125,7 +125,8 @@ class CCP4ProtRunRefmac(EMProtocol):
                         START)
 
     def createDataDictStep(self):
-        header = Ccp4Header(self._getInputVolume().getFileName(),
+        localInFileName = self._getVolumeFileName()
+        header = Ccp4Header(localInFileName,
                             readHeader=True)
         self.dict = {}
         x, y, z = header.getCellDimensions()
