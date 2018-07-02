@@ -25,17 +25,12 @@
 # *
 # **************************************************************************
 
-import json
-import os
 from tkMessageBox import showerror
 from protocol_molprobity import PhenixProtRunMolprobity
 from pyworkflow.protocol.params import LabelParam, EnumParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from pyworkflow.em.viewer import TableView
 import collections
-import glob
-from PIL import Image
-from convert import runPhenixProgram
 
 
 def errorWindow(tkParent, msg):
@@ -65,6 +60,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization of MolProbity results')
         form.addParam('showFinalResults', LabelParam,
+                      important=True,
                       label="Summary Table of Results",
                       help="Validation of protein geometry. Statistics "
                            "computed by the "
@@ -114,10 +110,86 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                            "experimental resolution expected for a model of "
                            "this quality; ideally the score should be lower "
                            "than the actual resolution.\n")
-
-        form.addParam('showBLrestraints', LabelParam,
-                      label="Basic geometry: Bond length restraints",
-                      help="Statistics across all thresholds\n\n")
+        group = form.addGroup('Basic Geometry: Bond Length Restraints')
+        group.addParam('showBLrestraints', LabelParam,
+                      label="Deviations",
+                      help="Check here the number of outlier atoms "
+                           "according "
+                           "to the bond length restraints between pairs of "
+                           "linked"
+                           "atoms.\nWarning!!!: Refined structures should not "
+                           "have any outliers except those are obvious in high "
+                           "resolution electron density maps.")
+        self.outliers = self.dictBLRestraints['Number of outliers > 4sigma']
+        if self.outliers > 0:
+            group.addParam('outliers', LabelParam,
+                      label="Outliers", help="List of outlier atoms ("
+                                             "sorted by deviation) according "
+                                             "to the bond length restraints")
+        group = form.addGroup('Basic Geometry: Bond Angle Restraints')
+        group.addParam('showBArestraints', LabelParam,
+                      label="Deviations",
+                      help="Check here the number of outlier residues "
+                           "according "
+                           "to the tau (N-alphaC-C) bond angle restraints.\n"
+                           "Warning!!!: Refined structures should not "
+                           "have any outliers except those are obvious in high "
+                           "resolution electron density maps.")
+        self.outliers = self.dictBARestraints['Number of outliers > 4sigma']
+        if self.outliers > 0:
+            group.addParam('outliers', LabelParam,
+                          label="Outliers", help="List of outlier residues ("
+                                                 "sorted by deviation) "
+                                                 "according to the bond angle "
+                                                 "restraints")
+        group = form.addGroup('Basic Geometry: Dihedral Angle Restraints')
+        group.addParam('showDArestraints', LabelParam,
+                      label="Deviations",
+                      help="Check here the number of outlier residues "
+                           "according "
+                           "to the side chain dihedral torsion (chi) angle "
+                           "restraints.\n"
+                           "Warning!!!: Refined structures should not "
+                           "have any outliers except those are obvious in high "
+                           "resolution electron density maps.")
+        self.outliers = self.dictDARestraints['Number of outliers > 4sigma']
+        if self.outliers > 0:
+            group.addParam('outliers', LabelParam,
+                          label="Outliers", help="List of outlier residues ("
+                                                 "sorted by deviation) "
+                                                 "according to the dihedral "
+                                                 "angle restraints")
+        group = form.addGroup('Basic Geometry: Chirality Restraints')
+        group.addParam('showCHILrestraints', LabelParam,
+                      label="Deviations",
+                      help="Check here the number of outlier residues "
+                           "according to the volume chirality "
+                           "restraints.\n"
+                           "Warning!!!: Refined structures should not "
+                           "have any outliers except those are obvious in high "
+                           "resolution electron density maps.")
+        self.outliers = self.dictChilRestraints['Number of outliers > 4sigma']
+        if self.outliers > 0:
+            group.addParam('outliers', LabelParam,
+                          label="Outliers", help="List of outlier residues ("
+                                                 "sorted by deviation) "
+                                                 "according to the volume "
+                                                 "chirality restraints")
+        group = form.addGroup('Basic Geometry: Planarity Restraints')
+        group.addParam('showPLANARrestraints', LabelParam,
+                      label="Deviations",
+                      help="Check here the number of outliers of planar "
+                           "groups, such as aromatic rings,"
+                           "according to the planar "
+                           "restraints.\n"
+                           "Warning!!!: Refined structures should not "
+                           "have any outliers except those are obvious in high "
+                           "resolution electron density maps.")
+        if self.outliers > 0:
+            group.addParam('outliers', LabelParam,
+                          label="Outliers", help="List of planar "
+                                                 "group outliers ("
+                                                 "sorted by deviation)")
         #
         # self.thresList = [str("%0.3f" % thres) for thres in self.dataDict[
         #     '_thresholds']]
@@ -169,22 +241,71 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         return {
             'showFinalResults': self._visualizeFinalResults,
             'showBLrestraints': self._showBLrestraints,
-            # 'showPeakCount': self._showPeakCount,
-            # 'showRollingWindows': self._showRollingWindows,
-            # 'showRingerResults': self._showRingerResults
+            'showBLoutliers': self._showBLoutliers,
+            'showBArestraints': self._showBArestraints,
+            'showDArestraints': self._showDArestraints,
+            'showCHILrestraints': self._showCHILrestraints,
+            'showPLANARrestraints': self._showPLANARrestraints,
         }
 
     def _visualizeFinalResults(self, e=None):
-
         headerList = ['statistic', 'value']
+        dictX = self.dictSummary
+        val = 0.4
+        mesg="Model Final Statistics"
+        title="MolProbity: Final Results Summary"
+        self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showBLrestraints(self, e=None):
+        headerList = ['measure', 'value']
+        dictX = self.dictBLRestraints
+        val = 0.3
+        mesg="Bond Length Restraints\n(Deviations from ideal values)"
+        title="MolProbity: Basic Geometry"
+        self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showBLoutliers(selfself, e=None):
+        pass
+
+    def _showBArestraints(self, e=None):
+        headerList = ['measure', 'value']
+        dictX = self.dictBARestraints
+        val = 0.3
+        mesg="Bond Angle Restraints\n(Deviations from ideal values)"
+        title="MolProbity: Basic Geometry"
+        self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showDArestraints(self, e=None):
+        headerList = ['measure', 'value']
+        dictX = self.dictDARestraints
+        val = 0.3
+        mesg="Dihedral Angle Restraints\n(Deviations from ideal values)"
+        title="MolProbity: Basic Geometry"
+        self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showCHILrestraints(self, e=None):
+        headerList = ['measure', 'value']
+        dictX = self.dictChilRestraints
+        val = 0.3
+        mesg="Chirality Restraints\n(Deviations from ideal values)"
+        title="MolProbity: Basic Geometry"
+        self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showPLANARrestraints(self, e=None):
+        headerList = ['measure', 'value']
+        dictX = self.dictPlanarRestraints
+        val = 0.3
+        mesg="Chirality Restraints\n(Deviations from ideal values)"
+        title="MolProbity: Basic Geometry"
+        self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showResults(self, headerList, dictX, val, mesg, title):
         dataList = []
-        for k, v in self.dictSummary.iteritems():
-            # if k[0] == "_":
-            #     continue
+        for k, v in dictX.iteritems():
             if isinstance(v, int):
                 dataList.append((k, v))
             elif isinstance(v, float):
-                dataList.append((k, "%0.4f" % v))
+                dataList.append((k, ("%" + str(val) + "f") % v))
 
         if not dataList:
             errorWindow(self.getTkRoot(), "No data available")
@@ -192,93 +313,28 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
 
         TableView(headerList=headerList,
                   dataList=dataList,
-                  mesg="Model Final Statistics\n",
-                  title="Molprobity: Final Results Summary",
+                  mesg=mesg,
+                  title=title,
                   height=len(dataList), width=250, padding=40)
 
-    def _showBLrestraints(self, e=None):
-        pass
-#     def showImage(self, fileName):
-#         fileName = os.path.join(self.plots, fileName)
-#         img = Image.open(fileName)
-#         img.show()
-#
-#     def _showThresholdScan(self, e=None):
-#         self.showImage(self.EMRINGERTOTALTHRESH)
-#
-#     def _showPeakCount(self, e=None):
-#         threshold_index = int(self.threshold)
-#         fileName = "%s.histogram.png" % self.thresList[threshold_index]
-#         self.showImage(fileName)
-#
-#     def _showRollingWindows(self, e=None):
-#         chain_index = int(self.chain)
-#         fileName = "%s_rolling.png" % self.chainList[chain_index]
-#         self.showImage(fileName)
-#
-#     def _showRingerResults(self, e=None):
-#         i = int(self.residue)
-#         index = int(self.dataDict['_residues_dict'][self.residueList[i]])
-#         # emringer main file
-#         mainDataFile = glob.glob(self.protocol._getExtraPath(
-#             "*_emringer.pkl"))[0]
-#         command = """from mmtbx.ringer.em_rolling import easy_pickle
-# import matplotlib.pyplot as plt
-#
-# # process file '%s'
-# file_name='%s'
-# ringer_results = easy_pickle.load(file_name)
-# figure = plt.figure() #  (figsize=(20,1000))
-#
-# def show_residue (residue, show_background_boxes=True) :
-#     subplots = []
-#     for i in range(1, residue.n_chi + 1) :
-#         chi = residue.get_angle(i)
-#         if (chi is None) : continue
-#         if (len(subplots) > 0) :
-#             p = figure.add_subplot(4, 1, i, sharex=subplots[0])
-#         else:
-#             p = figure.add_subplot(4, 1, i)
-#             p.set_title(residue.format())
-#         p.set_position([0.15, 0.725 - 0.225*(i-1), 0.8, 0.225])
-#         x = [ k*chi.sampling for k in range(len(chi.densities)) ]
-#         p.plot(x, chi.densities, 'r-', linewidth=1)
-#         if (chi.fofc_densities is not None) :
-#             p.plot(x, chi.fofc_densities, linestyle='--', color=[0.5,0.0,1.0])
-#         p.axvline(chi.angle_current, color='b', linewidth=2, linestyle='--')
-#         p.axhline(0, color=(0.4,0.4,0.4), linestyle='--', linewidth=1)
-#         if show_background_boxes:
-#             p.axhspan(0.3,1,facecolor="green",alpha=0.5)
-#             p.axhspan(-1,0.3,facecolor="grey",alpha=0.5)
-#         p.set_xlim(0,360)
-#         p.set_ylabel("Rho")
-#         p.set_xlabel("Chi" + str(i))
-#         subplots.append(p)
-#         plt.subplots_adjust(left = 0.18, bottom = 0.00, right = 0.94,
-#         top = 0.93,
-#                         wspace = 0.80, hspace = 0.43)
-#     plt.tight_layout()
-#     plt.show()
-# index = %d
-# show_residue(ringer_results[index])
-# """ % (mainDataFile, mainDataFile, index)
-#
-#         with open(self.EMRINGERSUBPLOTSFILENAME, "w") as f:
-#             f.write(command)
-#         # execute file with phenix.python
-#         runPhenixProgram("", self.EMRINGERSUBPLOTSFILENAME)
     def _parseFile(self, fileName):
         self.dictSummary = collections.OrderedDict()
         self.dictBLRestraints = collections.OrderedDict()
+        self.dictBARestraints = collections.OrderedDict()
+        self.dictDARestraints = collections.OrderedDict()
+        self.dictChilRestraints = collections.OrderedDict()
+        self.dictPlanarRestraints = collections.OrderedDict()
         with open(fileName) as f:
             line = f.readline()
             while line:
                 words = line.strip().split()
                 if len(words) > 1:
                     if (words[0] == 'Ramachandran' and words[1] == 'outliers'):
-                        self.dictSummary['Ramachandran outliers'] = float(words[3])
+                        self.dictSummary['Ramachandran outliers'] = \
+                            float(words[3])
                     elif (words[0] == 'favored' and words[1] == '='):
-                        self.dictSummary['Ramachandran favored'] = float(words[2])
+                        self.dictSummary['Ramachandran favored'] = \
+                            float(words[2])
                     elif (words[0] == 'Rotamer' and words[1] == 'outliers'):
                         self.dictSummary['Rotamer outliers'] = float(words[3])
                     elif (words[0] == 'C-beta' and words[1] == 'deviations'):
@@ -292,25 +348,155 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                     elif (words[0] == 'MolProbity' and words[1] == 'score'):
                         self.dictSummary['Overall score'] = float(words[3])
                     elif (words[0] == 'bond' and words[1] == ':'):
-                        self.dictBLRestraints['Number of restraints'] = int(words[4])
-                        self.dictBLRestraints['RMS (deviation)'] = float(words[2])
-                        self.dictBLRestraints['Max deviation'] = float(words[3])
+                        self.dictBLRestraints['Number of restraints'] = int(
+                            words[4])
+                        self.dictBLRestraints['RMS (deviation)'] = float(
+                            words[2])
+                        self.dictBLRestraints['Max deviation'] = float(
+                            words[3])
                     elif (words[0] == '----------Bond' and words[1] ==
                         'lengths----------'):
                         f.readline()
                         line = f.readline()
                         words = line.strip().split()
                         if (words[0] == 'All' and words[1] == 'restrained'):
-                            self.dictBLRestraints['Number of outliers > 4sigma'] = \
+                            self.dictBLRestraints['Number of outliers ' \
+                                                  '> 4sigma'] = int(0)
+                        elif (words[0] == 'atoms'):
+                            cnt = 1
+                            Atom1 = []
+                            Atom2 = []
+                            IdealValue = []
+                            ModelValue = []
+                            Deviation = []
+                            line = f.readline()
+                            words = line.strip().split()
+                            Atom1.append(words[0]+ ' ' + words[1] + ' ' +
+                                         words[2])
+                            while (len(words) > 1 and words[1] == 'DMS'):
+                                cnt += 1
+                                line = f.readline()
+                                words = line.strip().split()
+                            self.dictBLRestraints['Number of outliers ' \
+                                                  '> 4sigma'] = int(cnt / 2)
+                            if words[0].startswith('C'):
+                                Atom1.append(words[0] + ' ' + words[1] + ' ' +
+                                             words[2])
+                            if words[0].startswith('D'):
+                                Atom2.append(words[0] + ' ' + words[1] + ' ' +
+                                         words[2])
+                                IdealValue.append(float(words[3]))
+                                ModelValue.append(float(words[4]))
+                                Deviation.append(float(words[8].split('*')[0]))
+                    elif (words[0] == 'angle' and words[1] == ':'):
+                        self.dictBARestraints['Number of restraints'] = int(
+                            words[4])
+                        self.dictBARestraints['RMS (deviation)'] = float(
+                            words[2])
+                        self.dictBARestraints['Max deviation'] = float(
+                            words[3])
+                    elif (words[0] == '----------Bond' and words[1] ==
+                        'angles----------'):
+                        f.readline()
+                        line = f.readline()
+                        words = line.strip().split()
+                        if (words[0] == 'All' and words[1] == 'restrained'):
+                            self.dictBARestraints[
+                                'Number of outliers > 4sigma'] = \
                                 int(0)
                         elif (words[0] == 'atoms'):
                             cnt = 1
                             line = f.readline()
                             words = line.strip().split()
-                            while (len(words) > 1 and words[1] == 'DMS'):
+                            while (len(words) > 1 and len(words[2]) == 3):
                                 cnt += 1
                                 line = f.readline()
                                 words = line.strip().split()
-                            self.dictBLRestraints['Number of outliers > 4sigma'] = \
-                                int(cnt / 2)
+                            self.dictBARestraints[
+                                'Number of outliers > 4sigma'] = \
+                                int(cnt / 3)
+                    elif (words[0] == 'dihedral' and words[1] == ':'):
+                        self.dictDARestraints['Number of restraints'] = int(
+                            words[4])
+                        self.dictDARestraints['RMS (deviation)'] = float(
+                            words[2])
+                        self.dictDARestraints['Max deviation'] = float(
+                            words[3])
+                    elif (words[0] == '----------Dihedral' and words[1] ==
+                        'angles----------'):
+                        f.readline()
+                        line = f.readline()
+                        words = line.strip().split()
+                        if (words[0] == 'All' and words[1] == 'restrained'):
+                            self.dictDARestraints[
+                                'Number of outliers > 4sigma'] = \
+                                int(0)
+                        elif (words[0] == 'atoms'):
+                            cnt = 1
+                            line = f.readline()
+                            words = line.strip().split()
+                            while (len(words) > 1 and len(words[2]) == 3):
+                                cnt += 1
+                                line = f.readline()
+                                words = line.strip().split()
+                            self.dictDARestraints[
+                                'Number of outliers > 4sigma'] = \
+                                int(cnt / 4)
+                    elif (words[0] == 'chirality' and words[1] == ':'):
+                        self.dictChilRestraints['Number of restraints'] = int(
+                            words[4])
+                        self.dictChilRestraints['RMS (deviation)'] = float(
+                            words[2])
+                        self.dictChilRestraints['Max deviation'] = float(
+                            words[3])
+                    elif (words[0] == '----------Chiral' and words[1] ==
+                        'volumes----------'):
+                        f.readline()
+                        line = f.readline()
+                        words = line.strip().split()
+                        if (words[0] == 'All' and words[1] == 'restrained'):
+                            self.dictChilRestraints[
+                                'Number of outliers > 4sigma'] = \
+                                int(0)
+                        elif (words[0] == 'atoms'):
+                            # An example is necessary to test this part
+                            cnt = 1
+                            line = f.readline()
+                            words = line.strip().split()
+                            while (len(words) > 1 and len(words[2]) == 3):
+                                cnt += 1
+                                line = f.readline()
+                                words = line.strip().split()
+                            self.dictChilRestraints[
+                                'Number of outliers > 4sigma'] = \
+                                int(cnt / 4)
+                    elif (words[0] == 'planarity' and words[1] == ':'):
+                        self.dictPlanarRestraints['Number of restraints'] = \
+                            int(words[4])
+                        self.dictPlanarRestraints['RMS (deviation)'] = float(
+                            words[2])
+                        self.dictPlanarRestraints['Max deviation'] = float(
+                            words[3])
+                    elif (words[0] == '----------Planar' and words[1] ==
+                        'groups----------'):
+                        f.readline()
+                        line = f.readline()
+                        words = line.strip().split()
+                        if (words[0] == 'All' and words[1] == 'restrained'):
+                            self.dictPlanarRestraints[
+                                'Number of outliers > 4sigma'] = \
+                                int(0)
+                        elif (words[0] == 'atoms'):
+                            # An example is necessary to test this part
+                            cnt = 1
+                            line = f.readline()
+                            words = line.strip().split()
+                            while (len(words) > 6 ):
+                                cnt += 1
+                                line = f.readline()
+                                words = line.strip().split()
+                            self.dictPlanarRestraints[
+                                'Number of outliers > 4sigma'] = \
+                                int(cnt / 4)
                 line = f.readline()
+
