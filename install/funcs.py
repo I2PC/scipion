@@ -165,6 +165,7 @@ class Target:
         self._env = env
         self._name = name
         self._default = kwargs.get('default', False)
+        self._always = kwargs.get('always', False)  # Adding always here to allow getting to Commands where always=True
         self._commandList = list(commands)  # copy the list/tuple of commands
         self._finalCommands = [] # their targets will be used to check if we need to re-build
         self._deps = [] # names of dependency targets
@@ -202,7 +203,7 @@ class Target:
         t1 = time.time()
 
         print(green("Building %s ..." % self._name))
-        if self._existsAll():
+        if not self._always and self._existsAll():
             print("  All targets exist, skipping.")
         else:
             for command in self._commandList:
@@ -247,6 +248,7 @@ class Environment:
         self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
+        self._pipCmd = kwargs.get('pipCmd', 'python {}/pip install %s==%s'.format(self.getPythonPackagesFolder()))
 
     def getLibSuffix(self):
         return self._libSuffix
@@ -256,7 +258,6 @@ class Environment:
     
     @staticmethod
     def getSoftware():
-
         return os.environ.get('SCIPION_SOFTWARE', 'software')
 
     @staticmethod
@@ -298,6 +299,13 @@ class Environment:
     @staticmethod
     def getEm(name):
         return '%s/%s' % (Environment.getEmFolder(), name)
+
+    @staticmethod
+    def getEmPackagesFolder():
+        return "pyworkflow/em/packages"
+
+    def getTargetList(self):
+        return self._targetList
 
     def addTarget(self, name, *commands, **kwargs):
 
@@ -361,6 +369,8 @@ class Environment:
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
 
+        createBuildDir = kwargs.get('createBuildDir', False)
+
         deps = kwargs.get('deps', [])
         
         # Download library tgz
@@ -381,8 +391,18 @@ class Environment:
         else:
             t.addCommand(self._downloadCmd % {'tar': tarFile, 'url': url},
                          targets=tarFile)
-        t.addCommand(self._tarCmd % tar,
-                     targets=buildPath,
+
+        if createBuildDir:
+            tarCmd = '{} -C {}'.format(self._tarCmd % tar, buildDir)
+            t.addCommand('mkdir %s' % buildPath,
+                         targets=[buildPath],
+                         cwd=downloadDir)
+        else:
+            tarCmd = self._tarCmd % tar
+
+        finalTarget = join(downloadDir, kwargs.get('target', buildDir))
+        t.addCommand(tarCmd,
+                     targets=finalTarget,
                      cwd=downloadDir)
         
         return t          
@@ -420,7 +440,7 @@ class Environment:
 
         # If passing a command list (of tuples (command, target)) those actions
         # will be performed instead of the normal ./configure / cmake + make
-        commands = kwargs.get('commands', []) 
+        commands = kwargs.get('commands', [])
 
         t = self._addDownloadUntar(name, **kwargs)
         configDir = kwargs.get('configDir', t.buildDir)
@@ -481,24 +501,32 @@ class Environment:
 
         return t
 
-    def addPipModule(self, name, version, target=None, default=True, deps=[]):
+    def addPipModule(self, name, version="", pipCmd=None,
+                     target=None, default=True, deps=[], ignoreDefaultDeps=False):
         """Add a new module to our built Python .
         Params in kwargs:
             name: pip module name
-            version: module version is mandatory to prevent undesired updates.
+            version: module version - must be specified to prevent undesired updates.
             default: True if this module is build by default.
         """
 
         target = name if target is None else target
-        t = self.addTarget(name, default=default)
+        pipCmd = pipCmd or self._pipCmd % (name, version)
+        t = self.addTarget(name, default=default, always=True)  # we set always=True to let pip decide if updating
 
         # Add the dependencies
-        self._addTargetDeps(t, ['pip','python'] + deps)
+        if ignoreDefaultDeps:
+            defaultDeps = []
+        else:
+            defaultDeps = ['pip', 'python']
+        self._addTargetDeps(t, defaultDeps + deps)
 
-        # Install using pip
-        t.addCommand('python -m pip install %s==%s' % (name, version),
+        t.addCommand(pipCmd,
                      final=True,
-                     targets=self.getPythonPackagesFolder() + '/' + target)
+                     targets="%s/%s" % (self.getPythonPackagesFolder(), target),
+                     always=True  # execute pip command always. Pip will handle target existence
+                     )
+
         return t
 
     def addModule(self, name, **kwargs):
@@ -598,8 +626,8 @@ class Environment:
                    if kwargs.get('updateCuda', False) else None)
 
         # Set environment
-        variables = kwargs.get('vars',[])
-        for var,value in variables:
+        variables = kwargs.get('vars', [])
+        for var, value in variables:
             environ.update({var: value})
 
 
@@ -612,7 +640,7 @@ class Environment:
   
         libArgs = {'downloadDir': self.getEmFolder(),
                    'urlSuffix': 'em',
-                   'default': False} # This will be updated with value in kwargs
+                   'default': False}  # This will be updated with value in kwargs
         libArgs.update(kwargs)
 
         target = self._addDownloadUntar(extName, **libArgs)
@@ -689,37 +717,46 @@ class Environment:
                 executed.add(tgt.getName())
                 exploring.discard(tgt.getName())
 
-    def _getExtName(self, name, version):
+    @staticmethod
+    def _getExtName(name, version):
         """ Return folder name for a given package-version """
         return '%s-%s' % (name, version)
 
     def _isInstalled(self, name, version):
         """ Return true if the package-version seems to be installed. """
-        pydir = join(self.getLibFolder(), 'python2.7', 'site-packages')
+        pydir = self.getPythonPackagesFolder()
         extName = self._getExtName(name, version)
         return (exists(join(self.getEmFolder(), extName)) or
                 extName in [x[:len(extName)] for x in os.listdir(pydir)])
 
-    def execute(self):
-        if '--help' in self._args[2:]:
-            if self._packages:
-                print("Available packages: "
-                      "([ ] not installed, [X] seems already installed)")
+    def printHelp(self):
+        printStr = ""
+        if self._packages:
+            printStr=("Available binaries: "
+                  "([ ] not installed, [X] seems already installed)\n")
 
-                keys = sorted(self._packages.keys())
-                for k in keys:
-                    pVersions = self._packages[k]
-                    sys.stdout.write("%15s " % k)
-                    for name, version in pVersions:
-                        installed = self._isInstalled(name, version)
-                        vInfo = '%s [%s]' % (version, 'X' if installed else ' ')
-                        sys.stdout.write('%13s' % vInfo)
-                    sys.stdout.write("\n")
-            sys.exit()
+            keys = sorted(self._packages.keys())
+            for k in keys:
+                pVersions = self._packages[k]
+                # sys.stdout.write("%15s " % k)
+                printStr += "\t%15s " % k
+                for name, version in pVersions:
+                    installed = self._isInstalled(name, version)
+                    vInfo = '%s [%s]' % (version, 'X' if installed else ' ')
+                    # sys.stdout.write('%13s' % vInfo)
+                    printStr += '%13s' % vInfo
+                # sys.stdout.write("\n")
+                printStr += '\n'
+        return printStr
+
+    def execute(self):
+        if '--help' in self._args:
+            print(self.printHelp())
+            return
 
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'
-        cmdTargets = [a for a in self._args[2:]
+        cmdTargets = [a for a in self._args
                       if a[0].isalpha() and not a.startswith('xmipp')]
         if cmdTargets:
             # Check that they are all command targets

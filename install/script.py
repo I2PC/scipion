@@ -33,18 +33,19 @@ from install.funcs import Environment
 
 get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
+args = sys.argv
 
-env = Environment(args=sys.argv)
+env = Environment(args=args[2:])
 
-noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
-noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
+noOpencv = '--no-opencv' in args or not get('OPENCV')
+noScipy = '--no-scipy' in args or not get('SCIPY')
 
 
 #  *******************************
 #  *  PATHS
 #  *******************************
 # GET the real path where scipion is installed
-SCIPION = env._args[0]
+SCIPION = args[0]
 SCIPION = os.path.realpath(SCIPION)
 SCIPION = os.path.dirname(SCIPION)
 SCIPION = os.path.abspath(SCIPION)
@@ -336,7 +337,7 @@ env.addPipModule('paramiko', '1.14.0', default=False)
 env.addPipModule('winpdb', '1.3.6', default=False)
 
 env.addPipModule('lxml', '3.4.1', target='lxml-3.4.1*', default=False)
-env.addPipModule('requests', '2.18.4', default=False)
+env.addPipModule('requests', '2.18.4', default=True)
 
 # These were dependencies of iPython
 env.addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
@@ -359,51 +360,6 @@ env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
 
 # 'commands' is a list of (command, [targets]) to run after installation.
 
-
-env.addPackage('bsoft', version='1.8.8',
-               tar='bsoft1_8_8_Fedora_12.tgz')
-
-env.addPackage('bsoft', version='1.9.0',
-               tar='bsoft1_9_0_Fedora_20.tgz')
-
-env.addPackage('ctffind', version='3.6',
-               tar='ctffind_V3.5.tgz')
-
-env.addPackage('ctffind4', version='4.0.15',
-               tar='ctffind_V4.0.15.tgz')
-
-env.addPackage('ctffind4', version='4.1.5',
-               tar='ctffind_V4.1.5.tgz')
-
-env.addPackage('ctffind4', version='4.1.8',
-               tar='ctffind_V4.1.8.tgz')
-
-env.addPackage('ctffind4', version='4.1.10',
-               tar='ctffind4-4.1.10.tgz')
-
-
-env.addPackage('summovie', version='1.0.2',
-               tar='summovie_1.0.2.tgz')
-
-env.addPackage('unblur', version='1.0.15',
-               tar='unblur_1.0_150529.tgz')
-
-env.addPackage('unblur', version='1.0.2',
-               tar='unblur_1.0.2.tgz')
-
-eman2_commands = [('./eman2-installer',
-                   'eman2.*rc')]
-
-env.addPackage('eman', version='2.11',
-               tar='eman2.11.linux64.tgz',
-               commands=eman2_commands)
-
-env.addPackage('eman', version='2.12',
-               tar='eman2.12.linux64.tgz',
-               commands=eman2_commands)
-
-env.addPackage('frealign', version='9.07',
-               tar='frealign_v9.07.tgz')
 
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
@@ -435,6 +391,17 @@ env.addPackage('relion', version='2.1',
               commands=relion2_commands,
               updateCuda=True,
               vars=relion_vars)
+
+eman2_commands = [('./eman2-installer',
+                   'eman2.*rc')]
+
+env.addPackage('eman', version='2.11',
+               tar='eman2.11.linux64.tgz',
+               commands=eman2_commands)
+
+env.addPackage('eman', version='2.12',
+               tar='eman2.12.linux64.tgz',
+               commands=eman2_commands)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
@@ -505,9 +472,6 @@ env.addPackage('gctf', version='1.06',
 
 env.addPackage('gautomatch', version='0.53',
                tar='Gautomatch_v0.53.tgz')
-
-env.addPackage('mag_distortion', version='1.0.1',
-               tar='mag_distortion-1.0.1.tgz')
 
 env.addPackage('ethan', version='1.2',
                tar='ethan-1.2.tgz',

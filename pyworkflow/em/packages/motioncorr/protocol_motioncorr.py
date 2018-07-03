@@ -40,13 +40,12 @@ import pyworkflow.em as em
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
-from pyworkflow.em.packages.grigoriefflab.convert import (parseMagCorrInput,
-                                                          parseMagEstOutput)
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion, getEnviron,
                      parseMovieAlignment, parseMovieAlignment2, getCudaLib,
-                     MOTIONCORR_CUDA_LIB, MOTIONCOR2_CUDA_LIB, CUDA_LIB)
+                     MOTIONCORR_CUDA_LIB, MOTIONCOR2_CUDA_LIB, CUDA_LIB,
+                     parseMagCorrInput, parseMagEstOutput)
 from pyworkflow.protocol import STEPS_PARALLEL
 
 

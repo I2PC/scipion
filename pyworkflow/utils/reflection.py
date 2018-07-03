@@ -48,9 +48,10 @@ def getModules(path):
             try:
                 m = __import__(f)
                 modules[f] = m
-            except Exception, ex:
-                print ">>> Error loading module: '%s'" % f
-                print ">>> Exception: ", ex
+                checkPlugin(m)
+            except Exception as ex:
+                print(">>> Error loading module: '%s'" % f)
+                print(">>> Exception: ", ex)
                 import traceback
                 traceback.print_exc()
 
@@ -64,7 +65,7 @@ def getSubclassesFromModules(BaseClass, modules, debug=False):
 
     for m in modules.values():
         if debug:
-            print "loading module: ", m.__name__
+            print("loading module: ", m.__name__)
         subDict = getSubclasses(BaseClass, m.__dict__)
         
         for subclass in subDict.values():
@@ -73,7 +74,7 @@ def getSubclassesFromModules(BaseClass, modules, debug=False):
             if moduleName.startswith(m.__name__):
                 subclass._package = m
                 if debug:
-                    print "  found: ", subclass.__name__, "module: ", subclass.__module__
+                    print("  found: ", subclass.__name__, "module: ", subclass.__module__)
         subclasses.update(subDict)
 
     return subclasses
@@ -97,3 +98,8 @@ def getSubclasses(BaseClass, inputDict):
         if isclass(v) and issubclass(v, BaseClass):
             outputDict[k] = v
     return outputDict
+
+def checkPlugin(module):
+    if not getattr(module, '_plugin', None):
+        print('WARNING: module "%s" using old package structure, '
+              '_plugin attribute missing' % module.__name__)

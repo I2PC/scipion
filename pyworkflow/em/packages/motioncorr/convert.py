@@ -26,6 +26,7 @@
 
 import os
 from os.path import join, exists
+import re
 
 from pyworkflow.utils import Environ, getEnvVariable
 
@@ -140,3 +141,56 @@ def parseMovieAlignment2(logFile):
             yshifts.append(float(parts[2]))
     f.close()
     return xshifts, yshifts
+
+def parseMagEstOutput(filename):
+    result = []
+    ansi_escape = re.compile(r'\x1b[^m]*m')
+    if os.path.exists(filename):
+        f = open(filename)
+        parsing = False
+        for line in f:
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("The following distortion parameters were found"):
+                parsing = True
+            if parsing:
+                if 'Distortion Angle' in line:
+                    result.append(float(line.split()[3]))
+                if 'Major Scale' in line:
+                    result.append(float(line.split()[3]))
+                if 'Minor Scale' in line:
+                    result.append(float(line.split()[3]))
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = False
+            if 'Corrected Pixel Size' in line:
+                result.append(float(line.split()[4]))
+            if 'The Total Distortion =' in line:
+                result.append(float(line.split()[4]))
+        f.close()
+
+    return result
+
+
+def parseMagCorrInput(filename):
+    result = []
+    ansi_escape = re.compile(r'\x1b[^m]*m')
+    if os.path.exists(filename):
+        f = open(filename)
+        parsing = False
+        for line in f:
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = True
+            if parsing:
+                if 'Distortion Angle' in line:
+                    result.append(float(line.split()[3]))
+                if 'Major Scale' in line:
+                    result.append(float(line.split()[3]))
+                if 'Minor Scale' in line:
+                    result.append(float(line.split()[3]))
+            if 'Corrected Pixel Size' in line:
+                result.append(float(line.split()[4]))
+        f.close()
+
+    return result

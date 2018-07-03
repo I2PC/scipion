@@ -15,19 +15,16 @@ SCIPION_SOFTWARE = software
 SCIPION_URL = http://scipion.cnb.csic.es/downloads/scipion
 SCIPION_URL_SOFTWARE = %(SCIPION_URL)s/software
 SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
+SCIPION_PLUGIN_REPO_URL = http://scipion.i2pc.es/getplugins/
 
 [PACKAGES]
 EM_ROOT = software/em
 
-BSOFT_HOME = %(EM_ROOT)s/bsoft-1.9.0
 CRYOEF_HOME = %(EM_ROOT)s/cryoEF-1.1.0
-CTFFIND_HOME = %(EM_ROOT)s/ctffind-3.6
-CTFFIND4_HOME = %(EM_ROOT)s/ctffind4-4.1.10
-CCP4_HOME =  %(EM_ROOT)s/ccp4-7.0
+CCP4_HOME =  %(EM_ROOT)s/ccp4-6.5
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker-0.2.1
 EMAN2DIR = %(EM_ROOT)s/eman-2.12
 ETHAN_HOME = %(EM_ROOT)s/ethan-1.2
-FREALIGN_HOME = %(EM_ROOT)s/frealign-9.07
 GAUTOMATCH_HOME = %(EM_ROOT)s/gautomatch-0.53
 # replace '_cuX.Y_' to certain installed cuda
 GAUTOMATCH = Gautomatch-v0.53_sm_20_cu8.0_x86_64
@@ -43,7 +40,6 @@ IMAGIC_HOME = %(EM_ROOT)s/imagic
 LOCALREC_HOME = %(EM_ROOT)s/localrec-1.2.0
 LOCALREC_RELION_HOME = %(EM_ROOT)s/relion-1.4
 LOCSCALE_HOME = %(EM_ROOT)s/locscale-0.1
-MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
 MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1
@@ -62,8 +58,6 @@ RELION_HOME = %(EM_ROOT)s/relion-2.1
 RESMAP_HOME = %(EM_ROOT)s/resmap-1.1.5s2
 SIMPLE_HOME = %(EM_ROOT)s/simple-2.1
 SPIDER_HOME = %(EM_ROOT)s/spider-21.13/spider
-SUMMOVIE_HOME = %(EM_ROOT)s/summovie-1.0.2
-UNBLUR_HOME = %(EM_ROOT)s/unblur-1.0.2
 XMIPP_HOME = %(EM_ROOT)s/xmipp
 
 # Some visualization packages

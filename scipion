@@ -158,7 +158,9 @@ VARS = {
     'SCIPION_HOME': SCIPION_HOME,
     'SCIPION_CWD': SCIPION_CWD,
     'SCIPION_VERSION': getVersion(),
+    'SCIPION_SHORT_VERSION': getVersion(long=False),
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
+    'SCIPION_INSTALL': join(SCIPION_HOME, 'install'),
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
     'SCIPION_LOCAL_CONFIG': SCIPION_LOCAL_CONFIG,
@@ -297,6 +299,10 @@ MODE_TEST_DATA = 'testdata'
 MODE_HELP = 'help'
 MODE_VIEWER = ['viewer', 'view', 'show']
 MODE_INSTALL = 'install'
+MODE_INSTALL_PLUGIN = 'install_plugin'
+MODE_UNINSTALL_PLUGIN = 'uninstall_plugin'
+MODE_INSTALL_BINS = 'install_bins'
+MODE_UNINSTALL_BINS = 'uninstall_bins'
 MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
@@ -310,6 +316,8 @@ MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
 MODE_DEPENDENCIES = 'deps'
 MODE_DEMO = 'demo'
+PLUGIN_MODES = [MODE_UNINSTALL_PLUGIN, MODE_INSTALL_PLUGIN,
+                MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
 
 
 def main():
@@ -401,7 +409,16 @@ def main():
         #TODO: This option seems to be redundant with MODE_UNINSTALL 
         import scripts.clean as clean
         sys.exit(0)
-        
+
+    elif mode in PLUGIN_MODES:
+        cwd = os.getcwd()
+        os.chdir(SCIPION_HOME)
+
+        os.environ.update(VARS)
+        args = ' '.join(sys.argv)
+
+        runScript('%s %s' % (join(VARS['SCIPION_INSTALL'], 'install-plugin.py'), args))
+
     elif mode == MODE_INSTALL:
         # Always move to SCIPION_HOME dir before installing
         cwd = os.getcwd()
@@ -438,6 +455,7 @@ Example: scipion install eman-2.12
                     os.makedirs(path)
 
         def build(args):
+            # sys.path.append(XMIPP_LIB)
             # Just importing the script will launch the install actions
             import install.script as script
             # Remove targets names from environment, that are
@@ -576,8 +594,15 @@ MODE can be:
     help                   Print this help message.
 
     config                 Check and/or write Scipion's global and local configuration.
+    
+    install_plugin         Install Scipion plugins. Use flag --help to see usage.
+    
+    uninstall_plugin       Uninstall Scipion plugins. Use with flag --help to see usage.
+    
+    install_bins           Install Plugin Binaries. Use with flag --help to see usage.
 
-    install [OPTION]       Download and install all the necessary software to run Scipion.
+    install [OPTION]       [ WILL BE DEPRECATED IN NEXT RELEASE]
+                           Download and install all the necessary software to run Scipion.
                            OPTION can be:
                              --with-all-packages: download also all external em packages
                              --help: show all the available options
@@ -632,7 +657,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  help install manager project stats tests testdata viewer webserver printenv run
+  help install install_plugin uninstall_plugin install_bins uninstall_bins manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 
