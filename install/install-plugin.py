@@ -71,7 +71,7 @@ installParser.add_argument('-p', '--plugin', action='append', nargs='+',
                            metavar=('pluginName', 'pluginVersion'),
                            help='- pluginName:     the name of the plugin to install from the list\n'
                                  '                 of available plugins shown below.\n'
-                                 '- pluginVersion: (optional) pip version to install. If not specified,'
+                                 '- pluginVersion: (optional) pip version to install. If not specified,\n'
                                  '                 will install the latest compatible with current Scipion.')
 
 ############################################################################
