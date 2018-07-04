@@ -36,6 +36,7 @@ from convert import writeSetOfClasses2D, writeSetOfParticles
 import pyworkflow.em.metadata as metadata
 from pyworkflow.protocol.params import *
 import xmipp
+from xmipp3 import getMatlabEnviron
 from shutil import copy
 
 
@@ -275,15 +276,20 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             moveFile(os.path.join(iterDir, 'angles_iter001_00.xmd'), anglesFn)
         t.toc('Significant took: ')
 
-        reconsArgs = ' -i %s' % anglesFn
-        reconsArgs += ' -o %s' % volFn
-        reconsArgs += ' --weight -v 0  --sym %s ' % self.symmetryGroup
-
         print "Number of images for reconstruction: ", metadata.getSize(
             anglesFn)
-        t.tic()
-        self.runJob("xmipp_reconstruct_fourier", reconsArgs)
-        t.toc('Reconstruct fourier took: ')
+        fourier=False
+        if fourier:
+            reconsArgs = ' -i %s' % anglesFn
+            reconsArgs += ' -o %s' % volFn
+            reconsArgs += ' --weight -v 0  --sym %s ' % self.symmetryGroup
+
+            self.runJob("xmipp_reconstruct_fourier", reconsArgs)
+        else:
+        # [Htb, kernel, rec] = reconstruct_multires_ADMM_xmipp(pathXmd, scale, alphaRec, nbItADMM, nbItCG);
+            args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',4,1e2,30,7); xmipp_write(rec,'%s'); exit"''' \
+                 %(os.path.join(iterDir,"matlab.log"),anglesFn,volFn)
+            self.runJob("matlab", args, env=getMatlabEnviron(),numberOfMpi=1)
 
         # Center the volume
         fnSym = self._getExtraPath('volumeSym_%03d.vol' % iterNumber)
