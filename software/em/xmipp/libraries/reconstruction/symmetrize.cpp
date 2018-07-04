@@ -241,13 +241,14 @@ void ProgSymmetrize::preProcess()
             	fhOut.open(fnOutSymList.c_str());
 
                 Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
-                for (int i = 0; i < SL.symsNo(); i++)
+                for (int i = 0; i < SL.trueSymsNo(); i++)
                 {
                     SL.getMatrices(i, L, R);
                     fhOut<< L << std::endl;
                     fhOut<< R << std::endl;
                 }
             	fhOut.close();
+            	exit(0);
             }
         }
     }
