@@ -88,7 +88,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
                            ' - *by frame or movie*: Rejects movies if one of '
                                     'the conditions above are met.')
 
-        form.addParam('maxFrameShift', params.FloatParam, default=1, 
+        form.addParam('maxFrameShift', params.FloatParam, default=10,
                       label='Max. frame shift (A)',
                       condition='rejType==%s or rejType==%s or rejType==%s'
                                  % (self.REJ_FRAME, self.REJ_AND, self.REJ_OR),
