@@ -30,29 +30,35 @@
 /* Read parameters --------------------------------------------------------- */
 void ProgSymmetrize::readParams()
 {
-    XmippMetadataProgram::readParams();
     fn_sym = getParam("--sym");
-    doMask = false;
-    if (checkParam("--mask_in"))
-    {
-        fn_Maskin = getParam("--mask_in");
-        doMask = true;
-    }
-    helical=(fn_sym=="helical");
-    dihedral=(fn_sym=="dihedral");
-    helicalDihedral=(fn_sym=="helicalDihedral");
-    if (helical || helicalDihedral)
-    {
-    	Ts=getDoubleParam("--sampling");
-        zHelical=getDoubleParam("--helixParams",0)/Ts;
-        rotHelical=DEG2RAD(getDoubleParam("--helixParams",1));
-        rotPhaseHelical=DEG2RAD(getDoubleParam("--helixParams",2));
-    }
-    do_not_generate_subgroup = checkParam("--no_group");
-    wrap = !checkParam("--dont_wrap");
-    sum = checkParam("--sum");
-    heightFraction = getDoubleParam("--heightFraction");
-    splineOrder = getIntParam("--spline");
+	onlyWriteSymList = checkParam("--only_write_symlist");
+	if (onlyWriteSymList)
+		fnOutSymList = getParam("--only_write_symlist");
+	else
+	{
+		XmippMetadataProgram::readParams();
+		doMask = false;
+		if (checkParam("--mask_in"))
+		{
+			fn_Maskin = getParam("--mask_in");
+			doMask = true;
+		}
+		helical=(fn_sym=="helical");
+		dihedral=(fn_sym=="dihedral");
+		helicalDihedral=(fn_sym=="helicalDihedral");
+		if (helical || helicalDihedral)
+		{
+			Ts=getDoubleParam("--sampling");
+			zHelical=getDoubleParam("--helixParams",0)/Ts;
+			rotHelical=DEG2RAD(getDoubleParam("--helixParams",1));
+			rotPhaseHelical=DEG2RAD(getDoubleParam("--helixParams",2));
+		}
+		do_not_generate_subgroup = checkParam("--no_group");
+		wrap = !checkParam("--dont_wrap");
+		sum = checkParam("--sum");
+		heightFraction = getDoubleParam("--heightFraction");
+		splineOrder = getIntParam("--spline");
+	}
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -78,10 +84,14 @@ void ProgSymmetrize::defineParams()
     addParamsLine("   [--sum]               : compute the sum of the images/volumes instead of the average. This is useful for symmetrizing pieces");
     addParamsLine("   [--mask_in <fileName>]: symmetrize only in the masked area");
     addParamsLine("   [--spline <order=3>]  : Spline order for the interpolation (valid values are 1 and 3)");
+    addParamsLine("   [--only_write_symlist <filename>] : Write the left and right matrices in symlist as text)");
+    addParamsLine("                         : Matrices are written as L1, R1, L2, R2, ...)");
     addExampleLine("Symmetrize a list of images with 6 fold symmetry",false);
     addExampleLine("   xmipp_transform_symmetrize -i input.sel --sym 6");
     addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
     addExampleLine("   xmipp_transform_symmetrize -i input.vol --sym i3 --dont_wrap");
+    addExampleLine("Get the symmetry matrices",false);
+    addExampleLine("   xmipp_transform_symmetrize -i dummy.vol --sym i3 --only_write_symlist LR.txt");
 }
 
 /* Show ------------------------------------------------------------------- */
@@ -89,20 +99,27 @@ void ProgSymmetrize::show()
 {
     if (verbose==0)
         return;
-    XmippMetadataProgram::show();
-    std::cout
-    << "Symmetry: " << fn_sym << std::endl
-    << "No group: " << do_not_generate_subgroup << std::endl
-    << "Wrap:     " << wrap << std::endl
-    << "Sum:      " << sum << std::endl
-	<< "Spline:   " << splineOrder << std::endl;
-    if (doMask)
-        std::cout << "mask_in    " << fn_Maskin << std::endl;
-    if (helical)
-        std::cout << "RotHelical: " << RAD2DEG(rotHelical) << std::endl
-        << "RotPhaseHelical: " << RAD2DEG(rotPhaseHelical) << std::endl
-        << "ZHelical:   " << zHelical*Ts
-		<< "Height fraction: " << heightFraction << std::endl;
+    if (onlyWriteSymList)
+    {
+    	std::cout << "Output symlist: " << fnOutSymList << std::endl;
+    }
+    else
+    {
+		XmippMetadataProgram::show();
+		std::cout
+		<< "Symmetry: " << fn_sym << std::endl
+		<< "No group: " << do_not_generate_subgroup << std::endl
+		<< "Wrap:     " << wrap << std::endl
+		<< "Sum:      " << sum << std::endl
+		<< "Spline:   " << splineOrder << std::endl;
+		if (doMask)
+			std::cout << "mask_in    " << fn_Maskin << std::endl;
+		if (helical)
+			std::cout << "RotHelical: " << RAD2DEG(rotHelical) << std::endl
+			<< "RotPhaseHelical: " << RAD2DEG(rotPhaseHelical) << std::endl
+			<< "ZHelical:   " << zHelical*Ts
+			<< "Height fraction: " << heightFraction << std::endl;
+    }
 }
 
 /* Symmetrize ------------------------------------------------------- */
@@ -217,6 +234,21 @@ void ProgSymmetrize::preProcess()
             double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
             SL.readSymmetryFile(fn_sym, accuracy);
             symorder=-1;
+
+            if (onlyWriteSymList)
+            {
+            	std::ofstream fhOut;
+            	fhOut.open(fnOutSymList.c_str());
+
+                Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
+                for (int i = 0; i < SL.symsNo(); i++)
+                {
+                    SL.getMatrices(i, L, R);
+                    fhOut<< L << std::endl;
+                    fhOut<< R << std::endl;
+                }
+            	fhOut.close();
+            }
         }
     }
 }
@@ -224,6 +256,9 @@ void ProgSymmetrize::preProcess()
 /* Process image ------------------------------------------------------------- */
 void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
+	if (onlyWriteSymList)
+		return;
+
     Image<double> Iin;
     Image<double> Iout;
     Image<double> mask;

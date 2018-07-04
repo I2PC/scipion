@@ -65,6 +65,10 @@ public:
     bool            sum;
     /// Spline order
     int splineOrder;
+    /// Only write symlist
+    bool onlyWriteSymList;
+    /// Filename for the output symlist
+    FileName fnOutSymList;
 public:
     /** Read parameters from command line. */
     void readParams();
