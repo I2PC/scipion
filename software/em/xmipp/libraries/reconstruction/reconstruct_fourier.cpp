@@ -272,7 +272,7 @@ void ProgRecFourier::produceSideinfo()
     {
         SymList SL;
         SL.readSymmetryFile(fn_sym);
-        for (int isym = 0; isym < SL.symsNo(); isym++)
+        for (int isym = 0; isym < SL.trueSymsNo(); isym++)
         {
             Matrix2D<double>  L(4, 4), R(4, 4);
             SL.getMatrices(isym, L, R);
