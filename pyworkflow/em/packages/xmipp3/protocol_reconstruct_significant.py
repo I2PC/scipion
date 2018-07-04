@@ -287,8 +287,9 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             self.runJob("xmipp_reconstruct_fourier", reconsArgs)
         else:
         # [Htb, kernel, rec] = reconstruct_multires_ADMM_xmipp(pathXmd, scale, alphaRec, nbItADMM, nbItCG);
-            args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',4,1e2,30,7); xmipp_write(rec,'%s'); exit"''' \
-                 %(os.path.join(iterDir,"matlab.log"),anglesFn,volFn)
+            self.runJob("xmipp_transform_symmetrize","-i dummy.vol --sym %s --only_write_symlist %s"%(self.symmetryGroup,self._getTmpPath("LR.txt"))
+            args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',4,1e2,30,7,%s); xmipp_write(rec,'%s'); exit"''' \
+                 %(os.path.join(iterDir,"matlab.log"),anglesFn,volFn,self._getTmpPath("LR.txt"))
             self.runJob("matlab", args, env=getMatlabEnviron(),numberOfMpi=1)
 
         # Center the volume
