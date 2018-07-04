@@ -312,6 +312,9 @@ def getObjectLabel(pobj, mapper):
         if not len(label):
             label = '%s.%s' % (prot.getRunName(), extended)
 
+    label = label.replace("\n"," ")
+    if obj is not None:
+        return label + " (%d)" % obj.getObjId()
     return label
 
     
@@ -376,7 +379,8 @@ class SubclassesTreeProvider(TreeProvider):
                         # JMRT: The inclusion of subitems as possible inputs
                         # is causing a performance penalty. So for the moment
                         # we will restrict that to SetOfVolumes only
-                        if isinstance(attr, em.SetOfVolumes):
+                        if isinstance(attr, em.SetOfVolumes) or \
+                                isinstance(attr, em.SetOfPDBs):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
@@ -1215,7 +1219,7 @@ class FormWindow(Window):
          protocol: protocol from which the form will be generated.
          callback: callback function to call when Save or Execute are press.
         """
-        Window.__init__(self, title, master, icon='scipion_bn.xbm', 
+        Window.__init__(self, title, master, icon=Icon.SCIPION_ICON,
                         weight=False, minsize=(600, 450), **kwargs)
 
         # Some initialization

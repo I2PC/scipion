@@ -96,6 +96,7 @@ void ProgImageResize::preProcess()
         fn_out=fn_in+"_tmp";
         fn_out=fn_out.addExtension(fn_in.getExtension());
         temporaryOutput=true;
+        create_empty_stackfile=true;
     }
 
     if (checkParam("--factor") || checkParam("--dim"))

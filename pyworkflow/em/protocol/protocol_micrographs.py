@@ -74,9 +74,13 @@ class ProtCTFMicrographs(ProtMicrographs):
                       condition='not recalculate',
                       label=Message.LABEL_INPUT_MIC,
                       pointerClass='SetOfMicrographs')
+
+        form.addParam('AutoDownsampling', BooleanParam, default = False, label = 'Automatic Downsampling Factor',
+                      help = 'Recomended value to downsample')
+
         form.addParam('ctfDownFactor', FloatParam, default=1.,
-                      label='CTF Downsampling factor',
-                      condition='not recalculate',
+                      label='Manual CTF Downsampling factor',
+                      condition='not AutoDownsampling',    #'not recalculate',
                       help='Set to 1 for no downsampling. Non-integer downsample '
                            'factors are possible. This downsampling is only used '
                            'for estimating the CTF and it does not affect any '
@@ -116,7 +120,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         line.addParam('maxDefocus', FloatParam, default=4.,
                       label='Max')
 
-        form.addParam('windowSize', IntParam, default=256,
+        form.addParam('windowSize', IntParam, default=512,
                       expertLevel=LEVEL_ADVANCED,
                       label='Window size', condition='not recalculate',
                       help='The PSD is estimated from small patches of this '
@@ -336,7 +340,6 @@ class ProtCTFMicrographs(ProtMicrographs):
         # Get pointer to input micrographs
         self.inputMics = self.getInputMicrographs()
         acq = self.inputMics.getAcquisition()
-
         self._params = {'voltage': acq.getVoltage(),
                         'sphericalAberration': acq.getSphericalAberration(),
                         'magnification': acq.getMagnification(),
@@ -650,4 +653,3 @@ class ProtCTFMicrographs(ProtMicrographs):
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass
-

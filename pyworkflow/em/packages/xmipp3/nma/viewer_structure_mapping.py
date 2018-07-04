@@ -55,159 +55,85 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
     
         
     def _visualize(self, e=None):
-        fnOutput1 = self.protocol._defineResultsName1()
-        fnOutput2 = self.protocol._defineResultsName2()
-        fnOutput3 = self.protocol._defineResultsName3()
-        
-        if not os.path.exists(fnOutput3):
+        nDim = self.numberOfDimensions.get()
+        fnOutput = self.protocol._defineResultsName(nDim)
+        if not os.path.exists(fnOutput):
             return [self.errorMessage('The necessary metadata was not produced\n'
                                       'Execute again the protocol\n',
                                       title='Missing result file')]
+        coordinates = np.loadtxt(fnOutput)
         
-        
-        volList = [vol.clone() for vol in self.protocol._iterInputVolumes()]
-        
-        # 1 Dimension
-        data1 = []
-        fnCoordinate1 = open(fnOutput1, "r")
-        
-        for line in fnCoordinate1:
-            fields = line.split()
-            rowdata = map(float, fields)
-            data1.extend(rowdata)
-        
-        data1N = [[0 for i in range(1)] for i in volList]
-        count = 0
-        
-        for i in volList:
-            data1N[count][0] = data1[count]
-            count += 1
-        data1N = np.array (data1N)    
-        
-        # 2 Dimensions      
-        data2 = []
-        fnCoordinate2 = open(fnOutput2, "r")
-        
-        for line in fnCoordinate2:
-            fields = line.split()
-            rowdata = map(float, fields)
-            data2.extend(rowdata)
-            
-        count = 0
-        data2N = [[0 for i in range(2)] for i in volList]
-        nVolj = 1
-        
-        for j in range(2):
-            nVoli = 1
-            for i in volList:
-                data2N[(nVoli-1)][(nVolj-1)] = data2[count]
-                count += 1
-                nVoli += 1
-            nVolj += 1 
-        data2N = np.array (data2N)   
-                 
-        # 3 Dimensions    
-        data3 = []
-        fnCoordinate3 = open(fnOutput3, "r")
-        
-        for line in fnCoordinate3:
-            fields = line.split()
-            rowdata = map(float, fields)
-            data3.extend(rowdata)
-       
-        
-        count = 0
-        data3N = [[0 for i in range(3)] for i in volList]
-        nVolj = 1
-        
-        for j in range(3):
-            nVoli = 1
-            for i in volList:
-                data3N[(nVoli-1)][(nVolj-1)] = data3[count]
-                count += 1
-                nVoli += 1
-            nVolj += 1 
-        data3N = np.array (data3N)
-                        
+        # Create labels        
         count = 0
         labels = []
-        
-        for voli in volList:
+        for voli in self.protocol._iterInputVolumes():
             if not voli.getObjLabel():
                 count+=1
                 labels.append("vol_%02d"%count)                            
             else:
                 labels.append("%s"%voli.getObjLabel())
                 count += 1              
-        
-        nComponent = self.numberOfDimensions.get()
-        
-        if nComponent == 1:
+         
+        val = 0
+        if nDim == 1:
             AX = plt.subplot(111)
-            val = 0
-            plot = plt.plot(data1N[:, 0], np.zeros_like(data1N[:, 0]) + val, 'o', c='g')
+            plot = plt.plot(coordinates, np.zeros_like(coordinates) + val, 'o', c='g')
             plt.xlabel('Dimension 1', fontsize=11)
             AX.set_yticks([1])
             plt.title('StructMap')
-            
-            for label, x, y in zip(labels, data1N[:, 0], np.zeros_like(data1N[:, 0 ]) + val):
-                plt.annotate(
-                             label, 
-                             xy = (x, y), xytext = (-8, 8),
-                             textcoords = 'offset points', ha = 'right', va = 'bottom',fontsize=9,
+             
+            for label, x, y in zip(labels, coordinates, np.zeros_like(coordinates)):
+                plt.annotate(label, 
+                             xy = (x, y), xytext = (x+val, y+val),
+                             textcoords = 'data', ha = 'right', va = 'bottom',fontsize=9,
                              bbox = dict(boxstyle = 'round,pad=0.3', fc = 'yellow', alpha = 0.3))
+            plt.grid(True)
             plt.show()
-                        
-        elif nComponent == 2:
-            plot = plt.scatter(data2N[:, 0], data2N[:, 1], marker='o', c='g')
+                         
+        elif nDim == 2:
+            plot = plt.scatter(coordinates[:, 0], coordinates[:, 1], marker='o', c='g')
             plt.xlabel('Dimension 1', fontsize=11)
             plt.ylabel('Dimension 2', fontsize=11)
             plt.title('StructMap')
-            
-            for label, x, y in zip(labels, data2N[:, 0], data2N[:, 1]):
-                plt.annotate(
-                            label, 
-                            xy = (x, y), xytext = (-8, 8),
-                            textcoords = 'offset points', ha = 'right', va = 'bottom',fontsize=9,
-                            bbox = dict(boxstyle = 'round,pad=0.3', fc = 'yellow', alpha = 0.3))
-                                        
+            for label, x, y in zip(labels, coordinates[:, 0], coordinates[:, 1]):
+                plt.annotate(label, 
+                             xy = (x, y), xytext = (x+val, y+val),
+                             textcoords = 'data', ha = 'right', va = 'bottom',fontsize=9,
+                             bbox = dict(boxstyle = 'round,pad=0.3', fc = 'yellow', alpha = 0.3))
             plt.grid(True)
             plt.show()
-               
+                
         else: 
-                        
+                         
             fig = plt.figure()
             ax = fig.add_subplot(111, projection = '3d')
-           
-            ax.scatter(data3N[:, 0], data3N[:, 1], data3N[:, 2], marker = 'o', c='g')
+            
+            ax.scatter(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], marker = 'o', c='g')
             ax.set_xlabel('Dimension 1', fontsize=11)
             ax.set_ylabel('Dimension 2', fontsize=11)
             ax.set_zlabel('Dimension 3', fontsize=11)
             ax.text2D(0.05, 0.95, "StructMap", transform=ax.transAxes)
-                        
-            tX, tY, _ = proj3d.proj_transform(data3N[:, 0], data3N[:, 1],
-                                               data3N[:, 2], ax.get_proj())
+                         
+            x2, y2, _ = proj3d.proj_transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], ax.get_proj())
             Labels = []
-            
-            for i in range(len(data3N[:, 0])):
+            for i in range(len(coordinates[:, 0])):
                 text = labels[i]
                 label = ax.annotate(text,
                                     xycoords='data',
-                                    xy = (tX[i], tY[i]), xytext = (-8, 8),
-                                    textcoords = 'offset points', ha = 'right',
+                                    xy = (x2[i], y2[i]), xytext = (x2[i]+val, y2[i]+val),
+                                    textcoords = 'data', ha = 'right',
                                      va = 'bottom', fontsize=9,
-                                    bbox = dict(boxstyle = 'round,pad=0.5',
-                                                 fc = 'yellow', alpha = 0.5))
-                                    
+                                    bbox = dict(boxstyle = 'round,pad=0.3',
+                                                 fc = 'yellow', alpha = 0.3))
+                                     
                 Labels.append(label)
-            def update_position(e):
-                x2, y2, _ = proj3d.proj_transform(data3N[:, 0], data3N[:, 1],
-                                                  data3N[:, 2], ax.get_proj())
                 
-                for i in range(len(data3N[:, 0])):
+            def update_position(e):
+                x2, y2, _ = proj3d.proj_transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], ax.get_proj())
+                for i in range(len(coordinates[:, 0])):
                     label = Labels[i]
-                    label.xy = x2[i],y2[i]
-                    label.update_positions(fig.canvas.renderer)
+                    label.xytext = (x2[i],y2[i])
+                    label.update_positions(fig.canvas.get_renderer())
                 fig.canvas.draw()
             fig.canvas.mpl_connect('button_release_event', update_position)
             plt.show()

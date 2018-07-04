@@ -121,7 +121,8 @@ void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matr
 }
 
 void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
-                                       double &scale, double &shiftX, double &shiftY, double &psi)
+                                       double &scale, double &shiftX,
+                                       double &shiftY, double &psi)
 {
     //Calculate determinant for getting flip
     flip = ((dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) * dMij(A, 1, 0) ) < 0);
@@ -135,8 +136,9 @@ void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
     psi = RAD2DEG(atan2(sine, cosine));
 }
 
-void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, double &scale,
-                                       double &shiftX, double &shiftY, double &shiftZ,
+void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip,
+                                       double &scale, double &shiftX, 
+                                       double &shiftY, double &shiftZ,
                                        double &rot, double &tilt, double &psi)
 {
     scale =  sqrt(dMij(A,2,0)*dMij(A,2,0) \
@@ -166,12 +168,13 @@ void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, do
     shiftZ = dMij(tmpMatrix,2,3);
 }
 
-#define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
-                                                  imageGeo.setValue(label, value);
+#define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || \
+                                               !XMIPP_EQUAL_ZERO(value))\
+                                               imageGeo.setValue(label, value);
 void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
 {
     bool flip = false;
-    double scale = 1 , shiftX = 0, shiftY = 0, psi = 0, shiftZ = 0, rot = 0, tilt = 0;
+    double scale = 1, shiftX = 0, shiftY = 0, psi = 0, shiftZ = 0, rot = 0, tilt = 0;
 
     int dim = A.Xdim() - 1;
 
@@ -179,7 +182,8 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
         transformationMatrix2Parameters2D(A, flip, scale, shiftX, shiftY, psi);
     else if (dim == 3)
     {
-        transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
+        transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ,
+                                          rot, tilt, psi);
         ADD_IF_EXIST_NONZERO(MDL_ANGLE_ROT, rot);
         ADD_IF_EXIST_NONZERO(MDL_ANGLE_TILT, tilt);
         ADD_IF_EXIST_NONZERO(MDL_SHIFT_Z, shiftZ);
@@ -419,9 +423,10 @@ void scale3DMatrix(const Matrix1D<double> &sc, Matrix2D<double>& result,
 }
 
 #define DELTA_THRESHOLD	10e-7
-bool	getLoopRange( double value, double min, double max, double delta, int loopLimit, int &minIter, int &maxIter)
+bool	getLoopRange(double value, double min, double max, double delta,
+                     int loopLimit, int &minIter, int &maxIter)
 {
-	bool validRange=true;		// Return value. TRUE if input value is into range boundaries.
+	bool validRange=true;// Return value. TRUE if input value is into range boundaries.
 
 	// Value is under lower boundary.
 	if (value < min)
@@ -487,7 +492,8 @@ void applyGeometry(int SplineDegree,
                    MultidimArray< std::complex<double> >& V2,
                    const MultidimArray< std::complex<double> >& V1,
                    const Matrix2D< double > &A, bool inv,
-                   bool wrap, std::complex<double> outside, MultidimArray<double> *BcoeffsPtr)
+                   bool wrap, std::complex<double> outside,
+                   MultidimArray<double> *BcoeffsPtr)
 {
 
     if (SplineDegree > 1)
@@ -533,7 +539,8 @@ void applyGeometry(int SplineDegree,
                    const Matrix2D< double > &A, bool inv,
                    bool wrap, double outside)
 {
-#define APPLYGEO(type)  applyGeometry(SplineDegree,(*(MultidimArray<type>*)(V2.im)), (*(MultidimArray<type>*)(V1.im)), A, inv, wrap, (type) outside);
+#define APPLYGEO(type)  applyGeometry(SplineDegree,(*(MultidimArray<type>*)(V2.im)), \
+                        (*(MultidimArray<type>*)(V1.im)), A, inv, wrap, (type) outside);
     SWITCHDATATYPE(V1.datatype, APPLYGEO)
 #undef APPLYGEO
 
@@ -553,18 +560,20 @@ void selfScaleToSize(int SplineDegree,
                      MultidimArrayGeneric &V1,
                      int Xdim, int Ydim, int Zdim)
 {
-#define SELFSCALETOSIZE(type) selfScaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V1,type),Xdim,Ydim,Zdim);
+#define SELFSCALETOSIZE(type) selfScaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V1,type), \
+                                                                Xdim,Ydim,Zdim);
     SWITCHDATATYPE(V1.datatype,SELFSCALETOSIZE)
 #undef SELFSCALETOSIZE
 }
 
 void scaleToSize(int SplineDegree,
-                        MultidimArrayGeneric &V2,
-                        const MultidimArrayGeneric &V1,int Xdim, int Ydim, int Zdim)
+                 MultidimArrayGeneric &V2, const MultidimArrayGeneric &V1,
+                 int Xdim, int Ydim, int Zdim)
 {
   if (V1.datatype != V2.datatype)
     REPORT_ERROR(ERR_PARAM_INCORRECT, "scaleToSize: MultidimArrayGeneric requires same datatype");
-#define SCALETOSIZE(type) scaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type),Xdim,Ydim,Zdim);
+#define SCALETOSIZE(type) scaleToSize(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type), \
+                          MULTIDIM_ARRAY_TYPE(V1,type),Xdim,Ydim,Zdim);
     SWITCHDATATYPE(V1.datatype, SCALETOSIZE)
 #undef SCALETOSIZE
 }
@@ -613,7 +622,8 @@ void selfPyramidReduce(int SplineDegree,
                        MultidimArrayGeneric &V1,
                        int levels)
 {
-#define SELFPYRAMIDREDUCE(type) selfPyramidReduce(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels);
+#define SELFPYRAMIDREDUCE(type) selfPyramidReduce(SplineDegree, \
+                                      *((MultidimArray<type>*)(V1.im)), levels);
     SWITCHDATATYPE(V1.datatype,SELFPYRAMIDREDUCE);
 #undef SELFPYRAMIDREDUCE
 }
@@ -623,7 +633,8 @@ void selfPyramidExpand(int SplineDegree,
                        MultidimArrayGeneric &V1,
                        int levels)
 {
-#define SELFPYRAMIDEXPAND(type) selfPyramidExpand(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels);
+#define SELFPYRAMIDEXPAND(type) selfPyramidExpand(SplineDegree, \
+                                      *((MultidimArray<type>*)(V1.im)), levels);
     SWITCHDATATYPE(V1.datatype,SELFPYRAMIDEXPAND);
 #undef SELFPYRAMIDEXPAND
 }
@@ -635,7 +646,8 @@ void pyramidExpand(int SplineDegree,
 {
   if (V1.datatype != V2.datatype)
     REPORT_ERROR(ERR_PARAM_INCORRECT, "pyramidExpand: MultidimArrayGeneric requires same datatype");
-#define PYRAMIDEXPAND(type) pyramidExpand(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type), levels);
+#define PYRAMIDEXPAND(type) pyramidExpand(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),\
+                                              MULTIDIM_ARRAY_TYPE(V1,type), levels);
     SWITCHDATATYPE(V1.datatype, PYRAMIDEXPAND)
 #undef PYRAMIDEXPAND
 }
@@ -647,7 +659,8 @@ void pyramidReduce(int SplineDegree,
 {
   if (V1.datatype != V2.datatype)
     REPORT_ERROR(ERR_PARAM_INCORRECT, "pyramidReduce: MultidimArrayGeneric requires same datatype");
-#define PYRAMIDREDUCE(type) pyramidReduce(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),MULTIDIM_ARRAY_TYPE(V1,type), levels);
+#define PYRAMIDREDUCE(type) pyramidReduce(SplineDegree,MULTIDIM_ARRAY_TYPE(V2,type),\
+                                              MULTIDIM_ARRAY_TYPE(V1,type), levels);
     SWITCHDATATYPE(V1.datatype, PYRAMIDREDUCE)
 #undef PYRAMIDREDUCE
 }
@@ -660,7 +673,8 @@ void pyramidReduce(int SplineDegree,
 *
 * (x,y,z) are in logical coordinates.
 */
-double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, double y, double z,
+double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, 
+                                       double x, double y, double z,
                                        int SplineDegree)
 {
     int SplineDegree_1 = SplineDegree - 1;
@@ -708,8 +722,9 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
                     equivalent_l=-l-1;
                 else if (l>=Xdim)
                     equivalent_l=2*Xdim-l-1;
-                double Coeff = (double) DIRECT_A3D_ELEM(vol,
-                                                        equivalent_n,equivalent_m,equivalent_l);
+                double Coeff = (double) DIRECT_A3D_ELEM(vol, equivalent_n,
+                                                             equivalent_m,
+                                                             equivalent_l );
                 switch (SplineDegree)
                 {
                 case 2:
@@ -813,7 +828,8 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
  *
  * (x,y,z) are in logical coordinates.
  */
-double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, double y, double z,
+double interpolatedElementBSplineDiffY(MultidimArray<double> &vol,
+                                       double x, double y, double z,
                                        int SplineDegree)
 {
     int SplineDegree_1 = SplineDegree - 1;
@@ -861,8 +877,9 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
                     equivalent_l=-l-1;
                 else if (l>=Xdim)
                     equivalent_l=2*Xdim-l-1;
-                double Coeff = (double) DIRECT_A3D_ELEM(vol,
-                                                        equivalent_n,equivalent_m,equivalent_l);
+                double Coeff = (double) DIRECT_A3D_ELEM(vol, equivalent_n,
+                                                             equivalent_m,
+                                                             equivalent_l );
                 double aux;
                 switch (SplineDegree)
                 {
@@ -967,7 +984,8 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
  *
  * (x,y,z) are in logical coordinates.
  */
-double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, double y, double z,
+double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol,
+                                       double x, double y, double z,
                                        int SplineDegree)
 {
     int SplineDegree_1 = SplineDegree - 1;
@@ -1015,8 +1033,9 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
                     equivalent_l=-l-1;
                 else if (l>=Xdim)
                     equivalent_l=2*Xdim-l-1;
-                double Coeff = (double) DIRECT_A3D_ELEM(vol,
-                                                        equivalent_n,equivalent_m,equivalent_l);
+                double Coeff = (double) DIRECT_A3D_ELEM(vol, equivalent_n,
+                                                             equivalent_m,
+                                                             equivalent_l );
                 double aux;
                 switch (SplineDegree)
                 {
@@ -1113,7 +1132,8 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
     return zyxsum;
 }
 
-void radiallySymmetrize(const MultidimArray<double>& img, MultidimArray<double> &radialImg)
+void radiallySymmetrize(const MultidimArray<double>& img,
+                        MultidimArray<double> &radialImg)
 {
 	Matrix1D<int> center(2);
 	center.initZeros();
@@ -1129,4 +1149,47 @@ void radiallySymmetrize(const MultidimArray<double>& img, MultidimArray<double> 
         int d=DIRECT_MULTIDIM_ELEM(distance,n);
         DIRECT_MULTIDIM_ELEM(radialImg,n)=A1D_ELEM(radial_mean,d);
     }
+}
+
+
+void rotation3DMatrixFromIcoOrientations(const char* icoFrom, const char* icoTo,
+                                                            Matrix2D<double> &R)
+{
+    std::vector<char> symLabel;
+    symLabel.push_back((int)icoFrom[1]);
+    symLabel.push_back((int)icoTo[1]);
+    Matrix1D<double> xyz(3); 
+    Matrix2D<double> Rfrom, Rto;
+
+    for(int i=0; i<2; i++)
+    {
+        switch (symLabel[i])
+        {
+            case '1':
+                xyz = vectorR3(0.0, 90.0, 0.0);
+                break;
+            case '2':
+                xyz = vectorR3(0.0, 0.0, 0.0);
+                break;
+            case '3':
+                xyz = vectorR3(0.0, 31.7175, 0.0);
+                break;
+            case '4':
+                xyz = vectorR3(0.0, -31.7175, 0.0);
+                break;
+/*            case '5':
+                xyz = vectorR3(31.7175, 90.0, 0.0); // not aviable yet
+                break;
+            case '6':
+                xyz = vectorR3(-31.7175, 90.0, 0.0); // not aviable yet
+                break;*/
+            default:
+                REPORT_ERROR(ERR_PARAM_INCORRECT, "Incorrect standard icosahedral orientation");
+        }
+        if (i==0)
+            Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), Rfrom, true);
+        else
+            Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), Rto, true);
+    }
+    R = Rto * Rfrom.transpose();
 }
