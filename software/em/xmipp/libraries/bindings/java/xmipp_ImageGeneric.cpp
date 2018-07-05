@@ -185,10 +185,10 @@ Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select
 
         DataType dataType = image->getDatatype();
 
-        switch (dataType)
+    switch (dataType)
     {
-    case DT_UChar:
-        {
+        case DT_UChar:
+            {
             unsigned char *mdarray;
 
             // Get slice array.
