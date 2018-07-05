@@ -86,6 +86,8 @@ public class XmippImageConverter {
 
 	public static ImagePlus readToImagePlus(ImageGeneric image, int nslice)
 			throws Exception {
+		System.out.println ("image.getXDim() at readImagePlus: " + image.getXDim());
+		System.out.println ("image.getYDim() at readImagePlus: " + image.getYDim());
 		return readToImagePlus(image, image.getXDim(), image.getYDim(), nslice);
 	}
         
