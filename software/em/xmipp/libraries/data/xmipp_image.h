@@ -1257,7 +1257,7 @@ private:
         if (datatype == DT_UHalfByte){
             //REPORT_ERROR(ERR_MMAP, "Image Class::readData not supported for  "
             //                       "data type " + datatype2Str(DT_UHalfByte));
-            std::out<<"redirecting from readData to readData4bits!"<<std::endl;
+            std::cout<<"redirecting from readData to readData4bits!"<<std::endl;
             readData4bit(fimg, select_img, datatype, pad);
         }
         // If only half of a transform is stored, it needs to be handled
