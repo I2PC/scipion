@@ -87,6 +87,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     
     GLOBAL_SIGNIFICANT = 0
     GLOBAL_GPU_SIGNIFICANT = 1
+
+    RECONS_FOURIER = 0
+    RECONS_GPU_FOURIER = 1
+    RECONS_ADMM = 2
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -211,8 +215,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='The volume is zero padded by this factor to produce projections')
         form.addParam('contSimultaneous', IntParam, label="Number of simultaneous processes", default=4, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                       help='At the beginning of the process, each process requires more memory, this is the number of simultaneous processes that can do this part')
-        form.addParam('gpuRecons', BooleanParam, label="Use GPU reconstruction", default=False, expertLevel=LEVEL_ADVANCED,
-                      help='Use GPU reconstruction algorithm')
+        form.addParam('reconsMethod',EnumParam, label='Reconstruction method', choices=['Fourier','GPU Fourier', 'ADMM'], default=self.RECONS_FOURIER, 
+                      help='Fourier works in CPU, GPU Fourier in GPU and ADMM is multiscale reconstruction and needs MATLAB', expertLevel=LEVEL_ADVANCED)
+        form.addParam('admmRegularization', FloatParam, label="Regularization parameter", default=0.001, condition='reconsMethod==2',
+                      help='')
         
         form.addSection(label='Weights')
         form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=False, expertLevel=LEVEL_ADVANCED,
@@ -1241,14 +1247,24 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     self.runJob("xmipp_metadata_utilities",args,numberOfMpi=1)
                     fnAnglesToUse = fnRestricted
                 
-                # Reconstruct Fourier
-                args="-i %s -o %s --sym %s --weight"%(fnAnglesToUse,fnVol,self.symmetryGroup)
-                if self.gpuRecons:
-                    self.runJob('xmipp_cuda_reconstruct_fourier',args,numberOfMpi=1)
+
+
+                if self.reconsMethod==self.RECONS_FOURIER or self.reconsMethod==self.RECONS_GPU_FOURIER:
+                    # Reconstruct Fourier
+                    args="-i %s -o %s --sym %s --weight"%(fnAnglesToUse,fnVol,self.symmetryGroup)
+                    if self.reconsMethod==self.RECONS_GPU_FOURIER:
+                    	self.runJob('xmipp_cuda_reconstruct_fourier',args,numberOfMpi=1)
+                    else:
+                    	self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                 else:
-                    self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-                
-                # If stochastic gradient descent
+                    # Reconstruct with Multiscale (ADMM)
+  		    self.runJob("xmipp_transform_symmetrize","-i dummy.vol --sym %s --only_write_symlist %s"%(self.symmetryGroup,self._getTmpPath("LR.txt")),numberOfMpi=1)
+            	    scale=1
+            	    args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',%d,1e2,30,7,false,'%s'); xmipp_write(rec,'%s'); exit"''' \
+                       %(os.path.join(iterDir,"matlab.log"),anglesFn,scale,self._getTmpPath("LR.txt"),volFn)
+            	    self.runJob("matlab", args, env=getMatlabEnviron(),numberOfMpi=1)
+
+		# If stochastic gradient descent
                 if self.alignmentMethod==self.STOCHASTIC_ALIGNMENT:
                     newXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
                     fnAuxVol=join(fnDirCurrent,"volume%02d_aux.vol"%i)

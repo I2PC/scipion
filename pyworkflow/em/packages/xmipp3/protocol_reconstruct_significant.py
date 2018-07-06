@@ -36,7 +36,7 @@ from convert import writeSetOfClasses2D, writeSetOfParticles
 import pyworkflow.em.metadata as metadata
 from pyworkflow.protocol.params import *
 import xmipp
-from xmipp3 import getMatlabEnviron
+from xmipp3 import getMatlabEnviron, getXmippPath
 from shutil import copy
 
 
@@ -120,6 +120,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         form.addParam('maxResolution', FloatParam,
                       label="Target resolution", default=12,
                       help='Target resolution (A).', condition='useMaxRes',
+                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('useADMM', BooleanParam, default=False, label="Use ADMM for multiscale reconstruction",
                       expertLevel=LEVEL_ADVANCED)
 
         form.addSection(label='Criteria')
@@ -278,19 +280,26 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
 
         print "Number of images for reconstruction: ", metadata.getSize(
             anglesFn)
-        fourier=False
-        if fourier:
+
+        if not self.useADMM:
             reconsArgs = ' -i %s' % anglesFn
             reconsArgs += ' -o %s' % volFn
             reconsArgs += ' --weight -v 0  --sym %s ' % self.symmetryGroup
-
             self.runJob("xmipp_reconstruct_fourier", reconsArgs)
         else:
-        # [Htb, kernel, rec] = reconstruct_multires_ADMM_xmipp(pathXmd, scale, alphaRec, nbItADMM, nbItCG);
-            self.runJob("xmipp_transform_symmetrize","-i dummy.vol --sym %s --only_write_symlist %s"%(self.symmetryGroup,self._getTmpPath("LR.txt"))
-            args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',4,1e2,30,7,%s); xmipp_write(rec,'%s'); exit"''' \
-                 %(os.path.join(iterDir,"matlab.log"),anglesFn,volFn,self._getTmpPath("LR.txt"))
-            self.runJob("matlab", args, env=getMatlabEnviron(),numberOfMpi=1)
+            self.runJob("xmipp_transform_symmetrize","-i dummy.vol --sym %s --only_write_symlist %s"%(self.symmetryGroup,self._getTmpPath("LR.txt")),numberOfMpi=1)
+            scale=3
+            if iterNumber>int(self.iter.get()/4):
+                scale=3
+            if iterNumber>int(self.iter.get()/2):
+                scale=2
+            if iterNumber>int(3*self.iter.get()/4):
+                scale=1
+            args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',%d,1e1,30,7,false,'%s'); xmipp_write(rec,'%s'); exit"''' \
+                 %(os.path.join(iterDir,"matlab.log"),anglesFn,scale,self._getTmpPath("LR.txt"),volFn)
+            xmippDir=getXmippPath()
+            self.runJob("matlab", args, env=getMatlabEnviron([os.path.join(xmippDir,"libraries","bindings","matlab","epfl_admm","functions"),
+                                                              os.path.join(xmippDir,"libraries","bindings","matlab","epfl_admm","mains")]),numberOfMpi=1)
 
         # Center the volume
         fnSym = self._getExtraPath('volumeSym_%03d.vol' % iterNumber)
