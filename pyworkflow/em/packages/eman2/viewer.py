@@ -31,7 +31,7 @@ import os, math
 
 from pyworkflow.gui.project import ProjectWindow
 import pyworkflow.gui.text as text
-from pyworkflow.gui.dialog import askYesNo
+from pyworkflow.gui.dialog import askYesNo, showInfo
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER,
                                WEB_DJANGO)
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
@@ -900,10 +900,14 @@ class CtfViewer(ProtocolViewer):
 
         # Open dialog to request confirmation to overwrite output
         saveChanges = askYesNo("Save output changes?",
-                               "Do you want to overwrite output particles with new CTF values?",
+                               "Do you want to overwrite output particles with new CTF values?\n"
+                               "This may take a while depending on the set size.",
                                self.getTkRoot())
         if saveChanges:
             self.protocol.createOutputStep()
+            self.showInfo("Output updated",
+                          "Output particles were updated with new CTF values.",
+                          self.getTkRoot())
 
     def _load(self):
         self.protocol._createFilenameTemplates()
