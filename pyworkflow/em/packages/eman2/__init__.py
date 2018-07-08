@@ -29,7 +29,7 @@ This package contains the protocols and data for EMAN2
 
 from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "eman2_logo.png"
+_logo = "eman2_logo.jpg"
 _references = ['Tang2007']
 EMAN_DIR_VAR = 'EMAN2DIR'
 
