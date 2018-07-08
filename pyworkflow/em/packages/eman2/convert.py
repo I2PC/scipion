@@ -37,6 +37,9 @@ import pyworkflow as pw
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 from pyworkflow.em.data import Coordinate, Particle, CTFModel
+from pyworkflow.em.convert import ImageHandler
+import pyworkflow.em.metadata as md
+
 from eman2 import getEmanCommand, getEnviron
 
 
@@ -165,6 +168,29 @@ def createEmanProcess(script='e2converter.py', args=None, direc="."):
                             stdout=subprocess.PIPE, cwd=direc)
 
     return proc
+
+
+def writeSetOfMicrographs(micSet, filename):
+    """ Simplified function borrowed from xmipp. """
+    mdata = md.MetaData()
+
+    for img in micSet:
+        objId = mdata.addObject()
+        imgRow = md.Row()
+        imgRow.setValue(md.MDL_ITEM_ID, long(objId))
+
+        index, fname = img.getLocation()
+        fn = ImageHandler.locationToXmipp((index, fname))
+        imgRow.setValue(md.MDL_MICROGRAPH, fn)
+
+        if img.isEnabled():
+            enabled = 1
+        else:
+            enabled = -1
+        imgRow.setValue(md.MDL_ENABLED, enabled)
+        imgRow.writeToMd(mdata, objId)
+
+    mdata.write('Micrographs@%s' % filename)
 
 
 def readSetOfParticles(lstFile, partSet, direc):

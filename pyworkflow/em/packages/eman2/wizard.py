@@ -33,10 +33,10 @@ import pyworkflow as pw
 from pyworkflow.em.wizard import EmWizard
 from protocol_autopick_sparx import SparxGaussianProtPicking
 from pyworkflow.em import CoordinatesObjectView
-from pyworkflow.em.showj import CLASSIFIER
-from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
 from pyworkflow.utils import makePath, cleanPath
 from pyworkflow.utils.utils import readProperties
+
+from convert import writeSetOfMicrographs
 from eman2 import getBoxerCommand, getVersion
 
 
@@ -56,13 +56,11 @@ class SparxGaussianPickerWizard(EmWizard):
             print 'must specify input micrographs'
             return
         project = autopickProt.getProject()
-        micfn = micSet.getFileName()
         coordsDir = project.getTmpPath(micSet.getName())
 
         cleanPath(coordsDir)
         makePath(coordsDir)
 
-        from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
         micMdFn = os.path.join(coordsDir, "micrographs.xmd")
         writeSetOfMicrographs(micSet, micMdFn)
 
