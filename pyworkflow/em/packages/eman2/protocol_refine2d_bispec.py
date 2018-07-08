@@ -26,7 +26,7 @@
 
 import os
 import re
-from os.path import exists, basename
+from os.path import exists, basename, join
 from glob import glob
 
 import pyworkflow.em as em
@@ -34,10 +34,10 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         EnumParam, StringParam, BooleanParam,
                                         LabelParam)
-from pyworkflow.utils import makePath, createLink, join
+from pyworkflow.utils import makePath, createLink, cleanPath
 
 
-from convert import rowToAlignment, createEmanProcess, writeSetOfParticles
+from convert import createEmanProcess, writeSetOfParticles
 from constants import *
 from eman2 import getEmanProgram, validateVersion, isNewVersion, SCRATCHDIR
 
@@ -73,16 +73,17 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         myDict = {
             'partFlipSet': 'sets/inputSet__ctf_flip.lst',
             'partBispecSet': self._getExtraPath('sets/inputSet__ctf_flip_bispec.lst'),
-            'classes': 'r2db_01/classes_%(iter)02d.hdf',
-            'cls': 'r2db_01/classmx_%(iter)02d.hdf',
+            'classes_scipion': self._getExtraPath('classes_scipion_it%(iter)02d.sqlite'),
+            'classes': 'r2db_%(run)02d/classes_%(iter)02d.hdf',
+            'cls': 'r2db_%(run)02d/classmx_%(iter)02d.hdf',
             'results': self._getExtraPath('results_it%(iter)02d.txt'),
-            'basis': self._getExtraPath('r2db_01/basis_%(iter)02d.hdf')
+            'basis': self._getExtraPath('r2db_%(run)02d/basis_%(iter)02d.hdf')
         }
         self._updateFilenamesDict(myDict)
 
-    def _createIterTemplates(self):
+    def _createIterTemplates(self, currRun):
         """ Setup the regex on how to find iterations. """
-        clsFn = self._getExtraPath(self._getFileName('classes', iter=1))
+        clsFn = self._getExtraPath(self._getFileName('classes', run=currRun, iter=1))
         self._iterTemplate = clsFn.replace('classes_01', 'classes_??')
         # Iterations will be identify by classes_XX_ where XX is the iteration
         #  number and is restricted to only 2 digits.
@@ -248,7 +249,7 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._createFilenameTemplates()
-        self._createIterTemplates()
+        self._createIterTemplates(currRun=1)
         self._insertFunctionStep('convertImagesStep')
         args = self._prepareParams()
         self._insertFunctionStep('refineStep', args)
@@ -394,6 +395,9 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
 
         f.close()
 
+    def _getRun(self):
+        return 1
+
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
         result = None
@@ -412,17 +416,24 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
     def _firstIter(self):
         return self._getIterNumber(0) or 1
 
-    def _getIterData(self, it):
-        #TODO: the viewer is not implemented yet
-        data_sqlite = self._getFileName('data_scipion', iter=it)
-        if not exists(data_sqlite):
-            iterImgSet = em.SetOfParticles(filename=data_sqlite)
-            iterImgSet.copyInfo(self._getInputParticles())
-            self._fillDataFromIter(iterImgSet, it)
-            iterImgSet.write()
-            iterImgSet.close()
+    def _getIterClasses(self, it, clean=False):
+        """ Return a classes .sqlite file for this iteration.
+        If the file doesn't exists, it will be created by
+        converting from this iteration data.star file.
+        """
+        data_classes = self._getFileName('classes_scipion', iter=it)
 
-        return data_sqlite
+        if clean:
+            cleanPath(data_classes)
+
+        if not exists(data_classes):
+            clsSet = em.SetOfClasses2D(filename=data_classes)
+            clsSet.setImages(self._getInputParticles())
+            self._fillClassesFromIter(clsSet, it)
+            clsSet.write()
+            clsSet.close()
+
+        return data_classes
 
     def _getInputParticles(self):
         return self.inputParticles.get()
@@ -438,8 +449,8 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
                              iterParams=params)
 
     def _execEmanProcess(self, iterN):
-        clsFn = self._getFileName("cls", iter=iterN)
-        classesFn = self._getFileName("classes", iter=iterN)
+        clsFn = self._getFileName("cls", run=1, iter=iterN)
+        classesFn = self._getFileName("classes", run=1, iter=iterN)
 
         proc = createEmanProcess(args='read %s %s %s %s 2d'
                                  % (self._getParticlesStack(), clsFn, classesFn,
