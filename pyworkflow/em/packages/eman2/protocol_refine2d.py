@@ -556,7 +556,6 @@ class EmanProtRefine2D(em.ProtClassify2D):
         contRun = self.continueRun.get()
         files = sorted(glob(contRun._getExtraPath("r2d_%02d/classes_??.hdf" %
                                                   (self._getRun() - 1))))
-        print files
         if files:
             i = files[-1]
             iterNumber = int(i.split("_")[-1].replace('.hdf', ''))
