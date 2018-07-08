@@ -31,7 +31,7 @@ from pyworkflow.em.data import Coordinate, CTFModel
 from pyworkflow.em.data_tiltpairs import Angles
 from pyworkflow.em.metadata import (MetaData, MDL_XCOOR, MDL_YCOOR,
                                     MDL_PICKING_PARTICLE_SIZE)
-from convert import loadJson, readCTFModel
+from convert import loadJson, readCTFModel, readSetOfParticles
 
 
 class EmanImport():
@@ -128,8 +128,24 @@ class EmanImport():
         readCTFModel(ctf, fileName)
         return ctf
 
-    def importParticles(self, fileName):
+    def importParticles(self):
         """ Import particles from 'imageSet.lst' file. """
-        pass
         partSet = self.protocol._createSetOfParticles()
         partSet.setObjComment('Particles imported from EMAN lst file:\n%s' % self._lstFile)
+        self.protocol.setSamplingRate(partSet)
+        partSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
+        self.protocol.fillAcquisition(partSet.getAcquisition())
+
+        # Now read the alignment/ctf/acquisition parameters
+        direc = self.protocol._getExtraPath()
+        readSetOfParticles(self._lstFile, partSet, direc)
+
+        # Register the output set of particles
+        self.protocol._defineOutputs(outputParticles=partSet)
+
+    def validateParticles(self):
+        """ Should be overwritten in subclasses to
+        return summary message for NORMAL EXECUTION.
+        """
+        errors = []
+        return errors

@@ -36,7 +36,7 @@ import subprocess
 import pyworkflow as pw
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
-from pyworkflow.em.data import Coordinate
+from pyworkflow.em.data import Coordinate, Particle, CTFModel
 from eman2 import getEmanCommand, getEnviron
 
 
@@ -52,14 +52,6 @@ def writeJson(jsonDict, jsonFn):
     """ This function write a Json dictionary """
     with open(jsonFn, 'w') as outfile:
         json.dump(jsonDict, outfile)
-
-
-def objectToRow(obj, row, attrDict):
-    pass
-
-
-def rowToObject(md, objId, obj, attrDict):
-    pass
 
 
 def readCTFModel(ctfModel, filename):
@@ -81,15 +73,7 @@ def readCTFModel(ctfModel, filename):
         ampcont = float(keyPos['ampcont'])
         defocusU = 10000.0 * defocus + 5000.0 * dfdiff
         defocusV = 20000.0 * defocus - defocusU
-
-        # calculate phase shift as in EMAN2 ctf.cpp
-        if ampcont > -100.0 and ampcont <= 100.0:
-            PhaseShift = numpy.arcsin(ampcont / 100.0)
-        elif (ampcont > 100.0):
-            PhaseShift = numpy.pi - numpy.arcsin(2.0 - ampcont / 100.0)
-        else:
-            PhaseShift = -numpy.pi - numpy.arcsin(-2.0 - ampcont / 100.0)
-        ctfPhaseShift = numpy.rad2deg(PhaseShift)
+        ctfPhaseShift = calculatePhaseShift(ampcont)
 
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
         if jsonDict.has_key('ctf_im2d'):
@@ -118,32 +102,6 @@ def jsonToCtfModel(ctfJsonFn, ctfModel):
     mdFn = mdFn.split('__ctf_flip')[0] + '_info.json'
     if pwutils.exists(mdFn):
         readCTFModel(ctfModel, mdFn)
-
-
-def readMicrograph(md, objId):
-    """ Create a Micrograph object from a row of Xmipp metadata. """
-    pass
-
-
-def locationToEman(index, filename):
-    pass
-
-
-def micrographToRow(mic, micRow):
-    pass
-
-
-def rowToCoordinate(md, objId):
-    """ Create a Coordinate from a json. """
-    pass
-
-
-def readSetOfMicrographs(filename):
-    pass
-
-
-def writeSetOfMicrographs(micSet, filename, rowFunc=None):
-    pass
 
 
 def readSetOfCoordinates(workDir, micSet, coordSet, invertY=False, newBoxer=False):
@@ -193,10 +151,6 @@ def readCoordinates(mic, fileName, coordsSet, invertY=False):
                 coordsSet.append(coord)
 
 
-def writeSetOfCoordinates():
-    pass
-
-
 def createEmanProcess(script='e2converter.py', args=None, direc="."):
     """ Open a new Process with all EMAN environment (python...etc)
     that will server as an adaptor to use EMAN library
@@ -211,6 +165,39 @@ def createEmanProcess(script='e2converter.py', args=None, direc="."):
                             stdout=subprocess.PIPE, cwd=direc)
 
     return proc
+
+
+def readSetOfParticles(lstFile, partSet, direc):
+    proc = createEmanProcess(args='import %s' % lstFile, direc=direc)
+    proc.wait()
+    hasCTF = False
+
+    for line in iter(proc.stdout.readline, ''):
+        part = line.split()
+        img = Particle()
+        img.setLocation(int(part[0])+1, part[1])
+
+        if part [2] != 'None':
+            # convert ctf values
+            hasCTF = True
+            ctfModel = CTFModel()
+            defocus = float(part[2])
+            defocusAngle = float(part[3])
+            dfdiff = float(part[4])
+            ampcont = float(part[5])
+            defocusU = 10000.0 * defocus + 5000.0 * dfdiff
+            defocusV = 20000.0 * defocus - defocusU
+            ctfPhaseShift = calculatePhaseShift(ampcont)
+
+            ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+            ctfModel.setPhaseShift(float(ctfPhaseShift))
+
+            img.setCTF(ctfModel)
+
+        partSet.append(img)
+
+    partSet.setHasCTF(hasCTF)
+    partSet.setAlignment(em.ALIGN_NONE)
 
 
 def writeSetOfParticles(partSet, path, **kwargs):
@@ -415,3 +402,16 @@ def convertReferences(refSet, outputFn):
         proc.stdin.flush()
         proc.stdout.readline()
     proc.kill()
+
+
+def calculatePhaseShift(ampcont):
+    # calculate phase shift as in EMAN2 ctf.cpp
+    if ampcont > -100.0 and ampcont <= 100.0:
+        PhaseShift = numpy.arcsin(ampcont / 100.0)
+    elif (ampcont > 100.0):
+        PhaseShift = numpy.pi - numpy.arcsin(2.0 - ampcont / 100.0)
+    else:
+        PhaseShift = -numpy.pi - numpy.arcsin(-2.0 - ampcont / 100.0)
+    ctfPhaseShift = numpy.rad2deg(PhaseShift)
+
+    return ctfPhaseShift
