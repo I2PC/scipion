@@ -34,6 +34,7 @@ from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
 from pyworkflow.em.packages.ccp4.protocol_coot import CootRefine
 from pyworkflow.em.packages.ccp4.protocol_refmac import CCP4ProtRunRefmac
 from pyworkflow.em.packages.phenix.protocol_emringer import PhenixProtRunEMRinger
+from pyworkflow.em.packages.phenix.protocol_molprobity import PhenixProtRunMolprobity
 from pyworkflow.tests import *
 import os.path
 import json
@@ -1176,7 +1177,7 @@ class TestEMRingerValidation(TestImportData):
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
 
-        #EMRinger
+        # EMRinger
         refmac_PDB = protRefmac.outputPdb
         args = {'inputVolume': volume2,
                 'inputStructure': refmac_PDB,
@@ -1226,7 +1227,7 @@ class TestEMRingerValidation(TestImportData):
         volume = protChimera.output3Dmap
         structure3_PDB = protChimera.outputPdb_01
 
-        #coot
+        # coot
         listVolCoot = [volume]
         args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
                 'inputVolumes': listVolCoot,
@@ -1281,7 +1282,7 @@ class TestEMRingerValidation(TestImportData):
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
 
-        #EMRinger
+        # EMRinger
         refmac_PDB = protRefmac.outputPdb
         args = {'inputVolume': volume,
                 'inputStructure': refmac_PDB,
@@ -1313,7 +1314,7 @@ class TestEMRingerValidation(TestImportData):
         # import PDB
         structure5_PDB = self._importStructurePDBWoVol2()
 
-        #EMRinger
+        # EMRinger
         args = {'inputVolume': volume3,
                 'inputStructure': structure5_PDB,
                 'doTest': True
@@ -1329,4 +1330,373 @@ class TestEMRingerValidation(TestImportData):
                           modLength=2587,
                           EMScore=5.21530839370391,
                           protEMRinger=protEMRinger)
+
+class TestPhenixProtRunMolprobity(TestImportData):
+    """ Test the protocol of MolProbity validation
+    """
+    def checkResults(self, ramOutliers, ramFavored, rotOutliers, cbetaOutliers,
+                     clashScore, overallScore, protMolProbity):
+        # method to check MolProbity statistic results of the Final Results
+        # Table
+        self.assertTrue(protMolProbity.ramachandranOutliers == ramOutliers)
+        self.assertTrue(protMolProbity.ramachandranFavored == ramFavored)
+        self.assertTrue(protMolProbity.rotamerOutliers == rotOutliers)
+        self.assertTrue(protMolProbity.cbetaOutliers == cbetaOutliers)
+        self.assertTrue(protMolProbity.clashscore == clashScore)
+        self.assertTrue(protMolProbity.overallScore == overallScore)
+
+    def testMolProbityValidationFromPDB(self):
+        """ This test checks that EMRinger validation protocol runs with an
+        atomic structure; No Volume was provided and no error message is
+        expected"""
+        print "Run MolProbity validation protocol from imported pdb file " \
+              "without imported or pdb-associated volume"
+
+        # import PDB
+        structure_PDB = self._importStructurePDBWoVol()
+        self.assertTrue(structure_PDB.getFileName())
+        self.assertFalse(structure_PDB.getVolume())
+        args = {'inputStructure': structure_PDB
+               }
+
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('PhenixProtRunMolprobity validation\n '
+                                   'no volume associated to pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers = 0.94,
+                          ramFavored = 81.60,
+                          rotOutliers = 3.98,
+                          cbetaOutliers = 0,
+                          clashScore = 4.77,
+                          overallScore = 2.42,
+                          protMolProbity = protMolProbity)
+
+    def testMolProbityValidationFromVolume(self):
+        """ This test checks that MolProbity validation protocol runs with a
+        density volume; No atomic structure was provided and a error message is
+        expected"""
+
+        print "Run MolProbity validation protocol from imported volume file " \
+          "without imported pdb"
+
+        # import volume
+        volume = self._importVolume()
+        self.assertTrue(volume.getFileName())
+
+        args = {'inputVolume': volume,
+                'resolution': 3.5
+               }
+
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel(
+        'PhenixProtRunMolprobity validation\n volume and no pdb\n')
+
+        try:
+            self.launchProtocol(protMolProbity)
+        except Exception as e:
+            self.assertTrue(True)
+            print "This test should return a error message as '" \
+              " Input atomic structure cannot be EMPTY.\n"
+
+            return
+        self.assertTrue(False)
+
+    def testMolprobityValidationAfterRefmac(self):
+        """ This test checks that MolProbity validation protocol runs with a
+        volume provided directly as inputVol, the input PDB was fitted to
+        the volume and refined previously by coot and refmac
+         """
+        print "Run MolProbity validation from imported volume and pdb file " \
+              "fitted and refined by Coot/Refmac"
+
+        # Import Volume
+        volume = self._importVolume()
+
+        # import PDB
+        structure_PDB = self._importStructurePDBWoVol()
+
+        # coot
+        listVolCoot = [volume]
+        args = {'extraCommands': self._createExtraCommandLine(-24.11, -45.76,
+                                                              -24.60),
+                'inputVolumes': listVolCoot,
+                'pdbFileToBeRefined': structure_PDB,
+                'doInteractive': False
+                }
+        protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
+        self.launchProtocol(protCoot)
+
+        # refmac
+        coot_PDB = protCoot.outputPdb_0001
+        args = {'inputVolume': volume,
+                'inputStructure': coot_PDB
+                }
+        protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
+                               'model')
+        self.launchProtocol(protRefmac)
+        self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
+
+        # MolProbity
+        refmac_PDB = protRefmac.outputPdb
+        args = {'inputVolume': volume,
+                'resolution': 3.5,
+                'inputStructure': refmac_PDB
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers = 0.47,
+                          ramFavored = 83.96,
+                          rotOutliers = 7.39,
+                          cbetaOutliers = 7,
+                          clashScore = 7.75,
+                          overallScore = 2.76,
+                          protMolProbity = protMolProbity)
+
+    def testMolProbityValidationAfterChimeraAndCootAndRefmac(self):
+        """ This test checks that MolProbity validation protocol runs with a
+        volume provided by Chimera, the input PDB is provided by Coot """
+        print "Run MolProbity validation from volume provided by Chimera " \
+              "and pdb file provided by Coot/Refmac"
+
+        # Import Volume
+        volume = self._importVolume()
+
+        # import PDB
+        structure_PDB = self._importStructurePDBWoVol()
+
+        # create auxiliary CMD file for chimera fit
+        extraCommands = ""
+        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
+                         "coord #1')\n"
+        extraCommands += "runCommand('fitmap #2 #1')\n"
+        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
+                         "saverefmodel 1')\n"
+        extraCommands += "runCommand('stop')\n"
+
+        args = {'extraCommands': extraCommands,
+                'inputVolume': volume,
+                'pdbFileToBeRefined': structure_PDB
+                }
+        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
+                                'and model')
+        self.launchProtocol(protChimera)
+
+        structure2_PDB = protChimera.outputPdb_01
+        volume2 = protChimera.output3Dmap
+
+        # coot
+        listVolCoot = [volume2]
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+                'inputVolumes': listVolCoot,
+                'pdbFileToBeRefined': structure2_PDB,
+                'doInteractive': False
+                }
+        protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
+        self.launchProtocol(protCoot)
+        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+
+        # MolProbity
+        coot_PDB = protCoot.outputPdb_0001
+        args = {'inputVolume': volume2,
+                'resolution': 3.5,
+                'inputStructure': coot_PDB
+                }
+
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=0.94,
+                          ramFavored=81.60,
+                          rotOutliers=3.98,
+                          cbetaOutliers=0,
+                          clashScore=4.77,
+                          overallScore=2.42,
+                          protMolProbity=protMolProbity)
+
+        # refmac
+        coot_PDB = protCoot.outputPdb_0001
+        args = {'inputVolume': volume2,
+                'inputStructure': coot_PDB
+                }
+
+        protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
+                               'model')
+        self.launchProtocol(protRefmac)
+        self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
+
+        # MolProbity
+        refmac_PDB = protRefmac.outputPdb
+        args = {'inputVolume': volume2,
+                'resolution': 3.5,
+                'inputStructure': refmac_PDB
+                }
+
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=0.47,
+                          ramFavored=83.49,
+                          rotOutliers=7.95,
+                          cbetaOutliers=7,
+                          clashScore=8.05,
+                          overallScore=2.81,
+                          protMolProbity=protMolProbity)
+
+    def testMolProbityValidationAfterMultipleCootAndRefmacFit(self):
+        # This test checks that MolProbity runs when a volume provided
+        # by Chimera workflow; the PDB is provided by Coot/Refmac
+        # starting volume with a different coordinate origin
+        print "Run MolProbity validation from PDB file saved from " \
+              "Chimera_2/Coot/Refmac"
+
+        volume2 = self._importVolume2()
+        structure1_PDB = self._importStructurePDBWoVol()
+
+        # chimera fit
+
+        extraCommands = ""
+        extraCommands += "runCommand('fitmap #2 #1')\n"
+        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
+                         "saverefmodel 1')\n"
+        extraCommands += "runCommand('stop')\n"
+
+        args = {'extraCommands': extraCommands,
+                'inputVolume': volume2,
+                'pdbFileToBeRefined': structure1_PDB
+                }
+
+        protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
+        protChimera.setObjLabel('chimera fit\n volume associated '
+                               'to pdb\n save volume and model')
+        self.launchProtocol(protChimera)
+
+        volume = protChimera.output3Dmap
+        structure3_PDB = protChimera.outputPdb_01
+
+        # coot
+        listVolCoot = [volume]
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+                'inputVolumes': listVolCoot,
+                'pdbFileToBeRefined': structure3_PDB,
+                'doInteractive': True
+                }
+        protCoot = self.newProtocol(CootRefine, **args)
+        protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
+                             'save model')
+        try:
+            self.launchProtocol(protCoot)
+        except:
+            print "first call to coot ended"
+        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
+
+        protCoot.doInteractive.set(False)
+        self.launchProtocol(protCoot)
+
+        # MolProbity
+        coot_PDB = protCoot.outputPdb_0002
+        args = {'inputVolume': volume,
+                'resolution': 3.5,
+                'inputStructure': coot_PDB
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=0.94,
+                          ramFavored=81.60,
+                          rotOutliers=3.98,
+                          cbetaOutliers=0,
+                          clashScore=4.77,
+                          overallScore=2.42,
+                          protMolProbity=protMolProbity)
+
+        # refmac
+        coot_PDB = protCoot.outputPdb_0002
+        args = {'inputVolume': volume,
+                'inputStructure': coot_PDB
+                }
+
+        protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
+        protRefmac.setObjLabel('refmac refinement\n volume and '
+                               'pdb\n save model')
+        self.launchProtocol(protRefmac)
+        self.assertIsNotNone(protRefmac.outputPdb.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protRefmac.outputPdb.getFileName()))
+
+        # MolProbity
+        refmac_PDB = protRefmac.outputPdb
+        args = {'inputVolume': volume,
+                'resolution': 3.5,
+                'inputStructure': refmac_PDB
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=0.47,
+                          ramFavored=83.49,
+                          rotOutliers=6.82,
+                          cbetaOutliers=6,
+                          clashScore=8.05,
+                          overallScore=2.76,
+                          protMolProbity=protMolProbity)
+
+    def testMolProbityValidationSeveralChains(self):
+        """ This test checks that MolProbity validation protocol runs with a
+        volume provided directly as inputVol, the input PDB was fitted to
+        the volume and refined previously by coot and refmac in another project
+         """
+        print "Run MolProbity validation from imported volume and pdb file " \
+              "already refined by Coot and Refmac in another project"
+
+        # Import Volume
+        volume3 = self._importVolume3()
+
+        # import PDB
+        structure5_PDB = self._importStructurePDBWoVol2()
+
+        # MolProbity
+        args = {'inputVolume': volume3,
+                'resolution': 2.2,
+                'inputStructure': structure5_PDB
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=0.12,
+                          ramFavored=95.86,
+                          rotOutliers=0.52,
+                          cbetaOutliers=0,
+                          clashScore=9.74,
+                          overallScore=1.80,
+                          protMolProbity=protMolProbity)
 
