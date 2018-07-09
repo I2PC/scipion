@@ -360,7 +360,8 @@ class TableView(View):
     def __init__(self, headerList, dataList,
                  mesg=None, title=None,
                  height=10, width=400,
-                 fontSize=16, padding=10):
+                 fontSize=16, padding=10,
+                 fontFamily='monospace'):
         # get new widget that has as parent the top level window and set title
         win = tk.Toplevel()
         if title:
@@ -371,7 +372,7 @@ class TableView(View):
 
         # make font a little bigger
         # TODO: font size should be general
-        font = tkFont.Font(family='fixed', size=fontSize)
+        font = tkFont.Font(family=fontFamily, size=fontSize)
         font.metrics()
         fontheight = font.metrics()['linespace']
         style = ttk.Style()
