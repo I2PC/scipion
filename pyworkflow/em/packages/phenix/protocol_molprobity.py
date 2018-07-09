@@ -42,24 +42,16 @@ atomic structure derived from a cryo-EM density map.
     MOLPROBITYFILE = 'molprobity.mrc'
     MOLPROBITYOUTFILENAME = 'molprobity.out'
     MOLPROBITYCOOTFILENAME = 'molprobity_coot.py'
-#    mapKeyToLabel={}
-#    mapKeyToLabel['ramachandranOutliers'] = 'Ramachandran outliers'
-#    mapKeyToLabel['ramachandranFavored'] = 'Ramachandran favored'
-#    mapKeyToLabel['rotamerOutliers'] = 'Rotamer outliers'
-#    mapKeyToLabel['cbetaOutliers'] = 'C-beta outliers'
-#    mapKeyToLabel['clashscore'] = 'Clashscore'
-#    mapKeyToLabel['overallScore'] = 'Overall score'
-
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input Volume', allowsNull=True,
-                      help="Set the starting volume")
-        form.addParam('resolution', FloatParam, allowsNull=True,
-                      label='Resolution (A):',
-                      help='Set the resolution of the input volume')
+                      help="Set the starting volume (optional).")
+        form.addParam('resolution', FloatParam,
+                      label='Resolution (A):', allowsNull=True,
+                      help='Set the resolution of the input volume.')
         form.addParam('inputStructure', PointerParam,
                       pointerClass="PdbFile", allowsNull=False,
                       label='Input atomic structure',
@@ -68,7 +60,8 @@ atomic structure derived from a cryo-EM density map.
     # --------------------------- INSERT steps functions --------------------
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('convertInputStep')
+        if self.inputVolume.get() is not None:
+            self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('runMolprobityStep')
         self._insertFunctionStep('createOutputStep')
 
@@ -90,12 +83,13 @@ atomic structure derived from a cryo-EM density map.
         pdb = os.path.abspath(self.inputStructure.get().getFileName())
         args = ""
         args += pdb
-        args += " "
         # starting volume (.mrc)
-        volume = os.path.abspath(self._getTmpPath(self.MOLPROBITYFILE))
-        args += "map_file_name=%s" % volume
-        args += " "
-        args += "d_min=%f" % self.resolution.get()
+        if self.inputVolume.get() is not None:
+            args += " "
+            volume = os.path.abspath(self._getTmpPath(self.MOLPROBITYFILE))
+            args += "map_file_name=%s" % volume
+            args += " "
+            args += "d_min=%f" % self.resolution.get()
 
         # script with auxiliary files
 
