@@ -47,7 +47,7 @@ def errorWindow(tkParent, msg):
 class PhenixProtRunMolprobityViewer(ProtocolViewer):
     """ Viewer for Phenix program EMRinger
     """
-    _label = 'MolProbity Viewer'
+    _label = 'MolProbity viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [PhenixProtRunMolprobity]
 
@@ -122,7 +122,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                            "resolution electron density maps.")
         self.outliers = self.dictBLRestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
-            group.addParam('outliers', LabelParam,
+            group.addParam('showBLoutliers', LabelParam,
                       label="Outliers", help="List of outlier atoms ("
                                              "sorted by deviation) according "
                                              "to the bond length restraints")
@@ -137,7 +137,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                            "resolution electron density maps.")
         self.outliers = self.dictBARestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
-            group.addParam('outliers', LabelParam,
+            group.addParam('showBAoutliers', LabelParam,
                           label="Outliers", help="List of outlier residues ("
                                                  "sorted by deviation) "
                                                  "according to the bond angle "
@@ -154,7 +154,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                            "resolution electron density maps.")
         self.outliers = self.dictDARestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
-            group.addParam('outliers', LabelParam,
+            group.addParam('showDAoutliers', LabelParam,
                           label="Outliers", help="List of outlier residues ("
                                                  "sorted by deviation) "
                                                  "according to the dihedral "
@@ -185,57 +185,12 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                            "Warning!!!: Refined structures should not "
                            "have any outliers except those are obvious in high "
                            "resolution electron density maps.")
+        self.outliers = self.dictPlanarRestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
-            group.addParam('outliers', LabelParam,
+            group.addParam('showPLANARoutliers', LabelParam,
                           label="Outliers", help="List of planar "
                                                  "group outliers ("
                                                  "sorted by deviation)")
-        #
-        # self.thresList = [str("%0.3f" % thres) for thres in self.dataDict[
-        #     '_thresholds']]
-        # _maxScoreIndex = self.dataDict['_maxScoreIndex']
-        # form.addParam('threshold', EnumParam,
-        #               choices=self.thresList,
-        #               default=_maxScoreIndex,
-        #               label="Density threshold",
-        #               help="Choose one of the 20 map density cutoff values "
-        #                    "used to compute the percentage of rotameric "
-        #                    "residues. The Optimal threshold, at which the "
-        #                    "maximum EMRinger score was obtained, "
-        #                    "is shown by default.\n"
-        #               )
-        # form.addParam('showPeakCount', LabelParam,
-        #               label="Peak count for the selected density threshold",
-        #               help="Histograms for rotameric (blue) and non-rotameric "
-        #                    "(red) residues at the selected map density.")
-        # self.chainList = self.dataDict['_chains']
-        # form.addParam('chain', EnumParam,
-        #               choices=self.chainList,
-        #               default=0,
-        #               label="Chain",
-        #               help="Choose one of the model chains. The first chain "
-        #                    "is shown by default.")
-        # form.addParam('showRollingWindows', LabelParam,
-        #               label="Rolling window for the selected chain.",
-        #               help="Visualize the rolling window EMRinger analysis of "
-        #                    "your selected chain to distinguish regions of "
-        #                    "improved model quality.This analysis was "
-        #                    "performed on rolling sliding 21-residue windows "
-        #                    "along the primary sequence of proteins.")
-        # self.residueList = self.dataDict['_residues_format']
-        # form.addParam('residue', EnumParam,
-        #               choices=self.residueList,
-        #               default=0,
-        #               label="Residue",
-        #               help="Choose one of the gamma-carbon-containing "
-        #                    "residues (at least with one Chi angle) "
-        #                    "located in one of the chains in the "
-        #                    "position indicated. ")
-        # form.addParam('showRingerResults', LabelParam,
-        #               label="Ringer results for the selected residue.",
-        #               help="Individual plots for each Chi angle of the "
-        #                    "selected residue. Numeric values are showed in "
-        #                    "the extra/*.csv file.")
 
     def _getVisualizeDict(self):
         return {
@@ -243,9 +198,12 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
             'showBLrestraints': self._showBLrestraints,
             'showBLoutliers': self._showBLoutliers,
             'showBArestraints': self._showBArestraints,
+            'showBAoutliers': self._showBAoutliers,
             'showDArestraints': self._showDArestraints,
+            'showDAoutliers': self._showDAoutliers,
             'showCHILrestraints': self._showCHILrestraints,
             'showPLANARrestraints': self._showPLANARrestraints,
+            'showPLANARoutliers': self._showPLANARoutliers
         }
 
     def _visualizeFinalResults(self, e=None):
@@ -264,8 +222,13 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         title="MolProbity: Basic Geometry"
         self._showResults(headerList, dictX, val, mesg, title)
 
-    def _showBLoutliers(selfself, e=None):
-        pass
+    def _showBLoutliers(self, e=None):
+        headerList = ['Atom1', 'Atom2', 'Ideal value', 'Model value',
+                      'Deviation (sigmas)']
+        dataList = self.BLdataList
+        mesg = "List of outliers (sorted by deviation)"
+        title = "Bond Length Restraints"
+        self._showOutliers(headerList, dataList, mesg, title)
 
     def _showBArestraints(self, e=None):
         headerList = ['measure', 'value']
@@ -275,6 +238,14 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         title="MolProbity: Basic Geometry"
         self._showResults(headerList, dictX, val, mesg, title)
 
+    def _showBAoutliers(self, e=None):
+        headerList = ['Atoms', 'Ideal value', 'Model value', 'Deviation ('
+                                                            'sigmas)']
+        dataList = self.BAdataList
+        mesg = "List of outliers (sorted by deviation)"
+        title = "Bond Angle Restraints"
+        self._showOutliers(headerList, dataList, mesg, title)
+
     def _showDArestraints(self, e=None):
         headerList = ['measure', 'value']
         dictX = self.dictDARestraints
@@ -282,6 +253,14 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         mesg="Dihedral Angle Restraints\n(Deviations from ideal values)"
         title="MolProbity: Basic Geometry"
         self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showDAoutliers(self, e=None):
+        headerList = ['Atoms', 'Ideal value', 'Model value', 'Deviation ('
+                                                            'sigmas)']
+        dataList = self.DAdataList
+        mesg = "List of outliers (sorted by deviation)"
+        title = "Dihedral Angle Restraints"
+        self._showOutliers(headerList, dataList, mesg, title)
 
     def _showCHILrestraints(self, e=None):
         headerList = ['measure', 'value']
@@ -295,9 +274,17 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         headerList = ['measure', 'value']
         dictX = self.dictPlanarRestraints
         val = 0.3
-        mesg="Chirality Restraints\n(Deviations from ideal values)"
+        mesg="Planarity Restraints\n(Deviations from ideal values)"
         title="MolProbity: Basic Geometry"
         self._showResults(headerList, dictX, val, mesg, title)
+
+    def _showPLANARoutliers(self, e=None):
+        headerList = ['Atoms', 'Max. delta', 'RMS (delta)', 'Deviation ('
+                                                            'sigmas)']
+        dataList = self.PLANARdataList
+        mesg = "List of outliers (sorted by deviation)"
+        title = "Planarity Restraints"
+        self._showOutliers(headerList, dataList, mesg, title)
 
     def _showResults(self, headerList, dictX, val, mesg, title):
         dataList = []
@@ -317,13 +304,30 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                   title=title,
                   height=len(dataList), width=250, padding=40)
 
+    def _showOutliers(self, headerList, dataList, mesg, title):
+
+        if not dataList:
+            errorWindow(self.getTkRoot(), "No data available")
+            return
+
+        TableView(headerList=headerList,
+                  dataList=dataList,
+                  mesg=mesg,
+                  title=title,
+                  height=len(dataList), width=250, padding=40)
+
     def _parseFile(self, fileName):
         self.dictSummary = collections.OrderedDict()
         self.dictBLRestraints = collections.OrderedDict()
+        self.BLdataList = []
         self.dictBARestraints = collections.OrderedDict()
+        self.BAdataList = []
         self.dictDARestraints = collections.OrderedDict()
+        self.DAdataList = []
         self.dictChilRestraints = collections.OrderedDict()
+        self.ChildataList = []
         self.dictPlanarRestraints = collections.OrderedDict()
+        self.PLANARdataList = []
         with open(fileName) as f:
             line = f.readline()
             while line:
@@ -361,9 +365,8 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                         words = line.strip().split()
                         if (words[0] == 'All' and words[1] == 'restrained'):
                             self.dictBLRestraints['Number of outliers ' \
-                                                  '> 4sigma'] = int(0)
+                                                  '> 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            cnt = 1
                             Atom1 = []
                             Atom2 = []
                             IdealValue = []
@@ -371,23 +374,34 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                             Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-                            Atom1.append(words[0]+ ' ' + words[1] + ' ' +
-                                         words[2])
-                            while (len(words) > 1 and words[1] == 'DMS'):
-                                cnt += 1
+                            while (len(words) > 1):
+                                if len(words) == 3:
+                                    Atom1.append(words[0] + ' ' +
+                                        words[1] + ' ' + words[2])
+                                elif len(words) == 4:
+                                    Atom1.append(words[0] + words[1] + ' ' +
+                                        words[2] + ' ' + words[3])
+                                elif len(words) == 10:
+                                    Atom2.append(words[0] + words[1] + ' ' +
+                                        words[2] + ' ' + words[3])
+                                    IdealValue.append((words[4]))
+                                    ModelValue.append((words[5]))
+                                    Deviation.append(
+                                        (words[9].split('*')[0]))
+                                elif len(words) == 9:
+                                    Atom2.append(words[0] + ' ' +
+                                        words[1] + ' ' + words[2])
+                                    IdealValue.append((words[3]))
+                                    ModelValue.append((words[4]))
+                                    Deviation.append(
+                                        (words[8].split('*')[0]))
                                 line = f.readline()
                                 words = line.strip().split()
-                            self.dictBLRestraints['Number of outliers ' \
-                                                  '> 4sigma'] = int(cnt / 2)
-                            if words[0].startswith('C'):
-                                Atom1.append(words[0] + ' ' + words[1] + ' ' +
-                                             words[2])
-                            if words[0].startswith('D'):
-                                Atom2.append(words[0] + ' ' + words[1] + ' ' +
-                                         words[2])
-                                IdealValue.append(float(words[3]))
-                                ModelValue.append(float(words[4]))
-                                Deviation.append(float(words[8].split('*')[0]))
+                            self.dictBLRestraints['Number of outliers '\
+                                                  '> 4sigma'] = len(Atom1)
+                            self.BLdataList = zip(Atom1, Atom2,IdealValue,
+                                    ModelValue, Deviation)
+
                     elif (words[0] == 'angle' and words[1] == ':'):
                         self.dictBARestraints['Number of restraints'] = int(
                             words[4])
@@ -402,19 +416,52 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                         words = line.strip().split()
                         if (words[0] == 'All' and words[1] == 'restrained'):
                             self.dictBARestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(0)
+                                'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            cnt = 1
+                            Atom1 = []
+                            Atom2 = []
+                            Atom3 = []
+                            Atom123 = [Atom1, Atom2, Atom3]
+                            IdealValue = []
+                            ModelValue = []
+                            Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-                            while (len(words) > 1 and len(words[2]) == 3):
-                                cnt += 1
-                                line = f.readline()
-                                words = line.strip().split()
+                            while len(words) > 1:  # and len(words[2]) == 3):
+                                for atom in Atom123:
+                                    if len(words) == 4:
+                                        atom.append(words[0] + ' ' + words[1] +
+                                                ' ' + words[2] + ' ' + words[3])
+                                    if (len(words) == 10):
+                                        atom.append(words[0] + ' ' + words[1] +
+                                                    ' ' + words[2] + ' ' +
+                                                    words[3])
+                                        IdealValue.append(float(words[4]))
+                                        ModelValue.append(float(words[5]))
+                                        Deviation.append(
+                                            float(words[9].split('*')[0]))
+                                    if len(words) == 3:
+                                        atom.append(words[0] + ' ' + words[1] +
+                                                    ' ' + words[2])
+                                    if (len(words) == 9):
+                                        atom.append(words[0] + ' ' + words[1] +
+                                                    ' ' + words[2])
+
+                                        IdealValue.append(float(words[3]))
+                                        ModelValue.append(float(words[4]))
+                                        Deviation.append(
+                                            float(words[8].split('*')[0]))
+                                    line = f.readline()
+                                    words = line.strip().split()
                             self.dictBARestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(cnt / 3)
+                                'Number of outliers > 4sigma'] = len(Atom1)
+                            for a1, a2, a3, iv, mv, d in zip (Atom1, Atom2,
+                                                              Atom3,
+                                                              IdealValue,
+                                                       ModelValue, Deviation):
+                                self.BAdataList.append((a1 + ", " + a2 + ", "
+                                                                         "" +
+                                                        a3, iv, mv, d))
                     elif (words[0] == 'dihedral' and words[1] == ':'):
                         self.dictDARestraints['Number of restraints'] = int(
                             words[4])
@@ -429,19 +476,58 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                         words = line.strip().split()
                         if (words[0] == 'All' and words[1] == 'restrained'):
                             self.dictDARestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(0)
+                                'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            cnt = 1
+                            Atom1 = []
+                            Atom2 = []
+                            Atom3 = []
+                            Atom4 = []
+                            Atom1234 = [Atom1, Atom2, Atom3, Atom4]
+                            IdealValue = []
+                            ModelValue = []
+                            Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-                            while (len(words) > 1 and len(words[2]) == 3):
-                                cnt += 1
-                                line = f.readline()
-                                words = line.strip().split()
+
+                            while (len(words) > 1 ):  # and len(words[2]) == 3):
+                                for atom in Atom1234:
+                                    if len(words) == 4:
+                                        atom.append(words[0] + ' ' + words[1] +
+                                             ' ' + words[2] + ' ' + words[3])
+                                    if (len(words) == 10):
+                                        atom.append(words[0] + ' ' + words[1] +
+                                                    ' ' + words[2] + ' ' +
+                                                    words[3])
+                                        IdealValue.append(float(words[4]))
+                                        ModelValue.append(float(words[5]))
+                                        Deviation.append(
+                                            float(words[9].split('*')[0]))
+                                    if len(words) == 3:
+                                        atom.append(words[0] + ' ' + words[1] +
+                                                    ' ' + words[2])
+                                    if (len(words) == 9):
+                                        atom.append(words[0] + ' ' + words[1] +
+                                                    ' ' + words[2])
+                                        IdealValue.append(float(words[3]))
+                                        ModelValue.append(float(words[4]))
+                                        Deviation.append(
+                                            float(words[8].split('*')[0]))
+                                    line = f.readline()
+                                    words = line.strip().split()
+
                             self.dictDARestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(cnt / 4)
+                                'Number of outliers > 4sigma'] = len(Atom1)
+
+                            for a1, a2, a3, a4, iv, mv, d in zip (Atom1, Atom2,
+                                                             Atom3,
+                                                     Atom4, IdealValue,
+                                                       ModelValue, Deviation):
+                                element = a1 + ", " + a2 + ", " + a3 + ", " + a4
+                                if len(element) > 46:
+                                    element = element.replace(element[46:],
+                                                              "...")
+                                self.DAdataList.append((element,
+                                                       iv, mv, d))
                     elif (words[0] == 'chirality' and words[1] == ':'):
                         self.dictChilRestraints['Number of restraints'] = int(
                             words[4])
@@ -456,8 +542,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                         words = line.strip().split()
                         if (words[0] == 'All' and words[1] == 'restrained'):
                             self.dictChilRestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(0)
+                                'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
                             # An example is necessary to test this part
                             cnt = 1
@@ -484,19 +569,50 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                         words = line.strip().split()
                         if (words[0] == 'All' and words[1] == 'restrained'):
                             self.dictPlanarRestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(0)
+                                'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
                             # An example is necessary to test this part
-                            cnt = 1
+                            cnt = 0
+                            aminoacids = []
+                            Atoms = []
+                            MaxDelta = []
+                            RMSDelta = []
+                            Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-                            while (len(words) > 6 ):
-                                cnt += 1
+                            while (len(words) > 1):
+                                if len(words) == 4:
+                                    Atoms.append(words[0] + " " + words[1] +
+                                                 " " + words[2] + " " +
+                                                 words[3])
+                                if len(words) == 8:
+                                    cnt += 1
+                                    Atoms.append(words[0] + " " + words[1] +
+                                                 " " + words[2] + " " +
+                                                 words[3])
+                                    aminoacid = Atoms
+                                    Atoms = []
+                                    aminoacids.append(aminoacid)
+                                    MaxDelta.append(float(words[5]))
+                                    RMSDelta.append(float(words[4]))
+                                    Deviation.append(
+                                        float(words[7].split('*')[0]))
                                 line = f.readline()
                                 words = line.strip().split()
                             self.dictPlanarRestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(cnt / 4)
+                                'Number of outliers > 4sigma'] = int(cnt)
+
+                            for a, md, rd, d in zip(aminoacids, MaxDelta,
+                                                    RMSDelta,
+                                                                 Deviation):
+                                element = str()
+                                for i in range(len(a) -1):
+                                    element += a[i] + ", "
+                                element += a[len(a) - 1]
+                                if len(element) > 35:
+                                    element = element.replace(element[35:],
+                                                             "...")
+                                self.PLANARdataList.append(
+                                    (element, md, rd, d))
                 line = f.readline()
 
