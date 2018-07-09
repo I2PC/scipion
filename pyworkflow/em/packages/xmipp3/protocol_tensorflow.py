@@ -13,9 +13,9 @@ from keras.datasets import cifar10, mnist
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import mrcfile
 import glob
+import matplotlib.image as mpimg
 from keras.applications import VGG19
 import cv2
 import shutil
@@ -33,35 +33,48 @@ nb_validation_samples = 18
 epochs = 50
 batch_size = 32
 
+with mrcfile.open('/home/javiermota/Downloads/archive/10184/data/17dec27a_aldolase_00003gr_00032sq_v02_00002hln_00002esn-a-DW.mrc') as mrc:
+    noisyPatch = mrc.data
+
+
+
+
 (x_train, _), (x_test, _) = mnist.load_data()
+noisyPatch = noisyPatch[500:575,500:575]
+noisyPatch = cv2.normalize(noisyPatch.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
 imagesTrain_resized = []
 imagesTest_resized = []
-im_resi = []
+imagesNoisy = []
 for im in x_train:
     im_resize = cv2.resize(im,(size,size))
+    im_resize = cv2.normalize(im_resize.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
     imagesTrain_resized.append(im_resize)
+    imagesNoisy.append(im_resize+noisyPatch)
+    plt.imshow(im_resize+noisyPatch)
+    plt.gray()
+    plt.show()
 for im in x_test:
     im_resizeTest = cv2.resize(im,(size,size))
     imagesTest_resized.append(im_resizeTest)
 x_train = np.asarray(imagesTrain_resized)
 x_test = np.asarray(imagesTest_resized)
-x_train = x_train.astype('float32') / 255.
-x_test = x_test.astype('float32') / 255.
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
 x_train = x_train.reshape((len(x_train), size,size,1))
 x_test = x_test.reshape((len(x_test), size,size,1))
 print x_train.shape
 print x_test.shape
 
 noise_factor = 2
-x_train_noisy = x_train + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_train.shape)
+x_train_noisy = np.asarray(imagesNoisy)#x_train + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_train.shape)
 x_test_noisy = x_test + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_test.shape)
 
-x_train_noisy = np.clip(x_train_noisy, 0., 1.)
+'''x_train_noisy = np.clip(x_train_noisy, 0., 1.)
 x_test_noisy = np.clip(x_test_noisy, 0., 1.)
 plt.imshow(x_train_noisy[0].reshape(size,size))
 plt.gray()
-plt.show()
+plt.show()'''
 
 paths = []
 for image in glob.glob('/home/javiermota/Downloads/archive/10184/data/*.mrc'):
