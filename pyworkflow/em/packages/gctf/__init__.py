@@ -36,10 +36,16 @@ from bibtex import _bibtex # Load bibtex dict with references
 from convert import getEnviron
 
 from protocol_gctf import ProtGctf
+from protocol_gctf_refine import ProtGctfRefine
 
 # Wizards
 from wizard import GctfCTFWizard
 _environ = getEnviron()
+
+# We need this import to register the specific viewing command
+# when visualizing Gctf results
+from viewer import GctfViewer
+
 
 def validateInstallation():
     """ This function will be used to check if package is properly installed."""

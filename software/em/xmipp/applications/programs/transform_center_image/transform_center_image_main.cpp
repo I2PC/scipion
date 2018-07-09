@@ -33,6 +33,7 @@ public:
     bool limitShift;
     CorrelationAux aux;
     RotationalCorrelationAux aux2;
+    bool saveMdTransform;
 
     void defineParams()
     {
@@ -50,6 +51,7 @@ public:
         //params
         addParamsLine("  [--iter <n=10>]      : Number of iterations");
         addParamsLine("  [--limit]            : Limit the maximum shift allowed");
+        addParamsLine("  [--save_metadata_transform]            : Save in the output metadata the transform parameters");
 
     }
 
@@ -58,6 +60,9 @@ public:
         XmippMetadataProgram::readParams();
         Niter = getIntParam("--iter");
         limitShift = checkParam("--limit");
+        saveMdTransform = checkParam("--save_metadata_transform");
+        if (saveMdTransform)
+        		save_metadata_stack = true;
     }
 
     void show()
@@ -70,10 +75,22 @@ public:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
     {
         Image<double> img;
+        Matrix2D<double> A;
+        double scale, shiftX, shiftY, psi;
+        bool flip;
         img.readApplyGeo(fnImg, rowIn);
         img().checkDimensionWithDebug(2,__FILE__,__LINE__);
-        centerImage(img(), aux, aux2, Niter, limitShift);
+        A = centerImage(img(), aux, aux2, Niter, limitShift);
+        if (saveMdTransform){
+			transformationMatrix2Parameters2D(A,flip,scale,shiftX,shiftY,psi);
+			rowOut.setValue(MDL_IMAGE, fnImg);
+			rowOut.setValue(MDL_SHIFT_X, shiftX);
+			rowOut.setValue(MDL_SHIFT_Y, shiftY);
+			rowOut.setValue(MDL_ANGLE_PSI, psi);
+			rowOut.setValue(MDL_FLIP, flip);
+        }
         img.write(fnImgOut);
+
     }
 
 }

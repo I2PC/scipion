@@ -53,14 +53,20 @@ PROJECT_TMP = 'Tmp'
 PROJECT_UPLOAD = 'Uploads'
 PROJECT_SETTINGS = 'settings.sqlite'
 PROJECT_CONFIG = '.config'
-PROJECT_CONFIG_HOSTS = 'hosts.conf'
 PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 
 PROJECT_CREATION_TIME = 'CreationTime'
 
+# Allow the name of the host configuration to be changed.
+# This is useful for having the same central installation that
+# could be used from different environments (cluster vs workstations)
+PROJECT_CONFIG_HOSTS = os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
+
+
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+)(?P<number>\(\d*\))\s*$')
 REGEX_NUMBER_ENDING_CP=re.compile('(?P<prefix>.+\s\(copy)(?P<number>.*)\)\s*$')
+
 
 class Project(object):
     """This class will handle all information 
@@ -309,7 +315,7 @@ class Project(object):
             else:
                 localDir = os.path.dirname(os.environ['SCIPION_LOCAL_CONFIG'])
                 hostsFile = [os.environ['SCIPION_HOSTS'],
-                             os.path.join(localDir, 'hosts.conf')]
+                             os.path.join(localDir, PROJECT_CONFIG_HOSTS)]
         else:
             pwutils.copyFile(hosts, projHosts)
             hostsFile = hosts
@@ -449,8 +455,17 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-    def scheduleProtocol(self, protocol):
+    def scheduleProtocol(self, protocol, prerequisites=[]):
+        """ Schedule a new protocol that will run when the input data
+        is available and the prerequisited finished.
+        Params:
+            protocol: the protocol that will be scheduled.
+            prerequisites: a list with protocols ids that the scheduled
+                protocol will wait for.
+        """
         protocol.setStatus(pwprot.STATUS_SCHEDULED)
+        protocol.addPrerequisites(*prerequisites)
+
         self._setupProtocol(protocol)
         # protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean()  # Create working dir if necessary
@@ -503,7 +518,8 @@ class Project(object):
 
             # Copy is only working for db restored objects
             protocol.setMapper(self.mapper)
-            protocol.copy(prot2, copyId=False)
+
+            protocol.copy(prot2, copyId=False, excludeInputs=True)
             # Restore backup values
             protocol.setJobId(jobId)
             protocol.setObjLabel(label)
@@ -783,6 +799,10 @@ class Project(object):
                         # new workflow
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
+                            if isinstance(childPointer, pwobj.PointerList):
+                                for p in childPointer:
+                                    if p.getObjValue().getObjId() == prot.getObjId():
+                                        childPointer = p
                             childPointer.set(newProt)
                             childPointer.setExtended(oKey)
                         self.mapper.store(newChildProt)
@@ -1058,10 +1078,10 @@ class Project(object):
         The check will only be done for protocols that have not been sent
         to a queue system.
         """
-        from pyworkflow.protocol.launch import _isLocal
+        from pyworkflow.protocol.launch import _runsLocally
         pid = protocol.getPid()
 
-        if (protocol.isRunning() and _isLocal(protocol)
+        if (protocol.isRunning() and _runsLocally(protocol)
             and not protocol.useQueue()
             and not pwutils.isProcessAlive(pid)):
             protocol.setFailed("Process %s not found running on the machine. "
@@ -1069,7 +1089,6 @@ class Project(object):
                                "reporting the status to Scipion. Logs might "
                                "have information about what happened to this "
                                "process." % pid)
-
 
     def iterSubclasses(self, classesName, objectFilter=None):
         """ Retrieve all objects from the project that are instances
@@ -1346,3 +1365,4 @@ class Project(object):
                                 print "  Found file %s, creating link..." % newFile
                                 print pwutils.green("   %s -> %s" % (f, newFile))
                                 pwutils.createAbsLink(newFile, f)
+                                

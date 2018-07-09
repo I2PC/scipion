@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -67,6 +67,8 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
                       help='Volume to be used for class comparison')
         form.addParam('useAssignment', BooleanParam, default=True,
                       label='Use input angular assignment (if available)')
+        form.addParam('optimizeGray', BooleanParam, default=False,
+                      label='Optimize gray scale')
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
@@ -109,17 +111,19 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         img.convert(self.inputVolume.get(), fnVol)
         xdim=self.inputVolume.get().getDim()[0]
         if xdim!=self._getDimensions():
-            self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnVol,self._getDimensions()))
+            self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnVol,self._getDimensions()),numberOfMpi=1)
     
     def produceResiduals(self, fnVol, fnAngles, Ts):
-        if fnVol.endswith(".mrc"):
-            fnVol+=":mrc"
+        fnVol = self._getTmpPath("volume.vol")
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
-        xdim=self.inputVolume.get().getDim()[0]
-        self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
-                    (fnAngles,anglesOutFn,fnVol,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
+        xdim=self._getDimensions()
+        args="-i %s -o %s --ref %s --optimizeAngles --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f"%\
+                    (fnAngles,anglesOutFn,fnVol,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts)
+        if self.optimizeGray:
+            args+="--optimizeGray --max_gray_scale 0.95 "
+        self.runJob("xmipp_angular_continuous_assign2", args)
         fnNewParticles=self._getExtraPath("images.stk")
         if os.path.exists(fnNewParticles):
             cleanPath(fnNewParticles)

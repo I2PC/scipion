@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -161,7 +161,7 @@ class ProtRelionSubtract(ProtOperateParticles):
         params = ' --i %s --subtract_exp --angpix %0.3f' % (volFn,
                                                             volume.getSamplingRate())
         if self._getInputParticles().isPhaseFlipped():
-            params += ' --ctf_phase_flipped'
+            params += ' --ctf_phase_flip'
 
         if self.doCTF:
             params += ' --ctf'

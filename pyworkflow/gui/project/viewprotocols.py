@@ -26,7 +26,6 @@
 # **************************************************************************
 from __future__ import print_function
 
-
 INIT_REFRESH_SECONDS = 3
 
 """
@@ -41,24 +40,26 @@ from collections import OrderedDict
 import Tkinter as tk
 import ttk
 import datetime as dt
+
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
-from pyworkflow.config import isAFinalProtocol, getProtocolTag, \
-    PROTOCOL_DISABLED_TAG, PROTOCOL_TAG
+from pyworkflow.config import (isAFinalProtocol, getProtocolTag,
+                               PROTOCOL_DISABLED_TAG, PROTOCOL_TAG)
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
-
 from constants import STATUS_COLORS
 from pyworkflow.gui.project.utils import getStatusColorFromNode
+from pyworkflow.webservices import WorkflowRepository
 
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
 ACTION_EDIT = Message.LABEL_EDIT
+ACTION_RENAME = Message.LABEL_RENAME
 ACTION_SELECT_TO = Message.LABEL_SELECT_TO
 ACTION_COPY = Message.LABEL_COPY
 ACTION_DELETE = Message.LABEL_DELETE
@@ -73,6 +74,7 @@ ACTION_DEFAULT = Message.LABEL_DEFAULT
 ACTION_CONTINUE = Message.LABEL_CONTINUE
 ACTION_RESULTS = Message.LABEL_ANALYZE
 ACTION_EXPORT = Message.LABEL_EXPORT
+ACTION_EXPORT_UPLOAD = Message.LABEL_EXPORT_UPLOAD
 ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
@@ -91,6 +93,7 @@ ActionIcons = {
     ACTION_COPY: Icon.ACTION_COPY,
     ACTION_DELETE: Icon.ACTION_DELETE,
     ACTION_REFRESH: Icon.ACTION_REFRESH,
+    ACTION_RENAME: Icon.ACTION_RENAME,
     ACTION_STEPS: Icon.ACTION_STEPS,
     ACTION_BROWSE: Icon.ACTION_BROWSE,
     ACTION_DB: Icon.ACTION_DB,
@@ -100,6 +103,7 @@ ActionIcons = {
     ACTION_CONTINUE: Icon.ACTION_CONTINUE,
     ACTION_RESULTS: Icon.ACTION_RESULTS,
     ACTION_EXPORT: Icon.ACTION_EXPORT,
+    ACTION_EXPORT_UPLOAD: Icon.ACTION_EXPORT_UPLOAD,
     ACTION_COLLAPSE: 'fa-minus-square.png',
     ACTION_EXPAND: 'fa-plus-square.png',
     ACTION_LABELS: Icon.TAGS
@@ -183,6 +187,7 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                                pwprot.STATUS_LAUNCHED] 
 
         return [(ACTION_EDIT, single),
+                (ACTION_RENAME, single),
                 (ACTION_COPY, True),
                 (ACTION_DELETE, status != pwprot.STATUS_RUNNING),
                 (ACTION_STEPS, single),
@@ -190,6 +195,7 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                 (ACTION_DB, single),
                 (ACTION_STOP, stoppable and single),
                 (ACTION_EXPORT, not single),
+                (ACTION_EXPORT_UPLOAD, not single),
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
                 (ACTION_LABELS, True),
@@ -573,12 +579,15 @@ class ProtocolsView(tk.Frame):
         self._lastSelectedProtId = None
         self._lastStatus = None
         self.selectingArea = False
+        self._lastRightClickPos = None  # Keep last right-clicked position
 
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
         self.root.bind("<Control-f>", self._findProtocol)
         self.root.bind("<Control-a>", self._selectAllProtocols)
         self.root.bind("<Control-t>", self._toggleColorScheme)
+        if pwutils.envVarOn('SCIPION_DEBUG'):
+            self.root.bind("<Control-i>", self._inspectProtocols)
 
         # To bind key press to methods
         # Listen to any key: send event to keyPressed method
@@ -835,12 +844,12 @@ class ProtocolsView(tk.Frame):
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
 
+        self.actionButtons = {}
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE,
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
                            ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS,
-                           ACTION_EXPORT, ACTION_COLLAPSE, ACTION_EXPAND,
-                           ACTION_LABELS]
-        self.actionButtons = {}
+                           ACTION_EXPORT, ACTION_EXPORT_UPLOAD, ACTION_COLLAPSE,
+                           ACTION_EXPAND, ACTION_LABELS]
 
         def addButton(action, text, toolbar):
             btn = tk.Label(toolbar, text=text,
@@ -1275,6 +1284,7 @@ class ProtocolsView(tk.Frame):
             self.runsGraphCanvas.frame.grid_remove()
             self.updateRunsTreeSelection()
             self.viewButtons[ACTION_TREE].grid_remove()
+            self._lastRightClickPos = None
         else:
             self.runsTree.grid_remove()
             self.updateRunsGraph(reorganize=(previousView != VIEW_LIST))
@@ -1317,6 +1327,28 @@ class ProtocolsView(tk.Frame):
 
         # self.updateRunsGraph()
         self.drawRunsGraph()
+
+    def _inspectProtocols(self, e=None):
+        objs = self._getSelectedProtocols()
+
+        # We will inspect the selected objects or 
+        #   the whole project is no protocol is selected
+        if len(objs)>0:
+            objs.sort(key=lambda obj: obj._objId, reverse=True)
+            filePath = objs[0]._getLogsPath('inspector.csv')
+            doInspect = True
+        else:
+            obj = self.project
+            filePath = obj.getLogPath('inspector.csv')
+            objs = [obj]
+            doInspect = pwgui.dialog.askYesNo(Message.TITLE_INSPECTOR,
+                                              Message.LABEL_INSPECTOR, self.root)
+
+        if doInspect:
+            inspectObj(objs, filePath)
+            # we open the resulting CSV file with the OS default software
+            pwgui.text.openTextFileEditor(filePath)
+
 
     # NOt used!: pconesa 02/11/2016.
     # def _deleteSelectedProtocols(self, e=None):
@@ -1407,6 +1439,8 @@ class ProtocolsView(tk.Frame):
         if n <= 1:
             self._deselectItems(item)
             self._selectItemProtocol(prot)
+            self._lastRightClickPos = self.runsGraphCanvas.eventPos
+
         return self.provider.getObjectActions(prot)
 
     def _runItemControlClick(self, item=None):
@@ -1802,6 +1836,15 @@ class ProtocolsView(tk.Frame):
             entryLabel='File', entryValue='workflow.json')
         browser.show()
 
+    def _exportUploadProtocols(self):
+        try:
+            jsonFn = os.path.join(tempfile.mkdtemp(), 'workflow.json')
+            self.project.exportProtocols(self._getSelectedProtocols(), jsonFn)
+            WorkflowRepository().upload(jsonFn)
+            pwutils.cleanPath(jsonFn)
+        except Exception as ex:
+            self.windows.showError("Error connecting to workflow repository:\n" +  str(ex))
+
     def _stopProtocol(self, prot):
         if pwgui.dialog.askYesNo(Message.TITLE_STOP_FORM,
                                  Message.LABEL_STOP_FORM, self.root):
@@ -1856,10 +1899,10 @@ class ProtocolsView(tk.Frame):
             if bibTexCites:
                 with tempfile.NamedTemporaryFile(suffix='.bib') as bibFile:
                     for refId, refDict in bibTexCites.iteritems():
-                        refType = refDict['type']
+                        refType = refDict['ENTRYTYPE']
                         # remove 'type' and 'id' keys
                         refDict = {k: v for k, v in refDict.items()
-                                   if k not in ['type', 'id']}
+                                   if k not in ['ENTRYTYPE', 'ID']}
                         jsonStr = json.dumps(refDict, indent=4,
                                              ensure_ascii=False)[1:]
                         jsonStr = jsonStr.replace('": "', '"= "')
@@ -1879,6 +1922,17 @@ class ProtocolsView(tk.Frame):
 
         return
 
+    def _renameProtocol(self, prot):
+        """ Open the EditObject dialog to edit the protocol name. """
+        kwargs = {}
+        if self._lastRightClickPos:
+            kwargs['position'] = self._lastRightClickPos
+
+        dlg = pwgui.dialog.EditObjectDialog(self.runsGraphCanvas, Message.TITLE_EDIT_OBJECT,
+                                            prot, self.project.mapper, **kwargs)
+        if dlg.resultYes():
+            self._updateProtocol(prot)
+
     def _runActionClicked(self, action):
         prot = self.getSelectedProtocol()
         if prot:
@@ -1887,6 +1941,8 @@ class ProtocolsView(tk.Frame):
                     pass
                 elif action == ACTION_EDIT:
                     self._openProtocolForm(prot)
+                elif action == ACTION_RENAME:
+                    self._renameProtocol(prot)
                 elif action == ACTION_COPY:
                     self._copyProtocols()
                 elif action == ACTION_DELETE:
@@ -1905,6 +1961,8 @@ class ProtocolsView(tk.Frame):
                     self._analyzeResults(prot)
                 elif action == ACTION_EXPORT:
                     self._exportProtocols()
+                elif action == ACTION_EXPORT_UPLOAD:
+                    self._exportUploadProtocols()
                 elif action == ACTION_COLLAPSE:
                     nodeInfo = self.settings.getNodeById(prot.getObjId())
                     nodeInfo.setExpanded(False)
@@ -1953,3 +2011,220 @@ class RunBox(pwgui.TextBox):
     def moveTo(self, x, y):
         pwgui.TextBox.moveTo(self, x, y)
         self.nodeInfo.setPosition(self.x, self.y)
+
+
+
+def inspectObj(obj, filename, prefix='', maxDeep=5, inspectDetail=2,
+               memoryDict={}):
+    """ Creates a .CSV file in the filename path with
+        all its members and recursibely with a certain maxDeep,
+        if maxDeep=0 means no maxDeep (untils all members are inspected).
+        
+        inspectDetail can be:
+         - 1: All attributes are shown
+         - 2: All attributes are shown and iterable values are also inspected
+
+        prefix and memoryDict will be updated in the recursibe entries:
+         - prefix is to compond the two first columns (DEEP and Tree)
+         - memoryDict is a dictionary with the memory adress and an identifier
+    """ 
+
+    END_LINE   = '\n'  # end of line char
+    COL_DELIM  = '\t'  # column delimiter
+    INDENT_COUNTER = '/'  # character append in each indention (it's not writed)
+
+    NEW_CHILD = '  |------>  '  # new item indention
+    BAR_CHILD = '  | ' + INDENT_COUNTER  # bar indention
+    END_CHILD =('       -- '+COL_DELIM)*4 + END_LINE  # Child ending
+    column1  = '    - Name - ' + COL_DELIM
+    column2  = '    - Type - ' + COL_DELIM
+    column3  = '    - Value - ' + COL_DELIM
+    column4  = '  - Memory Address -'
+
+    #  Constants to distinguish the first, last and middle rows
+    IS_FIRST = 1
+    IS_LAST = -1
+    IS_MIDDLE = 0
+
+    def writeRow(name, value, prefix, posList=False):
+        """ Writes a row item. """
+        # we will avoid to recursively print the items wrote before 
+        #  (ie. with the same memory address), thus we store a dict with the
+        #  addresses and the flag isNew is propertly set
+        if str(hex(id(value))) in memoryDict:
+            memorySTR = memoryDict[str(hex(id(value)))]
+            isNew = False
+        else:
+            # if the item is new, we save its memory address in the memoryDict
+            #   and we pass the name and the line on the file as a reference.
+            memorySTR = str(hex(id(value)))
+            file = open(filename, 'r')
+            lineNum = str(len(file.readlines())+1)
+            file.close()
+            nameDict = str(name)[0:15]+' ...' if len(str(name))>25 else str(name)
+            memoryDict[str(hex(id(value)))] = '>>> '+nameDict + ' - L:'+lineNum
+            isNew = True
+        
+        if posList:
+            # if we have a List, the third column is 'pos/lenght'
+            thirdCol = posList
+        else:
+            # else, we print the value avoiding the EndOfLine char (// instead)
+            thirdCol = str(value).replace(END_LINE,' // ')
+
+        # we will print the indetion deep number in the first row
+        indentionDeep = prefix.count(INDENT_COUNTER)
+        deepStr = str(indentionDeep) + COL_DELIM
+
+        # the prefix without the indentCounters is 
+        #   the tree to be printed in the 2nd row
+        prefixToWrite = prefix.replace(INDENT_COUNTER,'') 
+        
+        file = open(filename, 'a')   
+        file.write( deepStr + prefixToWrite + COL_DELIM +
+                    str(name) + COL_DELIM + 
+                    str(type(value)) + COL_DELIM + 
+                    thirdCol + COL_DELIM + 
+                    memorySTR + END_LINE)
+        file.close()
+
+        return isNew
+
+    def recursivePrint(value, prefix, isFirstOrLast):
+        """ We print the childs items of tuples, lists, dicts and classes. """ 
+
+        # if it's the last item, its childs has not the bar indention
+        if isFirstOrLast == IS_LAST:  # void indention when no more items
+            prefixList = prefix.split(INDENT_COUNTER)
+            prefixList[-2]=prefixList[-2].replace('|',' ') 
+            prefix = INDENT_COUNTER.join(prefixList)
+
+        # recursive step with the new prefix and memory dict.
+        inspectObj(value, filename, prefix+BAR_CHILD, maxDeep, inspectDetail, 
+                   memoryDict)
+        
+        
+        if isFirstOrLast == IS_FIRST:
+            deepStr = str(indentionDeep) + COL_DELIM
+        else:
+            # When it was not the first item, the deep is encreased 
+            #   to improve the readability when filter 
+            deepStr = str(indentionDeep+1) + COL_DELIM
+
+        prefix = prefix.replace(INDENT_COUNTER,'') + COL_DELIM
+
+        # We introduce the end of the child and 
+        #   also the next header while it is not the last
+        file = open(filename, 'a')
+        file.write(deepStr + prefix + END_CHILD)
+        if isFirstOrLast != IS_LAST:
+            # header
+            file.write(deepStr + prefix + 
+                       column1 + column2 + column3 + column4 + END_LINE)
+        file.close()
+
+    def isIterable(obj):
+        """ Returns true if obj is a tuple, list, dict or calss. """
+        isTupleListDict = ( type(obj)==type(tuple()) or 
+                            type(obj)==type(dict())  or
+                            type(obj)==type(list()) ) and len(value)>1
+
+        # FIX ME: I don't know how to assert if is a class or not... 
+        isClass = str(type(obj))[1]=='c'
+
+        return isClass or (isTupleListDict and inspectDetail<2)
+
+    indentionDeep = prefix.count(INDENT_COUNTER)
+    if indentionDeep==0:
+        prefix = ' - Root - '
+
+        # dict with name and value pairs of the members
+        if len(obj)==1: 
+            # if only one obj is passed in the input list,
+            #   we directly inspect that obj.
+            obj_dict = obj[0].__dict__
+            obj = obj[0]
+
+        #  setting the header row
+        treeHeader = ' - Print on ' + str(dt.datetime.now())
+        prefixHeader = '-DEEP-' + COL_DELIM + treeHeader + COL_DELIM
+        col1 = '    - Name - (value for Lists and Tuples)' + COL_DELIM
+        col3 = '    - Value - (Pos./Len for Lists and Tuples) ' + COL_DELIM
+
+        #  writting the header row
+        file = open(filename, 'w')
+        file.write(prefixHeader + col1 + column2 + col3 + column4 + END_LINE)
+        file.close()
+
+        #  writting the root object
+        writeRow(obj.__class__.__name__, obj, prefix)
+        #  adding the child bar to the prefix
+        prefix = '  ' + BAR_CHILD
+    else:
+        # firsts settings depending on the type of the obj
+        if str(type(obj))[1]=='c':
+            obj_dict = obj.__dict__
+        elif (type(obj)==type(tuple()) or
+              type(obj)==type(list())):
+            column1 = '    - Value - ' + COL_DELIM
+            column3 = '  - Pos./Len. - ' + COL_DELIM
+        elif type(obj)==type(dict()):
+            column1 = '    - Key - ' + COL_DELIM
+            obj_dict = obj
+        else:  # if is not of the type above it not make sense to continue
+            return
+
+    indentionDeep = prefix.count(INDENT_COUNTER)
+    deepStr = str(indentionDeep) + COL_DELIM
+    isBelowMaxDeep = indentionDeep < maxDeep if maxDeep > 0 else True 
+
+    prefixToWrite = prefix.replace(INDENT_COUNTER,'') + COL_DELIM
+    file = open(filename, 'a')
+    file.write(deepStr + prefixToWrite + 
+               column1 + column2 + column3 + column4 + END_LINE)
+    file.close()
+
+    #  we update the prefix to put the NEW_CHILD string  ( |----> )
+    prefixList = prefix.split(INDENT_COUNTER)
+    prefixList[-2] = NEW_CHILD
+    #  we return to the string structure
+    #    with a certain indention if it's the root
+    prefixToWrite = '  ' + INDENT_COUNTER.join(prefixList) if indentionDeep == 1 \
+                     else  INDENT_COUNTER.join(prefixList)
+
+    isNew = True
+    if str(type(obj))[1]=='c' or type(obj)==type(dict()):
+        counter = 0
+        for key, value in obj_dict.items():
+            counter+=1
+            # write the variable
+            isNew = writeRow(key, value, prefixToWrite)
+
+            # managing the extrems of the loop
+            if counter==1:
+                isFirstOrLast = IS_FIRST
+            elif counter==len(obj_dict):
+                isFirstOrLast = IS_LAST
+            else:
+                isFirstOrLast = IS_MIDDLE
+
+            # show attributes for objects and items for lists and tuples 
+            if isBelowMaxDeep and isNew and isIterable(value):
+                recursivePrint(value, prefix, isFirstOrLast)
+    else:
+        for i in range(0,len(obj)): 
+            # write the variable
+            isNew = writeRow(obj[i], obj[i], prefixToWrite, 
+                             str(i+1)+'/'+str(len(obj)))
+
+            # managing the extrems of the loop
+            if i==0:
+                isFirstOrLast = IS_FIRST
+            elif len(obj)==i+1:
+                isFirstOrLast = IS_LAST
+            else:
+                isFirstOrLast = IS_MIDDLE
+
+            # show attributes for objects and items for lists and tuples 
+            if isBelowMaxDeep and isNew and isIterable(obj[i]):
+                recursivePrint(obj[i], prefix, isFirstOrLast)

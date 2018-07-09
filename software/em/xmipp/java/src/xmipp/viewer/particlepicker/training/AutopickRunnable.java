@@ -41,8 +41,11 @@ public class AutopickRunnable implements Runnable
 
 		public void run()
 		{
+
 			micrograph.getAutomaticParticles().clear();
-			if(classifier instanceof PickingClassifier)
+			boolean isGeneric = !(classifier instanceof PickingClassifier);
+
+			if (!isGeneric)
 			{
 				micrograph.setState(MicrographState.Supervised);
 				micrograph.setAutopickpercent(picker.getAutopickpercent());
@@ -52,10 +55,20 @@ public class AutopickRunnable implements Runnable
 			}
 			else 
 			{
-				((GenericClassifier)classifier).autopick(micrograph);
-				picker.loadMicrographData(micrograph);
+				GenericClassifier gc = (GenericClassifier) classifier;
+				gc.autopick(micrograph);
+				// Despite we run autopick in one micrographs, there are cases
+				// in which the command will pick all of them and we want
+				// to load the particles from all
+				if (gc.doPickAll()) {
+					for (SupervisedPickerMicrograph mic : picker.getMicrographs())
+						picker.loadMicrographData(mic);
+				}
+				else
+					picker.loadMicrographData(micrograph);
 			}
 
+			boolean updateAllMicrographs = isGeneric && ((GenericClassifier) classifier).doPickAll();
             // Runs inside of the Swing UI thread
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
@@ -67,7 +80,7 @@ public class AutopickRunnable implements Runnable
                     frame.getCanvas().repaint();
                     frame.getCanvas().setEnabled(true);
                     XmippWindowUtil.releaseGUI(frame.getRootPane());
-                    frame.updateMicrographsModel();
+                    frame.updateMicrographsModel(updateAllMicrographs);
                 }
             });
 		}

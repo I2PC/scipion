@@ -118,7 +118,8 @@ class ObjectBrowser(tk.Frame):
         self.label.grid(row=0, column=0, sticky='news')
         
     def _fillRightBottom(self, bottom):
-        self.text = TaggedText(bottom, width=40, height=15, bg='white', takefocus=0)
+        self.text = TaggedText(bottom, width=40, height=15, bg='white',
+                               takefocus=0)
         self.text.grid(row=0, column=0, sticky='news')
         
     def _itemClicked(self, obj):
@@ -143,7 +144,7 @@ class ObjectBrowser(tk.Frame):
         return self._lastSelected
       
 
-#------------- Classes and Functions related to File browsing --------------
+# ------------ Classes and Functions related to File browsing --------------
 
 class FileInfo(object):
     """ This class will store some information about a file.
@@ -270,11 +271,13 @@ class ImageFileHandler(FileHandler):
 class ParticleFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_image.gif'
-    
+
+
 class VolFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_vol.gif'
-    
+
+
 class StackHandler(ImageFileHandler):
     _index = '1@'
     
@@ -507,6 +510,9 @@ class FileBrowser(ObjectBrowser):
 
         ObjectBrowser.__init__(self, parent, self._provider)
         
+        # focuses on the browser in order to allow to move with the keyboard
+        self._goDir(os.path.abspath(initialDir))
+
         if selectionType == SELECT_NONE:
             selectButton = None
 
@@ -580,7 +586,8 @@ class FileBrowser(ObjectBrowser):
         self._addButton(frame, 'Home', Icon.HOME, self._actionHome)
         self._addButton(frame, 'Launch folder', Icon.ROCKET,
                         self._actionLaunchFolder)
-        self._addButton(frame, 'Working dir', Icon.ACTION_BROWSE, self._actionWorkingDir)
+        self._addButton(frame, 'Working dir', Icon.ACTION_BROWSE,
+                        self._actionWorkingDir)
         self._addButton(frame, 'Up', Icon.ARROW_UP, self._actionUp)
 
         # Add shortcuts
@@ -622,12 +629,13 @@ class FileBrowser(ObjectBrowser):
         self.tree.update()
         self.tree.focus_set()
 
-        itemKeyToSelect = PARENT_FOLDER
+        itemKeyToFocus = PARENT_FOLDER
         if not self.tree._objDict.has_key(PARENT_FOLDER):
-            itemKeyToSelect = self.tree.get_children()[0]
+            itemKeyToFocus = self.tree.get_children()[0]
 
-        self.tree.selectChild(itemKeyToSelect)
-        self.tree.focus(itemKeyToSelect)
+        # Focusing on a item, but nothing is selected 
+        # Current dir remains in _lastSelected
+        self.tree.focus(itemKeyToFocus)
         
     def _actionUp(self, e=None):
         parentFolder = getParentFolder(self.treeProvider.getDir())
@@ -707,7 +715,11 @@ class FileBrowser(ObjectBrowser):
         self.onClose()
         
     def _select(self, e=None):
-        self.onSelect(self.getSelected())
+        _lastSelected = self.getSelected()
+        if _lastSelected is not None:
+            self.onSelect(_lastSelected)
+        else:
+            print('Select a valid file/folder')
         
     def getEntryValue(self):
         return self.entryVar.get()

@@ -138,7 +138,7 @@ def main():
         # Upload datasets.
         for dataset in args.datasets:
             try:
-                upload(dataset, delete=args.delete)
+                upload(dataset, login=args.login, remoteFolder=args.remotefolder, delete=args.delete)
             except Exception as e:
                 print 'Error when uploading dataset %s: %s' % (dataset, e)
                 if ask() != 'y':
@@ -176,7 +176,11 @@ def get_parser():
         help='URL where remote datasets will be looked for.')
     add('--check-all', action='store_true',
         help='See if there is any remote dataset not in sync with locals.')
+    add('-l', '--login', default='scipion@scipion.cnb.csic.es', help='ssh login string. For upload')
+    add('-rf', '--remotefolder', default='/services/scipion/data/downloads/scipion/data/tests',
+        help='remote folder to put the dataset there. For upload.')
     add('-v', '--verbose', action='store_true', help='Print more details.')
+
 
     return parser
 
@@ -361,19 +365,17 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
         createMANIFEST(datasetFolder)
 
 
-def upload(dataset, delete=False):
+def upload(dataset, login, remoteFolder, delete=False):
     """ Upload a dataset to our repository """
 
     localFolder = join(os.environ['SCIPION_TESTS'], dataset)
-    remoteLoc = 'scipion@scipion.cnb.csic.es'
-    remoteFolder = '/services/scipion/data/downloads/scipion/data/tests'
 
     if not exists(localFolder):
         sys.exit("ERROR: local folder %s does not exist." % localFolder)
 
     print "Warning: Uploading, please BE CAREFUL! This can be dangerous."
     print ('You are going to be connected to "%s" to write in folder '
-           '"%s" the dataset "%s".' % (remoteLoc, remoteFolder, dataset))
+           '"%s" the dataset "%s".' % (login, remoteFolder, dataset))
     if ask() == 'n':
         return
 
@@ -384,11 +386,11 @@ def upload(dataset, delete=False):
     # Upload the dataset files (with rsync)
     print "Uploading files..."
     call(['rsync', '-rlv', '--chmod=a+r', localFolder,
-          '%s:%s' % (remoteLoc, remoteFolder)] + (['--delete'] if delete else []))
+          '%s:%s' % (login, remoteFolder)] + (['--delete'] if delete else []))
 
     # Regenerate remote MANIFEST (which contains a list of datasets)
     print "Regenerating remote MANIFEST file..."
-    call(['ssh', remoteLoc,
+    call(['ssh', login,
           'cd %s && find -type d -mindepth 1 -maxdepth 1 > MANIFEST' % remoteFolder])
     # This is a file that just contains the name of the directories
     # in remoteFolder. Nothing to do with the MANIFEST files in
@@ -401,7 +403,7 @@ Modification to %s dataset made at
 %s
 by %s at %s
 ----""" % (dataset, time.asctime(), getpass.getuser(), ' '.join(os.uname()))
-    call(['ssh', remoteLoc,
+    call(['ssh', login,
           'echo "%s" >> %s' % (log, join(remoteFolder, 'modifications.log'))])
     print "...done."
 

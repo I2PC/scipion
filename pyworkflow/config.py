@@ -40,6 +40,7 @@ import pyworkflow.object as pwobj
 import pyworkflow.hosts as pwhosts
 from pyworkflow import em
 from pyworkflow.mapper import SqliteMapper
+from pyworkflow.utils.properties import Icon
 
 ALL_PROTOCOLS = "All"
 
@@ -414,7 +415,7 @@ class ProjectConfig(pwobj.OrderedObject):
     """A simple base class to store ordered parameters"""
     def __init__(self, **args):
         pwobj.OrderedObject.__init__(self, **args)
-        self.icon = pwobj.String('scipion_bn.xbm')
+        self.icon = pwobj.String(Icon.SCIPION_ICON)
         self.logo = pwobj.String('scipion_logo_small.png')
 
 

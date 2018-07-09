@@ -35,6 +35,7 @@ from pyworkflow.em.constants import *
 from constants import *
 
 from protocol_ctffind import ProtCTFFind
+from protocol_ctftilt import ProtCTFTilt
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 from protocol_refinement import ProtFrealign
@@ -49,7 +50,8 @@ from pyworkflow import findResource
 #===============================================================================
 
 class BrandeisCTFWizard(CtfWizard):
-    _targets = [(ProtCTFFind, ['ctfDownFactor', 'lowRes', 'highRes'])]
+    _targets = [(ProtCTFFind, ['ctfDownFactor', 'lowRes', 'highRes']),
+                (ProtCTFTilt, ['ctfDownFactor', 'lowRes', 'highRes'])]
     
     def _getParameters(self, protocol):
         
@@ -78,7 +80,8 @@ class BrandeisCTFWizard(CtfWizard):
             args = {'unit': UNIT_PIXEL,
                     'downsample': _value[0],
                     'lf': _value[1],
-                    'hf': _value[2]
+                    'hf': _value[2],
+                    'showInAngstroms': True
                     }
             d = CtfDownsampleDialog(form.root, provider, **args)
 

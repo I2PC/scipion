@@ -186,6 +186,26 @@ void keepBiggestComponent(MultidimArray< double >& I,
  */
 void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
 
+/** Applays a variance filter to an image
+ * @ingroup Filters
+ *
+ * If relative=True, the filter is normalized to the mean (coeficient of variation) 
+ */
+void varianceFilter(MultidimArray<double> &I, int kernelSize = 10, bool relative=false);
+
+/** Transforms I to a binary mask with 0 where both variance and mean are high.
+ * @ingroup Filters
+ *
+ */
+void noisyZonesFilter(MultidimArray<double> &I, int kernelSize = 10);
+
+/** Returns the Gini coefficient of an image. This is related to the Entropy.
+ * It also applies a variance filter to the input Image
+ * @ingroup Filters
+ *
+ */
+double giniCoeff(MultidimArray<double> &I, int varKernelSize = 50);
+
 /** Segment an object using Otsu's method
  * @ingroup Filters
  *
@@ -194,7 +214,7 @@ void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
  *
  * http://www.biomecardio.com/matlab/otsu.html
  */
-void OtsuSegmentation(MultidimArray<double> &V);
+double OtsuSegmentation(MultidimArray<double> &V);
 
 /** Segment an object using Entropy method
  * @ingroup Filters
@@ -204,7 +224,7 @@ void OtsuSegmentation(MultidimArray<double> &V);
  *
  * http://rsbweb.nih.gov/ij/plugins/download/Entropy_Threshold.java
  */
-void EntropySegmentation(MultidimArray<double> &V);
+double EntropySegmentation(MultidimArray<double> &V);
 
 /** Segment an object using a combination of Otsu and Entropy method
  * @ingroup Filters
@@ -1382,7 +1402,7 @@ void centerImageRotationally(MultidimArray<double> &I, RotationalCorrelationAux 
  * with its mirrored (X, Y, XY) versions. The image is aligned translationally
  * and then rotationally Niter times.
  */
-void centerImage(MultidimArray<double> &I, CorrelationAux &aux,
+Matrix2D<double> centerImage(MultidimArray<double> &I, CorrelationAux &aux,
                  RotationalCorrelationAux &aux2,
                  int Niter=10, bool limitShift=true);
 

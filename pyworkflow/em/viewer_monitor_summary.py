@@ -171,5 +171,5 @@ class SummaryWindow(pwgui.Window):
         if pwutils.exists(reportPath):
             text._open_cmd(reportPath)
         else:
-            self.showInfo('Your html file is not ready yet. Please try again in a minute.' % reportPath)
+            self.showInfo('Your html file is not ready yet. Please try again in a minute.')
 

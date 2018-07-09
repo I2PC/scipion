@@ -3,7 +3,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Josue Gomez Blanco     (jgomez@cnb.csic.es)
+# *              Josue Gomez Blanco     (josue.gomez-blanco@mcgill.ca)
 # *              I. Foche Perez         (ifoche@cnb.csic.es)
 # *              J. Burguet Castell     (jburguet@cnb.csic.es)
 # *
@@ -40,14 +40,15 @@ import subprocess
 
 
 SCIPION_HOME = os.environ['SCIPION_HOME']
-LOGFILE = os.path.join(SCIPION_HOME, 'software', 'log', 'scons.log')
+SCIPION_SW = os.environ['SCIPION_SOFTWARE']
+LOGFILE = os.path.join(SCIPION_HOME, SCIPION_SW, 'log', 'scons.log')
 
 
 
 def build(args):
     """ Run scons with our python (and with the passed args) """
     # Call SCons and show the output on the screen and logfile.
-    proc = subprocess.Popen(['python', 'software/bin/scons'] + args,
+    proc = subprocess.Popen(['python', SCIPION_SW + '/bin/scons'] + args,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             cwd=SCIPION_HOME)
     with open(LOGFILE, 'a') as logFile:

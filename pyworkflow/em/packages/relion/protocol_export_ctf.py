@@ -164,12 +164,11 @@ class ProtRelionExportCtf(EMProtocol):
 
         def _setIf(label, attributes):
             for a in attributes:
-                if ctf.hasAttribute(a):
+                if ctf.getAttributeValue(a, None) is not None:
                     micRow.setValue(label, ctf.getAttributeValue(a))
 
         # Check if there is maximum resolution information
         _setIf('rlnCtfMaxResolution', ['_ctffind4_ctfResolution',
-                                       '_gctf_ctfResolution'])
+                                       '_gctf_ctfResolution', '_resolution'])
         _setIf('rlnCtfFigureOfMerit', ['_ctffind4_crossCorrelation',
-                                       '_gctf_crossCorrelation'])
-
+                                       '_gctf_crossCorrelation', '_fitQuality'])
