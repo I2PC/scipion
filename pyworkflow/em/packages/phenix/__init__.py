@@ -23,7 +23,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em.convert_header.CCP4.convert import getEnviron
+from pyworkflow.em.packages.ccp4.convert import getEnviron
 
 _logo = "phenix.png"
 
