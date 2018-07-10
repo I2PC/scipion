@@ -23,7 +23,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em.convert_header.CCP4.convert import getEnviron
+from convert import getEnviron
 
 _logo = "ccp4_200.png"
 
