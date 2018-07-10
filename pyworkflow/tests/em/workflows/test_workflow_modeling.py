@@ -1331,7 +1331,7 @@ class TestEMRingerValidation(TestImportData):
                           EMScore=5.21530839370391,
                           protEMRinger=protEMRinger)
 
-class TestPhenixProtRunMolprobity(TestImportData):
+class TestMolprobityValidation(TestImportData):
     """ Test the protocol of MolProbity validation
     """
     def checkResults(self, ramOutliers, ramFavored, rotOutliers, cbetaOutliers,
