@@ -71,6 +71,11 @@ def getProgram(progName):
     if 'PHENIX_HOME' not in os.environ:
         return None
 
-    return os.path.join(os.environ['PHENIX_HOME'],
-                        PHENIX_SCRIPT_PATH,
-                        os.path.basename(progName))
+    progLocation = os.path.join(os.environ['PHENIX_HOME'], PHENIX_SCRIPT_PATH, os.path.basename(progName))
+    if os.path.exists(progLocation):
+        return progLocation
+    progLocation = os.path.join(os.environ['PHENIX_HOME'], "build/bin", os.path.basename(progName))
+    if os.path.exists(progLocation):
+        return progLocation
+    
+    return None

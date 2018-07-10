@@ -42,7 +42,7 @@ samples the density around Chi1 angles of protein sidechains. Electronic
 density and appropriate rotameric angles must to coincide for each residue if
 the atomic structure backbone has been perfectly fitted to the map.
 """
-    _label = 'emringer: model to map validation'
+    _label = 'emringer'
     _program = ""
     # _version = VERSION_1_2
     EMRINGER = 'emringer.py'
