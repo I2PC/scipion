@@ -34,8 +34,6 @@ TODO:
 import os
 import pyworkflow.utils as pwutils
 import getpass
-cootPdbTemplateFileName = "cootOut%04d.pdb"
-cootScriptFileName = "cootScript.py"
 
 def deleteEnv(name):
     if name in os.environ:
