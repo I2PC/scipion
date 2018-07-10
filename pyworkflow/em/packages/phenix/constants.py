@@ -24,5 +24,5 @@
 # *
 # **************************************************************************
 
-CCP4VERSIONFILENAME = 'CHANGES'
-CCP4VERSION = '7.0'
+PHENIXVERSIONFILENAME = 'phenix_env.sh'
+PHENIXVERSION = '1.13'

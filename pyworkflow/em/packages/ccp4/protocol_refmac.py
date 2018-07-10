@@ -34,7 +34,8 @@ from pyworkflow.em.packages.ccp4.refmac_template_map2mtz import \
 from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.convert_header.CCP4.convert import (
-    adaptFileToCCP4, runCCP4Program, START, getProgram, Ccp4Header)
+    adaptFileToCCP4, START, Ccp4Header)
+from pyworkflow.em.packages.ccp4.convert import (runCCP4Program, getProgram)
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam
 from constants import CCP4VERSION, CCP4VERSIONFILENAME
 
@@ -125,7 +126,8 @@ class CCP4ProtRunRefmac(EMProtocol):
                         START)
 
     def createDataDictStep(self):
-        header = Ccp4Header(self._getInputVolume().getFileName(),
+        localInFileName = self._getVolumeFileName()
+        header = Ccp4Header(localInFileName,
                             readHeader=True)
         self.dict = {}
         x, y, z = header.getCellDimensions()

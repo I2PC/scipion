@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Marta Martinez (mmmtnez@cnb.csic.es)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -24,5 +23,14 @@
 # *
 # **************************************************************************
 
-CCP4VERSIONFILENAME = 'CHANGES'
-CCP4VERSION = '7.0'
+from pyworkflow.em.packages.ccp4.convert import getEnviron
+
+_logo = "phenix.png"
+
+from protocol_emringer import PhenixProtRunEMRinger
+from protocol_real_space_refine import PhenixProtRunRSRefine
+from protocol_superpose_pdbs import PhenixProtRunSuperposePDBs
+#from protocol_molprobity import PhenixProtRunMolprobity
+from viewer_emringer import PhenixProtRunEMRingerViewer
+
+_environ = getEnviron()

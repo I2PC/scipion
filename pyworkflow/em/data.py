@@ -610,6 +610,10 @@ class Image(EMObject):
         return x, y, z
         # x, y, z are floats in Angstroms
 
+    def setVolOriginAsTuple(self, x, y, z):
+        origin = self.getOrigin(force=True)
+        origin.setShifts(x, y, z )
+
     def setOrigin(self, newOrigin):
         """shifts in A"""
         self._origin = newOrigin

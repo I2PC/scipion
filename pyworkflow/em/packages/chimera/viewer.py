@@ -92,8 +92,8 @@ class ChimeraViewerBase(Viewer):
             else:
                 x, y, z = _showVol.getOrigin(force=True).getShifts()
 
-            f.write("volume #1 style surface voxelSize %f origin "
-                    "%0.2f,%0.2f,%0.2f\n"
+            f.write("volume #1 style surface voxelSize %f\n"
+                    "volume #1 origin %0.2f,%0.2f,%0.2f\n"
                     % (_showVol.getSamplingRate(), x, y, z))
 
         for filename in os.listdir(directory):
