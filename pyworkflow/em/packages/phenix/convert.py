@@ -45,7 +45,7 @@ def getEnviron(first=True):
 
     # add to variable
     environ.update({
-            'PATH': os.path.join(_phenix_home, 'bin'),
+            'PATH': os.path.join(_phenix_home, 'build','bin'),
     }, position=pos)
 
     # replace variable value
