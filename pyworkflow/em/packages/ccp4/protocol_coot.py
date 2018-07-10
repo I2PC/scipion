@@ -32,16 +32,15 @@ from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.packages.ccp4.convert import (getProgram,
-                                                       runCCP4Program,
-                                                       cootPdbTemplateFileName,
-                                                       cootScriptFileName
-                                                       )
+from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
 from pyworkflow.em.convert_header.CCP4.convert import copyMRCHeader, START
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam, StringParam
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.constants import STATUS_FINISHED
+
+cootPdbTemplateFileName = "cootOut%04d.pdb"
+cootScriptFileName = "cootScript.py"
 
 class CootRefine(EMProtocol):
     """Coot is an interactive graphical application for
