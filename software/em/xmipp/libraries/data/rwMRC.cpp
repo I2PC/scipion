@@ -189,6 +189,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     }
 
     DataType datatype;
+    std::cerr << " header->mode" << header->mode << std::endl;
     switch ( header->mode )
     {
     case 0:
@@ -313,10 +314,12 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     // Lets read the data
 
     // 4-bits mode: Here is the magic to expand the compressed images
-    if (header->mode == 101){
+    if (datatype == DT_UHalfByte){
+        std::cout << "mrc_io-readdata4BIT" << std::endl;
         readData4bit(fimg, select_img, datatype, 0);
     }
     else{
+        std::cout << "mrc_io-readdata" << std::endl;
         readData(fimg, select_img, datatype, 0);
     }
 
