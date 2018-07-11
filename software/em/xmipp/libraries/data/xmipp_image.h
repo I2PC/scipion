@@ -1405,7 +1405,7 @@ private:
         selectImgOffset = offset + IMG_INDEX(select_img) * (pagesizeF + pad);
 
         if (fseek(fimg, selectImgOffset, SEEK_SET) == -1)
-            REPORT_ERROR(ERR_IO_SIZE, "readData: can not seek the file pointer");
+            REPORT_ERROR(ERR_IO_SIZE, "readData4bit: can not seek the file pointer");
         for (size_t myn = 0; myn < NSIZE(data); myn++)
         {
 
