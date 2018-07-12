@@ -186,6 +186,28 @@ class TestImportData(TestImportBase):
         structure5_PDB = protImportPDB.outputPdb
         return structure5_PDB
 
+    def _importStructureMolProbity1(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/jlv_chimeraOut0001.pdb'),
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('import pdb\n jlv_chimeraOut0001')
+        self.launchProtocol(protImportPDB)
+        structure6_PDB = protImportPDB.outputPdb
+        return structure6_PDB
+
+    def _importStructureMolProbity2(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/jlv_cootOut0016.pdb'),
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('import pdb\n jlv_cootOut0016')
+        self.launchProtocol(protImportPDB)
+        structure7_PDB = protImportPDB.outputPdb
+        return structure7_PDB
+
     def _createExtraCommandLine(self, x, y, z):
         if (x != 0. or y != 0. or z != 0.):
             return """translate_molecule_by(0, %f, %f, %f)
@@ -1698,5 +1720,53 @@ class TestMolprobityValidation(TestImportData):
                           cbetaOutliers=0,
                           clashScore=9.74,
                           overallScore=1.80,
+                          protMolProbity=protMolProbity)
+
+    def testMolProbityValidationManyOutliers(self):
+        """ This test checks that MolProbity validation protocol runs with
+        two independent pdbs provided directly without inputVol associated and
+        allows the comparison of results
+         """
+        print "Run MolProbity validation to compare two imported pdb " \
+              "files obtained in another project"
+
+        # import first PDB
+        structure6_PDB = self._importStructureMolProbity1()
+
+        # MolProbity
+        args = {
+                'inputStructure': structure6_PDB
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=0.20,
+                          ramFavored=97.35,
+                          rotOutliers=12.24,
+                          cbetaOutliers=0,
+                          clashScore=130.72,
+                          overallScore=3.53,
+                          protMolProbity=protMolProbity)
+
+        # import second PDB (with higher number of Outliers)
+        structure7_PDB = self._importStructureMolProbity2()
+
+        # MolProbity
+        args = {
+            'inputStructure': structure7_PDB
+        }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=3.82,
+                          ramFavored=89.09,
+                          rotOutliers=31.35,
+                          cbetaOutliers=746,
+                          clashScore=276.52,
+                          overallScore=4.61,
                           protMolProbity=protMolProbity)
 
