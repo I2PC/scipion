@@ -187,6 +187,7 @@ Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select
 
     switch (dataType)
     {
+        case DT_UHalfByte:
         case DT_UChar:
             {
             unsigned char *mdarray;
@@ -378,6 +379,7 @@ Java_xmipp_jni_ImageGeneric_setArrayByte(JNIEnv *env, jobject jobj,
 
         switch (dataType)
     {
+    case DT_UHalfByte:
     case DT_UChar:
         {
             unsigned char *mdarray;
