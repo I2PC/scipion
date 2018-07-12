@@ -351,6 +351,7 @@ class Icon():
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
+    ACTION_RENAME = 'rename.png'
     # TODO: change action_steps icon - fa-codefork?
     ACTION_STEPS = 'fa-list-ul.png'
     ACTION_BROWSE = 'fa-folder-open.png'
