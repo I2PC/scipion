@@ -72,7 +72,7 @@ atomic structure derived from a cryo-EM density map.
         """
         vol = self._getInputVolume()
         inVolName = vol.getFileName()
-        newFn = self._getTmpPath(self.MOLPROBITYFILE)
+        newFn = self._getExtraPath(self.MOLPROBITYFILE)
         origin = vol.getOrigin(force=True).getShifts()
         sampling = vol.getSamplingRate()
         adaptFileToCCP4(inVolName, newFn, origin, sampling, START)  # ORIGIN
@@ -84,17 +84,30 @@ atomic structure derived from a cryo-EM density map.
         args = ""
         args += pdb
         # starting volume (.mrc)
-        if self.inputVolume.get() is not None:
+        vol = self._getInputVolume()
+        if vol is not None:
             args += " "
-            volume = os.path.abspath(self._getTmpPath(self.MOLPROBITYFILE))
+            volume = os.path.abspath(self._getExtraPath(self.MOLPROBITYFILE))
             args += "map_file_name=%s" % volume
             args += " "
             args += "d_min=%f" % self.resolution.get()
 
         # script with auxiliary files
-
-        runPhenixProgram(getProgram(self.MOLPROBITY), args,
+        try:
+            runPhenixProgram(getProgram(self.MOLPROBITY), args,
                          cwd=self._getExtraPath())
+        except:
+            print "WARNING!!!\nPHENIX error:\n pdb_interpretation.clash_guard" \
+                  " failure: Number of nonbonded interaction distances < 0.5: " \
+                  "109 This error has been disable by running the same " \
+                  "command with the same following additional " \
+                  "argument:\npdb_interpretation.clash_guard." \
+                  "nonbonded_distance_threshold=None "
+            args += " "
+            args += "pdb_interpretation.clash_guard." \
+                    "nonbonded_distance_threshold=None"
+            runPhenixProgram(getProgram(self.MOLPROBITY), args,
+                             cwd=self._getExtraPath())
 
 
     def createOutputStep(self):
@@ -142,7 +155,7 @@ atomic structure derived from a cryo-EM density map.
             summary.append("Rotamer outliers:           %0.2f"\
                            " %%   (Goal: < 1%%)    "\
                            "C-beta outliers:              %d"\
-                           " %%         (Goal: 0%%) " % \
+                           "            (Goal: 0) " % \
                             (self.rotamerOutliers.get(),
                              self.cbetaOutliers.get()
                             ))
