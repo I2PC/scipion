@@ -31,6 +31,8 @@ from pyworkflow.protocol.params import LabelParam, EnumParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from pyworkflow.em.viewer import TableView
 import collections
+from pyworkflow.em.packages.ccp4.convert import getProgram, runCCP4Program
+import os
 
 
 def errorWindow(tkParent, msg):
@@ -50,6 +52,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     _label = 'MolProbity viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [PhenixProtRunMolprobity]
+    COOT = 'coot'
 
     def __init__(self,  **kwargs):
         ProtocolViewer.__init__(self,  **kwargs)
@@ -110,6 +113,13 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                            "experimental resolution expected for a model of "
                            "this quality; ideally the score should be lower "
                            "than the actual resolution.\n")
+        form.addParam('showCootOutliers', LabelParam,
+                      important=True,
+                      label="Coot Visualization:\nRamachandran outliers\n "
+                            "Rotamer outliers\nC-beta outliers\n"
+                            "Severe clashes",
+                      help="Interactive visualization of outliers and clashes"
+                           " with Coot.")
         group = form.addGroup('Basic Geometry: Bond Length Restraints')
         group.addParam('showBLrestraints', LabelParam,
                       label="Deviations",
@@ -170,7 +180,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                            "resolution electron density maps.")
         self.outliers = self.dictChilRestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
-            group.addParam('outliers', LabelParam,
+            group.addParam('showCHILoutliers', LabelParam,
                           label="Outliers", help="List of outlier residues ("
                                                  "sorted by deviation) "
                                                  "according to the volume "
@@ -195,6 +205,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     def _getVisualizeDict(self):
         return {
             'showFinalResults': self._visualizeFinalResults,
+            'showCootOutliers': self._showCootOutliers,
             'showBLrestraints': self._showBLrestraints,
             'showBLoutliers': self._showBLoutliers,
             'showBArestraints': self._showBArestraints,
@@ -202,6 +213,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
             'showDArestraints': self._showDArestraints,
             'showDAoutliers': self._showDAoutliers,
             'showCHILrestraints': self._showCHILrestraints,
+            'showCHILoutliers': self._showCHILoutliers,
             'showPLANARrestraints': self._showPLANARrestraints,
             'showPLANARoutliers': self._showPLANARoutliers
         }
@@ -214,6 +226,22 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         title="MolProbity: Final Results Summary"
         self._showResults(headerList, dictX, val, mesg, title)
 
+    def _showCootOutliers(self, e=None):
+        MOLPROBITYCOOTFILENAME = self.protocol._getExtraPath(
+            self.protocol.MOLPROBITYCOOTFILENAME)
+        args = ""
+        args += " --python " + MOLPROBITYCOOTFILENAME
+        pdb = os.path.abspath(self.protocol.inputStructure.get().getFileName())
+        args += " " + "--pdb " + pdb
+        vol = self.protocol._getInputVolume()
+        if vol is not None:
+            MOLPROBITYFILE = os.path.abspath(self.protocol._getExtraPath(
+                self.protocol.MOLPROBITYFILE))
+            args += " " + "--map " + MOLPROBITYFILE
+
+        # run coot with args
+        runCCP4Program(getProgram(self.COOT), args)
+
     def _showBLrestraints(self, e=None):
         headerList = ['measure', 'value']
         dictX = self.dictBLRestraints
@@ -225,7 +253,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     def _showBLoutliers(self, e=None):
         headerList = ['Atom1', 'Atom2', 'Ideal value', 'Model value',
                       'Deviation (sigmas)']
-        dataList = self.BLdataList
+        dataList = self.blDataList
         mesg = "List of outliers (sorted by deviation)"
         title = "Bond Length Restraints"
         self._showOutliers(headerList, dataList, mesg, title)
@@ -241,7 +269,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     def _showBAoutliers(self, e=None):
         headerList = ['Atoms', 'Ideal value', 'Model value', 'Deviation ('
                                                             'sigmas)']
-        dataList = self.BAdataList
+        dataList = self.baDataList
         mesg = "List of outliers (sorted by deviation)"
         title = "Bond Angle Restraints"
         self._showOutliers(headerList, dataList, mesg, title)
@@ -257,7 +285,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     def _showDAoutliers(self, e=None):
         headerList = ['Atoms', 'Ideal value', 'Model value', 'Deviation ('
                                                             'sigmas)']
-        dataList = self.DAdataList
+        dataList = self.daDataList
         mesg = "List of outliers (sorted by deviation)"
         title = "Dihedral Angle Restraints"
         self._showOutliers(headerList, dataList, mesg, title)
@@ -270,6 +298,14 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         title="MolProbity: Basic Geometry"
         self._showResults(headerList, dictX, val, mesg, title)
 
+    def _showCHILoutliers(self, e=None):
+        headerList = ['Atoms', 'Ideal value', 'Model value', 'Deviation ('
+                                                            'sigmas)']
+        dataList = self.chilDataList
+        mesg = "List of outliers (sorted by deviation)"
+        title = "Chirality Restraints"
+        self._showOutliers(headerList, dataList, mesg, title)
+
     def _showPLANARrestraints(self, e=None):
         headerList = ['measure', 'value']
         dictX = self.dictPlanarRestraints
@@ -281,7 +317,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     def _showPLANARoutliers(self, e=None):
         headerList = ['Atoms', 'Max. delta', 'RMS (delta)', 'Deviation ('
                                                             'sigmas)']
-        dataList = self.PLANARdataList
+        dataList = self.planarDataList
         mesg = "List of outliers (sorted by deviation)"
         title = "Planarity Restraints"
         self._showOutliers(headerList, dataList, mesg, title)
@@ -319,28 +355,29 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
     def _parseFile(self, fileName):
         self.dictSummary = collections.OrderedDict()
         self.dictBLRestraints = collections.OrderedDict()
-        self.BLdataList = []
+        self.blDataList = []
         self.dictBARestraints = collections.OrderedDict()
-        self.BAdataList = []
+        self.baDataList = []
         self.dictDARestraints = collections.OrderedDict()
-        self.DAdataList = []
+        self.daDataList = []
         self.dictChilRestraints = collections.OrderedDict()
-        self.ChildataList = []
+        self.chilDataList = []
         self.dictPlanarRestraints = collections.OrderedDict()
-        self.PLANARdataList = []
+        self.planarDataList = []
         with open(fileName) as f:
             line = f.readline()
             while line:
                 words = line.strip().split()
                 if len(words) > 1:
                     if (words[0] == 'Ramachandran' and words[1] == 'outliers'):
-                        self.dictSummary['Ramachandran outliers'] = \
+                        self.dictSummary['Ramachandran outliers (%)'] = \
                             float(words[3])
                     elif (words[0] == 'favored' and words[1] == '='):
-                        self.dictSummary['Ramachandran favored'] = \
+                        self.dictSummary['Ramachandran favored (%)'] = \
                             float(words[2])
                     elif (words[0] == 'Rotamer' and words[1] == 'outliers'):
-                        self.dictSummary['Rotamer outliers'] = float(words[3])
+                        self.dictSummary['Rotamer outliers (%)'] = float(
+                            words[3])
                     elif (words[0] == 'C-beta' and words[1] == 'deviations'):
                         self.dictSummary['C-beta outliers'] = int(words[3])
                     elif (words[0] == 'Clashscore' and words[1] == '='):
@@ -367,40 +404,15 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                             self.dictBLRestraints['Number of outliers ' \
                                                   '> 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            Atom1 = []
-                            Atom2 = []
-                            IdealValue = []
-                            ModelValue = []
-                            Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-                            while (len(words) > 1):
-                                if len(words) == 3:
-                                    Atom1.append(words[0] + ' ' +
-                                        words[1] + ' ' + words[2])
-                                elif len(words) == 4:
-                                    Atom1.append(words[0] + words[1] + ' ' +
-                                        words[2] + ' ' + words[3])
-                                elif len(words) == 10:
-                                    Atom2.append(words[0] + words[1] + ' ' +
-                                        words[2] + ' ' + words[3])
-                                    IdealValue.append((words[4]))
-                                    ModelValue.append((words[5]))
-                                    Deviation.append(
-                                        (words[9].split('*')[0]))
-                                elif len(words) == 9:
-                                    Atom2.append(words[0] + ' ' +
-                                        words[1] + ' ' + words[2])
-                                    IdealValue.append((words[3]))
-                                    ModelValue.append((words[4]))
-                                    Deviation.append(
-                                        (words[8].split('*')[0]))
-                                line = f.readline()
-                                words = line.strip().split()
+                            self._parseFileAtom1Atom2(words, f)
                             self.dictBLRestraints['Number of outliers '\
-                                                  '> 4sigma'] = len(Atom1)
-                            self.BLdataList = zip(Atom1, Atom2,IdealValue,
-                                    ModelValue, Deviation)
+                                                  '> 4sigma'] = len(self.Atom1)
+                            self.blDataList = zip(self.Atom1, self.Atom2,
+                                                  self.IdealValue,
+                                                  self.ModelValue,
+                                                  self.Deviation)
 
                     elif (words[0] == 'angle' and words[1] == ':'):
                         self.dictBARestraints['Number of restraints'] = int(
@@ -418,48 +430,18 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                             self.dictBARestraints[
                                 'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            Atom1 = []
-                            Atom2 = []
-                            Atom3 = []
-                            Atom123 = [Atom1, Atom2, Atom3]
-                            IdealValue = []
-                            ModelValue = []
-                            Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-                            while len(words) > 1:  # and len(words[2]) == 3):
-                                for atom in Atom123:
-                                    if len(words) == 4:
-                                        atom.append(words[0] + ' ' + words[1] +
-                                                ' ' + words[2] + ' ' + words[3])
-                                    if (len(words) == 10):
-                                        atom.append(words[0] + ' ' + words[1] +
-                                                    ' ' + words[2] + ' ' +
-                                                    words[3])
-                                        IdealValue.append(float(words[4]))
-                                        ModelValue.append(float(words[5]))
-                                        Deviation.append(
-                                            float(words[9].split('*')[0]))
-                                    if len(words) == 3:
-                                        atom.append(words[0] + ' ' + words[1] +
-                                                    ' ' + words[2])
-                                    if (len(words) == 9):
-                                        atom.append(words[0] + ' ' + words[1] +
-                                                    ' ' + words[2])
-
-                                        IdealValue.append(float(words[3]))
-                                        ModelValue.append(float(words[4]))
-                                        Deviation.append(
-                                            float(words[8].split('*')[0]))
-                                    line = f.readline()
-                                    words = line.strip().split()
+                            self._parseFileAtom123(words, f)
                             self.dictBARestraints[
-                                'Number of outliers > 4sigma'] = len(Atom1)
-                            for a1, a2, a3, iv, mv, d in zip (Atom1, Atom2,
-                                                              Atom3,
-                                                              IdealValue,
-                                                       ModelValue, Deviation):
-                                self.BAdataList.append((a1 + ", " + a2 + ", "
+                                'Number of outliers > 4sigma'] = len(self.Atom1)
+                            for a1, a2, a3, iv, mv, d in zip (self.Atom1,
+                                                              self.Atom2,
+                                                              self.Atom3,
+                                                              self.IdealValue,
+                                                              self.ModelValue,
+                                                              self.Deviation):
+                                self.baDataList.append((a1 + ", " + a2 + ", "
                                                                          "" +
                                                         a3, iv, mv, d))
                     elif (words[0] == 'dihedral' and words[1] == ':'):
@@ -478,55 +460,24 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                             self.dictDARestraints[
                                 'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            Atom1 = []
-                            Atom2 = []
-                            Atom3 = []
-                            Atom4 = []
-                            Atom1234 = [Atom1, Atom2, Atom3, Atom4]
-                            IdealValue = []
-                            ModelValue = []
-                            Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-
-                            while (len(words) > 1 ):  # and len(words[2]) == 3):
-                                for atom in Atom1234:
-                                    if len(words) == 4:
-                                        atom.append(words[0] + ' ' + words[1] +
-                                             ' ' + words[2] + ' ' + words[3])
-                                    if (len(words) == 10):
-                                        atom.append(words[0] + ' ' + words[1] +
-                                                    ' ' + words[2] + ' ' +
-                                                    words[3])
-                                        IdealValue.append(float(words[4]))
-                                        ModelValue.append(float(words[5]))
-                                        Deviation.append(
-                                            float(words[9].split('*')[0]))
-                                    if len(words) == 3:
-                                        atom.append(words[0] + ' ' + words[1] +
-                                                    ' ' + words[2])
-                                    if (len(words) == 9):
-                                        atom.append(words[0] + ' ' + words[1] +
-                                                    ' ' + words[2])
-                                        IdealValue.append(float(words[3]))
-                                        ModelValue.append(float(words[4]))
-                                        Deviation.append(
-                                            float(words[8].split('*')[0]))
-                                    line = f.readline()
-                                    words = line.strip().split()
-
+                            self._parseFileAtom1234(words, f)
                             self.dictDARestraints[
-                                'Number of outliers > 4sigma'] = len(Atom1)
+                                'Number of outliers > 4sigma'] = len(self.Atom1)
 
-                            for a1, a2, a3, a4, iv, mv, d in zip (Atom1, Atom2,
-                                                             Atom3,
-                                                     Atom4, IdealValue,
-                                                       ModelValue, Deviation):
+                            for a1, a2, a3, a4, iv, mv, d in zip (self.Atom1,
+                                                                  self.Atom2,
+                                                                  self.Atom3,
+                                                                  self.Atom4,
+                                                                  self.IdealValue,
+                                                                  self.ModelValue,
+                                                                  self.Deviation):
                                 element = a1 + ", " + a2 + ", " + a3 + ", " + a4
                                 if len(element) > 46:
                                     element = element.replace(element[46:],
                                                               "...")
-                                self.DAdataList.append((element,
+                                self.daDataList.append((element,
                                                        iv, mv, d))
                     elif (words[0] == 'chirality' and words[1] == ':'):
                         self.dictChilRestraints['Number of restraints'] = int(
@@ -544,17 +495,24 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                             self.dictChilRestraints[
                                 'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            # An example is necessary to test this part
-                            cnt = 1
                             line = f.readline()
                             words = line.strip().split()
-                            while (len(words) > 1 and len(words[2]) == 3):
-                                cnt += 1
-                                line = f.readline()
-                                words = line.strip().split()
+                            self._parseFileAtom1234(words, f)
                             self.dictChilRestraints[
-                                'Number of outliers > 4sigma'] = \
-                                int(cnt / 4)
+                                'Number of outliers > 4sigma'] = len(self.Atom1)
+
+                            for a1, a2, a3, a4, iv, mv, d in zip(self.Atom1,
+                                                                 self.Atom2,
+                                                                 self.Atom3,
+                                                                 self.Atom4,
+                                                                 self.IdealValue,
+                                                                 self.ModelValue,
+                                                                 self.Deviation):
+                                element = a1 + ", " + a2 + ", " + a3 + ", " + a4
+                                if len(element) > 46:
+                                    element = element.replace(element[46:],
+                                                              "...")
+                                self.chilDataList.append((element, iv, mv, d))
                     elif (words[0] == 'planarity' and words[1] == ':'):
                         self.dictPlanarRestraints['Number of restraints'] = \
                             int(words[4])
@@ -571,40 +529,16 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                             self.dictPlanarRestraints[
                                 'Number of outliers > 4sigma'] = 0
                         elif (words[0] == 'atoms'):
-                            # An example is necessary to test this part
-                            cnt = 0
-                            aminoacids = []
-                            Atoms = []
-                            MaxDelta = []
-                            RMSDelta = []
-                            Deviation = []
                             line = f.readline()
                             words = line.strip().split()
-                            while (len(words) > 1):
-                                if len(words) == 4:
-                                    Atoms.append(words[0] + " " + words[1] +
-                                                 " " + words[2] + " " +
-                                                 words[3])
-                                if len(words) == 8:
-                                    cnt += 1
-                                    Atoms.append(words[0] + " " + words[1] +
-                                                 " " + words[2] + " " +
-                                                 words[3])
-                                    aminoacid = Atoms
-                                    Atoms = []
-                                    aminoacids.append(aminoacid)
-                                    MaxDelta.append(float(words[5]))
-                                    RMSDelta.append(float(words[4]))
-                                    Deviation.append(
-                                        float(words[7].split('*')[0]))
-                                line = f.readline()
-                                words = line.strip().split()
+                            self._parseFileGroups(words, f)
                             self.dictPlanarRestraints[
-                                'Number of outliers > 4sigma'] = int(cnt)
+                                'Number of outliers > 4sigma'] = int(self.cnt)
 
-                            for a, md, rd, d in zip(aminoacids, MaxDelta,
-                                                    RMSDelta,
-                                                                 Deviation):
+                            for a, md, rd, d in zip(self.groups,
+                                                    self.MaxDelta,
+                                                    self.RMSDelta,
+                                                    self.Deviation):
                                 element = str()
                                 for i in range(len(a) -1):
                                     element += a[i] + ", "
@@ -612,7 +546,146 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                                 if len(element) > 35:
                                     element = element.replace(element[35:],
                                                              "...")
-                                self.PLANARdataList.append(
+                                self.planarDataList.append(
                                     (element, md, rd, d))
                 line = f.readline()
 
+    def _parseFileAtom1Atom2(self, words, f):
+        self.Atom1 = []
+        self.Atom2 = []
+        self.IdealValue = []
+        self.ModelValue = []
+        self.Deviation = []
+        while (len(words) > 1):
+            if len(words) == 3:
+                self.Atom1.append(words[0] + ' ' +
+                             words[1] + ' ' + words[2])
+            elif len(words) == 4:
+                self.Atom1.append(words[0] + ' ' + words[1] + ' ' +
+                             words[2] + ' ' + words[3])
+            elif len(words) == 10:
+                self.Atom2.append(words[0] + ' ' + words[1] + ' ' +
+                             words[2] + ' ' + words[3])
+                self.IdealValue.append((words[4]))
+                self.ModelValue.append((words[5]))
+                self.Deviation.append(
+                    (words[9].split('*')[0]))
+            elif len(words) == 9:
+                self.Atom2.append(words[0] + ' ' +
+                             words[1] + ' ' + words[2])
+                self.IdealValue.append((words[3]))
+                self.ModelValue.append((words[4]))
+                self.Deviation.append(
+                    (words[8].split('*')[0]))
+            line = f.readline()
+            words = line.strip().split()
+
+    def _parseFileAtom123(self, words, f):
+        self.Atom1 = []
+        self.Atom2 = []
+        self.Atom3 = []
+        Atom123 = [self.Atom1, self.Atom2, self.Atom3]
+        self.IdealValue = []
+        self.ModelValue = []
+        self.Deviation = []
+        while len(words) > 1:
+            for atom in Atom123:
+                if len(words) == 4:
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2] + ' ' + words[3])
+                if (len(words) == 10):
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2] + ' ' + words[3])
+                    self.IdealValue.append(float(words[4]))
+                    self.ModelValue.append(float(words[5]))
+                    self.Deviation.append(
+                        float(words[9].split('*')[0]))
+                if len(words) == 3:
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2])
+                if (len(words) == 9):
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2])
+
+                    self.IdealValue.append(float(words[3]))
+                    self.ModelValue.append(float(words[4]))
+                    self.Deviation.append(
+                        float(words[8].split('*')[0]))
+                line = f.readline()
+                words = line.strip().split()
+
+    def _parseFileAtom1234(self, words, f):
+        self.Atom1 = []
+        self.Atom2 = []
+        self.Atom3 = []
+        self.Atom4 = []
+        Atom1234 = [self.Atom1, self.Atom2, self.Atom3, self.Atom4]
+        self.IdealValue = []
+        self.ModelValue = []
+        self.Deviation = []
+
+        while (len(words) > 1):
+            for atom in Atom1234:
+                if len(words) == 4:
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2] + ' ' + words[3])
+                if (len(words) == 10):
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2] + ' ' + words[3])
+                    self.IdealValue.append(float(words[4]))
+                    self.ModelValue.append(float(words[5]))
+                    self.Deviation.append(
+                        float(words[9].split('*')[0]))
+                if len(words) == 3:
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2])
+                if (len(words) == 9):
+                    atom.append(words[0] + ' ' + words[1] +
+                                ' ' + words[2])
+                    self.IdealValue.append(float(words[3]))
+                    self.ModelValue.append(float(words[4]))
+                    self.Deviation.append(
+                        float(words[8].split('*')[0]))
+                line = f.readline()
+                words = line.strip().split()
+
+    def _parseFileGroups(self, words, f):
+        self.cnt = 0
+        self.groups = []
+        Atoms = []
+        self.MaxDelta = []
+        self.RMSDelta = []
+        self.Deviation = []
+        while (len(words) > 1):
+            if len(words) == 4:
+                Atoms.append(words[0] + " " + words[1] +
+                             " " + words[2] + " " +
+                             words[3])
+            if len(words) == 8:
+                self.cnt += 1
+                Atoms.append(words[0] + " " + words[1] +
+                             " " + words[2] + " " +
+                             words[3])
+                aminoacid = Atoms
+                Atoms = []
+                self.groups.append(aminoacid)
+                self.MaxDelta.append(float(words[5]))
+                self.RMSDelta.append(float(words[4]))
+                self.Deviation.append(
+                    float(words[7].split('*')[0]))
+            if len(words) == 3:
+                Atoms.append(words[0] + " " + words[1] +
+                             " " + words[2])
+            if len(words) == 7:
+                self.cnt += 1
+                Atoms.append(words[0] + " " + words[1] +
+                             " " + words[2])
+                aminoacid = Atoms
+                Atoms = []
+                self.groups.append(aminoacid)
+                self.MaxDelta.append(float(words[4]))
+                self.RMSDelta.append(float(words[3]))
+                self.Deviation.append(
+                    float(words[6].split('*')[0]))
+            line = f.readline()
+            words = line.strip().split()
