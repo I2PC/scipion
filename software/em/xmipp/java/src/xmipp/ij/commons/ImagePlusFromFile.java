@@ -48,7 +48,8 @@ public class ImagePlusFromFile extends ImagePlusReader{
 			if (ig == null || hasChanged())
             {
                 if(Filename.isXmippSupported(fileName))
-                    System.out.println ("ImagePlus loadImagePlus: isXmippSupported";
+                {
+                    System.out.println ("ImagePlus loadImagePlus: isXmippSupported");
                     try
                     {
                         ig = new ImageGeneric(fileName);//to read again file
@@ -56,13 +57,14 @@ public class ImagePlusFromFile extends ImagePlusReader{
                     catch(Exception e)
                     {
                         imp = new ImagePlus(fileName);
-                        System.out.println ("ImagePlus loadImagePlus: Failed ImageGeneric, Using ImagePlus instead";
+                        System.out.println ("ImagePlus loadImagePlus: Failed ImageGeneric, Using ImagePlus instead");
                     }
+                }
                 else
                     imp = new ImagePlus(fileName);
                 if(ig != null && !hasIndex())
                 {
-                    System.out.println ("ImagePlus loadImagePlus: inside if(ig != null && !hasIndex())";
+                    System.out.println ("ImagePlus loadImagePlus: inside if(ig != null && !hasIndex())");
                     imp = XmippImageConverter.readToImagePlus(ig);
                 }
                 else if(ig != null)
