@@ -35,7 +35,7 @@ _bibtexStr = """
    Pages="213--221",
    Month="Feb",
    doi = "http://doi.org/10.1107/S0907444909052925",
-   url = "https://scripts.iucr.org/cgi-bin/paper?dz5186"
+   url = "http://scripts.iucr.org/cgi-bin/paper?dz5186"
 }
 
 
