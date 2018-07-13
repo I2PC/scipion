@@ -183,6 +183,14 @@ Java_xmipp_jni_ImageGeneric_getArrayByte(JNIEnv *env, jobject jobj, jlong select
         size_t size = image->getSize();
         jbyteArray array = env->NewByteArray(size);
 
+        // This is a common place where JVM could run out of memory
+        // We are trying to warn the user about this problem right before a core dump happens
+        if(array == NULL){
+            std::cerr << "\n***********************************" << std::endl;
+            std::cerr << "JVM might have run out of memory. You may want to increase JVM memory" << std::endl;
+            std::cerr << "***********************************\n" << std::endl;
+        }
+
         DataType dataType = image->getDatatype();
 
     switch (dataType)
