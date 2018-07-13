@@ -32,7 +32,7 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
+from pyworkflow.em.header_handler.CCP4.convert import Ccp4Header
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, getProgram, runChimeraProgram,\
     chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
