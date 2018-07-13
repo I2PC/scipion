@@ -30,13 +30,14 @@ import pyworkflow.protocol.constants as const
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
 from pyworkflow.em.packages.ccp4.refmac_template_map2mtz import \
-    template_map_mtz
-from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
+    template_refmac_preprocess_NOMASK, template_refmac_preprocess_MASK
+from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refmac_refine_MASK, template_refmac_refine_NOMASK
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.header_handler.CCP4.convert import (
     adaptFileToCCP4, START, Ccp4Header)
-from pyworkflow.em.packages.ccp4.convert import (runCCP4Program, getProgram)
-from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam
+from pyworkflow.em.packages.ccp4.convert import (
+    runCCP4Program, getProgram)
+from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, BooleanParam
 from constants import CCP4VERSION, CCP4VERSIONFILENAME
 
 
@@ -78,6 +79,20 @@ class CCP4ProtRunRefmac(EMProtocol):
                       label='Min. Resolution (A):',
                       help="Min resolution used in the refinement "
                            "(Angstroms).")
+        form.addParam('generateMaskedVolume', BooleanParam, default=True,
+                      label="Generate masked volume",
+                      important=True,
+                      help='If set to True, the masked volume will be '
+                           'generated')
+        form.addParam('SFCALCmapradius', FloatParam, default=3,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='SFCALC mapradius:',
+                      help='Specify how much around molecule should be cut '
+                           '(Angstroms)')
+        form.addParam('SFCALCmradius', FloatParam, default=3,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='SFCALC mradius:',
+                      help='Specify the radius (Angstroms) to calculate the mask')
         form.addParam('nRefCycle', IntParam, default=30,
                       expertLevel=const.LEVEL_ADVANCED,
                       label='Number of refinement iterations:',
@@ -126,6 +141,7 @@ class CCP4ProtRunRefmac(EMProtocol):
                         START)
 
     def createDataDictStep(self):
+        """ Precompute parameters to be used by refmac"""
         localInFileName = self._getVolumeFileName()
         header = Ccp4Header(localInFileName,
                             readHeader=True)
@@ -134,13 +150,19 @@ class CCP4ProtRunRefmac(EMProtocol):
         self.dict['Xlength'] = x
         self.dict['Ylength'] = y
         self.dict['Zlength'] = z
+        x, y, z = header.getGridSampling()
+        self.dict['XDim'] = x
+        self.dict['YDim'] = y
+        self.dict['ZDim'] = z
         self.dict['CCP4_HOME'] = os.environ['CCP4_HOME']
         self.dict['REFMAC_BIN'] = getProgram(self.REFMAC)
         self.dict['PDBSET_BIN'] = getProgram(self.PDBSET)
         self.dict['PDBFILE'] = \
             os.path.basename(self.inputStructure.get().getFileName())
-        self.dict['PDBDIR'] = os.path.dirname(self.inputStructure.get().getFileName())
-        self.dict['MAPFILE'] = self._getVolumeFileName()
+        self.dict['PDBDIR'] = os.path.abspath(os.path.dirname(
+            self.inputStructure.get().getFileName()))
+        self.dict['MAPFILE'] = os.path.abspath(self._getVolumeFileName())
+
         self.dict['RESOMIN'] = self.minResolution.get()
         self.dict['RESOMAX'] = self.maxResolution.get()
         self.dict['NCYCLE'] = self.nRefCycle.get()
@@ -149,14 +171,21 @@ class CCP4ProtRunRefmac(EMProtocol):
         else:
             self.dict['WEIGHT MATRIX'] = str(self.weightMatrix.get())
         self.dict['OUTPUTDIR'] = self._getExtraPath('')
-
+        self.dict['MASKED_VOLUME'] = self._getMapMaskedByPdbBasedMaskFileName()
+        self.dict['PDBSET_MASKED'] = self._getPdbsetMaskPDBFileName()
+        self.dict['PDBSET_NO_MASKED'] = self._getPdbsetNOMaskPDBFileName()
+        self.dict['SFCALC_MAPRADIUS'] = self.SFCALCmapradius.get()
+        self.dict['SFCALC_MRADIUS'] = self.SFCALCmradius.get()
         if self.BFactorSet.get() == 0:
             self.dict['BFACTOR_SET'] = "0"
         else:
             self.dict['BFACTOR_SET'] = "%f" % self.BFactorSet.get()
 
     def createMapMtzRefmacStep(self):
-        script_map2mtz = template_map_mtz % self.dict
+        if self.generateMaskedVolume.get():
+            script_map2mtz = template_refmac_preprocess_MASK  % self.dict
+        else:
+            script_map2mtz = template_refmac_preprocess_NOMASK % self.dict
         f_map2mtz = open(self._getMapMtzScriptFileName(), "w")
         f_map2mtz.write(script_map2mtz)
         f_map2mtz.close()
@@ -166,11 +195,15 @@ class CCP4ProtRunRefmac(EMProtocol):
     def executeMapMtzRefmacStep(self):
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
-        runCCP4Program(self._getMapMtzScriptFileName(), "",
-                       {'GENERIC': self._getExtraPath("")})
+        runCCP4Program(self._getMapMtzScriptFileName(), args="",
+                       #extraEnvDict={'GENERIC': self._getExtraPath("")},
+                       cwd=self._getExtraPath())
 
     def createRefineScriptFileStep(self):
-        data_refine = template_refine % self.dict
+        if self.generateMaskedVolume.get():
+            data_refine = template_refmac_refine_MASK  % self.dict
+        else:
+            data_refine = template_refmac_refine_NOMASK % self.dict
         f_refine = open(self._getRefineScriptFileName(), "w")
         f_refine.write(data_refine)
         f_refine.close()
@@ -180,8 +213,9 @@ class CCP4ProtRunRefmac(EMProtocol):
     def executeRefineRefmacStep(self):
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
-        runCCP4Program(self._getRefineScriptFileName(), "",
-                       {'GENERIC': self._getExtraPath("")})
+        runCCP4Program(self._getRefineScriptFileName(), args = "",
+                       #extraEnvDict = {'GENERIC': self._getExtraPath("")},
+                       cwd=self._getExtraPath())
 
     def createRefmacOutputStep(self):
         pdb = PdbFile()
@@ -247,10 +281,10 @@ class CCP4ProtRunRefmac(EMProtocol):
         return self._getExtraPath(fileName)
 
     def _getMapMtzScriptFileName(self):
-        return self._getTmpPath(self.refmacMap2MtzScriptFileName)
+        return os.path.abspath(self._getTmpPath(self.refmacMap2MtzScriptFileName))
 
     def _getRefineScriptFileName(self):
-        return self._getTmpPath(self.refmacRefineScriptFileName)
+        return os.path.abspath(self._getTmpPath(self.refmacRefineScriptFileName))
 
     def _getlogFileName(self):
         return self._getExtraPath(self.refineLogFileName)
@@ -260,3 +294,12 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     def _citations(self):
         return ['Vagin_2004']
+
+    def _getMapMaskedByPdbBasedMaskFileName(self, baseFileName='mapMaskedByPdbBasedMask.mrc'):
+        return baseFileName
+
+    def _getPdbsetMaskPDBFileName(self, baseFileName='pdbset_mask.pdb'):
+        return baseFileName
+
+    def _getPdbsetNOMaskPDBFileName(self, baseFileName='pdbset.pdb'):
+        return baseFileName
