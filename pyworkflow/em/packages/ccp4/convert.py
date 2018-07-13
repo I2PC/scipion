@@ -126,12 +126,12 @@ def getEnviron(ccp4First=True):
 
     return environ
 
-def runCCP4Program(program, args="", extraEnvDict=None):
+def runCCP4Program(program, args="", extraEnvDict=None, cwd=None):
     """ Internal shortcut function to launch a CCP4 program. """
     env = getEnviron()
     if extraEnvDict is not None:
         env.update(extraEnvDict)
-    pwutils.runJob(None, program, args, env=env)
+    pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
 def getProgram(progName):
     """ Return the program binary that will be used. """
