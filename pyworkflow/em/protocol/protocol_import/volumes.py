@@ -39,7 +39,7 @@ from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
 from base import ProtImportFiles
 from images import ProtImportImages
-from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header, \
+from pyworkflow.em.header_handler.CCP4.convert import Ccp4Header, \
     adaptFileToCCP4, ORIGIN
 
 
@@ -244,7 +244,7 @@ class ProtImportPdb(ProtImportFiles):
 
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
-            pdbPath = self._getPath('%s.cif' % self.pdbId.get())
+            pdbPath = self._getTmpPath('%s.cif' % self.pdbId.get())
             self._insertFunctionStep('pdbDownloadStep', pdbPath)
         else:
             pdbPath = self.pdbFile.get()
@@ -252,7 +252,9 @@ class ProtImportPdb(ProtImportFiles):
 
     def pdbDownloadStep(self, pdbPath):
         """Download all pdb files in file_list and unzip them."""
+        print "AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", pdbPath
         downloadPdb(self.pdbId.get(), pdbPath, self._log)
+        print "BBBBBBBBBBBBBBBBBBBBBBBBBBBBB: ", pdbPath
 
     def createOutputStep(self, pdbPath):
         """ Copy the PDB structure and register the output object.
@@ -261,7 +263,10 @@ class ProtImportPdb(ProtImportFiles):
             raise Exception("Atomic structure not found at *%s*" % pdbPath)
 
         baseName = basename(pdbPath)
+        print "BASENAME: CCCCCCCCCCCCCCCCCCCCCCCCC ", baseName, pdbPath
         localPath = self._getExtraPath(baseName)
+        print "localPath: DDDDDDDDDDDDDDDDDDDDDDDD ", localPath
+
         copyFile(pdbPath, localPath)
         pdb = PdbFile()
         volume = self.inputVolume.get()
@@ -274,6 +279,7 @@ class ProtImportPdb(ProtImportFiles):
             pdb.setVolume(volume)
 
         pdb.setFileName(localPath)
+        print "PDB: ", pdb.getFileName()
         self._defineOutputs(outputPdb=pdb)
 
         if volume is not None:
