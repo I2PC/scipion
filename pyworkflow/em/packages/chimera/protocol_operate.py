@@ -26,6 +26,7 @@
 # *
 # **************************************************************************
 
+
 from pyworkflow.em.packages.chimera.protocol_base import ChimeraProtBase
 
 class ChimeraProtOperate(ChimeraProtBase):

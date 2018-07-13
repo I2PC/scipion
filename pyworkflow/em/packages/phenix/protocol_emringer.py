@@ -31,7 +31,7 @@ import json
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import BooleanParam, PointerParam
 from convert import runPhenixProgram, getProgram
-from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4, START
+from pyworkflow.em.header_handler.CCP4.convert import adaptFileToCCP4, START
 from pyworkflow.object import String
 
 

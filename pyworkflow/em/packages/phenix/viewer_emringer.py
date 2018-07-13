@@ -86,7 +86,7 @@ class PhenixProtRunEMRingerViewer(ProtocolViewer):
         form.addParam('showThresholdScan', LabelParam,
                       label="Threshold Scan",
                       help="Statistics across all thresholds\n\n"
-                           "Blue line: EMRinger Score regarding"
+                           "Blue line: EMRinger Score regarding "
                            "the map electron potential. "
                            "The maximum value of EMRinger Score "
                            "determines the Optimal Threshold.\nRed "

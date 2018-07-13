@@ -24,6 +24,7 @@
 # **************************************************************************
 
 from convert import getEnviron
+from bibtex import _bibtex  # Load bibtex dict with references
 
 _logo = "ccp4_200.png"
 
@@ -31,5 +32,6 @@ from protocol_coot import CootRefine
 from viewer_coot import CootRefineViewer
 from protocol_refmac import CCP4ProtRunRefmac
 from viewer_refmac import CCP4ProtRunRefmacViewer
+_references = ['Winn_2011']
 
 _environ = getEnviron()

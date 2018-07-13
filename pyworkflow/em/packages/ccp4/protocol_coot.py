@@ -33,7 +33,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
-from pyworkflow.em.convert_header.CCP4.convert import copyMRCHeader, START
+from pyworkflow.em.header_handler.CCP4.convert import copyMRCHeader, START
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam, StringParam
 from pyworkflow.utils.properties import Message

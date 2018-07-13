@@ -58,7 +58,7 @@ from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
 
 
 import xmipp
-from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
+from pyworkflow.em.header_handler.CCP4.convert import Ccp4Header
 
 #===============================================================================
 #    Wizard EM base class
