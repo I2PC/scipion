@@ -24,11 +24,13 @@
 # **************************************************************************
 
 from pyworkflow.em.packages.ccp4.convert import getEnviron
+from bibtex import _bibtex  # Load bibtex dict with references
 
 _logo = "phenix.png"
 
 from protocol_emringer import PhenixProtRunEMRinger
 #from protocol_molprobity import PhenixProtRunMolprobity
 from viewer_emringer import PhenixProtRunEMRingerViewer
+_references = ['Adams_2010']
 
 _environ = getEnviron()
