@@ -252,9 +252,7 @@ class ProtImportPdb(ProtImportFiles):
 
     def pdbDownloadStep(self, pdbPath):
         """Download all pdb files in file_list and unzip them."""
-        print "AAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", pdbPath
         downloadPdb(self.pdbId.get(), pdbPath, self._log)
-        print "BBBBBBBBBBBBBBBBBBBBBBBBBBBBB: ", pdbPath
 
     def createOutputStep(self, pdbPath):
         """ Copy the PDB structure and register the output object.
@@ -263,9 +261,7 @@ class ProtImportPdb(ProtImportFiles):
             raise Exception("Atomic structure not found at *%s*" % pdbPath)
 
         baseName = basename(pdbPath)
-        print "BASENAME: CCCCCCCCCCCCCCCCCCCCCCCCC ", baseName, pdbPath
         localPath = self._getExtraPath(baseName)
-        print "localPath: DDDDDDDDDDDDDDDDDDDDDDDD ", localPath
 
         copyFile(pdbPath, localPath)
         pdb = PdbFile()
@@ -279,7 +275,6 @@ class ProtImportPdb(ProtImportFiles):
             pdb.setVolume(volume)
 
         pdb.setFileName(localPath)
-        print "PDB: ", pdb.getFileName()
         self._defineOutputs(outputPdb=pdb)
 
         if volume is not None:
