@@ -518,7 +518,7 @@ class ChimeraViewer(Viewer):
                     f.write("open %s\n" % os.path.abspath(
                         ImageHandler.removeFileType(volumeObject.getFileName())))
                     f.write("volume #%d style surface\n"%volID)
-                    x, y, z = volumeObject.getVolOriginAsTuple()
+                    x, y, z = volumeObject.getShiftsFromOrigin()
                     f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" % (volID, x,
                                                                      y, z))
                 else:
