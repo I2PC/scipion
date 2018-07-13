@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import os
+import sys
 from protocol_refmac import CCP4ProtRunRefmac
 from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
@@ -34,7 +35,7 @@ from tkMessageBox import showerror
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, runChimeraProgram, getProgram
-
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 def errorWindow(tkParent, msg):
     try:
@@ -64,7 +65,7 @@ class ParseFile():
         self.titleDict = {}  # titles go here
         self.tkParent = tkParent
         self.fileName = fileName
-        self._parsefile(lastIteration)
+        self._parsefile(lastIteration) # last iteration
 
     def _parseFinalResults(self, filePointer):
         headerList = []
@@ -164,6 +165,7 @@ class ParseFile():
         dataList = []  # each set of values in a different column
         stop = False
         msg = ""
+        Ncyc = []
         while 1:
             line = filePointer.readline()
             if line.find('Ncyc    Rfact    Rfree     FOM      -LL     '
@@ -179,7 +181,7 @@ class ParseFile():
         else:
             # skip one line
             line = filePointer.readline()
-            Ncyc = []
+            #Ncyc = []
             Rfact = []
             Rfree = []
             FOM = []
@@ -269,6 +271,11 @@ class ParseFile():
     def _parsefile(self, lastIteration=0):
         """ call the different functions that parse the data in the
         right order"""
+        if not os.path.exists(self.fileName):
+            msg = "File %s is not available. Wait until protocol has " \
+                  "finished" % self.fileName
+            errorWindow(self.getTkRoot(), msg)
+
         with open(self.fileName, "r") as filePointer:
             # LASTITERATION
             self._parseLastIteration(filePointer, lastIteration)
@@ -296,41 +303,56 @@ class CCP4ProtRunRefmacViewer(ProtocolViewer):
                                    self.getTkRoot(),
                                    self.protocol.nRefCycle.get() + 1)
 
+
+    def _checkProtocolHasEnded(self):
+        try:
+            self.protocol.outputPdb.getFileName()
+            return True
+        except:
+            errorWindow(None, "Protocol has not finished. Wait until it ends")
+            return False
+
     def _defineParams(self, form):
-        form.addSection(label='Visualization of Refmac results')
-        # group = form.addGroup('Overall results')
-        form.addParam('displayMapModel', LabelParam,
-                      label="Volume and models",
-                      help="Display of input volume, input pdb that has to be"
-                           "refined and final refined model of the structure.")
-        form.addParam('showFinalResults', LabelParam,
-                      label="Final Results Table",
-                      help="Table of Final Results from refine.log file.")
-        form.addParam('showLogFile', LabelParam,
-                      label="Show log file",
-                      help="Open refmac log file in a text editor.")
-        form.addParam('showLastIteration', LabelParam,
-                      label="Results Table (last iteration)",
-                      help="Table stored in log file summarizing the last "
-                           "iteration.")
-        form.addParam('displayRFactorPlot', LabelParam,
-                      label="R-factor vs. iteration",
-                      help="Plot R-factor as a function of the iteration.")
-        form.addParam('displayFOMPlot', LabelParam,
-                      label="FOM vs. iteration",
-                      help="Plot Figure Of Merit as a function of the "
-                           "iteration.")
-        form.addParam('displayLLPlot', LabelParam,
-                      label="-LL vs. iteration",
-                      help="Plot Log likelihood as a function of the "
-                           "iteration.")
-        form.addParam('displayLLfreePlot', LabelParam,
-                      label="-LLfree vs. iteration",
-                      help="Plot Log likelihood as a function of the "
-                           "iteration")
-        form.addParam('displayGeometryPlot', LabelParam,
-                      label="Geometry vs. iteration",
-                      help="""Plot Geometry as a function of the iteration:
+        if self._checkProtocolHasEnded():
+            form.addSection(label='Visualization of Refmac results')
+            # group = form.addGroup('Overall results')
+            form.addParam('displayMapModel', LabelParam,
+                          label="Volume and models",
+                          help="Display of input volume, input pdb that has to be"
+                               "refined and final refined model of the structure.")
+            form.addParam('displayMask', LabelParam,
+                          label="Display Mask",
+                          #condition='self.protocol.generateMaskedVolume',
+                          help="Display of input volume, input pdb that has to be"
+                               "refined and final refined model of the structure.")
+            form.addParam('showFinalResults', LabelParam,
+                          label="Final Results Table",
+                          help="Table of Final Results from refine.log file.")
+            form.addParam('showLogFile', LabelParam,
+                          label="Show log file",
+                          help="Open refmac log file in a text editor.")
+            form.addParam('showLastIteration', LabelParam,
+                          label="Results Table (last iteration)",
+                          help="Table stored in log file summarizing the last "
+                               "iteration.")
+            form.addParam('displayRFactorPlot', LabelParam,
+                          label="R-factor vs. iteration",
+                          help="Plot R-factor as a function of the iteration.")
+            form.addParam('displayFOMPlot', LabelParam,
+                          label="FOM vs. iteration",
+                          help="Plot Figure Of Merit as a function of the "
+                               "iteration.")
+            form.addParam('displayLLPlot', LabelParam,
+                          label="-LL vs. iteration",
+                          help="Plot Log likelihood as a function of the "
+                               "iteration.")
+            form.addParam('displayLLfreePlot', LabelParam,
+                          label="-LLfree vs. iteration",
+                          help="Plot Log likelihood as a function of the "
+                               "iteration")
+            form.addParam('displayGeometryPlot', LabelParam,
+                          label="Geometry vs. iteration",
+                          help="""Plot Geometry as a function of the iteration:
 Geometry includes rmsBOND (root mean square bond lengths)
 zBOND (zscore of the deviation of bond lengths)
 rmsANGL (root mean square bond angles)
@@ -342,6 +364,7 @@ and rmsCHIRAL (root mean square of chiral index.""")
             'showFinalResults': self._visualizeFinalResults,
             'showLastIteration': self._visualizeLastIteration,
             'displayMapModel': self._visualizeMapModel,
+            'displayMask': self._displayMask,
             'displayRFactorPlot': self._visualizeRFactorPlot,
             'displayFOMPlot': self._visualizeFOMPlot,
             'displayLLPlot': self._visualizeLLPlot,
@@ -349,6 +372,33 @@ and rmsCHIRAL (root mean square of chiral index.""")
             'displayGeometryPlot': self._visualizeGeometryPlot,
             'showLogFile': self._visualizeLogFile
         }
+
+    def _displayMask(self, e=None):
+        if self.protocol.generateMaskedVolume.get():
+            maskedMapFileName = os.path.abspath(self.protocol._getExtraPath(
+                self.protocol._getMapMaskedByPdbBasedMaskFileName()))
+            ccp4header = Ccp4Header(maskedMapFileName, readHeader=True)
+            dim, _, _ = ccp4header.getDims()
+            x, y, z = ccp4header.getOrigin()
+            sampling, _, _ = ccp4header.getSampling()
+            counter = 0
+            fnCmd = self.protocol._getTmpPath("chimera_mask.cmd")
+            f = open(fnCmd, 'w')
+            maskFileName = os.path.abspath(maskedMapFileName)
+            f.write("open %s\n" % maskFileName)
+            f.write("volume #%d style surface voxelSize %f\n" %
+                    (counter, sampling))
+            # No origin information in header :-(
+            #f.write("volume #%d origin  %0.2f,%0.2f,%0.2f\n" %
+            #        (counter, x, y, z))
+            f.close()
+            # run in the background
+            runChimeraProgram(getProgram(), fnCmd + "&")
+            return []
+        else:
+            errorWindow(self.getTkRoot(), "This protocol has been executed "
+                                          "without the mask option")
+        return []
 
     def _visualizeMapModel(self, e=None):
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
@@ -399,26 +449,6 @@ and rmsCHIRAL (root mean square of chiral index.""")
 
     def _visualizeFinalResults(self, e=None):
 
-        """
-        views = []
-        labels = '_1 _2'
-        emSet = EMSet(filename="/tmp/kk.sqlite")
-        emObject = EMObject()
-        emObject._1 = String('first parameter')
-        emObject._2 = Float(12.)
-        emSet.append(emObject)
-        emObject = EMObject()
-        emObject._1 = String('second parameter')
-        emObject._2 = Float(22.)
-        emSet.append(emObject)
-        emSet.write()
-        views.append(ObjectView(self._project,
-                                self.protocol.strId(),
-                                "/tmp/kk.sqlite",
-                                viewParams={MODE: MODE_MD, ORDER: labels,
-                                VISIBLE: labels}))
-        return views
-"""
         headerList, dataList, msg = self.parseFile.retrievefinalResults()
         if not dataList:
             errorWindow(self.getTkRoot(), msg)

@@ -25,7 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-template_refine="""#!/bin/sh
+template_refmac_header="""#!/bin/sh
 # This  script will run REFMAC for a model against an EM map. 
 # # 
 # Prerequistes:
@@ -39,16 +39,9 @@ template_refine="""#!/bin/sh
 # The radius is given in Angstrom and is can be user-defined (SFCALC MRAD 3). 
 #
 
-# 3D map
-MAPFILE=%(MAPFILE)s
-
-# PDB molecule without extension or path just the basename
-MOL=%(PDBFILE)s
-
-PDBFILE=${MOL}.pdb
-
 # Directory of output files (extra folder)
-OUTPUTDIR=%(OUTPUTDIR)s
+#OUTPUTDIR=%(OUTPUTDIR)s
+OUTPUTDIR=./
 
 # CCP4 PATH
 PATHCCP4=%(CCP4_HOME)s
@@ -57,51 +50,90 @@ PATHMRCBIN=$PATHCCP4/bin
 PATHMRCENV=$PATHMRCBIN/ccp4.setup-sh
 . $PATHMRCENV
 
+# Name of fixed pdb file by pdbset
+PDBSET_NO_MASKED=%(PDBSET_NO_MASKED)s
+
+# Name of fixed pdb file by pdbset and masked by refmac
+PDBSET_MASKED=%(PDBSET_MASKED)s
+
 #refmac binary
 refmac=%(REFMAC_BIN)s
+"""
 
-# Delete some temporary files. If not and the script is executed
-# two times there will be conflicts
+template_refmac_mask="""# refine the structure with mask
 
-# refine the structure
+$refmac HKLIN masked_fs.mtz\\
+        XYZIN  ${PDBSET_MASKED}\\
+        """
 
-$refmac HKLIN ${OUTPUTDIR}map2mtz.mtz \\
-        XYZIN  ${OUTPUTDIR}pdbset.pdb \\
-        XYZOUT ${OUTPUTDIR}refmac-refined.pdb\\
+template_refmac_NO_mask="""# refine the structure with OUT mask
+
+$refmac HKLIN map2mtz.mtz\\
+        XYZIN  ${PDBSET_NO_MASKED}\\
+        """
+
+template_refmac_footer1="""HKLOUT refmac-refined.mtz \\
+        XYZOUT refmac-refined.pdb\\
         atomsf ${PATHCCP4}/lib/data/atomsf_electron.lib \\
-        > ${OUTPUTDIR}refine.log <<EOF  
+        > refine.log <<EOF
 
 LABIN FP=Fout0 PHIB=Pout0
 
 # set resolution limits. The FSC=0.143 cutoff is recommended. 
 RESO = %(RESOMIN)f  %(RESOMAX)f
 
-# set B-factors at prior to refinement:
+# set B-factors at %(BFACTOR_SET)s prior to refinement:
 BFACTOR_SET=%(BFACTOR_SET)s
 
 # specify number of refinement cycles:
 NCYCLE = %(NCYCLE)d
 
 # set refinement weight:
+#   these weights need to be optimised.
 WEIGHT MATRIX = %(WEIGHT MATRIX)s
 
 #specify any other keyword:
 ##MAKE CISP NO
 ##MAKE SS NO
-MAKE HYDR NO #remove to use hydrogens
-SOLVENT NO
+## ROB
+#MAKE HYDR NO #remove to use hydrogens
+#SOLVENT NO
 
-source EM MB
 
+# ROB source EM MB
+source EM
+"""
+
+template_refmac_footer_mask="""@shifts.txt
+"""
+
+template_refmac_footer2=""""###specify external restraints below###
+
+#ridge dist sigma 0.01
+#ridge dist dmax 4.2
 ###specify external restraints below###
 
-ridge dist sigma 0.01
-ridge dist dmax 4.2
+EXTERNAL USE MAIN
+EXTERNAL DMAX 4.2
+EXTERNAL WEIGHT SCALE 5
+EXTERNAL WEIGHT GMWT 0.1
+@external.restraints
+
+MONI DIST 1000000
 
 END
 EOF
-          echo Output ${OUTPUTDIR}refmac-refined.pdb 
-
-      #fi
 #done
+
 """
+
+template_refmac_refine_NOMASK = template_refmac_header + \
+                                template_refmac_NO_mask + \
+                                template_refmac_footer1 + \
+                                template_refmac_footer2
+
+template_refmac_refine_MASK   = template_refmac_header + \
+                                template_refmac_mask + \
+                                template_refmac_footer1 + \
+                                template_refmac_footer_mask + \
+                                template_refmac_footer2

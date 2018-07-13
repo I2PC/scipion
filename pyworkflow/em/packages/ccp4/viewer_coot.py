@@ -82,14 +82,13 @@ class CootRefineViewer(Viewer):
 
         count = 1
         for outputVol in outputsVol:
-            print "outputVol: ", outputVol
             outputVolFileName = os.path.abspath(
                     ImageHandler.removeFileType(outputVol.getFileName()))
             x, y, z = outputVol.getOrigin(force=True).getShifts()
             f.write("open %s\n" % outputVolFileName)
-            f.write("volume #%d  style surface voxelSize %f origin "
-                    "%0.2f,%0.2f,%0.2f\n"
-                    % (count, outputVol.getSamplingRate(), x, y, z))
+            f.write("volume #%d  style surface voxelSize %f\n"
+                    "volume #%d  origin %0.2f,%0.2f,%0.2f\n"
+                    % (count, outputVol.getSamplingRate(), count, x, y, z))
             count += 1
 
         counter = 1

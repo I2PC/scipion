@@ -508,7 +508,13 @@ class ChimeraViewer(Viewer):
             # volume (if available)
             else:
                 fn = obj.getFileName()
-                fnCmd = self.protocol._getTmpPath("chimera.cmd")
+                # check if tmp dir exists, if not use /tmp
+                # tmp does not exists if you try to visualize something  (eye)
+                # before irunning the protocol
+                tmpPath=self.protocol._getTmpPath()
+                if not os.path.exists(tmpPath):
+                    tmpPath = "/tmp"
+                fnCmd = os.path.join(tmpPath, "chimera.cmd")
                 f = open(fnCmd, 'w')
                 if obj.hasVolume():
                     volID = 0
@@ -527,7 +533,7 @@ class ChimeraViewer(Viewer):
                     sampling = 1.
                 # Construct the coordinate file
                 bildFileName = os.path.abspath(
-                    self.protocol._getTmpPath("axis.bild"))
+                    os.path.join(tmpPath,"axis.bild"))
                 createCoordinateAxisFile(dim,
                                          bildFileName=bildFileName,
                                          sampling=sampling)

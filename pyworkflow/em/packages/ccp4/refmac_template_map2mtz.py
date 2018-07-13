@@ -25,7 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-template_map_mtz="""#!/bin/sh
+template_refmac_header="""#!/bin/sh
 # This  script will run REFMAC for a model against an EM map. 
 # # 
 # Prerequistes:
@@ -41,12 +41,6 @@ template_map_mtz="""#!/bin/sh
 # The radius is given in Angstrom and is can be user-defined (SFCALC MRAD 3). 
 #
 
-#refmac binary
-refmac=%(REFMAC_BIN)s
-
-#pdbset binary
-pdbset=%(PDBSET_BIN)s
-
 #PATH to PDB file
 PDBDIR=%(PDBDIR)s
 
@@ -58,11 +52,25 @@ PDBFILE=${MOL}.pdb
 #3D MAP FILENAME
 MAPFILE=%(MAPFILE)s
 
+# Name of fixed pdb file by pdbset
+PDBSET_NO_MASKED=%(PDBSET_NO_MASKED)s
+
+# Name of fixed pdb file by pdbset and masked by refmac
+PDBSET_MASKED=%(PDBSET_MASKED)s
+
+#NAme of masked volume
+MASKED_VOLUME=%(MASKED_VOLUME)s
+
 #CCP4 PATH
 PATHCCP4=%(CCP4_HOME)s
 
 #Directory of output files (extra folder)
-OUTPUTDIR=%(OUTPUTDIR)s
+#OUTPUTDIR=%(OUTPUTDIR)s
+OUTPUTDIR=./
+
+#SFCALC parameters
+SFCALC_MAPRADIUS=%(SFCALC_MAPRADIUS)s
+SFCALC_MRADIUS=%(SFCALC_MRADIUS)s
 
 # Delete some temporary files. Otherwise if the script is executed
 # two times there will be conflicts
@@ -84,25 +92,83 @@ PATHMRCENV=$PATHMRCBIN/ccp4.setup-sh
 # create a mask by calculating complex structure factors around a given radius 
 # taken from the input model 
 pdb_in=${PDBDIR}/${PDBFILE}
+"""
+
+template_pdbset="""#pdbset binary
+pdbset=%(PDBSET_BIN)s
+
+#execute pdbset
+$pdbset XYZIN  $pdb_in \\
+    XYZOUT ${PDBSET_NO_MASKED}  > pdbset.log \\
+    << END-pdbset
+    CELL %(Xlength)f %(Ylength)f %(Zlength)f  90.0 90.0 90.0
+    END
+END-pdbset
+
+"""
+
+
+template_map_to_mtz="""#refmac binary
+refmac=%(REFMAC_BIN)s
 
 echo we will work on $pdb_in
 $refmac MAPIN ${MAPFILE} \\
-    HKLOUT ${OUTPUTDIR}map2mtz.mtz \\
-    > ${OUTPUTDIR}map2mtz.log \\
-    << eof
+    HKLOUT map2mtz.mtz \\
+    XYZOUT  tmp_map2mtz.pdb \\
+    > map_to_mtz.log \\
+    << END-refmac
     MODE SFCALC 
     RESO %(RESOMAX)f
     SOURCE EM MB
     END
-eof
+END-refmac
 
-$pdbset XYZIN  $pdb_in \\
-    XYZOUT ${OUTPUTDIR}pdbset.pdb  > ${OUTPUTDIR}pdbset.log \\
-    << eof
-    CELL %(Xlength)f %(Ylength)f %(Zlength)f  90.0 90.0 90.0
-    END
-eof
-
-#done
 """
+
+template_map_to_mtz_mask="""#refmac binary
+refmac=%(REFMAC_BIN)s
+
+# refmac will produce two mtz files: starting_map.mtz and masked_fs.mtz.
+# The first file is mtz calculated for whole map and the second mtz
+# corresponds to map around molecule.
+
+$refmac MAPIN ${MAPFILE} \\
+    HKLOUT map2mtz.mtz \\
+    XYZIN   ${PDBSET_NO_MASKED} \\
+    XYZOUT  ${PDBSET_MASKED} \\
+    > map_to_mtz_mask.log \\
+    << END-refmac
+    MODE SFCALC
+    SFCALC mapradius ${SFCALC_MAPRADIUS}
+    SFCALC mradius ${SFCALC_MRADIUS}
+    SFCALC shift
+    END
+END-refmac
+
+"""
+
+template_ifft="""#ifft mask
+fft HKLIN masked_fs.mtz\\
+ MAPOUT ${MASKED_VOLUME}\\
+> ifftMask.log\\
+<< END-fft
+    LABIN F1=Fout0 PHI=Pout0
+    SCALE F1 1.0 300.0
+    RESOLUTION %(RESOMAX)f
+    GRID 256 256 256
+    END
+END-fft
+#    GRID %(XDim)d %(YDim)d %(ZDim)d
+
+"""
+
+template_refmac_preprocess_NOMASK = template_refmac_header + \
+                          template_pdbset + \
+                          template_map_to_mtz
+
+template_refmac_preprocess_MASK   = template_refmac_header + \
+                          template_pdbset + \
+                          template_map_to_mtz_mask + \
+                                    template_ifft
+
 
