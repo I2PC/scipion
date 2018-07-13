@@ -397,11 +397,11 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
                 xdim_o, ydim_o, zdim_o = volumes.getDim()
 
                 xOrig, yOrig , zOrig = \
-                    self.inputVolumes.get().getVolOriginAsTuple()
+                    self.inputVolumes.get().getShiftsFromOrigin()
                 xOrig += (xdim_i*iSampling-xdim_o*oSampling)/2.
                 yOrig += (ydim_i*iSampling-ydim_o*oSampling)/2.
                 zOrig += (zdim_i*iSampling-zdim_o*oSampling)/2.
-                volumes.setVolOriginAsTuple(xOrig, yOrig, zOrig)
+                volumes.setShiftsInOrigin(xOrig, yOrig, zOrig)
                 volumes.setSamplingRate(oSampling)
 
     #--------------------------- INFO functions ----------------------------------------------------
