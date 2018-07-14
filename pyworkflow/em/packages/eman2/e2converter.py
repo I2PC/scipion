@@ -38,7 +38,6 @@ import EMAN2 as eman
 
 MODE_WRITE = 'write'
 MODE_READ = 'read'
-MODE_IMPORT = 'import'
 
 
 def writeParticles():
@@ -226,28 +225,6 @@ def readParticles(inputParts, inputCls, inputClasses, outputTxt, alitype='3d'):
     f.close()
 
 
-def importParticles(lstFile):
-    lsx = eman.LSXFile(lstFile)
-
-    for index in range(len(lsx)):
-        loc, fn, _ = lsx[index]
-        abspath = os.path.abspath(lstFile)
-        fn = abspath.replace('sets/%s' % os.path.basename(lstFile), '') + fn
-        header = eman.EMData()
-        header.read_image(fn, loc, True)
-        ctf = header.get_attr_dict().get('ctf', None)
-
-        if ctf is not None:
-            defocus = float(ctf.to_dict()['defocus'])
-            defocusAngle = float(ctf.to_dict()['dfang'])
-            dfdiff = float(ctf.to_dict()['dfdiff'])
-            ampcont = float(ctf.to_dict()['ampcont'])
-            # write ctf params
-            print loc, fn, defocus, defocusAngle, dfdiff, ampcont
-        else:
-            print loc, fn, None
-
-
 if __name__ == '__main__':
     if len(sys.argv) > 0:
         mode = sys.argv[1]
@@ -261,9 +238,6 @@ if __name__ == '__main__':
             outputTxt = sys.argv[5]
             alitype = sys.argv[6]
             readParticles(inputParts, inputCls, inputClasses, outputTxt, alitype)
-        elif mode == MODE_IMPORT:
-            inputLst = sys.argv[2]
-            importParticles(inputLst)
         else:
             raise Exception("e2converter: Unknown mode '%s'" % mode)
     else:

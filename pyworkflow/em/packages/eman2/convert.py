@@ -31,12 +31,13 @@
 import glob
 import json
 import numpy
+import os
 import subprocess
 
 import pyworkflow as pw
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
-from pyworkflow.em.data import Coordinate, Particle, CTFModel
+from pyworkflow.em.data import Coordinate, Particle
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
 
@@ -193,37 +194,18 @@ def writeSetOfMicrographs(micSet, filename):
     mdata.write('Micrographs@%s' % filename)
 
 
-def readSetOfParticles(lstFile, partSet, direc):
-    proc = createEmanProcess(args='import %s' % lstFile, direc=direc)
-    proc.wait()
-    hasCTF = False
+def readSetOfParticles(lstFile, partSet, copyOrLink, direc):
+    for index, fn in iterLstFile(lstFile):
+        item = Particle()
+        # set full path to particles stack file
+        abspath = os.path.abspath(lstFile)
+        fn = abspath.replace('sets/%s' % os.path.basename(lstFile), '') + fn
+        newFn = pwutils.join(direc, os.path.basename(fn))
+        if not pwutils.exists(newFn):
+            copyOrLink(fn, newFn)
 
-    for line in iter(proc.stdout.readline, ''):
-        part = line.split()
-        img = Particle()
-        img.setLocation(int(part[0])+1, part[1])
-
-        if part [2] != 'None':
-            # convert ctf values
-            hasCTF = True
-            ctfModel = CTFModel()
-            defocus = float(part[2])
-            defocusAngle = float(part[3])
-            dfdiff = float(part[4])
-            ampcont = float(part[5])
-            defocusU = 10000.0 * defocus + 5000.0 * dfdiff
-            defocusV = 20000.0 * defocus - defocusU
-            ctfPhaseShift = calculatePhaseShift(ampcont)
-
-            ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
-            ctfModel.setPhaseShift(float(ctfPhaseShift))
-
-            img.setCTF(ctfModel)
-
-        partSet.append(img)
-
-    partSet.setHasCTF(hasCTF)
-    partSet.setAlignment(em.ALIGN_NONE)
+        item.setLocation(index, newFn)
+        partSet.append(item)
 
 
 def writeSetOfParticles(partSet, path, **kwargs):

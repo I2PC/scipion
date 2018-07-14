@@ -136,10 +136,8 @@ class EmanImport():
         partSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
         self.protocol.fillAcquisition(partSet.getAcquisition())
 
-        # Now read the alignment/ctf/acquisition parameters
         direc = self.protocol._getExtraPath()
-        readSetOfParticles(self._lstFile, partSet, direc)
-
+        readSetOfParticles(self._lstFile, partSet, self.copyOrLink, direc)
         # Register the output set of particles
         self.protocol._defineOutputs(outputParticles=partSet)
 
