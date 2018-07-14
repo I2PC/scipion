@@ -87,7 +87,7 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         self._iterTemplate = clsFn.replace('classes_01', 'classes_??')
         # Iterations will be identify by classes_XX_ where XX is the iteration
         #  number and is restricted to only 2 digits.
-        self._iterRegex = re.compile('classes_(\d{2,2})')
+        self._iterRegex = re.compile('classes_(\d{2})')
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):

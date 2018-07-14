@@ -184,7 +184,7 @@ class EmanProtCTFAuto(ProtProcessParticles):
         if not self.fromScratch and not partSet.hasCTF():
             errors.append('Input particles have no CTF information, '
                           'please select _Fit from scratch_ option.')
-        if partSet.getAcquisition() == None:
+        if partSet.getAcquisition() is None:
             errors.append('Acquisition information missing for input '
                           'particles, you cannot estimate CTF!')
 

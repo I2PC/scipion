@@ -95,7 +95,7 @@ Major features of this program:
                                                                'threed_??')
         # Iterations will be identify by threed_XX_ where XX is the iteration
         # number and is restricted to only 2 digits.
-        self._iterRegex = re.compile('threed_(\d{2,2})')
+        self._iterRegex = re.compile('threed_(\d{2})')
 
     # --------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):

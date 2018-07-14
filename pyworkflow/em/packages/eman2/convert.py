@@ -162,7 +162,7 @@ def createEmanProcess(script='e2converter.py', args=None, direc="."):
     cmd = getEmanCommand(program, args)
 
     #    gcmd = greenStr(cmd)
-    print "** Running: '%s'" % cmd
+    print ("** Running: '%s'" % cmd)
     proc = subprocess.Popen(cmd, shell=True, env=getEnviron(),
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE, cwd=direc)
@@ -362,8 +362,8 @@ def alignmentToRow(alignment, alignType):
     #     is2D = alignType == em.ALIGN_2D
     #     inverseTransform = alignType == em.ALIGN_PROJ
 
-    # tranformation matrix is procesed here because
-    # it uses routines available thrrough scipion python
+    # transformation matrix is processed here because
+    # it uses routines available through scipion python
     matrix = alignment.getMatrix()
     return geometryFromMatrix(matrix, True)
 
@@ -432,9 +432,9 @@ def convertReferences(refSet, outputFn):
 
 def calculatePhaseShift(ampcont):
     # calculate phase shift as in EMAN2 ctf.cpp
-    if ampcont > -100.0 and ampcont <= 100.0:
+    if  -100.0 < ampcont <= 100.0:
         PhaseShift = numpy.arcsin(ampcont / 100.0)
-    elif (ampcont > 100.0):
+    elif ampcont > 100.0:
         PhaseShift = numpy.pi - numpy.arcsin(2.0 - ampcont / 100.0)
     else:
         PhaseShift = -numpy.pi - numpy.arcsin(-2.0 - ampcont / 100.0)

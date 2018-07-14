@@ -905,7 +905,7 @@ class CtfViewer(ProtocolViewer):
                                self.getTkRoot())
         if saveChanges:
             self.protocol.createOutputStep()
-            self.showInfo("Output updated",
+            showInfo("Output updated",
                           "Output particles were updated with new CTF values.",
                           self.getTkRoot())
 

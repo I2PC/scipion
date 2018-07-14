@@ -57,7 +57,6 @@ def writeParticles():
         imageData = eman.EMData()
         imageData.read_image(filename, index)
 
-        ctf = None
         if '_ctfModel._defocusU' in objDict.keys():
             ctf = eman.EMAN2Ctf()
             defU = objDict['_ctfModel._defocusU']
@@ -106,7 +105,7 @@ def writeParticles():
     print "DONE"
 
 
-def readParticles(inputParts, inputCls, inputClasses, outputTxt, type='3d'):
+def readParticles(inputParts, inputCls, inputClasses, outputTxt, alitype='3d'):
     imgs = eman.EMUtil.get_image_count(inputParts)
     clsClassDict = {}
     shiftXList = {}
@@ -115,7 +114,7 @@ def readParticles(inputParts, inputCls, inputClasses, outputTxt, type='3d'):
     flipList = {}
     f = open(outputTxt, 'w')
 
-    if type == '2d':
+    if alitype == '2d':
         # reading 2d refinement results
         clsImgs = eman.EMData.read_images(inputCls)
         classes = eman.EMData.read_images(inputClasses)
@@ -260,8 +259,8 @@ if __name__ == '__main__':
             inputCls = sys.argv[3]
             inputClasses = sys.argv[4]
             outputTxt = sys.argv[5]
-            type = sys.argv[6]
-            readParticles(inputParts, inputCls, inputClasses, outputTxt, type)
+            alitype = sys.argv[6]
+            readParticles(inputParts, inputCls, inputClasses, outputTxt, alitype)
         elif mode == MODE_IMPORT:
             inputLst = sys.argv[2]
             importParticles(inputLst)
