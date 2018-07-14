@@ -77,6 +77,7 @@ class EmanProtRefine2D(em.ProtClassify2D):
         """ Centralize the names of the files. """
 
         myDict = {
+            'partSet': 'sets/inputSet.lst',
             'partFlipSet': 'sets/inputSet__ctf_flip.lst',
             'initialAvgSet': self._getExtraPath('initial_averages.hdf'),
             'classes_scipion': self._getExtraPath('classes_scipion_it%(iter)02d.sqlite'),
@@ -125,6 +126,12 @@ class EmanProtRefine2D(em.ProtClassify2D):
                       pointerClass='SetOfAverages',
                       help='Select starting class averages. If not provided, '
                            'they will be generated automatically.')
+        form.addParam('skipctf', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Skip ctf estimation?',
+                      help='Use this if you want to skip running e2ctf.py. '
+                           'It is not recommended to skip this step unless CTF '
+                           'estimation was already done with EMAN2.')
         form.addParam('numberOfClassAvg', IntParam, default=32,
                       label='Number of class-averages',
                       help='Number of class-averages to generate. Normally you '
@@ -412,10 +419,9 @@ class EmanProtRefine2D(em.ProtClassify2D):
         makePath(storePath)
         writeSetOfParticles(partSet, storePath, alignType=partAlign)
 
-        if partSet.hasCTF():
+        if not self.skipctf:
             program = getEmanProgram('e2ctf.py')
             acq = partSet.getAcquisition()
-
             args = " --voltage %d" % acq.getVoltage()
             args += " --cs %f" % acq.getSphericalAberration()
             args += " --ac %f" % (100 * acq.getAmplitudeContrast())
@@ -428,7 +434,7 @@ class EmanProtRefine2D(em.ProtClassify2D):
                         numberOfMpi=1, numberOfThreads=1)
 
         program = getEmanProgram('e2buildsets.py')
-        args = " --setname=inputSet__ctf_flip --allparticles --minhisnr=-1"
+        args = " --setname=inputSet --allparticles --minhisnr=-1"
         self.runJob(program, args, cwd=self._getExtraPath(),
                     numberOfMpi=1, numberOfThreads=1)
 
@@ -568,7 +574,10 @@ class EmanProtRefine2D(em.ProtClassify2D):
         return os.path.basename(self._getFileName(key, **args))
 
     def _getParticlesStack(self):
+        if not self.inputParticles.get().isPhaseFlipped() and not self.skipctf:
             return self._getFileName("partFlipSet")
+        else:
+            return self._getFileName("partSet")
 
     def _iterTextFile(self, iterN):
         f = open(self._getFileName('results', iter=iterN))

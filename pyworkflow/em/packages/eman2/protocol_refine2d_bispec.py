@@ -31,6 +31,7 @@ from glob import glob
 
 import pyworkflow.em as em
 from pyworkflow import VERSION_1_2
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         EnumParam, StringParam, BooleanParam,
                                         LabelParam)
@@ -71,8 +72,10 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         """ Centralize the names of the files. """
 
         myDict = {
+            'partSet': 'sets/inputSet.lst',
             'partFlipSet': 'sets/inputSet__ctf_flip.lst',
-            'partBispecSet': self._getExtraPath('sets/inputSet__ctf_flip_bispec.lst'),
+            # the strange filename fix below is required for eman
+            'partBispecSet': self._getExtraPath('sets/inputSet.lst__ctf_flip_bispec.lst'),
             'classes_scipion': self._getExtraPath('classes_scipion_it%(iter)02d.sqlite'),
             'classes': 'r2db_%(run)02d/classes_%(iter)02d.hdf',
             'cls': 'r2db_%(run)02d/classmx_%(iter)02d.hdf',
@@ -104,6 +107,12 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
                       label='Choose e2ctf auto protocol',
                       pointerClass='EmanProtCTFAuto',
                       help='Important: bispectra should match input particles!')
+        form.addParam('skipctf', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Skip ctf estimation?',
+                      help='Use this if you want to skip running e2ctf.py. '
+                           'It is not recommended to skip this step unless CTF '
+                           'estimation was already done with EMAN2.')
         form.addParam('numberOfClassAvg', IntParam, default=32,
                       label='Number of class-averages',
                       help='Number of class-averages to generate. Normally you '
@@ -263,7 +272,11 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         makePath(storePath)
         writeSetOfParticles(partSet, storePath, alignType=partAlign)
 
-        if partSet.hasCTF():
+        if self.useInputBispec and self.inputBispec is not None:
+            print "Skipping CTF estimation since input bispectra were provided"
+            self.skipctf.set(True)
+
+        if not self.skipctf:
             program = getEmanProgram('e2ctf.py')
             acq = partSet.getAcquisition()
 
@@ -279,7 +292,7 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
                         numberOfMpi=1, numberOfThreads=1)
 
         program = getEmanProgram('e2buildsets.py')
-        args = " --setname=inputSet__ctf_flip --allparticles --minhisnr=-1"
+        args = " --setname=inputSet --allparticles --minhisnr=-1"
         self.runJob(program, args, cwd=self._getExtraPath(),
                     numberOfMpi=1, numberOfThreads=1)
 
@@ -384,7 +397,10 @@ class EmanProtRefine2DBispec(em.ProtClassify2D):
         return os.path.basename(self._getFileName(key, **args))
 
     def _getParticlesStack(self):
+        if not self.inputParticles.get().isPhaseFlipped() and not self.skipctf:
             return self._getFileName("partFlipSet")
+        else:
+            return self._getFileName("partSet")
 
     def _iterTextFile(self, iterN):
         f = open(self._getFileName('results', iter=iterN))

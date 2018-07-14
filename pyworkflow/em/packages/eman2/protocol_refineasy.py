@@ -29,6 +29,7 @@ import re
 from glob import glob
 import pyworkflow.em as em
 
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         EnumParam, StringParam, BooleanParam)
 from pyworkflow.utils.path import cleanPattern, makePath, createLink, exists
@@ -114,13 +115,19 @@ Major features of this program:
                       label="Input particles",
                       important=True, pointerClass='SetOfParticles',
                       condition='not doContinue', allowsNull=True,
-                      help='Select the input particles.\n')
+                      help='Select the input particles.')
         form.addParam('input3DReference', PointerParam,
                       important=True,
                       pointerClass='Volume', allowsNull=True,
                       label='Initial 3D reference volume',
                       condition='not doContinue',
-                      help='Input 3D reference reconstruction.\n')
+                      help='Input 3D reference reconstruction.')
+        form.addParam('skipctf', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Skip ctf estimation?',
+                      help='Use this if you want to skip running e2ctf.py. '
+                           'It is not recommended to skip this step unless CTF '
+                           'estimation was already done with EMAN2.')
         form.addParam('numberOfIterations', IntParam, default=6,
                       label='Number of iterations',
                       help='The total number of refinement iterations to '
@@ -267,7 +274,7 @@ Major features of this program:
         storePath = self._getExtraPath("particles")
         makePath(storePath)
         writeSetOfParticles(partSet, storePath, alignType=partAlign)
-        if partSet.hasCTF():
+        if not self.skipctf:
             program = getEmanProgram('e2ctf.py')
             acq = partSet.getAcquisition()
 
@@ -432,11 +439,8 @@ Major features of this program:
         return os.path.basename(self._getFileName(key, **args))
 
     def _getParticlesStack(self):
-        if self._getInputParticles().hasCTF():
-            if self._getInputParticles().isPhaseFlipped():
-                return self._getFileName("partSet")
-            else:
-                return self._getFileName("partFlipSet")
+        if not self.inputParticles.get().isPhaseFlipped() and not self.skipctf:
+            return self._getFileName("partFlipSet")
         else:
             return self._getFileName("partSet")
 

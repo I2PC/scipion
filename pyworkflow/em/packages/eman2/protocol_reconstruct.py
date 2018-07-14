@@ -69,6 +69,12 @@ class EmanProtReconstruct(ProtReconstruct3D):
                       label="Input particles",
                       pointerCondition='hasAlignmentProj',
                       help='Select the input images from the project.')
+        form.addParam('skipctf', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Skip ctf estimation?',
+                      help='Use this if you want to skip running e2ctf.py. '
+                           'It is not recommended to skip this step unless CTF '
+                           'estimation was already done with EMAN2.')
         form.addParam('useE2make3d', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Use old e2make3d?',
@@ -187,8 +193,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         storePath = self._getExtraPath("particles")
         makePath(storePath)
         writeSetOfParticles(partSet, storePath, alignType=partAlign)
-        if partSet.hasCTF():
-            # perform phase flip on ptcls before reconstruction
+        if not self.skipctf:
             program = getEmanProgram('e2ctf.py')
             acq = partSet.getAcquisition()
 
@@ -316,10 +321,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
         return os.path.basename(self._getFileName(key))
 
     def _getParticlesStack(self):
-        if self.inputParticles.get().hasCTF():
-            if self.inputParticles.get().isPhaseFlipped():
-                return self._getFileName("partSet")
-            else:
-                return self._getFileName("partFlipSet")
+        if not self.inputParticles.get().isPhaseFlipped() and not self.skipctf:
+            return self._getFileName("partFlipSet")
         else:
             return self._getFileName("partSet")

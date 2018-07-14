@@ -266,13 +266,6 @@ class EmanProtTiltValidate(ProtAnalysis3D):
 
         return args
 
-    def _getParticlesStack(self):
-        if not (self.inputParticles.get().isPhaseFlipped() and
-                self.inputParticles.get().hasCTF()):
-            return self._getFileName("partFlipSet")
-        else:
-            return self._getFileName("partSet")
-
     def _getSimmxOpts(self, option):
         optionType = "optionType = self.getEnumText('" + option + "Type')"
         optionParams = 'optionParams = self.' + option + 'Params.get()'

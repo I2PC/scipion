@@ -209,57 +209,66 @@ def readSetOfParticles(lstFile, partSet, copyOrLink, direc):
 
 
 def writeSetOfParticles(partSet, path, **kwargs):
-    """ Convert the imgSet particles to a single .hdf file as expected by Eman.
+    """ Convert the imgSet particles to .hdf files as expected by Eman.
     This function should be called from a current dir where
     the images in the set are available.
     """
-    firstCoord = partSet.getFirstItem().getCoordinate() or None
-    hasMicName = False
-    if firstCoord:
-        hasMicName = firstCoord.getMicName() or False
+    ext = pwutils.getExt(partSet.getFirstItem().getFileName())[1:]
+    if ext == 'hdf':
+        # create links if input has hdf format
+        for fn in partSet.getFiles():
+            newFn = pwutils.removeBaseExt(fn).split('__ctf')[0] + '.hdf'
+            newFn = pwutils.join(path, newFn)
+            pwutils.createLink(fn, newFn)
+            print "   %s -> %s" % (fn, newFn)
+    else:
+        firstCoord = partSet.getFirstItem().getCoordinate() or None
+        hasMicName = False
+        if firstCoord:
+            hasMicName = firstCoord.getMicName() or False
 
-    fileName = ""
-    a = 0
-    proc = createEmanProcess(args='write')
+        fileName = ""
+        a = 0
+        proc = createEmanProcess(args='write')
 
-    for i, part in iterParticlesByMic(partSet):
-        micName = micId = part.getMicId()
-        if hasMicName:
-            micName = pwutils.removeBaseExt(part.getCoordinate().getMicName())
-        objDict = part.getObjDict()
+        for i, part in iterParticlesByMic(partSet):
+            micName = micId = part.getMicId()
+            if hasMicName:
+                micName = pwutils.removeBaseExt(part.getCoordinate().getMicName())
+            objDict = part.getObjDict()
 
-        if not micId:
-            micId = 0
+            if not micId:
+                micId = 0
 
-        suffix = kwargs.get('suffix', '')
-        if hasMicName and (micName != str(micId)):
-            objDict['hdfFn'] = pwutils.join(path, "%s%s.hdf" % (micName, suffix))
-        else:
-            objDict['hdfFn'] = pwutils.join(path, "mic_%06d%s.hdf" % (micId, suffix))
-
-        alignType = kwargs.get('alignType')
-
-        if alignType != em.ALIGN_NONE:
-            shift, angles = alignmentToRow(part.getTransform(), alignType)
-            # json cannot encode arrays so I convert them to lists
-            # json fail if has -0 as value
-            objDict['_shifts'] = shift.tolist()
-            objDict['_angles'] = angles.tolist()
-        objDict['_itemId'] = part.getObjId()
-
-        # the index in EMAN begins with 0
-        if fileName != objDict['_filename']:
-            fileName = objDict['_filename']
-            if objDict['_index'] == 0:
-                a = 0
+            suffix = kwargs.get('suffix', '')
+            if hasMicName and (micName != str(micId)):
+                objDict['hdfFn'] = pwutils.join(path, "%s%s.hdf" % (micName, suffix))
             else:
-                a = 1
-        objDict['_index'] = int(objDict['_index'] - a)
-        # Write the e2converter.py process from where to read the image
-        print >> proc.stdin, json.dumps(objDict)
-        proc.stdin.flush()
-        proc.stdout.readline()
-    proc.kill()
+                objDict['hdfFn'] = pwutils.join(path, "mic_%06d%s.hdf" % (micId, suffix))
+
+            alignType = kwargs.get('alignType')
+
+            if alignType != em.ALIGN_NONE:
+                shift, angles = alignmentToRow(part.getTransform(), alignType)
+                # json cannot encode arrays so I convert them to lists
+                # json fail if has -0 as value
+                objDict['_shifts'] = shift.tolist()
+                objDict['_angles'] = angles.tolist()
+            objDict['_itemId'] = part.getObjId()
+
+            # the index in EMAN begins with 0
+            if fileName != objDict['_filename']:
+                fileName = objDict['_filename']
+                if objDict['_index'] == 0:
+                    a = 0
+                else:
+                    a = 1
+            objDict['_index'] = int(objDict['_index'] - a)
+            # Write the e2converter.py process from where to read the image
+            print >> proc.stdin, json.dumps(objDict)
+            proc.stdin.flush()
+            proc.stdout.readline()
+        proc.kill()
 
 
 def getImageDimensions(imageFile):
