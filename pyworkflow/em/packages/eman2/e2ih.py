@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,24 +31,25 @@ format that Xmipp does not support right now.
 This way should be deprecated when we read more formats.
 """
 
-import os, sys
+import os
+import sys
 import EMAN2 as eman
 
 
 if __name__ == '__main__':
     n = len(sys.argv)
 
-    if n > 1 and n < 4:
+    if 1 < n < 4:
         inputFile = sys.argv[1]
 
-        if n > 2: # convert from input to output
+        if n > 2:  # convert from input to output
             outputFile = sys.argv[2]
             emd = eman.EMData()
             if '@' in inputFile or '@' in outputFile:
                 def _getLoc(fn):
                     if '@' in fn:
                         i, fn = fn.split('@')
-                        return [fn, int(i) - 1] # 0-index in eman
+                        return [fn, int(i) - 1]  # 0-index in eman
                     return [fn, 0]
                 emd.read_image(*_getLoc(inputFile))
                 emd.write_image(*_getLoc(outputFile))
@@ -57,10 +58,9 @@ if __name__ == '__main__':
                 for i in range(nsize):
                     emd.read_image(inputFile, i)
                     emd.write_image(outputFile, i)
-        else: # just print dimensions
+        else:  # just print dimensions
             nsize = eman.EMUtil.get_image_count(inputFile)
             emd = eman.EMData(inputFile, 0, True)
             print emd.get_xsize(), emd.get_ysize(), emd.get_zsize(), nsize
     else:
         print "usage: %s inputFile [outputFile]" % os.path.basename(sys.argv[0])
-

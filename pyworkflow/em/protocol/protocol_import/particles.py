@@ -35,7 +35,6 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from images import ProtImportImages
 
 
-
 class ProtImportParticles(ProtImportImages):
     """Protocol to import a set of particles to the project"""
     _label = 'import particles'
@@ -46,9 +45,10 @@ class ProtImportParticles(ProtImportImages):
     IMPORT_FROM_RELION = 3
     IMPORT_FROM_SCIPION = 4
     IMPORT_FROM_FREALIGN = 5
+    IMPORT_FROM_EMAN = 6
 
-    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign']
-    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par']
+    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign', 'eman']
+    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par', 'lst']
     alignTypeList = [ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
 
     def _getImportChoices(self):
@@ -60,7 +60,7 @@ class ProtImportParticles(ProtImportImages):
         # Do not change the order of this list since
         # it is related to the constants defined
         return choices + self.importFormats
-    
+
     def _defineImportParams(self, form):
         """ Import files from: emx, xmipp3, relion, scipion  formats. """
         param = form.getParam('importFrom')
@@ -74,38 +74,39 @@ class ProtImportParticles(ProtImportImages):
                        "*xmipp3*: images.xmd\n"
                        "*relion*: itXX_data.star\n"
                        "*scipion*: particles.sqlite\n"
+                       "*eman*: particleSet.lst\n"
                        "" % ', '.join(self.importFormats))
 
         form.addParam('emxFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       label='Input EMX file',
                       help="Select the EMX file containing particles "
                            "information.\n See more about \n"
                            "[[http://i2pc.cnb.csic.es/emx][EMX format]]")
 
         form.addParam('alignType', params.EnumParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
-                      default = 0,
-                      choices =self.alignTypeList,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      default=0,
+                      choices=self.alignTypeList,
                       label='Alignment Type',
                       help="Is this a 2D alignment, a 3D alignment or a set of projections")
-#
+        #
         form.addParam('mdFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Particles metadata file',
                       help="Select the particles Xmipp metadata file.\n"
                            "It is usually a images.xmd file result\n"
                            "from Xmipp protocols execution.")
-        
+
         form.addParam('starFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_RELION,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Star file',
                       help="Select a *_data.star file from a\n"
                            "previous Relion execution."
                            "To detect if the input particles contains alignment "
                            "information, it is required to have the "
                            "optimeser.star file corresponding to the data.star")
-        
+
         form.addParam('ignoreIdColumn', params.BooleanParam, default=False,
                       condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Ignore ID column?',
@@ -115,48 +116,51 @@ class ProtImportParticles(ProtImportImages):
                            "This option can be useful when merging\n"
                            "different metadatas and id's are not  \n"
                            "longer unique.")
-        
+
         form.addParam('sqliteFile', params.FileParam,
-              condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
-              label='Particles sqlite file',
-              help="Select the particles sqlite file.\n")
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+                      label='Particles sqlite file',
+                      help="Select the particles sqlite file.\n")
 
         form.addParam('frealignLabel', params.LabelParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
-                      label='For Frealign you need to import both stack and .par files.')  
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      label='For Frealign you need to import both stack and .par files.')
         form.addParam('stackFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='Stack file',
-                      help="Select an stack file with the particles.")          
+                      help="Select an stack file with the particles.")
         form.addParam('parFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='Param file',
-                      help="Select a Frealign .par file with the refinement information.")        
-        
-        
+                      help="Select a Frealign .par file with the refinement information.")
+
+        form.addParam('lstFile', params.FileParam,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMAN,
+                      label='Lst file',
+                      help='Select a *.lst set file from EMAN2 project.')
+
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.addParam('samplingRate', params.FloatParam,
-                   label=Message.LABEL_SAMP_RATE)
-
+                       label=Message.LABEL_SAMP_RATE)
 
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         ci = self.getImportClass()
-        
+
         if ci is None:
             ProtImportImages._insertAllSteps(self)
         else:
             self._insertFunctionStep('importParticlesStep', importFrom,
                                      self.importFilePath)
-            
+
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
             from pyworkflow.em.packages.emxlib import EmxImport
             self.importFilePath = abspath(self.emxFile.get('').strip())
             return EmxImport(self, self.importFilePath,
-                                   self.alignTypeList[self.alignType.get()])
+                             self.alignTypeList[self.alignType.get()])
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             self.importFilePath = self.mdFile.get('').strip()
@@ -168,41 +172,45 @@ class ProtImportParticles(ProtImportImages):
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
             from dataimport import ScipionImport
             self.importFilePath = self.sqliteFile.get('').strip()
-            return ScipionImport(self, self.importFilePath)    
+            return ScipionImport(self, self.importFilePath)
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
             from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportParticles
             return GrigorieffLabImportParticles(self, self.parFile.get(), self.stackFile.get())
+        elif self.importFrom == self.IMPORT_FROM_EMAN:
+            self.importFilePath = self.lstFile.get('').strip()
+            from pyworkflow.em.packages.eman2.dataimport import EmanImport
+            return EmanImport(self, self.lstFile.get())
         else:
             self.importFilePath = ''
-            return None 
-                    
+            return None
+
     def setSamplingRate(self, imgSet):
         imgSet.setSamplingRate(self.samplingRate.get())
-    
+
     def importParticlesStep(self, importFrom, *args):
         ci = self.getImportClass()
         ci.importParticles()
-        
+
         summary = "Import from *%s* file:\n" % self.getEnumText('importFrom')
         summary += self.importFilePath + '\n'
-        
+
         if self.hasAttribute('outputParticles'):
             particles = self.outputParticles
             summary += ' Particles: *%d* (ctf=%s, alignment=%s, phaseFlip=%s)\n' % (particles.getSize(),
                                                                                     particles.hasCTF(),
                                                                                     particles.getAlignment(),
                                                                                     particles.isPhaseFlipped())
-                                                                      
-        if self.hasAttribute('outputCoordinates'): # EMX files can contain only Coordinates information
+
+        if self.hasAttribute('outputCoordinates'):  # EMX files can contain only Coordinates information
             summary += '   Coordinates: *%d* \n' % (self.outputCoordinates.getSize())
-            
-        if self.hasAttribute('outputMicrographs'): # EMX files can contain only Coordinates information
+
+        if self.hasAttribute('outputMicrographs'):  # EMX files can contain only Coordinates information
             summary += '   Micrographs: *%d* \n' % (self.outputMicrographs.getSize())
-        
+
         if self.copyFiles:
             summary += '\n_WARNING_: Binary files copied into project (extra disk space)'
-            
+
         self.summaryVar.set(summary)
 
     def _validateFileExtension(self):
@@ -227,7 +235,7 @@ class ProtImportParticles(ProtImportImages):
                 return errors
             else:
                 return ci.validateParticles()
-    
+
     def _summary(self):
         if self.importFrom == self.IMPORT_FROM_FILES:
             return ProtImportImages._summary(self)
@@ -238,7 +246,7 @@ class ProtImportParticles(ProtImportImages):
 class ProtImportAverages(ProtImportParticles):
     """Protocol to import a set of averages to the project"""
     _label = 'import averages'
-    _outputClassName = 'SetOfAverages'    
+    _outputClassName = 'SetOfAverages'
 
     def _getImportChoices(self):
         """ Return a list of possible choices
@@ -247,10 +255,9 @@ class ProtImportAverages(ProtImportParticles):
         """
         choices = ProtImportImages._getImportChoices(self)
         return choices
-            
+
     def _defineAcquisitionParams(self, form):
         form.addParam('samplingRate', params.FloatParam, default=1.,
-                   label=Message.LABEL_SAMP_RATE)
+                      label=Message.LABEL_SAMP_RATE)
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.expertLevel.set(LEVEL_ADVANCED)
-        
