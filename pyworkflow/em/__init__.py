@@ -44,7 +44,7 @@ import pdb_handler
 
 
 class Domain:
-    __submodules = ['convert', 'bibtex', 'constants']
+    __submodules = ['plugin', 'protocols']
 
     @classmethod
     def __getSubmodule(cls, name, subname):
