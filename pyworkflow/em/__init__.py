@@ -26,6 +26,9 @@
 """
 This modules contains classes related with EM
 """
+import importlib
+import pkgutil
+
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
 from data_tiltpairs import *
@@ -37,7 +40,38 @@ from viewer import *
 import transformations
 import pdb_handler
 
-PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
+#PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
+
+
+class Domain:
+    __submodules = ['convert', 'bibtex', 'constants']
+
+    @classmethod
+    def __getSubmodule(cls, name, subname):
+        try:
+            return importlib.import_module('%s.%s' % (name, subname))
+        except Exception as e:
+            msg = str(e)
+            # FIXME: The following is a quick and dirty way to filter
+            # when the submodule is not present
+            if msg != 'No module named %s' % subname:
+                print("  failed to load: %s.%s" % (name, subname))
+                print("   error: %s" % e)
+            return None
+
+    @classmethod
+    def getPlugins(cls):
+        """ Return existing plugins for this Domain. """
+        plugins = {}
+
+        for p, name, isModule in pkgutil.iter_modules():
+            if (isModule and
+                all(cls.__getSubmodule(name, s) is not None
+                    for s in cls.__submodules)):
+                plugins[name] = importlib.import_module(name)
+
+        return plugins
+
 _emPackagesDict = None
 
 def getPackages():
