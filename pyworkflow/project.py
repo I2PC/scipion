@@ -232,6 +232,7 @@ class Project(object):
                 not be loaded.
         """
 
+        print("loading project: ", self.name)
         if not os.path.exists(self.path):
             raise Exception(
                 "Cannot load project, path doesn't exist: %s" % self.path)
@@ -245,32 +246,33 @@ class Project(object):
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
-        try:
+        print("loading db")
+        self._loadDb(dbPath)
 
-            self._loadDb(dbPath)
+        print("loading hosts")
+        self._loadHosts(hostsConf)
 
-            self._loadHosts(hostsConf)
+        if loadAllConfig:
+            print("loading protocols...")
+            self._loadProtocols(protocolsConf)
 
-            if loadAllConfig:
-                self._loadProtocols(protocolsConf)
+            # FIXME: Handle settings argument here
 
-                # FIXME: Handle settings argument here
+            # It is possible that settings does not exists if
+            # we are loading a project after a Project.setDbName,
+            # used when running protocols
+            settingsPath = os.path.join(self.path, self.settingsPath)
+            if os.path.exists(settingsPath):
+                self.settings = pwconfig.loadSettings(settingsPath)
+            else:
+                self.settings = None
 
-                # It is possible that settings does not exists if
-                # we are loading a project after a Project.setDbName,
-                # used when running protocols
-                settingsPath = os.path.join(self.path, self.settingsPath)
-                if os.path.exists(settingsPath):
-                    self.settings = pwconfig.loadSettings(settingsPath)
-                else:
-                    self.settings = None
-
-            self._loadCreationTime()
+        self._loadCreationTime()
 
         # Catch any exception..
-        except Exception as e:
-            print("ERROR: Project %s load failed.\n"
-                 "       Message: %s\n" % (self.path, e))
+        # except Exception as e:
+        #     print("ERROR: Project %s load failed.\n"
+        #          "       Message: %s\n" % (self.path, e))
 
 
     def _loadCreationTime(self):
