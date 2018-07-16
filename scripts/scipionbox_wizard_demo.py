@@ -417,7 +417,7 @@ def getTemplate():
         "runName": null,
         "runMode": 0,
         "importFrom": 0,
-        "filesPath": "~Movie's folder|%(SCIPION_HOME)s/data/tests/relion_betagal/|2~",
+        "filesPath": "~Movie's folder|%(SCIPION_HOME)s/data/tests/relion13_tutorial/betagal/Micrographs|2~",
         "filesPattern": "*.mrcs",
         "copyFiles": false,
         "haveDataBeenPhaseFlipped": false,
