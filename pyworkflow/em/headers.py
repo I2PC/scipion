@@ -59,19 +59,6 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
     ccp4header.writeHeader()
 
 
-def copyCCP4Header(inFileName, outFileName, scipionOriginShifts,
-                   sampling, originField=START):
-    x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    ccp4header = Ccp4Header(outFileName, readHeader=True)
-    ccp4header.setGridSampling(x, y, z)
-    ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-
-    if originField == ORIGIN:
-        ccp4header.setOrigin(scipionOriginShifts)
-    else:
-        ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
-    ccp4header.writeHeader()
-
 
 class Ccp4Header():
     """
@@ -149,7 +136,10 @@ class Ccp4Header():
         self.chain = "< 3i i 3i 3i 3f 144s 3f"
 
         if readHeader:
+            self.loaded = True
             self.readHeader()
+        else:
+            self.loaded = False
 
     def setOrigin(self, originTransformShift):
         # TODO: should we use originX,Y,Z and set this to 0
@@ -300,3 +290,18 @@ class Ccp4Header():
 
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
+
+
+    def copyCCP4Header(self, inFileName, scipionOriginShifts,
+                       sampling, originField=START):
+        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+        if not self.loaded:
+            self.readHeader()
+        self.setGridSampling(x, y, z)
+        self.setCellDimensions(x * sampling, y * sampling, z * sampling)
+
+        if originField == ORIGIN:
+            self.setOrigin(scipionOriginShifts)
+        else:
+            self.setStartAngstrom(scipionOriginShifts, sampling)
+            self.writeHeader()
