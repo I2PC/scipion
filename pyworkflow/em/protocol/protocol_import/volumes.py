@@ -37,7 +37,7 @@ from images import ProtImportImages
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
-from pyworkflow.em.headers.ccp4header import adaptFileToCCP4, ORIGIN
+from pyworkflow.em.headers import adaptFileToCCP4, ORIGIN
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
 

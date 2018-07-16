@@ -267,7 +267,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             pdbFileName = 'pdb%s.ent' % PDBID.lower()
 
         # get 3D map sampling
-        from pyworkflow.em.headers.ccp4header import Ccp4Header
+        from pyworkflow.em.headers import Ccp4Header
         header = Ccp4Header("emd_%s.map" % EMDBID, readHeader=True)
         sampling, y, z = header.getSampling()
 

@@ -31,7 +31,7 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
-from pyworkflow.em.headers.ccp4header import copyCCP4Header, START
+from pyworkflow.em.headers import Ccp4Header, START
 from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.constants import STATUS_FINISHED
@@ -160,8 +160,9 @@ the pdb file from coot  to scipion '
                     img.write(norVolName)
                 else:
                     ImageHandler().convert(inVolName, norVolName)
-                copyCCP4Header(inVolName, norVolName, inVol.getOrigin(
-                              force=True).getShifts(),
+                Ccp4Header(norVolName).copyCCP4Header(
+                    inVolName, inVol.getOrigin(
+                               force=True).getShifts(),
                                inVol.getSamplingRate(), originField=START)
 
     def runCootStep(self, inVolumes, norVolumesNames):

@@ -36,7 +36,7 @@ from pyworkflow.em.constants import SYM_I222r, SYM_I222, SCIPION_SYM_NAME, \
     SYM_OCTAHEDRAL
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Transform
-from pyworkflow.em.headers.ccp4header import Ccp4Header
+from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.packages.xmipp3 import getEnviron
 from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms \

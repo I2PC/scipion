@@ -46,7 +46,7 @@ from pyworkflow.em.constants import (UNIT_PIXEL,
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
-from pyworkflow.em.headers.ccp4header import Ccp4Header
+from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
                                                     ProtImportCoordinates,
                                                     ProtImportVolumes)

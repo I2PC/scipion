@@ -30,7 +30,7 @@ from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, \
     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL
 from pyworkflow.em.data import Transform
-from pyworkflow.em.headers.ccp4header import Ccp4Header
+from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, FloatParam, EnumParam, \
