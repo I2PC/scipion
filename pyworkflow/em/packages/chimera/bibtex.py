@@ -29,7 +29,7 @@ Bibtex string file for Gautomatch package.
 """
 
 _bibtexStr = """
-@Article{Pettersen2004,
+@article{Pettersen2004,
    Author="Pettersen, E. F.  and Goddard, T. D.  and Huang, C. C.  and Couch, G. S.  and Greenblatt, D. M.  and Meng, E. C.  and Ferrin, T. E. ",
    Title="{{U}{C}{S}{F} {C}himera--a visualization system for exploratory research and analysis}",
    Journal="J Comput Chem",
@@ -38,7 +38,8 @@ _bibtexStr = """
    Number="13",
    Pages="1605--1612",
    Month="Oct",
-   doi="https://doi.org/10.1002/jcc.20084"
+   doi="http://doi.org/10.1002/jcc.20084",
+   url = "http://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.20084"
 }
 """
 

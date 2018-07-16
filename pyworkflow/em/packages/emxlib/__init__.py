@@ -28,7 +28,7 @@ This sub-module contains all code related to EMX.
 Basically two files:
 
 emx.py : which is the EMX library provided at: 
-convert.py : which provides conversions between EMObjects and EMX objects.
+headers.py : which provides conversions between EMObjects and EMX objects.
 """
 from convert import importData, exportData
 #TODO: why this assimetry: EmxImport, ProtEmxExport

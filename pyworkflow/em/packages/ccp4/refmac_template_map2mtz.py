@@ -53,7 +53,7 @@ PDBDIR=%(PDBDIR)s
 #PDB molecule without extension or path just the basename
 MOL=%(PDBFILE)s
 
-PDBFILE=${MOL}.pdb
+PDBFILE=${MOL}
 
 #3D MAP FILENAME
 MAPFILE=%(MAPFILE)s

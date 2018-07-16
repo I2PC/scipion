@@ -24,13 +24,15 @@
 # *
 # **************************************************************************
 #
-from pyworkflow.tests import *
+from copy import deepcopy
 from tempfile import NamedTemporaryFile
+
+import numpy
+
 from pyworkflow.em.convert_atom_struct import AtomicStructHandler
 from pyworkflow.em.transformations import euler_matrix, \
     translation_matrix, concatenate_matrices
-from copy import deepcopy
-import numpy
+from pyworkflow.tests import *
 
 
 class TestAtomicStructHandler(unittest.TestCase):
@@ -265,7 +267,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             pdbFileName = 'pdb%s.ent' % PDBID.lower()
 
         # get 3D map sampling
-        from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
+        from pyworkflow.em.headers import Ccp4Header
         header = Ccp4Header("emd_%s.map" % EMDBID, readHeader=True)
         sampling, y, z = header.getSampling()
 

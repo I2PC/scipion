@@ -1,10 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
-# *              Marta Martinez (mmmtnez@cnb.csic.es)
-# *              Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     Marta Martinez (mmmtnez@cnb.csic.es)
 # *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -26,13 +24,5 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em.packages.chimera.protocol_base import ChimeraProtBase
-
-class ChimeraProtOperate(ChimeraProtBase):
-    """Protocol to perform rigid fit using Chimera.
-        Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transferm fitted
-        pdb to scipion. Default values are model=#0,
-        refmodel =#1 and saverefmodel 0 (false).
-        model refers to the pdb file. refmodel to a 3Dmap"""
-    _label = 'chimera operate'
+PHENIXVERSIONFILENAME = 'phenix_env.sh'
+PHENIXVERSION = '1.13'

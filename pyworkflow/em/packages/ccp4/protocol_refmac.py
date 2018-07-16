@@ -26,17 +26,19 @@
 
 import os
 import stat
+
 import pyworkflow.protocol.constants as const
+from constants import CCP4VERSION, CCP4VERSIONFILENAME
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
+from pyworkflow.em.headers import (
+    adaptFileToCCP4, START, Ccp4Header)
+from pyworkflow.em.packages.ccp4.convert import (runCCP4Program, getProgram)
 from pyworkflow.em.packages.ccp4.refmac_template_map2mtz import \
     template_map_mtz
 from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refine
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.convert_header.CCP4.convert import (
-    adaptFileToCCP4, runCCP4Program, START, getProgram, Ccp4Header)
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam
-from constants import CCP4VERSION, CCP4VERSIONFILENAME
 
 
 class CCP4ProtRunRefmac(EMProtocol):
@@ -125,7 +127,8 @@ class CCP4ProtRunRefmac(EMProtocol):
                         START)
 
     def createDataDictStep(self):
-        header = Ccp4Header(self._getInputVolume().getFileName(),
+        localInFileName = self._getVolumeFileName()
+        header = Ccp4Header(localInFileName,
                             readHeader=True)
         self.dict = {}
         x, y, z = header.getCellDimensions()
@@ -135,9 +138,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         self.dict['CCP4_HOME'] = os.environ['CCP4_HOME']
         self.dict['REFMAC_BIN'] = getProgram(self.REFMAC)
         self.dict['PDBSET_BIN'] = getProgram(self.PDBSET)
-        pdfileName = os.path.splitext(
-            os.path.basename(self.inputStructure.get().getFileName()))[0]
-        self.dict['PDBFILE'] = pdfileName
+        self.dict['PDBFILE'] = \
+            os.path.basename(self.inputStructure.get().getFileName())
         self.dict['PDBDIR'] = os.path.dirname(self.inputStructure.get().getFileName())
         self.dict['MAPFILE'] = self._getVolumeFileName()
         self.dict['RESOMIN'] = self.minResolution.get()
@@ -256,3 +258,6 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     def _getVolumeFileName(self, baseFileName="tmp3DMapFile.mrc"):
         return self._getExtraPath(baseFileName)
+
+    def _citations(self):
+        return ['Vagin_2004']
