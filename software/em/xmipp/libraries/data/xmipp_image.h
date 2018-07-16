@@ -188,19 +188,12 @@ public:
             case DT_UChar:
             {
                 if (typeid(T) == typeid(unsigned char))
-                {
                     memcpy(ptrDest, page, pageSize * sizeof(T));
-                }
-
                 else
                 {
                     unsigned char * ptr = (unsigned char *) page;
                     for (size_t i = 0; i < pageSize; ++i, ++ptr)
-                    {
                         ptrDest[i] = (T) *ptr;
-
-                    }
-
                 }
                 break;
             }
@@ -1409,8 +1402,6 @@ private:
         for (size_t myn = 0; myn < NSIZE(data); myn++)
         {
 
-            //std::cout<<"ww: " << page+pagesizeHalf<<" "<<pagesizeHalf<<std::endl;
-
             //Read page from disc
             if (fread(page+pagesizeF, pagesizeF, 1, fimg) != 1)
                 REPORT_ERROR(ERR_IO_NOREAD, "Cannot read the whole page");
@@ -1425,7 +1416,6 @@ private:
                 char& value = *(page+j);
                 page[i] = value & mask; // take the lower 4 bits
                 page[i+1] = (value >> 4) & mask; // take the upper 4 bits
-
             }
 
             castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype,

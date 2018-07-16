@@ -189,7 +189,6 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     }
 
     DataType datatype;
-    std::cerr << " header->mode" << header->mode << std::endl;
     switch ( header->mode )
     {
     case 0:
@@ -228,7 +227,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     size_t datasize_n;
     datasize_n = _xDim*_yDim*_zDim;
 
-    // If mode are fourier transforms (3,4)
+    // If mode is any of the fourier transforms (3,4)
     if ( header->mode > 2 && header->mode < 5 )
     {
         transform = CentHerm;
@@ -315,11 +314,9 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 
     // 4-bits mode: Here is the magic to expand the compressed images
     if (datatype == DT_UHalfByte){
-        std::cout << "mrc_io-readdata4BIT" << std::endl;
         readData4bit(fimg, select_img, datatype, 0);
     }
     else{
-        std::cout << "mrc_io-readdata" << std::endl;
         readData(fimg, select_img, datatype, 0);
     }
 

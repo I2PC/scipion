@@ -86,8 +86,6 @@ public class XmippImageConverter {
 
 	public static ImagePlus readToImagePlus(ImageGeneric image, int nslice)
 			throws Exception {
-		System.out.println ("image.getXDim() at readImagePlus: " + image.getXDim());
-		System.out.println ("image.getYDim() at readImagePlus: " + image.getYDim());
 		return readToImagePlus(image, image.getXDim(), image.getYDim(), nslice);
 	}
         
@@ -364,30 +362,22 @@ public class XmippImageConverter {
 	static ProcessorCreator createProcessorCreator(ImageGeneric image)
 			throws Exception {
 		ProcessorCreator pc = null;
-                        System.out.println("image.getDataType:"
-                         + image.getDataType()
-                         + ":  "
-                         + ImageGeneric.UHalfByte);
 		switch (image.getDataType()) {
 		case ImageGeneric.Float:
 		case ImageGeneric.Double:
 			pc = new ProcessorCreatorFloat();
-                        System.out.println("createProcessorCreator:1");
 			break;
 		case ImageGeneric.Short:
 		case ImageGeneric.UShort:
 			pc = new ProcessorCreatorShort();
-                        System.out.println("createProcessorCreator:2");
 			break;
 		case ImageGeneric.UHalfByte:
 		case ImageGeneric.SChar:
 		case ImageGeneric.UChar:
 			pc = new ProcessorCreatorByte();
-                        System.out.println("createProcessorCreator:3");
 			break;
 		default:
 			pc = new ProcessorCreatorFloat();
-                        System.out.println("createProcessorCreator:default");
 		}
 
 		return pc;

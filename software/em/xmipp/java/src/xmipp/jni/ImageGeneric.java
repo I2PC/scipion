@@ -144,7 +144,6 @@ public class ImageGeneric {
     }
 
     public void read(int width, int height, int slice, long image) throws Exception {
-        System.out.println("ImageGeneric.java_read width: " + width);
         read(filename, width, height, slice, image, true);
         // At this moment we don't know why
 //        read(Filename.getFilename(filename), width, height, slice, image, true);
