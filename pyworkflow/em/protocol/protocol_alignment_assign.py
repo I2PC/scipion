@@ -36,7 +36,7 @@ class ProtAlignmentAssign(ProtAlign2D):
     between the two sets and multiply by the right factor the shifts.
     The particles with the alignment can also be a subset of the other images
     """
-    _label = 'alignment assign'
+    _label = 'assign alignment'
 
     def _defineParams(self, form):
         form.addSection(label='Input')
