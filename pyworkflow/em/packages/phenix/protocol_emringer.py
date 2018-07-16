@@ -24,15 +24,15 @@
 # *
 # **************************************************************************
 
-import os
 import glob
 import json
+import os
 
-from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.protocol.params import BooleanParam, PointerParam
 from convert import runPhenixProgram, getProgram
-from pyworkflow.em.header_handler.CCP4.convert import adaptFileToCCP4, START
+from pyworkflow.em.headers.ccp4header import adaptFileToCCP4, START
+from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.object import String
+from pyworkflow.protocol.params import BooleanParam, PointerParam
 
 
 class PhenixProtRunEMRinger(EMProtocol):

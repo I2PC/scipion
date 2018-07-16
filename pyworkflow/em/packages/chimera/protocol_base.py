@@ -26,21 +26,21 @@
 # **************************************************************************
 
 import os
+
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.data import Transform
+from pyworkflow.em.headers.ccp4header import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.header_handler.CCP4.convert import Ccp4Header
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, getProgram, runChimeraProgram,\
+    createCoordinateAxisFile, getProgram, runChimeraProgram, \
     chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
     chimeraScriptFileName, sessionFile
-
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     StringParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.data import Transform
 
 
 class ChimeraProtBase(EMProtocol):
