@@ -28,9 +28,8 @@ This package contains the protocols and data for APPION
 """
 import os
 
-_logo = "ncbi_logo.png"
+from plugin import _plugin
 
-from bibtex import _bibtex
 from convert import getEnviron, DOGPICKER_HOME
 from protocol_dogpicker import DogPickerProtPicking
 from wizard import DogPickerWizard

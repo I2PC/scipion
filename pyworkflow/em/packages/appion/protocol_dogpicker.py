@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Laura del Cano (ldelcano@cnb.csic.es) [1]
@@ -54,7 +55,7 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
 
         ProtParticlePickingAuto._defineParams(self, form)
         form.addParam('diameter', params.IntParam, default=100,
-                   label='Diameter of particle')
+                   label='Diameter of particle in Å')
         form.addParam('invert', params.BooleanParam, default=False,
                       label='Invert',
                       help = "Invert image before picking, DoG normally picks "
@@ -137,9 +138,9 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
 
     #--------------------------- UTILS functions -------------------------------
     def _getPickArgs(self):
-        inputSampling = self.getInputMicrographs().getSamplingRate()
-        args = "--diam=%0.3f " % (inputSampling * self.diameter.get())
-        args += "--apix=%0.3f " % inputSampling
+
+        args = "--diam=%0.3f " % self.diameter.get()
+        args += "--apix=%0.3f " % self.getInputMicrographs().getSamplingRate()
         args += "--thresh=%f" % self.threshold
 
         if self.invert:
@@ -150,7 +151,7 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
         return [args]
 
     def readCoordsFromMics(self, workingDir, micList, coordSet):
-        coordSet.setBoxSize(self.diameter.get())
+        coordSet.setBoxSize(round(self.diameter.get()/self.getInputMicrographs().getSamplingRate()))
         readSetOfCoordinates(workingDir, micList, coordSet)
     
     def getCoordsDir(self):

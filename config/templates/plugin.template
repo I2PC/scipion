@@ -1,5 +1,7 @@
+import os
 from pyworkflow.plugin import Plugin
 from bibtex import _bibtex
+
 
 
 class YourPluginClass(Plugin):  #### Extend plugin class, change class name!!!

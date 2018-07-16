@@ -82,3 +82,4 @@ static/
 
 # Ignore version file
 .devel_version
+pyworkflow/em/packages/appion

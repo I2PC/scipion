@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
@@ -74,14 +75,14 @@ class DogPickerWizard(EmWizard):
 
 
         f.write("""
-        parameters = diameter,threshold
-        diameter.value = %(diameter)s
-        diameter.label = Diameter
-        diameter.help = some help
+        parameters = diameterA,threshold
+        diameterA.value = %(diameter)s
+        diameterA.label = Diameter in A 
+        diameterA.help = Sampling rate is %(apix)s
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = some help
-        autopickCommand = %(dogpicker)s  --thresh=%%(threshold) --diam=%%(diameter) --apix=%(apix)s  --image=%%(micrograph) --outfile=%(coordsDir)s/%%(micrographName).txt 
+        autopickCommand = %(dogpicker)s  --thresh=%%(threshold) --diam=%%(diameterA) --apix=%(apix)s  --image=%%(micrograph) --outfile=%(coordsDir)s/%%(micrographName).txt 
         convertCommand = %(convert)s --coordinates --from dogpicker --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         f.close()
@@ -94,6 +95,6 @@ class DogPickerWizard(EmWizard):
         myprops = readProperties(dogpickerProps)
 
         if myprops['applyChanges'] == 'true':
-            form.setVar('diameter', myprops['diameter.value'])
+            form.setVar('diameter', myprops['diameterA.value'])
             form.setVar('threshold', myprops['threshold.value'])
 
