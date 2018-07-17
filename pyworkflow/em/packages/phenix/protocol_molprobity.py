@@ -28,7 +28,7 @@ import os
 from pyworkflow.object import String, Float, Integer
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, FloatParam
-from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4, START
+from pyworkflow.em.headers import adaptFileToCCP4, START
 from convert import runPhenixProgram, getProgram
 
 class PhenixProtRunMolprobity(EMProtocol):
