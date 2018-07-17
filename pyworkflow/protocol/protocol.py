@@ -1138,7 +1138,7 @@ class Protocol(Step):
         By default, the protocol will use the one defined
         in the package that it belongs or None.
         """
-        return getattr(self.getClassPackage(), '_environ', None)
+        return self.getClassPackage().Plugin.getEnviron()
 
     def runJob(self, program, arguments, **kwargs):
         if self.stepsExecutionMode == STEPS_SERIAL:
