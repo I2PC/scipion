@@ -86,11 +86,13 @@ class CCP4ProtRunRefmac(EMProtocol):
                            'generated')
         form.addParam('SFCALCmapradius', FloatParam, default=3,
                       expertLevel=const.LEVEL_ADVANCED,
+                      condition='generateMaskedVolume',
                       label='SFCALC mapradius:',
                       help='Specify how much around molecule should be cut '
                            '(Angstroms)')
         form.addParam('SFCALCmradius', FloatParam, default=3,
                       expertLevel=const.LEVEL_ADVANCED,
+                      condition='generateMaskedVolume',
                       label='SFCALC mradius:',
                       help='Specify the radius (Angstroms) to calculate the mask')
         form.addParam('nRefCycle', IntParam, default=30,
