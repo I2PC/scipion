@@ -459,6 +459,9 @@ env.addPackage('localrec', version='1.1.0',
 env.addPackage('localrec', version='1.2.0',
                tar='localrec-1.2.0.tgz')
 
+env.addPackage('locscale', version='0.1',
+               tar='locscale-0.1.tgz')
+
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
                deps=['scipy'])
