@@ -30,7 +30,7 @@ import numpy
 from pyworkflow.protocol.params import PointerParam, BooleanParam
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
 from pyworkflow.em.data import Coordinate
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePicking
 
 
 class ProtExtractCoords(ProtParticlePicking):

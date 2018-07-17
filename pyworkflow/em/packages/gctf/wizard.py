@@ -33,6 +33,7 @@ import ttk
 from pyworkflow.em.constants import *
 
 from protocol_gctf import ProtGctf
+from protocol_gctf_refine import ProtGctfRefine
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 
@@ -43,7 +44,8 @@ from pyworkflow import findResource
 #===============================================================================
 
 class GctfCTFWizard(CtfWizard):
-    _targets = [(ProtGctf, ['ctfDownFactor', 'lowRes', 'highRes'])]
+    _targets = [(ProtGctf, ['ctfDownFactor', 'lowRes', 'highRes']),
+                (ProtGctfRefine, ['ctfDownFactor', 'lowRes', 'highRes'])]
     
     def _getParameters(self, protocol):
         
@@ -58,13 +60,13 @@ class GctfCTFWizard(CtfWizard):
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
         return CtfWizard._getListProvider(self, _objs)
-        
+
     def show(self, form):
         protocol = form.protocol
         params = self._getParameters(protocol)
         _value = params['value']
         _label = params['label']
-        
+
 #        form.setParamFromVar('inputMicrographs') # update selected input micrographs
         provider = self._getProvider(protocol)
         

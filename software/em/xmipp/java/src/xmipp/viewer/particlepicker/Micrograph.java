@@ -30,7 +30,7 @@ public abstract class Micrograph {
 	public static final String ext = ".pos";
 	private int width, height;
 	private String posfile;
-	private String ctf, psd;
+	private CtfInfo ctfInfo;
 	private Icon ctficon;
 
 	public void setPosFileFromXmipp24(String posfile) {
@@ -42,21 +42,20 @@ public abstract class Micrograph {
 	}
 
 	public Micrograph(String file) {
-		this(file, getName(file, 1), null, null);
+		this(file, getName(file, 1), null);
 	}
 
 	public Micrograph(String file, String name) {
-		this(file, name, null, null);
+		this(file, name, null);
 	}
 
-	public Micrograph(String file, String psd, String ctf) {
-		this(file, getName(file, 1), psd, ctf);
+	public Micrograph(String file, CtfInfo ctfInfo) {
+		this(file, getName(file, 1), ctfInfo);
 	}
 
-	public Micrograph(String file, String name, String psd, String ctf) {
+	public Micrograph(String file, String name, CtfInfo ctfInfo) {
 		this.file = file;
-		this.psd = psd;
-		this.ctf = ctf;
+		this.ctfInfo = ctfInfo;
 		String path = file;
 		if(Filename.hasPrefix(file))
 		    path = Filename.removePrefix(file);
@@ -74,7 +73,13 @@ public abstract class Micrograph {
 
 	}
 
+	public String getPSD() {
+		return ctfInfo == null ? null : ctfInfo.psd;
+	}
+
 	public ImagePlus getPSDImage() {
+		String psd = getPSD();
+
 		if (psd == null || !(new File(psd).exists()))
 			return null;
 		return XmippUtil.getImagePlus(psd);
@@ -84,6 +89,7 @@ public abstract class Micrograph {
 	public Icon getCTFIcon() {
 		String file;
 		if (ctficon == null) {
+			String psd = getPSD();
 			if (psd == null || !(new File(psd).exists()))
 				file = (Filename.getXmippPath("resources" + File.separator
 						+ "no-image.jpg"));
@@ -112,15 +118,15 @@ public abstract class Micrograph {
 		return noimageicon;
 	}
 
-	public String getPSD() {
-		return psd;
-	}
-
 	public String getCTF() {
-		return ctf;
+		return ctfInfo == null ? null : ctfInfo.ctf;
 	}
 
-	public boolean fits(int x, int y, int size) {
+    public CtfInfo getCtfInfo() {
+        return ctfInfo;
+    }
+
+    public boolean fits(int x, int y, int size) {
 		if (x < 0 || y < 0)
 			return false;
 

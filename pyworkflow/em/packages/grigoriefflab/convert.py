@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -171,6 +171,21 @@ def parseCtffind4Output(filename):
     return result
 
 
+def parseCtftiltOutput(filename):
+    """ Retrieve defocus U,V,angle,tilt axis,tilt angle,CC from the
+    output file of the ctftilt execution.
+    """
+    result = None
+    if os.path.exists(filename):
+        f = open(filename)
+        for line in f:
+            if 'Final Values' in line:
+                result = tuple(map(float, line.split()[:6]))
+                break
+        f.close()
+    return result
+
+
 def ctffindOutputVersion(filename):
     """ Detect the ctffind version (3 or 4) that produced
     the given filename.
@@ -188,7 +203,19 @@ def setWrongDefocus(ctfModel):
     ctfModel.setDefocusAngle(-999)
     
     
-def readCtfModel(ctfModel, filename, ctf4=False):        
+def readCtfModel(ctfModel, filename, ctf4=False, ctfTilt=False):
+    if ctfTilt:
+        result = parseCtftiltOutput(filename)
+        if result is None:
+            setWrongDefocus(ctfModel)
+            tiltAxis, tiltAngle, ctfFit = -999, -999, -999
+        else:
+            defocusU, defocusV, defocusAngle, tiltAxis, tiltAngle, ctfFit = result
+            ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+        ctfModel.setFitQuality(ctfFit)
+        ctfModel._ctftilt_tiltAxis = Float(tiltAxis)
+        ctfModel._ctftilt_tiltAngle = Float(tiltAngle)
+
     if not ctf4:
         result = parseCtffindOutput(filename)
         if result is None:

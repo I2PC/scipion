@@ -64,6 +64,10 @@ struct Particle_coords
     bool valid;
     /// Cost, scaled between 0 and 1
     double cost;
+    /// Score by var and Gini
+    double scoreVar;
+    /// Score by Gini
+    double scoreGini;
 };
 
 struct Point
@@ -524,7 +528,9 @@ public:
     void produce_all_images(int label, double minCost, const FileName &fn_root,
                             const FileName &fn_image = "", double ang = 0,
                             double gamma = 0., double psi = 0., bool rmStack=false,
-							bool fillBorders=false);
+							bool fillBorders=false,
+							bool extractNoise=false,
+							int Nnoise=-1);
 
     /** Search coordinate near a position.
         By default the precission is set to 3 pixels. The index of the coordinate
