@@ -27,18 +27,17 @@
 import os
 import stat
 import pyworkflow.protocol.constants as const
+from constants import CCP4VERSION, CCP4VERSIONFILENAME
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
+from pyworkflow.em.headers import (
+    adaptFileToCCP4, START, Ccp4Header)
+from pyworkflow.em.packages.ccp4.convert import (runCCP4Program, getProgram)
 from pyworkflow.em.packages.ccp4.refmac_template_map2mtz import \
     template_refmac_preprocess_NOMASK, template_refmac_preprocess_MASK
 from pyworkflow.em.packages.ccp4.refmac_template_refine import template_refmac_refine_MASK, template_refmac_refine_NOMASK
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.header_handler.CCP4.convert import (
-    adaptFileToCCP4, START, Ccp4Header)
-from pyworkflow.em.packages.ccp4.convert import (
-    runCCP4Program, getProgram)
-from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, BooleanParam
-from constants import CCP4VERSION, CCP4VERSIONFILENAME
+from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam
 
 
 class CCP4ProtRunRefmac(EMProtocol):

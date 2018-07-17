@@ -26,7 +26,7 @@
 # **************************************************************************
 
 from pyworkflow.em import *
-from pyworkflow.em.header_handler.CCP4.convert import adaptFileToCCP4, \
+from pyworkflow.em.headers import adaptFileToCCP4, \
     ORIGIN
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile

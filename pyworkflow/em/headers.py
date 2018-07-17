@@ -41,16 +41,8 @@ START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
 def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
                     sampling=1.0, originField=START):
-    """ Check input file format.
-        if mrc, check if header and scipion database agree (regarding origin)
-        if header and scipion object have the same origin creates a link to
-        original file. Otherwise copy the file and fix the origin
+    """ create new CCP4 binary file and fix the CCP4 header
     """
-    # def compareFloatTuples(t1, t2, error=0.001):
-    #    return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
-
-    # scipion origin follows different conventions from ccp4
-    #scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
     x, y, z, ndim = ImageHandler().getDimensions(inFileName)
     if z == 1 and ndim > 1:
         z = ndim
@@ -66,19 +58,6 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
 
     ccp4header.writeHeader()
 
-
-def copyMRCHeader(inFileName, outFileName, scipionOriginShifts,
-                  sampling, originField=START):
-    x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    ccp4header = Ccp4Header(outFileName, readHeader=True)
-    ccp4header.setGridSampling(x, y, z)
-    ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-    #scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
-    if originField == ORIGIN:
-        ccp4header.setOrigin(scipionOriginShifts)
-    else:
-        ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
-    ccp4header.writeHeader()
 
 
 class Ccp4Header():
@@ -157,7 +136,10 @@ class Ccp4Header():
         self.chain = "< 3i i 3i 3i 3f 144s 3f"
 
         if readHeader:
+            self.loaded = True
             self.readHeader()
+        else:
+            self.loaded = False
 
     def setOrigin(self, originTransformShift):
         # TODO: should we use originX,Y,Z and set this to 0
@@ -308,3 +290,18 @@ class Ccp4Header():
 
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
+
+
+    def copyCCP4Header(self, inFileName, scipionOriginShifts,
+                       sampling, originField=START):
+        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+        if not self.loaded:
+            self.readHeader()
+        self.setGridSampling(x, y, z)
+        self.setCellDimensions(x * sampling, y * sampling, z * sampling)
+
+        if originField == ORIGIN:
+            self.setOrigin(scipionOriginShifts)
+        else:
+            self.setStartAngstrom(scipionOriginShifts, sampling)
+            self.writeHeader()

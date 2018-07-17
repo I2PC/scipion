@@ -31,13 +31,13 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
-from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.headers import Ccp4Header, START
 from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
-from pyworkflow.em.header_handler.CCP4.convert import copyMRCHeader, START
+from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam, StringParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import STATUS_FINISHED
 
 cootPdbTemplateFileName = "cootOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
@@ -160,9 +160,10 @@ the pdb file from coot  to scipion '
                     img.write(norVolName)
                 else:
                     ImageHandler().convert(inVolName, norVolName)
-                copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
-                              force=True).getShifts(),
-                              inVol.getSamplingRate(), originField=START)
+                Ccp4Header(norVolName).copyCCP4Header(
+                    inVolName, inVol.getOrigin(
+                               force=True).getShifts(),
+                               inVol.getSamplingRate(), originField=START)
 
     def runCootStep(self, inVolumes, norVolumesNames):
 
