@@ -28,6 +28,7 @@ This modules contains classes related with EM
 """
 import importlib
 import pkgutil
+import inspect
 
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
@@ -41,6 +42,15 @@ import transformations
 import pdb_handler
 
 #PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
+
+
+class PluginMeta(type):
+    """ Metaclass that should be used to mark a given Python module
+    as a Scipion plugin.
+    """
+    def __init__(cls, name, bases, dct):
+        print("Creating PluginMeta....name: ", name)
+        super(PluginMeta, cls).__init__(name, bases, dct)
 
 
 class Domain:
@@ -60,17 +70,44 @@ class Domain:
             return None
 
     @classmethod
+    def __hasPluginMeta(cls, m, className):
+        """ Return True if the className refers to a class that
+        has PluginMeta as MetaClass (i.e. the module is a plugin)
+        """
+        a = getattr(m, className)
+        return inspect.isclass(a) and type(a) is PluginMeta
+
+    @classmethod
+    def __isPlugin(cls, m):
+        """ Return True if the module is a Scipion plugin. """
+        return any(cls.__hasPluginMeta(m, name) for name in dir(m))
+
+    @classmethod
     def getPlugins(cls):
         """ Return existing plugins for this Domain. """
         plugins = {}
 
         for p, name, isModule in pkgutil.iter_modules():
-            if (isModule and
-                all(cls.__getSubmodule(name, s) is not None
-                    for s in cls.__submodules)):
-                plugins[name] = importlib.import_module(name)
+            if isModule:
+                try:
+                    m = importlib.import_module(name)
+                    if cls.__isPlugin(m):
+                        plugins[name] = m
+                except Exception:
+                    pass
 
         return plugins
+
+    @classmethod
+    def getPlugin(cls, name):
+        """ Load a given plugin name. """
+        m = importlib.import_module(name)
+
+        if not cls.__isPlugin(m):
+            raise Exception("Invalid plugin '%s'. "
+                            "Class Plugin with __metaclass__=PluginMeta "
+                            "not found" % name)
+
 
 _emPackagesDict = None
 
