@@ -877,7 +877,8 @@ class TestRefmacRefinement(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0001
         args = {'inputVolume': volume,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
@@ -933,7 +934,8 @@ class TestRefmacRefinement(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0001
         args = {'inputVolume': volume2,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
@@ -1001,7 +1003,8 @@ class TestRefmacRefinement(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0002
         args = {'inputVolume': volume,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
@@ -1017,22 +1020,22 @@ class TestEMRingerValidation(TestImportData):
     """ Test the protocol of EMRinger validation
     """
     def checkResults(self, optThresh, rotRatio, maxZscore, modLength,
-                     EMScore, protEMRinger):
+                     EMScore, protEMRinger, places=4):
         # method to check EMRinger statistic results of the Final Results Table
         textFileName = protEMRinger._getExtraPath(
             protEMRinger.EMRINGERTRANSFERFILENAME.replace('py', 'txt'))
         with open(textFileName, "r") as f:
             self.resultsDict = json.loads(str(f.read()))
-            self.assertTrue(self.resultsDict[
-                                'Optimal Threshold'] == optThresh)
-            self.assertTrue(self.resultsDict[
-                                'Rotamer-Ratio'] == rotRatio)
-            self.assertTrue(self.resultsDict[
-                                'Max Zscore'] == maxZscore)
-            self.assertTrue(self.resultsDict[
-                                'Model Length'] == modLength)
-            self.assertTrue(self.resultsDict[
-                                'EMRinger Score'] == EMScore)
+            self.assertAlmostEqual(self.resultsDict[
+                                'Optimal Threshold'], optThresh, places)
+            self.assertAlmostEqual(self.resultsDict[
+                                'Rotamer-Ratio'], rotRatio, places)
+            self.assertAlmostEqual(self.resultsDict[
+                                'Max Zscore'], maxZscore, places)
+            self.assertAlmostEqual(self.resultsDict[
+                                'Model Length'], modLength, places)
+            self.assertAlmostEqual(self.resultsDict[
+                                'EMRinger Score'], EMScore, places)
 
     def testEMRingerValidationFromPDB(self):
         """ This test checks that EMRinger validation protocol runs with an
@@ -1091,7 +1094,8 @@ class TestEMRingerValidation(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0001
         args = {'inputVolume': volume,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
@@ -1188,7 +1192,8 @@ class TestEMRingerValidation(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0001
         args = {'inputVolume': volume2,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
@@ -1293,7 +1298,8 @@ class TestEMRingerValidation(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0002
         args = {'inputVolume': volume,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
@@ -1454,7 +1460,8 @@ class TestMolprobityValidation(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0001
         args = {'inputVolume': volume,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
@@ -1553,7 +1560,8 @@ class TestMolprobityValidation(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0001
         args = {'inputVolume': volume2,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
@@ -1660,7 +1668,8 @@ class TestMolprobityValidation(TestImportData):
         # refmac
         coot_PDB = protCoot.outputPdb_0002
         args = {'inputVolume': volume,
-                'inputStructure': coot_PDB
+                'inputStructure': coot_PDB,
+                'generateMaskedVolume': False
                 }
 
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
