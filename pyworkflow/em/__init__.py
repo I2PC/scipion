@@ -30,7 +30,7 @@ import importlib
 import pkgutil
 import inspect
 
-from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
+from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses
 from data import *
 from data_tiltpairs import *
 from protocol import *
@@ -40,8 +40,6 @@ from pyworkflow.wizard import Wizard
 from viewer import *
 import transformations
 import pdb_handler
-
-#PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
 
 
 class PluginMeta(type):
@@ -54,7 +52,11 @@ class PluginMeta(type):
 
 
 class Domain:
-    __submodules = ['plugin', 'protocols']
+    _plugins = {}
+    _protocols = {}
+    _objects = {}
+    _viewers = {}
+    _wizards = {}
 
     @classmethod
     def __getSubmodule(cls, name, subname):
@@ -85,18 +87,16 @@ class Domain:
     @classmethod
     def getPlugins(cls):
         """ Return existing plugins for this Domain. """
-        plugins = {}
-
-        for p, name, isModule in pkgutil.iter_modules():
-            if isModule:
-                try:
-                    m = importlib.import_module(name)
-                    if cls.__isPlugin(m):
-                        plugins[name] = m
-                except Exception:
-                    pass
-
-        return plugins
+        if not cls._plugins:  # Load plugin only once
+            for p, name, isModule in pkgutil.iter_modules():
+                if isModule:
+                    try:
+                        m = importlib.import_module(name)
+                        if cls.__isPlugin(m):
+                            cls._plugins[name] = m
+                    except Exception:
+                        pass
+        return dict(cls._plugins)
 
     @classmethod
     def getPlugin(cls, name):
@@ -109,65 +109,56 @@ class Domain:
                             "not found" % name)
         return m
 
-_emPackagesDict = None
+    @classmethod
+    def __getSubclasses(cls, submoduleName, BaseClass):
+        subclasses = getattr(cls, '_%s' % submoduleName)
 
-def getPackages():
-    global _emPackagesDict
-    if _emPackagesDict is None:
-        sys.path.insert(0, PACKAGES_PATH)
-        _emPackagesDict = getModules(PACKAGES_PATH)
-        sys.path.pop(0)
-    return _emPackagesDict
+        if not subclasses:  # Only discover subclasses once
+            for pluginName, plugin in cls.getPlugins().iteritems():
+                sub = cls.__getSubmodule(pluginName, submoduleName)
+                if sub is not None:
+                    for name in dir(sub):
+                        attr = getattr(sub, name)
+                        if inspect.isclass(attr) and issubclass(attr, BaseClass):
+                            subclasses[name] = attr
+            subclasses.update(getSubclasses(BaseClass, globals()))
 
-# Load all Protocol subclasses found in EM-packages
-_emProtocolsDict = None
+        return subclasses
 
-def getProtocols():
-    """ Load all protocols subclasses defined in all em-packages. """
-    global _emProtocolsDict
-    if _emProtocolsDict is None:
-        _emProtocolsDict = getSubclassesFromModules(Protocol, getPackages())
-        _emProtocolsDict.update(getSubclasses(Protocol, globals()))
-    return _emProtocolsDict
+    @classmethod
+    def getProtocols(cls):
+        """ Return all Protocol subclasses from all plugins for this domain.
+        """
+        return cls.__getSubclasses('protocols', Protocol)
 
-_emObjectsDict = None 
+    @classmethod
+    def getObjects(cls):
+        """ Return all EMObject subclasses from all plugins for this domain.
+        """
+        return cls.__getSubclasses('objects', EMObject)
 
-def getObjects():
-    """ Load all EMObject subclasses found in EM-packages. """
-    global _emObjectsDict
-    if _emObjectsDict is None:        
-        _emObjectsDict = getSubclassesFromModules(EMObject, getPackages())
-        _emObjectsDict.update(getSubclasses(EMObject, globals()))
-    return _emObjectsDict
+    @classmethod
+    def getViewers(cls):
+        """ Return all Viewer subclasses from all plugins for this domain.
+        """
+        return cls.__getSubclasses('viewers', Viewer)
 
-_emViewersDict = None
+    @classmethod
+    def getWizards(cls):
+        """ Return all Wizard subclasses from all plugins for this domain.
+        """
+        return cls.__getSubclasses('wizards', Wizard)
 
-def getViewers():
-    """ Load all subclasses of Viewer of different packages. """
-    global _emViewersDict
-    if _emViewersDict is None:
-        _emViewersDict = getSubclassesFromModules(Viewer, getPackages())
-    return _emViewersDict
-
-_emWizardsDict = None
-
-def getWizards():
-    """ Load all subclasses of Wizards. """
-    global _emWizardsDict
-    if _emWizardsDict is None:
-        _emWizardsDict = getSubclassesFromModules(Wizard, getPackages())
-    return _emWizardsDict
-        
         
 def findClass(className):
-    
-    if className in getProtocols():
-        return getProtocols()[className]
-    
-    if className in getObjects():
-        return getObjects()[className]
-    
-    raise Exception("findClass: class '%s' not found." % className)
+    c = Domain.getProtocols().get(
+        className,
+        Domain.getObjects().get(className, None))
+
+    if c is None:
+        raise Exception("findClass: class '%s' not found." % className)
+
+    return c
 
 
 def findSubClasses(classDict, className):
@@ -186,7 +177,7 @@ def findViewers(className, environment):
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
-    for viewer in getViewers().values():
+    for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
@@ -214,7 +205,7 @@ def findWizards(protocol, environment):
     """ Find availables wizards for this class. 
     Returns:
         a dict with the paramName and wizards for this class."""
-    return findWizardsFromDict(protocol, environment, getWizards())
+    return findWizardsFromDict(protocol, environment, Domain.getWizards())
 
 # Update global dictionary with variables found
 #globals().update(emProtocolsDict)
@@ -225,7 +216,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
     from pyworkflow.mapper.sqlite import SqliteFlatDb
     db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPrefix)
     setClassName = db.getProperty('self') # get the set class name
-    setObj = getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
+    setObj = Domain.getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
     return setObj
 
 
@@ -233,14 +224,14 @@ def runProgram(program, params):
     env = None
 
     if program.startswith('xmipp'):
-        import pyworkflow.em.packages.xmipp3 as xmipp3
+        import xmipp3
         env = xmipp3.getEnviron()
     if program.startswith('relion'):
-        import pyworkflow.em.packages.relion as relion
+        import relion
         env = relion.getEnviron()
     elif (program.startswith('e2') or
               program.startswith('sx')):
-        import pyworkflow.em.packages.eman2 as eman2
+        import eman2
         env = eman2.getEnviron()
     elif program.startswith('b'):
         import pyworkflow.em.packages.bsoft as bsoft

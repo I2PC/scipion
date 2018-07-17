@@ -25,22 +25,24 @@
 # *
 # **************************************************************************
 
+from __future__ import print_function
 import sys
 import importlib
 import traceback
 
 from pyworkflow.em import Domain
+import pyworkflow.utils as pwutils
 
 
 def usage(error):
-    print """
+    print("""
     ERROR: %s
 
     Usage: scipion python scripts/inspect-plugins.py [PLUGIN-NAME]
         This script loads all Scipion plugins found.
         If a PLUGIN-NAME is passed, it will inspect that plugin
         in more detail.
-    """ % error
+    """ % error)
     sys.exit(1)
 
 
@@ -67,8 +69,21 @@ if n > 2:
 
 if n == 1:  # List all plugins
     plugins = Domain.getPlugins()
+    print("Plugins:")
     for k, v in plugins.iteritems():
-        print("plugin: ", k)
+        print("-", k)
+
+
+    print("Objects")
+    pwutils.prettyDict(Domain.getObjects())
+
+    print("Protocols")
+    pwutils.prettyDict(Domain.getProtocols())
+
+    print("Viewers")
+    pwutils.prettyDict(Domain.getViewers())
+
+
 else:
     pluginName = sys.argv[1]
     plugin = Domain.getPlugin(pluginName)
