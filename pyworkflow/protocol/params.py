@@ -67,6 +67,9 @@ class FormElement(OrderedObject):
     
     def getLabel(self):
         return self.label.get()
+
+    def getHelp(self):
+        return self.help.get()
     
     def config(self, **kwargs):
         """ Configure the object and set attributes

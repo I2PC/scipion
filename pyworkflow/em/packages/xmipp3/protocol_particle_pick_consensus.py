@@ -30,7 +30,7 @@ import os
 from math import sqrt
 
 import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePicking
 from pyworkflow.protocol.constants import *
 from pyworkflow.em.data import Coordinate
 

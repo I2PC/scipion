@@ -25,19 +25,19 @@
 # *
 # **************************************************************************
 
+import os
+import sys
 import threading
 import uuid
 import urllib, urllib2
-import os
 import time
 from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
-SCIPION_STATS_SERVER = 'http://scipion.i2pc.es'
-SCIPION_STATS_WORKFLOW_APP = SCIPION_STATS_SERVER + '/report_protocols/api/workflow/workflow/'
+import config
 
 
-class ProjectNotifier(object):
+class ProjectWorkflowNotifier(object):
     """ Implement different types of notifications about a given
     project. Currently, the protocols in a workflow will be sent.
     """
@@ -85,9 +85,6 @@ class ProjectNotifier(object):
             data = urllib.urlencode(dataDict)
             content = opener.open(url, data=data).read()
             now = time.time()
-            #print "Notifying...."
-            #pwutils.prettyDate(now)
-            #print "dataDict: ", dataDict
             os.utime(self._getUuidFileName(), (now, now))
         except Exception:
             print "Could not notify, maybe there is not internet connection."
@@ -139,8 +136,7 @@ class ProjectNotifier(object):
                         'project_workflow': projectWorfklow}
 
             urlName = os.environ.get('SCIPION_NOTIFY_URL',
-                         SCIPION_STATS_WORKFLOW_APP
-                         ).strip()
+                                     config.SCIPION_STATS_WORKFLOW_APP).strip()
             urlName += "addOrUpdateWorkflow/"
             t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
             t.start() # will execute function in a separate thread

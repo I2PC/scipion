@@ -270,12 +270,15 @@ def runJavaIJapp(memory, appName, args, env={}):
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
 
-def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None, memory=None, pickerProps=None, inTmpFolder = False):
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
+                              memory=None, pickerProps=None, inTmpFolder=False):
 
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
         args = "--input %s --output %s"%(micsFn, outputDir)
+
         if mode:
-            args += " --mode %s"%mode
+            args += " --mode %s" % mode
+
         if pickerProps:
             args += " --classifier " + pickerProps
         else:

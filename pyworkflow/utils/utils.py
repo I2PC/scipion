@@ -287,11 +287,20 @@ def getLocalUserName():
 
 
 def getLocalHostName():
-    """ Recover local machine name.
-    returns: Local machine name.
-    """
+    return getHostName()
+
+
+def getHostName():
+    """ Return the name of the local machine. """
     import socket
     return socket.gethostname()
+
+
+def getHostFullName():
+    """ Return the fully-qualified name of the local machine. """
+    import socket
+    return socket.getfqdn()
+
 
 
 def isInFile(text, filePath):
@@ -458,7 +467,8 @@ def getListFromRangeString(rangeStr):
     "2,6,9-11" -> [2,6,9,10,11]
     "2 5, 6-8" -> [2,5,6,7,8]
     """
-    elements = rangeStr.split(',')
+    # Split elements by command or space
+    elements = re.split(',| ', rangeStr)
     values = []
     for e in elements:
         if '-' in e:

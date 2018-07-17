@@ -269,6 +269,11 @@ matplotlib = env.addModule(
     numpyIncludes=True,
     deps=[numpy, png, dateutil, pyparsing])
 
+poster = env.addModule(
+    'poster',
+    targets=['poster-0.8.1*'],
+    tar='poster-0.8.1.tgz')
+
 psutil = env.addModule(
     'psutil',
     targets=['psutil-2.1.1*'],
@@ -473,6 +478,9 @@ env.addPackage('motioncor2', version='1.0.2',
 
 env.addPackage('motioncor2', version='1.0.5',
                tar='motioncor2-1.0.5.tgz')
+
+env.addPackage('motioncor2', version='1.1.0',
+               tar='motioncor2-1.1.0.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')

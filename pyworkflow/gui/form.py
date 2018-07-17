@@ -52,14 +52,15 @@ from widgets import Button, HotButton, IconButton
 from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
-#from pyworkflow.em import findViewers
+
 
 THREADS = 'Threads'
 MPI = 'MPI'
 
-#-------------------- Variables wrappers around more complex objects -----------------------------
 
-class BoolVar():
+# ----------------- Variables wrappers around more complex objects ------------
+
+class BoolVar:
     """Wrapper around tk.IntVar"""
     def __init__(self, value=None):
         self.tkVar = tk.IntVar()
@@ -81,7 +82,7 @@ class BoolVar():
         return self.tkVar.get() == 1    
     
     
-class PointerVar():
+class PointerVar:
     """ Wrapper around tk.StringVar to hold object pointers. """
     def __init__(self, protocol):
         self.tkVar = tk.StringVar()
@@ -111,7 +112,7 @@ class PointerVar():
         self.set(None)
     
     
-class MultiPointerVar():
+class MultiPointerVar:
     """
     Wrapper around tk.StringVar to hold object pointers.
     This class is related with MultiPointerTreeProvider, which
@@ -119,17 +120,17 @@ class MultiPointerVar():
     add and remove from the list.
     """
     def __init__(self, provider, tree):
-        self.provider = provider # keep a reference to tree provider to add or remove objects
+        # keep a reference to tree provider to add or remove objects
+        self.provider = provider
         self.tree = tree
         self.tkVar = tk.StringVar()
         self.trace = self.tkVar.trace
         
     def _updateObjectsList(self):
-        self.tkVar.set(str(datetime.now())) # cause a trace to notify changes
-        self.tree.update() # Update the tkinter tree gui
+        self.tkVar.set(str(datetime.now()))  # cause a trace to notify changes
+        self.tree.update()  # Update the tkinter tree gui
         
     def set(self, value):
-        
         if isinstance(value, pwobj.Object) or isinstance(value, list):
             self.provider.addObject(value)
             self._updateObjectsList()
@@ -221,11 +222,10 @@ class MultiPointerTreeProvider(TreeProvider):
     
     def getObjectInfo(self, obj):
         label, info = getPointerLabelAndInfo(obj, self._mapper)
-        
-        return {'key': obj._strId, 'text': label, 'values': ('  ' + info,)}  
+        return {'key': obj._strId, 'text': label, 'values': ('  ' + info,)}
    
    
-class ComboVar():
+class ComboVar:
     """ Create a variable that display strings (for combobox)
     but the values are integers (for the underlying EnumParam).
     """
@@ -252,7 +252,7 @@ class ComboVar():
         return self.value         
         
 
-#---------------- Some used providers for the TREES -------------------------------
+# ---------------- Some used providers for the TREES --------------------------
 
 class ProtocolClassTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
@@ -263,7 +263,9 @@ class ProtocolClassTreeProvider(TreeProvider):
      
     def getObjects(self):
         from pyworkflow.em import findSubClasses, getProtocols
-        return [pwobj.String(s) for s in findSubClasses(getProtocols(), self.protocolClassName).keys()]
+        return [pwobj.String(s)
+                for s in findSubClasses(getProtocols(),
+                                        self.protocolClassName).keys()]
         
     def getColumns(self):
         return [('Protocol', 250)]
@@ -320,7 +322,6 @@ class SubclassesTreeProvider(TreeProvider):
     INFO_COLUMN = 'Info'
 
     def __init__(self, protocol, pointerParam, selected=None):
-
         TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
                               sortingAscending=False)
 
@@ -393,11 +394,14 @@ class SubclassesTreeProvider(TreeProvider):
                                         pi.addExtended(item.getObjId())
                                         pi._parentObject = p
                                         objects.append(pi)
-                                except Exception, ex:
-                                    print "Error loading items from:"
-                                    print "  protocol: %s, attribute: %s" % (prot.getRunName(), paramName)
-                                    print "  dbfile: ", os.path.join(project.getPath(), attr.getFileName())
-                                    print ex
+                                except Exception as ex:
+                                    print("Error loading items from:")
+                                    print("  protocol: %s, attribute: %s"
+                                          % (prot.getRunName(), paramName))
+                                    print("  dbfile: ",
+                                          os.path.join(project.getPath(),
+                                                       attr.getFileName()))
+                                    print(ex)
                     _checkParam(paramName, attr)
                     # The following is a dirty fix for the RCT case where there
                     # are inner output, maybe we should consider extend this for 
@@ -496,7 +500,7 @@ class SubclassesTreeProvider(TreeProvider):
         return actions
     
     
-#TODO: check if need to inherit from SubclassesTreeProvider
+# TODO: check if need to inherit from SubclassesTreeProvider
 class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
@@ -510,8 +514,9 @@ class RelationsTreeProvider(SubclassesTreeProvider):
         objects = []
         if self.item is not None:
             project = self.protocol.getProject()
-            for pobj in project.getRelatedObjects(self.relationParam.getName(), 
-                                                 self.item, self.direction):
+            for pobj in project.getRelatedObjects(self.relationParam.getName(),
+                                                  self.item, self.direction,
+                                                  refresh=True):
                 objects.append(pobj.clone())
 
         # Sort objects
@@ -519,8 +524,9 @@ class RelationsTreeProvider(SubclassesTreeProvider):
 
         return objects
     
-#---------------------- Other widgets ----------------------------------------
+# --------------------- Other widgets ----------------------------------------
 # http://tkinter.unpythonic.net/wiki/VerticalScrolledFrame
+
 
 class VerticalScrolledFrame(tk.Frame):
     """A pure Tkinter scrollable frame that actually works!
@@ -586,7 +592,6 @@ class SectionFrame(tk.Frame):
         self.headerFrame.grid(row=0, column=0, sticky='new')
         configureWeigths(self.headerFrame)
         self.headerFrame.columnconfigure(1, weight=1)
-        #self.headerFrame.columnconfigure(2, weight=1)
         self.headerLabel = tk.Label(self.headerFrame, text=label, fg='white',
                                     bg=bgColor)
         self.headerLabel.grid(row=0, column=0, sticky='nw')
@@ -610,7 +615,6 @@ class SectionFrame(tk.Frame):
         self.canvas.bind('<Configure>', self._configure_canvas)
         
         self.contentFrame.columnconfigure(0, weight=1)
-        #configureWeigths(self.contentFrame)
         self.columnconfigure(0, weight=1)
         
         
@@ -625,7 +629,6 @@ class SectionFrame(tk.Frame):
         # update the scrollbars to match the size of the inner frame
         fsize = self._getReqSize(self.contentFrame)
         csize = self._getSize(self.canvas)
-        #if fsize[0] != self.canvas.winfo_width():
         if fsize != csize:
             # update the canvas's width to fit the inner frame
             self.canvas.config(width=fsize[0], height=fsize[1])
@@ -634,7 +637,6 @@ class SectionFrame(tk.Frame):
     def _configure_canvas(self, event=None):
         fsize = self._getReqSize(self.contentFrame)
         csize = self._getSize(self.canvas)
-        #if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
         if fsize != csize:
             # update the inner frame's width to fill the canvas
             self.canvas.itemconfigure(self.contentId, width=csize[0])
@@ -699,7 +701,7 @@ class SectionWidget(SectionFrame):
         self.var.set(value)
     
                
-class ParamWidget():
+class ParamWidget:
     """For each one in the Protocol parameters, there will be
     one of this in the Form GUI.
     It is mainly composed by:
@@ -730,8 +732,8 @@ class ParamWidget():
         self._labelFont = self.window.font
 
         self._initialize(showButtons)
-        self._createLabel() # self.label should be set after this 
-        self._createContent() # self.content and self.var should be set after this
+        self._createLabel()  # self.label should be set after this
+        self._createContent()  # self.content and self.var should be set after this
         
         if self.var: # Groups have not self.var
             self.set(value)
@@ -921,8 +923,7 @@ class ParamWidget():
                 var.set(classes[0])
             
             self._addButton("Edit", Icon.ACTION_EDIT, self._openProtocolForm)
-            #btn = Button(content, "Edit", command=self._openProtocolForm)
-            #btn.grid(row=1, column=0)
+
         elif t is params.Line:
             var = None
             
@@ -930,7 +931,6 @@ class ParamWidget():
             var = None
             self._onlyLabel = True
         else:
-            #v = self.setVarValue(paramName)
             var = tk.StringVar()
             if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
                 # Reduce the entry width for numbers entries
@@ -954,7 +954,7 @@ class ParamWidget():
         if param.help.hasValue():
             self._addButton(Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP,
                             self._showHelpMessage)
-        
+
         self.var = var
 
     def _visualizeVar(self, e=None):
@@ -971,7 +971,7 @@ class ParamWidget():
             from pyworkflow.em import findViewers
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                ViewerClass = viewers[0] # Use the first viewer registered
+                ViewerClass = viewers[0]  # Use the first viewer registered
                 # Instantiate the viewer and visualize object
                 viewer = ViewerClass(project=self._protocol.getProject(),
                                      protocol=self._protocol,
@@ -1011,15 +1011,18 @@ class ParamWidget():
                     return "Please select object of types: %s" % self.param.pointerClass.get()
 
         title = "Select object of types: %s" % self.param.pointerClass.get()
+
         pointerCond = self.param.pointerCondition.get()
+
         if pointerCond:
             title += " (condition: %s)" % pointerCond
                                             
-        dlg = ListDialog(self.parent, title,
-                         tp, "Double click an item to preview the object",
+        dlg = ListDialog(self.parent, title, tp,
+                         "Double click selects the item, right-click allows "
+                         "you to visualize it",
                          validateSelectionCallback=validateSelected,
-                         selectmode=self._selectmode)
-        
+                         selectmode=self._selectmode, selectOnDoubleClick=True)
+
         if dlg.values:
             if isinstance(self.param, params.MultiPointerParam):
                 self.set(dlg.values)
@@ -1038,7 +1041,10 @@ class ParamWidget():
         tp = RelationsTreeProvider(self._protocol, self.param,
                                    selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp,
-                         selectmoded=self._selectmode)
+                         "Double click selects the item, right-click allows "
+                         "you to visualize it",
+                         selectmoded=self._selectmode,
+                         selectOnDoubleClick=True)
         if dlg.values:
             self.set(dlg.values[0])
             
@@ -1309,19 +1315,143 @@ class FormWindow(Window):
         """ Show the list of references of the protocol. """
         self.showInfo(self.protocol.getDoc(), "Help")
         
-        
+    def _createParallel(self, runFrame, r):
+        """ Create the section for MPI, threads and GPU. """
+        # some short notation
+        prot = self.protocol # shortcut notation
+        allowThreads = prot.allowThreads  # short notation
+        allowMpi = prot.allowMpi  # short notation
+        allowGpu = prot.allowsGpu()
+        numberOfMpi = prot.numberOfMpi.get()
+        numberOfThreads = prot.numberOfThreads.get()
+        mode = prot.stepsExecutionMode
+
+        if not (allowThreads or allowMpi or allowGpu):
+            return
+
+        self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True,
+                                sticky='ne', row=r, pady=0)
+
+        if allowThreads or allowMpi:
+            procFrame = tk.Frame(runFrame, bg='white')
+            r2 = 0
+            c2 = 0
+            sticky = 'ne'
+
+            if mode == params.STEPS_PARALLEL:
+                self.procTypeVar = tk.StringVar()
+
+                if allowThreads and allowMpi:
+                    if numberOfMpi > 1:
+                        procs = numberOfMpi
+                        self.procTypeVar.set(MPI)
+                        prot.numberOfThreads.set(1)
+                    else:
+                        procs = numberOfThreads
+                        self.procTypeVar.set(THREADS)
+                        prot.numberOfMpi.set(1)
+
+                    self.procTypeVar.trace('w', self._setThreadsOrMpi)
+                    procCombo = tk.Frame(procFrame, bg='white')
+                    for i, opt in enumerate([THREADS, MPI]):
+                        rb = tk.Radiobutton(procCombo, text=opt,
+                                            variable=self.procTypeVar,
+                                            value=opt, bg='white',
+                                            highlightthickness=0)
+                        rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))
+
+                    procCombo.grid(row=r2, column=0, sticky='nw', pady=5)
+                    procEntry = self._createBoundEntry(procFrame,
+                                                       Message.VAR_THREADS,
+                                                       func=self._setThreadsOrMpi,
+                                                       value=procs)
+                    procEntry.grid(row=r2, column=1, padx=(0, 5), sticky='nw')
+                else:
+                    # Show an error message
+                    self.showInfo(" If protocol execution is set to "
+                                  "STEPS_PARALLEL number of threads and mpi "
+                                  "should not be set to zero.")
+
+            else:
+                # ---- THREADS----
+                if allowThreads:
+                    self._createHeaderLabel(procFrame, Message.LABEL_THREADS,
+                                            sticky=sticky, row=r2, column=c2,
+                                            pady=0)
+                    entry = self._createBoundEntry(procFrame,
+                                                   Message.VAR_THREADS)
+                    entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
+                    # Modify values to be used in MPI entry
+                    c2 += 2
+                    sticky = 'nw'
+                # ---- MPI ----
+                if allowMpi:
+                    self._createHeaderLabel(procFrame, Message.LABEL_MPI,
+                                            sticky=sticky, row=r2, column=c2,
+                                            pady=0)
+                    entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
+                    entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
+
+            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT,
+                                 Icon.ACTION_HELP,
+                                 highlightthickness=0,
+                                 command=self._createHelpCommand(
+                                     Message.HELP_MPI_THREADS))
+            btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
+
+            procFrame.columnconfigure(0, minsize=60)
+            procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+
+            r += 1
+
+        if allowGpu:
+            self._createHeaderLabel(runFrame, "GPU IDs", bold=True,
+                                    sticky='ne', row=r, column=0, pady=0)
+            gpuFrame = tk.Frame(runFrame, bg='white')
+            gpuFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+
+            self.useGpuVar = tk.IntVar()
+
+            # For protocols that require GPU, there is not the option to choose
+            if not prot.requiresGpu():
+                self.useGpuVar.set(int(prot.useGpu.get()))
+                for i, opt in enumerate(['Yes', 'No']):
+                    rb = tk.Radiobutton(gpuFrame, text=opt,
+                                        variable=self.useGpuVar,
+                                        value=1-i, bg='white',
+                                        highlightthickness=0)
+                    rb.grid(row=0, column=i, sticky='nw', padx=(0, 5), pady=5)
+
+            self.gpuListVar = tk.StringVar()
+            self.gpuListVar.set(prot.getAttributeValue(params.GPU_LIST, ''))
+            gpuEntry = tk.Entry(gpuFrame, width=9, font=self.font,
+                                textvariable=self.gpuListVar)
+            gpuEntry.grid(row=0, column=2, sticky='nw',
+                          padx=(0, 5), pady=(0, 5))
+
+            gpuListParam = prot.getParam(params.GPU_LIST)
+            btnHelp = IconButton(gpuFrame, Message.TITLE_COMMENT,
+                                 Icon.ACTION_HELP,
+                                 highlightthickness=0,
+                                 command=self._createHelpCommand(
+                                     gpuListParam.getHelp()))
+            btnHelp.grid(row=0, column=3, padx=(5, 0), pady=2, sticky='ne')
+
+            # Trace changes in GPU related widgets to store values in protocol
+            self.useGpuVar.trace('w', self._setGpu)
+            self.gpuListVar.trace('w', self._setGpu)
+
     def _createCommon(self, parent):
         """ Create the second section with some common parameters. """
         commonFrame = tk.Frame(parent)
         
-        ############# Create the run part ###############
+        # ---------- Run section ---------
         runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN,
                                   height=100, headerBgColor=self.headerBgColor)
         runFrame = tk.Frame(runSection.contentFrame, bg='white')
         runFrame.grid(row=0, column=0, sticky='nw', padx=(0, 15))
-        #runFrame.columnconfigure(1, weight=1)
-        
-        r = 0 # Run name
+
+        r = 0  # Run name
         self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True,
                                 sticky='ne')
         self.runNameVar = tk.StringVar()
@@ -1333,7 +1463,7 @@ class FormWindow(Window):
                          highlightthickness=0,command=self._editObjParams)
         btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
         
-        c = 3 # Comment
+        c = 3  # Comment
         self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne',
                                 column=c)
         self.commentVar = tk.StringVar()
@@ -1345,8 +1475,8 @@ class FormWindow(Window):
         btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
         
         self.updateLabelAndCommentVars()
-                
-        r = 1 # Execution
+
+        r = 1  # Execution
         self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True,
                                 sticky='ne', row=r, pady=0)
         modeFrame = tk.Frame(runFrame, bg='white')
@@ -1361,7 +1491,6 @@ class FormWindow(Window):
                              highlightthickness=0,
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
         btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
-        #modeFrame.columnconfigure(0, minsize=60)
         modeFrame.columnconfigure(0, weight=1)
         modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
@@ -1379,106 +1508,44 @@ class FormWindow(Window):
         self.hostVar.set(hostName)
         self.hostCombo.grid(row=r, column=c+1, pady=5, sticky='nw')
         r = 2
+        self._createParallel(runFrame, r)
 
-        # ---- Parallel---- 
-        # some short notation
-        allowThreads = self.protocol.allowThreads # short notation
-        allowMpi = self.protocol.allowMpi # short notation
-        numberOfMpi = self.protocol.numberOfMpi.get() 
-        numberOfThreads = self.protocol.numberOfThreads.get()
-        mode = self.protocol.stepsExecutionMode
-        
-        if allowThreads or allowMpi:
-            self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True,
-                                    sticky='ne', row=r, pady=0)
-            procFrame = tk.Frame(runFrame, bg='white')
-            r2 = 0
-            c2 = 0
-            sticky = 'ne'
-
-            # FIXME: JMRT (2015-02-08) We are having problems with MPI and
-            # FIXME:    protocols parallelized with steps, for now use only threads
-            #if mode == params.STEPS_PARALLEL:
-            #    mode = None
-            #    allowMpi = False
-            #    allowThread = True
-
-            if mode == params.STEPS_PARALLEL:
-                self.procTypeVar = tk.StringVar()
-
-                if allowThreads and allowMpi:
-                    if numberOfMpi > 1:
-                        procs = numberOfMpi
-                        self.procTypeVar.set(MPI)
-                        self.protocol.numberOfThreads.set(1)
-                    else:
-                        procs = numberOfThreads
-                        self.procTypeVar.set(THREADS)
-                        self.protocol.numberOfMpi.set(1)
-                        
-                    self.procTypeVar.trace('w', self._setThreadsOrMpi)
-                    procCombo = tk.Frame(procFrame, bg='white')
-                    for i, opt in enumerate([THREADS, MPI]):
-                        rb = tk.Radiobutton(procCombo, text=opt, 
-                                            variable=self.procTypeVar, 
-                                            value=opt, bg='white',
-                                            highlightthickness=0)
-                        rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
-                        
-                    procCombo.grid(row=0, column=0, sticky='nw', pady=5)
-                    procEntry = self._createBoundEntry(procFrame,
-                                                       Message.VAR_THREADS,
-                                                       func=self._setThreadsOrMpi,
-                                                       value=procs)
-                    procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
-                else:
-                    # Show an error message
-                    self.showInfo(" If protocol execution is set to STEPS_PARALLEL number of threads and mpi should not be set to zero.")
-                    
-            else:
-                # ---- THREADS---- 
-                if allowThreads:
-                    self._createHeaderLabel(procFrame, Message.LABEL_THREADS, 
-                                            sticky=sticky, row=r2, column=c2, pady=0)
-                    entry = self._createBoundEntry(procFrame, Message.VAR_THREADS)
-                    entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
-                    # Modify values to be used in MPI entry
-                    c2 += 2
-                    sticky = 'nw'
-                # ---- MPI ---- 
-                if allowMpi:
-                    self._createHeaderLabel(procFrame, Message.LABEL_MPI, 
-                                            sticky=sticky, row=r2, column=c2, pady=0)
-                    entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
-                    entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
-                
-            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
-                                 highlightthickness=0,
-                                 command=self._createHelpCommand(Message.HELP_MPI_THREADS))
-            btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
-            procFrame.columnconfigure(0, minsize=60)
-            procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
-        
         # ---- QUEUE ----
         self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
                                 column=c, padx=(15,5), pady=0)
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
                                                   font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
-        frame.grid(row=2, column=c+1, pady=5, sticky='nw')
+        frame.grid(row=r, column=c+1, pady=5, sticky='nw')
         # Commented out the button to edit queue since the queue dialog
         #  will be shown after pressing the 'Execute' button
         #btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
         #                          command=self._editQueueParams)
         #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
-                             highlightthickness=0, command=self._createHelpCommand(Message.HELP_USEQUEUE))
-        btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
+                             highlightthickness=0,
+                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
+        btnHelp.grid(row=r, column=c+3, padx=(5, 0), pady=2, sticky='ne')
+
+        r = 3  # ---- Wait for other protocols (SCHEDULE) ----
+        self._createHeaderLabel(runFrame, Message.LABEL_WAIT_FOR, row=r, sticky='ne',
+                                column=c, padx=(15, 5), pady=0)
+        self.waitForVar = tk.StringVar()
+        self.waitForVar.set(', '.join(self.protocol.getPrerequisites()))
+        entryWf = tk.Entry(runFrame, font=self.font, width=25,
+                           textvariable=self.waitForVar)
+        entryWf.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')
+
+        self.waitForVar.trace('w', self._setWaitFor)
+
+        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                             highlightthickness=0,
+                             command=self._createHelpCommand(Message.HELP_WAIT_FOR))
+        btnHelp.grid(row=r, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
         #entry.configure(state='readonly')
         # Run mode
-        self.protocol.getParam('')
         #self._createHeaderLabel(runFrame, Message.LABEL_RUNMODE).grid(row=1, column=0, sticky='ne', padx=5, pady=5)
         #runSection.addContent()
         runSection.grid(row=0, column=0, sticky='news', padx=5, pady=5)
@@ -1747,7 +1814,7 @@ class FormWindow(Window):
                     self.showInfo(message, "Protocol action")
                 if not onlySave:
                     self.close()
-        except Exception, ex:
+        except Exception as ex:
             import traceback
             traceStr = traceback.format_exc()
             action = "EXECUTE"
@@ -1904,17 +1971,36 @@ class FormWindow(Window):
             
     def _setThreadsOrMpi(self, *args):
         mode = self.procTypeVar.get()
+        prot = self.protocol # shortcut notation
         try:
             procs = int(self.widgetDict['numberOfThreads'].get())
             if mode == THREADS: # threads mode
-                self.protocol.numberOfThreads.set(procs)
-                self.protocol.numberOfMpi.set(min(1, self.protocol.numberOfMpi.get())) # 0 or 1
+                prot.numberOfThreads.set(procs)
+                prot.numberOfMpi.set(min(1, prot.numberOfMpi.get())) # 0 or 1
             else:
-                self.protocol.numberOfMpi.set(procs)
-                self.protocol.numberOfThreads.set(min(1, self.protocol.numberOfThreads.get())) # 0 or 1
+                prot.numberOfMpi.set(procs)
+                m = min(1, prot.numberOfThreads.get()) # 0 or 1
+                prot.numberOfThreads.set(m)
         except Exception:
-            pass    
-        
+            pass
+
+    def _setGpu(self, *args):
+        prot = self.protocol # shortcut notation
+        if not prot.requiresGpu(): # Only set this if gpu is optional
+            prot.useGpu.set(self.useGpuVar.get())
+        prot.gpuList.set(self.gpuListVar.get())
+
+    def _setWaitFor(self, *args):
+        l1 = self.waitForVar.get().split(',')
+        idList = []
+        for p1 in l1:
+            idList.extend([p2.strip() for p2 in p1.split(' ') if p2])
+        try:
+            idIntList = map(int, idList)
+            self.protocol.setPrerequisites(*idIntList)
+        except Exception as ex:
+            pass
+
     def _setHostName(self, *args):
         self.protocol.setHostName(self.hostVar.get())        
         

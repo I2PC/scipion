@@ -536,7 +536,7 @@ def rowToParticle(partRow, **kwargs):
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(partRow))
         
-    # alignment is mandatory at this point, it shoud be check
+    # alignment is mandatory at this point, it should be check
     # and detected defaults if not passed at readSetOf.. level
     alignType = kwargs.get('alignType') 
     
@@ -1042,7 +1042,7 @@ def writeMicCoordinates(mic, coordList, outputFn, getPosFunc=None):
             it can be useful for scaling the coordinates if needed.
     """
     if getPosFunc is None:
-        getPosFunc = lambda coord: coord.getPostion()
+        getPosFunc = lambda coord: coord.getPosition()
    
     extraLabels = coordList[0].hasAttribute('_rlnClassNumber')
     f = openStar(outputFn, extraLabels)

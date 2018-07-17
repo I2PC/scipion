@@ -35,7 +35,6 @@ from pyworkflow.em.packages.relion.protocol_autopick_v2 import *
 from test_workflow import TestWorkflow
 
 
-
 class TestWorkflowRelionPick(TestWorkflow):
     @classmethod
     def setUpClass(cls):
@@ -50,12 +49,19 @@ class TestWorkflowRelionPick(TestWorkflow):
         self.launchProtocol(pickProt)
 
         if validate:
+            # We have changed the name of the output to 'outputCoordinatesSubset'
+            # when optimizing the wizard, so we need to consider this here
+            # for testing the output is not None
+            if hasattr(pickProt, 'outputCoordinatesSubset'):
+                outputName = 'outputCoordinatesSubset'
+            else:
+                outputName = 'outputCoordinates'
             # Check the output coordinates is not None and has some items
-            outputCoords = getattr(pickProt, 'outputCoordinates', None)
+            outputCoords = getattr(pickProt, outputName, None)
             self.assertIsNotNone(outputCoords)
             self.assertTrue(outputCoords.getSize() > 0,
-                            msg="Output set is empty for protocol '%s'" %
-                            pickProt.getRunName())
+                            msg="Output set (%s) is empty for protocol '%s'" %
+                                (outputName, pickProt.getRunName()))
 
     def _runPickWorkflow(self):
         #First, import a set of micrographs
