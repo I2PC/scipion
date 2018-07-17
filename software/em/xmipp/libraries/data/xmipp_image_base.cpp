@@ -749,7 +749,7 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readTIA(select_img,false);
     else if (ext_name.contains("dm3"))//DM3
         err = readDM3(select_img,false);
-    else if (ext_name.contains("dm4"))//DM3
+    else if (ext_name.contains("dm4"))//DM4
         err = readDM4(select_img,false);
     else if (ext_name.contains("ems"))//EM stack
         err = readEM(select_img, true);

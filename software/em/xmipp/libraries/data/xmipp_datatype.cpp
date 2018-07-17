@@ -80,16 +80,6 @@ size_t gettypesize(DataType type)
     return(size);
 }
 
-// Get size of datatype at reading time
-size_t getreadtypesize(DataType type)
-{
-
-    if (type == DT_UHalfByte)
-        return (size_t) 4;
-    else
-        return gettypesize(type);
-}
-
 /** Convert datatype string to datatypr enun */
 DataType str2Datatype(const std::string & str)
 {

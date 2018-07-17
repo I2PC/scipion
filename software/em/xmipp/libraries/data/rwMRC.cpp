@@ -123,7 +123,7 @@ struct MRChead
 int ImageBase::readMRC(size_t select_img, bool isStack)
 {
 #undef DEBUG
-    #define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     printf("DEBUG readMRC: Reading MRC file\n");
 #endif
@@ -227,7 +227,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     size_t datasize_n;
     datasize_n = _xDim*_yDim*_zDim;
 
-    // If mode are fourier transforms (3,4)
+    // If mode is any of the fourier transforms (3,4)
     if ( header->mode > 2 && header->mode < 5 )
     {
         transform = CentHerm;
@@ -313,10 +313,12 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     // Lets read the data
 
     // 4-bits mode: Here is the magic to expand the compressed images
-    if (header->mode == 101)
+    if (datatype == DT_UHalfByte){
         readData4bit(fimg, select_img, datatype, 0);
-    else
+    }
+    else{
         readData(fimg, select_img, datatype, 0);
+    }
 
     return errCode;
 }
