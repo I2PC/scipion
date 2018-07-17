@@ -1430,11 +1430,11 @@ class Protocol(Step):
         package = cls.getClassPackage()
         packageName = cls.getClassPackageName()
         varValue = os.environ[varName]
-        versions = ','.join(package.getSupportedVersions())
+        versions = ','.join(package.Plugin.getSupportedVersions())
 
         errorMsg = None
 
-        if not package.getVersion():
+        if not package.Plugin.getActiveVersion():
             errors.append("We could not detect *%s* version. " % packageName)
             errorMsg = "The path value should contains a valid version (%s)." % versions
         elif not os.path.exists(varValue):

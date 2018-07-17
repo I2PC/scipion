@@ -120,6 +120,7 @@ class Domain:
                     for name in dir(sub):
                         attr = getattr(sub, name)
                         if inspect.isclass(attr) and issubclass(attr, BaseClass):
+                            attr._package = plugin  # Set this special property used by Scipion
                             subclasses[name] = attr
             subclasses.update(getSubclasses(BaseClass, globals()))
 
