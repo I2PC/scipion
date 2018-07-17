@@ -107,7 +107,7 @@ class Domain:
             raise Exception("Invalid plugin '%s'. "
                             "Class Plugin with __metaclass__=PluginMeta "
                             "not found" % name)
-
+        return m
 
 _emPackagesDict = None
 
