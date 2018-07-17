@@ -1277,13 +1277,13 @@ class FormWindow(Window):
 
         # Consider legacy protocols
         if self._isLegacyProtocol():
-            t = '  Legacy protocol: %s' % (Mapper.getObjectPersistingClassName(self.protocol))
+            t = '  Missing protocol: %s' % (Mapper.getObjectPersistingClassName(self.protocol))
         else:
             t = '  Protocol: %s' % (self.protocol.getClassLabel())
 
         logoPath = self.protocol.getPluginLogoPath() or getattr(package, '_logo', '')
 
-        if logoPath:
+        if logoPath and os.path.exists(logoPath):
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, 
                                    image=self.getImage(logoPath, maxheight=40),
                                    compound=tk.LEFT)
@@ -1608,10 +1608,12 @@ class FormWindow(Window):
     def _createLegacyInfo(self, parent):
         frame = tk.Frame(parent)
         t = tk.Label(frame,
-                     text="This is a legacy protocol, it means that its class "
-                          "is missed. \nThis could be because you are opening "
-                          "an old project and some of \nthe executed protocols "
-                          "does not exist in the current version.\n\n"
+                     text="This protocol is missing from the installation. "
+                          "\nThis could be because you are opening an old "
+                          "project and some of \nthe executed protocols does "
+                          "not exist in the current version and were deprecated"
+                          ",\n or because your scipion installation requires a "
+                          "plugin where this protocol can be found.\n\n"
                           "If you are a developer, it could be the case that "
                           "you have changed \nto another branch where the "
                           "protocol does not exist.\n\n"

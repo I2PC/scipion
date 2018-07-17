@@ -34,8 +34,8 @@ import argparse
 #  *                                                                      *
 #  ************************************************************************
 
-MODE_INSTALL_PLUGIN = 'install_plugin'
-MODE_UNINSTALL_PLUGIN = 'uninstall_plugin'
+MODE_INSTALL_PLUGIN = 'installp'
+MODE_UNINSTALL_PLUGIN = 'uninstallp'
 MODE_LIST_BINS = 'list_plugin_bins'
 MODE_INSTALL_BINS = 'install_bins'
 MODE_UNINSTALL_BINS = 'uninstall_bins'
@@ -45,16 +45,16 @@ args = sys.argv[1:]
 pluginRepo = PluginRepository()
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-subparsers = parser.add_subparsers(help='mode "install_plugin", "uninstall_plugin" or "list_plugin_bins"',
+subparsers = parser.add_subparsers(help='mode "installp", "uninstallp" or "list_plugin_bins"',
                                    dest='mode',
                                    title='Mode',
-                                   description='available modes are "install_plugin" or "uninstall_plugin"')
+                                   description='available modes are "installp" or "uninstallp"')
 
 ############################################################################
 #                               Install parser                             #
 ############################################################################
 
-installParser = subparsers.add_parser("install_plugin", formatter_class=argparse.RawTextHelpFormatter,
+installParser = subparsers.add_parser("installp", formatter_class=argparse.RawTextHelpFormatter,
                                       usage="%s  [-h] [--noBin] [-p pluginName [pipVersion ...]]" %
                                             (' '.join(args[:2])),
                                       epilog="Example: %s -p grigoriefflab 1.0.1 -p relion -p eman \n\n" %
@@ -78,7 +78,7 @@ installParser.add_argument('-p', '--plugin', action='append', nargs='+',
 #                             Uninstall parser                             #
 ############################################################################
 
-uninstallParser = subparsers.add_parser("uninstall_plugin", formatter_class=argparse.RawTextHelpFormatter,
+uninstallParser = subparsers.add_parser("uninstallp", formatter_class=argparse.RawTextHelpFormatter,
                                         usage="%s  [-h] [-p pluginName [binVersion ...]]" %
                                               (' '.join(args[:2])),
                                         epilog="Example: %s grigoriefflab eman \n\n" %

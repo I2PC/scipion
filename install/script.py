@@ -440,9 +440,6 @@ env.addPackage('chimera', version='1.10.1',
                targetDir='chimera-1.10.1',
                commands=[('./scipion_installer','bin/chimera')])
 
-env.addPackage('dogpicker', version='0.2.1',
-               tar='dogpicker-0.2.1.tgz')
-
 env.addPackage('nma',
                tar='nma.tgz',
                commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),

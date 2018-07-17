@@ -65,9 +65,15 @@ class Plugin(object):
         pass
 
     def getMetadata(self):
-        pipPackage = pkg_resources.get_distribution(self.name)
-        metadataLines = [l for l in pipPackage._get_metadata(pipPackage.PKG_INFO)]
-        metadataTuples = message_from_string('\n'.join(metadataLines))
+        try:
+            pipPackage = pkg_resources.get_distribution(self.name)
+            metadataLines = [l for l in pipPackage._get_metadata(pipPackage.PKG_INFO)]
+            metadataTuples = message_from_string('\n'.join(metadataLines))
+
+        except Exception as e:
+            print("Plugin %s seems is not a pip module yet. No metadata found" % self.name)
+            metadataTuples = message_from_string('Author: plugin in development mode?')
+
         metadata = OrderedDict()
         for v in metadataTuples.items():
             if v[0] == 'Keywords':
