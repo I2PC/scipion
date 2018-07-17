@@ -213,8 +213,8 @@ class Project(object):
         classesDict.update(pwobj.__dict__)
         classesDict.update(pwconfig.__dict__)
         classesDict.update(pwhosts.__dict__)
-        classesDict.update(em.getProtocols())
-        classesDict.update(em.getObjects())
+        classesDict.update(em.Domain.getProtocols())
+        classesDict.update(em.Domain.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
 
     def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True,
@@ -886,7 +886,7 @@ class Project(object):
         f = open(filename)
         protocolsList = json.load(f)
 
-        emProtocols = em.getProtocols()
+        emProtocols = em.Domain.getProtocols()
         newDict = OrderedDict()
 
         # First iteration: create all protocols and setup parameters

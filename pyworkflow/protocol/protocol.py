@@ -1390,7 +1390,7 @@ class Protocol(Step):
         """ Return the package module to which this protocol belongs
         """
         import pyworkflow.em as em
-        em.getProtocols()  # make sure the _package is set for each Protocol class
+        em.Domain.getProtocols()  # make sure the _package is set for each Protocol class
         return getattr(cls, '_package', scipion)
 
     @classmethod

@@ -834,7 +834,7 @@ class EMSet(Set, EMObject):
 
     def _loadClassesDict(self):
         import pyworkflow.em as em
-        classDict = em.getObjects()
+        classDict = em.Domain.getObjects()
         classDict.update(globals())
 
         return classDict
