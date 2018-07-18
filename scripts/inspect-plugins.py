@@ -88,8 +88,8 @@ else:
     pluginName = sys.argv[1]
     plugin = Domain.getPlugin(pluginName)
     print("Plugin: %s" % pluginName)
-    for subName in ['constants', 'binaries', 'convert',
-                    'protocols', 'wizards', 'viewers']:
+    for subName in ['constants', 'convert', 'protocols',
+                    'wizards', 'viewers', 'tests']:
         sub, error = getSubmodule(pluginName, subName)
 
         if sub is None:

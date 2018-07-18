@@ -722,6 +722,6 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
         if default is None:
             raise Exception(exceptionMsg)
         else:
-            return  default
+            return default
     else:
         return value
