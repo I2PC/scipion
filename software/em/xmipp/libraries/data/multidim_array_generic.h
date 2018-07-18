@@ -65,6 +65,7 @@
         case DT_SChar:\
             {OP(char)};\
             break;\
+	    case DT_UHalfByte:\
         case DT_UChar:\
             {OP(unsigned char)};\
             break;\
