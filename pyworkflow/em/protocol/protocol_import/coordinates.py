@@ -141,19 +141,19 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         importFrom = self.getImportFrom()
         
         if importFrom == self.IMPORT_FROM_XMIPP:
-            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            from xmipp3.convert import XmippImport
             return XmippImport(self, filesPath)
 
         elif importFrom == self.IMPORT_FROM_RELION:
-            from pyworkflow.em.packages.relion.dataimport import RelionImport
+            from relion.convert import RelionImport
             return RelionImport(self, filesPath)
         
         elif importFrom == self.IMPORT_FROM_EMAN:
-            from pyworkflow.em.packages.eman2.dataimport import EmanImport
+            from eman2.convert import EmanImport
             return EmanImport(self)
         
         elif importFrom == self.IMPORT_FROM_DOGPICKER:
-            from pyworkflow.em.packages.appion.dataimport import DogpickerImport
+            from appion.convert import DogpickerImport
             return DogpickerImport(self)
         else:
             self.importFilePath = ''
@@ -236,7 +236,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         if importFrom == ProtImportCoordinates.IMPORT_FROM_EMAN:
             # Read the boxSize from the e2boxercache/base.json
             jsonFnbase = join(self.filesPath.get(), 'e2boxercache', 'base.json')
-            from pyworkflow.em.packages.eman2 import loadJson
+            from eman2 import loadJson
             jsonBoxDict = loadJson(jsonFnbase)
             boxSize = int(jsonBoxDict["box_size"])
         boxSize = (int)(boxSize * scale)
