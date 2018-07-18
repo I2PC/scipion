@@ -98,6 +98,7 @@ def getEmanPythonProgram(program):
 
     return python, program
 
+
 def convertBinaryVol(vol, outputDir):
     """ Convert binary volume to a mrc format.
     Params:
@@ -115,18 +116,11 @@ def convertBinaryVol(vol, outputDir):
         newFn = os.path.join(outputDir, replaceBaseExt(fn, 'mrc'))
         ih.convert(fn, newFn)
         return newFn
-<<<<<<< HEAD
-        
-    volFn = ih.removeFileType(vol.getFileName())
-=======
 
-    volFn = vol.getFileName()
-    if ':' in volFn:
-        volFn = volFn.split(':')[0]
->>>>>>> release-1.2.1
-    
+    volFn = ih.removeFileType(vol.getFileName())
+
     if not volFn.endswith('.mrc'):
         volFn = convertToMrc(volFn)
 
     return volFn
-    
+
