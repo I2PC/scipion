@@ -83,8 +83,16 @@ bool checkImageFileSize(const FileName &name, const ImageInfo &imgInfo, bool err
     else
         dataFname = name;
 
+    size_t explodeFactor = 1;
+
+    if (imgInfo.datatype == DT_UHalfByte){
+        explodeFactor = 2;
+    }
+
+
     size_t expectedSize = imgInfo.adim.nzyxdim*gettypesize(imgInfo.datatype) + imgInfo.offset;
     size_t actualSize = dataFname.removeAllPrefixes().removeFileFormat().getFileSize();
+    actualSize *= explodeFactor;
     bool result = (actualSize >= expectedSize);
 
     if (error && !result)
