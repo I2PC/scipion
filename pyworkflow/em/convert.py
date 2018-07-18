@@ -35,7 +35,6 @@ import pyworkflow.utils as pwutils
 from constants import *
 
 
-
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
     # TODO: remove dependency from Xmipp
@@ -341,8 +340,8 @@ class ImageHandler(object):
 
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmipp3.runXmippProgram(program, args)
+        import xmipp3
+        xmipp3.Plugin.runXmippProgram(program, args)
 
     def __runEman2Program(self, program, args):
         """ Internal workaround to launch an EMAN2 program. """
@@ -360,7 +359,7 @@ class ImageHandler(object):
         #TODO: right now we need to call a Xmipp program to create
         # the spherical mask, it would be nicer to have such utility
         # in the binding
-        import pyworkflow.em.packages.xmipp3 as xmipp3
+        import xmipp3
         inputRef = xmipp3.getImageLocation(refImage)
         self.__runXmippProgram('xmipp_transform_mask',
                                '-i %s --create_mask  %s --mask circular -%d'

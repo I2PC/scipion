@@ -255,9 +255,11 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
     return args
 
-def runJavaIJapp(memory, appName, args, env={}):
-    from pyworkflow.em.packages import xmipp3
-    env.update(xmipp3.getEnviron(xmippFirst=False))
+
+def runJavaIJapp(memory, appName, args, env=None):
+    import xmipp3
+    env = env or {}
+    env.update(xmipp3.Plugin.getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s'%args
@@ -265,10 +267,12 @@ def runJavaIJapp(memory, appName, args, env={}):
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
 
-def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
-                              memory='2g', pickerProps=None, inTmpFolder=False):
+
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol,
+                              mode=None, memory='2g',
+                              pickerProps=None, inTmpFolder=False):
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s"%(micsFn, outputDir)
+        args = "--input %s --output %s" % (micsFn, outputDir)
 
         if mode:
             args += " --mode %s" % mode
@@ -313,7 +317,8 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
         else:
             answer = 'no answer available'
             self.request.sendall(answer + '\n')
-    
+
+
 class MySocketServer (SocketServer.TCPServer):
 
     def serve_forever(self):
