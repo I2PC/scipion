@@ -33,24 +33,28 @@ extern "C" {
 #define xmipp_ImageGeneric_UInt 5L
 #undef xmipp_ImageGeneric_Int
 #define xmipp_ImageGeneric_Int 6L
+#undef xmipp_ImageGeneric_ULong
+#define xmipp_ImageGeneric_ULong 7L
 #undef xmipp_ImageGeneric_Long
-#define xmipp_ImageGeneric_Long 7L
+#define xmipp_ImageGeneric_Long 8L
 #undef xmipp_ImageGeneric_Float
-#define xmipp_ImageGeneric_Float 8L
+#define xmipp_ImageGeneric_Float 9L
 #undef xmipp_ImageGeneric_Double
-#define xmipp_ImageGeneric_Double 9L
+#define xmipp_ImageGeneric_Double 10L
 #undef xmipp_ImageGeneric_ComplexShort
-#define xmipp_ImageGeneric_ComplexShort 10L
+#define xmipp_ImageGeneric_ComplexShort 11L
 #undef xmipp_ImageGeneric_ComplexInt
-#define xmipp_ImageGeneric_ComplexInt 11L
+#define xmipp_ImageGeneric_ComplexInt 12L
 #undef xmipp_ImageGeneric_ComplexFloat
-#define xmipp_ImageGeneric_ComplexFloat 12L
+#define xmipp_ImageGeneric_ComplexFloat 13L
 #undef xmipp_ImageGeneric_ComplexDouble
-#define xmipp_ImageGeneric_ComplexDouble 13L
+#define xmipp_ImageGeneric_ComplexDouble 14L
 #undef xmipp_ImageGeneric_Bool
-#define xmipp_ImageGeneric_Bool 14L
+#define xmipp_ImageGeneric_Bool 15L
+#undef xmipp_ImageGeneric_UHalfByte
+#define xmipp_ImageGeneric_UHalfByte 16L
 #undef xmipp_ImageGeneric_LastEntry
-#define xmipp_ImageGeneric_LastEntry 15L
+#define xmipp_ImageGeneric_LastEntry 17L
 /*
  * Class:     xmipp_ImageGeneric
  * Method:    create

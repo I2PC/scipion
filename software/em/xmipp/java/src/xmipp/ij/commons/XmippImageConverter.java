@@ -371,6 +371,7 @@ public class XmippImageConverter {
 		case ImageGeneric.UShort:
 			pc = new ProcessorCreatorShort();
 			break;
+		case ImageGeneric.UHalfByte:
 		case ImageGeneric.SChar:
 		case ImageGeneric.UChar:
 			pc = new ProcessorCreatorByte();
