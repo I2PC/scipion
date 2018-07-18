@@ -1122,7 +1122,7 @@ class Project(object):
         :return: The graph taking into account run dependencies
         """
         outputDict = {} # Store the output dict
-        g = pwutils.graph.Graph(rootName='PROJECT')
+        g = pwutils.Graph(rootName='PROJECT')
 
         for r in runs:
             n = g.createNode(r.strId())
@@ -1170,7 +1170,7 @@ class Project(object):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
         relations = self.mapper.getRelationsByName(relation)
-        g = pwutils.graph.Graph(rootName='PROJECT')
+        g = pwutils.Graph(rootName='PROJECT')
         root = g.getRoot()
         root.pointer = None
         runs = self.getRuns(refresh=refresh)
