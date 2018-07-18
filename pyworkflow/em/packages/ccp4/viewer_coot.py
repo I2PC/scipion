@@ -27,13 +27,11 @@
 import os
 
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.packages.xmipp3.viewer import XmippViewer, PdbFile
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, runChimeraProgram, \
     getProgram
-from pyworkflow.em.convert_header.CCP4.convert import cootPdbTemplateFileName
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-from protocol_coot import CootRefine
+from protocol_coot import CootRefine, cootPdbTemplateFileName
 
 # TODO: very likely this should inherit from ProtocolViewer
 # not from XmippViewer. But then I get an empty form :-(
@@ -87,9 +85,9 @@ class CootRefineViewer(Viewer):
                     ImageHandler.removeFileType(outputVol.getFileName()))
             x, y, z = outputVol.getOrigin(force=True).getShifts()
             f.write("open %s\n" % outputVolFileName)
-            f.write("volume #%d  style surface voxelSize %f origin "
-                    "%0.2f,%0.2f,%0.2f\n"
-                    % (count, outputVol.getSamplingRate(), x, y, z))
+            f.write("volume #%d style surface voxelSize %f\n"
+                    "volume #%d origin %0.2f,%0.2f,%0.2f\n" % (
+                    count, outputVol.getSamplingRate(), count, x, y, z))
             count += 1
 
         counter = 1
