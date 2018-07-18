@@ -103,7 +103,7 @@ PROJECT_PATH = 'projectPath'
 OBJECT_ID = 'objectId'
 
 
-def getJVMMaxMemory():
+def getJvmMaxMemory():
     # Memory in GB
     return os.environ.get("JAVA_MAX_MEMORY", 2)
 
@@ -247,7 +247,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     appArgs: the arguments specific to the application.
     """ 
     if memory is None:
-        memory = getJVMMaxMemory()
+        memory = getJvmMaxMemory()
         print "No memory size provided. Using default: " + memory
     
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')

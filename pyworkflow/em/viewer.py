@@ -65,7 +65,7 @@ class DataView(View):
     """ Wrapper the arguments to showj (either web or desktop). """
     def __init__(self, path, viewParams={}, **kwargs):
         View.__init__(self)
-        self._memory = showj.getJVMMaxMemory()
+        self._memory = showj.getJvmMaxMemory()
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
