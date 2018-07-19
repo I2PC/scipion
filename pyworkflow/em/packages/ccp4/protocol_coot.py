@@ -32,7 +32,8 @@ from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
 from pyworkflow.em.headers import Ccp4Header, START
-from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
+from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program,
+                                                 validVersion)
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
@@ -274,6 +275,9 @@ the pdb file from coot  to scipion '
                 errors.append("Current values:")
                 errors.append("CCP4_HOME = %s" % os.environ['CCP4_HOME'])
                 errors.append("COOT = %s" % self.COOT)
+
+        if not validVersion(7, 0.056):
+            errors.append("CCP4 version should be at least 7.0.056")
 
         # Check that the input volume exist
         if (not self.pdbFileToBeRefined.get().hasVolume()) \
