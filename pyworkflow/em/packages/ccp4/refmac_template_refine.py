@@ -92,14 +92,6 @@ NCYCLE = %(NCYCLE)d
 #   these weights need to be optimised.
 WEIGHT MATRIX = %(WEIGHT MATRIX)s
 
-#specify any other keyword:
-##MAKE CISP NO
-##MAKE SS NO
-## ROB
-#MAKE HYDR NO #remove to use hydrogens
-#SOLVENT NO
-
-# ROB source EM MB
 source EM
 """
 
@@ -108,22 +100,9 @@ template_refmac_footer_mask="""@shifts.txt
 
 template_refmac_footer2=""""###specify external restraints below###
 
-## ROB
-#ridge dist sigma 0.01
-#ridge dist dmax 4.2
-## MARTA
 ridge dist sigma 0.01
 ridge dist dmax 4.2
-###specify external restraints below###
-
-## MARTA (ROB active)
-# EXTERNAL USE MAIN
-# EXTERNAL DMAX 4.2
-# EXTERNAL WEIGHT SCALE 5
-# EXTERNAL WEIGHT GMWT 0.1
-# @external.restraints
-# 
-# MONI DIST 1000000
+%(EXTRA_PARAMS)s
 
 END
 EOF
