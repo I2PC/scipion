@@ -126,6 +126,7 @@ def getEnviron(ccp4First=True):
 
     return environ
 
+
 def runCCP4Program(program, args="", extraEnvDict=None, cwd=None):
     """ Internal shortcut function to launch a CCP4 program. """
     env = getEnviron()
@@ -133,9 +134,33 @@ def runCCP4Program(program, args="", extraEnvDict=None, cwd=None):
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
+
 def getProgram(progName):
     """ Return the program binary that will be used. """
     if 'CCP4_HOME' not in os.environ:
         return None
     return os.path.join(os.environ['CCP4_HOME'], 'bin',
                         os.path.basename(progName))
+
+
+def validVersion(major=7, minor=0.056, greater=True):
+    """ Return ccp4 version as string. Example: 7.0.056"""
+    print "validVersion"
+    if 'CCP4_HOME' not in os.environ:
+        return False
+    versionFileName = os.path.join(os.environ['CCP4_HOME'], 'lib',
+                                   'ccp4','MAJOR_MINOR')
+    with open(versionFileName,"r") as f:
+        _major, _minor = f.readline().split(".",1)
+        _major = int(_major)
+        _minor = float(_minor)
+        print "validVersion",_major, _minor, major, minor, _minor >= minor
+        if greater:
+            if _major > major or \
+                (_major == major and _minor >= minor):
+                return True
+        else:
+            if _major == major and _minor == minor:
+                return True
+
+    return False
