@@ -27,19 +27,19 @@
 import os
 import stat
 import pyworkflow.protocol.constants as const
-from constants import CCP4VERSION, CCP4VERSIONFILENAME
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
 from pyworkflow.em.headers import (
     adaptFileToCCP4, START, Ccp4Header)
-from pyworkflow.em.packages.ccp4.convert import (runCCP4Program, getProgram)
+from pyworkflow.em.packages.ccp4.convert import (runCCP4Program, getProgram,
+                                                 validVersion)
 from pyworkflow.em.packages.ccp4.refmac_template_map2mtz import \
     template_refmac_preprocess_NOMASK, template_refmac_preprocess_MASK
 from pyworkflow.em.packages.ccp4.refmac_template_refine \
     import template_refmac_refine_MASK, template_refmac_refine_NOMASK
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
-    BooleanParam
+    BooleanParam, StringParam
 
 
 class CCP4ProtRunRefmac(EMProtocol):
@@ -112,6 +112,14 @@ class CCP4ProtRunRefmac(EMProtocol):
                       expertLevel=const.LEVEL_ADVANCED,
                       label='B Factor:', help='Specify the B factor value '
                                               'prior to refinement')
+        form.addParam('extraParams', StringParam, default='',
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='Extra parameters: ',
+                      help='Extra parameters to *refmac* program, '
+                           'the character | creates a new line\n'
+                      """
+                      HYDR Yes | HOUT Yes
+                      """)
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -183,6 +191,8 @@ class CCP4ProtRunRefmac(EMProtocol):
             self.dict['BFACTOR_SET'] = "0"
         else:
             self.dict['BFACTOR_SET'] = "%f" % self.BFactorSet.get()
+        self.dict['EXTRA_PARAMS'] = self.extraParams.get().replace('|','\n')
+
 
     def createMapMtzRefmacStep(self):
         if self.generateMaskedVolume.get():
@@ -257,13 +267,8 @@ class CCP4ProtRunRefmac(EMProtocol):
                 errors.append("CCP4_HOME = %s" % os.environ['CCP4_HOME'])
                 errors.append("REFMAC = %s" % self.REFMAC)
 
-        versionFile = os.path.join(os.environ['CCP4_HOME'], CCP4VERSIONFILENAME)
-        if os.path.exists(versionFile):
-            f = open(versionFile,"r")
-            line = f.readline()
-            if line.find(CCP4VERSION) == -1:
-                    errors.append("This version of CCP4 version is not "
-                                  "suported. Use version %s", CCP4VERSION)
+        if not validVersion(7, 0.056):
+            errors.append("CCP4 version should be at least 7.0.056")
 
         # Check that the input volume exist
         if self._getInputVolume() is None:
@@ -297,6 +302,14 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     def _citations(self):
         return ['Vagin_2004']
+
+    def _summary(self):
+        summary = []
+        summary.append('refmac '
+                       'keywords: '
+                       'https://www2.mrc-lmb.cam.ac.uk/groups/murshudov'
+                       '/content/refmac/refmac_keywords.html')
+        return summary
 
     def _getMapMaskedByPdbBasedMaskFileName(self, baseFileName='mapMaskedByPdbBasedMask.mrc'):
         return baseFileName
