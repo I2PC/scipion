@@ -350,7 +350,7 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
                   dataList=dataList,
                   mesg=mesg,
                   title=title,
-                  height=len(dataList), width=250, padding=40)
+                  height=min(20,len(dataList)), width=250, padding=40)
 
     def _parseFile(self, fileName):
         self.dictSummary = collections.OrderedDict()
