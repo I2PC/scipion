@@ -30,6 +30,7 @@ import importlib
 import pkgutil
 import inspect
 
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses
 from data import *
 from data_tiltpairs import *
@@ -48,7 +49,17 @@ class PluginMeta(type):
     """
     def __init__(cls, name, bases, dct):
         print("Creating PluginMeta....name: ", name)
+        from pyworkflow.utils import prettyDict
         super(PluginMeta, cls).__init__(name, bases, dct)
+        # for attrName, attr in cls.__dict__.iteritems():
+        #     if '__private' in attrName: # and iscallable(attr):
+        #         attr()
+
+        m = Domain.registerPlugin(cls.__module__)
+        #
+        # if cls.__module__ == 'eman2':
+        #     prettyDict(dct)
+        #     prettyDict(m.__dict__)
 
 
 class Domain:
@@ -72,6 +83,36 @@ class Domain:
             return None
 
     @classmethod
+    def _pluginMethod_hello(cls, plugin):
+        print("hello from plugin: ", plugin.__name__)
+
+    @classmethod
+    def registerPlugin(cls, name):
+        """ Register a new plugin. This function should only be called
+        when creating a class with __metaclass__=PluginMeta that will
+        trigger this.
+        """
+        print("Registering plugin: ", name)
+        m = importlib.import_module(name)
+        cls._plugins[name] = m  # Register the name to as a plugin
+        # TODO: Load subclasses (protocols, viewers, wizards)
+
+        # Load bibtex
+        m._bibtex = {}
+        bib = cls.__getSubmodule(name, 'bibtex')
+        if bib is not None:
+            try:
+                m._bibtex = pwutils.parseBibTex(bib.__doc__)
+            except:
+                pass
+
+        if not hasattr(m, 'hello'):
+            m.hello = lambda: cls._pluginMethod_hello(m)
+
+        return m
+
+
+    @classmethod
     def __hasPluginMeta(cls, m, className):
         """ Return True if the className refers to a class that
         has PluginMeta as MetaClass (i.e. the module is a plugin)
@@ -82,20 +123,23 @@ class Domain:
     @classmethod
     def __isPlugin(cls, m):
         """ Return True if the module is a Scipion plugin. """
-        return any(cls.__hasPluginMeta(m, name) for name in dir(m))
+        return m.__name__ in cls._plugins
 
     @classmethod
     def getPlugins(cls):
         """ Return existing plugins for this Domain. """
-        if not cls._plugins:  # Load plugin only once
+        loaded = getattr(cls, '_pluginsLoaded', False)
+        if not loaded: # Load plugin only once
             for p, name, isModule in pkgutil.iter_modules():
                 if isModule:
                     try:
-                        m = importlib.import_module(name)
-                        if cls.__isPlugin(m):
-                            cls._plugins[name] = m
+                        importlib.import_module(name)
+                        # NOTE: After importing the modules they will
+                        # automatically being register if they have a
+                        # class Plugin with metaclass PluginMeta
                     except Exception:
                         pass
+            cls._pluginsLoaded = True
         return dict(cls._plugins)
 
     @classmethod
