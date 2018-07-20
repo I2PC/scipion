@@ -59,7 +59,7 @@ class XmippProtConsensusPicking(ProtParticlePicking):
     means (screen particles, 2D and 3D classification, ...).
     """
 
-    _label = 'consensus picking'
+    _label = 'picking consensus'
     
     def __init__(self, **args):
         ProtParticlePicking.__init__(self, **args)
