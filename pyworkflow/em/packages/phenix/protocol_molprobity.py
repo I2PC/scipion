@@ -30,6 +30,7 @@ from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, FloatParam
 from pyworkflow.em.headers import adaptFileToCCP4, START
 from convert import runPhenixProgram, getProgram
+from pyworkflow.utils import magentaStr
 
 class PhenixProtRunMolprobity(EMProtocol):
     """MolProbity is a Phenix application to validate the geometry of an
@@ -60,7 +61,8 @@ atomic structure derived from a cryo-EM density map.
     # --------------------------- INSERT steps functions --------------------
 
     def _insertAllSteps(self):
-        if self.inputVolume.get() is not None:
+        if (self.inputVolume.get() or self.inputStructure.get().getVolume()) \
+                is not None:
             self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('runMolprobityStep')
         self._insertFunctionStep('createOutputStep')
@@ -167,6 +169,8 @@ atomic structure derived from a cryo-EM density map.
         except:
             summary = ["Overall score not yet computed"]
 
+        summary.append("MolProbity: http://molprobity.biochem.duke.edu/")
+        summary.append(magentaStr('Hi there'))
         return summary
 
     def _methods(self):
