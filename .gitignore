@@ -49,7 +49,6 @@
 /software/man
 /software/share
 /software/em/*
-!/software/em/xmipp
 
 gmon.out
 *~
