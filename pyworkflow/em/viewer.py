@@ -524,10 +524,11 @@ class ChimeraViewer(Viewer):
                     sampling = volumeObject.getSamplingRate()
                     f.write("open %s\n" % os.path.abspath(
                         ImageHandler.removeFileType(volumeObject.getFileName())))
-                    f.write("volume #%d style surface\n"%volID)
+                    f.write("volume #%d style surface voxelSize %f\n"
+                            % (volID, sampling))
                     x, y, z = volumeObject.getShiftsFromOrigin()
-                    f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" % (volID, x,
-                                                                     y, z))
+                    f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
+                            % (volID, x, y, z))
                 else:
                     dim = 150  # eventually we will create a PDB library that
                                # computes PDB dim
