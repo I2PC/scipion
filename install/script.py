@@ -442,13 +442,6 @@ env.addPackage('nysbc-3DFSC', version='2.5',
 env.addPackage('cryoEF', version='1.1.0',
                tar='cryoEF_v1.1.0.tgz')
 
-# Scons has a different pattern: it is expected to be in bin..TODO
-# scons = env.addModule(
-#      'scons',
-#      targets=[env.getBin('scons')],
-#      tar='scons-2.3.4.tgz')
-scons = env.addPipModule('scons','2.3.6', target='scons-2.3.6', default=False)
-
 hdf5 = env.addLibrary(
      'hdf5',
      tar='hdf5-1.8.14.tgz',
@@ -514,13 +507,27 @@ opencv = env.addLibrary(
     cmake=True,
     default=False)
 
+# ---- this is for XMIPP -----
+scons = env.addPipModule('scons', '2.3.6', target='scons-2.3.6', default=False)
+
 sconsArgs = " ".join([a for a in sys.argv[2:] if not a in env.getTargetNames()])
 xmipp = env.addPackage('xmipp', version='18.5',
                tar='xmipp-18.5.tgz',
-               commands=[('set SCIPION_HOME=%s; cp %s/config/scipion.conf %s/xmipp-18.5/install/xmipp.conf; %s/scons %s'%(SCIPION,SCIPION,SW_EM,SW_BIN,sconsArgs),
-                          '%s/xmipp-18.5/bin/xmipp_reconstruct_significant'%SW_EM)],
+               commands=[('src/xmipp/xmipp config ; src/xmipp/xmipp check_config ; '
+                          'src/xmipp/xmipp compile %d ; src/xmipp/xmipp install ; '
+                          # We introduce a fake target base in a real one in order to:
+                          #       (i)   Check if the installation was good
+                          #       (ii)  To be able to delete it
+                          #       (iii) To force to try to re-install if something new
+                          'cp %s/xmipp-18.5/build/bin/xmipp_reconstruct_significant '
+                          '%s/xmipp-18.5/build/bin/xmipp_reconstruct_significantTARGET'
+                            % (env.getProcessors(), SW_EM, SW_EM),
+                          '%s/xmipp-18.5/build/bin/xmipp_reconstruct_significantTARGET' % SW_EM),
+                         ('rm %s/xmipp-18.5/build/bin/xmipp_reconstruct_significantTARGET' % SW_EM,
+                          '%s/xmipp-18.5/build/bin/xmipp_reconstruct_significant' % SW_EM)],
                deps=[scons, fftw3, scikit, nma, tiff, sqlite, opencv, sh_alignment, hdf5])
-               #vars=[('SCIPION_HOME', SCIPION)])
+# ------------------------------
+
 
 # EM Environment
 emDomain = env.addTarget('emDomain')

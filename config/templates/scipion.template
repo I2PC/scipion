@@ -64,7 +64,7 @@ SIMPLE_HOME = %(EM_ROOT)s/simple-2.1
 SPIDER_HOME = %(EM_ROOT)s/spider-21.13/spider
 SUMMOVIE_HOME = %(EM_ROOT)s/summovie-1.0.2
 UNBLUR_HOME = %(EM_ROOT)s/unblur-1.0.2
-XMIPP_HOME = %(EM_ROOT)s/xmipp
+XMIPP_HOME = %(EM_ROOT)s/xmipp-18.5/build
 
 # Some visualization packages
 CHIMERA_HOME = %(EM_ROOT)s/chimera-1.10.1

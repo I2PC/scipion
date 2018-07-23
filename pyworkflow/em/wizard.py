@@ -57,7 +57,7 @@ from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
                                                     ProtImportVolumes)
 
 
-import xmipp
+import xmippLib as xmipp
 from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 #===============================================================================
