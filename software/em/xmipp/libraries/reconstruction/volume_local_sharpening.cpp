@@ -34,6 +34,7 @@ void ProgLocSharpening::readParams()
         fnRes = getParam("--resolution_map");
         sampling = getDoubleParam("--sampling");
         lambda = getDoubleParam("-l");
+        K= getDoubleParam("-k");
         Niter = getIntParam("-i");
         Nthread = getIntParam("-n");
         fnOut = getParam("-o");
@@ -49,6 +50,7 @@ void ProgLocSharpening::defineParams()
         addParamsLine("  -o <output=\"Sharpening.vol\">: sharpening volume");
         addParamsLine("  [--md <output=\"params.xmd\">]: sharpening params");
         addParamsLine("  [-l <lambda=1>]: regularization param");
+        addParamsLine("  [-k <K=0.025>]: K param");
         addParamsLine("  [-i <Niter=50>]: iteration");
         addParamsLine("  [-n <Nthread=1>]: threads number");
 }
@@ -117,8 +119,7 @@ void ProgLocSharpening::produceSideInfo()
 		{
 			DIRECT_MULTIDIM_ELEM(resVol, n) = 2*sampling;
 		}
-//    		else if (DIRECT_MULTIDIM_ELEM(resVol, n) ==0)
-//    			DIRECT_MULTIDIM_ELEM(resVol, n) = maxRes+5;
+
 	}
 
 	resVol.setXmippOrigin();
@@ -252,7 +253,7 @@ void ProgLocSharpening::localfiltering(MultidimArray< std::complex<double> > &my
 					   else
 						    {
 						   	   double res_map = DIRECT_MULTIDIM_ELEM(resVol, n);//+1e-38;
-						   	   DIRECT_MULTIDIM_ELEM(weight, n) = (exp(-0.025*(res-res_map)*(res-res_map)));
+						   	   DIRECT_MULTIDIM_ELEM(weight, n) = (exp(-K*(res-res_map)*(res-res_map)));
 						   	   DIRECT_MULTIDIM_ELEM(filteredVol, n) *= DIRECT_MULTIDIM_ELEM(weight, n);
 						    }
 
@@ -382,11 +383,6 @@ void ProgLocSharpening::run()
 				if (DIRECT_MULTIDIM_ELEM(sharpenedMap,n)<-4*desvOutside_Vorig)
 					DIRECT_MULTIDIM_ELEM(sharpenedMap,n)=-4*desvOutside_Vorig;
 			}
-
-//                Image<double> filteredvolume;
-//                filteredvolume = sharpenedMap;
-//                filteredvolume.write(formatString("sharpenedMapE_%i.vol", i));
-//                filteredvolume.clear();
 
 //        		double desv_sharp=0;
 //                computeAvgStdev_within_binary_mask(resVol, sharpenedMap, desv_sharp);

@@ -54,7 +54,7 @@ public:
 	FileName fnOut, fnVol, fnRes, fnMD;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
-	double sampling, maxRes, minRes, lambda, maxFreq, minFreq, desv_Vorig, desvOutside_Vorig;
+	double sampling, maxRes, minRes, lambda, K, maxFreq, minFreq, desv_Vorig, desvOutside_Vorig;
 	int Niter, Nthread;
 
 public:

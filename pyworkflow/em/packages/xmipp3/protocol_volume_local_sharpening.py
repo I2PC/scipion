@@ -38,6 +38,7 @@ import os
 import pyworkflow.em.metadata as md
 from pyworkflow.em.metadata.constants import (MDL_COST, MDL_ITER, MDL_SCALE)
 from ntpath import dirname
+from os.path import exists, lexists
 
 LOCALDEBLUR_METHOD_URL= 'http://github.com/I2PC/scipion/wiki/XmippProtLocSharp'
 
@@ -77,6 +78,11 @@ class XmippProtLocSharp(ProtAnalysis3D):
                       help='Regularization Param.' 
                         'The software determines this parameter automatically.'
                          'However, if the user wishes it can be modified')
+        form.addParam('K', FloatParam, default=0.025, 
+                      expertLevel=LEVEL_ADVANCED,
+                      label="K",
+                      help='K = 0.025 works well for all tested cases'
+                      ' K should be in the 0.01-0.05 range')        
         
         form.addParallelSection(threads = 4, mpi = 0)
   
@@ -124,7 +130,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
             imageFile = self._getTmpPath(OUTPUT_RESOLUTION_FILE)
             
         pathres=dirname(imageFile)
-               
+                       
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         max_res = np.amax(imgData)
@@ -132,8 +138,15 @@ class XmippProtLocSharp(ProtAnalysis3D):
         significance = 0.95
 
         mtd = md.MetaData()
-        mtd.read(pathres+"/"+(METADATA_MASK_FILE))  
-        radius = mtd.getValue(MDL_SCALE,1)
+        if exists(pathres+"/"+(METADATA_MASK_FILE)):
+            mtd.read(pathres+"/"+(METADATA_MASK_FILE))  
+            radius = mtd.getValue(MDL_SCALE,1)
+        else:
+            print ('WARNING---This is not the ideal case because MonoRes map has been introduced'
+                  ' from other project. The ideal case is to calculate it previously' 
+                  ' in the same project.')
+            xdim, _ydim, _zdim = self.inputVolume.get().getDim()
+            radius = xdim*0.5 
         
         params = ' --vol %s' % self._getExtraPath('sharpenedMap_'+str(iter)+'.mrc')
         params += ' --mask %s' % self._getTmpPath(BINARY_MASK)
@@ -166,10 +179,10 @@ class XmippProtLocSharp(ProtAnalysis3D):
             
         params += ' --sampling %f' % sampling
         params += ' -n %i' %  self.numberOfThreads.get()   
+        params += ' -k %f' %  self.K
         params += ' --md %s' % self._getTmpPath(METADATA_PARAMS_SHARPENING)  
         if (iter == 1 and self.const!=1):
              params += ' -l %f' % self.const
-        #params += ' -o %s' % self._getExtraPath('sharpenedMap.vol')
          
         if (iter == 1):
             invol = ' --vol %s' % self.volFn
