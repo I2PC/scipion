@@ -29,14 +29,14 @@ from pyworkflow.object import String, Float, Integer
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, FloatParam
 from pyworkflow.em.headers import adaptFileToCCP4, START
-from convert import runPhenixProgram, getProgram
+from convert import runPhenixProgram, getProgram1
 from pyworkflow.utils import magentaStr
 
 class PhenixProtRunMolprobity(EMProtocol):
     """MolProbity is a Phenix application to validate the geometry of an
 atomic structure derived from a cryo-EM density map.
 """
-    _label = 'molprobity: model validation'
+    _label = 'molprobity'
     _program = ""
     #_version = VERSION_1_2
     MOLPROBITY = 'molprobity.py'
@@ -96,7 +96,7 @@ atomic structure derived from a cryo-EM density map.
 
         # script with auxiliary files
         try:
-            runPhenixProgram(getProgram(self.MOLPROBITY), args,
+            runPhenixProgram(getProgram1(self.MOLPROBITY), args,
                          cwd=self._getExtraPath())
         except:
             print "WARNING!!!\nPHENIX error:\n pdb_interpretation.clash_guard" \
@@ -108,7 +108,7 @@ atomic structure derived from a cryo-EM density map.
             args += " "
             args += "pdb_interpretation.clash_guard." \
                     "nonbonded_distance_threshold=None"
-            runPhenixProgram(getProgram(self.MOLPROBITY), args,
+            runPhenixProgram(getProgram1(self.MOLPROBITY), args,
                              cwd=self._getExtraPath())
 
 
@@ -122,7 +122,7 @@ atomic structure derived from a cryo-EM density map.
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram(self.MOLPROBITY)
+        program = getProgram1(self.MOLPROBITY)
         if program is None:
             errors.append("Missing variables MOLPROBITY and/or PHENIX_HOME")
         elif not os.path.exists(program):
