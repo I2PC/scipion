@@ -35,7 +35,8 @@ import os
 import pyworkflow.utils as pwutils
 
 PHENIX_PYTHON = 'phenix.python '  # keep the ending space
-PHENIX_SCRIPT_PATH = 'modules/cctbx_project/mmtbx/command_line'
+PHENIX_SCRIPT_PATH1 = 'modules/cctbx_project/mmtbx/command_line'
+PHENIX_SCRIPT_PATH2 = 'modules/phenix/phenix/command_line'
 
 
 def getEnviron(first=True):
@@ -66,11 +67,21 @@ def runPhenixProgram(program, args=None, extraEnvDict=None, cwd=None):
     pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
 
-def getProgram(progName):
+def getProgram1(progName):
     """ Return the program binary that will be used. """
     if 'PHENIX_HOME' not in os.environ:
         return None
 
     return os.path.join(os.environ['PHENIX_HOME'],
-                        PHENIX_SCRIPT_PATH,
+                        PHENIX_SCRIPT_PATH1,
                         os.path.basename(progName))
+
+def getProgram2(progName):
+    """ Return the program binary that will be used. """
+    if 'PHENIX_HOME' not in os.environ:
+        return None
+
+    return os.path.join(os.environ['PHENIX_HOME'],
+                        PHENIX_SCRIPT_PATH2,
+                        os.path.basename(progName))
+
