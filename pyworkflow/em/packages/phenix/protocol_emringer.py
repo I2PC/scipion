@@ -28,7 +28,7 @@ import glob
 import json
 import os
 
-from convert import runPhenixProgram, getProgram
+from convert import runPhenixProgram, getProgram1
 from pyworkflow.em.headers import adaptFileToCCP4, START
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.object import String
@@ -99,7 +99,7 @@ the atomic structure backbone has been perfectly fitted to the map.
         args.append(vol)
 
         # script with auxiliary files
-        runPhenixProgram(getProgram(self.EMRINGER), args,
+        runPhenixProgram(getProgram1(self.EMRINGER), args,
                          cwd=self._getExtraPath())
 
     def createOutputStep(self):
@@ -225,7 +225,7 @@ dataDict['_residues_dict'] = dictResidue
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram(self.EMRINGER)
+        program = getProgram1(self.EMRINGER)
         if program is None:
             errors.append("Missing variables EMRINGER and/or PHENIX_HOME")
         elif not os.path.exists(program):
