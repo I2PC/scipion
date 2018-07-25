@@ -149,11 +149,32 @@ def addToTree(menu, item, checkFunction=None):
     return subMenu
 
 
+
+# Function to check if the protocol has to be added or not
+# It'll receive an item as in the confg:
+# {"tag": "protocol", "value": "ProtImportMovies", "text": "import movies"}
+def addItem(item):
+
+    # If it is a protocol
+    if item["tag"] == "protocol":
+        # Get the class name and then if it is disabled
+        protClassName = item["value"]
+        protClass = em.getProtocols().get(protClassName)
+        if protClass is None:
+            return False
+        else:
+            return not protClass.isDisabled()
+    else:
+        return True
+
 def loadProtocolsConf(protocolsConf):
     """ Read the protocol configuration from a .conf
     file similar to the one in ~/.config/scipion/protocols.conf,
     which is the default one when no file is passed.
     """
+    import time
+    time.sleep(5)
+
     # Read menus from users' config file.
     cp = ConfigParser()
     cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -161,23 +182,6 @@ def loadProtocolsConf(protocolsConf):
     
     try:
         assert cp.read(protocolsConf) != [], 'Missing file %s' % protocolsConf
-
-        # Function to check if the protocol has to be added or not
-        # It'll receive an item as in the confg:
-        # {"tag": "protocol", "value": "ProtImportMovies", "text": "import movies"}
-        def addItem(item):
-
-            # If it is a protocol
-            if item["tag"] == "protocol":
-                # Get the class name and then if it is disabled
-                protClassName = item["value"]
-                protClass = em.getProtocols().get(protClassName)
-                if protClass is None:
-                    return False
-                else:
-                    return not protClass.isDisabled()
-            else:
-                return True
 
         # Populate the protocols menu from the config file.
         for menuName in cp.options('PROTOCOLS'):
@@ -213,51 +217,130 @@ def isAFinalProtocol(v, k):
         return True
 
 
+def createProtocolConfig(viewComponents, section, tag, k, v, localPresentProtocolList):
+    """
+    #  This method create  a protocols configuration
+
+    :param viewComponents: views and sections in which the protocol must be inserted
+    :param section: depth of section
+    :param tag: type of protocol
+    :param k: name of protocol class
+    :param v: protocol to insert
+    :param localPresentProtocolList: list of protocols that belong to the view
+    :return:
+    """
+    if section == len(viewComponents):  # insert the protocol
+        protLine = {"tag": tag, "value": k,
+                    "text": v.getClassLabel(prependPackageName=False)}
+
+        # If it's a new protocol
+        if v.isNew() and v.isInstalled():
+            # add the new icon
+            protLine["icon"] = "newProt.png"
+        return protLine
+    else:
+        #  insert a section and the children of this section
+
+        packageLine = {"tag": "section", "value": viewComponents[section],
+                       "text": viewComponents[section]}
+
+        packageLine["children"] = [createProtocolConfig(viewComponents, section + 1, tag,
+                                                        k, v, localPresentProtocolList)]
+
+        # Add all protocols that are found in this section
+        for prot in localPresentProtocolList:
+            packageTreeLocation = prot.getTreeLocations()  # Get the protocol tree location
+            protocolClassName = prot.getClassName()
+
+            for view in packageTreeLocation:
+                viewProtComponents = view.split("~")
+
+                if section <= len(viewProtComponents)-1:
+                    protSection = viewProtComponents[section]
+                    viewSection = viewComponents[section]
+
+                    if protSection == viewSection:  # The protocol is insert into this section
+
+                        viewComponentsList = []
+                        for sectionComp in range(section + 1, len(viewProtComponents)):
+                            viewComponentsList.append(viewProtComponents[sectionComp])
+
+                        protSectionLine = createProtocolConfig(viewComponentsList, 0, tag,
+                                                               protocolClassName, prot, [])
+
+                        packageLine["children"].append(protSectionLine)
+                        prot.deleteSelectPackageTreeLocation(view)
+
+        return packageLine
+
+
+def loadPresentProtocols(protocol, allProtsSorted, viewName):
+    """
+    This method locate the "protocol" dependencies in the rest of protocols
+
+    :param protocol: active protocol
+    :param allProtsSorted: list of protocols
+    :param viewName: name of the view in which the protocol is located
+    """
+
+    protocolList = []
+    for k, v in allProtsSorted.iteritems():
+
+        packageName = v.getClassPackageName()
+        protClassName = protocol.getClassPackageName()
+
+        if packageName != protClassName:
+            #  Get the tree location
+            packageTreeLocation = v.getTreeLocations()
+
+            for view in packageTreeLocation:
+                viewComponents = view.split("~")  # Split each view components
+
+                if viewComponents[0] == viewName:
+                    protocolList.append(v)
+                    #  assuming that the protocol can not be in the same view twice
+                    break
+    return protocolList
+
+
 def addAllProtocols(protocols):
     # Add all protocols
+
     from pyworkflow.em import getProtocols
     allProts = getProtocols()
 
     # Sort the dictionary
     allProtsSorted = OrderedDict(sorted(allProts.items(), key= lambda e: e[1].getClassLabel()))
 
-    allProtMenu = ProtocolConfig(ALL_PROTOCOLS)
-    packages = {}
     # Group protocols by package name
     for k, v in allProtsSorted.iteritems():
 
         if isAFinalProtocol(v, k):
 
-            packageName = v.getClassPackageName()
+            packageTreeLocation = v.getTreeLocations()
 
-            # Get the package submenu
-            packageMenu = packages.get(packageName)
+            if len(packageTreeLocation) != 0:  # The tree locations is empty
 
-            # If no package menu available
-            if packageMenu is None:
+                tag = getProtocolTag(v.isInstalled())
 
-                # Add it to the menu ...
-                packageLine = {"tag": "package", "value": packageName,
-                               "text": packageName}
-                packageMenu = addToTree(allProtMenu, packageLine)
+                # Create a Tree View
+                for view in packageTreeLocation:
 
-                # Store it in the dict
-                packages[packageName] = packageMenu
+                    viewComponents = view.split("~")  # Split each view components
 
-            # Add the protocol
-            tag = getProtocolTag(v.isInstalled())
+                    viewName = viewComponents[0]  # Take the first element as View Name
+                    menu = ProtocolConfig(viewName)
 
-            protLine = {"tag": tag, "value": k,
-                        "text": v.getClassLabel(prependPackageName=False)}
+                    #  Load all present protocols in the actual view
+                    localPresentProtocolList = loadPresentProtocols(v, allProtsSorted, viewName)
 
-            # If it's a new protocol
-            if v.isNew() and v.isInstalled():
-                # add the new icon
-                protLine["icon"] = "newProt.png"
 
-            addToTree(packageMenu, protLine)
+                    packageLine = createProtocolConfig(viewComponents, 0, tag, k, v,
+                                                       localPresentProtocolList)
 
-    protocols[ALL_PROTOCOLS] = allProtMenu
+                    # Add sections and the protocol
+                    packageMenu = addToTree(menu, packageLine)
+                    protocols[viewName] = packageMenu
 
 
 def getProtocolTag(isInstalled):
@@ -386,6 +469,7 @@ class ProjectSettings(pwobj.OrderedObject):
 
     def ageColorMode(self):
         return self.getColorMode() == self.COLOR_MODE_AGE
+
     def write(self, dbPath=None):
         self.setName('ProjectSettings')
         if dbPath is not None:

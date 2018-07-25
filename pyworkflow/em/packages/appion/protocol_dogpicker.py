@@ -44,6 +44,7 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
     dogpicker.
     """
     _label = 'dogpicker'
+    _treeLocations = ["Carlos~Import~Yun", "Miguel~Import","Josue"]
         
     def __init__(self, **args):
         ProtParticlePickingAuto.__init__(self, **args)
@@ -155,4 +156,3 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
     
     def getCoordsDir(self):
         return self._getExtraPath()
- 
