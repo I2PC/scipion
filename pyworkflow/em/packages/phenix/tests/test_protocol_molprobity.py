@@ -348,7 +348,7 @@ class TestMolprobityValidation2(TestImportData):
                }
 
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
-        protMolProbity.setObjLabel('PhenixProtRunMolprobity validation\n'
+        protMolProbity.setObjLabel('Molprobity validation\n'
                                    'no volume associated to pdb\n')
         self.launchProtocol(protMolProbity)
 
@@ -379,7 +379,7 @@ class TestMolprobityValidation2(TestImportData):
 
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel(
-            'PhenixProtRunMolprobity validation\n volume and no pdb\n')
+            'Molprobity validation\n volume and no pdb\n')
 
         try:
             self.launchProtocol(protMolProbity)
