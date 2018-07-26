@@ -25,11 +25,12 @@
 # **************************************************************************
 
 import os
+from pyworkflow.object import String, Float, Integer
 
 
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam
-from convert import runPhenixProgram, getProgram2
+from convert import runPhenixProgram, getProgram, SUPERPOSE
 from pyworkflow.em import PdbFile
 import collections
 
@@ -39,7 +40,6 @@ class PhenixProtRunSuperposePDBs(EMProtocol):
     _label = 'superpose pdbs'
     _program = ""
     # _version = VERSION_1_2
-    SUPERPOSE = 'superpose_pdbs.py'
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
@@ -65,7 +65,7 @@ class PhenixProtRunSuperposePDBs(EMProtocol):
         args += " "
         args += os.path.abspath(self.inputStructureMoving.get().getFileName())
 
-        runPhenixProgram(getProgram2(self.SUPERPOSE), args,
+        runPhenixProgram(getProgram(SUPERPOSE), args,
                          cwd=self._getExtraPath())
 
     def createOutputStep(self):
@@ -78,38 +78,39 @@ class PhenixProtRunSuperposePDBs(EMProtocol):
         self._defineSourceRelation(self.inputStructureFixed.get(), pdb)
         self._defineSourceRelation(self.inputStructureMoving.get(), pdb)
 
+        logFile = os.path.abspath(self._getLogsPath()) + "/run.stdout"
+        self._parseLogFile(logFile)
+        self._store()
+
     # --------------------------- INFO functions ---------------------------
 
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram2(self.SUPERPOSE)
+        program = getProgram(SUPERPOSE)
         if not os.path.exists(program):
             errors.append("Cannot find " + program)
 
         # If there is any error at this point it is related to config variables
-        if errors:
             errors.append("Check configuration file: "
                           "~/.config/scipion/scipion.conf")
             errors.append("and set PHENIX_HOME variables properly.")
             if program is not None:
                 errors.append("Current values:")
                 errors.append("PHENIX_HOME = %s" % os.environ['PHENIX_HOME'])
-                errors.append("SUPERPOSE = %s" % self.SUPERPOSE)
+                errors.append("SUPERPOSE = %s" % SUPERPOSE)
 
         return errors
 
     def _summary(self):
         summary = []
         try:
-            logFile = os.path.abspath(self._getLogsPath()) + "/run.stdout"
-            self._parseLogFile(logFile)
             summary.append("RMSD between fixed and moving atoms (start): " +
-                       str(self.dictRMSD['startRMSD']))
+                       str(self.startRMSD))
             summary.append("RMSD between fixed and moving atoms (final): " +
-                       str(self.dictRMSD['finalRMSD']))
+                       str(self.finalRMSD))
         except:
-            summary.append("RMSD not yet computed")
+            summary.append("RMSD not yet computed" )
         summary.append(
             "http://www.phenix-online.org/documentation/superpose_pdbs.htm")
         summary.append("Peter Zwart, Pavel Afonine, Ralf W. Grosse-Kunstleve")
@@ -119,7 +120,6 @@ class PhenixProtRunSuperposePDBs(EMProtocol):
     # --------------------------- UTILS functions --------------------------
 
     def _parseLogFile(self, logFile):
-        self.dictRMSD = collections.OrderedDict()
         with open(logFile) as f:
             line = f.readline()
             while line:
@@ -127,8 +127,8 @@ class PhenixProtRunSuperposePDBs(EMProtocol):
                 if len(words) > 1:
                     if (words[0] == 'RMSD' and words[1] == 'between'and
                         words[6] == '(start):'):
-                        self.dictRMSD['startRMSD'] = float(words[7])
+                        self.startRMSD = Float(words[7])
                     elif (words[0] == 'RMSD' and words[1] == 'between' and
                           words[6] == '(final):'):
-                        self.dictRMSD['finalRMSD'] = float(words[7])
+                        self.finalRMSD = Float(words[7])
                 line = f.readline()
