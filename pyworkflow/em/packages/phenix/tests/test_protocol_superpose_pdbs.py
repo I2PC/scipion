@@ -156,9 +156,9 @@ class TestProtSuperposePdbs(TestImportData):
         logFile = os.path.abspath(protSuperposePdbs._getLogsPath()) +\
                   "/run.stdout"
         protSuperposePdbs._parseLogFile(logFile)
-        self.assertAlmostEqual(protSuperposePdbs.dictRMSD['startRMSD'],
+        self.assertAlmostEqual(protSuperposePdbs.startRMSD,
                                startRMSD, places)
-        self.assertAlmostEqual(protSuperposePdbs.dictRMSD['finalRMSD'],
+        self.assertAlmostEqual(protSuperposePdbs.finalRMSD,
                                finalRMSD, places)
 
     def testSuperposePdbsFromPDBAndCIF(self):
