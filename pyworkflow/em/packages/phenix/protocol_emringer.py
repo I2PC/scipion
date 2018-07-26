@@ -28,7 +28,7 @@ import glob
 import json
 import os
 
-from convert import runPhenixProgram, getProgram1
+from convert import runPhenixProgram, getProgram, EMRINGER
 from pyworkflow.em.headers import adaptFileToCCP4, START
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.object import String
@@ -45,7 +45,6 @@ the atomic structure backbone has been perfectly fitted to the map.
     _label = 'emringer'
     _program = ""
     # _version = VERSION_1_2
-    EMRINGER = 'emringer.py'
     EMRINGERFILE = 'emringer.map'
 
     EMRINGERTRANSFERFILENAME = 'emringer_transfer.txt'
@@ -99,7 +98,7 @@ the atomic structure backbone has been perfectly fitted to the map.
         args.append(vol)
 
         # script with auxiliary files
-        runPhenixProgram(getProgram1(self.EMRINGER), args,
+        runPhenixProgram(getProgram(EMRINGER), args,
                          cwd=self._getExtraPath())
 
     def createOutputStep(self):
@@ -225,7 +224,7 @@ dataDict['_residues_dict'] = dictResidue
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram1(self.EMRINGER)
+        program = getProgram(EMRINGER)
         if program is None:
             errors.append("Missing variables EMRINGER and/or PHENIX_HOME")
         elif not os.path.exists(program):
@@ -240,7 +239,7 @@ dataDict['_residues_dict'] = dictResidue
             if program is not None:
                 errors.append("Current values:")
                 errors.append("PHENIX_HOME = %s" % os.environ['PHENIX_HOME'])
-                errors.append("EMRINGER = %s" % self.EMRINGER)
+                errors.append("EMRINGER = %s" % EMRINGER)
 
         # Check that the input volume exist
         if self._getInputVolume() is None:
