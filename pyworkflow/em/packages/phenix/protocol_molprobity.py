@@ -29,7 +29,7 @@ from pyworkflow.object import String, Float, Integer
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, FloatParam
 from pyworkflow.em.headers import adaptFileToCCP4, START
-from convert import runPhenixProgram, getProgram1
+from convert import runPhenixProgram, getProgram, MOLPROBITY
 from pyworkflow.utils import magentaStr
 
 class PhenixProtRunMolprobity(EMProtocol):
@@ -39,7 +39,6 @@ atomic structure derived from a cryo-EM density map.
     _label = 'molprobity'
     _program = ""
     #_version = VERSION_1_2
-    MOLPROBITY = 'molprobity.py'
     MOLPROBITYFILE = 'molprobity.mrc'
     MOLPROBITYOUTFILENAME = 'molprobity.out'
     MOLPROBITYCOOTFILENAME = 'molprobity_coot.py'
@@ -96,7 +95,7 @@ atomic structure derived from a cryo-EM density map.
 
         # script with auxiliary files
         try:
-            runPhenixProgram(getProgram1(self.MOLPROBITY), args,
+            runPhenixProgram(getProgram(MOLPROBITY), args,
                          cwd=self._getExtraPath())
         except:
             print "WARNING!!!\nPHENIX error:\n pdb_interpretation.clash_guard" \
@@ -108,7 +107,7 @@ atomic structure derived from a cryo-EM density map.
             args += " "
             args += "pdb_interpretation.clash_guard." \
                     "nonbonded_distance_threshold=None"
-            runPhenixProgram(getProgram1(self.MOLPROBITY), args,
+            runPhenixProgram(getProgram(MOLPROBITY), args,
                              cwd=self._getExtraPath())
 
 
@@ -122,7 +121,7 @@ atomic structure derived from a cryo-EM density map.
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram1(self.MOLPROBITY)
+        program = getProgram(MOLPROBITY)
         if program is None:
             errors.append("Missing variables MOLPROBITY and/or PHENIX_HOME")
         elif not os.path.exists(program):
@@ -137,7 +136,7 @@ atomic structure derived from a cryo-EM density map.
             if program is not None:
                 errors.append("Current values:")
                 errors.append("PHENIX_HOME = %s" % os.environ['PHENIX_HOME'])
-                errors.append("MOLPROBITY = %s" % self.MOLPROBITY)
+                errors.append("MOLPROBITY = %s" % MOLPROBITY)
 
         # Check that the input volume exist
         # if self._getInputVolume() is None:
