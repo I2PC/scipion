@@ -326,7 +326,6 @@ void ProgLocSharpening::run()
 			{
 				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vorig)
 				{
-				   //if (DIRECT_MULTIDIM_ELEM(resVol, n) <= maxRes-5) //la mascara
 					   normOrig +=(DIRECT_MULTIDIM_ELEM(Vorig,n)*DIRECT_MULTIDIM_ELEM(Vorig,n));
 				}
 				normOrig = sqrt(normOrig);
@@ -338,7 +337,6 @@ void ProgLocSharpening::run()
 			double norm=0;
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(operatedfiltered)
 			{
-				//if (DIRECT_MULTIDIM_ELEM(resVol, n) <= maxRes-5) //la mascara
 					norm +=(DIRECT_MULTIDIM_ELEM(operatedfiltered,n)*DIRECT_MULTIDIM_ELEM(operatedfiltered,n));
 			}
 			norm=sqrt(norm);

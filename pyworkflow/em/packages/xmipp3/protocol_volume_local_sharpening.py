@@ -125,13 +125,13 @@ class XmippProtLocSharp(ProtAnalysis3D):
         sampling = self.inputVolume.get().getSamplingRate()
         
         if (iter == 1):
-            imageFile = self.resolutionVolume.get().getFileName()
+            resFile = self.resolutionVolume.get().getFileName()
         else:
-            imageFile = self._getTmpPath(OUTPUT_RESOLUTION_FILE)
+            resFile = self._getTmpPath(OUTPUT_RESOLUTION_FILE)
             
-        pathres=dirname(imageFile)
+        pathres=dirname(resFile)
                        
-        img = ImageHandler().read(imageFile)
+        img = ImageHandler().read(resFile)
         imgData = img.getData()
         max_res = np.amax(imgData)
         
@@ -142,9 +142,6 @@ class XmippProtLocSharp(ProtAnalysis3D):
             mtd.read(pathres+"/"+(METADATA_MASK_FILE))  
             radius = mtd.getValue(MDL_SCALE,1)
         else:
-            print ('WARNING---This is not the ideal case because MonoRes map has been introduced'
-                  ' from other project. The ideal case is to calculate it previously' 
-                  ' in the same project.')
             xdim, _ydim, _zdim = self.inputVolume.get().getDim()
             radius = xdim*0.5 
         
@@ -240,7 +237,17 @@ class XmippProtLocSharp(ProtAnalysis3D):
                 break
                 
         os.system('cp '  +self._getExtraPath('sharpenedMap_'+str(iteration)+'.mrc')+
-                   ' '  +self._getExtraPath('sharpenedMap.mrc'))   
+                   ' '  +self._getExtraPath('sharpenedMap.mrc'))
+        
+        resFile = self.resolutionVolume.get().getFileName()        
+        pathres=dirname(resFile)
+        if not exists(pathres+"/"+(METADATA_MASK_FILE)):
+
+            print ('\n====================\n' 
+                   ' WARNING---This is not the ideal case because resolution map has been imported.'
+                   ' The ideal case is to calculate it previously' 
+                   ' in the same project using MonoRes.'
+                   '\n====================\n')           
   
              
     def createOutputStep(self):
