@@ -39,9 +39,12 @@ from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam, StringParam
 from pyworkflow.utils.properties import Message
+import sqlite3
 
 cootPdbTemplateFileName = "cootOut%04d.pdb"
 cootScriptFileName = "cootScript.py"
+outpuDataBaseNameWithLabels = "outpuDataBaseNameWithLabels.sqlite"
+databaseTableName = 'pdb'
 
 class CootRefine(EMProtocol):
     """Coot is an interactive graphical application for
@@ -89,8 +92,11 @@ the pdb file from coot  to scipion '
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot '
                      'to scipion.\nYou may also execute (from script -> '
-                     'python) the command scipion_write(imol).\nimol is the '
-                     'PDB id.\nPress "x" in coot to change from one chain to '
+                     'python) the command scipion_write(imol, [pdblabel]).\nimol is the '
+                     'PDB id.\n'
+                     'pdblabel is an optional parameter that assign that label to the'
+                     'produced pdb. By default the label is outcoot0001.pdb'
+                     'Press "x" in coot to change from one chain to '
                      'the previous one.\nPress "X" in coot to change from one '
                      'chain to the next one.\nPress "U" in coot to initiate '
                      'global variables.\nYou have to set in advance the '
@@ -171,17 +177,25 @@ the pdb file from coot  to scipion '
         # PDB
         # find last created PDB output file
         listOfPDBs = []
-        counter = self.getCounter()
         template = self._getExtraPath(cootPdbTemplateFileName)
 
-        # if there is not previous output use pdb file form
+        # if there is no database use pdb file from the form
         # otherwise use last created pdb file
-        if counter == 1:
+        databasePath = self._getTmpPath(outpuDataBaseNameWithLabels)
+        if not os.path.exists(databasePath):
             pdbFileToBeRefined = self.pdbFileToBeRefined.get().getFileName()
         else:
-            pdbFileToBeRefined = template % (counter-1)
-            self._log.info("Using last created PDB file named=%s",
-                           pdbFileToBeRefined)
+            # open database
+            conn = sqlite3.connect(databasePath)
+            c = conn.cursor()
+
+            # read filename and label in a loop
+            c.execute(
+                'SELECT pdbFileName FROM %s order by id DESC limit 1' %
+                databaseTableName)
+            pdbFileToBeRefined = c.fetchone()[0]
+            print "pdbFileToBeRefinedpdbFileToBeRefined", pdbFileToBeRefined
+
         listOfPDBs.append(pdbFileToBeRefined)
         for pdb in self.inputPdbFiles:
             listOfPDBs.append(pdb.get().getFileName())  # other pdb files
@@ -193,15 +207,19 @@ the pdb file from coot  to scipion '
                          norVolumesNames,
                          listOfPDBs,
                          self.extraCommands.get(),
-                         self._getExtraPath(self.COOTINI)
+                         self._getExtraPath(self.COOTINI),  # coot.ini
+                         self._getTmpPath(outpuDataBaseNameWithLabels),
+                         table_name=databaseTableName
                          )
 
         args = ""
+
+        #  extraCommands option is only used for tests
         if self.extraCommands.get() != '':
             args += " --no-graphics "
         args += " --script " + self._getExtraPath(cootScriptFileName)
-        # script with auxiliary files
 
+        # script with auxiliary files
         self._log.info('Launching: ' + getProgram(self.COOT) + ' ' + args)
 
         # run in the background
@@ -213,23 +231,41 @@ the pdb file from coot  to scipion '
     def createOutputStep(self, inVolumes, norVolumesNames, init_counter=1):
         """ Copy the PDB structure and register the output object.
         """
-        template = self._getExtraPath(cootPdbTemplateFileName)
-        counter = init_counter
-        counter -= 1
-        while os.path.isfile(template % counter):
+        databasePath = self._getTmpPath(outpuDataBaseNameWithLabels)
+        # open database
+        conn = sqlite3.connect(databasePath)
+        c = conn.cursor()
+
+        # read filename and label in a loop
+        c.execute('SELECT pdbFileName, pdbLabelName FROM %s where saved = 0' %
+                  databaseTableName)
+        for row in c:
+            print "output", row[0], row[1]
+            pdbFileName = row[0]
+            pdbLabelName = row[1]
             pdb = PdbFile()
-            pdb.setFileName(template % counter)
-
-            outputs = {"outputPdb_%04d" % counter: pdb}
+            pdb.setFileName(pdbFileName)
+            outputs = {str(pdbLabelName) : pdb}
             self._defineOutputs(**outputs)
-
             # self._defineOutputs(outputPdb=pdb)
             self._defineSourceRelation(self.inputPdbFiles, pdb)
+
             # self._defineSourceRelation(self.inputVolumes, self.outputPdb)
 
             for vol in inVolumes:
                 self._defineSourceRelation(vol, pdb)
-            counter += 1
+
+
+        # clear database. Not very important since it will be deleted
+        # since it is wrotten in tmp
+        sql = 'update %s set saved = 1' % databaseTableName
+        c.execute(sql)
+        conn.commit()
+        conn.close()
+
+        template = self._getExtraPath(cootPdbTemplateFileName)
+        counter = init_counter
+        counter -= 1
 
         if not os.path.isfile(template % 2):  # only the first time get inside
             # here
@@ -250,9 +286,10 @@ the pdb file from coot  to scipion '
                 counter += 1
                 self._defineOutputs(**outputs)
                 self._defineSourceRelation(inVol, outVol)
+
         if os.path.isfile(self._getExtraPath('STOPPROTCOL')):
             self.setStatus(STATUS_FINISHED)
-            # NOTE: (ROB) can a derthy way to make an interactive process finish but I do not
+            # NOTE: (ROB) can a derty way to make an interactive process finish but I do not
             # think there is a clean one
             self._steps[self.step-1].setInteractive(False)
 
@@ -332,6 +369,8 @@ mydict['aaNumber']=37
 mydict['step']=5
 mydict['outfile']='%s'
 cootPath='%s'
+databasePath='%s'
+table_name = '%s'
 '''
 
 cootScriptBody = '''
@@ -416,23 +455,59 @@ def getOutPutFileName(template):
 
     return template%counter
 
-def _write():
+def storeFileNameDataBase(outFileName, outLabel=None):
+    import sqlite3
+    conn = sqlite3.connect(databasePath)
+    c = conn.cursor()
+    #create_database if it does not exists
+    sql = """create table if not exists %s (id integer primary key AUTOINCREMENT,
+                                            pdbFileName text,
+                                            pdbLabelName text,
+                                            saved integer default 0
+                                            )""" % (table_name)
+    c.execute(sql)
+    # insert record
+    if outLabel is None:
+        outLabel = os.path.splitext(os.path.basename(outFileName))[0]
+
+    sql = 'insert into ' + table_name + """ (pdbFileName,
+                                             pdbLabelName) values
+                                            ('%s', '%s')""" % (outFileName, outLabel)
+    c.execute(sql)
+
+    # commit
+    conn.commit()
+    # close connection
+    conn.close()
+
+def _write(outLabel=None):
     """write pdb file, default names
        can be overwritted using coot.ini"""
     #imol = getOutPutFileName(mydict['imol'])
     #outFile = getOutPutFileName(mydict['outfile'])
     dic = dict(mydict)
-    dic['outfile']=getOutPutFileName(dic['outfile'])
+    outFileName=getOutPutFileName(dic['outfile'])
+    
+    if outLabel is None:
+        outLabel = os.path.splitext(os.path.basename(outFileName))[0]
+    else:
+        ext = os.path.splitext(outFileName)[1]
+        dir = os.path.dirname(outFileName)
+        basename = os.path.splitext(outLabel)[0]
+        outFileName = os.path.join(dir, basename + ext)
+    
+    dic['outfile'] = outFileName
     command = "write_pdb_file(%(imol)s,'%(outfile)s')"%dic
+    storeFileNameDataBase(outFileName, outLabel)
     doIt(command)
     beep(0.1)
 
-def scipion_write(imol=0):
+def scipion_write(imol=0, outLabel=None):
     """scipion utility for writting files
     args: model number, 0 by default"""
     global mydict
     mydict['imol']=imol
-    _write()
+    _write(outLabel)
 
 def doIt(command):
     """launch command"""
@@ -486,10 +561,14 @@ def createScriptFile(imol,  # problem PDB id
                      extraCommands='',  # extra commands to add at the
                                        # end of the file
                                        # mainly used for testing
-                     cootFileName='/tmp/coot.ini'
+                     cootFileName='/tmp/coot.ini',
+                     outpuDataBaseNameWithLabels='output.db',
+                     table_name='pdb'
                      ):
     f = open(scriptFile, "w")
-    f.write(cootScriptHeader % (imol, pdbFile,cootFileName ))
+    f.write(cootScriptHeader % (imol, pdbFile, cootFileName,
+                                outpuDataBaseNameWithLabels,
+                                table_name))
     f.write(cootScriptBody)
     # load PDB and MAP
     f.write("\n#load Atomic Structures\n")  # problem atomic structure must be
