@@ -208,17 +208,22 @@ class TestImportData(TestImportBase):
         structure7_PDB = protImportPDB.outputPdb
         return structure7_PDB
 
-    def _createExtraCommandLine(self, x, y, z):
+    def _createExtraCommandLine(self, x, y, z, label=None):
+        if label is not None:
+            writeLine = 'scipion_write(0, "%s")' % label
+        else:
+            writeLine = 'scipion_write()'
+
         if (x != 0. or y != 0. or z != 0.):
             return """translate_molecule_by(0, %f, %f, %f)
 fit_molecule_to_map_by_random_jiggle(0,7000,2)
-scipion_write()
+%s
 coot_real_exit(0)
-""" % (x, y, z)
+""" % (x, y, z, writeLine)
         else:
-            return """scipion_write()
+            return """%s
 coot_real_exit(0)
-"""
+""" % writeLine
 
 
 class TestChimeraFit(TestImportData):
@@ -548,8 +553,9 @@ class TestCootRefinement(TestImportData):
         structure_PDB = self._importStructurePDBWoVol()
 
         listVolCoot = [volume]
+        label = 'testLabel'
         args = {'extraCommands': self._createExtraCommandLine(-24.11, -45.76,
-                                                              -24.60),
+                                                              -24.60, label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
@@ -557,10 +563,11 @@ class TestCootRefinement(TestImportData):
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and unfitted pdb\n '
                              'save model')
+
         self.launchProtocol(protCoot)
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+        self.assertIsNotNone(protCoot.testLabel.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.testLabel.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
@@ -597,7 +604,9 @@ class TestCootRefinement(TestImportData):
         volume2 = protChimera.output3Dmap
 
         listVolCoot = [volume2]
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+        label = 'testLabel2'
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
+                                                              label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
@@ -607,9 +616,9 @@ class TestCootRefinement(TestImportData):
                              'save model')
 
         self.launchProtocol(protCoot)
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+        self.assertIsNotNone(protCoot.testLabel2.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.testLabel2.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
@@ -645,7 +654,9 @@ class TestCootRefinement(TestImportData):
 
         structure2_PDB = protChimera.outputPdb_01
 
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+        label = 'testLabel3'
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
+                                                              label),
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
@@ -654,9 +665,9 @@ class TestCootRefinement(TestImportData):
                              'save model')
 
         self.launchProtocol(protCoot)
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+        self.assertIsNotNone(protCoot.testLabel3.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.testLabel3.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
@@ -693,8 +704,10 @@ class TestCootRefinement(TestImportData):
 
         structureCoot_PDB = self._importCootStructureWoVol()
 
+        label = 'testLabel4'
         listVolCoot = [volume, volume2]
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
+                                                              label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structureCoot_PDB,
                 'doInteractive': False
@@ -704,9 +717,9 @@ class TestCootRefinement(TestImportData):
                              'save model')
 
         self.launchProtocol(protCoot)
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+        self.assertIsNotNone(protCoot.testLabel4.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.testLabel4.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
@@ -741,8 +754,10 @@ class TestCootRefinement(TestImportData):
         volume = protChimera.output3Dmap
         structure3_PDB = protChimera.outputPdb_01
 
+        label = 'testLabel5'
         listVolCoot = [volume]
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
+                                                              label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': False
@@ -752,9 +767,9 @@ class TestCootRefinement(TestImportData):
                              'save model')
 
         self.launchProtocol(protCoot)
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+        self.assertIsNotNone(protCoot.testLabel5.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.testLabel5.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
@@ -789,33 +804,57 @@ class TestCootRefinement(TestImportData):
         volume = protChimera.output3Dmap
         structure3_PDB = protChimera.outputPdb_01
 
+        #first coot
+        label = 'testLabel6'
         listVolCoot = [volume]
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
+                                                              label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
                 }
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume pdb\n '
-                             'save model twice')
+                             'save model three times')
+
         try:
             self.launchProtocol(protCoot)
         except:
             print "first call to coot ended"
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+        self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.testLabel6.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
+        #second coot (label=None)
+        newExtraCommands = self._createExtraCommandLine(0., 0., 0.)
+        protCoot.extraCommands.set(newExtraCommands)
+
+        try:
+            self.launchProtocol(protCoot)
+        except:
+            print "second call to coot ended"
+        self.assertIsNotNone(protCoot.cootOut0001.getFileName(),
+                             "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(protCoot.cootOut0001.getFileName()))
+        self.assertTrue(
+            os.path.exists(protCoot.output3DMap_0001.getFileName()))
+
+        #third coot
         protCoot.doInteractive.set(False)
-        self.launchProtocol(protCoot)
-        self.assertIsNotNone(protCoot.outputPdb_0002.getFileName(),
+        label = 'lastTestLabel'
+        lastExtraCommands = self._createExtraCommandLine(0., 0., 0., label)
+        protCoot.extraCommands.set(lastExtraCommands)
+        try:
+            self.launchProtocol(protCoot)
+        except:
+            print "third call to coot ended"
+        self.assertIsNotNone(protCoot.lastTestLabel.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0002.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.lastTestLabel.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
-
 
 class TestRefmacRefinement(TestImportData):
     """ Test the flexible fitting of refmac refinement protocol
@@ -864,18 +903,20 @@ class TestRefmacRefinement(TestImportData):
 
         # coot
         listVolCoot = [volume]
+        label = 'testLabel'
         args = {'extraCommands': self._createExtraCommandLine(-24.11, -45.76,
-                                                              -24.60),
+                                                              -24.60, label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
         protCoot = self.newProtocol(CootRefine, **args)
-        protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
+        protCoot.setObjLabel('coot refinement\n volume and unfitted pdb\n '
+                             'save model')
         self.launchProtocol(protCoot)
 
         # refmac
-        coot_PDB = protCoot.outputPdb_0001
+        coot_PDB = protCoot.testLabel
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
@@ -922,7 +963,9 @@ class TestRefmacRefinement(TestImportData):
         volume2 = protChimera.output3Dmap
 
         listVolCoot = [volume2]
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+        label = 'testLabel2'
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
+                                                              label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
@@ -932,7 +975,7 @@ class TestRefmacRefinement(TestImportData):
         self.launchProtocol(protCoot)
 
         # refmac
-        coot_PDB = protCoot.outputPdb_0001
+        coot_PDB = protCoot.testLabel2
         args = {'inputVolume': volume2,
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
@@ -979,7 +1022,9 @@ class TestRefmacRefinement(TestImportData):
         structure3_PDB = protChimera.outputPdb_01
 
         listVolCoot = [volume]
-        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.),
+        label = 'testLabel3'
+        args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
+                                                              label),
                 'inputVolumes': listVolCoot,
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
@@ -991,17 +1036,20 @@ class TestRefmacRefinement(TestImportData):
             self.launchProtocol(protCoot)
         except:
             print "first call to coot ended"
-        self.assertIsNotNone(protCoot.outputPdb_0001.getFileName(),
+        self.assertIsNotNone(protCoot.testLabel3.getFileName(),
                              "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(protCoot.outputPdb_0001.getFileName()))
+        self.assertTrue(os.path.exists(protCoot.testLabel3.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
         protCoot.doInteractive.set(False)
+        label = 'testLabel4'
+        newExtraCommands = self._createExtraCommandLine(0., 0., 0., label)
+        protCoot.extraCommands.set(newExtraCommands)
         self.launchProtocol(protCoot)
 
         # refmac
-        coot_PDB = protCoot.outputPdb_0002
+        coot_PDB = protCoot.testLabel4
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
