@@ -1259,12 +1259,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 else:
                     # Reconstruct with Multiscale (ADMM)
   		            self.runJob("xmipp_transform_symmetrize","-i dummy.vol --sym %s --only_write_symlist %s"%(self.symmetryGroup,self._getTmpPath("LR.txt")),numberOfMpi=1)
-            	    scale=4
-            	    args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',%d,1e2,30,5,false,'%s'); xmipp_write(rec,'%s'); exit"''' \
-		                 %(os.path.join(fnDirCurrent,"matlab.log"),fnAngles,scale,self._getTmpPath("LR.txt"),fnVol)
-            	    xmippDir=getXmippPath()
-                    self.runJob("matlab", args, env=getMatlabEnviron(join(xmippDir,"libraries","bindings","matlab","epfl_admm","functions"),
-                                                             join(xmippDir,"libraries","bindings","matlab","epfl_admm","mains")),numberOfMpi=1)
+  		            scale=4
+  		            args='''-nosplash -nodesktop -r "diary('%s'); [Htb, kernel, rec]=reconstruct_multires_ADMM_xmipp_v2('%s',%d,1e2,30,5,false,'%s'); xmipp_write(rec,'%s'); exit"''' \
+  		                %(os.path.join(fnDirCurrent,"matlab.log"),fnAngles,scale,self._getTmpPath("LR.txt"),fnVol)
+  		            xmippDir=getXmippPath()
+  		            self.runJob("matlab", args, env=getMatlabEnviron(join(xmippDir,"libraries","bindings","matlab","epfl_admm","functions"),
+  		            	        join(xmippDir,"libraries","bindings","matlab","epfl_admm","mains")),numberOfMpi=1)
 
 		# If stochastic gradient descent
                 if self.alignmentMethod==self.STOCHASTIC_ALIGNMENT:
