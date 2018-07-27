@@ -32,8 +32,7 @@ from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
 from pyworkflow.em.headers import Ccp4Header, START
-from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program,
-                                                 validVersion)
+from convert import (getProgram, runCCP4Program, validVersion)
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
