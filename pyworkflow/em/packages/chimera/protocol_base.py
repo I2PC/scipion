@@ -26,21 +26,21 @@
 # **************************************************************************
 
 import os
+
 from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.data import Transform
+from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, getProgram, runChimeraProgram,\
+    createCoordinateAxisFile, getProgram, runChimeraProgram, \
     chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
     chimeraScriptFileName, sessionFile
-
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     StringParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.data import Transform
 
 
 class ChimeraProtBase(EMProtocol):
@@ -143,7 +143,7 @@ class ChimeraProtBase(EMProtocol):
         pdbModelCounter = 1
         if _inputVol is not None:
             pdbModelCounter += 1
-            x_input, y_input, z_input = _inputVol.getVolOriginAsTuple()
+            x_input, y_input, z_input = _inputVol.getShiftsFromOrigin()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
             f.write("runCommand('open %s')\n" % inputVolFileName)
@@ -313,7 +313,7 @@ class ChimeraProtBase(EMProtocol):
         return methodsMsgs
 
     def _citations(self):
-        return ['Emsley_2004']
+        return ['Pettersen2004']
 
 # define scipion_write command
 chimeraScriptHeader = '''
