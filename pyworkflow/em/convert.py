@@ -411,12 +411,6 @@ class ImageHandler(object):
 
         return outputFn
 
-    def scaleFourier(self, inputFn, outputFn, scaleFactor):
-        """ Scale an image by cropping in Fourier space. """
-        # TODO: Avoid using xmipp program for this
-        self.__runXmippProgram("xmipp_transform_downsample",
-                               "-i %s -o %s --step %f --method fourier"
-                               % (inputFn, outputFn, scaleFactor))
 
     @staticmethod
     def getThumbnailFn(inputFn):
@@ -446,6 +440,14 @@ class ImageHandler(object):
         if ':' in fileName:
             fileName = fileName.split(':')[0]
         return fileName
+
+    def scaleFourier(self, inputFn, outputFn, scaleFactor):
+        """ Scale an image by cropping in Fourier space. """
+        # TODO: Avoid using xmipp program for this
+        self.__runXmippProgram("xmipp_transform_downsample",
+                               "-i %s -o %s --step %f --method fourier"
+                               % (inputFn, outputFn, scaleFactor))
+
 
 DT_FLOAT = ImageHandler.DT_FLOAT
 

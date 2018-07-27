@@ -300,7 +300,6 @@ class CoordinatesObjectView(DataView):
         self.protocol = protocol
         self.pickerProps = pickerProps
         self.inTmpFolder = inTmpFolder
-
         self.mode = kwargs.get('mode', None)
 
     def show(self):
