@@ -44,8 +44,7 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
     dogpicker.
     """
     _label = 'dogpicker'
-    _treeLocations = ["Carlos~Import~Yun", "Miguel~Import","Josue"]
-        
+    _treeLocations = ["Miguel(1)"]
     def __init__(self, **args):
         ProtParticlePickingAuto.__init__(self, **args)
 

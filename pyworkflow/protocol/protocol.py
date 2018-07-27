@@ -1417,6 +1417,7 @@ class Protocol(Step):
 
     @classmethod
     def deleteSelectPackageTreeLocation(cls, view):
+        # type: (object) -> object
         """
         Delete a view in Tree Location"""
         if view in cls._treeLocations:
