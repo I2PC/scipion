@@ -31,11 +31,10 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.em import PdbFile
 from pyworkflow.em.headers import (
     adaptFileToCCP4, START, Ccp4Header)
-from pyworkflow.em.packages.ccp4.convert import (runCCP4Program, getProgram,
-                                                 validVersion)
-from pyworkflow.em.packages.ccp4.refmac_template_map2mtz import \
+from convert import (runCCP4Program, getProgram, validVersion)
+from refmac_template_map2mtz import \
     template_refmac_preprocess_NOMASK, template_refmac_preprocess_MASK
-from pyworkflow.em.packages.ccp4.refmac_template_refine \
+from refmac_template_refine \
     import template_refmac_refine_MASK, template_refmac_refine_NOMASK
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, \
