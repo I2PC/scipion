@@ -25,13 +25,15 @@
 # **************************************************************************
 
 import os
+import sqlite3
 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, runChimeraProgram, \
     getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-from protocol_coot import CootRefine, cootPdbTemplateFileName
+from protocol_coot import (CootRefine, cootPdbTemplateFileName,
+                           outpuDataBaseNameWithLabels, databaseTableName)
 
 # TODO: very likely this should inherit from ProtocolViewer
 # not from XmippViewer. But then I get an empty form :-(
@@ -91,12 +93,18 @@ class CootRefineViewer(Viewer):
 
         counter = 1
         template = self.protocol._getExtraPath(cootPdbTemplateFileName)
-        while os.path.isfile(template % counter):
-            pdbFileName = os.path.abspath(template % counter)
-            counter += 1
-        f.write("open %s\n" % pdbFileName)
+        databasePath = self.protocol._getTmpPath(outpuDataBaseNameWithLabels)
+        conn = sqlite3.connect(databasePath)
+        c = conn.cursor()
+        sql = 'SELECT pdbFileName FROM %s where saved = 1 order by id' %\
+              databaseTableName
+        c.execute(sql)
+        for row in c:
+            pdbFileName = os.path.abspath(row[0])
+            f.write("open %s\n" % pdbFileName)
 
         f.close()
+        conn.close()
         # run in the background
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []
