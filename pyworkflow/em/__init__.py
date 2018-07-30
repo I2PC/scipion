@@ -46,6 +46,7 @@ class Domain(pyworkflow.plugin.Domain):
     _protocolClass = Protocol
     _viewerClass = Viewer
     _wizardClass = Wizard
+    _baseClasses = globals()
 
 
 class Plugin(pyworkflow.plugin.Plugin):

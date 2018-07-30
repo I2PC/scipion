@@ -51,6 +51,7 @@ class Domain:
     _objectClass = None
     _viewerClass = None
     _wizardClass = None
+    _baseClasses = {}  # Update this with the base classes of the Domain
 
     # Dictionaries to store different type of objects
     _plugins = {}
@@ -141,7 +142,8 @@ class Domain:
                             # Set this special property used by Scipion
                             attr._package = plugin
                             subclasses[name] = attr
-            subclasses.update(pwutils.getSubclasses(BaseClass, globals()))
+            subclasses.update(
+                pwutils.getSubclasses(BaseClass, cls._baseClasses))
 
         return subclasses
 
