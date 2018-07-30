@@ -28,10 +28,10 @@ This module contains reflection utilities
 (dynamically load classes, inspect object properties and others)
 """
 
-import os, sys
+import os
 from os.path import exists, join
+import sys
 from inspect import isclass
-
 
 
 def getModules(path):
@@ -98,6 +98,7 @@ def getSubclasses(BaseClass, inputDict):
         if isclass(v) and issubclass(v, BaseClass):
             outputDict[k] = v
     return outputDict
+
 
 def checkPlugin(module):
     if not getattr(module, '_plugin', None):
