@@ -93,7 +93,7 @@ class CootRefineViewer(Viewer):
 
         counter = 1
         template = self.protocol._getExtraPath(cootPdbTemplateFileName)
-        databasePath = self.protocol._getTmpPath(outpuDataBaseNameWithLabels)
+        databasePath = self.protocol._getExtraPath(outpuDataBaseNameWithLabels)
         conn = sqlite3.connect(databasePath)
         c = conn.cursor()
         sql = 'SELECT pdbFileName FROM %s where saved = 1 order by id' %\
