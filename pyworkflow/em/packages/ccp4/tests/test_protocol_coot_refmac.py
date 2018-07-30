@@ -71,19 +71,6 @@ class TestImportData(TestImportBase):
         volume2 = protImportVol.outputVolume
         return volume2
 
-    def _importVolume3(self):
-        args = {'filesPath': self.dsModBuild.getFile(
-            'volumes/emd_4116.map'),
-                'samplingRate': 0.637,
-                'setOrigCoord': False
-                }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
-        protImportVol.setObjLabel('import volume emd_4116\nwith default '
-                                  'origin\n')
-        self.launchProtocol(protImportVol)
-        volume3 = protImportVol.outputVolume
-        return volume3
-
     def _importStructurePDBWoVol(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
@@ -114,7 +101,7 @@ class TestImportData(TestImportBase):
                 'inputVolume': self._importVolume()
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n volume associated\n 1ake_start')
+        protImportPDB.setObjLabel('import pdb\nvolume associated\n1ake_start')
         self.launchProtocol(protImportPDB)
         structure2_PDB = protImportPDB.outputPdb
         self.assertTrue(structure2_PDB.getFileName())
@@ -127,7 +114,7 @@ class TestImportData(TestImportBase):
                 'inputVolume': self._importVolume2()
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n volume associated\n 1ake_start')
+        protImportPDB.setObjLabel('import pdb\nvolume associated\n1ake_start')
         self.launchProtocol(protImportPDB)
         structure3_PDB = protImportPDB.outputPdb
         self.assertTrue(structure3_PDB.getFileName())
@@ -161,28 +148,6 @@ class TestImportData(TestImportBase):
         self.assertTrue(structure3_mmCIF.getFileName())
         return structure3_mmCIF
 
-    def _importMut1StructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/1ake_mut1.pdb'),
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n 1ake_mut1')
-        self.launchProtocol(protImportPDB)
-        structure3_PDB = protImportPDB.outputPdb
-        return structure3_PDB
-
-    def _importMut2StructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/1ake_mut2.pdb'),
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n 1ake_mut2')
-        self.launchProtocol(protImportPDB)
-        structure4_PDB = protImportPDB.outputPdb
-        return structure4_PDB
-
     def _importCootStructureWoVol(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
@@ -194,39 +159,6 @@ class TestImportData(TestImportBase):
         structureCoot_PDB = protImportPDB.outputPdb
         self.assertTrue(structureCoot_PDB.getFileName())
         return structureCoot_PDB
-
-    def _importStructurePDBWoVol2(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/3i3e_fitted.pdb'),
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n 3i3e_fitted')
-        self.launchProtocol(protImportPDB)
-        structure5_PDB = protImportPDB.outputPdb
-        return structure5_PDB
-
-    def _importStructureMolProbity1(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/jlv_chimeraOut0001.pdb'),
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n jlv_chimeraOut0001')
-        self.launchProtocol(protImportPDB)
-        structure6_PDB = protImportPDB.outputPdb
-        return structure6_PDB
-
-    def _importStructureMolProbity2(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/jlv_cootOut0016.pdb'),
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n jlv_cootOut0016')
-        self.launchProtocol(protImportPDB)
-        structure7_PDB = protImportPDB.outputPdb
-        return structure7_PDB
 
     def _createExtraCommandLine(self, x, y, z, label=None):
         if label is not None:
@@ -401,7 +333,7 @@ class TestCootRefinement2(TestImportData):
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
 
-        #first coot
+        # first coot
         label = 'testLabel5'
         listVolCoot = [volume2]
         args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
@@ -424,7 +356,7 @@ class TestCootRefinement2(TestImportData):
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
-        #second coot (label=None)
+        # second coot (label=None)
         newExtraCommands = self._createExtraCommandLine(0., 0., 0.)
         protCoot.extraCommands.set(newExtraCommands)
 
@@ -438,7 +370,7 @@ class TestCootRefinement2(TestImportData):
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
-        #third coot
+        # third coot
         protCoot.doInteractive.set(False)
         label = 'lastTestLabel'
         lastExtraCommands = self._createExtraCommandLine(0., 0., 0., label)
@@ -453,6 +385,7 @@ class TestCootRefinement2(TestImportData):
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
+
 class TestRefmacRefinement2(TestImportData):
     """ Test the flexible fitting of refmac refinement protocol
     """
@@ -460,8 +393,8 @@ class TestRefmacRefinement2(TestImportData):
     def testRefmacFlexibleFitFromPDB(self):
         """ This test checks that refmac runs with an atomic structure;
          No Volume was provided and an error message is expected"""
-        print "Run Refmac refinement from imported pdb file without imported " \
-              "or pdb-associated volume"
+        print "Run Refmac refinement from imported pdb file without" \
+              "imported or pdb-associated volume"
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -583,9 +516,8 @@ class TestRefmacRefinement2(TestImportData):
         directly as inputVol, the input PDB was fitted to the volume and
         refined previously by coot (refmac with mask)
          """
-        print "Run MASK Refmac refinement withouth mask from imported volume " \
-              "and " \
-              "pdb file fitted and refined by Coot"
+        print "Run MASK Refmac refinement withouth mask from imported " \
+              "volume and pdb file fitted and refined by Coot"
 
         # Import Volume
         volume = self._importVolume()
@@ -665,8 +597,8 @@ class TestRefmacRefinement2(TestImportData):
         directly as inputVol, the input PDB was fitted to the volume and
         refined previously by coot (refmac with mask)
          """
-        print "Run MASK Refmac refinement withouth mask from imported volume " \
-              "and pdb file fitted and refined by Coot"
+        print "Run MASK Refmac refinement withouth mask from imported " \
+              "volume and pdb file fitted and refined by Coot"
 
         # import PDB
         structure_PDB = self._importStructurePDBWithVol2()
