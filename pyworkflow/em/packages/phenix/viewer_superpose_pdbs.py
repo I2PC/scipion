@@ -27,7 +27,6 @@
 
 import os
 
-from pyworkflow.em.convert import ImageHandler
 from protocol_superpose_pdbs import PhenixProtRunSuperposePDBs
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, runChimeraProgram, getProgram
