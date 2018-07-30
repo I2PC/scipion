@@ -1,6 +1,8 @@
 # **************************************************************************
 # *
 # * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# *              Marta Martinez (mmmtnez@cnb.csic.es)
+# *              Roberto Marabini (roberto@cnb.csic.es)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -25,69 +27,69 @@
 
 import os
 import glob
-import json
-
+import math
+from pyworkflow.object import String, Float, Integer
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import BooleanParam, PointerParam, FloatParam, IntParam
-from convert import runPhenixProgram, getProgram
-from pyworkflow.em.convert_header.CCP4.convert import adaptFileToCCP4, START
-from pyworkflow.object import String
+from convert import runPhenixProgram, getProgram, REALSPACEREFINE
+from pyworkflow.em.headers import adaptFileToCCP4, START
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em import PdbFile
+from protocol_refinement_base import PhenixProtRunRefinementBase
 
 
-class PhenixProtRunRSRefine(EMProtocol):
-    """Autorefine refines a PDB comparing it to a volume.
-"""
+class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
+    """Tool for extensive real-space refinement of an atomic structure
+    against the map provided. The map can be derived from X-ray or neutron
+    crystallography, or cryoEM. The program obtains a model that fits the map
+    as well as possible having appropriate geometry. The model should not show
+    validation outliers, such as Ramachandran plot or rotamer outliers.
+    """
     _label = 'real space refine'
     _program = ""
     # _version = VERSION_1_2
+    REALSPACEFILE = 'real_space.mrc'
+
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
-        form.addSection(label='Input')
-        form.addParam('inputVolume', PointerParam, pointerClass="Volume",
-                      label='Input Volume', allowsNull=True,
-                      help="Set the starting volume")
-        form.addParam('inputStructure', PointerParam,
-                      pointerClass="PdbFile",
-                      label='Input atomic structure',
-                      help="PDBx/mmCIF to be refined")
-        form.addParam("doSecondary", BooleanParam, label="Secondary structure", default=False, expertLevel=LEVEL_ADVANCED)
-        form.addParam("resolution", FloatParam, label="Resolution", default=3.0, help="Current resolution of the map")
-        form.addParam("macroCycles", IntParam, label="Macro cycles", default=20, expertLevel=LEVEL_ADVANCED, help="Number of iterations of refinement")
+        PhenixProtRunRefinementBase._defineParams(self, form)
+        form.addParam("doSecondary", BooleanParam, label="Secondary structure",
+                      default=False, expertLevel=LEVEL_ADVANCED,
+                      help="Set to TRUE to use secondary structure "
+                           "restraints.\n")
+        form.addParam("macroCycles", IntParam, label="Macro cycles",
+                      default=5, expertLevel=LEVEL_ADVANCED,
+                      help="Number of iterations of refinement.\nAlthough 5 "
+                           "macro-cycles is usually sufficient, in cases in "
+                           "which model geometry or/and model-to-map fit is "
+                           "poor the use of more macro-cycles could be "
+                           "helpful.\n")
         
     # --------------------------- INSERT steps functions ---------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('convertInputStep')
-        self._insertFunctionStep('runRSrefineStep')
+        self._insertFunctionStep('convertInputStep', self.REALSPACEFILE)
+        self._insertFunctionStep('runRSrefineStep', self.REALSPACEFILE)
         self._insertFunctionStep('createOutputStep')
 
     # --------------------------- STEPS functions --------------------------
-
-    def convertInputStep(self):
-        """ convert 3D maps to MRC '.mrc' format
-        """
-        vol = self._getInputVolume()
-        inVolName = vol.getFileName()
-        newFn = self._getExtraPath("volume.mrc")
-        origin = vol.getOrigin(force=True).getShifts()
-        sampling = vol.getSamplingRate()
-        adaptFileToCCP4(inVolName, newFn, origin, sampling, START)  # ORIGIN
-
-    def runRSrefineStep(self):
+    def runRSrefineStep(self, tmpMapFile):
         args = os.path.abspath(self.inputStructure.get().getFileName())
-        args += " "+os.path.abspath(self._getExtraPath("volume.mrc"))
+        vol = os.path.abspath(self._getExtraPath(tmpMapFile))
+        args += " " + vol
+        args += " resolution=%f" % self.resolution
         args += " secondary_structure.enabled=%s"%self.doSecondary
-        args += " resolution=%f"%self.resolution
-        args += " run=minimization_global+local_grid_search+morphing+simulated_annealing"
+        args += " run=minimization_global+local_grid_search+morphing+" \
+                "simulated_annealing"
         args += " macro_cycles=%d"%self.macroCycles
-        self.runJob(getProgram("phenix.real_space_refine"), args, cwd=self._getExtraPath())
+        runPhenixProgram(getProgram(REALSPACEREFINE), args,
+                         cwd=self._getExtraPath())
 
     def createOutputStep(self):
         fnPdb = os.path.basename(self.inputStructure.get().getFileName())
         pdb = PdbFile()
-        pdb.setFileName(self._getExtraPath(fnPdb.replace(".pdb","_real_space_refined.pdb")))
+        pdb.setFileName(self._getExtraPath(
+            fnPdb.replace(".pdb", "_real_space_refined.pdb")))
         if self.inputVolume.get() is not None:
             pdb.setVolume(self.inputVolume.get())
         else:
@@ -97,37 +99,72 @@ class PhenixProtRunRSRefine(EMProtocol):
         if self.inputVolume.get() is not None:
             self._defineSourceRelation(self.inputVolume.get(), pdb)
 
+        fileName = glob.glob(self._getExtraPath("*.log"))[0]
+        self._parseFile(fileName)
+        self._store()
+
     # --------------------------- INFO functions ---------------------------
 
     def _validate(self):
-        errors = []
-        # Check that the program exists
-        program = getProgram("phenix.real_space_refine")
-        if not os.path.exists(program):
-            errors.append("Cannot find phenix.real_space_refine")
-
-        # If there is any error at this point it is related to config variables
-        if errors:
-            errors.append("Check configuration file: "
-                          "~/.config/scipion/scipion.conf")
-            errors.append("and set PHENIX_HOME variables properly.")
-            if program is not None:
-                errors.append("Current values:")
-                errors.append("PHENIX_HOME = %s" % os.environ['PHENIX_HOME'])
-
-        # Check that the input volume exist
-        if self._getInputVolume() is None:
-            errors.append("Error: You should provide a volume.\n")
-
+        errors = self.validateBase(REALSPACEREFINE, 'REALSPACEREFINE')
         return errors
 
     def _citations(self):
         return ['Barad_2015']
 
+    def _summary(self):
+        summary = PhenixProtRunRefinementBase._summary(self)
+        summary.append(
+            "https://www.phenix-online.org/documentation/reference/"
+            "real_space_refine.html")
+        return summary
+
     # --------------------------- UTILS functions --------------------------
-    def _getInputVolume(self):
-        if self.inputVolume.get() is None:
-            fnVol = self.inputStructure.get().getVolume()
+    def _parseFile(self, fileName):
+        with open(fileName) as f:
+            line = f.readline()
+            while line:
+                words = line.strip().split()
+                if len(words) > 1:
+                    if (words[0] == 'Final' and words[1] == 'info'
+                        and words[2] == '(overall)'):
+                        line = f.readline()
+                        while line:
+                            words = line.strip().split()
+                            if len(words) > 1:
+                                if (words[0] == 'all-atom' and
+                                    words[1] =='clashscore'):
+                                    self.clashscore = Float(words[3])
+                                elif (words[0] == 'outliers'and
+                                      words[1] == ':'):
+                                    self.ramachandranOutliers = Float(words[2])
+                                elif (words[0] == 'favored'and
+                                      words[1] == ':'):
+                                    self.ramachandranFavored = Float(words[2])
+                                elif (words[0] == 'rotamer' and
+                                      words[1] == 'outliers'):
+                                    self.rotamerOutliers = Float(words[3])
+                                elif (words[0] == 'cbeta' and
+                                      words[1] == 'deviations'):
+                                    self.cbetaOutliers = Integer(words[3])
+
+                            line = f.readline()
+                line = f.readline()
+        self.molprobity_score(self.clashscore.get(),
+                              self.rotamerOutliers.get(),
+                              self.ramachandranFavored.get()
+                              )
+
+    def molprobity_score(self, clashscore, rota_out, rama_fav):
+        """
+        Calculate the overall Molprobity score, as described here:
+          http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2877634/?tool=pubmed
+          http://kinemage.biochem.duke.edu/suppinfo/CASP8/methods.html
+        """
+        if (clashscore >= 0) and (rota_out >= 0) and (rama_fav >= 0):
+            rama_iffy = 100. - rama_fav
+            self.overallScore = Float(((0.426 * math.log(1 + clashscore)) +
+                       (0.33 * math.log(1 + max(0, rota_out - 1))) +
+                       (0.25 * math.log(1 + max(0, rama_iffy - 2)))) + 0.5)
         else:
-            fnVol = self.inputVolume.get()
-        return fnVol
+            return -1  # FIXME prevents crashing on RNA
