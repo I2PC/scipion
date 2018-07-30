@@ -25,94 +25,31 @@
 # *
 # **************************************************************************
 
-from tkMessageBox import showerror
 from protocol_molprobity import PhenixProtRunMolprobity
-from pyworkflow.protocol.params import LabelParam, EnumParam
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.em.viewer import TableView
+from pyworkflow.protocol.params import LabelParam
 import collections
-from pyworkflow.em.packages.ccp4.convert import getProgram, runCCP4Program
+from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
 import os
 
+from viewer_refinement_base import PhenixProtRefinementBaseViewer
 
-def errorWindow(tkParent, msg):
-    try:
-        # if tkRoot is null the error message may be behind
-        # other windows
-        showerror("Error",  # bar title
-                  msg,  # message
-                  parent=tkParent)
-    except:
-        print("Error:", msg)
-
-
-class PhenixProtRunMolprobityViewer(ProtocolViewer):
-    """ Viewer for Phenix program EMRinger
+class PhenixProtRunMolprobityViewer(PhenixProtRefinementBaseViewer):
+    """ Viewer for Phenix program Molprobity
     """
     _label = 'MolProbity viewer'
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [PhenixProtRunMolprobity]
+
     COOT = 'coot'
 
     def __init__(self,  **kwargs):
-        ProtocolViewer.__init__(self,  **kwargs)
-        MOLPROBITYOUTFILENAME = self.protocol._getExtraPath(
-            self.protocol.MOLPROBITYOUTFILENAME)
-        self._parseFile(MOLPROBITYOUTFILENAME)
+         PhenixProtRefinementBaseViewer.__init__(self, **kwargs)
+         MOLPROBITYOUTFILENAME = self.protocol._getExtraPath(
+             self.protocol.MOLPROBITYOUTFILENAME)
+         self._parseFile(MOLPROBITYOUTFILENAME)
 
     def _defineParams(self, form):
-        form.addSection(label='Visualization of MolProbity results')
-        form.addParam('showFinalResults', LabelParam,
-                      important=True,
-                      label="Summary Table of Results",
-                      help="Validation of protein geometry. Statistics "
-                           "computed by the "
-                           "PHENIX package using the same distributions as "
-                           "the MolProbity web server."
-                           "\n\nRamachandran outliers: Outlier "
-                           "residues that show an unusual "
-                           "combination of their phi and psi "
-                           "torsion angles. Ramachandran outlier score is "
-                           "computed as the percentage of Ramachandran "
-                           "outliers regarding the total number of residues "
-                           "in the entry showing outlier assessment."
-                           "\n\nRamachandran "
-                           "favored: Residues that show an normal "
-                           "combination of their phi and psi "
-                           "torsion angles. Ramachandran favored score is "
-                           "computed as the percentage of Ramachandran "
-                           "outliers regarding the total number of residues "
-                           "in the entry showing outlier assessment. Between "
-                           "the favored and outlier regions in the "
-                           "Ramachandran plot, there is a small region of "
-                           "allowed residues.\n\nRotamer outliers: Residues "
-                           "that adopt unusual chi torsion angles "
-                           "(non-rotameric), used to describe "
-                           "the conformation of protein sidechains. The "
-                           "score of rotamer outliers is computed as "
-                           "the percentage of residues with non-rotameric "
-                           "angles.\n\nC-beta outliers: Residues that show an "
-                           "unusual deviation (higher than 0.25 A) of the "
-                           "beta carbon from its ideal position. "
-                           "This deviation of beta carbon "
-                           "indicates incompatibilities between sidechain and "
-                           "backbone.\n\nClashscore: Score associated to the "
-                           "number of pairs of non-bonded atoms in the model "
-                           "that are unusually close to each other. These "
-                           "clashing atoms show unfavorable steric overlaps "
-                           "of van der Waals shells. Steric clashes in "
-                           "proteins are defined based on the Van der Waals "
-                           "repulsion energy of the clashing atoms. "
-                           "The clashscore is computed as the "
-                           "number of serious clashes per 1000 atoms. "
-                           "\n\nRMS (bonds): Root-mean-square deviation of "
-                           "macromolecular bond lengths. "
-                           "\n\nRMS (angles): Root-mean-square deviation of "
-                           "macromolecular bond angles. "
-                           "\n\nOverall score: Score that represents the "
-                           "experimental resolution expected for a model of "
-                           "this quality; ideally the score should be lower "
-                           "than the actual resolution.\n")
+        PhenixProtRefinementBaseViewer._defineParams(self,form)
+
         form.addParam('showCootOutliers', LabelParam,
                       important=True,
                       label="Coot Visualization:\nRamachandran outliers\n "
@@ -198,12 +135,14 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         self.outliers = self.dictPlanarRestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
             group.addParam('showPLANARoutliers', LabelParam,
-                          label="Outliers", help="List of planar "
-                                                 "group outliers ("
-                                                 "sorted by deviation)")
+                           label="Outliers",
+                           help='List of planar group outliers '
+                                '(sorted by deviation)')
 
     def _getVisualizeDict(self):
-        return {
+        myDict = super(PhenixProtRefinementBaseViewer, self)._getVisualizeDict()
+
+        myDict.update( {
             'showFinalResults': self._visualizeFinalResults,
             'showCootOutliers': self._showCootOutliers,
             'showBLrestraints': self._showBLrestraints,
@@ -216,15 +155,8 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
             'showCHILoutliers': self._showCHILoutliers,
             'showPLANARrestraints': self._showPLANARrestraints,
             'showPLANARoutliers': self._showPLANARoutliers
-        }
-
-    def _visualizeFinalResults(self, e=None):
-        headerList = ['statistic', 'value']
-        dictX = self.dictSummary
-        val = 0.4
-        mesg="Model Final Statistics"
-        title="MolProbity: Final Results Summary"
-        self._showResults(headerList, dictX, val, mesg, title)
+            })
+        return myDict
 
     def _showCootOutliers(self, e=None):
         MOLPROBITYCOOTFILENAME = self.protocol._getExtraPath(
@@ -322,35 +254,6 @@ class PhenixProtRunMolprobityViewer(ProtocolViewer):
         title = "Planarity Restraints"
         self._showOutliers(headerList, dataList, mesg, title)
 
-    def _showResults(self, headerList, dictX, val, mesg, title):
-        dataList = []
-        for k, v in dictX.iteritems():
-            if isinstance(v, int):
-                dataList.append((k, v))
-            elif isinstance(v, float):
-                dataList.append((k, ("%" + str(val) + "f") % v))
-
-        if not dataList:
-            errorWindow(self.getTkRoot(), "No data available")
-            return
-
-        TableView(headerList=headerList,
-                  dataList=dataList,
-                  mesg=mesg,
-                  title=title,
-                  height=len(dataList), width=250, padding=40)
-
-    def _showOutliers(self, headerList, dataList, mesg, title):
-
-        if not dataList:
-            errorWindow(self.getTkRoot(), "No data available")
-            return
-
-        TableView(headerList=headerList,
-                  dataList=dataList,
-                  mesg=mesg,
-                  title=title,
-                  height=min(20,len(dataList)), width=250, padding=40)
 
     def _parseFile(self, fileName):
         self.dictSummary = collections.OrderedDict()
