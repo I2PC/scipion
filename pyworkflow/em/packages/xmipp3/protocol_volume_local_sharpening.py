@@ -237,7 +237,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
                 break
                 
         os.system('cp '  +self._getExtraPath('sharpenedMap_'+str(iteration)+'.mrc')+
-                   ' '  +self._getExtraPath('sharpenedMap.mrc'))
+                   ' '  +self._getExtraPath('sharpenedMap_last.mrc'))
         
         resFile = self.resolutionVolume.get().getFileName()        
         pathres=dirname(resFile)
@@ -252,7 +252,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
              
     def createOutputStep(self):
         volume=Volume()
-        volume.setFileName(self._getExtraPath('sharpenedMap.mrc'))
+        volume.setFileName(self._getExtraPath('sharpenedMap_last.mrc'))
         volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
 
         self._defineOutputs(sharpened_map=volume)
@@ -273,5 +273,5 @@ class XmippProtLocSharp(ProtAnalysis3D):
         return summary
 
     def _citations(self):
-        return ['Ramirez-Aportela2018']
+        return ['Ramirez-Aportela 2018']
 
