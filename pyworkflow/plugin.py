@@ -181,6 +181,19 @@ class Plugin:
     _supportedVersions = []
 
     @classmethod
+    def _defineVar(cls, varName, defaultValue):
+        """ Internal method to define variables from the environment. """
+        cls._vars[varName] = os.environ.get(varName, defaultValue)
+
+    @classmethod
+    def _defineEmVar(cls, varName, defaultValue):
+        """ Shortcut method to define variables by prepending EM_ROOT
+        to the default value.
+        """
+        cls._defineVar(varName,
+                       os.path.join(os.environ['EM_ROOT'], defaultValue))
+
+    @classmethod
     @abstractmethod
     def getEnviron(cls):
         """ Setup the environment variables needed to launch programs. """
@@ -188,15 +201,32 @@ class Plugin:
 
     @classmethod
     @abstractmethod
-    def registerBinaries(cls, env):
-        """ Register required binaries in the given Environment. """
+    def _defineVariables(cls):
+        """ Method to define variables and their default values.
+        It will use the method _defineVar that will take a variable value
+        from the environment or from an optional default value.
+
+        This method is not supposed to be called from client code,
+        except from the Domain class when registering a Plugin.
+        """
         pass
+
+    @classmethod
+    @abstractmethod
+    def defineBinaries(cls, env):
+        """ Define required binaries in the given Environment. """
+        pass
+
+    @classmethod
+    def getVar(cls, varName, defaultValue=None):
+        """ Return the value of a given variable. """
+        return cls._vars.get(varName, defaultValue)
 
     @classmethod
     def getHome(cls, *paths):
         """ Return a path from the "home" of the package
          if the _homeVar is defined in the plugin. """
-        home = os.environ.get(cls._homeVar, None)
+        home = cls.getVar(cls._homeVar)
         return os.path.join(home, *paths) if home else ''
 
     @classmethod
