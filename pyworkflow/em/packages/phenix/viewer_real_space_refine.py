@@ -32,7 +32,7 @@ import os
 
 from viewer_refinement_base import PhenixProtRefinementBaseViewer
 
-class PhenixProtRunMolprobityViewer(PhenixProtRefinementBaseViewer):
+class PhenixProtRunRSRefineViewer(PhenixProtRefinementBaseViewer):
     """ Viewer for Phenix program real space refine
     """
     _label = 'Real Space Refine viewer'
