@@ -207,7 +207,7 @@ the pdb file from coot  to scipion '
                          listOfPDBs,
                          self.extraCommands.get(),
                          self._getExtraPath(self.COOTINI),  # coot.ini
-                         self._getTmpPath(outpuDataBaseNameWithLabels),
+                         self._getExtraPath(outpuDataBaseNameWithLabels),
                          table_name=databaseTableName
                          )
 
@@ -230,7 +230,7 @@ the pdb file from coot  to scipion '
     def createOutputStep(self, inVolumes, norVolumesNames, init_counter=1):
         """ Copy the PDB structure and register the output object.
         """
-        databasePath = self._getTmpPath(outpuDataBaseNameWithLabels)
+        databasePath = self._getExtraPath(outpuDataBaseNameWithLabels)
         # open database
         conn = sqlite3.connect(databasePath)
         c = conn.cursor()
