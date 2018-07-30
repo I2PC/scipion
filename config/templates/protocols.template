@@ -188,6 +188,8 @@ Protocols SPA = [
             ]},
 			{"tag": "section", "text": "Validation", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtCompareReprojections", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtGenerateReprojections",
+                "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCreateGallery", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtValidateNonTilt",    "text": "default"},
                 {"tag": "protocol", "value": "XmippProtMultiRefAlignability", "text": "default"},
