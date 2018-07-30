@@ -144,25 +144,13 @@ class TestImportData(TestImportBase):
     def _importStructurePDBWoVol(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/1ake_start.pdb'),
+                    'PDBx_mmCIF/1ake_start.pdb')
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure1_PDB = protImportPDB.outputPdb
         return structure1_PDB
-
-    def _importStructuremmCIFWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/1ake_start.pdb.cif'),
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import mmCIF\n 1ake_start')
-        self.launchProtocol(protImportPDB)
-        structure1_mmCIF = protImportPDB.outputPdb
-        self.assertTrue(structure1_mmCIF.getFileName())
-        return structure1_mmCIF
 
     def _importStructurePDBWithVol(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -177,53 +165,18 @@ class TestImportData(TestImportBase):
         self.assertTrue(structure2_PDB.getFileName())
         return structure2_PDB
 
-    def _importStructuremmCIFWithVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile('PDBx_mmCIF/'
-                                                   '1ake_start.pdb.cif'),
-                'inputVolume': self._importVolume()
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import mmCIF\n volume associated\n '
-                                  '1ake_start')
-        self.launchProtocol(protImportPDB)
-        structure2_mmCIF = protImportPDB.outputPdb
-        self.assertTrue(structure2_mmCIF.getFileName())
-        return structure2_mmCIF
-
-    def _importMut1StructurePDBWoVol(self):
+    def _importStructuremmCIFWithVol2(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/1ake_mut1.pdb'),
+                    'PDBx_mmCIF/5ni1.cif'),
+                'inputVolume': self._importVolume3()
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n 1ake_mut1')
+        protImportPDB.setObjLabel('import mmCIF\nvolume associated\n5ni1.cif')
         self.launchProtocol(protImportPDB)
-        structure3_PDB = protImportPDB.outputPdb
-        return structure3_PDB
-
-    def _importMut2StructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                    'PDBx_mmCIF/1ake_mut2.pdb'),
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n 1ake_mut2')
-        self.launchProtocol(protImportPDB)
-        structure4_PDB = protImportPDB.outputPdb
-        return structure4_PDB
-
-    def _importCootStructureWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
-                'pdbFile': self.dsModBuild.getFile(
-                        'PDBx_mmCIF/scipionOut0001.pdb')
-                }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n coot')
-        self.launchProtocol(protImportPDB)
-        structureCoot_PDB = protImportPDB.outputPdb
-        self.assertTrue(structureCoot_PDB.getFileName())
-        return structureCoot_PDB
+        structure_6 = protImportPDB.outputPdb
+        self.assertTrue(structure_6.getFileName())
+        return structure_6
 
     def _importStructurePDBWoVol2(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -391,7 +344,7 @@ class TestMolprobityValidation2(TestImportData):
             return
         self.assertTrue(False)
 
-    def testMolProbityValidationFromVolAssociatedToCIF(self):
+    def testMolProbityValidationFromVolAssociatedToPDB(self):
         """ This test checks that MolProbity validation protocol runs with an
         atomic structure associated to volume
         """
@@ -420,6 +373,37 @@ class TestMolprobityValidation2(TestImportData):
                           cbetaOutliers=0,
                           clashScore=4.77,
                           overallScore=2.42,
+                          protMolProbity=protMolProbity)
+
+    def testMolProbityValidationFromVolAssociatedToCIF(self):
+        """ This test checks that MolProbity validation protocol runs with an
+        atomic structure associated to volume
+        """
+        print "Run MolProbity validation protocol from imported cif file " \
+              "with cif-associated volume"
+
+        # import PDB
+        structure_6 = self._importStructuremmCIFWithVol2()
+        self.assertTrue(structure_6.getFileName())
+        self.assertTrue(structure_6.getVolume())
+
+        # MolProbity
+        args = {
+                'resolution': 3.5,
+                'inputStructure': structure_6
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                   'volume associated to cif\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkResults(ramOutliers=0.00,
+                          ramFavored=95.23,
+                          rotOutliers=0.43,
+                          cbetaOutliers=0,
+                          clashScore=3.53,
+                          overallScore=1.48,
                           protMolProbity=protMolProbity)
 
     def testMolProbityValidationFromVolumeAndPDB1(self):
