@@ -42,17 +42,20 @@ class TestImportData(TestImportBase):
     """ Import atomic structures(PDBx/mmCIF files)
     """
 
-    def _importVolume(self):
+    def _importVolume2(self):
         args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
                 'samplingRate': 1.5,
-                'setOrigCoord': False
+                'setOrigCoord': True,
+                'x': 11.994,
+                'y': -7.881,
+                'z': 10.91
                 }
         protImportVol = self.newProtocol(ProtImportVolumes, **args)
-        protImportVol.setObjLabel('import volume 1ake_4-5A\n with default '
-                                  'origin\n')
+        protImportVol.setObjLabel('import volume 1ake_4-5A\n'
+                                  'set origin in 11 -7 10\n')
         self.launchProtocol(protImportVol)
-        volume = protImportVol.outputVolume
-        return volume
+        volume2 = protImportVol.outputVolume
+        return volume2
 
     def _importStructurePDBWoVol(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -77,32 +80,32 @@ class TestImportData(TestImportBase):
         self.assertTrue(structure1_mmCIF.getFileName())
         return structure1_mmCIF
 
-    def _importStructurePDBWithVol(self):
+    def _importStructurePDBWithVol2(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_start.pdb'),
-                'inputVolume': self._importVolume()
+                'inputVolume': self._importVolume2()
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n volume associated\n 1ake_start')
+        protImportPDB.setObjLabel('import pdb\nvolume associated\n1ake_start')
         self.launchProtocol(protImportPDB)
-        structure2_PDB = protImportPDB.outputPdb
-        self.assertTrue(structure2_PDB.getFileName())
-        return structure2_PDB
+        structure3_PDB = protImportPDB.outputPdb
+        self.assertTrue(structure3_PDB.getFileName())
+        return structure3_PDB
 
-    def _importStructuremmCIFWithVol(self):
+    def _importStructuremmCIFWithVol2(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile('PDBx_mmCIF/'
                                                    '1ake_start.pdb.cif'),
-                'inputVolume': self._importVolume()
+                'inputVolume': self._importVolume2()
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
         protImportPDB.setObjLabel('import mmCIF\n volume associated\n '
                                   '1ake_start')
         self.launchProtocol(protImportPDB)
-        structure2_mmCIF = protImportPDB.outputPdb
-        self.assertTrue(structure2_mmCIF.getFileName())
-        return structure2_mmCIF
+        structure3_mmCIF = protImportPDB.outputPdb
+        self.assertTrue(structure3_mmCIF.getFileName())
+        return structure3_mmCIF
 
     def _importMut1StructurePDBWoVol(self):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -233,11 +236,11 @@ class TestProtSuperposePdbs(TestImportData):
               "and a imported cif file with volumes associated"
 
         # import PDBs
-        structure2_PDB = self._importStructurePDBWithVol()
+        structure2_PDB = self._importStructurePDBWithVol2()
         self.assertTrue(structure2_PDB.getFileName())
         self.assertTrue(structure2_PDB.getVolume())
 
-        structure2_mmCIF = self._importStructuremmCIFWithVol()
+        structure2_mmCIF = self._importStructuremmCIFWithVol2()
         self.assertTrue(structure2_mmCIF.getFileName())
         self.assertTrue(structure2_mmCIF.getVolume())
 
@@ -270,7 +273,7 @@ class TestProtSuperposePdbs(TestImportData):
               "associated"
 
         # import PDBs
-        structure2_PDB = self._importStructurePDBWithVol()
+        structure2_PDB = self._importStructurePDBWithVol2()
         self.assertTrue(structure2_PDB.getFileName())
         self.assertTrue(structure2_PDB.getVolume())
 
@@ -307,7 +310,7 @@ class TestProtSuperposePdbs(TestImportData):
               "associated"
 
         # import PDBs
-        structure2_PDB = self._importStructurePDBWithVol()
+        structure2_PDB = self._importStructurePDBWithVol2()
         self.assertTrue(structure2_PDB.getFileName())
         self.assertTrue(structure2_PDB.getVolume())
 
@@ -344,7 +347,7 @@ class TestProtSuperposePdbs(TestImportData):
               "associated"
 
         # import PDBs
-        structure2_PDB = self._importStructurePDBWithVol()
+        structure2_PDB = self._importStructurePDBWithVol2()
         self.assertTrue(structure2_PDB.getFileName())
         self.assertTrue(structure2_PDB.getVolume())
 
