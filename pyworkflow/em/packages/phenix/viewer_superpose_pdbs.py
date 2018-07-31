@@ -34,24 +34,23 @@ from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
 class PhenixProtRunSuperposePDBsViewer(Viewer):
-    """ Visualize the output of protocols protocol_fit and protocol_operate """
+    """ Visualize the output of protocols  superpose pdb """
     _environments = [DESKTOP_TKINTER]
     _label = 'Superpose PDBs viewer'
     _targets = [PhenixProtRunSuperposePDBs]
 
     def _visualize(self, obj, **args):
-        # THe input map or pdb may be a parameter from the protocol
-        # or from the parent protocol.
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
-        vol = self.protocol.inputStructureFixed.get().getVolume()
-        if vol is not None:
-            dim = vol.getDim()[0]
-            sampling = vol.getSamplingRate()
-            self.volFileName = vol.getFileName()
-            if vol.hasOrigin():
-                self.x, self.y, self.z = vol.getOrigin().getShifts()
-            else:
-                self.x, self.y, self.z = vol.getOrigin(force=True).getShifts()
+
+        self._getVols()
+        self._getPdbs()
+        dim = float()
+        sampling = float()
+        if len(self.vols) > 0:
+            if self.vols[0] is not None:
+                dim, sampling = self._getDimSamplingFromVol(self.vols[0])
+            elif self.vols[1] is not None:
+                dim, sampling = self._getDimSamplingFromVol(self.vols[1])
         else:
             # To show pdbs only
             dim = 150.
@@ -63,26 +62,54 @@ class PhenixProtRunSuperposePDBsViewer(Viewer):
                                  bildFileName=bildFileName,
                                  sampling=sampling)
 
-        pdbList = []
-        outputPdb = self.protocol.outputPdb.getFileName()
-        pdbList.append(outputPdb)
-        inputPdbFixed = self.protocol.inputStructureFixed.get().getFileName()
-        pdbList.append(inputPdbFixed)
-        inputPdbMoving = self.protocol.inputStructureMoving.get().getFileName()
-        pdbList.append(inputPdbMoving)
-
         with open(fnCmd, 'w') as f:
             f.write("open %s\n" % bildFileName)
-            if vol is not None:
-                f.write("open %s\n" % self.volFileName)
-                f.write("volume #1 style surface voxelSize %f\n"
-                        "volume #1 origin %0.2f,%0.2f,%0.2f\n"
-                        % (vol.getSamplingRate(), self.x, self.y, self.z))
-            for filename in pdbList:
+            if len(self.vols) > 0:
+                for vol in self.vols:
+                    sampling, volFileName, x, y, z = self._getXYZFromVol(vol)
+                    f.write("open %s\n" % volFileName)
+                    f.write("volume #1 style surface voxelSize %f\n"
+                            "volume #1 origin %0.2f,%0.2f,%0.2f\n"
+                            % (sampling, x, y, z))
+            for filename in self.pdbList:
                 f.write("open %s\n" % os.path.abspath(filename))
 
         # run in the background
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []
+
+    def _getVols(self):
+        self.vols = []
+        vol1 = self.protocol.inputStructureFixed.get().getVolume()
+        if vol1 is not None:
+            self.vols.append(vol1)
+        vol2 = self.protocol.inputStructureMoving.get().getVolume()
+        if vol2 is not None:
+            self.vols.append(vol2)
+
+    def _getPdbs(self):
+        self.pdbList = []
+        outputPdb = self.protocol.outputPdb.getFileName()
+        self.pdbList.append(outputPdb)
+        inputPdbFixed = self.protocol.inputStructureFixed.get().getFileName()
+        self.pdbList.append(inputPdbFixed)
+        inputPdbMoving = self.protocol.inputStructureMoving.get().getFileName()
+        self.pdbList.append(inputPdbMoving)
+
+    def _getDimSamplingFromVol(self, vol):
+        dim = vol.getDim()[0]
+        sampling = vol.getSamplingRate()
+
+        return dim, sampling
+
+    def _getXYZFromVol(self, vol):
+        sampling = vol.getSamplingRate()
+        volFileName = vol.getFileName()
+        if vol.hasOrigin():
+            x, y, z = vol.getOrigin().getShifts()
+        else:
+            x, y, z = vol.getOrigin(force=True).getShifts()
+        return sampling, volFileName, x, y, z
+
 
 
