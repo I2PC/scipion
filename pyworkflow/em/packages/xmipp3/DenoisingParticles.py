@@ -25,6 +25,7 @@ import os
 import xmipp
 import random
 from itertools import izip
+from keras.constraints import maxnorm
 
 size = 81
 batch_size = 32
@@ -66,24 +67,30 @@ def generate_model():
     input_img = Input(shape=(NoisyImage.shape[1],NoisyImage.shape[2],1),
                       name='input')
     #auxiliary_input = Input(shape=(size,size,1), name='input2')
-
+    x = Dropout(0.2)(input_img)
     #x = keras.layers.concatenate([input_img,auxiliary_input])
-    x = Conv2D(batch_size, (21, 21), activation='linear',
-               kernel_initializer='random_uniform', padding='same')(
-        input_img)
-    x1 = Conv2D(batch_size, (15, 15), activation='linear',
-                kernel_initializer='random_uniform', padding='same')(
-        input_img)
+    x = Conv2D(batch_size, (15, 15), activation='linear',
+               kernel_initializer='glorot_normal',
+               padding='same')(
+        x)
+    x1 = Conv2D(batch_size, (7, 7), activation='linear',
+                kernel_initializer='glorot_normal',
+                padding='same')(
+        x)
     x = keras.layers.subtract([x,x1])
-    x = LeakyReLU()(x)#Activation('relu')(x)
+    #x = Dropout(0.5)(x)
+    x = Activation('relu')(x)
     x = BatchNormalization()(x)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(batch_size, (9, 9), activation='linear',
-               kernel_initializer='random_uniform', padding='same')(x)
-    x1 = Conv2D(batch_size, (5, 5), activation='linear',
-                kernel_initializer='random_uniform', padding='same')(x)
+    x = Conv2D(batch_size, (5, 5), activation='linear',
+               kernel_initializer='glorot_normal',
+               padding='same')(x)
+    x1 = Conv2D(batch_size, (3, 3), activation='linear',
+                kernel_initializer='glorot_normal',
+                padding='same')(x)
     x = keras.layers.subtract([x,x1])
-    x = LeakyReLU()(x)#Activation('relu')(x)
+    #x = Dropout(0.5)(x)
+    x = Activation('relu')(x)
     x = BatchNormalization()(x)
     '''x = MaxPooling2D((2, 2), padding='same')(x)
     x = Conv2D(batch_size, (5, 5), activation='linear',
@@ -98,26 +105,30 @@ def generate_model():
     # at this point the representation is (7, 7, 32)
 
     x = Conv2D(batch_size, (3, 3), activation='linear',
-               kernel_initializer='random_uniform', padding='same')(
+               kernel_initializer='glorot_normal',
+               padding='same')(
      encoded)
-    x = LeakyReLU()(x)#Activation('relu')(x)
+    #x = Dropout(0.5)(x)
+    x = Activation('relu')(x)
     x = BatchNormalization()(x)
     x = UpSampling2D((2, 2))(x)
     x = Conv2D(batch_size, (5, 5), activation='linear',
-               kernel_initializer='random_uniform', padding='same')(
+               kernel_initializer='glorot_normal',
+               padding='same')(
         x)
-    x = LeakyReLU()(x)#Activation('relu')(x)
-    x = BatchNormalization()(x)
+    #x = Dropout(0.5)(x)
+    x = Activation('relu')(x)
+    #x = BatchNormalization()(x)
     x = UpSampling2D((2, 2))(x)
     '''x = Conv2D(batch_size, (5, 5), activation='linear',
-               kernel_initializer='random_uniform', padding='same')(
+               kernel_initializer='glorot_normal', padding='same')(
         x)
     x = Activation('relu')(x)
-    x = BatchNormalization()(x)
+    #x = BatchNormalization()(x)
     x = UpSampling2D((2, 2))(x)'''
     #x = Dropout(0.25)(x)
     decoded = Conv2D(1, (9, 9), activation='sigmoid',
-                     kernel_initializer='random_uniform', padding='same',
+                     kernel_initializer='glorot_normal', padding='same',
                      name='decoded')(x)
 
     autoencoder = Model(input_img, decoded)#Model(inputs=[input_img,auxiliary_input],
@@ -205,14 +216,14 @@ checkpointer = ModelCheckpoint(
                      callbacks=[TensorBoard(log_dir='/tmp/tb', histogram_freq=1,
                                             write_graph=False,
                                             write_images=False), checkpointer])'''
-'''
+
 autoencoder.fit_generator(generator,steps_per_epoch=len(
-    NoisyImage)/batch_size, epochs = 50,
+    NoisyImage)/batch_size, epochs = 150,
                           validation_data=(xval, yval),
                           validation_steps=20,
                            callbacks=[TensorBoard(log_dir='/tmp/tb', histogram_freq=1,
                 write_graph=False, write_images=False),checkpointer])
-K.clear_session()'''
+K.clear_session()
 
 
 model = load_model('DenoisingParticlesPrueba.h5')

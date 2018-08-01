@@ -27,13 +27,13 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 import numpy as np
-import matplotlib.pyplot as plt
 import argparse
 import os
 import glob
 import cv2
 import shutil
 import tensorflow as tf
+import xmipp
 
 if os.path.isdir('/tmp/tb'):
         shutil.rmtree('/tmp/tb')
@@ -119,36 +119,34 @@ def plot_results(models,
 
 # MNIST dataset
 #(x_train, y_train), (x_test, y_test) = mnist.load_data()
-size = 81
-paths = []
-for image in glob.glob('/home/javiermota/Frank10000_70S/particle_images'
-                       '/*.jpg'):
+def ExtractInfoMetadata(path, root, label, crop, size):
+    metadata = xmipp.MetaData(path)
+    Image = []
+    I = xmipp.Image()
+    for itemId in metadata:
+        fn = metadata.getValue(label, itemId)
+        n = fn.split('@')
+        fn = n[0] + '@' + root + n[1]
+        I.read(fn)
+        Data = I.getData()
+        Imresize = cv2.resize(Data,(size,size),interpolation=cv2.INTER_CUBIC)
+        Image.append(
+            cv2.normalize(np.asarray(Imresize[crop:-crop, crop:-crop]), None,
+                          0.0, 1.0, cv2.NORM_MINMAX))
 
-    paths.append(image)
+    Image = np.array(Image).astype('float')
+    Image = Image.reshape(len(Image), Image.shape[1],Image.shape[2], 1)
 
-def data_val(paths):
-    batch_img = []
-    labels = []
-    for i in range(100):
-        k = np.random.randint(0,len(paths))
-        image = cv2.imread(paths[k],0)
-        #with mrcfile.open(paths[k]) as mrc:
-            #for im in mrc.data:
-        image = cv2.resize(image,(size,size), interpolation=cv2.INTER_CUBIC)
-        image = cv2.normalize(image.astype('float'), None, 0.0, 1.0,
-                              cv2.NORM_MINMAX)
-        image = np.reshape(image,(size,size,1))
-        batch_img.append(image)
-        labels.append(image)
+    return Image
 
-    return batch_img, batch_img
 
-noisyPatch, other = data_val(paths)
+path2 = '/home/javiermota/ScipionUserData/projects/Frank10000_70S/Runs/006028_XmippProtGenerateReprojections/extra/anglesCont.xmd'
+root2 = '/home/javiermota/ScipionUserData/projects/Frank10000_70S/'
 
-train_data_dir = '/home/javiermota/Downloads/images/Train/cats/*.jpg'
-x_train = []
-x_test = []
-for im in glob.glob(train_data_dir):
+x_train = ExtractInfoMetadata(path2, root2, xmipp.MDL_IMAGE, 20, 120)
+x_test = ExtractInfoMetadata(path2, root2, xmipp.MDL_IMAGE_REF, 20, 120)
+
+'''for im in glob.glob(train_data_dir):
     try:
         k = np.random.randint(0, 100)
         image = cv2.imread(im,0)
@@ -169,12 +167,12 @@ for im in glob.glob(train_data_dir):
         x_test.append(image)
         x_train.append(imageNoise)
     except:
-        pass
+        pass'''
 
 x_train = np.asarray(x_train).astype('float32')
 x_test = np.asarray(x_test).astype('float32')
 image_size = x_train.shape[1]
-original_dim = size * size
+original_dim = x_train.shape[1] * x_train.shape[1]
 x_train = np.reshape(x_train, [-1, original_dim])
 x_test = np.reshape(x_test, [-1, original_dim])
 #x_train = x_train.astype('float32') / 255
@@ -245,7 +243,7 @@ vae.fit(x_train, x_test,
 prediction = vae.predict(x_train)
 
 for im in prediction:
-    plt.imshow(np.reshape(im,(81,81)))
+    plt.imshow(im.reshape(image_size,image_size))
     plt.gray()
     plt.show()
 '''plot_model(vae,
