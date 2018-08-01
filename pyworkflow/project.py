@@ -232,7 +232,6 @@ class Project(object):
                 not be loaded.
         """
 
-        print("loading project: ", self.name)
         if not os.path.exists(self.path):
             raise Exception(
                 "Cannot load project, path doesn't exist: %s" % self.path)
@@ -246,14 +245,11 @@ class Project(object):
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
-        print("loading db")
         self._loadDb(dbPath)
 
-        print("loading hosts")
         self._loadHosts(hostsConf)
 
         if loadAllConfig:
-            print("loading protocols...")
             self._loadProtocols(protocolsConf)
 
             # FIXME: Handle settings argument here
