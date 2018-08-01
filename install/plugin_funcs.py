@@ -271,14 +271,14 @@ class PluginInfo(object):
         return pluginClass
 
     def getInstallenv(self, envArgs=None):
-        """Reads the registerPluginBinaries function from plugin.py and returns an
+        """Reads the defineBinaries function from plugin.py and returns an
         Environment object with the plugin's binaries."""
         if envArgs is None:
             envArgs = []
         environment = Environment(args=envArgs)
         plugin = self.getPluginClass()
         if plugin:
-            plugin.registerPluginBinaries(environment)
+            plugin.defineBinaries(environment)
         return environment
 
     def getBinVersions(self):
