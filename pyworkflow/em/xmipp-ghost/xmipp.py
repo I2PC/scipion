@@ -1026,3 +1026,12 @@ MetaDataInfo = None
 
 def Image():
     pass
+
+def Euler_angles2matrix():
+    pass
+
+def FileName():
+    pass
+
+def getBlocksInMetaDataFile():
+    pass

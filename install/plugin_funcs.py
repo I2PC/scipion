@@ -5,6 +5,8 @@ from importlib import import_module
 import json
 import pkg_resources
 from pkg_resources import parse_version
+
+from pyworkflow.plugin import Domain
 from pyworkflow.utils.path import cleanPath
 from pyworkflow import LAST_VERSION, OLD_VERSIONS
 from install.funcs import Environment
@@ -43,6 +45,9 @@ class PluginInfo(object):
         self.binVersions = []
         self.pluginEnv = None
 
+        # Plugin class declared inside the pipmodule
+        self._plugin = None
+
         if self.remote:
             self.setRemotePluginInfo()
 
@@ -56,10 +61,17 @@ class PluginInfo(object):
         self.installPipModule()
         self.installBin()
 
+    def _getPlugin(self):
+        if self._plugin is None:
+            self._plugin = Domain.getPlugin(self.pipName)
+
+        return self._plugin
+
     def hasPipPackage(self):
         """Checks if the current plugin is installed via pip"""
         try:
-            pkg_resources.get_distribution(self.pipName)
+            # If we can get the plugin class is local
+            self._getPlugin()
             return True
         except Exception as e:
             return False
@@ -212,25 +224,34 @@ class PluginInfo(object):
         """Sets value for the attributes that can be obtained locally if the
         plugin is installed."""
         if self.isInstalled():
-            package = pkg_resources.get_distribution(self.pipName)
-            keys = ['Name', 'Version', 'Summary', 'Home-page', 'Author', 'Author-email']
-            pattern = r'(.*): (.*)'
-            metadata = {}
-            for line in package._get_metadata(package.PKG_INFO):
-                match = re.match(pattern, line)
-                if match:
-                    key = match.group(1)
-                    if key in keys:
-                        metadata[key] = match.group(2)
-                        keys.remove(key)
-                        if not len(keys):
-                            break
 
-            self.pipVersion = metadata.get('Version', "")
-            self.dirName = self.getDirName()
-            self.pipPath = self.getPipPath()
-            self.emLink = self.getEmPackagesLink()
-            self.binVersions = self.getBinVersions()
+            metadata = {}
+            # Take into account 2 cases here:
+            # A.: plugin is a proper pipmodule and is installed as such
+            # B.: Plugin is not yet a pipmodule but a local folder.
+            try:
+                package = pkg_resources.get_distribution(self.pipName)
+                keys = ['Name', 'Version', 'Summary', 'Home-page', 'Author', 'Author-email']
+                pattern = r'(.*): (.*)'
+
+                for line in package._get_metadata(package.PKG_INFO):
+                    match = re.match(pattern, line)
+                    if match:
+                        key = match.group(1)
+                        if key in keys:
+                            metadata[key] = match.group(2)
+                            keys.remove(key)
+                            if not len(keys):
+                                break
+
+                self.pipVersion = metadata.get('Version', "")
+                self.dirName = self.getDirName()
+                self.pipPath = self.getPipPath()
+                self.emLink = self.getEmPackagesLink()
+                self.binVersions = self.getBinVersions()
+            except:
+                # Case B: code local but not yet a pipmodule.
+                pass
 
             if not self.remote:  # only do this if we don't already have it from remote
                 self.homePage = metadata.get('Home-page', "")
@@ -238,14 +259,16 @@ class PluginInfo(object):
                 self.author = metadata.get('Author', "")
                 self.email = metadata.get('Author-email', "")
 
-    def getPluginObj(self):
+    def getPluginClass(self):
         """ Tries to find the _plugin object in plugin.py file."""
-        if os.path.exists(os.path.join(Environment.getPythonPackagesFolder(), self.dirName, 'plugin.py')):
-            plugin = getattr(import_module('%s.plugin' % self.dirName), '_plugin')
+        pluginModule = self._getPlugin()
+
+        if pluginModule is not None:
+            pluginClass = pluginModule.Plugin
         else:
             print("Warning: couldn't find _plugin in %s" % self.dirName)
-            plugin = None
-        return plugin
+            pluginClass = None
+        return pluginClass
 
     def getInstallenv(self, envArgs=None):
         """Reads the registerPluginBinaries function from plugin.py and returns an
@@ -253,7 +276,7 @@ class PluginInfo(object):
         if envArgs is None:
             envArgs = []
         environment = Environment(args=envArgs)
-        plugin = self.getPluginObj()
+        plugin = self.getPluginClass()
         if plugin:
             plugin.registerPluginBinaries(environment)
         return environment

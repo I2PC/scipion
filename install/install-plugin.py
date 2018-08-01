@@ -36,16 +36,16 @@ import argparse
 
 MODE_INSTALL_PLUGIN = 'installp'
 MODE_UNINSTALL_PLUGIN = 'uninstallp'
-MODE_LIST_BINS = 'list_plugin_bins'
-MODE_INSTALL_BINS = 'install_bins'
-MODE_UNINSTALL_BINS = 'uninstall_bins'
+MODE_LIST_BINS = 'listb'
+MODE_INSTALL_BINS = 'installb'
+MODE_UNINSTALL_BINS = 'uninstallb'
 
 args = sys.argv[1:]
 
 pluginRepo = PluginRepository()
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-subparsers = parser.add_subparsers(help='mode "installp", "uninstallp" or "list_plugin_bins"',
+subparsers = parser.add_subparsers(help='mode "installp", "uninstallp" or "listb"',
                                    dest='mode',
                                    title='Mode',
                                    description='available modes are "installp" or "uninstallp"')
@@ -98,7 +98,7 @@ uninstallParser.add_argument('-p', '--plugin', action='append',
 #                           Install Bins parser                            #
 ############################################################################
 
-installBinParser = subparsers.add_parser("install_bins", formatter_class=argparse.RawTextHelpFormatter,
+installBinParser = subparsers.add_parser("installb", formatter_class=argparse.RawTextHelpFormatter,
                                          usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
                                             (' '.join(args[:2])),
                                          epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
@@ -115,7 +115,7 @@ installBinParser.add_argument('binName', nargs='+',
 #                          Uninstall Bins parser                           #
 ############################################################################
 
-uninstallBinParser = subparsers.add_parser("uninstall_bins", formatter_class=argparse.RawTextHelpFormatter,
+uninstallBinParser = subparsers.add_parser("uninstallb", formatter_class=argparse.RawTextHelpFormatter,
                                            usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
                                            (' '.join(args[:2])),
                                            epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %

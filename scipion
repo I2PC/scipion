@@ -303,8 +303,8 @@ MODE_VIEWER = ['viewer', 'view', 'show']
 MODE_INSTALL = 'install'
 MODE_INSTALL_PLUGIN = 'installp'
 MODE_UNINSTALL_PLUGIN = 'uninstallp'
-MODE_INSTALL_BINS = 'install_bins'
-MODE_UNINSTALL_BINS = 'uninstall_bins'
+MODE_INSTALL_BINS = 'installb'
+MODE_UNINSTALL_BINS = 'uninstallb'
 MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
@@ -597,11 +597,11 @@ MODE can be:
 
     config                 Check and/or write Scipion's global and local configuration.
     
-    install_plugin         Install Scipion plugins. Use flag --help to see usage.
+    installp               Install Scipion plugins. Use flag --help to see usage.
     
-    uninstall_plugin       Uninstall Scipion plugins. Use with flag --help to see usage.
+    uninstallp             Uninstall Scipion plugins. Use with flag --help to see usage.
     
-    install_bins           Install Plugin Binaries. Use with flag --help to see usage.
+    installb               Install Plugin Binaries. Use with flag --help to see usage.
 
     install [OPTION]       [ WILL BE DEPRECATED IN NEXT RELEASE]
                            Download and install all the necessary software to run Scipion.
@@ -659,7 +659,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  help install install_plugin uninstall_plugin install_bins uninstall_bins manager project stats tests testdata viewer webserver printenv run
+  help install installp uninstallp installb uninstallb manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 

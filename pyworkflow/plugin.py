@@ -84,6 +84,9 @@ class Domain:
         cls._plugins[name] = m  # Register the name to as a plugin
         # TODO: Load subclasses (protocols, viewers, wizards)
 
+        # Define variables
+        m.Plugin._defineVariables()
+
         # Load bibtex
         m._bibtex = {}
         bib = cls.__getSubmodule(name, 'bibtex')
