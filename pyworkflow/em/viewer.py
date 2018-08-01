@@ -71,7 +71,8 @@ from viewer_monitor_summary import ViewerMonitorSummary
 
 
 class DataView(View):
-    """ Wrapper the arguments to showj (either web or desktop). """
+    """ Wrapper the arguments to showj (either web or desktop). Also useful to visualize images
+      that are not objects, e.g.: dark or gain images"""
     def __init__(self, path, viewParams={}, **kwargs):
         View.__init__(self)
         self._memory = '2g'
