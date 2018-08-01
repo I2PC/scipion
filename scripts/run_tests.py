@@ -31,26 +31,23 @@ the "case", or by giving the paths and file pattern to use for
 searching them.
 """
 
+from __future__ import print_function
+
 import os
 import sys
-
 from os.path import basename
 import argparse
 import unittest
+from collections import OrderedDict
 
 import pyworkflow.utils as pwutils
 import pyworkflow.tests as pwtests
+import pyworkflow.em as pwem
+
 from pyworkflow import HOME
 
 from pyworkflow.tests import *
 
-from pyworkflow import HOME
-
-PATH_PATTERN = {'model': ('tests/model tests/em/data', 'test*.py'),
-                'convert': ('em/packages', 'test_convert*.py'),
-                'protocols': ('em/packages' 'tests/em/protocols',
-                              'test_protocol*.py'),
-                'mixed': ('em/workflows', 'test*mixed*.py')}
 
 MODULE = 0
 CLASS = 1
@@ -63,20 +60,15 @@ class Tester():
         parser = argparse.ArgumentParser(description=__doc__)
         g = parser.add_mutually_exclusive_group()
         g.add_argument('--run', action='store_true', help='run the selected tests')
-        g.add_argument('--show', action='store_true', help='show available tests')
+        g.add_argument('--show', action='store_true', help='show available tests',
+                       default=True)
     
         add = parser.add_argument  # shortcut
-    
-        add('--case', choices=['model', 'convert', 'protocols', 'mixed'],
-            help='get pre-defined paths and patterns for the specified case')
-        add('--paths', default='.',
-            help='space-separated list of paths where the tests are searched')
+
         add('--pattern', default='test*.py',
             help='pattern for the files that will be used in the tests')
         add('--grep', default=None, nargs='+',
             help='only show/run tests containing the provided words')
-        add('--label', default=None, nargs='+',
-            help='only show/run tests containing the provided label')
         add('--skip', default=None, nargs='+',
             help='skip tests that contains these words')
         add('--log', default=None, nargs='?',
@@ -90,43 +82,46 @@ class Tester():
         if not args.run and not args.show and not args.tests:
             sys.exit(parser.format_help())
     
-        # If 'case' is given, 'path' and 'pattern' are (re-)written from it
-        if args.case:
-            print 'Using paths and pattern for given case "%s"' % args.case
-            args.paths, args.pattern = PATH_PATTERN[args.case]
-    
-        tests = unittest.TestSuite()
+
+        testsDict = OrderedDict()
+        testLoader = unittest.defaultTestLoader
+
         if args.tests:
+            # In this case the tests are passed as argument.
+            # The full name of the test will be used to load it.
+            testsDict['tests'] = unittest.TestSuite()
             for t in args.tests:
                 try:
-                    tests.addTests(unittest.defaultTestLoader.loadTestsFromName(
-                        '%s%s' % ('pyworkflow.', t)))
+                    testsDict['tests'].addTests(testLoader.loadTestsFromName(t))
                 except Exception as e:
-                    print 'Cannot find test %s -- skipping' % t
-                    print 'error: ', e
+                    print('Cannot load test %s -- skipping' % t)
+                    print('error: ', e)
         else:
-            self.discoverTests(tests, args.paths.split(), args.pattern)
-    
-        self.grep = args.grep
+            # In this other case, we will load the test available
+            # from pyworkflow and the other plugins
+            paths = [('pyworkflow', '.')]
+            for name, plugin in pwem.Domain.getPlugins().iteritems():
+                print("plugin.path: ", plugin.__path__[0])
+                paths.append((name, os.path.dirname(plugin.__path__[0])))
+            for k, p in paths:
+                testsDict[k] = testLoader.discover(
+                    p, pattern=args.pattern, top_level_dir=p)
+
+        self.grep = [g.lower() for g in args.grep] if args.grep else []
         self.skip = args.skip
         self.mode = args.mode
         self.log = args.log
-        self.labels = args.label
-    
-        if args.show:
-            self.printTests(tests)
-    
-        elif args.run:
-            self.runTests(tests)
-    
-        elif args.tests:
-            self.runSingleTest(tests)
 
-    def discoverTests(self, tests, paths, pattern):
-        """ Return tests discovered in paths that follow the given pattern """
-        for path in [join('pyworkflow', x) for x in paths]:
-            tests.addTests(unittest.defaultTestLoader.discover(
-                path, pattern=pattern, top_level_dir=HOME))
+        if args.tests:
+            self.runSingleTest(testsDict['tests'])
+        elif args.run:
+            for moduleName, tests in testsDict.iteritems():
+                print(">>>> %s" % moduleName)
+                self.runTests(moduleName, tests)
+        else:
+            for moduleName, tests in testsDict.iteritems():
+                print(">>>> %s" % moduleName)
+                self.printTests(moduleName, tests)
 
     def _match(self, itemName):
         itemLower = itemName.lower()
@@ -136,16 +131,30 @@ class Tester():
                 any(g.lower() in itemLower for g in self.skip))
         
         return (grep and not skip)
-    
-    def _visitTests(self, tests, newItemCallback):
+
+    def __iterTests(self, test):
+        """ Recursively iterate over a testsuite. """
+        print("__iterTests: %s, is-suite: %s" % (str(test.__class__),
+                                                 isinstance(test, unittest.TestSuite)))
+
+        if isinstance(test, unittest.TestSuite):
+            for t in test:
+                self.__iterTests(t)
+        else:
+            yield test
+
+    def _visitTests(self, moduleName, tests, newItemCallback):
         """ Show the list of tests available """
         mode = self.mode
     
         assert mode in ['modules', 'classes', 'all'], 'Unknown mode %s' % mode
     
         # First flatten the list of tests.
+        # testsFlat = list(iter(self.__iterTests(tests)))
+
         testsFlat = []
         toCheck = [t for t in tests]
+
         while toCheck:
             test = toCheck.pop()
             if isinstance(test, unittest.TestSuite):
@@ -159,44 +168,38 @@ class Tester():
         lastModule = None
         
         for t in testsFlat:
-            moduleName, className, testName = t.id().rsplit('.', 2)
+
+            testModuleName, className, testName = t.id().rsplit('.', 2)
             
             # If there is a failure loading the test, show it
-            if moduleName.startswith('unittest.loader.ModuleImportFailure'):
-                print pwutils.red(moduleName), "  test:", t.id()
+            errorStr = 'unittest.loader.ModuleImportFailure.'
+            if testModuleName.startswith(errorStr):
+                newName = t.id().replace(errorStr, '')
+                if self._match(newName):
+                    print(pwutils.red('ModuleImportFailure'), " ", newName)
                 continue
 
-            def _hasLabels():
-                if self.labels is None:
-                    return True
+            if testModuleName != lastModule:
+                lastModule = testModuleName
+                newItemCallback(MODULE, "%s"
+                                % (testModuleName))
 
-                # Check if class has a label that matches input labels.
-                import importlib
-                my_module = importlib.import_module(moduleName)
-                MyClass = getattr(my_module, className)
+            if mode in ['classes', 'all'] and className != lastClass:
+                lastClass = className
+                newItemCallback(CLASS, "%s.%s"
+                                % (testModuleName, className))
 
-                return pwtests.hasLabel(MyClass, self.labels)
-
-            if _hasLabels():
-
-                if moduleName != lastModule:
-                    lastModule = moduleName
-                    newItemCallback(MODULE, moduleName)
-
-                if mode in ['classes', 'all'] and className != lastClass:
-                    lastClass = className
-                    newItemCallback(CLASS, "%s.%s" % (moduleName, className))
-
-                if mode == 'all':
-                    newItemCallback(TEST, "%s.%s.%s" % (moduleName, className, testName))
+            if mode == 'all':
+                newItemCallback(TEST, "%s.%s.%s"
+                                % (testModuleName, className, testName))
 
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
-            print "%s scipion test %s" % (spaces, itemName)
+            print("%s scipion test %s" % (spaces, itemName))
             
-    def printTests(self, tests):
-        self._visitTests(tests, self._printNewItem)
+    def printTests(self, moduleName, tests):
+        self._visitTests(moduleName, tests, self._printNewItem)
         
     def _logTest(self, cmd, runTime, result, logFile):
         with open(self.testLog, "r+") as f:
@@ -234,7 +237,7 @@ class Tester():
                     logFile = ''
                     cmdFull = cmd
                 
-                print pwutils.green(cmdFull)
+                print(pwutils.green(cmdFull))
                 t = pwutils.Timer()
                 t.tic()
                 self.testCount += 1
@@ -243,7 +246,7 @@ class Tester():
                     self._logTest(cmd.replace(scipion, 'scipion'), 
                                   t.getToc(), result, logFile)
 
-    def runTests(self, tests):
+    def runTests(self, moduleName, tests):
         self.testCount = 0
 
         if self.log:
@@ -276,22 +279,19 @@ class Tester():
     </html>""")
 
             f.close()
-        self._visitTests(tests, self._runNewItem)
+        self._visitTests(moduleName, tests, self._runNewItem)
 
         if self.log:
-            print "\n\nOpen results in your browser: \nfile:///%s" % self.testLog
+            print("\n\nOpen results in your browser: \nfile:///%s"
+                  % self.testLog)
         
     def runSingleTest(self, tests):
         result = pwtests.GTestResult()
         tests.run(result)
         result.doReport()
-        if result.testFailed > 0:
-            sys.exit(1)
-        else:
-            sys.exit(0)
-
+        sys.exit(1 if result.testFailed > 0 else 0)
 
 
 if __name__ == '__main__':
-    print "Running tests...."
+    print("Running tests....")
     Tester().main()
