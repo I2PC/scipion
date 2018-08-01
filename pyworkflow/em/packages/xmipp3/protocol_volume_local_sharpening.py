@@ -40,15 +40,7 @@ from pyworkflow.em.metadata.constants import (MDL_COST, MDL_ITER, MDL_SCALE)
 from ntpath import dirname
 from os.path import exists, lexists
 
-LOCALDEBLUR_METHOD_URL= 'http://github.com/I2PC/scipion/wiki/XmippProtLocSharp'
-
-CHIMERA_RESOLUTION_VOL = 'MG_Chimera_resolution.vol'
-BINARY_MASK = 'binaryMask.vol'
-OUTPUT_RESOLUTION_FILE = 'resolutionMonoRes.vol'
-OUTPUT_RESOLUTION_FILE_CHIMERA = 'MonoResChimera.vol'
-METADATA_MASK_FILE = 'mask_data.xmd'
-METADATA_PARAMS_SHARPENING = 'params.xmd'
-
+LOCALDEBLUR_METHOD_URL='http://github.com/I2PC/scipion/wiki/XmippProtLocSharp' 
 
 class XmippProtLocSharp(ProtAnalysis3D):
     """    
@@ -85,12 +77,22 @@ class XmippProtLocSharp(ProtAnalysis3D):
                       ' K should be in the 0.01-0.05 range')        
         
         form.addParallelSection(threads = 4, mpi = 0)
-  
+        
     # --------------------------- INSERT steps functions --------------------------------------------
 
+    def _createFilenameTemplates(self):
+        """ Centralize how files are called """
+        myDict= {           
+                'BINARY_MASK': self._getTmpPath('binaryMask.vol'),
+                'OUTPUT_RESOLUTION_FILE': self._getTmpPath('resolutionMonoRes.vol'),                
+                'OUTPUT_RESOLUTION_FILE_CHIMERA': self._getTmpPath('MonoResChimera.vol'),
+                'METADATA_PARAMS_SHARPENING': self._getTmpPath('params.xmd'),                                                                                 
+                }
+        self._updateFilenamesDict(myDict) 
+    
 
     def _insertAllSteps(self):
-            # Convert input into xmipp Metadata format
+        self._createFilenameTemplates() 
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('createMaskStep')      
         self._insertFunctionStep('sharpeningAndMonoResStep')       
@@ -100,7 +102,6 @@ class XmippProtLocSharp(ProtAnalysis3D):
     def convertInputStep(self):
         """ Read the input volume.
         """
-
         self.volFn = self.inputVolume.get().getFileName()
         self.resFn = self.resolutionVolume.get().getFileName()      
         extVol = getExt(self.volFn)
@@ -114,7 +115,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
     def createMaskStep(self):
         
         params = ' -i %s' % self.resFn
-        params += ' -o %s' % self._getTmpPath(BINARY_MASK)
+        params += ' -o %s' % self._getFileName('BINARY_MASK')
         params += ' --select below %f' % 0.1
         params += ' --substitute binarize'
              
@@ -127,7 +128,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
         if (iter == 1):
             resFile = self.resolutionVolume.get().getFileName()
         else:
-            resFile = self._getTmpPath(OUTPUT_RESOLUTION_FILE)
+            resFile = self._getFileName('OUTPUT_RESOLUTION_FILE')
             
         pathres=dirname(resFile)
                        
@@ -138,28 +139,28 @@ class XmippProtLocSharp(ProtAnalysis3D):
         significance = 0.95
 
         mtd = md.MetaData()
-        if exists(pathres+"/"+(METADATA_MASK_FILE)):
-            mtd.read(pathres+"/"+(METADATA_MASK_FILE))  
+        if exists(pathres+"/"+('mask_data.xmd')):
+            mtd.read(pathres+"/"+('mask_data.xmd'))  
             radius = mtd.getValue(MDL_SCALE,1)
         else:
             xdim, _ydim, _zdim = self.inputVolume.get().getDim()
             radius = xdim*0.5 
         
         params = ' --vol %s' % self._getExtraPath('sharpenedMap_'+str(iter)+'.mrc')
-        params += ' --mask %s' % self._getTmpPath(BINARY_MASK)
+        params += ' --mask %s' % self._getFileName('BINARY_MASK')
         params += ' --sampling_rate %f' % sampling
         params += ' --minRes %f' % (2*sampling)
         params += ' --maxRes %f' % max_res           
         params += ' --step %f' % 0.25
         params += ' --mask_out %s' % self._getTmpPath('refined_mask.vol')
-        params += ' -o %s' % self._getTmpPath(OUTPUT_RESOLUTION_FILE)
+        params += ' -o %s' % self._getFileName('OUTPUT_RESOLUTION_FILE')
         params += ' --volumeRadius %f' % radius
         params += ' --exact'
-        params += ' --chimera_volume %s' % self._getTmpPath(
-                                                OUTPUT_RESOLUTION_FILE_CHIMERA)
+        params += ' --chimera_volume %s' % self._getFileName(
+                                                'OUTPUT_RESOLUTION_FILE_CHIMERA')
         params += ' --sym %s' % 'c1'
         params += ' --significance %f' % significance
-        params += ' --md_outputdata %s' % self._getTmpPath(METADATA_MASK_FILE)
+        params += ' --md_outputdata %s' % self._getTmpPath('mask_data.xmd')
         params += ' --threads %i' % self.numberOfThreads.get()
 
         self.runJob('xmipp_resolution_monogenic_signal', params)
@@ -171,13 +172,13 @@ class XmippProtLocSharp(ProtAnalysis3D):
         if (iter == 1):
             params = ' --resolution_map %s' % self.resFn
         else:
-            params = ' --resolution_map %s' % self._getTmpPath(
-                                                   OUTPUT_RESOLUTION_FILE)
+            params = ' --resolution_map %s' % self._getFileName(
+                                                   'OUTPUT_RESOLUTION_FILE')
             
         params += ' --sampling %f' % sampling
         params += ' -n %i' %  self.numberOfThreads.get()   
         params += ' -k %f' %  self.K
-        params += ' --md %s' % self._getTmpPath(METADATA_PARAMS_SHARPENING)  
+        params += ' --md %s' % self._getFileName('METADATA_PARAMS_SHARPENING')  
         if (iter == 1 and self.const!=1):
              params += ' -l %f' % self.const
          
@@ -205,7 +206,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
             print ("Iteration  %s"  % (iteration))
             self.sharpenStep(iteration)           
             mtd = md.MetaData()
-            mtd.read(self._getTmpPath(METADATA_PARAMS_SHARPENING))
+            mtd.read(self._getFileName('METADATA_PARAMS_SHARPENING'))
             
             lambda_sharpening = mtd.getValue(MDL_COST,1)
             Niters = mtd.getValue(MDL_ITER,1)
@@ -223,7 +224,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
             
             self.MonoResStep(iteration)
             
-            imageFile = self._getTmpPath(OUTPUT_RESOLUTION_FILE)
+            imageFile = self._getFileName('OUTPUT_RESOLUTION_FILE')
 
             img = ImageHandler().read(imageFile)
             imgData = img.getData()
@@ -241,7 +242,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
         
         resFile = self.resolutionVolume.get().getFileName()        
         pathres=dirname(resFile)
-        if not exists(pathres+"/"+(METADATA_MASK_FILE)):
+        if not exists(pathres+"/"+('mask_data.xmd')):
 
             print ('\n====================\n' 
                    ' WARNING---This is not the ideal case because resolution map has been imported.'
