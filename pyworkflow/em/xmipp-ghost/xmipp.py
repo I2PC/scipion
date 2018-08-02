@@ -50,8 +50,6 @@ MDL_OBJID = None
 MDL_ANGLE_PSI2 = None
 MDL_ANGLE_PSI = None
 
-
-
 MDL_ANGLE_PSI_DIFF = None
 MDL_ANGLE_ROT2 = None
 MDL_ANGLE_ROT = None
@@ -150,6 +148,7 @@ MDL_CTF_CRIT_PSDPCARUNSTEST = None
 MDL_CTF_PHASE_SHIFT = None
 MDL_CTF_VPP_RADIUS = None
 MDL_CUMULATIVE_SSNR = None
+MDL_CTF_CRIT_MAXFREQ = None
 
 MDL_DATATYPE = None
 MDL_DATE = None
@@ -1025,4 +1024,13 @@ MetaData = None
 MetaDataInfo = None
 
 def Image():
+    pass
+
+def Euler_angles2matrix():
+    pass
+
+def FileName():
+    pass
+
+def getBlocksInMetaDataFile():
     pass
