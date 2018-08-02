@@ -247,7 +247,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     javaBind = join(os.environ['XMIPP_HOME'], "bindings", "java")
-    imagej_home = join(javaBind, "build", "imagej")
+    imagej_home = join(javaBind, "imagej")
     lib = join(os.environ['XMIPP_HOME'], "lib")
     javaLib = join(javaBind, 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
