@@ -62,19 +62,28 @@ class XmippProtLocSharp(ProtAnalysis3D):
 
         form.addParam('resolutionVolume', PointerParam, pointerClass='Volume',
                       label="Resolution Map", important=True,
-                      help='Select a local resolution map.')
+                      help='Select a local resolution map.'
+                      ' The resolution map must have background 0.'
+                      ' MonoRes maps meet this condition.' 
+                      ' If you use another map you should check' 
+                      ' the background and modify it to zero' 
+                      ' before running LocalDeblur.')
                 
         form.addParam('const', FloatParam, default=1, 
                       expertLevel=LEVEL_ADVANCED,
                       label="lambda",
                       help='Regularization Param.' 
-                        'The software determines this parameter automatically.'
-                         'However, if the user wishes it can be modified')
+                        'The method determines this parameter automatically.'
+                        ' This parameter is directly related to the convergence.'
+                        ' Increasing it would accelerate the convergence,' 
+                        ' however it presents the risk of falling into local minima.')
         form.addParam('K', FloatParam, default=0.025, 
                       expertLevel=LEVEL_ADVANCED,
                       label="K",
-                      help='K = 0.025 works well for all tested cases'
-                      ' K should be in the 0.01-0.05 range')        
+                      help='K = 0.025 works well for all tested cases.'
+                      ' K should be in the 0.01-0.05 range.'
+                      ' For maps with FSC resolution lower than 6Å,'
+                      ' K = 0.01 can be a good alternative.')        
         
         form.addParallelSection(threads = 4, mpi = 0)
         
@@ -139,8 +148,8 @@ class XmippProtLocSharp(ProtAnalysis3D):
         significance = 0.95
 
         mtd = md.MetaData()
-        if exists(pathres+"/"+('mask_data.xmd')):
-            mtd.read(pathres+"/"+('mask_data.xmd'))  
+        if exists(os.path.join(pathres,'mask_data.xmd')):    
+            mtd.read(os.path.join(pathres,'mask_data.xmd')) 
             radius = mtd.getValue(MDL_SCALE,1)
         else:
             xdim, _ydim, _zdim = self.inputVolume.get().getDim()
@@ -203,7 +212,8 @@ class XmippProtLocSharp(ProtAnalysis3D):
         while nextIter is True:
             iteration = iteration + 1
             #print iteration
-            print ("Iteration  %s"  % (iteration))
+            print ('\n====================\n'
+                'Iteration  %s'  % (iteration))
             self.sharpenStep(iteration)           
             mtd = md.MetaData()
             mtd.read(self._getFileName('METADATA_PARAMS_SHARPENING'))
@@ -242,7 +252,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
         
         resFile = self.resolutionVolume.get().getFileName()        
         pathres=dirname(resFile)
-        if not exists(pathres+"/"+('mask_data.xmd')):
+        if  not exists(os.path.join(pathres,'mask_data.xmd')):     
 
             print ('\n====================\n' 
                    ' WARNING---This is not the ideal case because resolution map has been imported.'
