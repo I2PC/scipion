@@ -1,3 +1,6 @@
+print("Xmipp binaries not found. Ghost active.....BOOOOOO!\n"
+      "   See scipion install --list for help.")
+
 DT_DEFAULT = None
 DT_UNKNOWN = None
 DT_UCHAR = None
@@ -1020,7 +1023,10 @@ class SymList:
         pass
 
 
-MetaData = None
+def MetaData():
+    print("Xmipp binaries not found. Ghost active.....BOOOOOO!\n"
+          "   See scipion install --list for help.")
+
 MetaDataInfo = None
 
 def Image():
