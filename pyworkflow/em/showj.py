@@ -248,7 +248,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     """ 
     if memory is None:
         memory = getJvmMaxMemory()
-        print "No memory size provided. Using default: " + memory
+        print "No memory size provided. Using default: " + str(memory)
     
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     imagej_home = join(os.environ['XMIPP_HOME'], "external", "imagej")
