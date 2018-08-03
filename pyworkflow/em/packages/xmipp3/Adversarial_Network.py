@@ -12,13 +12,16 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Reshape
-from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D
+from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, Input, \
+    MaxPooling2D, Subtract
 from keras.layers import LeakyReLU, Dropout
 from keras.layers import BatchNormalization
-from keras.optimizers import Adam, RMSprop
+from keras.optimizers import Adam, RMSprop, SGD
 import xmipp
 import cv2
 
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 path1 = '/home/javiermota/ScipionUserData/projects/CNBScipionCourse/Runs/023211_XmippProtGenerateReprojections/extra/anglesCont.xmd'
@@ -88,12 +91,12 @@ class DCGAN(object):
         if self.G:
             return self.G
         self.G = Sequential()
-        dropout = 0.4
+        '''dropout = 0.4
         depth = 64+64+64+64
-        dim = 20
+        dim = 10
         # In: 100
         # Out: dim x dim x depth
-        self.G.add(Dense(dim*dim*depth, input_dim=625))
+        self.G.add(Dense(dim*dim*depth, input_dim=1600))
         self.G.add(BatchNormalization(momentum=0.9))
         self.G.add(Activation('relu'))
         self.G.add(Reshape((dim, dim, depth)))
@@ -117,7 +120,47 @@ class DCGAN(object):
 
         # Out: 28 x 28 x 1 grayscale image [0.0,1.0] per pix
         self.G.add(Conv2DTranspose(1, 5, padding='same'))
-        self.G.add(Activation('sigmoid'))
+        self.G.add(Activation('sigmoid'))'''
+        input_shape = (self.img_rows, self.img_cols, self.channel)
+        self.G.add(Conv2D(32, (15, 15), activation='linear',
+                          input_shape=input_shape,
+                   kernel_initializer='random_normal',
+                   padding='same'))
+
+        self.G.add(Dropout(0.4))
+        self.G.add(Activation('relu'))
+        self.G.add(BatchNormalization())
+        self.G.add(MaxPooling2D((2, 2), padding='same'))
+        self.G.add(Conv2D(32, (7, 7), activation='linear',
+                   kernel_initializer='random_normal',
+                   padding='same'))
+        self.G.add(Dropout(0.4))
+        self.G.add(Activation('relu'))
+        self.G.add(BatchNormalization())
+
+        self.G.add(MaxPooling2D((2, 2), padding='same', name='encoded'))
+
+        # at this point the representation is (7, 7, 32)
+
+        self.G.add(Conv2D(32, (3, 3), activation='linear',
+                   kernel_initializer='random_normal',
+                   padding='same'))
+        self.G.add(Dropout(0.3))
+        self.G.add(Activation('relu'))
+        self.G.add(BatchNormalization())
+        self.G.add(UpSampling2D((2, 2)))
+        self.G.add(Conv2D(32, (5, 5), activation='linear',
+                   kernel_initializer='random_normal',
+                   padding='same'))
+        self.G.add(Dropout(0.3))
+        self.G.add(Activation('relu'))
+        self.G.add(BatchNormalization())
+        self.G.add(UpSampling2D((2, 2)))
+        # x = Dropout(0.25)(x)
+        self.G.add(Conv2D(1, (9, 9), activation='sigmoid',
+                         kernel_initializer='random_normal', padding='same',
+                         name='decoded'))
+
         self.G.summary()
         return self.G
 
@@ -150,7 +193,7 @@ class MNIST_DCGAN(object):
         self.x_train = self.x_train.reshape(-1, self.img_rows,\
         	self.img_cols, 1).astype(np.float32)'''
         self.x_train = self.ExtractInfoMetadata(path1, root,
-                                                xmipp.MDL_IMAGE_REF, 20, 120)
+                                                xmipp.MDL_IMAGE_REF, 10, 80)
 
         self.img_rows = self.x_train.shape[1]
         self.img_cols = self.x_train.shape[2]
@@ -185,18 +228,24 @@ class MNIST_DCGAN(object):
 
     def train(self, train_steps=2000, batch_size=256, save_interval=0):
         noise_input = None
-        noise2 = self.ExtractInfoMetadata(path1, root, xmipp.MDL_IMAGE,
-                                          20, 65)
+        self.noise2 = self.ExtractInfoMetadata(path1, root, xmipp.MDL_IMAGE,
+                                          10, 80)
         if save_interval>0:
-            noise_input = np.random.uniform(0.0, 1.0, size=[16, 625])
+            #noise_input = np.random.uniform(0.0, 1.0, size=[16, 1600])
+            n = np.random.randint(0, self.x_train.shape[0], size=batch_size)
+            noise_input = self.noise2[n, :, :, :]
+
         for i in range(train_steps):
             k = np.random.randint(0,self.x_train.shape[0], size=batch_size)
             images_train = self.x_train[k, :, :, :]
             noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
-            noise3 = noise2[k,:,:,:]
-            noise3 = noise3.reshape(-1, noise2.shape[1]*noise2.shape[2])
+            noise3 = self.noise2[k,:,:,:]
+            #noise3 = noise3.reshape(-1, noise2.shape[1]*noise2.shape[2])
             #images_fake = self.generator.predict(noise)
             images_fake = self.generator.predict(noise3)
+            #plt.imshow(np.squeeze(images_fake[0]))
+            #plt.gray()
+            #plt.show()
             x = np.concatenate((images_train, images_fake))
             y = np.ones([2*batch_size, 1])
             y[batch_size:, :] = 0
@@ -204,6 +253,8 @@ class MNIST_DCGAN(object):
 
             y = np.ones([batch_size, 1])
             noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
+            j = np.random.randint(0, self.x_train.shape[0], size=batch_size)
+            noise3 = self.noise2[j, :, :, :]
             a_loss = self.adversarial.train_on_batch(noise3, y)
             log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
             log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
@@ -217,7 +268,9 @@ class MNIST_DCGAN(object):
         filename = 'mnist.png'
         if fake:
             if noise is None:
-                noise = np.random.uniform(-1.0, 1.0, size=[samples, 625])
+                #noise = np.random.uniform(-1.0, 1.0, size=[samples, 1600])
+                n = np.random.randint(0, self.x_train.shape[0], size=32)
+                noise = self.noise2[n, :, :, :]
             else:
                 filename = "mnist_%d.png" % step
             images = self.generator.predict(noise)
@@ -226,7 +279,7 @@ class MNIST_DCGAN(object):
             images = self.x_train[i, :, :, :]
 
         plt.figure(figsize=(10,10))
-        for i in range(images.shape[0]):
+        for i in range(16):
             plt.subplot(4, 4, i+1)
             image = images[i, :, :, :]
             image = np.reshape(image, [self.img_rows, self.img_cols])
