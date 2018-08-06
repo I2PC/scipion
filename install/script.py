@@ -194,10 +194,8 @@ arpack = env.addLibrary(
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
-if get('CUDA'):
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
-else:
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
+cudaStr = 'ON' if get('CUDA') else 'OFF'
+opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=' + cudaStr + '-DWITH_LIBV4L=ON -DWITH_V4L=OFF']
 opencv = env.addLibrary(
     'opencv',
     tar='opencv-2.4.13.tgz',
