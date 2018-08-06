@@ -46,7 +46,14 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
        http://www.embl-hamburg.de/biosaxs/manuals/crysol.html
     """
     _label = 'convert PDB to SAXS curve'
-    _treeLocations = ["Pedro(2)"]
+    _treeLocations = [("Test workflow", "{'text': 'MDA workflow'}", "{'text': 'More1', 'priority': 1}", "{'text': 'PDB_SAXS', 'tag': 'protocol','priority': 1}"),
+                        ("Protocols SPA", "Micrographs", "CTF estimation", "more", "Test"),
+                      ("Protocols Yunior",
+                       "{'text': 'Imports', 'icon': 'bookmark.png', 'openItem': false, 'bold': false, 'priority': 1}","More",
+                       "Juan", "{'text': 'DHCP', 'icon': 'bookmark.png', 'openItem': false, 'bold': false, 'priority': 1}")
+                       ]
+
+    _priority = 1
     
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
