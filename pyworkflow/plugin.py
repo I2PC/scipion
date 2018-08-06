@@ -79,7 +79,6 @@ class Domain:
         when creating a class with __metaclass__=PluginMeta that will
         trigger this.
         """
-        print("Registering plugin: ", name)
         m = importlib.import_module(name)
         cls._plugins[name] = m  # Register the name to as a plugin
         # TODO: Load subclasses (protocols, viewers, wizards)
