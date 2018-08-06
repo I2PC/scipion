@@ -153,16 +153,16 @@ class ProtImportParticles(ProtImportImages):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            from pyworkflow.em.packages.emxlib import EmxImport
+            from emxlib import EmxImport
             self.importFilePath = abspath(self.emxFile.get('').strip())
             return EmxImport(self, self.importFilePath,
                                    self.alignTypeList[self.alignType.get()])
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            from xmipp3.convert import XmippImport
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_RELION:
-            from pyworkflow.em.packages.relion.dataimport import RelionImport
+            from relion.convert import RelionImport
             self.importFilePath = self.starFile.get('').strip()
             return RelionImport(self, self.starFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
@@ -171,7 +171,7 @@ class ProtImportParticles(ProtImportImages):
             return ScipionImport(self, self.importFilePath)    
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
-            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportParticles
+            from grigoriefflab.convert import GrigorieffLabImportParticles
             return GrigorieffLabImportParticles(self, self.parFile.get(), self.stackFile.get())
         else:
             self.importFilePath = ''
