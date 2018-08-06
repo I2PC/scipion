@@ -29,17 +29,17 @@ class TestFSC(unittest.TestCase):
 
     def testMd(self):
         """test create FSC from metdata"""
-        import xmipp
+        import xmippLib
         xList=[0.00,0.05,0.10,0.15,0.2]
         yList=[1.00,0.95,0.90,0.85,0.2]
-        md1 =xmipp.MetaData()
+        md1 =xmippLib.MetaData()
         for freq,fscValue in izip(xList, yList):
             id = md1.addObject()
-            md1.setValue(xmipp.MDL_RESOLUTION_FREQ, freq, id)
-            md1.setValue(xmipp.MDL_RESOLUTION_FRC, fscValue, id)
+            md1.setValue(xmippLib.MDL_RESOLUTION_FREQ, freq, id)
+            md1.setValue(xmippLib.MDL_RESOLUTION_FRC, fscValue, id)
         fsc = FSC()
-        fsc.loadFromMd(md1,xmipp.MDL_RESOLUTION_FREQ,
-                       xmipp.MDL_RESOLUTION_FRC)
+        fsc.loadFromMd(md1,xmippLib.MDL_RESOLUTION_FREQ,
+                       xmippLib.MDL_RESOLUTION_FRC)
         x,y = fsc.getData()
         self.assertEqual(xList,x)
         self.assertEqual(yList,y)

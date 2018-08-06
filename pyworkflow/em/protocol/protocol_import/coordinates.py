@@ -32,8 +32,7 @@ from os.path import join, exists
 from pyworkflow.protocol.params import IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.em.protocol import ProtParticlePicking
-import xmipp
-        
+import xmippLib
 from base import ProtImportFiles
 
 
@@ -230,9 +229,9 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             configfile = join(self.filesPath.get(), 'config.xmd')
             existsConfig = exists(configfile)
             if existsConfig:
-                md = xmipp.MetaData('properties@' + configfile)
+                md = xmippLib.MetaData('properties@' + configfile)
                 configobj = md.firstObject()
-                boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+                boxSize = md.getValue(xmippLib.MDL_PICKING_PARTICLE_SIZE, configobj)
         if importFrom == ProtImportCoordinates.IMPORT_FROM_EMAN:
             # Read the boxSize from the e2boxercache/base.json
             jsonFnbase = join(self.filesPath.get(), 'e2boxercache', 'base.json')

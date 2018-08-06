@@ -61,7 +61,7 @@ from convert import ImageHandler
 from pyworkflow.em.viewers.chimera_utils import \
     getChimeraEnviron,  createCoordinateAxisFile
 
-import xmipp
+import xmippLib
 
 from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
@@ -614,7 +614,7 @@ class ChimeraClient:
         self.client.close()
 
     def initVolumeData(self):
-        self.image = xmipp.Image(self.volfile)
+        self.image = xmippLib.Image(self.volfile)
         self.image.convert2DataType(md.DT_DOUBLE)
         self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
         self.vol = self.image.getData()
@@ -686,7 +686,7 @@ class ChimeraAngDistClient(ChimeraClient):
             # Avoid zero division
             weight = 0 if interval == 0 else (weight - minweight)/interval
             weight = weight + 0.5  # add 0.5 to avoid cero weight
-            x, y, z = xmipp.Euler_direction(rot, tilt, psi)
+            x, y, z = xmippLib.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
 
             x = x * self.spheresDistance + x2
@@ -783,7 +783,7 @@ class ChimeraVirusClient(ChimeraClient):
             printCmd('reading motion')
             self.motion = data
             printCmd('getting euler angles')
-            rot, tilt, psi = xmipp.Euler_matrix2angles(self.motion)
+            rot, tilt, psi = xmippLib.Euler_matrix2angles(self.motion)
             printCmd('calling rotate')
             self.rotate(rot, tilt, psi)
         elif msg == 'id':
@@ -808,7 +808,7 @@ class ChimeraVirusClient(ChimeraClient):
                     tilt = float(tokens[2])
                     psi = float(tokens[3])
 
-                    matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+                    matrix = xmippLib.Euler_angles2matrix(rot, tilt, psi)
                 elif cmd == 'rotate_matrix':
                     matrixString = tokens[1]
                     matrix = ast.literal_eval(matrixString)
@@ -826,7 +826,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
     def __init__(self, volfile, **kwargs):
         print("on chimera projection client")
         ChimeraAngDistClient.__init__(self, volfile, **kwargs)
-        self.projection = xmipp.Image()
+        self.projection = xmippLib.Image()
         self.projection.setDataType(md.DT_DOUBLE)
         # 0.5 ->  Niquiest frequency
         # 2 -> bspline interpolation
@@ -872,7 +872,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
             printCmd('reading motion')
             self.motion = data
             printCmd('getting euler angles')
-            rot, tilt, psi = xmipp.Euler_matrix2angles(self.motion)
+            rot, tilt, psi = xmippLib.Euler_matrix2angles(self.motion)
             printCmd('calling rotate')
             self.rotate(rot, tilt, psi)
 
@@ -903,7 +903,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
                     tilt = float(tokens[2])
                     psi = float(tokens[3])
 
-                    matrix = xmipp.Euler_angles2matrix(rot, tilt, psi)
+                    matrix = xmippLib.Euler_angles2matrix(rot, tilt, psi)
                 elif cmd == 'rotate_matrix':
                     matrixString = tokens[1]
                     matrix = ast.literal_eval(matrixString)

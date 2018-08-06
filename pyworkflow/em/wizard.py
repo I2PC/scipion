@@ -57,7 +57,7 @@ from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
                                                     ProtImportVolumes)
 
 
-import xmipp
+import xmippLib
 from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 #===============================================================================
@@ -498,7 +498,7 @@ class ImagePreviewDialog(PreviewDialog):
         if index:
             filename = "%03d@%s" % (index, filename)
         
-#        self.image = xmipp.Image()
+#        self.image = xmippLib.Image()
         self.image = ImageHandler()._img
 
 
@@ -576,10 +576,10 @@ class DownsampleDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmipp.fastEstimateEnhancedPSD(self.rightImage,
-                                      self.lastObj.getFileName(),
-                                      self.getDownsample(), self.dim, 2)
-        
+        xmippLib.fastEstimateEnhancedPSD(self.rightImage,
+                                         self.lastObj.getFileName(),
+                                         self.getDownsample(), self.dim, 2)
+
 
 class CtfDialog(DownsampleDialog):
     
@@ -714,9 +714,9 @@ class BandPassFilterDialog(DownsampleDialog):
         using the self.lastObj that was selected
         """
         from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getLowFreq(), self.getHighFreq(),
-                             self.getFreqDecay(), self.dim)
+        xmippLib.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
+                                self.getLowFreq(), self.getHighFreq(),
+                                self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
@@ -764,8 +764,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         using the self.lastObj that was selected
         """
         from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getFreqSigma(), self.dim)
+        xmippLib.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
+                                self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):

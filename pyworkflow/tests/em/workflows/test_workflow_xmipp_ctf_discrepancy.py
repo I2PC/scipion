@@ -37,7 +37,7 @@ from pyworkflow.object import PointerList, Pointer
 from test_workflow import TestWorkflow
 import pyworkflow.tests as tests
 from pyworkflow.em import ImageHandler
-import xmipp
+import xmippLib
 
 
 class TestXmippCTFDiscrepancyBase(TestWorkflow):
@@ -69,8 +69,8 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
 
         # create one fake micrographs image
         projSize = 32
-        img = xmipp.Image()
-        img.setDataType(xmipp.DT_FLOAT)
+        img = xmippLib.Image()
+        img.setDataType(xmippLib.DT_FLOAT)
         img.resize(projSize, projSize)
         img.write(fnMic)
 
