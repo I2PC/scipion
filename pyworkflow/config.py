@@ -175,9 +175,6 @@ def loadProtocolsConf(protocolsConf):
     file similar to the one in ~/.config/scipion/protocols.conf,
     which is the default one when no file is passed.
     """
-    import time
-    time.sleep(5)
-
     # Read menus from users' config file.
     cp = ConfigParser()
     cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -259,7 +256,6 @@ def createProtocolConfig(viewComponents, section, tag, k, v):
             if 'priority' in viewComponent:
                 priority = viewComponent['priority']
 
-
             protLine = {"tag": "protocol", "value": k,
                         "text": text,
                         "priority": priority}
@@ -269,7 +265,6 @@ def createProtocolConfig(viewComponents, section, tag, k, v):
                 protLine["icon"] = "newProt.png"
             return protLine
         else:
-
             packageLine = {"tag": SECTION_TAG,
                    "value": viewComponent['text'],
                    "text": viewComponent['text'],
@@ -278,7 +273,6 @@ def createProtocolConfig(viewComponents, section, tag, k, v):
 
             packageLine["children"] = [createProtocolConfig(viewComponents,
                                                     section + 1, tag, k, v)]
-
         return packageLine
 
 
@@ -315,7 +309,6 @@ def getSectionList(view):
                           'bold': False,
                           'priority': LESS_PRIORITY}
             jsonString = json.dumps(jsonString)
-
         else:  # Parse the string
             rigthKey = view[i].find('}')
 
