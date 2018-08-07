@@ -10,15 +10,18 @@ import numpy as np
 import time
 from tensorflow.examples.tutorials.mnist import input_data
 
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Reshape
 from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, Input, \
-    MaxPooling2D, Subtract
+    MaxPooling2D, Subtract, AveragePooling2D
 from keras.layers import LeakyReLU, Dropout
 from keras.layers import BatchNormalization
 from keras.optimizers import Adam, RMSprop, SGD
 import xmipp
 import cv2
+import tensorflow as tf
+import keras
+from keras.callbacks import History
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -52,6 +55,7 @@ class DCGAN(object):
         self.G = None   # generator
         self.AM = None  # adversarial model
         self.DM = None  # discriminator model
+        self.batch_size = 32
 
 
     def discriminator(self):
@@ -83,14 +87,14 @@ class DCGAN(object):
         # Out: 1-dim probability
         self.D.add(Flatten())
         self.D.add(Dense(1))
-        self.D.add(Activation('sigmoid'))
+        self.D.add(Activation('tanh'))
         self.D.summary()
         return self.D
 
     def generator(self):
         if self.G:
             return self.G
-        self.G = Sequential()
+        #self.G = Sequential()
         '''dropout = 0.4
         depth = 64+64+64+64
         dim = 10
@@ -121,45 +125,51 @@ class DCGAN(object):
         # Out: 28 x 28 x 1 grayscale image [0.0,1.0] per pix
         self.G.add(Conv2DTranspose(1, 5, padding='same'))
         self.G.add(Activation('sigmoid'))'''
-        input_shape = (self.img_rows, self.img_cols, self.channel)
-        self.G.add(Conv2D(32, (15, 15), activation='linear',
-                          input_shape=input_shape,
-                   kernel_initializer='random_normal',
-                   padding='same'))
 
-        self.G.add(Dropout(0.4))
-        self.G.add(Activation('relu'))
-        self.G.add(BatchNormalization())
-        self.G.add(MaxPooling2D((2, 2), padding='same'))
-        self.G.add(Conv2D(32, (7, 7), activation='linear',
+        input_img = Input(shape=(self.img_rows, self.img_rows, 1),
+                          name='input')
+        # auxiliary_input = Input(shape=(size,size,1), name='input2')
+        x = Conv2D(self.batch_size, (15, 15), activation='linear',
                    kernel_initializer='random_normal',
-                   padding='same'))
-        self.G.add(Dropout(0.4))
-        self.G.add(Activation('relu'))
-        self.G.add(BatchNormalization())
-
-        self.G.add(MaxPooling2D((2, 2), padding='same', name='encoded'))
+                   padding='same')(input_img)
+        x1 = Conv2D(self.batch_size, (7, 7), activation='linear',
+                    kernel_initializer='random_normal',
+                    padding='same')(
+            x)
+        x = keras.layers.subtract([x, x1])
+        x = LeakyReLU()(x)#Activation('relu')(x)
+        x = BatchNormalization()(x)
+        x = AveragePooling2D((2, 2), padding='same')(x)
+        x = Conv2D(self.batch_size, (5, 5), activation='linear',
+                   kernel_initializer='random_normal',
+                   padding='same')(x)
+        x1 = Conv2D(self.batch_size, (3, 3), activation='linear',
+                    kernel_initializer='random_normal',
+                    padding='same')(x)
+        x = keras.layers.subtract([x, x1])
+        x = LeakyReLU()(x)#Activation('relu')(x)
+        x = BatchNormalization()(x)
+        encoded = AveragePooling2D((2, 2), padding='same', name='encoded')(x)
 
         # at this point the representation is (7, 7, 32)
 
-        self.G.add(Conv2D(32, (3, 3), activation='linear',
+        x = Conv2DTranspose(256, kernel_size=5, strides=2,
                    kernel_initializer='random_normal',
-                   padding='same'))
-        self.G.add(Dropout(0.3))
-        self.G.add(Activation('relu'))
-        self.G.add(BatchNormalization())
-        self.G.add(UpSampling2D((2, 2)))
-        self.G.add(Conv2D(32, (5, 5), activation='linear',
-                   kernel_initializer='random_normal',
-                   padding='same'))
-        self.G.add(Dropout(0.3))
-        self.G.add(Activation('relu'))
-        self.G.add(BatchNormalization())
-        self.G.add(UpSampling2D((2, 2)))
-        # x = Dropout(0.25)(x)
-        self.G.add(Conv2D(1, (9, 9), activation='sigmoid',
-                         kernel_initializer='random_normal', padding='same',
-                         name='decoded'))
+                   padding='same')(encoded)
+        x = LeakyReLU(alpha=0.2)(x)#Activation('relu')(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.4)(x)
+        #x = UpSampling2D((2, 2))(x)
+        x = Conv2DTranspose(128, kernel_size=5, strides=2,padding='same')(x)
+        x = LeakyReLU(alpha=0.2)(x)#Activation('relu')(x)
+        x = BatchNormalization()(x)
+        #x = UpSampling2D((2, 2))(x)
+        decoded = Conv2DTranspose(1, kernel_size=5, strides=1,padding='same',
+                         name='decoded')(x)
+        decoded = Activation('tanh')(decoded)
+
+        self.G = Model(input_img,
+                            decoded)  # Model(inputs=[input_img,auxiliary_input],
 
         self.G.summary()
         return self.G
@@ -167,7 +177,8 @@ class DCGAN(object):
     def discriminator_model(self):
         if self.DM:
             return self.DM
-        optimizer = RMSprop(lr=0.0002, decay=6e-8)
+        optimizer = Adam(0.00002)#RMSprop(lr=0.000002,
+        # decay=6e-8)
         self.DM = Sequential()
         self.DM.add(self.discriminator())
         self.DM.compile(loss='binary_crossentropy', optimizer=optimizer,\
@@ -177,7 +188,8 @@ class DCGAN(object):
     def adversarial_model(self):
         if self.AM:
             return self.AM
-        optimizer = RMSprop(lr=0.0001, decay=3e-8)
+        optimizer = Adam(0.00001, 0.5) #RMSprop(lr=0.000001,
+        # decay=3e-8)
         self.AM = Sequential()
         self.AM.add(self.generator())
         self.AM.add(self.discriminator())
@@ -216,10 +228,12 @@ class MNIST_DCGAN(object):
             Data = I.getData()
             Imresize = cv2.resize(Data, (size, size),
                                   interpolation=cv2.INTER_CUBIC)
-            Image.append(
-                cv2.normalize(np.asarray(Imresize[crop:-crop, crop:-crop]),
-                              None,
-                              0.0, 1.0, cv2.NORM_MINMAX))
+            Imnormalize = 2*(Imresize[crop:-crop, crop:-crop]-np.min(Imresize[
+                                                                  crop:-crop,
+                                                                  crop:-crop]))/\
+                          (np.max(Imresize[crop:-crop, crop:-crop])-np.min(
+                              Imresize[crop:-crop, crop:-crop]))-1
+            Image.append(Imnormalize)
 
         Image = np.array(Image).astype('float')
         Image = Image.reshape(len(Image), Image.shape[1], Image.shape[2], 1)
@@ -243,18 +257,22 @@ class MNIST_DCGAN(object):
             #noise3 = noise3.reshape(-1, noise2.shape[1]*noise2.shape[2])
             #images_fake = self.generator.predict(noise)
             images_fake = self.generator.predict(noise3)
-            #plt.imshow(np.squeeze(images_fake[0]))
-            #plt.gray()
-            #plt.show()
+            '''plt.subplot(1,2,1)
+            plt.imshow(np.squeeze(noise3[0]))
+            plt.gray()
+            plt.subplot(1, 2, 2)
+            plt.imshow(np.squeeze(images_fake[0]))
+            plt.gray()
+            plt.show()'''
             x = np.concatenate((images_train, images_fake))
             y = np.ones([2*batch_size, 1])
             y[batch_size:, :] = 0
             d_loss = self.discriminator.train_on_batch(x, y)
 
             y = np.ones([batch_size, 1])
-            noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
-            j = np.random.randint(0, self.x_train.shape[0], size=batch_size)
-            noise3 = self.noise2[j, :, :, :]
+            #noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
+            #j = np.random.randint(0, self.x_train.shape[0], size=batch_size)
+            #noise3 = self.noise2[j, :, :, :]
             a_loss = self.adversarial.train_on_batch(noise3, y)
             log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
             log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
@@ -263,6 +281,16 @@ class MNIST_DCGAN(object):
                 if (i+1)%save_interval==0:
                     self.plot_images(save2file=True, samples=noise_input.shape[0],\
                         noise=noise_input, step=(i+1))
+        self.generator.save('AdversarialDenoising.h5')
+
+    def write_log(callback, names, logs, batch_no):
+        for name, value in zip(names, logs):
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            summary_value.simple_value = value
+            summary_value.tag = name
+            callback.writer.add_summary(summary, batch_no)
+            callback.writer.flush()
 
     def plot_images(self, save2file=False, fake=True, samples=16, noise=None, step=0):
         filename = 'mnist.png'
@@ -295,7 +323,7 @@ class MNIST_DCGAN(object):
 if __name__ == '__main__':
     mnist_dcgan = MNIST_DCGAN()
     timer = ElapsedTimer()
-    mnist_dcgan.train(train_steps=2000, batch_size=32, save_interval=500)
+    mnist_dcgan.train(train_steps=5000, batch_size=32, save_interval=250)
     timer.elapsed_time()
     mnist_dcgan.plot_images(fake=True)
     mnist_dcgan.plot_images(fake=False, save2file=True)
