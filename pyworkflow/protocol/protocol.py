@@ -308,7 +308,6 @@ class Protocol(Step):
     _lastUpdateVersion = pw.VERSION_1
     _stepsCheckSecs = 3
     _treeLocations = []
-    _priority = 10
 
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)
@@ -1415,18 +1414,6 @@ class Protocol(Step):
         """
         Set protocol tree location"""
         cls._treeLocations = newLocation
-
-    @classmethod
-    def getPriority(cls):
-        """
-        Get protocol weight"""
-        return cls._priority
-
-    @classmethod
-    def setPriority(cls, nePriority):
-        """
-        Set protocol weight"""
-        cls._protWeight = newPriority
 
     @classmethod
     def deleteSelectPackageTreeLocation(cls, view):

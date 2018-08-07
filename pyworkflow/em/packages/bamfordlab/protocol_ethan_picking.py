@@ -46,8 +46,7 @@ class ProtEthanPicker(ProtParticlePickingAuto):
     """
 
     _label = 'ethan picker'
-    #_treeLocations = ["HTP~Import(1)", "PTH~Import(4)~more(4)"]
-    _priority = 1
+
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
