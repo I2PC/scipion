@@ -51,6 +51,11 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     """
     _label = 'extract movie particles'
 
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Particles', 'openItem': true, 'priority': 3}",
+                       "{'text': 'Extract', 'openItem': false, 'priority': 2}",
+                       "more")]
+
     def __init__(self, **kwargs):
         ProtExtractMovieParticles.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL

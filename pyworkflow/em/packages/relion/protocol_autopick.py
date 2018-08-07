@@ -318,8 +318,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
     the 'Threshold' and 'Inter-particle distance'.
     """
     _label = 'auto-picking (step 2)'
-    
-    
+
     def __init__(self, **kwargs):        
         ProtRelionAutopickBase.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL

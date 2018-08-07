@@ -34,6 +34,11 @@ from convert import createItemMatrix, writeSetOfParticles, getImageLocation
 class XmippProtCL2DAlign(em.ProtAlign2D):
     """ Aligns a set of particles using the CL2D algorithm. """
     _label = 'align with cl2d'
+
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': '2D', 'openItem': true, 'priority': 4}",
+                       "{'text': 'Align', 'openItem': false, 'priority': 1}",
+                       "{'text': 'align with cl2d', 'tag': 'protocol', 'priority': 1}")]
     
     # --------------------------- DEFINE param functions -----------------------
     def _defineAlignParams(self, form):

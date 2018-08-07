@@ -46,6 +46,9 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
     which the two CTF phases differ in 90 degrees.
     """
     _label = 'ctf consensus'
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Micrographs', 'openItem': true, 'priority': 2}",
+                       "CTF estimation", "{'text': 'more', 'openItem': false}")]
 
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)

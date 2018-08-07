@@ -54,6 +54,9 @@ class XmippProtMovieCorr(ProtAlignMovies):
     INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
 
     _label = 'correlation alignment'
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Movies', 'priority': 1, 'openItem': false}",
+                       "{'text': 'Correlation Alignment', 'tag': 'protocol','priority': 2}")]
     _lastUpdateVersion = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------

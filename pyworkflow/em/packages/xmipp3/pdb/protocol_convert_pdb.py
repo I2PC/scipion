@@ -42,6 +42,10 @@ from pyworkflow.utils import replaceBaseExt, removeExt, getExt
 class XmippProtConvertPdb(em.ProtInitialVolume):
     """ Convert a PDB file into a volume.  """
     _label = 'convert a PDB'
+
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': '3D', 'openItem': true, 'priority': 5}",
+                       "{'text': 'Initial Volume', 'openItem': false, 'priority': 1}")]
     IMPORT_FROM_ID = 0
     IMPORT_OBJ = 1
     IMPORT_FROM_FILES = 2 

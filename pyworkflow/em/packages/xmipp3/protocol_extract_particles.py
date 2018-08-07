@@ -49,6 +49,10 @@ from xmipp3 import XmippProtocol
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates"""
     _label = 'extract particles'
+
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Particles', 'openItem': true, 'priority': 3}",
+                       "{'text': 'Extract', 'openItem': false, 'priority': 2}")]
     
     def __init__(self, **kwargs):
         ProtExtractParticles.__init__(self, **kwargs)

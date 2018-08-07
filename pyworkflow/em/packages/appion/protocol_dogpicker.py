@@ -45,13 +45,6 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
     """
     _label = 'dogpicker'
 
-    """_treeLocations = [("Test workflow", "{'text': 'MDA workflow'}", "{'text': 'More1', 'priority': 4}", "{'text': 'Dog_Picker', 'tag': 'protocol','priority': 4}"),
-                      ("Protocols Yunior",
-                       "{'text': 'Imports', 'icon': 'bookmark.png', 'openItem': false, 'bold': false, 'priority': 1}","More",
-                       "{'text': 'Yunior', 'icon': 'bookmark.png', 'openItem': false, 'bold': false, 'priority': 1}")
-                       ]
-    """
-
     def init__(self, **args):
         ProtParticlePickingAuto.__init__(self, **args)
 

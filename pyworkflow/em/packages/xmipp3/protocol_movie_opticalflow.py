@@ -50,6 +50,10 @@ class XmippProtOFAlignment(ProtAlignMovies):
     Wrapper protocol to Xmipp Movie Alignment by Optical Flow
     """
     _label = 'optical alignment'
+
+    _treeLocations = [("XMIPP Protocols", "{'text': 'Movies', 'priority': 1, 'openItem': false}",
+                       "{'text': 'Optical Alignment', 'tag': 'protocol','priority': 1}")]
+
     _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
 

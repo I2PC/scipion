@@ -55,6 +55,7 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
     processors (GPUs).
     """
     _label = 'auto-picking'
+
     
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
