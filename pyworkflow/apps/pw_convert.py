@@ -10,7 +10,7 @@ import argparse
 
 from pyworkflow.em import loadSetFromDb
 from pyworkflow.em.data import SetOfCoordinates
-from pyworkflow.utils import cleanPath
+from pyworkflow.utils import cleanPath, importFromPlugin
 import pyworkflow.utils as pwutils
 
 
@@ -38,15 +38,21 @@ def main():
         coordSet.setMicrographs(micSet)
 
         if fromType == 'eman2':
-            if toType == 'xmipp': 
-                from pyworkflow.em.packages.eman2.convert import readSetOfCoordinates
+            if toType == 'xmipp':
+                readSetOfCoordinates = importFromPlugin('eman2.convert',
+                                                        'readSetOfCoordinates',
+                                                        doRaise=True)
         elif fromType == 'dogpicker':
-            if toType == 'xmipp': 
-                from pyworkflow.em.packages.appion.convert import readSetOfCoordinates
+            if toType == 'xmipp':
+                readSetOfCoordinates = importFromPlugin('appion.convert',
+                                                        'readSetOfCoordinates',
+                                                        doRaise=True)
         elif fromType == 'relion':
             if toType == 'xmipp':
                 def readSetOfCoordinates(outputDir, micSet, coordSet):
-                    from pyworkflow.em.packages.relion.convert import readSetOfCoordinates
+                    readSetOfCoordinates = importFromPlugin('relion.convert',
+                                                            'readSetOfCoordinates',
+                                                            doRaise=True)
                     inputCoords = args.extra
                     starFiles = [os.path.join(inputCoords,
                                               pwutils.removeBaseExt(mic.getFileName())
@@ -54,10 +60,14 @@ def main():
                     readSetOfCoordinates(coordSet, starFiles)
         elif fromType == 'gautomatch':
             if toType == 'xmipp':
-                from pyworkflow.em.packages.gautomatch.convert import readSetOfCoordinates
+                readSetOfCoordinates = importFromPlugin('gautomatch.convert',
+                                                        'readSetOfCoordinates',
+                                                        doRaise=True)
         elif fromType == 'gempicker':
             if toType == 'xmipp':
-                from pyworkflow.em.packages.igbmc.convert import readSetOfCoordinates
+                readSetOfCoordinates = importFromPlugin('igbmc.convert',
+                                                        'readSetOfCoordinates',
+                                                        doRaise=True)
         else:
             raise Exception('Unknown coordinates type: %s' % fromType)
 

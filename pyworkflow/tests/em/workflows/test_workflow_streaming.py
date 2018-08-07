@@ -29,19 +29,20 @@ from glob import glob
 import threading
 import socket
 
+from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
+import pyworkflow.utils as pwutils
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
                                     ProtImportMicrographs, ProtImportAverages)
-from pyworkflow.em.packages.eman2 import SparxGaussianProtPicking
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
-from pyworkflow.em.packages.relion import (ProtRelionExtractParticles,
-                                           ProtRelion2Autopick)
-from pyworkflow.em.packages.xmipp3 import XmippProtOFAlignment
-from pyworkflow.em import ImageHandler
 
-from pyworkflow.protocol import getProtocolFromDb
-import pyworkflow.utils as pwutils
+XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment')
+SparxGaussianProtPicking = importFromPlugin('eman2.protocols', 'SparxGaussianProtPicking')
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
+ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles')
+ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
 
 
 # Load the number of movies for the simulation, by default equal 5, but

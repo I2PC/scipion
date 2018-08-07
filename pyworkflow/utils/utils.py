@@ -725,3 +725,26 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
             return default
     else:
         return value
+
+
+def pluginNotFound(plugName, errorMsg='', doRaise=False):
+    msgStr = "%s plugin not found. %s\n" % (plugName, errorMsg)
+    msgStr += "  > See 'scipion install --list' to install it. < "
+    if doRaise:
+        raise Exception(msgStr)
+    else:
+        print(msgStr)
+
+
+
+def importFromPlugin(module, method='', errorMsg='', doRaise=False):
+    import importlib
+    try:
+        if method == '':
+            output = importlib.import_module(module)
+        else:
+            output = getattr(importlib.import_module(module), method)
+        return output
+    except Exception as e:
+        plugName = module.split('.')[0]
+        pluginNotFound(plugName, errorMsg, doRaise)

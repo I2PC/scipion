@@ -27,6 +27,7 @@
 from os.path import exists
 from os.path import abspath
 
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
@@ -153,16 +154,22 @@ class ProtImportParticles(ProtImportImages):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            from pyworkflow.em.packages.emxlib import EmxImport
+            EmxImport = importFromPlugin('emxlib', 'EmxImport',
+                                  errorMsg='Emx is needed to import .emx files',
+                                  doRaise=True)
             self.importFilePath = abspath(self.emxFile.get('').strip())
             return EmxImport(self, self.importFilePath,
                                    self.alignTypeList[self.alignType.get()])
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            XmippImport = importFromPlugin('xmipp3.convert', 'XmippImport',
+                                           'Xmipp is needed to import .xmd files',
+                                           doRaise=True)
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_RELION:
-            from pyworkflow.em.packages.relion.dataimport import RelionImport
+            RelionImport = importFromPlugin('relion.dataimport', 'RelionImport',
+                              errorMsg='Relion is needed to import .star files',
+                              doRaise=True)
             self.importFilePath = self.starFile.get('').strip()
             return RelionImport(self, self.starFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
@@ -171,7 +178,10 @@ class ProtImportParticles(ProtImportImages):
             return ScipionImport(self, self.importFilePath)    
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
-            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportParticles
+            GrigorieffLabImportParticles = importFromPlugin(
+                     'grigoriefflab.dataimport', 'GrigorieffLabImportParticles',
+                     errorMsg='GrigorieffLab is needed to import .stk files',
+                     doRaise=True)
             return GrigorieffLabImportParticles(self, self.parFile.get(), self.stackFile.get())
         else:
             self.importFilePath = ''
