@@ -58,7 +58,11 @@ class XmippProtCL2D(ProtClassify2D):
     the original dataset into a given number of classes. """
     
     _label = 'cl2d'
-    
+
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': '2D', 'openItem': true, 'priority': 4}",
+                       "{'text': 'Classify', 'openItem': false, 'priority': 1}")]
+
     def __init__(self, **args):
         ProtClassify2D.__init__(self, **args)
         if self.numberOfMpi.get() < 2:

@@ -47,6 +47,11 @@ class XmippProtMovieGain(ProtProcessMovies):
     Estimate the gain image of a camera, directly analyzing one of its movies.
     """
     _label = 'movie gain'
+
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Movies', 'priority': 1, 'openItem': true}",
+                       "{'text': 'Movie Gain', 'tag': 'protocol','priority': 4}")]
+
     _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **args):

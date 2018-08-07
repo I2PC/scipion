@@ -46,7 +46,7 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
        http://www.embl-hamburg.de/biosaxs/manuals/crysol.html
     """
     _label = 'convert PDB to SAXS curve'
-    
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')

@@ -47,6 +47,7 @@ class ProtEthanPicker(ProtParticlePickingAuto):
 
     _label = 'ethan picker'
 
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
 

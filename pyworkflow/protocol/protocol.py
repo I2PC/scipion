@@ -307,6 +307,7 @@ class Protocol(Step):
     # Version where protocol appeared first time
     _lastUpdateVersion = pw.VERSION_1
     _stepsCheckSecs = 3
+    _treeLocations = []
 
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)
@@ -1397,6 +1398,34 @@ class Protocol(Step):
     def getClassPackageName(cls):
         return cls.getClassPackage().__name__.replace(
             'pyworkflow.protocol.scipion', 'scipion')
+
+    @classmethod
+    def getClassName(cls):
+        return cls.__name__
+
+    @classmethod
+    def getTreeLocations(cls):
+        """
+        Get protocol tree location"""
+        return cls._treeLocations
+
+    @classmethod
+    def setTreeLocation(cls, newLocation):
+        """
+        Set protocol tree location"""
+        cls._treeLocations = newLocation
+
+    @classmethod
+    def deleteSelectPackageTreeLocation(cls, view):
+        # type: (object) -> object
+        """
+        Delete a view in Tree Location"""
+        if view in cls._treeLocations:
+            cls._treeLocations.remove(view)
+            return True
+        else:
+            return False
+
 
     @classmethod
     def validatePackageVersion(cls, varName, errors):

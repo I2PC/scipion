@@ -43,6 +43,9 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     values, the astigmatism, and the resolution.
     """
     _label = 'ctf selection'
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Micrographs', 'openItem': true, 'priority': 2}",
+                       "CTF estimation", "{'text': 'more', 'openItem': false}")]
 
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)

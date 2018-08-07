@@ -39,6 +39,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     either manually or in a supervised mode.
     """
     _label = 'manual-picking (step 1)'
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Particles', 'openItem': true, 'priority': 3}",
+                       "{'text': 'Picking', 'openItem': false, 'priority': 1}",
+                       "{'text': 'manual-picking (step 1)', 'tag': 'protocol', 'priority': 1}")]
 
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)

@@ -47,6 +47,9 @@ ALL_PROTOCOLS = "All"
 PATH = os.path.dirname(__file__)
 PROTOCOL_DISABLED_TAG = 'protocol-disabled'
 PROTOCOL_TAG = 'protocol'
+SECTION_TAG = 'section'
+LESS_PRIORITY = 10
+HIGHER_PRIORITY = 0
 
 
 def loadSettings(dbPath):
@@ -149,6 +152,24 @@ def addToTree(menu, item, checkFunction=None):
     return subMenu
 
 
+# Function to check if the protocol has to be added or not
+# It'll receive an item as in the confg:
+# {"tag": "protocol", "value": "ProtImportMovies", "text": "import movies"}
+def addItem(item):
+
+    # If it is a protocol
+    if item["tag"] == "protocol":
+        # Get the class name and then if it is disabled
+        protClassName = item["value"]
+        protClass = em.getProtocols().get(protClassName)
+        if protClass is None:
+            return False
+        else:
+            return not protClass.isDisabled()
+    else:
+        return True
+
+
 def loadProtocolsConf(protocolsConf):
     """ Read the protocol configuration from a .conf
     file similar to the one in ~/.config/scipion/protocols.conf,
@@ -161,23 +182,6 @@ def loadProtocolsConf(protocolsConf):
     
     try:
         assert cp.read(protocolsConf) != [], 'Missing file %s' % protocolsConf
-
-        # Function to check if the protocol has to be added or not
-        # It'll receive an item as in the confg:
-        # {"tag": "protocol", "value": "ProtImportMovies", "text": "import movies"}
-        def addItem(item):
-
-            # If it is a protocol
-            if item["tag"] == "protocol":
-                # Get the class name and then if it is disabled
-                protClassName = item["value"]
-                protClass = em.getProtocols().get(protClassName)
-                if protClass is None:
-                    return False
-                else:
-                    return not protClass.isDisabled()
-            else:
-                return True
 
         # Populate the protocols menu from the config file.
         for menuName in cp.options('PROTOCOLS'):
@@ -213,51 +217,212 @@ def isAFinalProtocol(v, k):
         return True
 
 
+def createProtocolConfig(viewComponents, section, tag, k, v):
+    """
+    #  This method create  a protocols configuration
+
+    :param viewComponents: views and sections in which the protocol must
+                           be inserted
+    :param section: depth of section
+    :param tag: type of protocol
+    :param k: name of protocol class
+    :param v: protocol to insert
+    """
+    if section == len(viewComponents):  # insert the protocol
+        protLine = {"tag": "protocol", "value": k,
+                    "text": v.getClassLabel(prependPackageName=True),
+                    "priority": LESS_PRIORITY}
+
+        # If it's a new protocol
+        if v.isNew() and v.isInstalled():
+            # add the new icon
+            protLine["icon"] = "newProt.png"
+        return protLine
+    else:
+        #  insert a section and the children of this section if the last
+        #  component isn't a protocol
+        viewComponent = viewComponents[section]
+
+        if 'tag' in viewComponent and viewComponent['tag'] == PROTOCOL_TAG:
+            # the last component is a protocol
+
+            # get the alternative text
+            text = v.getClassLabel(prependPackageName=True)
+            if 'text' in viewComponent:
+                text = viewComponent['text']
+
+            # get the priority
+            priority = LESS_PRIORITY
+            if 'priority' in viewComponent:
+                priority = viewComponent['priority']
+
+            protLine = {"tag": "protocol", "value": k,
+                        "text": text,
+                        "priority": priority}
+            # If it's a new protocol
+            if v.isNew() and v.isInstalled():
+                # add the new icon
+                protLine["icon"] = "newProt.png"
+            return protLine
+        else:
+            packageLine = {"tag": SECTION_TAG,
+                   "value": viewComponent['text'],
+                   "text": viewComponent['text'],
+                   "priority": viewComponent['priority'],
+                   "openItem": viewComponent['openItem']}
+
+            packageLine["children"] = [createProtocolConfig(viewComponents,
+                                                    section + 1, tag, k, v)]
+        return packageLine
+
+
+def findTreeLocation(parent, children, viewComponents, section):
+    """
+    Locate the protocol position in the given view
+    """
+    for child in children:
+        if child.tag == SECTION_TAG or child.tag == "protocol_group":
+            if section <= len(viewComponents)-1:
+                sectionName = viewComponents[section]
+                if child.text == sectionName['text']:
+                   return findTreeLocation(child, child.childs, viewComponents,
+                                           section+1)
+    return parent, section
+
+
+def getSectionList(view):
+    """
+    Get the section List of the given view
+    """
+    sections = []
+    sectionCount = len(view)
+
+    for i in range(1, sectionCount):
+        sect = view[i]
+        jsonString = None
+
+        if sect[0] != '{':  # Create a json taking into account a string
+
+            jsonString = {"tag": SECTION_TAG,
+                          "text": sect,
+                          "openItem": True,
+                          'bold': False,
+                          'priority': LESS_PRIORITY}
+            jsonString = json.dumps(jsonString)
+        else:  # Parse the string
+            rigthKey = view[i].find('}')
+
+            if rigthKey != -1:
+                jsonString = view[i].replace("\'", '\"')
+
+        if jsonString is not None:
+            jsonToObject = json.loads(jsonString)
+
+            if 'tag' not in jsonToObject:
+                jsonToObject['tag'] = SECTION_TAG
+            if 'openItem' not in jsonToObject:
+                jsonToObject['openItem'] = True
+            if 'bold' not in jsonToObject:
+                jsonToObject['bold'] = False
+            if 'priority' not in jsonToObject:
+                jsonToObject['priority'] = LESS_PRIORITY
+
+            jsonToObject = json.dumps(jsonToObject)
+            jsonToObject = json.loads(jsonToObject)
+
+            sections.append(jsonToObject)
+
+    return sections
+
+
+def orderByPriority(treeLocation):
+    """
+    Order by priority protocols and section in a given subTree
+    :param treeLocation: subtree location
+    """
+
+    # take the children in the subtree
+    children = treeLocation[0].childs
+
+    # Order all protocols and sections
+    childrenCount = len(children)
+
+    for i in range(0, childrenCount - 1):
+        for j in range(i+1, childrenCount):
+            childA = children[i]
+            childB = children[j]
+
+            # order the elements if both are of the same type
+            if (childB.tag == SECTION_TAG and childA.tag == SECTION_TAG) or \
+                    (childB.tag == PROTOCOL_TAG and childA.tag == PROTOCOL_TAG):
+                if childB.priority < childA.priority:
+                    tmpChild = children[i]
+                    children[i] = children[j]
+                    children[j] = tmpChild
+            else:
+                # order the protocols before the sections
+                if childB.tag == PROTOCOL_TAG and childA.tag == SECTION_TAG:
+                    tmpChild = children[i]
+                    children[i] = children[j]
+                    children[j] = tmpChild
+
+
 def addAllProtocols(protocols):
     # Add all protocols
+
     from pyworkflow.em import getProtocols
     allProts = getProtocols()
 
     # Sort the dictionary
-    allProtsSorted = OrderedDict(sorted(allProts.items(), key= lambda e: e[1].getClassLabel()))
+    allProtsSorted = OrderedDict(sorted(allProts.items(),
+                                        key= lambda e: e[1].getClassLabel()))
 
-    allProtMenu = ProtocolConfig(ALL_PROTOCOLS)
-    packages = {}
     # Group protocols by package name
     for k, v in allProtsSorted.iteritems():
 
         if isAFinalProtocol(v, k):
 
-            packageName = v.getClassPackageName()
+            packageTreeLocation = v.getTreeLocations()
 
-            # Get the package submenu
-            packageMenu = packages.get(packageName)
+            if len(packageTreeLocation) != 0:  # The tree locations is not empty
 
-            # If no package menu available
-            if packageMenu is None:
+                tag = getProtocolTag(v.isInstalled())
 
-                # Add it to the menu ...
-                packageLine = {"tag": "package", "value": packageName,
-                               "text": packageName}
-                packageMenu = addToTree(allProtMenu, packageLine)
+                # Create a Tree View
+                for view in packageTreeLocation:
 
-                # Store it in the dict
-                packages[packageName] = packageMenu
+                    viewName = view[0]  # Take the first element
+                                        # as View Name
 
-            # Add the protocol
-            tag = getProtocolTag(v.isInstalled())
+                    menu = protocols.get(viewName)  # Verify if the View Name is
+                                                    # present in protocols
 
-            protLine = {"tag": tag, "value": k,
-                        "text": v.getClassLabel(prependPackageName=False)}
+                    # Get the section List of the view
+                    sectionList = getSectionList(view)
 
-            # If it's a new protocol
-            if v.isNew() and v.isInstalled():
-                # add the new icon
-                protLine["icon"] = "newProt.png"
+                    if menu is None:  # Insert a new View
 
-            addToTree(packageMenu, protLine)
+                        menu = ProtocolConfig(viewName)
 
-    protocols[ALL_PROTOCOLS] = allProtMenu
+                        packageLine = createProtocolConfig(sectionList, 0,
+                                                           tag, k, v)
+
+                        # Add sections and the protocol
+                        addToTree(menu, packageLine)
+                        protocols[viewName] = menu
+
+                    else:
+                        # Find the protocol section and put in there
+                        treeLocation  = findTreeLocation(menu, menu.childs,
+                                                         sectionList, 0)
+
+                        packageLine = createProtocolConfig(sectionList,
+                                                           treeLocation[1],
+                                                           tag, k, v)
+
+                        addToTree(treeLocation[0], packageLine)
+
+                        orderByPriority(treeLocation)
 
 
 def getProtocolTag(isInstalled):
@@ -386,6 +551,7 @@ class ProjectSettings(pwobj.OrderedObject):
 
     def ageColorMode(self):
         return self.getColorMode() == self.COLOR_MODE_AGE
+
     def write(self, dbPath=None):
         self.setName('ProjectSettings')
         if dbPath is not None:
@@ -440,6 +606,7 @@ class MenuConfig(object):
         self.shortCut = pwobj.String(kwargs.get('shortCut', None))
         self.childs = pwobj.List()
         self.openItem = pwobj.Boolean(kwargs.get('openItem', False))
+        self.priority = pwobj.Integer(kwargs.get('priority', LESS_PRIORITY))
 
     def addSubMenu(self, text, value=None, **args):
         subMenu = type(self)(text, value, **args)
@@ -472,6 +639,7 @@ class ProtocolConfig(MenuConfig):
             elif tag == 'protocol_base':
                 args['icon'] = 'class_obj.gif'
 
+        args['priority'] = args.get('priority', LESS_PRIORITY)
         args['shortCut'] = shortCut
         return MenuConfig.addSubMenu(self, text, value, **args)
 

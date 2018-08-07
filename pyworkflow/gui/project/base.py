@@ -164,7 +164,7 @@ class ProjectBaseWindow(Window):
     #
     def onExit(self):
         # Project -> Exit
-        self.close()
+        self._onClosing()
 
     def onOnlineHelp(self):
         # Help -> Online help

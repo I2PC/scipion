@@ -42,6 +42,11 @@ class XmippProtMovieAverage(ProtAlignMovies):
     Protocol to average movies
     """
     _label = 'movie average'
+
+    _treeLocations = [("XMIPP Protocols",
+                       "{'text': 'Movies', 'priority': 1, 'openItem': false}",
+                       "{'text': 'Movie Average', 'tag': 'protocol','priority': 3}")]
+
     _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True

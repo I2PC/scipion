@@ -44,10 +44,9 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
     dogpicker.
     """
     _label = 'dogpicker'
-        
-    def __init__(self, **args):
-        ProtParticlePickingAuto.__init__(self, **args)
 
+    def init__(self, **args):
+        ProtParticlePickingAuto.__init__(self, **args)
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -155,4 +154,3 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
     
     def getCoordsDir(self):
         return self._getExtraPath()
- 
