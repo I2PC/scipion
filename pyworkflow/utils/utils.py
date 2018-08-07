@@ -30,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+import importlib
 from os.path import join
 
 
@@ -738,7 +739,12 @@ def pluginNotFound(plugName, errorMsg='', doRaise=False):
 
 
 def importFromPlugin(module, method='', errorMsg='', doRaise=False):
-    import importlib
+    """ This method try to import the method from the plugin/module and
+        returns what is imported if not fails. When the importation fails
+        (due to the plugin is not found),
+        it prints a common message + optional errorMsg or
+        it raise with the same message if doRaise is True.
+        """
     try:
         if method == '':
             output = importlib.import_module(module)
