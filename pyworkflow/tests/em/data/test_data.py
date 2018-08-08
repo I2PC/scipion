@@ -6,10 +6,14 @@ Created on May 20, 2013
 
 from glob import iglob
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3.convert import *
 import pyworkflow.em.metadata as md
 from pyworkflow.em.convert import ImageHandler, DT_FLOAT
+from pyworkflow.utils import pluginNotFound
 
+try:
+    from xmipp3.convert import *
+except:
+    pluginNotFound('xmipp')
 
 
 class TestFSC(unittest.TestCase):

@@ -72,7 +72,9 @@ def main():
             raise Exception('Unknown coordinates type: %s' % fromType)
 
         readSetOfCoordinates(outputDir, micSet, coordSet)
-        from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinatesWithState
+        writeSetOfCoordinatesWithState = importFromPlugin('xmipp3.convert',
+                                               'writeSetOfCoordinatesWithState',
+                                               doRasise=True)
         writeSetOfCoordinatesWithState(outputDir, coordSet, state='Automatic')
         
     

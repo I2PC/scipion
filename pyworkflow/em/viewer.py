@@ -49,8 +49,7 @@ import pyworkflow as pw
 from pyworkflow.em.constants import *
 from pyworkflow.em import ImageHandler, OrderedDict
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER, ProtocolViewer
-from pyworkflow.utils import Environ, runJob
-from pyworkflow.utils import getFreePort
+from pyworkflow.utils import Environ, runJob, importFromPlugin, getFreePort
 from pyworkflow.gui.matplotlib_image import ImageWindow
 
 # From pyworkflow.em level
@@ -248,11 +247,11 @@ class CtfView(ObjectView):
                        for attrName, _ in obj.getAttributesToStore())
 
         if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
-            import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
+            gviewer = importFromPlugin('grigoriefflab.viewers', 'gviewer')
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         elif _anyAttrStartsBy(first, '_gctf'):
-            from pyworkflow.em.packages.gctf.viewer import OBJCMD_GCTF
+            OBJCMD_GCTF = importFromPlugin('gctf.viewers', 'OBJCMD_GCTF')
             viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()

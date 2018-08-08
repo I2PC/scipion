@@ -160,7 +160,7 @@ class ImageHandler(object):
                 outputLoc[1].lower().endswith('.img')):
             # FIXME Since now we can not read dm4 format in Scipion natively
             # we are opening an Eman2 process to read the dm4 file
-            from pyworkflow.em.packages.eman2.convert import convertImage
+            convertImage = pwutils.importFromPlugin('eman2.convert','convertImage')
             convertImage(inputLoc, outputLoc)
         else:
             # Read from input
@@ -191,7 +191,7 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                from pyworkflow.em.packages.eman2.convert import convertImage
+                convertImage = pwutils.importFromPlugin('eman2.convert','convertImage')
                 convertImage(inputFn, outputFn)
             else:
                 ext = os.path.splitext(outputFn)[1]
@@ -244,7 +244,8 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                from pyworkflow.em.packages.eman2.convert import getImageDimensions
+                getImageDimensions = pwutils.importFromPlugin('eman2.convert',
+                                                              'getImageDimensions')
                 return getImageDimensions(fn) # we are ignoring index here
             else:
                 self._img.read(location, xmippLib.HEADER)

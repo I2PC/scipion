@@ -27,10 +27,12 @@ import os
 from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.protocol import ProtMonitorCTF
 from pyworkflow.em.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
+from pyworkflow.utils import importFromPlugin
+
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
 
 
 # Load the number of movies for the simulation, by default equal 5, but

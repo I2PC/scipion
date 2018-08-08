@@ -31,7 +31,6 @@ from collections import OrderedDict
 import pyworkflow.protocol.params as params
 from protocol import EMProtocol
 import time
-import xmippLib
 import random
 
 from pyworkflow import VERSION_1_1
@@ -39,12 +38,15 @@ from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition, Movie,
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils import importFromPlugin
+
+import xmippLib
+
 
 SET_OF_MOVIES = 0
 SET_OF_MICROGRAPHS = 1
 SET_OF_RANDOM_MICROGRAPHS = 2
 SET_OF_PARTICLES = 3
-
 
 
 class ProtCreateStreamData(EMProtocol):
@@ -321,7 +323,7 @@ class ProtCreateStreamData(EMProtocol):
 
     def createRandomMicStep(self, mic):
         time.sleep(self.creationInterval.get())
-        from pyworkflow.em.packages.xmipp3 import getEnviron
+        getEnviron = importFromPlugin('xmipp3', 'getEnviron')
 
         # create image
         img = xmippLib.Image()

@@ -147,7 +147,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             return XmippImport(self, filesPath)
 
         elif importFrom == self.IMPORT_FROM_RELION:
-            RelionImport = importFromPlugin('relion.dataimport', 'RelionImport',
+            RelionImport = importFromPlugin('relion.convert', 'RelionImport',
                               errorMsg='Relion is needed to import .star files',
                               doRaise=True)
             return RelionImport(self, filesPath)

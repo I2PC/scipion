@@ -276,8 +276,8 @@ class TestAtomicStructHandler(unittest.TestCase):
 
         def __getXmippEulerAngles(matrix):
             """ Internal fuction to convert scipion to xmipp angles"""
-            from pyworkflow.em.packages.xmipp3.convert \
-                import geometryFromMatrix
+            geometryFromMatrix = importFromPlugin('xmipp3.convert',
+                                                  'geometryFromMatrix')
 
             return geometryFromMatrix(matrix, False)
 

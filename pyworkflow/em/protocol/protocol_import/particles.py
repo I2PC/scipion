@@ -167,7 +167,7 @@ class ProtImportParticles(ProtImportImages):
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_RELION:
-            RelionImport = importFromPlugin('relion.dataimport', 'RelionImport',
+            RelionImport = importFromPlugin('relion.convert', 'RelionImport',
                               errorMsg='Relion is needed to import .star files',
                               doRaise=True)
             self.importFilePath = self.starFile.get('').strip()
@@ -179,7 +179,7 @@ class ProtImportParticles(ProtImportImages):
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
             GrigorieffLabImportParticles = importFromPlugin(
-                     'grigoriefflab.dataimport', 'GrigorieffLabImportParticles',
+                     'grigoriefflab.convert', 'GrigorieffLabImportParticles',
                      errorMsg='GrigorieffLab is needed to import .stk files',
                      doRaise=True)
             return GrigorieffLabImportParticles(self, self.parFile.get(), self.stackFile.get())

@@ -96,7 +96,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
         print sets[0]
 #        print "writing set to .xmd"
-#        from pyworkflow.em.packages.xmipp3 import writeSetOfParticles
+#        writeSetOfParticles = importFromPlugin('xmipp3.protocols', 'writeSetOfParticles')
 #        
 #        writeSetOfParticles(sets[0], "images.xmd")
         print "iterating set:"
