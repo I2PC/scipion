@@ -63,11 +63,9 @@ class XmippProtLocSharp(ProtAnalysis3D):
         form.addParam('resolutionVolume', PointerParam, pointerClass='Volume',
                       label="Resolution Map", important=True,
                       help='Select a local resolution map.'
-                      ' The resolution map must have background 0.'
-                      ' MonoRes maps meet this condition.' 
-                      ' If you use another map you should check' 
-                      ' the background and modify it to zero' 
-                      ' before running LocalDeblur.')
+                      ' LocalDeblur has been specially designed to work with'
+                      ' resolution maps obtained with MonoRes,' 
+                      ' however resolution map from ResMap and BlocRes are also accepted.')
                 
         form.addParam('const', FloatParam, default=1, 
                       expertLevel=LEVEL_ADVANCED,
@@ -103,6 +101,7 @@ class XmippProtLocSharp(ProtAnalysis3D):
     def _insertAllSteps(self):
         self._createFilenameTemplates() 
         self._insertFunctionStep('convertInputStep')
+        self._insertFunctionStep('checkBackgroundStep')
         self._insertFunctionStep('createMaskStep')      
         self._insertFunctionStep('sharpeningAndMonoResStep')       
         self._insertFunctionStep('createOutputStep')
@@ -119,8 +118,25 @@ class XmippProtLocSharp(ProtAnalysis3D):
             self.volFn = self.volFn + ':mrc'
         if (extRes == '.mrc') or (extRes == '.map'):
             self.resFn = self.resFn + ':mrc'     
-    
-    
+
+    def checkBackgroundStep(self): 
+        
+        initRes=self.resolutionVolume.get().getFileName() 
+
+        img = ImageHandler().read(initRes)
+        imgData = img.getData()
+        max_value = np.amax(imgData)
+        min_value = np.amin(imgData) 
+        #print ("minvalue %s  y maxvalue  %s"  % (min_value, max_value)) 
+        
+        if (min_value > 0.01):
+            params = ' -i %s' % self.resFn  
+            params += ' -o %s' % self.resFn    
+            params += ' --select above %f' % (max_value-1)   
+            params += ' --substitute value 0'
+            
+            self.runJob('xmipp_transform_threshold', params)  
+                             
     def createMaskStep(self):
         
         params = ' -i %s' % self.resFn
