@@ -380,8 +380,8 @@ class ProtImportMovies(ProtImportMicBase):
                                   help="Select a setOfMovies that are already "
                                        "imported that you want to exclude for "
                                        "this import.")
-    
-    
+
+
     # --------------------------- INSERT functions -----------------------------
     def _insertAllSteps(self):
         # Only the import movies has property 'inputIndividualFrames'
@@ -412,6 +412,11 @@ class ProtImportMovies(ProtImportMicBase):
                 errors.append("Scipion does not support individual frames. "
                               "You must set to Yes *Create movie stacks?* "
                               "parameter.")
+
+        if not self.gainFile.empty() and not os.path.exists(self.gainFile.get()):
+            errors.append("Gain file not found in " + str(self.gainFile.get()))
+        if not self.darkFile.empty() and not os.path.exists(self.darkFile.get()):
+            errors.append("Dark file not found in " + str(self.gainFile.get()))
         return errors
     
     # --------------------------- UTILS functions ------------------------------

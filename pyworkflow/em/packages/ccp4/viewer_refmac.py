@@ -378,8 +378,8 @@ and rmsCHIRAL (root mean square of chiral index.""")
         f.write("open %s\n" % fnVolName)
         x, y, z = fnVol.getOrigin(force=True).getShifts()
         sampling = fnVol.getSamplingRate()
-        f.write("volume #%d style surface voxelSize %f origin "
-                "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, x, y, z))
+        f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
+                "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, counter, x, y, z))
 
         # input PDB (usually from coot)
         counter += 1  # 2

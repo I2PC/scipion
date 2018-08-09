@@ -1,9 +1,7 @@
-# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -24,25 +22,15 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Bibtex string file for Gautomatch package.
-"""
 
-_bibtexStr = """
-@Article{Emsley_2004,
-Author="Emsley, P.  and Cowtan, K. ",
-Title="{{C}oot: model-building tools for molecular graphics}",
-Journal="Acta Crystallogr. D Biol. Crystallogr.",
-Year="2004",
-Volume="60",
-Number="Pt 12 Pt 1",
-Pages="2126--2132",
-Month="Dec",
-doi = "http://doi.org/10.1107/S0907444904019158",
-url = "http://scripts.iucr.org/cgi-bin/paper?S0907444904019158"
-}
-"""
+from pyworkflow.em.packages.ccp4.convert import getEnviron
+from bibtex import _bibtex  # Load bibtex dict with references
 
-from pyworkflow.utils import parseBibTex
+_logo = "phenix.png"
 
-_bibtex = parseBibTex(_bibtexStr)  
+from protocol_emringer import PhenixProtRunEMRinger
+#from protocol_molprobity import PhenixProtRunMolprobity
+from viewer_emringer import PhenixProtRunEMRingerViewer
+_references = ['Adams_2010']
+
+_environ = getEnviron()
