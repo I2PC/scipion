@@ -46,7 +46,6 @@ from pyworkflow.em.transformations import rotation_from_matrix, \
 class OutOfChainsError(Exception):
     pass
 
-
 class AtomicStructHandler():
     """ Class that contain utilities to handle pdb/cif files"""
     PDB = 0
@@ -304,3 +303,8 @@ class AtomicStructHandler():
         translation = translation_from_matrix(transformation_matrix)
         translation = [x * sampling for x in translation]
         self.structure.transform(rotation_matrix, translation)
+
+def cifToPdb(fnCif,fnPdb):
+    h = AtomicStructHandler()
+    h.read(fnCif)
+    h.writeAsPdb(fnPdb)

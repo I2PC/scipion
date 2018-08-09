@@ -31,22 +31,19 @@
 
 
 import os
-import sys
-import shutil
 from os.path import join
 from itertools import izip
 from glob import glob
 import fnmatch
 import platform
 import SCons.SConf
-try:
-    from ConfigParser import ConfigParser, ParsingError
-except ImportError:
-    from configparser import ConfigParser, ParsingError  # Python 3
-    
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
+
+# URL where we have most of our tgz files for libraries, modules and packages.
+URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
+SCIPION_SW = os.environ['SCIPION_SOFTWARE']
 
 # Define our builders
 if LINUX:
@@ -64,7 +61,7 @@ else:
 env = Environment(ENV=os.environ,
                   BUILDERS=Environment()['BUILDERS'],
                   tools=['Make', 'AutoConfig'],
-                  toolpath=[join('install', 'scons-tools')])
+                  toolpath=[join('software', 'install', 'scons-tools')])
 # TODO: BUILDERS var added from the tricky creation of a new environment.
 # If not, they lose default builders like "Program", which are needed later
 # (by CheckLib and so on). See http://www.scons.org/doc/2.0.1/HTML/scons-user/x3516.html
@@ -159,78 +156,6 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 
 #  ************************************************************************
 #  *                                                                      *
-#  *                            Extra options                             *
-#  *                                                                      *
-#  ************************************************************************
-cf = ConfigParser()
-cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-try:
-    if not os.path.exists("install/xmipp.conf"):
-        shutil.copy("install/xmipp.template", "install/xmipp.conf")
-    cf.read("install/xmipp.conf")        
-except ParsingError:
-    sys.exit("%s\nPlease fix the configuration file install/xmipp.conf." % sys.exc_info()[1])
-if not 'BUILD' in cf.sections():
-    print("Cannot find section BUILD in install/xmipp.conf")
-os.environ.update(dict(cf.items('BUILD')))
-
-env['SCIPION_HOME'] = os.environ['SCIPION_HOME']
-
-env['CPPPATH'] = os.environ.get('CPPPATH', [])
-env['CC'] = os.environ.get('CC')
-env['CXX'] = os.environ.get('CXX')
-env['LINKERFORPROGRAMS'] = os.environ.get('LINKERFORPROGRAMS')
-env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
-cxxFlags = os.environ.get('CXXFLAGS', '') 
-if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
-   cxxFlags += ' -g'
-else:
-    if cxxFlags.find("-O")==-1:
-        cxxFlags += " -O3"
-env['CXXFLAGS'] = cxxFlags.split()
-os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
-env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
-
-
-for path in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
-             'JAVA_HOME', 'JAVA_BINDIR']:
-    if not os.path.isdir(os.environ.get(path, '')):
-        Exit('Path to $%s (%s) should exist, but it does not. Stopping.\n'
-             'Please run "scipion config"' % (path, os.environ.get(path, '')))
-
-env['MPI_CC'] = os.environ.get('MPI_CC')
-env['MPI_CXX'] = os.environ.get('MPI_CXX')
-env['MPI_LINKERFORPROGRAMS'] = os.environ.get('MPI_LINKERFORPROGRAMS')
-env['MPI_LIB'] = os.environ.get('MPI_LIB')
-env['MPI_LIBDIR'] = os.environ['MPI_LIBDIR']
-env['MPI_INCLUDE'] = os.environ['MPI_INCLUDE']
-env['MPI_BINDIR'] = os.environ['MPI_BINDIR']
-env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
-env['NVCC'] = os.environ.get('NVCC')
-env['NVCC_INCLUDE'] = os.environ.get('NVCC_INCLUDE')
-env['NVCC_LIBDIR'] = os.environ.get('NVCC_LIBDIR')
-env['CUDA_LIB'] = os.environ.get('CUDA_LIB')
-
-# Java related environment variables, probably the main one
-# that need to be modified is JAVA_HOME
-env['JAVA_HOME'] = os.environ['JAVA_HOME']
-env['JAVA_BINDIR'] = os.environ['JAVA_BINDIR']
-env['JAVAC'] = os.environ.get('JAVAC')
-env['JAR'] = os.environ.get('JAR')
-env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
-
-
-AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
-          help='Get all EM packages')
-
-xmippPath = Dir('.').abspath
-env['PACKAGE'] = {'NAME': 'xmipp',
-                  'SCONSCRIPT': xmippPath
-                 }
-
-
-#  ************************************************************************
-#  *                                                                      *
 #  *                           Pseudobuilders                             *
 #  *                                                                      *
 #  ************************************************************************
@@ -259,24 +184,7 @@ env['PACKAGE'] = {'NAME': 'xmipp',
 # ensure it works in a parallel build (see
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
-def remove_prefix(text, prefix):
-    return text[text.startswith(prefix) and len(prefix):]
 
-env['INCDIRFLAGS'] = os.environ.get('INCDIRFLAGS', '').split()
-env['LIBDIRFLAGS'] = os.environ.get('LIBDIRFLAGS', '').split()
-
-if len(env["INCDIRFLAGS"])>0:
-    external_incdirs = [remove_prefix(os.path.expandvars(x),"-I") for x in env["INCDIRFLAGS"]]
-else:
-    external_incdirs = []
-
-if len(env["LIBDIRFLAGS"])>0:
-    external_libdirs = [remove_prefix(os.path.expandvars(x),"-L") for x in env["LIBDIRFLAGS"]]
-else:
-    external_libdirs = []    
-
-env['EXTERNAL_INCDIRS'] = external_incdirs
-env['EXTERNAL_LIBDIRS'] = external_libdirs
 
 def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[], 
                       libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
@@ -292,7 +200,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     Returns the final targets, the ones that Make will create.
     """
     _libs = list(libs)
-    _libpath = list(libpath)+external_libdirs
+    _libpath = list(libpath)
     if name == "XmippReconsAdaptCuda":
         _libs.append("XmippReconsCuda")
         _libs.append("cudart")
@@ -301,7 +209,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
         _libpath.append(env['CUDA_LIB'])
     if name == "XmippParallel" and cuda==True:
         _libs.append("XmippReconsAdaptCuda")
-    _incs = list(incs)+external_incdirs
+    _incs = list(incs)
     lastTarget = deps
     prefix = 'lib' if prefix is None else prefix
     suffix = '.so' if suffix is None else suffix
@@ -310,12 +218,15 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     targetName = join(basedir, target if target else prefix + name)
     sources = []
 
+    _libpath.append(Dir(SCIPION_SW + '/lib').abspath)
+    
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
         
     if not sources and env.TargetInBuild(name):
         Exit('No sources found for Library: %s. Exiting!!!' % name)
 
+    # FIXME: There must be a key in env dictionary that breaks the compilation. Please find it to make it more beautiful
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
@@ -339,6 +250,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     
 
     _incs.append(env['CPPPATH'])
+    _incs.append(SCIPION_SW + '/include')
 
     library = env2.SharedLibrary(
               target=targetName,
@@ -349,8 +261,8 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
               LIBS=_libs,
               SHLIBPREFIX=prefix,
               SHLIBSUFFIX=suffix,
-              CXXFLAGS=env['CXXFLAGS']+env['INCDIRFLAGS'],
-              LINKFLAGS=env['LINKFLAGS']+env['LIBDIRFLAGS'],
+              CXXFLAGS=env['CXXFLAGS'],
+              LINKFLAGS=env['LINKFLAGS'],
               **mpiArgs
               )
     SideEffect('dummy', library)
@@ -385,8 +297,8 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
     Returns the final targets, the ones that Make will create.
     """
     _libs = list(libs)
-    _libpath = list(libpath)+external_libdirs
-    _incs = list(incs)+external_incdirs
+    _libpath = list(libpath)
+    _incs = list(incs)
     lastTarget = deps
     prefix = 'lib' if prefix is None else prefix
     suffix = '.so' if suffix is None else suffix
@@ -394,6 +306,8 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
     basedir = 'lib'
     targetName = join(basedir, target if target else prefix + name)
     sources = []
+
+    _libpath.append(Dir('#software/lib').abspath)
 
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
@@ -426,6 +340,7 @@ def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], p
 
 
     _incs.append(env['CPPPATH'])
+    _incs.append('#software/include')
 
     library = env2.Library(
         target=targetName,
@@ -620,7 +535,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     pattern = pattern or ['*.cpp']
     installDir = installDir or 'bin'
     libs = libs or []
-    libPathsCopy = libPaths + [Dir('lib').abspath]
+    libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incsCopy = list(incs) or []
     if cuda or nvcc:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt']
@@ -639,13 +554,13 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     else: cxxCopy = env['CXX']
 
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy += env['CPPPATH']+external_incdirs
+    incsCopy += env['CPPPATH'] + ['libraries', Dir(SCIPION_SW + '/include').abspath,
+                                        Dir(SCIPION_SW + '/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
     ldLibraryPathCopy = [env['LIBPATH']]
     appendUnique(libPathsCopy, env.get('LIBPATH', '').split(os.pathsep))
-    appendUnique(libPathsCopy, external_libdirs)
     env2 = Environment()
     if mpi: 
         appendUnique(incsCopy, env['MPI_INCLUDE'])
@@ -730,8 +645,73 @@ env.AddMethod(addJavaTest, 'AddJavaTest')
 env.AddMethod(addProgram, 'AddProgram')
 env.AddMethod(targetInBuild, 'TargetInBuild')
 
-# Run SConscript
-env.SConscript('SConscript', exports='env')
+
+#  ************************************************************************
+#  *                                                                      *
+#  *                            Extra options                             *
+#  *                                                                      *
+#  ************************************************************************
+
+# Build variables, they are read from ~/.config/scipion/scipion.conf
+# in the [BUILD] section
+
+env['SCIPION_HOME'] = os.environ['SCIPION_HOME']
+
+env['CPPPATH'] = os.environ.get('CPPPATH', [])
+env['CC'] = os.environ.get('CC')
+env['CXX'] = os.environ.get('CXX')
+env['LINKERFORPROGRAMS'] = os.environ.get('LINKERFORPROGRAMS')
+env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
+cxxFlags = os.environ.get('CXXFLAGS', '') 
+if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
+   cxxFlags += ' -g'
+else:
+    if cxxFlags.find("-O")==-1:
+        cxxFlags += " -O3"
+# we force standard c++11 to compile
+cxxFlags += ' -std=c++11' if not '-std=c++11' in cxxFlags else ''
+env['CXXFLAGS'] = cxxFlags.split()
+os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
+env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
+
+
+for path in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
+             'JAVA_HOME', 'JAVA_BINDIR']:
+    if not os.path.isdir(os.environ.get(path, '')):
+        Exit('Path to $%s (%s) should exist, but it does not. Stopping.\n'
+             'Please run "scipion config"' % (path, os.environ.get(path, '')))
+
+env['MPI_CC'] = os.environ.get('MPI_CC')
+env['MPI_CXX'] = os.environ.get('MPI_CXX')
+env['MPI_LINKERFORPROGRAMS'] = os.environ.get('MPI_LINKERFORPROGRAMS')
+env['MPI_LIB'] = os.environ.get('MPI_LIB')
+env['MPI_LIBDIR'] = os.environ['MPI_LIBDIR']
+env['MPI_INCLUDE'] = os.environ['MPI_INCLUDE']
+env['MPI_BINDIR'] = os.environ['MPI_BINDIR']
+env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
+env['NVCC'] = os.environ.get('NVCC')
+env['NVCC_INCLUDE'] = os.environ.get('NVCC_INCLUDE')
+env['NVCC_LIBDIR'] = os.environ.get('NVCC_LIBDIR')
+env['CUDA_LIB'] = os.environ.get('CUDA_LIB')
+
+# Java related environment variables, probably the main one
+# that need to be modified is JAVA_HOME
+env['JAVA_HOME'] = os.environ['JAVA_HOME']
+env['JAVA_BINDIR'] = os.environ['JAVA_BINDIR']
+env['JAVAC'] = os.environ.get('JAVAC')
+env['JAR'] = os.environ.get('JAR')
+env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
+
+
+AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
+          help='Get all EM packages')
+
+xmippPath = Dir(SCIPION_SW + '/em/xmipp').abspath
+env['PACKAGE'] = {'NAME': 'xmipp',
+                  'SCONSCRIPT': xmippPath
+                  }
+
+env.SConscript(join(xmippPath, 'scipion_sconscript'), exports='env')
 
 # Add original help (the one that we would have if we didn't use
 # Help() before). But remove the "usage:" part (first line).

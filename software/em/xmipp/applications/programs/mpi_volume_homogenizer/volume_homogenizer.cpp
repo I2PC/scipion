@@ -220,6 +220,9 @@ void ProgVolumeHomogenizer::run()
 				projRef.mirrorX();
 			}
 
+		    normalize_OldXmipp(imgIn());
+		    normalize_OldXmipp(projIn());
+
 			//Preparing input data to use for OF algorithm
 			xmipp2Opencv(projIn(), ImgIn); //We wamt to compare the projIn() with the projRef() imgIn here is only a holder to compare
 			xmipp2Opencv(projIn(), ProjIn);
@@ -299,6 +302,9 @@ void ProgVolumeHomogenizer::run()
 				projIn.mirrorX();
 				projRef.mirrorX();
 			}
+
+		    normalize_OldXmipp(imgIn());
+		    normalize_OldXmipp(projIn());
 
 			//preparing input data to use for OF algorithm
 			xmipp2Opencv(imgIn(), ImgIn);
