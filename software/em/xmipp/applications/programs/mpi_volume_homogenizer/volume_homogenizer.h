@@ -29,6 +29,7 @@
 #include <reconstruction/fourier_filter.h>
 #include "opencv2/core/core.hpp"
 #include "opencv2/video/video.hpp"
+#include <data/normalize.h>
 
 
 

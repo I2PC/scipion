@@ -31,18 +31,16 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
+from pyworkflow.em.headers import Ccp4Header, START
+from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.convert_header.CCP4.convert import (getProgram,
-                                                       copyMRCHeader,
-                                                       runCCP4Program,
-                                                       cootPdbTemplateFileName,
-                                                       cootScriptFileName,
-                                                       START
-                                                       )
+from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam, StringParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import STATUS_FINISHED
+
+cootPdbTemplateFileName = "cootOut%04d.pdb"
+cootScriptFileName = "cootScript.py"
 
 class CootRefine(EMProtocol):
     """Coot is an interactive graphical application for
@@ -54,6 +52,7 @@ the pdb file from coot  to scipion '
     _program = ""
     _version = VERSION_1_2
     COOT = 'coot'
+    COOTINI='coot.ini'
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
@@ -94,7 +93,8 @@ the pdb file from coot  to scipion '
                      'the previous one.\nPress "X" in coot to change from one '
                      'chain to the next one.\nPress "U" in coot to initiate '
                      'global variables.\nYou have to set in advance the '
-                     '/tmp/coot.ini text file:\n[myvars]\nimol: '
+                     'protocolDirectory/extra/coot.ini text file:\n['
+                     'myvars]\nimol: '
                      '0\naa_main_chain: '
                      'X\naa_auxiliary_chain: XX\naaNumber: 160\nstep: 15\nIn '
                      'this case global variables will initiate in '
@@ -160,9 +160,10 @@ the pdb file from coot  to scipion '
                     img.write(norVolName)
                 else:
                     ImageHandler().convert(inVolName, norVolName)
-                copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
-                              force=True).getShifts(),
-                              inVol.getSamplingRate(), originField=START)
+                Ccp4Header(norVolName).copyCCP4Header(
+                    inVolName, inVol.getOrigin(
+                               force=True).getShifts(),
+                               inVol.getSamplingRate(), originField=START)
 
     def runCootStep(self, inVolumes, norVolumesNames):
 
@@ -190,7 +191,8 @@ the pdb file from coot  to scipion '
                          self._getExtraPath(cootPdbTemplateFileName),
                          norVolumesNames,
                          listOfPDBs,
-                         self.extraCommands.get()
+                         self.extraCommands.get(),
+                         self._getExtraPath(self.COOTINI)
                          )
 
         args = ""
@@ -325,6 +327,7 @@ mydict['aa_auxiliary_chain']="BB"
 mydict['aaNumber']=37
 mydict['step']=5
 mydict['outfile']='%s'
+cootPath='%s'
 '''
 
 cootScriptBody = '''
@@ -383,10 +386,10 @@ def _updateMol():
     aa_auxiliary_chain: AA
     aaNumber: 82
     step: 15
-    called /tmp/coot.ini"""
+    called protocolDirectory/extra/coot.ini"""
     global mydict
     config = ConfigParser.ConfigParser()
-    config.read(os.environ.get('COOT_INI',"/tmp/coot.ini"))
+    config.read(os.environ.get('COOT_INI',cootPath))
     try:
         mydict['imol']               = int(config.get("myvars", "imol"))
         mydict['aa_main_chain']      = config.get("myvars", "aa_main_chain")
@@ -397,6 +400,7 @@ def _updateMol():
     except ConfigParser.NoOptionError:
         pass
     beep(0.1)
+
 
 def getOutPutFileName(template):
     """get name based on template that does not exists
@@ -475,12 +479,13 @@ def createScriptFile(imol,  # problem PDB id
                                   # reference
                      listOfPDBs,  # PDB to be loaded, first one
                                   # is the problem PDB
-                     extraCommands=''  # extra commands to add at the
+                     extraCommands='',  # extra commands to add at the
                                        # end of the file
                                        # mainly used for testing
+                     cootFileName='/tmp/coot.ini'
                      ):
     f = open(scriptFile, "w")
-    f.write(cootScriptHeader % (imol, pdbFile))
+    f.write(cootScriptHeader % (imol, pdbFile,cootFileName ))
     f.write(cootScriptBody)
     # load PDB and MAP
     f.write("\n#load Atomic Structures\n")  # problem atomic structure must be
@@ -493,3 +498,17 @@ def createScriptFile(imol,  # problem PDB id
     f.write("\n#Extra Commands\n")
     f.write(extraCommands)
     f.close()
+
+
+    # create coot.ini if it does not exist
+    if os.path.exists(cootFileName):
+        pass
+    else:
+        f = open(cootFileName,"w")
+        f.write("""[myvars]
+imol: 0
+aa_main_chain: A
+aa_auxiliary_chain: AA
+aaNumber: 100
+step: 10
+""")
