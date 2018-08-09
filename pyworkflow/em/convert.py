@@ -28,7 +28,7 @@ import os
 import sys
 from itertools import izip
 
-import xmipp
+import xmippLib as xmipp
 import pyworkflow.utils as pwutils
 
 from constants import *

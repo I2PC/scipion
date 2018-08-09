@@ -28,33 +28,37 @@
 This module implement some wizards
 """
 
-import Tkinter as tk
 import os
+from os.path import basename, exists
+import Tkinter as tk
 import ttk
 
-import xmipp
-
+from pyworkflow.wizard import Wizard
 import pyworkflow.gui.dialog as dialog
+from pyworkflow.gui.widgets import LabelSlider
+from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
-from pyworkflow.em.constants import (UNIT_PIXEL,
+from pyworkflow.object import PointerList, Pointer
+
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.constants import (UNIT_PIXEL, 
                                      UNIT_PIXEL_FOURIER,
                                      UNIT_ANGSTROM,
-                                     FILTER_LOW_PASS,
-                                     FILTER_BAND_PASS,
+                                     UNIT_ANGSTROM_FOURIER,
+                                     FILTER_LOW_PASS, 
+                                     FILTER_BAND_PASS, 
                                      FILTER_HIGH_PASS
                                      )
-from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
-from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
+                                                    ProtImportMovies,
                                                     ProtImportCoordinates,
                                                     ProtImportVolumes)
-from pyworkflow.gui.tree import BoundTree, TreeProvider
-from pyworkflow.gui.widgets import LabelSlider
-from pyworkflow.object import PointerList, Pointer
-from pyworkflow.wizard import Wizard
 
+
+import xmippLib as xmipp
+from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 #===============================================================================
 #    Wizard EM base class
