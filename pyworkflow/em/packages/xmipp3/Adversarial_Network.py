@@ -140,10 +140,10 @@ class DCGAN(object):
         x = LeakyReLU()(x)#Activation('relu')(x)
         x = BatchNormalization()(x)
         x = AveragePooling2D((2, 2), padding='same')(x)
-        x = Conv2D(self.batch_size, (5, 5), activation='linear',
+        x = Conv2D(self.batch_size*2, (5, 5), activation='linear',
                    kernel_initializer='random_normal',
                    padding='same')(x)
-        x1 = Conv2D(self.batch_size, (3, 3), activation='linear',
+        x1 = Conv2D(self.batch_size*2, (3, 3), activation='linear',
                     kernel_initializer='random_normal',
                     padding='same')(x)
         x = keras.layers.subtract([x, x1])
@@ -153,14 +153,14 @@ class DCGAN(object):
 
         # at this point the representation is (7, 7, 32)
 
-        x = Conv2DTranspose(256, kernel_size=5, strides=2,
+        x = Conv2DTranspose(64, kernel_size=5, strides=2,
                    kernel_initializer='random_normal',
                    padding='same')(encoded)
         x = LeakyReLU(alpha=0.2)(x)#Activation('relu')(x)
         x = BatchNormalization()(x)
         x = Dropout(0.4)(x)
         #x = UpSampling2D((2, 2))(x)
-        x = Conv2DTranspose(128, kernel_size=5, strides=2,padding='same')(x)
+        x = Conv2DTranspose(32, kernel_size=5, strides=2,padding='same')(x)
         x = LeakyReLU(alpha=0.2)(x)#Activation('relu')(x)
         x = BatchNormalization()(x)
         #x = UpSampling2D((2, 2))(x)
@@ -323,7 +323,7 @@ class MNIST_DCGAN(object):
 if __name__ == '__main__':
     mnist_dcgan = MNIST_DCGAN()
     timer = ElapsedTimer()
-    mnist_dcgan.train(train_steps=5000, batch_size=32, save_interval=250)
+    mnist_dcgan.train(train_steps=2000, batch_size=32, save_interval=250)
     timer.elapsed_time()
     mnist_dcgan.plot_images(fake=True)
     mnist_dcgan.plot_images(fake=False, save2file=True)
