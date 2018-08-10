@@ -69,7 +69,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
-        memory = '%dg'%self.memory.get()
+        memory = '%d' % self.memory.get()
         process = launchSupervisedPickerGUI(micFn, extraDir, self, memory=memory)
         process.wait()
 
