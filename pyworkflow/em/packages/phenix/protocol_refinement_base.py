@@ -14,6 +14,10 @@ atomic structure derived from a cryo-EM density map.
     _label = 'refinementBase'
     _program = ""
 
+    MOLPROBITYOUTFILENAME = 'molprobity.out'
+    MOLPROBITYCOOTFILENAME = 'molprobity_coot.py'
+    MOLPROBITYPKLFILENAME = 'molprobity.pkl'
+
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -21,7 +25,7 @@ atomic structure derived from a cryo-EM density map.
                       label='Input Volume', allowsNull=True,
                       help="Set the starting volume.")
         form.addParam('resolution', FloatParam,
-                      label='Resolution (A):', allowsNull=True,
+                      label='Resolution (A):',
                       default=3.0,
                       help='Set the resolution of the input volume.')
         form.addParam('inputStructure', PointerParam,
@@ -98,3 +102,23 @@ atomic structure derived from a cryo-EM density map.
         else:
             fnVol = self.inputVolume.get()
         return fnVol
+
+    def _parseFile(self, fileName):
+        with open(fileName) as f:
+            line = f.readline()
+            while line:
+                words = line.strip().split()
+                if len(words) > 1:
+                    if (words[0] == 'Ramachandran' and words[1] == 'outliers'):
+                        self.ramachandranOutliers = Float(words[3])
+                    elif (words[0] == 'favored' and words[1] == '='):
+                        self.ramachandranFavored = Float(words[2])
+                    elif (words[0] == 'Rotamer' and words[1] == 'outliers'):
+                        self.rotamerOutliers = Float(words[3])
+                    elif (words[0] == 'C-beta' and words[1] == 'deviations'):
+                        self.cbetaOutliers = Integer(words[3])
+                    elif (words[0] == 'Clashscore' and words[1] == '='):
+                        self.clashscore = Float(words[2])
+                    elif (words[0] == 'MolProbity' and words[1] == 'score'):
+                        self.overallScore = Float(words[3])
+                line = f.readline()
