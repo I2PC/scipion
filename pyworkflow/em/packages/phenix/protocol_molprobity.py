@@ -37,12 +37,10 @@ atomic structure derived from a cryo-EM density map.
     _program = ""
     #_version = VERSION_1_2
     MOLPROBITYFILE = 'molprobity.mrc'
-    MOLPROBITYOUTFILENAME = 'molprobity.out'
-    MOLPROBITYCOOTFILENAME = 'molprobity_coot.py'
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
-        PhenixProtRunRefinementBase._defineParams(self, form)
+        super(PhenixProtRunMolprobity, self)._defineParams(form)
 
     # --------------------------- INSERT steps functions --------------------
 
@@ -69,7 +67,9 @@ atomic structure derived from a cryo-EM density map.
             args += "map_file_name=%s" % volume
             args += " "
             args += "d_min=%f" % self.resolution.get()
-
+            args += " "
+            args += "pickle=True"
+            # args += " wxplots=True" # TODO: Avoid the direct opening of plots
         # script with auxiliary files
         try:
             runPhenixProgram(getProgram(MOLPROBITY), args,
@@ -114,23 +114,23 @@ atomic structure derived from a cryo-EM density map.
 
     # --------------------------- UTILS functions --------------------------
 
-    def _parseFile(self, fileName):
-        with open(fileName) as f:
-            line = f.readline()
-            while line:
-                words = line.strip().split()
-                if len(words) > 1:
-                    if (words[0] == 'Ramachandran' and words[1] == 'outliers'):
-                        self.ramachandranOutliers = Float(words[3])
-                    elif (words[0] == 'favored' and words[1] == '='):
-                        self.ramachandranFavored = Float(words[2])
-                    elif (words[0] == 'Rotamer' and words[1] == 'outliers'):
-                        self.rotamerOutliers = Float(words[3])
-                    elif (words[0] == 'C-beta' and words[1] == 'deviations'):
-                        self.cbetaOutliers = Integer(words[3])
-                    elif (words[0] == 'Clashscore' and words[1] == '='):
-                        self.clashscore = Float(words[2])
-                    elif (words[0] == 'MolProbity' and words[1] == 'score'):
-                        self.overallScore = Float(words[3])
-                line = f.readline()
+    # def _parseFile(self, fileName):
+    #     with open(fileName) as f:
+    #         line = f.readline()
+    #         while line:
+    #             words = line.strip().split()
+    #             if len(words) > 1:
+    #                 if (words[0] == 'Ramachandran' and words[1] == 'outliers'):
+    #                     self.ramachandranOutliers = Float(words[3])
+    #                 elif (words[0] == 'favored' and words[1] == '='):
+    #                     self.ramachandranFavored = Float(words[2])
+    #                 elif (words[0] == 'Rotamer' and words[1] == 'outliers'):
+    #                     self.rotamerOutliers = Float(words[3])
+    #                 elif (words[0] == 'C-beta' and words[1] == 'deviations'):
+    #                     self.cbetaOutliers = Integer(words[3])
+    #                 elif (words[0] == 'Clashscore' and words[1] == '='):
+    #                     self.clashscore = Float(words[2])
+    #                 elif (words[0] == 'MolProbity' and words[1] == 'score'):
+    #                     self.overallScore = Float(words[3])
+    #             line = f.readline()
 
