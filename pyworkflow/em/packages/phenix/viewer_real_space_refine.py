@@ -25,11 +25,6 @@
 # **************************************************************************
 
 from protocol_real_space_refine import PhenixProtRunRSRefine
-from pyworkflow.protocol.params import LabelParam
-import collections
-from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
-import os
-
 from viewer_refinement_base import PhenixProtRefinementBaseViewer
 
 class PhenixProtRunRSRefineViewer(PhenixProtRefinementBaseViewer):
@@ -40,10 +35,14 @@ class PhenixProtRunRSRefineViewer(PhenixProtRefinementBaseViewer):
 
     def __init__(self,  **kwargs):
          PhenixProtRefinementBaseViewer.__init__(self, **kwargs)
-         MOLPROBITYOUTFILENAME = self.protocol._getExtraPath(
-             self.protocol.MOLPROBITYOUTFILENAME)
-         self._parseFile(MOLPROBITYOUTFILENAME)
+         REALSPACEFILE = self.protocol._getExtraPath(
+             self.protocol.REALSPACEFILE)
+         self.protocol._parseFile(REALSPACEFILE)
 
     def _defineParams(self, form):
         PhenixProtRefinementBaseViewer._defineParams(self,form)
+
+
+
+
 
