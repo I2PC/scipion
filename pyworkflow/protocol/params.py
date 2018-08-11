@@ -131,6 +131,7 @@ class ElementGroup(FormElement):
             yield (name, self._form.getParam(name))
 
     def addParam(self, paramName, ParamClass, **kwargs):
+        # type: (object, object, object) -> object
         """Add a new param to the group"""
         param = ParamClass(**kwargs)
         self._paramList.append(paramName)
@@ -230,6 +231,7 @@ class Form(object):
         self._analizeCondition(paramName, param)
         
     def addParam(self, *args, **kwargs):
+        # type: (object, object) -> object
         """Add a new param to last section"""
         return self.lastSection.addParam(*args, **kwargs)
     
