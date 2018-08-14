@@ -26,7 +26,9 @@ import os
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportParticles
-from pyworkflow.em.packages.emxlib.dataimport import ProtEmxExport
+from pyworkflow.utils import importFromPlugin
+
+ProtEmxExport = importFromPlugin('emxlib.convert', 'ProtEmxExport')
 
 
 class TestExportBase(BaseTest):

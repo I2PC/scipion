@@ -29,7 +29,7 @@ import sys
 from itertools import izip
 import PIL
 
-import xmipp
+import xmippLib
 import pyworkflow.utils as pwutils
 
 from constants import *
@@ -38,31 +38,31 @@ from constants import *
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
     # TODO: remove dependency from Xmipp
-    DT_DEFAULT = xmipp.DT_DEFAULT
-    DT_UNKNOWN = xmipp.DT_UNKNOWN
-    DT_UCHAR = xmipp.DT_UCHAR
-    DT_SCHAR = xmipp.DT_SCHAR
-    DT_USHORT = xmipp.DT_USHORT
-    DT_SHORT = xmipp.DT_SHORT
-    DT_UINT = xmipp.DT_UINT
-    DT_INT = xmipp.DT_INT
-    DT_LONG = xmipp.DT_LONG
-    DT_FLOAT = xmipp.DT_FLOAT
-    DT_DOUBLE = xmipp.DT_DOUBLE
-    DT_COMPLEXSHORT = xmipp.DT_COMPLEXSHORT
-    DT_COMPLEXINT = xmipp.DT_COMPLEXINT
-    DT_COMPLEXFLOAT = xmipp.DT_COMPLEXFLOAT
-    DT_COMPLEXDOUBLE = xmipp.DT_COMPLEXDOUBLE
-    DT_BOOL = xmipp.DT_BOOL
-    DT_LASTENTRY = xmipp.DT_LASTENTRY
+    DT_DEFAULT = xmippLib.DT_DEFAULT
+    DT_UNKNOWN = xmippLib.DT_UNKNOWN
+    DT_UCHAR = xmippLib.DT_UCHAR
+    DT_SCHAR = xmippLib.DT_SCHAR
+    DT_USHORT = xmippLib.DT_USHORT
+    DT_SHORT = xmippLib.DT_SHORT
+    DT_UINT = xmippLib.DT_UINT
+    DT_INT = xmippLib.DT_INT
+    DT_LONG = xmippLib.DT_LONG
+    DT_FLOAT = xmippLib.DT_FLOAT
+    DT_DOUBLE = xmippLib.DT_DOUBLE
+    DT_COMPLEXSHORT = xmippLib.DT_COMPLEXSHORT
+    DT_COMPLEXINT = xmippLib.DT_COMPLEXINT
+    DT_COMPLEXFLOAT = xmippLib.DT_COMPLEXFLOAT
+    DT_COMPLEXDOUBLE = xmippLib.DT_COMPLEXDOUBLE
+    DT_BOOL = xmippLib.DT_BOOL
+    DT_LASTENTRY = xmippLib.DT_LASTENTRY
     
     def __init__(self):
         # Now it will use Xmipp image library
         # to read and write most of formats, in the future
         # if we want to be independent of Xmipp, we should have
         # our own image library
-        self._img = xmipp.Image()
-        self._imgClass = xmipp.Image
+        self._img = xmippLib.Image()
+        self._imgClass = xmippLib.Image
     
     @classmethod
     def fixXmippVolumeFileName(cls, image):
@@ -160,7 +160,7 @@ class ImageHandler(object):
                 outputLoc[1].lower().endswith('.img')):
             # FIXME Since now we can not read dm4 format in Scipion natively
             # we are opening an Eman2 process to read the dm4 file
-            from pyworkflow.em.packages.eman2.convert import convertImage
+            convertImage = pwutils.importFromPlugin('eman2.convert','convertImage')
             convertImage(inputLoc, outputLoc)
         else:
             # Read from input
@@ -191,7 +191,7 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                from pyworkflow.em.packages.eman2.convert import convertImage
+                convertImage = pwutils.importFromPlugin('eman2.convert','convertImage')
                 convertImage(inputFn, outputFn)
             else:
                 ext = os.path.splitext(outputFn)[1]
@@ -207,10 +207,10 @@ class ImageHandler(object):
         #                         "implemented yet. " % pwutils.getExt(outputFn))
         else:
             # get input dim
-            (x, y, z, n) = xmipp.getImageSize(inputFn)
+            (x, y, z, n) = xmippLib.getImageSize(inputFn)
             
             location = self._convertToLocation(inputFn)
-            self._img.read(location, xmipp.HEADER)
+            self._img.read(location, xmippLib.HEADER)
             dataType = self._img.getDataType()
             
             if (firstImg and lastImg) is None:
@@ -221,7 +221,7 @@ class ImageHandler(object):
                 n = lastImg - firstImg + 1
             
             # Create empty output stack file to reserve desired space
-            xmipp.createEmptyFile(outputFn,x,y,1,n, dataType)
+            xmippLib.createEmptyFile(outputFn,x,y,1,n, dataType)
             for i, j in izip(range(firstImg, lastImg + 1), range(1, n+1)):
                 self.convert((i, inputFn), (j, outputFn))
     
@@ -244,10 +244,11 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                from pyworkflow.em.packages.eman2.convert import getImageDimensions
+                getImageDimensions = pwutils.importFromPlugin('eman2.convert',
+                                                              'getImageDimensions')
                 return getImageDimensions(fn) # we are ignoring index here
             else:
-                self._img.read(location, xmipp.HEADER)
+                self._img.read(location, xmippLib.HEADER)
                 return self._img.getDimensions()
         else:
             return None, None, None, None
@@ -255,7 +256,7 @@ class ImageHandler(object):
     def getDataType(self, locationObj):
         if self.existsLocation(locationObj):
             location = self._convertToLocation(locationObj)
-            self._img.read(location, xmipp.HEADER)
+            self._img.read(location, xmippLib.HEADER)
             return self._img.getDataType()
         else:
             return None
@@ -282,7 +283,7 @@ class ImageHandler(object):
         loc1 = self._convertToLocation(locationObj1)
         loc2 = self._convertToLocation(locationObj2)
         
-        return xmipp.compareTwoImageTolerance(loc1, loc2, tolerance)
+        return xmippLib.compareTwoImageTolerance(loc1, loc2, tolerance)
     
     def computeAverage(self, inputSet):
         """ Compute the average image either from filename or set.
@@ -320,9 +321,9 @@ class ImageHandler(object):
     
     def invertStack(self, inputFn, outputFn):
         #get input dim
-        (x,y,z,n) = xmipp.getImageSize(inputFn)
+        (x,y,z,n) = xmippLib.getImageSize(inputFn)
         #Create empty output stack for efficiency
-        xmipp.createEmptyFile(outputFn,x,y,z,n)
+        xmippLib.createEmptyFile(outputFn,x,y,z,n)
         # handle image formats
         for i in range(1, n+1):
             self.invert((i, inputFn), (i, outputFn))
@@ -340,12 +341,12 @@ class ImageHandler(object):
 
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        import xmipp3
+        xmipp3 = pwutils.importFromPlugin('xmipp3')
         xmipp3.Plugin.runXmippProgram(program, args)
 
     def __runEman2Program(self, program, args):
         """ Internal workaround to launch an EMAN2 program. """
-        import pyworkflow.em.packages.eman2 as eman2
+        eman2 = pwutils.importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
         runJob(None, eman2.getEmanProgram(program), args,
                env=eman2.getEnviron())
@@ -359,7 +360,7 @@ class ImageHandler(object):
         #TODO: right now we need to call a Xmipp program to create
         # the spherical mask, it would be nicer to have such utility
         # in the binding
-        import xmipp3
+        xmipp3 = pwutils.importFromPlugin('xmipp3')
         inputRef = xmipp3.getImageLocation(refImage)
         self.__runXmippProgram('xmipp_transform_mask',
                                '-i %s --create_mask  %s --mask circular -%d'
@@ -395,7 +396,7 @@ class ImageHandler(object):
         """ Check if imgFn has an image extension. The function
         is implemented in the Xmipp binding.
         """
-        return xmipp.FileName(imgFn).isImage()
+        return xmippLib.FileName(imgFn).isImage()
 
     def computeThumbnail(self, inputFn, outputFn, scaleFactor=6):
         """ Compute a thumbnail of inputFn, save to ouptutFn.

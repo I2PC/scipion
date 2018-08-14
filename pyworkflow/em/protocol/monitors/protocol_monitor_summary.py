@@ -218,7 +218,8 @@ class ProtMonitorSummary(ProtMonitor):
         return None
 
     def _getMovieGainProtocol(self):
-        from pyworkflow.em.packages.xmipp3 import XmippProtMovieGain
+        XmippProtMovieGain = importfromPlugin('xmipp3.protocols',
+                                              'XmippProtMovieGain')
         for protPointer in self.inputProtocols:
             prot = protPointer.get()
             if prot.getClassName() == XmippProtMovieGain.__name__:

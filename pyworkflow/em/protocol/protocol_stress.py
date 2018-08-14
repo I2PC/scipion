@@ -29,7 +29,7 @@
 import pyworkflow.protocol.params as params
 from protocol import EMProtocol
 import time
-import xmipp
+import xmippLib
 import random
 
 from pyworkflow import VERSION_1_1

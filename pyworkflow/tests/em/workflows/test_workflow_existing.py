@@ -6,7 +6,7 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.utils import cleanPath
 from pyworkflow.utils.graph import Graph, Node
-import pyworkflow.em.packages.eman2 as eman2
+eman2 = pwutils.importFromPlugin('eman2')
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
     
     
@@ -96,7 +96,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
         print sets[0]
 #        print "writing set to .xmd"
-#        from pyworkflow.em.packages.xmipp3 import writeSetOfParticles
+#        writeSetOfParticles = importFromPlugin('xmipp3.protocols', 'writeSetOfParticles')
 #        
 #        writeSetOfParticles(sets[0], "images.xmd")
         print "iterating set:"
@@ -253,7 +253,7 @@ class TestXmippWorkflow(unittest.TestCase):
         
         classes = prot.outputClasses
         averages = prot.outputClasses.getRepresentatives()
-        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmipp3 = pwutils.importFromPlugin('xmipp3')
         #xmipp3.writeSetOfClasses2D(classes, "classes.xmd")
         
         print "=" * 100

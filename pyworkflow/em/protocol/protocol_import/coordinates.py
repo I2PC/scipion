@@ -32,8 +32,8 @@ from os.path import join, exists
 from pyworkflow.protocol.params import IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.em.protocol import ProtParticlePicking
-import xmipp
-        
+from pyworkflow.utils import importFromPlugin
+import xmippLib
 from base import ProtImportFiles
 
 
@@ -141,19 +141,27 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         importFrom = self.getImportFrom()
         
         if importFrom == self.IMPORT_FROM_XMIPP:
-            from xmipp3.convert import XmippImport
+            XmippImport = importFromPlugin('xmipp3.convert', 'XmippImport',
+                                           'Xmipp is needed to import .xmd files',
+                                           doRaise=True)
             return XmippImport(self, filesPath)
 
         elif importFrom == self.IMPORT_FROM_RELION:
-            from relion.convert import RelionImport
+            RelionImport = importFromPlugin('relion.convert', 'RelionImport',
+                              errorMsg='Relion is needed to import .star files',
+                              doRaise=True)
             return RelionImport(self, filesPath)
         
         elif importFrom == self.IMPORT_FROM_EMAN:
-            from eman2.convert import EmanImport
+            EmanImport = importFromPlugin('eman.convert', 'EmanImport',
+                                 errorMsg='Eman is needed to import .emx files',
+                                 doRaise=True)
             return EmanImport(self)
         
         elif importFrom == self.IMPORT_FROM_DOGPICKER:
-            from appion.convert import DogpickerImport
+            DogpickerImport = importFromPlugin('appion.convert', 'DogpickerImport',
+                                    errorMsg='Eman is needed to import .emx files',
+                                    doRaise=True)
             return DogpickerImport(self)
         else:
             self.importFilePath = ''
@@ -230,13 +238,13 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             configfile = join(self.filesPath.get(), 'config.xmd')
             existsConfig = exists(configfile)
             if existsConfig:
-                md = xmipp.MetaData('properties@' + configfile)
+                md = xmippLib.MetaData('properties@' + configfile)
                 configobj = md.firstObject()
-                boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+                boxSize = md.getValue(xmippLib.MDL_PICKING_PARTICLE_SIZE, configobj)
         if importFrom == ProtImportCoordinates.IMPORT_FROM_EMAN:
             # Read the boxSize from the e2boxercache/base.json
             jsonFnbase = join(self.filesPath.get(), 'e2boxercache', 'base.json')
-            from eman2 import loadJson
+            loadJson = importFromPlugin('eman2', 'loadJson')
             jsonBoxDict = loadJson(jsonFnbase)
             boxSize = int(jsonBoxDict["box_size"])
         boxSize = (int)(boxSize * scale)

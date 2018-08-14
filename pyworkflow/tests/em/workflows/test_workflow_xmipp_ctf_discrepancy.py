@@ -31,13 +31,15 @@ import os
 from itertools import izip
 
 from pyworkflow.em.data import SetOfCTF, CTFModel, Micrograph, SetOfMicrographs
-from pyworkflow.em.packages.xmipp3 import XmippProtCTFDiscrepancy
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportCTF
 from pyworkflow.object import PointerList, Pointer
 from test_workflow import TestWorkflow
+from pyworkflow.utils import importFromPlugin
 import pyworkflow.tests as tests
 from pyworkflow.em import ImageHandler
-import xmipp
+
+import xmippLib
+XmippProtCTFDiscrepancy = importFromPlugin('xmipp.protocols', 'XmippProtCTFDiscrepancy')
 
 
 class TestXmippCTFDiscrepancyBase(TestWorkflow):
@@ -69,8 +71,8 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
 
         # create one fake micrographs image
         projSize = 32
-        img = xmipp.Image()
-        img.setDataType(xmipp.DT_FLOAT)
+        img = xmippLib.Image()
+        img.setDataType(xmippLib.DT_FLOAT)
         img.resize(projSize, projSize)
         img.write(fnMic)
 

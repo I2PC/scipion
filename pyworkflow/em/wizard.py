@@ -33,13 +33,13 @@ from os.path import basename, exists
 import Tkinter as tk
 import ttk
 
+from pyworkflow import findResource
 from pyworkflow.wizard import Wizard
+from pyworkflow.utils import importFromPlugin
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
-from pyworkflow import findResource
 from pyworkflow.object import PointerList, Pointer
-
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.constants import (UNIT_PIXEL, 
                                      UNIT_PIXEL_FOURIER,
@@ -56,8 +56,7 @@ from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
                                                     ProtImportCoordinates,
                                                     ProtImportVolumes)
 
-
-import xmipp
+import xmippLib
 from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 
 #===============================================================================
@@ -498,7 +497,7 @@ class ImagePreviewDialog(PreviewDialog):
         if index:
             filename = "%03d@%s" % (index, filename)
         
-#        self.image = xmipp.Image()
+#        self.image = xmippLib.Image()
         self.image = ImageHandler()._img
 
 
@@ -576,10 +575,10 @@ class DownsampleDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmipp.fastEstimateEnhancedPSD(self.rightImage,
-                                      self.lastObj.getFileName(),
-                                      self.getDownsample(), self.dim, 2)
-        
+        xmippLib.fastEstimateEnhancedPSD(self.rightImage,
+                                         self.lastObj.getFileName(),
+                                         self.getDownsample(), self.dim, 2)
+
 
 class CtfDialog(DownsampleDialog):
     
@@ -713,10 +712,10 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getLowFreq(), self.getHighFreq(),
-                             self.getFreqDecay(), self.dim)
+        getImageLocation = importFromPlugin('xmipp3.convert', 'getImageLocation')
+        xmippLib.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
+                                self.getLowFreq(), self.getHighFreq(),
+                                self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
@@ -763,9 +762,9 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getFreqSigma(), self.dim)
+        getImageLocation = importFromPlugin('xmipp3.convert', 'getImageLocation')
+        xmippLib.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
+                                self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):

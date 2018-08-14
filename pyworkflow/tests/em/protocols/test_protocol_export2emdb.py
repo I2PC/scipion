@@ -28,7 +28,10 @@ import os
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pyworkflow.em.protocol import ProtImportVolumes
 from pyworkflow.em.protocol.protocol_export import ProtExportEMDB
-from pyworkflow.em.packages.xmipp3 import XmippProtMultipleFSCs, XmippProtResolution3D
+from pyworkflow.utils import importFromPlugin
+
+XmippProtMultipleFSCs = importFromPlugin('xmipp3.protocols', 'XmippProtMultipleFSCs')
+XmippProtResolution3D = importFromPlugin('xmipp3.protocols', 'XmippProtResolution3D')
 
 class TestExport2EMDB(BaseTest):
     @classmethod

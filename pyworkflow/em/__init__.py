@@ -127,17 +127,17 @@ def runProgram(program, params):
     env = None
 
     if program.startswith('xmipp'):
-        import xmipp3
+        xmipp3 = importFromPlugin('xmipp3')
         env = xmipp3.getEnviron()
     if program.startswith('relion'):
-        import relion
+        relion = importFromPlugin('relion')
         env = relion.getEnviron()
     elif (program.startswith('e2') or
               program.startswith('sx')):
-        import eman2
+        eman2 = importFromPlugin('eman2')
         env = eman2.getEnviron()
     elif program.startswith('b'):
-        import pyworkflow.em.packages.bsoft as bsoft
+        bsoft = importFromPlugin('bsoft')
         env = bsoft.getEnviron()
 
     pwutils.runJob(None, program, params, env=env)

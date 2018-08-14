@@ -1,3 +1,6 @@
+print("Xmipp binaries not found. Ghost active.....BOOOOOO!\n"
+      "  > See scipion install --list to install Xmipp. < ")
+
 DT_DEFAULT = None
 DT_UNKNOWN = None
 DT_UCHAR = None
@@ -1020,7 +1023,10 @@ class SymList:
         pass
 
 
-MetaData = None
+def MetaData():
+    print("Xmipp binaries not found. Ghost active.....BOOOOOO!\n"
+          "  > See scipion install --list to install Xmipp. < ")
+
 MetaDataInfo = None
 
 def Image():
@@ -1029,7 +1035,7 @@ def Image():
 def Euler_angles2matrix():
     pass
 
-def FileName():
+def FileName(arg):
     pass
 
 def getBlocksInMetaDataFile():
