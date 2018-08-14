@@ -26,11 +26,15 @@
 # **************************************************************************
 
 import os
-from pyworkflow.protocol.params import BooleanParam,  IntParam
+from pyworkflow.protocol.params import BooleanParam,  IntParam, EnumParam
 from convert import runPhenixProgram, getProgram, REALSPACEREFINE, MOLPROBITY
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em import PdbFile
 from protocol_refinement_base import PhenixProtRunRefinementBase
+
+PDB = 0
+mmCIF = 1
+OUTPUT_FORMAT = ['pdb', 'mmcif']
 
 
 class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
@@ -48,6 +52,11 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
         super(PhenixProtRunRSRefine, self)._defineParams(form)
+        form.addParam('outputFormat', EnumParam, choices=OUTPUT_FORMAT,
+                      default=PDB, label="Select output format",
+                      help="Refined atomic structure is the protocol output. "
+                           "You can choose PDB or mmCIF as output format. "
+                           "PDB format has been selected by default.")
         form.addParam("doSecondary", BooleanParam, label="Secondary structure",
                       default=False, expertLevel=LEVEL_ADVANCED,
                       help="Set to TRUE to use secondary structure "
@@ -59,6 +68,70 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
                            "which model geometry or/and model-to-map fit is "
                            "poor the use of more macro-cycles could be "
                            "helpful.\n")
+        group = form.addGroup('Optimization strategy options')
+        group.addParam('minimizationGlobal', BooleanParam,
+                       label="Global minimization: ", default=True,
+                       expertLevel=LEVEL_ADVANCED,
+                       help="Phenix default parameter to look the global "
+                            "minimum of the model.\nGenerally, refinement "
+                            "with all defaults is "
+                            "sufficient.\nOther options "
+                            "of use: run=minimization_global+local_grid_search"
+                            "+morphing+simulated_annealing\n")
+        group.addParam('rigidBody', BooleanParam,
+                       label="Rigid body: ", default=False,
+                       expertLevel=LEVEL_ADVANCED,
+                       help="Refinement strategy that considers groups of "
+                            "atoms that move (rotate and translate) as a "
+                            "single body.\n")
+        group.addParam('localGridSearch', BooleanParam,
+                       label="Local grid search: ", default=False,
+                       expertLevel=LEVEL_ADVANCED,
+                       help="Refinement strategy that considers "
+                            "local rotamer fitting.\n\n Generally, refinement "
+                            "with all defaults is sufficient.\n Including "
+                            "local fitting, morphing, "
+                            "or simulated annealing "
+                            "( local_grid_search+morphing+simulated_annealing) "
+                            "into refinement may significantly increase "
+                            "runtime.\nOther options "
+                            "of use: run=minimization_global+local_grid_search"
+                            "+morphing+simulated_annealing\n")
+        group.addParam('morphing', BooleanParam,
+                       label="Morphing ", default=False,
+                       expertLevel=LEVEL_ADVANCED,
+                       help="Morphing procedure distorts a model to match an "
+                            "electron density map.\n\nGenerally, refinement "
+                            "with all defaults is "
+                            "sufficient.\n Including local fitting, morphing, "
+                            "or simulated annealing "
+                            "( local_grid_search+morphing+simulated_annealing) "
+                            "into refinement may significantly increase "
+                            "runtime.\nOther options "
+                            "of use: run=minimization_global+local_grid_search"
+                            "+morphing+simulated_annealing\n")
+        group.addParam('simulatedAnnealing', BooleanParam,
+                       label="Simulated annealing ", default=False,
+                       expertLevel=LEVEL_ADVANCED,
+                       help="Optimization technique known as molecular "
+                            "dynamics refinement; it minimizes the energy of "
+                            "the model.\n"
+                            "Generally, refinement with all defaults is "
+                            "sufficient.\n Including local fitting, morphing, "
+                            "or simulated annealing "
+                            "( local_grid_search+morphing+simulated_annealing) "
+                            "into refinement may significantly increase "
+                            "runtime.\nOther options "
+                            "of use: run=minimization_global+local_grid_search"
+                            "+morphing+simulated_annealing\n")
+        group.addParam('adp', BooleanParam,
+                       label="Atomic Displacement Parameters (ADPs) ",
+                       default=True,
+                       expertLevel=LEVEL_ADVANCED,
+                       help="Phenix default parameter.\nGenerally, refinement "
+                            "with all defaults is sufficient.\n\nADP ("
+                            "B-factors) refinement against the map is "
+                            "performed at the last macro-cycle only. ")
 
     # --------------------------- INSERT steps functions ---------------
     def _insertAllSteps(self):
@@ -75,19 +148,31 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
         args += " " + vol
         args += " resolution=%f" % self.resolution
         args += " secondary_structure.enabled=%s" % self.doSecondary
-        # args += " run=minimization_global+local_grid_search+morphing+" \
-        #         "simulated_annealing"
+        args += " run="
+        if self.minimizationGlobal == True:
+            args += "minimization_global+"
+        if self.rigidBody == True:
+            args += "rigid_body+"
+        if self.localGridSearch == True:
+            args += "local_grid_search+"
+        if self.morphing == True:
+            args += "morphing+"
+        if self.simulatedAnnealing == True:
+            args += "simulated_annealing+"
+        if self.adp == True:
+            args += "adp+"
+        args = args[:-1]
         args += " macro_cycles=%d" % self.macroCycles
+        args += " model_format=%s" % OUTPUT_FORMAT[int(self.outputFormat)]
         args += " write_pkl_stats=True"
-
         runPhenixProgram(getProgram(REALSPACEREFINE), args,
                          cwd=self._getExtraPath())
 
     def runMolprobityStep(self, tmpMapFile):
         # PDBx/mmCIF
-        outPdbName = self._getPdbRSRefineOutput()
+        self._getRSRefineOutput()
         args = ""
-        args += os.path.abspath(outPdbName)
+        args += os.path.abspath(self.outPdbName)
         # starting volume (.mrc)
         vol = os.path.abspath(self._getExtraPath(tmpMapFile))
         args += " "
@@ -96,27 +181,26 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
         args += "d_min=%f" % self.resolution.get()
         args += " "
         args += "pickle=True"
-        # args += " wxplots=True" # TODO: Avoid the direct opening of plots
-        # script with auxiliary files
+        # args += " wxplots=True" # Direct opening of the three wx plots (
+                                  # Ramachandran, Chi1-Chi2 and
+                                  # Multi-criterion plots)
+                                  # script with auxiliary files
         runPhenixProgram(getProgram(MOLPROBITY), args,
                          cwd=self._getExtraPath())
 
     def createOutputStep(self):
-        outPdbName = self._getPdbRSRefineOutput()
+        self._getRSRefineOutput()
         pdb = PdbFile()
-        pdb.setFileName(outPdbName)
+        pdb.setFileName(self.outPdbName)
 
         if self.inputVolume.get() is not None:
             pdb.setVolume(self.inputVolume.get())
         else:
-            self.pdb.setVolume(self.inputStructure.get().getVolume())
+            pdb.setVolume(self.inputStructure.get().getVolume())
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure.get(), pdb)
         if self.inputVolume.get() is not None:
             self._defineSourceRelation(self.inputVolume.get(), pdb)
-
-        # fileName = glob.glob(self._getExtraPath("*.log"))[0]
-        # self._parseFile(fileName)
 
         MOLPROBITYOUTFILENAME = self._getExtraPath(
             self.MOLPROBITYOUTFILENAME)
@@ -145,8 +229,14 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
 
     # --------------------------- UTILS functions --------------------------
 
-    def _getPdbRSRefineOutput(self):
+    def _getRSRefineOutput(self):
         inPdbName = os.path.basename(self.inputStructure.get().getFileName())
-        outPdbName = self._getExtraPath(
-            inPdbName.replace(".pdb", "_real_space_refined.pdb"))
-        return outPdbName
+        if self.outputFormat == PDB:
+            self.outPdbName = self._getExtraPath(
+                inPdbName.replace("." + inPdbName.split(".")[1],
+                                  "_real_space_refined.pdb"))
+        elif self.outputFormat == mmCIF:
+            self.outPdbName = self._getExtraPath(
+                inPdbName.replace("." + inPdbName.split(".")[1],
+                                  "_real_space_refined.cif"))
+
