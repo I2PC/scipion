@@ -346,7 +346,7 @@ class ImageHandler(object):
 
     def __runEman2Program(self, program, args):
         """ Internal workaround to launch an EMAN2 program. """
-        import pyworkflow.em.packages.eman2 as eman2
+        eman2 = pwutils.importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
         runJob(None, eman2.getEmanProgram(program), args,
                env=eman2.getEnviron())
@@ -360,7 +360,7 @@ class ImageHandler(object):
         #TODO: right now we need to call a Xmipp program to create
         # the spherical mask, it would be nicer to have such utility
         # in the binding
-        import xmipp3
+        xmipp3 = pwutils.importFromPlugin('xmipp3')
         inputRef = xmipp3.getImageLocation(refImage)
         self.__runXmippProgram('xmipp_transform_mask',
                                '-i %s --create_mask  %s --mask circular -%d'
