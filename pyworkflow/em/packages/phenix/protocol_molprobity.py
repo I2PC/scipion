@@ -60,15 +60,18 @@ atomic structure derived from a cryo-EM density map.
         args = ""
         args += pdb
         # starting volume (.mrc)
-        vol = self._getInputVolume()
+        if self.inputStructure.get().getVolume() is not None:
+            vol = self.inputStructure.get().getVolume()
+        else:
+            vol = self._getInputVolume().get()
         if vol is not None:
             args += " "
             volume = os.path.abspath(self._getExtraPath(self.MOLPROBITYFILE))
             args += "map_file_name=%s" % volume
             args += " "
             args += "d_min=%f" % self.resolution.get()
-            args += " "
-            args += "pickle=True"
+        args += " "
+        args += "pickle=True"
             # args += " wxplots=True" # TODO: Avoid the direct opening of plots
         # script with auxiliary files
         try:
@@ -111,26 +114,3 @@ atomic structure derived from a cryo-EM density map.
 
     def _citations(self):
         return ['Chen_2010']
-
-    # --------------------------- UTILS functions --------------------------
-
-    # def _parseFile(self, fileName):
-    #     with open(fileName) as f:
-    #         line = f.readline()
-    #         while line:
-    #             words = line.strip().split()
-    #             if len(words) > 1:
-    #                 if (words[0] == 'Ramachandran' and words[1] == 'outliers'):
-    #                     self.ramachandranOutliers = Float(words[3])
-    #                 elif (words[0] == 'favored' and words[1] == '='):
-    #                     self.ramachandranFavored = Float(words[2])
-    #                 elif (words[0] == 'Rotamer' and words[1] == 'outliers'):
-    #                     self.rotamerOutliers = Float(words[3])
-    #                 elif (words[0] == 'C-beta' and words[1] == 'deviations'):
-    #                     self.cbetaOutliers = Integer(words[3])
-    #                 elif (words[0] == 'Clashscore' and words[1] == '='):
-    #                     self.clashscore = Float(words[2])
-    #                 elif (words[0] == 'MolProbity' and words[1] == 'score'):
-    #                     self.overallScore = Float(words[3])
-    #             line = f.readline()
-
