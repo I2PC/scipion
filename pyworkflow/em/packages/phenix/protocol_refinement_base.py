@@ -21,17 +21,27 @@ atomic structure derived from a cryo-EM density map.
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
+        # TODO: Consider the possibility of including .mtz files in Scipion
+        # TODO: input volume (read the next comment)
+        # Real-space refine map volume: It is possible to use either CCP4 type
+        # .map files (which are three-dimensional grid of voxels with electron
+        # density values) or .mtz files (which contain Fourier coefficients
+        # for an electron density map). If CCP4 type map files are used,
+        # the resolution is needed as well. If mtz files are used,
+        # the resolution is detected automatically from the map coefficients.
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input Volume', allowsNull=True,
-                      help="Set the starting volume.")
+                      help="Set the starting volume.\n")
         form.addParam('resolution', FloatParam,
                       label='Resolution (A):',
                       default=3.0,
                       help='Set the resolution of the input volume.')
         form.addParam('inputStructure', PointerParam,
                       pointerClass="PdbFile", allowsNull=False,
-                      label='Input atomic structure',
-                      help="Set the PDBx/mmCIF to be processed.")
+                      label='Input atomic structure.',
+                      help="Set the atomic structure to be processed.\n"
+                           "Supported formats are PDB or mmCIF; this last one"
+                           " is especially useful for very large structures.")
 
     # --------------------------- STEPS functions --------------------------
 
