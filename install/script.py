@@ -37,7 +37,6 @@ args = sys.argv
 
 env = Environment(args=args[2:])
 
-noOpencv = '--no-opencv' in args or not get('OPENCV')
 noScipy = '--no-scipy' in args or not get('SCIPY')
 
 
@@ -148,6 +147,13 @@ tcl = env.addLibrary(
     targets=[env.getLib('tcl8.6')],
     flags=osFlags)
 
+zlib = env.addLibrary(
+    'zlib',
+    targets=[env.getLib('z')],
+    tar='zlib-1.2.8.tgz',
+    configTarget='zlib.pc',
+    default=True)
+
 osBuildDir = 'tk8.6.1/unix'
 osFlags = ['--enable-threads']
 
@@ -158,20 +164,13 @@ tk = env.addLibrary(
     targets=[env.getLib('tk8.6')],
     libChecks=['xft'],
     flags=osFlags,
-    deps=[tcl])
+    deps=[tcl, zlib])
 
 # Special case: tk does not make the link automatically, go figure.
 tk_wish = env.addTarget('tk_wish')
 tk_wish.addCommand('ln -v -s wish8.6 wish',
                    targets=SW_BIN + '/wish',
                    cwd= SW_BIN)
-
-zlib = env.addLibrary(
-    'zlib',
-    targets=[env.getLib('z')],
-    tar='zlib-1.2.8.tgz',
-    configTarget='zlib.pc',
-    default=False)
 
 jpeg = env.addLibrary(
     'jpeg',
@@ -228,14 +227,6 @@ swig = env.addLibrary(
     deps=[pcre],
     default=False)
 
-sh_alignment = env.addLibrary(
-    'sh_alignment',
-    tar='sh_alignment.tgz',
-    commands=[('cd ' + SW_TMP + '/sh_alignment; make install',
-               SW_PYT_PACK + '/sh_alignment/frm.py')],
-    deps=[python, swig],
-    default=False)
-
 lapack = env.addLibrary(
     'lapack',
     tar='lapack-3.5.0.tgz',
@@ -273,7 +264,7 @@ if os.environ.get('OPENCV_VER') == '3.4.1':
                    'cmake ' + ' '.join(opencvFlags) + ' .. ; '
                    'make -j ' + str(env.getProcessors()) + '; '
                    'make install', SW_LIB +'/libopencv_core.so')],
-        default=not noOpencv)
+        default=False)
 else:
     opencv = env.addLibrary(
         'opencv',
@@ -281,7 +272,7 @@ else:
         targets=[env.getLib('opencv_core')],
         flags=opencvFlags,
         cmake=True,
-        default=not noOpencv)
+        default=False)
 
 # ---------- Libraries required by PyTom 
 
