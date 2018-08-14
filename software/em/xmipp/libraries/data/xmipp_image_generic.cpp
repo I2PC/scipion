@@ -160,6 +160,7 @@ void ImageGeneric::setDatatype(DataType imgType)
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
+    case DT_UHalfByte:
     case DT_UChar:
         {
             Image<unsigned char> *imT = new Image<unsigned char>;

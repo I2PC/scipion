@@ -19,6 +19,7 @@ public class Filename {
 	public final static String EXT_HED = ".hed";
 	public final static String EXT_SER = ".ser";
 	public final static String EXT_DM3 = ".dm3";
+    public final static String EXT_DM4 = ".dm4";
 	public final static String EXT_EM = ".em";
 	public final static String EXT_EMS = ".ems";
 	public final static String EXT_PIF = ".pif";
@@ -61,7 +62,7 @@ public class Filename {
 			EXT_VOL, EXT_EM, EXT_PIF };
         
 	public final static String[] STACKS = new String[] { EXT_MRCS, EXT_MRCS2,
-			EXT_STK, EXT_PIF, EXT_EMS };
+			EXT_STK, EXT_PIF, EXT_EMS, EXT_DM4};
 
 	public final static String[] METADATAS = new String[] { EXT_XMD, EXT_SEL,
 			EXT_DOC, EXT_CTFPARAM, EXT_CTFDAT, EXT_POS };
@@ -72,7 +73,7 @@ public class Filename {
 			EXT_ERR, EXT_OUT, EXT_BOX };
         
         public final static String[] XMIPP_SUPPORTED = new String[]{EXT_RAW, EXT_SPI, EXT_XMP, EXT_VOL, EXT_STK, EXT_MRC, EXT_MRC2, EXT_MRCS2, EXT_MRCS, 
-            EXT_HED, EXT_IMG, EXT_INF, EXT_RAW, EXT_TIF, EXT_DM3, EXT_SER, EXT_SPE, EXT_EM, EXT_EMS, EXT_PIF, EXT_HDF, EXT_HDF5, EXT_H5, EXT_PSD};
+            EXT_HED, EXT_IMG, EXT_INF, EXT_RAW, EXT_TIF, EXT_DM3, EXT_DM4, EXT_SER, EXT_SPE, EXT_EM, EXT_EMS, EXT_PIF, EXT_HDF, EXT_HDF5, EXT_H5, EXT_PSD};
 
 	public static boolean isPSD(String filename) {
 		return filename != null && filename.endsWith(EXT_PSD);

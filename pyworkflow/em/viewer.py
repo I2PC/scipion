@@ -75,10 +75,13 @@ class DataView(View):
       that are not objects, e.g.: dark or gain images"""
     def __init__(self, path, viewParams={}, **kwargs):
         View.__init__(self)
-        self._memory = '2g'
+        self._memory = showj.getJvmMaxMemory()
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
+
+    def setMemory(self, memory):
+        self._memory = memory
 
     def getViewParams(self):
         """ Give access to the viewParams dict. """

@@ -425,7 +425,7 @@ public:
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
             // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
             return 0;
-        if (datatype == DT_UChar)
+        if (datatype == DT_UChar || datatype == DT_UHalfByte)
         {
             return IMGPIXEL(*IUChar,y,x);
         }
@@ -456,7 +456,7 @@ public:
     /** Micrograph max min*/
     void computeDoubleMinMax(double &Dmin, double &Dmax) const
     {
-        if (datatype == DT_UChar)
+        if (datatype == DT_UChar || datatype == DT_UHalfByte)
         {
             return (*IUChar)().computeDoubleMinMax(Dmin,Dmax);
         }
@@ -490,7 +490,7 @@ public:
     //write in default endiam
     void set_val(int y, int x, double new_val)
     {
-        if (datatype == DT_UChar)
+        if (datatype == DT_UChar || datatype == DT_UHalfByte)
         {
             IMGPIXEL(*IUChar,y,x) = (unsigned char) new_val;
         }
