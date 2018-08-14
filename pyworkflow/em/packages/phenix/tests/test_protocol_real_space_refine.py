@@ -27,7 +27,9 @@
 from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
     ProtImportVolumes
 from pyworkflow.em.packages.phenix.protocol_real_space_refine import \
-    PhenixProtRunRSRefine
+    PhenixProtRunRSRefine, mmCIF
+from pyworkflow.em.packages.phenix.protocol_molprobity \
+    import PhenixProtRunMolprobity
 from pyworkflow.tests import *
 
 
@@ -139,16 +141,49 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/5ni1.cif'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import pdb\n 5ni1.cif')
+        protImportPDB.setObjLabel('import cif\n 5ni1.cif')
         self.launchProtocol(protImportPDB)
         structure_hemo_cif = protImportPDB.outputPdb
         return structure_hemo_cif
 
+    def _importStructHemoCIF2(self):
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile(
+                    'PDBx_mmCIF/5ni1.cif'),
+                'inputVolume': self._importVolHemoOrg()
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('import cif\n 5ni1.cif\nassociated volume '
+                                  'emd_3488.map')
+        self.launchProtocol(protImportPDB)
+        structure_hemo_cif2 = protImportPDB.outputPdb
+        self.assertTrue(structure_hemo_cif2.getFileName())
+        return structure_hemo_cif2
+
 class TestPhenixRSRefine(TestImportData):
-    """ Test the protocol of MolProbity validation
+    """ Test the protocol of Real Space Refine
     """
-    def checkResults(self, ramOutliers, ramFavored, rotOutliers, cbetaOutliers,
-                     clashScore, overallScore, protRSRefine, places=2):
+    def checkMPResults(self, ramOutliers, ramFavored, rotOutliers,
+                       cbetaOutliers, clashScore, overallScore,
+                       protMolProbity, places=2):
+        # method to check MolProbity statistic results of the Final Results
+        # Table
+        self.assertAlmostEqual(protMolProbity.ramachandranOutliers,
+                               ramOutliers, places)
+        self.assertAlmostEqual(protMolProbity.ramachandranFavored,
+                               ramFavored, places)
+        self.assertAlmostEqual(protMolProbity.rotamerOutliers,
+                               rotOutliers, places)
+        self.assertAlmostEqual(protMolProbity.cbetaOutliers,
+                               cbetaOutliers, places)
+        self.assertAlmostEqual(protMolProbity.clashscore,
+                               clashScore, places)
+        self.assertAlmostEqual(protMolProbity.overallScore,
+                               overallScore, places)
+
+    def checkRSRefineResults(self, ramOutliers, ramFavored, rotOutliers,
+                             cbetaOutliers, clashScore, overallScore,
+                             protRSRefine, places=2):
         # method to check MolProbity statistic results of the Final Results
         # Table
         self.assertAlmostEqual(protRSRefine.ramachandranOutliers,
@@ -161,7 +196,6 @@ class TestPhenixRSRefine(TestImportData):
                                cbetaOutliers, places)
         self.assertAlmostEqual(protRSRefine.clashscore,
                                clashScore, places)
-        protRSRefine.overallScore = round(protRSRefine.overallScore, 2)
         self.assertAlmostEqual(protRSRefine.overallScore,
                                overallScore, places)
     #
@@ -199,10 +233,13 @@ class TestPhenixRSRefine(TestImportData):
         """ This test checks that phenix real_space_refine protocol runs
         with a volume provided directly as inputVol, the input PDB was fitted
         to the volume and refined previously by coot and refmac withouth mask
-        in another project
+        in another project; (MolProbity has been run to compare values before
+        and after refinement); default refine strategy
         """
         print "Run phenix real_space_refine from imported volume and pdb file " \
-              "previously fitted and refined by Coot and Refmac without mask"
+              "previously fitted and refined by Coot and Refmac without mask " \
+              "(MolProbity has been run to compare values before and after " \
+              "refinement); default refine strategy"
 
         # Import Volume
         volume_refmac3 = self._importVolRefmac3()
@@ -210,10 +247,31 @@ class TestPhenixRSRefine(TestImportData):
         # import PDB
         structure_refmac3 = self._importStructRefmac3()
 
+        #MolProbity
+        args = {
+                'inputVolume': volume_refmac3,
+                'resolution': 3.5,
+                'inputStructure': structure_refmac3
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                   'volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkMPResults(ramOutliers=0.47,
+                            ramFavored=83.96,
+                            rotOutliers=5.68,
+                            cbetaOutliers=1,
+                            clashScore=4.77,
+                            overallScore=2.50,
+                            protMolProbity=protMolProbity)
+
         # real_space_refine
         args = {'inputVolume': volume_refmac3,
                 'resolution': 3.5,
                 'inputStructure': structure_refmac3
+                # default parameters in Optimization strategy options
                 }
         protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
         protRSRefine.setObjLabel('RSRefine\n refmac3.mrc and '
@@ -221,27 +279,50 @@ class TestPhenixRSRefine(TestImportData):
         self.launchProtocol(protRSRefine)
 
         # check real_space_refine results
-        self.checkResults(ramOutliers=0.00,
-                          ramFavored=96.23,
-                          rotOutliers=0.00,
-                          cbetaOutliers=0,
-                          clashScore=1.79,
-                          overallScore=1.19,
-                          protRSRefine=protRSRefine)
+        self.checkRSRefineResults(ramOutliers=0.00,
+                                  ramFavored=95.75,
+                                  rotOutliers=0.00,
+                                  cbetaOutliers=0,
+                                  clashScore=2.09,
+                                  overallScore=1.27,
+                                  protRSRefine=protRSRefine)
 
     def testPhenixRSRefineFromVolumeAndPDB4(self):
         """ This test checks that phenix real_space_refine protocol runs
         with a volume provided directly as inputVol and the input PDB from
-        data banks
+        data banks; default refine strategy; (MolProbity has been run to
+        compare values before and after refinement).
         """
         print "Run phenix real_space_refine from imported volume and pdb file " \
-              "from data banks (vol origin 0.0, 0.0, 0.0)"
+              "from data banks (vol origin 0.0, 0.0, 0.0); default refine " \
+              "strategy; (MolProbity has been run to compare values before " \
+              "and after refinement)."
 
         # Import Volume
         volume_hemo_org = self._importVolHemoOrg()
 
         # import PDB
         structure_hemo_pdb = self._importStructHemoPDB()
+
+        # MolProbity
+        args = {
+                'inputVolume': volume_hemo_org,
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_pdb,
+               }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                   'volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkMPResults(ramOutliers=0.00,
+                            ramFavored=95.23,
+                            rotOutliers=0.43,
+                            cbetaOutliers=0,
+                            clashScore=3.53,
+                            overallScore=1.48,
+                            protMolProbity=protMolProbity)
 
         # real_space_refine
         args = {'inputVolume': volume_hemo_org,
@@ -254,27 +335,50 @@ class TestPhenixRSRefine(TestImportData):
         self.launchProtocol(protRSRefine)
 
         # check real_space_refine results
-        self.checkResults(ramOutliers=0.00,
-                          ramFavored=97.17,
-                          rotOutliers=2.17,
-                          cbetaOutliers=0,
-                          clashScore=2.32,
-                          overallScore=1.42,
-                          protRSRefine=protRSRefine)
+        self.checkRSRefineResults(ramOutliers=0.00,
+                                  ramFavored=98.23,
+                                  rotOutliers=0.00,
+                                  cbetaOutliers=0,
+                                  clashScore=1.99,
+                                  overallScore=0.97,
+                                  protRSRefine=protRSRefine)
 
-    def testPhenixRSRefineFromVolumeAndPDB5(self):
+    def testPhenixRSRefineFromVolumeAndCIF5(self):
         """ This test checks that phenix real_space_refine protocol runs
         with a volume provided directly as inputVol and the input PDB from
-        data banks
+        data banks; default refine strategy; (MolProbity has been run to
+        compare values before and after refinement).
         """
         print "Run phenix real_space_refine from imported volume and cif file " \
-              "from data banks (vol origin 0.0, 0.0, 0.0)"
+              "from data banks (vol origin 0.0, 0.0, 0.0); default refine " \
+              "strategy; (MolProbity has been run to compare values before " \
+              "and after refinement)."
 
         # Import Volume
         volume_hemo_org = self._importVolHemoOrg()
 
         # import PDB
         structure_hemo_cif = self._importStructHemoCIF()
+
+        # MolProbity
+        args = {
+            'inputVolume': volume_hemo_org,
+            'resolution': 3.2,
+            'inputStructure': structure_hemo_cif,
+        }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                   'volume and cif\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkMPResults(ramOutliers=0.00,
+                            ramFavored=95.23,
+                            rotOutliers=0.43,
+                            cbetaOutliers=0,
+                            clashScore=3.53,
+                            overallScore=1.48,
+                            protMolProbity=protMolProbity)
 
         # real_space_refine
         args = {'inputVolume': volume_hemo_org,
@@ -283,80 +387,253 @@ class TestPhenixRSRefine(TestImportData):
                 }
         protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
         protRSRefine.setObjLabel('RSRefine hemo\n emd_3488.map and '
-                                 '5ni1.cif\n')
+                                 '5ni1.cif\ndefault refine strategy')
         self.launchProtocol(protRSRefine)
 
         # check real_space_refine results
-        self.checkResults(ramOutliers=0.00,
-                          ramFavored=97.17,
-                          rotOutliers=2.17,
-                          cbetaOutliers=0,
-                          clashScore=2.32,
-                          overallScore=1.42,
-                          protRSRefine=protRSRefine)
+        self.checkRSRefineResults(ramOutliers=0.00,
+                                  ramFavored=98.23,
+                                  rotOutliers=0.00,
+                                  cbetaOutliers=0,
+                                  clashScore=1.99,
+                                  overallScore=0.97,
+                                  protRSRefine=protRSRefine)
 
-    # def testPhenixRSRefineSeveralChains(self):
-    #     """ This test checks that the phenix real_space_refine protocol runs
-    #     with a volume provided directly as inputVol, the input PDB was fitted
-    #     to the volume and refined previously by coot and refmac in another
-    #     project
-    #     """
-    #     print "Run phenix real_space_refine protocol from imported volume " \
-    #           "and pdb file already refined by Coot and Refmac in another " \
-    #           "project"
-    #
-    #     # Import Volume
-    #     volume3 = self._importVolume3()
-    #
-    #     # import PDB
-    #     structure5_PDB = self._importStructurePDBWoVol2()
-    #
-    #     # real_space_refine
-    #     args = {'inputVolume': volume3,
-    #             'resolution': 2.2,
-    #             'inputStructure': structure5_PDB
-    #             }
-    #     protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
-    #     protRSRefine.setObjLabel('RSRefine\n volume and pdb\n')
-    #     self.launchProtocol(protRSRefine)
-    #
-    #     # check real_space_refine results
-    #     self.checkResults(ramOutliers=0.12,
-    #                       ramFavored=95.86,
-    #                       rotOutliers=0.52,
-    #                       cbetaOutliers=0,
-    #                       clashScore=9.74,
-    #                       overallScore=1.80,
-    #                       protRSRefine=protRSRefine)
-    #
-    # def testPhenixRSRefineSeveralChains2(self):
-    #     """ This test checks that the phenix real_space_refine protocol runs
-    #     with an input PDB that has a volume associated (the pdb was fitted
-    #     to the volume and refined previously by coot and refmac in another
-    #     project
-    #     """
-    #     print "Run phenix real_space_refine protocol from imported pdb " \
-    #           "and and volume associated and already refined by Coot and " \
-    #           "Refmac in another project"
-    #
-    #     # import PDB
-    #     structure6_PDB = self._importStructurePDBWithVol2()
-    #
-    #     # real_space_refine
-    #     args = {
-    #             'resolution': 2.2,
-    #             'inputStructure': structure6_PDB
-    #             }
-    #     protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
-    #     protRSRefine.setObjLabel('RSRefine\n volume and pdb\n')
-    #     self.launchProtocol(protRSRefine)
-    #
-    #     # check real_space_refine results
-    #     self.checkResults(ramOutliers=0.12,
-    #                       ramFavored=95.86,
-    #                       rotOutliers=0.52,
-    #                       cbetaOutliers=0,
-    #                       clashScore=9.74,
-    #                       overallScore=1.80,
-    #                       protRSRefine=protRSRefine)
+    def testPhenixRSRefineFromVolumeAndPDB6(self):
+        """ This test checks that phenix real_space_refine protocol runs
+        with a volume provided directly as inputVol and the input PDB from
+        data banks; alternative refine strategy; (MolProbity has been run to
+        compare values before and after refinement).
+        """
+        print "Run phenix real_space_refine from imported volume and pdb " \
+              "file from data banks (vol origin 0.0, 0.0, 0.0); alternative " \
+              "refine strategy; (MolProbity has been run to compare values " \
+              "before and after refinement)."
 
+        # Import Volume
+        volume_hemo_org = self._importVolHemoOrg()
+
+        # import PDB
+        structure_hemo_pdb = self._importStructHemoPDB()
+
+        # MolProbity
+        args = {
+                'inputVolume': volume_hemo_org,
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_pdb,
+        }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                       'volume and pdb\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkMPResults(ramOutliers=0.00,
+                            ramFavored=95.23,
+                            rotOutliers=0.43,
+                            cbetaOutliers=0,
+                            clashScore=3.53,
+                            overallScore=1.48,
+                            protMolProbity=protMolProbity)
+
+        # real_space_refine
+        args = {'inputVolume': volume_hemo_org,
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_pdb,
+                'localGridSearch': True,
+                'morphing': True,
+                'simulatedAnnealing': True,
+                'adp': False
+                }
+        protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
+        protRSRefine.setObjLabel('RSRefine hemo\n emd_3488.map and '
+                                     '5ni1.pdb\nalternative refine strategy')
+        self.launchProtocol(protRSRefine)
+
+        # check real_space_refine results
+        self.checkRSRefineResults(ramOutliers=0.00,
+                                  ramFavored=97.17,
+                                  rotOutliers=2.17,
+                                  cbetaOutliers=0,
+                                  clashScore=2.32,
+                                  overallScore=1.42,
+                                  protRSRefine=protRSRefine)
+
+    def testPhenixRSRefineFromVolumeAndCIF7(self):
+        """ This test checks that phenix real_space_refine protocol runs
+        with a volume provided directly as inputVol and the input PDB from
+        data banks; alternative refine strategy; (MolProbity has been run
+        to compare values before and after refinement).
+        """
+        print "Run phenix real_space_refine from imported volume and cif " \
+              "file from data banks (vol origin 0.0, 0.0, 0.0); " \
+              "alternative refine strategy; (MolProbity has been run to " \
+              "compare values before and after refinement)."
+
+        # Import Volume
+        volume_hemo_org = self._importVolHemoOrg()
+
+        # import PDB
+        structure_hemo_cif = self._importStructHemoCIF()
+
+        # MolProbity
+        args = {
+                'inputVolume': volume_hemo_org,
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_cif,
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                       'volume and cif\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkMPResults(ramOutliers=0.00,
+                            ramFavored=95.23,
+                            rotOutliers=0.43,
+                            cbetaOutliers=0,
+                            clashScore=3.53,
+                            overallScore=1.48,
+                            protMolProbity=protMolProbity)
+
+        # real_space_refine
+        args = {'inputVolume': volume_hemo_org,
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_cif,
+                'localGridSearch': True,
+                'morphing': True,
+                'simulatedAnnealing': True,
+                'adp': False
+                }
+        protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
+        protRSRefine.setObjLabel('RSRefine hemo\n emd_3488.map and '
+                                     '5ni1.cif\nalternative refine strategy')
+        self.launchProtocol(protRSRefine)
+
+        # check real_space_refine results
+        self.checkRSRefineResults(ramOutliers=0.00,
+                                  ramFavored=97.17,
+                                  rotOutliers=2.17,
+                                  cbetaOutliers=0,
+                                  clashScore=2.32,
+                                  overallScore=1.42,
+                                  protRSRefine=protRSRefine)
+
+    def testPhenixRSRefineFromVolumeAndCIF8(self):
+        """ This test checks that phenix real_space_refine protocol runs
+        with a volume provided directly as inputVol and the input PDB from
+        data banks; default refine strategy; (MolProbity has been run to
+        compare values before and after refinement); outputFormat = mmCIF.
+        """
+        print "Run phenix real_space_refine from imported volume and cif file " \
+              "from data banks (vol origin 0.0, 0.0, 0.0); default refine " \
+              "strategy; (MolProbity has been run to compare values before " \
+              "and after refinement); outputFormat = mmCIF."
+
+        # Import Volume
+        volume_hemo_org = self._importVolHemoOrg()
+
+        # import PDB
+        structure_hemo_cif = self._importStructHemoCIF()
+
+        # MolProbity
+        args = {
+                'inputVolume': volume_hemo_org,
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_cif,
+               }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                       'volume and cif\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkMPResults(ramOutliers=0.00,
+                            ramFavored=95.23,
+                            rotOutliers=0.43,
+                            cbetaOutliers=0,
+                            clashScore=3.53,
+                            overallScore=1.48,
+                            protMolProbity=protMolProbity)
+
+        # real_space_refine
+        args = {'inputVolume': volume_hemo_org,
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_cif,
+                'outputFormat': mmCIF
+                }
+        protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
+        protRSRefine.setObjLabel('RSRefine hemo\n emd_3488.map and '
+                                 '5ni1.cif\ndefault refine strategy')
+        self.launchProtocol(protRSRefine)
+
+        # check real_space_refine results
+        self.checkRSRefineResults(ramOutliers=0.00,
+                                  ramFavored=98.23,
+                                  rotOutliers=0.00,
+                                  cbetaOutliers=0,
+                                  clashScore=1.99,
+                                  overallScore=0.97,
+                                  protRSRefine=protRSRefine)
+
+    def testPhenixRSRefineFromVolumeAndCIF9(self):
+        """ This test checks that phenix real_space_refine protocol runs
+            with a volume associated to the input mmCIF from the
+            data bank; alternative refine strategy; (MolProbity has been run
+            to compare values before and after refinement); outputFormat =
+            mmCIF.
+        """
+        print "Run phenix real_space_refine from imported cif " \
+              "file from data banks (vol origin 0.0, 0.0, 0.0) and " \
+              "associated volume; " \
+              "alternative refine strategy; (MolProbity has been run to " \
+              "compare values before and after refinement); outputFormat = " \
+              "mmCIF."
+
+        # import PDB
+        structure_hemo_cif2 = self._importStructHemoCIF2()
+
+        # MolProbity
+        args = {
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_cif2,
+                }
+        protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
+        protMolProbity.setObjLabel('MolProbity validation\n'
+                                   'cif and associated map\n')
+        self.launchProtocol(protMolProbity)
+
+        # check MolProbity results
+        self.checkMPResults(ramOutliers=0.00,
+                            ramFavored=95.23,
+                            rotOutliers=0.43,
+                            cbetaOutliers=0,
+                            clashScore=3.53,
+                            overallScore=1.48,
+                            protMolProbity=protMolProbity)
+
+        # real_space_refine
+        args = {
+                'resolution': 3.2,
+                'inputStructure': structure_hemo_cif2,
+                'outputFormat': mmCIF,
+                'localGridSearch': True,
+                'morphing': True,
+                'simulatedAnnealing': True,
+                'adp': False
+                }
+        protRSRefine = self.newProtocol(PhenixProtRunRSRefine, **args)
+        protRSRefine.setObjLabel('RSRefine hemo\n'
+                                 '5ni1.cif and associated map\n'
+                                 'emd_3488.map\nalternative '
+                                 'refine strategy')
+        self.launchProtocol(protRSRefine)
+
+        # check real_space_refine results
+        self.checkRSRefineResults(ramOutliers=0.00,
+                                  ramFavored=97.17,
+                                  rotOutliers=2.17,
+                                  cbetaOutliers=0,
+                                  clashScore=2.32,
+                                  overallScore=1.42,
+                                  protRSRefine=protRSRefine)
