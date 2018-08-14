@@ -34,7 +34,7 @@ import os
 from os.path import join
 from collections import OrderedDict
 import subprocess
-from pyworkflow.utils import getFreePort
+from pyworkflow.utils import getFreePort, importFromPlugin
 from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE, COL_RENDER_VOLUME
 import threading
 import shlex
@@ -258,7 +258,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
 
 def runJavaIJapp(memory, appName, args, env=None):
-    import xmipp3
+    xmipp3 = importFromPlugin('xmipp3')
     env = env or {}
     env.update(xmipp3.Plugin.getEnviron(xmippFirst=False))
 

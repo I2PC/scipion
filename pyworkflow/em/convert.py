@@ -341,7 +341,7 @@ class ImageHandler(object):
 
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        import xmipp3
+        xmipp3 = pwutils.importFromPlugin('xmipp3')
         xmipp3.Plugin.runXmippProgram(program, args)
 
     def __runEman2Program(self, program, args):

@@ -477,8 +477,8 @@ class ProtAlignMovies(ProtProcessMovies):
         
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        Plugin = importFromPlugin('xmipp3', 'Plugin')
-        Plugin.runXmippProgram(program, args)
+        xmipp3 = importFromPlugin('xmipp3')
+        xmipp3.Plugin.runXmippProgram(program, args)
 
     def __runEman2Program(self, program, args):
         """ Internal workaround to launch an EMAN2 program. """
