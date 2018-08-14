@@ -30,9 +30,12 @@ from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from pyworkflow.em.viewer import TableView
 from pyworkflow.protocol.params import LabelParam, EnumParam
 from pyworkflow.em.packages.ccp4.convert import getProgram, runCCP4Program
+from pyworkflow.em.viewers.chimera_utils import \
+    createCoordinateAxisFile, runChimeraProgram, getProgram
 import collections
 import json
 import os
+import glob
 from convert import runPhenixProgram
 import matplotlib.pyplot as plt
 
@@ -73,6 +76,11 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                                    object_pairs_hook=collections.OrderedDict)
 
     def _defineParams(self, form):
+        form.addSection(label="Volume and models")
+        form.addParam('displayMapModel', LabelParam,
+                      label="Volume and models",
+                      help="Display of input volume, input pdb that has to be"
+                           "refined and final refined model of the structure.")
         form.addSection(label='MolProbity results')
         group = form.addGroup('Summary MolProbity')
         group.addParam('showMolProbityResults', LabelParam,
@@ -217,7 +225,6 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                            label="Outliers",
                            help='List of planar group outliers '
                                 '(sorted by deviation)')
-        # TODO: if (mp.ramalyze is not None) and (not skip_protein) :
         if (self.dictOverall['_protein'] == True):
             group = form.addGroup('Protein')
             self.plotList = [u'Ramachandran plot', u'Chi1-Chi2 plot']
@@ -539,6 +546,7 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
 
     def _getVisualizeDict(self):
         return{
+            'displayMapModel': self._displayMapModel,
             'showMolProbityResults': self._visualizeMolProbityResults,
             'showCootOutliers': self._showCootOutliers,
             'showMissingAtoms': self._showMissingAtoms,
@@ -568,6 +576,66 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
             'showSuspiciousBfactors': self. _showSuspiciousBfactors
         }
 
+    def _displayMapModel(self, e=None):
+        bildFileName = os.path.abspath(self.protocol._getTmpPath(
+            "axis_output.bild"))
+        try:
+            _inputVol = self.protocol.inputVolume.get()
+        except:
+            _inputVol = self.protocol.inputStructure.get().getVolume()
+
+        if _inputVol is not None:
+            dim = _inputVol.getDim()[0]
+            sampling = _inputVol.getSamplingRate()
+
+        else:
+            # To show pdbs only
+            dim = 150.
+            sampling = 1.
+
+        createCoordinateAxisFile(dim,
+                                 bildFileName=bildFileName,
+                                 sampling=sampling)
+        counter = 0
+        fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
+        f = open(fnCmd, 'w')
+        # reference axis model = 0
+        f.write("open %s\n" % bildFileName)
+
+        # input 3D map
+        counter += 1  # 1
+        if _inputVol is not None:
+            fnVol = self._getInputVolume()
+        if fnVol is not None:
+            try:
+                VOLUMEFILENAME = os.path.abspath(self.protocol._getExtraPath(
+                    self.protocol.MOLPROBITYFILE))
+            except:
+                VOLUMEFILENAME = os.path.abspath(self.protocol._getExtraPath(
+                    self.protocol.REALSPACEFILE))
+        f.write("open %s\n" % VOLUMEFILENAME)
+        x, y, z = fnVol.getOrigin(force=True).getShifts()
+        sampling = fnVol.getSamplingRate()
+        f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
+                "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, counter, x, y, z))
+
+        # input PDB (usually from coot)
+        counter += 1  # 2
+        pdbFileName = os.path.abspath(
+            self.protocol.inputStructure.get().getFileName())
+        f.write("open %s\n" % pdbFileName)
+
+        # refined PDB
+        if (len(os.listdir(self.protocol._getExtraPath())) > 5):
+            counter += 1  # 3
+            pdbFileName = os.path.abspath(self.protocol.outputPdb.getFileName())
+            f.write("open %s\n" % pdbFileName)
+
+        f.close()
+        # run in the background
+        runChimeraProgram(getProgram(), fnCmd + "&")
+        return []
+
     def _visualizeMolProbityResults(self, e=None):
         headerList = ['statistic', 'value']
         dictX = self.dictSummary
@@ -580,19 +648,38 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
         MOLPROBITYCOOTFILENAME = self.protocol._getExtraPath(
             self.protocol.MOLPROBITYCOOTFILENAME)
         args = ""
-        args += " --python " + MOLPROBITYCOOTFILENAME
-        pdb = os.path.abspath(self.protocol.inputStructure.get().getFileName())
-        args += " " + "--pdb " + pdb
-        vol = self.protocol._getInputVolume()
+        args += " --script " + MOLPROBITYCOOTFILENAME
+        # pdb file
+        if (len(os.listdir(self.protocol._getExtraPath())) > 5):
+            pdb = os.path.abspath(self.protocol.outputPdb.getFileName())
+        else:
+            pdb = os.path.abspath(
+                self.protocol.inputStructure.get().getFileName())
+        if pdb.endswith(".pdb"):
+            args += " " + "--pdb " + pdb
+        elif pdb.endswith(".cif"):
+            args += " " + "--coords " + pdb
+        # volume
+        vol = self._getInputVolume()
         if vol is not None:
-            MOLPROBITYFILE = os.path.abspath(self.protocol._getExtraPath(
-                self.protocol.MOLPROBITYFILE))
-            args += " " + "--map " + MOLPROBITYFILE
-
+            try:
+                VOLUMEFILENAME = os.path.abspath(self.protocol._getExtraPath(
+                    self.protocol.MOLPROBITYFILE))
+            except:
+                VOLUMEFILENAME = os.path.abspath(self.protocol._getExtraPath(
+                    self.protocol.REALSPACEFILE))
+            args += " " + "--map " + VOLUMEFILENAME
         # run coot with args
         runCCP4Program(getProgram(self.COOT), args)
 
-    def _showMissingAtoms(self, e_None):
+    def _getInputVolume(self):
+        if self.protocol.inputVolume.get() is None:
+            fnVol = self.protocol.inputStructure.get().getVolume()
+        else:
+            fnVol = self.protocol.inputVolume.get()
+        return fnVol
+
+    def _showMissingAtoms(self, e=None):
         headerList = ['Chain', 'Residue', 'AtLoc', 'Missing atoms']
         dataList = []
         chain = []
@@ -1226,7 +1313,9 @@ else:
     dictOverall['_len_missing_atoms'] = 0
 
 # Protein group
-if data.ramalyze is not None:
+if data.ramalyze is None:
+    dictOverall['_protein'] = False
+else:
     dictOverall['_protein'] = True
 
     # Ramachandran analysis
@@ -1265,54 +1354,64 @@ else:
     dictOverall['_n_suites_rna_outliers'] = data.suites.angles.n_outliers
 
 # Clashes
-if data.clashes is not None:
+if data.clashes is None:
+    dictOverall['_clashes'] = False
+else:
     dictOverall['_clashes'] = True
     dictOverall['_n_clashes_outliers'] = data.clashes.n_outliers
     dictOverall['_clashes_outliers'] = data.clashes.as_gui_table_data()
     dictOverall['_clashes_headers'] = data.clashes.gui_list_headers
 
 # correlation coefficients
-if data.real_space.overall_rsc is not None:
-    dictOverall['_overall_rsc'] = True
-    dictOverall['Mask CC'] = data.real_space.overall_rsc[0]
-    dictOverall['Volume CC'] = data.real_space.overall_rsc[1]
-    dictOverall['Peak CC'] = data.real_space.overall_rsc[2]
+if data.real_space is None:
+    dictOverall['_overall_rsc'] = False
+    dictOverall['_fsc'] = False
+else:
+    if data.real_space.overall_rsc is None:
+        dictOverall['_overall_rsc'] = False
+    else:
+        dictOverall['_overall_rsc'] = True
+        dictOverall['Mask CC'] = data.real_space.overall_rsc[0]
+        dictOverall['Volume CC'] = data.real_space.overall_rsc[1]
+        dictOverall['Peak CC'] = data.real_space.overall_rsc[2]
 
-    # real_space_correlation_coefficients table
-    dictOverall['_rs_protein'] = []
-    for i in range(len(data.real_space.protein)):
-        dictOverall['_rs_protein'].append(data.real_space.protein[
-        i].as_table_row_phenix())
-    dictOverall['_rs_other'] = [] 
-    for i in range(len(data.real_space.other)):
-        dictOverall['_rs_other'].append(data.real_space.other[
-        i].as_table_row_phenix())
-    dictOverall['_rs_water'] = []
-    for i in range(len(data.real_space.water)):
-        dictOverall['_rs_water'].append(data.real_space.water[
-        i].as_table_row_phenix())
-    dictOverall['_rs_everything'] = []
-    for i in range(len(data.real_space.everything)):
-        dictOverall['_rs_everything'].append(data.real_space.everything[
-        i].as_table_row_phenix())
-    dictOverall['_rs_headers'] = data.real_space.gui_list_headers
+        # real_space_correlation_coefficients table
+        dictOverall['_rs_protein'] = []
+        for i in range(len(data.real_space.protein)):
+            dictOverall['_rs_protein'].append(data.real_space.protein[
+            i].as_table_row_phenix())
+        dictOverall['_rs_other'] = [] 
+        for i in range(len(data.real_space.other)):
+            dictOverall['_rs_other'].append(data.real_space.other[
+            i].as_table_row_phenix())
+        dictOverall['_rs_water'] = []
+        for i in range(len(data.real_space.water)):
+            dictOverall['_rs_water'].append(data.real_space.water[
+            i].as_table_row_phenix())
+        dictOverall['_rs_everything'] = []
+        for i in range(len(data.real_space.everything)):
+            dictOverall['_rs_everything'].append(data.real_space.everything[
+            i].as_table_row_phenix())
+        dictOverall['_rs_headers'] = data.real_space.gui_list_headers
 
-# fsc
-if data.real_space.fsc is not None:
-    dictOverall['_fsc'] = True
+    # fsc
+    if data.real_space.fsc is None:
+        dictOverall['_fsc'] = False
+    else:
+        dictOverall['_fsc'] = True
 
-    # atom mask radius
-    dictOverall['_atom_radius'] = data.real_space.fsc.atom_radius
+        # atom mask radius
+        dictOverall['_atom_radius'] = data.real_space.fsc.atom_radius
 
-    # fsc graph data
-    x_elements = []
-    y_elements = []
-    for x in data.real_space.fsc.d_inv:
-        x_elements.append(x)
-    for y in data.real_space.fsc.fsc:
-        y_elements.append(y)
-    dictOverall['_x_fsc'] = x_elements
-    dictOverall['_y_fsc'] = y_elements
+        # fsc graph data
+        x_elements = []
+        y_elements = []
+        for x in data.real_space.fsc.d_inv:
+            x_elements.append(x)
+        for y in data.real_space.fsc.fsc:
+            y_elements.append(y)
+        dictOverall['_x_fsc'] = x_elements
+        dictOverall['_y_fsc'] = y_elements
 
 # occupancy and suspicious B-factors table
 dictOverall['_occ_bf_outliers'] = data.model_stats.all.as_gui_table_data()
