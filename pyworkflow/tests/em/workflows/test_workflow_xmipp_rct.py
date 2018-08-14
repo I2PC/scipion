@@ -27,12 +27,12 @@ from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 from pyworkflow.utils import importFromPlugin
 
-XmippProtParticlePickingPairs = importFromPlugin('xmipp.protocols', 'XmippProtParticlePickingPairs')
-XmippProtExtractParticlesPairs = importFromPlugin('xmipp.protocols', 'XmippProtExtractParticlesPairs')
-XmippProtCL2D = importFromPlugin('xmipp.protocols', 'XmippProtCL2D')
-XmippProtRCT = importFromPlugin('xmipp.protocols', 'XmippProtRCT')
-SAME_AS_PICKING = importFromPlugin('xmipp.constants', 'SAME_AS_PICKING')
-OTHER = importFromPlugin('xmipp.constants', 'OTHER')
+XmippProtParticlePickingPairs = importFromPlugin('xmipp3.protocols', 'XmippProtParticlePickingPairs')
+XmippProtExtractParticlesPairs = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticlesPairs')
+XmippProtCL2D = importFromPlugin('xmipp3.protocols', 'XmippProtCL2D')
+XmippProtRCT = importFromPlugin('xmipp3.protocols', 'XmippProtRCT')
+SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
+OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
 
 
 # update this test when RCT workflow are implemented

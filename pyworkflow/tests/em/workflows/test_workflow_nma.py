@@ -30,11 +30,11 @@ from pyworkflow.tests import setupTestProject, DataSet
 from pyworkflow.utils import importFromPlugin
 from test_workflow import TestWorkflow
 
-XmippProtNMA = importFromPlugin('xmipp.protocols', 'XmippProtNMA')
-XmippProtAlignmentNMA = importFromPlugin('xmipp.protocols', 'XmippProtAlignmentNMA')
-XmippProtDimredNMA = importFromPlugin('xmipp.protocols', 'XmippProtDimredNMA')
-NMA_CUTOFF_ABS = importFromPlugin('xmipp.protocols', 'NMA_CUTOFF_ABS')
-XmippProtConvertToPseudoAtoms = importFromPlugin('xmipp.protocols',
+XmippProtNMA = importFromPlugin('xmipp3.protocols', 'XmippProtNMA')
+XmippProtAlignmentNMA = importFromPlugin('xmipp3.protocols', 'XmippProtAlignmentNMA')
+XmippProtDimredNMA = importFromPlugin('xmipp3.protocols', 'XmippProtDimredNMA')
+NMA_CUTOFF_ABS = importFromPlugin('xmipp3.protocols', 'NMA_CUTOFF_ABS')
+XmippProtConvertToPseudoAtoms = importFromPlugin('xmipp3.protocols',
                                                  'XmippProtConvertToPseudoAtoms')
    
    

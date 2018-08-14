@@ -37,7 +37,7 @@ except:
     pluginNotFound('xmipp')
 
 OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-XmippProtProjMatch = importFromPlugin('xmipp.protocols', 'XmippProtProjMatch')
+XmippProtProjMatch = importFromPlugin('xmipp3.protocols', 'XmippProtProjMatch')
 
        
 class TestXmippWorkflow(TestWorkflow):

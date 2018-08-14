@@ -28,7 +28,7 @@ from pyworkflow.utils import importFromPlugin
 from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtImportMicrographs, \
     ProtImportCoordinates
 
-XmippProtAssignmentTiltPair = importFromPlugin('xmipp.protocols',
+XmippProtAssignmentTiltPair = importFromPlugin('xmipp3.protocols',
                                                'XmippProtAssignmentTiltPair')
 
 
