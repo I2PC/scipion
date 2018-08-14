@@ -730,7 +730,7 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
 
 def pluginNotFound(plugName, errorMsg='', doRaise=False):
     msgStr = "%s plugin not found. %s\n" % (plugName, errorMsg)
-    msgStr += "  > See 'scipion install --list' to install it. < "
+    msgStr += "  > See 'scipion install --list' to install it."
     if doRaise:
         raise Exception(msgStr)
     else:
