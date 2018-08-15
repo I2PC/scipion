@@ -27,7 +27,8 @@
 
 import os
 from pyworkflow.protocol.params import BooleanParam,  IntParam, EnumParam
-from convert import runPhenixProgram, getProgram, REALSPACEREFINE, MOLPROBITY
+from convert import runPhenixProgram, getProgram, REALSPACEREFINE, \
+    MOLPROBITY, SUPERPOSE
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em import PdbFile
 from protocol_refinement_base import PhenixProtRunRefinementBase
@@ -172,7 +173,10 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
         # PDBx/mmCIF
         self._getRSRefineOutput()
         args = ""
-        args += os.path.abspath(self.outPdbName)
+        if self.outputFormat == PDB:
+            args += os.path.abspath(self.outPdbName)
+        elif self.outputFormat == mmCIF:
+            args += os.path.abspath(self.fitPdbName)
         # starting volume (.mrc)
         vol = os.path.abspath(self._getExtraPath(tmpMapFile))
         args += " "
@@ -189,7 +193,7 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
                          cwd=self._getExtraPath())
 
     def createOutputStep(self):
-        self._getRSRefineOutput()
+        # self._getRSRefineOutput()
         pdb = PdbFile()
         pdb.setFileName(self.outPdbName)
 
@@ -239,4 +243,14 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
             self.outPdbName = self._getExtraPath(
                 inPdbName.replace("." + inPdbName.split(".")[1],
                                   "_real_space_refined.cif"))
+            # cif files should be fitted to the initial atomic structure files
+            args = os.path.abspath(self.inputStructure.get().getFileName())
+            args += " "
+            args += os.path.abspath(self.outPdbName)
+
+            runPhenixProgram(getProgram(SUPERPOSE), args,
+                                 cwd=self._getExtraPath())
+            self.fitPdbName = self._getExtraPath(inPdbName.replace(
+                "." + inPdbName.split(".")[1],
+                "_real_space_refined.cif_fitted.pdb"))
 
