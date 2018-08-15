@@ -54,16 +54,13 @@ atomic structure derived from a cryo-EM density map.
     # --------------------------- STEPS functions --------------------------
 
     def runMolprobityStep(self):
-
         # PDBx/mmCIF
         pdb = os.path.abspath(self.inputStructure.get().getFileName())
         args = ""
         args += pdb
         # starting volume (.mrc)
-        if self.inputStructure.get().getVolume() is not None:
-            vol = self.inputStructure.get().getVolume()
-        else:
-            vol = self._getInputVolume().get()
+        tmpMapFile = self.MOLPROBITYFILE
+        vol = os.path.abspath(self._getExtraPath(tmpMapFile))
         if vol is not None:
             args += " "
             volume = os.path.abspath(self._getExtraPath(self.MOLPROBITYFILE))
