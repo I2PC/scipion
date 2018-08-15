@@ -31,7 +31,7 @@ from pyworkflow.em.viewer import TableView
 from pyworkflow.protocol.params import LabelParam, EnumParam
 from pyworkflow.em.packages.ccp4.convert import getProgram, runCCP4Program
 from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, runChimeraProgram, getProgram
+    createCoordinateAxisFile, runChimeraProgram
 import collections
 import json
 import os
@@ -604,8 +604,7 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
 
         # input 3D map
         counter += 1  # 1
-        if _inputVol is not None:
-            fnVol = self._getInputVolume()
+        fnVol = self._getInputVolume()
         if fnVol is not None:
             try:
                 VOLUMEFILENAME = os.path.abspath(self.protocol._getExtraPath(
@@ -613,11 +612,12 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
             except:
                 VOLUMEFILENAME = os.path.abspath(self.protocol._getExtraPath(
                     self.protocol.REALSPACEFILE))
-        f.write("open %s\n" % VOLUMEFILENAME)
-        x, y, z = fnVol.getOrigin(force=True).getShifts()
-        sampling = fnVol.getSamplingRate()
-        f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
-                "%0.2f,%0.2f,%0.2f\n" % (counter, sampling, counter, x, y, z))
+            f.write("open %s\n" % VOLUMEFILENAME)
+            x, y, z = fnVol.getOrigin(force=True).getShifts()
+            sampling = fnVol.getSamplingRate()
+            f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
+                    "%0.2f,%0.2f,%0.2f\n"
+                    % (counter, sampling, counter, x, y, z))
 
         # input PDB (usually from coot)
         counter += 1  # 2
@@ -630,9 +630,12 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
             counter += 1  # 3
             pdbFileName = os.path.abspath(self.protocol.outputPdb.getFileName())
             f.write("open %s\n" % pdbFileName)
+            if pdbFileName.endswith(".cif"):
+                f.write("match #%d #%d" % (counter, counter - 1))
 
         f.close()
         # run in the background
+        from pyworkflow.em.viewers.chimera_utils import getProgram
         runChimeraProgram(getProgram(), fnCmd + "&")
         return []
 
@@ -648,17 +651,22 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
         MOLPROBITYCOOTFILENAME = self.protocol._getExtraPath(
             self.protocol.MOLPROBITYCOOTFILENAME)
         args = ""
-        args += " --script " + MOLPROBITYCOOTFILENAME
+        args += " --python " + MOLPROBITYCOOTFILENAME
         # pdb file
         if (len(os.listdir(self.protocol._getExtraPath())) > 5):
             pdb = os.path.abspath(self.protocol.outputPdb.getFileName())
+            if pdb.endswith(".cif"):
+                self.protocol._getRSRefineOutput()
+                pdb = os.path.abspath(self.protocol.fitPdbName)
+            else:
+                pdb = os.path.abspath(self.protocol.outputPdb.getFileName())
         else:
             pdb = os.path.abspath(
                 self.protocol.inputStructure.get().getFileName())
         if pdb.endswith(".pdb"):
-            args += " " + "--pdb " + pdb
+            args += " --pdb " + pdb
         elif pdb.endswith(".cif"):
-            args += " " + "--coords " + pdb
+            args += " --coords " + pdb
         # volume
         vol = self._getInputVolume()
         if vol is not None:
@@ -668,7 +676,7 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
             except:
                 VOLUMEFILENAME = os.path.abspath(self.protocol._getExtraPath(
                     self.protocol.REALSPACEFILE))
-            args += " " + "--map " + VOLUMEFILENAME
+            args += " --map " + VOLUMEFILENAME
         # run coot with args
         runCCP4Program(getProgram(self.COOT), args)
 
