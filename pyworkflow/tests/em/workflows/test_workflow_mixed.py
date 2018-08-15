@@ -1,13 +1,19 @@
 from pyworkflow.tests import DataSet, setupTestProject
-from pyworkflow.em.packages.xmipp3 import (XmippProtPreprocessMicrographs,
-                                           XmippProtExtractParticles,
-                                           XmippProtCropResizeParticles, XmippProtML2D)
-from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind, ProtFrealign
-from pyworkflow.em.packages.eman2 import EmanProtInitModel
-from pyworkflow.em.packages.relion import ProtImportMicrographs, ProtImportVolumes
+from pyworkflow.utils import importFromPlugin
 from test_workflow import TestWorkflow
 from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
+
+XmippProtPreprocessMicrographs = importFromPLugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs')
+XmippProtExtractParticles = importFromPLugin('xmipp3.protocols', 'XmippProtExtractParticles')
+XmippProtCropResizeParticles = importFromPLugin('xmipp3.protocols', 'XmippProtCropResizeParticles')
+XmippProtML2D = importFromPLugin('xmipp3.protocols', 'XmippProtML2D')
+SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING'
+OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
+ProtFrealign = importFromPlugin('grigoriefflab.protocols', 'ProtFrealign')
+EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel')
+ProtImportMicrographs = importFromPlugin('relion.protocols', 'ProtImportMicrographs')
+ProtImportVolumes = importFromPlugin('relion.protocols', 'ProtImportVolumes')
 
 
 class TestMixedBPV(TestWorkflow):

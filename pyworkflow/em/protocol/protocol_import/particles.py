@@ -27,13 +27,13 @@
 from os.path import exists
 from os.path import abspath
 
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 from images import ProtImportImages
-
 
 
 class ProtImportParticles(ProtImportImages):
@@ -153,16 +153,24 @@ class ProtImportParticles(ProtImportImages):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            from emxlib import EmxImport
+            EmxImport = importFromPlugin('emxlib', 'EmxImport',
+                                  errorMsg='Emx is needed to import .emx files',
+                                  doRaise=True)
             self.importFilePath = abspath(self.emxFile.get('').strip())
             return EmxImport(self, self.importFilePath,
                                    self.alignTypeList[self.alignType.get()])
+
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            from xmipp3.convert import XmippImport
+            XmippImport = importFromPlugin('xmipp3.convert', 'XmippImport',
+                                           'Xmipp is needed to import .xmd files',
+                                           doRaise=True)
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
+
         elif self.importFrom == self.IMPORT_FROM_RELION:
-            from relion.convert import RelionImport
+            RelionImport = importFromPlugin('relion.convert', 'RelionImport',
+                              errorMsg='Relion is needed to import .star files',
+                              doRaise=True)
             self.importFilePath = self.starFile.get('').strip()
             return RelionImport(self, self.starFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
@@ -171,8 +179,12 @@ class ProtImportParticles(ProtImportImages):
             return ScipionImport(self, self.importFilePath)    
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
-            from grigoriefflab.convert import GrigorieffLabImportParticles
-            return GrigorieffLabImportParticles(self, self.parFile.get(), self.stackFile.get())
+            GrigorieffLabImportParticles = importFromPlugin(
+                     'grigoriefflab.convert', 'GrigorieffLabImportParticles',
+                     errorMsg='GrigorieffLab is needed to import .stk files',
+                     doRaise=True)
+            return GrigorieffLabImportParticles(self, self.parFile.get(),
+                                                self.stackFile.get())
         else:
             self.importFilePath = ''
             return None 
@@ -189,15 +201,17 @@ class ProtImportParticles(ProtImportImages):
         
         if self.hasAttribute('outputParticles'):
             particles = self.outputParticles
-            summary += ' Particles: *%d* (ctf=%s, alignment=%s, phaseFlip=%s)\n' % (particles.getSize(),
-                                                                                    particles.hasCTF(),
-                                                                                    particles.getAlignment(),
-                                                                                    particles.isPhaseFlipped())
-                                                                      
-        if self.hasAttribute('outputCoordinates'): # EMX files can contain only Coordinates information
+            summary += ' Particles: *%d* ' % particles.getSize()
+            summary += ('(ctf=%s, alignment=%s, phaseFlip=%s)\n'
+                        % (particles.hasCTF(), particles.getAlignment(),
+                           particles.isPhaseFlipped()))
+
+        # EMX files can contain only Coordinates information
+        if self.hasAttribute('outputCoordinates'):
             summary += '   Coordinates: *%d* \n' % (self.outputCoordinates.getSize())
-            
-        if self.hasAttribute('outputMicrographs'): # EMX files can contain only Coordinates information
+
+        # EMX files can contain only Coordinates information
+        if self.hasAttribute('outputMicrographs'):
             summary += '   Micrographs: *%d* \n' % (self.outputMicrographs.getSize())
         
         if self.copyFiles:
@@ -250,7 +264,6 @@ class ProtImportAverages(ProtImportParticles):
             
     def _defineAcquisitionParams(self, form):
         form.addParam('samplingRate', params.FloatParam, default=1.,
-                   label=Message.LABEL_SAMP_RATE)
+                      label=Message.LABEL_SAMP_RATE)
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.expertLevel.set(LEVEL_ADVANCED)
-        

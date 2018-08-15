@@ -24,16 +24,21 @@
 # *
 # **************************************************************************
 
-
 import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3.constants import OTHER 
-from pyworkflow.em.packages.xmipp3.protocol_projmatch import XmippProtProjMatch
+from pyworkflow.utils import pluginNotFound
 from test_workflow import TestWorkflow
 from pyworkflow.em.protocol import ProtImportCoordinates
-   
+
+try:
+    from xmipp3 import *
+except:
+    pluginNotFound('xmipp')
+
+OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
+XmippProtProjMatch = importFromPlugin('xmipp3.protocols', 'XmippProtProjMatch')
+
        
 class TestXmippWorkflow(TestWorkflow):
 

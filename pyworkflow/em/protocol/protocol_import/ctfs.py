@@ -24,9 +24,11 @@
 # *
 # **************************************************************************
 
-from pyworkflow.protocol.params import PointerParam
+
 from pyworkflow.em.data import SetOfMicrographs
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.utils.path import removeBaseExt
+from pyworkflow.protocol.params import PointerParam
 
 from base import ProtImportFiles
 
@@ -87,13 +89,16 @@ class ProtImportCTF(ProtImportFiles):
             importFrom = self.getFormat()
 
         if importFrom == self.IMPORT_FROM_XMIPP3:
-            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            XmippImport = importFromPlugin('xmipp3.convert', 'XmippImport',
+                                           doRaise=True)
             return XmippImport(self, filesPath)
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
-            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportCTF
+            GrigorieffLabImportCTF = importFromPlugin('grigoriefflab.convert',
+                                                      'GrigorieffLabImportCTF',
+                                                      doRaise=True)
             return GrigorieffLabImportCTF(self)
         elif importFrom == self.IMPORT_FROM_GCTF:
-            from pyworkflow.em.packages.gctf.dataimport import GctfImportCTF
+            GctfImportCTF = importFromPlugin('gctf.convert', 'GctfImportCTF', doRaise=True)
             return GctfImportCTF(self)
         elif importFrom == self.IMPORT_FROM_SCIPION:
             from dataimport import ScipionImport

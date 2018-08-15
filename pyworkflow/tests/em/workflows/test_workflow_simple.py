@@ -26,8 +26,9 @@
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportAverages
+from pyworkflow.utils import importFromPlugin
 
-from pyworkflow.em.packages.simple import ProtPrime
+ProtPrime = importFromPlugin('simple.protocols', 'ProtPrime')
 
 
 class TestSimpleBase(BaseTest):

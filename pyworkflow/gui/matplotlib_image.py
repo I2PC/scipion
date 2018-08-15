@@ -44,7 +44,7 @@ import matplotlib.cm as cm
 from matplotlib.patches import Wedge
 
 
-import xmipp
+import xmippLib
 import pyworkflow.gui as pwgui
 
 
@@ -197,7 +197,7 @@ class ImageWindow(pwgui.Window):
     def __init__(self, filename=None, dim=256, dpi=96, image=None, label=None):
         pwgui.Window.__init__(self, minsize=None)
         if image is None:
-            image = xmipp.Image()
+            image = xmippLib.Image()
             if dim is None:
                 image.read(filename)
                 dim, _, _, _ = image.getDimensions()

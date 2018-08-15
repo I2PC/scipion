@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,19 +23,15 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-"""
 
 from os.path import join, exists
 
 from pyworkflow.protocol.params import IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.em.protocol import ProtParticlePicking
-import xmipp
-        
+from pyworkflow.utils import importFromPlugin
+import xmippLib
 from base import ProtImportFiles
-
 
 
 class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
@@ -53,10 +49,10 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp','relion', 'eman', 'dogpicker']
+        return ['auto', 'xmipp', 'relion', 'eman', 'dogpicker']
 
     def _getDefaultChoice(self):
-        return  self.IMPORT_FROM_AUTO
+        return self.IMPORT_FROM_AUTO
     
     def _getFilesCondition(self):
         """ Return an string representing the condition
@@ -65,16 +61,18 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         """
         return True
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    # ---------------------- DEFINE param functions ---------------------------
     def _defineParams(self, form):
 
 
         ProtImportFiles._defineParams(self, form)
 
     def _defineImportParams(self, form):
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
-                          label='Input micrographs',
-                          help='Select the micrographs for which you want to import coordinates.')
+        form.addParam('inputMicrographs', PointerParam,
+                      pointerClass='SetOfMicrographs',
+                      label='Input micrographs',
+                      help='Select the micrographs for which you want to '
+                           'import coordinates.')
 
         form.addParam('boxSize', IntParam, label='Box size')
         form.addParam('scale', FloatParam,
@@ -87,13 +85,13 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                       help='Invert Y for EMAN coordinates taken on dm3 or'
                            ' tif micrographs')
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    # ------------------- INSERT steps functions ------------------------------
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         self._insertFunctionStep('createOutputStep', importFrom,
                                      self.filesPath.get())
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    # ------------------ STEPS functions --------------------------------------
     def createOutputStep(self, importFrom, *args):
         inputMics = self.inputMicrographs.get()
         coordsSet = self._createSetOfCoordinates(inputMics)
@@ -112,14 +110,17 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         self._defineOutputs(outputCoordinates=coordsSet)
         self._defineSourceRelation(self.inputMicrographs, coordsSet)
 
-    #--------------------------- INFO functions ---------------------------------------------------
+    # ---------------- INFO functions -----------------------------------------
     def _summary(self):
         summary = []
 
         if not hasattr(self, 'outputCoordinates'):
             msg = 'Output coordinates not ready yet'
         else:
-            msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag('inputMicrographs'), self._getImportChoices()[self.getImportFrom()])
+            msg = "%s  coordinates from " % self.outputCoordinates.getSize()
+            msg += "micrographs %s " % self.getObjectTag('inputMicrographs')
+            importFrom = self._getImportChoices()[self.getImportFrom()]
+            msg += "were imported using %s format." % importFrom
             if self.scale.get() != 1.:
                 msg += " Scale factor %0.2f was applied." % self.scale
             if self.invertX.get():
@@ -134,26 +135,36 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     def _methods(self):
         return self._summary()
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    # ------------------ UTILS functions --------------------------------------
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         filesPath = self.filesPath.get()
         importFrom = self.getImportFrom()
         
         if importFrom == self.IMPORT_FROM_XMIPP:
-            from xmipp3.convert import XmippImport
+            XmippImport = importFromPlugin('xmipp3.convert', 'XmippImport',
+                                           'Xmipp is needed to import .xmd files',
+                                           doRaise=True)
             return XmippImport(self, filesPath)
 
         elif importFrom == self.IMPORT_FROM_RELION:
-            from relion.convert import RelionImport
+            RelionImport = importFromPlugin('relion.convert', 'RelionImport',
+                              errorMsg='Relion is needed to import .star files',
+                              doRaise=True)
             return RelionImport(self, filesPath)
         
         elif importFrom == self.IMPORT_FROM_EMAN:
-            from eman2.convert import EmanImport
+            EmanImport = importFromPlugin('eman2.convert', 'EmanImport',
+                                 errorMsg='Eman is needed to import .json or '
+                                          '.box files',
+                                 doRaise=True)
             return EmanImport(self)
         
         elif importFrom == self.IMPORT_FROM_DOGPICKER:
-            from appion.convert import DogpickerImport
+            DogpickerImport = importFromPlugin('appion.convert', 'DogpickerImport',
+                                    errorMsg='appion plugin is needed to import '
+                                             'dogpicker files',
+                                    doRaise=True)
             return DogpickerImport(self)
         else:
             self.importFilePath = ''
@@ -188,7 +199,8 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             coordBase = removeBaseExt(coordFile)
             for mic in micSet:
                 micBase = removeBaseExt(mic.getFileName())
-                if coordBase in micBase or micBase in coordBase: #temporal use of in
+                # temporal use of in
+                if coordBase in micBase or micBase in coordBase:
                     return mic
             return None
         else:
@@ -230,13 +242,13 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             configfile = join(self.filesPath.get(), 'config.xmd')
             existsConfig = exists(configfile)
             if existsConfig:
-                md = xmipp.MetaData('properties@' + configfile)
+                md = xmippLib.MetaData('properties@' + configfile)
                 configobj = md.firstObject()
-                boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+                boxSize = md.getValue(xmippLib.MDL_PICKING_PARTICLE_SIZE, configobj)
         if importFrom == ProtImportCoordinates.IMPORT_FROM_EMAN:
             # Read the boxSize from the e2boxercache/base.json
             jsonFnbase = join(self.filesPath.get(), 'e2boxercache', 'base.json')
-            from eman2 import loadJson
+            loadJson = importFromPlugin('eman2', 'loadJson')
             jsonBoxDict = loadJson(jsonFnbase)
             boxSize = int(jsonBoxDict["box_size"])
         boxSize = (int)(boxSize * scale)

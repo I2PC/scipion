@@ -261,11 +261,11 @@ class ProtImportMicrographs(ProtImportMicBase):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            from pyworkflow.em.packages.emxlib import EmxImport
+            EmxImport = pwutils.importFromPlugin('emxlib.convert', 'EmxImport')
             self.importFilePath = self.emxFile.get('').strip()
             return EmxImport(self, self.importFilePath)
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            XmippImport = pwutils.importFromPlugin('xmipp3.convert','XmippImport')
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:

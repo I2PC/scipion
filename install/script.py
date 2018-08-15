@@ -37,7 +37,6 @@ args = sys.argv
 
 env = Environment(args=args[2:])
 
-noOpencv = '--no-opencv' in args or not get('OPENCV')
 noScipy = '--no-scipy' in args or not get('SCIPY')
 
 
@@ -129,12 +128,14 @@ fftw3 = env.addLibrary(
     'fftw3',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared'],
-    clean=True) # We need to clean to configure again with --enable-float
+    clean=True,
+    default = False) # We need to clean to configure again with --enable-float
     
 fftw3f = env.addLibrary(
     'fftw3f',
     tar='fftw-3.3.4.tgz',
-    flags=['--enable-threads', '--enable-shared', '--enable-float'])
+    flags=['--enable-threads', '--enable-shared', '--enable-float'],
+    default = False)
 
 osBuildDir = 'tcl8.6.1/unix'
 osFlags = ['--enable-threads']
@@ -146,6 +147,13 @@ tcl = env.addLibrary(
     targets=[env.getLib('tcl8.6')],
     flags=osFlags)
 
+zlib = env.addLibrary(
+    'zlib',
+    targets=[env.getLib('z')],
+    tar='zlib-1.2.8.tgz',
+    configTarget='zlib.pc',
+    default=True)
+
 osBuildDir = 'tk8.6.1/unix'
 osFlags = ['--enable-threads']
 
@@ -156,7 +164,7 @@ tk = env.addLibrary(
     targets=[env.getLib('tk8.6')],
     libChecks=['xft'],
     flags=osFlags,
-    deps=[tcl])
+    deps=[tcl, zlib])
 
 # Special case: tk does not make the link automatically, go figure.
 tk_wish = env.addTarget('tk_wish')
@@ -164,32 +172,30 @@ tk_wish.addCommand('ln -v -s wish8.6 wish',
                    targets=SW_BIN + '/wish',
                    cwd= SW_BIN)
 
-zlib = env.addLibrary(
-    'zlib',
-    targets=[env.getLib('z')],
-    tar='zlib-1.2.8.tgz',
-    configTarget='zlib.pc')
-
 jpeg = env.addLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
-    flags=['--without-simd'])
+    flags=['--without-simd'],
+    default=False)
 
 png = env.addLibrary(
     'png',
     tar='libpng-1.6.16.tgz',
-    deps=[zlib])
+    deps=[zlib],
+    default=False)
 
 tiff = env.addLibrary(
      'tiff',
      tar='tiff-3.9.4.tgz',
-     deps=[zlib, jpeg])
+     deps=[zlib, jpeg],
+     default=False)
 
 sqlite = env.addLibrary(
     'sqlite3',
     tar='SQLite-1a584e49.tgz',
     flags=['CPPFLAGS=-w',
-           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'],
+    default=False)
 
 hdf5 = env.addLibrary(
      'hdf5',
@@ -197,6 +203,7 @@ hdf5 = env.addLibrary(
      flags=['--enable-cxx', '--enable-shared'],
      targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
      configAlways=True,
+     default=False,
      deps=[zlib])
 
 python = env.addLibrary(
@@ -218,14 +225,6 @@ swig = env.addLibrary(
     targets=[env.getBin('swig')],
     makeTargets=['Source/Swig/tree.o'],
     deps=[pcre],
-    default=False)
-
-sh_alignment = env.addLibrary(
-    'sh_alignment',
-    tar='sh_alignment.tgz',
-    commands=[('cd ' + SW_TMP + '/sh_alignment; make install',
-               SW_PYT_PACK + '/sh_alignment/frm.py')],
-    deps=[python, swig],
     default=False)
 
 lapack = env.addLibrary(
@@ -265,7 +264,7 @@ if os.environ.get('OPENCV_VER') == '3.4.1':
                    'cmake ' + ' '.join(opencvFlags) + ' .. ; '
                    'make -j ' + str(env.getProcessors()) + '; '
                    'make install', SW_LIB +'/libopencv_core.so')],
-        default=not noOpencv)
+        default=False)
 else:
     opencv = env.addLibrary(
         'opencv',
@@ -273,7 +272,7 @@ else:
         targets=[env.getLib('opencv_core')],
         flags=opencvFlags,
         cmake=True,
-        default=not noOpencv)
+        default=False)
 
 # ---------- Libraries required by PyTom 
 
