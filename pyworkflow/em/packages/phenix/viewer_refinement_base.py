@@ -78,7 +78,7 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label="Volume and models")
         form.addParam('displayMapModel', LabelParam,
-                      label="Volume and models",
+                      label="Volume and models in Chimera",
                       help="Display of input volume, input pdb that has to be"
                            "refined and final refined model of the structure.")
         form.addSection(label='MolProbity results')
@@ -167,15 +167,15 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                             "according "
                             "to the tau (N-alphaC-C) bond angle restraints.\n"
                             "Warning!!!: Refined structures should not "
-                            "have any outliers except those are obvious in high "
-                            "resolution electron density maps.")
+                            "have any outliers except those are obvious in "
+                            "high resolution electron density maps.")
         self.outliers = self.dictBARestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
             group.addParam('showBAoutliers', LabelParam, important=True,
-                           label="Outliers", help="List of outlier residues ("
-                                                  "sorted by deviation) "
-                                                  "according to the bond angle "
-                                                  "restraints")
+                           label="Outliers",
+                           help="List of outlier residues (sorted by "
+                                "deviation) according to the bond angle "
+                                "restraints")
         group = form.addGroup('Basic Geometry: Dihedral Angle Restraints')
         group.addParam('showDArestraints', LabelParam,
                        label="Deviations",
@@ -184,8 +184,8 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                             "to the side chain dihedral torsion (chi) angle "
                             "restraints.\n"
                             "Warning!!!: Refined structures should not "
-                            "have any outliers except those are obvious in high "
-                            "resolution electron density maps.")
+                            "have any outliers except those are obvious in "
+                            "high resolution electron density maps.")
         self.outliers = self.dictDARestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
             group.addParam('showDAoutliers', LabelParam, important=True,
@@ -200,8 +200,8 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                             "according to the volume chirality "
                             "restraints.\n"
                             "Warning!!!: Refined structures should not "
-                            "have any outliers except those are obvious in high "
-                            "resolution electron density maps.")
+                            "have any outliers except those are obvious "
+                            "in high resolution electron density maps.")
         self.outliers = self.dictChilRestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
             group.addParam('showCHILoutliers', LabelParam, important=True,
@@ -217,8 +217,8 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                             "according to the planar "
                             "restraints.\n"
                             "Warning!!!: Refined structures should not "
-                            "have any outliers except those are obvious in high "
-                            "resolution electron density maps.")
+                            "have any outliers except those are obvious "
+                            "in high resolution electron density maps.")
         self.outliers = self.dictPlanarRestraints['Number of outliers > 4sigma']
         if self.outliers > 0:
             group.addParam('showPLANARoutliers', LabelParam, important=True,
@@ -410,9 +410,9 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                 group.addParam('showMesgNosuites', LabelParam,
                                label="Backbone angles within expected ranges",
                                help="")
-        form.addSection(label='Real-space correlation')
-        group = form.addGroup('Real-space correlation to electron density')
         if (self.dictOverall['_overall_rsc'] == True):
+            form.addSection(label='Real-space correlation')
+            group = form.addGroup('Real-space correlation to electron density')
             group.addParam('showMultiCriterionPlot', LabelParam,
                            important=True,
                            label="View Multi-criterion plot",
@@ -444,7 +444,8 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                                  "the N highest peaks in the model-calculated "
                                  "map and the N highest peaks in the "
                                  "experimental map.\n")
-            self.residueTypeList = [u'Protein', u'Other', u'Water', u'Everything']
+            self.residueTypeList = [u'Protein', u'Other', u'Water',
+                                    u'Everything']
             group.addParam('residueType', EnumParam,
                             choices=self.residueTypeList, default=0,
                             label="Residue Type:",
@@ -478,8 +479,7 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
                                  "including all scales.\nCC: Correlation "
                                  "coefficent between the observed map and "
                                  "model-derived map in the real space.\n")
-        group = form.addGroup('Fourier shell correlations')
-        if (self.dictOverall['_fsc'] == True):
+            group = form.addGroup('Fourier shell correlations')
             _atomRadius = "%0.3f" % self.dictOverall['_atom_radius']
             group.addParam('showAtomRadius', LabelParam,
                             important=True,
@@ -529,12 +529,15 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
             group.addParam('showSuspiciousBfactors', LabelParam,
                                 label="Suspicious B-factors",
                                 help= "The table of Suspicious B-factors (ADP"
-                                " outliers) details all isotropic ADPs with "
-                                "values outside a range of plus or minus 4 "
-                                "sigmas around the mean value for the "
-                                "considered atomic structure. We recommend "
-                                "checking the atomic positions, occupancies "
-                                "or element types shown in this table.\n")
+                                      " outliers) details all isotropic ADPs "
+                                      "with values outside a range of plus "
+                                      "or minus 4 sigmas around the mean "
+                                      "value for the considered atomic "
+                                      "structure. Although these B-factors "
+                                      "are not neccessarily wrong, "
+                                      "it may be worth checking the atomic "
+                                      "positions, occupancies or element "
+                                      "types shown in this table.\n")
             if self.dictOverall['_n_zero_b'] > 0:
                 group.addParam('showWarningSuspicious', LabelParam,
                                    important=True,
@@ -628,7 +631,8 @@ class PhenixProtRefinementBaseViewer(ProtocolViewer):
         # refined PDB
         if (len(os.listdir(self.protocol._getExtraPath())) > 5):
             counter += 1  # 3
-            pdbFileName = os.path.abspath(self.protocol.outputPdb.getFileName())
+            pdbFileName = os.path.abspath(
+                self.protocol.outputPdb.getFileName())
             f.write("open %s\n" % pdbFileName)
             if pdbFileName.endswith(".cif"):
                 f.write("match #%d #%d" % (counter, counter - 1))
@@ -1486,7 +1490,8 @@ if data.ramalyze is not None:
     else :
         app = wxtbx.app.CCTBXApp(0)
 """
-        # TODO: Get appropriate functioning of data._multi_criterion.display_wx_plots()
+        # TODO:
+        # Get appropriate functioning of data._multi_criterion.display_wx_plots()
         if (listName == "Multi-criterion plot"):
             self.command += """
         # data._multi_criterion.display_wx_plots() 
