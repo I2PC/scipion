@@ -31,7 +31,14 @@ atomic structure derived from a cryo-EM density map.
         # the resolution is detected automatically from the map coefficients.
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input Volume', allowsNull=True,
-                      help="Set the starting volume.\n")
+                      help="Set the starting volume.\nVolumes are optional "
+                           "for validation but without a volume, "
+                           "directly provided, or associated to the atomic "
+                           "structure, Phenix will not calculate real-space "
+                           "correlation.\nMoreover, if the volume and atomic "
+                           "structure are not correctly fitted, values of "
+                           "real-space correlation will indicate not "
+                           "correlation at all.\n")
         form.addParam('resolution', FloatParam,
                       label='Resolution (A):',
                       default=3.0,
