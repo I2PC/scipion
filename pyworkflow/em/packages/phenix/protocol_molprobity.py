@@ -59,11 +59,11 @@ atomic structure derived from a cryo-EM density map.
         args = ""
         args += pdb
         # starting volume (.mrc)
-        tmpMapFile = self.MOLPROBITYFILE
-        vol = os.path.abspath(self._getExtraPath(tmpMapFile))
-        if vol is not None:
+        if (self.inputVolume.get() or self.inputStructure.get().getVolume()) \
+                is not None:
+            tmpMapFile = self.MOLPROBITYFILE
+            volume = os.path.abspath(self._getExtraPath(tmpMapFile))
             args += " "
-            volume = os.path.abspath(self._getExtraPath(self.MOLPROBITYFILE))
             args += "map_file_name=%s" % volume
             args += " "
             args += "d_min=%f" % self.resolution.get()
@@ -76,8 +76,8 @@ atomic structure derived from a cryo-EM density map.
                          cwd=self._getExtraPath())
         except:
             print "WARNING!!!\nPHENIX error:\n pdb_interpretation.clash_guard" \
-                  " failure: Number of nonbonded interaction distances < 0.5: " \
-                  "109 This error has been disable by running the same " \
+                  " failure: Number of nonbonded interaction distances < 0.5:" \
+                  " 109 This error has been disable by running the same " \
                   "command with the same following additional " \
                   "argument:\npdb_interpretation.clash_guard." \
                   "nonbonded_distance_threshold=None "
