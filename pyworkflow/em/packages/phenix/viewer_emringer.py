@@ -36,6 +36,8 @@ import collections
 import glob
 from PIL import Image
 from convert import runPhenixProgram
+from pyworkflow.em.viewers.chimera_utils import \
+    createCoordinateAxisFile, runChimeraProgram
 
 
 def errorWindow(tkParent, msg):
@@ -67,7 +69,12 @@ class PhenixProtRunEMRingerViewer(ProtocolViewer):
             self.EMRINGERSUBPLOTSFILENAME)
 
     def _defineParams(self, form):
-        form.addSection(label='Visualization of EM Ringer results')
+        form.addSection(label="Volume and models")
+        form.addParam('displayMapModel', LabelParam,
+                      label="Volume and model in Chimera",
+                      help="Display of input volume, input pdb that has to be"
+                           "refined and final refined model of the structure.")
+        form.addSection(label='EM Ringer results')
         # group = form.addGroup('Overall results')
         form.addParam('showFinalResults', LabelParam,
                       label="Summary Table of Results",
@@ -141,12 +148,66 @@ class PhenixProtRunEMRingerViewer(ProtocolViewer):
 
     def _getVisualizeDict(self):
         return {
+            'displayMapModel': self._displayMapModel,
             'showFinalResults': self._visualizeFinalResults,
             'showThresholdScan': self._showThresholdScan,
             'showPeakCount': self._showPeakCount,
             'showRollingWindows': self._showRollingWindows,
             'showRingerResults': self._showRingerResults
         }
+
+    def _displayMapModel(self, e=None):
+        bildFileName = os.path.abspath(self.protocol._getTmpPath(
+            "axis_output.bild"))
+        try:
+            _inputVol = self.protocol.inputVolume.get()
+        except:
+            _inputVol = self.protocol.inputStructure.get().getVolume()
+
+        dim = _inputVol.getDim()[0]
+        sampling = _inputVol.getSamplingRate()
+
+
+        createCoordinateAxisFile(dim,
+                                 bildFileName=bildFileName,
+                                 sampling=sampling)
+        counter = 0
+        fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
+        f = open(fnCmd, 'w')
+        # reference axis model = 0
+        f.write("open %s\n" % bildFileName)
+
+        # input 3D map
+        counter += 1  # 1
+        fnVol = self._getInputVolume()
+        if fnVol is not None:
+            EMRINGERFILENAME = os.path.abspath(self.protocol._getTmpPath(
+                    self.protocol.EMRINGERFILE))
+            f.write("open %s\n" % EMRINGERFILENAME)
+            x, y, z = fnVol.getOrigin(force=True).getShifts()
+            sampling = fnVol.getSamplingRate()
+            f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
+                    "%0.2f,%0.2f,%0.2f\n"
+                    % (counter, sampling, counter, x, y, z))
+
+        # input PDB (usually from coot)
+        counter += 1  # 2
+        pdbFileName = os.path.abspath(
+            self.protocol.inputStructure.get().getFileName())
+        f.write("open %s\n" % pdbFileName)
+
+        f.close()
+        # run in the background
+        from pyworkflow.em.viewers.chimera_utils import getProgram
+        runChimeraProgram(getProgram(), fnCmd + "&")
+        return []
+
+    def _getInputVolume(self):
+        if self.protocol.inputVolume.get() is None:
+            fnVol = self.protocol.inputStructure.get().getVolume()
+        else:
+            fnVol = self.protocol.inputVolume.get()
+        return fnVol
 
     def _visualizeFinalResults(self, e=None):
 
