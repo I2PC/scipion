@@ -363,7 +363,8 @@ class TestMolprobityValidation2(TestImportData):
                 }
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n'
-                                   'volume associated to pdb\n')
+                                   'volume associated to pdb\nGood '
+                                   'validation/bad correlation\n')
         self.launchProtocol(protMolProbity)
 
         # check MolProbity results
@@ -389,12 +390,13 @@ class TestMolprobityValidation2(TestImportData):
 
         # MolProbity
         args = {
-                'resolution': 3.5,
+                'resolution': 2.2,
                 'inputStructure': structure_6
                 }
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n'
-                                   'volume associated to cif\n')
+                                   'volume associated to cif\nGood '
+                                   'validation/bad correlation\n')
         self.launchProtocol(protMolProbity)
 
         # check MolProbity results
