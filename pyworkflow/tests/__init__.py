@@ -37,8 +37,8 @@ try:
 except ImportError:
     from unittest import _WritelnDecorator # Python <2.6
 
-    
-DataSet(name='igbmc_gempicker', folder='igbmc_gempicker', 
+
+DataSet(name='igbmc_gempicker', folder='igbmc_gempicker',
         files={
                'allMics': 'micrographs/*.mrc',
                'mic1': 'micrographs/KLH_Dataset_I_Test_0001.mrc',
@@ -49,7 +49,7 @@ DataSet(name='igbmc_gempicker', folder='igbmc_gempicker',
                })
 
 
-DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
+DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
         files={
                'aligned_particles': 'gold/aligned_particles.sqlite',
                'allMics': 'micrographs/*.mrc',
@@ -84,7 +84,7 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                })
 
 
-DataSet(name='mda', folder='hemoglobin_mda', 
+DataSet(name='mda', folder='hemoglobin_mda',
         files={
                'particles': 'particles/*.spi',
                'particlesDir': 'particles',
@@ -94,14 +94,14 @@ DataSet(name='mda', folder='hemoglobin_mda',
                'averagesDir': 'averages'})
 
 
-DataSet(name='nma', folder='nma', 
+DataSet(name='nma', folder='nma',
         files={
                'pdb': 'pdb/AK.pdb',
                'vol': 'volumes/AK_LP10.vol',
                'particles': 'particles/img.stk'})
 
 
-DataSet(name='tomo', folder='xmipp_tomo_test', 
+DataSet(name='tomo', folder='xmipp_tomo_test',
         files={
                'vol1': 'volumes/subvols_6E6.001.mrc.spi',
                'vol2': 'volumes/subvols_6E6.002.mrc.spi',
@@ -110,7 +110,7 @@ DataSet(name='tomo', folder='xmipp_tomo_test',
         })
 
 
-DataSet(name='relion_tutorial', folder='relion_tutorial', 
+DataSet(name='relion_tutorial', folder='relion_tutorial',
         files={
                'allMics': 'micrographs/*.mrc',
                'boxingDir': 'pickingEman',
@@ -125,7 +125,7 @@ DataSet(name='relion_tutorial', folder='relion_tutorial',
         })
 
 
-DataSet(name='ribo_movies', folder='ribo_movies', 
+DataSet(name='ribo_movies', folder='ribo_movies',
         files={
                'movies': 'movies/1??_*.mrcs',
                'posAllDir': 'pickingXmipp',
@@ -140,7 +140,7 @@ DataSet(name='model',  folder='model',
                'modelGoldXml': 'gold/model_gold.xml',
         })
 
-DataSet(name='rct',  folder='rct', 
+DataSet(name='rct',  folder='rct',
         files={
                'classes': 'classes/classes2D_stable_core.sqlite',
                'positions': 'positions',
@@ -155,36 +155,36 @@ DataSet(name='groel',  folder='groel',
                'pickingDogpicker': 'pickingDogpicker'
         })
 
-DataSet(name='emx',  folder='emx', 
+DataSet(name='emx',  folder='emx',
         files={
 
                'alignFlip':'alignment/alignFlip.mrcs',
                'alignFlip2':'alignment/alignFlip2.mrcs',
                'alignShiftRotExp': 'alignment/Test1/images.mrc',
                'alignShiftRotExpGold': 'alignment/gold/align_shift_rot_exp_gold.mrcs',
-               
+
                'alignReconst': 'alignment/recons.mrcs',
                'alignReconstShift': 'alignment/recons_sh.mrcs',
-               
+
                'alignRotOnly': 'alignment/align_rot_only.mrcs',
                'alignRotOnlyGold': 'alignment/gold/align_rot_only_gold.mrcs',
-               
+
                # TODO: transform geometry not working in stacks of volumes
                'alignRotOnly3D': 'alignment/align_rot_only_3d.mrcs',
-               
+
                #'alignRotShift': 'alignment/align_rot_shift.mrcs',
                'alignShiftOnly': 'alignment/align_shift_only.mrcs',
                'alignShiftOnlyGold': 'alignment/gold/align_shift_only_gold.mrcs',
-               
+
                # TODO: transform geometry not working in stacks of volumes
                'alignShiftOnly3D': 'alignment/align_shift_only_3d.mrcs',
-               
+
                'alignShiftRot': 'alignment/align_shift_rot.mrcs',
                'alignShiftRotGold': 'alignment/gold/align_shift_rot_gold.mrcs',
-               
+
                # TODO: transform geometry not working in stacks of volumes
                'alignShiftRot3D': 'alignment/align_shift_rot_3d.mrcs',
-               
+
                'coordinatesGoldT1': 'coordinates/Test1/coordinates_gold.sqlite',
                'coordinatesT1': 'coordinates/Test1/coordinates.emx',
                'defocusParticleT2': 'defocusParticle/particles.emx',
@@ -192,18 +192,18 @@ DataSet(name='emx',  folder='emx',
                'emxMicrographCtf1Gold':'MicrographsCTF/ctfindCTFEstimation.sqlite',
                'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',
                'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',
-               
+
                'reconstRotOnly': 'reconstruction/reconstRotOnly.mrcs',
                'reconstRotOnlyGold': 'reconstruction/gold/reconstRotOnly_output.vol',
-               
+
                'reconstRotandShift': 'reconstruction/reconstRotandShift.mrcs',
                'reconstRotandShiftGold': 'reconstruction/gold/reconstRotandShift_output.vol',
 
                'reconstRotandShiftFlip': 'reconstruction/reconstRotandShiftFlip.mrcs',
                'reconstRotandShiftFlipGold': 'reconstruction/gold/reconstRotandShiftFlip_output.vol',
               })
-               
-               
+
+
 DataSet(name='CTFDiscrepancy',  folder='CTFDiscrepancy',
         files={
                'emxMicrographCtf1':'ctfindCTFEstimation.emx',
@@ -213,13 +213,17 @@ DataSet(name='CTFDiscrepancy',  folder='CTFDiscrepancy',
               })
 
 DataSet(name='movies',  folder='movies',
-        files={'movie1':'ribo/Falcon_2012_06_12-14_33_35_0_movie.mrcs',
-               'movie2':'ribo/Falcon_2012_06_12-16_55_40_0_movie.mrcs',
-               'movie3':'ribo/Falcon_2012_06_12-17_26_54_0_movie.mrcs',
-               'movie4':'qbeta/qbeta.mrc',
-               'movie5':'cct/cct_1.em',
-                })
-
+        files={'movie1': 'ribo/Falcon_2012_06_12-14_33_35_0_movie.mrcs',
+               'movie2': 'ribo/Falcon_2012_06_12-16_55_40_0_movie.mrcs',
+               'movie3': 'ribo/Falcon_2012_06_12-17_26_54_0_movie.mrcs',
+               'movie4': 'qbeta/qbeta.mrc',
+               'movie5': 'cct/cct_1.em',
+               'falcon2012_1': 'Falcon_2012_06_12-16_55_40_0_movie.mrcs',
+               'mrcGain': 'gain.mrc',
+               'mrcDark': 'dark.mrc',
+               'spiGain': 'gain.spi',
+               'spiDark': 'dark.spi',
+               })
 DataSet(name='riboMovies',  folder='riboMovies',
         files={'movie1':'30_movie_gc_window.mrcs',
                'movie2':'35_movie_gc_window.mrcs',
@@ -227,7 +231,7 @@ DataSet(name='riboMovies',  folder='riboMovies',
                'movie4':'165_movie_gc_window.mrcs',
                'movie5':'270_movie_gc_window.mrcs',
                'allMovies':'*.mrcs'
-                })         
+                })
 
 DataSet(name='jmbFalconMovies',  folder='jmbFalconMovies',
         files={'movie1':'Falcon_2014_07_16-16_32_43_0.mrcs',
@@ -236,14 +240,14 @@ DataSet(name='jmbFalconMovies',  folder='jmbFalconMovies',
                'movie4':'Falcon_2014_07_17-03_21_57_0.mrcs',
                'movie5':'Falcon_2014_07_17-06_55_56_0.mrcs',
                'allMovies':'*.mrcs'
-                })  
-               
+                })
+
 DataSet(name='grigorieff',  folder='grigorieff',
         files={'particles_rot_shift':'particles.sqlite',
                'ref_volume':'ref_volume.vol',
                'ctfsDir': 'ctfs'
                 })
-               
+
 DataSet(name='initial_volume',  folder='initial_volume',
         files={'groel': 'groel_64.stk',
                'ribosome': 'ribosomeFrank_64_preprocessed.stk',
@@ -263,7 +267,7 @@ DataSet(name='SymVirus', folder='SymVirus',
 
 DataSet(name='xmipp_programs', folder='xmipp_programs', files={}
        )
-               
+
 DataSet(name='resmap',  folder='resmap',
         files={'betagal': 'betaGal.mrc',
                'betagal_half1': 'betaGal_half01.mrc',

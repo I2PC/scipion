@@ -26,10 +26,10 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em import ProtImportMovies
+from pyworkflow.em import ProtImportMovies, ImageHandler
 from pyworkflow.tests import *
 from pyworkflow.em.packages.motioncorr import ProtMotionCorr
-
+from pyworkflow.em.packages.gctf import ProtGctf
 
 # Some utility functions to import movies that are used
 # in several tests.
@@ -136,3 +136,152 @@ class TestMotioncor2AlignMovies(BaseTest):
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
                              (2, 6), [0, 0, 0, 0])
+
+
+# Some utility functions to import movies that are used
+# in several tests.
+class TestMotioncor2GainFile(BaseTest):
+    @classmethod
+    def setData(cls):
+        cls.ds = DataSet.getDataSet('movies')
+
+    @classmethod
+    def runImportMovies(cls, pattern, **kwargs):
+        """ Run an Import micrograph protocol. """
+        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        params = {'samplingRate': 1.14,
+                  'voltage': 300,
+                  'sphericalAberration': 2.7,
+                  'magnification': 50000,
+                  'scannedPixelSize': None,
+                  'filesPattern': pattern,
+                  'dosePerFrame': 1.3,
+                  'gainFile': None,
+                  'darkFile': None,
+                  }
+        if 'samplingRate' not in kwargs:
+            del params['samplingRate']
+            params['samplingRateMode'] = 0
+        else:
+            params['samplingRateMode'] = 1
+
+        params.update(kwargs)
+
+        protImport = cls.newProtocol(ProtImportMovies, **params)
+        cls.launchProtocol(protImport)
+        return protImport
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.setData()
+        mrcGainFn = cls.ds.getFile("mrcGain")
+        spiGainFn = cls.ds.getFile("spiGain")
+        mrcDarkFn = cls.ds.getFile("mrcDark")
+        spiDarkFn = cls.ds.getFile("spiDark")
+
+        cls.protImportNoGainNoDark = cls.runImportMovies(
+                                            cls.ds.getFile('falcon2012_1'),
+                                            magnification=45000,
+                                            objLabel="Import No gain or dark")
+        cls.protImportMrcGain = cls.runImportMovies(
+                                            cls.ds.getFile('falcon2012_1'),
+                                            magnification=45000,
+                                            gainFile = mrcGainFn,
+                                            darkFile=mrcDarkFn,
+                                            objLabel="Import MRC gain and dark")
+
+        cls.protImportSpiGain = cls.runImportMovies(
+                                            cls.ds.getFile('falcon2012_1'),
+                                            magnification=45000,
+                                            gainFile=spiGainFn,
+                                            darkFile=spiDarkFn,
+                                            objLabel='Import SPI gain and dark')
+
+    def _checkMicrographs(self, protocol):
+        self.assertSetSize(protocol.outputMicrographs, size=1)
+
+    def _checkAlignment(self, movie, goldRange, goldRoi):
+        alignment = movie.getAlignment()
+        range = alignment.getRange()
+        aliFrames = range[1] - range[0] + 1
+        msgRange = "Alignment range must be %s (%s) and it is %s (%s)"
+        self.assertEqual(goldRange, range, msgRange % (goldRange,
+                                                       type(goldRange),
+                                                       range,
+                                                       type(range)))
+        roi = alignment.getRoi()
+        shifts = alignment.getShifts()
+        zeroShifts = (aliFrames * [0], aliFrames * [0])
+        nrShifts = len(shifts[0])
+        msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
+        msgShifts = "Alignment SHIFTS must be non-zero!"
+        self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, type(goldRoi),
+                                                 roi, type(roi)))
+        self.assertNotEqual(zeroShifts, shifts, msgShifts)
+        self.assertEqual(nrShifts, aliFrames, "Number of shifts is not equal"
+                                              " number of aligned frames.")
+
+    def testNoGainOrDarkFile(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                objLabel='NoGainFile - motioncor2',
+                                useMotioncor2=True,
+                                patchX=2, patchY=2,
+                                group=2)
+
+        prot.inputMovies.set(self.protImportNoGainNoDark.outputMovies)
+        self.launchProtocol(prot)
+
+        self._checkMicrographs(prot)
+        # self._checkAlignment(prot.outputMovies[1], (1, 7), [0, 0, 0, 0])
+
+
+    def testMrcGainDarkFiles(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                objLabel='MrcGainFile - motioncor2',
+                                useMotioncor2=True,
+                                patchX=2, patchY=2)
+        prot.inputMovies.set(self.protImportMrcGain.outputMovies)
+
+        self.launchProtocol(prot)
+
+        gain = self.protImportMrcGain.outputMovies.getGain()
+        finalGain = prot.getFinalCorrectionImagePath(gain)
+        self.assertTrue(os.path.exists(finalGain))
+        self.assertEquals(gain, finalGain)
+
+
+        self._checkMicrographs(prot)
+
+
+    def testSpiGainDarkFile(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                objLabel='SpiGainFile - motioncor2',
+                                useMotioncor2=True,
+                                patchX=2, patchY=2,
+                                group=2)
+
+        prot.inputMovies.set(self.protImportSpiGain.outputMovies)
+
+        self.launchProtocol(prot)
+
+        self._checkMicrographs(prot)
+
+        gain = self.protImportSpiGain.outputMovies.getGain()
+        finalGain = prot.getFinalCorrectionImagePath(gain)
+        self.assertTrue(os.path.exists(finalGain))
+        self.assertTrue('.spi' not in finalGain)
+
+        # Get first micrograph from MC
+        mic = prot.outputMovies.getFirstItem()
+        micFn = mic.getFileName()
+
+        # TODO: Get the right mic without gain from somewhere else
+        micNoGain = self.protImportNoGainNoDark.outputMovies.getFirstItem()
+        micNoGainFn = micNoGain.getFileName()
+
+        # Check images are different
+        self.assertFalse(ImageHandler().compareData(micFn, micNoGainFn, tolerance=0.00))
+
+        #xmipp_image_operate -i self.protImport2.outputMovies --minus
+        #self.protImport1.outputMovies -o mrc_difference
