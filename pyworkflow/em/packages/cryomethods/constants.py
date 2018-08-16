@@ -1,8 +1,9 @@
 # **************************************************************************
 # *
-# * Authors:     Pablo Conesa (pconesa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
+# *              Javier Vargas Balbuena (javier.vargasbalbuena@mcgill.ca)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Department of Anatomy and Cell Biology, McGill University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,43 +24,31 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.project.constants import STATUS_COLORS, WARNING_COLOR
-from pyworkflow.protocol import STATUS_FAILED
+import pyworkflow.em.metadata as md
 
+#------------------ Constants values --------------------------------------
 
-def getStatusColorFromNode(node):
+#Protocols constants
+MASK_FILL_ZERO = 0
+MASK_FILL_NOISE = 1
 
-    # If it is a run node (not PROJECT)
-    return getStatusColorFromRun(node.run)
+ANGULAR_SAMPLING_LIST = ['30', '15', '7.5', '3.7', '1.8', '0.9', '0.5',
+                         '0.2', '0.1']
 
+CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS,
+                 md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS,
+                 md.RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES]
 
-def getStatusColorFromRun(prot):
-    """
-    Returns the color associated with the status
-    -------
+#Viewer Constants
+ITER_LAST = 0
+ITER_SELECTION = 1
 
-    """
+VOLUME_SLICES = 0
+VOLUME_CHIMERA = 1
 
-    if prot:
-        if prot.hasSummaryWarnings():
-            return WARNING_COLOR
-        else:
-            return getStatusColor(prot.status.get(STATUS_FAILED))
-    else:
-        return getStatusColor()
+CHIMERADATAVIEW = 0
 
+# Relion Supported versions:
+V2_0 = '2.0'
+V2_1 = '2.1'
 
-def getStatusColor(status=None, default='#ADD8E6'):
-    """
-    Parameters
-    ----------
-    status status of the protocol
-
-    Returns the color associated with he status
-    -------
-
-    """
-    if status:
-        return STATUS_COLORS[status]
-    else:
-        return default

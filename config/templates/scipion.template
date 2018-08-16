@@ -118,6 +118,8 @@ JAVA_BINDIR = %(JAVA_HOME)s/bin
 JAVAC = %(JAVA_BINDIR)s/javac
 JAR = %(JAVA_BINDIR)s/jar
 JNI_CPPPATH = %(JAVA_HOME)s/include:%(JAVA_HOME)s/include/linux
+# Will be used as Xmx JVM param. In GB. Might be increased in specific cases: viewing movies +1
+JAVA_MAX_MEMORY = 2
 
 # Modules to compile
 GTEST = False

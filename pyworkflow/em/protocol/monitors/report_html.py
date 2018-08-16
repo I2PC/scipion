@@ -34,7 +34,7 @@ import multiprocessing
 from datetime import datetime
 
 from pyworkflow.protocol import getUpdatedProtocol
-from pyworkflow import getTemplatePath
+from pyworkflow import getTemplatePath, getConfigPath
 import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
 from pyworkflow.em.convert import ImageHandler
@@ -85,11 +85,22 @@ class ReportHtml:
 
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
-        defaultTemplate = getTemplatePath('execution.summary.template.html')
-        self.template = kwargs.get('template', defaultTemplate)
+        self.template= self._getHTMLTemplatePath()
 
         self.publishCmd = publishCmd
         self.refreshSecs = kwargs.get('refreshSecs', 60)
+    def _getHTMLTemplatePath(self):
+        """ Returns the path of the customized template at
+        config/execution.summary.html or the standard scipion HTML template"""
+        # Try if there is a customized template
+        template = getConfigPath('execution.summary.html')
+
+        if not os.path.exists(template):
+            template = getTemplatePath('execution.summary.template.html')
+        else:
+            print("Customized HTML template found at %s." % template)
+        return template
+
 
     def getHTMLReportText(self):
         if exists(self.template):
@@ -202,10 +213,26 @@ class ReportHtml:
             self.thumbPaths[MIC_ID].append(micId)
 
             if self.ctfProtocol is None:
-                psdPath = mic.psdJpeg.getFileName() if hasattr(mic, 'psdJpeg') else mic.psdCorr.getFileName()
-                psdThumb = join(PSD_THUMBS, pwutils.replaceExt(basename(psdPath), ext))
-                self.thumbPaths[PSD_THUMBS].append(psdThumb)
-                self.thumbPaths[PSD_PATH].append(psdPath)
+
+                def getMicPSDPath(mic):
+                    if hasattr(mic, 'psdJpeg'):
+                        return mic.psdJpeg.getFileName()
+                    elif hasattr(mic,'psdCorr'):
+                        return mic.psdCorr.getFileName()
+                    else:
+                        return None
+
+                psdPath = getMicPSDPath(mic)
+                psdThumb = None
+                if psdPath ==None:
+                    psdThumb = join(PSD_THUMBS, pwutils.replaceExt(basename(psdPath), ext))
+                    self.thumbPaths[PSD_THUMBS].append(psdThumb)
+                    self.thumbPaths[PSD_PATH].append(psdPath)
+                else:
+                    if PSD_THUMBS in self.thumbPaths:
+                        self.thumbPaths.pop(PSD_THUMBS, None)
+                    if PSD_PATH in self.thumbPaths:
+                        self.thumbPaths.pop(PSD_PATH, None)
 
     def generateReportImages(self, firstThumbIndex=0, micScaleFactor=6):
         """ Function to generate thumbnails for the report. Uses data from
@@ -228,7 +255,9 @@ class ReportHtml:
                 if self.micThumbSymlinks:
                     pwutils.createAbsLink(self.thumbPaths[MIC_PATH][i], dstImgPath)
                 else:
-                    ih.computeThumbnail(self.thumbPaths[MIC_PATH][i], dstImgPath, scaleFactor=micScaleFactor)
+                    ih.computeThumbnail(self.thumbPaths[MIC_PATH][i],
+                                        dstImgPath, scaleFactor=micScaleFactor,
+                                        flipOnY=True)
 
             # shift plots
             if SHIFT_THUMBS in self.thumbPaths:
@@ -237,21 +266,26 @@ class ReportHtml:
                     pwutils.createAbsLink(self.thumbPaths[SHIFT_PATH][i], dstImgPath)
 
             # Psd thumbnails
-            if self.ctfProtocol is None:
-                srcImgPath = self.thumbPaths[PSD_PATH][i]
-                dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
-                if not exists(dstImgPath):
-                    if srcImgPath.endswith('psd'):
-                        psdImg1 = ih.read(srcImgPath)
-                        psdImg1.convertPSD()
-                        psdImg1.write(dstImgPath)
-                        ih.computeThumbnail(dstImgPath, dstImgPath, scaleFactor=1)
-                    else:
-                        pwutils.createAbsLink(srcImgPath, dstImgPath)
-            else:
-                dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
-                if not exists(dstImgPath):
-                    ih.computeThumbnail(self.thumbPaths[PSD_PATH][i], dstImgPath, scaleFactor=1)
+            # If there ARE thumbnail for the PSD (no ctf protocol and
+            # moviealignment hasn't computed it
+            if PSD_THUMBS in self.thumbPaths:
+                if self.ctfProtocol is None:
+                    srcImgPath = self.thumbPaths[PSD_PATH][i]
+                    dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
+                    if not exists(dstImgPath) and srcImgPath is not None:
+                        if srcImgPath.endswith('psd'):
+                            psdImg1 = ih.read(srcImgPath)
+                            psdImg1.convertPSD()
+                            psdImg1.write(dstImgPath)
+                            ih.computeThumbnail(dstImgPath, dstImgPath,
+                                                scaleFactor=1, flipOnY=True)
+                        else:
+                            pwutils.createAbsLink(srcImgPath, dstImgPath)
+                else:
+                    dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
+                    if not exists(dstImgPath):
+                        ih.computeThumbnail(self.thumbPaths[PSD_PATH][i],
+                                            dstImgPath, scaleFactor=1, flipOnY=True)
 
         return
 

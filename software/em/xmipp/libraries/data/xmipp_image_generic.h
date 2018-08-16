@@ -197,6 +197,7 @@ public:
             return 16;
         case DT_SChar:
             return 7;
+        case DT_UHalfByte:
         case DT_UChar:
             return 8;
         default:
