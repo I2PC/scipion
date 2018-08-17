@@ -139,6 +139,7 @@ class Manager(object):
 
     def deleteProject(self, projectName):
         pwutils.path.cleanPath(self.getProjectPath(projectName))
+        os.chdir(self.PROJECTS)
 
     def renameProject(self, oldName, newName):
         os.rename(self.getProjectPath(oldName), self.getProjectPath(newName))
