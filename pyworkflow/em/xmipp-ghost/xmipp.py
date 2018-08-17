@@ -24,10 +24,13 @@
 # *
 # **************************************************************************
 
+import traceback
 
 # FIXME: This is a bypass until xmipp is replaced to xmippLib
 # FIXME:   in all imports related to the C++ binding
 
-print('import xmipp is deprecated for the xmipp binding.\n'
-      '  > Please change it to: import xmippLib ')
+print("\n >>> 'import xmipp' is deprecated for the xmipp binding:")
+traceback.print_stack()
+print(" > Please change 'import xmipp' to 'import xmippLib' \n")
+
 from xmippLib import *

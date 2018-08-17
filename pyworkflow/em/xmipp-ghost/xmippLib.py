@@ -1,5 +1,5 @@
 print("Xmipp binaries not found. Ghost active.....BOOOOOO!\n"
-      "  > See scipion install --list to install Xmipp. < ")
+      "  > See scipion install --list to install Xmipp. ")
 
 DT_DEFAULT = None
 DT_UNKNOWN = None
@@ -1025,7 +1025,7 @@ class SymList:
 
 def MetaData():
     print("Xmipp binaries not found. Ghost active.....BOOOOOO!\n"
-          "  > See scipion install --list to install Xmipp. < ")
+          "  > See scipion install --list to install Xmipp. ")
 
 MetaDataInfo = None
 
