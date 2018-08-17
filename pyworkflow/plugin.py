@@ -79,7 +79,6 @@ class Domain:
         when creating a class with __metaclass__=PluginMeta that will
         trigger this.
         """
-        print("Registering plugin: ", name)
         m = importlib.import_module(name)
         cls._plugins[name] = m  # Register the name to as a plugin
         # TODO: Load subclasses (protocols, viewers, wizards)
@@ -238,14 +237,17 @@ class Plugin:
         return cls._supportedVersions
 
     @classmethod
-    def getActiveVersion(cls):
-        """ Return the version of the Relion binaries that is currently active.
-        In the current implementation it will be inferred from the RELION_HOME
+    def getActiveVersion(cls, home=None, versions=None):
+        """ Return the version of the binaries that are currently active.
+        In the current implementation it will be inferred from the *_HOME
         variable, so it should contain the version number in it. """
-        home = cls.getHome()
-        for v in cls.getSupportedVersions():
+        home = home or cls.getHome()
+        versions = versions or cls.getSupportedVersions()
+
+        for v in versions:
             if v in home:
                 return v
+
         return ''
 
     @classmethod
