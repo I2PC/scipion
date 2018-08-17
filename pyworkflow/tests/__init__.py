@@ -253,3 +253,12 @@ DataSet(name='10010',  folder='10010',
 DataSet(name='model_building_tutorial', folder='model_building_tutorial',
         files={'vol1': 'volumes/1ake_4-5A.mrc',
                'pdb1': 'PDBs/1ake_start.pdb'})
+
+DataSet(name='eman', folder='eman',
+        files={
+               'micU': 'mics/ip3r10252011-0005_0-2.hdf',
+               'micT': 'mics/ip3r10252011-0005_10.hdf',
+               'volume': '3DmapIP3R1_clip_376apix.mrc',
+               'coords': 'coords/*.json',
+               'ctfs': 'ctfs/'
+               })
