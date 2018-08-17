@@ -1,3 +1,4 @@
+# -*- conf -*-
 [PROTOCOLS]
 Protocols SPA = [
 	{"tag": "section", "text": "Imports", "icon": "bookmark.png", "children": [
