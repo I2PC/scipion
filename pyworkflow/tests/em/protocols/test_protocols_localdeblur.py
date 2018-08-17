@@ -102,7 +102,7 @@ class TestLocalDeblur(TestLocalDeblurBase):
                                    const=1,
                                    )
         self.launchProtocol(LocalDeblur)
-        self.assertTrue(exists(LocalDeblur._getExtraPath('sharpenedMap.mrc')),
+        self.assertTrue(exists(LocalDeblur._getExtraPath('sharpenedMap_last.mrc')),
                         "LocalDeblur  has failed")
  
  
