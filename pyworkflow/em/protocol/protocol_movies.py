@@ -104,10 +104,10 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         self.samplingRate = self.inputMovies.get().getSamplingRate()
 
         # Gain and Dark conversion step
-        self.gainConvertStep = []
+        self.convertCIStep = []
         convertStepId = self._insertFunctionStep('_convertCorrectionImages',
                                                   prerequisites=[])
-        self.gainConvertStep.append(convertStepId)
+        self.convertCIStep.append(convertStepId)
 
         # Conversion step is part of processMovieStep because of streaming.
         movieSteps = self._insertNewMoviesSteps(self.insertedDict,
@@ -260,7 +260,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieStepId = self._insertFunctionStep('processMovieStep',
                                                movieDict,
                                                movie.hasAlignment(),
-                                               prerequisites=[])
+                                               prerequisites=self.convertCIStep)
         return movieStepId
 
     #--------------------------- STEPS functions -----------------------------
