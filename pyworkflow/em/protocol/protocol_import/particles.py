@@ -46,10 +46,9 @@ class ProtImportParticles(ProtImportImages):
     IMPORT_FROM_RELION = 3
     IMPORT_FROM_SCIPION = 4
     IMPORT_FROM_FREALIGN = 5
-    IMPORT_FROM_EMAN = 6
 
-    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign', 'eman']
-    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par', 'lst']
+    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign']
+    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par']
     alignTypeList = [ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
 
     def _getImportChoices(self):
@@ -75,32 +74,31 @@ class ProtImportParticles(ProtImportImages):
                        "*xmipp3*: images.xmd\n"
                        "*relion*: itXX_data.star\n"
                        "*scipion*: particles.sqlite\n"
-                       "*eman*: particleSet.lst\n"
                        "" % ', '.join(self.importFormats))
 
         form.addParam('emxFile', params.FileParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       label='Input EMX file',
                       help="Select the EMX file containing particles "
                            "information.\n See more about \n"
                            "[[http://i2pc.cnb.csic.es/emx][EMX format]]")
 
         form.addParam('alignType', params.EnumParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
-                      default=0,
-                      choices=self.alignTypeList,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      default = 0,
+                      choices =self.alignTypeList,
                       label='Alignment Type',
                       help="Is this a 2D alignment, a 3D alignment or a set of projections")
 #
         form.addParam('mdFile', params.FileParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Particles metadata file',
                       help="Select the particles Xmipp metadata file.\n"
                            "It is usually a images.xmd file result\n"
                            "from Xmipp protocols execution.")
         
         form.addParam('starFile', params.FileParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Star file',
                       help="Select a *_data.star file from a\n"
                            "previous Relion execution."
@@ -119,25 +117,21 @@ class ProtImportParticles(ProtImportImages):
                            "longer unique.")
         
         form.addParam('sqliteFile', params.FileParam,
-              condition='(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+              condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
               label='Particles sqlite file',
               help="Select the particles sqlite file.\n")
 
         form.addParam('frealignLabel', params.LabelParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='For Frealign you need to import both stack and .par files.')  
         form.addParam('stackFile', params.FileParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='Stack file',
                       help="Select an stack file with the particles.")          
         form.addParam('parFile', params.FileParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='Param file',
-                      help="Select a Frealign .par file with the refinement information.")
-        form.addParam('lstFile', params.FileParam,
-                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMAN,
-                      label='Lst file',
-                      help='Select a *.lst set file from EMAN2 project.')
+                      help="Select a Frealign .par file with the refinement information.")        
         
         
     def _defineAcquisitionParams(self, form):
@@ -191,11 +185,6 @@ class ProtImportParticles(ProtImportImages):
                      doRaise=True)
             return GrigorieffLabImportParticles(self, self.parFile.get(),
                                                 self.stackFile.get())
-        elif self.importFrom == self.IMPORT_FROM_EMAN:
-            self.importFilePath = self.lstFile.get('').strip()
-            EmanImport = importFromPlugin('eman2.convert', 'EmanImport',
-                                          doRaise=True)
-            return EmanImport(self, self.lstFile.get())
         else:
             self.importFilePath = ''
             return None 
