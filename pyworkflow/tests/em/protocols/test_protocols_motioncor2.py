@@ -29,7 +29,6 @@
 from pyworkflow.em import ProtImportMovies, ImageHandler
 from pyworkflow.tests import *
 from pyworkflow.em.packages.motioncorr import ProtMotionCorr
-from pyworkflow.em.packages.gctf import ProtGctf
 
 # Some utility functions to import movies that are used
 # in several tests.
