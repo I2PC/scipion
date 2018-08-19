@@ -176,9 +176,9 @@ def getPILImage(imageXmipp, dim=None, normalize=True):
     import xmippLib
     
     if normalize:
-        imagexmippLib.convert2DataType(xmippLib.DT_UCHAR, xmippLib.CW_ADJUST)
+        imageXmipp.convert2DataType(xmippLib.DT_UCHAR, xmippLib.CW_ADJUST)
         
-    imageData = imagexmippLib.getData()
+    imageData = imageXmipp.getData()
     image = Image.fromarray(imageData)
     if dim:
         size = int(dim), int(dim)
