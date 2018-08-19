@@ -30,7 +30,7 @@ of objects.
 """
 
 from base import ProtImport, ProtImportFiles
-from coordinates import ProtImportCoordinates
+from coordinates import ProtImportCoordinates, ProtImportCoordinatesPairs
 from ctfs import ProtImportCTF
 from images import ProtImportImages
 from masks import ProtImportMask
