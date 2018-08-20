@@ -214,6 +214,18 @@ class TestMotioncor2GainFile(BaseTest):
 
         protNoGain.inputMovies.set(self.protImportNoGainNoDark.outputMovies)
         self.launchProtocol(protNoGain)
+
+        # Check the is a step for converting the gain and dark
+        steps = protNoGain.loadSteps()
+
+        # Check new step is there
+        gainStep = steps[0]
+        self.assertEqual(gainStep.funcName, '_convertCorrectionImages')
+
+        # Check movie steps depends on it
+        movieStep = steps[1]
+        self.assertIn(str(gainStep.getObjId()), movieStep._prerequisites)
+
         self._checkMicrographs(protNoGain)
 
         # Gain and dark in MRC
