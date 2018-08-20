@@ -160,7 +160,7 @@ class ProtParticlePicking(ProtParticles):
         suffix = self.__getOutputSuffix()
         outputName = self.OUTPUT_PREFIX + suffix
 
-        readSetOfCoordinates = importFromPlugin('xmipp3.convert',
+        readSetOfCoordinates = pwutils.importFromPlugin('xmipp3.convert',
                                                 'readSetOfCoordinates')
         inputset = self.getInputMicrographs()
         # micrographs are the input set if protocol is not finished
