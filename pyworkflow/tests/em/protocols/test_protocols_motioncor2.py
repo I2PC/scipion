@@ -27,7 +27,6 @@
 # **************************************************************************
 
 from pyworkflow.em import ProtImportMovies, ImageHandler
-from pyworkflow.em.packages.xmipp3 import XmippProtMovieCorr
 from pyworkflow.tests import *
 from pyworkflow.em.packages.motioncorr import ProtMotionCorr
 
