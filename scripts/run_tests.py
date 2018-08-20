@@ -101,7 +101,6 @@ class Tester():
             # from pyworkflow and the other plugins
             paths = [('pyworkflow', '.')]
             for name, plugin in pwem.Domain.getPlugins().iteritems():
-                print("plugin.path: ", plugin.__path__[0])
                 paths.append((name, os.path.dirname(plugin.__path__[0])))
             for k, p in paths:
                 testsDict[k] = testLoader.discover(

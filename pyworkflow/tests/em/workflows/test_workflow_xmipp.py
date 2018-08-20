@@ -33,11 +33,11 @@ from pyworkflow.em.protocol import ProtImportCoordinates
 
 try:
     from xmipp3 import *
+    from xmipp3.protocols import *
 except:
     pluginNotFound('xmipp')
 
 OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-XmippProtProjMatch = importFromPlugin('xmipp3.protocols', 'XmippProtProjMatch')
 
        
 class TestXmippWorkflow(TestWorkflow):
