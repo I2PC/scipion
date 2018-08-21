@@ -87,14 +87,15 @@ the pdb file from coot  to scipion '
                       """)
         form.addParam('doInteractive', BooleanParam, default=True,
                       label='Interactive', condition='False',
-                      help="""Makes coot an interactive protocol""")
+                      help="""It makes coot an interactive protocol""")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot '
-                     'to scipion.\nYou may also execute (from script -> '
-                     'python) the command scipion_write(imol, [pdblabel]).\nimol is the '
-                     'PDB id.\n'
-                     'pdblabel is an optional parameter that assign that label to the'
-                     'produced pdb. By default the label is outcoot0001.pdb'
+                     'to scipion.\nYou may also execute (Calculate -> '
+                     'Scripting -> Python) the command scipion_write(imol, '
+                     '[pdblabel]).\nExample: scipion_write(0,"new_name")\n'
+                     'imol is the PDB id.\npdblabel is an optional parameter '
+                     'that assign that label to the produced pdb. By default '
+                     'the label is outcoot0001\n'
                      'Press "x" in coot to change from one chain to '
                      'the previous one.\nPress "X" in coot to change from one '
                      'chain to the next one.\nPress "U" in coot to initiate '
