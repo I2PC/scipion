@@ -55,14 +55,14 @@ class DCGAN(object):
         self.G = None   # generator
         self.AM = None  # adversarial model
         self.DM = None  # discriminator model
-        self.batch_size = 32
+        self.batch_size = 64
 
 
     def discriminator(self):
         if self.D:
             return self.D
         self.D = Sequential()
-        depth = 64
+        depth = 32
         dropout = 0.4
         # In: 28 x 28 x 1, depth = 1
         # Out: 14 x 14 x 1, depth=64
@@ -80,9 +80,9 @@ class DCGAN(object):
         self.D.add(LeakyReLU(alpha=0.2))
         self.D.add(Dropout(dropout))
 
-        self.D.add(Conv2D(depth*8, 5, strides=1, padding='same'))
+        '''self.D.add(Conv2D(depth*8, 5, strides=1, padding='same'))
         self.D.add(LeakyReLU(alpha=0.2))
-        self.D.add(Dropout(dropout))
+        self.D.add(Dropout(dropout))'''
 
         # Out: 1-dim probability
         self.D.add(Flatten())
@@ -129,10 +129,10 @@ class DCGAN(object):
         input_img = Input(shape=(self.img_rows, self.img_rows, 1),
                           name='input')
         # auxiliary_input = Input(shape=(size,size,1), name='input2')
-        x = Conv2D(self.batch_size, (15, 15), activation='linear',
+        x = Conv2D(self.batch_size, (5, 5), activation='linear',
                    kernel_initializer='random_normal',
                    padding='same')(input_img)
-        x1 = Conv2D(self.batch_size, (7, 7), activation='linear',
+        x1 = Conv2D(self.batch_size, (3, 3), activation='linear',
                     kernel_initializer='random_normal',
                     padding='same')(
             x)
@@ -153,23 +153,42 @@ class DCGAN(object):
 
         # at this point the representation is (7, 7, 32)
 
-        x = Conv2DTranspose(64, kernel_size=5, strides=2,
+        '''x = Conv2DTranspose(self.batch_size, kernel_size=2, strides=2, 
+        padding='same'
+        )(encoded)
+        #x = UpSampling2D((2, 2))(encoded)
+        x = LeakyReLU()(x)#Activation('relu')(x)
+        x = BatchNormalization()(x)
+        #x = Dropout(0.4)(x)
+        #x = UpSampling2D((2, 2))(x)
+        x = Conv2DTranspose(self.batch_size/2, kernel_size=2, strides=2, 
+        padding='same')(x)
+        x = LeakyReLU()(x)#Activation('relu')(x)
+        x = BatchNormalization()(x)
+        #x = UpSampling2D((2, 2))(x)
+        decoded = Conv2DTranspose(1, kernel_size=1, strides=1, padding='same')(x)
+        decoded = Activation('tanh')(decoded)'''
+        x = Conv2D(self.batch_size*2, (3, 3), activation='linear',
                    kernel_initializer='random_normal',
-                   padding='same')(encoded)
-        x = LeakyReLU(alpha=0.2)(x)#Activation('relu')(x)
-        x = BatchNormalization()(x)
-        x = Dropout(0.4)(x)
-        #x = UpSampling2D((2, 2))(x)
-        x = Conv2DTranspose(32, kernel_size=5, strides=2,padding='same')(x)
-        x = LeakyReLU(alpha=0.2)(x)#Activation('relu')(x)
-        x = BatchNormalization()(x)
-        #x = UpSampling2D((2, 2))(x)
-        decoded = Conv2DTranspose(1, kernel_size=5, strides=1,padding='same',
+                   padding='same')(
+            encoded)
+        x = LeakyReLU()(x)
+        x = BatchNormalization(momentum=0.8)(x)
+        x = UpSampling2D((2, 2))(x)
+        x = Conv2D(self.batch_size, (3, 3), activation='linear',
+                   kernel_initializer='random_normal',
+                   padding='same')(
+            x)
+        x = LeakyReLU()(x)
+        x = BatchNormalization(momentum=0.8)(x)
+        x = UpSampling2D((2, 2))(x)
+        decoded = Conv2D(1, (3, 3), activation='linear',
+                         kernel_initializer='random_normal', padding='same',
                          name='decoded')(x)
+        decoded = Conv2DTranspose(1, kernel_size=1, strides=1, padding='same')(
+            decoded)
         decoded = Activation('tanh')(decoded)
-
-        self.G = Model(input_img,
-                            decoded)  # Model(inputs=[input_img,auxiliary_input],
+        self.G = Model(input_img,decoded)  # Model(inputs=[input_img,auxiliary_input],
 
         self.G.summary()
         return self.G
@@ -177,7 +196,7 @@ class DCGAN(object):
     def discriminator_model(self):
         if self.DM:
             return self.DM
-        optimizer = Adam(0.00002)#RMSprop(lr=0.000002,
+        optimizer = Adam(0.0002, 0.5)#RMSprop(lr=0.000002,
         # decay=6e-8)
         self.DM = Sequential()
         self.DM.add(self.discriminator())
@@ -188,13 +207,14 @@ class DCGAN(object):
     def adversarial_model(self):
         if self.AM:
             return self.AM
-        optimizer = Adam(0.00001, 0.5) #RMSprop(lr=0.000001,
+        optimizer = Adam(0.0002, 0.5) #RMSprop(lr=0.000001,
         # decay=3e-8)
         self.AM = Sequential()
         self.AM.add(self.generator())
         self.AM.add(self.discriminator())
-        self.AM.compile(loss='binary_crossentropy', optimizer=optimizer,\
-            metrics=['accuracy'])
+        self.AM.summary()
+        self.AM.compile(loss='binary_crossentropy', optimizer=optimizer,
+                        metrics=['accuracy'])
         return self.AM
 
 class MNIST_DCGAN(object):
@@ -205,7 +225,7 @@ class MNIST_DCGAN(object):
         self.x_train = self.x_train.reshape(-1, self.img_rows,\
         	self.img_cols, 1).astype(np.float32)'''
         self.x_train = self.ExtractInfoMetadata(path1, root,
-                                                xmipp.MDL_IMAGE_REF, 10, 80)
+                                                xmipp.MDL_IMAGE_REF, 10, 60)
 
         self.img_rows = self.x_train.shape[1]
         self.img_cols = self.x_train.shape[2]
@@ -243,7 +263,7 @@ class MNIST_DCGAN(object):
     def train(self, train_steps=2000, batch_size=256, save_interval=0):
         noise_input = None
         self.noise2 = self.ExtractInfoMetadata(path1, root, xmipp.MDL_IMAGE,
-                                          10, 80)
+                                          10, 60)
         if save_interval>0:
             #noise_input = np.random.uniform(0.0, 1.0, size=[16, 1600])
             n = np.random.randint(0, self.x_train.shape[0], size=batch_size)
@@ -252,11 +272,13 @@ class MNIST_DCGAN(object):
         for i in range(train_steps):
             k = np.random.randint(0,self.x_train.shape[0], size=batch_size)
             images_train = self.x_train[k, :, :, :]
-            noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
+            #noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
             noise3 = self.noise2[k,:,:,:]
             #noise3 = noise3.reshape(-1, noise2.shape[1]*noise2.shape[2])
             #images_fake = self.generator.predict(noise)
             images_fake = self.generator.predict(noise3)
+            images_fake = 2*(images_fake-np.min(images_fake))/\
+                          (np.max(images_fake)-np.min(images_fake))-1
             '''plt.subplot(1,2,1)
             plt.imshow(np.squeeze(noise3[0]))
             plt.gray()
@@ -271,8 +293,9 @@ class MNIST_DCGAN(object):
 
             y = np.ones([batch_size, 1])
             #noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
-            #j = np.random.randint(0, self.x_train.shape[0], size=batch_size)
-            #noise3 = self.noise2[j, :, :, :]
+            j = np.random.randint(0, self.x_train.shape[0], size=batch_size)
+            noise3 = self.noise2[j, :, :, :]
+            images_train = self.x_train[j, :, :, :]
             a_loss = self.adversarial.train_on_batch(noise3, y)
             log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
             log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
@@ -302,6 +325,8 @@ class MNIST_DCGAN(object):
             else:
                 filename = "mnist_%d.png" % step
             images = self.generator.predict(noise)
+            images = 2 * (images - np.min(images)) / \
+                         (np.max(images) - np.min(images)) - 1
         else:
             i = np.random.randint(0, self.x_train.shape[0], samples)
             images = self.x_train[i, :, :, :]
@@ -323,7 +348,7 @@ class MNIST_DCGAN(object):
 if __name__ == '__main__':
     mnist_dcgan = MNIST_DCGAN()
     timer = ElapsedTimer()
-    mnist_dcgan.train(train_steps=2000, batch_size=32, save_interval=250)
+    mnist_dcgan.train(train_steps=10000, batch_size=32, save_interval=200)
     timer.elapsed_time()
     mnist_dcgan.plot_images(fake=True)
     mnist_dcgan.plot_images(fake=False, save2file=True)

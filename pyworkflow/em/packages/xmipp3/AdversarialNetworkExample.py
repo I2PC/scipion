@@ -168,7 +168,8 @@ class MNIST_DCGAN(object):
             noise = np.random.uniform(-1.0, 1.0, size=[batch_size, 100])
             a_loss = self.adversarial.train_on_batch(noise, y)
             log_mesg = "%d: [D loss: %f, acc: %f]" % (i, d_loss[0], d_loss[1])
-            log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0], a_loss[1])
+            log_mesg = "%s  [A loss: %f, acc: %f]" % (log_mesg, a_loss[0],
+             a_loss[1])
             print(log_mesg)
             if save_interval>0:
                 if (i+1)%save_interval==0:
@@ -204,7 +205,7 @@ class MNIST_DCGAN(object):
 if __name__ == '__main__':
     mnist_dcgan = MNIST_DCGAN()
     timer = ElapsedTimer()
-    mnist_dcgan.train(train_steps=10000, batch_size=256, save_interval=500)
+    mnist_dcgan.train(train_steps=2000, batch_size=256, save_interval=100)
     timer.elapsed_time()
     mnist_dcgan.plot_images(fake=True)
     mnist_dcgan.plot_images(fake=False, save2file=True)
