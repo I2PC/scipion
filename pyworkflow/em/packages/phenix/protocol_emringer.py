@@ -84,7 +84,7 @@ the atomic structure backbone has been perfectly fitted to the map.
         """
         vol = self._getInputVolume()
         inVolName = vol.getFileName()
-        newFn = self._getTmpPath(self.EMRINGERFILE)
+        newFn = self._getExtraPath(self.EMRINGERFILE)
         origin = vol.getOrigin(force=True).getShifts()
         sampling = vol.getSamplingRate()
         adaptFileToCCP4(inVolName, newFn, origin, sampling, START)  # ORIGIN
@@ -94,7 +94,7 @@ the atomic structure backbone has been perfectly fitted to the map.
         pdb = os.path.abspath(self.inputStructure.get().getFileName())
         args = []
         args.append(pdb)
-        vol = os.path.abspath(self._getTmpPath(self.EMRINGERFILE))
+        vol = os.path.abspath(self._getExtraPath(self.EMRINGERFILE))
         args.append(vol)
 
         # script with auxiliary files
