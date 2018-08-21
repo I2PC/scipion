@@ -420,7 +420,13 @@ class Project(object):
         2. Create the working dir and also the protocol independent db
         3. Call the launch method in protocol.job to handle submission:
            mpi, thread, queue,
-        and also take care if the execution is remotely."""
+        and also take care if the execution is remotely.
+
+        If the protocol has some prerequisited (other protocols that
+        needs to be finished first), it will be scheduled.
+        """
+        if protocol.getPrerequisites() and not scheduled:
+            return self.scheduleProtocol(protocol)
 
         isRestart = protocol.getRunMode() == MODE_RESTART
 
@@ -430,17 +436,18 @@ class Project(object):
 
         protocol.setStatus(pwprot.STATUS_LAUNCHED)
         self._setupProtocol(protocol)
-        # protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
-        protocol.makePathsAndClean()  # Create working dir if necessary
-        # Delete the relations created by this protocol
-        if isRestart:
-            self.mapper.deleteRelations(self)
-        self.mapper.commit()
 
         # Prepare a separate db for this run if not from schedule jobs
         # Scheduled protocols will load the project db from the run.db file,
         # so there is no need to copy the database
+
         if not scheduled:
+            protocol.makePathsAndClean()  # Create working dir if necessary
+            # Delete the relations created by this protocol
+            if isRestart:
+                self.mapper.deleteRelations(self)
+            self.mapper.commit()
+
             # NOTE: now we are simply copying the entire project db, this can be
             # changed later to only create a subset of the db need for the run
             pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
@@ -463,14 +470,16 @@ class Project(object):
             prerequisites: a list with protocols ids that the scheduled
                 protocol will wait for.
         """
+        isRestart = protocol.getRunMode() == MODE_RESTART
+
         protocol.setStatus(pwprot.STATUS_SCHEDULED)
         protocol.addPrerequisites(*prerequisites)
 
         self._setupProtocol(protocol)
-        # protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
         protocol.makePathsAndClean()  # Create working dir if necessary
         # Delete the relations created by this protocol if any
-        self.mapper.deleteRelations(self)
+        if isRestart:
+            self.mapper.deleteRelations(self)
         self.mapper.commit()
 
         # Prepare a separate db for this run
@@ -970,6 +979,10 @@ class Project(object):
 
         return protocol
 
+    # FIXME: this function just return if a given object exists, not
+    # if it is a protocol, so it is incorrect judging by the name
+    # Moreover, a more consistent name (comparing to similar methods)
+    # would be: hasProtocol
     def doesProtocolExists(self, protId):
         return self.mapper.exists(protId)
 
@@ -996,9 +1009,21 @@ class Project(object):
 
     def _setProtocolMapper(self, protocol):
         """ Set the project and mapper to the protocol. """
-        protocol.setProject(self)
-        protocol.setMapper(self.mapper)
-        self._setHostConfig(protocol)
+
+        # Tolerate loading errors. For support.
+        # When only having the sqlite, sometime there are exceptions here
+        # due to the absence of a set.
+        from pyworkflow.mapper.sqlite import SqliteFlatMapperException
+        try:
+
+            protocol.setProject(self)
+            protocol.setMapper(self.mapper)
+            self._setHostConfig(protocol)
+
+        except SqliteFlatMapperException:
+            protocol.addSummaryWarning(
+                "*Protocol loading problem*: A set related to this "
+                "protocol couldn't be loaded.")
 
     def _setupProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
@@ -1030,6 +1055,7 @@ class Project(object):
             self.runs = self.mapper.selectAllBatch(objectFilter=lambda o: isinstance(o, pwprot.Protocol))
 
             for r in self.runs:
+
                 self._setProtocolMapper(r)
 
                 # Check for run warnings
@@ -1269,7 +1295,8 @@ class Project(object):
 
         return self._sourceGraph
 
-    def getRelatedObjects(self, relation, obj, direction=em.RELATION_CHILDS):
+    def getRelatedObjects(self, relation, obj, direction=em.RELATION_CHILDS,
+                          refresh=False):
         """ Get all objects related to obj by a give relation.
         Params:
             relation: the relation name to search for.
@@ -1278,7 +1305,7 @@ class Project(object):
                 to this one by the RELATION_TRANSFORM.
             direction: this say if search for childs or parents in the relation.
         """
-        graph = self.getTransformGraph()
+        graph = self.getTransformGraph(refresh)
         relations = self.mapper.getRelationsByName(relation)
         connection = self._getConnectedObjects(obj, graph)
 

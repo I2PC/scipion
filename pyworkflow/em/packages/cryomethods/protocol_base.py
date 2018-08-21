@@ -24,68 +24,50 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 import re
 from glob import glob
-from os.path import exists, basename, join
-
-from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
-                                        IntParam, EnumParam, StringParam,
-                                        LabelParam, PathParam)
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.utils.path import cleanPath, replaceBaseExt
+from os.path import exists
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.em.data import SetOfVolumes
-from pyworkflow.em.protocol import EMProtocol
+import pyworkflow.protocol.params as params
+from pyworkflow.utils.path import cleanPath, replaceBaseExt
 
-from convert import (writeSetOfParticles, isVersion2, convertMask)
+from pyworkflow.em.packages.cryomethods.constants import (CHANGE_LABELS, V2_0,
+    ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO)
+import convert as conv
 
-ANGULAR_SAMPLING_LIST = ['30', '15', '7.5', '3.7', '1.8', '0.9', '0.5', '0.2', '0.1']
-MASK_FILL_ZERO = 0
-MASK_FILL_NOISE = 1
-
-
-class ProtInitialVolumeSelector(EMProtocol):
-    """ This class contains the common functions for all Relion protocols.
-    In subclasses there should be little changes about how to create the command
-    line and the files produced.
-
-    Most of the Relion protocols, have two modes: NORMAL or CONTINUE. That's why
-    some of the function have a template pattern approach to define the behaviour
-    depending on the case.
+class ProtocolBase(em.EMProtocol):
+    """ This class contains the common functions for protocols developed by
+    cryomethods that uses Relion programs.
     """
-    _label = 'volume selector'
-
-    OUTPUT_TYPE = SetOfVolumes
+    IS_VOLSELECTOR = False
+    OUTPUT_TYPE = em.SetOfVolumes
     FILE_KEYS = ['data', 'optimiser', 'sampling']
     PREFIXES = ['']
 
+
     def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
+        em.EMProtocol.__init__(self, **args)
 
     def _initialize(self):
         """ This function is mean to be called after the
-        working dir for the protocol have been set. (maybe after recovery from mapper)
+        working dir for the protocol have been set.
+        (maybe after recovery from mapper)
         """
         self._createFilenameTemplates()
-        self._createIterTemplates()
-
-        self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
+        self._createTemplates()
+        self._createVolDict()
 
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
         self.extraIter = self._getExtraPath('relion_it%(iter)03d_')
         myDict = {
             'input_star': self._getPath('input_particles.star'),
-            'input_mrcs': self._getPath('input_particles.mrcs'),
             'data_scipion': self.extraIter + 'data_scipion.sqlite',
-            'projections': self.extraIter + '%(half)sclass%(ref3d)03d_projections.sqlite',
             'volumes_scipion': self.extraIter + 'volumes.sqlite',
             'data': self.extraIter + 'data.star',
             'model': self.extraIter + 'model.star',
-            'shiny': self._getExtraPath('shiny/shiny.star'),
             'optimiser': self.extraIter + 'optimiser.star',
             'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
             'all_avgPmax_xmipp': self._getTmpPath(
@@ -96,18 +78,9 @@ class ProtInitialVolumeSelector(EMProtocol):
             'movie_particles': self._getPath('movie_particles.star'),
             'dataFinal': self._getExtraPath("relion_data.star"),
             'modelFinal': self._getExtraPath("relion_model.star"),
-            'finalvolume': self._getExtraPath(
-                "relion_class%(ref3d)03d.mrc:mrc"),
-            'final_half1_volume': self._getExtraPath(
-                "relion_half1_class%(ref3d)03d_unfil.mrc:mrc"),
-            'final_half2_volume': self._getExtraPath(
-                "relion_half2_class%(ref3d)03d_unfil.mrc:mrc"),
-            'finalSGDvolume': self._getExtraPath(
-                "relion_it%(iter)03d_class%(ref3d)03d.mrc:mrc"),
-            'preprocess_particles': self._getPath("preprocess_particles.mrcs"),
-            'preprocess_particles_star': self._getPath(
-                "preprocess_particles.star"),
-            'preprocess_particles_preffix': "preprocess_particles"
+            'finalvolume': self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc"),
+            'preprocess_parts': self._getPath("preprocess_particles.mrcs"),
+            'preprocess_parts_star': self._getPath("preprocess_particles.star"),
         }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:
@@ -117,32 +90,65 @@ class ProtInitialVolumeSelector(EMProtocol):
         # add other keys that depends on prefixes
         for p in self.PREFIXES:
             myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
-            myDict[
-                '%svolume' % p] = self.extraIter + p + 'class%(ref3d)03d.mrc:mrc'
-
+            myDict['%svolume' % p] = self.extraIter + p + \
+                                     'class%(ref3d)03d.mrc:mrc'
         self._updateFilenamesDict(myDict)
 
-    def _createIterTemplates(self):
+    def _createTemplates(self):
         """ Setup the regex on how to find iterations. """
         self._iterTemplate = self._getFileName('data', iter=0).replace('000',
                                                                        '???')
-        # Iterations will be identify by _itXXX_ where XXX is the iteration number
-        # and is restricted to only 3 digits.
+        # Iterations will be identify by _itXXX_ where XXX is the iteration
+        # number and is restricted to only 3 digits.
         self._iterRegex = re.compile('_it(\d{3,3})_')
+        self._classRegex = re.compile('_class(\d{3,3}).')
+
+    def _createVolDict(self):
+        self.volDict = {}
+        for i, vol in enumerate(self.inputVolumes.get()):
+            self.volDict[i+1] = vol.getObjId()
 
     # -------------------------- DEFINE param functions -----------------------
-    def _defineParams(self, form):
+    def _defineInputParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam,
+        form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
                       important=True,
                       label="Input particles",
                       help='Select the input images from the project.')
-        form.addParam('subsetSize', IntParam, default=1000,
-                      label='Subset size',
-                      help='Number of individual particles that will be use '
-                           'to obtain the best initial volume')
-        form.addParam('maskDiameterA', IntParam, default=-1,
+        if self.IS_VOLSELECTOR:
+            form.addParam('subsetSize', params.IntParam, default=1000,
+                          label='Subset size',
+                          help='Number of individual particles that will be '
+                               'use to obtain the best initial volume')
+            form.addParam('targetResol', params.FloatParam, default=10,
+                           label='Target Resolution (A)',
+                           help='In order to save time, you could rescale both '
+                                'particles and maps to a pisel size = resol/2. '
+                                'If set to 0, no rescale will be applied to '
+                                'the initial references.')
+        else:
+            form.addParam('copyAlignment', params.BooleanParam, default=False,
+                          label='Consider previous alignment?',
+                          help='If set to Yes, then alignment information from'
+                               ' input particles will be considered.')
+            form.addParam('alignmentAsPriors', params.BooleanParam,
+                          default=False,
+                          condition='copyAlignment',
+                          expertLevel=em.LEVEL_ADVANCED,
+                          label='Consider alignment as priors?',
+                          help='If set to Yes, then alignment information from '
+                               'input particles will be considered as PRIORS. '
+                               'This option is mandatory if you want to do '
+                               'local searches')
+            form.addParam('fillRandomSubset', params.BooleanParam, default=False,
+                          condition='copyAlignment',
+                          expertLevel=em.LEVEL_ADVANCED,
+                          label='Consider random subset value?',
+                          help='If set to Yes, then random subset value '
+                               'of input particles will be put into the'
+                               'star file that is generated.')
+        form.addParam('maskDiameterA', params.IntParam, default=-1,
                       label='Particle mask diameter (A)',
                       help='The experimental images will be masked with a '
                            'soft circular mask with this <diameter>. '
@@ -153,26 +159,34 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'The same diameter will also be used for a '
                            'spherical mask of the reference structures if no '
                            'user-provided mask is specified.')
-        form.addParam('targetResol', FloatParam, default=10,
-                       label='Target Resolution (A)',
-                       help='In order to save time, you could rescale both '
-                            'particles and maps to a pisel size = resol/2. '
-                            'If set to 0, no rescale will be applied to the '
-                            'initial references.')
+        if not self.IS_VOLSELECTOR:
+            form.addParam('numberOfClasses', params.IntParam, default=2,
+                          label='Number of classes:',
+                          help='The number of classes (K) for a multi-reference '
+                               'refinement. These classes will be made in an '
+                               'unsupervised manner from a single reference by '
+                               'division of the data into random subsets during '
+                               'the first iteration.')
 
         group = form.addGroup('Reference 3D map')
 
-        group.addParam('inputVolumes', PointerParam,
-                       pointerClass='SetOfVolumes',
+        referenceClass = 'SetOfVolumes'
+        referenceLabel = 'Input volumes'
+        if not self.IS_VOLSELECTOR:
+            referenceClass += ', Volume'
+            referenceLabel = 'Input volume(s)'
+
+        group.addParam('inputVolumes', params.PointerParam,
+                       pointerClass=referenceClass,
                        important=True,
-                       label='Input volumes',
-                       help='Initial reference 3D map, it should have the same '
-                            'dimensions and the same pixel size as your input '
-                            'particles.')
-        group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
+                       label=referenceLabel,
+                       help='Initial reference 3D map(s)')
+        group.addParam('isMapAbsoluteGreyScale', params.BooleanParam,
+                       default=False,
                        label="Is initial 3D map on absolute greyscale?",
-                       help='The probabilities are based on squared differences,'
-                            ' so that the absolute grey scale is important. \n'
+                       help='The probabilities are based on squared '
+                            'differences, so that the absolute grey scale is '
+                            'important. \n'
                             'Probabilities are calculated based on a Gaussian '
                             'noise model, which contains a squared difference '
                             'term between the reference and the experimental '
@@ -194,28 +208,46 @@ class ProtInitialVolumeSelector(EMProtocol):
                             'negatively affect the outcome of the subsequent '
                             'MAP refinement. Therefore, if in doubt it is '
                             'recommended to set this option to No.')
-
-        self.addSymmetry(group)
-
-        group.addParam('initialLowPassFilterA', FloatParam, default=40,
+        group.addParam('symmetryGroup', params.StringParam, default='c1',
+                       label="Symmetry",
+                       help='If the molecule is asymmetric, set Symmetry '
+                            'group to C1. Note their are multiple '
+                            'possibilities for icosahedral symmetry:\n'
+                            '* I1: No-Crowther 222 (standard in Heymann,'
+                            'Chagoyen  & Belnap, JSB, 151 (2005) 196-207)\n'
+                            '* I2: Crowther 222                          \n'
+                            '* I3: 52-setting (as used in SPIDER?)       \n'
+                            '* I4: A different 52 setting                \n'
+                            'The command *relion_refine --sym D2 '
+                            '--print_symmetry_ops* prints a list of all '
+                            'symmetry operators for symmetry group D2. RELION '
+                            'uses MIPP\'s libraries for symmetry operations. '
+                            'Therefore, look at the XMIPP Wiki for more '
+                            'details:\n'
+                            'http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp'
+                            '/WebHome?topic=Symmetry')
+        group.addParam('initialLowPassFilterA', params.FloatParam,
+                       default=25 if self.IS_VOLSELECTOR else 40,
                        label='Initial low-pass filter (A)',
-                       help='It is recommended to strongly low-pass filter your '
-                            'initial reference map. If it has not yet been '
-                            'low-pass filtered, it may be done internally using '
-                            'this option. If set to 0, no low-pass filter will '
-                            'be applied to the initial reference(s).')
+                       help='It is recommended to strongly low-pass filter '
+                            'your initial reference map. If it has not yet '
+                            'been low-pass filtered, it may be done '
+                            'internally using this option. If set to 0, '
+                            'no low-pass filter will be applied to the '
+                            'initial reference(s).')
 
+    def _defineCTFParams(self, form, expertLev=em.LEVEL_ADVANCED):
         form.addSection('CTF')
-        form.addParam('doCTF', BooleanParam, default=True,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('doCTF', params.BooleanParam, default=True,
+                      expertLevel=expertLev,
                       label='Do CTF-correction?',
                       help='If set to Yes, CTFs will be corrected inside the '
                            'MAP refinement. The resulting algorithm '
                            'intrinsically implements the optimal linear, or '
                            'Wiener filter. Note that input particles should '
                            'contains CTF parameters.')
-        form.addParam('hasReferenceCTFCorrected', BooleanParam, default=False,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('hasReferenceCTFCorrected', params.BooleanParam,
+                      default=False, expertLevel=expertLev,
                       label='Has reference been CTF-corrected?',
                       help='Set this option to Yes if the reference map '
                            'represents CTF-unaffected density, e.g. it was '
@@ -223,8 +255,8 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'from a PDB. If set to No, then in the first '
                            'iteration, the Fourier transforms of the reference '
                            'projections are not multiplied by the CTFs.')
-        form.addParam('haveDataBeenPhaseFlipped', LabelParam,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('haveDataBeenPhaseFlipped', params.LabelParam,
+                      expertLevel=expertLev,
                       label='Have data been phase-flipped?      '
                             '(Don\'t answer, see help)',
                       help='The phase-flip status is recorded and managed by '
@@ -236,8 +268,8 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'RELION, as this can be done inside the internal\n'
                            'CTF-correction. However, if the phases have been '
                            'flipped, the program will handle it.')
-        form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('ignoreCTFUntilFirstPeak', params.BooleanParam,
+                      default=False, expertLevel=em.LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?',
                       help='If set to Yes, then CTF-amplitude correction will '
                            'only be performed from the first peak '
@@ -247,10 +279,26 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'on the CTFs (e.g. 10-20%) often yields better '
                            'results. Therefore, this option is not generally '
                            'recommended.')
+        form.addParam('doCtfManualGroups', params.BooleanParam, default=False,
+                      label='Do manual grouping ctfs?', expertLevel=expertLev,
+                      help='Set this to Yes the CTFs will grouping manually.')
+        form.addParam('defocusRange', params.FloatParam, default=500,
+                      label='defocus range for group creation (in Angstroms)',
+                      condition='doCtfManualGroups', expertLevel=expertLev,
+                      help='Particles will be grouped by defocus.'
+                      'This parameter is the bin for an histogram.'
+                      'All particles assigned to a bin form a group')
+        form.addParam('numParticles', params.FloatParam, default=200,
+                      label='minimum size for defocus group',
+                      condition='doCtfManualGroups', expertLevel=expertLev,
+                      help='If defocus group is smaller than this value, '
+                           'it will be expanded until number of particles '
+                           'per defocus group is reached')
 
+    def _defineOptimizationParams(self, form, expertLev=em.LEVEL_ADVANCED):
         form.addSection(label='Optimisation')
-        form.addParam('numberOfIterations', IntParam, default=25,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('numberOfIterations', params.IntParam, default=25,
+                      expertLevel=expertLev,
                       label='Number of iterations',
                       help='Number of iterations to be performed. Note '
                            'that the current implementation does NOT '
@@ -258,8 +306,8 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'the calculations will need to be stopped '
                            'by the user if further iterations do not yield '
                            'improvements in resolution or classes.')
-        form.addParam('regularisationParamT', IntParam, default=2,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('regularisationParamT', params.IntParam, default=4,
+                      expertLevel=expertLev,
                       label='Regularisation parameter T',
                       help='Bayes law strictly determines the relative '
                            'weight between the contribution of the '
@@ -275,8 +323,52 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'Too small values yield too-low resolution '
                            'structures; too high values result in '
                            'over-estimated resolutions and overfitting.')
-        form.addParam('maskZero', EnumParam, default=0,
-                      expertLevel=LEVEL_ADVANCED,
+
+        # version 2.1+ only and not Volume selector protocol.
+        if conv.getVersion() != V2_0 and not self.IS_VOLSELECTOR:
+            form.addParam('doSubsets', params.BooleanParam, default=False,
+                          label='Use subsets for initial updates?',
+                          help='If set to True, multiple maximization updates '
+                               '(as many as defined by the _Number of subset '
+                               'updates_) will be performed during the first '
+                               'iteration(s): each time after the number of '
+                               'particles in a subset has been processed. By '
+                               'using subsets with much fewer particles than '
+                               'the entire data set, the initial updates '
+                               'will be much faster, while the very low '
+                               'resolution class averages will not be '
+                               'notably worse than with the entire data set. '
+                               '\nThis will greatly speed up 2D '
+                               'classifications with very many (hundreds of '
+                               'thousands or more) particles. A useful '
+                               'subset size is probably in the order of ten '
+                               'thousand particles. If the data set only '
+                               'comprises (tens of) thousands of particles, '
+                               'this option may be less useful.')
+            form.addParam('subsetSize', params.IntParam, default=10000,
+                          condition='doSubsets',
+                          label='Initial subset size',
+                          help='Number of individual particles after which one '
+                               'will perform a maximization update in the first '
+                               'iteration(s). A useful subset size is probably '
+                               'in the order of ten thousand particles.')
+            form.addParam('subsetUpdates', params.IntParam, default=3,
+                          condition='doSubsets',
+                          label='Number of subset updates',
+                          help='This option is only used when a positive '
+                               'number is given for the _Initial subset size_. '
+                               'In that case, in the first iteration, '
+                               'maximization updates are performed over '
+                               'a smaller subset of the particles to speed '
+                               'up calculations.Useful values are probably in '
+                               'the range of 2-5 subset updates. Using more '
+                               'might speed up further, but with the risk of '
+                               'affecting the results. If the number of subsets '
+                               'times the subset size is larger than the number '
+                               'of particles in the data set, then more than 1 '
+                               'iteration will be split into subsets.')
+        form.addParam('maskZero', params.EnumParam, default=0,
+                      expertLevel=expertLev,
                       choices=['Yes, fill with zeros',
                                'No, fill with random noise'],
                       label='Mask particles with zeros?',
@@ -295,8 +387,8 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'better when filling the solvent area with random '
                            'noise, some classifications go better when using '
                            'zeros.')
-        form.addParam('referenceMask', PointerParam,
-                      pointerClass='VolumeMask', expertLevel=LEVEL_ADVANCED,
+        form.addParam('referenceMask', params.PointerParam,
+                      pointerClass='VolumeMask', expertLevel=expertLev,
                       label='Reference mask (optional)', allowsNull=True,
                       help='A volume mask containing a (soft) mask with '
                            'the same dimensions as the reference(s), '
@@ -311,9 +403,9 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'icosahedral viruses, it is also useful to use '
                            'a second mask. Check _Advaced_ level and '
                            'select another volume mask')
-        form.addParam('solventMask', PointerParam,
+        form.addParam('solventMask', params.PointerParam,
                       pointerClass='VolumeMask',
-                      expertLevel=LEVEL_ADVANCED, allowsNull=True,
+                      expertLevel=expertLev, allowsNull=True,
                       label='Second reference mask (optional)',
                       help='For all white (value 1) pixels in this second '
                            'mask the corresponding pixels in the '
@@ -324,8 +416,8 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'have one-values inside the virion and '
                            'zero-values in the capsid and the solvent '
                            'areas.')
-        form.addParam('solventFscMask', BooleanParam, default=False,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('solventFscMask', params.BooleanParam, default=False,
+                      expertLevel=expertLev,
                       label='Use solvent-flattened FSCs?',
                       help='If set to Yes, then instead of using '
                            'unmasked maps to calculate the gold-standard '
@@ -338,7 +430,7 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'yield higher-resolution maps, especially '
                            'when the mask contains only a relatively '
                            'small volume inside the box.')
-        form.addParam('limitResolEStep', FloatParam, default=-1,
+        form.addParam('limitResolEStep', params.FloatParam, default=-1,
                       expertLevel=em.LEVEL_ADVANCED,
                       label='Limit resolution E-step to (A)',
                       help='If set to a positive number, then the '
@@ -356,10 +448,12 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'in the range of 7-12 Angstroms have proven '
                            'useful.')
 
+    def _defineSamplingParams(self, form,
+                              expertLev=em.LEVEL_ADVANCED, cond='True'):
         form.addSection('Sampling')
-        form.addParam('angularSamplingDeg', EnumParam, default=1,
+        form.addParam('angularSamplingDeg', params.EnumParam, default=1,
                       choices=ANGULAR_SAMPLING_LIST,
-                      expertLevel=em.LEVEL_ADVANCED,
+                      expertLevel=expertLev, condition=cond,
                       label='Angular sampling interval (deg)',
                       help='There are only a few discrete angular samplings'
                            ' possible because we use the HealPix library to'
@@ -367,9 +461,47 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'angles on the sphere. The samplings are '
                            'approximate numbers and vary slightly over '
                            'the sphere.')
+        form.addParam('offsetSearchRangePix', params.FloatParam,
+                      default=5, expertLevel=expertLev, condition=cond,
+                      label='Offset search range (pix)',
+                      help='Probabilities will be calculated only for '
+                           'translations in a circle with this radius (in '
+                           'pixels). The center of this circle changes at '
+                           'every iteration and is placed at the optimal '
+                           'translation for each image in the previous '
+                           'iteration.')
+        form.addParam('offsetSearchStepPix', params.FloatParam,
+                      default=1.0, expertLevel=expertLev, condition=cond,
+                      label='Offset search step (pix)',
+                      help='Translations will be sampled with this step-size '
+                           '(in pixels). Translational sampling is also done '
+                           'using the adaptive approach. Therefore, if '
+                           'adaptive=1, the translations will first be '
+                           'evaluated on a 2x coarser grid.')
+        form.addParam('localAngularSearch', params.BooleanParam,
+                      default=False, expertLevel=expertLev, condition=cond,
+                      label='Perform local angular search?',
+                      help='If set to Yes, then rather than performing '
+                           'exhaustive angular searches, local searches '
+                           'within the range given below will be performed. A '
+                           'prior Gaussian distribution centered at the '
+                           'optimal orientation in the previous iteration and '
+                           'with a stddev of 1/3 of the range given below '
+                           'will be enforced.')
+        form.addParam('localAngularSearchRange', params.FloatParam,
+                      default=5.0, expertLevel=expertLev, condition=cond,
+                      label='Local angular search range',
+                      help='Local angular searches will be performed within '
+                           '+/- the given amount (in degrees) from the '
+                           'optimal orientation in the previous iteration. A '
+                           'Gaussian prior (also see previous option) will be '
+                           'applied, so that orientations closer to the '
+                           'optimal orientation in the previous iteration will '
+                           'get higher weights than those further away.')
 
+    def _defineAdditionalParams(self, form):
         form.addSection('Additional')
-        form.addParam('useParallelDisk', BooleanParam, default=True,
+        form.addParam('useParallelDisk', params.BooleanParam, default=True,
                       label='Use parallel disc I/O?',
                       help='If set to Yes, all MPI slaves will read '
                            'their own images from disc. Otherwise, only '
@@ -378,7 +510,7 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'file systems like gluster of fhgfs are good '
                            'at parallel disc I/O. NFS may break with many '
                            'slaves reading in parallel.')
-        form.addParam('pooledParticles', IntParam, default=3,
+        form.addParam('pooledParticles', params.IntParam, default=3,
                       label='Number of pooled particles:',
                       help='Particles are processed in individual batches '
                            'by MPI slaves. During each batch, a stack of '
@@ -396,7 +528,7 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'particularly metadata handling of disk '
                            'access, is a problem. It has a modest cost of '
                            'increased RAM usage.')
-        form.addParam('allParticlesRam', BooleanParam, default=False,
+        form.addParam('allParticlesRam', params.BooleanParam, default=False,
                       label='Pre-read all particles into RAM?',
                       help='If set to Yes, all particle images will be '
                            'read into computer memory, which will greatly '
@@ -418,7 +550,7 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'sends those particles through the network to '
                            'the MPI slaves during the refinement '
                            'iterations.')
-        form.addParam('scratchDir', PathParam,
+        form.addParam('scratchDir', params.PathParam,
                       condition='not allParticlesRam',
                       label='Copy particles to scratch directory: ',
                       help='If a directory is provided here, then the job '
@@ -434,7 +566,7 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'correctly, the relion_volatile directory will '
                            'be wiped. If the job crashes, you may want to '
                            'remove it yourself.')
-        form.addParam('combineItersDisc', BooleanParam, default=False,
+        form.addParam('combineItersDisc', params.BooleanParam, default=False,
                       label='Combine iterations through disc?',
                       help='If set to Yes, at the end of every iteration '
                            'all MPI slaves will write out a large file '
@@ -450,11 +582,11 @@ class ProtInitialVolumeSelector(EMProtocol):
                            'gets to the cheese) and the start of the '
                            'ensuing maximisation step. It will depend on '
                            'your system setup which is most efficient.')
-        form.addParam('doGpu', BooleanParam, default=True,
+        form.addParam('doGpu', params.BooleanParam, default=True,
                       label='Use GPU acceleration?',
                       help='If set to Yes, the job will try to use GPU '
                            'acceleration.')
-        form.addParam('gpusToUse', StringParam, default='',
+        form.addParam('gpusToUse', params.StringParam, default='',
                       label='Which GPUs to use:', condition='doGpu',
                       help='This argument is not necessary. If left empty, '
                            'the job itself will try to allocate available '
@@ -463,42 +595,27 @@ class ProtInitialVolumeSelector(EMProtocol):
                            '(0,1,2,3, etc) to use. MPI-processes are '
                            'separated by ":", threads by ",". '
                            'For example: "0,0:1,1:0,0:1,1"')
-
-        form.addParam('oversampling', IntParam, default=1,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('oversampling', params.IntParam, default=1,
                       label="Over-sampling",
                       help="Adaptive oversampling order to speed-up "
                            "calculations (0=no oversampling, 1=2x, 2=4x, etc)")
-
+        form.addParam('extraParams', params.StringParam,
+                      default='',
+                      label='Additional parameters',
+                      help="In this box command-line arguments may be "
+                           "provided that are not generated by the GUI. This "
+                           "may be useful for testing developmental options "
+                           "and/or expert use of the program, e.g:\n"
+                           "--dont_combine_weights_via_disc\n"
+                           "--verb 1\n"
+                           "--pad 2")
         form.addParallelSection(threads=1, mpi=3)
-
-    def addSymmetry(self, container):
-        container.addParam('symmetryGroup', StringParam, default='c1',
-                           label="Symmetry",
-                           help='If the molecule is asymmetric, set Symmetry '
-                                'group to C1. Note their are multiple '
-                                'possibilities for icosahedral symmetry:\n'
-                                '* I1: No-Crowther 222 (standard in Heymann,'
-                                'Chagoyen  & Belnap, JSB, 151 (2005) 196-207)\n'
-                                '* I2: Crowther 222                          \n'
-                                '* I3: 52-setting (as used in SPIDER?)       \n'
-                                '* I4: A different 52 setting                \n'
-                                'The command *relion_refine --sym D2 '
-                                '--print_symmetry_ops* prints a list of all '
-                                'symmetry operators for symmetry group D2. '
-                                'RELION uses MIPP\'s libraries for symmetry '
-                                'operations.  Therefore, look at the XMIPP '
-                                'Wiki for more details:\n'
-                                ' http://xmipp.cnb.csic.es/twiki/bin/view/'
-                                'Xmipp/WebHome?topic=Symmetry')
 
     # -------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
+        self.volDict = {}
         self._initialize()
-        partsId = self._getInputParticles().getObjId()
-        volsId = self.inputVolumes.get().getObjId()
-        self._insertFunctionStep('convertInputStep', partsId, volsId,
-                                 self.targetResol.get())
+        self._insertFunctionStep('convertInputStep', self._getResetDeps())
         self._insertClassifyStep()
         self._insertFunctionStep('createOutputStep')
 
@@ -511,38 +628,46 @@ class ProtInitialVolumeSelector(EMProtocol):
         self._setComputeArgs(args)
 
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
-
         self._insertFunctionStep('runClassifyStep', params)
 
     # -------------------------- STEPS functions -------------------------------
-    def convertInputStep(self, particlesId, volumesId, tgResol):
+    def convertInputStep(self, resetDeps, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
         Params:
-            particlesId, volumesId: use this parameters just to force redo of
-            convert if either the input particles and/or input volumes are
-            changed.
+            particlesId: use this parameters just to force redo of convert if
+                the input particles are changed.
         """
-        self._imgFnList = []
         imgSet = self._getInputParticles()
         imgStar = self._getFileName('input_star')
 
-        subset = em.SetOfParticles(filename=":memory:")
+        self.info("Converting set from '%s' into '%s'" %
+                  (imgSet.getFileName(), imgStar))
 
-        newIndex = 1
-        for img in imgSet.iterItems(orderBy='RANDOM()', direction='ASC'):
-            self._scaleImages(newIndex, img)
-            newIndex += 1
-            subset.append(img)
-            subsetSize = self.subsetSize.get()
-            minSize = min(subsetSize, imgSet.getSize())
-            if subsetSize   > 0 and subset.getSize() == minSize:
-                break
-        writeSetOfParticles(subset, imgStar, self._getExtraPath(),
-                            alignType=em.ALIGN_NONE,
-                            postprocessImageRow=self._postprocessParticleRow)
-        self._convertInput(subset)
-        self._convertRef()
+        # Pass stack file as None to avoid write the images files
+        # If copyAlignment is set to False pass alignType to ALIGN_NONE
+        alignType = imgSet.getAlignment() if copyAlignment \
+            else em.ALIGN_NONE
+        hasAlign = alignType != em.ALIGN_NONE
+        fillRandomSubset = hasAlign and getattr(self, 'fillRandomSubset',
+                                                False)
+
+        conv.writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
+                                 alignType=alignType,
+                                 postprocessImageRow=self._postprocessParticleRow,
+                                 fillRandomSubset=fillRandomSubset)
+
+        alignToPrior = hasAlign and getattr(self, 'alignmentAsPriors',
+                                            False)
+
+        if alignToPrior:
+            self._copyAlignAsPriors(imgStar, alignType)
+
+        if self.doCtfManualGroups:
+            self._splitInCTFGroups(imgStar)
+
+        if self._getRefArg():
+            self._convertRef()
 
     def runClassifyStep(self, params):
         """ Execute the relion steps with the give params. """
@@ -616,26 +741,28 @@ class ProtInitialVolumeSelector(EMProtocol):
     # -------------------------- UTILS functions ------------------------------
     def _setNormalArgs(self, args):
         maskDiameter = self.maskDiameterA.get()
-        if maskDiameter <= 0:
-            x, _, _ = self._getInputParticles().getDim()
-            maskDiameter = self._getInputParticles().getSamplingRate() * x
+        pixelSize = self._getPixeSize()
 
-        args.update({'--i': self._getFileName('input_star'),
-                     '--particle_diameter': maskDiameter,
-                     '--angpix': self._getPixeSize(),
+        if maskDiameter <= 0:
+            maskDiameter = pixelSize * self._getNewDim()
+
+        self._defineInputOutput(args)
+        args.update({'--particle_diameter': maskDiameter,
+                     '--angpix': pixelSize,
                      })
         self._setCTFArgs(args)
 
         if self.maskZero == MASK_FILL_ZERO:
             args['--zero_mask'] = ''
 
+        args['--K'] = self.inputVolumes.get().getSize() if \
+            self.IS_VOLSELECTOR else self.numberOfClasses.get()
 
-
-        args['--K'] = self.inputVolumes.get().getSize()
         if self.limitResolEStep > 0:
             args['--strict_highres_exp'] = self.limitResolEStep.get()
 
-        args['--firstiter_cc'] = ''
+        if not self.isMapAbsoluteGreyScale:
+            args['--firstiter_cc'] = ''
         args['--ini_high'] = self.initialLowPassFilterA.get()
         args['--sym'] = self.symmetryGroup.get()
 
@@ -644,55 +771,6 @@ class ProtInitialVolumeSelector(EMProtocol):
             args['--ref'] = refArg
 
         self._setBasicArgs(args)
-
-    def _getScratchDir(self):
-        """ Returns the scratch dir value without spaces.
-         If none, the empty string will be returned.
-        """
-        scratchDir = self.scratchDir.get() or ''
-        return scratchDir.strip()
-
-    def _setComputeArgs(self, args):
-        if not self.combineItersDisc:
-            args['--dont_combine_weights_via_disc'] = ''
-
-        if not self.useParallelDisk:
-            args['--no_parallel_disc_io'] = ''
-
-        if self.allParticlesRam:
-            args['--preread_images'] = ''
-        else:
-            if self._getScratchDir():
-                args['--scratch_dir'] = self._getScratchDir()
-
-        args['--pool'] = self.pooledParticles.get()
-
-        if self.doGpu:
-            args['--gpu'] = self.gpusToUse.get()
-
-    def _getSamplingFactor(self):
-        return 1 if self.oversampling == 0 else 2 * self.oversampling.get()
-
-    def _setBasicArgs(self, args):
-        """ Return a dictionary with basic arguments. """
-        args.update({'--flatten_solvent': '',
-                     '--norm': '',
-                     '--scale': '',
-                     '--o': self._getExtraPath('relion'),
-                     '--oversampling': self.oversampling.get()
-                     })
-
-        args['--tau2_fudge'] = self.regularisationParamT.get()
-        args['--iter'] = self._getnumberOfIters()
-
-        self._setSamplingArgs(args)
-        self._setMaskArgs(args)
-
-    def _setSamplingArgs(self, args):
-        """ Set sampling related params. """
-        args['--healpix_order'] = self.angularSamplingDeg.get()
-        args['--offset_range'] = 5
-        args['--offset_step'] = (self._getSamplingFactor())
 
     def _setCTFArgs(self, args):
         # CTF stuff
@@ -708,19 +786,74 @@ class ProtInitialVolumeSelector(EMProtocol):
         if self.ignoreCTFUntilFirstPeak:
             args['--ctf_intact_first_peak'] = ''
 
+    def _setBasicArgs(self, args):
+        """ Return a dictionary with basic arguments. """
+        args.update({'--flatten_solvent': '',
+                     '--norm': '',
+                     '--scale': '',
+                     '--oversampling': self.oversampling.get()
+                     })
+
+        args['--tau2_fudge'] = self.regularisationParamT.get()
+        args['--iter'] = self._getnumberOfIters()
+
+        if not self.IS_VOLSELECTOR and conv.getVersion() != V2_0:
+            self._setSubsetArgs(args)
+
+        self._setSamplingArgs(args)
+        self._setMaskArgs(args)
+
+    def _setSubsetArgs(self, args):
+        if self._doSubsets():
+            args['--write_subsets'] = 1
+            args['--subset_size'] = self.subsetSize.get()
+            args['--max_subsets'] = self.subsetUpdates.get()
+
+    def _setSamplingArgs(self, args):
+        """Should be overwritten in subclasses"""
+        pass
+
     def _setMaskArgs(self, args):
         if self.referenceMask.hasValue():
-            mask = convertMask(self.referenceMask.get(), self._getTmpPath())
+            mask = conv.convertMask(self.referenceMask.get(),
+                                    self._getTmpPath())
             args['--solvent_mask'] = mask
 
         if self.solventMask.hasValue():
-            solventMask = convertMask(self.solventMask.get(),
-                                      self._getTmpPath())
+            solventMask = conv.convertMask(self.solventMask.get(),
+                                           self._getTmpPath())
             args['--solvent_mask2'] = solventMask
 
-        if (isVersion2() and self.referenceMask.hasValue() and
-                self.solventFscMask):
+        if (conv.isVersion2() and self.referenceMask.hasValue()
+                and self.solventFscMask):
             args['--solvent_correct_fsc'] = ''
+
+    def _getSamplingFactor(self):
+        return 1 if self.oversampling == 0 else 2 * self.oversampling.get()
+
+    def _setComputeArgs(self, args):
+        args['--pool'] = self.pooledParticles.get()
+        if not self.combineItersDisc:
+            args['--dont_combine_weights_via_disc'] = ''
+
+        if not self.useParallelDisk:
+            args['--no_parallel_disc_io'] = ''
+
+        if self.allParticlesRam:
+            args['--preread_images'] = ''
+        else:
+            if self._getScratchDir():
+                args['--scratch_dir'] = self._getScratchDir()
+
+        if self.doGpu:
+            args['--gpu'] = self.gpusToUse.get()
+
+    def _getScratchDir(self):
+        """ Returns the scratch dir value without spaces.
+         If none, the empty string will be returned.
+        """
+        scratchDir = self.scratchDir.get() or ''
+        return scratchDir.strip()
 
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
@@ -749,6 +882,17 @@ class ProtInitialVolumeSelector(EMProtocol):
     def _firstIter(self):
         return self._getIterNumber(0) or 1
 
+    def _splitInCTFGroups(self, imgStar):
+        """ Add a new column in the image star to separate the particles
+        into ctf groups """
+        from convert import splitInCTFGroups
+        splitInCTFGroups(imgStar,
+                         self.defocusRange.get(),
+                         self.numParticles.get())
+
+    def _getnumberOfIters(self):
+        return self.numberOfIterations.get()
+
     def _getIterVolumes(self, it, clean=False):
         """ Return a volumes .sqlite file for this iteration.
         If the file doesn't exists, it will be created by
@@ -764,7 +908,6 @@ class ProtInitialVolumeSelector(EMProtocol):
             self._fillVolSetFromIter(volSet, it)
             volSet.write()
             volSet.close()
-
         return sqlteVols
 
     def _fillVolSetFromIter(self, volSet, it):
@@ -772,7 +915,9 @@ class ProtInitialVolumeSelector(EMProtocol):
         modelStar = md.MetaData('model_classes@' +
                                 self._getFileName('model', iter=it))
         for row in md.iterRows(modelStar):
-            fn = row.getValue('rlnReferenceImage') + ":mrc"
+            fn = row.getValue('rlnReferenceImage')
+            fnMrc = fn + ":mrc"
+            itemId = self._getClassId(fn)
             classDistrib = row.getValue('rlnClassDistribution')
             accurracyRot = row.getValue('rlnAccuracyRotations')
             accurracyTras = row.getValue('rlnAccuracyTranslations')
@@ -780,24 +925,14 @@ class ProtInitialVolumeSelector(EMProtocol):
 
             if classDistrib > 0:
                 vol = em.Volume()
-                self._invertScaleVol(fn)
-                vol.setFileName(self._getOutputVolFn(fn))
+                self._invertScaleVol(fnMrc)
+                vol.setFileName(self._getOutputVolFn(fnMrc))
+                vol.setObjId(itemId)
                 vol._rlnClassDistribution = em.Float(classDistrib)
                 vol._rlnAccuracyRotations = em.Float(accurracyRot)
                 vol._rlnAccuracyTranslations = em.Float(accurracyTras)
                 vol._rlnEstimatedResolution = em.Float(resol)
                 volSet.append(vol)
-
-    def _splitInCTFGroups(self, imgStar):
-        """ Add a new column in the image star to separate the particles
-        into ctf groups """
-        from convert import splitInCTFGroups
-        splitInCTFGroups(imgStar,
-                         self.defocusRange.get(),
-                         self.numParticles.get())
-
-    def _getnumberOfIters(self):
-        return self.numberOfIterations.get()
 
     def _getRefArg(self):
         """ Return the filename that will be used for the --ref argument.
@@ -831,8 +966,8 @@ class ProtInitialVolumeSelector(EMProtocol):
         return self._getTmpPath("input_references.star")
 
     def _convertRef(self):
-        ih = em.ImageHandler()
 
+        ih = em.ImageHandler()
         inputObj = self.inputVolumes.get()
         row = md.Row()
         refMd = md.MetaData()
@@ -842,28 +977,8 @@ class ProtInitialVolumeSelector(EMProtocol):
             row.addToMd(refMd)
         refMd.write(self._getRefStar())
 
-    def _postprocessImageRow(self, img, imgRow):
-        partId = img.getParticleId()
-        imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
-        imgRow.setValue(md.RLN_MICROGRAPH_NAME,
-                        "%06d@fake_movie_%06d.mrcs"
-                        % (img.getFrameId(), img.getMicId()))
-
-    def _postprocessParticleRow(self, part, partRow):
-        if part.hasAttribute('_rlnGroupName'):
-            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
-                             '%s' % part.getAttributeValue('_rlnGroupName'))
-        else:
-            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
-                             '%s' % part.getMicId())
-
-        ctf = part.getCTF()
-
-        if ctf is not None and ctf.getPhaseShift():
-            partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
-
     def _getNewDim(self):
-        tgResol = self.targetResol.get()
+        tgResol = self.getAttributeValue('targetResol', 0)
         partSet = self._getInputParticles()
         size = partSet.getXDim()
         nyquist = 2 * partSet.getSamplingRate()
@@ -906,12 +1021,12 @@ class ProtInitialVolumeSelector(EMProtocol):
         args = '--operate_on %s --operate_out %s --norm --bg_radius %d'
 
         params = args % (self._getFileName('input_star'),
-                         self._getFileName('preprocess_particles_star'), bg)
+                         self._getFileName('preprocess_parts_star'), bg)
         self.runJob(self._getProgram(program='relion_preprocess'), params)
 
         from pyworkflow.utils import moveFile
 
-        moveFile(self._getFileName('preprocess_particles'),
+        moveFile(self._getFileName('preprocess_parts'),
                  self._getTmpPath('particles_subset.mrcs'))
 
     def _invertScaleVol(self, fn):
@@ -924,3 +1039,47 @@ class ProtInitialVolumeSelector(EMProtocol):
 
     def _getOutputVolFn(self, fn):
         return self._getExtraPath(replaceBaseExt(fn, '_origSize.mrc'))
+
+    def _postprocessImageRow(self, img, imgRow):
+        partId = img.getParticleId()
+        imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME,
+                        "%06d@fake_movie_%06d.mrcs"
+                        % (img.getFrameId(), img.getMicId()))
+
+    def _postprocessParticleRow(self, part, partRow):
+        if part.hasAttribute('_rlnGroupName'):
+            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
+                             '%s' % part.getAttributeValue('_rlnGroupName'))
+        else:
+            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
+                             '%s' % part.getMicId())
+        ctf = part.getCTF()
+        if ctf is not None and ctf.getPhaseShift():
+            partRow.setValue(md.RLN_CTF_PHASESHIFT, ctf.getPhaseShift())
+
+    def _getResetDeps(self):
+        """Should be overwritten in subclasses"""
+        pass
+
+    def _doSubsets(self):
+        # Since 'doSubsets' property is only valid for 2.1+ protocols
+        # we need provide a default value for backward compatibility
+        return self.getAttributeValue('doSubsets', False)
+
+    def _copyAlignAsPriors(self, imgStar, alignType):
+        mdParts = md.MetaData(imgStar)
+
+        # set priors equal to orig. values
+        mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR, md.RLN_ORIENT_ORIGIN_X)
+        mdParts.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR, md.RLN_ORIENT_ORIGIN_Y)
+        mdParts.copyColumn(md.RLN_ORIENT_PSI_PRIOR, md.RLN_ORIENT_PSI)
+        if alignType == em.ALIGN_PROJ:
+            mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
+            mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
+
+        mdParts.write(imgStar)
+
+    def _defineInputOutput(self, args):
+        args['--i'] = self._getFileName('input_star')
+        args['--o'] = self._getExtraPath('relion')

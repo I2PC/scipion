@@ -329,13 +329,18 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                     mic = micPathDict[micFile]
                     coordDict = {self._getPos(coord): coord
                                  for coord in self.coordDict[mic.getObjId()]}
-
+                    posSet = set()  # Set of (x, y) pairs to avoid duplicates
                     prevMicFile = micFile
 
                 pos = (row.getValue(md.RLN_IMAGE_COORD_X),
                        row.getValue(md.RLN_IMAGE_COORD_Y))
 
-                coord = coordDict.get(pos, None)
+                if pos in posSet:
+                    print("Duplicate coordinate at: %s, IGNORED. " % str(pos))
+                    coord = None
+                else:
+                    coord = coordDict.get(pos, None)
+
                 if coord is not None:
                     # scale the coordinates according to particles dimension.
                     coord.scale(self.getBoxScale())
@@ -346,6 +351,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
                     outputParts.append(p)
+                    posSet.add(pos)
 
         # Clean up the last mic if necessary
         if mic is not None:
