@@ -46,7 +46,7 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
     From two sets of points (tilted and untilted) the protocol determines
     the affine transformation between these sets.
     """
-    _label = 'assignment tiltpair'
+    _label = 'assign tiltpairs'
     _lastUpdateVersion = VERSION_1_1
     def __init__(self, *args, **kwargs):
         XmippProtParticlePickingPairs.__init__(self, *args, **kwargs)
