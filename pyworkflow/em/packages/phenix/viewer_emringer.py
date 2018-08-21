@@ -159,9 +159,9 @@ class PhenixProtRunEMRingerViewer(ProtocolViewer):
     def _displayMapModel(self, e=None):
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
-        try:
-            _inputVol = self.protocol.inputVolume.get()
-        except:
+
+        _inputVol = self.protocol.inputVolume.get()
+        if _inputVol is None:
             _inputVol = self.protocol.inputStructure.get().getVolume()
 
         dim = _inputVol.getDim()[0]
@@ -181,7 +181,7 @@ class PhenixProtRunEMRingerViewer(ProtocolViewer):
         counter += 1  # 1
         fnVol = self._getInputVolume()
         if fnVol is not None:
-            EMRINGERFILENAME = os.path.abspath(self.protocol._getTmpPath(
+            EMRINGERFILENAME = os.path.abspath(self.protocol._getExtraPath(
                     self.protocol.EMRINGERFILE))
             f.write("open %s\n" % EMRINGERFILENAME)
             x, y, z = fnVol.getOrigin(force=True).getShifts()
