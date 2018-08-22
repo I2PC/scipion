@@ -327,7 +327,7 @@ scipy = env.addPipModule('scipy', '0.14.0',
 env.addPipModule('bibtexparser', '0.6.2')
 env.addPipModule('django', '1.5.5')
 env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
-    deps=[jpeg])
+    deps=[jpeg, tiff])
 
 
 # Optional python modules
