@@ -54,7 +54,7 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
     def _defineParams(self, form):
         super(PhenixProtRunRSRefine, self)._defineParams(form)
         form.addParam('outputFormat', EnumParam, choices=OUTPUT_FORMAT,
-                      default=PDB, label="Select output format",
+                      default=PDB, label="Output format",
                       help="Refined atomic structure is the protocol output. "
                            "You can choose PDB or mmCIF as output format. "
                            "PDB format has been selected by default.")
