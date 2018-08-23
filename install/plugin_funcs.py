@@ -63,18 +63,16 @@ class PluginInfo(object):
 
     def _getPlugin(self):
         if self._plugin is None:
-            self._plugin = Domain.getPlugin(self.pipName)
 
+            try:
+                self._plugin = Domain.getPlugin(self.pipName)
+            except:
+                pass
         return self._plugin
 
     def hasPipPackage(self):
         """Checks if the current plugin is installed via pip"""
-        try:
-            # If we can get the plugin class is local
-            self._getPlugin()
-            return True
-        except Exception as e:
-            return False
+        return self._getPlugin() is not None
 
     def isInstalled(self):
         """Checks if the current plugin is installed (i.e. has pip package).
@@ -266,7 +264,7 @@ class PluginInfo(object):
         if pluginModule is not None:
             pluginClass = pluginModule.Plugin
         else:
-            print("Warning: couldn't find _plugin in %s" % self.dirName)
+            print("Warning: couldn't find Plugin in %s" % self.dirName)
             pluginClass = None
         return pluginClass
 
@@ -275,12 +273,14 @@ class PluginInfo(object):
         Environment object with the plugin's binaries."""
         if envArgs is None:
             envArgs = []
+
         environment = Environment(args=envArgs)
         plugin = self.getPluginClass()
-        if plugin:
+        if plugin is not None:
             plugin.defineBinaries(environment)
-        return environment
-
+            return environment
+        else:
+            return None
     def getBinVersions(self):
         """Get list with names of binaries of this plugin"""
         environment = self.getInstallenv()
@@ -312,13 +312,15 @@ class PluginInfo(object):
         """Returns string with info of binaries installed to print in console
         with flag --help"""
         env = self.getInstallenv()
-        return env.printHelp()
-
+        if env is not None:
+            return env.printHelp()
+        else:
+            return "No bin information\n"
 class PluginRepository(object):
 
     def __init__(self, repoUrl=REPOSITORY_URL):
         self.repoUrl = repoUrl
-
+        self.plugins = None
     def getPlugins(self, pluginList=None, getPipData=False):
         """Reads available plugins from self.repoUrl and returns a dict with
         PluginInfo objects. Params:
@@ -326,8 +328,11 @@ class PluginRepository(object):
         - getPipData: If true, each PluginInfo object will try to get the data
         of the plugin from pypi."""
 
+        if self.plugins is not None:
+            return self.plugins
+
         pluginsJson = {}
-        pluginDict = {}
+        self.plugins = {}
 
         if os.path.isfile(self.repoUrl):
             with open(self.repoUrl) as f:
@@ -338,7 +343,7 @@ class PluginRepository(object):
                 pluginsJson = r.json()
             else:
                 print("WARNING: Can't get Scipion's plugin list, the plugin repository is not available")
-                return pluginDict
+                return self.plugins
 
         availablePlugins = pluginsJson.keys()
 
@@ -353,8 +358,17 @@ class PluginRepository(object):
 
         for pluginName in targetPlugins:
             pluginsJson[pluginName].update(remote=getPipData)
-            pluginDict[pluginName] = PluginInfo(**pluginsJson[pluginName])
-        return pluginDict
+            self.plugins[pluginName] = PluginInfo(**pluginsJson[pluginName])
+        self._appendDevPlugins(self.plugins)
+
+        return self.plugins
+
+    def _appendDevPlugins(self, pluginDict):
+
+        for name, plugin in Domain.getPlugins().iteritems():
+            devPlugin = PluginInfo(name, name="dev-%s" % name, remote=False,
+                                   dirName=plugin.__file__)
+            pluginDict[name] = devPlugin
 
     def printPluginInfoStr(self, withBins=False, withUpdates=False):
         """Returns string to print in console which plugins are installed.
@@ -370,15 +384,17 @@ class PluginRepository(object):
         printStr = ""
         pluginDict = self.getPlugins(getPipData=withUpdates)
         if pluginDict:
-            withBinsStr = "Installed plugins and their binaries" if withBins else "Available plugins"
+            withBinsStr = "Installed plugins and their %s" % green("binaries") \
+                if withBins else "Available plugins"
             printStr += ("%s: "
                          "([ ] not installed, [X] seems already installed)\n\n" % withBinsStr)
             keys = sorted(pluginDict.keys())
             for name in keys:
                 plugin = pluginDict[name]
+
                 if withBins and not plugin.isInstalled():
                     continue
-                printStr += "%23s" % name
+                printStr += "%16s" % name
                 vInfo = '%s [%s]' % (plugin.pipVersion, 'X' if plugin.isInstalled() else ' ')
                 printStr += '%15s' % vInfo
                 if withUpdates and plugin.isInstalled():
@@ -386,7 +402,7 @@ class PluginRepository(object):
                         printStr += yellow('\t(%s available)' % plugin.latestRelease)
                 printStr += "\n"
                 if withBins:
-                    printStr += plugin.printBinInfoStr().split('\n', 1)[1]
+                    printStr += green(plugin.printBinInfoStr().split('\n', 1)[1])
         else:
             printStr = "List of available plugins in plugin repository inaccessible at this time."
         return printStr
