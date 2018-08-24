@@ -312,10 +312,13 @@ class PluginInfo(object):
         """Returns string with info of binaries installed to print in console
         with flag --help"""
         env = self.getInstallenv()
-        if env is not None:
-            return env.printHelp()
-        else:
-            return "No bin information\n"
+
+        try:
+            return env.printHelp().split('\n', 1)[1]
+        except Exception as e:
+            return " ".rjust(14) + "No binaries information defined.\n"
+
+
 class PluginRepository(object):
 
     def __init__(self, repoUrl=REPOSITORY_URL):
@@ -402,7 +405,7 @@ class PluginRepository(object):
                         printStr += yellow('\t(%s available)' % plugin.latestRelease)
                 printStr += "\n"
                 if withBins:
-                    printStr += green(plugin.printBinInfoStr().split('\n', 1)[1])
+                    printStr += green(plugin.printBinInfoStr())
         else:
             printStr = "List of available plugins in plugin repository inaccessible at this time."
         return printStr
