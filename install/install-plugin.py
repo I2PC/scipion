@@ -110,6 +110,10 @@ installBinParser.add_argument('binName', nargs='+',
                               help='The name(s) of the bins we want install, optionally with \n'
                                    'version in the form name-version. If no version is specified,\n'
                                    'will install the last one.')
+installBinParser.add_argument('-j',
+                              default=1,
+                              metavar='j',
+                              help='Number of CPUs to use for compilation \n')
 
 ############################################################################
 #                          Uninstall Bins parser                           #
@@ -173,6 +177,7 @@ elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
 elif parsedArgs.mode == MODE_INSTALL_BINS:
     plugin = PluginInfo(parsedArgs.pluginName, remote=False)
     if plugin.isInstalled():
+        parsedArgs.binName.append(["-j", parsedArgs.j])
         plugin.installBin(args=parsedArgs.binName)
 
 elif parsedArgs.mode == MODE_UNINSTALL_BINS:
