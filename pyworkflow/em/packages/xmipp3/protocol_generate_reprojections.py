@@ -103,7 +103,9 @@ class XmippProtGenerateReprojections(ProtAnalysis3D):
         fnVol = self._getTmpPath("volume.vol")
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
-        args="-i %s -o %s --ref %s --oprojections %s --sampling %f"%(fnAngles,anglesOutFn,fnVol,projectionsOutFn,Ts)
+        args="-i %s -o %s --ref %s --oprojections %s --sampling %f " \
+             "--max_angular_change 90"%(fnAngles,anglesOutFn,fnVol,
+                                  projectionsOutFn,Ts)
         self.runJob("xmipp_angular_continuous_assign2", args)
         fnNewParticles=self._getExtraPath("images.stk")
         if os.path.exists(fnNewParticles):
