@@ -136,11 +136,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # Get final correction image file
         finalName = self.getFinalCorrectionImagePath(correctionImage)
 
-        if not os.path.exists(finalName):
+        # If correctionImage is None, finalName will be None
+        if finalName is None:
+            return None
+
+        elif not os.path.exists(finalName):
             # Conversion never happened...
             print('converting %s to %s' % (correctionImage, finalName))
             ImageHandler().convert(correctionImage, finalName)
 
+        # return final name
         return os.path.abspath(finalName)
 
     def getFinalCorrectionImagePath(self, correctionImage):
