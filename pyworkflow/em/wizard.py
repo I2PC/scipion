@@ -40,6 +40,7 @@ from pyworkflow.utils import importFromPlugin
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.constants import (UNIT_PIXEL,
                                      UNIT_ANGSTROM,
+                                     UNIT_PIXEL_FOURIER,
                                      FILTER_LOW_PASS,
                                      FILTER_BAND_PASS,
                                      FILTER_HIGH_PASS
