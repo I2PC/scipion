@@ -1407,7 +1407,8 @@ def rowToAlignment(alignmentRow, alignType):
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             if flip:
                 angles[1] = angles[1]+180  # tilt + 180
-                angles[2] = 180 - angles[2]  # 180 - psi
+#                 angles[2] = 180 - angles[2]  # 180 - psi, COSS: this is mirroring Y
+                angles[2] = - angles[2]  # - psi, COSS: this is mirroring X
                 shifts[0] = -shifts[0]  # -x
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)

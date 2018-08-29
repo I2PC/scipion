@@ -90,7 +90,7 @@ class TestBasic(BaseTest):
 
 
 
-SHOW_IMAGES  = False # Launch xmipp_showj to open intermediate results
+SHOW_IMAGES  = True # Launch xmipp_showj to open intermediate results
 CLEAN_IMAGES = True # Remove the output temporary files
 PRINT_MATRIX = True
 PRINT_FILES  = True
@@ -626,6 +626,7 @@ class TestReconstruct(TestConvertBase):
 
         aList = [np.array(m) for m in mList]
         rowa = XmippMdRow()
+        rowap = XmippMdRow()
         rowb = XmippMdRow()
         rowb1 = XmippMdRow()
         rowb2 = XmippMdRow()
@@ -651,11 +652,11 @@ class TestReconstruct(TestConvertBase):
                 self.assertAlmostEqual(auxBtilt, auxAtilt, places=3, msg=None, delta=None)
 
             rowa.setValue(xmipp.MDL_FLIP,True)
-            b=rowToAlignment(rowa, ALIGN_PROJ)
-            alignmentToRow(b, rowb, ALIGN_PROJ)
-            aMatrix = a.getMatrix()
-            aMatrix[0:3,1:4] *= -1 #same two matrices with flip
-            self.assertTrue(np.allclose(aMatrix, b.getMatrix(), rtol=1e-2))
+            aflip=rowToAlignment(rowa, ALIGN_PROJ)
+            alignmentToRow(aflip, rowap, ALIGN_PROJ)
+            aflipp=rowToAlignment(rowap, ALIGN_PROJ)
+            
+            self.assertTrue(np.allclose(aflip.getMatrix(), aflipp.getMatrix(), rtol=1e-2))
 
  #* newrot = rot;
  #* newtilt = tilt + 180;
