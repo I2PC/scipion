@@ -12,8 +12,7 @@ import chimera
 from time import sleep
 from threading import Thread
 
-from pyworkflow.utils import importFromPlugin
-runCommand = importFromPlugin('chimera', 'runCommand')
+from chimera import runCommand
 
 #from time import gmtime, strftime
 #from datetime import datetime
