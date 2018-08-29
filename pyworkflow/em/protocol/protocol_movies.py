@@ -105,7 +105,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
         # Gain and Dark conversion step
         self.convertCIStep = []
-        convertStepId = self._insertFunctionStep('_convertCorrectionImages',
+        convertStepId = self._insertFunctionStep('_convertInputStep',
                                                   prerequisites=[])
         self.convertCIStep.append(convertStepId)
 
@@ -117,7 +117,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                                  prerequisites=finalSteps, wait=True)
 
     # STEP to convert correction images if apply
-    def _convertCorrectionImages(self):
+    def _convertInputStep(self):
 
         movs = self.inputMovies.get()
 
@@ -133,31 +133,35 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         """ Will convert a gain or dark file to a compatible one and return
         the final file name. Otherwise, will return same passed parameter"""
 
+        # Get final correction image file
+        finalName = self.getFinalCorrectionImagePath(correctionImage)
+
+        if not os.path.exists(finalName):
+            # Conversion never happened...
+            print('converting %s to %s' % (correctionImage, finalName))
+            ImageHandler().convert(correctionImage, finalName)
+
+        return os.path.abspath(finalName)
+
+    def getFinalCorrectionImagePath(self, correctionImage):
+        """ Returns the final path to the correction image (converted or not)
+        or and exception correctionImage does not exists"""
+
         if correctionImage is None:
             return
 
         elif not os.path.exists(correctionImage):
-            print (correctionImage)
-        else:
-
-            # Get final correction image file
-            finalName = self.getFinalCorrectionImagePath(correctionImage)
-
-            if not os.path.exists(finalName):
-                # Conversion never happened...
-                print('converting %s to %s' % (correctionImage, finalName))
-                ImageHandler().convert(correctionImage, finalName)
-
-            return os.path.abspath(finalName)
-
-    def getFinalCorrectionImagePath(self, correctionFile):
+            raise Exception("Correction image is set but not present in the "
+                            "file system. Either clean the value in the import "
+                            "protocol or copy the file to %s."
+                            % correctionImage)
 
         # Do we need to convert?
-        convertTo = self._getConvertExtension(correctionFile)
+        convertTo = self._getConvertExtension(correctionImage)
 
         if convertTo is not None:
             # Get the base name
-            fileName = basename(correctionFile)
+            fileName = basename(correctionImage)
 
             # Replace extension
             fileName = pwutils.replaceExt(fileName, convertTo)
@@ -166,7 +170,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             return self._getExtraPath(fileName)
 
         else:
-            return correctionFile
+            return correctionImage
 
 
     def _insertFinalSteps(self, deps):

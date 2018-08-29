@@ -219,7 +219,7 @@ class TestMotioncor2GainFile(BaseTest):
 
         # Check new step is there
         gainStep = steps[0]
-        self.assertEqual(gainStep.funcName, '_convertCorrectionImages')
+        self.assertEqual(gainStep.funcName, '_convertInputStep')
 
         # Check movie steps depends on it
         movieStep = steps[1]
