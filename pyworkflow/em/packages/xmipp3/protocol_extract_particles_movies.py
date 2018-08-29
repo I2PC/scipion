@@ -158,7 +158,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                       expertLevel=LEVEL_ADVANCED)
 
         form.addParallelSection(threads=3, mpi=1)
-    #--------------------------- INSERT steps functions ------------------------
+
+    # ------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
         self._createFilenameTemplates()
@@ -324,8 +325,11 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 #         makePath(particleFolder)
         mData = md.MetaData()
         mdAll = md.MetaData()
-          
+
+        self._micNameDict = {}
+
         for movie in inputMovies:
+            self._micNameDict[movie.getObjId()] = movie.getMicName()
             movieName = self._getMovieName(movie)
             movieStk = movieName.replace('.mrc', '.stk')
             movieMdFile = movieName.replace('.mrc', '.xmd')
@@ -344,7 +348,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         self._defineOutputs(outputParticles=particleSet)
         self._defineSourceRelation(self.inputMovies, particleSet)
     
-    # --------------------------- INFO functions -------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
         
@@ -401,7 +405,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         summary = []
         return summary
     
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
+
     def _getFnRelated(self, keyFile, movId, frameIndex):
         return self._getFileName(keyFile, movieId=movId, frame=frameIndex)
     
@@ -443,7 +448,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     def _postprocessImageRow(self, img, imgRow):
         img.setFrameId(imgRow.getValue(md.MDL_FRAME_ID))
         img.setParticleId(imgRow.getValue(md.MDL_PARTICLE_ID))
-
+        micName = self._micNameDict[imgRow.getValue(md.MDL_MICROGRAPH_ID)]
+        img.getCoordinate().setMicName(micName)
 
     def _useAlignToSum(self):
         return self.getAttributeValue('useAlignToSum', False)

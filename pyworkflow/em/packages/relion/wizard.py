@@ -251,13 +251,13 @@ class Relion2AutopickParams(EmWizard):
     def show(self, form):
         autopickProt = form.protocol
 
-        if not autopickProt.hasAttribute('outputCoordinates'):
+        if not autopickProt.hasAttribute('outputCoordinatesSubset'):
             form.showWarning("You should run the procotol in 'Optimize' mode "
                                "at least once before opening the wizard.")
             return
 
         project = autopickProt.getProject()
-        micSet = autopickProt.outputMicrographs
+        micSet = autopickProt.outputMicrographsSubset
         micfn = micSet.getFileName()
         coordsDir = project.getTmpPath(micSet.getName())
         cleanPath(coordsDir)

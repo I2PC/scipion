@@ -52,14 +52,15 @@ from widgets import Button, HotButton, IconButton
 from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
-#from pyworkflow.em import findViewers
+
 
 THREADS = 'Threads'
 MPI = 'MPI'
 
-#-------------------- Variables wrappers around more complex objects -----------------------------
 
-class BoolVar():
+# ----------------- Variables wrappers around more complex objects ------------
+
+class BoolVar:
     """Wrapper around tk.IntVar"""
     def __init__(self, value=None):
         self.tkVar = tk.IntVar()
@@ -81,7 +82,7 @@ class BoolVar():
         return self.tkVar.get() == 1    
     
     
-class PointerVar():
+class PointerVar:
     """ Wrapper around tk.StringVar to hold object pointers. """
     def __init__(self, protocol):
         self.tkVar = tk.StringVar()
@@ -111,7 +112,7 @@ class PointerVar():
         self.set(None)
     
     
-class MultiPointerVar():
+class MultiPointerVar:
     """
     Wrapper around tk.StringVar to hold object pointers.
     This class is related with MultiPointerTreeProvider, which
@@ -119,17 +120,17 @@ class MultiPointerVar():
     add and remove from the list.
     """
     def __init__(self, provider, tree):
-        self.provider = provider # keep a reference to tree provider to add or remove objects
+        # keep a reference to tree provider to add or remove objects
+        self.provider = provider
         self.tree = tree
         self.tkVar = tk.StringVar()
         self.trace = self.tkVar.trace
         
     def _updateObjectsList(self):
-        self.tkVar.set(str(datetime.now())) # cause a trace to notify changes
-        self.tree.update() # Update the tkinter tree gui
+        self.tkVar.set(str(datetime.now()))  # cause a trace to notify changes
+        self.tree.update()  # Update the tkinter tree gui
         
     def set(self, value):
-        
         if isinstance(value, pwobj.Object) or isinstance(value, list):
             self.provider.addObject(value)
             self._updateObjectsList()
@@ -221,11 +222,10 @@ class MultiPointerTreeProvider(TreeProvider):
     
     def getObjectInfo(self, obj):
         label, info = getPointerLabelAndInfo(obj, self._mapper)
-        
-        return {'key': obj._strId, 'text': label, 'values': ('  ' + info,)}  
+        return {'key': obj._strId, 'text': label, 'values': ('  ' + info,)}
    
    
-class ComboVar():
+class ComboVar:
     """ Create a variable that display strings (for combobox)
     but the values are integers (for the underlying EnumParam).
     """
@@ -252,7 +252,7 @@ class ComboVar():
         return self.value         
         
 
-#---------------- Some used providers for the TREES -------------------------------
+# ---------------- Some used providers for the TREES --------------------------
 
 class ProtocolClassTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
@@ -263,7 +263,9 @@ class ProtocolClassTreeProvider(TreeProvider):
      
     def getObjects(self):
         from pyworkflow.em import findSubClasses, getProtocols
-        return [pwobj.String(s) for s in findSubClasses(getProtocols(), self.protocolClassName).keys()]
+        return [pwobj.String(s)
+                for s in findSubClasses(getProtocols(),
+                                        self.protocolClassName).keys()]
         
     def getColumns(self):
         return [('Protocol', 250)]
@@ -323,7 +325,6 @@ class SubclassesTreeProvider(TreeProvider):
     INFO_COLUMN = 'Info'
 
     def __init__(self, protocol, pointerParam, selected=None):
-
         TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
                               sortingAscending=False)
 
@@ -397,11 +398,14 @@ class SubclassesTreeProvider(TreeProvider):
                                         pi.addExtended(item.getObjId())
                                         pi._parentObject = p
                                         objects.append(pi)
-                                except Exception, ex:
-                                    print "Error loading items from:"
-                                    print "  protocol: %s, attribute: %s" % (prot.getRunName(), paramName)
-                                    print "  dbfile: ", os.path.join(project.getPath(), attr.getFileName())
-                                    print ex
+                                except Exception as ex:
+                                    print("Error loading items from:")
+                                    print("  protocol: %s, attribute: %s"
+                                          % (prot.getRunName(), paramName))
+                                    print("  dbfile: ",
+                                          os.path.join(project.getPath(),
+                                                       attr.getFileName()))
+                                    print(ex)
                     _checkParam(paramName, attr)
                     # The following is a dirty fix for the RCT case where there
                     # are inner output, maybe we should consider extend this for 
@@ -500,7 +504,7 @@ class SubclassesTreeProvider(TreeProvider):
         return actions
     
     
-#TODO: check if need to inherit from SubclassesTreeProvider
+# TODO: check if need to inherit from SubclassesTreeProvider
 class RelationsTreeProvider(SubclassesTreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
@@ -514,8 +518,9 @@ class RelationsTreeProvider(SubclassesTreeProvider):
         objects = []
         if self.item is not None:
             project = self.protocol.getProject()
-            for pobj in project.getRelatedObjects(self.relationParam.getName(), 
-                                                 self.item, self.direction):
+            for pobj in project.getRelatedObjects(self.relationParam.getName(),
+                                                  self.item, self.direction,
+                                                  refresh=True):
                 objects.append(pobj.clone())
 
         # Sort objects
@@ -523,8 +528,9 @@ class RelationsTreeProvider(SubclassesTreeProvider):
 
         return objects
     
-#---------------------- Other widgets ----------------------------------------
+# --------------------- Other widgets ----------------------------------------
 # http://tkinter.unpythonic.net/wiki/VerticalScrolledFrame
+
 
 class VerticalScrolledFrame(tk.Frame):
     """A pure Tkinter scrollable frame that actually works!
@@ -590,7 +596,6 @@ class SectionFrame(tk.Frame):
         self.headerFrame.grid(row=0, column=0, sticky='new')
         configureWeigths(self.headerFrame)
         self.headerFrame.columnconfigure(1, weight=1)
-        #self.headerFrame.columnconfigure(2, weight=1)
         self.headerLabel = tk.Label(self.headerFrame, text=label, fg='white',
                                     bg=bgColor)
         self.headerLabel.grid(row=0, column=0, sticky='nw')
@@ -614,7 +619,6 @@ class SectionFrame(tk.Frame):
         self.canvas.bind('<Configure>', self._configure_canvas)
         
         self.contentFrame.columnconfigure(0, weight=1)
-        #configureWeigths(self.contentFrame)
         self.columnconfigure(0, weight=1)
         
         
@@ -629,7 +633,6 @@ class SectionFrame(tk.Frame):
         # update the scrollbars to match the size of the inner frame
         fsize = self._getReqSize(self.contentFrame)
         csize = self._getSize(self.canvas)
-        #if fsize[0] != self.canvas.winfo_width():
         if fsize != csize:
             # update the canvas's width to fit the inner frame
             self.canvas.config(width=fsize[0], height=fsize[1])
@@ -638,7 +641,6 @@ class SectionFrame(tk.Frame):
     def _configure_canvas(self, event=None):
         fsize = self._getReqSize(self.contentFrame)
         csize = self._getSize(self.canvas)
-        #if self.contentFrame.winfo_reqwidth() != self.canvas.winfo_width():
         if fsize != csize:
             # update the inner frame's width to fill the canvas
             self.canvas.itemconfigure(self.contentId, width=csize[0])
@@ -703,7 +705,7 @@ class SectionWidget(SectionFrame):
         self.var.set(value)
     
                
-class ParamWidget():
+class ParamWidget:
     """For each one in the Protocol parameters, there will be
     one of this in the Form GUI.
     It is mainly composed by:
@@ -734,8 +736,8 @@ class ParamWidget():
         self._labelFont = self.window.font
 
         self._initialize(showButtons)
-        self._createLabel() # self.label should be set after this 
-        self._createContent() # self.content and self.var should be set after this
+        self._createLabel()  # self.label should be set after this
+        self._createContent()  # self.content and self.var should be set after this
         
         if self.var: # Groups have not self.var
             self.set(value)
@@ -925,8 +927,7 @@ class ParamWidget():
                 var.set(classes[0])
             
             self._addButton("Edit", Icon.ACTION_EDIT, self._openProtocolForm)
-            #btn = Button(content, "Edit", command=self._openProtocolForm)
-            #btn.grid(row=1, column=0)
+
         elif t is params.Line:
             var = None
             
@@ -934,7 +935,6 @@ class ParamWidget():
             var = None
             self._onlyLabel = True
         else:
-            #v = self.setVarValue(paramName)
             var = tk.StringVar()
             if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
                 # Reduce the entry width for numbers entries
@@ -958,7 +958,7 @@ class ParamWidget():
         if param.help.hasValue():
             self._addButton(Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP,
                             self._showHelpMessage)
-        
+
         self.var = var
 
     def _visualizeVar(self, e=None):
@@ -975,7 +975,7 @@ class ParamWidget():
             from pyworkflow.em import findViewers
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                ViewerClass = viewers[0] # Use the first viewer registered
+                ViewerClass = viewers[0]  # Use the first viewer registered
                 # Instantiate the viewer and visualize object
                 viewer = ViewerClass(project=self._protocol.getProject(),
                                      protocol=self._protocol,
@@ -1449,14 +1449,13 @@ class FormWindow(Window):
         """ Create the second section with some common parameters. """
         commonFrame = tk.Frame(parent)
         
-        ############# Create the run part ###############
+        # ---------- Run section ---------
         runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN,
                                   height=100, headerBgColor=self.headerBgColor)
         runFrame = tk.Frame(runSection.contentFrame, bg='white')
         runFrame.grid(row=0, column=0, sticky='nw', padx=(0, 15))
-        #runFrame.columnconfigure(1, weight=1)
-        
-        r = 0 # Run name
+
+        r = 0  # Run name
         self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True,
                                 sticky='ne')
         self.runNameVar = tk.StringVar()
@@ -1468,7 +1467,7 @@ class FormWindow(Window):
                          highlightthickness=0,command=self._editObjParams)
         btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
         
-        c = 3 # Comment
+        c = 3  # Comment
         self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne',
                                 column=c)
         self.commentVar = tk.StringVar()
@@ -1480,8 +1479,8 @@ class FormWindow(Window):
         btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
         
         self.updateLabelAndCommentVars()
-                
-        r = 1 # Execution
+
+        r = 1  # Execution
         self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True,
                                 sticky='ne', row=r, pady=0)
         modeFrame = tk.Frame(runFrame, bg='white')
@@ -1496,7 +1495,6 @@ class FormWindow(Window):
                              highlightthickness=0,
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
         btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
-        #modeFrame.columnconfigure(0, minsize=60)
         modeFrame.columnconfigure(0, weight=1)
         modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
@@ -1522,7 +1520,7 @@ class FormWindow(Window):
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
                                                   font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
-        frame.grid(row=2, column=c+1, pady=5, sticky='nw')
+        frame.grid(row=r, column=c+1, pady=5, sticky='nw')
         # Commented out the button to edit queue since the queue dialog
         #  will be shown after pressing the 'Execute' button
         #btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
@@ -1531,7 +1529,23 @@ class FormWindow(Window):
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
                              highlightthickness=0,
                              command=self._createHelpCommand(Message.HELP_USEQUEUE))
-        btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
+        btnHelp.grid(row=r, column=c+3, padx=(5, 0), pady=2, sticky='ne')
+
+        r = 3  # ---- Wait for other protocols (SCHEDULE) ----
+        self._createHeaderLabel(runFrame, Message.LABEL_WAIT_FOR, row=r, sticky='ne',
+                                column=c, padx=(15, 5), pady=0)
+        self.waitForVar = tk.StringVar()
+        self.waitForVar.set(', '.join(self.protocol.getPrerequisites()))
+        entryWf = tk.Entry(runFrame, font=self.font, width=25,
+                           textvariable=self.waitForVar)
+        entryWf.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')
+
+        self.waitForVar.trace('w', self._setWaitFor)
+
+        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                             highlightthickness=0,
+                             command=self._createHelpCommand(Message.HELP_WAIT_FOR))
+        btnHelp.grid(row=r, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
         #entry.configure(state='readonly')
@@ -1804,7 +1818,7 @@ class FormWindow(Window):
                     self.showInfo(message, "Protocol action")
                 if not onlySave:
                     self.close()
-        except Exception, ex:
+        except Exception as ex:
             import traceback
             traceStr = traceback.format_exc()
             action = "EXECUTE"
@@ -1979,6 +1993,17 @@ class FormWindow(Window):
         if not prot.requiresGpu(): # Only set this if gpu is optional
             prot.useGpu.set(self.useGpuVar.get())
         prot.gpuList.set(self.gpuListVar.get())
+
+    def _setWaitFor(self, *args):
+        l1 = self.waitForVar.get().split(',')
+        idList = []
+        for p1 in l1:
+            idList.extend([p2.strip() for p2 in p1.split(' ') if p2])
+        try:
+            idIntList = map(int, idList)
+            self.protocol.setPrerequisites(*idIntList)
+        except Exception as ex:
+            pass
 
     def _setHostName(self, *args):
         self.protocol.setHostName(self.hostVar.get())        

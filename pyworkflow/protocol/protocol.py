@@ -80,6 +80,10 @@ class Step(OrderedObject):
         for p in newPrerequisites:
             self._prerequisites.append(p)
 
+    def setPrerequisites(self, *newPrerequisites):
+        self._prerequisites.clear()
+        self.addPrerequisites(*newPrerequisites)
+
     def _preconditions(self):
         """ Check if the necessary conditions to
         step execution are met"""
@@ -593,8 +597,21 @@ class Protocol(Step):
         emptyPointers = []
 
         for paramName, attr in self.iterInputPointers():
-            condition = self.evalParamCondition(paramName)
+
             param = self.getParam(paramName)
+            # Issue #1597: New data loaded with old code.
+            # If the input pointer is not a param:
+            # This could happen in backward incompatibility cases,
+            # Protocol has an attribute (inputPointer) but class does not define
+            # if in the define params.
+            if param is None:
+                print("%s attribute is not defined as parameter. "
+                      "This could happen when loading new code with older "
+                      "scipion versions." % paramName)
+                continue
+
+            condition = self.evalParamCondition(paramName)
+
             obj = attr.get()
             if condition and obj is None and not param.allowsNull:
                 if attr.hasValue():
@@ -1517,6 +1534,9 @@ class Protocol(Step):
         MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
 
+    def hasSummaryWarnings(self):
+        return len(self.summaryWarnings) != 0
+
     def addSummaryWarning(self, warningDescription):
         """Appends the warningDescription param to the list of summaryWarnings.
         Will be printed in the protocol summary."""
@@ -1525,16 +1545,14 @@ class Protocol(Step):
 
     def checkSummaryWarnings(self):
         """ Checks for warnings that we want to tell the user about by adding a
-        warning sign to the run box and a description to the run summary. Returns
-        summaryWarnings with any changes made to it during the check.
+        warning sign to the run box and a description to the run summary.
         List of warnings checked:
         1. If the folder for this protocol run exists.
         """
         if not self.isSaved() and not os.path.exists(self.workingDir.get()):
-            self.addSummaryWarning((
-                                   "*Missing run data*: The directory for this run is missing, so it won't be"
-                                   "possible to use its outputs in other protocols."))
-        return self.summaryWarnings
+            self.addSummaryWarning("*Missing run data*: The directory for this "
+                                   "run is missing, so it won't be possible to "
+                                   "use its outputs in other protocols.")
 
     def isContinued(self):
         """ Return if running in continue mode (MODE_RESUME). """
@@ -1594,8 +1612,20 @@ class Protocol(Step):
                     paramErrors = param.validate(attr.get())
             label = param.label.get()
             errors += ['*%s* %s' % (label, err) for err in paramErrors]
-            # Validate specific for the subclass
+
         try:
+            # Check that all ids specified in the 'Wait for' form entry
+            # are valid protocol ids
+            proj = self.getProject()
+            for protId in self.getPrerequisites():
+                try:
+                    prot = proj.getProtocol(int(protId))
+                except Exception:
+                    prot = None
+                if prot is None:
+                    errors.append('*%s* is not a valid protocol id.' % protId)
+
+            # Validate specific for the subclass
             installErrors = self.validateInstallation()
             if installErrors:
                 errors += installErrors

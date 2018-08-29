@@ -778,6 +778,7 @@ protected:
     /// @ingroup Images
     // Functions belonging to this topic are commented in rw*.h
 #include "rwDM3.h"
+#include "rwDM4.h"
 #include "rwIMAGIC.h"
 #include "rwMRC.h"
 #include "rwINF.h"
@@ -819,6 +820,10 @@ protected:
     /** Read the raw data
       */
     virtual void readData(FILE* fimg, size_t select_img, DataType datatype, size_t pad) = 0;
+
+    /** Read the raw data in MRC 4bit mode
+  */
+    virtual void readData4bit(FILE* fimg, size_t select_img, DataType datatype, size_t pad) = 0;
 
     /** Write the raw date after a data type casting.
      */

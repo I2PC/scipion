@@ -88,6 +88,7 @@ class XmippViewer(Viewer):
                 XmippProtExtractParticlesPairs,
                 XmippProtKerdensom,
                 ProtParticlePicking,
+                ProtImportMovies,
                 XmippProtParticlePickingPairs,
                 XmippProtRotSpectra,
                 XmippProtScreenParticles,
@@ -165,10 +166,13 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             # Enabled for the future has to be available
             labels = 'id _filename _samplingRate  '
-            self._views.append(ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={ORDER: labels,
-                                                      VISIBLE: labels,
-                                                      MODE: MODE_MD, RENDER: "no"}))
+            moviesView = ObjectView(self._project, obj.strId(), fn,
+                                      viewParams={ORDER: labels,
+                                                  VISIBLE: labels,
+                                                  MODE: MODE_MD, RENDER: "no"})
+            # For movies increase the JVM memory by 1 GB, just in case
+            moviesView.setMemory(showj.getJvmMaxMemory() + 1)
+            self._views.append(moviesView)
 
         elif issubclass(cls, SetOfMicrographs):
             self._views.append(MicrographsView(self._project, obj, **kwargs))
@@ -378,6 +382,14 @@ class XmippViewer(Viewer):
             if obj.getOutputsSize() >= 1:
                 coordsSet = obj.getCoords()
                 self._visualize(coordsSet)
+
+        elif issubclass(cls, ProtImportMovies):
+            movs = obj.outputMovies
+            self._visualize(movs)
+
+            gainFn = movs.getGain()
+            if os.path.exists(gainFn):
+                self._views.append(DataView(gainFn))
 
         elif issubclass(cls, XmippProtValidateNonTilt):
             outputVols = obj.outputVolumes

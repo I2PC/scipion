@@ -237,7 +237,7 @@ leads to objective and high-quality results.
                          updateItemCallback=self._createItemMatrix,
                          itemDataIterator=md.iterRows(outImgsFn,
                                                       sortByLabel=md.RLN_IMAGE_ID))
-    
+
     def _createItemMatrix(self, particle, row):
         createItemMatrix(particle, row, align=ALIGN_PROJ)
         setRelionAttributes(particle, row, md.RLN_PARTICLE_RANDOM_SUBSET)
