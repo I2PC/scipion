@@ -273,13 +273,13 @@ class TestAtomicStructHandler(unittest.TestCase):
 
         def __runXmippProgram(program, args):
             """ Internal function to launch a Xmipp program. """
-            import pyworkflow.em.packages.xmipp3 as xmipp3
+            xmipp3  = pwutils.importFromPlugin('xmipp3')
             xmipp3.runXmippProgram(program, args)
 
         def __getXmippEulerAngles(matrix):
             """ Internal fuction to convert scipion to xmipp angles"""
-            from pyworkflow.em.packages.xmipp3.convert \
-                import geometryFromMatrix
+            geometryFromMatrix = importFromPlugin('xmipp3.convert',
+                                                  'geometryFromMatrix')
 
             return geometryFromMatrix(matrix, False)
 

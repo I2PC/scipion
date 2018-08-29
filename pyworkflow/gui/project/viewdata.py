@@ -33,7 +33,7 @@ import ttk
 import tkFont
 
 import pyworkflow.protocol.protocol as prot
-from pyworkflow.em import findViewers, DESKTOP_TKINTER, getObjects
+from pyworkflow.em import findViewers, DESKTOP_TKINTER, Domain
 from pyworkflow.utils.graph import Graph
 from pyworkflow.utils.properties import Message, Icon, Color
 
@@ -359,7 +359,8 @@ class ProjectDataView(tk.Frame):
         if not item.node.isRoot():
 
             data = item.node.pointer.get()
-            self.toggleItemSelection(item, isinstance(data, getObjects()[className]))
+            self.toggleItemSelection(
+                item, isinstance(data, Domain.getObjects()[className]))
 
     def _invertAction(self, item):
         self.toggleItemSelection(item, not item.getSelected())

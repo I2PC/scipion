@@ -49,7 +49,6 @@
 /software/man
 /software/share
 /software/em/*
-!/software/em/xmipp
 
 gmon.out
 *~
@@ -82,3 +81,4 @@ static/
 
 # Ignore version file
 .devel_version
+pyworkflow/em/packages/appion

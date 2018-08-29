@@ -32,7 +32,7 @@ from math import ceil
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
-from pyworkflow.utils import yellowStr, redStr
+from pyworkflow.utils import yellowStr, redStr, importFromPlugin
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
@@ -477,12 +477,12 @@ class ProtAlignMovies(ProtProcessMovies):
         
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmipp3.runXmippProgram(program, args)
+        xmipp3 = importFromPlugin('xmipp3')
+        xmipp3.Plugin.runXmippProgram(program, args)
 
     def __runEman2Program(self, program, args):
         """ Internal workaround to launch an EMAN2 program. """
-        import pyworkflow.em.packages.eman2 as eman2
+        eman2 = importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
         runJob(self._log, eman2.getEmanProgram(program), args,
                env=eman2.getEnviron())

@@ -37,7 +37,7 @@ import stat
 import Tkinter as tk
 
 import time
-import xmipp
+import xmippLib
 
 from pyworkflow.utils import ROOT, getParentFolder
 from pyworkflow.utils.properties import Icon, KEYSYM
@@ -225,13 +225,13 @@ class SqlFileHandler(FileHandler):
     
     
 class ImageFileHandler(FileHandler):
-    _image = xmipp.Image()
+    _image = xmippLib.Image()
     _index = ''
     
     def _getImageString(self, filename):
         if isStandardImage(filename):
             return "Image file."
-        x, y, z, n = xmipp.getImageSize(filename)
+        x, y, z, n = xmippLib.getImageSize(filename)
         objType = 'Image'
         dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d" 
         expMsg = "Columns x Rows "
@@ -304,7 +304,7 @@ class MdFileHandler(ImageFileHandler):
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
         path = dirname(mdFn)
-        index, fn = xmipp.FileName(imgFn).decompose()
+        index, fn = xmippLib.FileName(imgFn).decompose()
         
         while path and path != '/':
             newFn = os.path.join(path, fn)
@@ -317,19 +317,19 @@ class MdFileHandler(ImageFileHandler):
         return None
             
     def _getMdString(self, filename, block=None):
-        md = xmipp.MetaData()
+        md = xmippLib.MetaData()
         if block:
             md.read(block + '@' + filename)
         else:
             md.read(filename, 1)
         labels = md.getActiveLabels()
         msg =  "Metadata items: *%d*\n" % md.getParsedLines()
-        msg += "Metadata labels: " + ''.join(["\n   - %s" % xmipp.label2Str(l)
+        msg += "Metadata labels: " + ''.join(["\n   - %s" % xmippLib.label2Str(l)
                                               for l in labels])
         
         imgPath = None
         for label in labels:
-            if xmipp.labelIsImage(label):
+            if xmippLib.labelIsImage(label):
                 imgPath = self._getImgPath(filename,
                                            md.getValue(label, md.firstObject()))
                 break
@@ -346,7 +346,7 @@ class MdFileHandler(ImageFileHandler):
         
         if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos' or ext == '.doc':
             msg = "*Metadata File* "
-            blocks = xmipp.getBlocksInMetaDataFile(filename)
+            blocks = xmippLib.getBlocksInMetaDataFile(filename)
             nblocks = len(blocks)
             if nblocks <= 1:
                 mdStr = self._getMdString(filename)

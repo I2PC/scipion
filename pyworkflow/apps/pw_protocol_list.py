@@ -61,7 +61,7 @@ if __name__ == '__main__':
     asciidoc = '--asciidoc' in sys.argv
     extended = '--extended' in sys.argv
 
-    emProtocolsDict = em.getProtocols()
+    emProtocolsDict = em.Domain.getProtocols()
     emCategories = [('Imports', em.ProtImport, []),
                     ('Micrographs', em.ProtMicrographs, []),
                     ('Particles', em.ProtParticles, []),

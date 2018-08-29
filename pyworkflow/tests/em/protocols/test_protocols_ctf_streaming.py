@@ -26,14 +26,18 @@ import os
 from pyworkflow.em.data import SetOfCTF
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
+from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.protocol.protocol_create_stream_data import \
     SET_OF_RANDOM_MICROGRAPHS
-from pyworkflow.em.packages.xmipp3.protocol_ctf_micrographs import\
-    XmippProtCTFMicrographs
-from pyworkflow.em.packages.gctf import ProtGctf
-from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
+from pyworkflow.utils import importFromPlugin
+
+XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols.protocol_ctf_micrographs',
+                                           'XmippProtCTFMicrographs')
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
+ProtGctf= importFromPlugin('gctf.protocols', 'ProtGctf')
+
+
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
 MICS = os.environ.get('SCIPION_TEST_MICS', 6)

@@ -171,7 +171,7 @@ def loadProtocolsConf(protocolsConf):
             if item["tag"] == "protocol":
                 # Get the class name and then if it is disabled
                 protClassName = item["value"]
-                protClass = em.getProtocols().get(protClassName)
+                protClass = em.Domain.getProtocols().get(protClassName)
                 if protClass is None:
                     return False
                 else:
@@ -215,8 +215,9 @@ def isAFinalProtocol(v, k):
 
 def addAllProtocols(protocols):
     # Add all protocols
-    from pyworkflow.em import getProtocols
-    allProts = getProtocols()
+    # FIXME: Check why this import is here
+    from pyworkflow.em import Domain
+    allProts = Domain.getProtocols()
 
     # Sort the dictionary
     allProtsSorted = OrderedDict(sorted(allProts.items(), key= lambda e: e[1].getClassLabel()))

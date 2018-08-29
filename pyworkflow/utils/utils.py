@@ -30,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+import importlib
 from os.path import join
 
 
@@ -722,6 +723,34 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
         if default is None:
             raise Exception(exceptionMsg)
         else:
-            return  default
+            return default
     else:
         return value
+
+
+def pluginNotFound(plugName, errorMsg='', doRaise=False):
+    msgStr = "%s plugin not found. %s\n" % (plugName, errorMsg)
+    msgStr += "  > See 'scipion install --list' to install it."
+    if doRaise:
+        raise Exception(msgStr)
+    else:
+        print(msgStr)
+
+
+
+def importFromPlugin(module, method='', errorMsg='', doRaise=False):
+    """ This method try to import the method from the plugin/module and
+        returns what is imported if not fails. When the importation fails
+        (due to the plugin is not found),
+        it prints a common message + optional errorMsg or
+        it raise with the same message if doRaise is True.
+        """
+    try:
+        if method == '':
+            output = importlib.import_module(module)
+        else:
+            output = getattr(importlib.import_module(module), method)
+        return output
+    except Exception as e:
+        plugName = module.split('.')[0]
+        pluginNotFound(plugName, errorMsg, doRaise)

@@ -29,12 +29,15 @@ import os
 
 import pyworkflow.tests as tests
 from pyworkflow.em.protocol import ProtImportParticles
-from pyworkflow.em.packages.xmipp3 import XmippProtExtractParticles
-from pyworkflow.em.packages.emxlib import ProtEmxExport
-from pyworkflow.em.packages.xmipp3 import XmippProtFilterParticles, XmippProtApplyAlignment, XmippProtReconstructFourier
-from pyworkflow.em.protocol.protocol_sets import ProtSplitSet,ProtUnionSet
+from pyworkflow.em.protocol.protocol_sets import ProtSplitSet, ProtUnionSet
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils import importFromPlugin
 
+XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
+XmippProtFilterParticles = importFromPlugin('xmipp3.protocols', 'XmippProtFilterParticles')
+XmippProtApplyAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtApplyAlignment')
+XmippProtReconstructFourier = importFromPlugin('xmipp3.protocols', 'XmippProtReconstructFourier')
+ProtEmxExport = importFromPlugin('emxlib.protocols', 'ProtEmxExport')
 
 
 class TestEmxWeb(tests.BaseTest):

@@ -160,7 +160,8 @@ class ProtParticlePicking(ProtParticles):
         suffix = self.__getOutputSuffix()
         outputName = self.OUTPUT_PREFIX + suffix
 
-        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
+        readSetOfCoordinates = pwutils.importFromPlugin('xmipp3.convert',
+                                                'readSetOfCoordinates')
         inputset = self.getInputMicrographs()
         # micrographs are the input set if protocol is not finished
         outputset = self._createSetOfCoordinates(inputset, suffix=suffix)

@@ -26,42 +26,42 @@
 """
 Add functions related to metadata
 """
-import xmipp
+import xmippLib
 
-getBlocksInMetaDataFile = xmipp.getBlocksInMetaDataFile
+getBlocksInMetaDataFile = xmippLib.getBlocksInMetaDataFile
 
-label2Str = xmipp.label2Str 
+label2Str = xmippLib.label2Str
 
-colorStr = xmipp.colorStr 
+colorStr = xmippLib.colorStr
 
-labelType = xmipp.labelType 
+labelType = xmippLib.labelType
 
-labelHasTag = xmipp.labelHasTag 
+labelHasTag = xmippLib.labelHasTag
 
-labelIsImage = xmipp.labelIsImage 
+labelIsImage = xmippLib.labelIsImage
 
-str2Label = xmipp.str2Label 
+str2Label = xmippLib.str2Label
 
-isValidLabel = xmipp.isValidLabel
+isValidLabel = xmippLib.isValidLabel
 
-MDValueRelational = xmipp.MDValueRelational
+MDValueRelational = xmippLib.MDValueRelational
 
-MDValueEQ = xmipp.MDValueEQ 
+MDValueEQ = xmippLib.MDValueEQ
 
-MDValueNE = xmipp.MDValueNE 
+MDValueNE = xmippLib.MDValueNE
 
-MDValueLT = xmipp.MDValueLT 
+MDValueLT = xmippLib.MDValueLT
 
-MDValueLE = xmipp.MDValueLE 
+MDValueLE = xmippLib.MDValueLE
 
-MDValueGT = xmipp.MDValueGT 
+MDValueGT = xmippLib.MDValueGT
 
-MDValueGE = xmipp.MDValueGE 
+MDValueGE = xmippLib.MDValueGE
 
-MDValueRange = xmipp.MDValueRange 
+MDValueRange = xmippLib.MDValueRange
 
-addLabelAlias = xmipp.addLabelAlias
+addLabelAlias = xmippLib.addLabelAlias
 
-activateMathExtensions = xmipp.activateMathExtensions
+activateMathExtensions = xmippLib.activateMathExtensions
 
-getSymmetryMatrices = xmipp.SymList().getSymmetryMatrices
+getSymmetryMatrices = xmippLib.SymList().getSymmetryMatrices

@@ -123,7 +123,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
             img = self.getImage(img)
 
         protClassName = value.split('.')[-1]  # Take last part
-        emProtocolsDict = em.getProtocols()
+        emProtocolsDict = em.Domain.getProtocols()
         prot = emProtocolsDict.get(protClassName, None)
 
         if tag == 'protocol' and text == 'default':
@@ -351,7 +351,7 @@ class SearchProtocolWindow(pwgui.Window):
     def _onSearchClick(self, e=None):
         self._resultsTree.clear()
         keyword = self._searchVar.get().lower()
-        emProtocolsDict = em.getProtocols()
+        emProtocolsDict = em.Domain.getProtocols()
         protList = []
 
         for key, prot in emProtocolsDict.iteritems():
@@ -989,7 +989,7 @@ class ProtocolsView(tk.Frame):
         self.protTree.unbind('<<TreeviewClose>>')
         self.protTreeItems = {}
         subclassedDict = {}  # Check which classes serve as base to not show them
-        emProtocolsDict = em.getProtocols()
+        emProtocolsDict = em.Domain.getProtocols()
         for _, v1 in emProtocolsDict.iteritems():
             for k2, v2 in emProtocolsDict.iteritems():
                 if v1 is not v2 and issubclass(v1, v2):
@@ -1306,7 +1306,7 @@ class ProtocolsView(tk.Frame):
         # the search protocol dialog tree
         tree = e.widget
         protClassName = tree.getFirst().split('.')[-1]
-        protClass = em.getProtocols().get(protClassName)
+        protClass = em.Domain.getProtocols().get(protClassName)
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 

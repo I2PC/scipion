@@ -33,18 +33,18 @@ from install.funcs import Environment
 
 get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
+args = sys.argv
 
-env = Environment(args=sys.argv)
+env = Environment(args=args[2:])
 
-noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
-noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
+noScipy = '--no-scipy' in args or not get('SCIPY')
 
 
 #  *******************************
 #  *  PATHS
 #  *******************************
 # GET the real path where scipion is installed
-SCIPION = env._args[0]
+SCIPION = args[0]
 SCIPION = os.path.realpath(SCIPION)
 SCIPION = os.path.dirname(SCIPION)
 SCIPION = os.path.abspath(SCIPION)
@@ -128,12 +128,14 @@ fftw3 = env.addLibrary(
     'fftw3',
     tar='fftw-3.3.4.tgz',
     flags=['--enable-threads', '--enable-shared'],
-    clean=True) # We need to clean to configure again with --enable-float
+    clean=True,
+    default = False) # We need to clean to configure again with --enable-float
     
 fftw3f = env.addLibrary(
     'fftw3f',
     tar='fftw-3.3.4.tgz',
-    flags=['--enable-threads', '--enable-shared', '--enable-float'])
+    flags=['--enable-threads', '--enable-shared', '--enable-float'],
+    default = False)
 
 osBuildDir = 'tcl8.6.1/unix'
 osFlags = ['--enable-threads']
@@ -145,6 +147,13 @@ tcl = env.addLibrary(
     targets=[env.getLib('tcl8.6')],
     flags=osFlags)
 
+zlib = env.addLibrary(
+    'zlib',
+    targets=[env.getLib('z')],
+    tar='zlib-1.2.8.tgz',
+    configTarget='zlib.pc',
+    default=True)
+
 osBuildDir = 'tk8.6.1/unix'
 osFlags = ['--enable-threads']
 
@@ -155,7 +164,7 @@ tk = env.addLibrary(
     targets=[env.getLib('tk8.6')],
     libChecks=['xft'],
     flags=osFlags,
-    deps=[tcl])
+    deps=[tcl, zlib])
 
 # Special case: tk does not make the link automatically, go figure.
 tk_wish = env.addTarget('tk_wish')
@@ -163,32 +172,30 @@ tk_wish.addCommand('ln -v -s wish8.6 wish',
                    targets=SW_BIN + '/wish',
                    cwd= SW_BIN)
 
-zlib = env.addLibrary(
-    'zlib',
-    targets=[env.getLib('z')],
-    tar='zlib-1.2.8.tgz',
-    configTarget='zlib.pc')
-
 jpeg = env.addLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
-    flags=['--without-simd'])
+    flags=['--without-simd'],
+    default=False)
 
 png = env.addLibrary(
     'png',
     tar='libpng-1.6.16.tgz',
-    deps=[zlib])
+    deps=[zlib],
+    default=False)
 
 tiff = env.addLibrary(
      'tiff',
      tar='tiff-3.9.4.tgz',
-     deps=[zlib, jpeg])
+     deps=[zlib, jpeg],
+     default=False)
 
 sqlite = env.addLibrary(
     'sqlite3',
     tar='SQLite-1a584e49.tgz',
     flags=['CPPFLAGS=-w',
-           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'],
+    default=False)
 
 hdf5 = env.addLibrary(
      'hdf5',
@@ -196,6 +203,7 @@ hdf5 = env.addLibrary(
      flags=['--enable-cxx', '--enable-shared'],
      targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
      configAlways=True,
+     default=False,
      deps=[zlib])
 
 python = env.addLibrary(
@@ -217,14 +225,6 @@ swig = env.addLibrary(
     targets=[env.getBin('swig')],
     makeTargets=['Source/Swig/tree.o'],
     deps=[pcre],
-    default=False)
-
-sh_alignment = env.addLibrary(
-    'sh_alignment',
-    tar='sh_alignment.tgz',
-    commands=[('cd ' + SW_TMP + '/sh_alignment; make install',
-               SW_PYT_PACK + '/sh_alignment/frm.py')],
-    deps=[python, swig],
     default=False)
 
 lapack = env.addLibrary(
@@ -264,7 +264,7 @@ if os.environ.get('OPENCV_VER') == '3.4.1':
                    'cmake ' + ' '.join(opencvFlags) + ' .. ; '
                    'make -j ' + str(env.getProcessors()) + '; '
                    'make install', SW_LIB +'/libopencv_core.so')],
-        default=not noOpencv)
+        default=False)
 else:
     opencv = env.addLibrary(
         'opencv',
@@ -272,7 +272,7 @@ else:
         targets=[env.getLib('opencv_core')],
         flags=opencvFlags,
         cmake=True,
-        default=not noOpencv)
+        default=False)
 
 # ---------- Libraries required by PyTom 
 
@@ -327,7 +327,7 @@ scipy = env.addPipModule('scipy', '0.14.0',
 env.addPipModule('bibtexparser', '0.6.2')
 env.addPipModule('django', '1.5.5')
 env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
-    deps=[jpeg])
+    deps=[jpeg, tiff])
 
 
 # Optional python modules
@@ -336,7 +336,7 @@ env.addPipModule('paramiko', '1.14.0', default=False)
 env.addPipModule('winpdb', '1.3.6', default=False)
 
 env.addPipModule('lxml', '3.4.1', target='lxml-3.4.1*', default=False)
-env.addPipModule('requests', '2.18.4', default=False)
+env.addPipModule('requests', '2.18.4', default=True)
 
 # These were dependencies of iPython
 env.addPipModule('pyzmq', '2.2.0.1', target='pyzmq*', default=False)
@@ -359,51 +359,6 @@ env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
 
 # 'commands' is a list of (command, [targets]) to run after installation.
 
-
-env.addPackage('bsoft', version='1.8.8',
-               tar='bsoft1_8_8_Fedora_12.tgz')
-
-env.addPackage('bsoft', version='1.9.0',
-               tar='bsoft1_9_0_Fedora_20.tgz')
-
-env.addPackage('ctffind', version='3.6',
-               tar='ctffind_V3.5.tgz')
-
-env.addPackage('ctffind4', version='4.0.15',
-               tar='ctffind_V4.0.15.tgz')
-
-env.addPackage('ctffind4', version='4.1.5',
-               tar='ctffind_V4.1.5.tgz')
-
-env.addPackage('ctffind4', version='4.1.8',
-               tar='ctffind_V4.1.8.tgz')
-
-env.addPackage('ctffind4', version='4.1.10',
-               tar='ctffind4-4.1.10.tgz')
-
-
-env.addPackage('summovie', version='1.0.2',
-               tar='summovie_1.0.2.tgz')
-
-env.addPackage('unblur', version='1.0.15',
-               tar='unblur_1.0_150529.tgz')
-
-env.addPackage('unblur', version='1.0.2',
-               tar='unblur_1.0.2.tgz')
-
-eman2_commands = [('./eman2-installer',
-                   'eman2.*rc')]
-
-env.addPackage('eman', version='2.11',
-               tar='eman2.11.linux64.tgz',
-               commands=eman2_commands)
-
-env.addPackage('eman', version='2.12',
-               tar='eman2.12.linux64.tgz',
-               commands=eman2_commands)
-
-env.addPackage('frealign', version='9.07',
-               tar='frealign_v9.07.tgz')
 
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
@@ -435,6 +390,26 @@ env.addPackage('relion', version='2.1',
               commands=relion2_commands,
               updateCuda=True,
               vars=relion_vars)
+
+eman2_commands = [('./eman2-installer',
+                   'eman2.*rc')]
+
+env.addPackage('eman', version='2.11',
+               tar='eman2.11.linux64.tgz',
+               commands=eman2_commands)
+
+env.addPackage('eman', version='2.12',
+               tar='eman2.12.linux64.tgz',
+               commands=eman2_commands)
+
+SW_EM = env.getEmFolder()
+
+eman22_commands = [('./eman2.21.linux64.centos7.sh -b -p "%s/eman-2.21"' %
+                    SW_EM, '%s/eman-2.21/bin/python' % SW_EM)]
+
+env.addPackage('eman', version='2.21',
+               tar='eman2.21.linux64.centos7.tgz',
+               commands=eman22_commands)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
@@ -476,9 +451,6 @@ env.addPackage('chimera', version='1.10.1',
                targetDir='chimera-1.10.1',
                commands=[('./scipion_installer','bin/chimera')])
 
-env.addPackage('dogpicker', version='0.2.1',
-               tar='dogpicker-0.2.1.tgz')
-
 env.addPackage('nma',
                tar='nma.tgz',
                commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
@@ -508,9 +480,6 @@ env.addPackage('gctf', version='1.06',
 
 env.addPackage('gautomatch', version='0.53',
                tar='Gautomatch_v0.53.tgz')
-
-env.addPackage('mag_distortion', version='1.0.1',
-               tar='mag_distortion-1.0.1.tgz')
 
 env.addPackage('ethan', version='1.2',
                tar='ethan-1.2.tgz',
