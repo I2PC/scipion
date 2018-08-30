@@ -30,18 +30,16 @@ Particles, Volumes...
 """
 
 from os.path import exists, basename, abspath
-from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import createAbsLink, copyFile
-import pyworkflow.protocol.constants as const
+
 import pyworkflow.protocol.params as params
+from base import ProtImportFiles
+from images import ProtImportImages
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
-from base import ProtImportFiles
-from images import ProtImportImages
-from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header, \
-    adaptFileToCCP4, ORIGIN
-
+from pyworkflow.em.headers import adaptFileToCCP4, ORIGIN
+from pyworkflow.utils.path import createAbsLink, copyFile
+from pyworkflow.utils.properties import Message
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -244,7 +242,7 @@ class ProtImportPdb(ProtImportFiles):
 
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
-            pdbPath = self._getPath('%s.cif' % self.pdbId.get())
+            pdbPath = self._getTmpPath('%s.cif' % self.pdbId.get())
             self._insertFunctionStep('pdbDownloadStep', pdbPath)
         else:
             pdbPath = self.pdbFile.get()
@@ -262,6 +260,7 @@ class ProtImportPdb(ProtImportFiles):
 
         baseName = basename(pdbPath)
         localPath = self._getExtraPath(baseName)
+
         copyFile(pdbPath, localPath)
         pdb = PdbFile()
         volume = self.inputVolume.get()

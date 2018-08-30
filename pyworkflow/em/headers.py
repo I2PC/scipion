@@ -31,119 +31,18 @@ TODO:
 """
 
 import collections
-import os
 from pyworkflow.em.convert import ImageHandler
-import pyworkflow.utils as pwutils
 import struct
-import getpass
 from math import isnan
-cootPdbTemplateFileName = "cootOut%04d.pdb"
-cootScriptFileName = "cootScript.py"
+
 ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
 START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
 
-def getEnviron(ccp4First=True):
-    environ = pwutils.Environ(os.environ)
-    pos = pwutils.Environ.BEGIN if ccp4First else pwutils.Environ.END
-    _ccp4_home = os.environ['CCP4_HOME']
-    _ccp4_master, _dir = os.path.split(_ccp4_home)
-    _username = getpass.getuser()
-    environ.update({
-            'PATH': os.path.join(_ccp4_home, 'bin'),
-            'LD_LIBRARY_PATH': os.path.join(_ccp4_home, 'lib'),
-            # # CCP4_MASTER is the location of the top-level directory
-            # # containing ccp4-N.N.N.
-            # export CCP4_MASTER=/home/roberto
-            # export CCP4=$CCP4_MASTER/ccp4-6.5
-            # alias xtal='pushd $CCP4_MASTER>/dev/null'
-            'CCP4_MASTER': _ccp4_master,
-            # alias ccp4='pushd $CCP4>/dev/null'
-            'CCP4': _ccp4_home,
-            # # CCP4_SCR: a per-user directory for run-time-generated scratch
-            # # files.
-            # export CCP4_SCR=/tmp/`whoami`
-            'CCP4_SCR': os.path.join("/tmp", _username),
-            # # This variable is set to ensure that the logfile output from programs
-            # # compiled with Gfortran is in the correct order.
-            # export GFORTRAN_UNBUFFERED_PRECONNECTED=Y
-            'GFORTRAN_UNBUFFERED_PRECONNECTED':"Y",
-            # # CBIN: location of the executables -- must be on your path
-            # # (see below)
-            # export CBIN=$CCP4/bin
-            # alias cbin='pushd $CBIN>/dev/null'
-            'CBIN': os.path.join(_ccp4_home, 'bin'),
-            # # CLIB: location of (binary) library files such as libccp4.a
-            # # and libccp4.so
-            # export CLIB=$CCP4/lib
-            # alias clib='pushd $CLIB>/dev/null'
-            'CLIB': os.path.join(_ccp4_home, 'lib'),
-            # # CLIBD: platform-independent data files
-            # export CLIBD=$CCP4/lib/data
-            # alias clibd='pushd $CLIBD>/dev/null'
-            'CLIBD': os.path.join(_ccp4_home, 'lib','data'),
-            # # CETC: executable scripts (NOT configuration files)
-            # export CETC=$CCP4/etc
-            # alias cetc='pushd $CETC>/dev/null'
-            'CETC': os.path.join(_ccp4_home, 'etc'),
-            # # CINCL: headers and two *.def files for handling
-            # # "logical names" in CCP4
-            # export CINCL=$CCP4/include
-            # alias cincl='pushd $CINCL>/dev/null'
-            'CINCL': os.path.join(_ccp4_home, 'include'),
-            # # CHTML: html documentation
-            # export CHTML=$CCP4/html
-            # alias chtml='pushd $CHTML>/dev/null'
-            'CHTML': os.path.join(_ccp4_home, 'html'),
-            # # CEXAM: examples and some tests
-            # export CEXAM=$CCP4/examples
-            # alias cexam='pushd $CEXAM>/dev/null'
-            'CEXAM': os.path.join(_ccp4_home, 'examples'),
-            # # CCP4I_TOP: the top directory of the interface
-            # export CCP4I_TOP=$CCP4/share/ccp4i
-            # # source code directories
-            # #export CLIBS=$CCP4/lib/libccp4
-            # #alias clibs='pushd $CLIBS>/dev/null'
-            # #export CPROG=$CCP4/src
-            # #alias cprog='pushd $CPROG>/dev/null'
-            'CCP4I_TOP': os.path.join(_ccp4_home, 'share','ccp4i'),
-            # # MMCIFDIC: platform-dependent (not in $CLIBD) data file for
-            # # the ccif library
-            # export MMCIFDIC=$CLIB/ccp4/cif_mmdic.lib
-            'MMCIFDIC': os.path.join(_ccp4_home, 'lib', 'cif_mmdic.lib'),
-            # # CLIBD_MON: dictionary files for REFMAC5 (keep trailing /)
-            # export CLIBD_MON=$CCP4/lib/data/monomers/
-            'CLIBD_MON': os.path.join(_ccp4_home, 'lib', 'data', 'monomers'),
-            # # CRANK: location of Crank automation suite within ccp4i
-            # export CRANK=$CCP4I_TOP/crank
-            'CRANK': os.path.join(_ccp4_home, 'crank'),
-            # # CCP4_HELPDIR: location of the VMS-style help file used
-            # # by (ip)mosflm
-            # export CCP4_HELPDIR=$CCP4/help/            # NB trailing /
-            'CCP4_HELPDIR': os.path.join(_ccp4_home, 'help'),
-            }, position=pos)
-    return environ
-
-def runCCP4Program(program, args="", extraEnvDict=None):
-    """ Internal shortcut function to launch a CCP4 program. """
-    env = getEnviron()
-    if extraEnvDict is not None:
-        env.update(extraEnvDict)
-    pwutils.runJob(None, program, args, env=env)
-
-
 def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
                     sampling=1.0, originField=START):
-    """ Check input file format.
-        if mrc, check if header and scipion database agree (regarding origin)
-        if header and scipion object have the same origin creates a link to
-        original file. Otherwise copy the file and fix the origin
+    """ create new CCP4 binary file and fix the CCP4 header
     """
-    # def compareFloatTuples(t1, t2, error=0.001):
-    #    return abs(sum(tuple(x - y for x, y in zip(t1, t2)))) < error
-
-    # scipion origin follows different conventions from ccp4
-    #scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
     x, y, z, ndim = ImageHandler().getDimensions(inFileName)
     if z == 1 and ndim > 1:
         z = ndim
@@ -159,27 +58,6 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
 
     ccp4header.writeHeader()
 
-
-def copyMRCHeader(inFileName, outFileName, scipionOriginShifts,
-                  sampling, originField=START):
-    x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    ccp4header = Ccp4Header(outFileName, readHeader=True)
-    ccp4header.setGridSampling(x, y, z)
-    ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-    #scipionOriginShifts = tuple([-1. * x for x in scipionOriginShifts])
-    if originField == ORIGIN:
-        ccp4header.setOrigin(scipionOriginShifts)
-    else:
-        ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
-    ccp4header.writeHeader()
-
-
-def getProgram(progName):
-    """ Return the program binary that will be used. """
-    if 'CCP4_HOME' not in os.environ:
-        return None
-    return os.path.join(os.environ['CCP4_HOME'], 'bin',
-                        os.path.basename(progName))
 
 
 class Ccp4Header():
@@ -258,7 +136,10 @@ class Ccp4Header():
         self.chain = "< 3i i 3i 3i 3f 144s 3f"
 
         if readHeader:
+            self.loaded = True
             self.readHeader()
+        else:
+            self.loaded = False
 
     def setOrigin(self, originTransformShift):
         # TODO: should we use originX,Y,Z and set this to 0
@@ -409,3 +290,18 @@ class Ccp4Header():
 
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
+
+
+    def copyCCP4Header(self, inFileName, scipionOriginShifts,
+                       sampling, originField=START):
+        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+        if not self.loaded:
+            self.readHeader()
+        self.setGridSampling(x, y, z)
+        self.setCellDimensions(x * sampling, y * sampling, z * sampling)
+
+        if originField == ORIGIN:
+            self.setOrigin(scipionOriginShifts)
+        else:
+            self.setStartAngstrom(scipionOriginShifts, sampling)
+            self.writeHeader()
