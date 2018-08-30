@@ -74,7 +74,7 @@ def main():
         readSetOfCoordinates(outputDir, micSet, coordSet)
         writeSetOfCoordinatesWithState = importFromPlugin('xmipp3.convert',
                                                'writeSetOfCoordinatesWithState',
-                                               doRasise=True)
+                                               doRaise=True)
         writeSetOfCoordinatesWithState(outputDir, coordSet, state='Automatic')
         
     
