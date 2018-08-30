@@ -1321,129 +1321,138 @@ class FormWindow(Window):
         
     def _createParallel(self, runFrame, r):
         """ Create the section for MPI, threads and GPU. """
-        # some short notation
-        prot = self.protocol # shortcut notation
-        allowThreads = prot.allowThreads  # short notation
-        allowMpi = prot.allowMpi  # short notation
-        allowGpu = prot.allowsGpu()
-        numberOfMpi = prot.numberOfMpi.get()
-        numberOfThreads = prot.numberOfThreads.get()
-        mode = prot.stepsExecutionMode
 
-        if not (allowThreads or allowMpi or allowGpu):
-            return
+        # Legacy protocols retrieved from the DB may not have this param
+        # and legacy mode will fail. Thus the try block
+        try:
 
-        self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True,
-                                sticky='ne', row=r, pady=0)
+            # some short notation
+            prot = self.protocol  # shortcut notation
+            allowThreads = prot.allowThreads  # short notation
+            allowMpi = prot.allowMpi  # short notation
+            allowGpu = prot.allowsGpu()
+            numberOfMpi = prot.numberOfMpi.get()
+            numberOfThreads = prot.numberOfThreads.get()
+            mode = prot.stepsExecutionMode
 
-        if allowThreads or allowMpi:
-            procFrame = tk.Frame(runFrame, bg='white')
-            r2 = 0
-            c2 = 0
-            sticky = 'ne'
+            if not (allowThreads or allowMpi or allowGpu):
+                return
 
-            if mode == params.STEPS_PARALLEL:
-                self.procTypeVar = tk.StringVar()
+            self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True,
+                                    sticky='ne', row=r, pady=0)
 
-                if allowThreads and allowMpi:
-                    if numberOfMpi > 1:
-                        procs = numberOfMpi
-                        self.procTypeVar.set(MPI)
-                        prot.numberOfThreads.set(1)
+            if allowThreads or allowMpi:
+                procFrame = tk.Frame(runFrame, bg='white')
+                r2 = 0
+                c2 = 0
+                sticky = 'ne'
+
+                if mode == params.STEPS_PARALLEL:
+                    self.procTypeVar = tk.StringVar()
+
+                    if allowThreads and allowMpi:
+                        if numberOfMpi > 1:
+                            procs = numberOfMpi
+                            self.procTypeVar.set(MPI)
+                            prot.numberOfThreads.set(1)
+                        else:
+                            procs = numberOfThreads
+                            self.procTypeVar.set(THREADS)
+                            prot.numberOfMpi.set(1)
+
+                        self.procTypeVar.trace('w', self._setThreadsOrMpi)
+                        procCombo = tk.Frame(procFrame, bg='white')
+                        for i, opt in enumerate([THREADS, MPI]):
+                            rb = tk.Radiobutton(procCombo, text=opt,
+                                                variable=self.procTypeVar,
+                                                value=opt, bg='white',
+                                                highlightthickness=0)
+                            rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))
+
+                        procCombo.grid(row=r2, column=0, sticky='nw', pady=5)
+                        procEntry = self._createBoundEntry(procFrame,
+                                                           Message.VAR_THREADS,
+                                                           func=self._setThreadsOrMpi,
+                                                           value=procs)
+                        procEntry.grid(row=r2, column=1, padx=(0, 5), sticky='nw')
                     else:
-                        procs = numberOfThreads
-                        self.procTypeVar.set(THREADS)
-                        prot.numberOfMpi.set(1)
+                        # Show an error message
+                        self.showInfo(" If protocol execution is set to "
+                                      "STEPS_PARALLEL number of threads and mpi "
+                                      "should not be set to zero.")
 
-                    self.procTypeVar.trace('w', self._setThreadsOrMpi)
-                    procCombo = tk.Frame(procFrame, bg='white')
-                    for i, opt in enumerate([THREADS, MPI]):
-                        rb = tk.Radiobutton(procCombo, text=opt,
-                                            variable=self.procTypeVar,
-                                            value=opt, bg='white',
-                                            highlightthickness=0)
-                        rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))
-
-                    procCombo.grid(row=r2, column=0, sticky='nw', pady=5)
-                    procEntry = self._createBoundEntry(procFrame,
-                                                       Message.VAR_THREADS,
-                                                       func=self._setThreadsOrMpi,
-                                                       value=procs)
-                    procEntry.grid(row=r2, column=1, padx=(0, 5), sticky='nw')
                 else:
-                    # Show an error message
-                    self.showInfo(" If protocol execution is set to "
-                                  "STEPS_PARALLEL number of threads and mpi "
-                                  "should not be set to zero.")
+                    # ---- THREADS----
+                    if allowThreads:
+                        self._createHeaderLabel(procFrame, Message.LABEL_THREADS,
+                                                sticky=sticky, row=r2, column=c2,
+                                                pady=0)
+                        entry = self._createBoundEntry(procFrame,
+                                                       Message.VAR_THREADS)
+                        entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
+                        # Modify values to be used in MPI entry
+                        c2 += 2
+                        sticky = 'nw'
+                    # ---- MPI ----
+                    if allowMpi:
+                        self._createHeaderLabel(procFrame, Message.LABEL_MPI,
+                                                sticky=sticky, row=r2, column=c2,
+                                                pady=0)
+                        entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
+                        entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
 
-            else:
-                # ---- THREADS----
-                if allowThreads:
-                    self._createHeaderLabel(procFrame, Message.LABEL_THREADS,
-                                            sticky=sticky, row=r2, column=c2,
-                                            pady=0)
-                    entry = self._createBoundEntry(procFrame,
-                                                   Message.VAR_THREADS)
-                    entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
-                    # Modify values to be used in MPI entry
-                    c2 += 2
-                    sticky = 'nw'
-                # ---- MPI ----
-                if allowMpi:
-                    self._createHeaderLabel(procFrame, Message.LABEL_MPI,
-                                            sticky=sticky, row=r2, column=c2,
-                                            pady=0)
-                    entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
-                    entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
+                btnHelp = IconButton(procFrame, Message.TITLE_COMMENT,
+                                     Icon.ACTION_HELP,
+                                     highlightthickness=0,
+                                     command=self._createHelpCommand(
+                                         Message.HELP_MPI_THREADS))
+                btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
 
-            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT,
-                                 Icon.ACTION_HELP,
-                                 highlightthickness=0,
-                                 command=self._createHelpCommand(
-                                     Message.HELP_MPI_THREADS))
-            btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
+                procFrame.columnconfigure(0, minsize=60)
+                procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
 
-            procFrame.columnconfigure(0, minsize=60)
-            procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+                r += 1
 
-            r += 1
+            if allowGpu:
+                self._createHeaderLabel(runFrame, "GPU IDs", bold=True,
+                                        sticky='ne', row=r, column=0, pady=0)
+                gpuFrame = tk.Frame(runFrame, bg='white')
+                gpuFrame.grid(row=r, column=1, sticky='new', columnspan=2)
 
-        if allowGpu:
-            self._createHeaderLabel(runFrame, "GPU IDs", bold=True,
-                                    sticky='ne', row=r, column=0, pady=0)
-            gpuFrame = tk.Frame(runFrame, bg='white')
-            gpuFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+                self.useGpuVar = tk.IntVar()
 
-            self.useGpuVar = tk.IntVar()
+                # For protocols that require GPU, there is not the option to choose
+                if not prot.requiresGpu():
+                    self.useGpuVar.set(int(prot.useGpu.get()))
+                    for i, opt in enumerate(['Yes', 'No']):
+                        rb = tk.Radiobutton(gpuFrame, text=opt,
+                                            variable=self.useGpuVar,
+                                            value=1-i, bg='white',
+                                            highlightthickness=0)
+                        rb.grid(row=0, column=i, sticky='nw', padx=(0, 5), pady=5)
 
-            # For protocols that require GPU, there is not the option to choose
-            if not prot.requiresGpu():
-                self.useGpuVar.set(int(prot.useGpu.get()))
-                for i, opt in enumerate(['Yes', 'No']):
-                    rb = tk.Radiobutton(gpuFrame, text=opt,
-                                        variable=self.useGpuVar,
-                                        value=1-i, bg='white',
-                                        highlightthickness=0)
-                    rb.grid(row=0, column=i, sticky='nw', padx=(0, 5), pady=5)
+                self.gpuListVar = tk.StringVar()
+                self.gpuListVar.set(prot.getAttributeValue(params.GPU_LIST, ''))
+                gpuEntry = tk.Entry(gpuFrame, width=9, font=self.font,
+                                    textvariable=self.gpuListVar)
+                gpuEntry.grid(row=0, column=2, sticky='nw',
+                              padx=(0, 5), pady=(0, 5))
 
-            self.gpuListVar = tk.StringVar()
-            self.gpuListVar.set(prot.getAttributeValue(params.GPU_LIST, ''))
-            gpuEntry = tk.Entry(gpuFrame, width=9, font=self.font,
-                                textvariable=self.gpuListVar)
-            gpuEntry.grid(row=0, column=2, sticky='nw',
-                          padx=(0, 5), pady=(0, 5))
+                # Legacy protocols retrieved from the DB will not have this param
+                # and legacy mode will fail. try added at the top.
+                gpuListParam = prot.getParam(params.GPU_LIST)
+                btnHelp = IconButton(gpuFrame, Message.TITLE_COMMENT,
+                                     Icon.ACTION_HELP,
+                                     highlightthickness=0,
+                                     command=self._createHelpCommand(
+                                         gpuListParam.getHelp()))
+                btnHelp.grid(row=0, column=3, padx=(5, 0), pady=2, sticky='ne')
 
-            gpuListParam = prot.getParam(params.GPU_LIST)
-            btnHelp = IconButton(gpuFrame, Message.TITLE_COMMENT,
-                                 Icon.ACTION_HELP,
-                                 highlightthickness=0,
-                                 command=self._createHelpCommand(
-                                     gpuListParam.getHelp()))
-            btnHelp.grid(row=0, column=3, padx=(5, 0), pady=2, sticky='ne')
-
-            # Trace changes in GPU related widgets to store values in protocol
-            self.useGpuVar.trace('w', self._setGpu)
-            self.gpuListVar.trace('w', self._setGpu)
+                # Trace changes in GPU related widgets to store values in protocol
+                self.useGpuVar.trace('w', self._setGpu)
+                self.gpuListVar.trace('w', self._setGpu)
+        except Exception as e:
+            print "Parallel section couldn't be created. %s" % e.message
 
     def _createCommon(self, parent):
         """ Create the second section with some common parameters. """
