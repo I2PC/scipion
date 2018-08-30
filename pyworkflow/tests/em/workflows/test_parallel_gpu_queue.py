@@ -27,6 +27,7 @@
 import os
 import json  # to fill the queue form
 import time
+import subprocess
 
 from pyworkflow.tests import *
 from pyworkflow.em.protocol import *
@@ -40,9 +41,14 @@ except:
     pwutils.pluginNotFound('relion')
 
 
-# Set this to match with your queue system
-QUEUE_PARAMS = (u'myslurmqueue', {u'JOB_TIME': u'1',  # in hours
-                                  u'JOB_MEMORY': u'8192'}) # in Mb
+# --- Set this to match with your queue system ---
+#  json params to fill the queue form, see SCIPION_HOME/config/host.conf
+QUEUE_PARAMS = (u'myslurmqueue', {u'JOB_TIME': u'1',        # in hours
+                                  u'JOB_MEMORY': u'8192'})  # in Mb
+#  command and args to list the queued jobs (to be used in a subprocess)
+#  the command output must contain the jobID and the protocolID
+QUEUE_COMMAND = ["gpu", "squeue"]
+
 
 class TestQueueBase(BaseTest):
     @classmethod
@@ -75,55 +81,64 @@ class TestQueueBase(BaseTest):
         return protPreproc
 
     def _checkAsserts(self, relionProt):
-        def loadQueue():
-            os.system("gpu squeue > queue.log")
-            queue = open("queue.log", "r").readlines()
-            os.system("rm queue.log")
-            return queue[1:]  # the first line is the header
-
+        """ If relionProt.useQueue() is True, first of all
+            is checked that the job is queued and after that
+            we wait until it's finished to check the outputs
+        """
         def isJobInQueue(jobId, protId, Yes=True):
-            """ returns the value of Yes if the protId and the jobId
-                are found in the queue. The value of Yes must be a boolean
+            """ returns Yes if the protId and the jobId
+                are found in the queue.
+                Set Yes=False to get a True when the job disappears
             """
             isQueueThere = not Yes
-            queueList = loadQueue()
-            for queueStr in queueList:
-                if jobId in queueStr and str(protId) in queueStr:
+            queueRaw = subprocess.check_output(QUEUE_COMMAND)
+            queueList = queueRaw.split('\n')
+            for queueLine in queueList:
+                # we will assume that if protId and jobId
+                # is in the string, the task is there
+                if jobId in queueLine and str(protId) in queueLine:
                     isQueueThere = Yes
                     break
             return isQueueThere
 
-        def wait_until(somepredicate, timeout, *args, **kwargs):
+        def wait_until(condition, timeout, *args, **kwargs):
+            """ :param condition: function handle that
+                                      is waited until return True
+                :param timeout: maximum time to wait
+                :param args and kwargs: params to pass to the condition func.
+                :return: False if the timeout is reached
+            """
             mustend = time.time() + timeout
             while time.time() < mustend:
-                if somepredicate(*args, **kwargs):
+                if condition(*args, **kwargs):
                     return True
                 time.sleep(1)
             return False
 
-        def checkQueue(relionProt):
-            jobId = relionProt.getJobId()   # is an string
-            protId = relionProt.getObjId()  # is an integer
+        def checkQueue(prot):
+            """ Check if the protocol job is queued
+            """
+            jobId = prot.getJobId()   # is an string
+            protId = prot.getObjId()  # is an integer
 
             self.assertTrue(isJobInQueue(jobId, protId),
                             "The job %s corresponding to "
                             "the protocol %d has been not "
                             "attached to the system queue"
                              % (jobId, protId))
-
             print(pwutils.magentaStr(" > job %s of the protocol %d found in the "
                                      "queue, wait a sec..." % (jobId, protId)))
+
             isDone = wait_until(isJobInQueue, 10*60, jobId, protId, Yes=False)
             self.assertTrue(isDone, "Timeout: the job has not ended...")
             print(pwutils.magentaStr("    ...job ended!"))
-            print("%s  >>  %s" % (relionProt, id(relionProt)))
-            return relionProt
+            return prot
 
         if relionProt.useQueue():
+            # if the protocol is use queue system, we check if it's queued
             relionProt = checkQueue(relionProt)
             return  # I don't know why, but we cannot retrieve the output, permissions???
 
-        print("%s  >>  %s" % (relionProt, id(relionProt)))
         self.assertIsNotNone(relionProt.outputClasses,
                              "There was a problem with Relion 2D classify")
 
@@ -137,6 +152,15 @@ class TestQueueBase(BaseTest):
 
     def _runRelionClassify2D(self, previousRun, label='', threads=1, MPI=1,
                              doGpu=False, GPUs='', useQueue=False):
+        """ :param previousRun: The outputParticles of that will be the input
+            :param label: For naming porposals
+            :param threads: How many threads to use
+            :param MPI: How many MPIs to use
+            :param doGpu: Use GPU or not
+            :param GPUs: Whichs GPUs to use (see Relion gpusToUse form param)
+            :param useQueue: Use the queue system or not
+            :return: the launched protocol
+        """
         prot2D = self.newProtocol(ProtRelionClassify2D,
                                   doCTF=False, maskDiameterA=340,
                                   numberOfMpi=MPI, numberOfThreads=threads)
