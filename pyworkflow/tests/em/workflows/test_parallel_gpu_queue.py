@@ -46,7 +46,7 @@ except:
 QUEUE_PARAMS = (u'myslurmqueue', {u'JOB_TIME': u'1',        # in hours
                                   u'JOB_MEMORY': u'8192'})  # in Mb
 #  command and args to list the queued jobs (to be used in a subprocess)
-#  the command output must contain the jobID and the protocolID
+#  the command's output must contain the jobID and the protocolID
 QUEUE_COMMAND = ["gpu", "squeue"]
 
 
