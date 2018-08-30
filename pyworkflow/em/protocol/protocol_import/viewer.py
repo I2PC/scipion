@@ -134,7 +134,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         if len(_setOfVolumes) > 1:
             f.write('tile\n')
         else:
-            x, y, z = vol.getVolOriginAsTuple()
+            x, y, z = vol.getShiftsFromOrigin()
             f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
         f.close()
         import pyworkflow.em as em

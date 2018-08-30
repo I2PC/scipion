@@ -602,13 +602,17 @@ class Image(EMObject):
         t.setShifts(x / -2. * sampling, y / -2. * sampling, z * sampling)
         return t  # The identity matrix
 
-    def getVolOriginAsTuple(self):
+    def getShiftsFromOrigin(self):
         origin = self.getOrigin(force=True).getShifts()
         x = origin[0]
         y = origin[1]
         z = origin[2]
         return x, y, z
         # x, y, z are floats in Angstroms
+
+    def setShiftsInOrigin(self, x, y, z):
+        origin = self.getOrigin(force=True)
+        origin.setShifts(x, y, z )
 
     def setOrigin(self, newOrigin):
         """shifts in A"""
