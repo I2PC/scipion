@@ -153,7 +153,7 @@ class ProtImportParticles(ProtImportImages):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            EmxImport = importFromPlugin('emxlib', 'EmxImport',
+            EmxImport = importFromPlugin('emxlib.convert', 'EmxImport',
                                   errorMsg='Emx is needed to import .emx files',
                                   doRaise=True)
             self.importFilePath = abspath(self.emxFile.get('').strip())
