@@ -262,9 +262,9 @@ class ProtocolClassTreeProvider(TreeProvider):
         self.protocolClassName = protocolClassName
      
     def getObjects(self):
-        from pyworkflow.em import findSubClasses, getProtocols
+        from pyworkflow.em import findSubClasses, Domain
         return [pwobj.String(s)
-                for s in findSubClasses(getProtocols(),
+                for s in findSubClasses(Domain.getProtocols(),
                                         self.protocolClassName).keys()]
         
     def getColumns(self):
@@ -915,8 +915,8 @@ class ParamWidget:
             protClassName = self.param.protocolClassName.get()
             
             if self.param.allowSubclasses:
-                from pyworkflow.em import findSubClasses, getProtocols
-                classes = findSubClasses(getProtocols(), protClassName).keys()
+                from pyworkflow.em import findSubClasses, Domain
+                classes = findSubClasses(Domain.getProtocols(), protClassName).keys()
             else:
                 classes = [protClassName]
             
