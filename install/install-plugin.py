@@ -177,7 +177,10 @@ elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
 elif parsedArgs.mode == MODE_INSTALL_BINS:
     plugin = PluginInfo(parsedArgs.pluginName, remote=False)
     if plugin.isInstalled():
-        parsedArgs.binName.append(["-j", parsedArgs.j])
+
+        import time
+        time.sleep(10)
+        parsedArgs.binName.extend(["-j", parsedArgs.j])
         plugin.installBin(args=parsedArgs.binName)
 
 elif parsedArgs.mode == MODE_UNINSTALL_BINS:
