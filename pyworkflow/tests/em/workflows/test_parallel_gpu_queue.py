@@ -80,7 +80,7 @@ class TestQueueBase(BaseTest):
         cls.sampling = protPreproc.outputParticles.getSamplingRate()
         return protPreproc
 
-    def _checkAsserts(self, relionProt):
+    def _checkAsserts(self, prot):
         """ If relionProt.useQueue() is True, first of all
             is checked that the job is queued and after that
             we wait until it's finished to check the outputs
@@ -115,12 +115,9 @@ class TestQueueBase(BaseTest):
                 time.sleep(1)
             return False
 
-        def checkQueue(prot):
+        def checkQueue(jobId, protId):
             """ Check if the protocol job is queued
             """
-            jobId = prot.getJobId()   # is an string
-            protId = prot.getObjId()  # is an integer
-
             self.assertTrue(isJobInQueue(jobId, protId),
                             "The job %s corresponding to "
                             "the protocol %d has been not "
@@ -132,21 +129,22 @@ class TestQueueBase(BaseTest):
             isDone = wait_until(isJobInQueue, 10*60, jobId, protId, Yes=False)
             self.assertTrue(isDone, "Timeout: the job has not ended...")
             print(pwutils.magentaStr("    ...job ended!"))
-            return prot
 
-        if relionProt.useQueue():
+        if prot.useQueue():
             # if the protocol is use queue system, we check if it's queued
-            relionProt = checkQueue(relionProt)
+            jobId = prot.getJobId()   # is an string
+            protId = prot.getObjId()  # is an integer
+            checkQueue(jobId, protId)
             return  # I don't know why, but we cannot retrieve the output, permissions???
 
-        self.assertIsNotNone(relionProt.outputClasses,
+        self.assertIsNotNone(prot.outputClasses,
                              "There was a problem with Relion 2D classify")
 
-        classsesPixSize = relionProt.outputClasses.getImages().getSamplingRate()
+        classsesPixSize = prot.outputClasses.getImages().getSamplingRate()
         self.assertAlmostEquals(self.sampling, classsesPixSize,
                                 "There was a problem with the sampling rate "
                                 "of the particles")
-        for class2D in relionProt.outputClasses:
+        for class2D in prot.outputClasses:
                 self.assertTrue(class2D.hasAlignment2D())
 
 
