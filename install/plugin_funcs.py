@@ -116,13 +116,13 @@ class PluginInfo(object):
         self.dirName = self.getDirName()
 
         # link pip module in em/packages
-        try:
+        """try:
             os.symlink(self.getPipPath(), self.getEmPackagesLink())
         except OSError:
             if os.path.islink(self.getEmPackagesLink()):
                 return True
             else:
-                raise
+                raise"""
 
         return True
 
