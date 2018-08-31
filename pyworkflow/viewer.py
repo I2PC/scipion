@@ -120,7 +120,7 @@ class Viewer(object):
     """ A Viewer will provide several Views to visualize
     the data associated to data objects or protocol.
     
-    The _targets class property should contains a list of string
+    The _targets class property should contain a list of string
     with the class names that this viewer is able to visualize.
     For example: _targets = ['Image', 'SetOfImages']
     """
@@ -136,6 +136,9 @@ class Viewer(object):
         self.formWindow = args.get('parent', None)
         self._tkRoot = self.formWindow.root if self.formWindow else None
         
+    def getTkRoot(self):
+        return self._tkRoot
+
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
     

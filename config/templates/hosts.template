@@ -1,7 +1,7 @@
 # -*- conf -*-
 
 [localhost]
-PARALLEL_COMMAND = mpirun -np %_(JOB_NODES)d -bynode %_(COMMAND)s
+PARALLEL_COMMAND = mpirun -np %_(JOB_NODES)d --map-by node %_(COMMAND)s
 NAME = PBS/TORQUE
 MANDATORY = False
 SUBMIT_COMMAND = qsub %_(JOB_SCRIPT)s
