@@ -218,8 +218,12 @@ class ProtMonitorSummary(ProtMonitor):
         return None
 
     def _getMovieGainProtocol(self):
-        XmippProtMovieGain = importfromPlugin('xmipp3.protocols',
+        XmippProtMovieGain = pwutils.importFromPlugin('xmipp3.protocols',
                                               'XmippProtMovieGain')
+
+        if XmippProtMovieGain is None:
+            return None
+
         for protPointer in self.inputProtocols:
             prot = protPointer.get()
             if prot.getClassName() == XmippProtMovieGain.__name__:
