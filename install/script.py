@@ -247,10 +247,8 @@ arpack = env.addLibrary(
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
-if get('CUDA'):
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
-else:
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
+cudaStr = 'ON' if get('CUDA') else 'OFF'
+opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=' + cudaStr + '-DWITH_LIBV4L=ON -DWITH_V4L=OFF']
 
 if os.environ.get('OPENCV_VER') == '3.4.1':
     opencvFlags.append('-DCMAKE_INSTALL_PREFIX=' + env.getSoftware())

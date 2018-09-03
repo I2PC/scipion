@@ -230,7 +230,8 @@ class ColumnProperties():
                 'columnName': self.getName(),
                 'columnLabel': self.getLabel()
                 }
-        
+
+
 def getArchitecture():
     import platform
     arch = platform.architecture()[0]
@@ -238,7 +239,8 @@ def getArchitecture():
         if a in arch:
             return a
     return 'NO_ARCH' 
-    
+
+
 def getJavaIJappArguments(memory, appName, appArgs):
     """ Build the command line arguments to launch 
     a Java application based on ImageJ. 
@@ -248,7 +250,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     """ 
     if memory is None:
         memory = getJvmMaxMemory()
-        print "No memory size provided. Using default: " + memory
+        print "No memory size provided. Using default: %s" % memory
     
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     imagej_home = join(os.environ['XMIPP_HOME'], "external", "imagej")
@@ -260,15 +262,17 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
     return args
 
+
 def runJavaIJapp(memory, appName, args, env={}):
     from pyworkflow.em.packages import xmipp3
     env.update(xmipp3.getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
-    print 'java %s'%args
+    print 'java %s' % args
     #return subprocess.Popen('java ' + args, shell=True, env=env)
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
+
 
 def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
                               memory=None, pickerProps=None, inTmpFolder=False):
@@ -319,7 +323,8 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
         else:
             answer = 'no answer available'
             self.request.sendall(answer + '\n')
-    
+
+
 class MySocketServer (SocketServer.TCPServer):
 
     def serve_forever(self):
