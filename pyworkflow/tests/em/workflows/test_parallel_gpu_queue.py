@@ -81,8 +81,8 @@ class TestQueueBase(BaseTest):
         return protPreproc
 
     def _checkAsserts(self, prot):
-        """ If relionProt.useQueue() is True, first of all
-            is checked that the job is queued and after that
+        """ If prot.useQueue() is True, first of all
+            we check if the job is queued and after that
             we wait until it's finished to check the outputs
         """
         def isJobInQueue(jobId, protId, Yes=True):
@@ -90,16 +90,16 @@ class TestQueueBase(BaseTest):
                 are found in the queue.
                 Set Yes=False to get a True when the job disappears
             """
-            isQueueThere = not Yes
+            isThere = not Yes
             queueRaw = subprocess.check_output(QUEUE_COMMAND)
             queueList = queueRaw.split('\n')
             for queueLine in queueList:
                 # we will assume that if protId and jobId
                 # is in the string, the task is there
                 if jobId in queueLine and str(protId) in queueLine:
-                    isQueueThere = Yes
+                    isThere = Yes
                     break
-            return isQueueThere
+            return isThere
 
         def wait_until(condition, timeout, *args, **kwargs):
             """ :param condition: function handle that
