@@ -29,8 +29,12 @@ from bibtex import _bibtex  # Load bibtex dict with references
 _logo = "phenix.png"
 
 from protocol_emringer import PhenixProtRunEMRinger
-#from protocol_molprobity import PhenixProtRunMolprobity
+# from protocol_molprobity import PhenixProtRunMolprobity
 from viewer_emringer import PhenixProtRunEMRingerViewer
+# from viewer_molprobity import PhenixProtRunMolprobityViewer
+# from protocol_real_space_refine import PhenixProtRunRSRefine
+from protocol_superpose_pdbs import PhenixProtRunSuperposePDBs
+from viewer_superpose_pdbs import PhenixProtRunSuperposePDBsViewer
+# from viewer_real_space_refine import PhenixProtRunRSRefineViewer
 _references = ['Adams_2010']
-
 _environ = getEnviron()
