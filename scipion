@@ -413,6 +413,9 @@ def main():
         import scripts.clean as clean
         sys.exit(0)
 
+    # elif mode == MODE_INSTALL_BINS:
+    #     runScript('scipion install %s' % ' '.join(sys.argv[2:]))
+
     elif mode in PLUGIN_MODES:
         cwd = os.getcwd()
         os.chdir(SCIPION_HOME)
@@ -458,6 +461,7 @@ Example: scipion install eman-2.12
         def build(args):
             # Just importing the script will launch the install actions
             import install.script as script
+            script.env.execute()
             return 0
 
         if args and args[0] == '--binary':

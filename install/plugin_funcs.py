@@ -45,9 +45,9 @@ class PluginInfo(object):
         self.binVersions = []
         self.pluginEnv = None
 
-        # Plugin class declared inside the pipmodule
+        # Distribution
+        self._dist = None
         self._plugin = None
-
         if self.remote:
             self.setRemotePluginInfo()
 
@@ -61,18 +61,28 @@ class PluginInfo(object):
         self.installPipModule()
         self.installBin()
 
+    def _getDistribution(self):
+        if self._dist is None:
+
+            try:
+                self._dist = pkg_resources.get_distribution(self.pipName)
+            except:
+                pass
+        return self._dist
+
     def _getPlugin(self):
         if self._plugin is None:
 
             try:
-                self._plugin = Domain.getPlugin(self.pipName)
+                dirname = self.getDirName()
+                self._plugin = Domain.getPlugin(dirname)
             except:
                 pass
         return self._plugin
 
     def hasPipPackage(self):
         """Checks if the current plugin is installed via pip"""
-        return self._getPlugin() is not None
+        return self._getDistribution() is not None
 
     def isInstalled(self):
         """Checks if the current plugin is installed (i.e. has pip package).
@@ -149,15 +159,13 @@ class PluginInfo(object):
         return
 
     def uninstallPip(self):
-        """Removes pip package from site-packages and removes link in
-        pyworkflow/em/packages"""
+        """Removes pip package from site-packages"""
         print('Removing %s plugin...' % self.pipName)
         try:
             from pip import main as pipmain
         except:
             from pip._internal import main as pipmain
-        if os.path.exists(self.emLink):
-            os.remove(self.emLink)
+
         pipmain(['uninstall', '-y', self.pipName])
         return
 
@@ -264,7 +272,8 @@ class PluginInfo(object):
         if pluginModule is not None:
             pluginClass = pluginModule.Plugin
         else:
-            print("Warning: couldn't find Plugin in %s" % self.dirName)
+            print("Warning: couldn't find Plugin for %s" % self.pipName)
+            print("Dirname: %s" % self.getDirName())
             pluginClass = None
         return pluginClass
 
@@ -281,6 +290,7 @@ class PluginInfo(object):
             return environment
         else:
             return None
+
     def getBinVersions(self):
         """Get list with names of binaries of this plugin"""
         environment = self.getInstallenv()
@@ -294,29 +304,17 @@ class PluginInfo(object):
         # the name of the package's top level directory
         return pkg_resources.get_distribution(self.pipName).get_metadata('top_level.txt').strip()
 
-    def getPipPath(self):
-        """Get path of the plugin in site packages folder"""
-        if self.dirName:
-            return os.path.join(Environment.getPythonPackagesFolder(), self.dirName)
-        else:
-            return ""
-
-    def getEmPackagesLink(self):
-        """Get path of the plugin link in Em packages folder"""
-        if self.dirName:
-            return os.path.join(Environment.getEmPackagesFolder(), self.dirName)
-        else:
-            return ""
-
     def printBinInfoStr(self):
         """Returns string with info of binaries installed to print in console
         with flag --help"""
-        env = self.getInstallenv()
-
         try:
+            env = self.getInstallenv()
+
             return env.printHelp().split('\n', 1)[1]
-        except Exception as e:
+        except IndexError as noBins:
             return " ".rjust(14) + "No binaries information defined.\n"
+        except Exception as e:
+            return " ".rjust(14) + "Error getting binaries info: %s" % e.message
 
 
 class PluginRepository(object):
@@ -362,16 +360,21 @@ class PluginRepository(object):
         for pluginName in targetPlugins:
             pluginsJson[pluginName].update(remote=getPipData)
             self.plugins[pluginName] = PluginInfo(**pluginsJson[pluginName])
+
+        # Add local plugins in development
         self._appendDevPlugins(self.plugins)
 
         return self.plugins
 
     def _appendDevPlugins(self, pluginDict):
+        from pip._internal.utils.misc import get_installed_distributions
+        for dist in get_installed_distributions():
+            name = dist.project_name
+            if "scipion-em" in name and name not in pluginDict:
+                devPlugin = PluginInfo(name, name="dev-%s" % name, remote=False,
+                                       dirName="unknown")
+                pluginDict[name] = devPlugin
 
-        for name, plugin in Domain.getPlugins().iteritems():
-            devPlugin = PluginInfo(name, name="dev-%s" % name, remote=False,
-                                   dirName=plugin.__file__)
-            pluginDict[name] = devPlugin
 
     def printPluginInfoStr(self, withBins=False, withUpdates=False):
         """Returns string to print in console which plugins are installed.
@@ -394,7 +397,6 @@ class PluginRepository(object):
             keys = sorted(pluginDict.keys())
             for name in keys:
                 plugin = pluginDict[name]
-
                 if withBins and not plugin.isInstalled():
                     continue
                 printStr += "%16s" % name

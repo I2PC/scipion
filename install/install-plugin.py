@@ -166,7 +166,7 @@ elif mode == MODE_INSTALL_PLUGIN:
 
 elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
     for pluginName in parsedArgs.plugin:
-        plugin = PluginInfo(pluginName, remote=False)
+        plugin = PluginInfo(pluginName, pluginName, remote=False)
         if plugin.isInstalled():
             if not parsedArgs.noBin:
                 plugin.uninstallBins()
