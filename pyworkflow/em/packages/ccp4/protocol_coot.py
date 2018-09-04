@@ -289,7 +289,7 @@ the pdb file from coot  to scipion '
 
         if os.path.isfile(self._getExtraPath('STOPPROTCOL')):
             self.setStatus(STATUS_FINISHED)
-            # NOTE: (ROB) can a derty way to make an interactive process finish but I do not
+            # NOTE: (ROB) can a dirty way to make an interactive process finish but I do not
             # think there is a clean one
             self._steps[self.step-1].setInteractive(False)
 
