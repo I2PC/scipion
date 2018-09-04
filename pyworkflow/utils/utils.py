@@ -729,8 +729,8 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
 
 
 def pluginNotFound(plugName, errorMsg='', doRaise=False):
-    msgStr = "%s plugin not found. %s\n" % (plugName, errorMsg)
-    msgStr += "  > See 'scipion install --list' to install it."
+    msgStr = " > %s plugin not found. %s\n" % (plugName, errorMsg)
+    # msgStr+= "  See 'scipion install --help' to install it."  # FIXME: give a valid hint to install the plugin
     if doRaise:
         raise Exception(msgStr)
     else:
@@ -739,9 +739,9 @@ def pluginNotFound(plugName, errorMsg='', doRaise=False):
 
 
 def importFromPlugin(module, method='', errorMsg='', doRaise=False):
-    """ This method try to import the method from the plugin/module and
-        returns what is imported if not fails. When the importation fails
-        (due to the plugin is not found),
+    """ This method try to import either the method from the module/plugin
+        or the whole module/plugin and returns what is imported if not fails.
+        When the importation fails (due to the plugin is not found),
         it prints a common message + optional errorMsg or
         it raise with the same message if doRaise is True.
         """

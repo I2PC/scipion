@@ -45,7 +45,8 @@ class ProtImportCTF(ProtImportFiles):
     IMPORT_FROM_XMIPP3 = 1
     IMPORT_FROM_GRIGORIEFF = 2
     IMPORT_FROM_GCTF = 3
-    IMPORT_FROM_SCIPION = 4
+    IMPORT_FROM_EMAN2 = 4
+    IMPORT_FROM_SCIPION = 5
 
     #--------------------------- DEFINE param functions ------------------------
 
@@ -63,7 +64,7 @@ class ProtImportCTF(ProtImportFiles):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp', 'grigorieff', 'gctf', 'scipion']
+        return ['auto', 'xmipp', 'grigorieff', 'gctf', 'eman2', 'scipion']
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_AUTO
@@ -100,6 +101,9 @@ class ProtImportCTF(ProtImportFiles):
         elif importFrom == self.IMPORT_FROM_GCTF:
             GctfImportCTF = importFromPlugin('gctf.convert', 'GctfImportCTF', doRaise=True)
             return GctfImportCTF(self)
+        elif importFrom == self.IMPORT_FROM_EMAN2:
+            EmanImport = importFromPlugin('eman2.convert', 'EmanImport', doRaise=True)
+            return EmanImport(self, None)
         elif importFrom == self.IMPORT_FROM_SCIPION:
             from dataimport import ScipionImport
             return ScipionImport(self, self.filesPath.get('').strip())
@@ -221,13 +225,11 @@ class ProtImportCTF(ProtImportFiles):
     def getFormat(self):
         for fileName, _ in self.iterFiles():
             if (fileName.endswith('.log') or 
-                fileName.endswith('.txt') or
-                fileName.endswith('.out')):
+                    fileName.endswith('.txt') or
+                    fileName.endswith('.out')):
                 return self.IMPORT_FROM_GRIGORIEFF
             if fileName.endswith('.ctfparam'):
                 return self.IMPORT_FROM_XMIPP3
+            if fileName.endswith('.json'):
+                return self.IMPORT_FROM_EMAN2
         return -1
-
-
-
-

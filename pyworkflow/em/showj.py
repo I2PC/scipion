@@ -103,6 +103,11 @@ PROJECT_PATH = 'projectPath'
 OBJECT_ID = 'objectId'
 
 
+def getJvmMaxMemory():
+    # Memory in GB
+    return os.environ.get("JAVA_MAX_MEMORY", 2)
+
+
 class ColumnsConfig():
     """ Store the configuration of the columns for a given table in a dataset.
     The order of the columns will be stored and configuration for each columns.
@@ -241,8 +246,8 @@ def getJavaIJappArguments(memory, appName, appArgs):
     appName: the qualified name of the java application.
     appArgs: the arguments specific to the application.
     """ 
-    if len(memory) == 0:
-        memory = "1g"
+    if memory is None:
+        memory = getJvmMaxMemory()
         print "No memory size provided. Using default: " + memory
     
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
@@ -252,7 +257,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     javaLib = join(javaBind, 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
-    args = "-Xmx%(memory)s -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+    args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
 
     return args
 
@@ -270,7 +275,7 @@ def runJavaIJapp(memory, appName, args, env=None):
 
 
 def launchSupervisedPickerGUI(micsFn, outputDir, protocol,
-                              mode=None, memory='2g',
+                              mode=None, memory=None,
                               pickerProps=None, inTmpFolder=False):
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
         args = "--input %s --output %s" % (micsFn, outputDir)
@@ -287,7 +292,7 @@ def launchSupervisedPickerGUI(micsFn, outputDir, protocol,
         if inTmpFolder:
             args += " --tmp true"
 
-        return runJavaIJapp("%s" % memory, app, args)
+        return runJavaIJapp(memory, app, args)
     
 
 def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
