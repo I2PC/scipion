@@ -182,7 +182,7 @@ png = env.addLibrary(
     'png',
     tar='libpng-1.6.16.tgz',
     deps=[zlib],
-    default=False)
+    default=True)
 
 tiff = env.addLibrary(
      'tiff',
