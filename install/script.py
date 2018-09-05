@@ -431,6 +431,71 @@ env.addPackage('spider', version='21.13',
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
 
+env.addPackage('motioncor2', version='17.01.30',
+               tar='motioncor2_01302017.tgz')
+
+env.addPackage('motioncor2', version='1.0.2',
+               tar='motioncor2-1.0.2.tgz')
+
+env.addPackage('motioncor2', version='1.0.5',
+               tar='motioncor2-1.0.5.tgz')
+
+env.addPackage('motioncor2', version='1.1.0',
+               tar='motioncor2-1.1.0.tgz')
+
+env.addPackage('simple', version='2.1',
+               tar='simple2.tgz')
+
+env.addPackage('chimera', version='1.10.1',
+               tar='chimera-1.10.1-linux_x86_64.tgz',
+               targetDir='chimera-1.10.1',
+               commands=[('./scipion_installer','bin/chimera')])
+
+env.addPackage('nma',
+               tar='nma.tgz',
+               commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
+                         ('cd NMA_cart; LDFLAGS=-L%s make; mv nma_* ..' %
+                          Environment.getLibFolder(), 'nma_diag_arpack')],
+               deps=['arpack'])
+
+env.addPackage('cryoem', version='1.0',
+                tar='cryoem-1.0.tgz',
+                pythonMod=True, default=False,
+                deps=[scipy, matplotlib, cythongsl])
+
+env.addPackage('powerfit', version='2.0',
+                tar='powerfit.tgz',
+                targets=['powerfit-2.0*'],
+                pythonMod=True, default=False,
+                deps=[numpy, scipy, fftw3])
+
+env.addPackage('gEMpicker', version='1.1',
+               tar='gEMpicker_v1.1.tgz')
+
+env.addPackage('gctf', version='0.50',
+               tar='Gctf_v0.50.tgz')
+
+env.addPackage('gctf', version='1.06',
+               tar='Gctf_v1.06.tgz')
+
+env.addPackage('gautomatch', version='0.53',
+               tar='Gautomatch_v0.53.tgz')
+
+env.addPackage('ethan', version='1.2',
+               tar='ethan-1.2.tgz',
+               commands=[('make', 'ethan')])
+
+fsc_commands = [('conda env create -f environment.yml && touch IS_INSTALLED',
+                 'IS_INSTALLED')]
+
+env.addPackage('nysbc-3DFSC', version='2.5',
+               tar='nysbc-3DFSC_2.5.tgz',
+               commands=fsc_commands,
+               neededProgs=['conda'])
+
+env.addPackage('cryoEF', version='1.1.0',
+               tar='cryoEF_v1.1.0.tgz')
+
 # Try to add binaries defined by the plugins
 #WARNING: this requires to be using Scipion python and not any PYTHON!!
 try:

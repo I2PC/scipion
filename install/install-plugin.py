@@ -146,7 +146,6 @@ if mode not in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS] and parsedArgs.help:
     parserUsed.exit(0)
 
 elif mode == MODE_INSTALL_PLUGIN:
-
     if parsedArgs.checkUpdates:
         print(pluginRepo.printPluginInfoStr(withUpdates=True))
         installParser.exit(0)
@@ -165,6 +164,10 @@ elif mode == MODE_INSTALL_PLUGIN:
                     plugin.installBin()
 
 elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
+
+    import time
+    time.sleep(5)
+
     for pluginName in parsedArgs.plugin:
         plugin = PluginInfo(pluginName, pluginName, remote=False)
         if plugin.isInstalled():

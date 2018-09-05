@@ -40,8 +40,6 @@ class PluginInfo(object):
         # things we have when installed
         self.dirName = ""
         self.pipVersion = ""
-        self.pipPath = ""
-        self.emLink = ""
         self.binVersions = []
         self.pluginEnv = None
 
@@ -63,7 +61,6 @@ class PluginInfo(object):
 
     def _getDistribution(self):
         if self._dist is None:
-
             try:
                 self._dist = pkg_resources.get_distribution(self.pipName)
             except:
@@ -166,6 +163,7 @@ class PluginInfo(object):
         except:
             from pip._internal import main as pipmain
 
+
         pipmain(['uninstall', '-y', self.pipName])
         return
 
@@ -252,9 +250,8 @@ class PluginInfo(object):
 
                 self.pipVersion = metadata.get('Version', "")
                 self.dirName = self.getDirName()
-                self.pipPath = self.getPipPath()
-                self.emLink = self.getEmPackagesLink()
                 self.binVersions = self.getBinVersions()
+
             except:
                 # Case B: code local but not yet a pipmodule.
                 pass
@@ -302,6 +299,7 @@ class PluginInfo(object):
         the _plugin object.)"""
         # top level file is a file included in all pip packages that contains
         # the name of the package's top level directory
+
         return pkg_resources.get_distribution(self.pipName).get_metadata('top_level.txt').strip()
 
     def printBinInfoStr(self):
@@ -314,7 +312,8 @@ class PluginInfo(object):
         except IndexError as noBins:
             return " ".rjust(14) + "No binaries information defined.\n"
         except Exception as e:
-            return " ".rjust(14) + "Error getting binaries info: %s" % e.message
+            return " ".rjust(14) + "Error getting binaries info: %s" % \
+                   e.message + "\n"
 
 
 class PluginRepository(object):
@@ -361,19 +360,7 @@ class PluginRepository(object):
             pluginsJson[pluginName].update(remote=getPipData)
             self.plugins[pluginName] = PluginInfo(**pluginsJson[pluginName])
 
-        # Add local plugins in development
-        self._appendDevPlugins(self.plugins)
-
         return self.plugins
-
-    def _appendDevPlugins(self, pluginDict):
-        from pip._internal.utils.misc import get_installed_distributions
-        for dist in get_installed_distributions():
-            name = dist.project_name
-            if "scipion-em" in name and name not in pluginDict:
-                devPlugin = PluginInfo(name, name="dev-%s" % name, remote=False,
-                                       dirName="unknown")
-                pluginDict[name] = devPlugin
 
 
     def printPluginInfoStr(self, withBins=False, withUpdates=False):
