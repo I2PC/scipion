@@ -150,7 +150,8 @@ elif mode == MODE_INSTALL_PLUGIN:
         print(pluginRepo.printPluginInfoStr(withUpdates=True))
         installParser.exit(0)
 
-    pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0], getPipData=True)
+    pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0],
+                                       getPipData=True)
     if not pluginDict:
         print('\n' + installParser.epilog)
     else:
@@ -164,9 +165,6 @@ elif mode == MODE_INSTALL_PLUGIN:
                     plugin.installBin()
 
 elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
-
-    import time
-    time.sleep(5)
 
     for pluginName in parsedArgs.plugin:
         plugin = PluginInfo(pluginName, pluginName, remote=False)
