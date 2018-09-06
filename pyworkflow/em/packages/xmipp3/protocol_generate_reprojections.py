@@ -119,17 +119,35 @@ class XmippProtGenerateReprojections(ProtAnalysis3D):
 
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
+
         self.newAssignmentPerformed = os.path.exists(self._getExtraPath("angles.xmd"))
         self.samplingRate = self.inputSet.get().getSamplingRate()
         outputSet = self._createSetOfParticles()
         outputSet.copyInfo(imgSet)
         if not self.newAssignmentPerformed:
             outputSet.setAlignmentProj()
-        outputSet.copyItems(imgSet,
-                            updateItemCallback=self._processRow,
-                            itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
+        self.iterMd = md.iterRows(imgFn, md.MDL_ITEM_ID)
+        self.lastRow = next(self.iterMd)
+        outputSet.copyItems(imgSet, #imgSubSet
+                            updateItemCallback=self._updateItem #self._processRow
+                            )
         self._defineOutputs(outputParticles=outputSet)
         self._defineSourceRelation(self.inputSet, outputSet)
+
+    def _updateItem(self, particle, row):
+        count = 0
+
+        while self.lastRow and particle.getObjId() == self.lastRow.getValue(
+                md.MDL_ITEM_ID):
+            count += 1
+            if count:
+                self._processRow(particle, self.lastRow)
+            try:
+                self.lastRow = next(self.iterMd)
+            except StopIteration:
+                self.lastRow = None
+
+        particle._appendItem = count > 0
 
     def _processRow(self, particle, row):
         def __setXmippImage(label):
@@ -141,9 +159,13 @@ class XmippProtGenerateReprojections(ProtAnalysis3D):
             else:
                 img = getattr(particle, attr)
             img.setLocation(xmippToLocation(row.getValue(label)))
-        
+        particle.setFileName(row.getValue(xmipp.MDL_IMAGE))
         __setXmippImage(xmipp.MDL_IMAGE)
         __setXmippImage(xmipp.MDL_IMAGE_REF)
+
+        setXmippAttributes(particle, row, xmipp.MDL_IMAGE_ORIGINAL,
+                           xmipp.MDL_IMAGE_REF)
+
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

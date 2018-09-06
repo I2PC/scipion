@@ -28,7 +28,7 @@ import xmipp
 #from pyworkflow.em.metadata.utils import iterRows
 #import pyworkflow.em.metadata as md
 
-
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
 metadata = xmipp.MetaData('/home/javiermota/ScipionUserData/projects'
                       '/CNBScipionCourse/Runs/023211_XmippProtGenerateReprojections/extra/anglesCont.xmd')
 Inoise=xmipp.Image()

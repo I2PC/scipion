@@ -17,6 +17,7 @@ import tensorflow as tf
 import keras
 from keras.callbacks import History
 from skimage.transform import rotate, AffineTransform, warp
+from skimage.feature import match_template
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -24,34 +25,39 @@ import matplotlib.pyplot as plt
 
 path1 = '/home/javiermota/ScipionUserData/projects/CNBScipionCourse/Runs/023211_XmippProtGenerateReprojections/extra/anglesCont.xmd'
 root = '/home/javiermota/ScipionUserData/projects/CNBScipionCourse/'
-path2 = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs/037132_XmippProtGenerateReprojections/extra/anglesCont.xmd'
+path2 = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs/037537_XmippProtGenerateReprojections/extra/anglesCont.xmd'
 root2 = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/'
 
-cnbCourseparticles = '/home/javiermota/ScipionUserData/projects' \
-                     '/CNBScipionCourse/Runs/006500_XmippProtCropResizeParticles/extra/output_images.xmd'
-path3 = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs' \
-        '/037132_XmippProtGenerateReprojections/extra/anglesCont.xmd'
-path3noise = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs/037219_XmippProtAddNoiseParticles/extra/Noisy.xmd'
+cnbCourseparticles = '/home/javiermota/ScipionUserData/projects/CNBScipionCourse/Runs/024405_XmippProtCropResizeParticles/extra/output_images.xmd'
+
+path1noise = '/home/javiermota/ScipionUserData/projects/CNBScipionCourse/Runs/023591_XmippProtAddNoiseParticles/extra/Noisy.xmd'
+
+path2noise = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs' \
+             '/037624_XmippProtAddNoiseParticles/extra/Noisy.xmd'
 
 pathGallery = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs' \
-              '/037163_XmippProtCreateGallery/images.xmd'
+              '/037568_XmippProtCreateGallery/images.xmd'
 
 galleryCourse = '/home/javiermota/ScipionUserData/projects/CNBScipionCourse' \
                 '/Runs/023535_XmippProtCreateGallery/images.xmd'
 
 pathtest = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs/020417_XmippProtExtractParticles/images.xmd'
-cossparticles = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs\
-/009654_XmippProtExtractParticles/images.xmd'
+cossparticles = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs/009654_XmippProtExtractParticles/images.xmd'
+highresParticlesCoss = '/home/javiermota/rinchen3/ScipionUserData/projects' \
+                       '/coss/Runs/037851_XmippProtCropResizeParticles/extra' \
+                       '/output_images.xmd'
+
+reprojectionParticles = '/home/javiermota/rinchen3/ScipionUserData/projects/coss/Runs/038007_XmippProtCropResizeParticles/extra/output_images.xmd'
 
 class GAN():
     def __init__(self):
-        self.img_rows = 60 #40
-        self.img_cols = 60 #40
+        self.img_rows = 100 #40
+        self.img_cols = 100 #40
         self.channels = 1
         self.shape = self.img_rows*self.img_cols
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
 
-        optimizer = Adam(0.00007, 0.5)
+        optimizer = Adam(0.0001, 0.5) #0.00007, 0.5
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
@@ -78,7 +84,7 @@ class GAN():
         self.combined = Model(z, valid)
         self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
 
-    def ExtractInfoMetadata(self, path, root, label, crop, size, norm=-1):
+    def ExtractInfoMetadata(self, path, root, label, size=0, norm=-1):
         metadata = xmipp.MetaData(path)
         Image = []
         I = xmipp.Image()
@@ -90,15 +96,20 @@ class GAN():
             I.read(fn)
             #I.write('/home/javiermota/image')
             Data = I.getData()
-            Imresize = cv2.resize(Data, (size, size),
-                                  interpolation=cv2.INTER_CUBIC)
-            Imresize = Imresize[crop:-crop, crop:-crop]
+            if size == 0:
+                Imresize = Data
+            else:
+                Imresize = cv2.resize(Data, (size, size),
+                                    interpolation=cv2.INTER_CUBIC)
 
             if norm == -1:
                 Imnormalize = 2*(Imresize-np.min(Imresize))/(np.max(Imresize)-np.min(
                                   Imresize))-1
             elif norm == 0:
                 Imnormalize = Imresize
+            elif norm == 1:
+                Imnormalize = (Imresize-np.min(Imresize))/(np.max(Imresize)-np.min(
+                                  Imresize))
             else:
                 Imnormalize = (Imresize-np.mean(Imresize))/np.std(Imresize)
 
@@ -112,97 +123,100 @@ class GAN():
 
         return Image
 
-    def addNoise(self, image):
-
-        imageNoise = []
-        projections = []
-        for std in np.arange(0.5,7,0.5):
-
-            noise = np.random.normal(0.0, std, image.shape)
-            imageNoise.append(image + noise)
-            projections.append(image)
-
-        projections = np.asarray(projections).astype('float32')
-        projections = projections.reshape(len(projections) * projections.shape[
-            1], projections.shape[2], projections.shape[3], 1)
-        imageNoise = np.asarray(imageNoise).astype('float32')
-        imageNoise = imageNoise.reshape(len(imageNoise) * imageNoise.shape[
-            1],imageNoise.shape[2],imageNoise.shape[3], 1)
-
-        return projections, imageNoise
-
-
     def normalization(self, image, type='mean'):
 
-        if type == 'mean':
-            Imnormalize = (image - np.mean(image)) / np.std(image)
+        NormalizedImage = []
+        for im in image:
+            if type == 'mean':
+                Imnormalize = (im - np.mean(im)) / np.std(im)
 
-        if type == -1:
-            Imnormalize = 2 * (image - np.min(image)) / (
-                        np.max(image) - np.min(
-                    image)) - 1
+            if type == -1:
+                Imnormalize = 2 * (im - np.min(im)) / (
+                            np.max(im) - np.min(im)) - 1
 
-        return Imnormalize
+            if type == 1:
+                Imnormalize = (im - np.min(im)) / (
+                        np.max(im) - np.min(im))
+
+            if type == 'RGB':
+                Imnormalize = np.floor(im*255)
+
+            NormalizedImage.append(Imnormalize)
+
+        NormalizedImage = np.array(NormalizedImage).astype('float')
+        NormalizedImage = NormalizedImage.reshape(len(NormalizedImage), NormalizedImage.shape[1], NormalizedImage.shape[2], 1)
+
+        return NormalizedImage
+
+    def addNoise(self, image):
+
+        levelsNoise = np.arange(0.5,3.5,0.1)
+        k = np.random.randint(0,len(levelsNoise))
+        noise = np.random.normal(0.0, levelsNoise[k], image.shape)
+        imageNoise = image + noise
+
+        return imageNoise
 
     def applyTransform(self, image):
 
-        noise = []
+        angle = np.random.randint(-180,180)
+        shiftx = np.random.randint(-10,10)
+        shifty = np.random.randint(-10,10)
+
+        imRotate = rotate(image,angle,mode='wrap')
+        shift = AffineTransform(translation=[shiftx, shifty])
+        imShift = warp(imRotate, shift, mode='wrap',
+                       preserve_range=True)
+
+        return imShift
+
+    def generate_data(self, images, batch_size):
+
         proj = []
-        for i,im in enumerate(image):
+        noiseImage = []
+        for j in range(0,batch_size):
+            idx = np.random.randint(0, X_train.shape[0])
+            img = images[idx]
 
-            angle = np.random.randint(-180,180,5).astype('float64')
-            shiftx = np.random.randint(-5,5,5)
-            shifty = np.random.randint(-5, 5, 5)
+            projection = self.applyTransform(img)
+            noise = self.addNoise(projection)
+            proj.append(projection)
+            noiseImage.append(noise)
 
-            for j, r in enumerate(angle):
+        projections = np.asarray(proj).astype('float32')
+        imageNoise = np.asarray(noiseImage).astype('float32')
 
-                imRotate = rotate(im,r,mode='wrap')
-                shift = AffineTransform(translation=[shiftx[j], shifty[j]])
-                imShift = warp(imRotate, shift, mode='wrap',
-                               preserve_range=True)
-                '''imRotateNoise = rotate(imageN[i], r, mode='wrap')
-                imShiftNoise = warp(imRotateNoise, shift, mode='wrap',
-                               preserve_range=True)'''
-
-                proj.append(self.normalization(imShift,-1))
-                proj.append(self.normalization(imRotate, -1))
-                '''noise.append(self.normalization(imShiftNoise, 'mean'))
-                noise.append(self.normalization(imRotateNoise, 'mean'))'''
-
-        proj = np.asarray(proj).astype('float64')
-
-        return proj
-
+        return projections, imageNoise
 
     def build_generator(self):
 
         #noise_shape = (self.shape,)
 
-        model = Sequential()
+        #model = Sequential()
 
         input_img = Input(shape=self.img_shape,
                           name='input')
-        x = Conv2D(32,(9,9),padding='same')(input_img)
+        x = Conv2D(32,(21, 21),padding='same')(input_img)
         x = BatchNormalization(momentum=0.8)(x)
         x = LeakyReLU(alpha=0.2)(x)
         x = AveragePooling2D((2, 2), padding='same')(x)
-        x = Conv2D(64, (5, 5), padding='same')(x)
+        x = Conv2D(64, (15, 15), padding='same')(x)
         x = BatchNormalization(momentum=0.8)(x)
         x = LeakyReLU(alpha=0.2)(x)
         encoded = AveragePooling2D((2, 2), padding='same', name='encoder')(x)
-        x = Conv2D(128, (3, 3), padding='same')(encoded)
+        x = Conv2D(64, (3, 3), padding='same')(encoded)
         x = BatchNormalization(momentum=0.8)(x)
         x = LeakyReLU(alpha=0.2)(x)
         x = UpSampling2D(2)(x)
-        x = Conv2D(64, (7, 7), padding='same')(x)
+        x = Conv2D(32, (7, 7), padding='same')(x)
         x = BatchNormalization(momentum=0.8)(x)
         x = LeakyReLU(alpha=0.2)(x)
         x = UpSampling2D(2)(x)
         '''x = Conv2D(32, (3, 3), padding='same')(x)
         x = BatchNormalization(momentum=0.8)(x)
         x = LeakyReLU(alpha=0.2)(x)'''
-        x = Conv2D(1, (7, 7), padding='same')(x)
-        decoded = Activation('tanh')(x)
+        x = Conv2D(1, (9, 9), padding='same')(x)
+        decoded = Activation('linear')(x)
         '''
         model.add(Dense(256, input_shape=noise_shape))
         model.add(LeakyReLU(alpha=0.2))
@@ -231,28 +245,23 @@ class GAN():
 
         model = Sequential()
 
-        model.add(Conv2D(32, (5,5), padding='same', input_shape=self.img_shape))
-        model.add(LeakyReLU())
-        model.add(Conv2D(64, (3, 3), padding='same'))
-        model.add(BatchNormalization())
-        model.add(LeakyReLU())
+        '''model.add(Conv2D(64, (3, 3), padding='same', input_shape=img_shape))
+        model.add(LeakyReLU(alpha=0.2))
         model.add(Conv2D(128, (3, 3), padding='same'))
-        model.add(BatchNormalization())
-        model.add(LeakyReLU())
-        model.add(Conv2D(256, (3, 3), padding='same'))
-        model.add(BatchNormalization())
-        model.add(LeakyReLU())
-        model.add(Conv2D(1, (3, 3), padding='same'))
-        model.add(Activation('sigmoid'))
-
-        '''model.add(Flatten(input_shape=img_shape))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Conv2D(32, (3, 3), padding='same'))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))'''
+        model.add(Flatten(input_shape=img_shape))
         model.add(Dense(512))
         model.add(LeakyReLU(alpha=0.2))
-        #model.add(Dropout(0.5))
         model.add(Dense(256))
         model.add(LeakyReLU(alpha=0.2))
-        #model.add(Dropout(0.5))
-        model.add(Dense(1, activation='sigmoid'))'''
+        model.add(Dense(128))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(64))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(1, activation='sigmoid'))
         model.summary()
 
         img = Input(shape=img_shape)
@@ -260,50 +269,35 @@ class GAN():
 
         return Model(img, validity)
 
-    def train(self, X_train, noise, epochs, batch_size=128, save_interval=50):
-
-        # Load the dataset
-        #(X_train, _), (_, _) = mnist.load_data()
-
-        # Rescale -1 to 1
-        #X_train = (X_train.astype(np.float32) - 127.5) / 127.5
-        #X_train = np.expand_dims(X_train, axis=3)
+    def train(self, X_train, epochs, batch_size=128, save_interval=50):
 
         half_batch = int(batch_size / 2)
 
         self.lossD = []
         self.lossG = []
+        lossEpoch = []
         for epoch in range(epochs):
 
             # ---------------------
             #  Train Discriminator
             # ---------------------
-
+            imgs, noise1 = self.generate_data(X_train, half_batch)
             # Select a random half batch of images
-            idx = np.random.randint(0, X_train.shape[0], half_batch)
-            imgs = X_train[idx]
-
-            #noise7 = np.random.normal(0, 1, (half_batch, self.shape))
-            noise1 = noise[idx]
-            #noise1 = noise1.reshape(len(noise1), 1600)
 
             # Generate a half batch of new images
             gen_imgs = self.generator.predict(noise1)
-            '''plt.imshow(np.squeeze(gen_imgs[0]))
-            plt.gray()
-            plt.show()'''
             # Train the discriminator
-            d_loss_real = self.discriminator.train_on_batch(imgs, np.ones(
-                (half_batch, 1)))
-            d_loss_fake = self.discriminator.train_on_batch(gen_imgs, np.zeros(
-                (half_batch, 1)))
+            d_loss_real = self.discriminator.train_on_batch(imgs, np.round(
+                np.random.uniform(0.8,1.0,half_batch),1))#np.ones((half_batch, 1)))
+            d_loss_fake = self.discriminator.train_on_batch(gen_imgs,
+                                                            np.round(
+                                                                np.random.uniform(0.0,0.2,half_batch),1)) #np.zeros((half_batch, 1)))
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
             # ---------------------
             #  Train Generator
             # ---------------------
-            idy = np.random.randint(0, X_train.shape[0], batch_size)
-            noise2 = noise[idy]
+            imgs2, noise2 = self.generate_data(X_train, batch_size)
             #noise2 = noise2.reshape(len(noise2), 1600)
             #noise8 = np.random.normal(0, 1, (batch_size, self.shape))
 
@@ -320,38 +314,30 @@ class GAN():
 
             self.lossD.append(d_loss[0])
             self.lossG.append(g_loss)
+            lossEpoch.append(d_loss[0])
             # If at save interval => save generated image samples
             if epoch % save_interval == 0:
-                self.save_imgs(X_train, noise, epoch)
+                print "MeanLoss = ", np.mean(lossEpoch)
+                self.save_imgs(X_train, epoch)
+                lossEpoch = []
 
-        self.generator.save('AdversarialDenoisingCoss.h5')
+        self.generator.save('AdversarialDenoisingCoss100CNB.h5')
 
     def predict(self, model, data):
 
         if isinstance(data, basestring):
-            test = self.ExtractInfoMetadata(data, root2, xmipp.MDL_IMAGE, 5,
-                                        70,1)
+            test = self.ExtractInfoMetadata(data, root2, xmipp.MDL_IMAGE_ORIGINAL,
+                                            80,1)
         else:
             test = data
         prediction = model.predict(test)
 
-        '''for i, im in enumerate(prediction):
-            plt.subplot(1, 2, 1)
-            plt.imshow(np.squeeze(im))
-            plt.gray()
-            plt.subplot(1, 2, 2)
-            plt.imshow(np.squeeze(test[i]))
-            plt.gray()
-            plt.show()'''
-
         return prediction
 
-    def save_imgs(self, X_train, noise, epoch):
+    def save_imgs(self, X_train,epoch):
         filename = "denoise_%d.png"
-        idx = np.random.randint(0, X_train.shape[0], 10)
-        noise = noise[idx]#np.random.normal(0, 1, (r * c, self.shape))
-        #noise2 = noise.reshape(len(noise), 1600)
-        true = X_train[idx]
+        true, noise = self.generate_data(X_train, 10)
+
         gen_imgs = self.generator.predict(noise)
 
         # Rescale images 0 - 1
@@ -383,50 +369,63 @@ class GAN():
 if __name__ == '__main__':
     gan = GAN()
 
-    '''X_train1 = gan.ExtractInfoMetadata(path1, root, xmipp.MDL_IMAGE_REF,
+    '''X_train = gan.ExtractInfoMetadata(path1noise, root, xmipp.MDL_IMAGE,
                                         5, 70)'''
-    X_train2 = gan.ExtractInfoMetadata(path3, root2, xmipp.MDL_IMAGE,
-                                        5, 70)
-
-    # self.X_train = X_train2#np.concatenate((X_train1, X_train2), axis=0)
-    '''noise1 = gan.ExtractInfoMetadata(path1, root, xmipp.MDL_IMAGE,
-                                      5, 70, 1)'''
-    '''noise2 = gan.ExtractInfoMetadata(path3noise, root2, xmipp.MDL_IMAGE,
-                                      5, 70, 1)'''
-    # self.noise = noise2#np.concatenate((noise1, noise2), axis=0)
-
-    X = gan.applyTransform(X_train2)
-    X_train, noise = gan.addNoise(X)
-    #X_train = np.concatenate((X_train2, X), axis=0)
-    #noise = np.concatenate((noise2, y), axis=0)
-    #gan.predict()
-    #image = gan.ExtractInfoMetadata(path2, root2, xmipp.MDL_IMAGE_REF,5, 70)
-    gan.train(X_train, noise, epochs=10000, batch_size=32, save_interval=200)
-    noise1 = gan.ExtractInfoMetadata(cnbCourseparticles, root, xmipp.MDL_IMAGE,
-                                     5, 70, 1)
-    model = load_model('AdversarialDenoisingCoss.h5')
+    X_train = gan.ExtractInfoMetadata(path1, root, xmipp.MDL_IMAGE_REF, 100,
+                                       -1)
+    #gan.train(X_train, epochs=10000, batch_size=32, save_interval=200)
+    noise1 = gan.ExtractInfoMetadata(reprojectionParticles, root2,
+                                     xmipp.MDL_IMAGE, 0, 2)
+    projection = gan.ExtractInfoMetadata(reprojectionParticles, root2,
+                                         xmipp.MDL_IMAGE_REF, 100, 1)
+    model = load_model('AdversarialDenoisingCoss100.h5')
     predict = gan.predict(model, noise1)
+    '''model2 = load_model('AdversarialDenoisingCoss100CNB.h5')
+    predict2 = gan.predict(model2, noise1)'''
 
-    for i,im in enumerate(predict):
-        plt.subplot(1,2,1)
-        plt.imshow(np.squeeze(im), cmap='gray')
-        plt.subplot(1, 2, 2)
-        plt.imshow(np.squeeze(noise1[i]), cmap='gray')
-        '''plt.subplot(1, 3, 3)
-        plt.imshow(np.squeeze(X_train1[i]), cmap='gray')'''
-        plt.show()
-
-    '''
     NoiseEnhanced = []
     for i, im in enumerate(predict):
 
-        NewNoise = im + noise[i]
-        #NewNoise = gan.normalization(NewNoise,'mean')
+        NewNoise = (im + noise1[i])/2.0
         NoiseEnhanced.append(NewNoise)
 
-    NoiseEnhanced = np.array(NoiseEnhanced).astype('float')
+    NoiseEnhanced = np.asarray(NoiseEnhanced).astype('float32')
     NoiseEnhanced = NoiseEnhanced.reshape(len(NoiseEnhanced),
                                           NoiseEnhanced.shape[1],
                                           NoiseEnhanced.shape[2],1)
-    gan.train(X_train, noise, epochs=20000, batch_size=32, save_interval=200)'''
+    predictEnhanced = gan.predict(model, NoiseEnhanced)
+    predictEnhanced = gan.normalization(predictEnhanced, 1)
+
+    '''NoiseEnhanced2 = []
+    for i, im in enumerate(predict2):
+        NewNoise = (im + noise1[i]) / 2.0
+        NoiseEnhanced2.append(NewNoise)
+
+    NoiseEnhanced2 = np.asarray(NoiseEnhanced2).astype('float32')
+    NoiseEnhanced2 = NoiseEnhanced2.reshape(len(NoiseEnhanced2),
+                                          NoiseEnhanced2.shape[1],
+                                          NoiseEnhanced2.shape[2], 1)
+    predictEnhanced2 = gan.predict(model, NoiseEnhanced2)
+    predictEnhanced2 = gan.normalization(predictEnhanced2, 1)'''
+
+    noise1 = gan.normalization(noise1, 1)
+    for i,im in enumerate(predictEnhanced):
+        diff = im - projection[i]
+        m_norm = np.sum(abs(diff))
+        print m_norm
+        correlation = match_template(im, projection[i])
+        #correlation2 = match_template(predictEnhanced2[i], projection[i])
+        correlation2 = match_template(im, noise1[i])
+        #correlation3 = match_template(projection[i], noise1[i])
+        print correlation[0], correlation2[0]#, correlation3[0]
+        plt.subplot(2,2,1)
+        plt.imshow(np.squeeze(im), cmap='gray')
+        plt.subplot(2, 2, 2)
+        plt.imshow(np.squeeze(noise1[i]), cmap='gray')
+        '''plt.subplot(2, 2, 3)
+        plt.imshow(np.squeeze(predictEnhanced2[i]), cmap='gray')'''
+        plt.subplot(2, 2, 3)
+        plt.imshow(np.squeeze(projection[i]), cmap='gray')
+        plt.show()
+
 
