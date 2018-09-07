@@ -166,8 +166,21 @@ class PhenixProtRunRSRefine(PhenixProtRunRefinementBase):
         args += " macro_cycles=%d" % self.macroCycles
         args += " model_format=%s" % OUTPUT_FORMAT[int(self.outputFormat)]
         args += " write_pkl_stats=True"
-        runPhenixProgram(getProgram(REALSPACEREFINE), args,
+        try:
+            runPhenixProgram(getProgram(REALSPACEREFINE), args,
                          cwd=self._getExtraPath())
+        except:
+            print "WARNING!!!\nPHENIX error:\n pdb_interpretation.clash_guard" \
+                  " failure: High number of nonbonded interaction distances " \
+                  "< 0.5. This error has been disable by running the same " \
+                  "command with the same following additional " \
+                  "argument:\npdb_interpretation.clash_guard." \
+                  "nonbonded_distance_threshold=None "
+            args += " "
+            args += "pdb_interpretation.clash_guard." \
+                    "nonbonded_distance_threshold=None"
+            runPhenixProgram(getProgram(REALSPACEREFINE), args,
+                             cwd=self._getExtraPath())
 
     def runMolprobityStep(self, tmpMapFile):
         # PDBx/mmCIF
