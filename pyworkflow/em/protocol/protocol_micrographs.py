@@ -588,8 +588,11 @@ class ProtCTFMicrographs(ProtMicrographs):
 
 
         for micFn, micDir, mic in self._iterMicrographs(micList):
-            ctf = self._createCtfModel(mic)
-            outputCtf.append(ctf)
+            try:
+                ctf = self._createCtfModel(mic)
+                outputCtf.append(ctf)
+            except:
+                pass
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCtf, streamMode)
