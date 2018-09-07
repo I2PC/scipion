@@ -76,8 +76,8 @@ atomic structure derived from a cryo-EM density map.
                          cwd=self._getExtraPath())
         except:
             print "WARNING!!!\nPHENIX error:\n pdb_interpretation.clash_guard" \
-                  " failure: Number of nonbonded interaction distances < 0.5:" \
-                  " 109 This error has been disable by running the same " \
+                  " failure: High number of nonbonded interaction distances " \
+                  "< 0.5. This error has been disable by running the same " \
                   "command with the same following additional " \
                   "argument:\npdb_interpretation.clash_guard." \
                   "nonbonded_distance_threshold=None "
