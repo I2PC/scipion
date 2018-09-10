@@ -36,10 +36,8 @@ get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 
 def defineBinaries(args=None):
     """
+    Define the way to execute the script according to args """
 
-    :param args:
-    :return:
-    """
     if args is None:
         args = sys.argv[2:]
         SCIPION = sys.argv[0]
