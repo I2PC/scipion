@@ -23,6 +23,7 @@ if os.environ['SCIPION_SHORT_VERSION'] not in versions:
 else:
     SCIPION_VERSION = os.environ['SCIPION_SHORT_VERSION']
 
+
 class PluginInfo(object):
 
     def __init__(self, pipName, name="", pluginSourceUrl="", remote=True,
@@ -281,12 +282,14 @@ class PluginInfo(object):
         Environment object with the plugin's binaries."""
         if envArgs is None:
             envArgs = []
+        from install import script
+        env = script.defineBinaries(envArgs)
+        env.setDefault(False)
 
-        environment = Environment(args=envArgs)
         plugin = self.getPluginClass()
         if plugin is not None:
-            plugin.defineBinaries(environment)
-            return environment
+            plugin.defineBinaries(env)
+            return env
         else:
             return None
 

@@ -461,7 +461,8 @@ Example: scipion install eman-2.12
         def build(args):
             # Just importing the script will launch the install actions
             import install.script as script
-            script.env.execute()
+            env = script.defineBinaries()
+            env.execute()
             return 0
 
         if args and args[0] == '--binary':

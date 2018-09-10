@@ -102,7 +102,7 @@ installBinParser = subparsers.add_parser("installb", formatter_class=argparse.Ra
                                          usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
                                             (' '.join(args[:2])),
                                          epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
-                                             (' '.join(args[:2]), pluginRepo.printPluginInfoStr(withBins=True)))
+                                             (' '.join(args[:2]), ""))
 installBinParser.add_argument('pluginName', metavar='pluginName',
                               help='The name of the plugin whose bins we want to uninstall.\n')
 installBinParser.add_argument('binName', nargs='+',
@@ -123,7 +123,7 @@ uninstallBinParser = subparsers.add_parser("uninstallb", formatter_class=argpars
                                            usage="%s  [-h] pluginName binName1 binName2-1.2.3 binName3 ..." %
                                            (' '.join(args[:2])),
                                            epilog="Example: %s scipion_grigoriefflab ctffind4 unblur-1.0.15\n\n %s" %
-                                           (' '.join(args[:2]), pluginRepo.printPluginInfoStr(withBins=True)))
+                                           (' '.join(args[:2]), ""))
 uninstallBinParser.add_argument('pluginName', metavar='pluginName',
                                 help='The name of the plugin whose bins we want to uninstall.\n')
 uninstallBinParser.add_argument('binName', nargs='+',
