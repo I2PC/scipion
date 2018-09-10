@@ -29,7 +29,6 @@ This module implement some wizards
 """
 
 import os
-from os.path import basename, exists
 import Tkinter as tk
 import ttk
 
@@ -50,6 +49,7 @@ from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
 from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
                                                     ProtImportCoordinates,
+                                                    ProtImportCoordinatesPairs,
                                                     ProtImportVolumes)
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.tree import BoundTree, TreeProvider
@@ -853,7 +853,8 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
 
 class ImportCoordinatesBoxSizeWizard(Wizard):
-    _targets = [(ProtImportCoordinates, ['boxSize'])]
+    _targets = [(ProtImportCoordinates, ['boxSize']),
+                (ProtImportCoordinatesPairs, ['boxSize'])]
 
     def _getBoxSize(self, protocol):
 
