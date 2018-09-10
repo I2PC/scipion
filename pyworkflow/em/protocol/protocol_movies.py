@@ -152,8 +152,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         """ Returns the final path to the correction image (converted or not)
         or and exception correctionImage does not exists"""
 
-        if correctionImage is None:
-            return
+        # Return if the correctionImage is None or the empty string
+        if not correctionImage:
+            return None
 
         elif not os.path.exists(correctionImage):
             raise Exception("Correction image is set but not present in the "
