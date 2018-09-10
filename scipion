@@ -437,10 +437,10 @@ def main():
             print("""Usage: %s [<target>] [--no-scipy] [--no-opencv] [--show]
 
 Installs Scipion. Also used to install only part of it, as specified
-in the <target>, or to add extra em packages to Scipion.
+in the <target>.
 
 Arguments:
-  <target>      a library, a python module, an em package or a xmipp file.
+  <target>      a library or a python module.
                 Version can be specified after a hyphen (-)
    -j N         where N is the number of processors to use during installation
   --help        show this help message
@@ -448,7 +448,7 @@ Arguments:
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
 
-Example: scipion install eman-2.12
+Example: scipion install -j 4
 
 """ % ' '.join(sys.argv[:2]))
         else:
