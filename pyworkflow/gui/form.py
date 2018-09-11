@@ -586,7 +586,7 @@ class SectionFrame(tk.Frame):
         if 'headerBgColor' in args:
             del args['headerBgColor']
         self.height = height
-        tk.Frame.__init__(self, master, bg='purple', **args)
+        tk.Frame.__init__(self, master, **args)
         configureWeigths(self, row=1)
         self._createHeader(label, headerBgColor)
         self._createContent()
@@ -603,18 +603,18 @@ class SectionFrame(tk.Frame):
         self.headerLabel.grid(row=0, column=0, sticky='nw')
         
     def _createContent(self):
-        canvasFrame = tk.Frame(self, bg='green', name="sectioncontentframe")
+        canvasFrame = tk.Frame(self, name="sectioncontentframe")
         configureWeigths(canvasFrame)
         self.canvas = Canvas(canvasFrame, width=625, height=self.height,
                              name="sectioncanvas", bg="purple")
-        self.canvas.grid(row=0, column=0, sticky='news', pady=3)
-        canvasFrame.grid(row=1, column=0, sticky='news', pady=3)
+        self.canvas.grid(row=0, column=0, sticky='news')
+        canvasFrame.grid(row=1, column=0, sticky='news')
         
         configureWeigths(self.canvas)
                 
-        self.contentFrame = tk.Frame(self.canvas, bg='cyan', bd=0,
+        self.contentFrame = tk.Frame(self.canvas, bg='white', bd=0,
                                      name="sectioncanvasframe")
-        self.contentFrame.grid(row=1, column=0, sticky='new')
+        self.contentFrame.grid(row=1, column=0, sticky='news')
         self.contentId = self.canvas.create_window(0, 0, anchor=tk.NW,
                                                    window=self.contentFrame)
 
@@ -624,7 +624,7 @@ class SectionFrame(tk.Frame):
         self.contentFrame.columnconfigure(1, weight=1)
         self.columnconfigure(0, weight=1)
 
-    def _getReqSize(self, widget):
+    def  _getReqSize(self, widget):
         return widget.winfo_reqwidth(), widget.winfo_reqheight()
     
     def _getSize(self, widget):
@@ -647,8 +647,8 @@ class SectionFrame(tk.Frame):
         if fsize != csize:
             # update the inner frame's width to fill the canvas
             self.canvas.itemconfigure(self.contentId, width=csize[0])
-            if csize[1] > fsize[1]:
-                self.canvas.itemconfigure(self.contentId, height=csize[1])
+            if csize[1] < fsize[1]:
+                self.canvas.itemconfigure(self.contentId, height=fsize[1])
                 self.canvas.config(scrollregion="0 0 %s %s" % csize)
                 
     def adjustContent(self):
