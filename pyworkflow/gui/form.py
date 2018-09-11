@@ -606,7 +606,7 @@ class SectionFrame(tk.Frame):
         canvasFrame = tk.Frame(self, name="sectioncontentframe")
         configureWeigths(canvasFrame)
         self.canvas = Canvas(canvasFrame, width=625, height=self.height,
-                             name="sectioncanvas", bg="purple")
+                             name="sectioncanvas")
         self.canvas.grid(row=0, column=0, sticky='news')
         canvasFrame.grid(row=1, column=0, sticky='news')
         
