@@ -115,6 +115,7 @@ class OptionWidget(Frame):
             self.menuButton.config(state=optState)
             
     def addParam(self, param):
+        # type: (object) -> object
         param.isSubparam = True;
         self.subparams.append(param)
         self.maxWidth = max(self.maxWidth, len(param.paramName))
@@ -289,6 +290,7 @@ class ParamsGroup(Frame):
         self.lastSelected = 0;
         
     def addParam(self, param):
+        # type: (object) -> object
         self.params.append(param)
         if self.single:
             return Label(param, text=param.paramName, font=param.boldFont)

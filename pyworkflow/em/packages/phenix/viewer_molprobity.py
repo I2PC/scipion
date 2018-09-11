@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Marta Martinez (mmmtnez@cnb.csic.es)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# *              Marta Martinez (mmmtnez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,5 +25,20 @@
 # *
 # **************************************************************************
 
-CCP4VERSIONFILENAME = 'CHANGES'
-CCP4VERSION = '7.0'
+from protocol_molprobity import PhenixProtRunMolprobity
+from viewer_refinement_base import PhenixProtRefinementBaseViewer
+
+class PhenixProtRunMolprobityViewer(PhenixProtRefinementBaseViewer):
+    """ Viewer for Phenix program Molprobity
+    """
+    _label = 'MolProbity viewer'
+    _targets = [PhenixProtRunMolprobity]
+
+    def __init__(self,  **kwargs):
+         PhenixProtRefinementBaseViewer.__init__(self, **kwargs)
+
+
+    def _defineParams(self, form):
+        PhenixProtRefinementBaseViewer._defineParams(self,form)
+
+

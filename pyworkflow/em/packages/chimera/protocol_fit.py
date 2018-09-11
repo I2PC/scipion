@@ -26,7 +26,6 @@
 # *
 # **************************************************************************
 
-from protocol_operate import ChimeraProtOperate
 from pyworkflow.em.packages.chimera.protocol_base import ChimeraProtBase
 
 

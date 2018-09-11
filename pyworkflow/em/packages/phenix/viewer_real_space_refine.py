@@ -1,7 +1,8 @@
-# **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     Roberto Marabini
+# *              Marta Martinez
 # *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -22,21 +23,26 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This EM module contains Gautomatch auto-picking protocol 
-"""
 
-from bibtex import _bibtex  # Load bibtex dict with references
-from pyworkflow.em.viewers.chimera_utils import getEnviron
+from protocol_real_space_refine import PhenixProtRunRSRefine
+from viewer_refinement_base import PhenixProtRefinementBaseViewer
 
-_logo = "ChimeraLogoSmall.png"
+class PhenixProtRunRSRefineViewer(PhenixProtRefinementBaseViewer):
+    """ Viewer for Phenix program real space refine
+    """
+    _label = 'Real Space Refine viewer'
+    _targets = [PhenixProtRunRSRefine]
 
-from protocol_fit import ChimeraProtRigidFit
-from protocol_operate import ChimeraProtOperate
-from protocol_restore import ChimeraProtRestore
-from viewer import ChimeraProtRigidFitViewer, ChimeraProtOperateViewer, \
-    ChimeraRestoreViewer
+    def __init__(self,  **kwargs):
+         PhenixProtRefinementBaseViewer.__init__(self, **kwargs)
+         REALSPACEFILE = self.protocol._getExtraPath(
+             self.protocol.REALSPACEFILE)
+         self.protocol._parseFile(REALSPACEFILE)
 
-_references = ['Pettersen2004']
+    def _defineParams(self, form):
+        PhenixProtRefinementBaseViewer._defineParams(self,form)
 
-_environ = getEnviron()
+
+
+
+
