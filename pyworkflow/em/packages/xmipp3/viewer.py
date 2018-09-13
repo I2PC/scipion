@@ -158,7 +158,7 @@ class XmippViewer(Viewer):
                                                   VISIBLE: labels,
                                                   MODE: MODE_MD, RENDER: "no"})
             # For movies increase the JVM memory by 1 GB, just in case
-            moviesView.setMemory(showj.getJvmMaxMemory() + 1)
+            moviesView.setMemory(str(int(showj.getJvmMaxMemory()) + 1))
             self._views.append(moviesView)
 
         elif issubclass(cls, SetOfMicrographs):
