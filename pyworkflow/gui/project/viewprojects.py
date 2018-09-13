@@ -96,21 +96,21 @@ class ProjectsView(tk.Frame):
         parent.columnconfigure(0, weight=1)
         colors = ['white', '#EAEBFF']
         for i, p in enumerate(self.manager.listProjects()):
-            # try:
-            project = self.manager.loadProject(p.getName(), chdir=False, loadAllConfig=False)
-            # Add creation time to project info
-            p.cTime = project.getCreationTime()
-            # Add if it's a link
-            p.isLink = project.isLink()
-            # If it's a link, get the linked folder
-            if p.isLink:
-                p.linkedFolder = os.path.realpath(project.path)
-            frame = self.createProjectLabel(parent, p, color=colors[i%2])
-            frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
-            r += 1
-            # except Exception, ex:
-            #     print "ERROR loading project: %s" % p.getName()
-            #     print ex
+            try:
+                project = self.manager.loadProject(p.getName(), chdir=False, loadAllConfig=False)
+                # Add creation time to project info
+                p.cTime = project.getCreationTime()
+                # Add if it's a link
+                p.isLink = project.isLink()
+                # If it's a link, get the linked folder
+                if p.isLink:
+                    p.linkedFolder = os.path.realpath(project.path)
+                frame = self.createProjectLabel(parent, p, color=colors[i%2])
+                frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
+                r += 1
+            except Exception, ex:
+                print "ERROR loading project from %s" % p.getName()
+                print ex
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
         text.setReadOnly(True)

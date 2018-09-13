@@ -592,7 +592,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 ctf = self._createCtfModel(mic)
                 outputCtf.append(ctf)
             except:
-                pass
+                print("Missing CTF?: Couldn't update CTF set with %s")
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCtf, streamMode)
