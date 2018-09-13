@@ -105,7 +105,7 @@ OBJECT_ID = 'objectId'
 
 def getJvmMaxMemory():
     # Memory in GB
-    return os.environ.get("JAVA_MAX_MEMORY", 2)
+    return int(os.environ.get("JAVA_MAX_MEMORY", 2))
 
 
 class ColumnsConfig():
