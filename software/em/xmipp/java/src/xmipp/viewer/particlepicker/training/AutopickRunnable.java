@@ -68,7 +68,7 @@ public class AutopickRunnable implements Runnable
 					picker.loadMicrographData(micrograph);
 			}
 
-			boolean updateAllMicrographs = isGeneric && ((GenericClassifier) classifier).doPickAll();
+			final boolean updateAllMicrographs = isGeneric && ((GenericClassifier) classifier).doPickAll();
             // Runs inside of the Swing UI thread
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
