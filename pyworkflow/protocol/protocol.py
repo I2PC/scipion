@@ -1600,7 +1600,7 @@ class Protocol(Step):
         """
         try:
 
-            validateFunc = getattr(cls.getClassPackage().Plugin,
+            validateFunc = getattr(cls.getClassPackage().Plugin(),
                                'validateInstallation', None)
 
             return validateFunc() if validateFunc is not None else []
