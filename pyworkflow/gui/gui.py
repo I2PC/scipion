@@ -271,6 +271,11 @@ class Window():
             self.root.minsize(minsize[0], minsize[1])
         if not icon is None:
             path = findResource(icon)          
+            # If path is None --> Icon not found
+            if path is None:
+                # By default, if icon is not found use default scipion one.
+                path = findResource('scipion_bn.xbm')
+
             abspath = os.path.abspath(path)
             self.root.iconbitmap("@" + abspath)
             
