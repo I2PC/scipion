@@ -270,9 +270,18 @@ class Window():
         if not minsize is None:
             self.root.minsize(minsize[0], minsize[1])
         if not icon is None:
-            path = findResource(icon)          
-            abspath = os.path.abspath(path)
-            self.root.iconbitmap("@" + abspath)
+            try:
+                path = findResource(icon)
+                # If path is None --> Icon not found
+                if path is None:
+                    # By default, if icon is not found use default scipion one.
+                    path = findResource('scipion_bn.xbm')
+
+                abspath = os.path.abspath(path)
+                self.root.iconbitmap("@" + abspath)
+            except Exception as e:
+                # Do nothing if icon could not be loaded
+                pass
             
         self.root.protocol("WM_DELETE_WINDOW", self._onClosing)
         self._w, self._h, self._x, self._y = 0, 0, 0, 0
