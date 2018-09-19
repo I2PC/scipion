@@ -33,21 +33,22 @@ from pyworkflow.utils import pluginNotFound
 try:
     from xmipp3 import *
     from xmipp3.constants import SAME_AS_PICKING
+    from xmipp3.protocols import *
 except:
     pluginNotFound('xmipp3')
 
 try:
-    from grigoriefflab import *
+    from grigoriefflab.protocols import *
 except:
     pluginNotFound('grigoriefflab')
 
 try:
-    from eman2 import *
+    from eman2.protocols import *
 except:
     pluginNotFound('eman2')
 
 try:
-    from relion import *
+    from relion.protocols import *
 except:
     pluginNotFound('relion')
 

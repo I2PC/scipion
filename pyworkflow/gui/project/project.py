@@ -418,8 +418,8 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             tokens = shlex.split(msg)
             if msg.startswith('run protocol'):
                 protocolName = tokens[2]
-                from pyworkflow.em import getProtocols
-                protocolClass = getProtocols()[protocolName]
+                from pyworkflow.em import Domain
+                protocolClass = Domain.getProtocols()[protocolName]
                 # Create the new protocol instance and set the input values
                 protocol = project.newProtocol(protocolClass)
 
