@@ -268,7 +268,7 @@ class Project(object):
 
         # Catch DB not found exception (when loading a project from a folder
         #  without project.sqlite
-        except MissingProjectDBException as noDBe:
+        except MissingProjectDbException as noDBe:
             # Raise it at before: This is a critical error and should be raised
             raise noDBe
 
@@ -300,7 +300,7 @@ class Project(object):
 
         absDbPath = os.path.join(self.path, self.dbPath)
         if not os.path.exists(absDbPath):
-            raise MissingProjectDBException("Project database not found at '%s'" % absDbPath)
+            raise MissingProjectDbException("Project database not found at '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
 
     def closeMapper(self):
@@ -1399,5 +1399,5 @@ class Project(object):
                                 pwutils.createAbsLink(newFile, f)
 
 
-class MissingProjectDBException(Exception):
+class MissingProjectDbException(Exception):
     pass
