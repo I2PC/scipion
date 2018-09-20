@@ -266,7 +266,13 @@ class Project(object):
 
             self._loadCreationTime()
 
-        # Catch any exception..
+        # Catch DB not found exception (when loading a project from a folder
+        #  without project.sqlite
+        except MissingProjectDbException as noDBe:
+            # Raise it at before: This is a critical error and should be raised
+            raise noDBe
+
+        # Catch any less severe exception..to allow at least open the project.
         except Exception as e:
             print("ERROR: Project %s load failed.\n"
                  "       Message: %s\n" % (self.path, e))
@@ -294,7 +300,7 @@ class Project(object):
 
         absDbPath = os.path.join(self.path, self.dbPath)
         if not os.path.exists(absDbPath):
-            raise Exception("Project database not found in '%s'" % absDbPath)
+            raise MissingProjectDbException("Project database not found at '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
 
     def closeMapper(self):
@@ -1391,3 +1397,7 @@ class Project(object):
                                 print "  Found file %s, creating link..." % newFile
                                 print pwutils.green("   %s -> %s" % (f, newFile))
                                 pwutils.createAbsLink(newFile, f)
+
+
+class MissingProjectDbException(Exception):
+    pass

@@ -416,7 +416,7 @@ class ImageHandler(object):
         a thumbnail 6 times smaller.
         """
         outputFn = outputFn or self.getThumbnailFn(inputFn)
-        args = "%s %s " % (inputFn, outputFn)
+        args = '"%s" "%s" ' % (inputFn, outputFn)
 
         process = "--process normalize"
         process += '' if not flipOnY else " --process=xform.flip:axis=y"
