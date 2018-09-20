@@ -1484,6 +1484,7 @@ class Protocol(Step):
              'JOB_THREADS': self.numberOfThreads.get(),
              'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
              'JOB_HOURS': 72,
+             'GPU_COUNT': len(self.getGpuList())
              }
         d.update(queueParams)
         return d
