@@ -729,13 +729,20 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
 
 
 def pluginNotFound(plugName, errorMsg='', doRaise=False):
-    msgStr = " > %s plugin not found. %s\n" % (plugName, errorMsg)
-    # msgStr+= "  See 'scipion install --help' to install it."  # FIXME: give a valid hint to install the plugin
-    if doRaise:
-        raise Exception(msgStr)
-    else:
-        print(msgStr)
+    msgStr = " > %s plugin not found. %s" % (plugName, errorMsg)
+    hint   = "   See 'scipion installp --help' to install it."  # FIXME: give a valid hint to install the plugin
 
+    stackList = traceback.extract_stack()
+    callIdx = -4
+    for idx, stackLine in enumerate(stackList):
+        if stackLine[0].endswith('/unittest/loader.py'):
+            callIdx = idx
+
+    callBy = stackList[callIdx + 1][0]
+    line = stackList[callIdx + 1][1]
+    calling = "   Called by %s, line %s" % (callBy, line)
+
+    print("%s\n%s\n%s\n" % (msgStr, calling, hint))
 
 
 def importFromPlugin(module, method='', errorMsg='', doRaise=False):
@@ -753,4 +760,6 @@ def importFromPlugin(module, method='', errorMsg='', doRaise=False):
         return output
     except Exception as e:
         plugName = module.split('.')[0]
+
+        errorMsg += str(e)
         pluginNotFound(plugName, errorMsg, doRaise)
