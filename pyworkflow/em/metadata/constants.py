@@ -25,6 +25,8 @@
 # **************************************************************************
 """
 Add constants from xmippLib module (binding).
+
+Make sure that these constants are defined in xmipp/bindings/python/python_constants.cpp
 """
 import xmippLib
 
@@ -341,12 +343,18 @@ MDL_SCORE_BY_VAR = xmippLib.MDL_SCORE_BY_VAR
 MDL_SCORE_BY_ZERNIKE = xmippLib.MDL_SCORE_BY_ZERNIKE
 MDL_SCORE_BY_ZSCORE=xmippLib.MDL_SCORE_BY_ZSCORE
 
+MDL_SPH_DEFORMATION = xmippLib.MDL_SPH_DEFORMATION
+MDL_SPH_COEFFICIENTS = xmippLib.MDL_SPH_COEFFICIENTS
+MDL_SPH_TSNE_COEFF1D = xmippLib.MDL_SPH_TSNE_COEFF1D
+MDL_SPH_TSNE_COEFF2D = xmippLib.MDL_SPH_TSNE_COEFF2D
+
 MDL_SUM = xmippLib.MDL_SUM
 MDL_SUMWEIGHT = xmippLib.MDL_SUMWEIGHT
 MDL_SYMNO = xmippLib.MDL_SYMNO
 
 MDL_TIME = xmippLib.MDL_TIME
 MDL_TRANSFORM_MATRIX = xmippLib.MDL_TRANSFORM_MATRIX
+
 MDL_TOMOGRAM_VOLUME = xmippLib.MDL_TOMOGRAM_VOLUME
 MDL_TOMOGRAMMD = xmippLib.MDL_TOMOGRAMMD
 
