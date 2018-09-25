@@ -271,8 +271,7 @@ elif parsedArgs.mode == MODE_UNINSTALL_BINS:
         if binToUninstallList:
             print("\n----------------------------------- \n")
             for binName in binToUninstallList:
-                print("WARNING: Binaries of %s has not been uninstalled."                
-                      " \n" % binName)
-                print("WARNING: Binaries of %s does not exist."
+                print("WARNING: Binaries of %s has not been uninstalled."% binName)
+                print("WARNING: Binaries of %s does not exist. \n"
                       % binName)
             print("----------------------------------- \n")

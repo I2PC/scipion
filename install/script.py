@@ -40,23 +40,22 @@ def defineBinaries(args=None):
 
     if args is None:
         args = sys.argv[2:]
-        SCIPION = sys.argv[0]
-    else:
-        SCIPION = os.environ['SCIPION_HOME']
+    #     SCIPION = sys.argv[0]
+    # else:
+    #     SCIPION = os.environ['SCIPION_HOME']
 
     env = Environment(args=args)
 
     noScipy = '--no-scipy' in args or not get('SCIPY')
-
 
     #  *******************************
     #  *  PATHS
     #  *******************************
     # GET the real path where scipion is installed
 
-    SCIPION = os.path.realpath(SCIPION)
-    SCIPION = os.path.dirname(SCIPION)
-    SCIPION = os.path.abspath(SCIPION)
+    # SCIPION = os.path.realpath(SCIPION)
+    # SCIPION = os.path.dirname(SCIPION)
+    # SCIPION = os.path.abspath(SCIPION)
 
 
     SW_BIN = env.getBinFolder()
@@ -191,7 +190,7 @@ def defineBinaries(args=None):
         'png',
         tar='libpng-1.6.16.tgz',
         deps=[zlib],
-        default=False)
+        default=True)
 
     tiff = env.addLibrary(
          'tiff',
