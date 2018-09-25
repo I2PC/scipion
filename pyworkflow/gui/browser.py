@@ -138,7 +138,9 @@ class ObjectBrowser(tk.Frame):
         if desc is not None:
             self.text.addText(desc)
         self.text.setReadOnly(True)
-            
+        if self.entryLabel and not self._lastSelected.isDir():
+            self.entryVar.set(self._lastSelected.getFileName())
+
     def getSelected(self):
         """ Return the selected object. """
         return self._lastSelected
@@ -539,7 +541,7 @@ class FileBrowser(ObjectBrowser):
         # Register keypress event
         self.tree.itemKeyPressed = self._itemKeyPressed
 
-        treeRow = 2
+        treeRow = 3
         treeFrame.grid(row=treeRow, column=0, sticky='news')
         # Toolbar frame
         toolbarFrame = tk.Frame(frame)
@@ -548,24 +550,24 @@ class FileBrowser(ObjectBrowser):
 
         pathFrame = tk.Frame(frame)
         pathLabel = tk.Label(pathFrame, text='Path')
-        pathLabel.grid(row=0, column=0, padx=5, pady=5)
+        pathLabel.grid(row=0, column=0, padx=0, pady=3)
         pathEntry = tk.Entry(pathFrame, bg='white', width=65,
                              textvariable=self.pathVar)
-        pathEntry.grid(row=0, column=1, sticky='new', pady=5)
+        pathEntry.grid(row=0, column=1, sticky='new', pady=3)
         pathEntry.bind("<Return>", self._onEnterPath)
         self.pathEntry = pathEntry
         pathFrame.grid(row=1, column=0, sticky='new')
-        
+
         # Entry frame, could be used for filter
-        if self.entryLabel:  
+        if self.entryLabel:
             entryFrame = tk.Frame(frame)
-            entryFrame.grid(row=2, column=0, sticky='new') 
+            entryFrame.grid(row=2, column=0, sticky='new')
             tk.Label(entryFrame, text=self.entryLabel).grid(row=0, column=0,
-                                                            sticky='nw')
-            tk.Entry(entryFrame, 
-                     textvariable=self.entryVar, 
+                                                            sticky='nw', pady=3)
+            tk.Entry(entryFrame,
+                     textvariable=self.entryVar,
                      bg='white',
-                     width=50).grid(row=0, column=1, sticky='nw')
+                     width=65).grid(row=0, column=1, sticky='nw', pady=3)
         
         frame.rowconfigure(treeRow, weight=1)
 
