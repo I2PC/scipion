@@ -196,6 +196,9 @@ class Target:
     def isDefault(self):
         return self._default
 
+    def setDefault(self, default):
+        self._default = default
+
     def getName(self):
         return self._name
 
@@ -812,6 +815,10 @@ class Environment:
 
         return environ
 
+    def setDefault(self, default):
+        """Set default values of all packages to the passed parameter"""
+        for t in self._targetList:
+            t.setDefault(default)
 
 class Link:
     def __init__(self, packageLink, packageFolder):
