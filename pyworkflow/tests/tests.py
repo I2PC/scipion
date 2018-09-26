@@ -38,7 +38,7 @@ class DataSet:
 
     _datasetDict = {} # store all created datasets
 
-    def __init__(self, name, folder, files):
+    def __init__(self, name, folder, files, url=None):
         """ 
         Params:
             
@@ -48,6 +48,7 @@ class DataSet:
         self.folder = folder
         self.path = join(TESTS_INPUT, folder)
         self.filesDict = files
+        self.url = url
         
     def getFile(self, key):
         if key in self.filesDict:
@@ -60,14 +61,18 @@ class DataSet:
     @classmethod
     def getDataSet(cls, name):
         """
-        This method is called every time the dataset want to be retreived
+        This method is called every time the dataset want to be retrieved
         """
         assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
-        folder = cls._datasetDict[name].folder
+
+        ds = cls._datasetDict[name]
+        folder = ds.folder
+        url = '' if ds.url is None else ' -u ' + ds.url
+
         if not envVarOn('SCIPION_TEST_NOSYNC'):
             scipion = "%s %s/scipion" % (os.environ['SCIPION_PYTHON'],
                                          os.environ['SCIPION_HOME'])
-            command = scipion + " testdata --download " + folder
+            command = scipion + " testdata --download " + folder + url
             print ">>>> " + command
             os.system(command)
         return cls._datasetDict[name]

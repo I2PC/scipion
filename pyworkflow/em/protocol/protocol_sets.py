@@ -34,8 +34,7 @@ This module contains protocols related to Set operations such us:
 import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
-from pyworkflow.object import Boolean, Object
-
+from pyworkflow.object import Boolean
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
@@ -124,7 +123,7 @@ class ProtUnionSet(ProtSets):
         # TODO: See what kind of restrictions we add,
         # like "All sets should have the same sampling rate."
 
-    # -------------------------- INSERT steps functions ------------------------
+    #-------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
     
@@ -298,7 +297,7 @@ class ProtSplitSet(ProtSets):
                       label="Randomize elements",
                       help='Put the elements at random in the different '
                            'subsets.')
-    
+
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -523,3 +522,65 @@ class ProtSubSet(ProtSets):
             return ["The elements of %s that also are referenced in %s" %
                     (self.inputFullSet.getName(), self.inputSubSet.getName()),
                     "are now in %s" % getattr(self, key).getName()]
+
+
+class ProtSubSetByMic(ProtSets):
+    """
+    Create a subset of those particles comes from a particular set of micrographs
+    """
+    _label = 'particles subset by micrograph'
+
+    #--------------------------- DEFINE param functions ------------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputParticles', pwprot.params.PointerParam,
+            pointerClass='SetOfParticles', label="Input particles",
+            help='Set of particles from which the subset will be taken')
+        add('inputMicrographs', pwprot.params.PointerParam,
+            pointerClass='SetOfMicrographs', label="Input micrographs",
+            help='Only the particles in this set of micrographs will be output')
+
+    #--------------------------- INSERT steps functions ------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep',
+                                 self.inputParticles.getObjId(),
+                                 self.inputMicrographs.getObjId())
+
+    #--------------------------- STEPS functions -------------------------------
+    def createOutputStep(self, partsId, micsId):
+        inputParticles = self.inputParticles.get()
+        inputMicrographs = self.inputMicrographs.get()
+
+        outputSet = self._createSetOfParticles()
+        outputSet.copyInfo(inputParticles)
+
+        micIds = []
+
+        for mic in inputMicrographs:
+            micIds.append(mic.getObjId())
+
+        for particle in inputParticles:
+            if particle.getMicId() in micIds:
+                outputSet.append(particle)
+
+        self._defineOutputs(outputParticles=outputSet)
+        self._defineTransformRelation(inputParticles, outputSet)
+
+    #--------------------------- INFO functions --------------------------------
+    def _validate(self):
+        """Make sure the input data make sense, i.e. hasMicId.
+        Thus they come from some Mic"""
+        if not self.inputParticles.get().getFirstItem().hasMicId():
+            return ['The _Input Particles_ must come from some Micrographs '
+                    'of the workflow, i.e. particles must have micId.']
+
+    def _summary(self):
+        if not hasattr(self, 'outputParticles'):
+            summary = ["Protocol has not finished yet."]
+        else:
+            summary = ['A subset of *%d* particles is made from a total of *%d*'
+                       ' particles.' % (self.outputParticles.getSize(),
+                                    self.inputParticles.get().getSize())]
+        return summary

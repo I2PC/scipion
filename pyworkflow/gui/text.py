@@ -41,13 +41,16 @@ from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2
                               parseHyperText, renderLine, renderTextFile, colorName,
                               which, envVarOn, expandPattern)
 from pyworkflow.utils.properties import Message, Color, Icon
+import tkMessageBox
 
 
 # Define a function to open files cleanly in a system-dependent way
 if sys.platform.startswith('darwin'):  # macs use the "open" command
-    _open_cmd = lambda path: subprocess.Popen(['open', path])
+    def _open_cmd(path, tkParent=None):
+        subprocess.Popen(['open', path])
 elif os.name == 'nt':  # there is a function os.startfile for windows
-    _open_cmd = lambda path: os.startfile(path)
+    def _open_cmd(path, tkParent=None):
+        os.startfile(path)
 elif os.name == 'posix':  # linux systems and so on
     def find_prog(*args):
         "Return the first argument that is a program in PATH"
@@ -60,7 +63,7 @@ elif os.name == 'posix':  # linux systems and so on
     editor = find_prog('pluma', 'gedit', 'kwrite', 'geany', 'kate',
                        'emacs', 'nedit', 'mousepad')
 
-    def _open_cmd(path):
+    def _open_cmd(path, tkParent=None):
         # If it is an url, open with browser.
         if path.startswith('http://') or path.startswith('https://'):
             try:
@@ -68,6 +71,19 @@ elif os.name == 'posix':  # linux systems and so on
                 return
             except:
                 pass
+        #OK, it is a file. Check if it does exist
+        #and notify if it does not
+        if not os.path.isfile(path):
+            try:
+                #if tkRoot is null the error message may be behind
+                #other windows
+                tkMessageBox.showerror("File Error",#bar title
+                                       "File not found\n(%s)"%path,#message
+                                       parent=tkParent)
+                return
+            except:
+                return
+
         if x_open:  # standard way to open
             proc = subprocess.Popen([x_open, path])
             time.sleep(1)
@@ -80,8 +96,15 @@ elif os.name == 'posix':  # linux systems and so on
                 return  # hope we found your fav editor :)
         print 'WARNING: Cannot open %s' % path  # nothing worked! :(
 else:
-    def _open_cmd(path):
-        print 'Unknown system, so cannot open %s' % path
+    def _open_cmd(path, tkParent=None):
+        try:
+            tkMessageBox.showerror("Unknown sSstem",#bar title
+                                   'Unknown system, so cannot open %s' % path,#message
+                                   parent=tkParent)
+            return
+        except:
+            pass
+
 
 
 class HyperlinkManager:
@@ -301,7 +324,8 @@ class TaggedText(Text):
     Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
-    some_link or [[some_link][some_label]] will display some_link as hyperlink or some_label as hyperlink to some_link
+    some_link or [[some_link][some_label]] will display some_link
+     as hyperlink or some_label as hyperlink to some_link
     also colors are recognized if set option colors=True
     """           
     def __init__(self, master, colors=True, **opts):  
@@ -319,7 +343,8 @@ class TaggedText(Text):
         self.tag_config(HYPER_BOLD, justify=tk.LEFT, font=gui.fontBold)
         self.tag_config(HYPER_ITALIC, justify=tk.LEFT, font=gui.fontItalic)
         if self.colors:            
-            self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
+            self.colors = configureColorTags(self)
+            # Color can be unavailable, so disable use of colors
         
     @staticmethod
     def openLink(link):
@@ -353,8 +378,6 @@ class TaggedText(Text):
     def addLine(self, line):
         self.line = line
         self.lastIndex = 0
-        #if protocol has been executed BUT crashee before create something
-        #line=None (ROB)
         if line is not None:
             parseHyperText(line, self.matchHyperText)
             Text.addLine(self, line[self.lastIndex:])
@@ -667,9 +690,9 @@ def openTextFile(filename):
         showTextFileViewer("File viewer", [filename])    
     
     
-def openTextFileEditor(filename):
+def openTextFileEditor(filename, tkParent=None):
     try:
-        _open_cmd(filename)
+        _open_cmd(filename,tkParent)
     except:
         showTextFileViewer("File viewer", [filename])
     

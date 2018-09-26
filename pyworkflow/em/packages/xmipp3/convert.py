@@ -68,6 +68,7 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE),
+       # ("_phaseShift", xmipp.MDL_CTF_PHASE_SHIFT),
        ("_resolution", xmipp.MDL_CTF_CRIT_MAXFREQ),
        ("_fitQuality", xmipp.MDL_CTF_CRIT_FITTINGSCORE)
        ])
@@ -112,6 +113,8 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
     xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_CRIT_ICENESS,
+    xmipp.MDL_CTF_VPP_RADIUS,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
     xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
@@ -158,6 +161,7 @@ CTF_EXTRA_LABELS_PLUS_RESOLUTION = [
     xmipp.MDL_CTF_CRIT_MAXFREQ,  # ###
     xmipp.MDL_CTF_CRIT_FITTINGSCORE,  # ###
     xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_CRIT_ICENESS,
     xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
     xmipp.MDL_CTF_CRIT_PSDVARIANCE,
     xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
@@ -172,7 +176,8 @@ CTF_EXTRA_LABELS_PLUS_RESOLUTION = [
     xmipp.MDL_CTF_Q0,
     xmipp.MDL_CTF_CS,
     xmipp.MDL_CTF_VOLTAGE,
-    xmipp.MDL_CTF_SAMPLING_RATE
+    xmipp.MDL_CTF_SAMPLING_RATE,
+    xmipp.MDL_CTF_VPP_RADIUS,
     ]
 
 # Some extra labels to take into account the zscore
@@ -189,6 +194,8 @@ IMAGE_EXTRA_LABELS = [
     xmipp.MDL_CUMULATIVE_SSNR,
     xmipp.MDL_PARTICLE_ID,
     xmipp.MDL_FRAME_ID,
+    xmipp.MDL_SCORE_BY_VAR,
+    xmipp.MDL_SCORE_BY_GINI,
     ]
 
 ANGLES_DICT = OrderedDict([
@@ -388,7 +395,6 @@ def micrographToCTFParam(mic, ctfparam):
     acquisitionToRow(mic.getAcquisition(), row)
     row.writeToMd(md, md.addObject())
     md.write(ctfparam)
-
     return ctfparam
 
 def imageToRow(img, imgRow, imgLabel, **kwargs):
@@ -646,6 +652,8 @@ def rowToCtfModel(ctfRow):
         # Case for metadata coming with Xmipp resolution label
         # Populate Scipion CTF from metadata row (using mapping dictionary
         # plus extra labels
+        if ctfRow.hasLabel(md.MDL_CTF_PHASE_SHIFT):
+            ctfModel.setPhaseShift(ctfRow.getValue(md.MDL_CTF_PHASE_SHIFT, 0))
         if ctfRow.containsLabel(xmipp.label2Str(xmipp.MDL_CTF_CRIT_MAXFREQ)):
             rowToObject(ctfRow, ctfModel, CTF_DICT,
                         extraLabels=CTF_EXTRA_LABELS)
@@ -657,7 +665,7 @@ def rowToCtfModel(ctfRow):
         ctfModel.standardize()
         # Set psd file names
         setPsdFiles(ctfModel, ctfRow)
-
+        # ctfModel.setPhaseShift(0.0)  # for consistency with ctfModel
 
     else:
         ctfModel = None
@@ -841,7 +849,7 @@ def writeMicCoordinates(mic, coordList, outputFn, isManual=True,
     f.close()
     
 
-def readSetOfCoordinates(outputDir, micSet, coordSet):
+def readSetOfCoordinates(outputDir, micSet, coordSet, readDiscarded=False):
     """ Read from Xmipp .pos files.
     Params:
         outputDir: the directory where the .pos files are.
@@ -850,6 +858,7 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         micSet: the SetOfMicrographs to associate the .pos, which
             name should be the same of the micrographs.
         coordSet: the SetOfCoordinates that will be populated.
+        readDiscarded: read only the coordinates with the MDL_ENABLE set at -1
     """
     # Read the boxSize from the config.xmd metadata
     configfile = join(outputDir, 'config.xmd')
@@ -860,13 +869,13 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         coordSet.setBoxSize(boxSize)
     for mic in micSet:
         posFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'pos'))
-        readCoordinates(mic, posFile, coordSet, outputDir)
+        readCoordinates(mic, posFile, coordSet, outputDir, readDiscarded)
 
     coordSet._xmippMd = String(outputDir)
 
 
-def readCoordinates(mic, fileName, coordsSet, outputDir):
-        posMd = readPosCoordinates(fileName)
+def readCoordinates(mic, fileName, coordsSet, outputDir, readDiscarded=False):
+        posMd = readPosCoordinates(fileName, readDiscarded)
         # TODO: CHECK IF THIS LABEL IS STILL NECESSARY
         posMd.addLabel(md.MDL_ITEM_ID)
 
@@ -886,22 +895,32 @@ def readCoordinates(mic, fileName, coordsSet, outputDir):
             posMd.setValue(md.MDL_ITEM_ID, long(coord.getObjId()), objId)
 
 
-def readPosCoordinates(posFile):
+def readPosCoordinates(posFile, readDiscarded=False):
     """ Read the coordinates in .pos file and return corresponding metadata.
     There are two possible blocks with particles:
     particles: with manual/supervised particles
     particles_auto: with automatically picked particles.
     If posFile doesn't exist, the metadata will be empty
+    readDiscarded: read only the coordinates in the particles_auto DB
+                   with the MDL_ENABLE set at -1 and a positive cost
     """
     mData = md.MetaData()
 
     if exists(posFile):
         blocks = md.getBlocksInMetaDataFile(posFile)
 
-        for b in ['particles', 'particles_auto']:
+        blocksToRead = ['particles_auto'] if readDiscarded \
+                        else ['particles','particles_auto']
+
+        for b in blocksToRead:
             if b in blocks:
                 mdAux = md.MetaData('%(b)s@%(posFile)s' % locals())
                 mData.unionAll(mdAux)
+        if readDiscarded:
+            for objId in mData:
+                if mData.getValue(md.MDL_COST, objId)>0:
+                    enabled=mData.getValue(md.MDL_ENABLED, objId)
+                    mData.setValue(md.MDL_ENABLED, -1*enabled, objId)
         mData.removeDisabled()
     return mData
 
@@ -953,11 +972,19 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
     if 'alignType' not in kwargs:
         kwargs['alignType'] = imgSet.getAlignment()
 
-    for img in imgSet:
-        objId = md.addObject()
-        imgRow = XmippMdRow()
-        imgToFunc(img, imgRow, **kwargs)
-        imgRow.writeToMd(md, objId)
+    if 'where' in kwargs:
+        where = kwargs['where']
+        for img in imgSet.iterItems(where=where):
+            objId = md.addObject()
+            imgRow = XmippMdRow()
+            imgToFunc(img, imgRow, **kwargs)
+            imgRow.writeToMd(md, objId)
+    else:
+        for img in imgSet:
+            objId = md.addObject()
+            imgRow = XmippMdRow()
+            imgToFunc(img, imgRow, **kwargs)
+            imgRow.writeToMd(md, objId)
 
 
 def readAnglesFromMicrographs(micFile, anglesSet):
@@ -1380,7 +1407,8 @@ def rowToAlignment(alignmentRow, alignType):
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             if flip:
                 angles[1] = angles[1]+180  # tilt + 180
-                angles[2] = 180 - angles[2]  # 180 - psi
+#                 angles[2] = 180 - angles[2]  # 180 - psi, COSS: this is mirroring Y
+                angles[2] = - angles[2]  # - psi, COSS: this is mirroring X
                 shifts[0] = -shifts[0]  # -x
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)

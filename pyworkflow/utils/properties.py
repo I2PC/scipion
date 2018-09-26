@@ -259,7 +259,7 @@ It is used by a few programs like Ctffind or Frealign."""
     TEXT_NO_CTF_READY = 'CTF of *Input Micrographs* not ready yet.'
     TEXT_NO_OUTPUT_CO = 'Output coordinates not ready yet.'
     ERROR_NO_EST_CTF = '_estimateCTF should be implemented'
-    
+    TEXT_NO_OUTPUT_FILES = 'No output file produced'
     
     TITLE_LAUNCHED = 'Success'
     LABEL_LAUNCHED = 'The protocol was launched successfully.'
@@ -339,6 +339,10 @@ Do you really want to continue?'
     TITLE_PICK_GAUSS = 'Automatic gaussian picking'
     LABEL_PICK_GAUSS = 'Do you wish to perform an automatic gaussian picking for the remaining micrographs?'
 
+    TITLE_INSPECTOR = 'Objects inspector'
+    LABEL_INSPECTOR = 'Objects inspector will inspect the whole project. ' \
+                      'Thus, it can take a while depending on the size of the project.\n' \
+                      'Do you want to continue?'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
@@ -391,6 +395,8 @@ class Icon():
     LINK = 'fa-iconmoon-link.png'
     ROOT = 'root.png'
     ROCKET = 'fa-rocket.png'
+
+    SCIPION_ICON = 'scipion_bn_icon.png'
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222

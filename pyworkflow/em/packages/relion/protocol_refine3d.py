@@ -23,7 +23,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+"""
+This module contains the protocol for 3d refinement with Relion.
+"""
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume, FSC
@@ -235,7 +237,7 @@ leads to objective and high-quality results.
                          updateItemCallback=self._createItemMatrix,
                          itemDataIterator=md.iterRows(outImgsFn,
                                                       sortByLabel=md.RLN_IMAGE_ID))
-    
+
     def _createItemMatrix(self, particle, row):
         createItemMatrix(particle, row, align=ALIGN_PROJ)
         setRelionAttributes(particle, row, md.RLN_PARTICLE_RANDOM_SUBSET)

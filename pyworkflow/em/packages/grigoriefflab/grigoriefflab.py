@@ -47,6 +47,8 @@ CTFFIND_HOME = 'CTFFIND_HOME'
 CTFFIND3 = 'ctffind3.exe'
 CTFFIND3MP = 'ctffind3_mp.exe'
 CTFFIND4 = 'ctffind'
+CTFTILT = 'ctftilt.exe'
+CTFTILTMP = 'ctftilt_mp.exe'
 FREALIGN = 'frealign_v9.exe'
 FREALIGNMP = 'frealign_v9_mp.exe'
 MAGDISTEST = 'mag_distortion_estimate_openmp.exe'
@@ -92,6 +94,9 @@ def _getHome(key, default):
 CTFFIND_PATH = join(os.environ[CTFFIND_HOME], CTFFIND3)
 CTFFINDMP_PATH = join(os.environ[CTFFIND_HOME], CTFFIND3MP)
 CTFFIND4_PATH = _getCtffind4()
+
+CTFTILT_PATH = join(os.environ[CTFFIND_HOME], CTFTILT)
+CTFTILTMP_PATH = join(os.environ[CTFFIND_HOME], CTFTILTMP)
 
 FREALIGN_HOME = _getHome(FREALIGN_HOME_VAR, 'frealign')
 FREALIGN_PATH = join(FREALIGN_HOME, 'bin', FREALIGN)
