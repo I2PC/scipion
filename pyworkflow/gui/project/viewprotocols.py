@@ -1842,7 +1842,7 @@ class ProtocolsView(tk.Frame):
             master=self.windows,
             path=self.project.getPath(''),
             onSelect=_export,
-            entryLabel='File', entryValue='workflow.json')
+            entryLabel='File  ', entryValue='workflow.json')
         browser.show()
 
     def _exportUploadProtocols(self):
