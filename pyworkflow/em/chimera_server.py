@@ -11,7 +11,9 @@ from numpy.linalg import inv
 import chimera
 from time import sleep
 from threading import Thread
+
 from chimera import runCommand
+
 #from time import gmtime, strftime
 #from datetime import datetime
 import sys

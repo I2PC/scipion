@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *            
+# * Authors:     David Maluenda Niubo (dmaluenda@cnb.csic.es)
+# *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -23,14 +23,20 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.plugin import Plugin
-from bibtex import _bibtex
-_logo = 'scipion_logo.png'
-_references = ['delaRosaTrevin201693']
 
-class Plugin(Plugin):
+import traceback
 
-    @classmethod
-    def validateInstallation(cls):
-        """ This function will be used to check if package is properly installed. """
-        return []  # No errors
+# FIXME: This is a bypass until xmipp is replaced to xmippLib
+# FIXME:   in all imports related to the C++ binding
+
+print("\n >>> WARNING: 'import xmipp' is deprecated for the xmipp binding.")
+stackList = traceback.extract_stack()
+for stackLine in stackList:
+    if 'import xmipp' in stackLine[3]:
+        print("  > Please change 'import xmipp' to 'import xmippLib' in\n"
+              "    File: '%s', line %d.\n" % (stackLine[0], stackLine[1]))
+    if 'from xmipp import' in stackLine[3]:
+        print("  > Please change 'from xmipp import ...' to 'from xmippLib import ...' in\n"
+              "    File: '%s', line %d.\n" % (stackLine[0], stackLine[1]))
+
+from xmippLib import *

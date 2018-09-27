@@ -38,13 +38,14 @@ Datasets:
 """
 
 import os
+from os.path import exists
 
 import pyworkflow.tests as tests
 import pyworkflow.em as em
-import pyworkflow.em.packages.xmipp3 as xmipp3
-import pyworkflow.em.packages.eman2 as eman2
+import pyworkflow.utils as pwutils
 
-from os.path import exists
+xmipp3 = pwutils.importFromPlugin('xmipp3')
+eman2 = pwutils.importFromPlugin('eman2')
 
    
 class TestGroel(tests.BaseTest):

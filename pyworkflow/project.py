@@ -213,8 +213,8 @@ class Project(object):
         classesDict.update(pwobj.__dict__)
         classesDict.update(pwconfig.__dict__)
         classesDict.update(pwhosts.__dict__)
-        classesDict.update(em.getProtocols())
-        classesDict.update(em.getObjects())
+        classesDict.update(em.Domain.getProtocols())
+        classesDict.update(em.Domain.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
 
     def load(self, dbPath=None, hostsConf=None, protocolsConf=None, chdir=True,
@@ -245,27 +245,25 @@ class Project(object):
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
-        try:
+        self._loadDb(dbPath)
 
-            self._loadDb(dbPath)
+        self._loadHosts(hostsConf)
 
-            self._loadHosts(hostsConf)
+        if loadAllConfig:
+            self._loadProtocols(protocolsConf)
 
-            if loadAllConfig:
-                self._loadProtocols(protocolsConf)
+            # FIXME: Handle settings argument here
 
-                # FIXME: Handle settings argument here
+            # It is possible that settings does not exists if
+            # we are loading a project after a Project.setDbName,
+            # used when running protocols
+            settingsPath = os.path.join(self.path, self.settingsPath)
+            if os.path.exists(settingsPath):
+                self.settings = pwconfig.loadSettings(settingsPath)
+            else:
+                self.settings = None
 
-                # It is possible that settings does not exists if
-                # we are loading a project after a Project.setDbName,
-                # used when running protocols
-                settingsPath = os.path.join(self.path, self.settingsPath)
-                if os.path.exists(settingsPath):
-                    self.settings = pwconfig.loadSettings(settingsPath)
-                else:
-                    self.settings = None
-
-            self._loadCreationTime()
+        self._loadCreationTime()
 
         # Catch DB not found exception (when loading a project from a folder
         #  without project.sqlite
@@ -899,7 +897,7 @@ class Project(object):
         f = open(filename)
         protocolsList = json.load(f)
 
-        emProtocols = em.getProtocols()
+        emProtocols = em.Domain.getProtocols()
         newDict = OrderedDict()
 
         # First iteration: create all protocols and setup parameters
@@ -1152,7 +1150,7 @@ class Project(object):
         :return: The graph taking into account run dependencies
         """
         outputDict = {} # Store the output dict
-        g = pwutils.graph.Graph(rootName='PROJECT')
+        g = pwutils.Graph(rootName='PROJECT')
 
         for r in runs:
             n = g.createNode(r.strId())
@@ -1200,7 +1198,7 @@ class Project(object):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
         relations = self.mapper.getRelationsByName(relation)
-        g = pwutils.graph.Graph(rootName='PROJECT')
+        g = pwutils.Graph(rootName='PROJECT')
         root = g.getRoot()
         root.pointer = None
         runs = self.getRuns(refresh=refresh)

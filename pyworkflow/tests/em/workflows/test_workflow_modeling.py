@@ -28,17 +28,25 @@
 # flexible fitting (coot and refmac), as well as validation programs such as
 # emringer and molprobity
 
-from pyworkflow.em.packages.chimera.protocol_fit import ChimeraProtRigidFit
+
+
+import os.path
+from pyworkflow.tests import *
+import json
+from pyworkflow.tests import *
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
     ProtImportVolumes
-from pyworkflow.em.packages.ccp4.protocol_coot import CootRefine
-from pyworkflow.em.packages.ccp4.protocol_refmac import CCP4ProtRunRefmac
-from pyworkflow.em.packages.phenix.protocol_emringer import PhenixProtRunEMRinger
-from pyworkflow.em.packages.phenix.protocol_molprobity import PhenixProtRunMolprobity
 from pyworkflow.tests import *
 import os.path
 import json
 
+
+ChimeraProtRigidFit = importFromPlugin('chimera.protocols', 'ChimeraProtRigidFit')
+CootRefine = importFromPlugin('cpp4.protocols', 'CootRefine')
+CCP4ProtRunRefmac = importFromPlugin('ccp4.protocols', 'CCP4ProtRunRefmac')
+PhenixProtRunEMRinger = importFromPlugin('phenix.protocols','PhenixProtRunEMRinger')
+PhenixProtRunMolprobity = importFromPlugin('phenix.protocols','PhenixProtRunMolprobity')
 
 class TestImportBase(BaseTest):
     @classmethod

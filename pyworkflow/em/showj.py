@@ -34,7 +34,7 @@ import os
 from os.path import join
 from collections import OrderedDict
 import subprocess
-from pyworkflow.utils import getFreePort
+from pyworkflow.utils import getFreePort, importFromPlugin
 from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE, COL_RENDER_VOLUME
 import threading
 import shlex
@@ -253,9 +253,10 @@ def getJavaIJappArguments(memory, appName, appArgs):
         print "No memory size provided. Using default: %s" % memory
 
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
-    imagej_home = join(os.environ['XMIPP_HOME'], "external", "imagej")
+    javaBind = join(os.environ['XMIPP_HOME'], "bindings", "java")
+    imagej_home = join(javaBind, "imagej")
     lib = join(os.environ['XMIPP_HOME'], "lib")
-    javaLib = join(os.environ['XMIPP_HOME'], 'java', 'lib')
+    javaLib = join(javaBind, 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
     args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
@@ -263,9 +264,10 @@ def getJavaIJappArguments(memory, appName, appArgs):
     return args
 
 
-def runJavaIJapp(memory, appName, args, env={}):
-    from pyworkflow.em.packages import xmipp3
-    env.update(xmipp3.getEnviron(xmippFirst=False))
+def runJavaIJapp(memory, appName, args, env=None):
+    xmipp3 = importFromPlugin('xmipp3')
+    env = env or {}
+    env.update(xmipp3.Plugin.getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s' % args
@@ -274,11 +276,11 @@ def runJavaIJapp(memory, appName, args, env={}):
     return subprocess.Popen(cmd, env=env)
 
 
-def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
-                              memory=None, pickerProps=None, inTmpFolder=False):
-
+def launchSupervisedPickerGUI(micsFn, outputDir, protocol,
+                              mode=None, memory=None,
+                              pickerProps=None, inTmpFolder=False):
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s"%(micsFn, outputDir)
+        args = "--input %s --output %s" % (micsFn, outputDir)
 
         if mode:
             args += " --mode %s" % mode

@@ -442,7 +442,8 @@ class BoxWizardView(tk.Frame):
         
         if useMC:
             # Create motioncorr
-            from pyworkflow.em.packages.motioncorr import ProtMotionCorr
+            ProtMotionCorr = pwutils.importFromPlugin('motioncorr.protocols',
+                                                      'ProtMotionCorr')
             protMC = project.newProtocol(ProtMotionCorr,
                                          objLabel='Motioncorr',
                                          useMotioncor2=useMC2,
@@ -451,7 +452,8 @@ class BoxWizardView(tk.Frame):
         
         if useOF:
             # Create Optical Flow protocol
-            from pyworkflow.em.packages.xmipp3 import XmippProtOFAlignment
+            XmippProtOFAlignment  = pwutils.importFromPlugin('xmipp3.protocols',
+                                                         'XmippProtOFAlignment')
             
             protOF = project.newProtocol(XmippProtOFAlignment,
                                          objLabel='Optical Flow',
@@ -464,8 +466,9 @@ class BoxWizardView(tk.Frame):
             if frames and useOF:
                 kwargs['alignFrame0'] = kwargs['sumFrame0'] = 1
                 kwargs['alignFrameN'] = kwargs['sumFrameN'] = 0
-            
-            from pyworkflow.em.packages.grigoriefflab import ProtSummovie
+
+            ProtSummovie = pwutils.importFromPlugin('grigoriefflab.protocols',
+                                                    'ProtSummovie')
             protSM = project.newProtocol(ProtSummovie,
                                          objLabel='Summovie',
                                          cleanInputMovies=useOF,
@@ -476,7 +479,8 @@ class BoxWizardView(tk.Frame):
         lastBeforeCTF = self.lastProt
         
         if useCTF:
-            from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
+            ProtCTFFind = pwutils.importFromPlugin('grigoriefflab.protocols',
+                                                   'ProtCTFFind')
             protCTF = project.newProtocol(ProtCTFFind,
                                           objLabel='Ctffind',
                                           numberOfThreads=1)
@@ -485,7 +489,7 @@ class BoxWizardView(tk.Frame):
             _saveProtocol(protCTF, movies=False)
         
         if useGCTF:
-            from pyworkflow.em.packages.gctf import ProtGctf
+            ProtGctf = pwutils.importFromPlugin('gctf.protocols', 'ProtGctf')
             protGCTF = project.newProtocol(ProtGctf,
                                            objLabel='Gctf')
             protGCTF.inputMicrographs.set(lastBeforeCTF)

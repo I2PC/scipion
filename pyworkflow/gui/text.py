@@ -257,8 +257,8 @@ class Text(tk.Text, Scrollable):
             path = os.path.join(dirname, fname)
 
         if os.path.exists(path):
-            import xmipp
-            fn = xmipp.FileName(path)
+            import xmippLib
+            fn = xmippLib.FileName(path)
             if fn.isImage() or fn.isMetaData():
                 from pyworkflow.em.viewer import DataView
                 DataView(path).show()

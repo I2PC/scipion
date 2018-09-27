@@ -26,7 +26,8 @@
 """
 This modules contains classes related with EM
 """
-from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
+
+
 from data import *
 from data_tiltpairs import *
 from protocol import *
@@ -37,66 +38,30 @@ from viewer import *
 import transformations
 import pdb_handler
 
-PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
-_emPackagesDict = None
+import pyworkflow.plugin
 
-def getPackages():
-    global _emPackagesDict
-    if _emPackagesDict is None:
-        sys.path.insert(0, PACKAGES_PATH)
-        _emPackagesDict = getModules(PACKAGES_PATH)
-        sys.path.pop(0)
-    return _emPackagesDict
 
-# Load all Protocol subclasses found in EM-packages
-_emProtocolsDict = None
+class Domain(pyworkflow.plugin.Domain):
+    _objectClass = EMObject
+    _protocolClass = Protocol
+    _viewerClass = Viewer
+    _wizardClass = Wizard
+    _baseClasses = globals()
 
-def getProtocols():
-    """ Load all protocols subclasses defined in all em-packages. """
-    global _emProtocolsDict
-    if _emProtocolsDict is None:
-        _emProtocolsDict = getSubclassesFromModules(Protocol, getPackages())
-        _emProtocolsDict.update(getSubclasses(Protocol, globals()))
-    return _emProtocolsDict
 
-_emObjectsDict = None 
+class Plugin(pyworkflow.plugin.Plugin):
+    pass
 
-def getObjects():
-    """ Load all EMObject subclasses found in EM-packages. """
-    global _emObjectsDict
-    if _emObjectsDict is None:        
-        _emObjectsDict = getSubclassesFromModules(EMObject, getPackages())
-        _emObjectsDict.update(getSubclasses(EMObject, globals()))
-    return _emObjectsDict
 
-_emViewersDict = None
-
-def getViewers():
-    """ Load all subclasses of Viewer of different packages. """
-    global _emViewersDict
-    if _emViewersDict is None:
-        _emViewersDict = getSubclassesFromModules(Viewer, getPackages())
-    return _emViewersDict
-
-_emWizardsDict = None
-
-def getWizards():
-    """ Load all subclasses of Wizards. """
-    global _emWizardsDict
-    if _emWizardsDict is None:
-        _emWizardsDict = getSubclassesFromModules(Wizard, getPackages())
-    return _emWizardsDict
-        
-        
 def findClass(className):
-    
-    if className in getProtocols():
-        return getProtocols()[className]
-    
-    if className in getObjects():
-        return getObjects()[className]
-    
-    raise Exception("findClass: class '%s' not found." % className)
+    c = Domain.getProtocols().get(
+        className,
+        Domain.getObjects().get(className, None))
+
+    if c is None:
+        raise Exception("findClass: class '%s' not found." % className)
+
+    return c
 
 
 def findSubClasses(classDict, className):
@@ -115,7 +80,7 @@ def findViewers(className, environment):
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
-    for viewer in getViewers().values():
+    for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
@@ -143,7 +108,7 @@ def findWizards(protocol, environment):
     """ Find availables wizards for this class. 
     Returns:
         a dict with the paramName and wizards for this class."""
-    return findWizardsFromDict(protocol, environment, getWizards())
+    return findWizardsFromDict(protocol, environment, Domain.getWizards())
 
 # Update global dictionary with variables found
 #globals().update(emProtocolsDict)
@@ -154,7 +119,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
     from pyworkflow.mapper.sqlite import SqliteFlatDb
     db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPrefix)
     setClassName = db.getProperty('self') # get the set class name
-    setObj = getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
+    setObj = Domain.getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
     return setObj
 
 
@@ -162,17 +127,17 @@ def runProgram(program, params):
     env = None
 
     if program.startswith('xmipp'):
-        import pyworkflow.em.packages.xmipp3 as xmipp3
+        xmipp3 = importFromPlugin('xmipp3')
         env = xmipp3.getEnviron()
     if program.startswith('relion'):
-        import pyworkflow.em.packages.relion as relion
+        relion = importFromPlugin('relion')
         env = relion.getEnviron()
     elif (program.startswith('e2') or
               program.startswith('sx')):
-        import pyworkflow.em.packages.eman2 as eman2
+        eman2 = importFromPlugin('eman2')
         env = eman2.getEnviron()
     elif program.startswith('b'):
-        import pyworkflow.em.packages.bsoft as bsoft
+        bsoft = importFromPlugin('bsoft')
         env = bsoft.getEnviron()
 
     pwutils.runJob(None, program, params, env=env)

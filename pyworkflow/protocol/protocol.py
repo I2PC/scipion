@@ -363,7 +363,7 @@ class Protocol(Step):
         if not hasattr(self, 'hostFullName'):
             self.hostFullName = String()
 
-        # Maybe this property can be inferred from the 
+        # Maybe this property can be inferred from the
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
 
@@ -392,7 +392,7 @@ class Protocol(Step):
         self.summaryWarnings = []
 
     def _storeAttributes(self, attrList, attrDict):
-        """ Store all attributes in attrDict as 
+        """ Store all attributes in attrDict as
         attributes of self, also store the key in attrList.
         """
         for key, value in attrDict.iteritems():
@@ -474,8 +474,8 @@ class Protocol(Step):
     @staticmethod
     def hasDefinition(cls):
         """ Check if the protocol has some definition.
-        This can help to detect "abstract" protocol that 
-        only serve as base for other, not to be instantiated. 
+        This can help to detect "abstract" protocol that
+        only serve as base for other, not to be instantiated.
         """
         return hasattr(cls, '_definition')
 
@@ -510,7 +510,7 @@ class Protocol(Step):
 
     def evalParamCondition(self, paramName):
         """ Eval if the condition of paramName in _definition
-        is satified with the current values of the protocol attributes. 
+        is satified with the current values of the protocol attributes.
         """
         return self._definition.evalParamCondition(paramName)
 
@@ -520,8 +520,8 @@ class Protocol(Step):
         return self.evalParamExpertLevel(self.getParam(paramName))
 
     def evalParamExpertLevel(self, param):
-        """ Return True if the param has an expert level is less than 
-        the one for the whole protocol. 
+        """ Return True if the param has an expert level is less than
+        the one for the whole protocol.
         """
         return param.expertLevel.get() <= self.expertLevel.get()
 
@@ -531,7 +531,7 @@ class Protocol(Step):
             yield paramName, getattr(self, paramName)
 
     def getDefinitionDict(self):
-        """ Similar to getObjDict, but only for those 
+        """ Similar to getObjDict, but only for those
         params that are in the form.
         This function is used for export protocols as json text file.
         """
@@ -664,7 +664,7 @@ class Protocol(Step):
 
     def getOutputFiles(self):
         """ Return the output files produced by this protocol.
-        This can be used in web to download or in remote 
+        This can be used in web to download or in remote
         executions to copy results back.
         """
         # By default return the output file of each output attribute
@@ -687,7 +687,7 @@ class Protocol(Step):
         """
         if hasattr(self, '_definition'):
             for paramName, param in self._definition.iterParams():
-                # Create the var with value coming from kwargs or from 
+                # Create the var with value coming from kwargs or from
                 # the default param definition
                 var = param.paramClass(value=kwargs.get(paramName,
                                                         param.default.get()))
@@ -698,7 +698,7 @@ class Protocol(Step):
 
     def _getFileName(self, key, **kwargs):
         """ This function will retrieve filenames given a key and some
-        keywords arguments. The __filenamesDict attribute should be 
+        keywords arguments. The __filenamesDict attribute should be
         updated with templates that accept the given keys.
         """
         return self.__filenamesDict[key] % kwargs
@@ -751,10 +751,10 @@ class Protocol(Step):
         pass
 
     def __insertStep(self, step, **kwargs):
-        """ Insert a new step in the list. 
+        """ Insert a new step in the list.
         Params:
          **kwargs:
-            prerequisites: a list with the steps index that need to be done 
+            prerequisites: a list with the steps index that need to be done
                            previous than the current one."""
         prerequisites = kwargs.get('prerequisites', None)
 
@@ -800,12 +800,12 @@ class Protocol(Step):
 
     def _getBasePath(self, path):
         """ Take the basename of the path and get the path
-        relative to working dir of the protocol. 
+        relative to working dir of the protocol.
         """
         return self._getPath(os.path.basename(path))
 
     def _insertFunctionStep(self, funcName, *funcArgs, **kwargs):
-        """ 
+        """
          Params:
            funcName: the string name of the function to be run in the Step.
            *funcArgs: the variable list of arguments to pass to the function.
@@ -852,7 +852,7 @@ class Protocol(Step):
 
     def _leaveDir(self):
         """ This method should be called after a call to _enterDir
-        to return to the previous location. 
+        to return to the previous location.
         """
         os.chdir(self._currentDir)
         if self._log:
@@ -863,7 +863,7 @@ class Protocol(Step):
         self._enterDir(self.workingDir.get())
 
     def _leaveWorkingDir(self):
-        """ This funcion make sense to use in conjunction 
+        """ This funcion make sense to use in conjunction
         with _enterWorkingDir to go back to execution path.
         """
         self._leaveDir()
@@ -897,7 +897,7 @@ class Protocol(Step):
         return prevSteps
 
     def _insertPreviousSteps(self):
-        """ Insert steps of previous execution. 
+        """ Insert steps of previous execution.
         It can be used to track previous steps done for
         protocol that allow some kind of continue (such as ctf estimation).
         """
@@ -906,7 +906,7 @@ class Protocol(Step):
 
     def __findStartingStep(self):
         """ From a previous run, compare self._steps and self._prevSteps
-        to find which steps we need to start at, skipping successful done 
+        to find which steps we need to start at, skipping successful done
         and not changed steps. Steps that needs to be done, will be deleted
         from the previous run storage.
         """
@@ -937,7 +937,7 @@ class Protocol(Step):
         return n
 
     def _storeSteps(self):
-        """ Store the new steps list that can be retrieved 
+        """ Store the new steps list that can be retrieved
         in further execution of this protocol.
         """
         stepsFn = self.getStepsFile()
@@ -1111,7 +1111,7 @@ class Protocol(Step):
 
     def makePathsAndClean(self):
         """ Create the necessary path or clean
-        if in RESTART mode. 
+        if in RESTART mode.
         """
         # Clean working path if in RESTART mode
         paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(),
@@ -1155,7 +1155,7 @@ class Protocol(Step):
         By default, the protocol will use the one defined
         in the package that it belongs or None.
         """
-        return getattr(self.getClassPackage(), '_environ', None)
+        return self.getClassPackage().Plugin.getEnviron()
 
     def runJob(self, program, arguments, **kwargs):
         if self.stepsExecutionMode == STEPS_SERIAL:
@@ -1177,7 +1177,7 @@ class Protocol(Step):
 
     def run(self):
         """ Before calling this method, the working dir for the protocol
-        to run should exists. 
+        to run should exists.
         """
         self.__initLogs()
 
@@ -1407,13 +1407,31 @@ class Protocol(Step):
         """ Return the package module to which this protocol belongs
         """
         import pyworkflow.em as em
-        em.getProtocols()  # make sure the _package is set for each Protocol class
+        em.Domain.getProtocols()  # make sure the _package is set for each Protocol class
         return getattr(cls, '_package', scipion)
+
+    @classmethod
+    def getClassPlugin(cls):
+        package = cls.getClassPackage()
+        return getattr(package, '_plugin', None)
 
     @classmethod
     def getClassPackageName(cls):
         return cls.getClassPackage().__name__.replace(
             'pyworkflow.protocol.scipion', 'scipion')
+
+    @classmethod
+    def getPluginLogoPath(cls):
+        package = cls.getClassPackage()
+        plugin = cls.getClassPlugin()
+        logo = plugin.logo if plugin else getattr(package, '_logo', None)
+        if logo:
+            logoPath = (pw.findResource(logo) or
+                        os.path.join(os.path.abspath(os.path.dirname(package.__file__)), logo))
+        else:
+            logoPath = None
+
+        return logoPath
 
     @classmethod
     def validatePackageVersion(cls, varName, errors):
@@ -1429,11 +1447,11 @@ class Protocol(Step):
         package = cls.getClassPackage()
         packageName = cls.getClassPackageName()
         varValue = os.environ[varName]
-        versions = ','.join(package.getSupportedVersions())
+        versions = ','.join(package.Plugin.getSupportedVersions())
 
         errorMsg = None
 
-        if not package.getVersion():
+        if not package.Plugin.getActiveVersion():
             errors.append("We could not detect *%s* version. " % packageName)
             errorMsg = "The path value should contains a valid version (%s)." % versions
         elif not os.path.exists(varValue):
@@ -1476,7 +1494,7 @@ class Protocol(Step):
         """
         queueName, queueParams = self.getQueueParams()
         hc = self.getHostConfig()
-        
+
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),
@@ -1522,7 +1540,7 @@ class Protocol(Step):
         self._store(self._numberOfSteps)
 
     def getStatusMessage(self):
-        """ Return the status string and if running the steps done. 
+        """ Return the status string and if running the steps done.
         """
         msg = self.getStatus()
         if self.isRunning() or self.isAborted() or self.isFailed():
@@ -1562,7 +1580,7 @@ class Protocol(Step):
     # Methods that should be implemented in subclasses
     def _validate(self):
         """ This function can be overwritten by subclasses.
-        Used from the public validate function.   
+        Used from the public validate function.
         """
         return []
 
@@ -1581,9 +1599,11 @@ class Protocol(Step):
         and there are not errors. If some errors are found, a list with
         the error messages will be returned.
         """
-        validateFunc = getattr(cls.getClassPackage(),
-                               'validateInstallation', None)
         try:
+
+            validateFunc = getattr(cls.getClassPackage().Plugin,
+                               'validateInstallation', None)
+
             return validateFunc() if validateFunc is not None else []
         except Exception as e:
 
@@ -1595,7 +1615,7 @@ class Protocol(Step):
 
     def validate(self):
         """ Check that input parameters are correct.
-        Return a list with errors, if the list is empty, all was ok.         
+        Return a list with errors, if the list is empty, all was ok.
         """
         errors = []
         # Validate that all input pointer parameters have a value
@@ -1706,12 +1726,12 @@ class Protocol(Step):
         """ Should be implemented in subclasses. See citations. """
         return getattr(self, "_references", [])
 
-    def __getPackageBibTex(self):
-        """ Return the _bibtex from the package . """
-        return getattr(self.getClassPackage(), "_bibtex", {})
+    def __getPluginBibTex(self):
+        """ Return the _bibtex from the package """
+        return getattr(self.getClassPlugin(), 'bibtex', {}) or getattr(self.getClassPackage(), "_bibtex", {})
 
     def _getCite(self, citeStr):
-        bibtex = self.__getPackageBibTex()
+        bibtex = self.__getPluginBibTex()
         if citeStr in bibtex:
             text = self._getCiteText(bibtex[citeStr])
         else:
@@ -1741,9 +1761,9 @@ class Protocol(Step):
 
     def __getCitations(self, citations):
         """ From the list of citations keys, obtains the full
-        info from the package _bibtex dict. 
+        info from the package _bibtex dict.
         """
-        bibtex = self.__getPackageBibTex()
+        bibtex = self.__getPluginBibTex()
         newCitations = []
         for c in citations:
             if c in bibtex:
@@ -1754,7 +1774,7 @@ class Protocol(Step):
 
     def __getCitationsDict(self, citationList, bibTexOutput=False):
         """ Return a dictionary with Cite keys and the citation links. """
-        bibtex = self.__getPackageBibTex()
+        bibtex = self.__getPluginBibTex()
         od = OrderedDict()
         for c in citationList:
             if c in bibtex:
@@ -1789,6 +1809,17 @@ class Protocol(Step):
             return ['No references provided']
         return citations
 
+    def getHelpText(self):
+        """Get help text to show in the protocol help button"""
+        helpText = self.getDoc()
+        plugin = self.getClassPlugin()
+        if plugin:
+            pluginMetadata = plugin.metadata
+            helpText += "\n\nPlugin info:\n"
+            for key, value in pluginMetadata.iteritems():
+                helpText += "%s: \t%s\n" % (key, value)
+        return helpText
+
     def _methods(self):
         """ Should be implemented in subclasses. See methods. """
         return ["No methods information."]
@@ -1797,7 +1828,7 @@ class Protocol(Step):
         """ Get the _methods results and parse possible cites. """
         try:
             baseMethods = self._methods() or []
-            bibtex = self.__getPackageBibTex()
+            bibtex = self.__getPluginBibTex()
             parsedMethods = []
             for m in baseMethods:
                 for bibId, cite in bibtex.iteritems():

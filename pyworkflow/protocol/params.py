@@ -257,8 +257,9 @@ class Form(object):
         condStr = param.condition.get()
         localDict = {}
         globalDict = dict(globals())
-        from pyworkflow.em import getObjects
-        globalDict.update(getObjects())
+        # FIXME: Check why this import is here
+        from pyworkflow.em import Domain
+        globalDict.update(Domain.getObjects())
 
         for t in param._conditionParams:
             if self.hasParam(t) or self._protocol.hasAttribute(t):
