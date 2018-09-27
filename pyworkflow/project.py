@@ -245,25 +245,27 @@ class Project(object):
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
-        self._loadDb(dbPath)
+        try:
 
-        self._loadHosts(hostsConf)
+            self._loadDb(dbPath)
 
-        if loadAllConfig:
-            self._loadProtocols(protocolsConf)
+            self._loadHosts(hostsConf)
 
-            # FIXME: Handle settings argument here
+            if loadAllConfig:
+                self._loadProtocols(protocolsConf)
 
-            # It is possible that settings does not exists if
-            # we are loading a project after a Project.setDbName,
-            # used when running protocols
-            settingsPath = os.path.join(self.path, self.settingsPath)
-            if os.path.exists(settingsPath):
-                self.settings = pwconfig.loadSettings(settingsPath)
-            else:
-                self.settings = None
+                # FIXME: Handle settings argument here
 
-        self._loadCreationTime()
+                # It is possible that settings does not exists if
+                # we are loading a project after a Project.setDbName,
+                # used when running protocols
+                settingsPath = os.path.join(self.path, self.settingsPath)
+                if os.path.exists(settingsPath):
+                    self.settings = pwconfig.loadSettings(settingsPath)
+                else:
+                    self.settings = None
+
+            self._loadCreationTime()
 
         # Catch DB not found exception (when loading a project from a folder
         #  without project.sqlite
