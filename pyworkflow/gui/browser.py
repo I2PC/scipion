@@ -802,6 +802,6 @@ class FileBrowserWindow(BrowserWindow):
                  '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
                  '.hed', *STANDARD_IMAGE_EXTENSIONS)
         register(VolFileHandler(), '.vol')
-        register(StackHandler(), '.stk', '.mrcs', '.st', '.pif')
+        register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
         register(ChimeraHandler(), '.bild')
     

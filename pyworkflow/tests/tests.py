@@ -174,12 +174,16 @@ def setupTestProject(cls):
         proj = Manager().loadProject(projName)
     else:
         proj = Manager().createProject(projName) # Now it will be loaded if exists
+
     
     cls.outputPath = proj.path
+    # Create project does not change the working directory anymore
+    os.chdir(cls.outputPath)
     cls.projName = projName
     cls.proj = proj
-        
-        
+
+
+
 #class for tests
 class Complex(Object):
     
