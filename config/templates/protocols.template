@@ -242,8 +242,7 @@ Protocols SPA = [
         {"tag": "protocol", "value": "PhenixProtRunRSRefine",   "text": "default"},
 	    {"tag": "protocol", "value": "PhenixProtRunMolprobity",   "text": "default"},
         {"tag": "protocol", "value": "XmippProt3DBionotes",   "text": "default"}
-    ]}
-]
+    ]}]
 MDA workflow = [
 	{"tag": "section", "text": "MDA workflow", "children": [
 		{"tag": "protocol",      "value": "ProtImportParticles",  "text": "Import particles", "icon": "bookmark.png"},
