@@ -33,6 +33,7 @@
 .pydevproject
 .classpath
 .idea
+*.iml
 
 # Scons auxiliary files
 .sconsign.dblite
@@ -81,4 +82,3 @@ static/
 
 # Ignore version file
 .devel_version
-pyworkflow/em/packages/appion

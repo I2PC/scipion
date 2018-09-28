@@ -90,6 +90,10 @@ class Manager(object):
         else:
             projectPath = os.path.join(location, projectName)
 
+        # JMRT: Right now the project.create function change the current
+        # working dir (cwd) to the project location, let's store the cwd
+        # and restored after the creation
+        cwd = os.getcwd()
         project = Project(projectPath)
         project.create(runsView=runsView, 
                        hostsConf=hostsConf, 
@@ -100,6 +104,8 @@ class Manager(object):
             # can be broken in systems with different mount points
             pwutils.path.createAbsLink(os.path.abspath(projectPath), 
                                        self.getProjectPath(projectName))
+
+        os.chdir(cwd)  # Retore cwd before project creation
 
         return project
 

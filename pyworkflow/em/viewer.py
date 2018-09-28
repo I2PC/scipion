@@ -362,7 +362,8 @@ class TableView(View):
     def __init__(self, headerList, dataList,
                  mesg=None, title=None,
                  height=10, width=400,
-                 fontSize=16, padding=10):
+                 fontSize=16, padding=10,
+                 fontFamily='monospace'):
         # get new widget that has as parent the top level window and set title
         win = tk.Toplevel()
         if title:
@@ -373,7 +374,7 @@ class TableView(View):
 
         # make font a little bigger
         # TODO: font size should be general
-        font = tkFont.Font(family='fixed', size=fontSize)
+        font = tkFont.Font(family=fontFamily, size=fontSize)
         font.metrics()
         fontheight = font.metrics()['linespace']
         style = ttk.Style()
@@ -510,7 +511,13 @@ class ChimeraViewer(Viewer):
             # volume (if available)
             else:
                 fn = obj.getFileName()
-                fnCmd = self.protocol._getTmpPath("chimera.cmd")
+                # check if tmp dir exists, if not use /tmp
+                # tmp does not exists if you try to visualize something  (eye)
+                # before irunning the protocol
+                tmpPath=self.protocol._getTmpPath()
+                if not os.path.exists(tmpPath):
+                    tmpPath = "/tmp"
+                fnCmd = os.path.join(tmpPath, "chimera.cmd")
                 f = open(fnCmd, 'w')
                 if obj.hasVolume():
                     volID = 0
@@ -519,17 +526,18 @@ class ChimeraViewer(Viewer):
                     sampling = volumeObject.getSamplingRate()
                     f.write("open %s\n" % os.path.abspath(
                         ImageHandler.removeFileType(volumeObject.getFileName())))
-                    f.write("volume #%d style surface\n"%volID)
+                    f.write("volume #%d style surface voxelSize %f\n"
+                            % (volID, sampling))
                     x, y, z = volumeObject.getShiftsFromOrigin()
-                    f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" % (volID, x,
-                                                                     y, z))
+                    f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
+                            % (volID, x, y, z))
                 else:
                     dim = 150  # eventually we will create a PDB library that
                                # computes PDB dim
                     sampling = 1.
                 # Construct the coordinate file
                 bildFileName = os.path.abspath(
-                    self.protocol._getTmpPath("axis.bild"))
+                    os.path.join(tmpPath,"axis.bild"))
                 createCoordinateAxisFile(dim,
                                          bildFileName=bildFileName,
                                          sampling=sampling)
