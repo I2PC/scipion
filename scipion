@@ -41,9 +41,9 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = ''
-__nickname__ = ''
-__releasedate__ = ''
+__version__ = 'v1.2.1'
+__nickname__ = 'Claudio'
+__releasedate__ = '2018-10-01'
 
 
 # This script tries to run ok with any python version. So we cannot
