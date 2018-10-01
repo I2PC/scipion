@@ -760,7 +760,7 @@ class Environment:
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'
         cmdTargets = [a for a in self._args
-                      if a[0].isalpha() and not a.startswith('xmipp')]
+                      if a[0].isalpha()]
         if cmdTargets:
             # Check that they are all command targets
             for t in cmdTargets:
