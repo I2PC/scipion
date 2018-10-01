@@ -39,10 +39,10 @@ from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
     ProtImportVolumes
 
 
-ChimeraProtRigidFit = importFromPlugin('chimera.protocols', 'ChimeraProtRigidFit')
-CootRefine = importFromPlugin('cpp4.protocols', 'CootRefine')
+ChimeraProtRigidFit = importFromPlugin('chimera.protocols', 'ChimeraProtRigidFit', doRaise=True)
+CootRefine = importFromPlugin('cpp4.protocols', 'CootRefine', noRaise=True)
 CCP4ProtRunRefmac = importFromPlugin('ccp4.protocols', 'CCP4ProtRunRefmac')
-PhenixProtRunEMRinger = importFromPlugin('phenix.protocols','PhenixProtRunEMRinger')
+PhenixProtRunEMRinger = importFromPlugin('phenix.protocols','PhenixProtRunEMRinger', noRaise=True)
 
 class TestImportBase(BaseTest):
     @classmethod

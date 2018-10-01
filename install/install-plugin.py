@@ -198,11 +198,9 @@ elif parsedArgs.mode == MODE_INSTALL_BINS:
                     binariesPluginList = plugin.getBinVersions()
                     # For each binary to install
                     for binName in binToInstallList:
-                        binVersions = []
-                        for binary in binariesPluginList:
-                            if binary.split('-')[0] == binName \
-                                    or binary == binName:
-                                binVersions.append(binary)
+                        binVersions = [binary for binary in binariesPluginList
+                                       if binary.split('-')[0] == binName or
+                                       binary == binName]
                         if binVersions:
                             if binName not in binVersions:
                                 binToInstallName = binVersions[len(binVersions)-1]
@@ -213,8 +211,9 @@ elif parsedArgs.mode == MODE_INSTALL_BINS:
                                 binToInstallList.remove(binName)
                             except AssertionError as err:  # TODO The correct exception must be captured
                                 print("WARNING: Binaries of %s has not been "
-                                      "installed." %
-                                      binName)
+                                      "installed." % binName)
+                                print("WARNING: Binaries of %s does not exist."
+                                      % binName)
                                 binToInstallList.remove(binName)
             else:
                 break
@@ -222,7 +221,9 @@ elif parsedArgs.mode == MODE_INSTALL_BINS:
             print("\n----------------------------------- \n")
             for binName in binToInstallList:
                 print("WARNING: Binaries of %s has not been installed."
-                      " \n" % binName)
+                      % binName)
+                print("WARNING: Binaries of %s does not exist. \n"
+                      % binName)
             print("----------------------------------- \n")
 
 elif parsedArgs.mode == MODE_UNINSTALL_BINS:
@@ -245,11 +246,9 @@ elif parsedArgs.mode == MODE_UNINSTALL_BINS:
                     binariesPluginList = plugin.getBinVersions()
                     # For each binary to install
                     for binName in binToUninstallList:
-                        binVersions = []
-                        for binary in binariesPluginList:
-                            if binary.split('-')[0] == binName \
-                                    or binary == binName:
-                                binVersions.append(binary)
+                        binVersions = [binary for binary in binariesPluginList
+                                       if binary.split('-')[0] == binName or
+                                       binary == binName]
                         if binVersions:
                             if binName not in binVersions:
                                 binToInstallName = [binVersions[len(binVersions)-1]]
@@ -262,7 +261,7 @@ elif parsedArgs.mode == MODE_UNINSTALL_BINS:
                                 binToUninstallList.remove(binName)
                             except AssertionError as err: # TODO The correct exception must be captured
                                 print("WARNING: Binaries of %s has not been "
-                                      "uninstalled." %binName)
+                                      "uninstalled." % binName)
                                 print("WARNING: Binaries of %s does not exist."
                                       % binName)
                                 binToUninstallList.remove(binName)
@@ -271,7 +270,8 @@ elif parsedArgs.mode == MODE_UNINSTALL_BINS:
         if binToUninstallList:
             print("\n----------------------------------- \n")
             for binName in binToUninstallList:
-                print("WARNING: Binaries of %s has not been uninstalled."% binName)
+                print("WARNING: Binaries of %s has not been uninstalled."
+                      % binName)
                 print("WARNING: Binaries of %s does not exist. \n"
                       % binName)
             print("----------------------------------- \n")

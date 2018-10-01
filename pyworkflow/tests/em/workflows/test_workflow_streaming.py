@@ -38,10 +38,10 @@ from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
                                     ProtImportMicrographs, ProtImportAverages)
 
-XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment')
-SparxGaussianProtPicking = importFromPlugin('eman2.protocols', 'SparxGaussianProtPicking')
+XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
+SparxGaussianProtPicking = importFromPlugin('eman2.protocols', 'SparxGaussianProtPicking', noRaise=True)
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
-ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles')
+ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', noRaise=True)
 ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
 
 

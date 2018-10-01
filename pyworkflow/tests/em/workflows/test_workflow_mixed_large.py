@@ -35,22 +35,22 @@ try:
     from xmipp3.constants import SAME_AS_PICKING
     from xmipp3.protocols import *
 except:
-    pluginNotFound('xmipp3')
+    pluginNotFound('xmipp3', noRaise=True)
 
 try:
     from grigoriefflab.protocols import *
 except:
-    pluginNotFound('grigoriefflab')
+    pluginNotFound('grigoriefflab', noRaise=True)
 
 try:
     from eman2.protocols import *
 except:
-    pluginNotFound('eman2')
+    pluginNotFound('eman2', noRaise=True)
 
 try:
     from relion.protocols import *
 except:
-    pluginNotFound('relion')
+    pluginNotFound('relion', noRaise=True)
 
 
 class TestMixedRelionTutorial(TestWorkflow):

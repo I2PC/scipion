@@ -81,8 +81,9 @@ class Tester():
     
         if not args.run and not args.show and not args.tests:
             sys.exit(parser.format_help())
-    
 
+        import time
+        time.sleep(5)
         testsDict = OrderedDict()
         testLoader = unittest.defaultTestLoader
 
@@ -119,8 +120,9 @@ class Tester():
                 self.runTests(moduleName, tests)
         else:
             for moduleName, tests in testsDict.iteritems():
-                print(">>>> %s" % moduleName)
-                self.printTests(moduleName, tests)
+                if self._match(moduleName):
+                    print(">>>> %s" % moduleName)
+                    self.printTests(moduleName, tests)
 
     def _match(self, itemName):
         itemLower = itemName.lower()

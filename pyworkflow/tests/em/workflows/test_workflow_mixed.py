@@ -27,16 +27,16 @@ from pyworkflow.utils import importFromPlugin
 from test_workflow import TestWorkflow
 from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
 
-XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs')
+XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs', noRaise=True)
 XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
 XmippProtCropResizeParticles = importFromPlugin('xmipp3.protocols', 'XmippProtCropResizeParticles')
 XmippProtML2D = importFromPlugin('xmipp3.protocols', 'XmippProtML2D')
 SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
 OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', noRaise=True)
 ProtFrealign = importFromPlugin('grigoriefflab.protocols', 'ProtFrealign')
-EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel')
-ProtImportMicrographs = importFromPlugin('relion.protocols', 'ProtImportMicrographs')
+EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel', noRaise=True)
+ProtImportMicrographs = importFromPlugin('relion.protocols', 'ProtImportMicrographs', noRaise=True)
 ProtImportVolumes = importFromPlugin('relion.protocols', 'ProtImportVolumes')
 
 
