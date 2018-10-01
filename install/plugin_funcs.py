@@ -326,6 +326,7 @@ class PluginRepository(object):
     def __init__(self, repoUrl=REPOSITORY_URL):
         self.repoUrl = repoUrl
         self.plugins = None
+
     def getPlugins(self, pluginList=None, getPipData=False):
         """Reads available plugins from self.repoUrl and returns a dict with
         PluginInfo objects. Params:
