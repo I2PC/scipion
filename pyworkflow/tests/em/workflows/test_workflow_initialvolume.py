@@ -44,8 +44,8 @@ import pyworkflow.tests as tests
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 
-xmipp3 = pwutils.importFromPlugin('xmipp3', noRaise=True)
-eman2 = pwutils.importFromPlugin('eman2', noRaise=True)
+xmipp3 = pwutils.importFromPlugin('xmipp3', doRaise=True)
+eman2 = pwutils.importFromPlugin('eman2', doRaise=True)
 
    
 class TestGroel(tests.BaseTest):

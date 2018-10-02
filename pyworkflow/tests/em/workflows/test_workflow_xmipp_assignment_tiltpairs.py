@@ -29,7 +29,7 @@ from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtImportMicrographs,
     ProtImportCoordinates
 
 XmippProtAssignmentTiltPair = importFromPlugin('xmipp3.protocols',
-                                               'XmippProtAssignmentTiltPair', noRaise=True)
+                                               'XmippProtAssignmentTiltPair', doRaise=True)
 
 
 # update this test when RCT workflow are implemented

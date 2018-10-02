@@ -29,13 +29,13 @@ from pyworkflow.tests import DataSet, setupTestProject
 from test_workflow import TestWorkflow
 from pyworkflow.utils import importFromPlugin
 
-XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', noRaise=True)
+XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
 XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols','XmippProtPreprocessMicrographs')
 XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtCTFMicrographs')
 XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
 XmippProtCL2DAlign = importFromPlugin('xmipp3.protocols', 'XmippProtCL2DAlign')
 OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-SpiderProtFilter = importFromPlugin('spider.protocols', 'SpiderProtFilter', noRaise=True)
+SpiderProtFilter = importFromPlugin('spider.protocols', 'SpiderProtFilter', doRaise=True)
 SpiderProtCAPCA = importFromPlugin('spider.protocols', 'SpiderProtCAPCA')
 SpiderProtClassifyWard = importFromPlugin('spider.protocols', 'SpiderProtClassifyWard')
 
