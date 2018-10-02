@@ -4,7 +4,7 @@
 # * Ported to Scipion:
 # *           Vahid Abrishami (vabrishami@cnb.csic.es), Oct 2014
 # *
-# * Refactored/Updated: Josue Gomez-Blanco (jgomez@cnb.csic.es), Jun 2016
+# * Refactored/Updated: Josue Gomez-Blanco (josue.gomez-blanco@mcgill.ca), Jun 2016
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *

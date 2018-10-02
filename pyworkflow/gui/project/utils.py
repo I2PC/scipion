@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.project.constants import STATUS_COLORS
+from pyworkflow.gui.project.constants import STATUS_COLORS, WARNING_COLOR
 from pyworkflow.protocol import STATUS_FAILED
 
 
@@ -41,7 +41,10 @@ def getStatusColorFromRun(prot):
     """
 
     if prot:
-        return getStatusColor(prot.status.get(STATUS_FAILED))
+        if prot.hasSummaryWarnings():
+            return WARNING_COLOR
+        else:
+            return getStatusColor(prot.status.get(STATUS_FAILED))
     else:
         return getStatusColor()
 

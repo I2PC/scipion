@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco   (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco   (josue.gomez-blanco@mcgill.ca)
 # *              Joaquin Oton   (oton@cnb.csic.es)
 # *              Airen Zaldivar (azaldivar@cnb.csic.es)
 # *

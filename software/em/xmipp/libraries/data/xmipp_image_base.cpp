@@ -749,6 +749,8 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
         err = readTIA(select_img,false);
     else if (ext_name.contains("dm3"))//DM3
         err = readDM3(select_img,false);
+    else if (ext_name.contains("dm4"))//DM4
+        err = readDM4(select_img,false);
     else if (ext_name.contains("ems"))//EM stack
         err = readEM(select_img, true);
     else if (ext_name.contains("em"))//EM
@@ -899,6 +901,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         writeIMAGIC(select_img,mode,imParam,castMode);
     else if (ext_name.contains("dm3"))
         writeDM3(select_img,false,mode);
+    else if (ext_name.contains("dm4"))
+        writeDM4(select_img,false,mode);
     else if (ext_name.contains("em"))
         writeEM(select_img,false,mode);
     else if (ext_name.contains("pif"))

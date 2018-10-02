@@ -14,6 +14,7 @@ from pyworkflow.tests import *
 import pyworkflow as pw
 
 from subprocess import Popen
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.process import killWithChilds
 from pyworkflow.tests import *
 
@@ -67,8 +68,7 @@ pages = "171-193",
         from pyworkflow.utils import prettyDict
         prettyDict(parser.get_entry_dict())
         
-        
-        
+
 class TestProccess(BaseTest):
     """ Some tests for utils.process module. """
 
@@ -83,6 +83,18 @@ class TestProccess(BaseTest):
         time.sleep(5)
         killWithChilds(p.pid)
 
+
+class TestGetListFromRangeString(BaseTest):
+
+    def test_getListFromRangeString(self):
+        inputStrings = ["1,5-8,10",         "2,6,9-11",        "2 5, 6-8"]
+        outputLists = [[1, 5, 6, 7, 8, 10], [2, 6, 9, 10, 11], [2, 5, 6, 7, 8]]
+
+        for s, o in zip(inputStrings, outputLists):
+            self.assertEqual(o, pwutils.getListFromRangeString(s))
+            # Check that also works properly with spaces as delimiters
+            s2 = s.replace(',', ' ')
+            self.assertEqual(o, pwutils.getListFromRangeString(s2))
 
 
 if __name__ == '__main__':

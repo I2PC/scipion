@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -466,6 +466,7 @@ eof
         first, _ = self._getFrameRange(movie.getNumberOfFrames(), 'align')
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY, first)
         plotter.savefig(self._getPlotGlobal(movie))
+        plotter.close()
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
     """ Create a plotter with the shift per frame. """

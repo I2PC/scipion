@@ -2,7 +2,7 @@
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *

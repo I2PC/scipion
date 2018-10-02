@@ -13,7 +13,7 @@ from pyworkflow.utils.utils import envVarOn, redStr, greenStr
 from pyworkflow.object import Object, Float
 from pyworkflow.protocol import MODE_RESTART
 
-TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
+TESTS_INPUT = os.environ['SCIPION_TESTS']
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
 
 
@@ -169,12 +169,16 @@ def setupTestProject(cls):
         proj = Manager().loadProject(projName)
     else:
         proj = Manager().createProject(projName) # Now it will be loaded if exists
+
     
     cls.outputPath = proj.path
+    # Create project does not change the working directory anymore
+    os.chdir(cls.outputPath)
     cls.projName = projName
     cls.proj = proj
-        
-        
+
+
+
 #class for tests
 class Complex(Object):
     

@@ -28,7 +28,8 @@ public class ImageGeneric {
     public final static int ComplexFloat = 13;      // Complex floating point (8-byte)
     public final static int ComplexDouble = 14;     // Complex floating point (16-byte)
     public final static int Bool = 15;              // Boolean (1-byte?)
-    public final static int LastEntry = 16;         // This must be the last entry
+    public final static int UHalfByte = 16 ;         // 4 bits per pixel
+    public final static int LastEntry = 17;         // This must be the last entry
     
     //AxisView constants for volume reslice
     public final static int Z_NEG = 0;
