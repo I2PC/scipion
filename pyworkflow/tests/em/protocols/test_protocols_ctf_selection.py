@@ -30,9 +30,10 @@ from pyworkflow.em.protocol.protocol_create_stream_data import \
     SET_OF_RANDOM_MICROGRAPHS
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
+from pyworkflow.utils import importFromPlugin
 
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
-XmippProtCTFSelection = importFromPlugin('xmipp3.protocols','XmippProtCTFSelection')
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
+XmippProtCTFSelection = importFromPlugin('xmipp3.protocols','XmippProtCTFSelection', doRaise=True)
 
 
 # Load the number of movies for the simulation, by default equal 5, but

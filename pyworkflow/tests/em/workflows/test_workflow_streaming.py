@@ -39,9 +39,9 @@ from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
                                     ProtImportMicrographs, ProtImportAverages)
 
 XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
-SparxGaussianProtPicking = importFromPlugin('eman2.protocols', 'SparxGaussianProtPicking', noRaise=True)
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
-ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', noRaise=True)
+SparxGaussianProtPicking = importFromPlugin('eman2.protocols', 'SparxGaussianProtPicking', doRaise=True)
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
+ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', doRaise=True)
 ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
 
 

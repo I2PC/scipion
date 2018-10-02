@@ -33,9 +33,9 @@ from pyworkflow.em.protocol.protocol_create_stream_data import \
 from pyworkflow.utils import importFromPlugin
 
 XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols.protocol_ctf_micrographs',
-                                           'XmippProtCTFMicrographs')
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
-ProtGctf= importFromPlugin('gctf.protocols', 'ProtGctf')
+                                           'XmippProtCTFMicrographs', doRaise=True)
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
+ProtGctf= importFromPlugin('gctf.protocols', 'ProtGctf', doRaise=True)
 
 
 # Load the number of movies for the simulation, by default equal 5, but
