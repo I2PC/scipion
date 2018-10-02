@@ -58,16 +58,20 @@ from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
 from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
 from protocol.monitors.protocol_monitor_movie_gain import ProtMonitorMovieGainViewer
 
-#------------------------ Some common Views ------------------
+# ------------------------ Some common Views ------------------
+
 
 class DataView(View):
     """ Wrapper the arguments to showj (either web or desktop). """
     def __init__(self, path, viewParams={}, **kwargs):
         View.__init__(self)
-        self._memory = '2g'
+        self._memory = showj.getJvmMaxMemory()
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
+
+    def setMemory(self, memory):
+        self._memory = memory
 
     def getViewParams(self):
         """ Give access to the viewParams dict. """
@@ -297,6 +301,8 @@ class Classes3DView(ClassesView):
 
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
+    MODE_AUTOMATIC = 'Automatic'
+
     def __init__(self, project, path, outputdir, protocol, pickerProps=None,
                  inTmpFolder=False, **kwargs):
         DataView.__init__(self, path, **kwargs)
@@ -305,10 +311,11 @@ class CoordinatesObjectView(DataView):
         self.protocol = protocol
         self.pickerProps = pickerProps
         self.inTmpFolder = inTmpFolder
+        self.mode = kwargs.get('mode', None)
         
     def show(self):
         return showj.launchSupervisedPickerGUI(self._path, self.outputdir,
-                                               self.protocol,
+                                               self.protocol, mode=self.mode,
                                                pickerProps=self.pickerProps,
                                                inTmpFolder=self.inTmpFolder)
         

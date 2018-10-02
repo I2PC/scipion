@@ -148,6 +148,17 @@ class ImageHandler(object):
         
         return os.path.exists(fn)
     
+    @classmethod
+    def getSupportedDataType(cls, inDataType, outputFilename):
+        """ Returns the most simmilar data type supported by the output format"""
+        outDataType = inDataType
+
+        if outputFilename.endswith(".mrc") or outputFilename.endswith(".mrcs"):
+            if inDataType == cls.DT_SCHAR:
+                outDataType = cls.DT_USHORT
+
+        return outDataType
+
     def convert(self, inputObj, outputObj, dataType=None, transform=None):
         """ Convert from one image to another.
         inputObj and outputObj can be: tuple, string, or Image subclass 
@@ -157,8 +168,7 @@ class ImageHandler(object):
         inputLoc = self._convertToLocation(inputObj)
         outputLoc = self._convertToLocation(outputObj)
         
-        if (inputLoc[1].lower().endswith('dm4') or
-                outputLoc[1].lower().endswith('.img')):
+        if outputLoc[1].lower().endswith('.img'):
             # FIXME Since now we can not read dm4 format in Scipion natively
             # we are opening an Eman2 process to read the dm4 file
             from pyworkflow.em.packages.eman2.convert import convertImage
@@ -166,7 +176,7 @@ class ImageHandler(object):
         else:
             # Read from input
             self._img.read(inputLoc)
-            
+
             if dataType is not None:
                 self._img.convert2DataType(dataType)
             if transform is not None:
@@ -187,7 +197,7 @@ class ImageHandler(object):
         """
         inputLower = inputFn.lower()
         outputLower = outputFn.lower()
-        if inputLower.endswith('.dm4') or outputLower.endswith('.img'):
+        if outputLower.endswith('.img'):
             if (firstImg and lastImg) is None:
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
@@ -212,7 +222,8 @@ class ImageHandler(object):
             
             location = self._convertToLocation(inputFn)
             self._img.read(location, xmipp.HEADER)
-            dataType = self._img.getDataType()
+
+            dataType = self.getSupportedDataType(self._img.getDataType(), outputLower)
             
             if (firstImg and lastImg) is None:
                 n = max(z, n)
@@ -241,10 +252,10 @@ class ImageHandler(object):
                 im = PIL.Image.open(fn)
                 x, y = im.size # (width,height) tuple
                 return x, y, 1, 1
-            elif ext == '.dm4' or ext == '.img':
+            elif ext == '.img':
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
-                # we are opening an Eman2 process to read the dm4 file
+                # we are opening an Eman2 process to read the .img files
                 from pyworkflow.em.packages.eman2.convert import getImageDimensions
                 return getImageDimensions(fn) # we are ignoring index here
             else:
@@ -398,14 +409,20 @@ class ImageHandler(object):
         """
         return xmipp.FileName(imgFn).isImage()
 
-    def computeThumbnail(self, inputFn, outputFn, scaleFactor=6):
+    def computeThumbnail(self, inputFn, outputFn, scaleFactor=6, flipOnY=False,
+                         flipOnX=False):
         """ Compute a thumbnail of inputFn, save to ouptutFn.
         Optionally choose a scale factor eg scaleFactor=6 will make
         a thumbnail 6 times smaller.
         """
         outputFn = outputFn or self.getThumbnailFn(inputFn)
-        args = "%s %s " % (inputFn, outputFn)
-        args += "--fouriershrink %s --process normalize" % scaleFactor
+        args = '"%s" "%s" ' % (inputFn, outputFn)
+
+        process = "--process normalize"
+        process += '' if not flipOnY else " --process=xform.flip:axis=y"
+        process += '' if not flipOnX else " --process=xform.flip:axis=x"
+
+        args += "--fouriershrink %s %s" % (scaleFactor, process)
 
         self.__runEman2Program('e2proc2d.py', args)
 
@@ -433,6 +450,13 @@ class ImageHandler(object):
             fn += ':mrc'
         
         return fn
+
+    def scaleFourier(self, inputFn, outputFn, scaleFactor):
+        """ Scale an image by cropping in Fourier space. """
+        # TODO: Avoid using xmipp program for this
+        self.__runXmippProgram("xmipp_transform_downsample",
+                               "-i %s -o %s --step %f --method fourier"
+                               % (inputFn, outputFn, scaleFactor))
 
 
 DT_FLOAT = ImageHandler.DT_FLOAT
@@ -514,3 +538,32 @@ def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
         success = False
         
     return success
+
+
+def getSubsetByDefocus(inputCTFs, inputMics, nMics):
+    """ Return a subset of inputMics that covers the whole range of defocus
+    from the inputCtfs set.
+    This function can be used from picking wizards that wants to optimize the
+    parameters for micrographs with different defocus values.
+    Params:
+        nMics is the number of micrographs that will be in the subset.
+    """
+    sortedMicIds = []
+
+    # Sort CTFs by defocus and select only those that match with inputMics
+    for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
+        ctfId = ctf.getObjId()
+        if ctfId in inputMics:
+            sortedMicIds.append(ctfId)
+
+    # Take an equally spaced subset of micrographs
+    space = len(sortedMicIds) / (nMics - 1)
+    micIds = [sortedMicIds[0], sortedMicIds[-1]]
+    pos = 0
+    while len(micIds) < nMics:  # just add first and last
+        pos += space
+        micIds.insert(1, sortedMicIds[pos])
+
+    # Return the list with selected micrographs
+    return [inputMics[micId].clone() for micId in micIds]
+

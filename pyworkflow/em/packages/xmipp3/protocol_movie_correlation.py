@@ -2,7 +2,7 @@
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Vahid Abrishami (vabrishami@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -227,6 +227,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
         meanX, meanY = self._loadMeanShifts(movie)
         plotter = createAlignmentPlot(meanX, meanY)
         plotter.savefig(self._getPlotCart(movie))
+        plotter.close()
 
     def _setAlignmentInfo(self, movie, obj):
         """ Set alignment info such as plot and psd filename, and

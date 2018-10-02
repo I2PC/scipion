@@ -346,7 +346,7 @@ public:
         {
             gain.read(fnGain);
             applyWindow(gain());
-            gain() = 1.0/gain();
+            //Do not divide by the gain: gain() = 1.0/gain();
             double avg = gain().computeAvg();
             if (isinf(avg) || isnan(avg))
                 REPORT_ERROR(ERR_ARG_INCORRECT,
