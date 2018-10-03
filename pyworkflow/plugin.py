@@ -258,9 +258,8 @@ class Plugin:
 
         The default implementation will check if the _pathVars exists.
         """
-        environ = cls.getEnviron()
-        missing = ["%s: %s" % (var, environ[var])
-                   for var in cls._pathVars if not os.path.exists(environ[var])]
+        missing = ["%s: %s" % (var, cls.getVar(var))
+                   for var in cls._pathVars if not os.path.exists(cls.getVar(var))]
 
         return (["Missing variables:"] + missing) if missing else []
 
