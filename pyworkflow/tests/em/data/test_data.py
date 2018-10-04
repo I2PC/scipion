@@ -13,7 +13,7 @@ from pyworkflow.utils import pluginNotFound
 try:
     from xmipp3.convert import *
 except:
-    pluginNotFound('xmipp')
+    pluginNotFound('xmipp', doRaise=True)
 
 
 class TestFSC(unittest.TestCase):

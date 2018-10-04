@@ -40,7 +40,7 @@ from pyworkflow.em import ImageHandler
 
 import xmippLib
 XmippProtCTFDiscrepancy = importFromPlugin('xmipp3.protocols',
-                                           'XmippProtCTFConsensus')
+                                           'XmippProtCTFConsensus', doRaise=True)
 
 
 class TestXmippCTFDiscrepancyBase(TestWorkflow):

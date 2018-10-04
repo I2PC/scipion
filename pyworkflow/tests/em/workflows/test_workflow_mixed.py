@@ -29,15 +29,15 @@ from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates, \
                                                    ProtImportMicrographs, \
                                                    ProtImportVolumes
 
-XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs')
+XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs', doRaise=True)
 XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
 XmippProtCropResizeParticles = importFromPlugin('xmipp3.protocols', 'XmippProtCropResizeParticles')
 XmippProtML2D = importFromPlugin('xmipp3.protocols', 'XmippProtML2D')
 SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
 OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
 ProtFrealign = importFromPlugin('grigoriefflab.protocols', 'ProtFrealign')
-EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel')
+EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel', doRaise=True)
 
 
 class TestMixedBPV(TestWorkflow):
