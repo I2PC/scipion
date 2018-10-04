@@ -1,2 +1,12 @@
+sudo: true
+dist: trusty
+env: TRAVIS=1
+language: python
+addons:
+  sonarcloud:
+# See https://docs.travis-ci.com/user/sonarcloud/
+    organization: "i2pc"
+    token:
+        secure: $SONAR_TOKEN
 script:
-    - exit 0;
+ - sonar-scanner

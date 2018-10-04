@@ -109,7 +109,7 @@ class ProjectsView(tk.Frame):
                 frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
                 r += 1
             except Exception, ex:
-                print "ERROR loading project from %s" % p.getName()
+                print "ERROR loading project: %s" % p.getName()
                 print ex
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)

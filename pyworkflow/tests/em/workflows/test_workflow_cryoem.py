@@ -26,8 +26,9 @@
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportAverages
+import pyworkflow.utils as pwutils
 
-ProtCryoem = importFromPlugin('cryoem_scipion.protocols', 'ProtCryoem')
+ProtCryoem = pwutils.importFromPlugin('cryoem_scipion.protocols', 'ProtCryoem', doRaise=True)
 
 
 class TestCryoEmBase(BaseTest):
