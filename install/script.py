@@ -23,11 +23,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
 import glob
 import os
 import sys
-
 import shutil
+import subprocess
 
 from install.funcs import Environment
 
@@ -45,7 +46,6 @@ def defineBinaries(args=None):
     #     SCIPION = os.environ['SCIPION_HOME']
 
     env = Environment(args=args)
-
     noScipy = '--no-scipy' in args or not get('SCIPY')
 
     #  *******************************
@@ -356,6 +356,19 @@ def defineBinaries(args=None):
     env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
                  default=False, deps=[scipy, cython])
 
+    tensorFlowTarget="1.10.0"
+    nvccProgram = subprocess.Popen(["which","nvcc"],stdout=subprocess.PIPE).stdout.read()
+    if nvccProgram!="":
+        nvccVersion = subprocess.Popen(["nvcc", '--version'], stdout=subprocess.PIPE).stdout.read()
+        if "release 8.0" in nvccVersion:
+            tensorFlowTarget = "1.4.1"
+
+    env.addPipModule('tensorflow', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-%s-cp27-none-linux_x86_64.whl"%tensorFlowTarget,
+                     target='tensorflow*', default=False)
+    env.addPipModule('tensorflow-gpu', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-%s-cp27-none-linux_x86_64.whl"%tensorFlowTarget,
+	             target='tensorflow*', default=False)
+    cv2 = env.addPipModule('opencv-python', "3.4.2.17", target="cv2", default=False)
+    env.addPipModule('Keras', '2.2.2', target='keras', default=False, deps=[cv2])
 
     #  ************************************************************************
     #  *                                                                      *
