@@ -25,7 +25,9 @@
 from pyworkflow.tests import DataSet, setupTestProject
 from pyworkflow.utils import importFromPlugin
 from test_workflow import TestWorkflow
-from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
+from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates, \
+                                                   ProtImportMicrographs, \
+                                                   ProtImportVolumes
 
 XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs')
 XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
@@ -36,8 +38,6 @@ OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind')
 ProtFrealign = importFromPlugin('grigoriefflab.protocols', 'ProtFrealign')
 EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel')
-ProtImportMicrographs = importFromPlugin('relion.protocols', 'ProtImportMicrographs')
-ProtImportVolumes = importFromPlugin('relion.protocols', 'ProtImportVolumes')
 
 
 class TestMixedBPV(TestWorkflow):
