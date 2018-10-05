@@ -540,6 +540,10 @@ class Protocol(Step):
         d['object.id'] = self.strId()
         d['object.label'] = self.getObjLabel()
         d['object.comment'] = self.getObjComment()
+        d['_useQueue'] = self._useQueue.getObjValue()
+
+        if self._queueParams:
+            d['_queueParams'] = self._queueParams.get()
 
         od = self.getObjDict()
 

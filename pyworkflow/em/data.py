@@ -1066,8 +1066,9 @@ class SetOfImages(EMSet):
                   % self.getName())
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f Å/px)" % \
-            (self.getClassName(), self.getSize(), self._dimStr(), sampling)
+        s = "%s (%d items, %s, %0.2f Å/px%s)" % \
+            (self.getClassName(), self.getSize(),
+             self._dimStr(), sampling, self._appendStreamState())
         return s
 
     def _dimStr(self):

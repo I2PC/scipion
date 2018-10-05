@@ -256,13 +256,14 @@ elif parsedArgs.mode == MODE_UNINSTALL_BINS:
                                 binToInstallName = [binName]
                             try:
                                 plugin.uninstallBins(binToInstallName)
-                                print("Binaries of %s has been uninstalled "
+                                print("Binaries of %s have been uninstalled "
                                       "successfully." % binName)
                                 binToUninstallList.remove(binName)
-                            except AssertionError as err: # TODO The correct exception must be captured
-                                print("WARNING: Binaries of %s has not been "
+                                
+                            except AssertionError as err:  # TODO The correct exception must be captured
+                                print("WARNING: Binaries of %s have not been "
                                       "uninstalled." % binName)
-                                print("WARNING: Binaries of %s does not exist."
+                                print("WARNING: Binaries of %s don't exist."
                                       % binName)
                                 binToUninstallList.remove(binName)
             else:
@@ -270,8 +271,6 @@ elif parsedArgs.mode == MODE_UNINSTALL_BINS:
         if binToUninstallList:
             print("\n----------------------------------- \n")
             for binName in binToUninstallList:
-                print("WARNING: Binaries of %s has not been uninstalled."
-                      % binName)
-                print("WARNING: Binaries of %s does not exist. \n"
-                      % binName)
+                print("WARNING: Binaries of %s have not been uninstalled."% binName)
+                print("WARNING: Binaries of %s don't exist. \n" % binName)
             print("----------------------------------- \n")

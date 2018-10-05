@@ -916,6 +916,10 @@ class Project(object):
                                                               None),
                                         objComment=protDict.get(
                                             'object.comment', None))
+
+                prot._useQueue.set(protDict.get('_useQueue', False))
+                prot._queueParams.set(protDict.get('_queueParams', None))
+
                 newDict[protId] = prot
                 self.saveProtocol(prot)
 
