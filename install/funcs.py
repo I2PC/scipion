@@ -251,7 +251,8 @@ class Environment:
         self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
-        self._pipCmd = kwargs.get('pipCmd', 'python {}/pip install %s==%s'.format(self.getPythonPackagesFolder()))
+        self._pipCmd = kwargs.get('pipCmd', '{} {}/pip install %s==%s'.format(self.getBin('python'),
+                                                                              self.getPythonPackagesFolder()))
 
     def getLibSuffix(self):
         return self._libSuffix
