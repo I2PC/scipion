@@ -59,7 +59,7 @@ EM_ROOT = software/em
 #RESMAP_HOME = %(EM_ROOT)s/resmap-1.1.5s2
 #SIMPLE_HOME = %(EM_ROOT)s/simple-2.1
 #SPIDER_HOME = %(EM_ROOT)s/spider-21.13/spider
-#XMIPP_HOME = %(EM_ROOT)s/xmipp
+XMIPP_HOME = %(EM_ROOT)s/xmipp
 
 # Some visualization packages
 CHIMERA_HOME = %(EM_ROOT)s/chimera-1.10.1
