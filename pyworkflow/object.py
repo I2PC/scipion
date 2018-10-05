@@ -1167,7 +1167,7 @@ class Set(OrderedObject):
                                          self._appendStreamState())
 
     def _appendStreamState(self):
-        return "" if self.isStreamClosed() else ", o"
+        return "" if self.isStreamClosed() else ", open set"
 
     def getSubset(self, n):
         """ Return a subset of n element, making a clone of each. """
