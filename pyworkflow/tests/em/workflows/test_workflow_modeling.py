@@ -42,11 +42,14 @@ import os.path
 import json
 
 
-ChimeraProtRigidFit = importFromPlugin('chimera.protocols', 'ChimeraProtRigidFit')
-CootRefine = importFromPlugin('cpp4.protocols', 'CootRefine')
+ChimeraProtRigidFit = importFromPlugin('chimera.protocols',
+                                       'ChimeraProtRigidFit', doRaise=True)
+CootRefine = importFromPlugin('cpp4.protocols', 'CootRefine', doRaise=True)
 CCP4ProtRunRefmac = importFromPlugin('ccp4.protocols', 'CCP4ProtRunRefmac')
-PhenixProtRunEMRinger = importFromPlugin('phenix.protocols','PhenixProtRunEMRinger')
-PhenixProtRunMolprobity = importFromPlugin('phenix.protocols','PhenixProtRunMolprobity')
+PhenixProtRunEMRinger = importFromPlugin('phenix.protocols',
+                                         'PhenixProtRunEMRinger', doRaise=True)
+PhenixProtRunMolprobity = importFromPlugin('phenix.protocols',
+                                           'PhenixProtRunMolprobity')
 
 class TestImportBase(BaseTest):
     @classmethod

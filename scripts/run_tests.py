@@ -81,7 +81,6 @@ class Tester():
     
         if not args.run and not args.show and not args.tests:
             sys.exit(parser.format_help())
-    
 
         testsDict = OrderedDict()
         testLoader = unittest.defaultTestLoader
@@ -103,8 +102,8 @@ class Tester():
             for name, plugin in pwem.Domain.getPlugins().iteritems():
                 paths.append((name, os.path.dirname(plugin.__path__[0])))
             for k, p in paths:
-                testsDict[k] = testLoader.discover(
-                    p, pattern=args.pattern, top_level_dir=p)
+                testsDict[k] = testLoader.discover(os.path.join(p, k), pattern=args.pattern,
+                                                   top_level_dir=p)
 
         self.grep = [g.lower() for g in args.grep] if args.grep else []
         self.skip = args.skip
@@ -119,8 +118,9 @@ class Tester():
                 self.runTests(moduleName, tests)
         else:
             for moduleName, tests in testsDict.iteritems():
-                print(">>>> %s" % moduleName)
-                self.printTests(moduleName, tests)
+                if self._match(moduleName):
+                    print(">>>> %s" % moduleName)
+                    self.printTests(moduleName, tests)
 
     def _match(self, itemName):
         itemLower = itemName.lower()
@@ -166,31 +166,34 @@ class Tester():
         lastClass = None
         lastModule = None
         
-        for t in testsFlat:
+        if testsFlat:
+            for t in testsFlat:
 
-            testModuleName, className, testName = t.id().rsplit('.', 2)
-            
-            # If there is a failure loading the test, show it
-            errorStr = 'unittest.loader.ModuleImportFailure.'
-            if testModuleName.startswith(errorStr):
-                newName = t.id().replace(errorStr, '')
-                if self._match(newName):
-                    print(pwutils.red('ModuleImportFailure'), " ", newName)
-                continue
+                testModuleName, className, testName = t.id().rsplit('.', 2)
 
-            if testModuleName != lastModule:
-                lastModule = testModuleName
-                newItemCallback(MODULE, "%s"
-                                % (testModuleName))
+                # If there is a failure loading the test, show it
+                errorStr = 'unittest.loader.ModuleImportFailure.'
+                if testModuleName.startswith(errorStr):
+                    newName = t.id().replace(errorStr, '')
+                    if self._match(newName):
+                        print(pwutils.red('ModuleImportFailure. Please, run the test.'), " ", newName)
+                    continue
 
-            if mode in ['classes', 'all'] and className != lastClass:
-                lastClass = className
-                newItemCallback(CLASS, "%s.%s"
-                                % (testModuleName, className))
+                if testModuleName != lastModule:
+                    lastModule = testModuleName
+                    newItemCallback(MODULE, "%s"
+                                    % (testModuleName))
 
-            if mode == 'all':
-                newItemCallback(TEST, "%s.%s.%s"
-                                % (testModuleName, className, testName))
+                if mode in ['classes', 'all'] and className != lastClass:
+                    lastClass = className
+                    newItemCallback(CLASS, "%s.%s"
+                                    % (testModuleName, className))
+
+                if mode == 'all':
+                    newItemCallback(TEST, "%s.%s.%s"
+                                    % (testModuleName, className, testName))
+        else:
+            print(pwutils.green(' The plugin does not have any test'))
 
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
