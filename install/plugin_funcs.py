@@ -97,6 +97,7 @@ class PluginInfo(object):
         environment = Environment()
 
         if not version:
+            self.setRemotePluginInfo()
             version = self.latestRelease
         elif version not in self.compatibleReleases:
             if self.compatibleReleases:
@@ -266,7 +267,7 @@ class PluginInfo(object):
                 self.email = metadata.get('Author-email', "")
 
     def getPluginClass(self):
-        """ Tries to find the _plugin object in plugin.py file."""
+        """ Tries to find the Plugin object."""
         pluginModule = self._getPlugin()
 
         if pluginModule is not None:
@@ -278,7 +279,7 @@ class PluginInfo(object):
         return pluginClass
 
     def getInstallenv(self, envArgs=None):
-        """Reads the defineBinaries function from plugin.py and returns an
+        """Reads the defineBinaries function from Plugin class and returns an
         Environment object with the plugin's binaries."""
         if envArgs is None:
             envArgs = []
