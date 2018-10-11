@@ -110,8 +110,15 @@ class PluginInfo(object):
                       "version %s." % (self.pipName, SCIPION_VERSION))
             return False
 
-        cmd = PIP_CMD % {'installSrc': self.pluginSourceUrl or "%s==%s" %
-                                       (self.pipName, version)}
+        if self.pluginSourceUrl:
+            if os.path.exists(self.pluginSourceUrl):
+                installSrc = self.pluginSourceUrl
+            else:
+                installSrc = 'git+%s' % self.pluginSourceUrl  # path doesnt exist, we assume is git
+        else:
+            installSrc = "%s==%s" % (self.pipName, version)
+
+        cmd = PIP_CMD % {'installSrc': installSrc}
 
         pipModule = environment.addPipModule(self.pipName,
                                              target="%s*" % self.pipName.replace('-', '_'),
