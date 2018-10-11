@@ -349,6 +349,8 @@ cythongsl = env.addPipModule('cythongsl','0.2.1',
                          default=False, deps=[cython])
 env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
              default=False, deps=[scipy, cython])
+env.addPipModule('scikit-image', pipCmd="pip install scikit-image",
+                 target='scikit-image*', default=False)
 
 env.addPipModule('tensorflow', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.4.1-cp27-none-linux_x86_64.whl", target='tensorflow*', default=False)
 env.addPipModule('tensorflow-gpu', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.4.1-cp27-none-linux_x86_64.whl", target='tensorflow*', default=False)
