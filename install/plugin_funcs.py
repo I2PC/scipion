@@ -114,7 +114,7 @@ class PluginInfo(object):
             if os.path.exists(self.pluginSourceUrl):
                 installSrc = self.pluginSourceUrl
             else:
-                installSrc = 'git+%s' % self.pluginSourceUrl  # path doesnt exist, we assume is git
+                installSrc = '--upgrade git+%s' % self.pluginSourceUrl  # path doesnt exist, we assume is git and force install
         else:
             installSrc = "%s==%s" % (self.pipName, version)
 
