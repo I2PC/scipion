@@ -43,10 +43,12 @@ def usage(error):
     print("""
     ERROR: %s
 
-    Usage: scipion python scripts/inspect-plugins.py [PLUGIN-NAME] [info]
+    Usage: scipion python scripts/inspect-plugins.py [PLUGIN-NAME] [info] [--showBase]
         This script loads all Scipion plugins found.
         If a PLUGIN-NAME is passed, it will inspect that plugin
         in more detail.
+        'info' argument will print plugin summary,
+        '-showBase' will print Base class protocols (hidden by default).
     """ % error)
     sys.exit(1)
 
@@ -78,7 +80,7 @@ def getFirstLine(doc):
 
 n = len(sys.argv)
 
-if n > 3:
+if n > 4:
     usage("Incorrect number of input parameters")
 
 if n == 1:  # List all plugins
@@ -99,6 +101,9 @@ if n == 1:  # List all plugins
 
 
 elif n == 2:
+    if sys.argv[1] in ['-h', '--help', 'help']:
+        usage("Printing help message")
+
     pluginName = sys.argv[1]
     plugin = Domain.getPlugin(pluginName)
     print("Plugin: %s" % pluginName)
@@ -117,9 +122,10 @@ elif n == 2:
 
         print("   >>> %s: %s" % (subName, msg))
 
-else:
+elif n > 2:
     if sys.argv[2] == 'info':
         pluginName = sys.argv[1]
+        showBase = True if (n == 4 and sys.argv[3] == '--showBase') else False
         subclasses = {}
         emCategories = [('Imports', em.ProtImport),
                         ('Micrographs', em.ProtMicrographs),
@@ -180,7 +186,11 @@ else:
                 if prots[prot].isBase():
                     cat = 'Base prot'
 
-            print("%-35s %-35s %-10s %-s" % (prot, label, cat, desc))
+            # skip Base protocols if not requested
+            if prots[prot].isBase() and not showBase:
+                continue
+            else:
+                print("%-35s %-35s %-10s %-s" % (prot, label, cat, desc))
 
     else:
         usage("The last argument must be 'info'")
