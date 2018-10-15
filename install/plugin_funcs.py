@@ -266,7 +266,7 @@ class PluginInfo(object):
                 self.email = metadata.get('Author-email', "")
 
     def getPluginClass(self):
-        """ Tries to find the _plugin object in plugin.py file."""
+        """ Tries to find the Plugin object."""
         pluginModule = self._getPlugin()
 
         if pluginModule is not None:
@@ -278,7 +278,7 @@ class PluginInfo(object):
         return pluginClass
 
     def getInstallenv(self, envArgs=None):
-        """Reads the defineBinaries function from plugin.py and returns an
+        """Reads the defineBinaries function from Plugin class and returns an
         Environment object with the plugin's binaries."""
         if envArgs is None:
             envArgs = []
@@ -334,11 +334,9 @@ class PluginRepository(object):
         - getPipData: If true, each PluginInfo object will try to get the data
         of the plugin from pypi."""
 
-        if self.plugins is not None:
-            return self.plugins
-
         pluginsJson = {}
-        self.plugins = {}
+        if self.plugins is None:
+            self.plugins = {}
 
         if os.path.isfile(self.repoUrl):
             with open(self.repoUrl) as f:
