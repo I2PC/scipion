@@ -150,7 +150,6 @@ elif mode == MODE_INSTALL_PLUGIN:
     if parsedArgs.checkUpdates:
         print(pluginRepo.printPluginInfoStr(withUpdates=True))
         installParser.exit(0)
-
     pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0],
                                        getPipData=True)
     if not pluginDict:

@@ -97,7 +97,6 @@ class PluginInfo(object):
         environment = Environment()
 
         if not version:
-            self.setRemotePluginInfo()
             version = self.latestRelease
         elif version not in self.compatibleReleases:
             if self.compatibleReleases:
@@ -335,11 +334,9 @@ class PluginRepository(object):
         - getPipData: If true, each PluginInfo object will try to get the data
         of the plugin from pypi."""
 
-        if self.plugins is not None:
-            return self.plugins
-
         pluginsJson = {}
-        self.plugins = {}
+        if self.plugins is None:
+            self.plugins = {}
 
         if os.path.isfile(self.repoUrl):
             with open(self.repoUrl) as f:
