@@ -399,11 +399,11 @@ class ProtExtractParticles(ProtParticles):
         """ Load coordinates from the input streaming.
         """
         # TODO: this takes for ever if you are NOT
-        # doing streaming and have several thousnad of mics
+        # doing streaming and have several thousands of mics
         # so I add a counter to keep the user entertained
         import sys
         a = datetime.datetime.now()
-        counter = 0
+        counter = 1
 
         coordsFn = self.getCoords().getFileName()
         self.debug("Loading input db: %s" % coordsFn)
@@ -414,9 +414,11 @@ class ProtExtractParticles(ProtParticles):
 
         for micKey, mic in micDict.iteritems():
             if counter % 50 ==0: # counter to keep the user entertained
+                                 # prints each 50 movies. In streaming
+                                 # it will not print 
                  b = datetime.datetime.now()
-                 print b-a , 'reading coordinater for mic number', "%06d"%counter
-                 sys.stdout.flush()
+                 print b-a , 'reading coordinates for mic number', "%06d"%counter
+                 sys.stdout.flush()  # force buffer to print 
             counter += 1
 
             micId = mic.getObjId()
