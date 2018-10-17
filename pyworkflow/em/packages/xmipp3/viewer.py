@@ -389,7 +389,7 @@ class XmippViewer(Viewer):
             self._visualize(movs)
 
             gainFn = movs.getGain()
-            if os.path.exists(gainFn):
+            if gainFn != None and os.path.exists(gainFn):
                 self._views.append(DataView(gainFn))
 
         elif issubclass(cls, XmippProtValidateNonTilt):
