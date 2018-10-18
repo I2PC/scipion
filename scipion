@@ -217,14 +217,11 @@ try:
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
 
-    print("ENVIRON'S PYTHONPATH: %s" % os.environ.get('PYTHONPATH', ''))
-    print("ENVIRON'S LD_LIBRARY_PATH: %s" % os.environ.get('LD_LIBRARY_PATH', ''))
-
     PYTHONPATH_LIST = [SCIPION_HOME,
                        join(SCIPION_SOFTWARE,
                             'lib', 'python2.7', 'site-packages'),
                        XMIPP_BINDINGS,
-                       # os.environ.get('PYTHONPATH', ''),
+                       os.environ.get('PYTHONPATH', ''),
                        join(SCIPION_HOME, 'pyworkflow', 'em', 'xmipp-ghost')]  # To be able to open scipion without xmipp
 
     if 'SCIPION_NOGUI' in os.environ:
