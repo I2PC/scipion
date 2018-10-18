@@ -217,6 +217,8 @@ try:
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
 
+    print("ENVIRON'S PYTHONPATH: %s" % os.environ.get('PYTHONPATH', ''))
+
     PYTHONPATH_LIST = [SCIPION_HOME,
                        join(SCIPION_SOFTWARE,
                             'lib', 'python2.7', 'site-packages'),
