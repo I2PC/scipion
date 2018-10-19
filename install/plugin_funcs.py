@@ -11,10 +11,11 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow import LAST_VERSION, OLD_VERSIONS
 from install.funcs import Environment
 
-REPOSITORY_URL = os.environ.get('SCIPION_PLUGIN_JSON', None) or \
-                 os.environ['SCIPION_PLUGIN_REPO_URL']
+REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
+                  os.environ['SCIPION_PLUGIN_REPO_URL'])
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
-PIP_CMD = 'python {}/pip install %(installSrc)s'.format(
+PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
+    Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
