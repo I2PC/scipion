@@ -982,7 +982,7 @@ class ParamWidget:
                                      parent=self.window)
                 viewer.visualize(obj)
             else:
-                self._showInfo("There is not viewer registered for "
+                self._showInfo("There is no viewer registered for "
                                "*%s* object class." % obj.getClassName())
     
     def _visualizePointerParam(self, paramName):
@@ -1860,7 +1860,7 @@ class FormWindow(Window):
                                 protocol=self.protocol, parent=self)
                 v.visualize(obj) # Instanciate the viewer and visualize object
             else:
-                self.showInfo("There is not viewer registered for this object")
+                self.showInfo("There is no viewer registered for this object")
         else:
             self.showInfo("Select the object before visualize")
          
