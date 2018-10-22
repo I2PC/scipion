@@ -439,7 +439,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                                                     % objLabel):
                 prot.getProject().deleteProtocolOutput(prot, obj)
                 self.parent._fillSummary()
-                self.parent.windows.showInfo("Object *%s* successfuly deleted."
+                self.parent.windows.showInfo("Object *%s* successfully deleted."
                                              % objLabel)
         except Exception as ex:
             self.parent.windows.showError(str(ex))
