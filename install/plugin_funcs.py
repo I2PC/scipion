@@ -113,22 +113,28 @@ class PluginInfo(object):
 
         if self.pluginSourceUrl:
             if os.path.exists(self.pluginSourceUrl):
-                installSrc = self.pluginSourceUrl
+                # install from dir in editable mode
+                installSrc = '-e %s' % self.pluginSourceUrl
+                target = "%s*" % self.pipName
             else:
-                installSrc = '--upgrade git+%s' % self.pluginSourceUrl  # path doesnt exist, we assume is git and force install
+                # path doesnt exist, we assume is git and force install
+                installSrc = '--upgrade git+%s' % self.pluginSourceUrl
+                target = "%s*" % self.pipName.replace('-', '_')
         else:
+            # install from pypi
             installSrc = "%s==%s" % (self.pipName, version)
+            target = "%s*" % self.pipName.replace('-', '_')
 
         cmd = PIP_CMD % {'installSrc': installSrc}
 
         pipModule = environment.addPipModule(self.pipName,
-                                             target="%s*" % self.pipName.replace('-', '_'),
+                                             target=target,
                                              pipCmd=cmd,
                                              ignoreDefaultDeps=True)
 
-        reloadPkgRes = self.isInstalled()  # check if we're doing a version
-                                           # change of an already installed
-                                           # plugin
+        # check if we're doing a version change of an already installed plugin
+        reloadPkgRes = self.isInstalled()
+
         environment.execute()
         if reloadPkgRes:
             # if plugin was already installed, pkg_resources has the old one
