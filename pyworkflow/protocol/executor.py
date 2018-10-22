@@ -34,10 +34,17 @@ import time
 import datetime
 import traceback
 import threading
+import os
+import signal
+import re
+from subprocess import Popen, PIPE
+from multiprocessing.pool import ThreadPool, TimeoutError
 
 import pyworkflow.utils.process as process
 import constants as cts
 
+from launch import _submit, UNKNOWN_JOBID
+from retrying import retry
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
@@ -256,6 +263,59 @@ class ThreadStepExecutor(StepExecutor):
         for t in threading.enumerate():
             if t is not threading.current_thread():
                 t.join()
+
+class QueueStepExecutor(ThreadStepExecutor):
+    def __init__(self, hostConfig, submitDict, nThreads, **kwargs):
+        ThreadStepExecutor.__init__(self, hostConfig, nThreads, **kwargs)
+        self.submitDict = submitDict
+        # Command counter per thread
+        self.threadCommands = {}
+        for threadId in range(nThreads):
+            self.threadCommands[threadId] = 0
+        # set to > 1 threads because one "stuck" thread caused a run to fail
+        self.pool = ThreadPool(processes=10)
+        # This is a dirty hot-fix now because we are spawning too many threads
+        # even for the case when nThreads = 1
+        if nThreads > 1:
+            self.runJobs = ThreadStepExecutor.runSteps
+        else:
+            self.runJobs = StepExecutor.runSteps
+    def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
+        threadId = threading.current_thread().thId
+        submitDict = dict(self.hostConfig.getQueuesDefault())
+        submitDict.update(self.submitDict)
+        submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
+        self.threadCommands[threadId] += 1
+        jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
+        submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
+        submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
+        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd, env))
+        return self._runWithTimeout(lambda: self._waitForJob(self.hostConfig, job))
+    @retry(stop_max_attempt_number=10, wait_exponential_multiplier=1000, wait_exponential_max=120000, retry_on_result=(lambda r: r is None))
+    def _runWithTimeout(self, command):
+        timeout = 30
+        return self.pool.apply_async(command).get(timeout)
+    def _waitForJob(self, hostConfig, jobid):
+        if (jobid is None) or (jobid == UNKNOWN_JOBID):
+            return 0
+        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
+        p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
+        def communicate():
+            return p.communicate()[0]
+        try:
+            out = self.pool.apply_async(communicate).get(30)
+        except TimeoutError:
+            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+            return None
+        # FIXME: this is too specific to grid engine
+        s = re.search('exit_status\s+-*(\d+)', out)
+        if s:
+            status = int(s.group(1))
+            print "job %s finished with exist status %s" % (jobid, status)
+            return status
+        else:
+            print "job %s still running" % jobid
+            return None
 
 
 class MPIStepExecutor(ThreadStepExecutor):

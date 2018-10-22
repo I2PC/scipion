@@ -1524,11 +1524,13 @@ class FormWindow(Window):
         self._createParallel(runFrame, r)
 
         # ---- QUEUE ----
-        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE_FOR_JOBS, row=2, sticky='ne',
                                 column=c, padx=(15,5), pady=0)
+
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
                                                   font=self.font)
-        self._addVarBinding(Message.VAR_QUEUE, var)
+
+        self._addVarBinding(Message.VAR_QUEUE_FOR_JOBS, var)
         frame.grid(row=r, column=c+1, pady=5, sticky='nw')
         # Commented out the button to edit queue since the queue dialog
         #  will be shown after pressing the 'Execute' button
@@ -1536,8 +1538,9 @@ class FormWindow(Window):
         #                          command=self._editQueueParams)
         #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
-                             highlightthickness=0,
-                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
+                             highlightthickness = 0,
+                             command = self._createHelpCommand(Message.HELP_USEQUEUEPERJOB))
+
         btnHelp.grid(row=r, column=c+3, padx=(5, 0), pady=2, sticky='ne')
 
         r = 3  # ---- Wait for other protocols (SCHEDULE) ----

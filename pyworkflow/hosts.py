@@ -89,7 +89,10 @@ class HostConfig(OrderedObject):
     
     def getSubmitPrefix(self):
         return self.queueSystem.submitPrefix.get()
-    
+
+    def getCheckCommand(self):
+        return self.queueSystem.checkCommand.get()
+
     def getCancelCommand(self):
         return self.queueSystem.cancelCommand.get()
     

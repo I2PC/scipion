@@ -127,6 +127,8 @@ class Message():
     LABEL_THREADS = 'Threads'
     LABEL_MPI = 'MPI'
     LABEL_QUEUE = 'Use queue?'
+    LABEL_QUEUE_FOR_JOBS = 'Use queue for Jobs?'
+
     LABEL_WAIT_FOR = 'Wait for'
     
     LABEL_EXPERT = 'Expert Level'
@@ -152,11 +154,17 @@ Define the number of processors to be used in the execution.
        the same computer.     
     """
 
-    HELP_USEQUEUE = """  
-Select *Yes* if you want to submit the job to a Queue system.
-The queue commands for launch and stop jobs should be configured
-for the current host in the _hosts.conf_ file.    
+    HELP_USEQUEUE = """
+    Select *Yes* if you want to submit a single job per protocol to a Queue system.
+    The queue commands for launch and stop jobs should be configured
+    for the current host in the _hosts.conf_ file.
+        """
+    HELP_USEQUEUEPERJOB = """
+    Select *Yes* if you want to submit the multiple jobs per protocol to a Queue system.
+    The queue commands for launch and stop jobs should be configured
+    for the current host in the _hosts.conf_ file.
     """
+
 
     HELP_WAIT_FOR = """
     Specify a comma separated list of protocol IDs if you want
@@ -190,6 +198,7 @@ runs that will be executed after each other.
     VAR_EXPERT = 'expertLevel'
     VAR_MPI = 'numberOfMpi'
     VAR_QUEUE = '_useQueue'
+    VAR_QUEUE_FOR_JOBS = '_useQueueForJobs'
     VAR_RUN_NAME = 'runName'
     VAR_COMMENT = 'comment'
     VAR_RUN_MODE = 'runMode'

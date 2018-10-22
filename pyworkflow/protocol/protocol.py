@@ -44,7 +44,7 @@ import pyworkflow as pw
 from pyworkflow.object import *
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.log import ScipionLogger
-from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
+from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor, QueueStepExecutor
 from constants import *
 from params import Form
 import scipion
@@ -371,6 +371,7 @@ class Protocol(Step):
         self.runMode = Integer(kwargs.get('runMode', MODE_RESUME))
         # Use queue system?
         self._useQueue = Boolean(False)
+        self._useQueueForJobs = Boolean(False)
         # Store a json string with queue name
         # and queue parameters (only meaningful if _useQueue=True)
         self._queueParams = String()
@@ -541,6 +542,7 @@ class Protocol(Step):
         d['object.label'] = self.getObjLabel()
         d['object.comment'] = self.getObjComment()
         d['_useQueue'] = self._useQueue.getObjValue()
+        d['_useQueueForJobs'] = self._useQueueForJobs.getObjValue()
 
         if self._queueParams:
             d['_queueParams'] = self._queueParams.get()
@@ -1517,6 +1519,10 @@ class Protocol(Step):
         """ Return True if the protocol should be launched through a queue. """
         return self._useQueue.get()
 
+    def useQueueForJobs(self):
+        """ Return True if tasks within the protocol should be launched through a queue. """
+        return self._useQueueForJobs.get()
+
     def getQueueParams(self):
         if self._queueParams.hasValue():
             return json.loads(self._queueParams.get())
@@ -1941,6 +1947,7 @@ def runProtocolMain(projectPath, protDbPath, protId):
 
     # Create the steps executor
     executor = None
+    nThreads = max(protocol.numberOfThreads.get(), 1)
 
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
@@ -1955,10 +1962,15 @@ def runProtocolMain(projectPath, protDbPath, protId):
                                      hostConfig=hostConfig)
             sys.exit(retcode)
 
-        elif protocol.numberOfThreads > 1:
-            executor = ThreadStepExecutor(hostConfig,
-                                          protocol.numberOfThreads.get()-1,
-                                          gpuList=protocol.getGpuList())
+        elif nThreads > 1:
+            if protocol.useQueueForJobs():
+                executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1, gpuList = protocol.getGpuList())
+            else:
+                executor = ThreadStepExecutor(hostConfig, nThreads-1, gpuList = protocol.getGpuList())
+
+    if executor is None and protocol.useQueueForJobs():
+        executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), 1, gpuList = protocol.getGpuList())
+
     if executor is None:
         executor = StepExecutor(hostConfig,
                                 gpuList=protocol.getGpuList())
