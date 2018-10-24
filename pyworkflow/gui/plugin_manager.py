@@ -134,6 +134,7 @@ class CheckboxTreeview(ttk.Treeview):
                 if "checked" in tags:
                     self.uncheck_descendant(item)
 
+
 class PluginBrowser(tk.Frame):
     """ This class will implement a frame.
         It will display a list of plugin at the left
@@ -149,15 +150,35 @@ class PluginBrowser(tk.Frame):
         mainFrame = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
         mainFrame.grid(row=0, column=0, sticky='news')
 
+        # Left Panel
         leftPanel = tk.Frame(mainFrame)
         leftPanel.grid(row=0, column=0, padx=0, pady=0)
-
         self._fillLeftPanel(leftPanel)
+
+        # Right Panel: will be two vertical panes
+        # At the Top contain the plugin or binary information
+        # At the Bottom contain a system terminal that show the operation steps
+        rightPanel = tk.PanedWindow(mainFrame, orient=tk.VERTICAL)
+        rightPanel.grid(row=0, column=1, padx=0, pady=0)
+
+        # Top Panel
+        topPanel = tk.Listbox(rightPanel)
+
+        # Bottom Panel
+        bottomPanel = tk.Listbox(rightPanel)
+
+        # Add the right panels to Right Panel
+        rightPanel.add(topPanel, padx=0, pady=0)
+        rightPanel.add(bottomPanel, padx=0, pady=0)
 
 
         # Add the Plugin list at left
         mainFrame.add(leftPanel, padx=0, pady=0)
         mainFrame.paneconfig(leftPanel, minsize=200)
+
+        # Add the Plugins or Binaries information
+        mainFrame.add(rightPanel, padx=0, pady=0)
+        mainFrame.paneconfig(rightPanel, minsize=200)
 
 
     def _fillLeftPanel(self, frame):
@@ -171,6 +192,14 @@ class PluginBrowser(tk.Frame):
         self.tree.configure(yscrollcommand=self.yscrollbar.set)
         self.yscrollbar.configure(command=self.tree.yview)
 
+        # Load all plugins and fill the tree view
+        self.loadPlugin()
+
+
+    def loadPlugin(self):
+        """
+        Load all plugins and fill the tree view widget
+        """
         self.tree.insert("", 0, "Appion", text="Appion")
         self.tree.insert("Appion", "end", "dogpicker", text="dogpicker")
 
