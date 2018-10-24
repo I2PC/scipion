@@ -184,7 +184,10 @@ Protocols SPA = [
 				{"tag": "protocol", "value": "XmippProtNMA", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtDimredNMA", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtCLTomo", "text": "default"}
+                {"tag": "protocol", "value": "XmippProtCLTomo", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtAngularAlignmentSPH", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtStructureMapSPH", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtVolumeDeformSPH", "text": "default"}
             ]},
 			{"tag": "section", "text": "Validation", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtCompareReprojections", "text": "default"},
