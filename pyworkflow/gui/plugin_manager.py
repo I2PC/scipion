@@ -38,6 +38,7 @@ from text import TaggedText, openTextFileEditor
 from widgets import Button, HotButton
 from pyworkflow.config import MenuConfig
 from pyworkflow.utils.properties import Icon
+#from pyworkflow.gui.form import *
 
 
 class CheckboxTreeview(ttk.Treeview):
@@ -133,6 +134,49 @@ class CheckboxTreeview(ttk.Treeview):
                 if "checked" in tags:
                     self.uncheck_descendant(item)
 
+class VerticalScrolledFrame(tk.Frame):
+    """A pure Tkinter scrollable frame that actually works!
+    * Use the 'interior' attribute to place widgets inside the scrollable frame
+    * Construct and pack/place/grid normally
+    * This frame only allows vertical scrolling
+
+    """
+    def __init__(self, parent, *args, **kw):
+        tk.Frame.__init__(self, parent, *args, **kw)
+
+        # create a canvas object and a vertical scrollbar for scrolling it
+        vscrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
+        vscrollbar.pack(fill=tk.Y, side=tk.RIGHT, expand=tk.FALSE)
+        canvas = Canvas(self, bd=0, highlightthickness=0,
+                        yscrollcommand=vscrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
+        vscrollbar.config(command=canvas.yview)
+
+        # reset the view
+        canvas.xview_moveto(0)
+        canvas.yview_moveto(0)
+
+        # create a frame inside the canvas which will be scrolled with it
+        self.interior = interior = tk.Frame(canvas)
+        interior_id = canvas.create_window(0, 0, window=interior,
+                                           anchor=tk.NW)
+
+        # track changes to the canvas and frame width and sync them,
+        # also updating the scrollbar
+        def _configure_interior(event):
+            # update the scrollbars to match the size of the inner frame
+            size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
+            canvas.config(scrollregion="0 0 %s %s" % size)
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the canvas's width to fit the inner frame
+                canvas.config(width=interior.winfo_reqwidth())
+        interior.bind('<Configure>', _configure_interior)
+
+        def _configure_canvas(event):
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                # update the inner frame's width to fill the canvas
+                canvas.itemconfigure(interior_id, width=canvas.winfo_width())
+        canvas.bind('<Configure>', _configure_canvas)
 
 class PluginBrowser(tk.Frame):
     """ This class will implement a frame.
@@ -160,60 +204,24 @@ class PluginBrowser(tk.Frame):
         mainFrame.paneconfig(leftPanel, minsize=200)
 
 
-
-
-
     def _fillLeftPanel(self, frame):
         gui.configureWeigths(frame)
-        t = CheckboxTreeview(frame, show="tree")
-        t.pack(fill=tk.BOTH, expand=False)
-        t.insert("", 0, "Appion", text="Appion")
-        t.insert("Appion", "end", "dogpicker", text="dogpicker")
+        self.tree = CheckboxTreeview(frame, show="tree")
+        self.tree.grid(row=0, column=0, sticky='news')
 
-        t.insert("", 0, "Xmipp", text="Xmipp")
-        t.insert("Xmipp", "end", "XmippBin", text="XmippBin")
-        t.insert("Xmipp", "end", "XmippSource", text="XmippSource")
+        self.yscrollbar = ttk.Scrollbar(frame, orient='vertical',
+                                        command=self.tree.yview)
+        self.yscrollbar.grid(row=0, column=1, sticky='news')
+        self.tree.configure(yscrollcommand=self.yscrollbar.set)
+        self.yscrollbar.configure(command=self.tree.yview)
 
+        self.tree.insert("", 0, "Appion", text="Appion")
+        self.tree.insert("Appion", "end", "dogpicker", text="dogpicker")
 
+        self.tree.insert("", 0, "Xmipp", text="Xmipp")
+        self.tree.insert("Xmipp", "end", "XmippBin", text="XmippBin")
+        self.tree.insert("Xmipp", "end", "XmippSource", text="XmippSource")
 
-
-
-    # def _fillLeftPanel(self, frame):
-    #     gui.configureWeigths(frame)
-    #     self.treeview = ttk.Treeview(frame, selectmode='browse')
-    #
-    #     scrollbar_horizontal = ttk.Scrollbar(frame, orient='horizontal',
-    #                                          command=self.treeview.xview)
-    #
-    #     scrollbar_vertical = ttk.Scrollbar(frame, orient='vertical',
-    #                                        command=self.treeview.yview)
-    #
-    #     scrollbar_horizontal.pack(side='bottom', fill=X)
-    #     scrollbar_vertical.pack(side='right', fill=Y)
-    #
-    #     self.treeview.configure(xscrollcommand=scrollbar_horizontal.set,
-    #                    yscrollcommand=scrollbar_vertical.set)
-    #
-    #     self.treeview.pack(side=LEFT, fill=BOTH, expand=False)
-    #
-    #     frame.pack(expand=False)
-    #
-    #     self.treeview.pack(side=LEFT, fill=BOTH, expand=False)
-    #     self.treeview.insert('', '0', 'it_titulo', text='Matematicas')
-    #     self.treeview.insert('', '1', 'it_aritmetica', text='Aritmetica')
-    #     self.treeview.insert('', '2', 'it_algebra', text='Algebra')
-    #     self.treeview.insert('', '3', 'it_geometria', text='Geometria')
-    #     self.treeview.insert('', 'end', 'it_calculo', text='Calculo')
-    #
-    #     self.treeview.insert('it_aritmetica', '0', 'prop_sum',
-    #                 text='Propiedades de la suma')
-    #     self.treeview.insert('it_aritmetica', '1', 'prop_res',
-    #                 text='Propiedades de la resta')
-    #     self.treeview.insert('it_aritmetica', '2', 'prop_mul',
-    #                 text='Propiedades de la multiplicacion')
-    #     self.treeview.insert('it_aritmetica', '3', 'prop_div',
-    #                 text='Propiedades de la division')
-    #     self.treeview.insert('it_aritmetica', 'end', 'art_repaso', text='Repaso')
 
 
 
