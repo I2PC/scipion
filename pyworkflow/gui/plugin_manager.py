@@ -162,14 +162,23 @@ class PluginBrowser(tk.Frame):
         rightPanel.grid(row=0, column=1, padx=0, pady=0)
 
         # Top Panel
-        topPanel = tk.Listbox(rightPanel)
+        dataCols = ('Name', 'Version', 'Description')
+        topPanel = ttk.Treeview(rightPanel, columns=dataCols,show='headings')
+        ysb = ttk.Scrollbar(orient=VERTICAL, command=topPanel.yview)
+        xsb = ttk.Scrollbar(orient=HORIZONTAL, command=topPanel.xview)
+        topPanel['yscroll'] = ysb.set
+        topPanel['xscroll'] = xsb.set
+
 
         # Bottom Panel
-        bottomPanel = tk.Listbox(rightPanel)
+        bottomPanel = ttk.Treeview(rightPanel)
 
         # Add the right panels to Right Panel
         rightPanel.add(topPanel, padx=0, pady=0)
         rightPanel.add(bottomPanel, padx=0, pady=0)
+
+        self._fillTopRightPanel(topPanel)
+        self._fillBottomRightPanel(bottomPanel)
 
 
         # Add the Plugin list at left
@@ -180,13 +189,28 @@ class PluginBrowser(tk.Frame):
         mainFrame.add(rightPanel, padx=0, pady=0)
         mainFrame.paneconfig(rightPanel, minsize=200)
 
+    def _fillTopRightPanel(self, topFrame):
+        """
+        Fill the top Panel with the plugins list
+        """
+        pass
 
-    def _fillLeftPanel(self, frame):
-        gui.configureWeigths(frame)
-        self.tree = CheckboxTreeview(frame, show="tree")
+    def _fillBottomRightPanel(self, topFrame):
+        """
+        Fill the top Panel with the plugins list
+        """
+        pass
+
+
+    def _fillLeftPanel(self, leftFrame):
+        """
+        Fill the left Panel with the plugins list
+        """
+        gui.configureWeigths(leftFrame)
+        self.tree = CheckboxTreeview(leftFrame, show="tree")
         self.tree.grid(row=0, column=0, sticky='news')
 
-        self.yscrollbar = ttk.Scrollbar(frame, orient='vertical',
+        self.yscrollbar = ttk.Scrollbar(leftFrame, orient='vertical',
                                         command=self.tree.yview)
         self.yscrollbar.grid(row=0, column=1, sticky='news')
         self.tree.configure(yscrollcommand=self.yscrollbar.set)
