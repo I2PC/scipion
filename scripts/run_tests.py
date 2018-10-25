@@ -73,7 +73,7 @@ class Tester():
             help='skip tests that contains these words')
         add('--log', default=None, nargs='?',
             help="Generate logs files with the output of each test.")
-        add('--mode', default='classes', choices=['modules', 'classes', 'all'],
+        add('--mode', default='classes', choices=['modules', 'classes', 'onlyclasses', 'all'],
             help='how much detail to give in show mode')
         add('tests', metavar='TEST', nargs='*',
             help='test case from string identifier (module, class or callable)')
@@ -146,7 +146,7 @@ class Tester():
         """ Show the list of tests available """
         mode = self.mode
     
-        assert mode in ['modules', 'classes', 'all'], 'Unknown mode %s' % mode
+        assert mode in ['modules', 'classes', 'onlyclasses', 'all'], 'Unknown mode %s' % mode
     
         # First flatten the list of tests.
         # testsFlat = list(iter(self.__iterTests(tests)))
@@ -181,10 +181,10 @@ class Tester():
 
                 if testModuleName != lastModule:
                     lastModule = testModuleName
-                    newItemCallback(MODULE, "%s"
-                                    % (testModuleName))
+                    if mode != 'onlyclasses':
+                        newItemCallback(MODULE, "%s" % testModuleName)
 
-                if mode in ['classes', 'all'] and className != lastClass:
+                if mode in ['classes', 'onlyclasses', 'all'] and className != lastClass:
                     lastClass = className
                     newItemCallback(CLASS, "%s.%s"
                                     % (testModuleName, className))
