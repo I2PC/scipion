@@ -11,10 +11,11 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow import LAST_VERSION, OLD_VERSIONS
 from install.funcs import Environment
 
-REPOSITORY_URL = os.environ.get('SCIPION_PLUGIN_JSON', None) or \
-                 os.environ['SCIPION_PLUGIN_REPO_URL']
+REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
+                  os.environ['SCIPION_PLUGIN_REPO_URL'])
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
-PIP_CMD = 'python {}/pip install %(installSrc)s'.format(
+PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
+    Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
@@ -110,17 +111,30 @@ class PluginInfo(object):
                       "version %s." % (self.pipName, SCIPION_VERSION))
             return False
 
-        cmd = PIP_CMD % {'installSrc': self.pluginSourceUrl or "%s==%s" %
-                                       (self.pipName, version)}
+        if self.pluginSourceUrl:
+            if os.path.exists(self.pluginSourceUrl):
+                # install from dir in editable mode
+                installSrc = '-e %s' % self.pluginSourceUrl
+                target = "%s*" % self.pipName
+            else:
+                # path doesnt exist, we assume is git and force install
+                installSrc = '--upgrade git+%s' % self.pluginSourceUrl
+                target = "%s*" % self.pipName.replace('-', '_')
+        else:
+            # install from pypi
+            installSrc = "%s==%s" % (self.pipName, version)
+            target = "%s*" % self.pipName.replace('-', '_')
+
+        cmd = PIP_CMD % {'installSrc': installSrc}
 
         pipModule = environment.addPipModule(self.pipName,
-                                             target="%s*" % self.pipName.replace('-', '_'),
+                                             target=target,
                                              pipCmd=cmd,
                                              ignoreDefaultDeps=True)
 
-        reloadPkgRes = self.isInstalled()  # check if we're doing a version
-                                           # change of an already installed
-                                           # plugin
+        # check if we're doing a version change of an already installed plugin
+        reloadPkgRes = self.isInstalled()
+
         environment.execute()
         if reloadPkgRes:
             # if plugin was already installed, pkg_resources has the old one
