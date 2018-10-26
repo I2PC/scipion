@@ -388,6 +388,10 @@ class Environment:
         t.buildPath = buildPath
         t.targetPath = targetPath
 
+        # check if tar exists and has size >0 so that we can download again
+        if os.path.isfile(tarFile) and os.path.getsize(tarFile) == 0:
+            os.remove(tarFile)
+
         if url.startswith('file:'):
             t.addCommand('ln -s %s %s' % (url.replace('file:', ''), tar),
                          targets=tarFile,
