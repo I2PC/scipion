@@ -113,31 +113,22 @@ class Tester():
 
         if args.tests:
             self.runSingleTest(testsDict['tests'])
+
         elif args.run:
             for moduleName, tests in testsDict.iteritems():
                 print(">>>> %s" % moduleName)
                 self.runTests(moduleName, tests)
-        elif args.grep:
-            pattern = str('test*' + args.grep[0] + '*')
-            testsMatch = self.discoverTests(self.paths, pattern)
 
-            for moduleName, tests in testsMatch.iteritems():
-                print(">>>> %s" % moduleName)
-                self.printTests(moduleName, tests)
+        elif args.grep:
+            pattern = args.grep[0]
+            for moduleName, tests in testsDict.iteritems():
+                self.printTests(pattern, tests)
+
         else:
             for moduleName, tests in testsDict.iteritems():
                 if self._match(moduleName):
                     print(">>>> %s" % moduleName)
                     self.printTests(moduleName, tests)
-
-    def discoverTests(self, paths, pattern):
-        """ Return tests discovered in paths that follow the given pattern """
-        tests = OrderedDict()
-        for k, p in paths:
-            tests[k] = unittest.defaultTestLoader.discover(os.path.join(p, k),
-                                                           pattern=pattern,
-                                                           top_level_dir=p)
-        return tests
 
     def _match(self, itemName):
         itemLower = itemName.lower()
@@ -182,7 +173,6 @@ class Tester():
         # and name, in a nice way.
         lastClass = None
         lastModule = None
-
         if testsFlat:
             for t in testsFlat:
 
@@ -210,7 +200,8 @@ class Tester():
                     newItemCallback(TEST, "%s.%s.%s"
                                     % (testModuleName, className, testName))
         else:
-            print(pwutils.green(' The plugin does not have any test'))
+            if not self.grep:
+                print(pwutils.green(' The plugin does not have any test'))
 
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
@@ -312,7 +303,7 @@ class Tester():
 
 
 if __name__ == '__main__':
-    print("Running tests....")
     import time
     time.sleep(5)
+    print("Running tests....")
     Tester().main()
