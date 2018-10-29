@@ -27,7 +27,8 @@
 import sys
 from install.plugin_funcs import PluginRepository, PluginInfo
 import argparse
-
+import os
+import re
 #  ************************************************************************
 #  *                                                                      *
 #  *                       External (EM) Plugins                          *
@@ -73,6 +74,15 @@ installParser.add_argument('-p', '--plugin', action='append', nargs='+',
                                  '                 of available plugins shown below.\n'
                                  '- pluginVersion: (optional) pip version to install. If not specified,\n'
                                  '                 will install the latest compatible with current Scipion.')
+
+installParser.add_argument('--devel', action='store_true',
+                            help='Optional flag to indicate that we will pass install sources instead\n'
+                                 'of pip names. Sources might be local paths or git urls. With local\n'
+                                 'paths, will do pip install -e (editable mode). It is expected to find\n'
+                                 'the plugin name in the basename of the path or in the repo name. \n'
+                                 '(i.e. it needs to match the one specified in setup.py). E.g:\n'
+                                 'scipion installp -p path/to/pluginName --devel \n'
+                                 'scipion installp -p https://github.com/someOrg/pluginName.git --devel')
 
 ############################################################################
 #                             Uninstall parser                             #
@@ -150,21 +160,40 @@ elif mode == MODE_INSTALL_PLUGIN:
     if parsedArgs.checkUpdates:
         print(pluginRepo.printPluginInfoStr(withUpdates=True))
         installParser.exit(0)
-    pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0],
-                                       getPipData=True)
-    if not pluginDict:
-        print('\n' + installParser.epilog)
-    else:
-        for cmdTarget in parsedArgs.plugin:
-            pluginName = cmdTarget[0]
-            pluginVersion = "" if len(cmdTarget) == 1 else cmdTarget[1]
-            plugin = pluginDict.get(pluginName, None)
-            if plugin:
-                installed = plugin.installPipModule(version=pluginVersion)
+
+    if parsedArgs.devel:
+        for p in parsedArgs.plugin:
+            pluginSrc = p[0]
+            pluginName = ""
+            if os.path.exists(pluginSrc):
+                pluginName = os.path.basename(pluginSrc)
+            else:  # we assume it is a git url
+                m = re.match('https://github.com/(.*)/(.*).git', pluginSrc)
+                if m:
+                    pluginName = m.group(2)
+            if not pluginName:
+                print("ERROR: Couldn't find pluginName for source %s" % pluginSrc)
+            else:
+                plugin = PluginInfo(pipName=pluginName, pluginSourceUrl=pluginSrc, remote=False)
+                installed = plugin.installPipModule()
                 if installed and not parsedArgs.noBin:
                     plugin.installBin()
-            else:
-                print("WARNING: Plugin %s does not exist." % pluginName)
+    else:
+        pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0],
+                                           getPipData=True)
+        if not pluginDict:
+            print('\n' + installParser.epilog)
+        else:
+            for cmdTarget in parsedArgs.plugin:
+                pluginName = cmdTarget[0]
+                pluginVersion = "" if len(cmdTarget) == 1 else cmdTarget[1]
+                plugin = pluginDict.get(pluginName, None)
+                if plugin:
+                    installed = plugin.installPipModule(version=pluginVersion)
+                    if installed and not parsedArgs.noBin:
+                        plugin.installBin()
+                else:
+                    print("WARNING: Plugin %s does not exist." % pluginName)
 
 elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
 
