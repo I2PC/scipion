@@ -821,6 +821,10 @@ class Environment:
         for t in self._targetList:
             t.setDefault(default)
 
+    def getPackages(self):
+        """Return all plugin packages"""
+        return self._packages
+
 class Link:
     def __init__(self, packageLink, packageFolder):
         self._packageLink = packageLink

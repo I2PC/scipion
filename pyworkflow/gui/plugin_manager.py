@@ -39,7 +39,12 @@ from widgets import Button, HotButton
 from pyworkflow.config import MenuConfig
 from pyworkflow.utils.properties import Icon
 from pyworkflow.gui.form import *
+from install.plugin_funcs import PluginRepository, PluginInfo
+from install.funcs import Environment
 
+
+UNCHECKED = 'unchecked'
+CHECKED = 'checked'
 
 class CheckboxTreeview(ttk.Treeview):
     """
@@ -54,68 +59,54 @@ class CheckboxTreeview(ttk.Treeview):
         self.im_checked = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-checked.png')
         self.im_unchecked = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-unchecked.png')
         self.im_tristate = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-checkmark.png')
-        self.tag_configure("unchecked", image=self.im_unchecked)
-        self.tag_configure("tristate", image=self.im_tristate)
-        self.tag_configure("checked", image=self.im_checked)
+        self.tag_configure(UNCHECKED, image=self.im_unchecked)
+        self.tag_configure(CHECKED, image=self.im_checked)
         # check / uncheck boxes on click
         self.bind("<Button-3>", self.box_click, True)
 
 
     def insert(self, parent, index, iid=None, **kw):
         """ same method as for standard treeview but add the tag 'unchecked'
-            automatically if no tag among ('checked', 'unchecked', 'tristate')
+            automatically if no tag among ('checked', 'unchecked')
             is given """
         if not "tags" in kw:
-            kw["tags"] = ("unchecked",)
-        elif not ("unchecked" in kw["tags"] or "checked" in kw["tags"]
-                  or "tristate" in kw["tags"]):
-            kw["tags"] = ("unchecked",)
+            kw["tags"] = (UNCHECKED,)
+        elif not (UNCHECKED in kw["tags"] or CHECKED in kw["tags"]):
+            kw["tags"] = (UNCHECKED,)
         ttk.Treeview.insert(self, parent, index, iid, **kw)
 
     def check_descendant(self, item):
         """ check the boxes of item's descendants """
         children = self.get_children(item)
         for iid in children:
-            self.item(iid, tags=("checked",))
+            self.item(iid, tags=(CHECKED,))
             self.check_descendant(iid)
 
     def check_ancestor(self, item):
         """ check the box of item and change the state of the boxes of item's
             ancestors accordingly """
-        self.item(item, tags=("checked",))
+        self.item(item, tags=(CHECKED,))
         parent = self.parent(item)
         if parent:
-            self.item(parent, tags=("checked",))
-
-
-    def tristate_parent(self, item):
-        """ put the box of item in tristate and change the state of the boxes of
-            item's ancestors accordingly """
-        self.item(item, tags=("tristate",))
-        parent = self.parent(item)
-        if parent:
-            self.tristate_parent(parent)
+            self.item(parent, tags=(CHECKED,))
 
     def uncheck_descendant(self, item):
         """ uncheck the boxes of item's descendant """
         children = self.get_children(item)
         for iid in children:
-            self.item(iid, tags=("unchecked",))
+            self.item(iid, tags=(UNCHECKED,))
             self.uncheck_descendant(iid)
-        self.item(item, tags=("unchecked",))
+        self.item(item, tags=(UNCHECKED,))
 
     def uncheck_ancestor(self, item):
         """ uncheck the box of item and change the state of the boxes of item's
             ancestors accordingly """
-        self.item(item, tags=("unchecked",))
+        self.item(item, tags=(UNCHECKED,))
         parent = self.parent(item)
         if parent:
             children = self.get_children(parent)
-            b = ["unchecked" in self.item(c, "tags") for c in children]
-            if False in b:
-                # at least one box is checked and item's box is unchecked
-                self.tristate_parent(parent)
-            else:
+            b = [UNCHECKED in self.item(c, "tags") for c in children]
+            if TRUE in b:
                 # no box is checked
                 self.uncheck_ancestor(parent)
 
@@ -127,11 +118,11 @@ class CheckboxTreeview(ttk.Treeview):
             # a box was clicked
             item = self.identify_row(y)
             tags = self.item(item, "tags")
-            if "unchecked" in tags:
+            if UNCHECKED in tags:
                 self.check_descendant(item)
                 self.check_ancestor(item)
             else:
-                if "checked" in tags:
+                if CHECKED in tags:
                     self.uncheck_descendant(item)
 
 
@@ -163,7 +154,8 @@ class PluginBrowser(tk.Frame):
 
         # Top Panel
         dataCols = ('Name', 'Version', 'Description')
-        topPanel = ttk.Treeview(rightPanel, columns=dataCols,show='headings')
+        topPanel = ttk.Treeview(rightPanel, columns=dataCols, show='headings')
+
         ysb = ttk.Scrollbar(orient=VERTICAL, command=topPanel.yview)
         xsb = ttk.Scrollbar(orient=HORIZONTAL, command=topPanel.xview)
         topPanel['yscroll'] = ysb.set
@@ -224,15 +216,39 @@ class PluginBrowser(tk.Frame):
         """
         Load all plugins and fill the tree view widget
         """
-        self.tree.insert("", 0, "Appion", text="Appion")
-        self.tree.insert("Appion", "end", "dogpicker", text="dogpicker")
+        pluginRepo = PluginRepository()
+        pluginDict = pluginRepo.getPlugins(getPipData=True)
 
-        self.tree.insert("", 0, "Xmipp", text="Xmipp")
-        self.tree.insert("Xmipp", "end", "XmippBin", text="XmippBin")
-        self.tree.insert("Xmipp", "end", "XmippSource", text="XmippSource")
+        for pluginObj in pluginDict:
+            plugin = pluginDict.get(pluginObj, None)
+            if plugin is not None:
+                tag = UNCHECKED
+                if plugin.isInstalled():
+                    # Insert the plugin name in the tree
+                    pluginName = plugin.getPluginName()
+                    tag = CHECKED
+                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag)
+                    # Insert all binaries of plugin on the tree
+                    pluginBinaryList = plugin.getInstallenv()
 
+                    if pluginBinaryList is not None:
+                        binaryList = pluginBinaryList.getPackages()
+                        keys = sorted(binaryList.keys())
+                        for k in keys:
+                            pVersions = binaryList[k]
+                            for binary, version in pVersions:
+                                installed = pluginBinaryList._isInstalled(binary,
+                                                                     version)
+                                if installed:
+                                    tag = CHECKED
+                                else:
+                                    tag = UNCHECKED
+                                binaryName = str(binary + '-' + version)
+                                self.tree.insert(pluginObj, "end", binaryName,
+                                                 text=binaryName, tags=tag)
 
-
+                else:
+                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag)
 
 class PluginManagerWindow(gui.Window):
     """ Windows to hold a plugin manager frame inside. """
@@ -261,5 +277,6 @@ class PluginManager(PluginManagerWindow):
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
-
+        import time
+        time.sleep(5)
         browser = PluginBrowser(self.root, **kwargs)

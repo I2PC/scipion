@@ -334,6 +334,14 @@ class PluginInfo(object):
             return " ".rjust(14) + "Error getting binaries info: %s" % \
                    e.message + "\n"
 
+    def getPluginName(self):
+        """Return the plugin name"""
+        return self.name
+
+    def getPipName(self):
+        """Return the plugin pip name"""
+        return self.pipName
+
 
 class PluginRepository(object):
 
