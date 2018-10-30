@@ -222,9 +222,6 @@ class PluginBrowser(tk.Frame):
         rightPanel.add(topPanel, padx=0, pady=0)
         rightPanel.add(bottomPanel, padx=0, pady=0)
 
-        self._fillTopRightPanel(topPanel)
-        self._fillBottomRightPanel(bottomPanel)
-
         # Add the Plugin list at left
         mainFrame.add(leftPanel, padx=0, pady=0)
         mainFrame.paneconfig(leftPanel, minsize=200)
@@ -232,18 +229,6 @@ class PluginBrowser(tk.Frame):
         # Add the Plugins or Binaries information
         mainFrame.add(rightPanel, padx=0, pady=0)
         mainFrame.paneconfig(rightPanel, minsize=200)
-
-    def _fillTopRightPanel(self, topFrame):
-        """
-        Fill the top Panel with the plugins list
-        """
-        pass
-
-    def _fillBottomRightPanel(self, topFrame):
-        """
-        Fill the top Panel with the plugins list
-        """
-        pass
 
     def _fillLeftPanel(self, leftFrame):
         """
