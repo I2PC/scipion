@@ -342,6 +342,25 @@ class PluginInfo(object):
         """Return the plugin pip name"""
         return self.pipName
 
+    def getPipVersion(self):
+        """Return the plugin pip version"""
+        return self.pipVersion
+
+    def getSourceUrl(self):
+        """Return the plugin source url"""
+        return self.pluginSourceUrl
+
+    def getHomePage(self):
+        """Return the plugin Home page"""
+        return self.homePage
+
+    def getSummary(self):
+        """Return the plugin summary"""
+        return self.summary
+
+    def getAuthor(self):
+        """Return the plugin author"""
+        return self.author
 
 class PluginRepository(object):
 

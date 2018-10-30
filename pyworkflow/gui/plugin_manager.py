@@ -28,6 +28,7 @@ import os.path
 import stat
 
 from Tkinter import *
+import tkFont
 import Tkinter as tk
 import ttk
 import Tix
@@ -36,17 +37,23 @@ import gui
 from tree import BoundTree, TreeProvider, Tree
 from text import TaggedText, openTextFileEditor
 from widgets import Button, HotButton
+
 from pyworkflow.config import MenuConfig
 from pyworkflow.utils.properties import Icon
 from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
-from install.funcs import Environment
 
-
+PLUGIN = 'plugin'
+BINARY = 'binary'
 UNCHECKED = 'unchecked'
 CHECKED = 'checked'
+INSTALL = 'install'
+UNINSTALL = 'uninstall'
+pluginRepo = PluginRepository()
+pluginDict = pluginRepo.getPlugins(getPipData=True)
 
-class CheckboxTreeview(ttk.Treeview):
+
+class PluginTreeview(ttk.Treeview):
     """
         Treeview widget with checkboxes left of each item.
         The checkboxes are done via the image attribute of the item, so to keep
@@ -58,12 +65,13 @@ class CheckboxTreeview(ttk.Treeview):
         # checkboxes are implemented with pictures
         self.im_checked = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-checked.png')
         self.im_unchecked = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-unchecked.png')
-        self.im_tristate = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-checkmark.png')
+        self.im_install = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-install.png')
+        self.im_uninstall = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-uninstall.png')
         self.tag_configure(UNCHECKED, image=self.im_unchecked)
         self.tag_configure(CHECKED, image=self.im_checked)
-        # check / uncheck boxes on click
-        self.bind("<Button-3>", self.box_click, True)
-
+        self.tag_configure(INSTALL, image=self.im_install)
+        self.tag_configure(UNINSTALL, image=self.im_uninstall)
+        self.selectedItem = None
 
     def insert(self, parent, index, iid=None, **kw):
         """ same method as for standard treeview but add the tag 'unchecked'
@@ -75,55 +83,73 @@ class CheckboxTreeview(ttk.Treeview):
             kw["tags"] = (UNCHECKED,)
         ttk.Treeview.insert(self, parent, index, iid, **kw)
 
-    def check_descendant(self, item):
-        """ check the boxes of item's descendants """
-        children = self.get_children(item)
-        for iid in children:
-            self.item(iid, tags=(CHECKED,))
-            self.check_descendant(iid)
-
-    def check_ancestor(self, item):
+    def check_item(self, item):
         """ check the box of item and change the state of the boxes of item's
             ancestors accordingly """
-        self.item(item, tags=(CHECKED,))
-        parent = self.parent(item)
-        if parent:
-            self.item(parent, tags=(CHECKED,))
+        if UNCHECKED in self.item(item, 'tags'):
+            self.item(item, tags=(INSTALL,))
+        else:
+            self.item(item, tags=(CHECKED,))
 
-    def uncheck_descendant(self, item):
+    def uncheck_item(self, item):
         """ uncheck the boxes of item's descendant """
-        children = self.get_children(item)
-        for iid in children:
-            self.item(iid, tags=(UNCHECKED,))
-            self.uncheck_descendant(iid)
-        self.item(item, tags=(UNCHECKED,))
+        if CHECKED in self.item(item, 'tags'):
+            self.item(item, tags=(UNINSTALL,))
+            children = self.get_children(item)
+            for iid in children:
+                self.delete(iid)
+        else:
 
-    def uncheck_ancestor(self, item):
-        """ uncheck the box of item and change the state of the boxes of item's
-            ancestors accordingly """
-        self.item(item, tags=(UNCHECKED,))
-        parent = self.parent(item)
-        if parent:
-            children = self.get_children(parent)
-            b = [UNCHECKED in self.item(c, "tags") for c in children]
-            if TRUE in b:
-                # no box is checked
-                self.uncheck_ancestor(parent)
+            self.item(item, tags=(UNCHECKED,))
 
-    def box_click(self, event):
-        """ check or uncheck box when clicked """
-        x, y, widget = event.x, event.y, event.widget
-        elem = widget.identify("element", x, y)
-        if "image" in elem:
-            # a box was clicked
-            item = self.identify_row(y)
-            tags = self.item(item, "tags")
-            if UNCHECKED in tags:
-                self.check_descendant(item)
-                self.check_ancestor(item)
-            else:
-                if CHECKED in tags:
-                    self.uncheck_descendant(item)
+
+class Operation:
+    """
+    This class contain the operation details
+    """
+    def __init__(self, objName, objType=PLUGIN, objStatus=INSTALL):
+        self.objName = objName
+        self.objType = objType
+        self.status = objStatus
+
+    def getObjName(self):
+        return self.objName
+
+    def getObjType(self):
+        return self.objType
+
+    def getObjStatus(self):
+        return self.status
+
+    def setObjStatus(self):
+        if self.status == INSTALL:
+            self.status = UNINSTALL
+        else:
+            self.status = INSTALL
+
+
+class OperationList:
+    """
+    This class contain a plugins/binaries operation list and allow execute it
+    """
+    def __init__(self):
+        self.operationList = []
+
+    def insertOperation(self, operation):
+        self.operationList.append(operation)
+
+    def deleteOperation(self, operation):
+        self.operationList.remove(operation)
+
+    def deleteOperation(self, index):
+        self.operationList.pop(index)
+
+    def updateOperationStatus(self, objName):
+        """
+        Update the status
+
+        """
+        pass
 
 
 class PluginBrowser(tk.Frame):
@@ -140,12 +166,12 @@ class PluginBrowser(tk.Frame):
         # and the right containing the description
         mainFrame = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
         mainFrame.grid(row=0, column=0, sticky='news')
-
+        # ---------------------------------------------------------------
         # Left Panel
-        leftPanel = tk.Frame(mainFrame)
+        leftPanel = tk.Frame(mainFrame)  # Create a left panel to put the tree
         leftPanel.grid(row=0, column=0, padx=0, pady=0)
-        self._fillLeftPanel(leftPanel)
-
+        self._fillLeftPanel(leftPanel)  # Fill the left panel
+        # ---------------------------------------------------------------
         # Right Panel: will be two vertical panes
         # At the Top contain the plugin or binary information
         # At the Bottom contain a system terminal that show the operation steps
@@ -153,17 +179,42 @@ class PluginBrowser(tk.Frame):
         rightPanel.grid(row=0, column=1, padx=0, pady=0)
 
         # Top Panel
-        dataCols = ('Name', 'Version', 'Description')
-        topPanel = ttk.Treeview(rightPanel, columns=dataCols, show='headings')
+        topPanel = ttk.Frame(rightPanel)  # Panel to put the plugin information
+        topPanel.pack(side=TOP, fill=BOTH, expand=Y)
 
-        ysb = ttk.Scrollbar(orient=VERTICAL, command=topPanel.yview)
-        xsb = ttk.Scrollbar(orient=HORIZONTAL, command=topPanel.xview)
-        topPanel['yscroll'] = ysb.set
-        topPanel['xscroll'] = xsb.set
+        self.dataCols = ('Name                      ',
+                         'Version            ',
+                         'Description               ',
+                         'Url                       ',
+                         'Author                    ')
+        self.topPanelTree = ttk.Treeview(topPanel, columns=self.dataCols,
+                                         show='headings')
+        self.topPanelTree.grid(row=0, column=0, sticky='news')
 
+        # configure column headings
+        for c in self.dataCols:
+            self.topPanelTree.heading(c, text=c.title())
+            self.topPanelTree.column(c, width=tkFont.Font().measure(c.title()))
+
+        # configure horizontal scroollbar
+        xsb = ttk.Scrollbar(topPanel, orient='horizontal',
+                                        command=self.topPanelTree.xview)
+        xsb.grid(row=1, column=0, sticky='news')
+        self.topPanelTree.configure(yscrollcommand=xsb.set)
+        xsb.configure(command=self.topPanelTree.xview)
+        topPanel.rowconfigure(0, weight=1)
+        topPanel.columnconfigure(0, weight=1)
 
         # Bottom Panel
-        bottomPanel = ttk.Treeview(rightPanel)
+        # This section show the plugin operation and a console
+        bottomPanel = ttk.Frame(rightPanel)
+        tabControl = ttk.Notebook(bottomPanel)  # Create Tab Control
+        operationTab = ttk.Frame(tabControl)    # Create a operation tab
+        consoleTab = ttk.Frame(tabControl)    # Create a console
+        tabControl.add(operationTab, text='Operations')  # Add the Operation tab
+        tabControl.add(consoleTab, text='Console')
+        tabControl.pack(expand=1, fill="both")    # Pack to make visible
+
 
         # Add the right panels to Right Panel
         rightPanel.add(topPanel, padx=0, pady=0)
@@ -171,7 +222,6 @@ class PluginBrowser(tk.Frame):
 
         self._fillTopRightPanel(topPanel)
         self._fillBottomRightPanel(bottomPanel)
-
 
         # Add the Plugin list at left
         mainFrame.add(leftPanel, padx=0, pady=0)
@@ -193,13 +243,12 @@ class PluginBrowser(tk.Frame):
         """
         pass
 
-
     def _fillLeftPanel(self, leftFrame):
         """
         Fill the left Panel with the plugins list
         """
         gui.configureWeigths(leftFrame)
-        self.tree = CheckboxTreeview(leftFrame, show="tree")
+        self.tree = PluginTreeview(leftFrame, show="tree")
         self.tree.grid(row=0, column=0, sticky='news')
 
         self.yscrollbar = ttk.Scrollbar(leftFrame, orient='vertical',
@@ -208,29 +257,95 @@ class PluginBrowser(tk.Frame):
         self.tree.configure(yscrollcommand=self.yscrollbar.set)
         self.yscrollbar.configure(command=self.tree.yview)
 
+        # check / uncheck boxes(plugin or binary) on right click
+        self.tree.bind("<Button-3>", self.box_rightClick, True)
+        # show the plugin or binary information on click
+        self.tree.bind("<Button-1>", self.objectInformation, True)
+
         # Load all plugins and fill the tree view
-        self.loadPlugin()
+        self.loadPlugins()
 
+    def objectInformation(self, event):
+        """Show the plugin or binary information"""
+        x, y, widget = event.x, event.y, event.widget
+        item = self.tree.selectedItem = self.tree.identify_row(y)
+        if self.tree.selectedItem is not None and \
+                self.isPlugin(self.tree.item(self.tree.selectedItem,
+                                             "values")[0]):
+            self.showPluginInformation(item)
 
-    def loadPlugin(self):
+    def box_rightClick(self, event):
+        """ check or uncheck a plugin or binary box when clicked """
+        x, y, widget = event.x, event.y, event.widget
+        elem = widget.identify("element", x, y)
+        if "image" in elem:
+            # a box was clicked
+            self.tree.selectedItem = self.tree.identify_row(y)
+            tags = self.tree.item(self.tree.selectedItem, "tags")
+            if tags[0] in [UNCHECKED, UNINSTALL]:
+                self.tree.check_item(self.tree.selectedItem)
+                self.reloadInstalledPlugin(self.tree.selectedItem)
+            else:
+                self.tree.uncheck_item(self.tree.selectedItem)
+
+    def isPlugin(self, value):
+        return value == 'plugin'
+
+    def showPluginInformation(self, pluginName):
+        """Shows the information associated with a given plugin"""
+        #dataCols = ('Name', 'Version', 'Description', 'Home Page', 'Author')
+        plugin = pluginDict.get(pluginName, None)
+        if plugin is not None:
+            pluginInfo = [(plugin.getPipName(), plugin.getPipVersion(),
+                           plugin.getSummary(), plugin.getHomePage(),
+                           plugin.getAuthor())]
+            self.topPanelTree.delete(*self.topPanelTree.get_children())
+            self.topPanelTree.insert('', 'end', values=pluginInfo[0])
+
+            for idx, val in enumerate(pluginInfo):
+                iwidth = tkFont.Font().measure(self.dataCols[idx])
+                if self.topPanelTree.column(self.dataCols[idx], 'width') <= iwidth:
+                    self.topPanelTree.column(self.dataCols[idx], width=iwidth)
+
+    def reloadInstalledPlugin(self, pluginName):
+        """
+        Reload a given installed plugin and update a tree view
+        """
+        plugin = pluginDict.get(pluginName, None)
+        if plugin is not None:
+            # Insert all binaries of plugin on the tree
+            pluginBinaryList = plugin.getInstallenv()
+            if pluginBinaryList is not None:
+                binaryList = pluginBinaryList.getPackages()
+                keys = sorted(binaryList.keys())
+                for k in keys:
+                    pVersions = binaryList[k]
+                    for binary, version in pVersions:
+                        installed = pluginBinaryList._isInstalled(binary,
+                                                                  version)
+                        tag = UNCHECKED
+                        if installed:
+                            tag = CHECKED
+                        binaryName = str(binary + '-' + version)
+                        self.tree.insert(pluginName, "end", binaryName,
+                                         text=binaryName, tags=tag,
+                                         values='binary')
+
+    def loadPlugins(self):
         """
         Load all plugins and fill the tree view widget
         """
-        pluginRepo = PluginRepository()
-        pluginDict = pluginRepo.getPlugins(getPipData=True)
-
         for pluginObj in pluginDict:
             plugin = pluginDict.get(pluginObj, None)
             if plugin is not None:
                 tag = UNCHECKED
                 if plugin.isInstalled():
                     # Insert the plugin name in the tree
-                    pluginName = plugin.getPluginName()
                     tag = CHECKED
-                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag)
+                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
+                                     values='plugin')
                     # Insert all binaries of plugin on the tree
                     pluginBinaryList = plugin.getInstallenv()
-
                     if pluginBinaryList is not None:
                         binaryList = pluginBinaryList.getPackages()
                         keys = sorted(binaryList.keys())
@@ -239,16 +354,17 @@ class PluginBrowser(tk.Frame):
                             for binary, version in pVersions:
                                 installed = pluginBinaryList._isInstalled(binary,
                                                                      version)
+                                tag = UNCHECKED
                                 if installed:
                                     tag = CHECKED
-                                else:
-                                    tag = UNCHECKED
                                 binaryName = str(binary + '-' + version)
                                 self.tree.insert(pluginObj, "end", binaryName,
-                                                 text=binaryName, tags=tag)
-
+                                                 text=binaryName, tags=tag,
+                                                 values='binary')
                 else:
-                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag)
+                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
+                                     values='plugin')
+
 
 class PluginManagerWindow(gui.Window):
     """ Windows to hold a plugin manager frame inside. """
