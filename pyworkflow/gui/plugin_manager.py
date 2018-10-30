@@ -136,20 +136,21 @@ class OperationList:
         self.operationList = []
 
     def insertOperation(self, operation):
-        self.operationList.append(operation)
+        index = self.operationIndex(operation)
+        if index is not None:
+            self.removeOperation(index)
+        else:
+            self.operationList.append(operation)
 
-    def deleteOperation(self, operation):
-        self.operationList.remove(operation)
-
-    def deleteOperation(self, index):
+    def removeOperation(self, index):
         self.operationList.pop(index)
 
-    def updateOperationStatus(self, objName):
-        """
-        Update the status
-
-        """
-        pass
+    def operationIndex(self, operation):
+        index = None
+        for i in range(0, len(self.operationList)):
+            if self.operationList[i].getObjName() == operation.getObjName():
+                return i
+        return index
 
 
 class PluginBrowser(tk.Frame):
@@ -160,6 +161,7 @@ class PluginBrowser(tk.Frame):
     def __init__(self, parent,  **args):
         tk.Frame.__init__(self, parent, **args)
         self._lastSelected = None
+        self.operationList = OperationList()
         gui.configureWeigths(self)
         # The main layout will be two panes,
         # At the left containing the plugin list
@@ -282,11 +284,15 @@ class PluginBrowser(tk.Frame):
             # a box was clicked
             self.tree.selectedItem = self.tree.identify_row(y)
             tags = self.tree.item(self.tree.selectedItem, "tags")
+            type = self.tree.item(self.tree.selectedItem, "value")
             if tags[0] in [UNCHECKED, UNINSTALL]:
                 self.tree.check_item(self.tree.selectedItem)
                 self.reloadInstalledPlugin(self.tree.selectedItem)
             else:
                 self.tree.uncheck_item(self.tree.selectedItem)
+            self.operationList.insertOperation(Operation(self.tree.selectedItem,
+                                                         type))
+            x = 10
 
     def isPlugin(self, value):
         return value == 'plugin'
