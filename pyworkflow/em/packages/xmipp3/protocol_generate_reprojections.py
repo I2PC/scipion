@@ -159,7 +159,8 @@ class XmippProtGenerateReprojections(ProtAnalysis3D):
             else:
                 img = getattr(particle, attr)
             img.setLocation(xmippToLocation(row.getValue(label)))
-        particle.setFileName(row.getValue(xmipp.MDL_IMAGE))
+
+        particle.setLocation(xmippToLocation(row.getValue(xmipp.MDL_IMAGE)))
         __setXmippImage(xmipp.MDL_IMAGE)
         __setXmippImage(xmipp.MDL_IMAGE_REF)
 
