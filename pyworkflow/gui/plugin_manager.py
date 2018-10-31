@@ -49,6 +49,8 @@ UNCHECKED = 'unchecked'
 CHECKED = 'checked'
 INSTALL = 'install'
 UNINSTALL = 'uninstall'
+TO_INSTALL = 'to_install'
+INSTALLED = 'installed'
 pluginRepo = PluginRepository()
 pluginDict = pluginRepo.getPlugins(getPipData=True)
 
@@ -67,10 +69,14 @@ class PluginTreeview(ttk.Treeview):
         self.im_unchecked = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-unchecked.png')
         self.im_install = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-install.png')
         self.im_uninstall = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-uninstall.png')
+        self.im_to_install = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-to_install.png')
+        self.im_installed = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-installed.png')
         self.tag_configure(UNCHECKED, image=self.im_unchecked)
         self.tag_configure(CHECKED, image=self.im_checked)
         self.tag_configure(INSTALL, image=self.im_install)
         self.tag_configure(UNINSTALL, image=self.im_uninstall)
+        self.tag_configure(TO_INSTALL, image=self.im_to_install)
+        self.tag_configure(INSTALLED, image=self.im_installed)
         self.selectedItem = None
 
     def insert(self, parent, index, iid=None, **kw):
@@ -121,11 +127,9 @@ class Operation:
     def getObjStatus(self):
         return self.status
 
-    def setObjStatus(self):
-        if self.status == INSTALL:
-            self.status = UNINSTALL
-        else:
-            self.status = INSTALL
+    def setObjStatus(self, status):
+        self.status = status
+
 
 
 class OperationList:
@@ -151,6 +155,9 @@ class OperationList:
             if self.operationList[i].getObjName() == operation.getObjName():
                 return i
         return index
+
+    def getOperations(self):
+        return self.operationList
 
 
 class PluginBrowser(tk.Frame):
@@ -211,12 +218,16 @@ class PluginBrowser(tk.Frame):
         # This section show the plugin operation and a console
         bottomPanel = ttk.Frame(rightPanel)
         tabControl = ttk.Notebook(bottomPanel)  # Create Tab Control
+        tabControl.grid(row=0, column=0, sticky='news')
+
         operationTab = ttk.Frame(tabControl)    # Create a operation tab
+        operationTab.grid(row=0, column=0, padx=0, pady=0)
+        self._fillRightBottomPanel(operationTab)
+
         consoleTab = ttk.Frame(tabControl)    # Create a console
         tabControl.add(operationTab, text='Operations')  # Add the Operation tab
         tabControl.add(consoleTab, text='Console')
         tabControl.pack(expand=1, fill="both")    # Pack to make visible
-
 
         # Add the right panels to Right Panel
         rightPanel.add(topPanel, padx=0, pady=0)
@@ -252,6 +263,17 @@ class PluginBrowser(tk.Frame):
         # Load all plugins and fill the tree view
         self.loadPlugins()
 
+    def _fillRightBottomPanel(self, panel):
+        gui.configureWeigths(panel)
+        self.operationTree = PluginTreeview(panel, show="tree")
+        self.operationTree.grid(row=0, column=0, sticky='news')
+
+        self.yscrollbar = ttk.Scrollbar(panel, orient='vertical',
+                                        command=self.operationTree.yview)
+        self.yscrollbar.grid(row=0, column=1, sticky='news')
+        self.operationTree.configure(yscrollcommand=self.yscrollbar.set)
+        self.yscrollbar.configure(command=self.operationTree.yview)
+
     def objectInformation(self, event):
         """Show the plugin or binary information"""
         x, y, widget = event.x, event.y, event.widget
@@ -270,21 +292,37 @@ class PluginBrowser(tk.Frame):
             self.tree.selectedItem = self.tree.identify_row(y)
             tags = self.tree.item(self.tree.selectedItem, "tags")
             type = self.tree.item(self.tree.selectedItem, "value")
+            self.operationList.insertOperation(Operation(self.tree.selectedItem,
+                                                         type, TO_INSTALL))
             if tags[0] in [UNCHECKED, UNINSTALL]:
                 self.tree.check_item(self.tree.selectedItem)
                 self.reloadInstalledPlugin(self.tree.selectedItem)
             else:
+                children = self.tree.get_children(self.tree.selectedItem)
+                for iid in children:
+                    self.deleteOperation(iid)
                 self.tree.uncheck_item(self.tree.selectedItem)
-            self.operationList.insertOperation(Operation(self.tree.selectedItem,
-                                                         type))
-            x = 10
+
+            self.showOperationList()
+
+    def deleteOperation(self, operationName):
+        for op in self.operationList.getOperations():
+            if operationName == op.getObjName():
+                self.operationList.insertOperation(op)
+
+    def showOperationList(self):
+        self.operationTree.delete(*self.operationTree.get_children())
+        for op in self.operationList.getOperations():
+            self.operationTree.insert("", 'end', op.getObjName(),
+                                      text=op.getObjName(),
+                                      tags=TO_INSTALL)
+        self.operationTree.update()
 
     def isPlugin(self, value):
-        return value == 'plugin'
+        return value == PLUGIN
 
     def showPluginInformation(self, pluginName):
         """Shows the information associated with a given plugin"""
-        #dataCols = ('Name', 'Version', 'Description', 'Home Page', 'Author')
         plugin = pluginDict.get(pluginName, None)
         if plugin is not None:
             pluginInfo = [(plugin.getPipName(), plugin.getPipVersion(),
@@ -334,7 +372,7 @@ class PluginBrowser(tk.Frame):
                     # Insert the plugin name in the tree
                     tag = CHECKED
                     self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
-                                     values='plugin')
+                                     values=PLUGIN)
                     # Insert all binaries of plugin on the tree
                     pluginBinaryList = plugin.getInstallenv()
                     if pluginBinaryList is not None:
@@ -351,10 +389,10 @@ class PluginBrowser(tk.Frame):
                                 binaryName = str(binary + '-' + version)
                                 self.tree.insert(pluginObj, "end", binaryName,
                                                  text=binaryName, tags=tag,
-                                                 values='binary')
+                                                 values=BINARY)
                 else:
                     self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
-                                     values='plugin')
+                                     values=PLUGIN)
 
 
 class PluginManagerWindow(gui.Window):
