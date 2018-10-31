@@ -51,7 +51,7 @@
 /software/share
 /software/em/*
 !/software/em/xmipp
-
+/software/em/xmipp/bindings
 gmon.out
 *~
 \#*

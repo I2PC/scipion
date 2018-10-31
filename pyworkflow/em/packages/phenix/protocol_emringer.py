@@ -28,7 +28,7 @@ import glob
 import json
 import os
 
-from convert import runPhenixProgram, getProgram
+from convert import runPhenixProgram, getProgram, EMRINGER
 from pyworkflow.em.headers import adaptFileToCCP4, START
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.object import String
@@ -42,10 +42,9 @@ samples the density around Chi1 angles of protein sidechains. Electronic
 density and appropriate rotameric angles must to coincide for each residue if
 the atomic structure backbone has been perfectly fitted to the map.
 """
-    _label = 'emringer: model to map validation'
+    _label = 'emringer'
     _program = ""
     # _version = VERSION_1_2
-    EMRINGER = 'emringer.py'
     EMRINGERFILE = 'emringer.map'
 
     EMRINGERTRANSFERFILENAME = 'emringer_transfer.txt'
@@ -85,7 +84,7 @@ the atomic structure backbone has been perfectly fitted to the map.
         """
         vol = self._getInputVolume()
         inVolName = vol.getFileName()
-        newFn = self._getTmpPath(self.EMRINGERFILE)
+        newFn = self._getExtraPath(self.EMRINGERFILE)
         origin = vol.getOrigin(force=True).getShifts()
         sampling = vol.getSamplingRate()
         adaptFileToCCP4(inVolName, newFn, origin, sampling, START)  # ORIGIN
@@ -95,11 +94,11 @@ the atomic structure backbone has been perfectly fitted to the map.
         pdb = os.path.abspath(self.inputStructure.get().getFileName())
         args = []
         args.append(pdb)
-        vol = os.path.abspath(self._getTmpPath(self.EMRINGERFILE))
+        vol = os.path.abspath(self._getExtraPath(self.EMRINGERFILE))
         args.append(vol)
 
         # script with auxiliary files
-        runPhenixProgram(getProgram(self.EMRINGER), args,
+        runPhenixProgram(getProgram(EMRINGER), args,
                          cwd=self._getExtraPath())
 
     def createOutputStep(self):
@@ -225,7 +224,7 @@ dataDict['_residues_dict'] = dictResidue
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram(self.EMRINGER)
+        program = getProgram(EMRINGER)
         if program is None:
             errors.append("Missing variables EMRINGER and/or PHENIX_HOME")
         elif not os.path.exists(program):
@@ -240,7 +239,7 @@ dataDict['_residues_dict'] = dictResidue
             if program is not None:
                 errors.append("Current values:")
                 errors.append("PHENIX_HOME = %s" % os.environ['PHENIX_HOME'])
-                errors.append("EMRINGER = %s" % self.EMRINGER)
+                errors.append("EMRINGER = %s" % EMRINGER)
 
         # Check that the input volume exist
         if self._getInputVolume() is None:
