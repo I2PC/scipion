@@ -105,8 +105,8 @@ class BaseTest(unittest.TestCase):
             print "\n>>> ERROR running protocol %s" % prot.getRunName()
             print "    FAILED with error: %s\n" % prot.getErrorMessage()
             raise Exception("ERROR launching protocol.")
-        
-        if not prot.isFinished():
+
+        if not prot.isFinished() and not prot.useQueue:  # when queued is not finished yet
             print "\n>>> ERROR running protocol %s" % prot.getRunName()
             raise Exception("ERROR: Protocol not finished")
     
@@ -174,12 +174,16 @@ def setupTestProject(cls):
         proj = Manager().loadProject(projName)
     else:
         proj = Manager().createProject(projName) # Now it will be loaded if exists
+
     
     cls.outputPath = proj.path
+    # Create project does not change the working directory anymore
+    os.chdir(cls.outputPath)
     cls.projName = projName
     cls.proj = proj
-        
-        
+
+
+
 #class for tests
 class Complex(Object):
     

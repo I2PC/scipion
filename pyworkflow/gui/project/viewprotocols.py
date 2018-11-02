@@ -439,7 +439,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                                                     % objLabel):
                 prot.getProject().deleteProtocolOutput(prot, obj)
                 self.parent._fillSummary()
-                self.parent.windows.showInfo("Object *%s* successfuly deleted."
+                self.parent.windows.showInfo("Object *%s* successfully deleted."
                                              % objLabel)
         except Exception as ex:
             self.parent.windows.showError(str(ex))
@@ -1842,7 +1842,7 @@ class ProtocolsView(tk.Frame):
             master=self.windows,
             path=self.project.getPath(''),
             onSelect=_export,
-            entryLabel='File', entryValue='workflow.json')
+            entryLabel='File  ', entryValue='workflow.json')
         browser.show()
 
     def _exportUploadProtocols(self):

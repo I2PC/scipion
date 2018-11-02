@@ -122,8 +122,7 @@ class CTFModel(EMObject):
         self._defocusV = Float(kwargs.get('defocusV', None))
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
-        self._phaseShift = None if not 'phaseShift' in kwargs \
-            else Float(kwargs.get('phaseShift', None))
+        self._phaseShift = Float(kwargs['phaseShift']) if 'phaseShift' in kwargs else None
         self._defocusRatio = Float()
         self._psdFile = String()
         self._micObj = None
@@ -1067,8 +1066,9 @@ class SetOfImages(EMSet):
                   % self.getName())
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f Å/px)" % \
-            (self.getClassName(), self.getSize(), self._dimStr(), sampling)
+        s = "%s (%d items, %s, %0.2f Å/px%s)" % \
+            (self.getClassName(), self.getSize(),
+             self._dimStr(), sampling, self._appendStreamState())
         return s
 
     def _dimStr(self):

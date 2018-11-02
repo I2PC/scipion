@@ -196,6 +196,9 @@ class Target:
     def isDefault(self):
         return self._default
 
+    def setDefault(self, default):
+        self._default = default
+
     def getName(self):
         return self._name
 
@@ -248,7 +251,8 @@ class Environment:
         self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
-        self._pipCmd = kwargs.get('pipCmd', 'python {}/pip install %s==%s'.format(self.getPythonPackagesFolder()))
+        self._pipCmd = kwargs.get('pipCmd', '{} {}/pip install %s==%s'.format(self.getBin('python'),
+                                                                              self.getPythonPackagesFolder()))
 
     def getLibSuffix(self):
         return self._libSuffix
@@ -757,7 +761,7 @@ class Environment:
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'
         cmdTargets = [a for a in self._args
-                      if a[0].isalpha() and not a.startswith('xmipp')]
+                      if a[0].isalpha()]
         if cmdTargets:
             # Check that they are all command targets
             for t in cmdTargets:
@@ -812,6 +816,10 @@ class Environment:
 
         return environ
 
+    def setDefault(self, default):
+        """Set default values of all packages to the passed parameter"""
+        for t in self._targetList:
+            t.setDefault(default)
 
 class Link:
     def __init__(self, packageLink, packageFolder):

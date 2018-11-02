@@ -35,9 +35,9 @@ try:
     from xmipp3 import *
     from xmipp3.protocols import *
 except:
-    pluginNotFound('xmipp')
+    pluginNotFound('xmipp', doRaise=True)
 
-OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
+OTHER = importFromPlugin('xmipp3.constants', 'OTHER', doRaise=True)
 
        
 class TestXmippWorkflow(TestWorkflow):

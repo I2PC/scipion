@@ -27,7 +27,7 @@ from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 from pyworkflow.utils import importFromPlugin
 
-XmippProtParticlePickingPairs = importFromPlugin('xmipp3.protocols', 'XmippProtParticlePickingPairs')
+XmippProtParticlePickingPairs = importFromPlugin('xmipp3.protocols', 'XmippProtParticlePickingPairs', doRaise=True)
 XmippProtExtractParticlesPairs = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticlesPairs')
 XmippProtCL2D = importFromPlugin('xmipp3.protocols', 'XmippProtCL2D')
 XmippProtRCT = importFromPlugin('xmipp3.protocols', 'XmippProtRCT')

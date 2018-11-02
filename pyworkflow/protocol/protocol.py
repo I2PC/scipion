@@ -540,6 +540,10 @@ class Protocol(Step):
         d['object.id'] = self.strId()
         d['object.label'] = self.getObjLabel()
         d['object.comment'] = self.getObjComment()
+        d['_useQueue'] = self._useQueue.getObjValue()
+
+        if self._queueParams:
+            d['_queueParams'] = self._queueParams.get()
 
         od = self.getObjDict()
 
@@ -1504,6 +1508,7 @@ class Protocol(Step):
              'JOB_THREADS': self.numberOfThreads.get(),
              'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
              'JOB_HOURS': 72,
+             'GPU_COUNT': len(self.getGpuList())
              }
         d.update(queueParams)
         return d

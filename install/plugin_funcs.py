@@ -11,9 +11,12 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow import LAST_VERSION, OLD_VERSIONS
 from install.funcs import Environment
 
-REPOSITORY_URL = os.environ.get('SCIPION_PLUGIN_JSON', None) or os.environ['SCIPION_PLUGIN_REPO_URL']
+REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
+                  os.environ['SCIPION_PLUGIN_REPO_URL'])
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
-PIP_CMD = 'python {}/pip install %(installSrc)s'.format(Environment.getPythonPackagesFolder())
+PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
+    Environment.getBin('python'),
+    Environment.getPythonPackagesFolder())
 
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
 if os.environ['SCIPION_SHORT_VERSION'] not in versions:
@@ -21,9 +24,11 @@ if os.environ['SCIPION_SHORT_VERSION'] not in versions:
 else:
     SCIPION_VERSION = os.environ['SCIPION_SHORT_VERSION']
 
+
 class PluginInfo(object):
 
-    def __init__(self, pipName, name="", pluginSourceUrl="", remote=True, **kwargs):
+    def __init__(self, pipName, name="", pluginSourceUrl="", remote=True,
+                 **kwargs):
         self.pipName = pipName
         self.name = name
         self.pluginSourceUrl = pluginSourceUrl
@@ -40,14 +45,12 @@ class PluginInfo(object):
         # things we have when installed
         self.dirName = ""
         self.pipVersion = ""
-        self.pipPath = ""
-        self.emLink = ""
         self.binVersions = []
         self.pluginEnv = None
 
-        # Plugin class declared inside the pipmodule
+        # Distribution
+        self._dist = None
         self._plugin = None
-
         if self.remote:
             self.setRemotePluginInfo()
 
@@ -61,18 +64,27 @@ class PluginInfo(object):
         self.installPipModule()
         self.installBin()
 
+    def _getDistribution(self):
+        if self._dist is None:
+            try:
+                self._dist = pkg_resources.get_distribution(self.pipName)
+            except:
+                pass
+        return self._dist
+
     def _getPlugin(self):
         if self._plugin is None:
 
             try:
-                self._plugin = Domain.getPlugin(self.pipName)
+                dirname = self.getDirName()
+                self._plugin = Domain.getPlugin(dirname)
             except:
                 pass
         return self._plugin
 
     def hasPipPackage(self):
         """Checks if the current plugin is installed via pip"""
-        return self._getPlugin() is not None
+        return self._getDistribution() is not None
 
     def isInstalled(self):
         """Checks if the current plugin is installed (i.e. has pip package).
@@ -89,44 +101,52 @@ class PluginInfo(object):
             version = self.latestRelease
         elif version not in self.compatibleReleases:
             if self.compatibleReleases:
-                print('%s version %s not compatible with current Scipion version %s.' % (self.pipName,
-                                                                                         version,
-                                                                                         SCIPION_VERSION))
-                print("Please choose a compatible release: %s" % " ".join(self.compatibleReleases.keys()))
+                print('%s version %s not compatible with current Scipion '
+                      'version %s.' % (self.pipName, version, SCIPION_VERSION))
+                print("Please choose a compatible release: %s" % " ".join(
+                    self.compatibleReleases.keys()))
 
             else:
-                print("%s has no compatible versions with current Scipion version %s." % (self.pipName,
-                                                                                          SCIPION_VERSION))
+                print("%s has no compatible versions with current Scipion "
+                      "version %s." % (self.pipName, SCIPION_VERSION))
             return False
 
-        cmd = PIP_CMD % {'installSrc': self.pluginSourceUrl or "%s==%s" % (self.pipName, version)}
+        if self.pluginSourceUrl:
+            if os.path.exists(self.pluginSourceUrl):
+                # install from dir in editable mode
+                installSrc = '-e %s' % self.pluginSourceUrl
+                target = "%s*" % self.pipName
+            else:
+                # path doesnt exist, we assume is git and force install
+                installSrc = '--upgrade git+%s' % self.pluginSourceUrl
+                target = "%s*" % self.pipName.replace('-', '_')
+        else:
+            # install from pypi
+            installSrc = "%s==%s" % (self.pipName, version)
+            target = "%s*" % self.pipName.replace('-', '_')
+
+        cmd = PIP_CMD % {'installSrc': installSrc}
 
         pipModule = environment.addPipModule(self.pipName,
-                                             target="%s*" % self.pipName.replace('-', '_'),
+                                             target=target,
                                              pipCmd=cmd,
                                              ignoreDefaultDeps=True)
-        reloadPkgRes = self.isInstalled()  # check if we're doing a version change of an already installed plugin
+
+        # check if we're doing a version change of an already installed plugin
+        reloadPkgRes = self.isInstalled()
+
         environment.execute()
         if reloadPkgRes:
-            # if plugin was already installed, pkg_resources has the old one so it needs a reload
+            # if plugin was already installed, pkg_resources has the old one
+            # so it needs a reload
             reload(pkg_resources)
         # we already have a dir for the plugin:
         self.dirName = self.getDirName()
-
-        # link pip module in em/packages
-        try:
-            os.symlink(self.getPipPath(), self.getEmPackagesLink())
-        except OSError:
-            if os.path.islink(self.getEmPackagesLink()):
-                return True
-            else:
-                raise
-
         return True
 
     def installBin(self, args=None):
-        """Install binaries of the plugin. Args is the list of args to be passed to
-        the install environment."""
+        """Install binaries of the plugin. Args is the list of args to be
+           passed to the install environment."""
         environment = self.getInstallenv(envArgs=args)
         environment.execute()
         self.setLocalPluginInfo()
@@ -149,15 +169,13 @@ class PluginInfo(object):
         return
 
     def uninstallPip(self):
-        """Removes pip package from site-packages and removes link in
-        pyworkflow/em/packages"""
+        """Removes pip package from site-packages"""
         print('Removing %s plugin...' % self.pipName)
         try:
             from pip import main as pipmain
         except:
             from pip._internal import main as pipmain
-        if os.path.exists(self.emLink):
-            os.remove(self.emLink)
+
         pipmain(['uninstall', '-y', self.pipName])
         return
 
@@ -187,11 +205,14 @@ class PluginInfo(object):
 
         for release, releaseData in pipJsonData['releases'].iteritems():
             releaseData = releaseData[0]
-            scipionVersions = [parse_version(v) for v in re.findall(reg, releaseData['comment_text'])]
+            scipionVersions = [parse_version(v)
+                               for v in re.findall(reg,
+                                                   releaseData['comment_text'])]
             if len(scipionVersions) == 0:
-                print("WARNING: %s's release %s did not specify a compatible Scipion version" % (self.pipName,
-                                                                                                 release))
-            elif any([v <= parse_version(SCIPION_VERSION.strip('v')) for v in scipionVersions]):
+                print("WARNING: %s's release %s did not specify a compatible "
+                      "Scipion version" % (self.pipName, release))
+            elif any([v <= parse_version(SCIPION_VERSION.strip('v'))
+                      for v in scipionVersions]):
                 if parse_version(latestCompRelease) < parse_version(release):
                     latestCompRelease = release
                 releases[release] = releaseData
@@ -229,7 +250,8 @@ class PluginInfo(object):
             # B.: Plugin is not yet a pipmodule but a local folder.
             try:
                 package = pkg_resources.get_distribution(self.pipName)
-                keys = ['Name', 'Version', 'Summary', 'Home-page', 'Author', 'Author-email']
+                keys = ['Name', 'Version', 'Summary', 'Home-page', 'Author',
+                        'Author-email']
                 pattern = r'(.*): (.*)'
 
                 for line in package._get_metadata(package.PKG_INFO):
@@ -244,43 +266,47 @@ class PluginInfo(object):
 
                 self.pipVersion = metadata.get('Version', "")
                 self.dirName = self.getDirName()
-                self.pipPath = self.getPipPath()
-                self.emLink = self.getEmPackagesLink()
                 self.binVersions = self.getBinVersions()
+
             except:
                 # Case B: code local but not yet a pipmodule.
                 pass
 
-            if not self.remote:  # only do this if we don't already have it from remote
+            if not self.remote:  # only do this if we don't already have
+                                 # it from remote
                 self.homePage = metadata.get('Home-page', "")
                 self.summary = metadata.get('Summary', "")
                 self.author = metadata.get('Author', "")
                 self.email = metadata.get('Author-email', "")
 
     def getPluginClass(self):
-        """ Tries to find the _plugin object in plugin.py file."""
+        """ Tries to find the Plugin object."""
         pluginModule = self._getPlugin()
 
         if pluginModule is not None:
             pluginClass = pluginModule.Plugin
         else:
-            print("Warning: couldn't find Plugin in %s" % self.dirName)
+            print("Warning: couldn't find Plugin for %s" % self.pipName)
+            print("Dirname: %s" % self.getDirName())
             pluginClass = None
         return pluginClass
 
     def getInstallenv(self, envArgs=None):
-        """Reads the defineBinaries function from plugin.py and returns an
+        """Reads the defineBinaries function from Plugin class and returns an
         Environment object with the plugin's binaries."""
         if envArgs is None:
             envArgs = []
+        from install import script
+        env = script.defineBinaries(envArgs)
+        env.setDefault(False)
 
-        environment = Environment(args=envArgs)
         plugin = self.getPluginClass()
         if plugin is not None:
-            plugin.defineBinaries(environment)
-            return environment
+            plugin.defineBinaries(env)
+            return env
         else:
             return None
+
     def getBinVersions(self):
         """Get list with names of binaries of this plugin"""
         environment = self.getInstallenv()
@@ -288,35 +314,25 @@ class PluginInfo(object):
         return binVersions
 
     def getDirName(self):
-        """Get the name of the folder that contains the plugin code itself (e.g. to import
-        the _plugin object.)"""
+        """Get the name of the folder that contains the plugin code
+           itself (e.g. to import the _plugin object.)"""
         # top level file is a file included in all pip packages that contains
         # the name of the package's top level directory
+
         return pkg_resources.get_distribution(self.pipName).get_metadata('top_level.txt').strip()
-
-    def getPipPath(self):
-        """Get path of the plugin in site packages folder"""
-        if self.dirName:
-            return os.path.join(Environment.getPythonPackagesFolder(), self.dirName)
-        else:
-            return ""
-
-    def getEmPackagesLink(self):
-        """Get path of the plugin link in Em packages folder"""
-        if self.dirName:
-            return os.path.join(Environment.getEmPackagesFolder(), self.dirName)
-        else:
-            return ""
 
     def printBinInfoStr(self):
         """Returns string with info of binaries installed to print in console
         with flag --help"""
-        env = self.getInstallenv()
-
         try:
+            env = self.getInstallenv()
+
             return env.printHelp().split('\n', 1)[1]
-        except Exception as e:
+        except IndexError as noBins:
             return " ".rjust(14) + "No binaries information defined.\n"
+        except Exception as e:
+            return " ".rjust(14) + "Error getting binaries info: %s" % \
+                   e.message + "\n"
 
 
 class PluginRepository(object):
@@ -324,6 +340,7 @@ class PluginRepository(object):
     def __init__(self, repoUrl=REPOSITORY_URL):
         self.repoUrl = repoUrl
         self.plugins = None
+
     def getPlugins(self, pluginList=None, getPipData=False):
         """Reads available plugins from self.repoUrl and returns a dict with
         PluginInfo objects. Params:
@@ -331,11 +348,9 @@ class PluginRepository(object):
         - getPipData: If true, each PluginInfo object will try to get the data
         of the plugin from pypi."""
 
-        if self.plugins is not None:
-            return self.plugins
-
         pluginsJson = {}
-        self.plugins = {}
+        if self.plugins is None:
+            self.plugins = {}
 
         if os.path.isfile(self.repoUrl):
             with open(self.repoUrl) as f:
@@ -345,7 +360,8 @@ class PluginRepository(object):
             if r.ok:
                 pluginsJson = r.json()
             else:
-                print("WARNING: Can't get Scipion's plugin list, the plugin repository is not available")
+                print("WARNING: Can't get Scipion's plugin list, the plugin "
+                      "repository is not available")
                 return self.plugins
 
         availablePlugins = pluginsJson.keys()
@@ -356,22 +372,15 @@ class PluginRepository(object):
             targetPlugins = set(availablePlugins).intersection(set(pluginList))
             if len(targetPlugins) < len(pluginList):
                 wrongPluginNames = set(pluginList) - set(availablePlugins)
-                print("WARNING - The following plugins didn't match available plugin names:")
+                print("WARNING - The following plugins didn't match available "
+                      "plugin names:")
                 print(" ".join(wrongPluginNames))
 
         for pluginName in targetPlugins:
             pluginsJson[pluginName].update(remote=getPipData)
             self.plugins[pluginName] = PluginInfo(**pluginsJson[pluginName])
-        self._appendDevPlugins(self.plugins)
 
         return self.plugins
-
-    def _appendDevPlugins(self, pluginDict):
-
-        for name, plugin in Domain.getPlugins().iteritems():
-            devPlugin = PluginInfo(name, name="dev-%s" % name, remote=False,
-                                   dirName=plugin.__file__)
-            pluginDict[name] = devPlugin
 
     def printPluginInfoStr(self, withBins=False, withUpdates=False):
         """Returns string to print in console which plugins are installed.
@@ -382,7 +391,8 @@ class PluginRepository(object):
             """Return function that escapes text with ANSI color n."""
             return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
 
-        black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
+        black, red, green, yellow, blue, magenta, cyan, white = map(ansi,
+                                                                    range(30, 38))
 
         printStr = ""
         pluginDict = self.getPlugins(getPipData=withUpdates)
@@ -394,7 +404,6 @@ class PluginRepository(object):
             keys = sorted(pluginDict.keys())
             for name in keys:
                 plugin = pluginDict[name]
-
                 if withBins and not plugin.isInstalled():
                     continue
                 printStr += "%16s" % name

@@ -729,19 +729,42 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
 
 
 def pluginNotFound(plugName, errorMsg='', doRaise=False):
-    msgStr = " > %s plugin not found. %s\n" % (plugName, errorMsg)
-    # msgStr+= "  See 'scipion install --help' to install it."  # FIXME: give a valid hint to install the plugin
-    if doRaise:
-        raise Exception(msgStr)
-    else:
-        print(msgStr)
+    """ Prints or raise (depending on the doRaise) telling why it is failing
+    """
+    # FIXME: give a hint to install the plugin with the GUI
+    hint = "   See 'scipion installp --help'"
 
+    # the str casting is to work with Exceptions as errorMsg
+    if 'No module named %s'%plugName in str(errorMsg):
+        msgStr = " > %s plugin not found. %s" % (plugName, errorMsg)
+        hint += " to install it."
+    else:
+        msgStr = " > error when importing from %s: %s" % (plugName, errorMsg)
+        if errorMsg != '':  # if empty we know nothing...
+            hint += ", it can be a versions compatibility issue"
+
+
+    stackList = traceback.extract_stack()
+    callIdx = -4  # We use the most probable index as default
+    for idx, stackLine in enumerate(stackList):
+        if stackLine[0].endswith('/unittest/loader.py'):
+            callIdx = idx
+
+    callBy = stackList[callIdx + 1][0]
+    line = stackList[callIdx + 1][1]
+    calling = "   Called by %s, line %s" % (callBy, line)
+
+    raiseMsg = "%s\n%s\n%s\n" % (msgStr, calling, hint)
+    if doRaise:
+        raise Exception("\n\n"+raiseMsg)
+    else:
+        print(raiseMsg)
 
 
 def importFromPlugin(module, method='', errorMsg='', doRaise=False):
     """ This method try to import either the method from the module/plugin
         or the whole module/plugin and returns what is imported if not fails.
-        When the importation fails (due to the plugin is not found),
+        When the importation fails (due to the plugin or the method is not found),
         it prints a common message + optional errorMsg or
         it raise with the same message if doRaise is True.
         """
@@ -753,4 +776,5 @@ def importFromPlugin(module, method='', errorMsg='', doRaise=False):
         return output
     except Exception as e:
         plugName = module.split('.')[0]
-        pluginNotFound(plugName, errorMsg, doRaise)
+        errMsg = str(e) if errorMsg=='' else "%s. %s" % (str(e), errorMsg)
+        pluginNotFound(plugName, errMsg, doRaise)

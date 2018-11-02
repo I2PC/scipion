@@ -1162,8 +1162,13 @@ class Set(OrderedObject):
         self._getMapper().update(item)
                 
     def __str__(self):
-        return "%-20s (%d items)" % (self.getClassName(), self.getSize())
-    
+
+        return "%-20s (%d items%s)" % (self.getClassName(), self.getSize(),
+                                         self._appendStreamState())
+
+    def _appendStreamState(self):
+        return "" if self.isStreamClosed() else ", open set"
+
     def getSubset(self, n):
         """ Return a subset of n element, making a clone of each. """
         subset = []
