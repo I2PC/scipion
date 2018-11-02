@@ -398,6 +398,16 @@ class Icon():
 
     SCIPION_ICON = 'scipion_bn_icon.png'
 
+    CHECKED = 'fa-checked.png'
+    UNCHECKED = 'fa-unchecked.png'
+    INSTALL = 'fa-install.png'
+    UNINSTALL = 'fa-uninstall.png'
+    TO_INSTALL = 'fa-to_install.png'
+    INSTALLED = 'fa-installed.png'
+    PROCESSING = 'fa-processing'
+    FAILURE = 'fa-failure.png'
+
+
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
     LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection

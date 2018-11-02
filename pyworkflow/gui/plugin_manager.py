@@ -59,15 +59,15 @@ class PluginTreeview(ttk.Treeview):
 
     def __init__(self, master=None, **kw):
         ttk.Treeview.__init__(self, master, **kw)
-        # checkboxes are implemented with pictures
-        self.im_checked = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-checked.png')
-        self.im_unchecked = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-unchecked.png')
-        self.im_install = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-install.png')
-        self.im_uninstall = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-uninstall.png')
-        self.im_to_install = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-to_install.png')
-        self.im_installed = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-installed.png')
-        self.im_processing = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-processing.png')
-        self.im_failure = tk.PhotoImage(file='/home/yunior/Escritorio/icon/fa-failure.png')
+
+        self.im_checked = gui.getImage(Icon.CHECKED)
+        self.im_unchecked = gui.getImage(Icon.UNCHECKED)
+        self.im_install = gui.getImage(Icon.INSTALL)
+        self.im_uninstall = gui.getImage(Icon.UNINSTALL)
+        self.im_to_install = gui.getImage(Icon.TO_INSTALL)
+        self.im_installed = gui.getImage(Icon.INSTALLED)
+        self.im_processing = gui.getImage(Icon.PROCESSING)
+        self.im_failure = gui.getImage(Icon.FAILURE)
         self.tag_configure(UNCHECKED, image=self.im_unchecked)
         self.tag_configure(CHECKED, image=self.im_checked)
         self.tag_configure(INSTALL, image=self.im_install)
@@ -155,8 +155,8 @@ class Operation:
                 plugin = pluginDict.get(self.objName, None)
                 if plugin is not None:
                     installed = plugin.installPipModule()
-                if installed:
-                        plugin.installBin()
+                    if installed:
+                            plugin.installBin()
             else:
                 plugin = PluginInfo(self.objName, self.objName, remote=False)
                 if plugin is not None:
@@ -222,7 +222,7 @@ class PluginBrowser(tk.Frame):
         gui.configureWeigths(self)
         # Define a Tool Bar
         toolBarFrame = tk.Frame(parent)
-        toolBarFrame.grid(row=0, column=0, sticky='news')
+        toolBarFrame.grid(row=0, column=0, sticky=W)
         self._fillToolbar(toolBarFrame)
         # The main layout will be two panes,
         # At the left containing the plugin list
@@ -299,7 +299,7 @@ class PluginBrowser(tk.Frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
 
-        self._addButton(frame, 'Apply', None,
+        self._addButton(frame, 'Apply', gui.getImage(Icon.ACTION_EXECUTE),
                         self._applyOperations)
 
     def _addButton(self, frame, text, image, command):
