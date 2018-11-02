@@ -350,13 +350,12 @@ cythongsl = env.addPipModule('cythongsl','0.2.1',
 env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
              default=False, deps=[scipy, cython])
 
-env.addPipModule('tensorflow', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.10.0-cp27-none-linux_x86_64.whl",
+env.addPipModule('tensorflow', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.4.1-cp27-none-linux_x86_64.whl",
                  target='tensorflow*', default=False)
-env.addPipModule('tensorflow-gpu', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.10.0-cp27-none-linux_x86_64.whl",
+env.addPipModule('tensorflow-gpu', pipCmd="pip install https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.4.1-cp27-none-linux_x86_64.whl",
 	         target='tensorflow*', default=False)
 cv2 = env.addPipModule('opencv-python', "3.4.2.17", target="cv2", default=False)
-tensorboard = env.addPipModule('tensorboard',"1.10.0")
-env.addPipModule('Keras', '2.2.2', target='keras', default=False, deps=[cv2,tensorboard])
+env.addPipModule('Keras', '2.2.2', target='keras', default=False, deps=[cv2])
 
 #  ************************************************************************
 #  *                                                                      *
