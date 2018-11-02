@@ -404,7 +404,7 @@ class Icon():
     UNINSTALL = 'fa-uninstall.png'
     TO_INSTALL = 'fa-to_install.png'
     INSTALLED = 'fa-installed.png'
-    PROCESSING = 'fa-processing'
+    PROCESSING = 'fa-processing.png'
     FAILURE = 'fa-failure.png'
 
 

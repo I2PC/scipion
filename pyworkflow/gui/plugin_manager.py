@@ -24,14 +24,12 @@
 # *
 # **************************************************************************
 
-import os.path
-import stat
-
+from multiprocessing import Process
 from Tkinter import *
 import tkFont
 
 from pyworkflow.config import MenuConfig
-from pyworkflow.utils.properties import Icon
+from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
 
@@ -156,7 +154,7 @@ class Operation:
                 if plugin is not None:
                     installed = plugin.installPipModule()
                     if installed:
-                            plugin.installBin()
+                        plugin.installBin()
             else:
                 plugin = PluginInfo(self.objName, self.objName, remote=False)
                 if plugin is not None:
@@ -276,12 +274,13 @@ class PluginBrowser(tk.Frame):
 
         operationTab = ttk.Frame(tabControl)    # Create a operation tab
         operationTab.grid(row=0, column=0, padx=0, pady=0)
-        self._fillRightBottomPanel(operationTab)
+        self._fillRightBottomOperationsPanel(operationTab)
 
         consoleTab = ttk.Frame(tabControl)    # Create a console
         tabControl.add(operationTab, text='Operations')  # Add the Operation tab
         tabControl.add(consoleTab, text='Output Log')
         tabControl.pack(expand=1, fill="both")    # Pack to make visible
+        self._fillRightBottomOutputLogPanel(consoleTab)
 
         # Add the right panels to Right Panel
         rightPanel.add(topPanel, padx=0, pady=0)
@@ -332,7 +331,8 @@ class PluginBrowser(tk.Frame):
         # Load all plugins and fill the tree view
         self.loadPlugins()
 
-    def _fillRightBottomPanel(self, panel):
+    def _fillRightBottomOperationsPanel(self, panel):
+        # Fill the operation tab
         gui.configureWeigths(panel)
         self.operationTree = PluginTreeview(panel, show="tree")
         self.operationTree.grid(row=0, column=0, sticky='news')
@@ -342,6 +342,15 @@ class PluginBrowser(tk.Frame):
         self.yscrollbar.grid(row=0, column=1, sticky='news')
         self.operationTree.configure(yscrollcommand=self.yscrollbar.set)
         self.yscrollbar.configure(command=self.operationTree.yview)
+
+    def _fillRightBottomOutputLogPanel(self, panel):
+        # Fill the Output Log
+        gui.configureWeigths(panel)
+        self.terminal = tk.Frame(panel)
+        self.terminal.grid(row=0, column=0, sticky='news')
+        self.terminal.pack(fill=BOTH, expand=YES)
+        wid = self.terminal.winfo_id()
+        os.system('xterm -into %d -geometry 500x200 -bg black -fg white &' % wid)
 
     def objectInformation(self, event):
         """Show the plugin or binary information"""
@@ -385,9 +394,9 @@ class PluginBrowser(tk.Frame):
     def _applyOperations(self, e=None):
         for op in self.operationList.getOperations():
             item = op.getObjName()
-            self.operationTree.processing_item(item)
-            self.operationTree.update()
             try:
+                self.operationTree.processing_item(item)
+                self.operationTree.update()
                 op.runOperation()
                 self.operationTree.installed_item(item)
                 self.operationTree.update()
