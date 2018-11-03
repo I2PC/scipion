@@ -48,7 +48,7 @@ pluginRepo = PluginRepository()
 pluginDict = pluginRepo.getPlugins(getPipData=True)
 
 
-class PluginTreeview(ttk.Treeview):
+class PluginTree(ttk.Treeview):
     """
         Treeview widget with checkboxes left of each item.
         The checkboxes are done via the image attribute of the item, so to keep
@@ -120,7 +120,7 @@ class PluginTreeview(ttk.Treeview):
 
 class Operation:
     """
-    This class contain the operation details
+    This class contain the object(plugin/binary) operation details
     """
     def __init__(self, objName, objType=PLUGIN, objStatus=INSTALL,
                  objParent=None):
@@ -130,23 +130,39 @@ class Operation:
         self.objParent = objParent
 
     def getObjName(self):
+        """
+        Get the object(plugin/binary) name
+        """
         return self.objName
 
     def getObjType(self):
+        """
+        Get the object type (plugin or binary)
+        """
         return self.objType
 
     def getObjStatus(self):
+        """
+        Get the object status (installed, uninstalled, to install,...)
+        """
         return self.objStatus
 
     def setObjStatus(self, status):
+        """
+        Set the object status
+        """
         self.objStatus = status
 
     def getObjParent(self):
+        """
+        Get the object parent in the tree. If the object is a bynary, this
+        method return None
+        """
         return self.objParent
 
     def runOperation(self):
         """
-        This method install or unistall a plugin/binary operation
+        This method install or uninstall a plugin/binary operation
         """
         if self.objType == PLUGIN:
             if self.objStatus == INSTALL:
@@ -177,6 +193,9 @@ class OperationList:
         self.operationList = []
 
     def insertOperation(self, operation):
+        """
+        This method insert into the list a given operation
+        """
         index = self.operationIndex(operation)
         if index is not None:
             self.removeOperation(index)
@@ -188,9 +207,15 @@ class OperationList:
             self.operationList.append(operation)
 
     def removeOperation(self, index):
+        """
+        Remove an operation from the list based on an index
+        """
         self.operationList.pop(index)
 
     def operationIndex(self, operation):
+        """
+        Returns the index of an operation within the list
+        """
         index = None
         for i in range(0, len(self.operationList)):
             if self.operationList[i].getObjName() == operation.getObjName():
@@ -198,13 +223,22 @@ class OperationList:
         return index
 
     def getOperations(self):
+        """
+        Return the operation List
+        """
         return self.operationList
 
     def applyOperations(self):
+        """
+        Execute a operation list
+        """
         for op in self.operationList:
             op.runOperation()
 
     def clearOperations(self):
+        """
+        Clear the operation List
+        """
         self.operationList = []
 
 
@@ -212,37 +246,47 @@ class PluginBrowser(tk.Frame):
     """ This class will implement a frame.
         It will display a list of plugin at the left
         panel. A TreeProvider will be used to populate the list (Tree).
+        At the right panel provide a plugin/binary information(top panel) and
+        a list of operation (bottom panel)
         """
-    def __init__(self, parent,  **args):
-        tk.Frame.__init__(self, parent, **args)
+    def __init__(self, master,  **args):
+        tk.Frame.__init__(self, master, **args)
         self._lastSelected = None
         self.operationList = OperationList()
         gui.configureWeigths(self)
+
+        # Creating the layout where all application elements will be placed
+        parentFrame = tk.Frame(master)
+        parentFrame.grid(row=0, column=0, sticky='news')
+        gui.configureWeigths(parentFrame, 1)
+
         # Define a Tool Bar
-        toolBarFrame = tk.Frame(parent)
+        toolBarFrame = tk.Frame(parentFrame)
         toolBarFrame.grid(row=0, column=0, sticky=W)
         self._fillToolbar(toolBarFrame)
-        # The main layout will be two panes,
+        # The main layout will be two panes:
         # At the left containing the plugin list
-        # and the right containing the description
-        mainFrame = tk.PanedWindow(parent, orient=tk.HORIZONTAL)
+        # and the right containing a description and the operation list
+        mainFrame = tk.PanedWindow(parentFrame, orient=tk.HORIZONTAL)
         mainFrame.grid(row=1, column=0, sticky='news')
+
         # ---------------------------------------------------------------
         # Left Panel
         leftPanel = tk.Frame(mainFrame)  # Create a left panel to put the tree
-        leftPanel.grid(row=0, column=0, padx=0, pady=0)
+        leftPanel.grid(row=0, column=0, padx=0, pady=0, sticky='news')
         self._fillLeftPanel(leftPanel)  # Fill the left panel
+
         # ---------------------------------------------------------------
         # Right Panel: will be two vertical panes
         # At the Top contain the plugin or binary information
-        # At the Bottom contain a system terminal that show the operation steps
+        # At the Bottom contain a tab widget with an operation list and
+        # a system terminal that show the operation steps
         rightPanel = tk.PanedWindow(mainFrame, orient=tk.VERTICAL)
-        rightPanel.grid(row=0, column=1, padx=0, pady=0)
+        rightPanel.grid(row=1, column=1, padx=0, pady=0, sticky='news')
 
         # Top Panel
         topPanel = ttk.Frame(rightPanel)  # Panel to put the plugin information
         topPanel.pack(side=TOP, fill=BOTH, expand=Y)
-
         self.dataCols = ('Name                      ',
                          'Version            ',
                          'Description               ',
@@ -275,14 +319,15 @@ class PluginBrowser(tk.Frame):
         operationTab = ttk.Frame(tabControl)    # Create a operation tab
         operationTab.grid(row=0, column=0, padx=0, pady=0)
         self._fillRightBottomOperationsPanel(operationTab)
-
         consoleTab = ttk.Frame(tabControl)    # Create a console
+        self._fillRightBottomOutputLogPanel(consoleTab)
+
+
         tabControl.add(operationTab, text='Operations')  # Add the Operation tab
         tabControl.add(consoleTab, text='Output Log')
         tabControl.pack(expand=1, fill="both")    # Pack to make visible
-        self._fillRightBottomOutputLogPanel(consoleTab)
 
-        # Add the right panels to Right Panel
+        # Add the widgets to Right Panel
         rightPanel.add(topPanel, padx=0, pady=0)
         rightPanel.add(bottomPanel, padx=0, pady=0)
 
@@ -290,14 +335,13 @@ class PluginBrowser(tk.Frame):
         mainFrame.add(leftPanel, padx=0, pady=0)
         mainFrame.paneconfig(leftPanel, minsize=200)
 
-        # Add the Plugins or Binaries information
+        # Add the Plugins or Binaries information and Operation list at right
         mainFrame.add(rightPanel, padx=0, pady=0)
         mainFrame.paneconfig(rightPanel, minsize=200)
 
     def _fillToolbar(self, frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
-
         self._addButton(frame, 'Apply', gui.getImage(Icon.ACTION_EXECUTE),
                         self._applyOperations)
 
@@ -314,7 +358,7 @@ class PluginBrowser(tk.Frame):
         Fill the left Panel with the plugins list
         """
         gui.configureWeigths(leftFrame)
-        self.tree = PluginTreeview(leftFrame, show="tree")
+        self.tree = PluginTree(leftFrame, show="tree")
         self.tree.grid(row=0, column=0, sticky='news')
 
         self.yscrollbar = ttk.Scrollbar(leftFrame, orient='vertical',
@@ -334,7 +378,7 @@ class PluginBrowser(tk.Frame):
     def _fillRightBottomOperationsPanel(self, panel):
         # Fill the operation tab
         gui.configureWeigths(panel)
-        self.operationTree = PluginTreeview(panel, show="tree")
+        self.operationTree = PluginTree(panel, show="tree")
         self.operationTree.grid(row=0, column=0, sticky='news')
 
         self.yscrollbar = ttk.Scrollbar(panel, orient='vertical',
@@ -387,11 +431,17 @@ class PluginBrowser(tk.Frame):
             self.showOperationList()
 
     def deleteOperation(self, operationName):
+        """
+        Delete an operation given the object name
+        """
         for op in self.operationList.getOperations():
             if operationName == op.getObjName():
                 self.operationList.insertOperation(op)
 
     def _applyOperations(self, e=None):
+        """
+        Execute all operation
+        """
         for op in self.operationList.getOperations():
             item = op.getObjName()
             try:
@@ -411,6 +461,10 @@ class PluginBrowser(tk.Frame):
         self.operationList.clearOperations()
 
     def showOperationList(self):
+        """
+        Shows the operation list at left bottom panel
+        :return:
+        """
         self.operationTree.delete(*self.operationTree.get_children())
         for op in self.operationList.getOperations():
             self.operationTree.insert("", 'end', op.getObjName(),
@@ -439,7 +493,7 @@ class PluginBrowser(tk.Frame):
 
     def reloadInstalledPlugin(self, pluginName):
         """
-        Reload a given installed plugin and update a tree view
+        Reload a given plugin and update a tree view
         """
         plugin = PluginInfo(pluginName, pluginName, remote=False)
         if plugin is not None:
@@ -469,7 +523,6 @@ class PluginBrowser(tk.Frame):
             else:
                 if UNINSTALL in self.tree.item(pluginName, 'tags'):
                     self.tree.item(pluginName, tags=(UNCHECKED,))
-
 
     def loadPlugins(self):
         """
@@ -506,9 +559,11 @@ class PluginBrowser(tk.Frame):
                     self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
                                      values=PLUGIN)
 
-class PluginManagerWindow(gui.Window):
-    """ Windows to hold a plugin manager frame inside. """
 
+class PluginManagerWindow(gui.Window):
+    """
+     Windows to hold a plugin manager frame inside.
+    """
     def __init__(self, title, master=None, **kwargs):
         if 'minsize' not in kwargs:
             kwargs['minsize'] = (300, 300)
@@ -527,8 +582,9 @@ class PluginManagerWindow(gui.Window):
 
 
 class PluginManager(PluginManagerWindow):
-    """ Windows to hold a frame inside. """
-
+    """
+    Windows to hold a frame inside.
+    """
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
