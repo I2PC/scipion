@@ -588,6 +588,4 @@ class PluginManager(PluginManagerWindow):
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
-        import time
-        time.sleep(5)
         browser = PluginBrowser(self.root, **kwargs)
