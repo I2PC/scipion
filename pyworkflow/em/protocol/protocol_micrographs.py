@@ -263,6 +263,7 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         self.info("Estimating CTF of micrograph: %s " % micFn)
         self._defineValues()
+        self._prepareCommand()
         self._estimateCTF(mic, *args)
 
         # Mark this mic as finished
@@ -317,6 +318,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 micList.append(mic)
 
         self._defineValues()
+        self._prepareCommand()
         self._estimateMicrographList(micList, *args)
 
         for mic in micList:
