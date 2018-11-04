@@ -193,12 +193,12 @@ class ProtCTFMicrographs(ProtMicrographs):
             line = ctf.getObjComment()
             if ctf.isEnabled() and line:
                 # CTF Re-estimation
-                copyId = self._insertFunctionStep('copyCtfFilesStep',
-                                                  ctf.getObjId())
+                #copyId = self._insertFunctionStep('copyCtfFilesStep',
+                #                                  ctf.getObjId())
                 # Make estimation steps independent between them
                 stepId = self._insertFunctionStep('_restimateCTF',
                                                   ctf.getObjId(),
-                                                  prerequisites=[copyId])
+                                                  prerequisites=[])
                 recalDeps.append(stepId)
         return recalDeps
 
