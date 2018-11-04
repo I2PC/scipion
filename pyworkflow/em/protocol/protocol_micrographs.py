@@ -485,15 +485,15 @@ class ProtCTFMicrographs(ProtMicrographs):
 
     def _iterMicrographs(self, inputMics=None):
         """ Iterate over micrographs and yield
-        micrograph name and a directory to process.
+        micrograph name.
         """
         if inputMics is None:
             inputMics = self.inputMics
 
         for mic in inputMics:
             micFn = mic.getFileName()
-            micDir = self._getMicrographDir(mic)
-            yield (micFn, micDir, mic)
+            #micDir = self._getMicrographDir(mic)
+            yield (micFn, mic)
 
     def _prepareCommand(self):
         """ This function should be implemented to prepare the
@@ -677,9 +677,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         else:
             outputCtf.enableAppend()
 
-
-
-        for micFn, micDir, mic in self._iterMicrographs(micList):
+        for micFn, mic in self._iterMicrographs(micList):
             try:
                 ctf = self._createCtfModel(mic)
                 outputCtf.append(ctf)
