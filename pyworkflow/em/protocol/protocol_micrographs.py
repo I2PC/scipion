@@ -180,24 +180,6 @@ class ProtCTFMicrographs(ProtMicrographs):
                                    self._insertMicrographCtfStep,
                                    self._insertMicrographListCtfStep,
                                    *self._getCtfArgs())
-        # deps = []
-        # # For each mic insert the step to process it
-        # for mic in inputMics:
-        #     micKey = mic.getMicName()
-        #     if micKey not in self.micDict:
-        #         args = [mic.getFileName(), self._getMicrographDir(mic), micKey]
-        #         stepId = self._insertEstimationSteps(self.initialIds, *args)
-        #         deps.append(stepId)
-        #         self.micDict[micKey] = mic
-        # return deps
-
-    # def _insertEstimationSteps(self, prerequisites, *args):
-    #     """ Basic method to insert a estimateCTF step for a given micrograph."""
-    #     self._defineValues()
-    #     self._prepareCommand()
-    #     micStepId = self._insertFunctionStep('_estimateCTF', *args,
-    #                                          prerequisites=prerequisites)
-    #     return micStepId
 
     def _insertRecalculateSteps(self):
         recalDeps = []
@@ -250,16 +232,15 @@ class ProtCTFMicrographs(ProtMicrographs):
         CTF estimation protocol.
         """
         mic = self.micDict[micName]
-        #micDir = self._getMicrographDir(mic)
-        #micDoneFn = self._getMicrographDone(micDir)
+        micDoneFn = self._getMicrographDone(mic)
         micFn = mic.getFileName()
 
-        #if self.isContinued() and self._isMicDone(mic):
-        #    self.info("Skipping micrograph: %s, seems to be done" % micFn)
-        #    return
+        if self.isContinued() and self._isMicDone(mic):
+            self.info("Skipping micrograph: %s, seems to be done" % micFn)
+            return
 
         # Clean old finished files
-        #cleanPath(micDoneFn)
+        cleanPath(micDoneFn)
 
         self.info("Estimating CTF of micrograph: %s " % micFn)
         self._defineValues()
@@ -267,7 +248,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         self._estimateCTF(mic, *args)
 
         # Mark this mic as finished
-        #open(micDoneFn, 'w').close()
+        open(micDoneFn, 'w').close()
 
     def _estimateCTF(self, mic, *args):
         """ Do the CTF estimation with the specific program
@@ -304,28 +285,25 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         for micName in micNameList:
             mic = self.micDict[micName]
-            #micDir = self._getMicrographDir(mic)
-            #micDoneFn = self._getMicrographDone(micDir)
+            micDoneFn = self._getMicrographDone(mic)
             micFn = mic.getFileName()
 
-            #if self.isContinued() and self._isMicDone(mic):
-            #    self.info("Skipping micrograph: %s, seems to be done" % micFn)
-
-            #else:
+            if self.isContinued() and self._isMicDone(mic):
+                self.info("Skipping micrograph: %s, seems to be done" % micFn)
+            else:
                 # Clean old finished files
-            #    cleanPath(micDoneFn)
-            self.info("Estimating CTF of micrograph: %s " % micFn)
-            micList.append(mic)
+                cleanPath(micDoneFn)
+                self.info("Estimating CTF of micrograph: %s " % micFn)
+                micList.append(mic)
 
         self._defineValues()
         self._prepareCommand()
         self._estimateMicrographList(micList, *args)
 
-        # for mic in micList:
-        #     # Mark this mic as finished
-        #     micDir = self._getMicrographDir(mic)
-        #     micDoneFn = self._getMicrographDone(micDir)
-        #     open(micDoneFn, 'w').close()
+        for mic in micList:
+             # Mark this mic as finished
+             micDoneFn = self._getMicrographDone(mic)
+             open(micDoneFn, 'w').close()
 
     def _estimateMicrographList(self, micList, *args):
         """ This function can be implemented by subclasses if it is a more
@@ -472,34 +450,21 @@ class ProtCTFMicrographs(ProtMicrographs):
         else:
             return self.inputCtf.get()
 
-    def _getMicrographDir(self, mic):
-        """ Return an unique dir name for results of the micrograph. """
-        return self._getExtraPath(removeBaseExt(mic.getFileName()))
-
-    def _getMicrographDone(self, micDir):
-        """ Return the file that is used as a flag of termination. """
-        return join(micDir, 'done.txt')
-
-    def _writeMicrographDone(self, micDir):
-        open(self._getMicrographDone(micDir), 'w').close()
-
     def _iterMicrographs(self, inputMics=None):
         """ Iterate over micrographs and yield
-        micrograph name.
-        """
+        micrograph name. """
         if inputMics is None:
             inputMics = self.inputMics
 
         for mic in inputMics:
             micFn = mic.getFileName()
-            #micDir = self._getMicrographDir(mic)
             yield (micFn, mic)
 
     def _prepareCommand(self):
         """ This function should be implemented to prepare the
         arguments template if doesn't change for each micrograph
         After this method self._program and self._args should be set. 
-        """
+    """
         pass
 
     def _computeDefocusRange(self, ctfSet):
@@ -737,11 +702,19 @@ class ProtCTFMicrographs(ProtMicrographs):
 
     def _isMicDone(self, mic):
         """ A mic is done if the marker file exists. """
-        micDir = self._getMicrographDir(mic)
-        return exists(self._getMicrographDone(micDir))
+        return exists(self._getExtraPath('DONE',
+                                         'mic_%06d.TXT' % mic.getObjId()))
 
     def _getAllDone(self):
         return self._getExtraPath('DONE', 'all.TXT')
+
+    def _getMicrographDir(self, mic):
+        """ Return an unique dir name for results of the micrograph. """
+        return self._getExtraPath(removeBaseExt(mic.getFileName()))
+
+    def _getMicrographDone(self, mic):
+        """ Return the file that is used as a flag of termination. """
+        return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())
 
 
 class ProtPreprocessMicrographs(ProtMicrographs):
