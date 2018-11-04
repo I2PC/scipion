@@ -250,16 +250,16 @@ class ProtCTFMicrographs(ProtMicrographs):
         CTF estimation protocol.
         """
         mic = self.micDict[micName]
-        micDir = self._getMicrographDir(mic)
-        micDoneFn = self._getMicrographDone(micDir)
+        #micDir = self._getMicrographDir(mic)
+        #micDoneFn = self._getMicrographDone(micDir)
         micFn = mic.getFileName()
 
-        if self.isContinued() and self._isMicDone(mic):
-            self.info("Skipping micrograph: %s, seems to be done" % micFn)
-            return
+        #if self.isContinued() and self._isMicDone(mic):
+        #    self.info("Skipping micrograph: %s, seems to be done" % micFn)
+        #    return
 
         # Clean old finished files
-        cleanPath(micDoneFn)
+        #cleanPath(micDoneFn)
 
         self.info("Estimating CTF of micrograph: %s " % micFn)
         self._defineValues()
@@ -267,7 +267,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         self._estimateCTF(mic, *args)
 
         # Mark this mic as finished
-        open(micDoneFn, 'w').close()
+        #open(micDoneFn, 'w').close()
 
     def _estimateCTF(self, mic, *args):
         """ Do the CTF estimation with the specific program
@@ -304,28 +304,28 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         for micName in micNameList:
             mic = self.micDict[micName]
-            micDir = self._getMicrographDir(mic)
-            micDoneFn = self._getMicrographDone(micDir)
+            #micDir = self._getMicrographDir(mic)
+            #micDoneFn = self._getMicrographDone(micDir)
             micFn = mic.getFileName()
 
-            if self.isContinued() and self._isMicDone(mic):
-                self.info("Skipping micrograph: %s, seems to be done" % micFn)
+            #if self.isContinued() and self._isMicDone(mic):
+            #    self.info("Skipping micrograph: %s, seems to be done" % micFn)
 
-            else:
+            #else:
                 # Clean old finished files
-                cleanPath(micDoneFn)
-                self.info("Estimating CTF of micrograph: %s " % micFn)
-                micList.append(mic)
+            #    cleanPath(micDoneFn)
+            self.info("Estimating CTF of micrograph: %s " % micFn)
+            micList.append(mic)
 
         self._defineValues()
         self._prepareCommand()
         self._estimateMicrographList(micList, *args)
 
-        for mic in micList:
-            # Mark this mic as finished
-            micDir = self._getMicrographDir(mic)
-            micDoneFn = self._getMicrographDone(micDir)
-            open(micDoneFn, 'w').close()
+        # for mic in micList:
+        #     # Mark this mic as finished
+        #     micDir = self._getMicrographDir(mic)
+        #     micDoneFn = self._getMicrographDone(micDir)
+        #     open(micDoneFn, 'w').close()
 
     def _estimateMicrographList(self, micList, *args):
         """ This function can be implemented by subclasses if it is a more
