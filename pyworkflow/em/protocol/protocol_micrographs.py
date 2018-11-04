@@ -262,15 +262,12 @@ class ProtCTFMicrographs(ProtMicrographs):
         cleanPath(micDoneFn)
 
         self.info("Estimating CTF of micrograph: %s " % micFn)
-        self._defineValues()
-        self._prepareCommand()
-
-        self._estimateCTF(micFn, micDir, micName)
+        self._estimateCTF(mic, *args)
 
         # Mark this mic as finished
         open(micDoneFn, 'w').close()
 
-    def _estimateCTF(self, micFn, micDir, micName):
+    def _estimateCTF(self, mic, *args):
         """ Do the CTF estimation with the specific program
         and the parameters required.
         Params:
@@ -331,11 +328,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         efficient way to estimate many micrographs at once.
          Default implementation will just call the _estimateCTF. """
         for mic in micList:
-            micFn = mic.getFileName()
-            micDir = self._getMicrographDir(mic)
-            micName = mic.getMicName()
-
-            self._estimateCTF(micFn, micDir, micName)
+            self._estimateCTF(mic, *args)
 
     def copyMicDirectoryStep(self, micId):
         """ Copy micrograph's directory tree for recalculation"""
@@ -540,7 +533,7 @@ class ProtCTFMicrographs(ProtMicrographs):
 
     def _getCtfArgs(self):
         """ Should be implemented in sub-classes to define the argument
-        list that should be passed to the picking step function.
+        list that should be passed to the estimation step function.
         """
         return []
 
