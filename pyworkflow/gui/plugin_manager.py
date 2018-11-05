@@ -342,11 +342,11 @@ class PluginBrowser(tk.Frame):
     def _fillToolbar(self, frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
-        self._addButton(frame, 'Apply', gui.getImage(Icon.ACTION_EXECUTE),
+        self._addButton(frame, 'Apply', Icon.PROCESSING,
                         self._applyOperations)
 
     def _addButton(self, frame, text, image, command):
-        btn = tk.Label(frame, text=text, image=image,
+        btn = tk.Label(frame, text=text, image=gui.getImage(image),
                    compound=tk.LEFT, cursor='hand2')
         btn.bind('<Button-1>', command)
         btn.grid(row=0, column=self._col, sticky='nw',
@@ -493,7 +493,7 @@ class PluginBrowser(tk.Frame):
 
     def reloadInstalledPlugin(self, pluginName):
         """
-        Reload a given plugin and update a tree view
+        Reload a given plugin and update the tree view
         """
         plugin = PluginInfo(pluginName, pluginName, remote=False)
         if plugin is not None:
@@ -572,14 +572,22 @@ class PluginManagerWindow(gui.Window):
         menu = MenuConfig()
 
         fileMenu = menu.addSubMenu('File')
-        fileMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
+        fileMenu.addSubMenu('Browse Plugin', 'browse', icon='fa-folder-open.png')
         fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
+
+        helpMenu = menu.addSubMenu('Help')
+        helpMenu.addSubMenu('Help', 'help', icon='fa-question-circle.png')
         self.menuCfg = menu
         gui.Window.createMainMenu(self, self.menuCfg)
 
     def onExit(self):
         self.close()
 
+    def onBrowse(self):
+        pass
+
+    def onHelp(self):
+        pass
 
 class PluginManager(PluginManagerWindow):
     """
@@ -588,4 +596,5 @@ class PluginManager(PluginManagerWindow):
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
+
         browser = PluginBrowser(self.root, **kwargs)
