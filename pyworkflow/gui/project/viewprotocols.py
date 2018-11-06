@@ -1675,7 +1675,7 @@ class ProtocolsView(tk.Frame):
 
             self.methodText.setReadOnly(True)
         except Exception as e:
-            self.methodText.addLine('Could not load all methods:' + e.getMessage())
+            self.methodText.addLine('Could not load all methods:' + str(e))
 
     def _fillLogs(self):
         prot = self.getSelectedProtocol()

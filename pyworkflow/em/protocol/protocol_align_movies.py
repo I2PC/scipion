@@ -479,8 +479,8 @@ class ProtAlignMovies(ProtProcessMovies):
         """ Internal workaround to launch an EMAN2 program. """
         eman2 = importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
-        runJob(self._log, eman2.getEmanProgram(program), args,
-               env=eman2.getEnviron())
+        runJob(self._log, eman2.Plugin.getProgram(program), args,
+               env=eman2.Plugin.getEnviron())
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
                      dark=None, gain=None, splineOrder=None):
@@ -619,6 +619,10 @@ class ProtAlignMovies(ProtProcessMovies):
     def getThumbnailFn(self, inputFn):
         """ Returns the default name for a thumbnail image"""
         return pwutils.replaceExt(inputFn, "thumb.png")
+    
+    def _getPsdCorr(self, movie):
+        """ This should be implemented in subclasses."""
+        pass
 
 
 def createAlignmentPlot(meanX, meanY):
