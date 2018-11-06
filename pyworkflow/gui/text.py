@@ -514,6 +514,7 @@ class TextFileViewer(tk.Frame):
         for _ in self.taList:
             self.notebook.forget(0)       
         self.taList = []
+        self._lastTabIndex = None
         
     def _addFileTab(self, filename):
         tab = tk.Frame(self.notebook)
