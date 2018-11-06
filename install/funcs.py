@@ -88,7 +88,6 @@ Continue anyway? (y/n)""" % lib)
     # software/log/lib_...log so we don't check again if we already said "no"
 
 
-
 class Command:
     def __init__(self, env, cmd, targets=None,  **kwargs):
         self._env = env
@@ -784,7 +783,12 @@ class Environment:
                 self._showTargetTree(targetList)
         else:
             self._executeTargets(targetList)
-        
+
+    def executeTargets(self, *targets):
+        """ Allow to execute for given targets providing the name. """
+        targetList = [self.getTarget(t) for t in targets]
+        self._executeTargets(targetList)
+
     def updateCudaEnviron(self, package):
         """ Update the environment adding CUDA_LIB and/or CUDA_BIN to support
         packages that uses CUDA.
@@ -824,6 +828,7 @@ class Environment:
         """Set default values of all packages to the passed parameter"""
         for t in self._targetList:
             t.setDefault(default)
+
 
 class Link:
     def __init__(self, packageLink, packageFolder):
