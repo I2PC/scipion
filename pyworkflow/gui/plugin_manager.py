@@ -32,6 +32,7 @@ from pyworkflow.config import MenuConfig
 from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
+import tempfile as tmpfile
 
 PLUGIN = 'plugin'
 BINARY = 'binary'
@@ -394,7 +395,7 @@ class PluginBrowser(tk.Frame):
         self.terminal.grid(row=0, column=0, sticky='news')
         self.terminal.pack(fill=BOTH, expand=YES)
         wid = self.terminal.winfo_id()
-        os.system('xterm -into %d -geometry 500x200 -bg black -fg white &' % wid)
+        os.system('xterm -into %d -geometry 500x200 -bg black -fg white -fa font -fs 10 &' % wid)
 
     def objectInformation(self, event):
         """Show the plugin or binary information"""
@@ -442,12 +443,26 @@ class PluginBrowser(tk.Frame):
         """
         Execute all operation
         """
+
         for op in self.operationList.getOperations():
             item = op.getObjName()
             try:
+                # oldstdout = sys.stdout
+                # file = tmpfile.NamedTemporaryFile(delete=False)
+                # file_name = file.name
+                # sys.stdout = file
+
                 self.operationTree.processing_item(item)
                 self.operationTree.update()
                 op.runOperation()
+
+                # sys.stdout.flush()
+                # file.close()
+                # sys.stdout = oldstdout
+                # my_file = open(file_name, 'r')
+                # data = my_file.read()
+                # print(data)
+
                 self.operationTree.installed_item(item)
                 self.operationTree.update()
                 if op.getObjType() == PLUGIN:
@@ -459,6 +474,9 @@ class PluginBrowser(tk.Frame):
                 self.tree.uncheck_item(item)
                 self.operationTree.update()
         self.operationList.clearOperations()
+
+
+
 
     def showOperationList(self):
         """
@@ -596,5 +614,4 @@ class PluginManager(PluginManagerWindow):
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
-
         browser = PluginBrowser(self.root, **kwargs)
