@@ -34,6 +34,7 @@ from pyworkflow.gui.text import *
 from pyworkflow.gui import *
 from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
+from pyworkflow.utils import *
 import tempfile as tmpfile
 
 PLUGIN = 'plugin'
@@ -351,8 +352,11 @@ class PluginBrowser(tk.Frame):
                         self._applyOperations)
 
     def _addButton(self, frame, text, image, command):
+        # btn = IconButton(frame, "text", image,
+        #                  tooltip=Message.EXECUTE_PLUGINS_OPERATION,
+        #                  command=command, bg=None)
         btn = tk.Label(frame, text=text, image=gui.getImage(image),
-                   compound=tk.LEFT, cursor='hand2')
+                       compound=tk.LEFT, cursor='hand2')
         btn.bind('<Button-1>', command)
         btn.grid(row=0, column=self._col, sticky='nw',
                  padx=(0, 5), pady=5)
@@ -399,8 +403,8 @@ class PluginBrowser(tk.Frame):
         self.terminal.grid(row=0, column=0, sticky='news')
         gui.configureWeigths(self.terminal)
 
-        self.Textlog = TextFileViewer(self.terminal, allowOpen=True,
-                                      font='black')
+        self.Textlog = TextFileViewer(self.terminal, font='black')
+        self.Textlog.grid(row=0, column=0, sticky='news')
 
         self.file_log_path = os.path.join(os.environ['SCIPION_LOGS'],
                                      PLUGIN_LOG_NAME)
@@ -409,11 +413,8 @@ class PluginBrowser(tk.Frame):
 
         self.fileLog = open(self.file_log_path, 'w', 0)
         self.fileLogErr = open(self.file_errors_path, 'w', 0)
-
         self.plug_log = ScipionLogger(self.file_log_path)
-
-        # Create two tabs where the log and errors will appears
-        self.Textlog.grid(row=0, column=0, sticky='news')
+        self.plug_errors_log = ScipionLogger(self.file_errors_path)
 
     def _box_rightClick(self, event):
         """ check or uncheck a plugin or binary box when clicked """
@@ -448,15 +449,17 @@ class PluginBrowser(tk.Frame):
         oldstdout = sys.stdout
         oldstderr = sys.stderr
         sys.stdout = self.fileLog
-        self.Textlog.createWidgets([self.file_log_path])
+        sys.stderr = self.fileLogErr
+        # Create two tabs where the log and errors will appears
+        self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
         for op in self.operationList.getOperations():
             item = op.getObjName()
             try:
                 self.operationTree.processing_item(item)
                 self.operationTree.update()
                 op.runOperation()
-                self.Textlog.clipboard_append(self.plug_log.getLogString())
                 self.Textlog.refreshAll(goEnd=True)
+                self.Textlog.update()
                 self.operationTree.installed_item(item)
                 self.operationTree.update()
                 if op.getObjType() == PLUGIN:
@@ -467,14 +470,17 @@ class PluginBrowser(tk.Frame):
                 self.operationTree.failure_item(item)
                 self.tree.uncheck_item(item)
                 self.operationTree.update()
+                strErr = str('Error executing the operation: ' +
+                                        op.getObjStatus() + ' ' + op.getObjName())
+                sys.stdout.write(redStr(strErr))
+                sys.stderr.write(redStr(strErr))
+                self.Textlog.refreshAll(goEnd=True)
+                self.Textlog.update()
         self.operationList.clearOperations()
         sys.stdout.flush()
+        sys.stderr.flush()
         sys.stdout = oldstdout
         sys.stderr = oldstderr
-        self.Textlog.clipboard_clear()
-
-
-
 
     def objectInformation(self, event):
         """Show the plugin or binary information"""
