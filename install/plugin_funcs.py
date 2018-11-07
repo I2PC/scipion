@@ -348,11 +348,8 @@ class PluginRepository(object):
         self.plugins = None
 
     @staticmethod
-    def getLocalPlugins():
-        return Domain.getPlugins()
-
-    def getBinToPluginDict(self):
-        localPlugins = self.getLocalPlugins()
+    def getBinToPluginDict():
+        localPlugins = Domain.getPlugins()
         binToPluginDict = {}
         for p, pobj in localPlugins.iteritems():
             pinfo = PluginInfo(name=p, plugin=pobj, remote=False)
