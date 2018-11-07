@@ -29,7 +29,9 @@ from Tkinter import *
 import tkFont
 
 from pyworkflow.config import MenuConfig
-from pyworkflow.utils.log import ScipionLogger
+from pyworkflow.utils.log import *
+from pyworkflow.gui.text import *
+from pyworkflow.gui import *
 from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
 import tempfile as tmpfile
@@ -44,6 +46,8 @@ TO_INSTALL = 'to_install'
 INSTALLED = 'installed'
 PRECESSING = 'processing'
 FAILURE = 'failure'
+PLUGIN_LOG_NAME = 'Plugin.log'
+PLUGIN_ERRORS_LOG_NAME = 'Plugin.err'
 
 pluginRepo = PluginRepository()
 pluginDict = pluginRepo.getPlugins(getPipData=True)
@@ -369,7 +373,7 @@ class PluginBrowser(tk.Frame):
         self.yscrollbar.configure(command=self.tree.yview)
 
         # check / uncheck boxes(plugin or binary) on right click
-        self.tree.bind("<Button-3>", self.box_rightClick, True)
+        self.tree.bind("<Button-3>", self._box_rightClick, True)
         # show the plugin or binary information on click
         self.tree.bind("<Button-1>", self.objectInformation, True)
 
@@ -382,31 +386,36 @@ class PluginBrowser(tk.Frame):
         self.operationTree = PluginTree(panel, show="tree")
         self.operationTree.grid(row=0, column=0, sticky='news')
 
-        self.yscrollbar = ttk.Scrollbar(panel, orient='vertical',
+        yscrollbar = ttk.Scrollbar(panel, orient='vertical',
                                         command=self.operationTree.yview)
-        self.yscrollbar.grid(row=0, column=1, sticky='news')
-        self.operationTree.configure(yscrollcommand=self.yscrollbar.set)
-        self.yscrollbar.configure(command=self.operationTree.yview)
+        yscrollbar.grid(row=0, column=1, sticky='news')
+        self.operationTree.configure(yscrollcommand=yscrollbar.set)
+        yscrollbar.configure(command=self.operationTree.yview)
 
     def _fillRightBottomOutputLogPanel(self, panel):
         # Fill the Output Log
         gui.configureWeigths(panel)
         self.terminal = tk.Frame(panel)
         self.terminal.grid(row=0, column=0, sticky='news')
-        self.terminal.pack(fill=BOTH, expand=YES)
-        wid = self.terminal.winfo_id()
-        os.system('xterm -into %d -geometry 500x200 -bg black -fg white -fa font -fs 10 &' % wid)
+        gui.configureWeigths(self.terminal)
 
-    def objectInformation(self, event):
-        """Show the plugin or binary information"""
-        x, y, widget = event.x, event.y, event.widget
-        item = self.tree.selectedItem = self.tree.identify_row(y)
-        if self.tree.selectedItem is not None and \
-                self.isPlugin(self.tree.item(self.tree.selectedItem,
-                                             "values")[0]):
-            self.showPluginInformation(item)
+        self.Textlog = TextFileViewer(self.terminal, allowOpen=True,
+                                      font='black')
 
-    def box_rightClick(self, event):
+        self.file_log_path = os.path.join(os.environ['SCIPION_LOGS'],
+                                     PLUGIN_LOG_NAME)
+        self.file_errors_path = os.path.join(os.environ['SCIPION_LOGS'],
+                                        PLUGIN_ERRORS_LOG_NAME)
+
+        self.fileLog = open(self.file_log_path, 'w', 0)
+        self.fileLogErr = open(self.file_errors_path, 'w', 0)
+
+        self.plug_log = ScipionLogger(self.file_log_path)
+
+        # Create two tabs where the log and errors will appears
+        self.Textlog.grid(row=0, column=0, sticky='news')
+
+    def _box_rightClick(self, event):
         """ check or uncheck a plugin or binary box when clicked """
         x, y, widget = event.x, event.y, event.widget
         elem = widget.identify("element", x, y)
@@ -431,38 +440,23 @@ class PluginBrowser(tk.Frame):
 
             self.showOperationList()
 
-    def deleteOperation(self, operationName):
-        """
-        Delete an operation given the object name
-        """
-        for op in self.operationList.getOperations():
-            if operationName == op.getObjName():
-                self.operationList.insertOperation(op)
-
     def _applyOperations(self, e=None):
         """
         Execute all operation
         """
-
+        # Take the standard system out and errors
+        oldstdout = sys.stdout
+        oldstderr = sys.stderr
+        sys.stdout = self.fileLog
+        self.Textlog.createWidgets([self.file_log_path])
         for op in self.operationList.getOperations():
             item = op.getObjName()
             try:
-                # oldstdout = sys.stdout
-                # file = tmpfile.NamedTemporaryFile(delete=False)
-                # file_name = file.name
-                # sys.stdout = file
-
                 self.operationTree.processing_item(item)
                 self.operationTree.update()
                 op.runOperation()
-
-                # sys.stdout.flush()
-                # file.close()
-                # sys.stdout = oldstdout
-                # my_file = open(file_name, 'r')
-                # data = my_file.read()
-                # print(data)
-
+                self.Textlog.clipboard_append(self.plug_log.getLogString())
+                self.Textlog.refreshAll(goEnd=True)
                 self.operationTree.installed_item(item)
                 self.operationTree.update()
                 if op.getObjType() == PLUGIN:
@@ -474,9 +468,33 @@ class PluginBrowser(tk.Frame):
                 self.tree.uncheck_item(item)
                 self.operationTree.update()
         self.operationList.clearOperations()
+        sys.stdout.flush()
+        sys.stdout = oldstdout
+        sys.stderr = oldstderr
+        self.Textlog.clipboard_clear()
 
 
 
+
+    def objectInformation(self, event):
+        """Show the plugin or binary information"""
+        x, y, widget = event.x, event.y, event.widget
+        item = self.tree.selectedItem = self.tree.identify_row(y)
+        if self.tree.selectedItem is not None:
+            if self.isPlugin(self.tree.item(self.tree.selectedItem,
+                                            "values")[0]):
+                self.showPluginInformation(item)
+            else:
+                parent = self.tree.parent(item)
+                self.showPluginInformation(parent)
+
+    def deleteOperation(self, operationName):
+        """
+        Delete an operation given the object name
+        """
+        for op in self.operationList.getOperations():
+            if operationName == op.getObjName():
+                self.operationList.insertOperation(op)
 
     def showOperationList(self):
         """
@@ -585,6 +603,7 @@ class PluginManagerWindow(gui.Window):
     def __init__(self, title, master=None, **kwargs):
         if 'minsize' not in kwargs:
             kwargs['minsize'] = (300, 300)
+            kwargs['size'] = (300, 300)
         gui.Window.__init__(self, title, master, **kwargs)
 
         menu = MenuConfig()
@@ -607,6 +626,7 @@ class PluginManagerWindow(gui.Window):
     def onHelp(self):
         pass
 
+
 class PluginManager(PluginManagerWindow):
     """
     Windows to hold a frame inside.
@@ -614,4 +634,6 @@ class PluginManager(PluginManagerWindow):
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
+        import time
+        time.sleep(5)
         browser = PluginBrowser(self.root, **kwargs)
