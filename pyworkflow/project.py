@@ -829,8 +829,8 @@ class Project(object):
 
         return result
 
-    def getProtocolsJson(self, protocols=None, namesOnly=False):
-        """ Create a Json string with the information of the given protocols.
+    def getProtocolsDict(self, protocols=None, namesOnly=False):
+        """ Create a dict with the information of the given protocols.
          Params:
             protocols: list of protocols or None to include all.
             namesOnly: the output list will contain only the protocol names.
@@ -873,6 +873,15 @@ class Project(object):
                             childDict[iKey] = '%s.%s' % (
                             protId, oKey)  # equivalent to pointer.getUniqueId
 
+        return newDict
+
+    def getProtocolsJson(self, protocols=None, namesOnly=False):
+        """ Wraps getProtocolsDict to get a json string
+             Params:
+                protocols: list of protocols or None to include all.
+                namesOnly: the output list will contain only the protocol names.
+        """
+        newDict = self.getProtocolsDict(protocols=None, namesOnly=False)
         return json.dumps(list(newDict.values()),
                           indent=4, separators=(',', ': '))
 
