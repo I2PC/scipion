@@ -343,7 +343,7 @@ Do you really want to continue?'
     LABEL_INSPECTOR = 'Objects inspector will inspect the whole project. ' \
                       'Thus, it can take a while depending on the size of the project.\n' \
                       'Do you want to continue?'
-    EXECUTE_PLUGINS_OPERATION = 'Apply all selected operations'
+    EXECUTE_PLUGINS_MANAGER_OPERATION = 'Apply all selected operations'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
@@ -399,6 +399,7 @@ class Icon():
 
     SCIPION_ICON = 'scipion_bn_icon.png'
 
+    # PLUGIN MANAGER ICONS
     CHECKED = 'fa-checked.png'
     UNCHECKED = 'fa-unchecked.png'
     INSTALL = 'fa-install.png'

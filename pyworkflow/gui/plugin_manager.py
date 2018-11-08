@@ -26,8 +26,8 @@
 
 from Tkinter import *
 from pyworkflow.config import MenuConfig
-from pyworkflow.utils.log import *
-from pyworkflow.gui.text import *
+from pyworkflow.utils.log import ScipionLogger
+from pyworkflow.gui.text import TextFileViewer
 from pyworkflow.gui import *
 from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
@@ -345,7 +345,7 @@ class PluginBrowser(tk.Frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
         self._addButton(frame, 'Apply', Icon.ACTION_EXECUTE,
-                        Message.EXECUTE_PLUGINS_OPERATION, 'normal',
+                        Message.EXECUTE_PLUGINS_MANAGER_OPERATION, 'normal',
                         self._applyOperations)
 
     def _addButton(self, frame, text, image, tooltip, state, command):
@@ -364,7 +364,8 @@ class PluginBrowser(tk.Frame):
         Fill the left Panel with the plugins list
         """
         gui.configureWeigths(leftFrame)
-        self.tree = PluginTree(leftFrame, show="tree")
+        pluginColumn = ('Value')
+        self.tree = PluginTree(leftFrame, show="tree", columns=pluginColumn)
         self.tree.grid(row=0, column=0, sticky='news')
 
         self.yscrollbar = ttk.Scrollbar(leftFrame, orient='vertical',
@@ -468,7 +469,8 @@ class PluginBrowser(tk.Frame):
                 self.tree.uncheck_item(item)
                 self.operationTree.update()
                 strErr = str('Error executing the operation: ' +
-                                        op.getObjStatus() + ' ' + op.getObjName())
+                             op.getObjStatus() + ' ' +
+                             op.getObjName() + '\n')
                 sys.stdout.write(redStr(strErr))
                 sys.stderr.write(redStr(strErr))
                 self.Textlog.refreshAll(goEnd=True)
@@ -606,17 +608,16 @@ class PluginManagerWindow(gui.Window):
     def __init__(self, title, master=None, **kwargs):
         if 'minsize' not in kwargs:
             kwargs['minsize'] = (300, 300)
-            kwargs['size'] = (300, 300)
         gui.Window.__init__(self, title, master, **kwargs)
 
         menu = MenuConfig()
 
-        # fileMenu = menu.addSubMenu('File')
+        fileMenu = menu.addSubMenu('File')
         # #fileMenu.addSubMenu('Browse Plugin', 'browse', icon='fa-folder-open.png')
-        # fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
-        #
-        # helpMenu = menu.addSubMenu('Help')
-        # helpMenu.addSubMenu('Help', 'help', icon='fa-question-circle.png')
+        fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
+
+        helpMenu = menu.addSubMenu('Help')
+        helpMenu.addSubMenu('Help', 'help', icon='fa-question-circle.png')
         self.menuCfg = menu
         gui.Window.createMainMenu(self, self.menuCfg)
 
@@ -627,7 +628,72 @@ class PluginManagerWindow(gui.Window):
         pass
 
     def onHelp(self):
-        pass
+        PluginHelp('Plugin Manager Glossary', self).show()
+
+
+class PluginHelp(gui.Window):
+    """
+         Windows to hold a plugin manager help
+        """
+
+    def __init__(self, title, master=None, **kwargs):
+        if 'minsize' not in kwargs:
+            kwargs['minsize'] = (500, 300)
+            gui.Window.__init__(self, title, master, **kwargs)
+        self.root.resizable(0, 0)
+        self.createHelp()
+
+    def createHelp(self):
+        helpFrame = tk.Frame(self.root)
+        helpFrame.grid(row=0, column=0, sticky='news')
+        photo = PhotoImage(file=gui.findResource(Icon.CHECKED))
+        btn = Label(helpFrame, image=photo)
+        btn.photo = photo
+        btn.grid(row=0, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='INSTALLED Plugin/Binary')
+        btn.grid(row=0, column=1, sticky='sw', padx=0, pady=0)
+
+        photo = PhotoImage(file=gui.findResource(Icon.UNCHECKED))
+        btn = Label(helpFrame, image=photo)
+        btn.photo = photo
+        btn.grid(row=1, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='UNINSTALLED Plugin/Binary')
+        btn.grid(row=1, column=1, sticky='sw', padx=0, pady=0)
+
+        photo = PhotoImage(file=gui.findResource(Icon.INSTALL))
+        btn = Label(helpFrame, image=photo)
+        btn.photo = photo
+        btn.grid(row=2, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='Plugin/Binary TO INSTALL')
+        btn.grid(row=2, column=1, sticky='sw', padx=0, pady=0)
+
+        photo = PhotoImage(file=gui.findResource(Icon.UNINSTALL))
+        btn = Label(helpFrame, image=photo)
+        btn.photo = photo
+        btn.grid(row=3, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='Plugin/Binary TO UNINSTALL')
+        btn.grid(row=3, column=1, sticky='sw', padx=0, pady=0)
+
+        photo = PhotoImage(file=gui.findResource(Icon.ACTION_EXECUTE))
+        btn = Label(helpFrame, image=photo)
+        btn.photo = photo
+        btn.grid(row=4, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='Apply the selected operations')
+        btn.grid(row=4, column=1, sticky='sw', padx=0, pady=0)
+
+        photo = PhotoImage(file=gui.findResource(Icon.TO_INSTALL))
+        btn = Label(helpFrame, image=photo)
+        btn.photo = photo
+        btn.grid(row=5, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='Operation waiting to be executed')
+        btn.grid(row=5, column=1, sticky='sw', padx=0, pady=0)
+
+        btn = Label(helpFrame, text='Right-Click')
+        btn.photo = photo
+        btn.grid(row=6, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='Change or Undo the status of the '
+                                    'plugins/binaries in the tree view')
+        btn.grid(row=6, column=1, sticky='sw', padx=0, pady=0)
 
 
 class PluginManager(PluginManagerWindow):
