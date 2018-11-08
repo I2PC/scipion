@@ -433,7 +433,7 @@ class PluginBrowser(tk.Frame):
                 for iid in children:
                     self.deleteOperation(iid)
                 self.tree.uncheck_item(self.tree.selectedItem)
-
+            self.showPluginInformation(self.tree.selectedItem)
             self.showOperationList()
 
     def _applyOperations(self, e=None):
