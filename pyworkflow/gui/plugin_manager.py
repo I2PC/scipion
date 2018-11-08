@@ -24,10 +24,7 @@
 # *
 # **************************************************************************
 
-from multiprocessing import Process
 from Tkinter import *
-import tkFont
-
 from pyworkflow.config import MenuConfig
 from pyworkflow.utils.log import *
 from pyworkflow.gui.text import *
@@ -35,7 +32,6 @@ from pyworkflow.gui import *
 from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
 from pyworkflow.utils import *
-import tempfile as tmpfile
 
 PLUGIN = 'plugin'
 BINARY = 'binary'
@@ -327,7 +323,6 @@ class PluginBrowser(tk.Frame):
         self._fillRightBottomOperationsPanel(operationTab)
         consoleTab = ttk.Frame(tabControl)    # Create a console
         self._fillRightBottomOutputLogPanel(consoleTab)
-
 
         tabControl.add(operationTab, text='Operations')  # Add the Operation tab
         tabControl.add(consoleTab, text='Output Log')
@@ -640,6 +635,4 @@ class PluginManager(PluginManagerWindow):
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
-        import time
-        time.sleep(5)
         browser = PluginBrowser(self.root, **kwargs)
