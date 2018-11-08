@@ -651,49 +651,48 @@ class PluginHelp(gui.Window):
         btn.photo = photo
         btn.grid(row=0, column=0, sticky='sw', padx=10, pady=5)
         btn = Label(helpFrame, text='INSTALLED Plugin/Binary')
-        btn.grid(row=0, column=1, sticky='sw', padx=0, pady=0)
+        btn.grid(row=0, column=1, sticky='sw', padx=0, pady=5)
 
         photo = PhotoImage(file=gui.findResource(Icon.UNCHECKED))
         btn = Label(helpFrame, image=photo)
         btn.photo = photo
         btn.grid(row=1, column=0, sticky='sw', padx=10, pady=5)
         btn = Label(helpFrame, text='UNINSTALLED Plugin/Binary')
-        btn.grid(row=1, column=1, sticky='sw', padx=0, pady=0)
+        btn.grid(row=1, column=1, sticky='sw', padx=0, pady=5)
 
         photo = PhotoImage(file=gui.findResource(Icon.INSTALL))
         btn = Label(helpFrame, image=photo)
         btn.photo = photo
         btn.grid(row=2, column=0, sticky='sw', padx=10, pady=5)
         btn = Label(helpFrame, text='Plugin/Binary TO INSTALL')
-        btn.grid(row=2, column=1, sticky='sw', padx=0, pady=0)
+        btn.grid(row=2, column=1, sticky='sw', padx=0, pady=5)
 
         photo = PhotoImage(file=gui.findResource(Icon.UNINSTALL))
         btn = Label(helpFrame, image=photo)
         btn.photo = photo
         btn.grid(row=3, column=0, sticky='sw', padx=10, pady=5)
         btn = Label(helpFrame, text='Plugin/Binary TO UNINSTALL')
-        btn.grid(row=3, column=1, sticky='sw', padx=0, pady=0)
+        btn.grid(row=3, column=1, sticky='sw', padx=0, pady=5)
 
         photo = PhotoImage(file=gui.findResource(Icon.ACTION_EXECUTE))
         btn = Label(helpFrame, image=photo)
         btn.photo = photo
         btn.grid(row=4, column=0, sticky='sw', padx=10, pady=5)
         btn = Label(helpFrame, text='Apply the selected operations')
-        btn.grid(row=4, column=1, sticky='sw', padx=0, pady=0)
+        btn.grid(row=4, column=1, sticky='sw', padx=0, pady=5)
 
         photo = PhotoImage(file=gui.findResource(Icon.TO_INSTALL))
         btn = Label(helpFrame, image=photo)
         btn.photo = photo
         btn.grid(row=5, column=0, sticky='sw', padx=10, pady=5)
         btn = Label(helpFrame, text='Operation waiting to be executed')
-        btn.grid(row=5, column=1, sticky='sw', padx=0, pady=0)
+        btn.grid(row=5, column=1, sticky='sw', padx=0, pady=5)
 
         btn = Label(helpFrame, text='Right-Click')
-        btn.photo = photo
         btn.grid(row=6, column=0, sticky='sw', padx=10, pady=5)
         btn = Label(helpFrame, text='Change or Undo the status of the '
                                     'plugins/binaries in the tree view')
-        btn.grid(row=6, column=1, sticky='sw', padx=0, pady=0)
+        btn.grid(row=6, column=1, sticky='sw', padx=0, pady=5)
 
 
 class PluginManager(PluginManagerWindow):
