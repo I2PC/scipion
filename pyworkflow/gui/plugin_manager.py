@@ -266,6 +266,7 @@ class PluginBrowser(tk.Frame):
         toolBarFrame = tk.Frame(parentFrame)
         toolBarFrame.grid(row=0, column=0, sticky=W)
         self._fillToolbar(toolBarFrame)
+        gui.configureWeigths(toolBarFrame)
         # The main layout will be two panes:
         # At the left containing the plugin list
         # and the right containing a description and the operation list
@@ -284,7 +285,7 @@ class PluginBrowser(tk.Frame):
         # At the Bottom contain a tab widget with an operation list and
         # a system terminal that show the operation steps
         rightPanel = tk.PanedWindow(mainFrame, orient=tk.VERTICAL)
-        rightPanel.grid(row=1, column=1, padx=0, pady=0, sticky='news')
+        rightPanel.grid(row=0, column=1, padx=0, pady=0, sticky='news')
 
         # Top Panel
         topPanel = ttk.Frame(rightPanel)  # Panel to put the plugin information
@@ -343,18 +344,19 @@ class PluginBrowser(tk.Frame):
     def _fillToolbar(self, frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
-        self._addButton(frame, 'Apply', Icon.PROCESSING,
+        self._addButton(frame, 'Apply', Icon.ACTION_EXECUTE,
+                        Message.EXECUTE_PLUGINS_OPERATION, 'normal',
                         self._applyOperations)
 
-    def _addButton(self, frame, text, image, command):
-        # btn = IconButton(frame, "text", image,
-        #                  tooltip=Message.EXECUTE_PLUGINS_OPERATION,
-        #                  command=command, bg=None)
-        btn = tk.Label(frame, text=text, image=gui.getImage(image),
-                       compound=tk.LEFT, cursor='hand2')
+    def _addButton(self, frame, text, image, tooltip, state, command):
+        btn = IconButton(frame, text, image, command=command,
+                         tooltip=tooltip, bg=None)
+        btn.config(relief="flat", activebackground=None, compound='left',
+                   fg='black', overrelief="raised",
+                   state=state)
         btn.bind('<Button-1>', command)
         btn.grid(row=0, column=self._col, sticky='nw',
-                 padx=(0, 5), pady=5)
+                 padx=(0, 5), pady=0)
         self._col += 1
 
     def _fillLeftPanel(self, leftFrame):
@@ -609,19 +611,19 @@ class PluginManagerWindow(gui.Window):
 
         menu = MenuConfig()
 
-        fileMenu = menu.addSubMenu('File')
-        fileMenu.addSubMenu('Browse Plugin', 'browse', icon='fa-folder-open.png')
-        fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
-
-        helpMenu = menu.addSubMenu('Help')
-        helpMenu.addSubMenu('Help', 'help', icon='fa-question-circle.png')
+        # fileMenu = menu.addSubMenu('File')
+        # #fileMenu.addSubMenu('Browse Plugin', 'browse', icon='fa-folder-open.png')
+        # fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
+        #
+        # helpMenu = menu.addSubMenu('Help')
+        # helpMenu.addSubMenu('Help', 'help', icon='fa-question-circle.png')
         self.menuCfg = menu
         gui.Window.createMainMenu(self, self.menuCfg)
 
     def onExit(self):
         self.close()
 
-    def onBrowse(self):
+    def onBrowsePlugin(self):
         pass
 
     def onHelp(self):
