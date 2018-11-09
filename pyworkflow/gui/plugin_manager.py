@@ -364,8 +364,7 @@ class PluginBrowser(tk.Frame):
         Fill the left Panel with the plugins list
         """
         gui.configureWeigths(leftFrame)
-        pluginColumn = ('Value')
-        self.tree = PluginTree(leftFrame, show="tree", columns=pluginColumn)
+        self.tree = PluginTree(leftFrame, show="tree")
         self.tree.grid(row=0, column=0, sticky='news')
 
         self.yscrollbar = ttk.Scrollbar(leftFrame, orient='vertical',
@@ -470,7 +469,7 @@ class PluginBrowser(tk.Frame):
                 self.operationTree.update()
                 strErr = str('Error executing the operation: ' +
                              op.getObjStatus() + ' ' +
-                             op.getObjName() + '\n')
+                             op.getObjName())
                 sys.stdout.write(redStr(strErr))
                 sys.stderr.write(redStr(strErr))
                 self.Textlog.refreshAll(goEnd=True)
