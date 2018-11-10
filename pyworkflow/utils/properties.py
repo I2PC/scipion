@@ -343,7 +343,8 @@ Do you really want to continue?'
     LABEL_INSPECTOR = 'Objects inspector will inspect the whole project. ' \
                       'Thus, it can take a while depending on the size of the project.\n' \
                       'Do you want to continue?'
-    EXECUTE_PLUGINS_MANAGER_OPERATION = 'Apply all selected operations'
+    EXECUTE_PLUGINS_MANAGER_OPERATION = 'Execute all selected operations'
+    DELETE_SELECTED_OPERATION = 'Delete a selected operation'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
@@ -408,6 +409,7 @@ class Icon():
     INSTALLED = 'fa-installed.png'
     PROCESSING = 'fa-processing.png'
     FAILURE = 'fa-failure.png'
+    DELETE_OPERATION = 'fa-delete-operation.png'
 
 
 class Color():

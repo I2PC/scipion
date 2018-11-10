@@ -262,11 +262,6 @@ class PluginBrowser(tk.Frame):
         parentFrame.grid(row=0, column=0, sticky='news')
         gui.configureWeigths(parentFrame, 1)
 
-        # Define a Tool Bar
-        toolBarFrame = tk.Frame(parentFrame)
-        toolBarFrame.grid(row=0, column=0, sticky=W)
-        self._fillToolbar(toolBarFrame)
-        gui.configureWeigths(toolBarFrame)
         # The main layout will be two panes:
         # At the left containing the plugin list
         # and the right containing a description and the operation list
@@ -344,7 +339,7 @@ class PluginBrowser(tk.Frame):
     def _fillToolbar(self, frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
-        self._addButton(frame, 'Apply', Icon.ACTION_EXECUTE,
+        self._addButton(frame, '', Icon.TO_INSTALL,
                         Message.EXECUTE_PLUGINS_MANAGER_OPERATION, 'normal',
                         self._applyOperations)
 
@@ -356,7 +351,7 @@ class PluginBrowser(tk.Frame):
                    state=state)
         btn.bind('<Button-1>', command)
         btn.grid(row=0, column=self._col, sticky='nw',
-                 padx=(0, 5), pady=0)
+                 padx=3, pady=7)
         self._col += 1
 
     def _fillLeftPanel(self, leftFrame):
@@ -382,14 +377,29 @@ class PluginBrowser(tk.Frame):
         self.loadPlugins()
 
     def _fillRightBottomOperationsPanel(self, panel):
-        # Fill the operation tab
+        """
+        Create a Operation Tab
+        :param panel:
+        :return:
+        """
         gui.configureWeigths(panel)
-        self.operationTree = PluginTree(panel, show="tree")
-        self.operationTree.grid(row=0, column=0, sticky='news')
+        # Define a Tool Bar
+        opPanel = tk.Frame(panel)
+        opPanel.grid(row=0, column=0, sticky='news')
+        gui.configureWeigths(opPanel, 1)
 
-        yscrollbar = ttk.Scrollbar(panel, orient='vertical',
+        toolBarFrame = tk.Frame(opPanel)
+        toolBarFrame.grid(row=0, column=0, sticky=W)
+        self._fillToolbar(toolBarFrame)
+        gui.configureWeigths(toolBarFrame)
+
+        # Fill the operation tab
+        self.operationTree = PluginTree(opPanel, show="tree")
+        self.operationTree.grid(row=1, column=0, sticky='news')
+
+        yscrollbar = ttk.Scrollbar(opPanel, orient='vertical',
                                         command=self.operationTree.yview)
-        yscrollbar.grid(row=0, column=1, sticky='news')
+        yscrollbar.grid(row=1, column=1, sticky='news')
         self.operationTree.configure(yscrollcommand=yscrollbar.set)
         yscrollbar.configure(command=self.operationTree.yview)
 
