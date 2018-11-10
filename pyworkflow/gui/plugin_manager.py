@@ -29,20 +29,10 @@ from pyworkflow.config import MenuConfig
 from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.gui.text import TextFileViewer
 from pyworkflow.gui import *
-from pyworkflow.gui.form import *
 from install.plugin_funcs import PluginRepository, PluginInfo
-from pyworkflow.utils import *
 
-PLUGIN = 'plugin'
-BINARY = 'binary'
-UNCHECKED = 'unchecked'
-CHECKED = 'checked'
-INSTALL = 'install'
-UNINSTALL = 'uninstall'
-TO_INSTALL = 'to_install'
-INSTALLED = 'installed'
-PRECESSING = 'processing'
-FAILURE = 'failure'
+from pyworkflow.utils.properties import *
+from pyworkflow.utils import redStr
 PLUGIN_LOG_NAME = 'Plugin.log'
 PLUGIN_ERRORS_LOG_NAME = 'Plugin.err'
 
@@ -68,14 +58,14 @@ class PluginTree(ttk.Treeview):
         self.im_installed = gui.getImage(Icon.INSTALLED)
         self.im_processing = gui.getImage(Icon.PROCESSING)
         self.im_failure = gui.getImage(Icon.FAILURE)
-        self.tag_configure(UNCHECKED, image=self.im_unchecked)
-        self.tag_configure(CHECKED, image=self.im_checked)
-        self.tag_configure(INSTALL, image=self.im_install)
-        self.tag_configure(UNINSTALL, image=self.im_uninstall)
-        self.tag_configure(TO_INSTALL, image=self.im_to_install)
-        self.tag_configure(INSTALLED, image=self.im_installed)
-        self.tag_configure(PRECESSING, image=self.im_processing)
-        self.tag_configure(FAILURE, image=self.im_failure)
+        self.tag_configure(PluginStates.UNCHECKED, image=self.im_unchecked)
+        self.tag_configure(PluginStates.CHECKED, image=self.im_checked)
+        self.tag_configure(PluginStates.INSTALL, image=self.im_install)
+        self.tag_configure(PluginStates.UNINSTALL, image=self.im_uninstall)
+        self.tag_configure(PluginStates.TO_INSTALL, image=self.im_to_install)
+        self.tag_configure(PluginStates.INSTALLED, image=self.im_installed)
+        self.tag_configure(PluginStates.PRECESSING, image=self.im_processing)
+        self.tag_configure(PluginStates.FAILURE, image=self.im_failure)
         self.selectedItem = None
 
     def insert(self, parent, index, iid=None, **kw):
@@ -83,49 +73,51 @@ class PluginTree(ttk.Treeview):
             automatically if no tag among ('checked', 'unchecked')
             is given """
         if not "tags" in kw:
-            kw["tags"] = (UNCHECKED,)
-        elif not (UNCHECKED in kw["tags"] or CHECKED in kw["tags"] or
-                  TO_INSTALL in kw["tags"] or INSTALLED in kw["tags"]):
-            kw["tags"] = (UNCHECKED,)
+            kw["tags"] = (PluginStates.UNCHECKED,)
+        elif not (PluginStates.UNCHECKED in kw["tags"] or
+                  PluginStates.CHECKED in kw["tags"] or
+                  PluginStates.TO_INSTALL in kw["tags"] or
+                  PluginStates.INSTALLED in kw["tags"]):
+            kw["tags"] = (PluginStates.UNCHECKED,)
         ttk.Treeview.insert(self, parent, index, iid, **kw)
 
     def check_item(self, item):
         """ check the box of item and change the state of the boxes of item's
             ancestors accordingly """
-        if UNCHECKED in self.item(item, 'tags'):
-            self.item(item, tags=(INSTALL,))
+        if PluginStates.UNCHECKED in self.item(item, 'tags'):
+            self.item(item, tags=(PluginStates.INSTALL,))
         else:
-            self.item(item, tags=(CHECKED,))
+            self.item(item, tags=(PluginStates.CHECKED,))
 
     def uncheck_item(self, item):
         """ uncheck the boxes of item's descendant """
-        if CHECKED in self.item(item, 'tags'):
-            self.item(item, tags=(UNINSTALL,))
+        if PluginStates.CHECKED in self.item(item, 'tags'):
+            self.item(item, tags=(PluginStates.UNINSTALL,))
             children = self.get_children(item)
             for iid in children:
                 self.delete(iid)
         else:
-            self.item(item, tags=(UNCHECKED,))
+            self.item(item, tags=(PluginStates.UNCHECKED,))
 
     def processing_item(self, item):
         """change the box item to processing item"""
-        self.item(item, tags=(PRECESSING,))
+        self.item(item, tags=(PluginStates.PRECESSING,))
 
     def installed_item(self, item):
         """change the box item to processing item"""
-        self.item(item, tags=(INSTALLED,))
+        self.item(item, tags=(PluginStates.INSTALLED,))
 
     def failure_item(self, item):
         """change the box item to failure item"""
-        self.item(item, tags=(FAILURE,))
+        self.item(item, tags=(PluginStates.FAILURE,))
 
 
 class Operation:
     """
     This class contain the object(plugin/binary) operation details
     """
-    def __init__(self, objName, objType=PLUGIN, objStatus=INSTALL,
-                 objParent=None):
+    def __init__(self, objName, objType=PluginStates.PLUGIN,
+                 objStatus=PluginStates.INSTALL, objParent=None):
         self.objName = objName
         self.objType = objType
         self.objStatus = objStatus
@@ -166,8 +158,8 @@ class Operation:
         """
         This method install or uninstall a plugin/binary operation
         """
-        if self.objType == PLUGIN:
-            if self.objStatus == INSTALL:
+        if self.objType == PluginStates.PLUGIN:
+            if self.objStatus == PluginStates.INSTALL:
                 plugin = pluginDict.get(self.objName, None)
                 if plugin is not None:
                     installed = plugin.installPipModule()
@@ -180,7 +172,7 @@ class Operation:
                     plugin.uninstallPip()
         else:
             plugin = PluginInfo(self.objParent, self.objParent, remote=False)
-            if self.objStatus == INSTALL:
+            if self.objStatus == PluginStates.INSTALL:
                 if plugin is not None:
                     plugin.installBin([self.objName])
             else:
@@ -202,9 +194,9 @@ class OperationList:
         if index is not None:
             self.removeOperation(index)
         else:
-            tag = UNINSTALL
-            if operation.getObjStatus() == UNCHECKED:
-                tag = INSTALL
+            tag = PluginStates.UNINSTALL
+            if operation.getObjStatus() == PluginStates.UNCHECKED:
+                tag = PluginStates.INSTALL
             operation.setObjStatus(tag)
             self.operationList.append(operation)
 
@@ -224,11 +216,22 @@ class OperationList:
                 return i
         return index
 
-    def getOperations(self):
+    def getOperations(self, op=None):
         """
-        Return the operation List
+        Return the operation List. If the operation is not None return a list
+        with only the operation op
         """
-        return self.operationList
+        if op is None:
+            return self.operationList
+        else:
+            return [self.getOperationByName(op.getObjName())]
+
+    def getOperationByName(self, opName):
+        operation = [op for op in self.operationList
+                     if op.getObjName() == opName]
+        if len(operation):
+            return operation[0]
+        return None
 
     def applyOperations(self):
         """
@@ -241,7 +244,7 @@ class OperationList:
         """
         Clear the operation List
         """
-        self.operationList = []
+        del self.operationList[:]
 
 
 class PluginBrowser(tk.Frame):
@@ -343,6 +346,10 @@ class PluginBrowser(tk.Frame):
                         Message.EXECUTE_PLUGINS_MANAGER_OPERATION, 'normal',
                         self._applyOperations)
 
+        self._addButton(frame, '', Icon.DELETE_OPERATION,
+                        Message.DELETE_SELECTED_OPERATION, 'normal',
+                        self._deleteSelectedOperation)
+
     def _addButton(self, frame, text, image, tooltip, state, command):
         btn = IconButton(frame, text, image, command=command,
                          tooltip=tooltip, bg=None)
@@ -396,12 +403,12 @@ class PluginBrowser(tk.Frame):
         # Fill the operation tab
         self.operationTree = PluginTree(opPanel, show="tree")
         self.operationTree.grid(row=1, column=0, sticky='news')
-
         yscrollbar = ttk.Scrollbar(opPanel, orient='vertical',
                                         command=self.operationTree.yview)
         yscrollbar.grid(row=1, column=1, sticky='news')
         self.operationTree.configure(yscrollcommand=yscrollbar.set)
         yscrollbar.configure(command=self.operationTree.yview)
+        self.operationTree.bind("<Button-1>", self.operationInformation, True)
 
     def _fillRightBottomOutputLogPanel(self, panel):
         # Fill the Output Log
@@ -417,7 +424,6 @@ class PluginBrowser(tk.Frame):
                                      PLUGIN_LOG_NAME)
         self.file_errors_path = os.path.join(os.environ['SCIPION_LOGS'],
                                         PLUGIN_ERRORS_LOG_NAME)
-
         self.fileLog = open(self.file_log_path, 'w', 0)
         self.fileLogErr = open(self.file_errors_path, 'w', 0)
         self.plug_log = ScipionLogger(self.file_log_path)
@@ -436,9 +442,9 @@ class PluginBrowser(tk.Frame):
             operation = Operation(self.tree.selectedItem, objType[0], tags[0],
                                   parent)
             self.operationList.insertOperation(operation)
-            if tags[0] in [UNCHECKED, UNINSTALL]:
+            if tags[0] in [PluginStates.UNCHECKED, PluginStates.UNINSTALL]:
                 self.tree.check_item(self.tree.selectedItem)
-                if objType[0] == PLUGIN:
+                if objType[0] == PluginStates.PLUGIN:
                     self.reloadInstalledPlugin(self.tree.selectedItem)
             else:
                 children = self.tree.get_children(self.tree.selectedItem)
@@ -448,7 +454,28 @@ class PluginBrowser(tk.Frame):
             self.showPluginInformation(self.tree.selectedItem)
             self.showOperationList()
 
-    def _applyOperations(self, e=None):
+    def _deleteSelectedOperation(self, e=None):
+        """
+        Delete a selected operation
+        """
+        if self.operationTree.selectedItem:
+            item = self.operationTree.selectedItem
+            operation = self.operationList.getOperationByName(item)
+            index = self.operationList.operationIndex(operation)
+            if index is not None:
+                self.operationList.removeOperation(index)
+                self.showOperationList()
+                if PluginStates.INSTALL in self.tree.item(item, 'tags'):
+                    self.tree.item(self.operationTree.selectedItem,
+                                   tags=(PluginStates.UNCHECKED,))
+                else:
+                    if operation.getObjType() == PluginStates.PLUGIN:
+                        self.reloadInstalledPlugin(item)
+                    else:
+                        self.reloadInstalledPlugin(self.tree.parent(item))
+                self.operationTree.selectedItem = None
+
+    def _applyOperations(self, operation=None):
         """
         Execute all operation
         """
@@ -459,7 +486,7 @@ class PluginBrowser(tk.Frame):
         sys.stderr = self.fileLogErr
         # Create two tabs where the log and errors will appears
         self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
-        for op in self.operationList.getOperations():
+        for op in self.operationList.getOperations(operation):
             item = op.getObjName()
             try:
                 self.operationTree.processing_item(item)
@@ -469,7 +496,7 @@ class PluginBrowser(tk.Frame):
                 self.Textlog.update()
                 self.operationTree.installed_item(item)
                 self.operationTree.update()
-                if op.getObjType() == PLUGIN:
+                if op.getObjType() == PluginStates.PLUGIN:
                     self.reloadInstalledPlugin(item)
                 else:
                     self.reloadInstalledPlugin(self.tree.parent(item))
@@ -502,6 +529,16 @@ class PluginBrowser(tk.Frame):
                 parent = self.tree.parent(item)
                 self.showPluginInformation(parent)
 
+    def operationInformation(self, event):
+        x, y, widget = event.x, event.y, event.widget
+        elem = widget.identify("element", x, y)
+        item = self.operationTree.selectedItem = self.operationTree.identify_row(y)
+        # if "image" in elem:
+        #     # execute a selected operation
+        #     operation = self.operationList.getOperationByName(item)
+        #     if operation is not None:
+        #         self._applyOperations(operation)
+
     def deleteOperation(self, operationName):
         """
         Delete an operation given the object name
@@ -520,11 +557,11 @@ class PluginBrowser(tk.Frame):
             self.operationTree.insert("", 'end', op.getObjName(),
                                       text=str(op.getObjStatus().upper() +
                                                ' --> ' + op.getObjName()),
-                                      tags=TO_INSTALL)
+                                      tags=PluginStates.TO_INSTALL)
         self.operationTree.update()
 
     def isPlugin(self, value):
-        return value == PLUGIN
+        return value == PluginStates.PLUGIN
 
     def showPluginInformation(self, pluginName):
         """Shows the information associated with a given plugin"""
@@ -558,9 +595,9 @@ class PluginBrowser(tk.Frame):
                         for binary, version in pVersions:
                             installed = pluginBinaryList._isInstalled(binary,
                                                                       version)
-                            tag = UNCHECKED
+                            tag = PluginStates.UNCHECKED
                             if installed:
-                                tag = CHECKED
+                                tag = PluginStates.CHECKED
                             binaryName = str(binary + '-' + version)
                             if binaryName in self.tree.get_children(pluginName):
                                 self.tree.item(binaryName, tags=(tag,))
@@ -568,11 +605,12 @@ class PluginBrowser(tk.Frame):
                                 self.tree.insert(pluginName, "end", binaryName,
                                                  text=binaryName, tags=tag,
                                                  values='binary')
-                self.tree.item(pluginName, tags=(CHECKED,))
-
+                self.tree.item(pluginName, tags=(PluginStates.CHECKED,))
             else:
-                if UNINSTALL in self.tree.item(pluginName, 'tags'):
-                    self.tree.item(pluginName, tags=(UNCHECKED,))
+                if PluginStates.UNINSTALL in self.tree.item(pluginName, 'tags'):
+                    self.tree.item(pluginName, tags=(PluginStates.UNCHECKED,))
+        else:
+            self.tree.item(pluginName, tags=(PluginStates.UNCHECKED,))
 
     def loadPlugins(self):
         """
@@ -582,12 +620,12 @@ class PluginBrowser(tk.Frame):
         for pluginObj in pluginDict:
             plugin = pluginDict.get(pluginObj, None)
             if plugin is not None:
-                tag = UNCHECKED
+                tag = PluginStates.UNCHECKED
                 if plugin.isInstalled():
                     # Insert the plugin name in the tree
-                    tag = CHECKED
+                    tag = PluginStates.CHECKED
                     self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
-                                     values=PLUGIN)
+                                     values=PluginStates.PLUGIN)
                     # Insert all binaries of plugin on the tree
                     pluginBinaryList = plugin.getInstallenv()
                     if pluginBinaryList is not None:
@@ -598,16 +636,16 @@ class PluginBrowser(tk.Frame):
                             for binary, version in pVersions:
                                 installed = pluginBinaryList._isInstalled(binary,
                                                                      version)
-                                tag = UNCHECKED
+                                tag = PluginStates.UNCHECKED
                                 if installed:
-                                    tag = CHECKED
+                                    tag = PluginStates.CHECKED
                                 binaryName = str(binary + '-' + version)
                                 self.tree.insert(pluginObj, "end", binaryName,
                                                  text=binaryName, tags=tag,
-                                                 values=BINARY)
+                                                 values=PluginStates.BINARY)
                 else:
                     self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
-                                     values=PLUGIN)
+                                     values=PluginStates.PLUGIN)
 
 
 class PluginManagerWindow(gui.Window):
@@ -620,9 +658,8 @@ class PluginManagerWindow(gui.Window):
         gui.Window.__init__(self, title, master, **kwargs)
 
         menu = MenuConfig()
-
         fileMenu = menu.addSubMenu('File')
-        # #fileMenu.addSubMenu('Browse Plugin', 'browse', icon='fa-folder-open.png')
+        # fileMenu.addSubMenu('Browse Plugin', 'browse', icon='fa-folder-open.png')
         fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
@@ -642,9 +679,8 @@ class PluginManagerWindow(gui.Window):
 
 class PluginHelp(gui.Window):
     """
-         Windows to hold a plugin manager help
-        """
-
+    Windows to hold a plugin manager help
+    """
     def __init__(self, title, master=None, **kwargs):
         if 'minsize' not in kwargs:
             kwargs['minsize'] = (500, 300)
@@ -683,18 +719,18 @@ class PluginHelp(gui.Window):
         btn = Label(helpFrame, text='Plugin/Binary TO UNINSTALL')
         btn.grid(row=3, column=1, sticky='sw', padx=0, pady=5)
 
-        photo = PhotoImage(file=gui.findResource(Icon.ACTION_EXECUTE))
-        btn = Label(helpFrame, image=photo)
-        btn.photo = photo
-        btn.grid(row=4, column=0, sticky='sw', padx=10, pady=5)
-        btn = Label(helpFrame, text='Apply the selected operations')
-        btn.grid(row=4, column=1, sticky='sw', padx=0, pady=5)
-
         photo = PhotoImage(file=gui.findResource(Icon.TO_INSTALL))
         btn = Label(helpFrame, image=photo)
         btn.photo = photo
+        btn.grid(row=4, column=0, sticky='sw', padx=10, pady=5)
+        btn = Label(helpFrame, text='Execute the selected operations')
+        btn.grid(row=4, column=1, sticky='sw', padx=0, pady=5)
+
+        photo = PhotoImage(file=gui.findResource(Icon.DELETE_OPERATION))
+        btn = Label(helpFrame, image=photo)
+        btn.photo = photo
         btn.grid(row=5, column=0, sticky='sw', padx=10, pady=5)
-        btn = Label(helpFrame, text='Operation waiting to be executed')
+        btn = Label(helpFrame, text='Delete a selected operation')
         btn.grid(row=5, column=1, sticky='sw', padx=0, pady=5)
 
         btn = Label(helpFrame, text='Right-Click')

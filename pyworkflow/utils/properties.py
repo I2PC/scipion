@@ -346,6 +346,20 @@ Do you really want to continue?'
     EXECUTE_PLUGINS_MANAGER_OPERATION = 'Execute all selected operations'
     DELETE_SELECTED_OPERATION = 'Delete a selected operation'
 
+
+# PLUGIN/BINARY STATES
+class PluginStates():
+    PLUGIN = 'plugin'
+    BINARY = 'binary'
+    UNCHECKED = 'unchecked'
+    CHECKED = 'checked'
+    INSTALL = 'install'
+    UNINSTALL = 'uninstall'
+    TO_INSTALL = 'to_install'
+    INSTALLED = 'installed'
+    PRECESSING = 'processing'
+    FAILURE = 'failure'
+
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
     # Project Content Template
