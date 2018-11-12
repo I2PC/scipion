@@ -59,7 +59,7 @@ class ProtExportEMDB(EMProtocol):
                       pointerClass='Volume',
                       help='This volume will be exported using mrc format')
         form.addParam('exportFSC', params.PointerParam, label="FSC to export", important=True,
-                      pointerClass='FSC',
+                      pointerClass='FSC, SetOfFSCs',
                       help='This FSC will be exported using XML emdb format')
         form.addParam('filesPath', params.PathParam, important=True,
                       label="Export to directory",
@@ -79,8 +79,12 @@ class ProtExportEMDB(EMProtocol):
         ih.convert(self.exportVolume.get().getLocation(), self.getFnPath())
 
     def exportFSCStep(self):
+        exportFSC = self.exportFSC.get()
 
-        x,y = self.exportFSC.get().getData()
+        if type(exportFSC) is SetOfFSCs:
+            exportFSC=exportFSC.getFirstItem()
+
+        x,y = exportFSC.getData()
         fo = open(self.getFnPath("fsc"), "w")
         fo.write('<fsc title="FSC(%s)" xaxis="Resolution(A-1)" '
                  'yaxis="Correlation Coefficient">\n' % self._getFileName('volume'))
