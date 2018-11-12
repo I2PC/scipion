@@ -32,6 +32,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.data import FSC, SetOfFSCs
 
 
 class ProtExportEMDB(EMProtocol):
@@ -40,16 +41,10 @@ class ProtExportEMDB(EMProtocol):
     _label = 'export emdb'
     _program = ""
     _lastUpdateVersion = VERSION_1_2
+    VOLUMENAME = 'volume.mrc'
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
-
-    def _createFileNamesTemplates(self):
-        myDict = {
-                  'volume' : 'final_volume.mrc',
-                  'fsc' : 'final_fsc.xml'
-                  }
-        self._updateFilenamesDict(myDict)
 
         #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -67,35 +62,48 @@ class ProtExportEMDB(EMProtocol):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._createFileNamesTemplates()
         self._insertFunctionStep('exportVolumeStep')
         self._insertFunctionStep('exportFSCStep')
 
     #--------------------------- STEPS functions --------------------------------------------
 
     def exportVolumeStep(self):
-
+        #create directory if needed
+        dirName = self.filesPath.get()
+        try:
+            os.makedirs(dirName)
+        except OSError:
+            if not os.path.isdir(dirName):
+                raise
         ih = ImageHandler()
-        ih.convert(self.exportVolume.get().getLocation(), self.getFnPath())
+        ih.convert(self.exportVolume.get().getLocation(),
+                   os.path.join(dirName, self.VOLUMENAME))
 
     def exportFSCStep(self):
         exportFSC = self.exportFSC.get()
+        if isinstance(self.exportFSC.get(), FSC):
+            fscSet = self._createSetOfFSCs()
+            fscSet.append(exportFSC)
+        else:
+            fscSet = exportFSC
 
-        if type(exportFSC) is SetOfFSCs:
-            exportFSC=exportFSC.getFirstItem()
+        dirName = self.filesPath.get()
+        for i, exportFSC in enumerate(fscSet):
 
-        x,y = exportFSC.getData()
-        fo = open(self.getFnPath("fsc"), "w")
-        fo.write('<fsc title="FSC(%s)" xaxis="Resolution(A-1)" '
-                 'yaxis="Correlation Coefficient">\n' % self._getFileName('volume'))
-        for i in range(len(x)):
-            fo.write("<coordinate>\n")
-            fo.write("<x>%f</x>\n"%x[i])
-            fo.write("<y>%f</y>\n" % y[i])
-            fo.write("</coordinate>\n")
+            x,y = exportFSC.getData()
+            fnFSC = os.path.join(dirName, "fsc_%02d.xml" % i)
+            fo = open(fnFSC, "w")
+            fo.write('<fsc title="FSC(%s)" xaxis="Resolution(A-1)" '
+                     'yaxis="Correlation Coefficient">\n' %
+                     os.path.join(dirName, self.VOLUMENAME))
+            for i in range(len(x)):
+                fo.write("<coordinate>\n")
+                fo.write("<x>%f</x>\n"%x[i])
+                fo.write("<y>%f</y>\n" % y[i])
+                fo.write("</coordinate>\n")
 
-        fo.write("</fsc>\n")
-        fo.close()
+            fo.write("</fsc>\n")
+            fo.close()
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -115,4 +123,5 @@ class ProtExportEMDB(EMProtocol):
 #--------------------------- UTILS functions ---------------------------------------------------
 
     def getFnPath(self, label='volume'):
-        return os.path.join(self.filesPath.get(), self._getFileName(label))
+        return os.path.join(self.filesPath.get(),
+                            self._getFileName(label))
