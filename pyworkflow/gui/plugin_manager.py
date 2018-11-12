@@ -38,7 +38,7 @@ PLUGIN_LOG_NAME = 'Plugin.log'
 PLUGIN_ERRORS_LOG_NAME = 'Plugin.err'
 
 pluginRepo = PluginRepository()
-pluginDict = pluginRepo.getPlugins(getPipData=True)
+pluginDict = None
 
 
 class PluginTree(ttk.Treeview):
@@ -483,6 +483,8 @@ class PluginBrowser(tk.Frame):
         """
         Execute the operation list
         """
+        # Create two tabs where the log and errors will appears
+        self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
         self._applyOperations(None)
         self.operationList.clearOperations()
 
@@ -496,18 +498,16 @@ class PluginBrowser(tk.Frame):
         oldstderr = sys.stderr
         sys.stdout = self.fileLog
         sys.stderr = self.fileLogErr
-        # Create two tabs where the log and errors will appears
-        self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
         for op in self.operationList.getOperations(operation):
             item = op.getObjName()
             try:
                 self.operationTree.processing_item(item)
                 self.operationTree.update()
                 op.runOperation()
-                self.Textlog.refreshAll(goEnd=True)
-                self.Textlog.update()
                 self.operationTree.installed_item(item)
                 self.operationTree.update()
+                self.Textlog.refreshAll(goEnd=True)
+                self.Textlog.update()
                 if op.getObjType() == PluginStates.PLUGIN:
                     self.reloadInstalledPlugin(item)
                 else:
@@ -640,6 +640,9 @@ class PluginBrowser(tk.Frame):
         """
         Load all plugins and fill the tree view widget
         """
+        global pluginDict
+        if pluginDict is None:
+            pluginDict = pluginRepo.getPlugins(getPipData=True)
         self.tree.delete(*self.tree.get_children())
         for pluginObj in pluginDict:
             plugin = pluginDict.get(pluginObj, None)
