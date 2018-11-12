@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from Tkinter import *
+import webbrowser
 from pyworkflow.config import MenuConfig
 from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.gui.text import TextFileViewer
@@ -216,7 +217,7 @@ class OperationList:
                 return i
         return index
 
-    def getOperations(self, op=None):
+    def getOperations(self, op):
         """
         Return the operation List. If the operation is not None return a list
         with only the operation op
@@ -286,7 +287,8 @@ class PluginBrowser(tk.Frame):
         rightPanel.grid(row=0, column=1, padx=0, pady=0, sticky='news')
 
         # Top Panel
-        topPanel = ttk.Frame(rightPanel)  # Panel to put the plugin information
+        # Panel to put the plugin information
+        topPanel = ttk.Frame(rightPanel, cursor='hand2')
         topPanel.pack(side=TOP, fill=BOTH, expand=Y)
         self.dataCols = ('Name                      ',
                          'Version            ',
@@ -310,6 +312,8 @@ class PluginBrowser(tk.Frame):
         xsb.configure(command=self.topPanelTree.xview)
         topPanel.rowconfigure(0, weight=1)
         topPanel.columnconfigure(0, weight=1)
+        self.topPanelTree.bind("<Button-1>", self.linkToWebSite, True)
+
 
         # Bottom Panel
         # This section show the plugin operation and a console
@@ -344,7 +348,7 @@ class PluginBrowser(tk.Frame):
         self._col = 0
         self._addButton(frame, '', Icon.TO_INSTALL,
                         Message.EXECUTE_PLUGINS_MANAGER_OPERATION, 'normal',
-                        self._applyOperations)
+                        self._applyAllOperations)
 
         self._addButton(frame, '', Icon.DELETE_OPERATION,
                         Message.DELETE_SELECTED_OPERATION, 'normal',
@@ -475,9 +479,17 @@ class PluginBrowser(tk.Frame):
                         self.reloadInstalledPlugin(self.tree.parent(item))
                 self.operationTree.selectedItem = None
 
+    def _applyAllOperations(self, e=None):
+        """
+        Execute the operation list
+        """
+        self._applyOperations(None)
+        self.operationList.clearOperations()
+
     def _applyOperations(self, operation=None):
         """
-        Execute all operation
+        Execute one operation. If operation is None, then execute the operation
+        list
         """
         # Take the standard system out and errors
         oldstdout = sys.stdout
@@ -517,6 +529,18 @@ class PluginBrowser(tk.Frame):
         sys.stdout = oldstdout
         sys.stderr = oldstderr
 
+    def linkToWebSite(self, event):
+        """
+        Load the plugin url
+        """
+        x, y, widget = event.x, event.y, event.widget
+        item = self.topPanelTree.selectedItem = self.topPanelTree.identify_row(y)
+        if len(self.topPanelTree.selectedItem):
+            browser = webbrowser.get()
+            url = self.topPanelTree.item(item, 'value')[3]
+            if url:
+                browser.open(url)
+
     def objectInformation(self, event):
         """Show the plugin or binary information"""
         x, y, widget = event.x, event.y, event.widget
@@ -543,7 +567,7 @@ class PluginBrowser(tk.Frame):
         """
         Delete an operation given the object name
         """
-        for op in self.operationList.getOperations():
+        for op in self.operationList.getOperations(None):
             if operationName == op.getObjName():
                 self.operationList.insertOperation(op)
 
@@ -553,7 +577,7 @@ class PluginBrowser(tk.Frame):
         :return:
         """
         self.operationTree.delete(*self.operationTree.get_children())
-        for op in self.operationList.getOperations():
+        for op in self.operationList.getOperations(None):
             self.operationTree.insert("", 'end', op.getObjName(),
                                       text=str(op.getObjStatus().upper() +
                                                ' --> ' + op.getObjName()),
