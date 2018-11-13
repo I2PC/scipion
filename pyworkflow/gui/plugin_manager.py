@@ -288,32 +288,10 @@ class PluginBrowser(tk.Frame):
 
         # Top Panel
         # Panel to put the plugin information
-        topPanel = ttk.Frame(rightPanel, cursor='hand2')
+        topPanel = ttk.Frame(rightPanel)
         topPanel.pack(side=TOP, fill=BOTH, expand=Y)
-        self.dataCols = ('Name                      ',
-                         'Version            ',
-                         'Description               ',
-                         'Url                       ',
-                         'Author                    ')
-        self.topPanelTree = ttk.Treeview(topPanel, columns=self.dataCols,
-                                         show='headings')
-        self.topPanelTree.grid(row=0, column=0, sticky='news')
-
-        # configure column headings
-        for c in self.dataCols:
-            self.topPanelTree.heading(c, text=c.title())
-            self.topPanelTree.column(c, width=tkFont.Font().measure(c.title()))
-
-        # configure horizontal scroollbar
-        xsb = ttk.Scrollbar(topPanel, orient='horizontal',
-                                        command=self.topPanelTree.xview)
-        xsb.grid(row=1, column=0, sticky='news')
-        self.topPanelTree.configure(yscrollcommand=xsb.set)
-        xsb.configure(command=self.topPanelTree.xview)
-        topPanel.rowconfigure(0, weight=1)
-        topPanel.columnconfigure(0, weight=1)
-        self.topPanelTree.bind("<Button-1>", self.linkToWebSite, True)
-
+        topPanel.configure(cursor='hand1')
+        self._createRightTopPanel(topPanel)
 
         # Bottom Panel
         # This section show the plugin operation and a console
@@ -386,6 +364,28 @@ class PluginBrowser(tk.Frame):
 
         # Load all plugins and fill the tree view
         self.loadPlugins()
+
+    def _createRightTopPanel(self, topPanel):
+        """
+        Create a right top panel
+        """
+        self.topPanelTree = ttk.Treeview(topPanel, show='tree', cursor='hand2')
+        self.topPanelTree.grid(row=0, column=0, sticky='news')
+
+        # configure vertical scroollbar
+        ysb = ttk.Scrollbar(topPanel, orient='vertical',
+                            command=self.topPanelTree.yview)
+        ysb.grid(row=0, column=1, sticky='news')
+        self.topPanelTree.configure(yscrollcommand=ysb.set)
+        ysb.configure(command=self.topPanelTree.yview)
+        xsb = ttk.Scrollbar(topPanel, orient='horizontal',
+                            command=self.topPanelTree.yview)
+        xsb.grid(row=1, column=0, sticky='news')
+        self.topPanelTree.configure(xscrollcommand=xsb.set)
+        xsb.configure(command=self.topPanelTree.xview)
+        topPanel.rowconfigure(0, weight=1)
+        topPanel.columnconfigure(0, weight=1)
+        self.topPanelTree.bind("<Button-1>", self.linkToWebSite, True)
 
     def _fillRightBottomOperationsPanel(self, panel):
         """
@@ -535,11 +535,10 @@ class PluginBrowser(tk.Frame):
         """
         x, y, widget = event.x, event.y, event.widget
         item = self.topPanelTree.selectedItem = self.topPanelTree.identify_row(y)
-        if len(self.topPanelTree.selectedItem):
+        if len(self.topPanelTree.selectedItem) and \
+                self.topPanelTree.item(item, 'value')[0] == 'pluginUrl':
             browser = webbrowser.get()
-            url = self.topPanelTree.item(item, 'value')[3]
-            if url:
-                browser.open(url)
+            browser.open(item)
 
     def objectInformation(self, event):
         """Show the plugin or binary information"""
@@ -591,16 +590,30 @@ class PluginBrowser(tk.Frame):
         """Shows the information associated with a given plugin"""
         plugin =  pluginDict.get(pluginName, None)
         if plugin is not None:
-            pluginInfo = [(plugin.getPipName(), plugin.getPipVersion(),
-                           plugin.getSummary(), plugin.getHomePage(),
-                           plugin.getAuthor())]
+            pluginName = plugin.getPipName()
+            pluginVersion = plugin.getPipVersion()
+            pluginDescription = plugin.getSummary()
+            pluginUrl = plugin.getHomePage()
+            pluginAuthor = plugin.getAuthor()
             self.topPanelTree.delete(*self.topPanelTree.get_children())
-            self.topPanelTree.insert('', 'end', values=pluginInfo[0])
 
-            for idx, val in enumerate(pluginInfo):
-                iwidth = tkFont.Font().measure(self.dataCols[idx])
-                if self.topPanelTree.column(self.dataCols[idx], 'width') <= iwidth:
-                    self.topPanelTree.column(self.dataCols[idx], width=iwidth)
+            self.topPanelTree.tag_configure('pluginUrl', foreground='blue')
+
+            self.topPanelTree.insert('', 'end', pluginName,
+                                     text='Name:          ' + pluginName,
+                                     values='pluginName')
+            self.topPanelTree.insert('', 'end', pluginVersion,
+                                     text='Version:        ' + pluginVersion,
+                                     values='pluginVersion')
+            self.topPanelTree.insert('', 'end', pluginDescription,
+                                     text='Description:  ' + pluginDescription,
+                                     values='pluginDescription')
+            self.topPanelTree.insert('', 'end', pluginUrl,
+                                     text='URL:             ' + pluginUrl,
+                                     values='pluginUrl', tags=('pluginUrl',))
+            self.topPanelTree.insert('', 'end', pluginAuthor,
+                                     text='Author:         ' + pluginAuthor,
+                                     values='pluginAuthor')
 
     def reloadInstalledPlugin(self, pluginName):
         """
@@ -674,14 +687,13 @@ class PluginBrowser(tk.Frame):
                     self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
                                      values=PluginStates.PLUGIN)
 
-
 class PluginManagerWindow(gui.Window):
     """
      Windows to hold a plugin manager frame inside.
     """
     def __init__(self, title, master=None, **kwargs):
         if 'minsize' not in kwargs:
-            kwargs['minsize'] = (300, 300)
+            kwargs['minsize'] = (900, 300)
         gui.Window.__init__(self, title, master, **kwargs)
 
         menu = MenuConfig()
