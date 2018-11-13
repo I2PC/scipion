@@ -329,7 +329,7 @@ class PluginBrowser(tk.Frame):
                         self._applyAllOperations)
 
         self._addButton(frame, '', Icon.DELETE_OPERATION,
-                        Message.DELETE_SELECTED_OPERATION, 'normal',
+                        Message.CANCEL_SELECTED_OPERATION, 'normal',
                         self._deleteSelectedOperation)
 
     def _addButton(self, frame, text, image, tooltip, state, command):
@@ -358,9 +358,7 @@ class PluginBrowser(tk.Frame):
         self.yscrollbar.configure(command=self.tree.yview)
 
         # check / uncheck boxes(plugin or binary) on right click
-        self.tree.bind("<Button-3>", self._box_rightClick, True)
-        # show the plugin or binary information on click
-        self.tree.bind("<Button-1>", self.objectInformation, True)
+        self.tree.bind("<Button-1>", self._onPluginTreeClick, True)
 
         # Load all plugins and fill the tree view
         self.loadPlugins()
@@ -433,13 +431,13 @@ class PluginBrowser(tk.Frame):
         self.plug_log = ScipionLogger(self.file_log_path)
         self.plug_errors_log = ScipionLogger(self.file_errors_path)
 
-    def _box_rightClick(self, event):
+    def _onPluginTreeClick(self, event):
         """ check or uncheck a plugin or binary box when clicked """
         x, y, widget = event.x, event.y, event.widget
         elem = widget.identify("element", x, y)
+        self.tree.selectedItem = self.tree.identify_row(y)
         if "image" in elem:
             # a box was clicked
-            self.tree.selectedItem = self.tree.identify_row(y)
             tags = self.tree.item(self.tree.selectedItem, "tags")
             objType = self.tree.item(self.tree.selectedItem, "value")
             parent = self.tree.parent(self.tree.selectedItem)
@@ -457,6 +455,14 @@ class PluginBrowser(tk.Frame):
                 self.tree.uncheck_item(self.tree.selectedItem)
             self.showPluginInformation(self.tree.selectedItem)
             self.showOperationList()
+        else:
+            if self.tree.selectedItem is not None:
+                if self.isPlugin(self.tree.item(self.tree.selectedItem,
+                                                "values")[0]):
+                    self.showPluginInformation(self.tree.selectedItem)
+                else:
+                    parent = self.tree.parent(self.tree.selectedItem)
+                    self.showPluginInformation(parent)
 
     def _deleteSelectedOperation(self, e=None):
         """
@@ -539,18 +545,6 @@ class PluginBrowser(tk.Frame):
                 self.topPanelTree.item(item, 'value')[0] == 'pluginUrl':
             browser = webbrowser.get()
             browser.open(item)
-
-    def objectInformation(self, event):
-        """Show the plugin or binary information"""
-        x, y, widget = event.x, event.y, event.widget
-        item = self.tree.selectedItem = self.tree.identify_row(y)
-        if self.tree.selectedItem is not None:
-            if self.isPlugin(self.tree.item(self.tree.selectedItem,
-                                            "values")[0]):
-                self.showPluginInformation(item)
-            else:
-                parent = self.tree.parent(item)
-                self.showPluginInformation(parent)
 
     def operationInformation(self, event):
         x, y, widget = event.x, event.y, event.widget
@@ -687,6 +681,7 @@ class PluginBrowser(tk.Frame):
                     self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
                                      values=PluginStates.PLUGIN)
 
+
 class PluginManagerWindow(gui.Window):
     """
      Windows to hold a plugin manager frame inside.
@@ -769,14 +764,8 @@ class PluginHelp(gui.Window):
         btn = Label(helpFrame, image=photo)
         btn.photo = photo
         btn.grid(row=5, column=0, sticky='sw', padx=10, pady=5)
-        btn = Label(helpFrame, text='Delete a selected operation')
+        btn = Label(helpFrame, text='Cancel a selected operation')
         btn.grid(row=5, column=1, sticky='sw', padx=0, pady=5)
-
-        btn = Label(helpFrame, text='Right-Click')
-        btn.grid(row=6, column=0, sticky='sw', padx=10, pady=5)
-        btn = Label(helpFrame, text='Change or Undo the status of the '
-                                    'plugins/binaries in the tree view')
-        btn.grid(row=6, column=1, sticky='sw', padx=0, pady=5)
 
 
 class PluginManager(PluginManagerWindow):

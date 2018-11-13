@@ -344,7 +344,7 @@ Do you really want to continue?'
                       'Thus, it can take a while depending on the size of the project.\n' \
                       'Do you want to continue?'
     EXECUTE_PLUGINS_MANAGER_OPERATION = 'Execute all selected operations'
-    DELETE_SELECTED_OPERATION = 'Delete a selected operation'
+    CANCEL_SELECTED_OPERATION = 'Cancel a selected operation'
 
 
 # PLUGIN/BINARY STATES
