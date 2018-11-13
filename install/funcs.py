@@ -634,9 +634,10 @@ class Environment:
                    if kwargs.get('updateCuda', False) else None)
 
         # Set environment
-        variables = kwargs.get('vars', [])
-        for var, value in variables:
-            environ.update({var: value})
+        variables = kwargs.get('vars', {})
+        if variables:
+            environ = {} if environ is None else environ
+            environ.update(variables)
 
 
         # We reuse the download and untar from the addLibrary method
