@@ -26,6 +26,7 @@
 
 from Tkinter import *
 import webbrowser
+import threading
 from pyworkflow.config import MenuConfig
 from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.gui.text import TextFileViewer
@@ -326,12 +327,12 @@ class PluginBrowser(tk.Frame):
     def _fillToolbar(self, frame):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
-        self._addButton(frame, '', Icon.TO_INSTALL,
-                        Message.EXECUTE_PLUGINS_MANAGER_OPERATION, 'normal',
-                        self._applyAllOperations)
-        self._addButton(frame, '', Icon.DELETE_OPERATION,
-                        Message.CANCEL_SELECTED_OPERATION, 'normal',
-                        self._deleteSelectedOperation)
+        self.executeOpsBtn = self._addButton(frame, '', Icon.TO_INSTALL,
+                                       Message.EXECUTE_PLUGINS_MANAGER_OPERATION,
+                                          'disable', self._applyAllOperations)
+        self.cancelOpsBtn = self._addButton(frame, '', Icon.DELETE_OPERATION,
+                              Message.CANCEL_SELECTED_OPERATION, 'disable',
+                                         self._deleteSelectedOperation)
 
     def _addButton(self, frame, text, image, tooltip, state, command):
         btn = IconButton(frame, text, image, command=command,
@@ -343,6 +344,7 @@ class PluginBrowser(tk.Frame):
         btn.grid(row=0, column=self._col, sticky='nw',
                  padx=3, pady=7)
         self._col += 1
+        return btn
 
     def _fillLeftPanel(self, leftFrame):
         """
@@ -445,8 +447,9 @@ class PluginBrowser(tk.Frame):
             operation = Operation(self.tree.selectedItem, objType[0], tags[0],
                                   parent)
             self.operationList.insertOperation(operation)
-            if tags[0] in [PluginStates.UNCHECKED, PluginStates.UNINSTALL]:
+            if tags[0] == PluginStates.UNCHECKED:
                 self.tree.check_item(self.tree.selectedItem)
+            elif tags[0] == PluginStates.UNINSTALL:
                 if objType[0] == PluginStates.PLUGIN:
                     self.reloadInstalledPlugin(self.tree.selectedItem)
             else:
@@ -464,6 +467,10 @@ class PluginBrowser(tk.Frame):
                 else:
                     parent = self.tree.parent(self.tree.selectedItem)
                     self.showPluginInformation(parent)
+        if len(self.operationList.getOperations(None)):
+            self.executeOpsBtn.config(state='normal')
+        else:
+            self.executeOpsBtn.config(state='disable')
 
     def _deleteSelectedOperation(self, e=None):
         """
@@ -485,15 +492,22 @@ class PluginBrowser(tk.Frame):
                     else:
                         self.reloadInstalledPlugin(self.tree.parent(item))
                 self.operationTree.selectedItem = None
+                self.cancelOpsBtn.config(state='disable')
+                if not len(self.operationList.getOperations(None)):
+                    self.executeOpsBtn.config(state='disable')
 
-    def _applyAllOperations(self, e=None):
+    def _applyAllOperations(self, event=None):
         """
         Execute the operation list
         """
         # Create two tabs where the log and errors will appears
+        self.executeOpsBtn.config(state='disable')
+        self.cancelOpsBtn.config(state='disable')
         self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
-        self._applyOperations(None)
-        self.operationList.clearOperations()
+        if event is not None:
+            threadOp = threading.Thread(target=self._applyOperations,
+                                        args=(None,))
+            threadOp.start()
 
     def _applyOperations(self, operation=None):
         """
@@ -515,10 +529,13 @@ class PluginBrowser(tk.Frame):
                 self.operationTree.update()
                 self.Textlog.refreshAll(goEnd=True)
                 self.Textlog.update()
-                if op.getObjType() == PluginStates.PLUGIN:
-                    self.reloadInstalledPlugin(item)
+                if op.getObjStatus() == PluginStates.INSTALL:
+                    if op.getObjType() == PluginStates.PLUGIN:
+                        self.reloadInstalledPlugin(item)
+                    else:
+                        self.reloadInstalledPlugin(self.tree.parent(item))
                 else:
-                    self.reloadInstalledPlugin(self.tree.parent(item))
+                    self.tree.uncheck_item(item)
             except AssertionError as err:
                 self.operationTree.failure_item(item)
                 self.tree.uncheck_item(item)
@@ -552,6 +569,8 @@ class PluginBrowser(tk.Frame):
         x, y, widget = event.x, event.y, event.widget
         elem = widget.identify("element", x, y)
         item = self.operationTree.selectedItem = self.operationTree.identify_row(y)
+        if len(item) and len(self.operationList.getOperations(None)):
+            self.cancelOpsBtn.config(state='normal')
 
     def deleteOperation(self, operationName):
         """
