@@ -45,9 +45,7 @@ class PluginTree(ttk.Treeview):
     """
         Treeview widget with checkboxes left of each item.
         The checkboxes are done via the image attribute of the item, so to keep
-        the checkbox, you cannot add an image to the item.
-    """
-
+        the checkbox, you cannot add an image to the item. """
     def __init__(self, master=None, **kw):
         ttk.Treeview.__init__(self, master, **kw)
 
@@ -182,14 +180,15 @@ class Operation:
 
 class OperationList:
     """
-    This class contain a plugins/binaries operation list and allow execute it
+    This class contain a plugins/binaries operations list and allow execute it
     """
     def __init__(self):
         self.operationList = []
 
     def insertOperation(self, operation):
         """
-        This method insert into the list a given operation
+        This method insert into the list a given operation. If the operation was
+        inserted previously is eliminated
         """
         index = self.operationIndex(operation)
         if index is not None:
@@ -228,6 +227,9 @@ class OperationList:
             return [self.getOperationByName(op.getObjName())]
 
     def getOperationByName(self, opName):
+        """
+        Return an operation that match with a given name
+        """
         operation = [op for op in self.operationList
                      if op.getObjName() == opName]
         if len(operation):
@@ -327,7 +329,6 @@ class PluginBrowser(tk.Frame):
         self._addButton(frame, '', Icon.TO_INSTALL,
                         Message.EXECUTE_PLUGINS_MANAGER_OPERATION, 'normal',
                         self._applyAllOperations)
-
         self._addButton(frame, '', Icon.DELETE_OPERATION,
                         Message.CANCEL_SELECTED_OPERATION, 'normal',
                         self._deleteSelectedOperation)
@@ -387,9 +388,7 @@ class PluginBrowser(tk.Frame):
 
     def _fillRightBottomOperationsPanel(self, panel):
         """
-        Create a Operation Tab
-        :param panel:
-        :return:
+        Create the Operations Tab
         """
         gui.configureWeigths(panel)
         # Define a Tool Bar
@@ -413,6 +412,8 @@ class PluginBrowser(tk.Frame):
         self.operationTree.bind("<Button-1>", self.operationInformation, True)
 
     def _fillRightBottomOutputLogPanel(self, panel):
+        """ Create and fill the output log with two tabs(plugin.log and
+        plugin.err)"""
         # Fill the Output Log
         gui.configureWeigths(panel)
         self.terminal = tk.Frame(panel)
@@ -547,14 +548,10 @@ class PluginBrowser(tk.Frame):
             browser.open(item)
 
     def operationInformation(self, event):
+        """Update the operationTree selected item"""
         x, y, widget = event.x, event.y, event.widget
         elem = widget.identify("element", x, y)
         item = self.operationTree.selectedItem = self.operationTree.identify_row(y)
-        # if "image" in elem:
-        #     # execute a selected operation
-        #     operation = self.operationList.getOperationByName(item)
-        #     if operation is not None:
-        #         self._applyOperations(operation)
 
     def deleteOperation(self, operationName):
         """
@@ -693,7 +690,6 @@ class PluginManagerWindow(gui.Window):
 
         menu = MenuConfig()
         fileMenu = menu.addSubMenu('File')
-        # fileMenu.addSubMenu('Browse Plugin', 'browse', icon='fa-folder-open.png')
         fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
