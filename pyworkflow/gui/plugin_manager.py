@@ -645,17 +645,17 @@ class PluginBrowser(tk.Frame):
         Load all plugins and fill the tree view widget
         """
         global pluginDict
-        if pluginDict is None:
-            pluginDict = pluginRepo.getPlugins(getPipData=True)
+        pluginDict = pluginRepo.getPlugins(getPipData=True)
+        pluginList = sorted(pluginDict.keys(), reverse=True)
         self.tree.delete(*self.tree.get_children())
-        for pluginObj in pluginDict:
-            plugin = pluginDict.get(pluginObj, None)
+        for pluginName in pluginList:
+            plugin = pluginDict.get(pluginName, None)
             if plugin is not None:
                 tag = PluginStates.UNCHECKED
                 if plugin.isInstalled():
                     # Insert the plugin name in the tree
                     tag = PluginStates.CHECKED
-                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
+                    self.tree.insert("", 0, pluginName, text=pluginName, tags=tag,
                                      values=PluginStates.PLUGIN)
                     # Insert all binaries of plugin on the tree
                     pluginBinaryList = plugin.getInstallenv()
@@ -671,11 +671,11 @@ class PluginBrowser(tk.Frame):
                                 if installed:
                                     tag = PluginStates.CHECKED
                                 binaryName = str(binary + '-' + version)
-                                self.tree.insert(pluginObj, "end", binaryName,
+                                self.tree.insert(pluginName, "end", binaryName,
                                                  text=binaryName, tags=tag,
                                                  values=PluginStates.BINARY)
                 else:
-                    self.tree.insert("", 0, pluginObj, text=pluginObj, tags=tag,
+                    self.tree.insert("", 0, pluginName, text=pluginName, tags=tag,
                                      values=PluginStates.PLUGIN)
 
 
