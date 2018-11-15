@@ -668,10 +668,10 @@ class PluginBrowser(tk.Frame):
         pluginList = sorted(pluginDict.keys(), reverse=True)
         self.tree.delete(*self.tree.get_children())
         for pluginName in pluginList:
-            plugin = pluginDict.get(pluginName, None)
+            plugin = PluginInfo(pluginName, pluginName, remote=False)
             if plugin is not None:
                 tag = PluginStates.UNCHECKED
-                if plugin.isInstalled():
+                if plugin._getPlugin():
                     # Insert the plugin name in the tree
                     tag = PluginStates.CHECKED
                     self.tree.insert("", 0, pluginName, text=pluginName, tags=tag,
