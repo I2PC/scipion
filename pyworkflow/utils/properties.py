@@ -396,7 +396,10 @@ class Icon():
     ROOT = 'root.png'
     ROCKET = 'fa-rocket.png'
 
-    SCIPION_ICON = 'scipion_bn_icon.png'
+    SCIPION_ICON = 'scipion_icon.png'
+    SCIPION_ICON_PROJ = 'scipion_icon.png'  # 'scipion_icon_proj.png'
+    SCIPION_ICON_PROJS = 'scipion_icon.png'  # 'scipion_icon_projs.png'
+    SCIPION_ICON_PROT = 'scipion_icon.png'  # 'scipion_icon_prot.png'
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
