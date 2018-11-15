@@ -543,8 +543,8 @@ class PluginBrowser(tk.Frame):
                 strErr = str('Error executing the operation: ' +
                              op.getObjStatus() + ' ' +
                              op.getObjName())
-                sys.stdout.write(redStr(strErr))
-                sys.stderr.write(redStr(strErr))
+                self.plug_log.info(redStr(strErr), False)
+                self.plug_errors_log.error(redStr(strErr), False)
                 self.Textlog.refreshAll(goEnd=True)
                 self.Textlog.update()
         self.operationList.clearOperations()
