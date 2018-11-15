@@ -58,23 +58,23 @@ class ProtImportVolumes(ProtImportImages):
                       label=Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
                       label="Set origin of coordinates",
-                      help="Option YES: A new volume will be created with the "
+                      help="Option YES:\nA new volume will be created with "
+                           "the "
                            "given ORIGIN of coordinates. This ORIGIN will be "
-                           "set in the map file header.\n"
-                           # Option YES: The binary of the object volume will 
-                           # be saved with its header modified. 
-                           # Option NO: The binary of the object volume will 
-                           # saved without any modifications. Then, the volume
-                           # is the input volume itself with other filename.
-                           # In this case the coordinates of the origin will
-                           # be saved as SCIPION object, not in the header 
-                           # volume. 
-                           # Volumes are not copied by default. They are only
-                           # copied if the user has selected the option YES in
-                           # the advanced question form "Copy files?"
-                           "Option NO: The ORIGIN of coordinates will be " 
-                           "placed at the center of the whole volume. This "
-                           "ORIGIN will NOT be set in the map file header. \n"
+                           "set in the map file header.\nThe ORIGIN of "
+                           "coordinates will be placed at the center of the "
+                           "whole volume if you select n(x)/2, n(y)/2, "
+                           "n(z)/2 as "
+                           "x, y, z coordinates (n(x), n(y), n(z) are the "
+                           "dimensions of the whole volume). However, "
+                           "selecting "
+                           "0, 0, 0 as x, y, z coordinates, the volume will be "
+                           "placed at the upper right-hand corner.\n\n"
+                           "Option NO:\nThe ORIGIN of coordinates will be " 
+                           "placed at the center of the whole volume ("
+                           "coordinates n(x)/2, n(y)/2, n(z)/2 by default). "
+                           "This "
+                           "ORIGIN will NOT be set in the map file header.\n\n"
                            "WARNING: In case you want to process "
                            "the volume with programs requiring a specific "
                            "symmetry regarding the origin of coordinates, "
@@ -94,11 +94,14 @@ class ProtImportVolumes(ProtImportImages):
                                   "provide the map center coordinates in "
                                   "Angstroms (pixels x sampling).\n",
                             condition='setOrigCoord')
-        line.addParam('x', params.FloatParam, condition='setOrigCoord',
+        # line.addParam would produce a nicer looking form
+        # but them the wizard icon is drawn outside the visible
+        # window. Until this bug is fixed form is a better option
+        form.addParam('x', params.FloatParam, condition='setOrigCoord',
                       label="x", help="offset along x axis (Angstroms)")
-        line.addParam('y', params.FloatParam, condition='setOrigCoord',
+        form.addParam('y', params.FloatParam, condition='setOrigCoord',
                       label="y", help="offset along y axis (Angstroms)")
-        line.addParam('z', params.FloatParam, condition='setOrigCoord',
+        form.addParam('z', params.FloatParam, condition='setOrigCoord',
                       label="z", help="offset along z axis (Angstroms)")
 
     def _insertAllSteps(self):

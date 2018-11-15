@@ -119,6 +119,7 @@ class viewerProtImportVolumes(ProtocolViewer):
                                      bildFileName=tmpFileNameBILD,
                                      sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
+            f.write("cofr 0,0,0\n")  # set center of coordinates
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
