@@ -531,6 +531,25 @@ class ProtImportImages(ProtImportFiles):
         """ Create the output set that will be populated as more data is
         imported. """
 
+
+    def processImportDict(self, importDict, importDir):
+        """
+        This function is used when we import a workflow from a json.
+        If we need to include source data for reproducibility purposes,
+        this function will make the necessary changes in the protocol dict
+        to include the source data.
+        Params:
+            - importDict: import dictionary coming from the json
+            - importDir: directory containing the json file
+        """
+
+        if not os.path.exists(importDict['filesPath']):  # we might have a relative path
+            absPath = os.path.join(importDir, importDict['filesPath'].split('/', 1)[1])
+            if os.path.exists(absPath):
+                importDict['filesPath'] = absPath
+
+        return importDict
+
     # --------------- Streaming special functions -----------------------
     def _getStopStreamingFilename(self):
         return self._getExtraPath("STOP_STREAMING.TXT")

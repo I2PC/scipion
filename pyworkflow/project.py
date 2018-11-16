@@ -906,13 +906,14 @@ class Project(object):
         Note: either filename or jsonStr should be not None.
         """
         f = open(filename)
+        importDir = os.path.dirname(filename)
         protocolsList = json.load(f)
 
         emProtocols = em.Domain.getProtocols()
         newDict = OrderedDict()
 
         # First iteration: create all protocols and setup parameters
-        for protDict in protocolsList:
+        for i, protDict in enumerate(protocolsList):
             protClassName = protDict['object.className']
             protId = protDict['object.id']
             protClass = emProtocols.get(protClassName, None)
@@ -920,11 +921,11 @@ class Project(object):
             if protClass is None:
                 print "ERROR: protocol class name '%s' not found" % protClassName
             else:
+                protLabel = protDict.get('object.label', None)
                 prot = self.newProtocol(protClass,
-                                        objLabel=protDict.get('object.label',
-                                                              None),
-                                        objComment=protDict.get(
-                                            'object.comment', None))
+                                        objLabel=protLabel,
+                                        objComment=protDict.get('object.comment', None))
+                protocolsList[i] = prot.processImportDict(protDict, importDir)
 
                 prot._useQueue.set(protDict.get('_useQueue', False))
                 prot._queueParams.set(protDict.get('_queueParams', None))

@@ -553,6 +553,40 @@ class Protocol(Step):
 
         return d
 
+    # def generateExportData(self, protDict, exportDir=None):
+    #     """ Implement in subclasses: function to perform actions
+    #     necessary for reproducibility, which can include processing
+    #     protocol data from protDict or copying protocol files to
+    #     an exportDir, for example.
+    #     This function is used when we use the option "Export
+    #     workflow with source data".
+    #     Params:
+    #         - protDict: protocol dictionary coming from
+    #                       getDefinitionDict()
+    #         - exportDir: directory to store protocol files, if needed
+    #     Returns:
+    #         - protDict:  dictionary that will finally be exported
+    #                     to json.
+    #     """
+    #     return protDict
+
+    # def getExportDict(self, definitionDict):
+    #     """ Returns a dictionary with the protocol's form data.
+    #     To be overwritten in subclasses. It is intended to extend or modify the data
+    #     in definitionDict for reproducibility purposes
+    #     """
+    #     return definitionDict
+
+    def processImportDict(self, importDict, importDir):
+        """
+        This function is used when we import a workflow from a json to process or
+        adjust the json data for reproducibility purposes e.g. resolve relative paths
+        Params:
+        importDict: Dict of the protocol that we got from the json
+        importDir: dir of the json we're importing
+        """
+        return importDict
+
     def iterDefinitionSections(self):
         """ Iterate over all the section of the definition. """
         for section in self._definition.iterSections():
