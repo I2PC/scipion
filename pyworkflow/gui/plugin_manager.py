@@ -111,6 +111,18 @@ class PluginTree(ttk.Treeview):
         """change the box item to failure item"""
         self.item(item, tags=(PluginStates.FAILURE,))
 
+    def disable(self):
+        self.state(('disabled',))
+
+    def enable(self):
+        self.state(('!disabled',))
+
+    def is_disabled(self):
+        return 'disabled' in self.state()
+
+    def is_enabled(self):
+        return not self.is_disabled()
+
 
 class Operation:
     """
@@ -436,41 +448,42 @@ class PluginBrowser(tk.Frame):
 
     def _onPluginTreeClick(self, event):
         """ check or uncheck a plugin or binary box when clicked """
-        x, y, widget = event.x, event.y, event.widget
-        elem = widget.identify("element", x, y)
-        self.tree.selectedItem = self.tree.identify_row(y)
-        if "image" in elem:
-            # a box was clicked
-            tags = self.tree.item(self.tree.selectedItem, "tags")
-            objType = self.tree.item(self.tree.selectedItem, "value")
-            parent = self.tree.parent(self.tree.selectedItem)
-            operation = Operation(self.tree.selectedItem, objType[0], tags[0],
-                                  parent)
-            self.operationList.insertOperation(operation)
-            if tags[0] == PluginStates.UNCHECKED:
-                self.tree.check_item(self.tree.selectedItem)
-            elif tags[0] == PluginStates.UNINSTALL:
-                if objType[0] == PluginStates.PLUGIN:
-                    self.reloadInstalledPlugin(self.tree.selectedItem)
-            else:
-                children = self.tree.get_children(self.tree.selectedItem)
-                for iid in children:
-                    self.deleteOperation(iid)
-                self.tree.uncheck_item(self.tree.selectedItem)
-            self.showPluginInformation(self.tree.selectedItem)
-            self.showOperationList()
-        else:
-            if self.tree.selectedItem is not None:
-                if self.isPlugin(self.tree.item(self.tree.selectedItem,
-                                                "values")[0]):
-                    self.showPluginInformation(self.tree.selectedItem)
+        if self.tree.is_enabled():
+            x, y, widget = event.x, event.y, event.widget
+            elem = widget.identify("element", x, y)
+            self.tree.selectedItem = self.tree.identify_row(y)
+            if "image" in elem:
+                # a box was clicked
+                tags = self.tree.item(self.tree.selectedItem, "tags")
+                objType = self.tree.item(self.tree.selectedItem, "value")
+                parent = self.tree.parent(self.tree.selectedItem)
+                operation = Operation(self.tree.selectedItem, objType[0], tags[0],
+                                      parent)
+                self.operationList.insertOperation(operation)
+                if tags[0] == PluginStates.UNCHECKED:
+                    self.tree.check_item(self.tree.selectedItem)
+                elif tags[0] == PluginStates.UNINSTALL:
+                    if objType[0] == PluginStates.PLUGIN:
+                        self.reloadInstalledPlugin(self.tree.selectedItem)
                 else:
-                    parent = self.tree.parent(self.tree.selectedItem)
-                    self.showPluginInformation(parent)
-        if len(self.operationList.getOperations(None)):
-            self.executeOpsBtn.config(state='normal')
-        else:
-            self.executeOpsBtn.config(state='disable')
+                    children = self.tree.get_children(self.tree.selectedItem)
+                    for iid in children:
+                        self.deleteOperation(iid)
+                    self.tree.uncheck_item(self.tree.selectedItem)
+                self.showPluginInformation(self.tree.selectedItem)
+                self.showOperationList()
+            else:
+                if self.tree.selectedItem is not None:
+                    if self.isPlugin(self.tree.item(self.tree.selectedItem,
+                                                    "values")[0]):
+                        self.showPluginInformation(self.tree.selectedItem)
+                    else:
+                        parent = self.tree.parent(self.tree.selectedItem)
+                        self.showPluginInformation(parent)
+            if len(self.operationList.getOperations(None)):
+                self.executeOpsBtn.config(state='normal')
+            else:
+                self.executeOpsBtn.config(state='disable')
 
     def _deleteSelectedOperation(self, e=None):
         """
@@ -500,9 +513,12 @@ class PluginBrowser(tk.Frame):
         """
         Execute the operation list
         """
-        # Create two tabs where the log and errors will appears
+        # Disable the execute and cancel button
         self.executeOpsBtn.config(state='disable')
         self.cancelOpsBtn.config(state='disable')
+        # Disable the TreeView
+        self.tree.disable()
+        # Create two tabs where the log and errors will appears
         self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
         if event is not None:
             threadOp = threading.Thread(target=self._applyOperations,
@@ -552,6 +568,8 @@ class PluginBrowser(tk.Frame):
         sys.stderr.flush()
         sys.stdout = oldstdout
         sys.stderr = oldstderr
+        # Enable the treeview
+        self.tree.enable()
 
     def linkToWebSite(self, event):
         """
