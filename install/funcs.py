@@ -146,7 +146,8 @@ class Command:
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
-                    call(cmd, shell=True, env=self._environ)
+                    call(cmd, shell=True, env=self._environ,
+                         stdout=sys.stdout, stderr=sys.stderr)
 
             # Return to working directory, useful when we change dir
             # before executing the command.

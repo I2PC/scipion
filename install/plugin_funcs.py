@@ -18,6 +18,10 @@ PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
     Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
+PIP_UNINSTALL_CMD = '{} {}/pip uninstall -y %s'.format(
+    Environment.getBin('python'),
+    Environment.getPythonPackagesFolder())
+
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
 if os.environ['SCIPION_SHORT_VERSION'] not in versions:
     SCIPION_VERSION = LAST_VERSION
@@ -90,6 +94,7 @@ class PluginInfo(object):
     def isInstalled(self):
         """Checks if the current plugin is installed (i.e. has pip package).
         NOTE: we might wanna change definition of isInstalled, hence the extra function."""
+        reload(pkg_resources)
         return self.hasPipPackage()
 
     def installPipModule(self, version=""):
@@ -166,17 +171,17 @@ class PluginInfo(object):
                 print('Removing %s binaries...' % binVersion)
                 realPath = os.path.realpath(f)  # in case its a link
                 cleanPath(f, realPath)
+                print('Binary %s has been uninstalled successfully ' % binVersion)
         return
 
     def uninstallPip(self):
         """Removes pip package from site-packages"""
         print('Removing %s plugin...' % self.pipName)
-        try:
-            from pip import main as pipmain
-        except:
-            from pip._internal import main as pipmain
-
-        pipmain(['uninstall', '-y', self.pipName])
+        import subprocess
+        args = (PIP_UNINSTALL_CMD % self.pipName).split()
+        r = subprocess.call(PIP_UNINSTALL_CMD % self.pipName, shell=True)
+        if not r:
+            print('Plugin %s has been uninstalled successfully ' % self.pipName)
         return
 
     ####################### Remote data funcs ############################

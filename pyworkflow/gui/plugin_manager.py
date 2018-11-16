@@ -650,7 +650,7 @@ class PluginBrowser(tk.Frame):
         plugin = PluginInfo(pluginName, pluginName, remote=False)
         if plugin is not None:
             # Insert all binaries of plugin on the tree
-            if plugin._getPlugin():
+            if plugin.isInstalled():
                 pluginBinaryList = plugin.getInstallenv()
                 if pluginBinaryList is not None:
                     binaryList = pluginBinaryList.getPackages()
