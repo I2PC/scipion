@@ -77,7 +77,9 @@ class PluginTree(ttk.Treeview):
         elif not (PluginStates.UNCHECKED in kw["tags"] or
                   PluginStates.CHECKED in kw["tags"] or
                   PluginStates.TO_INSTALL in kw["tags"] or
-                  PluginStates.INSTALLED in kw["tags"]):
+                  PluginStates.INSTALLED in kw["tags"] or
+                  PluginStates.INSTALL in kw["tags"] or
+                  PluginStates.UNINSTALLED in kw["tags"] ):
             kw["tags"] = (PluginStates.UNCHECKED,)
         ttk.Treeview.insert(self, parent, index, iid, **kw)
 
@@ -465,6 +467,8 @@ class PluginBrowser(tk.Frame):
                 elif tags[0] == PluginStates.UNINSTALL:
                     if objType[0] == PluginStates.PLUGIN:
                         self.reloadInstalledPlugin(self.tree.selectedItem)
+                    else:
+                        self.tree.check_item(self.tree.selectedItem)
                 else:
                     children = self.tree.get_children(self.tree.selectedItem)
                     for iid in children:
@@ -608,7 +612,7 @@ class PluginBrowser(tk.Frame):
             self.operationTree.insert("", 'end', op.getObjName(),
                                       text=str(op.getObjStatus().upper() +
                                                ' --> ' + op.getObjName()),
-                                      tags=PluginStates.TO_INSTALL)
+                                      tags=op.getObjStatus())
         self.operationTree.update()
 
     def isPlugin(self, value):
