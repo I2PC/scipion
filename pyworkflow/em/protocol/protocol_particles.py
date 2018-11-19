@@ -402,7 +402,7 @@ class ProtExtractParticles(ProtParticles):
         # doing streaming and have several thousands of mics
         # so I add a counter to keep the user entertained
         import sys
-        a = datetime.datetime.now()
+        a = datetime.now()
         counter = 1
 
         coordsFn = self.getCoords().getFileName()
@@ -413,12 +413,10 @@ class ProtExtractParticles(ProtParticles):
         coordSet.loadAllProperties()
 
         for micKey, mic in micDict.iteritems():
-            if counter % 50 ==0: # counter to keep the user entertained
-                                 # prints each 50 movies. In streaming
-                                 # it will not print 
-                 b = datetime.datetime.now()
-                 print b-a , 'reading coordinates for mic number', "%06d"%counter
-                 sys.stdout.flush()  # force buffer to print 
+            if counter % 50 == 0:
+                b = datetime.now()
+                print b-a, 'reading coordinates for mic number', "%06d" % counter
+                sys.stdout.flush()  # force buffer to print
             counter += 1
 
             micId = mic.getObjId()
@@ -427,7 +425,7 @@ class ProtExtractParticles(ProtParticles):
             for coord in coordSet.iterItems(where='_micId=%s' % micId):
                 # TODO: Check performance penalty of using this clone
                 coordList.append(coord.clone())
-            self.debug("   Coords found: %s" % len(coordList))
+            self.debug("Coords found: %s" % len(coordList))
 
             if coordList:
                 self.coordDict[micId] = coordList

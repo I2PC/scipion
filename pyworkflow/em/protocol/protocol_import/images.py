@@ -72,10 +72,10 @@ class ProtImportImages(ProtImportFiles):
                        help='Depending on the import Format, the wizard\n'
                             'will try to import the acquisition values.\n'
                             'If not found, required ones should be provided.')
-        group.addParam('voltage', params.FloatParam, default=200,
+        group.addParam('voltage', params.FloatParam, default=300,
                    label=Message.LABEL_VOLTAGE, 
                    help=Message.TEXT_VOLTAGE)
-        group.addParam('sphericalAberration', params.FloatParam, default=2,
+        group.addParam('sphericalAberration', params.FloatParam, default=2.7,
                    label=Message.LABEL_SPH_ABERRATION, 
                    help=Message.TEXT_SPH_ABERRATION)
         group.addParam('amplitudeContrast', params.FloatParam, default=0.1,
