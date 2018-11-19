@@ -881,7 +881,7 @@ class Project(object):
                 protocols: list of protocols or None to include all.
                 namesOnly: the output list will contain only the protocol names.
         """
-        newDict = self.getProtocolsDict(protocols=None, namesOnly=False)
+        newDict = self.getProtocolsDict(protocols=protocols, namesOnly=namesOnly)
         return json.dumps(list(newDict.values()),
                           indent=4, separators=(',', ': '))
 
