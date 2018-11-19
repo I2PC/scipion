@@ -48,10 +48,6 @@ args = sys.argv[1:]
 
 pluginRepo = PluginRepository()
 
-import time
-
-time.sleep(5)
-
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 subparsers = parser.add_subparsers(help='mode "installp", "uninstallp" or "listb"',
                                    dest='mode',
@@ -244,6 +240,7 @@ elif parsedArgs.mode == MODE_INSTALL_BINS:
             print('ERROR: Could not find target %s' % binTarget)
             continue
         pmodule = Domain.getPlugin(pluginTargetName)
+        numberProcessor = parsedArgs.j
         pinfo = PluginInfo(name=pluginTargetName, plugin=pmodule, remote=False)
         pinfo.installBin([binTarget])
 

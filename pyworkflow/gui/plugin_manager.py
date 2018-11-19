@@ -168,9 +168,10 @@ class Operation:
         """
         return self.objParent
 
-    def runOperation(self):
+    def runOperation(self, processors):
         """
         This method install or uninstall a plugin/binary operation
+        :param processors: number of processors to compilation
         """
         if self.objType == PluginStates.PLUGIN:
             if self.objStatus == PluginStates.INSTALL:
@@ -178,7 +179,7 @@ class Operation:
                 if plugin is not None:
                     installed = plugin.installPipModule()
                     if installed:
-                        plugin.installBin()
+                        plugin.installBin(args=['-j', processors])
             else:
                 plugin = PluginInfo(self.objName, self.objName, remote=False)
                 if plugin is not None:
@@ -188,7 +189,7 @@ class Operation:
             plugin = PluginInfo(self.objParent, self.objParent, remote=False)
             if self.objStatus == PluginStates.INSTALL:
                 if plugin is not None:
-                    plugin.installBin([self.objName])
+                    plugin.installBin(args=['-j', processors])
             else:
                 plugin.uninstallBins([self.objName])
 
@@ -348,6 +349,15 @@ class PluginBrowser(tk.Frame):
                               Message.CANCEL_SELECTED_OPERATION, 'disable',
                                          self._deleteSelectedOperation)
 
+        tk.Label(frame, text='Number of processors:').grid(row=0,
+                                                           column=self._col,
+                                                           padx=5)
+        self._col += 1
+        self.numberProcessors = tk.StringVar()
+        self.numberProcessors.set('1')
+        processorsEntry = tk.Entry(frame, textvariable=self.numberProcessors)
+        processorsEntry.grid(row=0, column=self._col, sticky='ew', padx=5)
+
     def _addButton(self, frame, text, image, tooltip, state, command):
         btn = IconButton(frame, text, image, command=command,
                          tooltip=tooltip, bg=None)
@@ -443,6 +453,7 @@ class PluginBrowser(tk.Frame):
                                      PLUGIN_LOG_NAME)
         self.file_errors_path = os.path.join(os.environ['SCIPION_LOGS'],
                                         PLUGIN_ERRORS_LOG_NAME)
+        
         self.fileLog = open(self.file_log_path, 'w', 0)
         self.fileLogErr = open(self.file_errors_path, 'w', 0)
         self.plug_log = ScipionLogger(self.file_log_path)
@@ -544,7 +555,7 @@ class PluginBrowser(tk.Frame):
             try:
                 self.operationTree.processing_item(item)
                 self.operationTree.update()
-                op.runOperation()
+                op.runOperation(self.numberProcessors.get())
                 self.operationTree.installed_item(item)
                 self.operationTree.update()
                 self.Textlog.refreshAll(goEnd=True)

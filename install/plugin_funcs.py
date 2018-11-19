@@ -1,6 +1,7 @@
 import requests
 import os
 import re
+import sys
 from importlib import import_module
 import json
 import pkg_resources
@@ -179,10 +180,9 @@ class PluginInfo(object):
         print('Removing %s plugin...' % self.pipName)
         import subprocess
         args = (PIP_UNINSTALL_CMD % self.pipName).split()
-        r = subprocess.call(PIP_UNINSTALL_CMD % self.pipName, shell=True)
-        if not r:
-            print('Plugin %s has been uninstalled successfully ' % self.pipName)
-        return
+        subprocess.call(PIP_UNINSTALL_CMD % self.pipName, shell=True,
+                            stdout=sys.stdout,
+                            stderr=sys.stderr)
 
     ####################### Remote data funcs ############################
 
