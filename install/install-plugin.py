@@ -48,6 +48,10 @@ args = sys.argv[1:]
 
 pluginRepo = PluginRepository()
 
+import time
+
+time.sleep(5)
+
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 subparsers = parser.add_subparsers(help='mode "installp", "uninstallp" or "listb"',
                                    dest='mode',
@@ -86,6 +90,10 @@ installParser.add_argument('--devel', action='store_true',
                                  '(i.e. it needs to match the one specified in setup.py). E.g:\n'
                                  'scipion installp -p path/to/pluginName --devel \n'
                                  'scipion installp -p https://github.com/someOrg/pluginName.git --devel')
+installParser.add_argument('-j',
+                              default='1',
+                              metavar='j',
+                              help='Number of CPUs to use for compilation \n')
 
 ############################################################################
 #                             Uninstall parser                             #
@@ -126,7 +134,7 @@ installBinParser.add_argument('binName', nargs='*',
                                    'version in the form name-version. If no version is specified,\n'
                                    'will install the last one.')
 installBinParser.add_argument('-j',
-                              default=1,
+                              default='1',
                               metavar='j',
                               help='Number of CPUs to use for compilation \n')
 
@@ -184,6 +192,7 @@ elif mode == MODE_INSTALL_PLUGIN:
             pluginName = ""
             if os.path.exists(pluginSrc):
                 pluginName = os.path.basename(pluginSrc)
+                numberProcessor = parsedArgs.j
             else:  # we assume it is a git url
                 m = re.match('https://github.com/(.*)/(.*).git', pluginSrc)
                 if m:
@@ -192,9 +201,10 @@ elif mode == MODE_INSTALL_PLUGIN:
                 print("ERROR: Couldn't find pluginName for source %s" % pluginSrc)
             else:
                 plugin = PluginInfo(pipName=pluginName, pluginSourceUrl=pluginSrc, remote=False)
+                processors = parsedArgs.j
                 installed = plugin.installPipModule()
                 if installed and not parsedArgs.noBin:
-                    plugin.installBin()
+                    plugin.installBin(args=['-j', numberProcessor])
     else:
         pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0],
                                            getPipData=True)
@@ -204,11 +214,12 @@ elif mode == MODE_INSTALL_PLUGIN:
             for cmdTarget in parsedArgs.plugin:
                 pluginName = cmdTarget[0]
                 pluginVersion = "" if len(cmdTarget) == 1 else cmdTarget[1]
+                numberProcessor = parsedArgs.j
                 plugin = pluginDict.get(pluginName, None)
                 if plugin:
                     installed = plugin.installPipModule(version=pluginVersion)
                     if installed and not parsedArgs.noBin:
-                        plugin.installBin()
+                        plugin.installBin(args=['-j', numberProcessor])
                 else:
                     print("WARNING: Plugin %s does not exist." % pluginName)
 
