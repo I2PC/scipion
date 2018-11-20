@@ -32,7 +32,7 @@ import PIL
 import xmippLib
 import pyworkflow.utils as pwutils
 
-from constants import *
+from pyworkflow.em.constants import *
 
 
 class ImageHandler(object):
@@ -72,7 +72,7 @@ class ImageHandler(object):
         """
         # We can not import Volume from top level since
         # data depends on this module
-        from data import Volume, Movie
+        from pyworkflow.em.data import Volume, Movie
         fn = image.getFileName()
         if isinstance(image, Volume):
             if fn.endswith('.mrc') or fn.endswith('.map'):
@@ -466,112 +466,4 @@ class ImageHandler(object):
 
 
 DT_FLOAT = ImageHandler.DT_FLOAT
-
-
-#TODO: use biopython and move this fuction to convert_Atom_struct
-def downloadPdb(pdbId, pdbFile, log=None):
-    pdbGz = pdbFile + ".gz"
-    result = (__downloadPdb(pdbId, pdbGz, log) and 
-              __unzipPdb(pdbGz, pdbFile, log))
-    return result
-    
-#TODO: use biopython and move this fuction to convert_Atom_struct
-def __downloadPdb(pdbId, pdbGz, log):
-    import ftplib
-    """Download a pdb file given its id. """
-    if log:
-        log.info("File to download and unzip: %s" % pdbGz)
-    
-    pdborgHostname = "ftp.wwpdb.org"
-    pdborgDirectory = "/pub/pdb/data/structures/all/mmCIF/"
-    prefix = ""  # use pdb for PDB and null for mmcif
-    suffix = ".cif.gz"
-    success = True
-    # Log into serverhttp://www.rcsb.org/pdb/files/2MP1.pdb.gz
-    ftp = ftplib.FTP()
-    try:
-        ftp.connect(pdborgHostname)
-        ftp.login()
-    except ftplib.error_temp:
-        if log:
-            log.error("ERROR! Timeout reached!")
-        success = False
-    
-    if success:
-        # Download  file
-        _fileIn = "%s/%s%s%s" % (pdborgDirectory, prefix, pdbId.lower(), suffix) 
-        _fileOut = pdbGz
-        try:
-            ftp.retrbinary("RETR %s" % _fileIn, open(_fileOut, "wb").write)
-        except ftplib.error_perm:
-            os.remove(_fileOut)
-            if log:
-                log.error("ERROR!  %s could not be retrieved!" % _fileIn)
-            success = False
-        # Log out
-        ftp.quit()
-        
-    return success
-
-# TODO unzip may go to utilities
-def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
-    """
-    Unzip a pdb file.
-    Params:
-        pdbGz: zipped pdb file.
-        pdbFile: output pdb file.
-        cleanFile: remove the zipped file.
-    """
-    import gzip
-    success = True
-    try:
-        f = gzip.open(pdbGz, 'r')
-        g = open(pdbFile, 'w')
-        g.writelines(f.readlines())
-        f.close()
-        g.close()
-    except:
-        e = sys.exc_info()[0]
-        if log:
-            log.error('ERROR opening gzipped file %s: %s' % (pdbGz, e))
-        success = False
-    
-    try:
-        if success:
-            os.remove(pdbGz)
-    except:
-        e = sys.exc_info()[0]
-        if log:
-            log.error('ERROR deleting gzipped file: %s' % e)
-        success = False
-        
-    return success
-
-
-def getSubsetByDefocus(inputCTFs, inputMics, nMics):
-    """ Return a subset of inputMics that covers the whole range of defocus
-    from the inputCtfs set.
-    This function can be used from picking wizards that wants to optimize the
-    parameters for micrographs with different defocus values.
-    Params:
-        nMics is the number of micrographs that will be in the subset.
-    """
-    sortedMicIds = []
-
-    # Sort CTFs by defocus and select only those that match with inputMics
-    for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
-        ctfId = ctf.getObjId()
-        if ctfId in inputMics:
-            sortedMicIds.append(ctfId)
-
-    # Take an equally spaced subset of micrographs
-    space = len(sortedMicIds) / (nMics - 1)
-    micIds = [sortedMicIds[0], sortedMicIds[-1]]
-    pos = 0
-    while len(micIds) < nMics:  # just add first and last
-        pos += space
-        micIds.insert(1, sortedMicIds[pos])
-
-    # Return the list with selected micrographs
-    return [inputMics[micId].clone() for micId in micIds]
 

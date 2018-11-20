@@ -31,50 +31,21 @@ TODO:
 """
 
 import collections
-from pyworkflow.em.convert import ImageHandler
 import struct
 from math import isnan
 
 from pyworkflow.utils import getExt
+from .image_handler import ImageHandler
 
-ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
-START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
-# File formats
-MRC = 0
-SPIDER = 1
-UNKNOWNFORMAT=2
+class Ccp4Header:
+    ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
+    START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
-def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
-                    sampling=1.0, originField=START):
-    """ create new CCP4 binary file and fix the CCP4 header
-    """
-    x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    if z == 1 and ndim > 1:
-        z = ndim
-
-    ImageHandler().convert(inFileName, outFileName)
-    ccp4header = Ccp4Header(outFileName, readHeader=True)
-    ccp4header.setGridSampling(x, y, z)
-    ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-    if originField == ORIGIN:
-        ccp4header.setOrigin(scipionOriginShifts)
-    else:
-        ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
-
-    ccp4header.writeHeader()
-
-def getFileFormat(fileName):
-
-    ext = getExt(fileName)
-    if (ext == '.mrc') or (ext == '.map'):
-        return MRC
-    elif (ext == '.spi') or (ext == '.vol'):
-        return SPIDER
-    else:
-        return UNKNOWNFORMAT
-
-class Ccp4Header():
+    # File formats
+    MRC = 0
+    SPIDER = 1
+    UNKNOWNFORMAT = 2
     """
     In spite of the name this is the MRC2014 format no the CCP4.
     In an MRC EM file the origin is typically in header fields called
@@ -143,7 +114,6 @@ class Ccp4Header():
     characters (i.e. symmetry operators do not cross the ends of the
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
-
     def __init__(self, fileName, readHeader=False):
         self._name = fileName.replace(':mrc', '')  # remove mrc ending
         self._header = collections.OrderedDict()
@@ -290,8 +260,6 @@ class Ccp4Header():
         self._header['originY'] = a[17]
         self._header['originZ'] = a[18]
 
-
-
     def getHeader(self):
         return self._header
 
@@ -315,7 +283,6 @@ class Ccp4Header():
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
 
-
     def copyCCP4Header(self, inFileName, scipionOriginShifts,
                        sampling, originField=START):
         x, y, z, ndim = ImageHandler().getDimensions(inFileName)
@@ -324,8 +291,39 @@ class Ccp4Header():
         self.setGridSampling(x, y, z)
         self.setCellDimensions(x * sampling, y * sampling, z * sampling)
 
-        if originField == ORIGIN:
+        if originField == self.ORIGIN:
             self.setOrigin(scipionOriginShifts)
         else:
             self.setStartAngstrom(scipionOriginShifts, sampling)
             self.writeHeader()
+
+    @classmethod
+    def fixFile(cls, inFileName, outFileName, scipionOriginShifts,
+                sampling=1.0, originField=START):
+        """ Create new CCP4 binary file and fix its header.
+        """
+        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+        if z == 1 and ndim > 1:
+            z = ndim
+
+        ImageHandler().convert(inFileName, outFileName)
+        ccp4header = Ccp4Header(outFileName, readHeader=True)
+        ccp4header.setGridSampling(x, y, z)
+        ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
+        if originField == cls.ORIGIN:
+            ccp4header.setOrigin(scipionOriginShifts)
+        else:
+            ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
+
+        ccp4header.writeHeader()
+
+    @classmethod
+    def getFileFormat(cls, fileName):
+
+        ext = getExt(fileName)
+        if (ext == '.mrc') or (ext == '.map'):
+            return cls.MRC
+        elif (ext == '.spi') or (ext == '.vol'):
+            return cls.SPIDER
+        else:
+            return cls.UNKNOWNFORMAT

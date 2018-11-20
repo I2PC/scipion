@@ -25,13 +25,15 @@
 # *
 # **************************************************************************
 
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
-from plotter import EmPlotter, plt
-from data import FSC, SetOfFSCs
 from matplotlib.ticker import FuncFormatter
 from matplotlib.widgets import Button
-from pyworkflow.em.protocol import ProtCreateFSC
+
+from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
 from pyworkflow.utils.properties import Icon, Color
+from pyworkflow.em.data import FSC, SetOfFSCs
+from pyworkflow.em.protocol import ProtCreateFSC
+
+from .plotter import EmPlotter, plt
 
 
 class FscViewer(Viewer):
@@ -75,7 +77,6 @@ class FscViewer(Viewer):
         return  bcreateFSC
 
     def visualize(self, obj, **kwargs):
-    #def _visualize(self, obj, **kwargs):
         # Keep input object in case we need to launch
         # a new protocol and set dependencies
         self.fscList = []

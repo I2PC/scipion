@@ -47,7 +47,7 @@ from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project, PROJECT_CONFIG_HOSTS
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
-from pyworkflow.em.plotter import plotFile
+from pyworkflow.em.viewers import EmPlotter
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.gui.text import _open_cmd, openTextFileEditor
 from pyworkflow.webservices import ProjectWorkflowNotifier, WorkflowRepository
@@ -271,7 +271,7 @@ class ProjectWindow(ProjectBaseWindow):
         server_thread.start()
 
     def schedulePlot(self, path, *args):
-        self.enqueue(lambda: plotFile(path, *args).show())    
+        self.enqueue(lambda: EmPlotter.createFromFile(path, *args).show())
 
     @classmethod
     def registerObjectCommand(cls, cmd, func):

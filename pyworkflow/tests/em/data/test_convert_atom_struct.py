@@ -29,9 +29,9 @@ from tempfile import NamedTemporaryFile
 
 import numpy
 
-from pyworkflow.em.convert_atom_struct import AtomicStructHandler
-from pyworkflow.em.transformations import euler_matrix, \
-    translation_matrix, concatenate_matrices
+from pyworkflow.em.convert.atomic import AtomicStructHandler
+from pyworkflow.em.convert.transformations import (
+    euler_matrix, translation_matrix, concatenate_matrices)
 from pyworkflow.tests import *
 
 
@@ -343,17 +343,14 @@ class TestAtomicStructHandler(unittest.TestCase):
             header.writeHeader()
 
             # view the results with chimera
-            from pyworkflow.em.viewers.chimera_utils \
-                import runChimeraProgram
-            from pyworkflow.em.viewers.chimera_utils \
-                import getProgram as chimera_get_program
+            from pyworkflow.em.viewers import Chimera
             args = "%s %s %s %s" % (
                    pdbFileName,
                    "emd_%s.map" % EMDBID,
                    "%s_%s_transformed.ent" % (suffix, PDBID.lower()),
                    "%s_emd_%s_transform.map" % (suffix, EMDBID)
             )
-            runChimeraProgram(chimera_get_program(), args)
+            Chimera.runProgram(args)
 
         # shift atomic structure
         doAll = True

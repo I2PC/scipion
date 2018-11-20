@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -24,16 +24,12 @@
 # *
 # **************************************************************************
 
-from pyworkflow.object import Float, Object, String, Float, Integer
+from pyworkflow.object import Object, Float, Integer
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import PointerParam
 
 from pyworkflow.em import EMSet
 from protocol_2d import ProtAlign2D
-
-# For the viewer part
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import DataView
 
 
 class ProtClassesConsensus(ProtAlign2D):
@@ -53,7 +49,7 @@ class ProtClassesConsensus(ProtAlign2D):
 
         form.addParallelSection(threads=0, mpi=0)
 
-#--------------------------- INSERT steps functions --------------------------------------------
+# -------------------------- INSERT steps functions ---------------------------
 
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
@@ -120,19 +116,4 @@ class ProtClassesConsensus(ProtAlign2D):
         errors = [ ]
         return errors
     
-    
-class ViewerClassesConsensus(Viewer):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtClassesConsensus]
-    
-    def _visualize(self, obj, **kwargs):
-        labels = 'class1.id class1._representative._filename class2.id class2._representative._filename jaccard intersection union'
-        return [DataView(obj.outputConsensus.getFileName(), 
-                         viewParams={'order': labels, 'mode': 'metadata',
-                                     'visible': labels,
-                                     'render': 'class1._representative._filename class2._representative._filename'
-                                     })
-                ]
-    
-    def visualize(self, obj, **kwargs):
-        self._visualize(obj, **kwargs)[0].show()
+

@@ -28,15 +28,15 @@ This modules contains classes related with EM
 """
 
 
+from constants import *
 from data import *
 from data_tiltpairs import *
 from protocol import *
-from constants import *
 from convert import *
 from pyworkflow.wizard import Wizard
-from viewer import *
-import transformations
-import pdb_handler
+# TODO: Check if we can remove this import * (not recommended)
+#from viewers import *
+from pyworkflow.viewer import Viewer
 
 import pyworkflow.plugin
 
