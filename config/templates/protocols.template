@@ -171,14 +171,12 @@ Protocols SPA = [
         	{"tag": "section", "text": "more", "openItem": "False", "children": [
     	        {"tag": "protocol", "value": "ProtRelionPolish", "text": "default"}
             ]}
-        ]},
-        
+        ]},        
 		{"tag": "protocol_group", "text": "Postprocess", "openItem": "False", "children": [
         	{"tag": "protocol", "value": "XmippProtLocSharp",  "text": "default"},
      		{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},       	
         	{"tag": "protocol", "value": "ProtLocScale",  "text": "default"}
-        ]},        
-        
+        ]},               
 		{"tag": "protocol_group", "text": "Analysis", "openItem": "False", "children": [
             {"tag": "section", "text": "Heterogeneity", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtSolidAngles", "text": "default"},
