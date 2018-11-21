@@ -29,6 +29,7 @@ from .views import (DataView, ObjectView, MicrographsView, CtfView,
                            ClassesView, Classes3DView, CoordinatesObjectView,
                            ImageView, TableView)
 from .plotter import EmPlotter
+from .viewers_data import DataViewer
 
 from .viewer_localres import LocalResolutionViewer
 from .viewer_vmd import Vmd, VmdView, VmdViewer
