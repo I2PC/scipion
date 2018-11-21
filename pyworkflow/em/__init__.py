@@ -34,8 +34,6 @@ from data_tiltpairs import *
 from protocol import *
 from convert import *
 from pyworkflow.wizard import Wizard
-# TODO: Check if we can remove this import * (not recommended)
-#from viewers import *
 from pyworkflow.viewer import Viewer
 
 import pyworkflow.plugin
