@@ -78,8 +78,7 @@ class PluginTree(ttk.Treeview):
                   PluginStates.CHECKED in kw["tags"] or
                   PluginStates.TO_INSTALL in kw["tags"] or
                   PluginStates.INSTALLED in kw["tags"] or
-                  PluginStates.INSTALL in kw["tags"] or
-                  PluginStates.UNINSTALLED in kw["tags"] ):
+                  PluginStates.INSTALL in kw["tags"]):
             kw["tags"] = (PluginStates.UNCHECKED,)
         ttk.Treeview.insert(self, parent, index, iid, **kw)
 
@@ -189,7 +188,7 @@ class Operation:
             plugin = PluginInfo(self.objParent, self.objParent, remote=False)
             if self.objStatus == PluginStates.INSTALL:
                 if plugin is not None:
-                    plugin.installBin(args=['-j', processors])
+                    plugin.installBin(args=[self.getObjName(), '-j', processors])
             else:
                 plugin.uninstallBins([self.objName])
 
@@ -564,7 +563,7 @@ class PluginBrowser(tk.Frame):
                     if op.getObjType() == PluginStates.PLUGIN:
                         self.reloadInstalledPlugin(item)
                     else:
-                        self.reloadInstalledPlugin(self.tree.parent(item))
+                        self.tree.check_item(item)
                 else:
                     self.tree.uncheck_item(item)
             except AssertionError as err:
