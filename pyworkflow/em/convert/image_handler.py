@@ -367,11 +367,7 @@ class ImageHandler(object):
         The radius should be less or equal dim(refImage)/2
         The mask will be stored in 'outputFile'
         """
-        #TODO: right now we need to call a Xmipp program to create
-        # the spherical mask, it would be nicer to have such utility
-        # in the binding
-        getImageLocation = pwutils.importFromPlugin('xmipp3.convert', 'getImageLocation')
-        inputRef = getImageLocation(refImage)
+        inputRef = self.locationToXmipp(refImage)
         self.__runXmippProgram('xmipp_transform_mask',
                                '-i %s --create_mask  %s --mask circular -%d'
                                % (inputRef, outputFile, radius))

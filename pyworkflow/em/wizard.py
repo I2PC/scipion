@@ -709,8 +709,8 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        getImageLocation = importFromPlugin('xmipp3.convert', 'getImageLocation')
-        xmippLib.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
+        xmippLib.bandPassFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
                                 self.getLowFreq(), self.getHighFreq(),
                                 self.getFreqDecay(), self.dim)
 
@@ -759,8 +759,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        getImageLocation = importFromPlugin('xmipp3.convert', 'getImageLocation')
-        xmippLib.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
+        xmippLib.gaussianFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
                                 self.getFreqSigma(), self.dim)
 
 
