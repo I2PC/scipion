@@ -146,7 +146,8 @@ class Command:
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
-                    call(cmd, shell=True, env=self._environ)
+                    call(cmd, shell=True, env=self._environ,
+                         stdout=sys.stdout, stderr=sys.stderr)
 
             # Return to working directory, useful when we change dir
             # before executing the command.
@@ -825,6 +826,10 @@ class Environment:
         """Set default values of all packages to the passed parameter"""
         for t in self._targetList:
             t.setDefault(default)
+
+    def getPackages(self):
+        """Return all plugin packages"""
+        return self._packages
 
 class Link:
     def __init__(self, packageLink, packageFolder):

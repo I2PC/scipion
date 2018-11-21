@@ -242,7 +242,7 @@ elif parsedArgs.mode == MODE_INSTALL_BINS:
         pmodule = Domain.getPlugin(pluginTargetName)
         numberProcessor = parsedArgs.j
         pinfo = PluginInfo(name=pluginTargetName, plugin=pmodule, remote=False)
-        pinfo.installBin(args=['-j', numberProcessor])
+        pinfo.installBin([binTarget, '-j', numberProcessor])
 
 
 elif parsedArgs.mode == MODE_UNINSTALL_BINS:
