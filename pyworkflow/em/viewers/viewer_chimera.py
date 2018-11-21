@@ -35,6 +35,7 @@ from multiprocessing.connection import Client
 from threading import Thread
 from numpy import flipud
 
+import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.viewer import CommandView, Viewer, DESKTOP_TKINTER
 from pyworkflow.gui.matplotlib_image import ImageWindow
@@ -186,7 +187,7 @@ class ChimeraClient:
         self.address = ''
         self.port = pwutils.getFreePort()
 
-        serverfile = os.path.join('em', 'chimera_server.py')
+        serverfile = pw.join('em', 'viewers', 'chimera_server.py')
         command = CommandView("chimera --script '%s %s %s' &" %
                               (serverfile, self.port, serverName),
                               env=Chimera.getEnviron(),).show()
