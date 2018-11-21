@@ -42,6 +42,7 @@ import pyworkflow.plugin
 
 
 class Domain(pyworkflow.plugin.Domain):
+    _name = __name__
     _objectClass = EMObject
     _protocolClass = Protocol
     _viewerClass = Viewer
