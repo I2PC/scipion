@@ -168,11 +168,15 @@ Protocols SPA = [
         	{"tag": "protocol", "value": "XmippProtProjMatch",  "text": "default"},
         	{"tag": "protocol", "value": "EmanProtRefine",  "text": "default"},
         	{"tag": "protocol", "value": "SpiderProtRefinement",  "text": "default"},
-        	{"tag": "protocol", "value": "ProtLocScale",  "text": "default"},
         	{"tag": "section", "text": "more", "openItem": "False", "children": [
     	        {"tag": "protocol", "value": "ProtRelionPolish", "text": "default"}
             ]}
-        ]},
+        ]},        
+		{"tag": "protocol_group", "text": "Postprocess", "openItem": "False", "children": [
+        	{"tag": "protocol", "value": "XmippProtLocSharp",  "text": "default"},
+     		{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},       	
+        	{"tag": "protocol", "value": "ProtLocScale",  "text": "default"}
+        ]},               
 		{"tag": "protocol_group", "text": "Analysis", "openItem": "False", "children": [
             {"tag": "section", "text": "Heterogeneity", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtSolidAngles", "text": "default"},
@@ -199,7 +203,6 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtMonoRes",   "text": "default"},
                 {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
-    			{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},
     			{"tag": "protocol", "value": "ProtRelionLocalRes",   "text": "default"},
                 {"tag": "protocol", "value": "BsoftProtBfilter", "text": "default"}
 			]},
