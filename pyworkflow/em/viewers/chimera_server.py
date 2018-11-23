@@ -1,5 +1,7 @@
 #!/usr/bin/env xmipp_python
-
+"""
+This scripts seems to be execute with the Python and libraries from Chimera.
+"""
 
 
 from __future__ import print_function

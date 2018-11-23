@@ -24,10 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs,
-Particles, Volumes...
-"""
+
 
 from os.path import exists, basename, abspath
 
@@ -37,7 +34,7 @@ from images import ProtImportImages
 from pyworkflow.em import Volume, ImageHandler, PdbFile
 from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
-from pyworkflow.em.headers import adaptFileToCCP4, ORIGIN
+from pyworkflow.em.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
 
@@ -150,9 +147,8 @@ class ProtImportVolumes(ProtImportImages):
 
             if self.copyFiles or setOrigCoord:
                 newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
-                adaptFileToCCP4(fileName, newFileName, origin.getShifts(),
-                                samplingRate,
-                                ORIGIN)
+                Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
+                                   samplingRate, Ccp4Header.ORIGIN)
             else:
                 newFileName = abspath(self._getVolumeFileName(fileName))
 

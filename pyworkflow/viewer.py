@@ -114,7 +114,7 @@ class TextView(View):
         showTextFileViewer(self._title, self._filelist, self._tkParent)
 
 
-#----------------- Viewers ----------------------------------------
+# ---------------- Viewers ----------------------------------------
     
 class Viewer(object):
     """ A Viewer will provide several Views to visualize

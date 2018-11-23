@@ -49,12 +49,11 @@ from Bio.Alphabet import IUPAC
 from Bio import Entrez, SeqIO
 import urllib, urllib2, sys
 from Bio.SeqRecord import SeqRecord
-import os
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
 from Bio import pairwise2
 
 
-class SequenceHandler():
+class SequenceHandler:
     def __init__(self, sequence=None,
                  iUPACAlphabet=0,
                  isAminoacid=True):

@@ -44,7 +44,6 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow.mapper.sqlite_db import SqliteDb
 
 
-
 class EMProtocol(Protocol):
     """ Base class to all EM protocols.
     It will contains some common functionalities. 
