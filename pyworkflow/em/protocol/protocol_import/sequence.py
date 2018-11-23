@@ -30,22 +30,13 @@ from os.path import exists
 import os
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
-from pyworkflow.em import Sequence
-from pyworkflow.em.handler_sequence import SEQ_TYPE_AMINOACIDS,\
-    SEQ_TYPE_NUCLEOTIDES, IUPAC_PROTEIN_ALPHABET, SEQ_TYPE, \
-    EXTENDED_PROTEIN_ALPHABET, IUPAC_NUCLEOTIDE_ALPHABET, \
-    EXTENDED_DNA_ALPHABET, SequenceHandler, cleanSequenceScipion, \
-    alphabetToIndex
-from pyworkflow.em.handler_atom_struct import AtomicStructHandler
-from tkMessageBox import showerror
-
-def errorWindow(tkParent, msg):
-    try:
-        showerror("Error",  # bar title
-                  msg,  # message
-                  parent=tkParent)
-    except:
-        print("Error:", msg)
+from pyworkflow.em.data import Sequence
+from pyworkflow.em.convert.sequence import (
+    SEQ_TYPE_AMINOACIDS, SEQ_TYPE_NUCLEOTIDES, IUPAC_PROTEIN_ALPHABET,
+    SEQ_TYPE, EXTENDED_PROTEIN_ALPHABET, IUPAC_NUCLEOTIDE_ALPHABET,
+    EXTENDED_DNA_ALPHABET, SequenceHandler, cleanSequenceScipion,
+    alphabetToIndex)
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 
 
 class ProtImportSequence(ProtImportFiles):
@@ -371,7 +362,7 @@ class ProtImportSequence(ProtImportFiles):
 
         record, error = seqHandler.downloadSeqFromDatabase(sequenceDB)
         if record is None:
-            errorWindow(None, error)
+            print("Error: ", error)
             self.setAborted()
             exit(0)
 

@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -24,17 +24,8 @@
 # *
 # **************************************************************************
 
-"""
-Sub-packages containing different sub-modules to import different type
-of objects.
-"""
+from .utils import getSubsetByDefocus, downloadPdb
+from .image_handler import ImageHandler, DT_FLOAT
 
-from base import ProtImport, ProtImportFiles
-from coordinates import ProtImportCoordinates, ProtImportCoordinatesPairs
-from ctfs import ProtImportCTF
-from images import ProtImportImages
-from masks import ProtImportMask
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from volumes import ProtImportVolumes, ProtImportPdb
-from .sequence import ProtImportSequence
+from .headers import Ccp4Header
+

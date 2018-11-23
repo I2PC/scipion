@@ -829,8 +829,8 @@ class Project(object):
 
         return result
 
-    def getProtocolsJson(self, protocols=None, namesOnly=False):
-        """ Create a Json string with the information of the given protocols.
+    def getProtocolsDict(self, protocols=None, namesOnly=False):
+        """ Create a dict with the information of the given protocols.
          Params:
             protocols: list of protocols or None to include all.
             namesOnly: the output list will contain only the protocol names.
@@ -873,6 +873,15 @@ class Project(object):
                             childDict[iKey] = '%s.%s' % (
                             protId, oKey)  # equivalent to pointer.getUniqueId
 
+        return newDict
+
+    def getProtocolsJson(self, protocols=None, namesOnly=False):
+        """ Wraps getProtocolsDict to get a json string
+             Params:
+                protocols: list of protocols or None to include all.
+                namesOnly: the output list will contain only the protocol names.
+        """
+        newDict = self.getProtocolsDict(protocols=protocols, namesOnly=namesOnly)
         return json.dumps(list(newDict.values()),
                           indent=4, separators=(',', ': '))
 
@@ -897,13 +906,14 @@ class Project(object):
         Note: either filename or jsonStr should be not None.
         """
         f = open(filename)
+        importDir = os.path.dirname(filename)
         protocolsList = json.load(f)
 
         emProtocols = em.Domain.getProtocols()
         newDict = OrderedDict()
 
         # First iteration: create all protocols and setup parameters
-        for protDict in protocolsList:
+        for i, protDict in enumerate(protocolsList):
             protClassName = protDict['object.className']
             protId = protDict['object.id']
             protClass = emProtocols.get(protClassName, None)
@@ -911,11 +921,11 @@ class Project(object):
             if protClass is None:
                 print "ERROR: protocol class name '%s' not found" % protClassName
             else:
+                protLabel = protDict.get('object.label', None)
                 prot = self.newProtocol(protClass,
-                                        objLabel=protDict.get('object.label',
-                                                              None),
-                                        objComment=protDict.get(
-                                            'object.comment', None))
+                                        objLabel=protLabel,
+                                        objComment=protDict.get('object.comment', None))
+                protocolsList[i] = prot.processImportDict(protDict, importDir)
 
                 prot._useQueue.set(protDict.get('_useQueue', False))
                 prot._queueParams.set(protDict.get('_queueParams', None))
