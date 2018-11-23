@@ -836,7 +836,7 @@ class Sequence(EMObject):
         return self._isAminoacids
 
     def __str__(self):
-         return self.getSeqName()
+         return "Sequence (name = {})\n".format(self.getSeqName())
 
 
 class PdbFile(EMFile):
