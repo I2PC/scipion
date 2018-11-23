@@ -72,10 +72,10 @@ class ProtImportImages(ProtImportFiles):
                        help='Depending on the import Format, the wizard\n'
                             'will try to import the acquisition values.\n'
                             'If not found, required ones should be provided.')
-        group.addParam('voltage', params.FloatParam, default=200,
+        group.addParam('voltage', params.FloatParam, default=300,
                    label=Message.LABEL_VOLTAGE, 
                    help=Message.TEXT_VOLTAGE)
-        group.addParam('sphericalAberration', params.FloatParam, default=2,
+        group.addParam('sphericalAberration', params.FloatParam, default=2.7,
                    label=Message.LABEL_SPH_ABERRATION, 
                    help=Message.TEXT_SPH_ABERRATION)
         group.addParam('amplitudeContrast', params.FloatParam, default=0.1,
@@ -530,6 +530,25 @@ class ProtImportImages(ProtImportFiles):
     def _createOutputSet(self):
         """ Create the output set that will be populated as more data is
         imported. """
+
+
+    def processImportDict(self, importDict, importDir):
+        """
+        This function is used when we import a workflow from a json.
+        If we need to include source data for reproducibility purposes,
+        this function will make the necessary changes in the protocol dict
+        to include the source data.
+        Params:
+            - importDict: import dictionary coming from the json
+            - importDir: directory containing the json file
+        """
+
+        if not os.path.exists(importDict['filesPath']):  # we might have a relative path
+            absPath = os.path.join(importDir, importDict['filesPath'].split('/', 1)[1])
+            if os.path.exists(absPath):
+                importDict['filesPath'] = absPath
+
+        return importDict
 
     # --------------- Streaming special functions -----------------------
     def _getStopStreamingFilename(self):
