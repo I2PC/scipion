@@ -260,7 +260,7 @@ class Text(tk.Text, Scrollable):
             import xmippLib
             fn = xmippLib.FileName(path)
             if fn.isImage() or fn.isMetaData():
-                from pyworkflow.em.viewer import DataView
+                from pyworkflow.em.viewers import DataView
                 DataView(path).show()
             else:
                 _open_cmd(path)

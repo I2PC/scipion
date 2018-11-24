@@ -264,7 +264,7 @@ class ImageFileHandler(FileHandler):
         return self._getImagePreview(fn), self._getImageString(fn)
     
     def getFileActions(self, objFile):
-        from pyworkflow.em.viewer import DataView
+        from pyworkflow.em.viewers import DataView
         fn = objFile.getPath()
         return [('Open with Xmipp viewer', lambda: DataView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
