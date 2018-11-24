@@ -209,7 +209,7 @@ class Viewer(object):
                 to the ObjectView constructor
         """
         # We can not import em globally
-        from pyworkflow.em import ObjectView
+        from pyworkflow.em.viewers import ObjectView
         fn = None
 
         if isinstance(filenameOrObject, basestring):
