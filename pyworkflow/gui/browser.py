@@ -290,7 +290,7 @@ class StackHandler(ImageFileHandler):
 class ChimeraHandler(FileHandler):
     
     def getFileActions(self, objFile):
-        from pyworkflow.em.viewer import ChimeraView
+        from pyworkflow.em.viewers import ChimeraView
         fn = objFile.getPath()
         return [('Open with Chimera', lambda: ChimeraView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
