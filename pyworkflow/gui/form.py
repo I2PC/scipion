@@ -774,7 +774,7 @@ class ParamWidget:
         bgColor = 'white'
         
         if self.param.isExpert():
-            bgColor = 'grey'
+            bgColor = 'lightgrey'
         
         self.label = tk.Label(self.parent, text=self._getParamLabel(), 
                               bg=bgColor, font=self._labelFont, wraplength=500)

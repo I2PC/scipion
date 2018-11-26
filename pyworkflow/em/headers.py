@@ -35,9 +35,15 @@ from pyworkflow.em.convert import ImageHandler
 import struct
 from math import isnan
 
+from pyworkflow.utils import getExt
+
 ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
 START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
+# File formats
+MRC = 0
+SPIDER = 1
+UNKNOWNFORMAT=2
 
 def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
                     sampling=1.0, originField=START):
@@ -58,7 +64,15 @@ def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
 
     ccp4header.writeHeader()
 
+def getFileFormat(fileName):
 
+    ext = getExt(fileName)
+    if (ext == '.mrc') or (ext == '.map'):
+        return MRC
+    elif (ext == '.spi') or (ext == '.vol'):
+        return SPIDER
+    else:
+        return UNKNOWNFORMAT
 
 class Ccp4Header():
     """
@@ -117,9 +131,9 @@ class Ccp4Header():
        .          "           in MAPBRICK, MAPCONT and FRODO)
        .          "           (all set to zero by default)
        .          "
-      52          "
-      53    MAP             Character string 'MAP ' to identify file type
-      54    MACHST          Machine stamp indicating the machine type
+      50-52	ORIGIN      	  origin in X,Y,Z (pixel units) used for Fourier transforms (modes 3 and 4)
+      53    MAP               Character string 'MAP ' to identify file type
+      54    MACHST            Machine stamp indicating the machine type
                               which wrote file
       55      ARMS            Rms deviation of map from mean density
       56      NLABL           Number of labels being used
@@ -133,7 +147,7 @@ class Ccp4Header():
     def __init__(self, fileName, readHeader=False):
         self._name = fileName.replace(':mrc', '')  # remove mrc ending
         self._header = collections.OrderedDict()
-        self.chain = "< 3i i 3i 3i 3f 144s 3f"
+        self.chain = "< 3i i 3i 3i 3f 36s i 104s 3f"
 
         if readHeader:
             self.loaded = True
@@ -227,6 +241,12 @@ class Ccp4Header():
                self._header['Ylength'],\
                self._header['Zlength']
 
+    def getISPG(self):
+        return self._header['ISPG']
+
+    def setISPG(self, ispg):
+        self._header['ISPG'] = ispg
+
     def read_header_values(self, file, file_size, file_type):
 
         MRC_USER = 29
@@ -263,10 +283,14 @@ class Ccp4Header():
         self._header['Xlength'] = a[10]
         self._header['Ylength'] = a[11]
         self._header['Zlength'] = a[12]
-        self._header['dummy1'] = a[13] + "\n"  # "< 3i i 3i 3i 3f 36s 3f"
-        self._header['originX'] = a[14]
-        self._header['originY'] = a[15]
-        self._header['originZ'] = a[16]
+        self._header['dummy1'] = a[13] + "\n"  # "< 3i i 3i 3i 3f 36s"
+        self._header['ISPG'] = a[14]
+        self._header['dummy2'] = a[15] + "\n"  # "< 3i i 3i 3i 3f 36s i 104s"
+        self._header['originX'] = a[16]
+        self._header['originY'] = a[17]
+        self._header['originZ'] = a[18]
+
+
 
     def getHeader(self):
         return self._header

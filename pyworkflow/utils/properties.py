@@ -352,6 +352,22 @@ Do you really want to continue?'
     LABEL_INSPECTOR = 'Objects inspector will inspect the whole project. ' \
                       'Thus, it can take a while depending on the size of the project.\n' \
                       'Do you want to continue?'
+    EXECUTE_PLUGINS_MANAGER_OPERATION = 'Execute all selected operations'
+    CANCEL_SELECTED_OPERATION = 'Cancel a selected operation'
+
+
+# PLUGIN/BINARY STATES
+class PluginStates():
+    PLUGIN = 'plugin'
+    BINARY = 'binary'
+    UNCHECKED = 'unchecked'
+    CHECKED = 'checked'
+    INSTALL = 'install'
+    UNINSTALL = 'uninstall'
+    TO_INSTALL = 'to_install'
+    INSTALLED = 'installed'
+    PRECESSING = 'processing'
+    FAILURE = 'failure'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
@@ -406,6 +422,18 @@ class Icon():
     ROCKET = 'fa-rocket.png'
 
     SCIPION_ICON = 'scipion_bn_icon.png'
+
+    # PLUGIN MANAGER ICONS
+    CHECKED = 'fa-checked.png'
+    UNCHECKED = 'fa-unchecked.png'
+    INSTALL = 'fa-install.png'
+    UNINSTALL = 'fa-uninstall.png'
+    TO_INSTALL = 'fa-to_install.png'
+    INSTALLED = 'fa-installed.png'
+    PROCESSING = 'fa-processing.png'
+    FAILURE = 'fa-failure.png'
+    DELETE_OPERATION = 'fa-delete-operation.png'
+
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
