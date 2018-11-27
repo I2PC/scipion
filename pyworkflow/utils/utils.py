@@ -745,13 +745,16 @@ def pluginNotFound(plugName, errorMsg='', doRaise=False):
 
 
     stackList = traceback.extract_stack()
-    callIdx = -4  # We use the most probable index as default
-    for idx, stackLine in enumerate(stackList):
-        if stackLine[0].endswith('/unittest/loader.py'):
-            callIdx = idx
+    if len(stackList) > 3:
+        callIdx = -3  # We use the most probable index as default
+        for idx, stackLine in enumerate(stackList):
+            if stackLine[0].endswith('/unittest/loader.py'):
+                callIdx = idx + 1
+    else:
+        callIdx = 0
 
-    callBy = stackList[callIdx + 1][0]
-    line = stackList[callIdx + 1][1]
+    callBy = stackList[callIdx][0]
+    line = stackList[callIdx][1]
     calling = "   Called by %s, line %s" % (callBy, line)
 
     raiseMsg = "%s\n%s\n%s\n" % (msgStr, calling, hint)
