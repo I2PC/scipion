@@ -39,7 +39,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from viewer_chimera import createCoordinateAxisFile, Chimera
+from pyworkflow.em.viewers.viewer_chimera import Chimera, ChimeraView
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
@@ -115,7 +115,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             dim = self.protocol.outputVolume.getDim()[0]
             tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
                 "axis.bild"))
-            createCoordinateAxisFile(dim,
+            Chimera.createCoordinateAxisFile(dim,
                                      bildFileName=tmpFileNameBILD,
                                      sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
@@ -138,8 +138,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             x, y, z = vol.getShiftsFromOrigin()
             f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
         f.close()
-        import pyworkflow.em as em
-        return [em.ChimeraView(tmpFileNameCMD)]
+        return [ChimeraView(tmpFileNameCMD)]
 
     def _showVolumesSlices(self):
         # Write an sqlite with all volumes selected for visualization.

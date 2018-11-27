@@ -6,8 +6,6 @@ Created on May 20, 2013
 
 from glob import iglob
 from pyworkflow.tests import *
-import pyworkflow.em.metadata as md
-from pyworkflow.em.convert import ImageHandler, DT_FLOAT
 import pyworkflow.utils as pwutils
 
 try:

@@ -261,7 +261,14 @@ def getJavaIJappArguments(memory, appName, appArgs):
     javaLib = join(javaBind, 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
-    args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+
+    import subprocess
+    version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
+    majorVersion = int(version.split('"')[1].split('.')[0])
+    if majorVersion > 9:
+        args = "-Xmx%(memory)sg -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+    else:
+        args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
 
     return args
 
@@ -269,7 +276,8 @@ def getJavaIJappArguments(memory, appName, appArgs):
 def runJavaIJapp(memory, appName, args, env=None):
     xmipp3 = importFromPlugin('xmipp3')
     env = env or {}
-    env.update(xmipp3.Plugin.getEnviron(xmippFirst=False))
+    getEnviron = importFromPlugin('xmipp3', 'Plugin').getEnviron
+    env.update(getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s' % args

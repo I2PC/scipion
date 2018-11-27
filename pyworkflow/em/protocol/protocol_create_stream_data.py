@@ -323,7 +323,7 @@ class ProtCreateStreamData(EMProtocol):
 
     def createRandomMicStep(self, mic):
         time.sleep(self.creationInterval.get())
-        getEnviron = importFromPlugin('xmipp3', 'getEnviron')
+        getEnviron = importFromPlugin('xmipp3', 'Plugin').getEnviron
 
         # create image
         img = xmippLib.Image()
