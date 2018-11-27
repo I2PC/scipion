@@ -32,7 +32,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import FSC, SetOfFSCs
+from pyworkflow.em.data import FSC
 
 
 class ProtExportEMDB(EMProtocol):
