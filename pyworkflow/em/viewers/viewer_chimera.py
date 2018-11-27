@@ -46,6 +46,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import PdbFile
 from pyworkflow.em.convert import ImageHandler
 
+
 import showj
 import xmippLib
 
@@ -119,7 +120,7 @@ class Chimera:
         pwutils.runJob(None, prog, args, env=cls.getEnviron())
 
     @classmethod
-    def createCoordinateAxisFile(dim, bildFileName="/tmp/axis.bild",
+    def createCoordinateAxisFile(cls, dim, bildFileName="/tmp/axis.bild",
                                  sampling=1, r1=0.1):
         """ Create a coordinate system, Along each dimension
         we place a small sphere in the negative axis. In this way
@@ -379,7 +380,6 @@ class ChimeraVirusClient(ChimeraClient):
 
     # this is an auxiliary file that should be deleted
     def listToBild(self, points, radius, file, color='0 0 1'):
-        print ("--------------------------------")
         f = open(file, 'w')
         for point in points:
             print ("\n.color", color, "\n.sphere", point[0]+128.,
@@ -610,7 +610,7 @@ class ChimeraViewer(Viewer):
                 # Construct the coordinate file
                 bildFileName = os.path.abspath(
                     os.path.join(tmpPath, "axis.bild"))
-                createCoordinateAxisFile(dim,
+                Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=bildFileName,
                                          sampling=sampling)
                 f.write("open %s\n" % bildFileName)
