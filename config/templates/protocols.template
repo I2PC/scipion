@@ -10,14 +10,15 @@ Protocols SPA = [
 		{"tag": "protocol", "value": "ProtImportParticles",   "text": "import particles"},
 		{"tag": "protocol", "value": "ProtImportVolumes",     "text": "import volumes"},
 		{"tag": "section", "text": "more", "openItem": "False", "children": [
-			{"tag": "protocol", "value": "ProtImportCoordinates",   "text": "import coordinates"},
-			{"tag": "protocol", "value": "ProtImportCTF",   "text": "import ctfs"},
-			{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
-			{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
-			{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
-			{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "import micrograph pairs"},
-			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
-			{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
+		{"tag": "protocol", "value": "ProtImportCoordinates",   "text": "import coordinates"},
+		{"tag": "protocol", "value": "ProtImportCTF",   "text": "import ctfs"},
+		{"tag": "protocol", "value": "ProtImportPdb",   "text": "import atomic structure"},
+		{"tag": "protocol", "value": "ProtImportSequence",   "text": "import sequence"},
+		{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
+		{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
+		{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "import micrograph pairs"},
+		{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
+		{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
 		]}
 	]},
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [

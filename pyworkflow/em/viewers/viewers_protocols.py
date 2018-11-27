@@ -24,20 +24,25 @@
 # *
 # **************************************************************************
 
-# Expose many basic views
-from .views import (DataView, ObjectView, MicrographsView, CtfView,
-                           ClassesView, Classes3DView, CoordinatesObjectView,
-                           ImageView, TableView)
-from .plotter import EmPlotter
-from .viewers_data import DataViewer
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em.protocol import ProtClassesConsensus
 
-from .viewer_localres import LocalResolutionViewer
-from .viewer_vmd import Vmd, VmdView, VmdViewer
-from .viewer_fsc import FscViewer
-from .viewer_pdf import PDFReportViewer
-from .viewer_chimera import (Chimera, ChimeraView, ChimeraClientView,
-                             ChimeraDataView, ChimeraViewer)
-from .viewer_monitors import (ProtMonitorCTFViewer, ProtMonitorSystemViewer,
-                              ProtMonitorMovieGainViewer, ViewerMonitorSummary)
-from .viewer_sequence import SequenceViewer
-from .viewer_volumes import viewerProtImportVolumes
+from .views import DataView
+
+
+class ViewerClassesConsensus(Viewer):
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtClassesConsensus]
+
+    def _visualize(self, obj, **kwargs):
+        labels = ('class1.id class1._representative._filename class2.id '
+                  'class2._representative._filename jaccard intersection union')
+        return [DataView(obj.outputConsensus.getFileName(),
+                         viewParams={'order': labels, 'mode': 'metadata',
+                                     'visible': labels,
+                                     'render': 'class1._representative._filename class2._representative._filename'
+                                     })
+                ]
+
+    def visualize(self, obj, **kwargs):
+        self._visualize(obj, **kwargs)[0].show()
