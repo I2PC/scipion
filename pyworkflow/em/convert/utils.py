@@ -23,6 +23,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import os
+import sys
 
 
 def getSubsetByDefocus(inputCTFs, inputMics, nMics):
