@@ -439,7 +439,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                                                     % objLabel):
                 prot.getProject().deleteProtocolOutput(prot, obj)
                 self.parent._fillSummary()
-                self.parent.windows.showInfo("Object *%s* successfuly deleted."
+                self.parent.windows.showInfo("Object *%s* successfully deleted."
                                              % objLabel)
         except Exception as ex:
             self.parent.windows.showError(str(ex))
@@ -792,6 +792,15 @@ class ProtocolsView(tk.Frame):
 
             if not self.project.doesProtocolExists(protId):
                 self._selection.remove(protId)
+
+    def _isMultipleSelection(self):
+        return len(self._selection) > 1
+
+    def _isSingleSelection(self):
+        return len(self._selection) == 1
+
+    def _noSelection(self):
+        return len(self._selection) == 0
 
     # noinspection PyUnusedLocal
     def refreshRuns(self, e=None, initRefreshCounter=True, checkPids=False):
@@ -1375,8 +1384,9 @@ class ProtocolsView(tk.Frame):
         self._fillMethod()
         self._fillLogs()
 
-        last = self.getSelectedProtocol()
-        self._lastSelectedProtId = last.getObjId() if last else None
+        if self._isSingleSelection():
+            last = self.getSelectedProtocol()
+            self._lastSelectedProtId = last.getObjId() if last else None
 
         self._updateActionToolbar()
 
@@ -1665,12 +1675,12 @@ class ProtocolsView(tk.Frame):
 
             self.methodText.setReadOnly(True)
         except Exception as e:
-            self.methodText.addLine('Could not load all methods:' + e.getMessage())
+            self.methodText.addLine('Could not load all methods:' + str(e))
 
     def _fillLogs(self):
         prot = self.getSelectedProtocol()
 
-        if len(self._selection) != 1 or not prot:
+        if not self._isSingleSelection() or not prot:
             self.outputViewer.clear()
             self._lastStatus = None
         elif prot.getObjId() != self._lastSelectedProtId:
@@ -1793,15 +1803,17 @@ class ProtocolsView(tk.Frame):
                 # self.updateRunsGraph()
                 self.drawRunsGraph()
 
-    def _selectAncestors(self, run=None):
+    def _selectAncestors(self, childRun=None):
 
         children = []
-        if run is None:
+        # If parent param not passed...
+        if childRun is None:
+            #..use selection, must be first call
             for protId in self._selection:
                 run = self.runsGraph.getNode(str(protId))
                 children.append(run)
         else:
-            name = run.getName()
+            name = childRun.getName()
 
             if not name.isdigit():
                 return
@@ -1810,7 +1822,7 @@ class ProtocolsView(tk.Frame):
 
             # If already selected (may be this should be centralized)
             if name not in self._selection:
-                children = (run,)
+                children = (childRun,)
                 self._selection.append(name)
 
         # Go up .
@@ -1820,9 +1832,11 @@ class ProtocolsView(tk.Frame):
             for parent in run.getParents():
                 self._selectAncestors(parent)
 
-        self._updateSelection()
-
-        self.drawRunsGraph()
+        # Only update selection at the end, avoid recursion
+        if childRun is None:
+            self._lastSelectedProtId = None
+            self._updateSelection()
+            self.drawRunsGraph()
 
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()

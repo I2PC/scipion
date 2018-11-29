@@ -146,7 +146,8 @@ class Command:
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
-                    call(cmd, shell=True, env=self._environ)
+                    call(cmd, shell=True, env=self._environ,
+                         stdout=sys.stdout, stderr=sys.stderr)
 
             # Return to working directory, useful when we change dir
             # before executing the command.
@@ -387,6 +388,10 @@ class Environment:
         t.buildDir = buildDir
         t.buildPath = buildPath
         t.targetPath = targetPath
+
+        # check if tar exists and has size >0 so that we can download again
+        if os.path.isfile(tarFile) and os.path.getsize(tarFile) == 0:
+            os.remove(tarFile)
 
         if url.startswith('file:'):
             t.addCommand('ln -s %s %s' % (url.replace('file:', ''), tar),
@@ -630,9 +635,10 @@ class Environment:
                    if kwargs.get('updateCuda', False) else None)
 
         # Set environment
-        variables = kwargs.get('vars', [])
-        for var, value in variables:
-            environ.update({var: value})
+        variables = kwargs.get('vars', {})
+        if variables:
+            environ = {} if environ is None else environ
+            environ.update(variables)
 
 
         # We reuse the download and untar from the addLibrary method
@@ -820,6 +826,10 @@ class Environment:
         """Set default values of all packages to the passed parameter"""
         for t in self._targetList:
             t.setDefault(default)
+
+    def getPackages(self):
+        """Return all plugin packages"""
+        return self._packages
 
 class Link:
     def __init__(self, packageLink, packageFolder):

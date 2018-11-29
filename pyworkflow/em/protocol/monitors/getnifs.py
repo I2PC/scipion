@@ -107,19 +107,27 @@ def get_network_interfaces():
     if result != 0:
         raise OSError(get_errno())
     del result
-    try:
-        retval = {}
-        for ifa in ifap_iter(ifap):
+    retval = {}
+    for ifa in ifap_iter(ifap):
+        try:
             name = ifa.ifa_name
             i = retval.get(name)
             if not i:
                 i = retval[name] = NetworkInterface(name)
-            family, addr = getfamaddr(ifa.ifa_addr.contents)
-            if addr:
-                i.addresses[family] = addr
-        return retval.values()
-    finally:
-        libc.freeifaddrs(ifap)
+                family, addr = getfamaddr(ifa.ifa_addr.contents)
+                if addr:
+                    i.addresses[family] = addr
+        except ValueError :
+                del retval[name]
+                print "get_network_interfaces: " \
+                      "Can not connect to NIC %s" % name
+        except:
+            print "Unexpected error:", sys.exc_info()[0]
+    #print retval.values()
+    libc.freeifaddrs(ifap)
+    return retval.values()
+
 
 if __name__ == '__main__':
     print [str(ni) for ni in get_network_interfaces()]
+

@@ -36,7 +36,7 @@ from pyworkflow import findResource
 from pyworkflow.object import PointerList, Pointer
 from pyworkflow.wizard import Wizard
 from pyworkflow.utils import importFromPlugin
-from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.convert import ImageHandler, Ccp4Header
 from pyworkflow.em.constants import (UNIT_PIXEL,
                                      UNIT_ANGSTROM,
                                      UNIT_PIXEL_FOURIER,
@@ -46,11 +46,10 @@ from pyworkflow.em.constants import (UNIT_PIXEL,
                                      )
 from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
-from pyworkflow.em.headers import Ccp4Header
-from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
-                                                    ProtImportCoordinates,
-                                                    ProtImportCoordinatesPairs,
-                                                    ProtImportVolumes)
+from pyworkflow.em.protocol import (ProtImportImages,
+                                    ProtImportCoordinates,
+                                    ProtImportCoordinatesPairs,
+                                    ProtImportVolumes)
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow.gui.widgets import LabelSlider
@@ -710,8 +709,8 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        getImageLocation = importFromPlugin('xmipp3.convert', 'getImageLocation')
-        xmippLib.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
+        xmippLib.bandPassFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
                                 self.getLowFreq(), self.getHighFreq(),
                                 self.getFreqDecay(), self.dim)
 
@@ -760,8 +759,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        getImageLocation = importFromPlugin('xmipp3.convert', 'getImageLocation')
-        xmippLib.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
+        xmippLib.gaussianFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
                                 self.getFreqSigma(), self.dim)
 
 
