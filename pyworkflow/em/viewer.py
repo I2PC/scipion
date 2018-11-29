@@ -707,7 +707,7 @@ class ChimeraAngDistClient(ChimeraClient):
             self.angulardist.append(command)
             # printCmd(command)
 
-
+# ChimeraVirusClient DELETE this class
 class ChimeraVirusClient(ChimeraClient):
 
     def __init__(self, volfile, **kwargs):

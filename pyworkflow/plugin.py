@@ -47,6 +47,7 @@ class Domain:
     """
 
     # The following classes should be defined in subclasses of Domain
+    _name = None
     _protocolClass = None
     _objectClass = None
     _viewerClass = None
@@ -130,10 +131,24 @@ class Domain:
         return m
 
     @classmethod
-    def __getSubclasses(cls, submoduleName, BaseClass):
+    def __getSubclasses(cls, submoduleName, BaseClass,
+                        updateBaseClasses=False):
+        """ Load all detected subclasses of a given BaseClass.
+        Params:
+            updateBaseClasses: if True, it will try to load classes from the
+                Domain submodule that was not imported as globals()
+        """
         subclasses = getattr(cls, '_%s' % submoduleName)
 
         if not subclasses:  # Only discover subclasses once
+            if updateBaseClasses:
+                sub = cls.__getSubmodule(cls.getName(), submoduleName)
+                if sub is not None:
+                    for name in dir(sub):
+                        attr = getattr(sub, name)
+                        if inspect.isclass(attr) and issubclass(attr, BaseClass):
+                            cls._baseClasses[name] = attr
+
             for pluginName, plugin in cls.getPlugins().iteritems():
                 sub = cls.__getSubmodule(pluginName, submoduleName)
                 if sub is not None:
@@ -164,13 +179,18 @@ class Domain:
     def getViewers(cls):
         """ Return all Viewer subclasses from all plugins for this domain.
         """
-        return cls.__getSubclasses('viewers', cls._viewerClass)
+        return cls.__getSubclasses('viewers', cls._viewerClass,
+                                   updateBaseClasses=True)
 
     @classmethod
     def getWizards(cls):
         """ Return all Wizard subclasses from all plugins for this domain.
         """
         return cls.__getSubclasses('wizards', cls._wizardClass)
+
+    @classmethod
+    def getName(cls):
+        return cls._name
 
 
 class Plugin:
