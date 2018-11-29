@@ -55,10 +55,10 @@ void MpiProgReconstructSignificant::gatherAlignment()
 	MultidimArray<double> aux;
 	if (rank==0)
 		aux.resizeNoCopy(cc);
-	MPI_Reduce(MULTIDIM_ARRAY(weight), MULTIDIM_ARRAY(aux), MULTIDIM_SIZE(weight), MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+	xmipp_MPI_Reduce(MULTIDIM_ARRAY(weight), MULTIDIM_ARRAY(aux), MULTIDIM_SIZE(weight), MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 	if (rank==0)
 		weight=aux;
-	MPI_Reduce(MULTIDIM_ARRAY(cc), MULTIDIM_ARRAY(aux), MULTIDIM_SIZE(cc), MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+	xmipp_MPI_Reduce(MULTIDIM_ARRAY(cc), MULTIDIM_ARRAY(aux), MULTIDIM_SIZE(cc), MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 	if (rank==0)
 		cc=aux;
 

@@ -36,8 +36,7 @@ from collections import OrderedDict
 
 from pyworkflow.em.packages.gctf import GCTF_HOME
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pyworkflow.object import Float, ObjectWrap
-import pyworkflow.em as em
+from pyworkflow.object import ObjectWrap
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 
@@ -117,7 +116,10 @@ def readCtfModel(ctfModel, filename, ctf4=False):
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     ctfModel.setFitQuality(ctfFit)
     ctfModel.setResolution(ctfResolution)
-    ctfModel.setPhaseShift(ctfPhaseShift)
+
+    # Avoid creation of phaseShift
+    if ctfPhaseShift != 0:
+        ctfModel.setPhaseShift(ctfPhaseShift)
 
 
 def getEnviron():

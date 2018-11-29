@@ -648,7 +648,7 @@ void ProgCtfGroup::writeOutputToDisc()
     Image<double> Ictf2D;
     Ictf2D.data.alias(ctf2D);
 
-    olddefGroup=1;
+    olddefGroup=-1;
     //defGroup=-1;
     FileName outFileNameCTF,outFileNameWIEN,outFileName;
     outFileNameCTF = fn_root + "_ctf."+format;
@@ -660,6 +660,8 @@ void ProgCtfGroup::writeOutputToDisc()
     FOR_ALL_OBJECTS_IN_METADATA(sortedCtfMD)
     {
         sortedCtfMD.getValue(MDL_DEFGROUP,defGroup,__iter.objId);
+        if (olddefGroup<0)
+        	olddefGroup=defGroup;
         sortedCtfMD.getValue(MDL_ORDER,order,__iter.objId);
         sortedCtfMD.getValue(MDL_COUNT,count,__iter.objId);
         double dCount = (double)count;

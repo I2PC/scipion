@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# *              Tomas Majtner (tmajtner@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,20 +24,23 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
 from pyworkflow import VERSION_1_1
+from pyworkflow.em.data import SetOfMovies, Movie
+from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
+from pyworkflow.em.protocol.monitors import MonitorMovieGain, \
+    MovieGainMonitorPlotter
+from pyworkflow.object import Set
+from pyworkflow.protocol.params import PointerParam, IntParam, \
+    BooleanParam, LEVEL_ADVANCED
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
-from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
-from pyworkflow.em.data import SetOfMovies, Movie
-from pyworkflow.object import Set
 import pyworkflow.protocol.constants as cons
 import pyworkflow.em as em
 import numpy as np
 import os
 import math
 import xmipp
-
 
 class XmippProtMovieGain(ProtProcessMovies):
     """
@@ -53,17 +57,18 @@ class XmippProtMovieGain(ProtProcessMovies):
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
  
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies, Movie',
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies, '
+                                                                'Movie',
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select one or several movies. A gain image will '
                            'be calculated for each one of them.')
-        form.addParam('frameStep', IntParam, default=1,
+        form.addParam('frameStep', IntParam, default=5,
                       label="Frame step", expertLevel=LEVEL_ADVANCED,
-                      help='By default, every frame (frameStep=1) is used to '
-                           'compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then only every 2nd, '
-                           '3rd, ... frame will be used.')
-        form.addParam('movieStep', IntParam, default=1,
+                      help='By default, every 5th frame is used to compute '
+                           'the movie gain. If you set this parameter to '
+                           '2, 3, ..., then only every 2nd, 3rd, ... '
+                           'frame will be used.')
+        form.addParam('movieStep', IntParam, default=250,
                       label="Movie step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every movie (movieStep=1) is used to '
                            'compute the movie gain. If you set '
@@ -82,9 +87,7 @@ class XmippProtMovieGain(ProtProcessMovies):
     #--------------------------- STEPS functions -------------------------------
 
     def createOutputStep(self):
-        # Do nothing now, the output should be ready.
         pass
-
 
     def _insertNewMoviesSteps(self, insertedDict, inputMovies):
         """ Insert steps to process new movies (from streaming)
@@ -140,11 +143,14 @@ class XmippProtMovieGain(ProtProcessMovies):
             mean, dev, min, max = G.computeStats()
             Gnp = G.getData()
             p = np.percentile(Gnp, [2.5, 25, 50, 75, 97.5])
-            fhSummary.write("movie_%06d: mean=%f std=%f [min=%f,max=%f]\n" % (movieId, mean, dev, min, max))
+            fhSummary.write("movie_%06d: mean=%f std=%f [min=%f,max=%f]\n" %
+                            (movieId, mean, dev, min, max))
             fhSummary.write(
-                "            2.5%%=%f 25%%=%f 50%%=%f 75%%=%f 97.5%%=%f\n" % (p[0], p[1], p[2], p[3], p[4]))
+                "            2.5%%=%f 25%%=%f 50%%=%f 75%%=%f 97.5%%=%f\n" %
+                (p[0], p[1], p[2], p[3], p[4]))
             fhSummary.close()
-            fnMonitorSummary.write("movie_%06d: %f %f %f %f\n" % (movieId, dev, p[0], p[4], max))
+            fnMonitorSummary.write("movie_%06d: %f %f %f %f\n" %
+                                   (movieId, dev, p[0], p[4], max))
             fnMonitorSummary.close()
 
 
@@ -183,13 +189,16 @@ class XmippProtMovieGain(ProtProcessMovies):
             return
         if isinstance(self.inputMovies.get(), Movie):
             saveMovie = self.getAttributeValue('doSaveMovie', False)
-            imageSet = self._loadOutputSet(em.data.SetOfImages, 'movies.sqlite', fixSampling=saveMovie)
+            imageSet = self._loadOutputSet(em.data.SetOfImages,
+                                           'movies.sqlite',
+                                           fixSampling=saveMovie)
 
             movie = self.inputMovies.get()
             imgOut = em.data.Image()
             imgOut.setObjId(movie.getObjId())
             imgOut.setSamplingRate(movie.getSamplingRate())
-            imgOut.setFileName(self._getPath("movie_%06d_gain.xmp" % movie.getObjId()))
+            imgOut.setFileName(self._getPath("movie_%06d_gain.xmp" %
+                                             movie.getObjId()))
             imageSet.setSamplingRate(movie.getSamplingRate())
             imageSet.append(imgOut)
 
@@ -203,19 +212,19 @@ class XmippProtMovieGain(ProtProcessMovies):
             doneList = self._readDoneList()
             # Check for newly done items
             newDone = [m.clone() for m in self.listOfMovies
-                       if int(m.getObjId()) not in doneList and self._isMovieDone(m)]
-
-            # Update the file with the newly done movies
-            # or exit from the function if no new done movies
-            self.debug('_checkNewOutput: ')
-            self.debug('   listOfMovies: {0}, doneList: {1}, newDone: {2}'
-                       .format(int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get()))), len(doneList), len(newDone)))
+                       if int(m.getObjId()) not in doneList and
+                       self._isMovieDone(m)]
 
             allDone = len(doneList) + len(newDone)
-            # We have finished when there is not more input movies (stream closed)
-            # and the number of processed movies is equal to the number of inputs
-            self.finished = self.streamClosed and allDone == int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get())))
-            streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+            # We have finished when there is not more input movies
+            # (stream closed) and the number of processed movies is
+            # equal to the number of inputs
+            self.finished = self.streamClosed and \
+                            allDone == int(math.ceil(
+                                len(self.listOfMovies) /
+                                float(self.movieStep.get())))
+            streamMode = Set.STREAM_CLOSED if self.finished \
+                else Set.STREAM_OPEN
 
             if newDone:
                 self._writeDoneList(newDone)
@@ -225,20 +234,17 @@ class XmippProtMovieGain(ProtProcessMovies):
                 # so we exit from the function here
                 return
 
-            self.debug('   finished: %s ' % self.finished)
-            self.debug('        self.streamClosed ({0}) AND' .format(self.streamClosed))
-            self.debug('        allDone ({0}) == len(self.listOfMovies ({1})'
-                       .format(allDone, int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get())))))
-            self.debug('   streamMode: %s' % streamMode)
-
             saveMovie = self.getAttributeValue('doSaveMovie', False)
-            imageSet = self._loadOutputSet(em.data.SetOfImages, 'movies.sqlite', fixSampling=saveMovie)
+            imageSet = self._loadOutputSet(em.data.SetOfImages,
+                                           'movies.sqlite',
+                                           fixSampling=saveMovie)
 
             for movie in newDone:
                 imgOut = em.data.Image()
                 imgOut.setObjId(movie.getObjId())
                 imgOut.setSamplingRate(movie.getSamplingRate())
-                imgOut.setFileName(self._getPath("movie_%06d_gain.xmp" % movie.getObjId()))
+                imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
+                                                 % movie.getObjId()))
                 imageSet.setSamplingRate(movie.getSamplingRate())
                 imageSet.append(imgOut)
 
