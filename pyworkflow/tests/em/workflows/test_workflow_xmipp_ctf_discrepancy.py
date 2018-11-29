@@ -27,20 +27,16 @@ Please,  do not  generate or  distribute
 a modified version of this file under its original name.
 """
 
-import os
-from itertools import izip
 
 from pyworkflow.em.data import SetOfCTF, CTFModel, Micrograph, SetOfMicrographs
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportCTF
-from pyworkflow.object import PointerList, Pointer
 from test_workflow import TestWorkflow
 from pyworkflow.utils import importFromPlugin
 import pyworkflow.tests as tests
-from pyworkflow.em import ImageHandler
 
 import xmippLib
 XmippProtCTFDiscrepancy = importFromPlugin('xmipp3.protocols',
-                                           'XmippProtCTFConsensus', doRaise=True)
+                                           'XmippProtCTFDiscrepancy', doRaise=True)
 
 
 class TestXmippCTFDiscrepancyBase(TestWorkflow):
