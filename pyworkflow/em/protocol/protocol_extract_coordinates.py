@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              David Maluenda (dmaluenda@cnb.csic.es)  -streaming version-
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,15 +26,21 @@
 # *
 # **************************************************************************
 
-
+import os
 import numpy
+from datetime import datetime
+from collections import OrderedDict
+
 from pyworkflow.protocol.params import PointerParam, BooleanParam
+from pyworkflow.protocol.constants import STATUS_NEW
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pyworkflow.em.data import Coordinate
-from pyworkflow.em.protocol import ProtParticlePicking
+from pyworkflow.em.data import (Coordinate, SetOfParticles, SetOfMicrographs,
+                                SetOfCoordinates, Set)
+from pyworkflow.em.protocol import ProtParticlePickingAuto
+import pyworkflow.utils as pwutils
 
 
-class ProtExtractCoords(ProtParticlePicking):
+class ProtExtractCoords(ProtParticlePickingAuto):
     """ 
     Extract the coordinates information from a set of particles.
     
@@ -42,12 +49,10 @@ class ProtExtractCoords(ProtParticlePicking):
     original dimensions. It can be also handy to visualize the resulting
     particles in their location on micrographs.
     """
-    # TESTS: 
-    # scipion test tests.em.protocols.test_protocols_xmipp_mics.TestXmippExtractParticles
     
     _label = 'extract coordinates'
 
-    # -------------------------- DEFINE param functions -----------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -71,101 +76,194 @@ class ProtExtractCoords(ProtParticlePicking):
         
         form.addParallelSection(threads=0, mpi=0)
 
-    # -------------------------- INSERT steps functions -----------------------
-
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutputStep')
+        self.inputSize = 0
+        self.outputSize = 0
+        self.micDict = OrderedDict()
+
+        micDict, self.streamClosed = self.loadInputs()
+        stepsIds = self._insertNewSteps(micDict)
+
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=stepsIds, wait=True)
+
+    def _insertNewSteps(self, micsDict):
+        deps = []
+        stepId = self._insertFunctionStep('extractCoordsStep', micsDict,
+                                          prerequisites=[])
+        deps.append(stepId)
+        return deps
+
+    def _checkNewInput(self):
+        # Check if there are new particles to process from the input set
+        partsFile = self.getInputParticles().getFileName()
+        micsFile = self.getInputMicrographs().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTimeParts = datetime.fromtimestamp(os.path.getmtime(partsFile))
+        mTimeMics = datetime.fromtimestamp(os.path.getmtime(micsFile))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTimeParts and self.lastCheck > mTimeMics:
+            return None
+        self.lastCheck = now
+
+        micDict, self.streamClosed = self.loadInputs()
+
+        if len(micDict) > 0:
+            fDeps = self._insertNewSteps(micDict)
+            outputStep = self._getFirstJoinStep()
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+    def extractCoordsStep(self, micsDict):
+        inPart = self.getInputParticles()
+        inMics = self.getInputMicrographs()
+        scale = inPart.getSamplingRate() / inMics.getSamplingRate()
+        print "Scaling coordinates by a factor *%0.2f*" % scale
+        alignType = inPart.getAlignment()
+
+        tmpFn = self.getTmpOutputPath(next(iter(micsDict)))
+        outputCoords = SetOfCoordinates(filename=tmpFn)
+        outputCoords.setMicrographs(inMics)
+
+        newCoord = Coordinate()
+        for partList in micsDict.values():
+            for particle in partList:
+                coord = particle.getCoordinate()
+                micKey = coord.getMicId()
+                mic = inMics[micKey]
+
+                if mic is None:
+                    print "Skipping particle, key %s not found" % micKey
+                else:
+                    newCoord.copyObjId(particle)
+                    x, y = coord.getPosition()
+                    if self.applyShifts:
+                        shifts = self.getShifts(particle.getTransform(), alignType)
+                        xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
+                        newCoord.setPosition(xCoor * scale, yCoor * scale)
+                    else:
+                        newCoord.setPosition(x * scale, y * scale)
+
+                    newCoord.setMicrograph(mic)
+                    outputCoords.append(newCoord)
+
+        boxSize = inPart.getXDim() * scale
+        outputCoords.setBoxSize(boxSize)
+
+        self.outputSize += len(outputCoords)
+
+        outputCoords.write()
+        outputCoords.close()
+
+        # once the new processed particles have been wrote
+        self.micDict.update(micsDict)
+
+    def _checkNewOutput(self):
+        if getattr(self, 'finished', False):
+            return
+
+        self.finished = self.streamClosed and \
+                        self.inputSize == self.outputSize
+
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        # we will read all ready files
+        files = pwutils.glob(self.getTmpOutputPath('*'))
+        newData = len(files) > 0
+        lastToClose = self.finished and hasattr(self, 'outputCoordinates')
+        if newData or lastToClose:
+            outSet = self._loadOutputSet()
+            if newData:
+                for tmpFile in files:
+                    tmpSet = SetOfCoordinates(filename=tmpFile)
+                    tmpSet.loadAllProperties()
+                    outSet.copyItems(tmpSet)
+                    outSet.setBoxSize(tmpSet.getBoxSize())
+
+                    tmpSet.close()
+                    pwutils.cleanPath(tmpFile)
+
+            self._updateOutputSet('outputCoordinates', outSet, state=streamMode)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
+    def _loadOutputSet(self):
+        setFile = self._getPath("coordinates.sqlite")
+        if os.path.exists(setFile):
+            outputSet = SetOfCoordinates(filename=setFile)
+            outputSet.loadAllProperties()
+            outputSet.enableAppend()
+        else:
+            outputSet = SetOfCoordinates(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+            self._store(outputSet)
+            self._defineTransformRelation(self.getInputParticles(), outputSet)
+            self._defineSourceRelation(self.getInputMicrographs(), outputSet)
+
+        outputSet.copyInfo(self.getInputParticles())
+        outputSet.setMicrographs(self.getInputMicrographs())
+
+        return outputSet
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
 
     def createOutputStep(self):
-        inputParticles = self.inputParticles.get()
-        inputMics = self.inputMicrographs.get()
-        outputCoords = self._createSetOfCoordinates(inputMics)
-        alignType = inputParticles.getAlignment()
+        pass
 
-        scale = inputParticles.getSamplingRate() / inputMics.getSamplingRate()
-        print "Scaling coordinates by a factor *%0.2f*" % scale
-        newCoord = Coordinate()
-        firstCoord = inputParticles.getFirstItem().getCoordinate()
-        hasMicName = firstCoord.getMicName() is not None
+    # ------------- UTILS functions ----------------
+    def getTmpOutputPath(self, suffix):
+        return self._getExtraPath("coords%s.sqlite" % suffix)
 
-        # Create the micrographs dict using either micName or micId
-        micDict = {}
+    def loadInputs(self):
+        micsFn = self.getInputMicrographs().getFileName()
+        micsSet = SetOfMicrographs(filename=micsFn)
+        micsSet.loadAllProperties()
 
-        for mic in inputMics:
-            micKey = mic.getMicName() if hasMicName else mic.getObjId()
-            if micKey in micDict:
-                print ">>> ERROR: micrograph key %s is duplicated!!!" % micKey
-                print "           Used in micrographs:"
-                print "           - %s" % micDict[micKey].getLocation()
-                print "           - %s" % mic.getLocation()
-                raise Exception("Micrograph key %s is duplicated!!!" % micKey)
-            micDict[micKey] = mic.clone()
+        availableMics = []
+        for mic in micsSet:
+            availableMics.append(mic.getObjId())
 
-        for particle in inputParticles:
-            coord = particle.getCoordinate()
-            micKey = coord.getMicName() if hasMicName else coord.getMicId()
-            mic = micDict.get(micKey, None)  
-            
-            if mic is None: 
-                print "Skipping particle, key %s not found" % micKey
-            else:
-                newCoord.copyObjId(particle)
-                x, y = coord.getPosition()
-                if self.applyShifts:
-                    shifts = self.getShifts(particle.getTransform(), alignType)
-                    xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
-                    newCoord.setPosition(xCoor*scale, yCoor*scale)
+        micsSetClosed = micsSet.isStreamClosed()
+        micsSet.close()
+
+        partsFn = self.getInputParticles().getFileName()
+        partsSet = SetOfParticles(filename=partsFn)
+        partsSet.loadAllProperties()
+
+        newItemDict = OrderedDict()
+        for item in partsSet:
+            micKey = item.getCoordinate().getMicId()
+            if micKey not in self.micDict and micKey in availableMics:
+                if micKey in newItemDict.keys():
+                    newItemDict[micKey].append(item.clone())
                 else:
-                    newCoord.setPosition(x*scale, y*scale)
+                    newItemDict[micKey] = [item.clone()]
 
-                newCoord.setMicrograph(mic)
-                outputCoords.append(newCoord)
-        
-        boxSize = inputParticles.getXDim() * scale
-        outputCoords.setBoxSize(boxSize)
-        
-        self._defineOutputs(outputCoordinates=outputCoords)
-        self._defineSourceRelation(self.inputParticles, outputCoords)
-        self._defineSourceRelation(self.inputMicrographs, outputCoords)
+        self.inputSize = partsSet.getSize()
+        partSetClosed = partsSet.isStreamClosed()
 
-    # -------------------------- INFO functions -------------------------------
-    def _summary(self):
-        summary = []
-        ps1 = self.inputParticles.get().getSamplingRate()
-        ps2 = self.inputMicrographs.get().getSamplingRate()
-        summary.append(u'Input particles pixel size: *%0.3f* (Å/px)' % ps1)
-        summary.append(u'Input micrographs pixel size: *%0.3f* (Å/px)' % ps2)
-        summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1/ps2))
-        if self.applyShifts:
-            summary.append('Applied 2D shifts from particles')
-        
-        if hasattr(self, 'outputCoordinates'):
-            summary.append('Output coordinates: *%d*'
-                           % self.outputCoordinates.getSize())
-            
-        return summary 
+        partsSet.close()
 
-    def _methods(self):
-        # No much to add to summary information
-        return self._summary()
+        return newItemDict, micsSetClosed and partSetClosed
 
-    def _validate(self):
-        """ The function of this hook is to add some validation before the
-        protocol is launched to be executed. It should return a list of errors.
-        If the list is empty the protocol can be executed.
-        """
-        errors = [ ]
-        inputParticles = self.inputParticles.get()
-        first = inputParticles.getFirstItem()
-        if first.getCoordinate() is None:
-            errors.append('The input particles do not have coordinates!!!')
-
-        if self.applyShifts and not inputParticles.hasAlignment():
-            errors.append('Input particles do not have alignment information!')
-        
-        return errors
-
-    # -------------------------- UTILS functions -----------------------------
     def getShifts(self, transform, alignType):
         """
         is2D == True-> matrix is 2D (2D images alignment)
@@ -215,3 +313,43 @@ class ProtExtractCoords(ProtParticlePicking):
         else:
             shifts = translation_from_matrix(matrix)
         return shifts
+
+    def getInputParticles(self):
+        return self.inputParticles.get()
+
+    #--------------------------- INFO functions --------------------------------
+    def _summary(self):
+        summary = []
+        ps1 = self.getInputParticles().getSamplingRate()
+        ps2 = self.getInputMicrographs().getSamplingRate()
+        summary.append(u'Input particles pixel size: *%0.3f* (Å/px)' % ps1)
+        summary.append(u'Input micrographs pixel size: *%0.3f* (Å/px)' % ps2)
+        summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1/ps2))
+        if self.applyShifts:
+            summary.append('Applied 2D shifts from particles')
+
+        if hasattr(self, 'outputCoordinates'):
+            summary.append('Output coordinates: *%d*'
+                           % self.outputCoordinates.getSize())
+
+        return summary
+
+    def _methods(self):
+        # No much to add to summary information
+        return self._summary()
+
+    def _validate(self):
+        """ The function of this hook is to add some validation before the
+        protocol is launched to be executed. It should return a list of errors.
+        If the list is empty the protocol can be executed.
+        """
+        errors = []
+        inputParticles = self.getInputParticles()
+        first = inputParticles.getFirstItem()
+        if first.getCoordinate() is None:
+            errors.append('The input particles do not have coordinates!!!')
+
+        if self.applyShifts and not inputParticles.hasAlignment():
+            errors.append('Input particles do not have alignment information!')
+
+        return errors
