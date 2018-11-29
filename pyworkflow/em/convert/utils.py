@@ -24,6 +24,8 @@
 # *
 # **************************************************************************
 
+import os
+import sys
 
 def getSubsetByDefocus(inputCTFs, inputMics, nMics):
     """ Return a subset of inputMics that covers the whole range of defocus
