@@ -23,7 +23,11 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import os
+import sys
 
+import os
+import sys
 
 def getSubsetByDefocus(inputCTFs, inputMics, nMics):
     """ Return a subset of inputMics that covers the whole range of defocus
