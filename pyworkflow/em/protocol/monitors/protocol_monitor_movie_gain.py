@@ -74,7 +74,7 @@ class ProtMonitorMovieGain(ProtMonitor):
                       help="Take one sample each SamplinInteval seconds")
         ProtMonitor._sendMailParams(self, form)
 
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions ------------------------------
     def monitorStep(self):
         self.createMonitor().loop()
 
@@ -95,7 +95,7 @@ class ProtMonitorMovieGain(ProtMonitor):
                                             ratio2Value = self.ratio2Value.get())
         return movieGainMonitor
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         #TODO if less than 20 sec complain
         return []  # no errors
@@ -204,142 +204,3 @@ class MonitorMovieGain(Monitor):
         }
         return data
 
-
-from matplotlib import animation
-from pyworkflow.em.plotter import EmPlotter
-from pyworkflow.gui.plotter import plt
-from pyworkflow.viewer import ( DESKTOP_TKINTER, Viewer)
-import sys
-
-
-class ProtMonitorMovieGainViewer(Viewer):
-    _environments = [DESKTOP_TKINTER]
-    _label = 'movie gain monitor'
-    _targets = [ProtMonitorMovieGain]
-
-    def _visualize(self, obj, **kwargs):
-        return [MovieGainMonitorPlotter(obj.createMonitor())]
-
-
-class MovieGainMonitorPlotter(EmPlotter):
-    def __init__(self, monitor):
-        EmPlotter.__init__(self, windowTitle="Movie Gain Monitor")
-        self.monitor = monitor
-        self.y2 = 0.
-        self.y1 = 100.
-        self.win = 250 # number of samples to be plotted
-        self.step = 50 # self.win will be modified in steps of this size
-
-        self.createSubPlot(self._getTitle(), "", "")
-        self.fig = self.getFigure()
-        self.ax = self.getLastSubPlot()
-        self.ax2 = self.ax.twinx()
-        self.ax2.margins(0.05)
-        self.oldWin = self.win
-
-        self.lines = {}
-        self.init = True
-        self.stop = False
-
-    def _getTitle(self):
-        return ("Use scrool wheel to change view window (win=%d)\n "
-                "S stops, C continues plotting" % self.win)
-
-    def onscroll(self, event):
-
-        if event.button == 'up':
-            self.win += self.step
-        else:
-            self.win -= self.step
-            if self.win < self.step:
-               self.win = self.step
-
-        if self.oldWin != self.win:
-            self.ax.set_title(self._getTitle())
-            self.oldWin= self.win
-        self.animate()
-        EmPlotter.show(self)
-
-    def press(self,event):
-
-        sys.stdout.flush()
-        if event.key == 'S':
-            self.stop = True
-            self.ax.set_title('Plot is Stopped. Press C to continue plotting')
-        elif event.key == 'C':
-            self.ax.set_title(self._getTitle())
-            self.stop = False
-            self.animate()
-        EmPlotter.show(self)
-
-    def has_been_closed(self,ax):
-        fig = ax.figure.canvas.manager
-        active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
-        return fig not in active_fig_managers
-
-    def animate(self, i=0): #do NOT remove i
-                           #FuncAnimation adds it as argument
-        if self.stop:
-            return
-
-        data = self.monitor.getData()
-        self.x = data['idValues']
-        for k,v in self.lines.iteritems():
-            self.y = data[k]
-
-            lenght = len(self.x)
-            imin = max(0,len(self.x) - self.win)
-            xdata = self.x[imin:lenght]
-            ydata = self.y[imin:lenght]
-            v.set_data(xdata,ydata)
-
-        self.ax.set_ylabel('Ratios between specified percentiles',
-                           color='b', size=10)
-        self.ax.spines['left'].set_color('blue')
-        self.ax.spines['right'].set_color('red')
-        self.ax.tick_params(axis='y', labelsize=8, colors='blue')
-        self.ax.relim()
-        self.ax.autoscale()
-        self.ax.grid(False)
-        self.ax.get_xaxis().set_visible(False)
-        self.ax2.set_ylabel('Residual gain standard deviation',
-                            color='r', size=10)
-        self.ax2.tick_params(axis='y', labelsize=8, colors='red')
-        self.ax2.relim()
-        self.ax2.autoscale()
-        lines, labels = self.ax.get_legend_handles_labels()
-        lines2, labels2 = self.ax2.get_legend_handles_labels()
-        self.ax2.legend(lines + lines2, labels + labels2,
-                        loc=2, prop={'size':10}).get_frame().set_alpha(0.5)
-
-
-    def show(self):
-        self.paint(['ratio1','ratio2','standard_deviation'])
-
-    def paint(self, labels):
-        for label in labels:
-            if (label == 'standard_deviation'):
-                self.lines[label], = \
-                    self.ax2.plot([], [], '-o',
-                                  label='Standard deviation',
-                                  color='r')
-            if (label == 'ratio1'):
-                self.lines[label], = \
-                    self.ax.plot([], [], '-o',
-                                 label='97.5/2.5 percentile',
-                                 color='b')
-            if (label == 'ratio2'):
-                self.lines[label], = \
-                    self.ax.plot([], [], '-*',
-                                 label='max/97.5 percentile',
-                                 color='b')
-
-        anim = animation.FuncAnimation(self.fig, self.animate,
-                                       interval=self.monitor.samplingInterval*1000)#miliseconds
-
-        self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
-        self.fig.canvas.mpl_connect('key_press_event', self.press)
-        EmPlotter.show(self)
-
-    def empty(self):
-        return self.init

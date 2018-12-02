@@ -1,6 +1,7 @@
 import requests
 import os
 import re
+import sys
 from importlib import import_module
 import json
 import pkg_resources
@@ -18,6 +19,10 @@ PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
     Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
+PIP_UNINSTALL_CMD = '{} {}/pip uninstall -y %s'.format(
+    Environment.getBin('python'),
+    Environment.getPythonPackagesFolder())
+
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
 if os.environ['SCIPION_SHORT_VERSION'] not in versions:
     SCIPION_VERSION = LAST_VERSION
@@ -27,8 +32,8 @@ else:
 
 class PluginInfo(object):
 
-    def __init__(self, pipName, name="", pluginSourceUrl="", remote=True,
-                 **kwargs):
+    def __init__(self, pipName="", name="", pluginSourceUrl="", remote=True,
+                 plugin=None, **kwargs):
         self.pipName = pipName
         self.name = name
         self.pluginSourceUrl = pluginSourceUrl
@@ -50,7 +55,7 @@ class PluginInfo(object):
 
         # Distribution
         self._dist = None
-        self._plugin = None
+        self._plugin = plugin
         if self.remote:
             self.setRemotePluginInfo()
 
@@ -63,6 +68,7 @@ class PluginInfo(object):
         the plugin"""
         self.installPipModule()
         self.installBin()
+        self.setLocalPluginInfo()
 
     def _getDistribution(self):
         if self._dist is None:
@@ -89,6 +95,7 @@ class PluginInfo(object):
     def isInstalled(self):
         """Checks if the current plugin is installed (i.e. has pip package).
         NOTE: we might wanna change definition of isInstalled, hence the extra function."""
+        reload(pkg_resources)
         return self.hasPipPackage()
 
     def installPipModule(self, version=""):
@@ -149,11 +156,10 @@ class PluginInfo(object):
            passed to the install environment."""
         environment = self.getInstallenv(envArgs=args)
         environment.execute()
-        self.setLocalPluginInfo()
 
     def uninstallBins(self, binList=None):
-        """Install binaries of the plugin.
-        - binList: if  given, will install the binaries in it. The binList
+        """Uninstall binaries of the plugin.
+        - binList: if  given, will uninstall the binaries in it. The binList
                    may contain strings with only the name of the binary or
                    name and version in the format name-version"""
         if binList is None:
@@ -166,18 +172,17 @@ class PluginInfo(object):
                 print('Removing %s binaries...' % binVersion)
                 realPath = os.path.realpath(f)  # in case its a link
                 cleanPath(f, realPath)
+                print('Binary %s has been uninstalled successfully ' % binVersion)
         return
 
     def uninstallPip(self):
         """Removes pip package from site-packages"""
         print('Removing %s plugin...' % self.pipName)
-        try:
-            from pip import main as pipmain
-        except:
-            from pip._internal import main as pipmain
-
-        pipmain(['uninstall', '-y', self.pipName])
-        return
+        import subprocess
+        args = (PIP_UNINSTALL_CMD % self.pipName).split()
+        subprocess.call(PIP_UNINSTALL_CMD % self.pipName, shell=True,
+                            stdout=sys.stdout,
+                            stderr=sys.stderr)
 
     ####################### Remote data funcs ############################
 
@@ -309,8 +314,14 @@ class PluginInfo(object):
 
     def getBinVersions(self):
         """Get list with names of binaries of this plugin"""
-        environment = self.getInstallenv()
-        binVersions = [target.getName() for target in environment.getTargetList()]
+        from install import script
+        env = script.defineBinaries()
+        env.setDefault(False)
+        defaultTargets = [target.getName() for target in env.getTargetList()]
+        plugin = self.getPluginClass()
+        if plugin is not None:
+            plugin.defineBinaries(env)
+        binVersions = [target.getName() for target in env.getTargetList() if target.getName() not in defaultTargets]
         return binVersions
 
     def getDirName(self):
@@ -334,12 +345,51 @@ class PluginInfo(object):
             return " ".rjust(14) + "Error getting binaries info: %s" % \
                    e.message + "\n"
 
+    def getPluginName(self):
+        """Return the plugin name"""
+        return self.name
+
+    def getPipName(self):
+        """Return the plugin pip name"""
+        return self.pipName
+
+    def getPipVersion(self):
+        """Return the plugin pip version"""
+        return self.pipVersion
+
+    def getSourceUrl(self):
+        """Return the plugin source url"""
+        return self.pluginSourceUrl
+
+    def getHomePage(self):
+        """Return the plugin Home page"""
+        return self.homePage
+
+    def getSummary(self):
+        """Return the plugin summary"""
+        return self.summary
+
+    def getAuthor(self):
+        """Return the plugin author"""
+        return self.author
 
 class PluginRepository(object):
 
     def __init__(self, repoUrl=REPOSITORY_URL):
         self.repoUrl = repoUrl
         self.plugins = None
+
+    @staticmethod
+    def getBinToPluginDict():
+        localPlugins = Domain.getPlugins()
+        binToPluginDict = {}
+        for p, pobj in localPlugins.iteritems():
+            pinfo = PluginInfo(name=p, plugin=pobj, remote=False)
+            pbins = pinfo.getBinVersions()
+            binToPluginDict.update({k: p for k in pbins})
+            pbinsNoVersion = set([b.split('-', 1)[0] for b in pbins])
+            binToPluginDict.update({k: p for k in pbinsNoVersion})
+        return binToPluginDict
 
     def getPlugins(self, pluginList=None, getPipData=False):
         """Reads available plugins from self.repoUrl and returns a dict with

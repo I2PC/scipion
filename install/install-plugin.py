@@ -26,6 +26,9 @@
 
 import sys
 from install.plugin_funcs import PluginRepository, PluginInfo
+from pyworkflow.plugin import Domain
+from install.funcs import Environment
+from install import script
 import argparse
 import os
 import re
@@ -83,6 +86,10 @@ installParser.add_argument('--devel', action='store_true',
                                  '(i.e. it needs to match the one specified in setup.py). E.g:\n'
                                  'scipion installp -p path/to/pluginName --devel \n'
                                  'scipion installp -p https://github.com/someOrg/pluginName.git --devel')
+installParser.add_argument('-j',
+                              default='1',
+                              metavar='j',
+                              help='Number of CPUs to use for compilation \n')
 
 ############################################################################
 #                             Uninstall parser                             #
@@ -110,18 +117,20 @@ uninstallParser.add_argument('-p', '--plugin', action='append',
 
 installBinParser = subparsers.add_parser("installb", formatter_class=argparse.RawTextHelpFormatter,
                                          usage="%s  [-h] binName1 binName2-1.2.3 binName3 ..." %
-                                            (' '.join(args[:2])),
-                                         epilog="Example: %s ctffind4 unblur-1.0.15\n\n %s" %
-                                             (' '.join(args[:2]), pluginRepo.printPluginInfoStr(withBins=True)))
+                                         (' '.join(args[:2])),
+                                         epilog="Example: %s ctffind4 unblur-1.0.15\n\n" %
+                                         (' '.join(args[:2])),
+                                         add_help=False)
 #installBinParser.add_argument('pluginName', metavar='pluginName',
 #                              help='The name of the plugin whose bins we want to uninstall.\n')
-installBinParser.add_argument('binName', nargs='+',
+installBinParser.add_argument('-h', '--help', action='store_true', help='show help')
+installBinParser.add_argument('binName', nargs='*',
                               metavar='binName(s)',
                               help='The name(s) of the bins we want install, optionally with \n'
                                    'version in the form name-version. If no version is specified,\n'
                                    'will install the last one.')
 installBinParser.add_argument('-j',
-                              default=1,
+                              default='1',
                               metavar='j',
                               help='Number of CPUs to use for compilation \n')
 
@@ -132,10 +141,12 @@ installBinParser.add_argument('-j',
 uninstallBinParser = subparsers.add_parser("uninstallb", formatter_class=argparse.RawTextHelpFormatter,
                                            usage="%s [-h] binName1 binName2-1.2.3 binName3 ..." %
                                            (' '.join(args[:2])),
-                                           epilog="Example: %s ctffind4 unblur-1.0.15\n\n %s" %
-                                           (' '.join(args[:2]), pluginRepo.printPluginInfoStr(withBins=True)))
+                                           epilog="Example: %s ctffind4 unblur-1.0.15\n\n " %
+                                           (' '.join(args[:2])),
+                                           add_help=False)
 #uninstallBinParser.add_argument('pluginName', metavar='pluginName',
 #                                help='The name of the plugin whose bins we want to uninstall.\n')
+uninstallBinParser.add_argument('-h', '--help', action='store_true', help='show help')
 uninstallBinParser.add_argument('binName', nargs='+',
                                 metavar='binName(s)',
                                 help='The name(s) of the bins we want to uninstall\n'
@@ -149,10 +160,20 @@ modeToParser = {MODE_INSTALL_BINS: installBinParser,
 
 parsedArgs = parser.parse_args(args[1:])
 mode = parsedArgs.mode
+parserUsed = modeToParser[mode]
 
-if mode not in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS] and parsedArgs.help:
-    parserUsed = modeToParser[mode]
-    parserUsed.epilog += pluginRepo.printPluginInfoStr()
+if parsedArgs.help or (mode in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
+                       and len(parsedArgs.binName) == 0):
+
+    if mode not in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]:
+        parserUsed.epilog += pluginRepo.printPluginInfoStr()
+    else:
+        env = script.defineBinaries([])
+        env.setDefault(False)
+        installedPlugins = Domain.getPlugins()
+        for p, pobj in installedPlugins.iteritems():
+            pobj.Plugin.defineBinaries(env)
+        parserUsed.epilog += env.printHelp()
     parserUsed.print_help()
     parserUsed.exit(0)
 
@@ -167,6 +188,7 @@ elif mode == MODE_INSTALL_PLUGIN:
             pluginName = ""
             if os.path.exists(pluginSrc):
                 pluginName = os.path.basename(pluginSrc)
+                numberProcessor = parsedArgs.j
             else:  # we assume it is a git url
                 m = re.match('https://github.com/(.*)/(.*).git', pluginSrc)
                 if m:
@@ -175,9 +197,10 @@ elif mode == MODE_INSTALL_PLUGIN:
                 print("ERROR: Couldn't find pluginName for source %s" % pluginSrc)
             else:
                 plugin = PluginInfo(pipName=pluginName, pluginSourceUrl=pluginSrc, remote=False)
+                processors = parsedArgs.j
                 installed = plugin.installPipModule()
                 if installed and not parsedArgs.noBin:
-                    plugin.installBin()
+                    plugin.installBin(args=['-j', numberProcessor])
     else:
         pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0],
                                            getPipData=True)
@@ -187,11 +210,12 @@ elif mode == MODE_INSTALL_PLUGIN:
             for cmdTarget in parsedArgs.plugin:
                 pluginName = cmdTarget[0]
                 pluginVersion = "" if len(cmdTarget) == 1 else cmdTarget[1]
+                numberProcessor = parsedArgs.j
                 plugin = pluginDict.get(pluginName, None)
                 if plugin:
                     installed = plugin.installPipModule(version=pluginVersion)
                     if installed and not parsedArgs.noBin:
-                        plugin.installBin()
+                        plugin.installBin(args=['-j', numberProcessor])
                 else:
                     print("WARNING: Plugin %s does not exist." % pluginName)
 
@@ -208,97 +232,28 @@ elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
 
 elif parsedArgs.mode == MODE_INSTALL_BINS:
 
-    # Get all plugins installed
-    pluginDict = pluginRepo.getPlugins(
-        pluginList=list(zip(*parsedArgs.binName))[0],
-        getPipData=True)
     binToInstallList = parsedArgs.binName
+    binToPlugin = pluginRepo.getBinToPluginDict()
+    for binTarget in binToInstallList:
+        pluginTargetName = binToPlugin.get(binTarget, None)
+        if pluginTargetName is None:
+            print('ERROR: Could not find target %s' % binTarget)
+            continue
+        pmodule = Domain.getPlugin(pluginTargetName)
+        numberProcessor = parsedArgs.j
+        pinfo = PluginInfo(name=pluginTargetName, plugin=pmodule, remote=False)
+        pinfo.installBin([binTarget, '-j', numberProcessor])
 
-    if not pluginDict:
-        print('\n' + installParser.epilog)
-    else:
-        # Move through the plugin list
-        for pluginName in pluginDict:
-            if binToInstallList:
-                plugin = pluginDict.get(pluginName, None)
-                if plugin.isInstalled():
-                    # Get plugin binaries
-                    binariesPluginList = plugin.getBinVersions()
-                    # For each binary to install
-                    for binName in binToInstallList:
-                        binVersions = [binary for binary in binariesPluginList
-                                       if binary.split('-')[0] == binName or
-                                       binary == binName]
-                        if binVersions:
-                            if binName not in binVersions:
-                                binToInstallName = binVersions[len(binVersions)-1]
-                            else:
-                                binToInstallName = binName
-                            try:
-                                plugin.installBin(args=[binToInstallName])
-                                binToInstallList.remove(binName)
-                            except AssertionError as err:  # TODO The correct exception must be captured
-                                print("WARNING: Binaries of %s has not been "
-                                      "installed." % binName)
-                                print("WARNING: Binaries of %s does not exist."
-                                      % binName)
-                                binToInstallList.remove(binName)
-            else:
-                break
-        if binToInstallList:
-            print("\n----------------------------------- \n")
-            for binName in binToInstallList:
-                print("WARNING: Binaries of %s has not been installed."
-                      % binName)
-                print("WARNING: Binaries of %s does not exist. \n"
-                      % binName)
-            print("----------------------------------- \n")
 
 elif parsedArgs.mode == MODE_UNINSTALL_BINS:
 
-    # Get all plugins installed
-    pluginDict = pluginRepo.getPlugins(
-        pluginList=list(zip(*parsedArgs.binName))[0],
-        getPipData=True)
-    binToUninstallList = parsedArgs.binName
-
-    if not pluginDict:
-        print('\n' + installParser.epilog)
-    else:
-        # Move through the plugin list
-        for pluginName in pluginDict:
-            if binToUninstallList:
-                plugin = pluginDict.get(pluginName, None)
-                if plugin.isInstalled():
-                    # Get plugin binaries
-                    binariesPluginList = plugin.getBinVersions()
-                    # For each binary to install
-                    for binName in binToUninstallList:
-                        binVersions = [binary for binary in binariesPluginList
-                                       if binary.split('-')[0] == binName or
-                                       binary == binName]
-                        if binVersions:
-                            if binName not in binVersions:
-                                binToInstallName = [binVersions[len(binVersions)-1]]
-                            else:
-                                binToInstallName = [binName]
-                            try:
-                                plugin.uninstallBins(binToInstallName)
-                                print("Binaries of %s have been uninstalled "
-                                      "successfully." % binName)
-                                binToUninstallList.remove(binName)
-                                
-                            except AssertionError as err:  # TODO The correct exception must be captured
-                                print("WARNING: Binaries of %s have not been "
-                                      "uninstalled." % binName)
-                                print("WARNING: Binaries of %s don't exist."
-                                      % binName)
-                                binToUninstallList.remove(binName)
-            else:
-                break
-        if binToUninstallList:
-            print("\n----------------------------------- \n")
-            for binName in binToUninstallList:
-                print("WARNING: Binaries of %s have not been uninstalled."% binName)
-                print("WARNING: Binaries of %s don't exist. \n" % binName)
-            print("----------------------------------- \n")
+    binToInstallList = parsedArgs.binName
+    binToPlugin = pluginRepo.getBinToPluginDict()
+    for binTarget in binToInstallList:
+        pluginTargetName = binToPlugin.get(binTarget, None)
+        if pluginTargetName is None:
+            print('ERROR: Could not find target %s' % binTarget)
+            continue
+        pmodule = Domain.getPlugin(pluginTargetName)
+        pinfo = PluginInfo(name=pluginTargetName, plugin=pmodule, remote=False)
+        pinfo.uninstallBins([binTarget])

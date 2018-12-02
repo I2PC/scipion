@@ -40,7 +40,8 @@ import threading
 import shlex
 import SocketServer
 
-#------------------------ Showj constants ---------------------------
+# ----------------------- Showj constants ---------------------------
+
 PATH = 'path'
 DATASET = 'dataset'
 
@@ -108,7 +109,7 @@ def getJvmMaxMemory():
     return int(os.environ.get("JAVA_MAX_MEMORY", 2))
 
 
-class ColumnsConfig():
+class ColumnsConfig:
     """ Store the configuration of the columns for a given table in a dataset.
     The order of the columns will be stored and configuration for each columns.
     For each column, we store properties:
@@ -172,7 +173,7 @@ class ColumnsConfig():
             print "  values: ", col.getValues()
 
 
-class ColumnProperties():
+class ColumnProperties:
     """ Store some properties to customize how each column
     will be display in the table.
     """
@@ -190,7 +191,8 @@ class ColumnProperties():
         self.editable = (self.columnType == COL_RENDER_TEXT)
         self.allowSetEditable = self.editable
 
-        self.renderable = 'renderable' in defaultColumnLayoutProperties and defaultColumnLayoutProperties['renderable'].lower() == 'true'
+        self.renderable = ('renderable' in defaultColumnLayoutProperties
+                           and defaultColumnLayoutProperties['renderable'].lower() == 'true')
 
         self.allowSetRenderable = ((self.columnType == COL_RENDER_IMAGE or
                                    self.columnType == COL_RENDER_VOLUME) and allowRender)
@@ -259,7 +261,14 @@ def getJavaIJappArguments(memory, appName, appArgs):
     javaLib = join(javaBind, 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
-    args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+
+    import subprocess
+    version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
+    majorVersion = int(version.split('"')[1].split('.')[0])
+    if majorVersion > 9:
+        args = "-Xmx%(memory)sg -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+    else:
+        args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
 
     return args
 
@@ -267,7 +276,8 @@ def getJavaIJappArguments(memory, appName, appArgs):
 def runJavaIJapp(memory, appName, args, env=None):
     xmipp3 = importFromPlugin('xmipp3')
     env = env or {}
-    env.update(xmipp3.Plugin.getEnviron(xmippFirst=False))
+    getEnviron = importFromPlugin('xmipp3', 'Plugin').getEnviron
+    env.update(getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
     print 'java %s' % args
@@ -308,7 +318,7 @@ def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None):
 
 class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
 
-    def handle(self):#FIXME: RUNNING FOREVER
+    def handle(self):  # FIXME: RUNNING FOREVER
         protocol = self.server.protocol
         msg = self.request.recv(1024)
         tokens = shlex.split(msg)

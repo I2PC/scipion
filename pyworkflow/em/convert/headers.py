@@ -31,36 +31,21 @@ TODO:
 """
 
 import collections
-from pyworkflow.em.convert import ImageHandler
 import struct
 from math import isnan
 
-ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
-START = 1  # save coordinate origin in the mrc header field=start (pixel)
+from pyworkflow.utils import getExt
+from .image_handler import ImageHandler
 
 
-def adaptFileToCCP4(inFileName, outFileName, scipionOriginShifts,
-                    sampling=1.0, originField=START):
-    """ create new CCP4 binary file and fix the CCP4 header
-    """
-    x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-    if z == 1 and ndim > 1:
-        z = ndim
+class Ccp4Header:
+    ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
+    START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
-    ImageHandler().convert(inFileName, outFileName)
-    ccp4header = Ccp4Header(outFileName, readHeader=True)
-    ccp4header.setGridSampling(x, y, z)
-    ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
-    if originField == ORIGIN:
-        ccp4header.setOrigin(scipionOriginShifts)
-    else:
-        ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
-
-    ccp4header.writeHeader()
-
-
-
-class Ccp4Header():
+    # File formats
+    MRC = 0
+    SPIDER = 1
+    UNKNOWNFORMAT = 2
     """
     In spite of the name this is the MRC2014 format no the CCP4.
     In an MRC EM file the origin is typically in header fields called
@@ -117,9 +102,9 @@ class Ccp4Header():
        .          "           in MAPBRICK, MAPCONT and FRODO)
        .          "           (all set to zero by default)
        .          "
-      52          "
-      53    MAP             Character string 'MAP ' to identify file type
-      54    MACHST          Machine stamp indicating the machine type
+      50-52	ORIGIN      	  origin in X,Y,Z (pixel units) used for Fourier transforms (modes 3 and 4)
+      53    MAP               Character string 'MAP ' to identify file type
+      54    MACHST            Machine stamp indicating the machine type
                               which wrote file
       55      ARMS            Rms deviation of map from mean density
       56      NLABL           Number of labels being used
@@ -129,11 +114,10 @@ class Ccp4Header():
     characters (i.e. symmetry operators do not cross the ends of the
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
-
     def __init__(self, fileName, readHeader=False):
         self._name = fileName.replace(':mrc', '')  # remove mrc ending
         self._header = collections.OrderedDict()
-        self.chain = "< 3i i 3i 3i 3f 144s 3f"
+        self.chain = "< 3i i 3i 3i 3f 36s i 104s 3f"
 
         if readHeader:
             self.loaded = True
@@ -227,6 +211,12 @@ class Ccp4Header():
                self._header['Ylength'],\
                self._header['Zlength']
 
+    def getISPG(self):
+        return self._header['ISPG']
+
+    def setISPG(self, ispg):
+        self._header['ISPG'] = ispg
+
     def read_header_values(self, file, file_size, file_type):
 
         MRC_USER = 29
@@ -263,10 +253,12 @@ class Ccp4Header():
         self._header['Xlength'] = a[10]
         self._header['Ylength'] = a[11]
         self._header['Zlength'] = a[12]
-        self._header['dummy1'] = a[13] + "\n"  # "< 3i i 3i 3i 3f 36s 3f"
-        self._header['originX'] = a[14]
-        self._header['originY'] = a[15]
-        self._header['originZ'] = a[16]
+        self._header['dummy1'] = a[13] + "\n"  # "< 3i i 3i 3i 3f 36s"
+        self._header['ISPG'] = a[14]
+        self._header['dummy2'] = a[15] + "\n"  # "< 3i i 3i 3i 3f 36s i 104s"
+        self._header['originX'] = a[16]
+        self._header['originY'] = a[17]
+        self._header['originZ'] = a[18]
 
     def getHeader(self):
         return self._header
@@ -291,7 +283,6 @@ class Ccp4Header():
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
 
-
     def copyCCP4Header(self, inFileName, scipionOriginShifts,
                        sampling, originField=START):
         x, y, z, ndim = ImageHandler().getDimensions(inFileName)
@@ -300,8 +291,39 @@ class Ccp4Header():
         self.setGridSampling(x, y, z)
         self.setCellDimensions(x * sampling, y * sampling, z * sampling)
 
-        if originField == ORIGIN:
+        if originField == self.ORIGIN:
             self.setOrigin(scipionOriginShifts)
         else:
             self.setStartAngstrom(scipionOriginShifts, sampling)
             self.writeHeader()
+
+    @classmethod
+    def fixFile(cls, inFileName, outFileName, scipionOriginShifts,
+                sampling=1.0, originField=START):
+        """ Create new CCP4 binary file and fix its header.
+        """
+        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+        if z == 1 and ndim > 1:
+            z = ndim
+
+        ImageHandler().convert(inFileName, outFileName)
+        ccp4header = Ccp4Header(outFileName, readHeader=True)
+        ccp4header.setGridSampling(x, y, z)
+        ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
+        if originField == cls.ORIGIN:
+            ccp4header.setOrigin(scipionOriginShifts)
+        else:
+            ccp4header.setStartAngstrom(scipionOriginShifts, sampling)
+
+        ccp4header.writeHeader()
+
+    @classmethod
+    def getFileFormat(cls, fileName):
+
+        ext = getExt(fileName)
+        if (ext == '.mrc') or (ext == '.map'):
+            return cls.MRC
+        elif (ext == '.spi') or (ext == '.vol'):
+            return cls.SPIDER
+        else:
+            return cls.UNKNOWNFORMAT
