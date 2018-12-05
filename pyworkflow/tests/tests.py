@@ -7,6 +7,7 @@ import unittest
 from os.path import join, relpath
 from itertools import izip
 
+import pyworkflow as pw
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
 from pyworkflow.utils.utils import envVarOn, redStr, greenStr
@@ -70,9 +71,8 @@ class DataSet:
         url = '' if ds.url is None else ' -u ' + ds.url
 
         if not envVarOn('SCIPION_TEST_NOSYNC'):
-            scipion = "%s %s/scipion" % (os.environ['SCIPION_PYTHON'],
-                                         os.environ['SCIPION_HOME'])
-            command = scipion + " testdata --download " + folder + url
+            command = ("%s %s testdata --download %s %s"
+                       % (pw.PYTHON, pw.getScipionScript(), folder, url))
             print ">>>> " + command
             os.system(command)
         return cls._datasetDict[name]

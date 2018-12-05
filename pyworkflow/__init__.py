@@ -25,15 +25,16 @@
 # **************************************************************************
 
 import os
+from .utils.path import findFile
+
 
 HOME = os.path.abspath(os.path.dirname(__file__))
+
 
 def join(*paths):
     """ join paths from HOME . """
     return os.path.join(HOME, *paths)
 
-RESOURCES = [join('resources')]
-WEB_RESOURCES = join('web', 'pages', 'resources')
 
 if "SCIPION_USER_DATA" not in os.environ:
     raise Exception("SCIPION_USER_DATA is not defined as environment variable")
@@ -42,7 +43,6 @@ SCIPION_HOME = os.environ['SCIPION_HOME']
 SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
 SCIPION_SUPPORT_EMAIL = 'scipion@cnb.csic.es'
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
-SCIPION_PYTHON = PYTHON
 
 # Versions
 VERSION_1 = 'v1.0'
@@ -61,14 +61,13 @@ _logo = 'scipion_logo.png'
 
 #----------------- Some functions to centralize path access -------------------
 
+__resourcesPath = [join('resources')]
+
+
 def findResource(filename):
-    """ This function will search for a give
-    resource filename in the paths specified
-    in pyworkflow.RESOURCES path list.
-    """
     from utils.path import findFile
 
-    return findFile(filename, *RESOURCES)
+    return findFile(filename, *__resourcesPath)
 
 # Following are a set of functions to centralize the way to get
 # files from several scipion folder such as: config or apps

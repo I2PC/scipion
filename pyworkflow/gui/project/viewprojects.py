@@ -167,11 +167,10 @@ class ProjectsView(tk.Frame):
         self.createProjectList(self.text)
         self.openProject(projName)
 
-
     def openProject(self, projName):
         from subprocess import Popen
         script = pw.join('apps', 'pw_project.py')
-        Popen([os.environ['SCIPION_PYTHON'], script, projName])
+        Popen([pw.PYTHON, script, projName])
 
     def deleteProject(self, projName):
         if askYesNo(Message.TITLE_DELETE_PROJECT,
