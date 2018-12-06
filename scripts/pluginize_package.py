@@ -27,6 +27,8 @@
 
 import os
 import sys
+
+import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.em import PACKAGES_PATH, getPackages
 from pyworkflow import findResource
@@ -34,7 +36,8 @@ import argparse
 
 pipEmptyFiles = ['CHANGES.txt', 'MANIFEST.in', 'README.rst']
 scipion_home = os.environ['SCIPION_HOME']
-templatesFolder = os.path.join(scipion_home, 'config', 'templates')
+templatesFolder = pw.join('config', 'templates')
+
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                  usage='Script to create basic plugin structure for an existing Scipion package \n'
                                        'in an empty folder (which will become the plugin repository)\n'

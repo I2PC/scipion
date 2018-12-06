@@ -44,6 +44,7 @@ import hashlib
 from urllib2 import urlopen
 import getpass
 
+import pyworkflow as pw
 from pyworkflow.utils import redB, red, green, yellow
 
 
@@ -72,12 +73,9 @@ QL jmQQQgmQQQQQQmaaaQWQQQ
 """
 
 
-
 def main():
     # Get arguments.
     args = get_parser().parse_args()
-
-    #print scipion_logo
 
     # Dispatch the easy cases first (list and check), and then take care of
     # the more complex ones.
@@ -105,20 +103,24 @@ def main():
 
     print 'Selected datasets: %s' % yellow(' '.join(args.datasets))
 
+    testFolder = pw.Config.SCIPION_TESTS
+
     if args.format:
         for dataset in args.datasets:
-            print 'Formatting %s (creating MANIFEST file)' % dataset
-            if not exists(join(os.environ['SCIPION_TESTS'], dataset)):
+            datasetFolder = join(testFolder, dataset)
+            print('Formatting %s (creating MANIFEST file)' % dataset)
+
+            if not exists(datasetFolder):
                 sys.exit('ERROR: %s does not exist in datasets folder %s.' %
-                         (dataset, os.environ['SCIPION_TESTS']))
-            createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
+                         (dataset, testFolder))
+            createMANIFEST(datasetFolder)
         sys.exit(0)
 
     if args.download:
         # Download datasets.
         try:
             for dataset in args.datasets:
-                if exists(join(os.environ['SCIPION_TESTS'], dataset)):
+                if exists(join(testFolder, dataset)):
                     print 'Local copy of dataset %s detected.' % dataset
                     print 'Checking for updates...'
                     update(dataset, url=args.url, verbose=args.verbose)
@@ -138,7 +140,8 @@ def main():
         # Upload datasets.
         for dataset in args.datasets:
             try:
-                upload(dataset, login=args.login, remoteFolder=args.remotefolder, delete=args.delete)
+                upload(dataset, login=args.login,
+                       remoteFolder=args.remotefolder, delete=args.delete)
             except Exception as e:
                 print 'Error when uploading dataset %s: %s' % (dataset, e)
                 if ask() != 'y':

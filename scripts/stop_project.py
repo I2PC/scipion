@@ -28,9 +28,11 @@
 import sys
 import os
 from time import sleep
+
+import pyworkflow as pw
+import pyworkflow.utils as pwutils
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
-import pyworkflow.utils as pwutils
 
 
 def usage(error):
@@ -52,7 +54,7 @@ if n > 2:
 
 projName = sys.argv[1]
 
-path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'gui', 'no-tkinter')
+path = pw.join('gui', 'no-tkinter')
 sys.path.insert(1, path)
 
 manager = Manager()

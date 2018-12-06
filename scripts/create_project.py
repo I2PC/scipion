@@ -25,7 +25,10 @@
 # *
 # **************************************************************************
 
-import sys, os
+import sys
+import os
+
+import pyworkflow as pw
 from pyworkflow.manager import Manager
 import pyworkflow.utils as pwutils
 
@@ -53,7 +56,7 @@ projName = sys.argv[1]
 jsonFile = None if n < 3 else os.path.abspath(sys.argv[2])
 location = None if n < 4 else sys.argv[3]
 
-path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'gui', 'no-tkinter')
+path = pw.join('gui', 'no-tkinter')
 sys.path.insert(1, path)
 
 # Create a new project

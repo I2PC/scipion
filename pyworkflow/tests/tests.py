@@ -8,14 +8,9 @@ from os.path import join, relpath
 from itertools import izip
 
 import pyworkflow as pw
-from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
-from pyworkflow.utils.utils import envVarOn, redStr, greenStr
 from pyworkflow.object import Object, Float
 from pyworkflow.protocol import MODE_RESTART
-
-TESTS_INPUT = os.environ['SCIPION_TESTS']
-TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
 
 
 SMALL = 'small'
@@ -37,7 +32,7 @@ def hasLabel(TestClass, labels):
 
 class DataSet:
 
-    _datasetDict = {} # store all created datasets
+    _datasetDict = {}  # store all created datasets
 
     def __init__(self, name, folder, files, url=None):
         """ 
@@ -47,7 +42,7 @@ class DataSet:
         """
         self._datasetDict[name] = self
         self.folder = folder
-        self.path = join(TESTS_INPUT, folder)
+        self.path = join(pw.Config.SCIPION_TESTS, folder)
         self.filesDict = files
         self.url = url
         
@@ -70,7 +65,7 @@ class DataSet:
         folder = ds.folder
         url = '' if ds.url is None else ' -u ' + ds.url
 
-        if not envVarOn('SCIPION_TEST_NOSYNC'):
+        if not pw.utils.envVarOn('SCIPION_TEST_NOSYNC'):
             command = ("%s %s testdata --download %s %s"
                        % (pw.PYTHON, pw.getScipionScript(), folder, url))
             print ">>>> " + command
@@ -121,7 +116,7 @@ class BaseTest(unittest.TestCase):
         and return a newly created protocol of the given class
         """
         # Try to continue from previous execution
-        if envVarOn('SCIPION_TEST_CONTINUE'):
+        if pw.utils.envVarOn('SCIPION_TEST_CONTINUE'):
             candidates = cls.proj.mapper.selectByClass(protocolClass.__name__)
             if candidates:
                 c = candidates[0]
@@ -160,11 +155,12 @@ class BaseTest(unittest.TestCase):
 
         self.assertIsNotNone(object.get(), msg)
 
+
 def setupTestOutput(cls):
     """ Create the output folder for a give Test class. """
-    cls.outputPath = join(TESTS_OUTPUT, cls.__name__)
-    cleanPath(cls.outputPath)
-    makePath(cls.outputPath)
+    cls.outputPath = join(pw.Config.SCIPION_TESTS_OUTPUT, cls.__name__)
+    pw.utils.cleanPath(cls.outputPath)
+    pw.utils.makePath(cls.outputPath)
        
 
 def setupTestProject(cls):
@@ -175,7 +171,6 @@ def setupTestProject(cls):
     else:
         proj = Manager().createProject(projName) # Now it will be loaded if exists
 
-    
     cls.outputPath = proj.path
     # Create project does not change the working directory anymore
     os.chdir(cls.outputPath)
@@ -183,9 +178,8 @@ def setupTestProject(cls):
     cls.proj = proj
 
 
-
-#class for tests
 class Complex(Object):
+    """ Simple class used for tests here. """
     
     cGold = complex(1.0, 1.0)
     
@@ -215,9 +209,9 @@ class Complex(Object):
         return c
        
     
-        
 class GTestResult(unittest.TestResult):
-    """ Subclass TestResult to output tests results with colors (green for success and red for failure)
+    """ Subclass TestResult to output tests results with colors
+    (green for success and red for failure)
     and write a report on an .xml file. 
     """
     xml = None
@@ -229,19 +223,20 @@ class GTestResult(unittest.TestResult):
         self.startTimeAll = time.time()
     
     def openXmlReport(self, classname, filename):
-        #self.xml = open(filename, 'w')
-        #self.xml.write('<testsuite name="%s">\n' % classname)
         pass
         
     def doReport(self):
         secs = time.time() - self.startTimeAll
         sys.stderr.write("\n%s run %d tests (%0.3f secs)\n" %
-                         (greenStr("[==========]"), self.numberTests, secs))
+                         (pw.utils.greenStr("[==========]"),
+                          self.numberTests, secs))
         if self.testFailed:
-            print >> sys.stderr, redStr("[  FAILED  ]") + " %d tests" % self.testFailed
-        print >> sys.stdout, greenStr("[  PASSED  ]") + " %d tests" % (self.numberTests - self.testFailed)
-        #self.xml.write('</testsuite>\n')
-        #self.xml.close()
+            sys.stderr.write("%s %d tests\n"
+                             % (pw.utils.redStr("[  FAILED  ]"),
+                                self.testFailed))
+        sys.stdout.write("%s %d tests\n"
+                         % (pw.utils.greenStr("[  PASSED  ]"),
+                            self.numberTests - self.testFailed))
 
     def tic(self):
         self.startTime = time.time()
@@ -262,12 +257,15 @@ class GTestResult(unittest.TestResult):
     
     def addSuccess(self, test):
         secs = self.toc()
-        sys.stderr.write("%s %s (%0.3f secs)\n" % (greenStr('[ RUN   OK ]'), self.getTestName(test), secs))
-    
+        sys.stderr.write("%s %s (%0.3f secs)\n" %
+                         (pw.utils.greenStr('[ RUN   OK ]'),
+                          self.getTestName(test), secs))
+
     def reportError(self, test, err):
-        sys.stderr.write("%s %s\n" % (redStr('[   FAILED ]'),
+        sys.stderr.write("%s %s\n" % (pw.utils.redStr('[   FAILED ]'),
                                       self.getTestName(test)))
-        sys.stderr.write("\n%s" % redStr("".join(format_exception(*err))))
+        sys.stderr.write("\n%s"
+                         % pw.utils.redStr("".join(format_exception(*err))))
         self.testFailed += 1
                 
     def addError(self, test, err):

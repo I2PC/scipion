@@ -40,11 +40,11 @@ import argparse
 import unittest
 from collections import OrderedDict
 
+import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.tests as pwtests
 import pyworkflow.em as pwem
 
-from pyworkflow import HOME
 
 from pyworkflow.tests import *
 
@@ -234,7 +234,7 @@ class Tester():
     def _runNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
-            scipion = join(os.environ['SCIPION_HOME'], 'scipion')
+            scipion = pw.getScipionScript()
             cmd = "%s %s test %s" % (spaces, scipion, itemName)
             run = ((itemType == MODULE and self.mode == 'module') or
                    (itemType == CLASS and self.mode == 'classes') or

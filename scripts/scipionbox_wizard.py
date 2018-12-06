@@ -352,8 +352,7 @@ class BoxWizardView(tk.Frame):
             self.windows.showError("\n  - ".join(errors))
         else:
             self._createDataFolder(projPath, scipionProjPath)
-            command = os.path.join(os.getenv("SCIPION_HOME"),
-                                   "scripts/mirror_directory.sh")
+            command = pw.join('..', 'scripts', 'mirror_directory.sh')
             if doBackup:
                 subprocess.Popen([command, dataFolder, projName, backupFolder],
                                  stdout=open('logfile_out.log', 'w'),

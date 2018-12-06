@@ -33,13 +33,15 @@ Template may look like this, separator is "~" and within it you can define:
 ~title|value|type~
 Template string sits at the end of the file ready for a running streaming demo.
 """
+
 import os
 import re
 import Tkinter as tk
 import tempfile
 import tkFont
-
 import datetime
+
+import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.gui import Message, Icon
 from pyworkflow.config import ProjectSettings
@@ -249,8 +251,8 @@ class BoxWizardView(tk.Frame):
 
         projectName = self._getValue(PROJECT_NAME)
 
-        scipion = os.path.join(os.environ.get('SCIPION_HOME'), 'scipion')
-        scriptsPath = os.path.join(os.environ.get('SCIPION_HOME'), 'scripts')
+        scipion = pw.getScipionScript()
+        scriptsPath = pw.join('..', 'scripts')
 
         # Download the required data
         # pwutils.runCommand(scipion +

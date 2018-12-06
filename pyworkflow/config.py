@@ -83,7 +83,7 @@ def loadHostsConf(hostsConf):
 
         for hostName in cp.sections():
             host = pwhosts.HostConfig(label=hostName, hostName=hostName)
-            host.setHostPath(pw.SCIPION_USER_DATA)
+            host.setHostPath(pw.Config.SCIPION_USER_DATA)
 
             # Helper functions (to write less)
             def get(var, default=None):
@@ -101,7 +101,7 @@ def loadHostsConf(hostsConf):
                 
                 return od
 
-            host.setScipionHome(get('SCIPION_HOME', pw.SCIPION_HOME))
+            host.setScipionHome(get('SCIPION_HOME', pw.Config.SCIPION_HOME))
             host.setScipionConfig(get('SCIPION_CONFIG'))
             # Read the address of the remote hosts, 
             # using 'localhost' as default for backward compatibility
