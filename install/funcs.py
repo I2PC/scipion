@@ -88,7 +88,6 @@ Continue anyway? (y/n)""" % lib)
     # software/log/lib_...log so we don't check again if we already said "no"
 
 
-
 class Command:
     def __init__(self, env, cmd, targets=None,  **kwargs):
         self._env = env

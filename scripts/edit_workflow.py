@@ -62,12 +62,13 @@ pwutils.makePath(os.path.join(customUserData, 'projects'))
 print "Loading projects from:\n", customUserData 
  
 # Create a new project
-manager = Manager(SCIPION_USER_DATA=customUserData)
+manager = Manager(workspace=customUserData)
 
 projName = os.path.basename(jsonFn)
 proj = manager.createProject(projName)
 projPath = manager.getProjectPath(projName)
 proj.loadProtocols(jsonFn)
+
 
 class EditorProjectWindow(ProjectWindow):
     def close(self, e=None):

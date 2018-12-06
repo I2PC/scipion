@@ -57,7 +57,7 @@ else:
 print "Loading projects from:\n", customUserData 
  
 # Create a new project
-manager = Manager(SCIPION_USER_DATA=customUserData)
+manager = Manager(workspace=customUserData)
 
 for projInfo in manager.listProjects():
     projName = projInfo.getName()

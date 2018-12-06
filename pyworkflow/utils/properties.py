@@ -29,7 +29,8 @@
 This module defines the text used in the application.
 """
 
-class Message():
+
+class Message:
     # Example Usage: 
     # MyMessage = Message()
     # print MyMessage.label
@@ -348,7 +349,7 @@ Do you really want to continue?'
 
 
 # PLUGIN/BINARY STATES
-class PluginStates():
+class PluginStates:
     PLUGIN = 'plugin'
     BINARY = 'binary'
     UNCHECKED = 'unchecked'
@@ -360,8 +361,9 @@ class PluginStates():
     PRECESSING = 'processing'
     FAILURE = 'failure'
 
+
 # To get font awesome icons into png use: http://fa2png.io/
-class Icon():
+class Icon:
     # Project Content Template
     RUNS_TREE = 'fa-sitemap.png'
     RUNS_LIST = 'fa-bars.png'
@@ -426,7 +428,7 @@ class Icon():
     DELETE_OPERATION = 'fa-delete-operation.png'
 
 
-class Color():
+class Color:
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
     LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
     LIGHT_BLUE_COLOR = '#EAEBFF' # Very light blue for even rows
@@ -441,7 +443,7 @@ class Color():
     STATUS_FAILED = '#F5CCCB', 
     STATUS_INTERACTIVE = '#F3F5CB',
     STATUS_ABORTED = '#F5CCCB',
-    #STATUS_SAVED = '#124EB0',
+
 
 class colorText:
     """printing in colors, bold, etc,
@@ -457,6 +459,7 @@ class colorText:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
     END = '\033[0m'
+
 
 class KEYSYM:
     """ Keysym values for evaluating key pressed within events

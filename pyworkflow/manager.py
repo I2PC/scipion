@@ -29,6 +29,7 @@ This modules handles the System management
 
 import os
 
+import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from project import Project
 
@@ -49,15 +50,19 @@ class ProjectInfo(object):
         
         
 class Manager(object):
-    """This class will handle the creation, modification
-    and listing of projects."""
-    def __init__(self, SCIPION_USER_DATA=None):
-        """For create a Project, the path is required"""
-        if SCIPION_USER_DATA is not None:
-            self.PROJECTS = os.path.join(SCIPION_USER_DATA, 'projects')
-        else:
-            self.PROJECTS = os.path.join(os.environ["SCIPION_USER_DATA"], 'projects')
-        
+    """ Manage all projects of a given workspace.
+     (i.e, listing projects, creating, deleting or querying info)
+    """
+    def __init__(self, workspace=None):
+        """
+        Params:
+            workspace: path to where the user's workspace is. A subfolder
+            named 'projects' is expected. If workspace is None, the workspace
+            will be taken from the global configuration.
+        """
+        ws = workspace or pw.Config.SCIPION_USER_DATA
+        self.PROJECTS = os.path.join(ws, 'projects')
+
     def getProjectPath(self, projectName):
         """Return the project path given the name"""
         return os.path.join(self.PROJECTS, projectName)
@@ -67,7 +72,7 @@ class Manager(object):
         And some other project info
         If sortByData is True, recently modified projects will be first"""
         projList = []
-        pwutils.path.makePath(self.PROJECTS)
+        pw.utils.makePath(self.PROJECTS)
         for f in os.listdir(self.PROJECTS):
             p = self.getProjectPath(f)
             if os.path.isdir(p):
@@ -102,8 +107,8 @@ class Manager(object):
         if projectPath != self.getProjectPath(projectName):
             # JMRT: Let's create the link to the absolute path, since relative
             # can be broken in systems with different mount points
-            pwutils.path.createAbsLink(os.path.abspath(projectPath), 
-                                       self.getProjectPath(projectName))
+            pw.utils.createAbsLink(os.path.abspath(projectPath),
+                                   self.getProjectPath(projectName))
 
         os.chdir(cwd)  # Retore cwd before project creation
 
@@ -125,11 +130,11 @@ class Manager(object):
         # If need to copyFiles
         if copyFiles:
             # Copy the whole folder
-            pwutils.path.copyTree(os.path.abspath(fromLocation), os.path.abspath(projectPath))
+            pw.utils.copyTree(os.path.abspath(fromLocation), os.path.abspath(projectPath))
 
         else:
             # Link the folder
-            pwutils.path.createAbsLink(os.path.abspath(fromLocation), projectPath)
+            pw.utils.createAbsLink(os.path.abspath(fromLocation), projectPath)
 
         project = self.loadProject(projectName)
 
@@ -144,7 +149,7 @@ class Manager(object):
         return project
 
     def deleteProject(self, projectName):
-        pwutils.path.cleanPath(self.getProjectPath(projectName))
+        pw.utils.cleanPath(self.getProjectPath(projectName))
 
     def renameProject(self, oldName, newName):
         os.rename(self.getProjectPath(oldName), self.getProjectPath(newName))

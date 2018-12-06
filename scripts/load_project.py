@@ -64,7 +64,7 @@ projName = os.path.basename(pathToProj)
 pwutils.createAbsLink(pathToProj, os.path.join(projectsDir, projName))
  
 # Create a new project
-manager = Manager(SCIPION_USER_DATA=customUserData)
+manager = Manager(workspace=customUserData)
 
 proj = manager.loadProject(projName)
 projPath = manager.getProjectPath(projName)
