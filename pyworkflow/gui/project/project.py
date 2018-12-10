@@ -376,7 +376,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
     def onBrowseFiles(self):
         # File -> Browse files
         FileBrowserWindow("Browse files", self,
-                          os.environ['SCIPION_USER_DATA'],
+                          pw.Config.SCIPION_USER_DATA,
                           selectButton=None).show()
 
     def onGeneral(self):
@@ -407,9 +407,8 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
     def onPlugins(self):
         # Config -> Plugins
-        PluginManager("Plugin Manager", self,
-                          os.environ['SCIPION_USER_DATA'],
-                          selectButton=None).show()
+        PluginManager("Plugin Manager", self, pw.Config.SCIPION_USER_DATA,
+                      selectButton=None).show()
 
 
 class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):

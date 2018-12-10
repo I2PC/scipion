@@ -25,7 +25,10 @@
 # *
 # **************************************************************************
 
-import sys, os
+import sys
+import os
+
+import pyworkflow as pw
 from pyworkflow.manager import Manager
 from pyworkflow.object import Boolean
 
@@ -47,7 +50,7 @@ if n < 2 or n > 4:
     usage("Incorrect number of input parameters")
     
 # Load the given project
-projectsDir = os.path.join(os.environ['SCIPION_USER_DATA'], 'projects')
+projectsDir = os.path.join(pw.Config.SCIPION_USER_DATA, 'projects')
 projName = sys.argv[1]
 manager = Manager()
 project = manager.loadProject(projName)

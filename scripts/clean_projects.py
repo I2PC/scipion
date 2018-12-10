@@ -25,7 +25,10 @@
 # *
 # **************************************************************************
 
-import sys, os
+import sys
+import os
+
+import pyworkflow as pw
 from pyworkflow.manager import Manager
 
 
@@ -52,7 +55,7 @@ arg1 = sys.argv[1]
 if n > 1 and arg1 != '--delete':
     customUserData = arg1
 else:
-    customUserData = os.environ['SCIPION_USER_DATA']
+    customUserData = pw.Config.SCIPION_USER_DATA
 
 print "Loading projects from:\n", customUserData 
  

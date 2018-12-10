@@ -25,12 +25,14 @@
 # *
 # **************************************************************************
 
-import sys, os
+import sys
+import os
 from datetime import datetime
 
+import pyworkflow as pw
+import pyworkflow.utils as pwutils
 from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
-import pyworkflow.utils as pwutils
 
 
 def usage(error):
@@ -54,8 +56,7 @@ jsonFn = os.path.abspath(sys.argv[1])
 
 now = datetime.now()
 tempSpace = "editor-%s" % now.strftime('%Y%m%d-%H%M%S')
-customUserData = os.path.join(os.environ['SCIPION_USER_DATA'],
-                              'tmp', tempSpace)
+customUserData = os.path.join(pw.Config.SCIPION_USER_DATA, 'tmp', tempSpace)
 
 pwutils.makePath(os.path.join(customUserData, 'projects'))
 

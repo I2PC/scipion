@@ -260,7 +260,7 @@ class Tester():
         self.testCount = 0
 
         if self.log:
-            self.testsDir = join(os.environ['SCIPION_USER_DATA'], 'Tests', self.log)
+            self.testsDir = join(pw.Config.SCIPION_USER_DATA, 'Tests', self.log)
             pwutils.cleanPath(self.testsDir)
             pwutils.makePath(self.testsDir)
             self.testLog = join(self.testsDir, 'tests.html')
