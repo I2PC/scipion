@@ -35,12 +35,17 @@ from os.path import join
 from collections import OrderedDict
 import subprocess
 from pyworkflow.utils import getFreePort, importFromPlugin
-from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE, COL_RENDER_VOLUME
 import threading
 import shlex
 import SocketServer
 
 # ----------------------- Showj constants ---------------------------
+COL_RENDER_NONE = 0
+COL_RENDER_ID = 1
+COL_RENDER_TEXT = 2
+COL_RENDER_IMAGE = 3
+COL_RENDER_CHECKBOX = 4
+COL_RENDER_VOLUME = 5
 
 PATH = 'path'
 DATASET = 'dataset'

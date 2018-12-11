@@ -23,17 +23,19 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+# JMRT (2018-12-11) This module is almost not used at all. Maybe it
+can be removed in a future. Just kept here for the moment inside
+pw.utils and not imported by default
+"""
 
 import os
+from collections import OrderedDict, namedtuple
+
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.mapper.sqlite import SqliteDb, SqliteFlatDb
 from pyworkflow.mapper.sqlite_db import SqliteDb
 
-"""
-This modules implements a DataSet, a container of several Tables.
-This will serve as an abstraction layer from where the data will be taken.
-"""
-from collections import OrderedDict, namedtuple
 
 class DataSet(object):
     """ Holds several Tables
@@ -227,7 +229,9 @@ class Table(object):
     def __str__(self):
         return '\n'.join([str(row) for row in self.iterRows()])
     
-        
+
+# JMRT (2018-12-11) This constants are duplicated in showj, since this module
+# is not widely used I don't find convenient such a dependency
 COL_RENDER_NONE = 0
 COL_RENDER_ID = 1
 COL_RENDER_TEXT = 2
