@@ -34,24 +34,8 @@ from ConfigParser import ConfigParser
 from collections import OrderedDict
 
 import pyworkflow as pw
-from pyworkflow.object import *
-from pyworkflow.mapper import SqliteMapper, XmlMapper
+from pyworkflow.object import OrderedObject, String, Integer, Boolean
 
-
-
-class HostMapper(SqliteMapper):
-    def __init__(self, filename, dictClasses=None):
-        if dictClasses is None:
-            dictClasses = globals()
-        SqliteMapper.__init__(self, filename, dictClasses)
-        
-    def selectByLabel(self, objLabel):
-        hostsList = self.selectAll()
-        for host in hostsList:
-            if host.label == objLabel:
-                return host
-        return None
-        
         
 class HostConfig(OrderedObject):
     """ Main store the configuration for execution hosts. """
@@ -152,6 +136,68 @@ class HostConfig(OrderedObject):
     
     def setAddress(self, newAddress):
         return self.address.set(newAddress)
+
+    @classmethod
+    def load(cls, hostsConf):
+        """ Load several hosts from a configuration file.
+        Return an dictionary with hostName -> hostConfig pairs.
+        """
+        # Read from users' config file.
+        cp = ConfigParser()
+        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+        hosts = OrderedDict()
+
+        try:
+            assert cp.read(hostsConf) != [], 'Missing file %s' % hostsConf
+
+            for hostName in cp.sections():
+                host = HostConfig(label=hostName, hostName=hostName)
+                host.setHostPath(pw.Config.SCIPION_USER_DATA)
+
+                # Helper functions (to write less)
+                def get(var, default=None):
+                    if cp.has_option(hostName, var):
+                        return cp.get(hostName, var).replace('%_(', '%(')
+                    else:
+                        return default
+
+                def getDict(var):
+                    od = OrderedDict()
+
+                    if cp.has_option(hostName, var):
+                        for key, value in json.loads(get(var)).iteritems():
+                            od[key] = value
+
+                    return od
+
+                host.setScipionHome(get('SCIPION_HOME', pw.Config.SCIPION_HOME))
+                host.setScipionConfig(get('SCIPION_CONFIG'))
+                # Read the address of the remote hosts,
+                # using 'localhost' as default for backward compatibility
+                host.setAddress(get('ADDRESS', 'localhost'))
+                host.mpiCommand.set(get('PARALLEL_COMMAND'))
+                host.queueSystem = QueueSystemConfig()
+                hostQueue = host.queueSystem  # shortcut
+                hostQueue.name.set(get('NAME'))
+
+                # If the NAME is not provided or empty
+                # do no try to parse the rest of Queue parameters
+                if hostQueue.hasName():
+                    hostQueue.setMandatory(get('MANDATORY', 0))
+                    hostQueue.submitPrefix.set(get('SUBMIT_PREFIX', ''))
+                    hostQueue.submitCommand.set(get('SUBMIT_COMMAND'))
+                    hostQueue.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+                    hostQueue.cancelCommand.set(get('CANCEL_COMMAND'))
+                    hostQueue.checkCommand.set(get('CHECK_COMMAND'))
+                    hostQueue.queues = getDict('QUEUES')
+                    hostQueue.queuesDefault = getDict('QUEUES_DEFAULT')
+
+                hosts[hostName] = host
+
+            return hosts
+        except Exception as e:
+            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                     'To solve it, delete %s and run again.' % (e, hostsConf))
 
 
 class QueueSystemConfig(OrderedObject):
@@ -276,4 +322,5 @@ class QueueConfig(OrderedObject):
     
     def setMaxHours(self, maxHours):
         self.maxHours.set(maxHours)
-   
+
+

@@ -25,24 +25,22 @@
 # *
 # **************************************************************************
 
+import datetime as dt
+import json
 import os
 import re
-import json
-import traceback
 import time
+import traceback
 from collections import OrderedDict
-import datetime as dt
 
 import pyworkflow as pw
-import pyworkflow.em as em
 import pyworkflow.config as pwconfig
-import pyworkflow.hosts as pwhosts
-import pyworkflow.protocol as pwprot
+import pyworkflow.em as em
 import pyworkflow.object as pwobj
+import pyworkflow.protocol as pwprot
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import MODE_RESTART
-
 
 OBJECT_PARENT_ID = pwobj.OBJECT_PARENT_ID
 PROJECT_DBNAME = 'project.sqlite'
@@ -117,9 +115,11 @@ class Project(object):
             return os.path.join(*paths)
         else:
             return self.path
+
     def isLink(self):
         """Returns if the project path is a link to another folder."""
         return self._isLink
+
     def getDbPath(self):
         """ Return the path to the sqlite db. """
         return self.dbPath
@@ -200,7 +200,6 @@ class Project(object):
         classesDict = pwobj.Dict(default=pwprot.LegacyProtocol)
         classesDict.update(pwobj.__dict__)
         classesDict.update(pwconfig.__dict__)
-        classesDict.update(pwhosts.__dict__)
         classesDict.update(em.Domain.getProtocols())
         classesDict.update(em.Domain.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
@@ -286,7 +285,8 @@ class Project(object):
 
         absDbPath = os.path.join(self.path, self.dbPath)
         if not os.path.exists(absDbPath):
-            raise MissingProjectDbException("Project database not found at '%s'" % absDbPath)
+            raise MissingProjectDbException(
+                "Project database not found at '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
 
     def closeMapper(self):
@@ -312,7 +312,7 @@ class Project(object):
             pwutils.copyFile(hosts, projHosts)
             hostsFile = hosts
 
-        self._hosts = pwconfig.loadHostsConf(hostsFile)
+        self._hosts = pwprot.HostConfig.load(hostsFile)
 
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """

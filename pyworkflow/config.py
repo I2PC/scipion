@@ -28,16 +28,14 @@ This modules serve to define some Configuration classes
 mainly for project GUI
 """
 
-import sys
-import os
-import json
-from collections import OrderedDict
-from ConfigParser import ConfigParser
 import datetime as dt
+import json
+import os
+import sys
+from ConfigParser import ConfigParser
+from collections import OrderedDict
 
-import pyworkflow as pw
 import pyworkflow.object as pwobj
-import pyworkflow.hosts as pwhosts
 from pyworkflow import em
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils.properties import Icon
@@ -68,67 +66,7 @@ def loadSettings(dbPath):
     return settings
 
 
-def loadHostsConf(hostsConf):
-    """ Load several hosts from a configuration file. 
-    Return an OrderedDict where the keys are the hostname
-    and the values the configuration for each host.
-    """
-    # Read from users' config file.
-    cp = ConfigParser()
-    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    hosts = OrderedDict()
-    
-    try:
-        assert cp.read(hostsConf) != [], 'Missing file %s' % hostsConf
 
-        for hostName in cp.sections():
-            host = pwhosts.HostConfig(label=hostName, hostName=hostName)
-            host.setHostPath(pw.Config.SCIPION_USER_DATA)
-
-            # Helper functions (to write less)
-            def get(var, default=None):
-                if cp.has_option(hostName, var):
-                    return cp.get(hostName, var).replace('%_(', '%(')
-                else:
-                    return default
-                
-            def getDict(var):
-                od = OrderedDict()
-
-                if cp.has_option(hostName, var):
-                    for key, value in json.loads(get(var)).iteritems():
-                        od[key] = value                
-                
-                return od
-
-            host.setScipionHome(get('SCIPION_HOME', pw.Config.SCIPION_HOME))
-            host.setScipionConfig(get('SCIPION_CONFIG'))
-            # Read the address of the remote hosts, 
-            # using 'localhost' as default for backward compatibility
-            host.setAddress(get('ADDRESS', 'localhost'))
-            host.mpiCommand.set(get('PARALLEL_COMMAND'))
-            host.queueSystem = pwhosts.QueueSystemConfig()
-            host.queueSystem.name.set(get('NAME'))
-            
-            # If the NAME is not provided or empty
-            # do no try to parse the rest of Queue parameters
-            if host.queueSystem.hasName(): 
-                host.queueSystem.setMandatory(get('MANDATORY', 0))
-                host.queueSystem.submitPrefix.set(get('SUBMIT_PREFIX', ''))
-                host.queueSystem.submitCommand.set(get('SUBMIT_COMMAND'))
-                host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
-                host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
-                host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
-    
-                host.queueSystem.queues = getDict('QUEUES')
-                host.queueSystem.queuesDefault = getDict('QUEUES_DEFAULT')
-                
-            hosts[hostName] = host
-
-        return hosts
-    except Exception as e:
-        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                 'To solve it, delete %s and run again.' % (e, hostsConf))
 
 
 # Helper function to recursively add items to a menu.
@@ -310,8 +248,10 @@ class ProjectSettings(pwobj.OrderedObject):
     def __init__(self, confs={}, **kwargs):
         pwobj.OrderedObject.__init__(self, **kwargs)
         self.config = ProjectConfig()
-        self.currentProtocolsView = pwobj.String()  # Store the current view selected by the user
-        self.colorMode = pwobj.Integer(ProjectSettings.COLOR_MODE_STATUS)  # Store the color mode: 0= Status, 1=Labels, ...
+        # Store the current view selected by the user
+        self.currentProtocolsView = pwobj.String()
+        # Store the color mode: 0= Status, 1=Labels, ...
+        self.colorMode = pwobj.Integer(ProjectSettings.COLOR_MODE_STATUS)
         self.nodeList = NodeConfigList()  # Store graph nodes positions and other info
         self.labelsList = LabelsList()  # Label list
         self.mapper = None  # This should be set when load, or write
@@ -321,7 +261,8 @@ class ProjectSettings(pwobj.OrderedObject):
         self.dataSelection = pwobj.CsvList(int)  # Store selected runs
         # Some extra settings stored, now mainly used
         # from the webtools
-        self.creationTime = pwobj.String(dt.datetime.now()) # Time when the project was created
+        # Time when the project was created
+        self.creationTime = pwobj.String(dt.datetime.now())
         # Number of days that this project is active
         # if None, the project will not expire
         # This is used in webtools where a limited time
