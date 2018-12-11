@@ -33,10 +33,11 @@ def waitForDebugger(seconds=20):
         print(str(seconds) + " seconds left.")
         seconds -= 1
 
+
 # From: https://www.huyng.com/posts/python-performance-analysis
 
-class Timer(object):
 
+class Timer(object):
     indentation = 0
     blackList = []
     whiteList = []
