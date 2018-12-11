@@ -42,7 +42,7 @@ import tempfile
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.config import MenuConfig, ProjectSettings
+from pyworkflow.project import MenuConfig, ProjectSettings
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.viewers import EmPlotter

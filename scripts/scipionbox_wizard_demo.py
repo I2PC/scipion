@@ -44,7 +44,7 @@ import datetime
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.gui import Message, Icon
-from pyworkflow.config import ProjectSettings
+from pyworkflow.project import ProjectSettings
 
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.project.base import ProjectBaseWindow

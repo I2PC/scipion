@@ -27,3 +27,6 @@
 
 from .project import Project, MissingProjectDbException
 from .manager import Manager, ProjectInfo
+from .config import (ProjectSettings, ProjectConfig, MenuConfig,
+                     ProtocolConfig, NodeConfig, NodeConfigList,
+                     Label, LabelsList, ProtocolTreeConfig)

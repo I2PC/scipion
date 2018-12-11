@@ -32,6 +32,7 @@ import unittest
 from pyworkflow.mapper import *
 from pyworkflow.object import *
 from pyworkflow.config import *
+from pyworkflow.project import *
 from pyworkflow.em.data import Acquisition, SetOfImages, Image
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils

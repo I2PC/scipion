@@ -46,8 +46,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
-from pyworkflow.config import (isAFinalProtocol, getProtocolTag,
-                               PROTOCOL_DISABLED_TAG, PROTOCOL_TAG)
+from pyworkflow.project import ProtocolTreeConfig
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
@@ -355,7 +354,7 @@ class SearchProtocolWindow(pwgui.Window):
         protList = []
 
         for key, prot in emProtocolsDict.iteritems():
-            if isAFinalProtocol(prot, key):
+            if ProtocolTreeConfig.isAFinalProtocol(prot, key):
                 label = prot.getClassLabel().lower()
                 if keyword in label:
                     protList.append((key,
@@ -366,7 +365,7 @@ class SearchProtocolWindow(pwgui.Window):
         protList.sort(key=lambda x: x[1])  # sort by label
 
         for key, label, installed in protList:
-            tag = getProtocolTag(installed)
+            tag = ProtocolTreeConfig.getProtocolTag(installed)
             if not installed: label += " (not installed)"
             self._resultsTree.insert('', 'end', key,
                                      text=label, tags=(tag))
@@ -948,15 +947,20 @@ class ProtocolsView(tk.Frame):
         t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
         t.column('#0', minwidth=300)
         # Protocol nodes
-        t.tag_configure(PROTOCOL_TAG, image=self.getImage('python_file.gif'))
-        t.tag_bind(PROTOCOL_TAG, '<Double-1>', self._protocolItemClick)
-        t.tag_bind(PROTOCOL_TAG, '<Return>', self._protocolItemClick)
+        t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL,
+                        image=self.getImage('python_file.gif'))
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
+                   '<Double-1>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
+                   '<Return>', self._protocolItemClick)
 
         # Disable protocols (not installed) are allowed to be added.
-        t.tag_configure(PROTOCOL_DISABLED_TAG, image=self.getImage('prot_disabled.gif'))
-        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Double-1>', self._protocolItemClick)
-        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Return>', self._protocolItemClick)
-
+        t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                        image=self.getImage('prot_disabled.gif'))
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                   '<Double-1>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                   '<Return>', self._protocolItemClick)
 
         t.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         t.tag_configure('protocol_group', image=self.getImage('class_obj.gif'))

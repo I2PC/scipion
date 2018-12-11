@@ -34,13 +34,15 @@ import traceback
 from collections import OrderedDict
 
 import pyworkflow as pw
-import pyworkflow.config as pwconfig
 import pyworkflow.em as em
 import pyworkflow.object as pwobj
 import pyworkflow.protocol as pwprot
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import MODE_RESTART
+
+import config
+
 
 OBJECT_PARENT_ID = pwobj.OBJECT_PARENT_ID
 PROJECT_DBNAME = 'project.sqlite'
@@ -54,7 +56,7 @@ PROJECT_CREATION_TIME = 'CreationTime'
 
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+)(?P<number>\(\d*\))\s*$')
-REGEX_NUMBER_ENDING_CP=re.compile('(?P<prefix>.+\s\(copy)(?P<number>.*)\)\s*$')
+REGEX_NUMBER_ENDING_CP = re.compile('(?P<prefix>.+\s\(copy)(?P<number>.*)\)\s*$')
 
 
 class Project(object):
@@ -187,7 +189,7 @@ class Project(object):
             self.settings.write()
 
     def createSettings(self, runsView=1, readOnly=False):
-        self.settings = pwconfig.ProjectSettings()
+        self.settings = config.ProjectSettings()
         self.settings.setRunsView(runsView)
         self.settings.setReadOnly(readOnly)
         self.settings.write(self.settingsPath)
@@ -199,7 +201,7 @@ class Project(object):
         """
         classesDict = pwobj.Dict(default=pwprot.LegacyProtocol)
         classesDict.update(pwobj.__dict__)
-        classesDict.update(pwconfig.__dict__)
+        classesDict.update(config.__dict__)
         classesDict.update(em.Domain.getProtocols())
         classesDict.update(em.Domain.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
@@ -245,9 +247,13 @@ class Project(object):
                 # we are loading a project after a Project.setDbName,
                 # used when running protocols
                 settingsPath = os.path.join(self.path, self.settingsPath)
+                print("settingsPath: ", settingsPath)
+
                 if os.path.exists(settingsPath):
-                    self.settings = pwconfig.loadSettings(settingsPath)
+                    self.settings = config.ProjectSettings.load(settingsPath)
+                    self.settings.printAll()
                 else:
+                    print("settings is None")
                     self.settings = None
 
             self._loadCreationTime()
@@ -259,9 +265,9 @@ class Project(object):
             raise noDBe
 
         # Catch any less severe exception..to allow at least open the project.
-        except Exception as e:
-            print("ERROR: Project %s load failed.\n"
-                  "       Message: %s\n" % (self.path, e))
+        # except Exception as e:
+        #     print("ERROR: Project %s load failed.\n"
+        #           "       Message: %s\n" % (self.path, e))
 
     def _loadCreationTime(self):
         # Load creation time, it should be in project.sqlite or
@@ -332,7 +338,7 @@ class Project(object):
             pwutils.copyFile(protocolsConf, projProtConf)
             protConf = protocolsConf
 
-        self._protocolViews = pwconfig.loadProtocolsConf(protConf)
+        self._protocolViews = config.ProtocolTreeConfig.load(protConf)
 
     def getHostNames(self):
         """ Return the list of host name in the project. """

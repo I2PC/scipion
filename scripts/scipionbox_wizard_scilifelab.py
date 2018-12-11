@@ -28,6 +28,7 @@
 import os
 import sys
 import re
+import subprocess
 import Tkinter as tk
 import tkFileDialog
 import tkMessageBox
@@ -38,15 +39,14 @@ from ConfigParser import ConfigParser
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.project import Manager
+from pyworkflow.project import Manager, ProjectSettings
 from pyworkflow.gui import Message, Icon
-from pyworkflow.config import ProjectSettings
 import pyworkflow.em as em
 
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.project.base import ProjectBaseWindow
 from pyworkflow.gui.widgets import HotButton, Button
-import subprocess
+
 
 VIEW_WIZARD = 'wizardview'
 
