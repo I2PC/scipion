@@ -33,7 +33,7 @@ import os
 
 import time
 
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 from pyworkflow.gui.project import ProjectWindow
 import pyworkflow.utils as pwutils
 

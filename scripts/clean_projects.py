@@ -29,7 +29,7 @@ import sys
 import os
 
 import pyworkflow as pw
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 
 
 def usage(error):

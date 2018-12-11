@@ -29,11 +29,11 @@ import Tkinter as tk
 import tkFont
 
 import pyworkflow as pw
-from pyworkflow.project import PROJECT_DBNAME
+from pyworkflow.project import Project
 from pyworkflow.utils.utils import prettyDate, prettyTime
 from pyworkflow.utils.path import getHomePath
 
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui.dialog import askString, askYesNo, showError
@@ -416,7 +416,7 @@ class ProjectImportWindow(Window):
         elif not os.path.isdir(projLocation):
                 errorMessage += "Project location is not a directory\n"
         # Validate that the project location is a scipion project folder
-        elif not os.path.exists(os.path.join(projLocation, PROJECT_DBNAME)):
+        elif not os.path.exists(os.path.join(projLocation, Project.getName())):
             errorMessage += "Project location doesn't look like a scipion folder\n"
 
         # Validate that there isn't already a project with the same name

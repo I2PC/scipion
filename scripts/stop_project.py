@@ -31,8 +31,7 @@ from time import sleep
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.manager import Manager
-from pyworkflow.project import Project
+from pyworkflow.project import Manager, Project
 
 
 def usage(error):

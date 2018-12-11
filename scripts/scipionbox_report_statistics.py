@@ -37,7 +37,7 @@ import sys
 import sqlite3 as lite
 import uuid
 
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 import pyworkflow.utils as pwutils
 from pyworkflow.em.data import SetOfCTF
 

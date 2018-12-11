@@ -39,7 +39,7 @@ import argparse
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 from pyworkflow.gui import Message, Icon
 from pyworkflow.config import ProjectSettings
 import pyworkflow.em as em

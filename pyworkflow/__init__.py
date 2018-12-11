@@ -58,6 +58,10 @@ class Config:
     SCIPION_TESTS_OUTPUT = __get('SCIPION_TESTS_OUTPUT',
                                  os.path.join(SCIPION_USER_DATA, 'Tests'))
 
+    SCIPION_CONFIG_MAIN = os.environ.get('SCIPION_CONFIG_MAIN', 'scipion.conf')
+    SCIPION_CONFIG_HOSTS = os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
+    SCIPION_CONFIG_PROTOCOLS = os.environ.get('SCIPION_CONFIG_PROTOCOLS', 'protocols.conf')
+
 
 def join(*paths):
     """ join paths from HOME . """

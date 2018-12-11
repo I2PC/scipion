@@ -40,10 +40,14 @@ import datetime as dt
 RELATION_CHILDS = 0
 RELATION_PARENTS = 1
 
+# Then column name of the parent id relation
+OBJECT_PARENT_ID = 'object_parent_id'
+
 
 class Object(object):
     """ All objects in our Domain should inherit from this class
     that will contains all base properties"""
+
     def __init__(self, value=None, **kwargs):
         object.__init__(self)
         self._objIsPointer = kwargs.get('objIsPointer', False) # True if will be treated as a reference for storage

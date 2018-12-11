@@ -1070,9 +1070,6 @@ class Protocol(Step):
         pass
 
     def copy(self, other, copyId=True, excludeInputs=False):
-
-        from pyworkflow.project import OBJECT_PARENT_ID
-
         # Input attributes list
         inputAttributes = []
 

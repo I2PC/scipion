@@ -30,7 +30,7 @@ import os
 from time import sleep
 
 import pyworkflow as pw
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 from pyworkflow.project import Project
 import pyworkflow.utils as pwutils
 

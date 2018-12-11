@@ -31,7 +31,7 @@ from datetime import datetime
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 from pyworkflow.gui.project import ProjectWindow
 
 

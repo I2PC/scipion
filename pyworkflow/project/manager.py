@@ -34,7 +34,6 @@ import pyworkflow.utils as pwutils
 from project import Project
 
 
-
 class ProjectInfo(object):
     """Class to store some information about the project"""
     def __init__(self, projName, mTime):

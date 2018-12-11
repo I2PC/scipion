@@ -8,7 +8,7 @@ from os.path import join, relpath
 from itertools import izip
 
 import pyworkflow as pw
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 from pyworkflow.object import Object, Float
 from pyworkflow.protocol import MODE_RESTART
 
