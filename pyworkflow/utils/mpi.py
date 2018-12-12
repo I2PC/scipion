@@ -62,7 +62,7 @@ def send(command, comm, dest, tag):
                             "to slave." % os.getpid())
 
     # Receive the result in a non-blocking way too (with irecv())
-    req_recv = comm.irecv(dest=dest, tag=tag)
+    req_recv = comm.irecv(source=dest, tag=tag)
     while True:
         done, result = req_recv.test()
         if done:
@@ -105,7 +105,7 @@ def runJobMPISlave(mpiComm):
     
     while True:
         # Receive command in a non-blocking way
-        req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
+        req_recv = mpiComm.irecv(source=0, tag=TAG_RUN_JOB+rank)
         while True:
             done, command = req_recv.test()
             if done:
