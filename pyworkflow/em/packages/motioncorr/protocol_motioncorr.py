@@ -577,6 +577,7 @@ class ProtMotionCorr(ProtAlignMovies):
         first, _ = self._getFrameRange(movie.getNumberOfFrames(), 'align')
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY, first)
         plotter.savefig(self._getPlotGlobal(movie))
+        plotter.close()
 
     def _isOutStackSupport(self):
         # checks if output aligned movies can be saved by motioncor2
