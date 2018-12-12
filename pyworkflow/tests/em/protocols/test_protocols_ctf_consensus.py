@@ -133,7 +133,7 @@ class TestCtfConsensus(BaseTest):
         }
 
         protCTFSel2 = self.newProtocol(XmippProtCTFConsensus, **kwargs)
-        protCTFSel2.inputCTF.set(protCTFSel.outputCTFDiscarded)
+        protCTFSel2.inputCTF.set(protCTFSel.outputCTF)
         self.proj.launchProtocol(protCTFSel2)
 
         counter = 1
