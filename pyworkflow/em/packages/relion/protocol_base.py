@@ -713,7 +713,7 @@ class ProtRelionBase(EMProtocol):
                            'with their accumulated results. The MPI '
                            'master will read in all these files, combine '
                            'them all, and write out a new file with the '
-                           'combined results. All MPI salves will then '
+                           'combined results. All MPI slaves will then '
                            'read in the combined results. This reduces '
                            'heavy load on the network, but increases load '
                            'on the disc I/O. This will affect the time it '
