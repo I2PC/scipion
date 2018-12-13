@@ -240,6 +240,8 @@ Protocols SPA = [
 	{"tag": "section", "text": "Model Building", "openItem": "False", "children": [
         {"tag": "protocol", "value": "XmippProtExtractUnit",   "text": "default"},
         {"tag": "protocol", "value": "ChimeraProtRigidFit",   "text": "default"},
+        {"tag": "protocol", "value": "ChimeraModelFromTemplate",   "text": "default"},
+        {"tag": "protocol", "value": "PowerfitProtRigidFit",   "text": "default"},
         {"tag": "protocol", "value": "CootRefine",   "text": "default"},
         {"tag": "protocol", "value": "CCP4ProtRunRefmac",   "text": "default"},
         {"tag": "protocol", "value": "PhenixProtRunEMRinger",   "text": "default"},
