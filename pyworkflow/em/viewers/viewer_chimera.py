@@ -591,6 +591,7 @@ class ChimeraViewer(Viewer):
                     tmpPath = "/tmp"
                 fnCmd = os.path.join(tmpPath, "chimera.cmd")
                 f = open(fnCmd, 'w')
+                f.write("cofr 0,0,0\n")  # set center of coordinates
                 if obj.hasVolume():
                     volID = 0
                     volumeObject = obj.getVolume()
