@@ -102,7 +102,8 @@ class ChimeraServer:
 
     def initListenShowJ(self):
 
-        self.listenShowJThread = Thread(target=self.listenShowJ)
+        self.listenShowJThread = Thread(name="listenShowJ",
+                                        target=self.listenShowJ)
         self.listenShowJThread.daemon = True
         self.listenShowJThread.start()
 
