@@ -101,7 +101,7 @@ class BaseTest(unittest.TestCase):
             print "    FAILED with error: %s\n" % prot.getErrorMessage()
             raise Exception("ERROR launching protocol.")
 
-        if not prot.isFinished() and not prot.useQueue:  # when queued is not finished yet
+        if not prot.isFinished() and not prot.useQueue():  # when queued is not finished yet
             print "\n>>> ERROR running protocol %s" % prot.getRunName()
             raise Exception("ERROR: Protocol not finished")
     
