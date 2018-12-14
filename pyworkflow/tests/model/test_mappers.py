@@ -31,7 +31,6 @@ import unittest
 
 from pyworkflow.mapper import *
 from pyworkflow.object import *
-from pyworkflow.config import *
 from pyworkflow.project import *
 from pyworkflow.em.data import Acquisition, SetOfImages, Image
 from pyworkflow.tests import *
@@ -358,23 +357,6 @@ class TestSqliteFlatMapper(BaseTest):
         # Make sure that maxId() returns the proper value after loading db
         self.assertEqual(bigId+1, mapper2.maxId())
         
-    def test_downloads(self):
-        dbName = self.getOutputPath('downloads.sqlite')
-
-        print ">>> test_downloads: dbName = '%s'" % dbName
-        mapper = SqliteFlatMapper(dbName, globals())
-        mapper.enableAppend()
-        
-        n = 10
-        
-        for i in range(n):
-            download = DownloadRecord(fullName='Paco Perez', 
-                                      organization='kkkk')
-            mapper.store(download)
-            
-        mapper.commit()
-        mapper.close()
-         
     def test_emtpySet(self):
         dbName = self.getOutputPath('empty.sqlite')
         print ">>> test empty set: dbName = '%s'" % dbName
