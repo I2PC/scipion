@@ -274,19 +274,16 @@ class ProtGctf(em.ProtCTFMicrographs):
 
         try:
             self.runJob(self._getProgram(), self._args % self._params,  env=self._getEnviron())
+
+            pwutils.moveFile(micFnCtf, psdFile)
+            pwutils.moveFile(micFnCtfFit, ctffitFile)
+            pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
+
         except:
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
 
         psdFile = self._getPsdPath(micDir)
         ctffitFile = self._getCtfFitOutPath(micDir)
-
-        # To prevent delays in FS, wait for 5 secs. Tested with less, but no succeed
-        import time
-        time.sleep(5)
-
-        pwutils.moveFile(micFnCtf, psdFile)
-        pwutils.moveFile(micFnCtfFit, ctffitFile)
-        pwutils.cleanPath(self.getProject().getPath('micrographs_all_gctf.star'))
 
         # Let's notify that this micrograph has been processed
         # just creating an empty file at the end (after success or failure)
