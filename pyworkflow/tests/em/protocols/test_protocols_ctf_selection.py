@@ -34,8 +34,7 @@ from pyworkflow.utils import importFromPlugin
 
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
 XmippProtCTFSelection = importFromPlugin('xmipp3.protocols',
-                                         'XmippProtCTFConsensus', doRaise=True)
-
+                                         'XmippProtCTFSelection', doRaise=True)
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement

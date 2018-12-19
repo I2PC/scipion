@@ -39,8 +39,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, getProgram
+from pyworkflow.em.viewers.viewer_chimera import Chimera, ChimeraView
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
@@ -71,7 +70,8 @@ class viewerProtImportVolumes(ProtocolViewer):
         }
 
     def _validate(self):
-        if self.displayVol == VOLUME_CHIMERA and find_executable(getProgram()) is None:
+        if (self.displayVol == VOLUME_CHIMERA
+            and find_executable(Chimera.getProgram()) is None):
             return ["chimera is not available. "
                     "Either install it or choose option 'slices'. "]
         return []
@@ -115,10 +115,11 @@ class viewerProtImportVolumes(ProtocolViewer):
             dim = self.protocol.outputVolume.getDim()[0]
             tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
                 "axis.bild"))
-            createCoordinateAxisFile(dim,
+            Chimera.createCoordinateAxisFile(dim,
                                      bildFileName=tmpFileNameBILD,
                                      sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
+            f.write("cofr 0,0,0\n")  # set center of coordinates
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
@@ -137,8 +138,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             x, y, z = vol.getShiftsFromOrigin()
             f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
         f.close()
-        import pyworkflow.em as em
-        return [em.ChimeraView(tmpFileNameCMD)]
+        return [ChimeraView(tmpFileNameCMD)]
 
     def _showVolumesSlices(self):
         # Write an sqlite with all volumes selected for visualization.

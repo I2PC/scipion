@@ -114,7 +114,7 @@ class TextView(View):
         showTextFileViewer(self._title, self._filelist, self._tkParent)
 
 
-#----------------- Viewers ----------------------------------------
+# ---------------- Viewers ----------------------------------------
     
 class Viewer(object):
     """ A Viewer will provide several Views to visualize
@@ -209,7 +209,7 @@ class Viewer(object):
                 to the ObjectView constructor
         """
         # We can not import em globally
-        from pyworkflow.em import ObjectView
+        from pyworkflow.em.viewers.views import ObjectView
         fn = None
 
         if isinstance(filenameOrObject, basestring):

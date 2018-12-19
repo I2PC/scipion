@@ -743,18 +743,25 @@ def pluginNotFound(plugName, errorMsg='', doRaise=False):
         if errorMsg != '':  # if empty we know nothing...
             hint += ", it can be a versions compatibility issue"
 
-
     stackList = traceback.extract_stack()
-    callIdx = -4  # We use the most probable index as default
-    for idx, stackLine in enumerate(stackList):
-        if stackLine[0].endswith('/unittest/loader.py'):
-            callIdx = idx
+    if len(stackList) > 3:
+        callIdx = -3  # We use the most probable index as default
+        for idx, stackLine in enumerate(stackList):
+            if stackLine[0].endswith('/unittest/loader.py'):
+                callIdx = idx + 1
+    else:
+        callIdx = 0
 
-    callBy = stackList[callIdx + 1][0]
-    line = stackList[callIdx + 1][1]
-    calling = "   Called by %s, line %s" % (callBy, line)
+    callBy = stackList[callIdx][0]
+    if callBy.endswith('pyworkflow/plugin.py'):
+        # This special case is to know why is failing and not where is called
+        # because we know that we call all plugins.protocols at the beginning
+        calling = traceback.format_exc().split('\n')[-4]
+    else:
+        line = stackList[callIdx][1]
+        calling = "  Called by %s, line %s" % (callBy, line)
 
-    raiseMsg = "%s\n%s\n%s\n" % (msgStr, calling, hint)
+    raiseMsg = "%s\n %s\n%s\n" % (msgStr, calling, hint)
     if doRaise:
         raise Exception("\n\n"+raiseMsg)
     else:

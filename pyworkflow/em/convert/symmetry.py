@@ -27,7 +27,7 @@
 This module returns the matrices related with the different
 point symmetries. Code based on chiomera file sym.py
 """
-from constants import SYM_CYCLIC, SYM_DIHEDRAL, SYM_OCTAHEDRAL, \
+from pyworkflow.em.constants import SYM_CYCLIC, SYM_DIHEDRAL, SYM_OCTAHEDRAL, \
     SYM_TETRAHEDRAL, SYM_TETRAHEDRAL_Z3, SYM_I222, SYM_I222r, \
     SYM_In25, SYM_In25r
 from math import sin, cos, pi, acos, sqrt, asin
