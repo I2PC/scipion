@@ -47,7 +47,8 @@ from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project, PROJECT_CONFIG_HOSTS
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
-from pyworkflow.em.plotter import plotFile
+from pyworkflow.em.viewers import EmPlotter
+from pyworkflow.gui.plugin_manager import PluginManager
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.gui.text import _open_cmd, openTextFileEditor
 from pyworkflow.webservices import ProjectWorkflowNotifier, WorkflowRepository
@@ -265,13 +266,13 @@ class ProjectWindow(ProjectBaseWindow):
                                   ProjectTCPRequestHandler)
         server.project = self.project
         server.window = self
-        server_thread = threading.Thread(target=server.serve_forever)
+        server_thread = threading.Thread(name="projectTCPserver", target=server.serve_forever)
         # Exit the server thread when the main thread terminates
         server_thread.daemon = True
         server_thread.start()
 
     def schedulePlot(self, path, *args):
-        self.enqueue(lambda: plotFile(path, *args).show())    
+        self.enqueue(lambda: EmPlotter.createFromFile(path, *args).show())
 
     @classmethod
     def registerObjectCommand(cls, cmd, func):
@@ -346,6 +347,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         confMenu.addSubMenu('General', 'general')
         confMenu.addSubMenu('Hosts', 'hosts')
         confMenu.addSubMenu('Protocols', 'protocols')
+        confMenu.addSubMenu('Plugins', 'plugins')
         confMenu.addSubMenu('User', 'user')
 
         helpMenu = menu.addSubMenu('Help')
@@ -402,6 +404,12 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
     def onUser(self):
         self._openConfigFile('scipion.conf', userOnly=True)
+
+    def onPlugins(self):
+        # Config -> Plugins
+        PluginManager("Plugin Manager", self,
+                          os.environ['SCIPION_USER_DATA'],
+                          selectButton=None).show()
 
 
 class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):

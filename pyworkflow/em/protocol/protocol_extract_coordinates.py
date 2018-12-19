@@ -47,7 +47,7 @@ class ProtExtractCoords(ProtParticlePicking):
     
     _label = 'extract coordinates'
 
-    #--------------------------- DEFINE param functions ------------------------
+    # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -71,7 +71,7 @@ class ProtExtractCoords(ProtParticlePicking):
         
         form.addParallelSection(threads=0, mpi=0)
 
-    #--------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
 
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -128,7 +128,7 @@ class ProtExtractCoords(ProtParticlePicking):
         self._defineSourceRelation(self.inputParticles, outputCoords)
         self._defineSourceRelation(self.inputMicrographs, outputCoords)
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _summary(self):
         summary = []
         ps1 = self.inputParticles.get().getSamplingRate()
@@ -165,7 +165,7 @@ class ProtExtractCoords(ProtParticlePicking):
         
         return errors
 
-    #--------------------------- UTILS functions ------------------------------
+    # -------------------------- UTILS functions -----------------------------
     def getShifts(self, transform, alignType):
         """
         is2D == True-> matrix is 2D (2D images alignment)
@@ -208,7 +208,7 @@ class ProtExtractCoords(ProtParticlePicking):
         return shifts
 
     def geometryFromMatrix(self, matrix, inverseTransform):
-        from pyworkflow.em.transformations import translation_from_matrix
+        from pyworkflow.em.convert.transformations import translation_from_matrix
         if inverseTransform:
             matrix = numpy.linalg.inv(matrix)
             shifts = -translation_from_matrix(matrix)

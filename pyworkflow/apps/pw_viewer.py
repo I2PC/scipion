@@ -28,7 +28,7 @@
 import os
 import sys
 
-from pyworkflow.em.viewer import DataView
+from pyworkflow.em.viewers import DataView
 from pyworkflow.gui.tree import DbTreeProvider
 from pyworkflow.gui.browser import FileBrowserWindow
             

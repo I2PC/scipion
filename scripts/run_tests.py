@@ -56,13 +56,13 @@ TEST = 2
 
 class Tester():
     def main(self):
-    
+
         parser = argparse.ArgumentParser(description=__doc__)
         g = parser.add_mutually_exclusive_group()
         g.add_argument('--run', action='store_true', help='run the selected tests')
         g.add_argument('--show', action='store_true', help='show available tests',
                        default=True)
-    
+
         add = parser.add_argument  # shortcut
 
         add('--pattern', default='test*.py',
@@ -73,15 +73,14 @@ class Tester():
             help='skip tests that contains these words')
         add('--log', default=None, nargs='?',
             help="Generate logs files with the output of each test.")
-        add('--mode', default='classes', choices=['modules', 'classes', 'all'],
+        add('--mode', default='classes', choices=['modules', 'classes', 'onlyclasses', 'all'],
             help='how much detail to give in show mode')
         add('tests', metavar='TEST', nargs='*',
             help='test case from string identifier (module, class or callable)')
         args = parser.parse_args()
-    
+
         if not args.run and not args.show and not args.tests:
             sys.exit(parser.format_help())
-    
 
         testsDict = OrderedDict()
         testLoader = unittest.defaultTestLoader
@@ -99,12 +98,13 @@ class Tester():
         else:
             # In this other case, we will load the test available
             # from pyworkflow and the other plugins
-            paths = [('pyworkflow', '.')]
+            self.paths = [('pyworkflow', '.')]
             for name, plugin in pwem.Domain.getPlugins().iteritems():
-                paths.append((name, os.path.dirname(plugin.__path__[0])))
-            for k, p in paths:
-                testsDict[k] = testLoader.discover(
-                    p, pattern=args.pattern, top_level_dir=p)
+                self.paths.append((name, os.path.dirname(plugin.__path__[0])))
+            for k, p in self.paths:
+                testsDict[k] = testLoader.discover(os.path.join(p, k),
+                                                   pattern=args.pattern,
+                                                   top_level_dir=p)
 
         self.grep = [g.lower() for g in args.grep] if args.grep else []
         self.skip = args.skip
@@ -113,14 +113,22 @@ class Tester():
 
         if args.tests:
             self.runSingleTest(testsDict['tests'])
+
         elif args.run:
             for moduleName, tests in testsDict.iteritems():
                 print(">>>> %s" % moduleName)
                 self.runTests(moduleName, tests)
+
+        elif args.grep:
+            pattern = args.grep[0]
+            for moduleName, tests in testsDict.iteritems():
+                self.printTests(pattern, tests)
+
         else:
             for moduleName, tests in testsDict.iteritems():
-                print(">>>> %s" % moduleName)
-                self.printTests(moduleName, tests)
+                if self._match(moduleName):
+                    print(">>>> %s" % moduleName)
+                    self.printTests(moduleName, tests)
 
     def _match(self, itemName):
         itemLower = itemName.lower()
@@ -128,7 +136,7 @@ class Tester():
                 all(g.lower() in itemLower for g in self.grep))
         skip = (self.skip and
                 any(g.lower() in itemLower for g in self.skip))
-        
+
         return (grep and not skip)
 
     def __iterTests(self, test):
@@ -145,9 +153,9 @@ class Tester():
     def _visitTests(self, moduleName, tests, newItemCallback):
         """ Show the list of tests available """
         mode = self.mode
-    
-        assert mode in ['modules', 'classes', 'all'], 'Unknown mode %s' % mode
-    
+
+        assert mode in ['modules', 'classes', 'onlyclasses', 'all'], 'Unknown mode %s' % mode
+
         # First flatten the list of tests.
         # testsFlat = list(iter(self.__iterTests(tests)))
 
@@ -160,46 +168,49 @@ class Tester():
                 toCheck += [t for t in test]
             else:
                 testsFlat.append(test)
-    
+
         # Follow the flattened list of tests and show the module, class
         # and name, in a nice way.
         lastClass = None
         lastModule = None
-        
-        for t in testsFlat:
+        if testsFlat:
+            for t in testsFlat:
 
-            testModuleName, className, testName = t.id().rsplit('.', 2)
-            
-            # If there is a failure loading the test, show it
-            errorStr = 'unittest.loader.ModuleImportFailure.'
-            if testModuleName.startswith(errorStr):
-                newName = t.id().replace(errorStr, '')
-                if self._match(newName):
-                    print(pwutils.red('ModuleImportFailure'), " ", newName)
-                continue
+                testModuleName, className, testName = t.id().rsplit('.', 2)
 
-            if testModuleName != lastModule:
-                lastModule = testModuleName
-                newItemCallback(MODULE, "%s"
-                                % (testModuleName))
+                # If there is a failure loading the test, show it
+                errorStr = 'unittest.loader.ModuleImportFailure.'
+                if testModuleName.startswith(errorStr):
+                    newName = t.id().replace(errorStr, '')
+                    if self._match(newName):
+                        print(pwutils.red('Error loading the test. Please, run the test for more information:'), newName)
+                    continue
 
-            if mode in ['classes', 'all'] and className != lastClass:
-                lastClass = className
-                newItemCallback(CLASS, "%s.%s"
-                                % (testModuleName, className))
+                if testModuleName != lastModule:
+                    lastModule = testModuleName
+                    if mode != 'onlyclasses':
+                        newItemCallback(MODULE, "%s" % testModuleName)
 
-            if mode == 'all':
-                newItemCallback(TEST, "%s.%s.%s"
-                                % (testModuleName, className, testName))
+                if mode in ['classes', 'onlyclasses', 'all'] and className != lastClass:
+                    lastClass = className
+                    newItemCallback(CLASS, "%s.%s"
+                                    % (testModuleName, className))
+
+                if mode == 'all':
+                    newItemCallback(TEST, "%s.%s.%s"
+                                    % (testModuleName, className, testName))
+        else:
+            if not self.grep:
+                print(pwutils.green(' The plugin does not have any test'))
 
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
             print("%s scipion test %s" % (spaces, itemName))
-            
+
     def printTests(self, moduleName, tests):
         self._visitTests(moduleName, tests, self._printNewItem)
-        
+
     def _logTest(self, cmd, runTime, result, logFile):
         with open(self.testLog, "r+") as f:
             lines = f.readlines()
@@ -219,7 +230,7 @@ class Tester():
                 else:
                     f.write(l)
             f.close()
-        
+
     def _runNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
@@ -235,14 +246,14 @@ class Tester():
                 else:
                     logFile = ''
                     cmdFull = cmd
-                
+
                 print(pwutils.green(cmdFull))
                 t = pwutils.Timer()
                 t.tic()
                 self.testCount += 1
                 result = os.system(cmdFull)
                 if self.log:
-                    self._logTest(cmd.replace(scipion, 'scipion'), 
+                    self._logTest(cmd.replace(scipion, 'scipion'),
                                   t.getToc(), result, logFile)
 
     def runTests(self, moduleName, tests):
@@ -283,7 +294,7 @@ class Tester():
         if self.log:
             print("\n\nOpen results in your browser: \nfile:///%s"
                   % self.testLog)
-        
+
     def runSingleTest(self, tests):
         result = pwtests.GTestResult()
         tests.run(result)

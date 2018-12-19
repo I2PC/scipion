@@ -28,9 +28,14 @@
 from __future__ import print_function
 import sys
 import importlib
+import inspect
 import traceback
+from collections import OrderedDict
 
 from pyworkflow.em import Domain
+from pyworkflow.protocol import Protocol
+from install.plugin_funcs import PluginInfo
+import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 
 
@@ -38,10 +43,12 @@ def usage(error):
     print("""
     ERROR: %s
 
-    Usage: scipion python scripts/inspect-plugins.py [PLUGIN-NAME]
+    Usage: scipion python scripts/inspect-plugins.py [PLUGIN-NAME] [info] [--showBase]
         This script loads all Scipion plugins found.
         If a PLUGIN-NAME is passed, it will inspect that plugin
         in more detail.
+        'info' argument will print plugin summary,
+        '-showBase' will print Base class protocols (hidden by default).
     """ % error)
     sys.exit(1)
 
@@ -62,9 +69,18 @@ def getSubmodule(name, subname):
         r = (None, None if msg == noModuleMsg else traceback.format_exc())
     return r
 
+def getFirstLine(doc):
+    """ Get the first non empty line from doc. """
+    if doc:
+        for lines in doc.split('\n'):
+            l = lines.strip()
+            if l:
+                return l
+    return ''
+
 n = len(sys.argv)
 
-if n > 2:
+if n > 4:
     usage("Incorrect number of input parameters")
 
 if n == 1:  # List all plugins
@@ -84,7 +100,10 @@ if n == 1:  # List all plugins
     pwutils.prettyDict(Domain.getViewers())
 
 
-else:
+elif n == 2:
+    if sys.argv[1] in ['-h', '--help', 'help']:
+        usage("Printing help message")
+
     pluginName = sys.argv[1]
     plugin = Domain.getPlugin(pluginName)
     print("Plugin: %s" % pluginName)
@@ -103,6 +122,75 @@ else:
 
         print("   >>> %s: %s" % (subName, msg))
 
+elif n > 2:
+    if sys.argv[2] == 'info':
+        pluginName = sys.argv[1]
+        showBase = True if (n == 4 and sys.argv[3] == '--showBase') else False
+        subclasses = {}
+        emCategories = [('Imports', em.ProtImport),
+                        ('Micrographs', em.ProtMicrographs),
+                        ('Particles', em.ProtParticles),
+                        ('2D', em.Prot2D),
+                        ('3D', em.Prot3D)]
 
+        plugin = Domain.getPlugin(pluginName)
+        version = PluginInfo('scipion-em-%s' % pluginName).pipVersion
+        bin = PluginInfo('scipion-em-%s' % pluginName).printBinInfoStr()
+        print("Plugin name: %s, version: %s" % (pluginName, version))
+        print("Plugin binaries: %s" % bin)
 
+        # print bibtex
+        bib, error2 = getSubmodule(pluginName, 'bibtex')
+        if bib is None:
+            if error2 is None:
+                msg = " missing bibtex"
+            else:
+                msg = " error -> %s" % error2
+        else:
+            print("Plugin references:")
+            bibtex = pwutils.parseBibTex(bib.__doc__)
 
+            for citeStr in bibtex:
+                text = Protocol()._getCiteText(bibtex[citeStr])
+                print(text)
+
+        # print protocols
+        sub, error = getSubmodule(pluginName, 'protocols')
+        if sub is None:
+            if error is None:
+                msg = " missing protocols"
+            else:
+                msg = " error -> %s" % error
+
+        else:
+            for name in dir(sub):
+                attr = getattr(sub, name)
+                if inspect.isclass(attr) and issubclass(attr, Protocol):
+                    # Set this special property used by Scipion
+                    attr._package = plugin
+                    subclasses[name] = attr
+
+        print("Plugin protocols:\n")
+        print("%-35s %-35s %-10s %-s" % (
+            'NAME', 'LABEL', 'CATEGORY', 'DESCRIPTION'))
+
+        prots = OrderedDict(sorted(subclasses.items()))
+        for prot in prots:
+            label = prots[prot].getClassLabel()
+            desc = getFirstLine(prots[prot].__doc__)
+            cat = 'None'
+
+            for c in emCategories:
+                if issubclass(prots[prot], c[1]):
+                    cat = c[0]
+                if prots[prot].isBase():
+                    cat = 'Base prot'
+
+            # skip Base protocols if not requested
+            if prots[prot].isBase() and not showBase:
+                continue
+            else:
+                print("%-35s %-35s %-10s %-s" % (prot, label, cat, desc))
+
+    else:
+        usage("The last argument must be 'info'")

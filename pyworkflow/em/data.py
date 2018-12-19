@@ -122,8 +122,7 @@ class CTFModel(EMObject):
         self._defocusV = Float(kwargs.get('defocusV', None))
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
-        self._phaseShift = None if not 'phaseShift' in kwargs \
-            else Float(kwargs.get('phaseShift', None))
+        self._phaseShift = Float(kwargs['phaseShift']) if 'phaseShift' in kwargs else None
         self._defocusRatio = Float()
         self._psdFile = String()
         self._micObj = None
@@ -777,6 +776,68 @@ class EMFile(EMObject):
         """ Use the _objValue attribute to store filename. """
         self._filename.set(filename)
 
+class Sequence(EMObject):
+    """Class containing a sequence of aminoacids/nucleotides
+       Attribute names follow the biopython default ones
+    """
+
+    def __init__(self, name=None, sequence=None,
+                 alphabet=None, isAminoacids=True, id=None, description=None,
+                 **kwargs):
+        EMObject.__init__(self, **kwargs)
+        # sequence Id, usually from a database. E.g: P12345
+        self._id = String(id)
+        # Descriptive alias provided by the user. E.g: CicloxigenasaB
+        self._name = String(name)
+        # Id this a aminoacid or nucleotide sequence
+        self._isAminoacids = Boolean(isAminoacids)
+        # So far we just use _description when creating 'fasta' sequence files
+        self._description = String(description)
+        # sequence stores a string of residues (one character per residue)
+        self._sequence = String(sequence)
+        # alphabet is used to describe de convention followed to
+        # store the _sequence. We follow biopython criteria
+        self._alphabet = Integer(alphabet)
+
+    def getId(self):
+        return self._id.get()
+
+    def setId(self, id):
+        self._id.set(id)
+
+
+    # Note that the natural name for the next two functions are
+    # getName and  setName but
+    # setName is defined in Object for another purpose
+    def getSeqName(self):
+        return self._name.get()
+
+    def setSeqName(self, name):
+        self._name.set(name)
+
+    def getSequence(self):
+        return self._sequence.get()
+
+    def setSequence(self, sequence):
+        self._sequence.set(sequence)
+
+    def getDescription(self):
+        return self._description.get()
+
+    def setDescription(self, description):
+        self._description.set(description)
+
+    # Note: Alphabet is set when the sequence object is created
+    # after that it makes no sense to change the alphabet
+    def getAlphabet(self):
+        return self._alphabet.get()
+
+    def getIsAminoacids(self):
+        return self._isAminoacids
+
+    def __str__(self):
+         return "Sequence (name = {})\n".format(self.getSeqName())
+
 
 class PdbFile(EMFile):
     """Represents an PDB file. """
@@ -1067,8 +1128,9 @@ class SetOfImages(EMSet):
                   % self.getName())
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f Å/px)" % \
-            (self.getClassName(), self.getSize(), self._dimStr(), sampling)
+        s = "%s (%d items, %s, %0.2f Å/px%s)" % \
+            (self.getClassName(), self.getSize(),
+             self._dimStr(), sampling, self._appendStreamState())
         return s
 
     def _dimStr(self):
@@ -1259,6 +1321,10 @@ class SetOfPDBs(EMSet):
     """ Set containing PDB items. """
     ITEM_TYPE = PdbFile
 
+class SetOfSequences(EMSet):
+    """Set containing Sequence items."""
+    ITEM_TYPE = Sequence
+
 
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
@@ -1425,7 +1491,8 @@ class SetOfCoordinates(EMSet):
             boxStr = ' %d x %d' % (boxSize, boxSize)
         else:
             boxStr = 'No-Box'
-        s = "%s (%d items, %s)" % (self.getClassName(), self.getSize(), boxStr)
+        s = "%s (%d items, %s%s)" % (self.getClassName(), self.getSize(),
+                                     boxStr, self._appendStreamState())
 
         return s
 
@@ -2091,5 +2158,5 @@ class FSC(EMObject):
 
 
 class SetOfFSCs(EMSet):
-    """Represents a set of Volumes"""
+    """Represents a set of FSCs"""
     ITEM_TYPE = FSC

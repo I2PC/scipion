@@ -53,7 +53,7 @@ class TestImportMicrographs(TestImportBase):
             mic1.setFileName(os.path.basename(mic1.getFileName()))
             mic2.setFileName(os.path.basename(mic2.getFileName()))
 
-            self.assertTrue(mic1.equalAttributes(mic2, verbose=True))        
+            self.assertTrue(mic1.equalAttributes(mic2, verbose=True))
     
     def test_pattern(self):
         """ Import several micrographs from a given pattern.
@@ -150,6 +150,7 @@ class TestImportMicrographs(TestImportBase):
                                          )
         prot1.setObjLabel('from xmipp (no-ctf)')
         self.launchProtocol(prot1)
+        #TODO these micrographs are not identical, fix the test
         self.checkMicSet(prot1.outputMicrographs, 
                          goldFn=micsMd.replace('.xmd', '_gold.sqlite'))
         

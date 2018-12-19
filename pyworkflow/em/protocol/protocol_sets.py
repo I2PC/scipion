@@ -35,6 +35,7 @@ import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
 from pyworkflow.object import Boolean
+from pyworkflow.em.data import SetOfClasses
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
@@ -234,6 +235,11 @@ class ProtUnionSet(ProtSets):
         if len(classes) > 1:
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
+        if issubclass(type(self.inputSets[0].get()), SetOfClasses):
+            return["Is not posible to join different sets of classes.\n"
+                   "If you want to join diferent representative, extract them "
+                   "with the viewer and them run this protocol with the "
+                   "resulting averages."]
         return []  # no errors
 
     def _warnings(self):

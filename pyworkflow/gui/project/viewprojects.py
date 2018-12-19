@@ -96,21 +96,21 @@ class ProjectsView(tk.Frame):
         parent.columnconfigure(0, weight=1)
         colors = ['white', '#EAEBFF']
         for i, p in enumerate(self.manager.listProjects()):
-            # try:
-            project = self.manager.loadProject(p.getName(), chdir=False, loadAllConfig=False)
-            # Add creation time to project info
-            p.cTime = project.getCreationTime()
-            # Add if it's a link
-            p.isLink = project.isLink()
-            # If it's a link, get the linked folder
-            if p.isLink:
-                p.linkedFolder = os.path.realpath(project.path)
-            frame = self.createProjectLabel(parent, p, color=colors[i%2])
-            frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
-            r += 1
-            # except Exception, ex:
-            #     print "ERROR loading project: %s" % p.getName()
-            #     print ex
+            try:
+                project = self.manager.loadProject(p.getName(), chdir=False, loadAllConfig=False)
+                # Add creation time to project info
+                p.cTime = project.getCreationTime()
+                # Add if it's a link
+                p.isLink = project.isLink()
+                # If it's a link, get the linked folder
+                if p.isLink:
+                    p.linkedFolder = os.path.realpath(project.path)
+                frame = self.createProjectLabel(parent, p, color=colors[i%2])
+                frame.grid(row=r, column=0, padx=10, pady=5, sticky='new')
+                r += 1
+            except Exception, ex:
+                print "ERROR loading project: %s" % p.getName()
+                print ex
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
         text.setReadOnly(True)
@@ -350,7 +350,7 @@ class ProjectImportWindow(Window):
         self.btnSearch = IconButton(content, 'Browse', Icon.ACTION_BROWSE, highlightthickness=0, command=self._browseSearchLocation)
         self.btnSearch.grid(row=3, column=2, sticky='e', padx=5, pady=5)
         btnSearchHelp = IconButton(content, Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP, highlightthickness=0,
-             command=lambda: self.showInfo('Optional: Folder where raw files, binaries (movies, migcrographs,..) can be found. Used to repair broken links.'))
+             command=lambda: self.showInfo('Optional: Folder where raw files, binaries (movies, micrographs,..) can be found. Used to repair broken links.'))
         btnSearchHelp.grid(row=3, column=3, sticky='e', padx=2, pady=2)
 
         self.initial_focus = entryName

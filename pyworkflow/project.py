@@ -245,30 +245,38 @@ class Project(object):
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
-        self._loadDb(dbPath)
+        try:
 
-        self._loadHosts(hostsConf)
+            self._loadDb(dbPath)
 
-        if loadAllConfig:
-            self._loadProtocols(protocolsConf)
+            self._loadHosts(hostsConf)
 
-            # FIXME: Handle settings argument here
+            if loadAllConfig:
+                self._loadProtocols(protocolsConf)
 
-            # It is possible that settings does not exists if
-            # we are loading a project after a Project.setDbName,
-            # used when running protocols
-            settingsPath = os.path.join(self.path, self.settingsPath)
-            if os.path.exists(settingsPath):
-                self.settings = pwconfig.loadSettings(settingsPath)
-            else:
-                self.settings = None
+                # FIXME: Handle settings argument here
 
-        self._loadCreationTime()
+                # It is possible that settings does not exists if
+                # we are loading a project after a Project.setDbName,
+                # used when running protocols
+                settingsPath = os.path.join(self.path, self.settingsPath)
+                if os.path.exists(settingsPath):
+                    self.settings = pwconfig.loadSettings(settingsPath)
+                else:
+                    self.settings = None
 
-        # Catch any exception..
-        # except Exception as e:
-        #     print("ERROR: Project %s load failed.\n"
-        #          "       Message: %s\n" % (self.path, e))
+            self._loadCreationTime()
+
+        # Catch DB not found exception (when loading a project from a folder
+        #  without project.sqlite
+        except MissingProjectDbException as noDBe:
+            # Raise it at before: This is a critical error and should be raised
+            raise noDBe
+
+        # Catch any less severe exception..to allow at least open the project.
+        except Exception as e:
+            print("ERROR: Project %s load failed.\n"
+                 "       Message: %s\n" % (self.path, e))
 
 
     def _loadCreationTime(self):
@@ -293,7 +301,7 @@ class Project(object):
 
         absDbPath = os.path.join(self.path, self.dbPath)
         if not os.path.exists(absDbPath):
-            raise Exception("Project database not found in '%s'" % absDbPath)
+            raise MissingProjectDbException("Project database not found at '%s'" % absDbPath)
         self.mapper = self.createMapper(absDbPath)
 
     def closeMapper(self):
@@ -821,8 +829,8 @@ class Project(object):
 
         return result
 
-    def getProtocolsJson(self, protocols=None, namesOnly=False):
-        """ Create a Json string with the information of the given protocols.
+    def getProtocolsDict(self, protocols=None, namesOnly=False):
+        """ Create a dict with the information of the given protocols.
          Params:
             protocols: list of protocols or None to include all.
             namesOnly: the output list will contain only the protocol names.
@@ -831,7 +839,7 @@ class Project(object):
 
         # If the nameOnly, we will simply return a json list with their names
         if namesOnly:
-            return json.dumps([prot.getClassName() for prot in protocols])
+            return {i: prot.getClassName() for i, prot in enumerate(protocols)}
 
 
         # Handle the copy of a list of protocols
@@ -865,6 +873,15 @@ class Project(object):
                             childDict[iKey] = '%s.%s' % (
                             protId, oKey)  # equivalent to pointer.getUniqueId
 
+        return newDict
+
+    def getProtocolsJson(self, protocols=None, namesOnly=False):
+        """ Wraps getProtocolsDict to get a json string
+             Params:
+                protocols: list of protocols or None to include all.
+                namesOnly: the output list will contain only the protocol names.
+        """
+        newDict = self.getProtocolsDict(protocols=protocols, namesOnly=namesOnly)
         return json.dumps(list(newDict.values()),
                           indent=4, separators=(',', ': '))
 
@@ -889,13 +906,14 @@ class Project(object):
         Note: either filename or jsonStr should be not None.
         """
         f = open(filename)
+        importDir = os.path.dirname(filename)
         protocolsList = json.load(f)
 
         emProtocols = em.Domain.getProtocols()
         newDict = OrderedDict()
 
         # First iteration: create all protocols and setup parameters
-        for protDict in protocolsList:
+        for i, protDict in enumerate(protocolsList):
             protClassName = protDict['object.className']
             protId = protDict['object.id']
             protClass = emProtocols.get(protClassName, None)
@@ -903,11 +921,15 @@ class Project(object):
             if protClass is None:
                 print "ERROR: protocol class name '%s' not found" % protClassName
             else:
+                protLabel = protDict.get('object.label', None)
                 prot = self.newProtocol(protClass,
-                                        objLabel=protDict.get('object.label',
-                                                              None),
-                                        objComment=protDict.get(
-                                            'object.comment', None))
+                                        objLabel=protLabel,
+                                        objComment=protDict.get('object.comment', None))
+                protocolsList[i] = prot.processImportDict(protDict, importDir)
+
+                prot._useQueue.set(protDict.get('_useQueue', False))
+                prot._queueParams.set(protDict.get('_queueParams', None))
+
                 newDict[protId] = prot
                 self.saveProtocol(prot)
 
@@ -1390,4 +1412,7 @@ class Project(object):
                                 print "  Found file %s, creating link..." % newFile
                                 print pwutils.green("   %s -> %s" % (f, newFile))
                                 pwutils.createAbsLink(newFile, f)
-                                
+
+
+class MissingProjectDbException(Exception):
+    pass

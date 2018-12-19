@@ -30,7 +30,7 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.utils import cleanPath
 from pyworkflow.utils.graph import Graph, Node
-eman2 = pwutils.importFromPlugin('eman2')
+eman2 = pwutils.importFromPlugin('eman2', doRaise=True)
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
     
     

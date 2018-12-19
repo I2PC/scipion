@@ -30,7 +30,7 @@ from pyworkflow.em.protocol import ProtImportVolumes
 from pyworkflow.em.protocol.protocol_export import ProtExportEMDB
 from pyworkflow.utils import importFromPlugin
 
-XmippProtMultipleFSCs = importFromPlugin('xmipp3.protocols', 'XmippProtMultipleFSCs')
+XmippProtMultipleFSCs = importFromPlugin('xmipp3.protocols', 'XmippProtMultipleFSCs', doRaise=True)
 XmippProtResolution3D = importFromPlugin('xmipp3.protocols', 'XmippProtResolution3D')
 
 class TestExport2EMDB(BaseTest):
@@ -76,15 +76,16 @@ class TestExport2EMDB(BaseTest):
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
-        protExp._createFileNamesTemplates()
-        nameVolume = protExp.getFnPath()
-        nameFsc = protExp.getFnPath('fsc')
+        #protExp._createFileNamesTemplates()
+        nameVolume = protExp.VOLUMENAME
+        dirName = protExp.filesPath.get()
+        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 0)
         self.assertTrue(os.path.exists(nameVolume))
         self.assertTrue(os.path.exists(nameFsc))
 
         #Chek if the files have the correct data
         orig_list_x, orig_list_y = protExp.exportFSC.get().getData()
-        fo = open(protExp.getFnPath('fsc'), "rU")
+        fo = open(nameFsc, "rU")
         saved_x=[]
         orig_x=[]
         count=0

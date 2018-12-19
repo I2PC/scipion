@@ -33,7 +33,8 @@ import ttk
 import tkFont
 
 import pyworkflow.protocol.protocol as prot
-from pyworkflow.em import findViewers, DESKTOP_TKINTER, Domain
+from pyworkflow.em import findViewers, Domain
+from pyworkflow.viewer import DESKTOP_TKINTER
 from pyworkflow.utils.graph import Graph
 from pyworkflow.utils.properties import Message, Icon, Color
 
