@@ -656,6 +656,15 @@ class Protocol(Step):
                     return True
         return False
 
+    def worksInStreaming(self):
+
+        # A protocol should work in streaming if it implements the stepCheck()
+        # Get the stepCheck method from the Protocol
+        baseStepCheck = Protocol._stepsCheck
+        ownStepCheck = self._stepsCheck
+
+        return not pwutils.isSameFunction(baseStepCheck, ownStepCheck)
+
     def allowsGpu(self):
         """ Returns True if this protocol allows GPU computation. """
         return self.hasAttribute(GPU_LIST)
