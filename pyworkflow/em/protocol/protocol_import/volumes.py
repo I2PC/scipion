@@ -31,7 +31,7 @@ from os.path import exists, basename, abspath
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
 from images import ProtImportImages
-from pyworkflow.em import Volume, ImageHandler, PdbFile
+from pyworkflow.em import Volume, ImageHandler, AtomStruct
 from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
 from pyworkflow.em.convert import Ccp4Header
@@ -261,7 +261,7 @@ class ProtImportPdb(ProtImportFiles):
         localPath = self._getExtraPath(baseName)
 
         copyFile(pdbPath, localPath)
-        pdb = PdbFile()
+        pdb = AtomStruct()
         volume = self.inputVolume.get()
 
         # if a volume exists assign it to the pdb object
