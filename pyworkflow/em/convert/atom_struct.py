@@ -441,6 +441,14 @@ def cifToPdb(fnCif,fnPdb):
     h.read(fnCif)
     h.writeAsPdb(fnPdb)
 
+def toPdb(inFileName, outPDBFile):
+    if inFileName.endswith(".pdb") or inFileName.endswith(".ent"):
+        return inFileName
+    elif inFileName.endswith(".cif") or inFileName.endswith(".mmcif"):
+        cifToPdb(inFileName, outPDBFile)
+        return outPDBFile
+    else:
+        print "ERROR (toPdb), Unknown file type for file = %s" % inFileName
 #rethink
 # def getNumberModelsChains(parsed_structure):
 #     countModels = 0
