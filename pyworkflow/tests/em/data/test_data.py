@@ -344,7 +344,7 @@ class TestSetOfMicrographs(BaseTest):
             self.assertTrue(mic.equalAttributes( mic2))
             counter += 1
 
-    def test_tester(self):
+    def test_mapper(self):
         """ test that indexes are created when a
         setOfParticles is created """
         MICNUMBER = 10
@@ -517,7 +517,7 @@ class TestSetOfParticles(BaseTest):
         # before accessing items db        
         imgSet.getFirstItem()
 
-    def test_tester(self):
+    def test_mapper(self):
         """ test that indexes are created when a
         setOfParticles is created """
         PARTNUMBER = 10
@@ -547,7 +547,7 @@ class TestSetOfCoordinates(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
 
-    def test_tester(self):
+    def test_mapper(self):
         """ test that indexes are created when a
         setOfCoordinates is created """
         PARTNUMBER = 10
@@ -832,7 +832,7 @@ class TestCoordinatesTiltPair(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
 
-    def test_tester(self):
+    def test_mapper(self):
         """ test that indexes are created when a
         setOfCoordinates is created """
         MICNUMBER = 10
@@ -856,7 +856,7 @@ class TestCoordinatesTiltPair(BaseTest):
         # that a need to create a set of micTiltPairs
         # and two sets of coordinates but the person who
         # added that data type Should provide a clear test
-        # when this is done then I will finish the test_tester
+        # when this is done then I will finish the test_mapper
 
 class TestCoordinatesTiltPair(BaseTest):
     # TODO: A proper test for SetOfMovieParticles is missing
@@ -864,11 +864,11 @@ class TestCoordinatesTiltPair(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
 
-    def test_tester(self):
+    def test_mapper(self):
         """ test that indexes are created when a
         SetOfMovieParticles is created """
         # TODO I do not see any example on how to create
         # a set of SetOfMovieParticles. The person who
         # added that data type should provide a clear test
-        # when this is done then I will finish the test_tester
+        # when this is done then I will finish the test_mapper
         pass
