@@ -500,8 +500,9 @@ class SqliteObjectsDb(SqliteDb):
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
     
-    def __init__(self, dbName, timeout=1000):
+    def __init__(self, dbName, timeout=1000, pragmas=None):
         SqliteDb.__init__(self)
+        self._pragmas = pragmas or {}
         self._createConnection(dbName, timeout)
         self._initialize()
 
@@ -518,7 +519,9 @@ class SqliteObjectsDb(SqliteDb):
         """Create required tables if don't exists"""
         # Enable foreings keys
         self.setVersion(self.VERSION)
-        self.executeCommand("PRAGMA foreign_keys=ON")
+        self._pragmas['foreing_keys'] = "ON"
+        for pragma in self._pragmas.iteritems():
+            self.executeCommand("PRAGMA %s=%s" % pragma)
         # Create the Objects table
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Objects
                      (id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -701,11 +704,40 @@ class SqliteObjectsDb(SqliteDb):
 
 class SqliteFlatMapper(Mapper):
     """Specific Flat Mapper implementation using Sqlite database"""
-    def __init__(self, dbName, dictClasses=None, tablePrefix=''):
+    def __init__(self, dbName, dictClasses=None, tablePrefix='',
+                 indexes=None):
         Mapper.__init__(self, dictClasses)
         self._objTemplate = None
         try:
-            self.db = SqliteFlatDb(dbName, tablePrefix)
+            # We (ROB and JMRT) are playing with different
+            # PRAGMAS (see https://www.sqlite.org/pragma.html)
+            # for the SqliteFlatMapper instances
+            # We have been playing with the following
+            # pragmas: {synchronous, journal_mode, temp_store and
+            #  cache_size} and inside scipion no improvement
+            # has been observed. Outside scipion a careful
+            #  choosing of pragmas may duplicate the speed but
+            # inside scipion, I think that the overhead due
+            # to the manipulation of python classes is more
+            # important that the data access.
+
+            # uncommenting these pragmas increase the speed
+            # by a factor of two if python object is manipulated
+            # unfortunately, any interesting operation involve
+            # creation and manipulation of python object that take
+            # longer than the access time to the database
+            pragmas = {
+                #0 | OFF | 1 | NORMAL | 2 | FULL | 3 | EXTRA;
+                ##'synchronous': 'OFF', # ON
+                #DELETE | TRUNCATE | PERSIST | MEMORY | WAL | OFF
+                ##'journal_mode': 'OFF', # DELETE
+                # FILE 0 | DEFAULT | 1 | FILE | 2 | MEMORY;
+                ##'temp_store': 'MEMORY',
+                # PRAGMA schema.cache_size = pages;
+                ##'cache_size': '5000' # versus 5000
+            }
+            self.db = SqliteFlatDb(dbName, tablePrefix,
+                                   pragmas=pragmas, indexes=indexes)
             self.doCreateTables = self.db.missingTables()
             
             if not self.doCreateTables:
@@ -943,8 +975,11 @@ class SqliteFlatDb(SqliteDb):
                  'Boolean': 'INTEGER'
                  }
 
-    def __init__(self, dbName, tablePrefix='', timeout=1000):
+    def __init__(self, dbName, tablePrefix='', timeout=1000,
+                 pragmas=None, indexes=None):
         SqliteDb.__init__(self)
+        self._pragmas = pragmas or {}
+        self._indexes = indexes or []
         tablePrefix = tablePrefix.strip()
         if tablePrefix and not tablePrefix.endswith('_'): # Avoid having _ for empty prefix
             tablePrefix += '_'
@@ -1049,6 +1084,9 @@ class SqliteFlatDb(SqliteDb):
         Each nested property of the object will be stored as a column value.
         """
         self.setVersion(self.VERSION)
+        for pragma in self._pragmas.iteritems():
+            print ("executing pragma", pragma)
+            self.executeCommand("PRAGMA %s = %s;" % pragma)
         # Create a general Properties table to store some needed values
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Properties
                      (key       TEXT UNIQUE, -- property key                 
@@ -1070,9 +1108,11 @@ class SqliteFlatDb(SqliteDb):
                       """ % self.tablePrefix
 
         c = 0
+        colMap = {}
         for k, v in objDict.iteritems():
             colName = 'c%02d' % c
             className = v[0]
+            colMap[k] = colName
             c += 1
             self.executeCommand(self.INSERT_CLASS, (k, colName, className))
             if k != SELF:
@@ -1081,6 +1121,13 @@ class SqliteFlatDb(SqliteDb):
         CREATE_OBJECT_TABLE += ')'
         # Create the Objects table
         self.executeCommand(CREATE_OBJECT_TABLE)
+
+        for idx in self._indexes:
+            # first check if the attribute to be indexed exists
+            if idx in colMap:
+                self.executeCommand("CREATE INDEX index_%s ON Objects (%s);"
+                                % (idx.replace('.', '_'), colMap[idx]))
+
         self.commit()
         # Prepare the INSERT and UPDATE commands
         self.setupCommands(objDict)
