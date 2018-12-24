@@ -62,7 +62,8 @@ class TestStreamingWorkflow(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('movies')
-        cls.importThread = threading.Thread(target=cls._createInputLinks)
+        cls.importThread = threading.Thread(name="createInputLinks",
+                                            target=cls._createInputLinks)
         cls.importThread.start()
         # Wait until the first link is created
         time.sleep(5)
@@ -171,7 +172,8 @@ class TestBaseRelionStreaming(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('relion_tutorial')
-        cls.importThread = threading.Thread(target=cls._createInputLinks)
+        cls.importThread = threading.Thread(name="createInputLinksR",
+                                            target=cls._createInputLinks)
         cls.importThread.start()
         # Wait until the first link is created
         time.sleep(5)
@@ -416,7 +418,8 @@ class TestFrameStacking(BaseTest):
     def test_Stream(self):
         # Create a separated thread to simulate real streaming with
         # individual frames
-        thread = threading.Thread(target=lambda: self._createFrames(delay=1))
+        thread = threading.Thread(name="createFrames",
+                                  target=lambda: self._createFrames(delay=1))
         thread.start()
         time.sleep(5)
 
@@ -560,7 +563,8 @@ class TestStreamingSocket(BaseTest):
         clientSocket.close()
 
     def test_StreamMovies(self):
-        thread = threading.Thread(target=lambda: self._sendMovies(delay=1))
+        thread = threading.Thread(name="sendMovies",
+                                  target=lambda: self._sendMovies(delay=1))
         thread.start()
         protImport = self.newProtocol(ProtImportMovies,
                                       objLabel='import movies',
@@ -582,7 +586,8 @@ class TestStreamingSocket(BaseTest):
     def test_StreamStack(self):
         # Create a separated thread to simulate real streaming with
         # individual frames
-        thread = threading.Thread(target=lambda: self._sendFrames(delay=1))
+        thread = threading.Thread(name="sendFrames",
+                                  target=lambda: self._sendFrames(delay=1))
         thread.start()
         # --------------- IMPORT MOVIES -------------------
         protImport = self.newProtocol(ProtImportMovies,
