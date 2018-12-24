@@ -722,9 +722,9 @@ class SqliteFlatMapper(Mapper):
             # important that the data access.
 
             # uncommenting these pragmas increase the speed
-            # by a factor of two if python object is manipulated
-            # unfortunately, any interesting operation involve
-            # creation and manipulation of python object that take
+            # by a factor of two if NO python object is manipulated.
+            # Unfortunately, any interesting operation involve
+            # creation and manipulation of python objects that take
             # longer than the access time to the database
             pragmas = {
                 #0 | OFF | 1 | NORMAL | 2 | FULL | 3 | EXTRA;
@@ -734,7 +734,7 @@ class SqliteFlatMapper(Mapper):
                 # FILE 0 | DEFAULT | 1 | FILE | 2 | MEMORY;
                 ##'temp_store': 'MEMORY',
                 # PRAGMA schema.cache_size = pages;
-                ##'cache_size': '5000' # versus 5000
+                ##'cache_size': '5000' # versus -2000
             }
             self.db = SqliteFlatDb(dbName, tablePrefix,
                                    pragmas=pragmas, indexes=indexes)
