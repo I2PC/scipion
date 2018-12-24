@@ -234,6 +234,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtImageOperateVolumes", "text": "default"},
 	        {"tag": "protocol", "value": "ChimeraProtOperate", "text": "default"},
             {"tag": "protocol", "value": "ChimeraProtRestore", "text": "default"},
+            {"tag": "protocol", "value": "ProtAtomStrucOperate", "text": "default"},
             {"tag": "protocol", "value": "PhenixProtRunSuperposePDBs",   "text": "default"}
 		]}
     ]},
