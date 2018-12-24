@@ -241,15 +241,18 @@ class ProtImportPdb(ProtImportFiles):
 
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
-            pdbPath = self._getTmpPath('%s.cif' % self.pdbId.get())
-            self._insertFunctionStep('pdbDownloadStep', pdbPath)
+            self._insertFunctionStep('pdbDownloadStep')
         else:
             pdbPath = self.pdbFile.get()
         self._insertFunctionStep('createOutputStep', pdbPath)
 
     def pdbDownloadStep(self, pdbPath):
         """Download all pdb files in file_list and unzip them."""
-        downloadPdb(self.pdbId.get(), pdbPath, self._log)
+        aSH = AtomicStructHandler()
+        self.pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
+                                              type='mmCif',
+                                              dir=os.getcwd())
+#        downloadPdb(self.pdbId.get(), pdbPath, self._log)
 
     def createOutputStep(self, pdbPath):
         """ Copy the PDB structure and register the output object.
