@@ -1322,6 +1322,24 @@ class Protocol(Step):
                 outputs.append('File "%s" does not exist' % fname)
         return outputs
 
+    def getLogsLastLines(self, lastLines):
+        """
+        Get the log last(lastLines) lines
+        """
+        self.__openLogsFiles('r')
+        iterlen = lambda it: sum(1 for _ in it)
+        numLines = iterlen(self.__fOut)
+        default = 20
+        if not lastLines or not lastLines.isdigit():
+            lastLines = default
+        sk = numLines - int(lastLines)
+        if not sk:
+            sk = numLines
+        self.__fOut.seek(0, 0)
+        output = [l for k, l in enumerate(self.__fOut) if k >= sk]
+        self.__closeLogsFiles()
+        return output
+
     def warning(self, message, redirectStandard=True):
         self._log.warning(message, redirectStandard)
 
