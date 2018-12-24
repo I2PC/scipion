@@ -78,7 +78,7 @@ class AtomicStructHandler:
         :param pdbID:
         :param dir: save structure in this directory
         :param type:  mmCif or pdb
-        :return:
+        :return: filename with pdb file
         """
         if dir is None:
             dir = os.getcwd()
