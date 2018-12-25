@@ -259,12 +259,12 @@ class BoxWizardView(tk.Frame):
         #                     " testdata --download jmbFalconMovies")
 
         # Create the project
-        createProjectScript = os.path.join(scriptsPath, 'create_project.py')
+        createProjectScript = os.path.join(scriptsPath, 'create.py')
         pwutils.runCommand(scipion + " python " + createProjectScript + " " +
                            projectName + " " + workflow)
 
         # Schedule the project
-        scheduleProjectScript = os.path.join(scriptsPath, 'schedule_project.py')
+        scheduleProjectScript = os.path.join(scriptsPath, 'schedule.py')
         pwutils.runCommand(scipion + " python " + scheduleProjectScript + " " +
                            projectName)
 
