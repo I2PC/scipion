@@ -252,7 +252,7 @@ class BoxWizardView(tk.Frame):
         projectName = self._getValue(PROJECT_NAME)
 
         scipion = pw.getScipionScript()
-        scriptsPath = pw.join('..', 'scripts')
+        scriptsPath = pw.join('pyworkflow', 'project', 'scripts')
 
         # Download the required data
         # pwutils.runCommand(scipion +
