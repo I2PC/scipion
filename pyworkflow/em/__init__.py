@@ -28,20 +28,19 @@ This modules contains classes related with EM
 """
 
 
+from constants import *
 from data import *
 from data_tiltpairs import *
 from protocol import *
-from constants import *
 from convert import *
 from pyworkflow.wizard import Wizard
-from viewer import *
-import transformations
-import pdb_handler
+from pyworkflow.viewer import Viewer
 
 import pyworkflow.plugin
 
 
 class Domain(pyworkflow.plugin.Domain):
+    _name = __name__
     _objectClass = EMObject
     _protocolClass = Protocol
     _viewerClass = Viewer

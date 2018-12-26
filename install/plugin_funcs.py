@@ -1,6 +1,7 @@
 import requests
 import os
 import re
+import sys
 from importlib import import_module
 import json
 import pkg_resources
@@ -15,6 +16,10 @@ REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
                   os.environ['SCIPION_PLUGIN_REPO_URL'])
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
 PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
+    Environment.getBin('python'),
+    Environment.getPythonPackagesFolder())
+
+PIP_UNINSTALL_CMD = '{} {}/pip uninstall -y %s'.format(
     Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
@@ -90,6 +95,7 @@ class PluginInfo(object):
     def isInstalled(self):
         """Checks if the current plugin is installed (i.e. has pip package).
         NOTE: we might wanna change definition of isInstalled, hence the extra function."""
+        reload(pkg_resources)
         return self.hasPipPackage()
 
     def installPipModule(self, version=""):
@@ -166,18 +172,17 @@ class PluginInfo(object):
                 print('Removing %s binaries...' % binVersion)
                 realPath = os.path.realpath(f)  # in case its a link
                 cleanPath(f, realPath)
+                print('Binary %s has been uninstalled successfully ' % binVersion)
         return
 
     def uninstallPip(self):
         """Removes pip package from site-packages"""
         print('Removing %s plugin...' % self.pipName)
-        try:
-            from pip import main as pipmain
-        except:
-            from pip._internal import main as pipmain
-
-        pipmain(['uninstall', '-y', self.pipName])
-        return
+        import subprocess
+        args = (PIP_UNINSTALL_CMD % self.pipName).split()
+        subprocess.call(PIP_UNINSTALL_CMD % self.pipName, shell=True,
+                            stdout=sys.stdout,
+                            stderr=sys.stderr)
 
     ####################### Remote data funcs ############################
 
@@ -340,6 +345,33 @@ class PluginInfo(object):
             return " ".rjust(14) + "Error getting binaries info: %s" % \
                    e.message + "\n"
 
+    def getPluginName(self):
+        """Return the plugin name"""
+        return self.name
+
+    def getPipName(self):
+        """Return the plugin pip name"""
+        return self.pipName
+
+    def getPipVersion(self):
+        """Return the plugin pip version"""
+        return self.pipVersion
+
+    def getSourceUrl(self):
+        """Return the plugin source url"""
+        return self.pluginSourceUrl
+
+    def getHomePage(self):
+        """Return the plugin Home page"""
+        return self.homePage
+
+    def getSummary(self):
+        """Return the plugin summary"""
+        return self.summary
+
+    def getAuthor(self):
+        """Return the plugin author"""
+        return self.author
 
 class PluginRepository(object):
 

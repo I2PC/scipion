@@ -23,31 +23,30 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement the classes to create plots on xmipp.
-"""
+
 from math import radians
 from itertools import izip
 
 from pyworkflow.gui.plotter import Plotter, plt
-import metadata as md
-
+import pyworkflow.em.metadata as md
 
 
 class EmPlotter(Plotter):
-    ''' Class to create several plots'''
+    """ Class to create several plots. """
     def __init__(self, x=1, y=1, mainTitle="", **kwargs):
         Plotter.__init__(self, x, y, mainTitle, **kwargs)
 
     def plotAngularDistribution(self, title, rot, 
                                 tilt, weight=[], max_p=40, 
                                 min_p=5, max_w=2, min_w=1, color='blue'):
-        '''Create an special type of subplot, representing the angular
-        distribution of weight projections. '''
+        """ Create an special type of subplot, representing the angular
+        distribution of weight projections. """
         if weight:
             max_w = max(weight)
             min_w = min(weight)
-            a = self.createSubPlot(title, 'Min weight=%(min_w).2f, Max weight=%(max_w).2f' % locals(), '', projection='polar')
+            a = self.createSubPlot(title,
+                                   'Min weight=%(min_w).2f, Max weight=%(max_w).2f'
+                                   % locals(), '', projection='polar')
             for r, t, w in izip(rot, tilt, weight):
                 pointsize = int((w - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=pointsize)
@@ -65,7 +64,6 @@ class EmPlotter(Plotter):
             tilt: MDL_ANGLE_TILT
             weight: MDL_WEIGHT
         """
-
         angMd = md.MetaData(mdFile)
         rot = []
         tilt = []
@@ -116,21 +114,18 @@ class EmPlotter(Plotter):
 
         self.plot(xValues, yValues, color, **kwargs)
         
-        
-def plotFile(dbName, dbPreffix, plotType, columnsStr, colorsStr, linesStr,
-             markersStr, xcolumn, ylabel, xlabel, title, bins, orderColumn,
-             orderDirection):
+    @classmethod
+    def createFromFile(cls, dbName, dbPreffix, plotType, columnsStr, colorsStr, linesStr,
+                 markersStr, xcolumn, ylabel, xlabel, title, bins, orderColumn,
+                 orderDirection):
         columns = columnsStr.split()
         colors = colorsStr.split()
         lines = linesStr.split()
         markers = markersStr.split()
         data = PlotData(dbName, dbPreffix, orderColumn, orderDirection)
-        #setObj = getSetObject(dbName, dbPreffix)
-
         plotter = Plotter(windowTitle=title)
         ax = plotter.createSubPlot(title, xlabel, ylabel)
         xvalues = data.getColumnValues(xcolumn) if xcolumn else range(0, data.getSize())
-        #xvalues = range(0, setObj.getSize()) if not isxvalues else []
 
         for i, col in enumerate(columns):
             yvalues = data.getColumnValues(col)
@@ -145,11 +140,11 @@ def plotFile(dbName, dbPreffix, plotType, columnsStr, colorsStr, linesStr,
                 else:
                     ax.scatter(xvalues, yvalues, c=color, label=col, alpha=0.5)
         ax.legend(columns)
-        
+
         return plotter
         
 
-class PlotData():
+class PlotData:
     """ Small wrapper around table data such as: sqlite or metadata
     files. """
     def __init__(self, fileName, tableName, orderColumn, orderDirection):

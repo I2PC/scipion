@@ -27,23 +27,19 @@ Please,  do not  generate or  distribute
 a modified version of this file under its original name.
 """
 
-import os
-from itertools import izip
 
 from pyworkflow.em.data import SetOfCTF, CTFModel, Micrograph, SetOfMicrographs
 from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportCTF
-from pyworkflow.object import PointerList, Pointer
 from test_workflow import TestWorkflow
 from pyworkflow.utils import importFromPlugin
 import pyworkflow.tests as tests
-from pyworkflow.em import ImageHandler
 
 import xmippLib
-XmippProtCTFDiscrepancy = importFromPlugin('xmipp3.protocols',
-                                           'XmippProtCTFConsensus', doRaise=True)
+XmippProtCTFConsensus = importFromPlugin('xmipp3.protocols',
+                                         'XmippProtCTFConsensus', doRaise=True)
 
 
-class TestXmippCTFDiscrepancyBase(TestWorkflow):
+class TestXmippCTFConsensusBase(TestWorkflow):
     @classmethod
     def setUpClass(cls):
         tests.setupTestProject(cls)
@@ -56,7 +52,7 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
 
         return ctf
 
-    def testCtfdiscrepancyWorkflow(self):
+    def testCtfConsensusWorkflow(self):
         # create one micrograph set
         fnMicSet = self.proj.getTmpPath("mics.sqlite")
         fnMic = self.proj.getTmpPath("mic.mrc")
@@ -137,13 +133,13 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         self.launchProtocol(protCTF1)
         self.launchProtocol(protCTF2)
 
-        # launch CTF discrepancy protocol
-        protCtfDiscrepancy = self.newProtocol(XmippProtCTFDiscrepancy)
-        protCtfDiscrepancy.inputCTF1.set(protCTF1.outputCTF)
-        protCtfDiscrepancy.inputCTF2.set(protCTF2.outputCTF)
-        protCtfDiscrepancy.setObjLabel('ctf discrepancy')
-        self.launchProtocol(protCtfDiscrepancy)
-        ctf0 = protCtfDiscrepancy.outputCTF.getFirstItem()
+        # launch CTF consensus protocol
+        protCtfConsensus = self.newProtocol(XmippProtCTFConsensus)
+        protCtfConsensus.inputCTF1.set(protCTF1.outputCTF)
+        protCtfConsensus.inputCTF2.set(protCTF2.outputCTF)
+        protCtfConsensus.setObjLabel('ctf consensus')
+        self.launchProtocol(protCtfConsensus)
+        ctf0 = protCtfConsensus.outputCTF.getFirstItem()
         resolution = int(ctf0.getResolution())
         defocusU = int(ctf0.getDefocusU())
         self.assertEqual(resolution, 2)

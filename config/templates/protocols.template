@@ -10,14 +10,15 @@ Protocols SPA = [
 		{"tag": "protocol", "value": "ProtImportParticles",   "text": "import particles"},
 		{"tag": "protocol", "value": "ProtImportVolumes",     "text": "import volumes"},
 		{"tag": "section", "text": "more", "openItem": "False", "children": [
-			{"tag": "protocol", "value": "ProtImportCoordinates",   "text": "import coordinates"},
-			{"tag": "protocol", "value": "ProtImportCTF",   "text": "import ctfs"},
-			{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
-			{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
-			{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
-			{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "import micrograph pairs"},
-			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
-			{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
+		{"tag": "protocol", "value": "ProtImportCoordinates",   "text": "import coordinates"},
+		{"tag": "protocol", "value": "ProtImportCTF",   "text": "import ctfs"},
+		{"tag": "protocol", "value": "ProtImportPdb",   "text": "import atomic structure"},
+		{"tag": "protocol", "value": "ProtImportSequence",   "text": "import sequence"},
+		{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
+		{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
+		{"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "import micrograph pairs"},
+		{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
+		{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
 		]}
 	]},
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [
@@ -41,7 +42,7 @@ Protocols SPA = [
 		    {"tag": "protocol", "value": "ProtGctf", "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
-				{"tag": "protocol", "value": "XmippProtCTFDiscrepancy", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtCTFConsensus", "text": "default"},
 				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtCTFSelection", "text": "default"}
 			]}
@@ -168,11 +169,15 @@ Protocols SPA = [
         	{"tag": "protocol", "value": "XmippProtProjMatch",  "text": "default"},
         	{"tag": "protocol", "value": "EmanProtRefine",  "text": "default"},
         	{"tag": "protocol", "value": "SpiderProtRefinement",  "text": "default"},
-        	{"tag": "protocol", "value": "ProtLocScale",  "text": "default"},
         	{"tag": "section", "text": "more", "openItem": "False", "children": [
     	        {"tag": "protocol", "value": "ProtRelionPolish", "text": "default"}
             ]}
-        ]},
+        ]},        
+		{"tag": "protocol_group", "text": "Postprocess", "openItem": "False", "children": [
+        	{"tag": "protocol", "value": "XmippProtLocSharp",  "text": "default"},
+     		{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},       	
+        	{"tag": "protocol", "value": "ProtLocScale",  "text": "default"}
+        ]},               
 		{"tag": "protocol_group", "text": "Analysis", "openItem": "False", "children": [
             {"tag": "section", "text": "Heterogeneity", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtSolidAngles", "text": "default"},
@@ -199,7 +204,6 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtMonoRes",   "text": "default"},
                 {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
-    			{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},
     			{"tag": "protocol", "value": "ProtRelionLocalRes",   "text": "default"},
                 {"tag": "protocol", "value": "BsoftProtBfilter", "text": "default"}
 			]},
@@ -207,8 +211,7 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtSubtractProjection", "text": "default"},
 				{"tag": "protocol", "value": "ProtRelionSubtract",  "text": "default"},
 				{"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
-				{"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtCombinePdb", "text": "default"}
+				{"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"}
 			]}
 		]},
 		{"tag": "protocol_group", "text": "Reconstruct", "openItem": "False", "children": [
@@ -236,6 +239,8 @@ Protocols SPA = [
 	{"tag": "section", "text": "Model Building", "openItem": "False", "children": [
         {"tag": "protocol", "value": "XmippProtExtractUnit",   "text": "default"},
         {"tag": "protocol", "value": "ChimeraProtRigidFit",   "text": "default"},
+        {"tag": "protocol", "value": "ChimeraModelFromTemplate",   "text": "default"},
+        {"tag": "protocol", "value": "PowerfitProtRigidFit",   "text": "default"},
         {"tag": "protocol", "value": "CootRefine",   "text": "default"},
         {"tag": "protocol", "value": "CCP4ProtRunRefmac",   "text": "default"},
         {"tag": "protocol", "value": "PhenixProtRunEMRinger",   "text": "default"},

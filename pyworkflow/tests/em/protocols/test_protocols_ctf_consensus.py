@@ -33,9 +33,8 @@ from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
 from pyworkflow.utils import importFromPlugin
 
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-XmippProtCTFSelection = importFromPlugin('xmipp3.protocols',
+XmippProtCTFConsensus = importFromPlugin('xmipp3.protocols',
                                          'XmippProtCTFConsensus', doRaise=True)
-
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
@@ -46,7 +45,7 @@ MIC_SQLITE = "micrographs.sqlite"
 MIC_DISCARDED_SQLITE = "micrographsDiscarded.sqlite"
 
 
-class TestCtfSelection(BaseTest):
+class TestCtfConsensus(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -112,7 +111,7 @@ class TestCtfSelection(BaseTest):
             'resolution': 7
         }
 
-        protCTFSel = self.newProtocol(XmippProtCTFSelection, **kwargs)
+        protCTFSel = self.newProtocol(XmippProtCTFConsensus, **kwargs)
         protCTFSel.inputCTF.set(protCTF.outputCTF)
         self.proj.launchProtocol(protCTFSel,  wait=False)
 
@@ -133,7 +132,7 @@ class TestCtfSelection(BaseTest):
             'resolution': 3.7,
         }
 
-        protCTFSel2 = self.newProtocol(XmippProtCTFSelection, **kwargs)
+        protCTFSel2 = self.newProtocol(XmippProtCTFConsensus, **kwargs)
         protCTFSel2.inputCTF.set(protCTFSel.outputCTF)
         self.proj.launchProtocol(protCTFSel2)
 

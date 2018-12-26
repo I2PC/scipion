@@ -264,7 +264,7 @@ class ImageFileHandler(FileHandler):
         return self._getImagePreview(fn), self._getImageString(fn)
     
     def getFileActions(self, objFile):
-        from pyworkflow.em.viewer import DataView
+        from pyworkflow.em.viewers import DataView
         fn = objFile.getPath()
         return [('Open with Xmipp viewer', lambda: DataView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
@@ -290,7 +290,7 @@ class StackHandler(ImageFileHandler):
 class ChimeraHandler(FileHandler):
     
     def getFileActions(self, objFile):
-        from pyworkflow.em.viewer import ChimeraView
+        from pyworkflow.em.viewers import ChimeraView
         fn = objFile.getPath()
         return [('Open with Chimera', lambda: ChimeraView(fn).show(),
                  Icon.ACTION_VISUALIZE)]

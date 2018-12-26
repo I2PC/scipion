@@ -553,6 +553,16 @@ class Protocol(Step):
 
         return d
 
+    def processImportDict(self, importDict, importDir):
+        """
+        This function is used when we import a workflow from a json to process or
+        adjust the json data for reproducibility purposes e.g. resolve relative paths
+        Params:
+        importDict: Dict of the protocol that we got from the json
+        importDir: dir of the json we're importing
+        """
+        return importDict
+
     def iterDefinitionSections(self):
         """ Iterate over all the section of the definition. """
         for section in self._definition.iterSections():

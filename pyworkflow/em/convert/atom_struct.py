@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# *              Marta Martinez (mmmtnez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -39,14 +40,21 @@ from Bio.PDB import PDBIO, MMCIFIO
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
 from Bio.PDB import PDBList
-from pyworkflow.em.transformations import rotation_from_matrix, \
-    translation_from_matrix
+from Bio.PDB.Polypeptide import PPBuilder
+from collections import OrderedDict
+from Bio.PDB.Polypeptide import is_aa
+from Bio.PDB.Polypeptide import three_to_one
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
+from .transformations import rotation_from_matrix, translation_from_matrix
+from .sequence import SequenceHandler
 
 
 class OutOfChainsError(Exception):
     pass
 
-class AtomicStructHandler():
+
+class AtomicStructHandler:
     """ Class that contain utilities to handle pdb/cif files"""
     PDB = 0
     CIF = 1
@@ -60,6 +68,7 @@ class AtomicStructHandler():
         self.ioPDB = None
         self.ioCIF = None
         self.structure = None
+        self._readDone = False
         if fileName is not None:
             self.read(fileName)
 
@@ -79,11 +88,13 @@ class AtomicStructHandler():
         return fileName
 
     def getStructure(self):
+        """return strcture information, model, chain,
+           residues, atoms..."""
         return self.structure
 
     def read(self, fileName):
         """ Read and parse file."""
-        # biopython asigns an ID to any read structure
+        # biopython assigns an ID to any read structure
         structure_id = os.path.basename(fileName)
         structure_id = structure_id[:4] if len(structure_id) > 4 else "1xxx"
 
@@ -99,6 +110,127 @@ class AtomicStructHandler():
             self.type = self.CIF
 
         self.structure = parser.get_structure(structure_id, fileName)
+        self._readDone = True
+
+    def checkRead(self):
+        if self._readDone:
+            return True
+        else:
+            print "you must read the pdb file first"
+            exit(0)
+
+    def getModelsChains(self):
+        """
+        return a dic of all models and respective chains (chainID and
+        length of residues) from a pdb file
+        """
+        self.checkRead()
+        models = OrderedDict()
+
+        for model in self.structure:
+            chainDic = OrderedDict()
+            for chain in model:
+                if len(chain.get_unpacked_list()[0].resname) == 1: # RNA
+                    seq = list()
+                    for residue in chain:
+                        if residue.get_resname() in ['A', 'C', 'G', 'U']:
+                            seq.append(residue.get_resname())
+                        else:
+                            seq.append("X")
+                elif len(chain.get_unpacked_list()[0].resname) == 2: # DNA
+                    seq = list()
+                    for residue in chain:
+                        if residue.get_resname()[1] in ['A', 'C', 'G', 'T']:
+                            seq.append(residue.get_resname()[1])
+                        else:
+                            seq.append("X")
+                elif len(chain.get_unpacked_list()[0].resname) == 3: # Protein
+                    seq = list()
+                    for residue in chain:
+                        if is_aa(residue.get_resname(), standard=True):
+                            seq.append(three_to_one(residue.get_resname()))
+                        else:
+                            seq.append("X")
+                while seq[-1] == "X":
+                    del seq[-1]
+                while seq[0] == "X":
+                    del seq[0]
+                chainDic[chain.id] = len(seq)
+            models[model.id] = chainDic
+
+        return models
+
+    def getSequenceFromChain(self, modelID, chainID):
+        self.checkRead()
+        seq = list()
+        for model in self.structure:
+            if str(model.id) == modelID:
+                for chain in model:
+                    if str(chain.id) == chainID:
+                        if len(chain.get_unpacked_list()[0].resname) == 1:
+                            print "Your sequence is a nucleotide sequence (" \
+                                  "RNA)\n"
+                            # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
+                            for residue in chain:
+                                ## Check if the residue belongs to the
+                                ## standard RNA and add those residues to the
+                                ## seq
+                                if residue.get_resname() in ['A', 'C',
+                                                                'G', 'U']:
+                                    seq.append(residue.get_resname())
+                                else:
+                                    seq.append("X")
+                        elif len(chain.get_unpacked_list()[0].resname) == 2:
+                            print "Your sequence is a nucleotide sequence (" \
+                                  "DNA)\n"
+                            # alphabet = IUPAC.ExtendedIUPACDNA._upper()
+                            for residue in chain:
+                                ## Check if the residue belongs to the
+                                ## standard DNA and add those residues to the
+                                ## seq
+                                if residue.get_resname()[1] in ['A', 'C',
+                                                                'G', 'T']:
+                                    seq.append(residue.get_resname()[1])
+                                else:
+                                    seq.append("X")
+                        elif len(chain.get_unpacked_list()[0].resname) == 3:
+                            print "Your sequence is an aminoacid sequence"
+                            #alphabet = IUPAC.ExtendedIUPACProtein._upper()
+                            for residue in chain:
+                                ## The test below checks if the amino acid
+                                ## is one of the 20 standard amino acids
+                                ## Some proteins have "UNK" or "XXX", or other symbols
+                                ## for missing or unknown residues
+                                if is_aa(residue.get_resname(), standard=True):
+                                    seq.append(three_to_one(residue.get_resname()))
+                                else:
+                                    seq.append("X")
+                        while seq[-1] == "X":
+                            del seq[-1]
+                        while seq[0] == "X":
+                            del seq[0]
+                        # return Seq(str(''.join(seq)), alphabet=alphabet)
+                        return Seq(str(''.join(seq)))
+
+    def getFullID(self, model_id='0', chain_id=None):
+        """
+        assign a label to a sequence obtained from a PDB file
+        :parameter
+        model_id
+        chain_id
+        :return: string with label
+        """
+        self.checkRead()  # cehck we have read the structure
+        label = "%s" % self.structure.get_id()  # PDB_ID
+        # check how many model are in sequence if > 1 add to id
+        models = self.getModelsChains()
+        if len(models) > 1:
+            label = label + "__%s" % str(model_id)
+        # if chain_id is None do not add it to te name
+        if chain_id is not None:
+            label = label + "_%s" % str(chain_id)
+        return label
+
 
     def readLowLevel(self, fileName):
         """ Return a dictionary with all mmcif fields. you should parse them
@@ -308,3 +440,13 @@ def cifToPdb(fnCif,fnPdb):
     h = AtomicStructHandler()
     h.read(fnCif)
     h.writeAsPdb(fnPdb)
+
+#rethink
+# def getNumberModelsChains(parsed_structure):
+#     countModels = 0
+#     for model in parsed_structure:
+#         countModels += 1
+#         countChains = 0
+#         for chain in model:
+#             countChains += 1
+#     return countModels, countChains

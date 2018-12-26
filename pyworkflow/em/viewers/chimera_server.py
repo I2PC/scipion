@@ -1,5 +1,7 @@
 #!/usr/bin/env xmipp_python
-
+"""
+This scripts seems to be execute with the Python and libraries from Chimera.
+"""
 
 
 from __future__ import print_function
@@ -100,7 +102,8 @@ class ChimeraServer:
 
     def initListenShowJ(self):
 
-        self.listenShowJThread = Thread(target=self.listenShowJ)
+        self.listenShowJThread = Thread(name="listenShowJ",
+                                        target=self.listenShowJ)
         self.listenShowJThread.daemon = True
         self.listenShowJThread.start()
 
