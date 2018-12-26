@@ -108,12 +108,12 @@ class ProtAlignMovies(ProtProcessMovies):
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # validate that we have some output movies
-        failedList = self._readFailedList()
-        if len(failedList) == len(self.listOfMovies):
+        if self.outputMicrographs.getSize() == 0 and len(self.listOfMovies) != 0:
             raise Exception(redStr("All movies failed, didn't create outputMicrographs."
                                    "Please review movie processing steps above."))
-        elif 0 < len(failedList) < len(self.listOfMovies):
-            self.warning(yellowStr("WARNING - Failed to align %d movies." % len(failedList)))
+        elif self.outputMicrographs.getSize() < len(self.listOfMovies):
+            self.warning(yellowStr("WARNING - Failed to align %d movies."
+                                   % (len(self.listOfMovies) - self.outputMicrographs.getSize())))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -208,7 +208,6 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
-            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -221,14 +220,11 @@ class ProtAlignMovies(ProtProcessMovies):
                 if not os.path.exists(extraMicFn):
                     print(yellowStr("WARNING: Micrograph %s was not generated, "
                                     "can't add it to output set." % extraMicFn))
-                    doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
-            if doneFailed:
-                self._writeFailedList(doneFailed)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
