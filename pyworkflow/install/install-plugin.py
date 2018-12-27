@@ -25,10 +25,9 @@
 # **************************************************************************
 
 import sys
-from install.plugin_funcs import PluginRepository, PluginInfo
 from pyworkflow.plugin import Domain
-from install.funcs import Environment
-from install import script
+from pyworkflow.install.plugin_funcs import PluginRepository, PluginInfo
+from pyworkflow.install import script
 import argparse
 import os
 import re

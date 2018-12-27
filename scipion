@@ -461,7 +461,7 @@ Example: scipion install -j 4
 
         def build(args):
             # Just importing the script will launch the install actions
-            import install.script as script
+            import pyworkflow.install.script as script
             env = script.defineBinaries()
             env.execute()
             return 0

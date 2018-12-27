@@ -29,7 +29,7 @@ import sys
 
 import shutil
 
-from install.funcs import Environment
+from pyworkflow.install import Environment
 
 get = lambda x: os.environ.get(x, 'y').lower() in ['true', 'yes', 'y', '1']
 

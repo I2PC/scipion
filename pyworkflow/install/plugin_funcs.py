@@ -10,7 +10,7 @@ from pkg_resources import parse_version
 from pyworkflow.plugin import Domain
 from pyworkflow.utils.path import cleanPath
 from pyworkflow import LAST_VERSION, OLD_VERSIONS
-from install.funcs import Environment
+from pyworkflow.install import Environment
 
 REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
                   os.environ['SCIPION_PLUGIN_REPO_URL'])
