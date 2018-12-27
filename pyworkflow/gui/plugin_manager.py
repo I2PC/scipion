@@ -32,7 +32,7 @@ from pyworkflow.project import MenuConfig
 from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.gui.text import TextFileViewer
 from pyworkflow.gui import *
-from install.plugin_funcs import PluginRepository, PluginInfo
+from pyworkflow.install.plugin_funcs import PluginRepository, PluginInfo
 
 from pyworkflow.utils.properties import *
 from pyworkflow.utils import redStr

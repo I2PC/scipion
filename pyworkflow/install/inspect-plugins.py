@@ -24,8 +24,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 from __future__ import print_function
+
 import sys
 import importlib
 import inspect
@@ -34,9 +34,10 @@ from collections import OrderedDict
 
 from pyworkflow.em import Domain
 from pyworkflow.protocol import Protocol
-from install.plugin_funcs import PluginInfo
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
+
+from .plugin_funcs import PluginInfo
 
 
 def usage(error):
@@ -68,6 +69,7 @@ def getSubmodule(name, subname):
         msg = str(e)
         r = (None, None if msg == noModuleMsg else traceback.format_exc())
     return r
+
 
 def getFirstLine(doc):
     """ Get the first non empty line from doc. """

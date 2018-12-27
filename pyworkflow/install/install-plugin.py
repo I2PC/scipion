@@ -25,12 +25,14 @@
 # **************************************************************************
 
 import sys
-from pyworkflow.plugin import Domain
-from pyworkflow.install.plugin_funcs import PluginRepository, PluginInfo
-from pyworkflow.install import script
 import argparse
 import os
 import re
+
+from pyworkflow.plugin import Domain
+from .plugin_funcs import PluginRepository, PluginInfo
+import script
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                       External (EM) Plugins                          *

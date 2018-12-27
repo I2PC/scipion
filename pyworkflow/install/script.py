@@ -308,7 +308,7 @@ def defineBinaries(args=None):
     # Add pip to our python
     pip = env.addTarget('pip')
     # we will install a certain version of setuptools
-    pip.addCommand('python scripts/get-pip.py -I --no-setuptools',
+    pip.addCommand('python pyworkflow/install/get-pip.py -I --no-setuptools',
                    targets=SW_PYT_PACK + '/pip', default=True, final=True)
 
     # Required python modules
