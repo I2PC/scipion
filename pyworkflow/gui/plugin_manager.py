@@ -536,7 +536,7 @@ class PluginBrowser(tk.Frame):
         # Create two tabs where the log and errors will appears
         self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
         if event is not None:
-            threadOp = threading.Thread(target=self._applyOperations,
+            threadOp = threading.Thread(name="plugin-manager", target=self._applyOperations,
                                         args=(None,))
             threadOp.start()
 

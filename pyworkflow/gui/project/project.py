@@ -264,7 +264,7 @@ class ProjectWindow(ProjectBaseWindow):
                                   ProjectTCPRequestHandler)
         server.project = self.project
         server.window = self
-        server_thread = threading.Thread(target=server.serve_forever)
+        server_thread = threading.Thread(name="projectTCPserver", target=server.serve_forever)
         # Exit the server thread when the main thread terminates
         server_thread.daemon = True
         server_thread.start()

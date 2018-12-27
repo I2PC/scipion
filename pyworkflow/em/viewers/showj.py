@@ -355,7 +355,8 @@ def initProtocolTCPServer(protocol):
         port = getFreePort()
         server = MySocketServer((address, port), ProtocolTCPRequestHandler)
         server.protocol = protocol
-        server_thread = threading.Thread(target=server.serve_forever)
+        server_thread = threading.Thread(name="ProtocolTCPServer",
+                                         target=server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
         return port

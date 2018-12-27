@@ -138,8 +138,8 @@ class ProjectWorkflowNotifier(object):
             urlName = os.environ.get('SCIPION_NOTIFY_URL',
                                      config.SCIPION_STATS_WORKFLOW_APP).strip()
             urlName += "addOrUpdateWorkflow/"
-            t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
-            t.start() # will execute function in a separate thread
+            t = threading.Thread(name="notifier", target=lambda: self._sendData(urlName, dataDict))
+            t.start()  # will execute function in a separate thread
         except Exception as e:
             print "Can't report usage: ", e
             
