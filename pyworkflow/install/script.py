@@ -311,13 +311,6 @@ def defineBinaries(args=None):
     pip.addCommand('python scripts/get-pip.py -I --no-setuptools',
                    targets=SW_PYT_PACK + '/pip', default=True, final=True)
 
-    # Scons has a different pattern: it is expected to be in bin..TODO
-    # scons = env.addModule(
-    #      'scons',
-    #      targets=[env.getBin('scons')],
-    #      tar='scons-2.3.4.tgz')
-    #env.addPipModule('scons','2.3.6', target='scons-2.3.6')
-
     # Required python modules
     env.addPipModule('setuptools', '39.0.1')
     numpy = env.addPipModule('numpy','1.14.1')
