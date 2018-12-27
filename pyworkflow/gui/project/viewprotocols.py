@@ -579,7 +579,6 @@ class ProtocolsView(tk.Frame):
         self.root = windows.root
         self.getImage = windows.getImage
         self.protCfg = windows.protCfg
-        self.icon = windows.icon
         self.settings = windows.getSettings()
         self.runsView = self.settings.getRunsView()
         self._loadSelection()
@@ -1578,13 +1577,13 @@ class ProtocolsView(tk.Frame):
     def _browseSteps(self):
         """ Open a new window with the steps list. """
         window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows,
-                             self.getSelectedProtocol(), icon=self.icon)
+                             self.getSelectedProtocol())
         window.show()
 
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.getSelectedProtocol())
         window = pwgui.browser.BrowserWindow(Message.TITLE_BROWSE_DATA,
-                                             self.windows, icon=self.icon)
+                                             self.windows)
         window.setBrowser(pwgui.browser.ObjectBrowser(window.root, provider))
         window.itemConfig(self.getSelectedProtocol(), open=True)
         window.show()

@@ -177,9 +177,10 @@ class ProjectConfig(pwobj.OrderedObject):
     """A simple base class to store ordered parameters"""
     def __init__(self, **args):
         pwobj.OrderedObject.__init__(self, **args)
-        self.icon = pwobj.String(Icon.SCIPION_ICON)
         self.logo = pwobj.String('scipion_logo_small.png')
-
+        # Do not store this object, unless we implement some kind of
+        # icon customization
+        self._objDoStore = False
 
 class MenuConfig(object):
     """Menu configuration in a tree fashion.
