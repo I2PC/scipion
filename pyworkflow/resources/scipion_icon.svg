@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="scipion_icon.svg"
-   inkscape:export-filename="/home/pablo/desarrollo/scipion/pyworkflow/resources/scipion_icon_projs2.png"
+   inkscape:export-filename="/home/pablo/desarrollo/scipion/pyworkflow/resources/scipion_icon.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
    enable-background="new">
@@ -51,11 +51,11 @@
      inkscape:cx="32.672635"
      inkscape:cy="209.05963"
      inkscape:document-units="px"
-     inkscape:current-layer="layer5"
+     inkscape:current-layer="layer2"
      showgrid="false"
-     inkscape:window-width="1317"
-     inkscape:window-height="744"
-     inkscape:window-x="49"
+     inkscape:window-width="1871"
+     inkscape:window-height="1056"
+     inkscape:window-x="1415"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
      showguides="true"
@@ -82,9 +82,9 @@
      id="layer2"
      inkscape:label="helmet"
      transform="translate(-300.71851,-252.27944)"
-     style="display:inline;opacity:0.75">
+     style="display:inline;opacity:1">
     <path
-       style="opacity:1;fill:#b22222;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.20844336;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.20844336;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 324.53702,489.27944 c -16.8818,-23.45253 -22.81852,-50.51373 -22.81852,-79.41037 0,-76.11449 62.21155,-138.93637 138.32604,-138.93637 46.78918,0 89.01637,20.95633 115.67396,58.47985 0,0 -10.32633,5.69393 -42.13117,27.34746 -73.54279,-85.82731 -208.61515,2.55398 -147.03767,104.91299 -31.74988,21.74654 -42.01264,27.60644 -42.01264,27.60644 z"
        id="path5105"
        inkscape:connector-curvature="0"
@@ -131,7 +131,7 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="projects icon"
-     style="display:inline">
+     style="display:none">
     <g
        id="g4299"
        transform="translate(-2,-6)">
