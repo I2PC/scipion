@@ -92,4 +92,4 @@ def getConfigPath(*paths):
 
 
 def getTemplatePath(*paths):
-    return getConfigPath('templates', *paths)
+    return join('templates', *paths)

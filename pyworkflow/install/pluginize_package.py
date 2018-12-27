@@ -36,7 +36,7 @@ import argparse
 
 pipEmptyFiles = ['CHANGES.txt', 'MANIFEST.in', 'README.rst']
 scipion_home = os.environ['SCIPION_HOME']
-templatesFolder = pw.join('config', 'templates')
+templatesFolder = pw.getTemplatePath()
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                  usage='Script to create basic plugin structure for an existing Scipion package \n'

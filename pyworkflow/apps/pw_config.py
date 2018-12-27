@@ -82,7 +82,9 @@ def main():
         localSections = ['DIRS_LOCAL', 'PACKAGES', 'VARIABLES']
 
     try:
-        templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')
+        #FIXME: Here we are still assuming that SCIPION_HOME is at the same place
+        # where pyworkflow is
+        templatesDir = join(os.environ['SCIPION_HOME'], 'pyworkflow', 'templates')
         # Global installation configuration files.
         for fpath, tmplt in [
             (os.environ['SCIPION_CONFIG'], 'scipion'),
