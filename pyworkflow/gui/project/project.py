@@ -117,12 +117,11 @@ class ProjectWindow(ProjectBaseWindow):
             self.projName += "<READ ONLY>"
 
         # Notify about the workflow in this project
-        self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
         ProjectBaseWindow.__init__(self, projTitle, master,
-                                   icon=self.icon, minsize=(90,50))
+                                   minsize=(90,50), icon=Icon.SCIPION_ICON_PROJ)
         self.root.attributes("-zoomed", True)
 
         self.switchView(VIEW_PROTOCOLS)
@@ -364,7 +363,8 @@ class ProjectManagerWindow(ProjectBaseWindow):
         except Exception:
             title = Message.LABEL_PROJECTS
         
-        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **kwargs)
+        ProjectBaseWindow.__init__(self, title, minsize=(750, 500),
+                                   icon=Icon.SCIPION_ICON_PROJS, **kwargs)
         self.manager = Manager()
         
         self.switchView(VIEW_PROJECTS)
