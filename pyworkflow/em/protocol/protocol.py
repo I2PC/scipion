@@ -267,7 +267,7 @@ class EMProtocol(Protocol):
         This function can be used from several base protocols that support
         streaming and batch:
 
-        - Prot
+        - ProtCTFMicrographs
         - ProtParticlePickingAuto
         - ProtExtractParticles
         Params:
