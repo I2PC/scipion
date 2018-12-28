@@ -1491,7 +1491,8 @@ class SetOfCoordinates(EMSet):
             boxStr = ' %d x %d' % (boxSize, boxSize)
         else:
             boxStr = 'No-Box'
-        s = "%s (%d items, %s)" % (self.getClassName(), self.getSize(), boxStr)
+        s = "%s (%d items, %s%s)" % (self.getClassName(), self.getSize(),
+                                     boxStr, self._appendStreamState())
 
         return s
 
