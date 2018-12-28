@@ -208,7 +208,7 @@ class ProtImportSequence(ProtImportFiles):
                       display=params.EnumParam.DISPLAY_HLIST,
                       help='Import structure data from online server or local '
                            'file',
-                      pointerClass='PdbFile',
+                      pointerClass='AtomStruct',
                       allowsNull=True)
         form.addParam('pdbId', params.StringParam,
                       condition='(inputProteinSequence == %d or '

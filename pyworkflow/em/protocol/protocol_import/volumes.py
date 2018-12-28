@@ -27,17 +27,18 @@
 
 
 from os.path import exists, basename, abspath
+from os import getcwd
 
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
 from images import ProtImportImages
-from pyworkflow.em import Volume, ImageHandler, PdbFile
+from pyworkflow.em import Volume, ImageHandler, AtomStruct
 from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
 from pyworkflow.em.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
-
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -243,15 +244,17 @@ class ProtImportPdb(ProtImportFiles):
         if self.inputPdbData == self.IMPORT_FROM_ID:
             self._insertFunctionStep('pdbDownloadStep')
         else:
-            pdbPath = self.pdbFile.get()
-        self._insertFunctionStep('createOutputStep', pdbPath)
+            self._insertFunctionStep('createOutputStep', self.pdbFile.get())
 
-    def pdbDownloadStep(self, pdbPath):
-        """Download all pdb files in file_list and unzip them."""
+    def pdbDownloadStep(self):
+        """Download all pdb files in file_list and unzip them.
+        """
         aSH = AtomicStructHandler()
-        self.pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
+        print "retriving PDB file %s" % self.pdbId.get()
+        pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
                                               type='mmCif',
-                                              dir=os.getcwd())
+                                              dir=self._getExtraPath())
+        self.createOutputStep(pdbPath)
 #        downloadPdb(self.pdbId.get(), pdbPath, self._log)
 
     def createOutputStep(self, pdbPath):
@@ -261,10 +264,11 @@ class ProtImportPdb(ProtImportFiles):
             raise Exception("Atomic structure not found at *%s*" % pdbPath)
 
         baseName = basename(pdbPath)
-        localPath = self._getExtraPath(baseName)
+        localPath = abspath(self._getExtraPath(baseName))
 
-        copyFile(pdbPath, localPath)
-        pdb = PdbFile()
+        if str(pdbPath) != str(localPath):
+            copyFile(pdbPath, localPath)
+        pdb = AtomStruct()
         volume = self.inputVolume.get()
 
         # if a volume exists assign it to the pdb object
@@ -295,6 +299,6 @@ class ProtImportPdb(ProtImportFiles):
         if (self.inputPdbData == self.IMPORT_FROM_FILES and not exists(
                 self.pdbFile.get())):
             errors.append("Atomic structure not found at *%s*" %
-                          self.pdbPath.get())
+                          self.pdbFile.get())
         # TODO: maybe also validate that if exists is a valid PDB file
         return errors
