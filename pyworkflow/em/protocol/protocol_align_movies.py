@@ -108,7 +108,7 @@ class ProtAlignMovies(ProtProcessMovies):
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # validate that we have some output movies
-        if hasattr(self, 'doSaveAveMic') and not self.doSaveAveMic.get():
+        if hasattr(self, 'doSaveAveMic') and not self.doSaveAveMic:
             output = self.outputMovies
         else:
             output = self.outputMicrographs
