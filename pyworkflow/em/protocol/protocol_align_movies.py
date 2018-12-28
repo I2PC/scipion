@@ -108,10 +108,15 @@ class ProtAlignMovies(ProtProcessMovies):
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # validate that we have some output movies
-        if self.outputMicrographs.getSize() == 0 and len(self.listOfMovies) != 0:
+        if hasattr(self, 'doSaveAveMic') and not self.doSaveAveMic.get():
+            output = self.outputMovies
+        else:
+            output = self.outputMicrographs
+
+        if output.getSize() == 0 and len(self.listOfMovies) != 0:
             raise Exception(redStr("All movies failed, didn't create outputMicrographs."
                                    "Please review movie processing steps above."))
-        elif self.outputMicrographs.getSize() < len(self.listOfMovies):
+        elif output.getSize() < len(self.listOfMovies):
             self.warning(yellowStr("WARNING - Failed to align %d movies."
                                    % (len(self.listOfMovies) - self.outputMicrographs.getSize())))
 
