@@ -151,18 +151,28 @@ class MonitorCTF(Monitor):
             ctf = setOfCTFs[ctfID]
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
+
+            # Defocus angle
             defocusAngle = ctf.getDefocusAngle()
             if defocusAngle > 360 or defocusAngle< -360:
                 defocusAngle = 0
+
+            # Astigmatism
             astig = abs(defocusU - defocusV)
+
+            # Resolution
             resolution = ctf.getResolution()
             if isinf(resolution):
-                 resolution = 0.
+                resolution = 0.
             
+            # Fit quality
             fitQuality = ctf.getFitQuality()
             if fitQuality is None or isinf(fitQuality): 
-                  fitQuality = 0.
-            
+                fitQuality = 0.
+
+            # PhaseShift
+            phaseShift = ctf.getPhaseShift() if ctf.hasPhaseShift() else 0.
+
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
             shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
@@ -185,9 +195,9 @@ class MonitorCTF(Monitor):
 #            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
 #                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
 #                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
-            sql = """INSERT INTO %s(ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, micPath,psdPath,shiftPlotPath )
-                     VALUES(%d,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfID, defocusU,
-                     defocusV, astig, defocusU / defocusV, resolution, fitQuality, micPath, psdPath, shiftPlotPath)
+            sql = """INSERT INTO %s(ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, phaseShift, micPath,psdPath,shiftPlotPath )
+                     VALUES(%d,%f,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfID, defocusU,
+                     defocusV, astig, defocusU / defocusV, resolution, fitQuality, phaseShift,  micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
@@ -224,6 +234,7 @@ class MonitorCTF(Monitor):
                                 ratio FLOAT,
                                 resolution FLOAT,
 				                fitQuality FLOAT,
+				                phaseShift FLOAT,
                                 micPath STRING,
                                 psdPath STRING,
                                 shiftPlotPath STRING)
@@ -246,6 +257,7 @@ class MonitorCTF(Monitor):
             'idValues': get('ctfID'),
             'resolution': get('resolution'),
             'fitQuality': get('fitQuality'),
+            'phaseShift': get('phaseShift'),
             'imgMicPath': get('micPath'),
             'imgPsdPath': get('psdPath'),
             'imgShiftPath': get('shiftPlotPath')

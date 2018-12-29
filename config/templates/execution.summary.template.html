@@ -890,7 +890,9 @@
                           {"title": "CC value ",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "Defocus ratio",
-                            "render": $.fn.dataTable.render.number( ',', '.', 3)});
+                            "render": $.fn.dataTable.render.number( ',', '.', 3)},
+                          {"title": "Phase shift",
+                            "render": $.fn.dataTable.render.number( ',', '.', 1)});
 
             }
             var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
@@ -917,7 +919,8 @@
 				                   report.ctfData.astigmatism[index]*1e-4,
                                    report.ctfData.resolution[index],
 	                               report.ctfData.fitQuality[index],
-                                   report.ctfData.ratio[index]);
+                                   report.ctfData.ratio[index],
+                                   report.ctfData.phaseShift[index]);
                 }
 
                 dataset.unshift(rowValues);
