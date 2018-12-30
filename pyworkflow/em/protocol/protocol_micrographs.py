@@ -664,14 +664,13 @@ class ProtCTFMicrographs(ProtMicrographs):
         outputName = 'outputCTF'
         outputCtf = getattr(self, outputName, None)
 
-        # If there are not outputCoordinates yet, it means that is the first
-        # time we are updating output coordinates, so we need to first create
+        # If there are not outputCTFs yet, it means that is the first
+        # time we are updating output CTF, so we need to first create
         # the output set
         firstTime = outputCtf is None
 
         if firstTime:
-            micSetPtr = self.getInputMicrographsPointer()
-            outputCtf = self._createSetOfCoordinates(micSetPtr)
+            outputCtf = self._createSetOfCTF()
         else:
             outputCtf.enableAppend()
 
