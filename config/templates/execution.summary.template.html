@@ -6,13 +6,13 @@
         <!--highcharts-->
         <SCRIPT src="https://code.highcharts.com/highcharts.js"></SCRIPT>
         <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
-        <SCRIPT src="https://code.highcharts.com/modules/heatmap.js"></SCRIPT>
+        <!--SCRIPT src="https://code.highcharts.com/modules/heatmap.js"></SCRIPT>
         <!--bootstrap-->
         <SCRIPT src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></SCRIPT>
         <LINK rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <!--data tables-->
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-print-1.3.1/r-2.1.1/sc-1.4.2/datatables.min.css"/>
-        <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-print-1.3.1/r-2.1.1/sc-1.4.2/datatables.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css"/>
+        <script type="text/javascript" src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
         <link rel="shortcut icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
         <link rel="apple-touch-icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
         <TITLE>Scipion - %(projectName)s </TITLE>
@@ -309,7 +309,7 @@
             movieGainData: %(movieGainData)s,
             systemData: %(systemData)s
         }
-
+        var micTable;
         var refreshPaused = false;
 
         String.prototype.format = function() {
@@ -483,66 +483,6 @@
             }
             addResolutionHistogram();
             addDefocusCoverage();
-//
-//            $('#ctfChart').highcharts({
-//                title: {
-//                    text: '',
-//                    x: -20 //center
-//                },
-//                subtitle: {
-//                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
-//                },
-//                xAxis: {
-//                    title: {
-//                        text: 'Micrograph index'
-//                    },
-//                    allowDecimals: false,
-//                    type:'linear',
-//                    range:50,
-//                    floor: 1
-//                },
-//                yAxis: {
-//                    title: {
-//                        text: 'Defocus(\u212B)'
-//                    },
-//                    plotLines: [{
-//                        value: 0,
-//                        width: 1,
-//                        color: '#D14242'
-//                    }]
-//                },
-//                tooltip: {
-//                    valueSuffix: ' A'
-//                },
-//                legend: {
-//                    layout: 'vertical',
-//                    align: 'right',
-//                    verticalAlign: 'middle',
-//                    borderWidth: 0
-//                },
-//                series: [{
-//                    name: 'Defocus U',
-//                    data: report.ctfData.defocusU,
-//                    color: '#0000FF'
-//
-//                }, {
-//                    name: 'Defocus V',
-//                    data: report.ctfData.defocusV,
-//                    color: '#FF0000'
-//                }],
-//                chart:{
-//                    zoomType: 'x',
-//                    panning: true,
-//                    panKey:'shift'
-//                }
-//            });
-//
-//            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
-//            // we force it
-//            var ctfChart = $('#ctfChart').highcharts()
-//            ctfChart.showResetZoom();
-//
-//
         };
 
         function addDefocusCoverage(){
@@ -908,8 +848,7 @@
                         if(imgThumbPath==''){
                             rowValues.push(imgLoadingIcon)
                         }else{
-                            rowValues.push(imgHtml.format(imgThumbPath, imgWidth,
-                                                        report.ctfData.micId[index]))
+                            rowValues.push(imgThumbPath)
                         }
                     }
                 }
@@ -925,18 +864,39 @@
 
                 dataset.unshift(rowValues);
             });
-            var dataTable = {
+            var dataTableConf = {
                 data: dataset,
                  "order": [[ 0, "desc" ]],
                 columns: cols,
-                stateSave: true
-            };
+                stateSave: true,
+                rowCallback: function( row, data ) {
+                    renderImagesOnRow(row, data);
+                }
+           };
 
             $('#micTable').wrap("<div class='scrolledTable'></div>");
-            $('#micTable').DataTable( dataTable);
+            micTable = $('#micTable').DataTable( dataTableConf);
 
         };
+        function renderImagesOnRow(row, data){
 
+            // loop through the data...
+            for (var index =0; index<data.length; index++){
+                cellValue=data[index];
+                if (isImage(cellValue)){
+                    var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
+                    var imgWidth = Math.floor($('#content').width() * 0.2);
+                    imgHtml = imgHtml.format(cellValue, imgWidth, data[0]);
+                    $(row).find("td:nth-child(" + (index+1) + ")").html(imgHtml)
+                }
+            }
+
+        };
+        function isImage(cellValue){
+            if (typeof (cellValue) == 'string') {
+                return cellValue.startsWith("img");
+            }
+        };
         function populateReport(){
             addAcquisition();
             addRuns();
@@ -1029,12 +989,6 @@
             registerModalEvents();
             handleRefresh();
             handleSectionToggle();
-        })
-
-
-
-
-
-
+        });
     </SCRIPT>
 <HTML>
