@@ -458,20 +458,31 @@ class ProtocolTreeConfig:
         return subMenu
 
     @classmethod
-    def __findTreeLocation(cls, subMenu, children):
+    def __inSubMenu(cls, child, subMenu):
+        """
+        Return True if child belongs to subMenu
+        """
+        for ch in subMenu:
+            if child['text'] == ch.text:
+                return ch
+        return None
+
+    @classmethod
+    def __findTreeLocation(cls, subMenu, children, parent):
         """
         Locate the protocol position in the given view
         """
-        if children['tag'] == cls.TAG_PROTOCOL or not subMenu.childs:
-            return subMenu, children
-        else:
-            for child in subMenu.childs:
-                if child.tag == cls.TAG_SECTION or child.tag == cls.TAG_PROTOCOL_GROUP:
-                    if child.text == children['text']:
-                        return cls.__findTreeLocation(child,
-                                                children['children'][0])
+        for child in children:
+            if child['tag'] == cls.TAG_SECTION or child['tag'] == cls.TAG_PROTOCOL_GROUP:
+                sm = cls.__inSubMenu(child, subMenu)
+                if sm:
+                   cls.__findTreeLocation(sm.childs,
+                                           child['children'], sm)
+                else:
+                    cls.__addToTree(parent, child, cls.__checkItem)
+            else:
+                cls.__addToTree(parent, child, cls.__checkItem)
 
-            return subMenu, children
 
     @classmethod
     def __checkItem(cls, item):
@@ -540,55 +551,45 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
+        import time
+        time.sleep(5)
         pluginRepo = PluginRepository()
-        # FIXME Load the plugins with em.Domain.
         # Load the plugins locally
-        pluginDict = pluginRepo.getPlugins(getPipData=False)
-
+        pluginDict = pw.em.Domain.getPlugins()
         # Read menus from users' config file.
         cp = ConfigParser()
         cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-
         try:
             protocols = OrderedDict()
             pluginList = pluginDict.keys()
             for pluginName in pluginList:
-                plugin = PluginInfo(pluginName, pluginName,
-                                    remote=False)
-                if plugin.isInstalled():
-                    # Locate the plugin protocols.conf file
-                    pluginDirName = plugin.getDirName()
-                    pluginFolderPath = plugin._getDistribution().location
-                    protocolsConfPath = os.path.join(pluginFolderPath,
-                                                     pluginDirName,
-                                                     cls.PLUGIN_CONFIG_PROTOCOLS)
 
-                    # Populate the protocols menu from the plugin config file.
-                    if os.path.exists(protocolsConfPath):
-                        # Read menus from users' config file.
-                        cp = ConfigParser()
-                        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-                        cp.read(protocolsConfPath)
-                        #  Ensure that the protocols section exists
-                        if cp.has_section('PROTOCOLS'):
-                            for menuName in cp.options('PROTOCOLS'):
-                                if menuName not in protocols:  # The view has not been inserted
-                                    menu = ProtocolConfig(menuName)
-                                    children = json.loads(cp.get('PROTOCOLS',
-                                                                 menuName))
-                                    for child in children:
-                                        cls.__addToTree(menu, child, cls.__checkItem)
-                                    protocols[menuName] = menu
-                                else:  # The view has been inserted
-                                    menu = protocols.get(menuName)
-                                    children = json.loads(cp.get('PROTOCOLS',
-                                                                 menuName))
-                                    for child in children:
-                                        treeLocation = cls.__findTreeLocation(menu,
-                                                                        child)
-                                        cls.__addToTree(treeLocation[0],
-                                                        treeLocation[1],
-                                                        cls.__checkItem)
+                # Locate the plugin protocols.conf file
+                protocolsConfPath = os.path.join(pluginDict[pluginName].__path__[0],
+                                                 cls.PLUGIN_CONFIG_PROTOCOLS)
+                # Populate the protocols menu from the plugin config file.
+                if os.path.exists(protocolsConfPath):
+                    # Read menus from users' config file.
+                    cp = ConfigParser()
+                    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+                    cp.read(protocolsConfPath)
+                    #  Ensure that the protocols section exists
+                    if cp.has_section('PROTOCOLS'):
+                        for menuName in cp.options('PROTOCOLS'):
+                            if menuName not in protocols:  # The view has not been inserted
+                                menu = ProtocolConfig(menuName)
+                                children = json.loads(cp.get('PROTOCOLS',
+                                                             menuName))
+                                for child in children:
+                                    cls.__addToTree(menu, child, cls.__checkItem)
+                                protocols[menuName] = menu
+                            else:  # The view has been inserted
+                                menu = protocols.get(menuName)
+                                children = json.loads(cp.get('PROTOCOLS',
+                                                             menuName))
+                                cls.__findTreeLocation(menu.childs, children,
+                                                       menu)
+
 
             cls.__addAllProtocols(protocols)
 
