@@ -41,12 +41,18 @@ import pyworkflow.hosts as pwhosts
 from pyworkflow import em
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils.properties import Icon
+from install.plugin_funcs import PluginRepository, PluginInfo
+from install.funcs import Environment
 
 ALL_PROTOCOLS = "All"
 
 PATH = os.path.dirname(__file__)
 PROTOCOL_DISABLED_TAG = 'protocol-disabled'
 PROTOCOL_TAG = 'protocol'
+
+SECTION_TAG = 'section'
+PROTOCOL_GROUP_TAG = 'protocol_group'
+PLUGIN_CONFIG_PROTOCOLS = 'protocols.conf'
 
 
 def loadSettings(dbPath):
@@ -150,52 +156,78 @@ def addToTree(menu, item, checkFunction=None):
 
 
 def loadProtocolsConf(protocolsConf):
-    """ Read the protocol configuration from a .conf
+    """ Read the protocol configuration from the plugins .conf
     file similar to the one in ~/.config/scipion/protocols.conf,
     which is the default one when no file is passed.
     """
-    # Read menus from users' config file.
-    cp = ConfigParser()
-    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     protocols = OrderedDict()
-    
-    try:
-        assert cp.read(protocolsConf) != [], 'Missing file %s' % protocolsConf
+    pluginRepo = PluginRepository()
+    pluginDict = pluginRepo.getPlugins(getPipData=False)
 
-        # Function to check if the protocol has to be added or not
-        # It'll receive an item as in the confg:
-        # {"tag": "protocol", "value": "ProtImportMovies", "text": "import movies"}
-        def addItem(item):
+    # Function to check if the protocol has to be added or not
+    # It'll receive an item as in the confg:
+    # {"tag": "protocol", "value": "ProtImportMovies", "text": "import movies"}
+    def addItem(item):
 
-            # If it is a protocol
-            if item["tag"] == "protocol":
-                # Get the class name and then if it is disabled
-                protClassName = item["value"]
-                protClass = em.Domain.getProtocols().get(protClassName)
-                if protClass is None:
-                    return False
-                else:
-                    return not protClass.isDisabled()
+        # If it is a protocol
+        if item["tag"] == "protocol":
+            # Get the class name and then if it is disabled
+            protClassName = item["value"]
+            protClass = em.Domain.getProtocols().get(protClassName)
+            if protClass is None:
+                return False
             else:
-                return True
+                return not protClass.isDisabled()
+        else:
+            return True
 
-        # Populate the protocols menu from the config file.
-        for menuName in cp.options('PROTOCOLS'):
-            menu = ProtocolConfig(menuName)
-            children = json.loads(cp.get('PROTOCOLS', menuName))
-            for child in children:
-                addToTree(menu, child, addItem)
-            protocols[menuName] = menu
+    pluginList = pluginDict.keys()
+    for pluginName in pluginList:
+        plugin = PluginInfo(pluginName, pluginName,
+                                   remote=False)
+        if plugin.isInstalled():
+            pluginDirName = plugin.getDirName()
+            try:
+                pluginFolderPath = plugin._getDistribution().location
+                protocolsConfPath = os.path.join(pluginFolderPath,
+                                                 pluginDirName,
+                                                 PLUGIN_CONFIG_PROTOCOLS)
 
-        addAllProtocols(protocols)
+                # Populate the protocols menu from the plugin config file.
+                if os.path.exists(protocolsConfPath):
+                    # Read menus from users' config file.
+                    cp = ConfigParser()
+                    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+                    cp.read(protocolsConfPath)
+                    #  Ensure that the protocols section exists
+                    if cp.has_section('PROTOCOLS'):
+                        for menuName in cp.options('PROTOCOLS'):
+                            if menuName not in protocols:  # The view has not been inserted
+                                menu = ProtocolConfig(menuName)
+                                children = json.loads(cp.get('PROTOCOLS',
+                                                             menuName))
+                                for child in children:
+                                    addToTree(menu, child, addItem)
+                                protocols[menuName] = menu
+                            else:  # The view has been inserted
+                                menu = protocols.get(menuName)
+                                children = json.loads(cp.get('PROTOCOLS',
+                                                             menuName))
+                                for child in children:
+                                    treeLocation = findTreeLocation(menu, child)
+                                    addToTree(treeLocation[0], treeLocation[1],
+                                              addItem)
 
-        return protocols
-    
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                 'To solve it, delete %s and run again.' % (e, protocolsConf))
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                         'To solve it, delete %s and run again.' % (
+                         e, protocolsConfPath))
+
+    addAllProtocols(protocols)
+
+    return protocols
 
 
 def isAFinalProtocol(v, k):
@@ -213,6 +245,22 @@ def isAFinalProtocol(v, k):
         return True
 
 
+def findTreeLocation(subMenu, children):
+    """
+    Locate the protocol position in the given view
+    """
+    if children['tag'] == PROTOCOL_TAG or not subMenu.childs:
+        return subMenu, children
+    else:
+        for child in subMenu.childs:
+            if child.tag == SECTION_TAG or child.tag == PROTOCOL_GROUP_TAG:
+                if child.text == children['text']:
+                    return findTreeLocation(child,
+                                               children['children'][0])
+
+        return subMenu, children
+
+
 def addAllProtocols(protocols):
     # Add all protocols
     # FIXME: Check why this import is here
@@ -220,7 +268,8 @@ def addAllProtocols(protocols):
     allProts = Domain.getProtocols()
 
     # Sort the dictionary
-    allProtsSorted = OrderedDict(sorted(allProts.items(), key= lambda e: e[1].getClassLabel()))
+    allProtsSorted = OrderedDict(sorted(allProts.items(),
+                                        key=lambda e: e[1].getClassLabel()))
 
     allProtMenu = ProtocolConfig(ALL_PROTOCOLS)
     packages = {}

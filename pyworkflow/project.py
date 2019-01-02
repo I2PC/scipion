@@ -146,7 +146,8 @@ class Project(object):
     #     return dt.datetime.now() - self.getCreationTime()
     #
     def getElapsedTime(self):
-        """ Returns the time elapsed from the creation to the last execution time"""
+        """ Returns the time elapsed from the creation to the last execution
+            time"""
 
         if self._creationTime and self._lastRunTime:
 
@@ -239,7 +240,8 @@ class Project(object):
         # If folder is read only, flag it and warn about it.
         if not os.access(self.path, os.W_OK):
             self._isInReadOnlyFolder = True
-            print("WARNING on project \"%s\": don't have write permissions for project folder. "
+            print("WARNING on project \"%s\": don't have write permissions for "
+                  "project folder. "
                   "Loading as READ-ONLY." % self.shortName)
 
         if chdir:
@@ -278,7 +280,6 @@ class Project(object):
             print("ERROR: Project %s load failed.\n"
                  "       Message: %s\n" % (self.path, e))
 
-
     def _loadCreationTime(self):
         # Load creation time, it should be in project.sqlite or
         # in some old projects it is found in settings.sqlite
@@ -301,7 +302,8 @@ class Project(object):
 
         absDbPath = os.path.join(self.path, self.dbPath)
         if not os.path.exists(absDbPath):
-            raise MissingProjectDbException("Project database not found at '%s'" % absDbPath)
+            raise MissingProjectDbException("Project database not found at '%s'"
+                                            % absDbPath)
         self.mapper = self.createMapper(absDbPath)
 
     def closeMapper(self):
@@ -356,8 +358,8 @@ class Project(object):
             hostKey = hostName
         else:
             hostKey = self._hosts.keys()[0]
-            print "PROJECT: Warning, protocol host '%s' not found." % hostName
-            print "         Using '%s' instead." % hostKey
+            print("PROJECT: Warning, protocol host '%s' not found." % hostName)
+            print("         Using '%s' instead." % hostKey)
 
         return self._hosts[hostKey]
 
@@ -375,8 +377,9 @@ class Project(object):
         else:
             viewKey = self._protocolViews.keys()[0]
             self.settings.setProtocolView(viewKey)
-            print "PROJECT: Warning, protocol view '%s' not found." % currentView
-            print "         Using '%s' instead." % viewKey
+            print("PROJECT: Warning, protocol view '%s' not found."
+                  % currentView)
+            print("         Using '%s' instead." % viewKey)
 
         return self._protocolViews[viewKey]
 
@@ -646,7 +649,7 @@ class Project(object):
             if wd.startswith(PROJECT_RUNS):
                 pwutils.path.cleanPath(wd)
             else:
-                print "Error path: ", wd
+                print("Error path: ", wd)
 
         self.mapper.commit()
 
@@ -919,7 +922,8 @@ class Project(object):
             protClass = emProtocols.get(protClassName, None)
 
             if protClass is None:
-                print "ERROR: protocol class name '%s' not found" % protClassName
+                print("ERROR: protocol class name '%s' not found"
+                      % protClassName)
             else:
                 protLabel = protDict.get('object.label', None)
                 prot = self.newProtocol(protClass,
@@ -1096,7 +1100,8 @@ class Project(object):
         return self.runs
 
     def _annotateLastRunTime(self, protLastTS):
-        """ Sets _lastRunTime for the project if it is after current _lastRunTime"""
+        """ Sets _lastRunTime for the project if it is after current
+            _lastRunTime"""
         try:
             if protLastTS is None: return
 
@@ -1108,8 +1113,10 @@ class Project(object):
             return
 
     def needRefresh(self):
-        """ True if any run is active and its timestamp is older than its corresponding runs.db
-        NOTE: If an external script changes the DB this will fail. It uses only in memory objects."""
+        """ True if any run is active and its timestamp is older than its
+            corresponding runs.db
+            NOTE: If an external script changes the DB this will fail. It uses only
+            in memory objects."""
         # Loop through the runs
         for run in self.runs:
 
@@ -1184,7 +1191,8 @@ class Project(object):
                 if pointedId in outputDict:
                     parentNode = outputDict[pointedId]
                     if parentNode is node:
-                        print "WARNING: Found a cyclic dependence from node %s to itself, problably a bug. " % pointedId
+                        print("WARNING: Found a cyclic dependence from node %s "
+                              "to itself, problably a bug. " % pointedId)
                     else:
                         parentNode.addChild(node)
                         return True
@@ -1233,8 +1241,8 @@ class Project(object):
 
             # Duplicated ...
             if pObj is None:
-                print "WARNING: Relation seems to point to a deleted object. " \
-                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                print("WARNING: Relation seems to point to a deleted object. "
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID]))
                 continue
 
             pExt = rel['object_parent_extended']
@@ -1336,8 +1344,8 @@ class Project(object):
             pObj = self.getObject(rel[OBJECT_PARENT_ID])
 
             if pObj is None:
-                print "WARNING: Relation seems to point to a deleted object. " \
-                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID])
+                print("WARNING: Relation seems to point to a deleted object. " 
+                      "%s: %s" % (OBJECT_PARENT_ID, rel[OBJECT_PARENT_ID]))
                 continue
             pExt = rel['object_parent_extended']
             pp = pwobj.Pointer(pObj, extended=pExt)
@@ -1403,14 +1411,15 @@ class Project(object):
                         if not os.path.exists(f):
                             if not broken:
                                 broken = True
-                                print "Found broken links in run: ", pwutils.magenta(prot.getRunName())
-                            print "  Missing: ", pwutils.magenta(f)
+                                print("Found broken links in run: ",
+                                      pwutils.magenta(prot.getRunName()))
+                            print("  Missing: ", pwutils.magenta(f))
                             if os.path.islink(f):
-                                print "    -> ", pwutils.red(os.path.realpath(f))
+                                print("    -> ", pwutils.red(os.path.realpath(f)))
                             newFile = pwutils.findFile(os.path.basename(f), searchDir, recursive=True)
                             if newFile:
-                                print "  Found file %s, creating link..." % newFile
-                                print pwutils.green("   %s -> %s" % (f, newFile))
+                                print("  Found file %s, creating link..." % newFile)
+                                print(pwutils.green("   %s -> %s" % (f, newFile)))
                                 pwutils.createAbsLink(newFile, f)
 
 
