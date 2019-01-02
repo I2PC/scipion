@@ -473,16 +473,12 @@ class ProtocolTreeConfig:
         Locate the protocol position in the given view
         """
         for child in children:
-            if child['tag'] == cls.TAG_SECTION or child['tag'] == cls.TAG_PROTOCOL_GROUP:
-                sm = cls.__inSubMenu(child, subMenu)
-                if sm:
-                   cls.__findTreeLocation(sm.childs,
-                                           child['children'], sm)
-                else:
-                    cls.__addToTree(parent, child, cls.__checkItem)
+            sm = cls.__inSubMenu(child, subMenu)
+            if sm:
+               cls.__findTreeLocation(sm.childs,
+                                       child['children'], sm)
             else:
                 cls.__addToTree(parent, child, cls.__checkItem)
-
 
     @classmethod
     def __checkItem(cls, item):
@@ -551,9 +547,6 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
-        import time
-        time.sleep(5)
-        pluginRepo = PluginRepository()
         # Load the plugins locally
         pluginDict = pw.em.Domain.getPlugins()
         # Read menus from users' config file.
@@ -563,7 +556,6 @@ class ProtocolTreeConfig:
             protocols = OrderedDict()
             pluginList = pluginDict.keys()
             for pluginName in pluginList:
-
                 # Locate the plugin protocols.conf file
                 protocolsConfPath = os.path.join(pluginDict[pluginName].__path__[0],
                                                  cls.PLUGIN_CONFIG_PROTOCOLS)
@@ -589,7 +581,6 @@ class ProtocolTreeConfig:
                                                              menuName))
                                 cls.__findTreeLocation(menu.childs, children,
                                                        menu)
-
 
             cls.__addAllProtocols(protocols)
 
