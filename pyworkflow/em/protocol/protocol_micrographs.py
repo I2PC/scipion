@@ -1,8 +1,9 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez BLanco (josue.gomez-blanco@mcgill.ca)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *              Roberto Marabini (roberto@cnb.csic.es)
 # *              Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# *              Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -22,24 +23,23 @@
 # * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 # * 02111-1307  USA
 # *
-# *  All comments concerning this program package may be sent to the
+# *  All comments concerning this program package may be sent to theesti
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-from os.path import exists, dirname, join, getmtime
-import time
+from os.path import exists, dirname, join, getmtime, exists
 from datetime import datetime
 from collections import OrderedDict
 
 
-from pyworkflow.object import Set, Boolean, Pointer
+from pyworkflow.object import Set, Boolean
 from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
                                            STATUS_NEW)
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
-                                        BooleanParam, FileParam, LabelParam)
+                                        BooleanParam, FileParam)
 from pyworkflow.utils import redStr, yellowStr
-from pyworkflow.utils.path import copyTree, removeBaseExt, makePath, makeFilePath
+from pyworkflow.utils.path import copyTree, removeBaseExt, makePath, makeFilePath, cleanPath
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.utils import prettyTime
 from pyworkflow.em.protocol import EMProtocol
@@ -76,7 +76,8 @@ class ProtCTFMicrographs(ProtMicrographs):
                       label=Message.LABEL_INPUT_MIC,
                       pointerClass='SetOfMicrographs')
 
-        form.addParam('AutoDownsampling', BooleanParam, default = False, label = 'Automatic Downsampling Factor',
+        form.addParam('AutoDownsampling', BooleanParam, default = False,
+                      label = 'Automatic Downsampling Factor',
                       help = 'Recomended value to downsample')
 
         form.addParam('ctfDownFactor', FloatParam, default=1.,
@@ -144,7 +145,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if not self.recalculate:
             self.initialIds = self._insertInitialSteps()
             self.micDict = OrderedDict()
-            micDict, _ = self._loadInputList()
+            micDict, self.streamClosed = self._loadInputList()
             ctfIds = self._insertNewMicsSteps(micDict.values())
             self._insertFinalSteps(ctfIds)
             # For the streaming mode, the steps function have a 'wait' flag
@@ -169,6 +170,8 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ Override this function to insert some steps before the
         estimate ctfs steps.
         Should return a list of ids of the initial steps. """
+
+        makePath(self._getExtraPath('DONE'))
         return []
 
     def _insertNewMicsSteps(self, inputMics):
@@ -176,24 +179,11 @@ class ProtCTFMicrographs(ProtMicrographs):
         Params:
             inputMics: input mics set to be check
         """
-        deps = []
-        # For each mic insert the step to process it
-        for mic in inputMics:
-            micKey = mic.getMicName()
-            if micKey not in self.micDict:
-                args = [mic.getFileName(), self._getMicrographDir(mic), micKey]
-                stepId = self._insertEstimationSteps(self.initialIds, *args)
-                deps.append(stepId)
-                self.micDict[micKey] = mic
-        return deps
-
-    def _insertEstimationSteps(self, prerequisites, *args):
-        """ Basic method to insert a estimateCTF step for a given micrograph."""
-        self._defineValues()
-        self._prepareCommand()
-        micStepId = self._insertFunctionStep('_estimateCTF', *args,
-                                             prerequisites=prerequisites)
-        return micStepId
+        return self._insertNewMics(inputMics,
+                                   lambda mic: mic.getMicName(),
+                                   self._insertCtfStep,
+                                   self._insertCtfListStep,
+                                   *self._getCtfArgs())
 
     def _insertRecalculateSteps(self):
         recalDeps = []
@@ -204,12 +194,12 @@ class ProtCTFMicrographs(ProtMicrographs):
             line = ctf.getObjComment()
             if ctf.isEnabled() and line:
                 # CTF Re-estimation
-                copyId = self._insertFunctionStep('copyMicDirectoryStep',
-                                                  ctf.getObjId())
+                #copyId = self._insertFunctionStep('copyCtfFilesStep',
+                #                                  ctf.getObjId())
                 # Make estimation steps independent between them
                 stepId = self._insertFunctionStep('_restimateCTF',
                                                   ctf.getObjId(),
-                                                  prerequisites=[copyId])
+                                                  prerequisites=[])
                 recalDeps.append(stepId)
         return recalDeps
 
@@ -218,9 +208,9 @@ class ProtCTFMicrographs(ProtMicrographs):
         return deps
 
     def _getFirstJoinStepName(self):
-        # This function will be used for streamming, to check which is
+        # This function will be used for streaming, to check which is
         # the first function that need to wait for all micrographs
-        # to have completed, this can be overriden in subclasses
+        # to have completed, this can be overwritten in subclasses
         # (e.g., in Xmipp 'sortPSDStep')
         return 'createOutputStep'
 
@@ -230,8 +220,41 @@ class ProtCTFMicrographs(ProtMicrographs):
                 return s
         return None
 
-    #--------------------------- STEPS functions -------------------------------
-    def _estimateCTF(self, micFn, micDir, micName):
+    # -------------------------- STEPS functions ------------------------------
+    def _insertCtfStep(self, mic, prerequisites, *args):
+        """ Basic method to insert an estimation step for a given micrograph. """
+        micStepId = self._insertFunctionStep('estimateCtfStep',
+                                             mic.getMicName(), *args,
+                                             prerequisites=prerequisites)
+        return micStepId
+
+    def estimateCtfStep(self, micName, *args):
+        """ Step function that will be common for all CTF protocols.
+        It will take care of re-building the micrograph object from the micDict
+        argument and perform any conversion if needed. Then, the function
+        _estimateCTF will be called, that should be implemented by each
+        CTF estimation protocol.
+        """
+        mic = self.micDict[micName]
+        micDoneFn = self._getMicrographDone(mic)
+        micFn = mic.getFileName()
+
+        if self.isContinued() and self._isMicDone(mic):
+            self.info("Skipping micrograph: %s, seems to be done" % micFn)
+            return
+
+        # Clean old finished files
+        cleanPath(micDoneFn)
+
+        self.info("Estimating CTF of micrograph: %s " % mic.getObjId())
+        self._defineValues()
+        self._prepareCommand()
+        self._estimateCTF(mic, *args)
+
+        # Mark this mic as finished
+        open(micDoneFn, 'w').close()
+
+    def _estimateCTF(self, mic, *args):
         """ Do the CTF estimation with the specific program
         and the parameters required.
         Params:
@@ -249,19 +272,62 @@ class ProtCTFMicrographs(ProtMicrographs):
         """
         raise Exception(Message.ERROR_NO_EST_CTF)
 
-    def copyMicDirectoryStep(self, micId):
-        """ Copy micrograph's directory tree for recalculation"""
+    # Group of functions to estimate several micrographs if the batch size is
+    # defined. In some programs it might be more efficient to estimate many
+    # at once and not one by one
+
+    def _insertCtfListStep(self, micList, prerequisites, *args):
+        """ Basic method to insert an estimation step for a given micrograph. """
+        micNameList = [mic.getMicName() for mic in micList]
+        micStepId = self._insertFunctionStep('estimateCtfListStep',
+                                             micNameList, *args,
+                                             prerequisites=prerequisites)
+        return micStepId
+
+    def estimateCtfListStep(self, micNameList, *args):
+        micList = []
+
+        for micName in micNameList:
+            mic = self.micDict[micName]
+            micDoneFn = self._getMicrographDone(mic)
+            if self.isContinued() and self._isMicDone(mic):
+                self.info("Skipping micrograph: %s, seems to be done"
+                          % mic.getFileName())
+            else:
+                # Clean old finished files
+                cleanPath(micDoneFn)
+                micList.append(mic)
+
+        self.info("Estimating CTF for micrographs: %s"
+                  % [mic.getObjId() for mic in micList])
+        self._defineValues()
+        self._prepareCommand()
+        self._estimateCtfList(micList, *args)
+
+        for mic in micList:
+             # Mark this mic as finished
+             open(self._getMicrographDone(mic), 'w').close()
+
+    def _estimateCtfList(self, micList, *args):
+        """ This function can be implemented by subclasses if it is a more
+        efficient way to estimate many micrographs at once.
+         Default implementation will just call the _estimateCTF. """
+        for mic in micList:
+            self._estimateCTF(mic, *args)
+
+    def copyCtfFilesStep(self, micId):
+        """ Copy CTF files for recalculation"""
         ctfModel = self.recalculateSet[micId]
         mic = ctfModel.getMicrograph()
 
-        prevDir = self._getPrevMicDir(ctfModel)
-        micDir = self._getMicrographDir(mic)
-        if not prevDir == micDir:
-            # Create micrograph dir under extra directory
-            makePath(micDir)
-            if not exists(micDir):
-                raise Exception("No created dir: %s " % micDir)
-            copyTree(prevDir, micDir)
+        # prevDir = self._getPrevMicDir(ctfModel)
+        # micDir = self._getMicrographDir(mic)
+        # if not prevDir == micDir:
+        #     # Create micrograph dir under extra directory
+        #     makePath(micDir)
+        #     if not exists(micDir):
+        #         raise Exception("No created dir: %s " % micDir)
+        #     copyTree(prevDir, micDir)
 
     def _createCtfModel(self, mic):
         """ This should be implemented in subclasses
@@ -311,7 +377,7 @@ class ProtCTFMicrographs(ProtMicrographs):
 
 
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _summary(self):
         summary = []
 
@@ -340,7 +406,7 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         return methods
 
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _defineValues(self):
         """ This function get some parameters of the micrographs"""
         # Get pointer to input micrographs
@@ -355,7 +421,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                         'windowSize': self.windowSize.get(),
                         'lowRes': self.lowRes.get(),
                         'highRes': self.highRes.get(),
-                        # Convert from microns to Amstrongs
+                        # Convert from microns to Angstroms
                         'minDefocus': self.minDefocus.get() * 1e+4,
                         'maxDefocus': self.maxDefocus.get() * 1e+4
                         }
@@ -375,9 +441,6 @@ class ProtCTFMicrographs(ProtMicrographs):
                         'samplingRate': mic.getSamplingRate()
                         }
 
-    def _getPrevMicDir(self, ctfModel):
-        return dirname(ctfModel.getPsdFile())
-
     def _ctfCounter(self, values):
         """ This function return the number of CTFs that was recalculated.
         """
@@ -392,34 +455,21 @@ class ProtCTFMicrographs(ProtMicrographs):
         else:
             return self.inputCtf.get()
 
-    def _getMicrographDir(self, mic):
-        """ Return an unique dir name for results of the micrograph. """
-        return self._getExtraPath(removeBaseExt(mic.getFileName()))
-
-    def _getMicrographDone(self, micDir):
-        """ Return the file that is used as a flag of termination. """
-        return join(micDir, 'done.txt')
-
-    def _writeMicrographDone(self, micDir):
-        open(self._getMicrographDone(micDir), 'w').close()
-
     def _iterMicrographs(self, inputMics=None):
         """ Iterate over micrographs and yield
-        micrograph name and a directory to process.
-        """
+        micrograph name. """
         if inputMics is None:
             inputMics = self.inputMics
 
         for mic in inputMics:
             micFn = mic.getFileName()
-            micDir = self._getMicrographDir(mic)
-            yield (micFn, micDir, mic)
+            yield (micFn, mic)
 
     def _prepareCommand(self):
         """ This function should be implemented to prepare the
         arguments template if doesn't change for each micrograph
         After this method self._program and self._args should be set. 
-        """
+    """
         pass
 
     def _computeDefocusRange(self, ctfSet):
@@ -455,10 +505,16 @@ class ProtCTFMicrographs(ProtMicrographs):
     def getInputMicrographs(self):
         return self.getInputMicrographsPointer().get()
 
-    # ------ Methods for Streaming picking --------------
+    def _getCtfArgs(self):
+        """ Should be implemented in sub-classes to define the argument
+        list that should be passed to the estimation step function.
+        """
+        return []
+
+    # ------ Methods for Streaming CTF --------------
     def _stepsCheck(self):
         # To allow streaming ctf estimation we need to detect:
-        #   1) new micrographs ready to be picked
+        #   1) new micrographs ready to be estimated
         #   2) new output ctfs that have been produced and add then
         #      to the output set.
     
@@ -546,14 +602,14 @@ class ProtCTFMicrographs(ProtMicrographs):
                 outputStep.setStatus(STATUS_NEW)
 
     def _loadInputList(self):
-        """ Load the input set of micrographs that are ready to be picked. """
+        """ Load the input set of micrographs that are ready to be estimated. """
         return self._loadSet(self.getInputMicrographs(), SetOfMicrographs,
                         lambda mic: mic.getMicName())
         
     def _loadSet(self, inputSet, SetClass, getKeyFunc):
         """ Load a given input set if their items are not already present
         in the self.micDict.
-        This can be used to load new micrographs for picking as well as
+        This can be used to load new micrographs for estimation as well as
         new CTF (if used) in streaming.
         """
         setFn = inputSet.getFileName()
@@ -591,22 +647,20 @@ class ProtCTFMicrographs(ProtMicrographs):
         else:
             outputCtf.enableAppend()
 
-
-
-        for micFn, micDir, mic in self._iterMicrographs(micList):
+        for micFn, mic in self._iterMicrographs(micList):
             try:
                 ctf = self._createCtfModel(mic)
                 outputCtf.append(ctf)
             except:
-                print(yellowStr("Missing CTF?: Couldn't update CTF set with %s" % micFn))
+                print(yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCtf, streamMode)
 
-        if firstTime:  # define relation just once
+        if firstTime:  # define relation just onceget
             # Using a pointer to define the relations is more robust to
             # scheduling and id changes between the protocol run.db and
-            # the main project database.
+            # the main project database.get
             self._defineCtfRelation(self.getInputMicrographsPointer(),
                                     outputCtf)
 
@@ -616,14 +670,13 @@ class ProtCTFMicrographs(ProtMicrographs):
         outputName = 'outputCTF'
         outputCtf = getattr(self, outputName, None)
 
-        # If there are not outputCoordinates yet, it means that is the first
-        # time we are updating output coordinates, so we need to first create
+        # If there are not outputCTFs yet, it means that is the first
+        # time we are updating output CTF, so we need to first create
         # the output set
         firstTime = outputCtf is None
 
         if firstTime:
-            micSetPtr = self.getInputMicrographsPointer()
-            outputCtf = self._createSetOfCoordinates(micSetPtr)
+            outputCtf = self._createSetOfCTF()
         else:
             outputCtf.enableAppend()
 
@@ -653,11 +706,18 @@ class ProtCTFMicrographs(ProtMicrographs):
 
     def _isMicDone(self, mic):
         """ A mic is done if the marker file exists. """
-        micDir = self._getMicrographDir(mic)
-        return exists(self._getMicrographDone(micDir))
+        return exists(self._getMicrographDone(mic))
 
     def _getAllDone(self):
         return self._getExtraPath('DONE', 'all.TXT')
+
+    def _getMicrographDir(self, mic):
+        """ Return an unique dir name for results of the micrograph. """
+        return self._getTmpPath('mic_%04d' % mic.getObjId())
+
+    def _getMicrographDone(self, mic):
+        """ Return the file that is used as a flag of termination. """
+        return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())
 
 
 class ProtPreprocessMicrographs(ProtMicrographs):

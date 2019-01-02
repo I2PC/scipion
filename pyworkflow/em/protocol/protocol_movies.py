@@ -480,7 +480,6 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
     """ Assign a gain image to a set of movies
     """
     _label = 'assign gain to movies'
-    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)

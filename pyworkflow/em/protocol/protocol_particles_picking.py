@@ -285,7 +285,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     def _pickMicrographList(self, micList, *args):
         """ This function can be implemented by subclasses if it is a more
-        effcient way to pick many micrographs at once.
+        efficient way to pick many micrographs at once.
          Default implementation will just call the _pickMicrograph
         """
         for mic in micList:
