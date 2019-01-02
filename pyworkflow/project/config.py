@@ -475,9 +475,8 @@ class ProtocolTreeConfig:
         for child in children:
             sm = cls.__inSubMenu(child, subMenu)
             if sm:
-               cls.__findTreeLocation(sm.childs,
-                                       child['children'], sm)
-            else:
+                cls.__findTreeLocation(sm.childs, child['children'], sm)
+            elif sm is None:
                 cls.__addToTree(parent, child, cls.__checkItem)
 
     @classmethod
@@ -547,6 +546,8 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
+        import time
+        time.sleep(5)
         # Load the plugins locally
         pluginDict = pw.em.Domain.getPlugins()
         # Read menus from users' config file.
