@@ -26,6 +26,7 @@
 # **************************************************************************
 
 import sys
+import os
 import json
 import datetime as dt
 from collections import OrderedDict
@@ -34,6 +35,7 @@ from ConfigParser import ConfigParser  # FIXME Does not work in Python3
 import pyworkflow as pw
 import pyworkflow.object as pwobj
 from pyworkflow.mapper import SqliteMapper
+from pyworkflow.install.plugin_funcs import PluginRepository, PluginInfo
 from pyworkflow.utils.properties import Icon
 
 
@@ -417,6 +419,9 @@ class ProtocolTreeConfig:
     ALL_PROTOCOLS = "All"
     TAG_PROTOCOL_DISABLED = 'protocol-disabled'
     TAG_PROTOCOL = 'protocol'
+    TAG_SECTION = 'section'
+    TAG_PROTOCOL_GROUP = 'protocol_group'
+    PLUGIN_CONFIG_PROTOCOLS = 'protocols.conf'
 
     @classmethod
     def getProtocolTag(cls, isInstalled):
@@ -453,6 +458,22 @@ class ProtocolTreeConfig:
         return subMenu
 
     @classmethod
+    def __findTreeLocation(cls, subMenu, children):
+        """
+        Locate the protocol position in the given view
+        """
+        if children['tag'] == cls.TAG_PROTOCOL or not subMenu.childs:
+            return subMenu, children
+        else:
+            for child in subMenu.childs:
+                if child.tag == cls.TAG_SECTION or child.tag == cls.TAG_PROTOCOL_GROUP:
+                    if child.text == children['text']:
+                        return cls.__findTreeLocation(child,
+                                                children['children'][0])
+
+            return subMenu, children
+
+    @classmethod
     def __checkItem(cls, item):
         """ Function to check if the protocol has to be added or not.
         Params:
@@ -467,7 +488,7 @@ class ProtocolTreeConfig:
         protClassName = item["value"]
         protClass = pw.em.Domain.getProtocols().get(protClassName)
 
-        return False if protClass is None else protClass.isDisabled()
+        return False if protClass is None else not protClass.isDisabled()
 
     @classmethod
     def __addAllProtocols(cls, protocols):
@@ -519,20 +540,55 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
+        pluginRepo = PluginRepository()
+        # FIXME Load the plugins with em.Domain.
+        # Load the plugins locally
+        pluginDict = pluginRepo.getPlugins(getPipData=False)
+
         # Read menus from users' config file.
         cp = ConfigParser()
         cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-        protocols = OrderedDict()
 
         try:
-            assert cp.read(protocolsConf) != [], 'Missing file %s' % protocolsConf
-            # Populate the protocols menu from the config file.
-            for menuName in cp.options('PROTOCOLS'):
-                menu = pw.project.ProtocolConfig(menuName)
-                children = json.loads(cp.get('PROTOCOLS', menuName))
-                for child in children:
-                    cls.__addToTree(menu, child, cls.__checkItem)
-                protocols[menuName] = menu
+            protocols = OrderedDict()
+            pluginList = pluginDict.keys()
+            for pluginName in pluginList:
+                plugin = PluginInfo(pluginName, pluginName,
+                                    remote=False)
+                if plugin.isInstalled():
+                    # Locate the plugin protocols.conf file
+                    pluginDirName = plugin.getDirName()
+                    pluginFolderPath = plugin._getDistribution().location
+                    protocolsConfPath = os.path.join(pluginFolderPath,
+                                                     pluginDirName,
+                                                     cls.PLUGIN_CONFIG_PROTOCOLS)
+
+                    # Populate the protocols menu from the plugin config file.
+                    if os.path.exists(protocolsConfPath):
+                        # Read menus from users' config file.
+                        cp = ConfigParser()
+                        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+                        cp.read(protocolsConfPath)
+                        #  Ensure that the protocols section exists
+                        if cp.has_section('PROTOCOLS'):
+                            for menuName in cp.options('PROTOCOLS'):
+                                if menuName not in protocols:  # The view has not been inserted
+                                    menu = ProtocolConfig(menuName)
+                                    children = json.loads(cp.get('PROTOCOLS',
+                                                                 menuName))
+                                    for child in children:
+                                        cls.__addToTree(menu, child, cls.__checkItem)
+                                    protocols[menuName] = menu
+                                else:  # The view has been inserted
+                                    menu = protocols.get(menuName)
+                                    children = json.loads(cp.get('PROTOCOLS',
+                                                                 menuName))
+                                    for child in children:
+                                        treeLocation = cls.__findTreeLocation(menu,
+                                                                        child)
+                                        cls.__addToTree(treeLocation[0],
+                                                        treeLocation[1],
+                                                        cls.__checkItem)
 
             cls.__addAllProtocols(protocols)
 
