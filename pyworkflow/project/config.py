@@ -546,8 +546,6 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
-        import time
-        time.sleep(5)
         # Load the plugins locally
         pluginDict = pw.em.Domain.getPlugins()
         # Read menus from users' config file.
