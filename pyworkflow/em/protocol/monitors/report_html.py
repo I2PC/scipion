@@ -310,6 +310,35 @@ class ReportHtml:
         zipped.append((aboveThresh, "> %0.2f" % (maxDefocus)))
 
         return zipped
+    def getTimeSeries(self, data):
+        from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import \
+            PHASE_SHIFT, TIME_STAMP, DEFOCUS_U, RESOLUTION
+        # Get timeStamp
+        ts = data[TIME_STAMP]
+
+        timeSeries = dict()
+
+        # Get phaseShift
+        phaseShiftSerie = data[PHASE_SHIFT]
+        phaseShiftSerie = zip(ts, phaseShiftSerie)
+        # Add it to the series
+        timeSeries[PHASE_SHIFT]= phaseShiftSerie
+
+        # Get defocusU
+        defocusSerie = data[DEFOCUS_U]
+        defocusSerie = zip(ts, defocusSerie)
+        # Add it to the series
+        timeSeries[DEFOCUS_U] = defocusSerie
+
+        # Get Resolution
+        resSerie = data[RESOLUTION]
+        resSerie = zip(ts, resSerie)
+        # Add it to the series
+        timeSeries[RESOLUTION] = resSerie
+
+        return timeSeries
+
+
 
     def getResolutionHistogram(self, resolutionValues):
         if len(resolutionValues) == 0:
@@ -373,6 +402,8 @@ class ReportHtml:
                 data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
 
             data['resolutionHistogram'] = self.getResolutionHistogram(data['resolution'])
+
+            data['timeSeries'] = self.getTimeSeries(data)
 
         else:
             # Thumbnails for Micrograph Table

@@ -252,12 +252,16 @@
             </DIV>
 
             <SECTION id="ctf">
-                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>CTF monitor</H2>
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>CTF histograms</H2>
                 <div class="row sectionContent" id="ctfHistograms">
                     <!--<DIV id="ctfChart" class="column column-7"></DIV>-->
                     <DIV id="resolutionHistogram" class="column column-6"></DIV>
                     <DIV id="defocusHistogram" class="column column-6"></DIV>
                 </div>
+            </SECTION>
+            <SECTION id="timeSeries">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>CTF Time Series</H2>
+                <DIV id="timeSeriesChart" class="sectionContent"></DIV>
             </SECTION>
             <SECTION id="movieGain">
                 <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>Movie gain monitor</H2>
@@ -596,6 +600,83 @@
 
             return systemSeries;
         }
+        function getTimeSeriesYAxis(){
+            return [{ // Defocus Axis Default
+                labels: {
+                    format: '{value} (\u00B5m)'
+                },
+                title: {
+                    text: 'Defocus'}
+
+            }, { // Phase Shift Axis
+                gridLineWidth: 0,
+                title: {
+                    text: 'Phase Shift (°)'
+                },
+                labels: {
+                    format: '{value}°'
+                },
+                opposite: true
+            }, { // resolution
+                gridLineWidth: 0,
+                title: {
+                    text: 'Resolution (Å)'
+                },
+                labels: {
+                    format: '{value} Å'
+                },
+                ceiling: 20,
+                opposite: true
+            }];
+        }
+        function getTimeSeries() {
+
+            var series = [];
+
+            // define defocus serie
+            var defocusSerie = {
+                name: "Defocus U",
+                data: report.ctfData.timeSeries.defocusU,
+                tooltip: {
+                    valueDecimals: 0,
+                    valueSuffix: ' \u00B5m'
+                }
+            };
+
+            series.push(defocusSerie);
+
+            // define resolution serie
+            var resSerie = {
+                name: "Resolution",
+                yAxis: 2,
+                data: report.ctfData.timeSeries.resolution,
+                tooltip: {
+                    valueDecimals: 2,
+                    valueSuffix: ' Å'
+                }
+            };
+
+            series.push(resSerie);
+
+            // define phaseShift serie
+            if (report.ctfData.timeSeries['phaseShift'] !=undefined){
+
+                var phsSerie = {
+                    name: "Phase Shift",
+                    yAxis: 1,
+                    data: report.ctfData.timeSeries.phaseShift,
+                    tooltip: {
+                        valueDecimals: 0,
+                        valueSuffix: ' °'
+                    }
+                };
+
+                series.push(phsSerie);
+            }
+
+
+            return series;
+        }
 
         function getSeriesYAxis(name, yAxes){
             var mbKeys = /send|recv|read|write|gpuMem/;
@@ -737,6 +818,42 @@
             return yAxis
         }
 
+        function addTimeSeries () {
+
+            Highcharts.chart('timeSeriesChart', {
+                chart: {
+                    type: 'spline',
+                    zoomType: 'x'
+                },
+                title: {
+                    text: 'CTF values over time'
+                },
+                subtitle: {
+                    text: document.ontouchstart === undefined ?
+                            'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+                },
+                xAxis: {
+                    type: 'datetime'
+                },
+                yAxis: getTimeSeriesYAxis(),
+                legend: {
+                    layout: 'horizontal',
+                    verticalAlign: 'bottom',
+                    horizontalAlign: 'center',
+                    borderWidth: 0
+                },
+                plotOptions: {
+                    spline: {
+                        marker: {
+                            enabled: true
+                        },
+                        lineWidth: 0
+                    }
+                },
+                series: getTimeSeries()
+            });
+
+        }
         function addSystemChart () {
 
             if (report.systemData.length == 0) {
@@ -831,13 +948,11 @@
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "Defocus ratio",
                             "render": $.fn.dataTable.render.number( ',', '.', 3)},
-                          {"title": "Phase shift",
+                          {"title": "Phase shift (°)",
                             "render": $.fn.dataTable.render.number( ',', '.', 1)});
 
             }
-            var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
             var imgLoadingIcon = '<span class="glyphicon glyphicon-hourglass" title="Loading thumbnail..."></span>';
-            var imgWidth = Math.floor($('#content').width() * 0.2);
             var imgPathKeys = ['imgMicThumbs', 'imgShiftThumbs', 'imgPsdThumbs'];
 
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
@@ -903,6 +1018,7 @@
             addCTFChart();
             addMovieGainChart();
             addSystemChart();
+            addTimeSeries();
             addMicTable();
         };
 

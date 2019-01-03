@@ -37,7 +37,10 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
 
-
+PHASE_SHIFT = 'phaseShift'
+TIME_STAMP = 'timeStamp'
+DEFOCUS_U = 'defocusU'
+RESOLUTION = 'resolution'
 CTF_LOG_SQLITE = 'ctf_log.sqlite'
 
 
@@ -190,19 +193,19 @@ class MonitorCTF(Monitor):
                 defocusAngle = 180. - defocusAngle
                 print("ERROR: defocusU should be greater than defocusV")
 
+            ctfCreationTime = ctf.getObjCreation()
+
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-#            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
-#                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
-#                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
-            sql = """INSERT INTO %s(ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, phaseShift, micPath,psdPath,shiftPlotPath )
-                     VALUES(%d,%f,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfID, defocusU,
+            sql = """INSERT INTO %s(timestamp, ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, phaseShift, micPath,psdPath,shiftPlotPath )
+                     VALUES("%s",%d,%f,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfCreationTime, ctfID, defocusU,
                      defocusV, astig, defocusU / defocusV, resolution, fitQuality, phaseShift,  micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
                 print("ERROR: saving one data point (CTF monitor). I continue")
-                print e
+                print(e)
+                print(sql)
 
             if abs(defocusU - defocusV) > astigmatism:
                 self.warning("Astigmatism (defocusU - defocusV)  = %f."
@@ -250,17 +253,18 @@ class MonitorCTF(Monitor):
             return [r[0] for r in self.cur.fetchall()]
 
         data = {
-            'defocusU': get('defocusU'),
+            DEFOCUS_U: get('defocusU'),
             'defocusV': get('defocusV'),
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
             'idValues': get('ctfID'),
-            'resolution': get('resolution'),
+            RESOLUTION: get('resolution'),
             'fitQuality': get('fitQuality'),
-            'phaseShift': get('phaseShift'),
+            PHASE_SHIFT: get('phaseShift'),
             'imgMicPath': get('micPath'),
             'imgPsdPath': get('psdPath'),
-            'imgShiftPath': get('shiftPlotPath')
+            'imgShiftPath': get('shiftPlotPath'),
+            TIME_STAMP: get("strftime('%s', timestamp) * 1000")
          }
         # conn.close()
         return data
