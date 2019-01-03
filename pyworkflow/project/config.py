@@ -573,8 +573,6 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
-        import time
-        time.sleep(5)
         try:
             protocols = OrderedDict()
             # Read the protocols.conf from Scipion (base) and create an initial
