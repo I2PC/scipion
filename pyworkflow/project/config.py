@@ -461,7 +461,10 @@ class ProtocolTreeConfig:
         Return True if child belongs to subMenu
         """
         for ch in subMenu:
-            if child['text'] == ch.text:
+            if child['tag'] == cls.TAG_PROTOCOL:
+                if ch.value == child['value']:
+                    return ch
+            elif ch.text == child['text']:
                 return ch
         return None
 
@@ -472,10 +475,10 @@ class ProtocolTreeConfig:
         """
         for child in children:
             sm = cls.__inSubMenu(child, subMenu)
-            if sm:
-                cls.__findTreeLocation(sm.childs, child['children'], sm)
-            elif sm is None:
+            if sm is None:
                 cls.__addToTree(parent, child, cls.__checkItem)
+            elif child['tag'] == cls.TAG_PROTOCOL_GROUP or child['tag'] == cls.TAG_SECTION:
+                cls.__findTreeLocation(sm.childs, child['children'], sm)
 
     @classmethod
     def __checkItem(cls, item):
@@ -570,6 +573,8 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
+        import time
+        time.sleep(5)
         try:
             protocols = OrderedDict()
             # Read the protocols.conf from Scipion (base) and create an initial
