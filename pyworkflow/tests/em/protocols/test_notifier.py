@@ -24,7 +24,6 @@ import time
 import urllib2
 import json
 
-import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtStress
 
@@ -63,20 +62,20 @@ class TestNotifier(BaseTest):
         kwargs = {'noCpu': 2,
                   'noMem': 0,
                   'amountMem': 8,
-                  'timeout':3,
-                  'delay':1
+                  'timeout': 3,
+                  'delay': 1
                   }
         # Create and execute protocol stress
         prot1 = self.newProtocol(ProtStress, **kwargs)
         prot1.setObjLabel('stress')
-        self.proj.launchProtocol(prot1, wait=True) 
+        self.proj.launchProtocol(prot1, wait=True)
 
         # We want to test this class: ProjectNotifier
         projectNotifier = pws.ProjectWorkflowNotifier(self.proj)
         # Remove uuid and data files (so we start always in the same conditions)
-        uuidFn=projectNotifier._getUuidFileName()
+        uuidFn = projectNotifier._getUuidFileName()
         os.remove(uuidFn) if os.path.exists(uuidFn) else None
-        dataFn=projectNotifier._getDataFileName()
+        dataFn = projectNotifier._getDataFileName()
         os.remove(dataFn) if os.path.exists(dataFn) else None
 
         # Store workflow  in database
@@ -91,13 +90,13 @@ class TestNotifier(BaseTest):
         results = json.loads(urllib2.urlopen(urlWork).read())
 
         objects = results["objects"]
-        if  (len(objects)!=0):
+        if (len(objects) != 0):
             objects = results["objects"][0]
             project_workflowRemote = objects["project_workflow"]
         else:
             project_workflowRemote = ""
         # Get protocol list local
-        project_workflowLocal  = self.proj.getProtocolsJson(namesOnly=True)
+        project_workflowLocal = self.proj.getProtocolsJson(namesOnly=True)
         # Test that stored protocol and local one are identical
         self.assertEqual(project_workflowLocal, project_workflowRemote)
 
@@ -105,8 +104,8 @@ class TestNotifier(BaseTest):
         # has increased in 1
         urlProt = self._getUrl()
         urlProt = urlProt.replace("workflow/workflow/",
-                          "workflow/protocol/?name=ProtStress")
-        time.sleep(5)# notifier runs in a thread so wait a bit
+                                  "workflow/protocol/?name=ProtStress")
+        time.sleep(5)  # notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
         objects = results["objects"]
         if len(objects) != 0:
@@ -114,20 +113,20 @@ class TestNotifier(BaseTest):
             times_protocolRemote_2 = objects["timesUsed"]
         else:
             times_protocolRemote_2 = 0
-        self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
 
         # Try to resend the project, as we have a 30 sec time this should
         # not go through number times should not change
         projectNotifier.notifyWorkflow()
-        time.sleep(5)# notifier runs in a thread so wait a bit
+        time.sleep(5)  # notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
         objects = results["objects"]
-        if  (len(objects)!=0):
+        if len(objects) != 0:
             objects = results["objects"][0]
             times_protocolRemote_2 = objects["timesUsed"]
         else:
             times_protocolRemote_2 = 0
-        self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
 
         # Try to resend project, as no modification has been made number of
         # times should not change
@@ -136,12 +135,12 @@ class TestNotifier(BaseTest):
         time.sleep(5)  # notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
         objects = results["objects"]
-        if  (len(objects)!=0):
+        if (len(objects) != 0):
             objects = results["objects"][0]
             times_protocolRemote_2 = objects["timesUsed"]
         else:
             times_protocolRemote_2 = 0
-        self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
 
         # Add new protocol and resend
         prot2 = self.newProtocol(ProtStress, **kwargs)
@@ -151,10 +150,10 @@ class TestNotifier(BaseTest):
         time.sleep(5)  # notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
         objects = results["objects"]
-        if  len(objects) != 0:
+        if len(objects) != 0:
             objects = results["objects"][0]
             times_protocolRemote_2 = objects["timesUsed"]
         else:
             times_protocolRemote_2 = 0
 
-        self.assertEqual(times_protocolRemote_2, times_protocolRemote +2)
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
