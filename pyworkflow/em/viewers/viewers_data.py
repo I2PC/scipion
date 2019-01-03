@@ -214,7 +214,7 @@ class DataViewer(pwviewer.Viewer):
             movs = obj.outputMovies
             self._visualize(movs)
             gainFn = movs.getGain()
-            if gainFn is not None and os.path.exists(gainFn):
+            if gainFn is not None:
                 if os.path.exists(gainFn):
                     self._views.append(views.DataView(gainFn))
 
