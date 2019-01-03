@@ -26,6 +26,7 @@
 #
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
+from collections import Counter
 
 import numpy
 
@@ -394,6 +395,87 @@ class TestAtomicStructHandler(unittest.TestCase):
         self.assertTrue(os.path.exists(fileName))
 
         os.unlink(fileName)
+
+    def testFunctionAddStructNoNewModel(self):
+        """ add two atomic structures with overlaping chain ids"""
+        pdbID1 = '1P30'  # A
+        pdbID2 = '1CJD'  # A, B, C
+        outFile = "/tmp/nomodel.cif"  # A, A002, B, C
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        #
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = ['A', 'A002', 'B', 'C']
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+
+        atomsNumT = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        self.assertEqual(atomsNum1 + atomsNum2, atomsNumT)
+        os.unlink(fileName1)
+        os.unlink(fileName2)
+        os.unlink(outFile)
+
+    def testFunctionAddStructNoNewModelAddTwice(self):
+        """ add two atomic structures with overlaping chain ids, last atomic
+        structure is added two times"""
+        pdbID1 = '1P30'  # A,
+        pdbID2 = '1CJD'  # A, B, C
+        outFile = "/tmp/nomodel.cif"  # A, A002, B, C, A003, B002, C002
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        #
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = ['A', 'A002', 'B', 'C', 'A003', 'B002', 'C002']
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+
+        atomsNumT = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        self.assertEqual(atomsNum1 + atomsNum2 + atomsNum2, atomsNumT)
+        os.unlink(fileName1)
+        os.unlink(fileName2)
+        os.unlink(outFile)
+
+    def testFunctionAddStructNewModel(self):
+        pdbID1 = '1P30'  # A,B,C
+        pdbID2 = '1CJD'  # A
+        outFile = "/tmp/model.cif"
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        #
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=True)
+        #
+        #aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = ['A', 'A', 'B', 'C']
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+        atomsNumT = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        self.assertEqual(atomsNum1 + atomsNum2, atomsNumT)
+
+        os.unlink(fileName1)
+        os.unlink(fileName2)
+        os.unlink(outFile)
 
     @classmethod
     def tearDownClass(cls):
