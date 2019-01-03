@@ -35,8 +35,6 @@ from ConfigParser import ConfigParser  # FIXME Does not work in Python3
 import pyworkflow as pw
 import pyworkflow.object as pwobj
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.install.plugin_funcs import PluginRepository, PluginInfo
-from pyworkflow.utils.properties import Icon
 
 
 class ProjectSettings(pwobj.OrderedObject):
