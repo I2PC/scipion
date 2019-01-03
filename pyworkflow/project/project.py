@@ -251,7 +251,6 @@ class Project(object):
 
                 if os.path.exists(settingsPath):
                     self.settings = config.ProjectSettings.load(settingsPath)
-                    self.settings.printAll()
                 else:
                     print("settings is None")
                     self.settings = None

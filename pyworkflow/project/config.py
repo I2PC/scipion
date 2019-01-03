@@ -539,23 +539,22 @@ class ProtocolTreeConfig:
         protocols[cls.ALL_PROTOCOLS] = allProtMenu
 
     @classmethod
-    def __addPluginProtocols(cls, protocols, pluginProtocolsConfPath):
+    def __addProtocolsFromConf(cls, protocols, protocolsConfPath):
         """
-        Load the protocols of a given plugin .conf file
+        Load the protocols in the tree from a given protocols.conf file,
+        either the global one in Scipion or defined in a plugin.
         """
         # Populate the protocols menu from the plugin config file.
-        if os.path.exists(pluginProtocolsConfPath):
-            # Read menus from users' config file.
+        if os.path.exists(protocolsConfPath):
             cp = ConfigParser()
-            cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-            cp.read(pluginProtocolsConfPath)
+            cp.optionxform = str  # keep case
+            cp.read(protocolsConfPath)
             #  Ensure that the protocols section exists
             if cp.has_section('PROTOCOLS'):
                 for menuName in cp.options('PROTOCOLS'):
                     if menuName not in protocols:  # The view has not been inserted
                         menu = ProtocolConfig(menuName)
-                        children = json.loads(cp.get('PROTOCOLS',
-                                                     menuName))
+                        children = json.loads(cp.get('PROTOCOLS', menuName))
                         for child in children:
                             cls.__addToTree(menu, child, cls.__checkItem)
                         protocols[menuName] = menu
@@ -563,8 +562,7 @@ class ProtocolTreeConfig:
                         menu = protocols.get(menuName)
                         children = json.loads(cp.get('PROTOCOLS',
                                                      menuName))
-                        cls.__findTreeLocation(menu.childs, children,
-                                               menu)
+                        cls.__findTreeLocation(menu.childs, children, menu)
 
     @classmethod
     def load(cls, protocolsConf):
@@ -576,7 +574,7 @@ class ProtocolTreeConfig:
             protocols = OrderedDict()
             # Read the protocols.conf from Scipion (base) and create an initial
             # tree view
-            cls.__addPluginProtocols(protocols, protocolsConf[0])
+            cls.__addProtocolsFromConf(protocols, protocolsConf[0])
 
             # Read the protocols.conf of any installed plugin
             pluginDict = pw.em.Domain.getPlugins()
@@ -585,7 +583,7 @@ class ProtocolTreeConfig:
                 # Locate the plugin protocols.conf file
                 protocolsConfPath = os.path.join(pluginDict[pluginName].__path__[0],
                                                  cls.PLUGIN_CONFIG_PROTOCOLS)
-                cls.__addPluginProtocols(protocols, protocolsConfPath)
+                cls.__addProtocolsFromConf(protocols, protocolsConfPath)
 
             # Add all protocols to All view
             cls.__addAllProtocols(protocols)
