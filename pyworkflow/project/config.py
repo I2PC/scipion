@@ -539,46 +539,55 @@ class ProtocolTreeConfig:
         protocols[cls.ALL_PROTOCOLS] = allProtMenu
 
     @classmethod
+    def __addPluginProtocols(cls, protocols, pluginProtocolsConfPath):
+        """
+        Load the protocols of a given plugin .conf file
+        """
+        # Populate the protocols menu from the plugin config file.
+        if os.path.exists(pluginProtocolsConfPath):
+            # Read menus from users' config file.
+            cp = ConfigParser()
+            cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+            cp.read(pluginProtocolsConfPath)
+            #  Ensure that the protocols section exists
+            if cp.has_section('PROTOCOLS'):
+                for menuName in cp.options('PROTOCOLS'):
+                    if menuName not in protocols:  # The view has not been inserted
+                        menu = ProtocolConfig(menuName)
+                        children = json.loads(cp.get('PROTOCOLS',
+                                                     menuName))
+                        for child in children:
+                            cls.__addToTree(menu, child, cls.__checkItem)
+                        protocols[menuName] = menu
+                    else:  # The view has been inserted
+                        menu = protocols.get(menuName)
+                        children = json.loads(cp.get('PROTOCOLS',
+                                                     menuName))
+                        cls.__findTreeLocation(menu.childs, children,
+                                               menu)
+
+    @classmethod
     def load(cls, protocolsConf):
         """ Read the protocol configuration from a .conf file similar to the
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
-        # Load the plugins locally
-        pluginDict = pw.em.Domain.getPlugins()
-        # Read menus from users' config file.
-        cp = ConfigParser()
-        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
         try:
             protocols = OrderedDict()
+            # Read the protocols.conf from Scipion (base) and create an initial
+            # tree view
+            cls.__addPluginProtocols(protocols, protocolsConf[0])
+
+            # Read the protocols.conf of any installed plugin
+            pluginDict = pw.em.Domain.getPlugins()
             pluginList = pluginDict.keys()
             for pluginName in pluginList:
                 # Locate the plugin protocols.conf file
                 protocolsConfPath = os.path.join(pluginDict[pluginName].__path__[0],
                                                  cls.PLUGIN_CONFIG_PROTOCOLS)
-                # Populate the protocols menu from the plugin config file.
-                if os.path.exists(protocolsConfPath):
-                    # Read menus from users' config file.
-                    cp = ConfigParser()
-                    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-                    cp.read(protocolsConfPath)
-                    #  Ensure that the protocols section exists
-                    if cp.has_section('PROTOCOLS'):
-                        for menuName in cp.options('PROTOCOLS'):
-                            if menuName not in protocols:  # The view has not been inserted
-                                menu = ProtocolConfig(menuName)
-                                children = json.loads(cp.get('PROTOCOLS',
-                                                             menuName))
-                                for child in children:
-                                    cls.__addToTree(menu, child, cls.__checkItem)
-                                protocols[menuName] = menu
-                            else:  # The view has been inserted
-                                menu = protocols.get(menuName)
-                                children = json.loads(cp.get('PROTOCOLS',
-                                                             menuName))
-                                cls.__findTreeLocation(menu.childs, children,
-                                                       menu)
+                cls.__addPluginProtocols(protocols, protocolsConfPath)
 
+            # Add all protocols to All view
             cls.__addAllProtocols(protocols)
 
             return protocols
