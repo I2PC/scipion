@@ -246,7 +246,7 @@ class Window():
     setup functions. """
     
     def __init__(self, title='', masterWindow=None, weight=True,
-                 minsize=(500, 300), icon=None, **kwargs):
+                 minsize=(500, 300), icon=Icon.SCIPION_ICON, **kwargs):
         """Create a Tk window.
         title: string to use as title for the windows.
         master: if not provided, the windows create will be the principal one
@@ -269,25 +269,9 @@ class Window():
             configureWeigths(self.root)
         if not minsize is None:
             self.root.minsize(minsize[0], minsize[1])
-        if not icon is None:
-            try:
-                path = findResource(icon)
-                # If path is None --> Icon not found
-                if path is None:
-                    # By default, if icon is not found use default scipion one.
-                    path = findResource('scipion_bn.xbm')
 
-                abspath = os.path.abspath(path)
-
-                if abspath.endswith('.xbm'):
-                    self.root.iconbitmap("@" + abspath)
-                else:
-                    img = tk.Image("photo", file=abspath)
-                    self.root.tk.call('wm', 'iconphoto', self.root._w, img)
-            except Exception as e:
-                # Do nothing if icon could not be loaded
-                pass
-            
+        # Set the icon
+        self._setIcon(icon)
 
         self.root.protocol("WM_DELETE_WINDOW", self._onClosing)
         self._w, self._h, self._x, self._y = 0, 0, 0, 0
@@ -299,7 +283,25 @@ class Window():
             self.queue = Queue.Queue(maxsize=0)
         else:
             self.queue = None
-            
+
+    def _setIcon(self, icon):
+
+        if icon is not None:
+            try:
+                path = findResource(icon)
+                # If path is None --> Icon not found
+                if path is None:
+                    # By default, if icon is not found use default scipion one.
+                    path = findResource(Icon.SCIPION_ICON)
+
+                abspath = os.path.abspath(path)
+
+                img = tk.Image("photo", file=abspath)
+                self.root.tk.call('wm', 'iconphoto', self.root._w, img)
+            except Exception as e:
+                # Do nothing if icon could not be loaded
+                pass
+
     def __processQueue(self):#called from main frame
         if not self.queue.empty():
             func = self.queue.get(block=False)
