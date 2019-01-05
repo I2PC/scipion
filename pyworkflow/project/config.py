@@ -575,8 +575,6 @@ class ProtocolTreeConfig:
         Load the protocols in the tree from a given protocols.conf file,
         either the global one in Scipion or defined in a plugin.
         """
-        # import time
-        # time.sleep(5)
         # Populate the protocols menu from the plugin config file.
         if os.path.exists(protocolsConfPath):
             cp = ConfigParser()
