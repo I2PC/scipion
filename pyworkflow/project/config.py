@@ -469,6 +469,33 @@ class ProtocolTreeConfig:
         return None
 
     @classmethod
+    def _orderSubMenu(cls, session):
+        """
+        Order all children of a given session:
+        The protocols first, then the sessions(the 'more' session at the end)
+        """
+        lengthSession = len(session.childs)
+        if lengthSession > 1:
+            childs = session.childs
+            lastChildPos = lengthSession - 1
+            if childs[lastChildPos].tag == cls.TAG_PROTOCOL:
+                for i in range(lastChildPos - 1, -1, -1):
+                    if childs[i].tag == cls.TAG_PROTOCOL:
+                        break
+                    else:
+                        tmp = childs[i+1]
+                        childs[i+1] = childs[i]
+                        childs[i] = tmp
+            else:
+                for i in range(lastChildPos - 1, -1, -1):
+                    if childs[i].tag == cls.TAG_PROTOCOL:
+                        break
+                    elif 'more' in str(childs[i].text).lower():
+                        tmp = childs[i+1]
+                        childs[i+1] = childs[i]
+                        childs[i] = tmp
+
+    @classmethod
     def __findTreeLocation(cls, subMenu, children, parent):
         """
         Locate the protocol position in the given view
@@ -477,6 +504,7 @@ class ProtocolTreeConfig:
             sm = cls.__inSubMenu(child, subMenu)
             if sm is None:
                 cls.__addToTree(parent, child, cls.__checkItem)
+                cls._orderSubMenu(parent)
             elif child['tag'] == cls.TAG_PROTOCOL_GROUP or child['tag'] == cls.TAG_SECTION:
                 cls.__findTreeLocation(sm.childs, child['children'], sm)
 
@@ -547,6 +575,8 @@ class ProtocolTreeConfig:
         Load the protocols in the tree from a given protocols.conf file,
         either the global one in Scipion or defined in a plugin.
         """
+        # import time
+        # time.sleep(5)
         # Populate the protocols menu from the plugin config file.
         if os.path.exists(protocolsConfPath):
             cp = ConfigParser()
