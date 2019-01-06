@@ -102,6 +102,7 @@
         TH {
             background: #EAEBEC;
             padding: 3px;
+            text-align: center;
         }
         TD {
             padding: 5px;
@@ -523,7 +524,7 @@
                             }
                         }];
             var dataSeries = [{
-                                name: 'Defocus Coverage',
+                                name: 'Defocus',
                                 data: defocusData
                             }];
             if('defocusCoverageLast50' in report.ctfData){
@@ -543,7 +544,7 @@
                             opposite: true
                         });
                 dataSeries.push({
-                                name: 'Defocus Coverage (last 50 mics)',
+                                name: 'Defocus (last 50 mics)',
                                 yAxis: 1,
                                 data: defocusDataLast50
                             })
@@ -611,7 +612,7 @@
             }, { // Phase Shift Axis
                 gridLineWidth: 0,
                 title: {
-                    text: 'Phase Shift (°)'
+                    text: 'Phase Shift (deg)'
                 },
                 labels: {
                     format: '{value}°'
@@ -940,7 +941,7 @@
             if ('defocusU' in report.ctfData){
                 cols.push({"title": "DefocusU (µm)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
-                          {"title": "Astigmatism (µm)",
+                          {"title": "Astigmatism (nm)",
                            "render": $.fn.dataTable.render.number( ',', '.', 3)},
                           {"title": "Max. Res (Å)",
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
@@ -948,7 +949,7 @@
                             "render": $.fn.dataTable.render.number( ',', '.', 2)},
                           {"title": "Defocus ratio",
                             "render": $.fn.dataTable.render.number( ',', '.', 3)},
-                          {"title": "Phase shift (°)",
+                          {"title": "Phase shift (deg)",
                             "render": $.fn.dataTable.render.number( ',', '.', 1)});
 
             }
@@ -970,7 +971,7 @@
 
                 if ('defocusU' in report.ctfData){
                     rowValues.push(report.ctfData.defocusU[index]*1e-4,
-				                   report.ctfData.astigmatism[index]*1e-4,
+				                   report.ctfData.astigmatism[index],
                                    report.ctfData.resolution[index],
 	                               report.ctfData.fitQuality[index],
                                    report.ctfData.ratio[index],
