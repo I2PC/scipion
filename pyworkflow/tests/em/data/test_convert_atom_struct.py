@@ -451,8 +451,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(outFile)
 
     def testFunctionAddStructNewModel(self):
-        pdbID1 = '1P30'  # A,B,C
-        pdbID2 = '1CJD'  # A
+        pdbID1 = '1P30'  # A
+        pdbID2 = '1CJD'  # A, B,C
         outFile = "/tmp/model.cif"
         aSH1 = AtomicStructHandler()
         aSH2 = AtomicStructHandler()
@@ -476,6 +476,31 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(fileName1)
         os.unlink(fileName2)
         os.unlink(outFile)
+
+    def testFunctionSelectChain(self):
+        pdbID1 = '1P30'  # A,B,C
+        outFile = "/tmp/model.cif"
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        #
+        chainID = 'A'
+        outFileName = "/tmp/output.mmcif"
+        aSH1.extractChain(chainID=chainID, modelID='0', end=20,
+                          filename=outFileName)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = chainID
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+        aSH2.read(outFileName)
+        atomsNumT = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        self.assertEqual(122, atomsNumT)
+
+        #os.unlink(fileName1)
+        #os.unlink(outFile)
 
     @classmethod
     def tearDownClass(cls):
