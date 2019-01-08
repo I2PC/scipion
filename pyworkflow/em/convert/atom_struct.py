@@ -36,6 +36,7 @@ import numpy
 from collections import defaultdict
 
 import Bio.PDB.Atom
+from Bio.PDB.Dice import ChainSelector
 from Bio.PDB.MMCIFParser import MMCIFParser
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB import PDBIO, MMCIFIO
@@ -48,7 +49,8 @@ from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
-from .transformations import rotation_from_matrix, translation_from_matrix
+from .transformations import rotation_from_matrix, \
+    translation_from_matrix
 from .sequence import SequenceHandler
 
 
@@ -640,6 +642,16 @@ class AtomicStructHandler:
         if outPDBfileName is not None:
             self.write(outPDBfileName)
 
+    def extractChain(self, chainID, start=0, end=-1,
+                     modelID='0', filename="output.mmcif"):
+        """Code for chopping  a structure.
+        This module is used internally by the Bio.PDB.extract() function.
+        """
+        sel = ChainSelector(chain_id=chainID, start=start,
+                            end=end, model_id=int(modelID))
+        io = scipionMMCIFIO()
+        io.set_structure(self.structure)
+        io.save(filename, sel)
 
 def cifToPdb(fnCif,fnPdb):
     h = AtomicStructHandler()
