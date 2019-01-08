@@ -49,11 +49,13 @@ from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
 from pyworkflow.em.protocol import (ProtImportImages,
                                     ProtImportCoordinates,
                                     ProtImportCoordinatesPairs,
-                                    ProtImportVolumes)
+                                    ProtImportVolumes,
+                                    ProtImportSequence)
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow.gui.widgets import LabelSlider
-
+from data import String
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 import xmippLib
 
 #===============================================================================
@@ -902,3 +904,57 @@ class ImportOriginVolumeWizard(Wizard):
         return x, y, z
 
 
+class ListTreeProviderString(ListTreeProvider):
+    def getText(self, obj):
+        return obj.get()
+
+
+class GetStructureChainsWizard(Wizard):
+    _targets = [(ProtImportSequence, ['inputStructureChain'])
+                # NOTE: be careful if you change this class since
+                # chimera-wizard inherits from it.
+                #(ChimeraModelFromTemplate, ['inputStructureChain'])
+                ]
+
+    def getModelsChainsStep(self, protocol):
+        self.structureHandler = AtomicStructHandler()
+        import sys
+        sys.stdout.flush()
+        if hasattr(protocol, 'pdbId'):
+            if protocol.pdbId.get() is not None:
+                pdbID = protocol.pdbId.get()
+                fileName = self.structureHandler.readFromPDBDatabase(
+                    os.path.basename(pdbID), dir="/tmp/")
+            else:
+                fileName = protocol.pdbFile.get()
+        else:
+            if protocol.pdbFileToBeRefined.get() is not None:
+                fileName = os.path.abspath(protocol.pdbFileToBeRefined.get(
+                ).getFileName())
+
+        print ("getModelsChainsStep2: fileName", fileName, type(fileName))
+        self.structureHandler.read(fileName)
+        self.structureHandler.getStructure()
+        models = self.structureHandler.getModelsChains()
+        return models
+
+    def editionListOfChains(self, models):
+        self.chainList = []
+        for model, chainDic in models.iteritems():
+            for chainID, lenResidues in chainDic.iteritems():
+                self.chainList.append(('{"model": %d, "chain": "%s", "residues": %d}' %
+                                       (model, str(chainID), lenResidues)))
+
+    def show(self, form):
+        protocol = form.protocol
+        models = self.getModelsChainsStep(protocol)
+
+        self.editionListOfChains(models)
+        finalChainList = []
+        for i in self.chainList:
+            finalChainList.append(String(i))
+        provider = ListTreeProviderString(finalChainList)
+        dlg = dialog.ListDialog(form.root,"Model chains", provider,
+                                "Select one of the chains (model, chain, "
+                                "number of chain residues)" )
+        form.setVar('inputStructureChain', dlg.values[0].get())
