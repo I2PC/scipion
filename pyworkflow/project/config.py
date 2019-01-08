@@ -601,28 +601,27 @@ class ProtocolTreeConfig:
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
-        try:
-            protocols = OrderedDict()
-            # Read the protocols.conf from Scipion (base) and create an initial
-            # tree view
-            cls.__addProtocolsFromConf(protocols, protocolsConf[0])
 
-            # Read the protocols.conf of any installed plugin
-            pluginDict = pw.em.Domain.getPlugins()
-            pluginList = pluginDict.keys()
-            for pluginName in pluginList:
+        protocols = OrderedDict()
+        # Read the protocols.conf from Scipion (base) and create an initial
+        # tree view
+        cls.__addProtocolsFromConf(protocols, protocolsConf[0])
+
+        # Read the protocols.conf of any installed plugin
+        pluginDict = pw.em.Domain.getPlugins()
+        pluginList = pluginDict.keys()
+        for pluginName in pluginList:
+            try:
                 # Locate the plugin protocols.conf file
                 protocolsConfPath = os.path.join(pluginDict[pluginName].__path__[0],
                                                  cls.PLUGIN_CONFIG_PROTOCOLS)
                 cls.__addProtocolsFromConf(protocols, protocolsConfPath)
+            except Exception as e:
+                print('Failed to read settings. The reported error was:\n  %s\n'
+                      'To solve it, fix %s and run again.' % (
+                            e, protocolsConfPath))
 
             # Add all protocols to All view
-            cls.__addAllProtocols(protocols)
+        cls.__addAllProtocols(protocols)
 
-            return protocols
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, protocolsConf))
+        return protocols
