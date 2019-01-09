@@ -311,8 +311,11 @@ class ProtImportSequence(ProtImportFiles):
 
         # form has a wizard that creates label with the format
         # [model: x, chain: x, xxx residues]
-        selectedModel = chainId.split(',')[0].split(':')[1].strip()
-        selectedChain = chainId.split(',')[1].split(':')[1].strip()
+        import json
+        chainIdDict = json.loads(self.inputStructureChain.get())
+
+        selectedModel = chainIdDict['model']
+        selectedChain = chainIdDict['chain']
 
         self.structureHandler = AtomicStructHandler()
 
