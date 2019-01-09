@@ -604,27 +604,29 @@
         function getTimeSeriesYAxis(){
             return [{ // Defocus Axis Default
                 labels: {
-                    format: '{value} (\u00B5m)'
+                    format: '{value:.1f}'
                 },
                 title: {
-                    text: 'Defocus'}
+                    text: 'Defocus (\u00B5m)'}
 
             }, { // Phase Shift Axis
-                gridLineWidth: 0,
                 title: {
                     text: 'Phase Shift (deg)'
                 },
                 labels: {
-                    format: '{value}°'
+                    format: '{value}'
                 },
+                tickInterval: 45,
+                endOnTick: true,
+                ceiling: 180,
+                floor:0,
                 opposite: true
             }, { // resolution
-                gridLineWidth: 0,
                 title: {
                     text: 'Resolution (Å)'
                 },
                 labels: {
-                    format: '{value} Å'
+                    format: '{value}'
                 },
                 ceiling: 20,
                 opposite: true
@@ -639,7 +641,7 @@
                 name: "Defocus U",
                 data: report.ctfData.timeSeries.defocusU,
                 tooltip: {
-                    valueDecimals: 0,
+                    valueDecimals: 1,
                     valueSuffix: ' \u00B5m'
                 }
             };
@@ -668,7 +670,7 @@
                     data: report.ctfData.timeSeries.phaseShift,
                     tooltip: {
                         valueDecimals: 0,
-                        valueSuffix: ' °'
+                        valueSuffix: ' deg'
                     }
                 };
 
