@@ -62,4 +62,6 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "ProtUnionSet", "text": "default"},
 			{"tag": "protocol", "value": "ProtSplitSet", "text": "default"}
 			]}		
-	]}]
+	]},
+	{"tag": "section", "text": "Exports", "openItem": "False", "children": []
+	}]
