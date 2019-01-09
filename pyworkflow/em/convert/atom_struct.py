@@ -297,7 +297,7 @@ class AtomicStructHandler:
         self.checkRead()
         seq = list()
         for model in self.structure:
-            if str(model.id) == modelID:
+            if model.id == modelID:
                 for chain in model:
                     if str(chain.id) == chainID:
                         if len(chain.get_unpacked_list()[0].resname) == 1:

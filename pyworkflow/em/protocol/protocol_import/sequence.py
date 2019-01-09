@@ -316,7 +316,6 @@ class ProtImportSequence(ProtImportFiles):
 
         selectedModel = chainIdDict['model']
         selectedChain = chainIdDict['chain']
-
         self.structureHandler = AtomicStructHandler()
 
         if self.pdbId.get() is not None:
