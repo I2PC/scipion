@@ -11,7 +11,7 @@
 # *
 # * This program is distributed in the hope that it will be useful,
 # * but WITHOUT ANY WARRANTY; without even the implied warranty of
-# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * MERCHANTABIlITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # * GNU General Public License for more details.
 # *
 # * You should have received a copy of the GNU General Public License
@@ -1008,7 +1008,9 @@ class Set(OrderedObject):
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
         self._representative = None
-        self._classesDict = classesDict 
+        self._classesDict = classesDict
+        self._indexes = kwargs.get('indexes', [])
+
         # If filename is passed in the constructor, it means that
         # we want to create a new object, so we need to delete it if
         # the file exists
@@ -1114,7 +1116,7 @@ class Set(OrderedObject):
         if self._mapperPath.isEmpty():
             raise Exception("Set.load:  mapper path and prefix not set.")
         fn, prefix = self._mapperPath
-        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)            
+        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix, self._indexes)
         self._size.set(self._mapper.count())
         self._idCount = self._mapper.maxId()
            

@@ -42,7 +42,7 @@ Protocols SPA = [
 		    {"tag": "protocol", "value": "ProtGctf", "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
-				{"tag": "protocol", "value": "XmippProtCTFDiscrepancy", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtCTFConsensus", "text": "default"},
 				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtCTFSelection", "text": "default"}
 			]}
@@ -211,8 +211,7 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtSubtractProjection", "text": "default"},
 				{"tag": "protocol", "value": "ProtRelionSubtract",  "text": "default"},
 				{"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
-				{"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtCombinePdb", "text": "default"}
+				{"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"}
 			]}
 		]},
 		{"tag": "protocol_group", "text": "Reconstruct", "openItem": "False", "children": [
@@ -234,6 +233,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtImageOperateVolumes", "text": "default"},
 	        {"tag": "protocol", "value": "ChimeraProtOperate", "text": "default"},
             {"tag": "protocol", "value": "ChimeraProtRestore", "text": "default"},
+            {"tag": "protocol", "value": "ProtAtomStrucOperate", "text": "default"},
             {"tag": "protocol", "value": "PhenixProtRunSuperposePDBs",   "text": "default"}
 		]}
     ]},

@@ -49,14 +49,14 @@ from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
 from pyworkflow.em.protocol import (ProtImportImages,
                                     ProtImportCoordinates,
                                     ProtImportCoordinatesPairs,
-                                    ProtImportVolumes)
+                                    ProtImportVolumes,
+                                    ProtImportSequence)
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 from pyworkflow.em.protocol.protocol_import import ProtImportSequence
-from data import String
-
+from pyworkflow.em.data import String
 import xmippLib
 
 #===============================================================================
@@ -911,7 +911,11 @@ class ListTreeProviderString(ListTreeProvider):
 
 
 class GetStructureChainsWizard(Wizard):
-    _targets = [(ProtImportSequence, ['inputStructureChain'])]
+    _targets = [(ProtImportSequence, ['inputStructureChain'])
+                # NOTE: be careful if you change this class since
+                # chimera-wizard inherits from it.
+                #(ChimeraModelFromTemplate, ['inputStructureChain'])
+                ]
 
     def getModelsChainsStep(self, protocol):
         self.structureHandler = AtomicStructHandler()
@@ -936,12 +940,14 @@ class GetStructureChainsWizard(Wizard):
         self.chainList = []
         for model, chainDic in models.iteritems():
             for chainID, lenResidues in chainDic.iteritems():
-                self.chainList.append(("[model: %s, chain: %s, %d residues]" %
-                                       (str(model), str(chainID), lenResidues)))
+
+                self.chainList.append(('{"model": %d, "chain": "%s", "residues": %d}' %
+                                       (model, str(chainID), lenResidues)))
 
     def show(self, form):
         protocol = form.protocol
         models = self.getModelsChainsStep(protocol)
+
         self.editionListOfChains(models)
         finalChainList = []
         for i in self.chainList:
@@ -951,5 +957,4 @@ class GetStructureChainsWizard(Wizard):
                                 "Select one of the chains (model, chain, "
                                 "number of chain residues)" )
         form.setVar('inputStructureChain', dlg.values[0].get())
-
 

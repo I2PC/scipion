@@ -53,7 +53,7 @@ class EMProtocol(Protocol):
     def __init__(self, **kwargs):
         Protocol.__init__(self, **kwargs)
         
-    def __createSet(self, SetClass, template, suffix):
+    def __createSet(self, SetClass, template, suffix, **kwargs):
         """ Create a set and set the filename using the suffix. 
         If the file exists, it will be delete. """
         setFn = self._getPath(template % suffix)
@@ -62,23 +62,27 @@ class EMProtocol(Protocol):
         cleanPath(setFn)
         
         SqliteDb.closeConnection(setFn)        
-        setObj = SetClass(filename=setFn)
+        setObj = SetClass(filename=setFn, **kwargs)
         return setObj
     
     def _createSetOfMicrographs(self, suffix=''):
         return self.__createSet(SetOfMicrographs,
-                                'micrographs%s.sqlite', suffix)
+                                'micrographs%s.sqlite', suffix,
+                                indexes=['_index'])
     
     def _createSetOfCoordinates(self, micSet, suffix=''):
         coordSet = self.__createSet(SetOfCoordinates,
-                                    'coordinates%s.sqlite', suffix)
+                                    'coordinates%s.sqlite', suffix,
+                                    indexes=['_micId'])
         coordSet.setMicrographs(micSet)       
         return coordSet
 
     def _createCoordinatesTiltPair(self, micTiltPairs, uCoords, tCoords,
                                    angles, suffix):
         coordTiltPairs = self.__createSet(CoordinatesTiltPair,
-                                          'coordinates_pairs%s.sqlite', suffix)
+                                          'coordinates_pairs%s.sqlite', suffix,
+                                          indexes=['_untilted._micId',
+                                                   '_tilted._micId'])
         coordTiltPairs.setUntilted(uCoords)
         coordTiltPairs.setTilted(tCoords)
         coordTiltPairs.setAngles(angles)
@@ -98,7 +102,8 @@ class EMProtocol(Protocol):
         return self.__createSet(SetOfImages, 'images%s.sqlite', suffix)
 
     def _createSetOfParticles(self, suffix=''):
-        return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
+        return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix,
+                                indexes=['_classId', '_micId'])
 
     def _createSetOfAverages(self, suffix=''):
         return self.__createSet(SetOfAverages, 'averages%s.sqlite', suffix)
@@ -262,7 +267,7 @@ class EMProtocol(Protocol):
         This function can be used from several base protocols that support
         streaming and batch:
 
-        - Prot
+        - ProtCTFMicrographs
         - ProtParticlePickingAuto
         - ProtExtractParticles
         Params:
