@@ -295,7 +295,7 @@
         </DIV>
 
         <FOOTER>
-            Powered by <a href="http://scipion.cnb.csic.es">Scipion</a><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
+            Powered by <a href="http://scipion.i2pc.es">Scipion</a><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
         </FOOTER>
     </BODY>
     <SCRIPT>
@@ -1002,7 +1002,7 @@
             for (var index =0; index<data.length; index++){
                 cellValue=data[index];
                 if (isImage(cellValue)){
-                    var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp" data-target="#modal" data-toggle="modal"><img width={1} src={0} alt="Micrograph {2}"></a></div>';
+                    var imgHtml = getImageHTML(cellValue, data);
                     var imgWidth = Math.floor($('#content').width() * 0.2);
                     imgHtml = imgHtml.format(cellValue, imgWidth, data[0]);
                     $(row).find("td:nth-child(" + (index+1) + ")").html(imgHtml)
@@ -1010,6 +1010,23 @@
             }
 
         };
+        function getImageHTML(value, rowData){
+
+            var extraInfo = ''
+            // if it is a PSD image
+            if (value.indexOf('imgPsdThumbs') == 0) {
+                extraInfo = ' extraInfo="<br/><strong>CC</strong>:' + rowData[6].toFixed(2) +
+                    '<br/><strong>Resolution</strong>: ' + rowData[5].toFixed(2) + '"';
+            }
+
+
+            return '<div class="thumbnail">' +
+                      '<a href ="#" class="popUp" data-target="#modal" data-toggle="modal">' +
+                        '<img width={1} src={0} alt="Micrograph {2}"' + extraInfo + '>' +
+                      '</a>' +
+                    '</div>';
+
+        }
         function isImage(cellValue){
             if (typeof (cellValue) == 'string') {
                 return cellValue.startsWith("img");
@@ -1040,7 +1057,9 @@
                 var title = $invoker.find('img').attr('alt');
                 var footer = $invoker.find('img').attr('src');
                 footer = footer.slice(footer.indexOf('/')+1, footer.length);
-                $('#modalFooter').text(footer);
+                var extraInfo = $invoker.find('img').attr('extraInfo');
+                footer = footer + extraInfo;
+                $('#modalFooter').html(footer);
                 $('.modal-title').text(title);
                 if ($("#refreshBtn").hasClass('btn-info')) {
                     refreshPaused = true
