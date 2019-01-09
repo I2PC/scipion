@@ -143,7 +143,7 @@ class TestNotifier(BaseTest):
             times_protocolRemote_2 = 0
         self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
 
-        # Add new protocol and resend after wait 30 = 25 + 5 seconds
+        # Add new protocol and resend after waiting 30 = 25 +5  seconds
         prot2 = self.newProtocol(ProtStress, **kwargs)
         prot2.setObjLabel('stress2')
         self.proj.launchProtocol(prot2, wait=True)
