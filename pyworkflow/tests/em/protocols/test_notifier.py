@@ -58,6 +58,7 @@ class TestNotifier(BaseTest):
             times_protocolRemote = objects["timesUsed"]
         else:
             times_protocolRemote = 0
+
         # Run a project that executes one time protStress
         kwargs = {'noCpu': 2,
                   'noMem': 0,
@@ -142,10 +143,11 @@ class TestNotifier(BaseTest):
             times_protocolRemote_2 = 0
         self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
 
-        # Add new protocol and resend
+        # Add new protocol and resend after wait 30 = 25 + 5 seconds
         prot2 = self.newProtocol(ProtStress, **kwargs)
         prot2.setObjLabel('stress2')
         self.proj.launchProtocol(prot2, wait=True)
+        time.sleep(25)
         projectNotifier.notifyWorkflow()
         time.sleep(5)  # notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
@@ -156,4 +158,4 @@ class TestNotifier(BaseTest):
         else:
             times_protocolRemote_2 = 0
 
-        self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote + 2)
