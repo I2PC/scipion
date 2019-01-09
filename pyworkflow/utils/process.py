@@ -85,7 +85,7 @@ def buildRunCommand(programname, params, numberOfMpi, hostConfig=None,
     else:
         assert hostConfig is not None, 'hostConfig needed to launch MPI processes.'
 
-        if programname.startswith('xmipp'):
+        if programname.startswith('xmipp') and not programname.startswith('xmipp_mpi'):
             programname = programname.replace('xmipp', 'xmipp_mpi')
             
         mpiFlags = '' if env is None else env.get('SCIPION_MPI_FLAGS', '') 
