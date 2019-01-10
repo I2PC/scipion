@@ -32,12 +32,11 @@ from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 
-from pyworkflow.utils import redStr, greenStr, magentaStr
-from pyworkflow.em.data import EMObject
+from pyworkflow.utils import greenStr, magentaStr
 
 from pyworkflow.em.protocol.protocol_import import (
     ProtImportMicrographs, ProtImportVolumes, ProtImportMovies,
-    ProtImportParticles, ProtImportCoordinates)
+    ProtImportParticles)
 
 from pyworkflow.em.protocol.protocol_sets import (
     ProtSplitSet, ProtSubSet, ProtUnionSet, ProtSubSetByMic)
@@ -91,7 +90,9 @@ class TestSets(BaseTest):
         p_imp_movies = new(ProtImportMovies,
                            filesPath=cls.dataset_ribo.getFile('movies'),
                            samplingRate=2.37, magnification=59000,
-                           voltage=300, sphericalAberration=2.0)
+                           voltage=300, sphericalAberration=2.0,
+                           gainFile=cls.dataset_ribo.getFile('volume'),
+                           darkFile=cls.dataset_ribo.getFile('volume'))
         launch(p_imp_movies, wait=True)
         cls.movies = p_imp_movies.outputMovies
 
@@ -184,7 +185,7 @@ class TestSets(BaseTest):
             p_subset.inputFullSet.set(setFull)
             p_subset.inputSubSet.set(setSub)
             self.launchProtocol(p_subset)
-            
+
             # Launch difference subset
             p_subset_diff = self.proj.copyProtocol(p_subset)
             p_subset_diff.setOperation.set(p_subset_diff.SET_DIFFERENCE)
@@ -194,24 +195,37 @@ class TestSets(BaseTest):
             setFullIds = setFull.getIdSet()
             setSubIds = setSub.getIdSet()
             n = len(setFull)
-            
+
             # Check intersection
             outputs = [o for o in self.outputs(p_subset)]
             n1 = 0
             if outputs:
                 output = outputs[0]
+
+                # Check properties
+                self.assertTrue(set0.equalAttributes(output,
+                                    ignore=['_mapperPath', '_size'],
+                                    verbose=True),
+                                "Intersection subset attributes are wrong")
+
                 n1 = len(output)
                 for elem in output:
                     self.assertTrue(elem.getObjId() in setFullIds)
                     self.assertTrue(elem.getObjId() in setSubIds,
                                     'object id %s not in set: %s' 
                                     % (elem.getObjId(), setSubIds))
-                
+
             # Check difference
             outputs = [o for o in self.outputs(p_subset_diff)]
             n2 = 0
             if outputs:
                 output_diff = outputs[0]
+                # Check properties
+                self.assertTrue(set0.equalAttributes(output_diff,
+                                    ignore=['_mapperPath', '_size'],
+                                    verbose=True),
+                                "In subset attributes are wrong")
+
                 n2 = len(output_diff)
                 for elem in output_diff:
                     self.assertTrue(elem.getObjId() in setFullIds)
@@ -220,6 +234,7 @@ class TestSets(BaseTest):
             self.assertTrue(n >= n1)
             self.assertTrue(n >= n2)            
             self.assertEqual(n, n1+n2)
+
 
         # We won't do these first two, there are too few elements.
         #   check(self.micros)
