@@ -1878,25 +1878,40 @@ class Protocol(Step):
 
     def getStepsGraph(self, refresh=True):
         """ Build a graph taking into account the dependencies between
-        steps. """
+        steps. In streaming we might find first the createOutputStep (e.g 24)
+        depending on 25"""
         from pyworkflow.utils.graph import Graph
         g = Graph(rootName='PROTOCOL')
         root = g.getRoot()
         root.label = 'Protocol'
-        stepsDict = {}
-        steps = self.loadSteps()
 
-        for i, s in enumerate(steps):
-            index = s._index or (i + 1)
+        steps = self.loadSteps()
+        stepsDict = {str(i+1): steps[i] for i in range(0, len(steps))}
+        stepsDone = {}
+
+        def addStep(i, step):
+
+            # Exit if already done
+            # This happens when, in streaming there is a child "before" a parent
+            if i in stepsDone:
+                return
+
+            index = step.getIndex() or i
             sid = str(index)
             n = g.createNode(sid)
-            n.label = sid
-            stepsDict[sid] = n
-            if s._prerequisites.isEmpty():
+            n.step = step
+            stepsDone[i] = n
+            if step.getPrerequisites().isEmpty():
                 root.addChild(n)
             else:
-                for p in s._prerequisites:
-                    stepsDict[p].addChild(n)
+                for p in step.getPrerequisites():
+                    # If prerequisite exists
+                    if not p in stepsDone:
+                        addStep(p, stepsDict[p])
+                    stepsDone[p].addChild(n)
+
+        for i, s in stepsDict.items():
+            addStep(i, s)
         return g
 
     def closeMappers(self):
