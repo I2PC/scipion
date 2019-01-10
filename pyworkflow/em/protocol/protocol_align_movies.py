@@ -256,10 +256,12 @@ class ProtAlignMovies(ProtProcessMovies):
     def _validate(self):
         errors = []
 
-        if (self.cropDimX > 0 and self.cropDimY <= 0 or
-                        self.cropDimY > 0 and self.cropDimX <= 0):
-            errors.append("If you give cropDimX, you should also give cropDimY"
-                          " and vice versa")
+        # Only validate about cropDimensions if the protocol supports them
+        if (hasattr(self, 'cropDimX') and hasattr(self, 'cropDimY')
+            and (self.cropDimX > 0 and self.cropDimY <= 0
+                 or self.cropDimY > 0 and self.cropDimX <= 0)):
+                errors.append("If you give cropDimX, you should also give "
+                              "cropDimY and vice versa")
 
         # movie = self.inputMovies.get().getFirstItem()
         # # Close movies db because the getFirstItem open it
@@ -453,6 +455,12 @@ class ProtAlignMovies(ProtProcessMovies):
         to the output set of micrographs.
         """
         pass
+
+    def _doComputeMicThumbnail(self):
+        """ Should be implemented in sub-classes if want to check
+        the generation of thumbnails.
+        """
+        return False
 
     def _storeSummary(self, movie):
         """ Implement this method if you want to store the summary. """
