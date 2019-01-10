@@ -194,7 +194,7 @@ def defineBinaries(args=None):
 
     tiff = env.addLibrary(
          'tiff',
-         tar='tiff-3.9.4.tgz',
+         tar='tiff-4.0.10.tgz',
          deps=[zlib, jpeg],
          default=False)
 
@@ -216,7 +216,7 @@ def defineBinaries(args=None):
 
     python = env.addLibrary(
         'python',
-        tar='Python-2.7.14.tgz',
+        tar='Python-2.7.15.tgz',
         targets=[env.getLib('python2.7'), env.getBin('python')],
         flags=['--enable-shared', '--enable-unicode=ucs4'],
         deps=[sqlite, tk, zlib])
