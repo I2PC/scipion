@@ -230,6 +230,7 @@ class ProjectCreateWindow(Window):
         self.btnBrowse.grid(row=1, column=2, sticky='e', padx=5, pady=5)
 
         self.initial_focus = entryName
+        self.initial_focus.focus()
 
         btnFrame = tk.Frame(content)
         btnFrame.columnconfigure(0, weight=1)
@@ -353,6 +354,7 @@ class ProjectImportWindow(Window):
         btnSearchHelp.grid(row=3, column=3, sticky='e', padx=2, pady=2)
 
         self.initial_focus = entryName
+        self.initial_focus.focus()
         btnCheck.select()
 
         btnFrame = tk.Frame(content)

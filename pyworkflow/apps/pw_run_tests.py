@@ -299,7 +299,8 @@ class Tester():
         result = pwtests.GTestResult()
         tests.run(result)
         result.doReport()
-        sys.exit(1 if result.testFailed > 0 else 0)
+        resultPassed = result.numberTests - result.testFailed
+        sys.exit(1 if result.testFailed > 0 or resultPassed == 0 else 0)
 
 
 if __name__ == '__main__':
