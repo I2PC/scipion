@@ -251,7 +251,6 @@ class Project(object):
 
                 if os.path.exists(settingsPath):
                     self.settings = config.ProjectSettings.load(settingsPath)
-                    self.settings.printAll()
                 else:
                     print("settings is None")
                     self.settings = None
@@ -349,8 +348,8 @@ class Project(object):
             hostKey = hostName
         else:
             hostKey = self._hosts.keys()[0]
-            print "PROJECT: Warning, protocol host '%s' not found." % hostName
-            print "         Using '%s' instead." % hostKey
+            print("PROJECT: Warning, protocol host '%s' not found." % hostName)
+            print("         Using '%s' instead." % hostKey)
 
         return self._hosts[hostKey]
 
@@ -368,8 +367,8 @@ class Project(object):
         else:
             viewKey = self._protocolViews.keys()[0]
             self.settings.setProtocolView(viewKey)
-            print "PROJECT: Warning, protocol view '%s' not found." % currentView
-            print "         Using '%s' instead." % viewKey
+            print("PROJECT: Warning, protocol view '%s' not found." % currentView)
+            print("         Using '%s' instead." % viewKey)
 
         return self._protocolViews[viewKey]
 
@@ -638,7 +637,7 @@ class Project(object):
             if wd.startswith(PROJECT_RUNS):
                 pwutils.path.cleanPath(wd)
             else:
-                print "Error path: ", wd
+                print("Error path: ", wd)
 
         self.mapper.commit()
 
@@ -911,7 +910,7 @@ class Project(object):
             protClass = emProtocols.get(protClassName, None)
 
             if protClass is None:
-                print "ERROR: protocol class name '%s' not found" % protClassName
+                print("ERROR: protocol class name '%s' not found" % protClassName)
             else:
                 protLabel = protDict.get('object.label', None)
                 prot = self.newProtocol(protClass,

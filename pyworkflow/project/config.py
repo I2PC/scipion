@@ -26,6 +26,7 @@
 # **************************************************************************
 
 import sys
+import os
 import json
 import datetime as dt
 from collections import OrderedDict
@@ -34,7 +35,6 @@ from ConfigParser import ConfigParser  # FIXME Does not work in Python3
 import pyworkflow as pw
 import pyworkflow.object as pwobj
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils.properties import Icon
 
 
 class ProjectSettings(pwobj.OrderedObject):
@@ -417,6 +417,9 @@ class ProtocolTreeConfig:
     ALL_PROTOCOLS = "All"
     TAG_PROTOCOL_DISABLED = 'protocol-disabled'
     TAG_PROTOCOL = 'protocol'
+    TAG_SECTION = 'section'
+    TAG_PROTOCOL_GROUP = 'protocol_group'
+    PLUGIN_CONFIG_PROTOCOLS = 'protocols.conf'
 
     @classmethod
     def getProtocolTag(cls, isInstalled):
@@ -453,6 +456,59 @@ class ProtocolTreeConfig:
         return subMenu
 
     @classmethod
+    def __inSubMenu(cls, child, subMenu):
+        """
+        Return True if child belongs to subMenu
+        """
+        for ch in subMenu:
+            if child['tag'] == cls.TAG_PROTOCOL:
+                if ch.value == child['value']:
+                    return ch
+            elif ch.text == child['text']:
+                return ch
+        return None
+
+    @classmethod
+    def _orderSubMenu(cls, session):
+        """
+        Order all children of a given session:
+        The protocols first, then the sessions(the 'more' session at the end)
+        """
+        lengthSession = len(session.childs)
+        if lengthSession > 1:
+            childs = session.childs
+            lastChildPos = lengthSession - 1
+            if childs[lastChildPos].tag == cls.TAG_PROTOCOL:
+                for i in range(lastChildPos - 1, -1, -1):
+                    if childs[i].tag == cls.TAG_PROTOCOL:
+                        break
+                    else:
+                        tmp = childs[i+1]
+                        childs[i+1] = childs[i]
+                        childs[i] = tmp
+            else:
+                for i in range(lastChildPos - 1, -1, -1):
+                    if childs[i].tag == cls.TAG_PROTOCOL:
+                        break
+                    elif 'more' in str(childs[i].text).lower():
+                        tmp = childs[i+1]
+                        childs[i+1] = childs[i]
+                        childs[i] = tmp
+
+    @classmethod
+    def __findTreeLocation(cls, subMenu, children, parent):
+        """
+        Locate the protocol position in the given view
+        """
+        for child in children:
+            sm = cls.__inSubMenu(child, subMenu)
+            if sm is None:
+                cls.__addToTree(parent, child, cls.__checkItem)
+                cls._orderSubMenu(parent)
+            elif child['tag'] == cls.TAG_PROTOCOL_GROUP or child['tag'] == cls.TAG_SECTION:
+                cls.__findTreeLocation(sm.childs, child['children'], sm)
+
+    @classmethod
     def __checkItem(cls, item):
         """ Function to check if the protocol has to be added or not.
         Params:
@@ -467,7 +523,7 @@ class ProtocolTreeConfig:
         protClassName = item["value"]
         protClass = pw.em.Domain.getProtocols().get(protClassName)
 
-        return False if protClass is None else protClass.isDisabled()
+        return False if protClass is None else not protClass.isDisabled()
 
     @classmethod
     def __addAllProtocols(cls, protocols):
@@ -514,32 +570,58 @@ class ProtocolTreeConfig:
         protocols[cls.ALL_PROTOCOLS] = allProtMenu
 
     @classmethod
+    def __addProtocolsFromConf(cls, protocols, protocolsConfPath):
+        """
+        Load the protocols in the tree from a given protocols.conf file,
+        either the global one in Scipion or defined in a plugin.
+        """
+        # Populate the protocols menu from the plugin config file.
+        if os.path.exists(protocolsConfPath):
+            cp = ConfigParser()
+            cp.optionxform = str  # keep case
+            cp.read(protocolsConfPath)
+            #  Ensure that the protocols section exists
+            if cp.has_section('PROTOCOLS'):
+                for menuName in cp.options('PROTOCOLS'):
+                    if menuName not in protocols:  # The view has not been inserted
+                        menu = ProtocolConfig(menuName)
+                        children = json.loads(cp.get('PROTOCOLS', menuName))
+                        for child in children:
+                            cls.__addToTree(menu, child, cls.__checkItem)
+                        protocols[menuName] = menu
+                    else:  # The view has been inserted
+                        menu = protocols.get(menuName)
+                        children = json.loads(cp.get('PROTOCOLS',
+                                                     menuName))
+                        cls.__findTreeLocation(menu.childs, children, menu)
+
+    @classmethod
     def load(cls, protocolsConf):
         """ Read the protocol configuration from a .conf file similar to the
         one in scipion/config/protocols.conf,
         which is the default one when no file is passed.
         """
-        # Read menus from users' config file.
-        cp = ConfigParser()
-        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+
         protocols = OrderedDict()
+        # Read the protocols.conf from Scipion (base) and create an initial
+        # tree view
+        cls.__addProtocolsFromConf(protocols, protocolsConf[0])
 
-        try:
-            assert cp.read(protocolsConf) != [], 'Missing file %s' % protocolsConf
-            # Populate the protocols menu from the config file.
-            for menuName in cp.options('PROTOCOLS'):
-                menu = pw.project.ProtocolConfig(menuName)
-                children = json.loads(cp.get('PROTOCOLS', menuName))
-                for child in children:
-                    cls.__addToTree(menu, child, cls.__checkItem)
-                protocols[menuName] = menu
+        # Read the protocols.conf of any installed plugin
+        pluginDict = pw.em.Domain.getPlugins()
+        pluginList = pluginDict.keys()
+        for pluginName in pluginList:
+            try:
+                # Locate the plugin protocols.conf file
+                protocolsConfPath = os.path.join(pluginDict[pluginName].__path__[0],
+                                                 cls.PLUGIN_CONFIG_PROTOCOLS)
+                cls.__addProtocolsFromConf(protocols, protocolsConfPath)
+            except Exception as e:
+                print('Failed to read settings. The reported error was:\n  %s\n'
+                      'To solve it, fix %s and run again.' % (
+                            e, protocolsConfPath))
 
-            cls.__addAllProtocols(protocols)
+            # Add all protocols to All view
+        cls.__addAllProtocols(protocols)
 
-            return protocols
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                     'To solve it, delete %s and run again.' % (e, protocolsConf))
+        return protocols
