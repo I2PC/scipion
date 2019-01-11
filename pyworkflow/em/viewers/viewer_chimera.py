@@ -43,7 +43,7 @@ from pyworkflow.em.constants import (
     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL, SYM_I222,
     SYM_I222r, SYM_In25, SYM_In25r)
 import pyworkflow.em.metadata as md
-from pyworkflow.em.data import AtomStruct
+from pyworkflow.em.data import AtomStruct, PdbFile
 from pyworkflow.em.convert import ImageHandler
 
 
@@ -568,7 +568,7 @@ class ChimeraDataView(ChimeraClientView):
 class ChimeraViewer(Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [DESKTOP_TKINTER]
-    _targets = [AtomStruct]
+    _targets = [AtomStruct, PdbFile]
 
     def __init__(self, **kwargs):
         Viewer.__init__(self, **kwargs)
