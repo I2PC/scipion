@@ -189,6 +189,11 @@ class ProtAlignMovies(ProtProcessMovies):
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
 
+            # If need to save the movie
+            if saveMovie:
+                movieSet.setGain(None)
+                movieSet.setDark(None)
+
             for movie in newDone:
                 newMovie = self._createOutputMovie(movie)
                 if newMovie.getAlignment().getShifts()[0]:
@@ -275,9 +280,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
         if lastFrame == 0:
-            # Although getFirstItem is not remonended in general, here it is
+            # Although getFirstItem is not recommended in general, here it is
             # used olny once, for validation purposes, so performance
-            # problems not should be apprear.
+            # problems should not appear.
             frames = self.inputMovies.get().getFirstItem().getNumberOfFrames()
             lastFrame = frames
         else:
