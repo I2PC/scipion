@@ -58,6 +58,8 @@ class PluginTree(ttk.Treeview):
         self.im_installed = gui.getImage(Icon.INSTALLED)
         self.im_processing = gui.getImage(Icon.PROCESSING)
         self.im_failure = gui.getImage(Icon.FAILURE)
+        self.im_availableRelease = gui.getImage(Icon.CHECKED)
+
         self.tag_configure(PluginStates.UNCHECKED, image=self.im_unchecked)
         self.tag_configure(PluginStates.CHECKED, image=self.im_checked)
         self.tag_configure(PluginStates.INSTALL, image=self.im_install)
@@ -66,6 +68,10 @@ class PluginTree(ttk.Treeview):
         self.tag_configure(PluginStates.INSTALLED, image=self.im_installed)
         self.tag_configure(PluginStates.PRECESSING, image=self.im_processing)
         self.tag_configure(PluginStates.FAILURE, image=self.im_failure)
+        helv36 = tkFont.Font(family="Helvetica", size=10, weight="bold")
+        self.tag_configure(PluginStates.AVAILABLE_RELEASE,
+                           image=self.im_availableRelease,
+                           font=helv36)
         self.selectedItem = None
 
     def insert(self, parent, index, iid=None, **kw):
@@ -78,7 +84,8 @@ class PluginTree(ttk.Treeview):
                   PluginStates.CHECKED in kw["tags"] or
                   PluginStates.TO_INSTALL in kw["tags"] or
                   PluginStates.INSTALLED in kw["tags"] or
-                  PluginStates.INSTALL in kw["tags"]):
+                  PluginStates.INSTALL in kw["tags"] or
+                  PluginStates.AVAILABLE_RELEASE in kw["tags"]):
             kw["tags"] = (PluginStates.UNCHECKED,)
         ttk.Treeview.insert(self, parent, index, iid, **kw)
 
@@ -92,7 +99,8 @@ class PluginTree(ttk.Treeview):
 
     def uncheck_item(self, item):
         """ uncheck the boxes of item's descendant """
-        if PluginStates.CHECKED in self.item(item, 'tags'):
+        if (PluginStates.CHECKED in self.item(item, 'tags') or
+                PluginStates.AVAILABLE_RELEASE in self.item(item, 'tags')):
             self.item(item, tags=(PluginStates.UNINSTALL,))
             children = self.get_children(item)
             for iid in children:
@@ -188,7 +196,8 @@ class Operation:
             plugin = PluginInfo(self.objParent, self.objParent, remote=False)
             if self.objStatus == PluginStates.INSTALL:
                 if plugin is not None:
-                    plugin.installBin(args=[self.getObjName(), '-j', processors])
+                    plugin.installBin(args=[self.getObjName(), '-j',
+                                            processors])
             else:
                 plugin.uninstallBins([self.objName])
 
@@ -449,9 +458,9 @@ class PluginBrowser(tk.Frame):
         self.Textlog.grid(row=0, column=0, sticky='news')
 
         self.file_log_path = os.path.join(os.environ['SCIPION_LOGS'],
-                                     PLUGIN_LOG_NAME)
+                                          PLUGIN_LOG_NAME)
         self.file_errors_path = os.path.join(os.environ['SCIPION_LOGS'],
-                                        PLUGIN_ERRORS_LOG_NAME)
+                                             PLUGIN_ERRORS_LOG_NAME)
         
         self.fileLog = open(self.file_log_path, 'w', 0)
         self.fileLogErr = open(self.file_errors_path, 'w', 0)
@@ -469,8 +478,8 @@ class PluginBrowser(tk.Frame):
                 tags = self.tree.item(self.tree.selectedItem, "tags")
                 objType = self.tree.item(self.tree.selectedItem, "value")
                 parent = self.tree.parent(self.tree.selectedItem)
-                operation = Operation(self.tree.selectedItem, objType[0], tags[0],
-                                      parent)
+                operation = Operation(self.tree.selectedItem, objType[0],
+                                      tags[0], parent)
                 self.operationList.insertOperation(operation)
                 if tags[0] == PluginStates.UNCHECKED:
                     self.tree.check_item(self.tree.selectedItem)
@@ -535,7 +544,8 @@ class PluginBrowser(tk.Frame):
         # Create two tabs where the log and errors will appears
         self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
         if event is not None:
-            threadOp = threading.Thread(name="plugin-manager", target=self._applyOperations,
+            threadOp = threading.Thread(name="plugin-manager",
+                                        target=self._applyOperations,
                                         args=(None,))
             threadOp.start()
 
@@ -591,15 +601,14 @@ class PluginBrowser(tk.Frame):
         """
         x, y, widget = event.x, event.y, event.widget
         item = self.topPanelTree.selectedItem = self.topPanelTree.identify_row(y)
-        if len(self.topPanelTree.selectedItem) and \
-                self.topPanelTree.item(item, 'value')[0] == 'pluginUrl':
+        if (len(self.topPanelTree.selectedItem) and
+                self.topPanelTree.item(item, 'value')[0] == 'pluginUrl'):
             browser = webbrowser.get()
             browser.open(item)
 
     def operationInformation(self, event):
         """Update the operationTree selected item"""
         x, y, widget = event.x, event.y, event.widget
-        elem = widget.identify("element", x, y)
         item = self.operationTree.selectedItem = self.operationTree.identify_row(y)
         if len(item) and len(self.operationList.getOperations(None)):
             self.cancelOpsBtn.config(state='normal')
@@ -630,7 +639,7 @@ class PluginBrowser(tk.Frame):
 
     def showPluginInformation(self, pluginName):
         """Shows the information associated with a given plugin"""
-        plugin =  pluginDict.get(pluginName, None)
+        plugin = pluginDict.get(pluginName, None)
         if plugin is not None:
             pluginName = plugin.getPipName()
             pluginVersion = plugin.getPipVersion()
@@ -644,9 +653,19 @@ class PluginBrowser(tk.Frame):
             self.topPanelTree.insert('', 'end', pluginName,
                                      text='Name:          ' + pluginName,
                                      values='pluginName')
+            if pluginVersion != plugin.latestRelease:
+                pluginVersion = (pluginVersion + '  *(A new release is '
+                                                 'available now: version ' +
+                                 plugin.latestRelease + ')')
+                self.topPanelTree.tag_configure('pluginVersion',
+                                                foreground=Color.RED_COLOR)
+            else:
+                self.topPanelTree.tag_configure('pluginVersion',
+                                                foreground='black')
             self.topPanelTree.insert('', 'end', pluginVersion,
                                      text='Version:        ' + pluginVersion,
-                                     values='pluginVersion')
+                                     values='pluginVersion',
+                                     tags=('pluginVersion',))
             self.topPanelTree.insert('', 'end', pluginDescription,
                                      text='Description:  ' + pluginDescription,
                                      values='pluginDescription')
@@ -661,7 +680,7 @@ class PluginBrowser(tk.Frame):
         """
         Reload a given plugin and update the tree view
         """
-        plugin = PluginInfo(pluginName, pluginName, remote=False)
+        plugin = PluginInfo(pluginName, pluginName, remote=True)
         if plugin is not None:
             # Insert all binaries of plugin on the tree
             if plugin.isInstalled():
@@ -684,7 +703,10 @@ class PluginBrowser(tk.Frame):
                                 self.tree.insert(pluginName, "end", binaryName,
                                                  text=binaryName, tags=tag,
                                                  values='binary')
-                self.tree.item(pluginName, tags=(PluginStates.CHECKED,))
+                tag = PluginStates.CHECKED
+                if plugin.latestRelease != plugin.pipVersion:
+                    tag = PluginStates.AVAILABLE_RELEASE
+                self.tree.item(pluginName, tags=(tag,))
             else:
                 if PluginStates.UNINSTALL in self.tree.item(pluginName, 'tags'):
                     self.tree.item(pluginName, tags=(PluginStates.UNCHECKED,))
@@ -706,8 +728,11 @@ class PluginBrowser(tk.Frame):
                 if plugin._getPlugin():
                     # Insert the plugin name in the tree
                     tag = PluginStates.CHECKED
-                    self.tree.insert("", 0, pluginName, text=pluginName, tags=tag,
-                                     values=PluginStates.PLUGIN)
+                    latestRelease = pluginDict.get(pluginName).latestRelease
+                    if plugin.pipVersion != latestRelease:
+                        tag = PluginStates.AVAILABLE_RELEASE
+                    self.tree.insert("", 0, pluginName, text=pluginName,
+                                     tags=tag, values=PluginStates.PLUGIN)
                     # Insert all binaries of plugin on the tree
                     pluginBinaryList = plugin.getInstallenv()
                     if pluginBinaryList is not None:
@@ -726,8 +751,8 @@ class PluginBrowser(tk.Frame):
                                                  text=binaryName, tags=tag,
                                                  values=PluginStates.BINARY)
                 else:
-                    self.tree.insert("", 0, pluginName, text=pluginName, tags=tag,
-                                     values=PluginStates.PLUGIN)
+                    self.tree.insert("", 0, pluginName, text=pluginName,
+                                     tags=tag, values=PluginStates.PLUGIN)
 
 
 class PluginManagerWindow(gui.Window):
@@ -819,7 +844,6 @@ class PluginManager(PluginManagerWindow):
     """
     Windows to hold a frame inside.
     """
-    def __init__(self, title, master=None, path=None,
-                 onSelect=None, shortCuts=None, **kwargs):
+    def __init__(self, title, master=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
         browser = PluginBrowser(self.root, **kwargs)

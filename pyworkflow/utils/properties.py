@@ -359,6 +359,7 @@ class PluginStates():
     INSTALLED = 'installed'
     PRECESSING = 'processing'
     FAILURE = 'failure'
+    AVAILABLE_RELEASE = 'available_release'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
