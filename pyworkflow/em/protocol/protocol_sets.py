@@ -161,9 +161,11 @@ class ProtUnionSet(ProtSets):
         for itemSet in self.inputSets:
             for obj in itemSet.get():
                 objId = obj.getObjId()
-                if self.ignoreDuplicates.get() and objId in idsList:
-                    continue
-                idsList.append(objId)
+                if self.ignoreDuplicates.get():
+                    if objId in idsList:
+                        continue
+                    idsList.append(objId)
+
                 if self.ignoreExtraAttributes:
                     newObj = itemSet.get().ITEM_TYPE()
                     newObj.copyAttributes(obj, *copyAttrs)
