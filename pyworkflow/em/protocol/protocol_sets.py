@@ -101,12 +101,6 @@ class ProtUnionSet(ProtSets):
                            ' volumes, etc.) to be united. If you select 3 sets '
                            'with 100, 200, 200 elements, the final set will '
                            'contain a total of 500 elements.')
-        form.addParam('renumber', pwprot.params.BooleanParam, default=False, 
-                      expertLevel=pwprot.LEVEL_ADVANCED,
-                      label="Create new ids",
-                      help='Make an automatic renumbering of the ids, so the '
-                           'new objects\nare not associated to the old ones.')
-
         form.addParam('ignoreDuplicates', pwprot.params.BooleanParam,
                       default=False,
                       label='Ignore duplicates?',
@@ -123,6 +117,11 @@ class ProtUnionSet(ProtSets):
                            'inputs since they will be identical. '
                            'Therefore, set this option to *Yes* to keep only '
                            'one copy of the item. (the first occurrence)')
+        form.addParam('renumber', pwprot.params.BooleanParam, default=False,
+                      expertLevel=pwprot.LEVEL_ADVANCED,
+                      label="Force new ids",
+                      help='Make an automatic renumbering of the ids, so all '
+                           'new objects will not be associated to the old ones.')
 
         # TODO: See what kind of restrictions we add,
         # like "All sets should have the same sampling rate."
