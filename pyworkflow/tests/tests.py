@@ -88,13 +88,28 @@ class BaseTest(unittest.TestCase):
         """Return the path relative to SCIPION_HOME/tests"""
         return relpath(filename, basedir)
     
-    @classmethod
-    def launchProtocol(cls, prot):
-        """ Launch a given protocol using cls.proj and the
-        flag wait=True.
+    def launchProtocol(cls, prot, **kwargs):
+        """ Launch a given protocol using cls.proj.
+        Accepted **kwargs:
+            wait: if True the function will return after the protocol runs.
+                If not specified, then if waitForOutput is passed, wait is
+                false.
+            waitForOutputs: a list of expected outputs, ignored if wait=True
         """
+        wait = kwargs.get('wait', None)
+        waitForOutputs = kwargs.get('waitForOutput', [])
+
+        if wait is None:
+            wait = not waitForOutputs
+
         if getattr(prot, '_run', True):
-            cls.proj.launchProtocol(prot, wait=True)
+            cls.proj.launchProtocol(prot, wait=wait)
+            if not wait and waitForOutputs:
+                while True:
+                    time.sleep(10)
+                    prot = cls.updateProtocol(prot)
+                    if all(prot.hasAttribute(o) for o in waitForOutputs):
+                        return prot
         
         if prot.isFailed():
             print("\n>>> ERROR running protocol %s" % prot.getRunName())
@@ -110,6 +125,8 @@ class BaseTest(unittest.TestCase):
             for i in range(0, len(logLines)):
                 print(logLines[i])
             raise Exception("ERROR: Protocol not finished")
+
+        return prot
     
     @classmethod    
     def saveProtocol(cls, prot):
