@@ -109,25 +109,28 @@ class ProtUnionSet(ProtSets):
 
         form.addParam('ignoreDuplicates', pwprot.params.BooleanParam,
                       default=False,
-                      expertLevel=pwprot.LEVEL_ADVANCED,
                       label='Ignore duplicates?',
-                      help='By default if duplicated items are found in input '
-                           'sets this will cause renumbering of the items ids '
-                           'in the output set. This is the case for example '
-                           'when doing several imports, which will cause ids '
-                           'overlapping, but we really want to insert as new '
-                           'items in the output. If, for example, the items '
-                           'belonged to the same set in a previous step, you '
-                           'should set this option to *Yes* to keep only one '
-                           'copy of the item. (the first occurrence)')
-        
+                      help='By default, if duplicated items are found (same ID) '
+                           'within the input sets, it will cause renumbering of the '
+                           'items ids in the output set. '
+                           'This is the case for example when doing several '
+                           'imports (which will cause ids overlapping) '
+                           'but we really want to insert as new items in the '
+                           'output. \n'
+                           'On the other hand, if the items come from the same '
+                           'protocol (obove in the workflow), you would like '
+                           'to ignore that items that appears in the different '
+                           'inputs since they will be identical. '
+                           'Therefore, set this option to *Yes* to keep only '
+                           'one copy of the item. (the first occurrence)')
+
         # TODO: See what kind of restrictions we add,
         # like "All sets should have the same sampling rate."
 
     #-------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
-    
+
     # --------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
@@ -140,7 +143,8 @@ class ProtUnionSet(ProtSets):
 
         # Renumber from the beginning if either the renumber option is selected
         # or we find duplicated ids in the sets
-        cleanIds = self.renumber.get() or self.duplicatedIds()
+        cleanIds = ((not self.ignoreDuplicates.get() and self.duplicatedIds())
+                        or self.renumber.get())
 
         #TODO ROB remove ignoreExtraAttributes condition
         #or implement it. But this will be for Scipion 1.2
@@ -154,15 +158,20 @@ class ProtUnionSet(ProtSets):
                 if not "." in attr:
                     copyAttrs.append(attr)
 
+        idsList = []
         for itemSet in self.inputSets:
             for obj in itemSet.get():
+                objId = obj.getObjId()
+                if self.ignoreDuplicates.get() and objId in idsList:
+                    continue
+                idsList.append(objId)
                 if self.ignoreExtraAttributes:
                     newObj = itemSet.get().ITEM_TYPE()
                     newObj.copyAttributes(obj, *copyAttrs)
 
                     self.cleanExtraAttributes(newObj, commonAttrs)
                     if not cleanIds:
-                        newObj.setObjId(obj.getObjId())
+                        newObj.setObjId(objId)
                 else:
                     newObj = obj
 
