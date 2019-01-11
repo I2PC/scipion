@@ -687,7 +687,10 @@ class Project(object):
             m = REGEX_NUMBER_ENDING.match(otherProtLabel)
             if m and m.groupdict()['prefix'].strip() == defaultLabel:
                 stringSuffix = m.groupdict()['number'].strip('(').strip(')')
-                maxSuffix = max(int(stringSuffix),maxSuffix)
+                try:
+                    maxSuffix = max(int(stringSuffix),maxSuffix)
+                except:
+                    print "stringSuffix", stringSuffix
             elif otherProtLabel == defaultLabel: # When only we have the prefix,
                 maxSuffix = max(1,maxSuffix)     # this REGEX don't match.
 

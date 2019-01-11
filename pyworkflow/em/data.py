@@ -838,8 +838,7 @@ class Sequence(EMObject):
     def __str__(self):
          return "Sequence (name = {})\n".format(self.getSeqName())
 
-
-class PdbFile(EMFile):
+class AtomStruct(EMFile):
     """Represents an PDB file. """
 
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
@@ -893,6 +892,12 @@ class PdbFile(EMFile):
 
     def setOrigin(self, newOrigin):
         self._origin = newOrigin
+
+class PdbFile(AtomStruct):
+    def __init__(self, filename=None, pseudoatoms=False, **kwargs):
+        AtomStruct.__init__(self, filename, pseudoatoms, **kwargs)
+        print "This class has been renamed to AtomStruct. Please" \
+              " update your code"
 
 
 class EMSet(Set, EMObject):
@@ -1317,9 +1322,17 @@ class SetOfDefocusGroup(EMSet):
         self._avgSet.set(value)
 
 
-class SetOfPDBs(EMSet):
+class SetOfAtomStructs(EMSet):
     """ Set containing PDB items. """
-    ITEM_TYPE = PdbFile
+    ITEM_TYPE = AtomStruct
+
+class SetOfPDBs(SetOfAtomStructs):
+    """ Set containing PDB items. """
+    def __init__(self):
+        SetOfAtomStructs.__init__(self)
+        print "SetOfPDBs class has been renamed to SetOfAtomStructs. Please" \
+              " update your code"
+
 
 class SetOfSequences(EMSet):
     """Set containing Sequence items."""
