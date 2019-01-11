@@ -412,6 +412,15 @@ class ProtExtractParticles(ProtParticles):
         coordSet._xmippMd = String()
         coordSet.loadAllProperties()
 
+        # TODO: horrible code. Rewrite using
+        # for coord in coordSet.iterItems(orderBy='_micId',
+        #                                 direction='ASC'):
+        #     micId = coord.getMicId()
+        #     if micId != lastMicId:
+        #         lastMicId = micId
+        #         ...
+        #     ...
+
         for micKey, mic in micDict.iteritems():
             if counter % 50 == 0:
                 b = datetime.now()

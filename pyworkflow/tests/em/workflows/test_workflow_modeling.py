@@ -44,7 +44,7 @@ import json
 
 ChimeraProtRigidFit = importFromPlugin('chimera.protocols',
                                        'ChimeraProtRigidFit', doRaise=True)
-CootRefine = importFromPlugin('cpp4.protocols', 'CootRefine', doRaise=True)
+CootRefine = importFromPlugin('ccp4.protocols', 'CootRefine', doRaise=True)
 CCP4ProtRunRefmac = importFromPlugin('ccp4.protocols', 'CCP4ProtRunRefmac')
 PhenixProtRunEMRinger = importFromPlugin('phenix.protocols',
                                          'PhenixProtRunEMRinger', doRaise=True)

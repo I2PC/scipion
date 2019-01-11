@@ -75,6 +75,9 @@ runs = project.getRuns()
 # Now assuming that there is no dependencies between runs
 # and the graph is lineal
 for prot in runs:
-    project.stopProtocol(prot)
-
+    if prot.isActive():
+        try:
+            project.stopProtocol(prot)
+        except:
+            print "Couldn't stop protocol %s" % prot
 

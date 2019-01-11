@@ -138,7 +138,7 @@ class ObjectBrowser(tk.Frame):
         if desc is not None:
             self.text.addText(desc)
         self.text.setReadOnly(True)
-        if self.entryLabel and not self._lastSelected.isDir():
+        if hasattr(self, 'entryLabel') and not self._lastSelected.isDir():
             self.entryVar.set(self._lastSelected.getFileName())
 
     def getSelected(self):

@@ -204,7 +204,8 @@ class ChimeraClient:
         self.client.send(data)
 
     def initListenThread(self):
-            self.listen_thread = Thread(target=self.listen)
+            self.listen_thread = Thread(name="ChimeraCli.listenTh",
+                                        target=self.listen)
             # self.listen_thread.daemon = True
             self.listen_thread.start()
 
@@ -454,7 +455,8 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
                               dim=self.size, label="Projection")
         self.iw.updateData(flipud(self.projection.getData()))
         if self.showjPort:
-            self.showjThread = Thread(target=self.listenShowJ)
+            self.showjThread = Thread(name="ChimeraProjClient",
+                                      target=self.listenShowJ)
             self.showjThread.daemon = True
             self.showjThread.start()
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
@@ -489,7 +491,8 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
             sys.exit(0)
 
     def initListenThread(self):
-        self.listen_thread = Thread(target=self.listen)
+        self.listen_thread = Thread(name="ChimeraProjectionCli.initListen",
+                                    target=self.listen)
         self.listen_thread.daemon = True
         self.listen_thread.start()
 
@@ -591,6 +594,7 @@ class ChimeraViewer(Viewer):
                     tmpPath = "/tmp"
                 fnCmd = os.path.join(tmpPath, "chimera.cmd")
                 f = open(fnCmd, 'w')
+                f.write("cofr 0,0,0\n")  # set center of coordinates
                 if obj.hasVolume():
                     volID = 0
                     volumeObject = obj.getVolume()

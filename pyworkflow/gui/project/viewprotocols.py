@@ -303,10 +303,35 @@ class StepsWindow(pwgui.browser.BrowserWindow):
         g = self._protocol.getStepsGraph()
         w = pwgui.Window("Protocol steps", self, minsize=(800, 600))
         root = w.root
-        canvas = pwgui.Canvas(root, width=600, height=500)
+        canvas = pwgui.Canvas(root, width=600, height=500, tooltipCallback=self._stepTooltip,)
         canvas.grid(row=0, column=0, sticky='nsew')
         canvas.drawGraph(g, pwgui.graph.LevelTreeLayout())
         w.show()
+
+    def _stepTooltip(self, tw, item):
+        """ Create the contents of the tooltip to be displayed
+        for the given step.
+        Params:
+            tw: a tk.TopLevel instance (ToolTipWindow)
+            item: the selected step.
+        """
+
+        if not hasattr(item.node, 'step'):
+            return
+
+        step = item.node.step
+
+        tm = str(step.funcName)
+
+        if not hasattr(tw, 'tooltipText'):
+            frame = tk.Frame(tw)
+            frame.grid(row=0, column=0)
+            tw.tooltipText = pwgui.dialog.createMessageBody(frame, tm, None,
+                                                            textPad=0,
+                                                            textBg=Color.LIGHT_GREY_COLOR_2)
+            tw.tooltipText.config(bd=1, relief=tk.RAISED)
+        else:
+            pwgui.dialog.fillMessageText(tw.tooltipText, tm)
 
 
 class SearchProtocolWindow(pwgui.Window):
@@ -580,7 +605,6 @@ class ProtocolsView(tk.Frame):
         self.root = windows.root
         self.getImage = windows.getImage
         self.protCfg = windows.protCfg
-        self.icon = windows.icon
         self.settings = windows.getSettings()
         self.runsView = self.settings.getRunsView()
         self._loadSelection()
@@ -1574,13 +1598,13 @@ class ProtocolsView(tk.Frame):
     def _browseSteps(self):
         """ Open a new window with the steps list. """
         window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows,
-                             self.getSelectedProtocol(), icon=self.icon)
+                             self.getSelectedProtocol())
         window.show()
 
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.getSelectedProtocol())
         window = pwgui.browser.BrowserWindow(Message.TITLE_BROWSE_DATA,
-                                             self.windows, icon=self.icon)
+                                             self.windows)
         window.setBrowser(pwgui.browser.ObjectBrowser(window.root, provider))
         window.itemConfig(self.getSelectedProtocol(), open=True)
         window.show()
