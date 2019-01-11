@@ -253,7 +253,7 @@ class ReportHtml:
             dstImgPath = join(self.reportDir, self.thumbPaths[MIC_THUMBS][i])
             if not exists(dstImgPath):
                 if self.micThumbSymlinks:
-                    pwutils.createAbsLink(self.thumbPaths[MIC_PATH][i], dstImgPath)
+                    pwutils.copyFile(self.thumbPaths[MIC_PATH][i], dstImgPath)
                 else:
                     ih.computeThumbnail(self.thumbPaths[MIC_PATH][i],
                                         dstImgPath, scaleFactor=micScaleFactor,
@@ -263,7 +263,7 @@ class ReportHtml:
             if SHIFT_THUMBS in self.thumbPaths:
                 dstImgPath = join(self.reportDir, self.thumbPaths[SHIFT_THUMBS][i])
                 if not exists(dstImgPath):
-                    pwutils.createAbsLink(self.thumbPaths[SHIFT_PATH][i], dstImgPath)
+                    pwutils.copyFile(self.thumbPaths[SHIFT_PATH][i], dstImgPath)
 
             # Psd thumbnails
             # If there ARE thumbnail for the PSD (no ctf protocol and
@@ -280,7 +280,7 @@ class ReportHtml:
                             ih.computeThumbnail(dstImgPath, dstImgPath,
                                                 scaleFactor=1, flipOnY=True)
                         else:
-                            pwutils.createAbsLink(srcImgPath, dstImgPath)
+                            pwutils.copyFile(srcImgPath, dstImgPath)
                 else:
                     dstImgPath = join(self.reportDir, self.thumbPaths[PSD_THUMBS][i])
                     if not exists(dstImgPath):
