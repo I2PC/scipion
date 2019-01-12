@@ -844,6 +844,7 @@ class PluginManager(PluginManagerWindow):
     """
     Windows to hold a frame inside.
     """
-    def __init__(self, title, master=None, **kwargs):
+    def __init__(self, title, master=None, path=None,
+                 onSelect=None, shortCuts=None, **kwargs):
         PluginManagerWindow.__init__(self, title, master, **kwargs)
         browser = PluginBrowser(self.root, **kwargs)
