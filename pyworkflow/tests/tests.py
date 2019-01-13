@@ -88,6 +88,7 @@ class BaseTest(unittest.TestCase):
         """Return the path relative to SCIPION_HOME/tests"""
         return relpath(filename, basedir)
     
+    @classmethod 
     def launchProtocol(cls, prot, **kwargs):
         """ Launch a given protocol using cls.proj.
         Accepted **kwargs:
