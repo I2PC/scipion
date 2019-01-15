@@ -25,6 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
 
 import os
 from os.path import join, basename
@@ -128,7 +129,7 @@ class ProtImportMicBase(ProtImportImages):
 
             if event == 'start':
                 if 'pixelSize' in elem.tag:
-                    print "started: pixelSize"
+                    print("started: pixelSize")
                     pixelSize = True
 
             elif event == 'end':
@@ -165,6 +166,11 @@ class ProtImportMicrographs(ProtImportMicBase):
         """
         choices = ProtImportImages._getImportChoices(self)
         return choices + ['emx', 'xmipp3', 'scipion']
+
+    def _getBlacklistSetClass(self):
+        """ Returns the class to be blacklisted by this protocol.
+        """
+        return "SetOfMicrographs"
     
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters
@@ -288,6 +294,11 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase.__init__(self, **kwargs)
         self.serverSocket = None
         self.connectionList = None
+
+    def _getBlacklistSetClass(self):
+        """ Returns the class to be blacklisted by this protocol.
+        """
+        return "SetOfMicrographs"
     
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)
@@ -449,7 +460,7 @@ class ProtImportMovies(ProtImportMicBase):
             decompress('tar', 'jxf %s', '.tbz', '.mrc')
         
         dim = dimMovie.getDim()
-        print "Dim: ", dim
+        print("Dim: ", dim)
         range = [1, dim[2], 1]
         movie.setFramesRange(range)
         imgSet.setDim(dim)
@@ -536,24 +547,18 @@ class ProtImportMovies(ProtImportMicBase):
         
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
-            if self.streamingSocket:
-                iterInputFiles = self.iterFilenamesFromSocket()
-            else:
-                iterInputFiles = ProtImportMicBase.iterNewInputFiles(self)
+            iterInputFiles = ProtImportMicBase.iterNewInputFiles(self)
             
             for fileName, uniqueFn, fileId in iterInputFiles:
                 yield fileName, uniqueFn, fileId
             return
         
         if self.dataStreaming:
-            if self.streamingSocket:
-                filePaths = [f[0] for f in self.iterFilenamesFromSocket()]
-            else:
-                # Consider only the files that are not changed in the fileTime
-                # delta if processing data in streaming
-                fileTimeout = timedelta(seconds=self.fileTimeout.get())
-                filePaths = [f for f in self.getMatchFiles()
-                             if not self.fileModified(f, fileTimeout)]
+            # Consider only the files that are not changed in the fileTime
+            # delta if processing data in streaming
+            fileTimeout = timedelta(seconds=self.fileTimeout.get())
+            filePaths = [f for f in self.getMatchFiles()
+                         if not self.fileModified(f, fileTimeout)]
         else:
             filePaths = self.getMatchFiles()
         

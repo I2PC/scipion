@@ -172,7 +172,7 @@ class ProtImportImages(ProtImportFiles):
             sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
             sys.stdout.flush()
             
-        print "\n"
+        print("\n")
         
         args = {}
         outputSet = self._getOutputName()
@@ -234,7 +234,7 @@ class ProtImportImages(ProtImportFiles):
             fileTimeout = timedelta(seconds=5)
 
         while not finished:
-            time.sleep(3) # wait 3 seconds before check for new files
+            time.sleep(3)  # wait 3 seconds before check for new files
             someNew = False
             someAdded = False
 
@@ -262,7 +262,7 @@ class ProtImportImages(ProtImportFiles):
 
                 someAdded = True
                 self.debug('Appending file to DB...')
-                if self.importedFiles: # enable append after first append
+                if self.importedFiles:  # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:
@@ -347,14 +347,14 @@ class ProtImportImages(ProtImportFiles):
                 #  - Importing in streaming, since files may be incomplete
                 #  - Bad characters in path [':' ,'%', '#']
                 if (not self.dataStreaming and
-                    not (imgFn.endswith('bz2') or 
+                    not (imgFn.endswith('bz2') or
                          imgFn.endswith('tbz') or
-			 ih.isImageFile(imgFn))):
+                         ih.isImageFile(imgFn))):
                     if not errors:  # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)
                     errors += ProtImportImages.validatePath(imgFn)
-        
+
         return errors
         
     def _validate(self):

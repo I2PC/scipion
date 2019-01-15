@@ -36,7 +36,6 @@ from pyworkflow.utils.path import expandPattern, copyFile, createAbsLink
 from pyworkflow.em.protocol import EMProtocol
 
 
-
 class ProtImport(EMProtocol):
     """ Base class for other all Import protocols. """
 
@@ -52,25 +51,26 @@ class ProtImportFiles(ProtImport):
         (_importFile(fileName, fileId))
     """
     IMPORT_FROM_FILES = 0
+    BLACKLIST_REGEXPS = 0
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         importChoices = self._getImportChoices()
         filesCondition = self._getFilesCondition()
-        
+
         form.addSection(label='Import')
 
-        if len(importChoices) > 1: # not only from files
-            form.addParam('importFrom', params.EnumParam, 
+        if len(importChoices) > 1:  # not only from files
+            form.addParam('importFrom', params.EnumParam,
                           choices=importChoices, default=self._getDefaultChoice(),
                           label='Import from',
                           help='Select the type of import.')
         else:
-            form.addHidden('importFrom', params.EnumParam, 
-                          choices=importChoices, default=self.IMPORT_FROM_FILES,
-                          label='Import from',
-                          help='Select the type of import.')
-        form.addParam('filesPath', params.PathParam, 
+            form.addHidden('importFrom', params.EnumParam,
+                           choices=importChoices, default=self.IMPORT_FROM_FILES,
+                           label='Import from',
+                           help='Select the type of import.')
+        form.addParam('filesPath', params.PathParam,
                       condition=filesCondition,
                       label="Files directory",
                       help="Directory with the files you want to import.\n\n"
@@ -87,7 +87,7 @@ class ProtImportFiles(ProtImport):
                            "NOTE: wildcard characters ('*', '?', '#') "
                            "cannot appear in the actual path.)")
         form.addParam('filesPattern', params.StringParam,
-                      label='Pattern', 
+                      label='Pattern',
                       condition=filesCondition,
                       help="Pattern of the files to be imported.\n\n"
                            "The pattern can contain standard wildcards such as\n"
@@ -97,7 +97,7 @@ class ProtImportFiles(ProtImport):
                            "('*', '?', '#', ':', '%') cannot appear in the "
                            "actual path.")
         form.addParam('copyFiles', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED, 
+                      expertLevel=params.LEVEL_ADVANCED,
                       label="Copy files?",
                       help="By default the files are not copied into the "
                            "project to avoid data duplication and to save "
@@ -108,38 +108,40 @@ class ProtImportFiles(ProtImport):
 
         self._defineImportParams(form)
 
+        self._defineBlacklistParams(form)
+
         self._defineAcquisitionParams(form)
 
         form.addSection('Streaming')
-        
+
         form.addParam('dataStreaming', params.BooleanParam, default=False,
-              label="Process data in streaming?",
-              help="Select this option if you want import data as it is "
-                   "generated and process on the fly by next protocols. "
-                   "In this case the protocol will keep running to check "
-                   "new files and will update the output Set, which can "
-                   "be used right away by next steps.")
+                      label="Process data in streaming?",
+                      help="Select this option if you want import data as it is "
+                           "generated and process on the fly by next protocols. "
+                           "In this case the protocol will keep running to check "
+                           "new files and will update the output Set, which can "
+                           "be used right away by next steps.")
 
         form.addParam('timeout', params.IntParam, default=43200,
-              condition='dataStreaming',
-              label="Timeout (secs)",
-              help="Interval of time (in seconds) after which, if no new file "
-                   "is detected, the protocol will end. When finished, "
-                   "the output Set will be closed and no more data will be "
-                   "added to it. \n"
-                    "Note 1:  The default value is  high (12 hours) to avoid "
-                   "the protocol finishes during the aqcuisition of the "
-                   "microscpe. You can also stop it from right click and press "
-                   "STOP_STREAMING.\n"
-                   "Note 2: If you're using individual frames when importing "
-                   "movies, the timeout won't be refreshed until a whole "
-                   "movie is stacked.")
+                      condition='dataStreaming',
+                      label="Timeout (secs)",
+                      help="Interval of time (in seconds) after which, if no new file "
+                           "is detected, the protocol will end. When finished, "
+                           "the output Set will be closed and no more data will be "
+                           "added to it. \n"
+                           "Note 1:  The default value is  high (12 hours) to avoid "
+                           "the protocol finishes during the aqcuisition of the "
+                           "microscpe. You can also stop it from right click and press "
+                           "STOP_STREAMING.\n"
+                           "Note 2: If you're using individual frames when importing "
+                           "movies, the timeout won't be refreshed until a whole "
+                           "movie is stacked.")
 
         form.addParam('fileTimeout', params.IntParam, default=30,
-              condition='dataStreaming',
-              label="File timeout (secs)",
-              help="Interval of time (in seconds) after which, if a file has "
-                   "not changed, we consider it as a new file. \n")
+                      condition='dataStreaming',
+                      label="File timeout (secs)",
+                      help="Interval of time (in seconds) after which, if a file has "
+                           "not changed, we consider it as a new file. \n")
 
     def _defineImportParams(self, form):
         """ Override to add options related to the different types
@@ -147,15 +149,70 @@ class ProtImportFiles(ProtImport):
         """
         pass
 
+    def _getBlacklistSetClass(self):
+        """ Returns the class to be blacklisted by this protocol.
+        """
+        return "SetOfImages"
+
+    def _defineBlacklistParams(self, form):
+        """ Options to blacklist certain items when launching the
+        import protocol.
+        """
+        form.addParam("blacklist", params.BooleanParam,
+                      default=False,
+                      label="Add blacklist",
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help="Open options to blacklist files during import.")
+        group = form.addGroup("Blacklist options", condition='blacklist')
+        group.addParam("blacklistSet", params.PointerParam,
+                       pointerClass=self._getBlacklistSetClass(),
+                       condition='blacklist',
+                       allowsNull=True,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       label="Blacklist Set",
+                       help="Files on this set will not be imported")
+        group.addParam('blacklistDate', params.StringParam,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='blacklist',
+                       label="Blacklist date",
+                       allowsNull=True,
+                       help="Files acquired before this date will not be imported. "
+                            "Must follow format: YYYY-mm-dd HH:MM:SS \n"
+                            "e.g: 2019-01-14 14:18:05")
+        group.addParam('useRegexps', params.EnumParam,
+                       default=self.BLACKLIST_REGEXPS,
+                       condition='blacklist',
+                       choices=['RegExps', 'File names'],
+                       expertLevel=params.LEVEL_ADVANCED,
+                       label='Blacklist file type',
+                       help="Choose RegExp if the black list file contains regular expressions. Set to File Names if "
+                            "the black list file contains file names.")
+
+        group.addParam('blacklistFile', params.FileParam,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='blacklist',
+                       label="Blacklist File",
+                       allowsNull=True,
+                       help="Blacklist everything included in this file. If Use RegExps is True,"
+                            "lines will be interpreted as regular expressions. E.g: \n"
+                            "(.*)GRID_0[1-5](.*)\n"
+                            "(.*)/GRID_10/Falcon_2019_01_14-16_(.*)\n"
+                            "If Use RegExps is False, lines will be interpreted as file names. E.g.\n"
+                            "/path/to/GRID_10/Falcon_2019_01_14-16_51_20_0_movie.mrcs\n"
+                            "/path/to/GRID_10/Falcon_2019_01_14-16_55_40_0_movie.mrcs"
+                       )
+
+        return group
+
     def _defineAcquisitionParams(self, form):
         """ Override to add options related to acquisition info.
         """
         pass
 
     def _getDefaultChoice(self):
-        return  self.IMPORT_FROM_FILES
-    
-    #--------------------------- INFO functions --------------------------------
+        return self.IMPORT_FROM_FILES
+
+    # --------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         if self.importFrom == self.IMPORT_FROM_FILES:
@@ -167,25 +224,31 @@ class ProtImportFiles(ProtImport):
                 if self.numberOfFiles == 0:
                     errors.append("There are no files matching the pattern %s"
                                   % self.getPattern())
-            
+
+        if self.blacklistSet:
+            first = self.blacklistSet.get().getFirstItem()
+            if not os.path.islink(first.getFileName()):
+                errors.append("Can't blacklist an input Set if files were copied. Please choose "
+                              "a different blacklist option.")
+
         return errors
-    
-    #--------------------------- BASE methods to be overriden ------------------
+
+    # --------------------------- BASE methods to be overriden ------------------
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
         return ['files']
-    
+
     def _getFilesCondition(self):
         """ Return an string representing the condition
         when to display the files path and pattern to grab
         files.
         """
         return '(importFrom == %d)' % self.IMPORT_FROM_FILES
-    
-    #--------------------------- UTILS functions -------------------------------
+
+    # --------------------------- UTILS functions -------------------------------
     def getPattern(self):
         """ Expand the pattern using environ vars or username
         and also replacing special character # by digit matching.
@@ -193,7 +256,7 @@ class ProtImportFiles(ProtImport):
         self._idRegex = None
         filesPath = self.filesPath.get('').strip()
         filesPattern = self.filesPattern.get('').strip()
-        
+
         if filesPattern:
             fullPattern = join(filesPath, filesPattern)
         else:
@@ -201,19 +264,19 @@ class ProtImportFiles(ProtImport):
 
         pattern = expandPattern(fullPattern.replace("$", ""))
         match = re.match('[^#]*(#+)[^#]*', pattern)
-        
+
         if match is not None:
             g = match.group(1)
             n = len(g)
             # prepare regex pattern - place ids, handle *, handle ?
-            idregex = pattern.replace(g, '(%s)' % ('[0-9]'*n))
-            idregex = idregex.replace('*','.*')
+            idregex = pattern.replace(g, '(%s)' % ('[0-9]' * n))
+            idregex = idregex.replace('*', '.*')
             idregex = idregex.replace('?', '.')
             self._idRegex = re.compile(idregex)
-            pattern = pattern.replace(g, '[0-9]'*n)
-        
-        return pattern   
-    
+            pattern = pattern.replace(g, '[0-9]' * n)
+
+        return pattern
+
     def getMatchFiles(self, pattern=None):
         """ Return a sorted list with the paths of files that
         matched the pattern.
@@ -224,10 +287,10 @@ class ProtImportFiles(ProtImport):
         filePaths = glob(pattern)
         filePaths.sort()
         self.numberOfFiles = len(filePaths)
-        
+
         return filePaths
 
-    def getCopyOrLink(self):    
+    def getCopyOrLink(self):
         # Set a function to copyFile or createLink
         # depending in the user selected option 
         if self.copyFiles:
@@ -249,13 +312,50 @@ class ProtImportFiles(ProtImport):
 
         return delta < fileTimeout
 
+    def isBlacklisted(self, fileName):
+
+        if not self.blacklist:
+            return False
+
+        # Blacklisted by set
+        blacklistSet = self.blacklistSet.get()
+        if blacklistSet:
+            for img in blacklistSet:
+                blacklistFileName = img.getFileName()
+                if os.path.islink(blacklistFileName) and os.path.basename(fileName) in os.readlink(blacklistFileName):
+                    return True
+
+        # Blacklisted by date
+        blacklistDate = self.blacklistDate.get()
+        if blacklistDate:
+            fileDate = datetime.fromtimestamp(os.path.getmtime(fileName))
+            if fileDate < blacklistDate:
+                print("Blacklist warning: %s is blacklisted by date" % fileName)
+                return True
+
+        # Blacklisted by file
+        blacklistfile = self.blacklistFile.get()
+        if blacklistfile:
+            with open(blacklistfile, 'r') as f:
+                for blacklistedItem in f:
+                    blacklistedItem = blacklistedItem.strip()
+                    if self.useRegexps.get() == self.BLACKLIST_REGEXPS:
+                        if re.match(blacklistedItem, fileName):
+                            print("Blacklist warning: %s matched blacklist regexp %s"
+                                  % (fileName, blacklistedItem))
+                            return True
+                    elif fileName in blacklistedItem:
+                        return True
+
     def iterFiles(self):
         """ Iterate through the files matched with the pattern.
         Provide the fileName and fileId.
         """
         filePaths = self.getMatchFiles()
-        
+
         for fileName in filePaths:
+            if self.isBlacklisted(fileName):
+                continue
             if self._idRegex:
                 # Try to match the file id from filename
                 # this is set by the user by using #### format in the pattern
@@ -268,7 +368,5 @@ class ProtImportFiles(ProtImport):
 
             else:
                 fileId = None
-                
-            yield fileName, fileId            
 
-
+            yield fileName, fileId
