@@ -305,12 +305,32 @@ class PluginBrowser(tk.Frame):
         parentFrame.grid(row=0, column=0, sticky='news')
         gui.configureWeigths(parentFrame, 1)
 
+        self._lunchProgressBar(master)
+        self._fillPluginManagerGui(parentFrame)
+
+    def _lunchProgressBar(self, parent):
+        self.progressbarLabel = ttk.Label(parent, text='Loading Plugins...',
+                                          background='white')
+        self.progressbarLabel.place(x=450, y=65, width=200)
+        self.progressbar = ttk.Progressbar(parent)
+        self.progressbar.place(x=450, y=80, width=200)
+        self.progressbar.step(1)
+        self.progressbar.start(90)
+
+    def _closeProgressBar(self):
+        self.progressbar.stop()
+        self.progressbar.destroy()
+        self.progressbarLabel.destroy()
+
+    def _fillPluginManagerGui(self, parentFrame):
+        """
+        Fill the Plugin Manager GUI
+        """
         # The main layout will be two panes:
         # At the left containing the plugin list
         # and the right containing a description and the operation list
         mainFrame = tk.PanedWindow(parentFrame, orient=tk.HORIZONTAL)
         mainFrame.grid(row=1, column=0, sticky='news')
-
         # ---------------------------------------------------------------
         # Left Panel
         leftPanel = tk.Frame(mainFrame)  # Create a left panel to put the tree
@@ -338,15 +358,15 @@ class PluginBrowser(tk.Frame):
         tabControl = ttk.Notebook(bottomPanel)  # Create Tab Control
         tabControl.grid(row=1, column=0, sticky='news')
 
-        operationTab = ttk.Frame(tabControl)    # Create a operation tab
+        operationTab = ttk.Frame(tabControl)  # Create a operation tab
         operationTab.grid(row=0, column=0, padx=0, pady=0)
         self._fillRightBottomOperationsPanel(operationTab)
-        consoleTab = ttk.Frame(tabControl)    # Create a console
+        consoleTab = ttk.Frame(tabControl)  # Create a console
         self._fillRightBottomOutputLogPanel(consoleTab)
 
         tabControl.add(operationTab, text='Operations')  # Add the Operation tab
         tabControl.add(consoleTab, text='Output Log')
-        tabControl.pack(expand=1, fill="both")    # Pack to make visible
+        tabControl.pack(expand=1, fill="both")  # Pack to make visible
 
         # Add the widgets to Right Panel
         rightPanel.add(topPanel, padx=0, pady=0)
@@ -416,7 +436,9 @@ class PluginBrowser(tk.Frame):
         self.tree.bind("<FocusOut>", self._popupFocusOut)
 
         # Load all plugins and fill the tree view
-        self.loadPlugins()
+        threadLoadPlugin = threading.Thread(name="loading_plugin",
+                                            target=self.loadPlugins)
+        threadLoadPlugin.start()
 
     def _popup(self, event):
         try:
@@ -431,12 +453,10 @@ class PluginBrowser(tk.Frame):
         finally:
             self.popup_menu.grab_release()
 
-
     def _popupFocusOut(self, event=None):
         self.popup_menu.unpost()
 
     def _updatePlugin(self):
-        tags = self.tree.item(self.tree.selectedItem, "tags")
         objType = self.tree.item(self.tree.selectedItem, "value")
         parent = self.tree.parent(self.tree.selectedItem)
         operation = Operation(self.tree.selectedItem, objType[0],
@@ -693,20 +713,21 @@ class PluginBrowser(tk.Frame):
         """Shows the information associated with a given plugin"""
         plugin = pluginDict.get(pluginName, None)
         if plugin is not None:
+            self.topPanelTree.delete(*self.topPanelTree.get_children())
             pluginName = plugin.getPipName()
-            pluginVersion = plugin.getPipVersion()
+            pluginVersion = plugin.latestRelease
             pluginDescription = plugin.getSummary()
             pluginUrl = plugin.getHomePage()
             pluginAuthor = plugin.getAuthor()
-            self.topPanelTree.delete(*self.topPanelTree.get_children())
 
             self.topPanelTree.tag_configure('pluginUrl', foreground='blue')
 
             self.topPanelTree.insert('', 'end', pluginName,
                                      text='Name:          ' + pluginName,
                                      values='pluginName')
-            if pluginVersion != plugin.latestRelease:
-                pluginVersion = (pluginVersion + '  *(A new release is '
+            if PluginStates.AVAILABLE_RELEASE in self.tree.item(pluginName,
+                                                                'tags'):
+                pluginVersion = (plugin.getPipVersion() + '  *(A new release is '
                                                  'available now: version ' +
                                  plugin.latestRelease + ')')
                 self.topPanelTree.tag_configure('pluginVersion',
@@ -773,8 +794,13 @@ class PluginBrowser(tk.Frame):
         global pluginDict
         pluginDict = pluginRepo.getPlugins(getPipData=True)
         pluginList = sorted(pluginDict.keys(), reverse=True)
+        countPlugin = self.progressbar['value']
         self.tree.delete(*self.tree.get_children())
+        self.progressbar["maximum"] = countPlugin + len(pluginList)
+        self.progressbar.stop()
         for pluginName in pluginList:
+            countPlugin = countPlugin + 1
+            self.progressbar['value'] = countPlugin
             plugin = PluginInfo(pluginName, pluginName, remote=False)
             if plugin is not None:
                 tag = PluginStates.UNCHECKED
@@ -806,6 +832,7 @@ class PluginBrowser(tk.Frame):
                 else:
                     self.tree.insert("", 0, pluginName, text=pluginName,
                                      tags=tag, values=PluginStates.PLUGIN)
+        self._closeProgressBar()
 
 
 class PluginManagerWindow(gui.Window):
