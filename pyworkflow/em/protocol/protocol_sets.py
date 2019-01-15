@@ -467,6 +467,12 @@ class ProtSubSet(ProtSets):
             self.summaryVar.set('Output was not generated. Resulting set '
                                 'was EMPTY!!!')
 
+    # Overwrite SetOfCoordinates creation
+    def _createSetOfCoordinates(self, suffix=''):
+        coordSet = self.inputFullSet.get()
+        micSet = coordSet.getMicrographs()
+        return ProtSets._createSetOfCoordinates(self, micSet, suffix)
+
     # -------------------------- INFO functions -------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
