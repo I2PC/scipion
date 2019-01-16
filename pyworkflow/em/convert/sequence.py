@@ -108,7 +108,6 @@ class SequenceHandler:
                                            rettype=format, retmode="text")
 
                 record = SeqIO.read(handle, format)
-                print "record: ", record
                 break
             except urllib2.HTTPError, e:
                 error = "%s is a wrong sequence ID" % seqID

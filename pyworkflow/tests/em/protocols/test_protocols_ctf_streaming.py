@@ -35,7 +35,7 @@ from pyworkflow.utils import importFromPlugin
 XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols.protocol_ctf_micrographs',
                                            'XmippProtCTFMicrographs', doRaise=True)
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtGctf= importFromPlugin('gctf.protocols', 'ProtGctf', doRaise=True)
+ProtGctf = importFromPlugin('gctf.protocols', 'ProtGctf', doRaise=True)
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -151,7 +151,7 @@ class TestCtfStreaming(BaseTest):
             protCTF3.ctfDownFactor.set(2)
             self.proj.scheduleProtocol(protCTF3)
 
-        except NVMLError, err:
+        except NVMLError as err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
 

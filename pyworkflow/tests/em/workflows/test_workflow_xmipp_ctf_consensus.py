@@ -1,146 +1,137 @@
-"""
-/***************************************************************************
- * Authors:     Roberto Marabini (roberto@cnb.csic.es)
- *
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- * 02111-1307  USA
- *
- *  All comments concerning this program package may be sent to the
- *  e-mail address 'scipion@cnb.csic.es'
- ***************************************************************************/
-MODIFICATION ADVICE:
+# ***************************************************************************
+# *
+# * Authors:     David Maluenda (dmaluenda@cnb.csic.es)
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'scipion@cnb.csic.es'
+# *
+# ***************************************************************************/
 
-Please,  do not  generate or  distribute
-a modified version of this file under its original name.
-"""
-
-
-from pyworkflow.em.data import SetOfCTF, CTFModel, Micrograph, SetOfMicrographs
-from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportCTF
-from test_workflow import TestWorkflow
+from pyworkflow.tests import BaseTest, DataSet, setupTestProject
+from pyworkflow.em.protocol import ProtImportMicrographs, ProtCreateStreamData
 from pyworkflow.utils import importFromPlugin
-import pyworkflow.tests as tests
 
-import xmippLib
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
+XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols',
+                                           'XmippProtCTFMicrographs', doRaise=True)
 XmippProtCTFConsensus = importFromPlugin('xmipp3.protocols',
                                          'XmippProtCTFConsensus', doRaise=True)
 
 
-class TestXmippCTFConsensusBase(TestWorkflow):
+class TestCtfConsensus(BaseTest):
+    """ Check if the Xmipp-CTFconsensus rejects CTFs (and the coorrespondig mics)
+        when two CTF estimations give different results,
+        and accept when the two estimations give similar results.
+    """
     @classmethod
     def setUpClass(cls):
-        tests.setupTestProject(cls)
-        # cls.dataset = tests.DataSet.getDataSet('CTFDiscrepancy')
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.micsFn = cls.dataset.getFile('allMics')
 
-    def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
-        ctf = CTFModel()
-        ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
-        ctf.setPsdFile(psdFile)
+    def checkCTFs(self, protConsensus, refCTFs, refMics, label=''):
+        outputCTF = getattr(protConsensus, "outputCTF"+label)
+        outputMicrographs = getattr(protConsensus, "outputMicrographs"+label)
 
-        return ctf
+        self.assertIsNotNone(outputCTF,
+                             "There was a problem with the CTF-Consensus. "
+                             "No outputCTF is created.")
+        self.assertIsNotNone(outputMicrographs,
+                             "There was a problem with the CTF-Consensus. "
+                             "No outputMicrographs is created.")
 
-    def testCtfConsensusWorkflow(self):
-        # create one micrograph set
-        fnMicSet = self.proj.getTmpPath("mics.sqlite")
-        fnMic = self.proj.getTmpPath("mic.mrc")
-        mic = Micrograph()
-        mic.setFileName(fnMic)
-        micSet = SetOfMicrographs(filename=fnMicSet)
+        self.assertEqual(outputCTF.getSize(), refCTFs.getSize(),
+                         "The outputCTF size is wrong.")
+        self.assertEqual(outputMicrographs.getSize(), refCTFs.getSize(),
+                         "The outputMicrographs size is wrong.")
+        self.assertTupleEqual(outputMicrographs.getDim(), refMics.getDim(),
+                              "The outputMicrographs dimension is wrong.")
 
-        # create two CTFsets
-        fnCTF1 = self.proj.getTmpPath("ctf1.sqlite")
-        fnCTF2 = self.proj.getTmpPath("ctf2.sqlite")
-        ctfSet1 = SetOfCTF(filename=fnCTF1)
-        ctfSet2 = SetOfCTF(filename=fnCTF2)
+        firstCTF = outputCTF.getFirstItem()
+        refCTF = refCTFs.getFirstItem()
+        self.assertTrue(firstCTF.equalAttributes(refCTF),
+                        "The outputCTF has different attributes than the input.")
 
-        # create one fake micrographs image
-        projSize = 32
-        img = xmippLib.Image()
-        img.setDataType(xmippLib.DT_FLOAT)
-        img.resize(projSize, projSize)
-        img.write(fnMic)
+    def test1(self):
+        # Import a set of micrographs
+        protImport = self.newProtocol(ProtImportMicrographs,
+                                      filesPath=self.micsFn,
+                                      samplingRate=1.237, voltage=300)
+        self.launchProtocol(protImport)
+        self.assertIsNotNone(protImport.outputMicrographs,
+                             "There was a problem with the import")
 
-        # fill the sets
-        for i in range(1, 4):
-            mic = Micrograph()
-            mic.setFileName(fnMic)
-            micSet.append(mic)
+        # Create pure noise micrographs (to force a Discarded consensus set)
+        protStream = self.newProtocol(ProtCreateStreamData,
+                                      xDim=9216,
+                                      yDim=9441,
+                                      nDim=3,
+                                      samplingRate=1.237,
+                                      setof=2,  # 2 -> SetOfRandomMicrographs
+                                      creationInterval=1)
+        self.proj.launchProtocol(protStream, wait=False)
 
-            defocusU = 1000+10*i
-            defocusV = 1000+i
-            defocusAngle = i*10
-            psdFile = "psd_1%04d" % i
-            ctf = self._getCTFModel(defocusU,
-                                    defocusV,
-                                    defocusAngle,
-                                    psdFile)
-            ctf.setMicrograph(mic)
-            ctfSet1.append(ctf)
+        # Computes the CTF with Xmipp
+        protCTF1 = self.newProtocol(XmippProtCTFMicrographs)
+        protCTF1.inputMicrographs.set(protImport.outputMicrographs)
+        self.proj.launchProtocol(protCTF1, wait=False)
 
-            defocusU = 1000+20*i
-            defocusV = 1000+i
-            defocusAngle = i*20
-            psdFile = "psd_2%04d" % i
-            ctf = self._getCTFModel(defocusU,
-                                    defocusV,
-                                    defocusAngle,
-                                    psdFile)
-            ctf.setMicrograph(mic)
-            ctfSet2.append(ctf)
-        ctfSet1.write()
-        ctfSet2.write()
-        micSet.write()
+        # Computes the CTF with CTFFind4
+        protCTF2 = self.newProtocol(ProtCTFFind)
+        protCTF2.inputMicrographs.set(protImport.outputMicrographs)
+        self.proj.launchProtocol(protCTF2, wait=False)
 
-        # import micrograph set
-        args = {'importFrom': ProtImportMicrographs.IMPORT_FROM_SCIPION,
-                'sqliteFile': fnMicSet,
-                'amplitudConstrast': 0.1,
-                'sphericalAberration': 2.,
-                'voltage': 100,
-                'samplingRate': 2.1
-                }
+        self._waitOutput(protStream, "outputMicrographs")
+        # Computes the CTF with CTFFind4 for the noise mics
+        protCTF3 = self.newProtocol(ProtCTFFind)
+        protCTF3.inputMicrographs.set(protStream.outputMicrographs)
+        self.proj.launchProtocol(protCTF3, wait=False)
 
-        protMicImport = self.newProtocol(ProtImportMicrographs, **args)
-        protMicImport.setObjLabel('import micrographs from sqlite ')
-        self.launchProtocol(protMicImport)
 
-        # import ctfsets
-        protCTF1 = \
-            self.newProtocol(ProtImportCTF,
-                             importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
-                             filesPath=fnCTF1)
-        protCTF2 = \
-            self.newProtocol(ProtImportCTF,
-                             importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
-                             filesPath=fnCTF2)
-        protCTF1.inputMicrographs.set(protMicImport.outputMicrographs)
-        protCTF2.inputMicrographs.set(protMicImport.outputMicrographs)
-        protCTF1.setObjLabel('import ctfs from scipion_1 ')
-        protCTF2.setObjLabel('import ctfs from scipion_2 ')
-        self.launchProtocol(protCTF1)
-        self.launchProtocol(protCTF2)
+        # Computes the Consensus of GOOD CTFs
+        self._waitOutput(protCTF1, "outputCTF")
+        self._waitOutput(protCTF2, "outputCTF")
+        protCTFcons = self.newProtocol(XmippProtCTFConsensus,
+                                       useDefocus=False,
+                                       useAstigmatism=False,
+                                       useResolution=False,
+                                       calculateConsensus=True)
+        protCTFcons.inputCTF.set(protCTF1.outputCTF)
+        protCTFcons.inputCTF2.set(protCTF2.outputCTF)
+        self.launchProtocol(protCTFcons)
 
-        # launch CTF consensus protocol
-        protCtfConsensus = self.newProtocol(XmippProtCTFConsensus)
-        protCtfConsensus.inputCTF1.set(protCTF1.outputCTF)
-        protCtfConsensus.inputCTF2.set(protCTF2.outputCTF)
-        protCtfConsensus.setObjLabel('ctf consensus')
-        self.launchProtocol(protCtfConsensus)
-        ctf0 = protCtfConsensus.outputCTF.getFirstItem()
-        resolution = int(ctf0.getResolution())
-        defocusU = int(ctf0.getDefocusU())
-        self.assertEqual(resolution, 2)
-        self.assertEqual(defocusU, 1010)
+        protCTF1.outputCTF.load()  # Needed to update the setSize
+        self.checkCTFs(protCTFcons,
+                       refMics=protImport.outputMicrographs,
+                       refCTFs=protCTF1.outputCTF)
+
+
+        # Computes the Consensus comparing a good CTF to a RANDOM one
+        self._waitOutput(protCTF3, "outputCTF")
+        protCTFcons2 = self.newProtocol(XmippProtCTFConsensus,
+                                       useDefocus=False,
+                                       useAstigmatism=False,
+                                       useResolution=False,
+                                       calculateConsensus=True)
+        protCTFcons2.inputCTF.set(protCTF1.outputCTF)
+        protCTFcons2.inputCTF2.set(protCTF3.outputCTF)
+        self.launchProtocol(protCTFcons2)
+        self.checkCTFs(protCTFcons2,
+                       refMics=protImport.outputMicrographs,
+                       refCTFs=protCTF1.outputCTF,
+                       label="Discarded")
