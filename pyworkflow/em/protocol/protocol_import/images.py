@@ -355,6 +355,8 @@ class ProtImportImages(ProtImportFiles):
                     errors.append('  %s' % imgFn)
                     errors += ProtImportImages.validatePath(imgFn)
 
+            break  # validate just first image
+
         return errors
         
     def _validate(self):
