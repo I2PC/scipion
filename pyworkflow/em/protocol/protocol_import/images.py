@@ -407,8 +407,7 @@ class ProtImportImages(ProtImportFiles):
     
     #--------------------------- UTILS functions -------------------------------
     def _cleanUp(self):
-        """Empty method to override in child classes. E.g. to close socket in
-        ProtImportMovies with streamingSocket."""
+        """Empty method to override in child classes."""
         pass
 
     def getFiles(self):

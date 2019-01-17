@@ -369,19 +369,6 @@ class ProtImportMovies(ProtImportMicBase):
                            "frame files after creating the movie stack. ")
         
         streamingSection = form.getSection('Streaming')
-        streamingSection.addParam('streamingSocket', params.BooleanParam,
-                                  default=False,
-                                  condition=streamingConditioned,
-                                  expertLevel=params.LEVEL_ADVANCED,
-                                  label="Use streaming socket",
-                                  help="Use a socket to discover new files "
-                                       "instead of polling your directory.")
-        streamingSection.addParam('socketPort', params.IntParam, default=5000,
-                                  condition=streamingConditioned +
-                                            ' and streamingSocket',
-                                  expertLevel=params.LEVEL_ADVANCED,
-                                  label="Socket port",
-                                  help="Port to use for the streaming socket.")
         streamingSection.addParam('moviesToExclude', params.PointerParam,
                                   pointerClass='SetOfMovies',
                                   condition=streamingConditioned,
@@ -400,8 +387,6 @@ class ProtImportMovies(ProtImportMicBase):
         inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
         
         if self.dataStreaming or inputIndividualFrames:
-            if self.streamingSocket:
-                self.launchSocket()
             funcName = 'importImagesStreamStep'
         else:
             funcName = 'importImagesStep'
@@ -415,14 +400,12 @@ class ProtImportMovies(ProtImportMicBase):
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
         """Overwriting to skip file validation if streaming with socket"""
-        if self.streamingSocket:
-            errors = []
-        else:
-            errors = ProtImportMicBase._validate(self)
-            if self.inputIndividualFrames and not self.stackFrames:
-                errors.append("Scipion does not support individual frames. "
-                              "You must set to Yes *Create movie stacks?* "
-                              "parameter.")
+
+        errors = ProtImportMicBase._validate(self)
+        if self.inputIndividualFrames and not self.stackFrames:
+            errors.append("Scipion does not support individual frames. "
+                          "You must set to Yes *Create movie stacks?* "
+                          "parameter.")
 
         if not self.gainFile.empty() and not os.path.exists(self.gainFile.get()):
             errors.append("Gain file not found in " + str(self.gainFile.get()))
@@ -465,77 +448,6 @@ class ProtImportMovies(ProtImportMicBase):
         movie.setFramesRange(range)
         imgSet.setDim(dim)
         imgSet.setFramesRange(range)
-    
-    def launchSocket(self):
-        host = ''  # Where do we get this?!!
-        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        serverSocket.bind((host, self.socketPort))
-        serverSocket.listen(10)
-        serverSocket.setblocking(0)
-        self.serverSocket = serverSocket
-        self.connectionList = [serverSocket]
-        self.info("Socket started on port " + str(self.socketPort))
-        return serverSocket
-    
-    def iterFilenamesFromSocket(self):
-        recv_buffer = 4096  # Advisable to keep it as an exponent of 2
-        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
-        for sock in read_sockets:
-            if sock is self.serverSocket:
-                # New connection received through self.serverSocket
-                sockfd, addr = self.serverSocket.accept()
-                sockfd.setblocking(0)
-                self.connectionList.append(sockfd)
-                self.debug("Client (%s, %s) connected" % addr)
-                continue
-            else:
-                # Data received from a client, process it
-                try:
-                    # In Windows, sometimes when a TCP program closes abruptly,
-                    # a "Connection reset by peer" exception will be thrown
-                    data = sock.recv(recv_buffer)
-                    if data:
-                        files = shlex.split(data)
-                        self.debug("Data received in socket:")
-                        self.debug(files)
-                        for fileName in files:
-                            uniqueFn = self._getUniqueFileName(fileName, files)
-                            if uniqueFn in self.importedFiles:
-                                self._spreadMessage('WARNING: Not importing,'
-                                                    ' already imported file %s '
-                                                    '\n' % fileName, sock)
-                                continue
-                            else:
-                                if os.path.exists(fileName):
-                                    self._spreadMessage('OK: Importing file %s '
-                                                        '\n' % fileName, sock)
-                                    fileId = None
-                                    yield fileName, uniqueFn, fileId
-                                else:
-                                    self._spreadMessage('WARNING: Not '
-                                                        'importing , path does '
-                                                        'not exist %s '
-                                                        '\n' % fileName, sock)
-                                    continue
-                    else:
-                        continue
-                # client disconnected, remove from socket list
-                except Exception as e:
-                    self.debug("Exception reading socket!!")
-                    self.debug(str(e))
-                    sock.close()
-                    self.connectionList.remove(sock)
-                    continue
-        return
-    
-    def _spreadMessage(self, message, sock):
-        try:
-            if sock is not None:
-                sock.send(message)
-            self.debug(message)
-        except:
-            pass
     
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
@@ -644,9 +556,3 @@ class ProtImportMovies(ProtImportMicBase):
             return self.ignoreCopy
         else:
             return ProtImportMicBase.getCopyOrLink(self)
-    
-    def _cleanUp(self):
-        if self.streamingSocket:
-            self.debug('Closing socket...')
-            self.serverSocket.shutdown(socket.SHUT_RDWR)
-            self.serverSocket.close()

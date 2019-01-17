@@ -441,9 +441,7 @@ def getTemplate():
         "stackFrames": false,
         "writeMoviesInProject": false,
         "movieSuffix": "_frames.mrcs",
-        "deleteFrames": false,
-        "streamingSocket": false,
-        "socketPort": 5000
+        "deleteFrames": false
     },
     {
         "object.className": "XmippProtMovieGain",
