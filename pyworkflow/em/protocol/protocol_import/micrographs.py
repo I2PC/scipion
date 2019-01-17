@@ -298,7 +298,7 @@ class ProtImportMovies(ProtImportMicBase):
     def _getBlacklistSetClass(self):
         """ Returns the class to be blacklisted by this protocol.
         """
-        return "SetOfMicrographs"
+        return "SetOfMovies"
     
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)

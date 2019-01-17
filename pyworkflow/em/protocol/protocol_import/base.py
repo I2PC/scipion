@@ -108,8 +108,6 @@ class ProtImportFiles(ProtImport):
 
         self._defineImportParams(form)
 
-        self._defineBlacklistParams(form)
-
         self._defineAcquisitionParams(form)
 
         form.addSection('Streaming')
@@ -143,6 +141,8 @@ class ProtImportFiles(ProtImport):
                       help="Interval of time (in seconds) after which, if a file has "
                            "not changed, we consider it as a new file. \n")
 
+        self._defineBlacklistParams(form)
+
     def _defineImportParams(self, form):
         """ Override to add options related to the different types
         of import that are allowed by each protocol.
@@ -158,51 +158,41 @@ class ProtImportFiles(ProtImport):
         """ Options to blacklist certain items when launching the
         import protocol.
         """
-        form.addParam("blacklist", params.BooleanParam,
-                      default=False,
-                      label="Add blacklist",
-                      expertLevel=params.LEVEL_ADVANCED,
-                      help="Open options to blacklist files during import.")
-        group = form.addGroup("Blacklist options", condition='blacklist')
-        group.addParam("blacklistSet", params.PointerParam,
-                       pointerClass=self._getBlacklistSetClass(),
-                       condition='blacklist',
-                       allowsNull=True,
-                       expertLevel=params.LEVEL_ADVANCED,
-                       label="Blacklist Set",
-                       help="Files on this set will not be imported")
-        group.addParam('blacklistDate', params.StringParam,
-                       expertLevel=params.LEVEL_ADVANCED,
-                       condition='blacklist',
-                       label="Blacklist date",
-                       allowsNull=True,
-                       help="Files acquired before this date will not be imported. "
-                            "Must follow format: YYYY-mm-dd HH:MM:SS \n"
-                            "e.g: 2019-01-14 14:18:05")
-        group.addParam('useRegexps', params.EnumParam,
-                       default=self.BLACKLIST_REGEXPS,
-                       condition='blacklist',
-                       choices=['RegExps', 'File names'],
-                       expertLevel=params.LEVEL_ADVANCED,
-                       label='Blacklist file type',
-                       help="Choose RegExp if the black list file contains regular expressions. Set to File Names if "
-                            "the black list file contains file names.")
-
-        group.addParam('blacklistFile', params.FileParam,
-                       expertLevel=params.LEVEL_ADVANCED,
-                       condition='blacklist',
-                       label="Blacklist File",
-                       allowsNull=True,
-                       help="Blacklist everything included in this file. If Use RegExps is True,"
-                            "lines will be interpreted as regular expressions. E.g: \n"
-                            "(.*)GRID_0[1-5](.*)\n"
-                            "(.*)/GRID_10/Falcon_2019_01_14-16_(.*)\n"
-                            "If Use RegExps is False, lines will be interpreted as file names. E.g.\n"
-                            "/path/to/GRID_10/Falcon_2019_01_14-16_51_20_0_movie.mrcs\n"
-                            "/path/to/GRID_10/Falcon_2019_01_14-16_55_40_0_movie.mrcs"
-                       )
-
-        return group
+        form.addSection(label="Blacklist")
+        form.addParam("blacklistSet", params.PointerParam,
+                      pointerClass=self._getBlacklistSetClass(),
+                      allowsNull=True,
+                      label="Blacklist Set",
+                      help="Files on this set will not be imported")
+        form.addParam('blacklistDateFrom', params.StringParam,
+                      label="Blacklist from date",
+                      allowsNull=True,
+                      help="Files acquired after this date will not be imported. "
+                           "Must follow format: YYYY-mm-dd HH:MM:SS \n"
+                           "e.g: 2019-01-14 14:18:05")
+        form.addParam('blacklistDateTo', params.StringParam,
+                      label="Blacklist to date",
+                      allowsNull=True,
+                      help="Files acquired before this date will not be imported. "
+                           "Must follow format: YYYY-mm-dd HH:MM:SS \n"
+                           "e.g: 2019-01-14 14:18:05")
+        form.addParam('useRegexps', params.EnumParam,
+                      default=self.BLACKLIST_REGEXPS,
+                      choices=['RegExps', 'File names'],
+                      label='Blacklist file type',
+                      help="Choose RegExp if the black list file contains regular expressions. Set to File Names if "
+                           "the black list file contains file names.")
+        form.addParam('blacklistFile', params.FileParam,
+                      label="Blacklist File",
+                      allowsNull=True,
+                      help="Blacklist everything included in this file. If Use RegExps is True,"
+                           "lines will be interpreted as regular expressions. E.g: \n"
+                           "(.*)GRID_0[1-5](.*)\n"
+                           "(.*)/GRID_10/Falcon_2019_01_14-16_(.*)\n"
+                           "If Use RegExps is False, lines will be interpreted as file names. E.g.\n"
+                           "/path/to/GRID_10/Falcon_2019_01_14-16_51_20_0_movie.mrcs\n"
+                           "/path/to/GRID_10/Falcon_2019_01_14-16_55_40_0_movie.mrcs"
+                      )
 
     def _defineAcquisitionParams(self, form):
         """ Override to add options related to acquisition info.
@@ -225,11 +215,19 @@ class ProtImportFiles(ProtImport):
                     errors.append("There are no files matching the pattern %s"
                                   % self.getPattern())
 
-        if self.blacklistSet:
+        if self.blacklistSet.get() is not None:
             first = self.blacklistSet.get().getFirstItem()
             if not os.path.islink(first.getFileName()):
                 errors.append("Can't blacklist an input Set if files were copied. Please choose "
                               "a different blacklist option.")
+
+        dates = [self.blacklistDateTo.get(), self.blacklistDateFrom.get()]
+        for d in dates:
+            if d:
+                try:
+                    datetime.strptime(self.blacklistDateTo.get(), "%Y-%m-%d %H:%M:%S")
+                except ValueError as e:
+                    errors.append("Bad date formatting in blacklist date %s: %s" % (d, e))
 
         return errors
 
@@ -314,24 +312,38 @@ class ProtImportFiles(ProtImport):
 
     def isBlacklisted(self, fileName):
 
-        if not self.blacklist:
-            return False
-
         # Blacklisted by set
         blacklistSet = self.blacklistSet.get()
-        if blacklistSet:
+        if blacklistSet is not None:
             for img in blacklistSet:
                 blacklistFileName = img.getFileName()
                 if os.path.islink(blacklistFileName) and os.path.basename(fileName) in os.readlink(blacklistFileName):
                     return True
 
         # Blacklisted by date
-        blacklistDate = self.blacklistDate.get()
-        if blacklistDate:
+        blacklistDateFrom = self.blacklistDateFrom.get()
+        blacklistDateTo = self.blacklistDateTo.get()
+        doDateBlacklist = blacklistDateFrom is not None and blacklistDateTo is not None
+        if doDateBlacklist:
             fileDate = datetime.fromtimestamp(os.path.getmtime(fileName))
-            if fileDate < blacklistDate:
-                print("Blacklist warning: %s is blacklisted by date" % fileName)
-                return True
+
+            if blacklistDateFrom:
+                parsedDateFrom = datetime.strptime(blacklistDateFrom, "%Y-%m-%d %H:%M:%S")
+                if blacklistDateTo:
+                    parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
+                    if parsedDateFrom <= fileDate <= parsedDateTo:
+                        print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        return True
+                else:
+                    if parsedDateFrom <= fileDate:
+                        print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        return True
+
+            elif blacklistDateTo:
+                parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
+                if fileDate <= parsedDateTo:
+                    print("Blacklist warning: %s is blacklisted by date" % fileName)
+                    return True
 
         # Blacklisted by file
         blacklistfile = self.blacklistFile.get()
