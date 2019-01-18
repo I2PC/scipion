@@ -419,7 +419,31 @@ class Project(object):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)
 
-    def launchProtocol(self, protocol, wait=False, scheduled=False):
+    def saveWorkflow(self, prot):
+        if prot:
+            prot.runMode.set(MODE_RESTART)
+            prot.setStatus(pwprot.STATUS_SAVED)
+            node = self.getRunsGraph().getNode(prot.strId())
+            if node:
+                dependencies = [node.run for node in node.getChilds()]
+                for dep in dependencies:
+                    self.saveWorkflow(dep)
+
+    def launchProtDependencies(self, prot):
+        if prot:
+            self.scheduleProtocol(prot)
+            node = self.getRunsGraph().getNode(prot.strId())
+            if node:
+                dependencies = [node.run for node in node.getChilds()]
+                for dep in dependencies:
+                    self.launchProtDependencies(dep)
+
+    def restartWorkflow(self, prot):
+        self.saveWorkflow(prot)
+        self.launchProtDependencies(prot)
+
+    def launchProtocol(self, protocol, wait=False, scheduled=False,
+                       force=False):
         """ In this function the action of launching a protocol
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
@@ -436,9 +460,10 @@ class Project(object):
 
         isRestart = protocol.getRunMode() == MODE_RESTART
 
-        if (not protocol.isInteractive() and not protocol.isInStreaming()) or isRestart:
-            self._checkModificationAllowed([protocol],
-                                           'Cannot RE-LAUNCH protocol')
+        if not force:
+            if (not protocol.isInteractive() and not protocol.isInStreaming()) or isRestart:
+                self._checkModificationAllowed([protocol],
+                                               'Cannot RE-LAUNCH protocol')
 
         protocol.setStatus(pwprot.STATUS_LAUNCHED)
         self._setupProtocol(protocol)

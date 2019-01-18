@@ -156,8 +156,7 @@ class RunScheduler():
 
         _log("Launching the protocol >>>>")
         log.close()
-        project.launchProtocol(protocol, scheduled=True)
-
+        project.launchProtocol(protocol, scheduled=True, force=True)
 
 if __name__ == '__main__':
     scheduler = RunScheduler()

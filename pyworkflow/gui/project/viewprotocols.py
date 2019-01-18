@@ -79,6 +79,7 @@ ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
 ACTION_LABELS = 'Labels'
+ACTION_RESTART = 'Restart WorkFlow'
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -106,7 +107,8 @@ ActionIcons = {
     ACTION_EXPORT_UPLOAD: Icon.ACTION_EXPORT_UPLOAD,
     ACTION_COLLAPSE: 'fa-minus-square.png',
     ACTION_EXPAND: 'fa-plus-square.png',
-    ACTION_LABELS: Icon.TAGS
+    ACTION_LABELS: Icon.TAGS,
+    ACTION_RESTART: Icon.ACTION_CONTINUE
 }
 
 
@@ -199,7 +201,8 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
                 (ACTION_LABELS, True),
-                (ACTION_SELECT_TO, True)
+                (ACTION_SELECT_TO, True),
+                (ACTION_RESTART, True)
                 ]
 
     def getObjectActions(self, obj):
@@ -1814,6 +1817,13 @@ class ProtocolsView(tk.Frame):
             self.project.copyProtocol(protocols)
             self.refreshRuns()
 
+    def _restartWorkflow(self):
+        protocols = self._getSelectedProtocols()
+        if len(protocols) == 1:
+            if pwgui.dialog.askYesNo(Message.TITLE_RESTART_WORKFLOW,
+                                     Message.LABEL_RESTART_WORKFLOW, self.root):
+                self.project.restartWorkflow(protocols[0])
+
     def _selectLabels(self):
         selectedNodes = self._getSelectedNodes()
 
@@ -2024,6 +2034,8 @@ class ProtocolsView(tk.Frame):
                     self._selectLabels()
                 elif action == ACTION_SELECT_TO:
                     self._selectAncestors()
+                elif action == ACTION_RESTART:
+                    self._restartWorkflow()
 
             except Exception as ex:
                 self.windows.showError(str(ex))

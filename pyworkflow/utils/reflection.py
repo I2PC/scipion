@@ -110,6 +110,6 @@ def isSameFunction(function1, function2):
     """ Check if the content of 2 functions is the same.
     This could be used to check if a method has been overridden or not
     From https://stackoverflow.com/questions/13620542/detecting-empty-function-definitions-in-python"""
-    function1.__code__.co_code == function2.__code__.co_code
+    return function1.__code__.co_code == function2.__code__.co_code
 
 
