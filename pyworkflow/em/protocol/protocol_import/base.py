@@ -310,6 +310,21 @@ class ProtImportFiles(ProtImport):
 
         return delta < fileTimeout
 
+    def getBlacklistFileItems(self):
+
+        if not hasattr(self, '_blacklistFileItems'):
+            blacklistfile = self.blacklistFile.get()
+            blacklistItems = set()
+            if blacklistfile:
+                with open(blacklistfile, 'r') as f:
+                    for blacklistedItem in f:
+                        blacklistedItem = blacklistedItem.strip()
+                        blacklistItems.add(blacklistedItem)
+            self._blacklistFileItems = blacklistItems
+
+        return self._blacklistFileItems
+
+
     def isBlacklisted(self, fileName):
 
         # Blacklisted by set
@@ -326,7 +341,6 @@ class ProtImportFiles(ProtImport):
         doDateBlacklist = blacklistDateFrom is not None and blacklistDateTo is not None
         if doDateBlacklist:
             fileDate = datetime.fromtimestamp(os.path.getmtime(fileName))
-
             if blacklistDateFrom:
                 parsedDateFrom = datetime.strptime(blacklistDateFrom, "%Y-%m-%d %H:%M:%S")
                 if blacklistDateTo:
@@ -346,18 +360,16 @@ class ProtImportFiles(ProtImport):
                     return True
 
         # Blacklisted by file
-        blacklistfile = self.blacklistFile.get()
-        if blacklistfile:
-            with open(blacklistfile, 'r') as f:
-                for blacklistedItem in f:
-                    blacklistedItem = blacklistedItem.strip()
-                    if self.useRegexps.get() == self.BLACKLIST_REGEXPS:
-                        if re.match(blacklistedItem, fileName):
-                            print("Blacklist warning: %s matched blacklist regexp %s"
-                                  % (fileName, blacklistedItem))
-                            return True
-                    elif fileName in blacklistedItem:
-                        return True
+        blacklistfileItems = self.getBlacklistFileItems()
+        for blacklistedItem in blacklistfileItems:
+            if self.useRegexps.get() == self.BLACKLIST_REGEXPS:
+                if re.match(blacklistedItem, fileName):
+                    print("Blacklist warning: %s matched blacklist regexp %s"
+                          % (fileName, blacklistedItem))
+                    return True
+            elif fileName in blacklistedItem:
+                print("Blacklist warning: %s is blacklisted " % fileName)
+                return True
 
     def iterFiles(self):
         """ Iterate through the files matched with the pattern.
