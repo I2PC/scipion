@@ -393,9 +393,6 @@ class ProtImportFiles(ProtImport):
         """
         filePaths = self.getMatchFiles()
 
-        from time import sleep
-        sleep(10)
-
         for fileName in filePaths:
             if self.isBlacklisted(fileName):
                 continue
