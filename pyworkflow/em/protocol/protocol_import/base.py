@@ -35,7 +35,6 @@ import pyworkflow.protocol.params as params
 from pyworkflow.utils.path import expandPattern, copyFile, createAbsLink
 from pyworkflow.em.protocol import EMProtocol
 
-
 class ProtImport(EMProtocol):
     """ Base class for other all Import protocols. """
 
@@ -215,20 +214,17 @@ class ProtImportFiles(ProtImport):
                     errors.append("There are no files matching the pattern %s"
                                   % self.getPattern())
 
-        if self.blacklistSet.get() is not None:
-            first = self.blacklistSet.get().getFirstItem()
-            if not os.path.islink(first.getFileName()):
-                errors.append("Can't blacklist an input Set if files were copied. Please choose "
-                              "a different blacklist option.")
-
-        dates = [self.blacklistDateTo.get(), self.blacklistDateFrom.get()]
+        dates = [self.blacklistDateFrom.get(), self.blacklistDateTo.get()]
+        parsedDates = []
         for d in dates:
             if d:
                 try:
-                    datetime.strptime(self.blacklistDateTo.get(), "%Y-%m-%d %H:%M:%S")
+                    parsedDates.append(datetime.strptime(self.blacklistDateTo.get(), "%Y-%m-%d %H:%M:%S"))
                 except ValueError as e:
                     errors.append("Bad date formatting in blacklist date %s: %s" % (d, e))
 
+        if len(parsedDates) == 2 and parsedDates[0] > parsedDates[1]:
+            errors.append("Wrong blacklist dates: date from must be earlier than date to")
         return errors
 
     # --------------------------- BASE methods to be overriden ------------------
@@ -310,9 +306,12 @@ class ProtImportFiles(ProtImport):
 
         return delta < fileTimeout
 
-    def getBlacklistFileItems(self):
+    def _getUniqueFileName(self, fileName):
+        """To be overwritten by subclasses"""
+        return os.path.basename(fileName)
 
-        if not hasattr(self, '_blacklistFileItems'):
+    def getItemsToBlacklistFromFile(self):
+        if not hasattr(self, '_fileItemsToBlacklist'):
             blacklistfile = self.blacklistFile.get()
             blacklistItems = set()
             if blacklistfile:
@@ -320,19 +319,31 @@ class ProtImportFiles(ProtImport):
                     for blacklistedItem in f:
                         blacklistedItem = blacklistedItem.strip()
                         blacklistItems.add(blacklistedItem)
-            self._blacklistFileItems = blacklistItems
+            self._fileItemsToBlacklist = blacklistItems
 
-        return self._blacklistFileItems
+        return self._fileItemsToBlacklist
 
+    def getBlacklistedItems(self):
+        if not hasattr(self, '_blacklistedItems'):
+            self._blacklistedItems = set()
+        return self._blacklistedItems
 
     def isBlacklisted(self, fileName):
+        # check if already blacklisted
+        blacklistedItems = self.getBlacklistedItems()
+        if fileName in blacklistedItems:
+            return True
 
         # Blacklisted by set
         blacklistSet = self.blacklistSet.get()
         if blacklistSet is not None:
             for img in blacklistSet:
                 blacklistFileName = img.getFileName()
-                if os.path.islink(blacklistFileName) and os.path.basename(fileName) in os.readlink(blacklistFileName):
+                if ((os.path.islink(blacklistFileName)
+                     and fileName == os.readlink(blacklistFileName))
+                        or (self._getUniqueFileName(fileName) == os.path.basename(blacklistFileName))):
+                    print("Blacklist warning: %s is blacklisted by the input set" % fileName)
+                    blacklistedItems.add(fileName)
                     return True
 
         # Blacklisted by date
@@ -347,28 +358,33 @@ class ProtImportFiles(ProtImport):
                     parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
                     if parsedDateFrom <= fileDate <= parsedDateTo:
                         print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        blacklistedItems.add(fileName)
                         return True
                 else:
                     if parsedDateFrom <= fileDate:
                         print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        blacklistedItems.add(fileName)
                         return True
 
             elif blacklistDateTo:
                 parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
                 if fileDate <= parsedDateTo:
                     print("Blacklist warning: %s is blacklisted by date" % fileName)
+                    blacklistedItems.add(fileName)
                     return True
 
         # Blacklisted by file
-        blacklistfileItems = self.getBlacklistFileItems()
-        for blacklistedItem in blacklistfileItems:
+        items2blacklist = self.getItemsToBlacklistFromFile()
+        for item2blacklist in items2blacklist:
             if self.useRegexps.get() == self.BLACKLIST_REGEXPS:
-                if re.match(blacklistedItem, fileName):
+                if re.match(item2blacklist, fileName):
                     print("Blacklist warning: %s matched blacklist regexp %s"
-                          % (fileName, blacklistedItem))
+                          % (fileName, item2blacklist))
+                    blacklistedItems.add(fileName)
                     return True
-            elif fileName in blacklistedItem:
+            elif fileName in item2blacklist:
                 print("Blacklist warning: %s is blacklisted " % fileName)
+                blacklistedItems.add(fileName)
                 return True
 
     def iterFiles(self):
@@ -376,6 +392,9 @@ class ProtImportFiles(ProtImport):
         Provide the fileName and fileId.
         """
         filePaths = self.getMatchFiles()
+
+        from time import sleep
+        sleep(10)
 
         for fileName in filePaths:
             if self.isBlacklisted(fileName):
