@@ -665,6 +665,12 @@ class Protocol(Step):
 
         return not pwutils.isSameFunction(baseStepCheck, ownStepCheck)
 
+    def getAttrInStreaming(self):
+        for paramName, attr in self.iterOutputEM():
+            if isinstance(attr, Set):
+                return attr
+        return None
+
     def allowsGpu(self):
         """ Returns True if this protocol allows GPU computation. """
         return self.hasAttribute(GPU_LIST)

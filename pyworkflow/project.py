@@ -42,7 +42,7 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.protocol.constants import MODE_RESTART
+from pyworkflow.protocol.constants import MODE_RESTART, MODE_CONTINUE
 
 OBJECT_PARENT_ID = 'object_parent_id'
 
@@ -419,28 +419,37 @@ class Project(object):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)
 
-    def saveWorkflow(self, prot):
+    def setProtStatusStep(self, prot):
         if prot:
-            prot.runMode.set(MODE_RESTART)
-            prot.setStatus(pwprot.STATUS_SAVED)
-            node = self.getRunsGraph().getNode(prot.strId())
-            if node:
-                dependencies = [node.run for node in node.getChilds()]
-                for dep in dependencies:
-                    self.saveWorkflow(dep)
+            steps = prot.getSteps()
+            for step in steps:
+                step.setStatus(pwprot.STATUS_SAVED)
 
-    def launchProtDependencies(self, prot):
+    def continueWorkflow(self, prot):
         if prot:
-            self.scheduleProtocol(prot)
-            node = self.getRunsGraph().getNode(prot.strId())
-            if node:
-                dependencies = [node.run for node in node.getChilds()]
-                for dep in dependencies:
-                    self.launchProtDependencies(dep)
+            attrInStreaming = prot.getAttrInStreaming()
+            if attrInStreaming is not None:
+                attrInStreaming.setStreamState(attrInStreaming.STREAM_OPEN)
+                prot.setStatus(pwprot.STATUS_SAVED)
+                self.setProtStatusStep(prot)
+                self.scheduleProtocol(prot)
+                time.sleep(1)
+                node = self.getRunsGraph().getNode(prot.strId())
+                if node:
+                    dependencies = [node.run for node in node.getChilds()]
+                    for dep in dependencies:
+                        self.restartWorkflow(dep)
 
     def restartWorkflow(self, prot):
-        self.saveWorkflow(prot)
-        self.launchProtDependencies(prot)
+        if prot:
+            prot.runMode.set(MODE_RESTART)
+            self.scheduleProtocol(prot)
+            time.sleep(1)
+            node = self.getRunsGraph().getNode(prot.strId())
+            if node:
+                dependencies = [node.run for node in node.getChilds()]
+                for dep in dependencies:
+                    self.restartWorkflow(dep)
 
     def launchProtocol(self, protocol, wait=False, scheduled=False,
                        force=False):
