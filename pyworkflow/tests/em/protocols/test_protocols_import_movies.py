@@ -130,6 +130,7 @@ class TestImportMovies(TestImportBase):
         args['blacklistFile'] = self.proj.getTmpPath('blacklist_regex.txt')
         args['blacklistDateFrom'] = dateFrom
         args['blacklistDateTo'] = dateTo
+        args['useRegexps'] = True
 
         protBlacklistRegexDate = self.newProtocol(ProtImportMovies, **args)
         protBlacklistRegexDate.setObjLabel('Blacklist date & regexp')
@@ -146,6 +147,7 @@ class TestImportMovies(TestImportBase):
 
         args = self.getArgs('ribo/', pattern='*.mrcs')
         args['blacklistFile'] = self.proj.getTmpPath('blacklist_filenames.txt')
+        args['useRegexps'] = False
 
         protBlacklistSetFiles = self.newProtocol(ProtImportMovies, **args)
         protBlacklistSetFiles.blacklistSet.set(protBlacklistRegexDate.outputMovies)

@@ -30,10 +30,7 @@ from __future__ import print_function
 import os
 from os.path import join, basename
 import re
-from datetime import timedelta
-import socket
-import select
-import shlex
+from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -70,6 +67,77 @@ class ProtImportMicBase(ProtImportImages):
                        label=Message.LABEL_SCANNED,
                        help='')
         return group
+
+    def _defineBlacklistParams(self, form):
+        """ Options to blacklist certain items when launching the
+        import protocol.
+        """
+        form.addSection(label="Blacklist")
+        form.addParam("blacklistSet", params.PointerParam,
+                      pointerClass=self._getBlacklistSetClass(),
+                      allowsNull=True,
+                      label="Blacklist Set",
+                      help="Files on this set will not be imported")
+        form.addParam('blacklistDateFrom', params.StringParam,
+                      label="Blacklist from date",
+                      allowsNull=True,
+                      help="Files acquired after this date will not be imported. "
+                           "Must follow format: YYYY-mm-dd HH:MM:SS \n"
+                           "e.g: 2019-01-14 14:18:05")
+        form.addParam('blacklistDateTo', params.StringParam,
+                      label="Blacklist to date",
+                      allowsNull=True,
+                      help="Files acquired before this date will not be imported. "
+                           "Must follow format: YYYY-mm-dd HH:MM:SS \n"
+                           "e.g: 2019-01-14 14:18:05")
+        form.addParam('useRegexps', params.BooleanParam,
+                      default=True,
+                      label='Blacklist contains RegExps',
+                      help="Choose Yes if the black list file contains regular expressions. Set to No if "
+                           "the black list file contains file names.")
+        form.addParam('blacklistFile', params.FileParam,
+                      label="Blacklist File",
+                      allowsNull=True,
+                      help="Blacklist everything included in this file. If Use RegExps is True,"
+                           "lines will be interpreted as regular expressions. E.g: \n"
+                           "(.*)GRID_0[1-5](.*)\n"
+                           "(.*)/GRID_10/Falcon_2019_01_14-16_(.*)\n"
+                           "If Use RegExps is False, lines will be interpreted as file names. E.g.\n"
+                           "/path/to/GRID_10/Falcon_2019_01_14-16_51_20_0_movie.mrcs\n"
+                           "/path/to/GRID_10/Falcon_2019_01_14-16_55_40_0_movie.mrcs"
+                      )
+
+    def _getBlacklistSetClass(self):
+        """ Returns the class to be blacklisted by this protocol.
+        """
+        return "SetOfImages"
+
+    def _validateBlacklist(self):
+        errors = []
+        blacklistBySet = self.blacklistSet.get()
+        if blacklistBySet and blacklistBySet.isStreamOpen():
+            errors.append("Can't blacklist an open set. "
+                          "Please stop streaming or  wait until streaming is done to blacklist this set.")
+
+        dates = [self.blacklistDateFrom.get(), self.blacklistDateTo.get()]
+        parsedDates = []
+        for d in dates:
+            if d:
+                try:
+                    parsedDates.append(datetime.strptime(self.blacklistDateTo.get(), "%Y-%m-%d %H:%M:%S"))
+                except ValueError as e:
+                    errors.append("Bad date formatting in blacklist date %s: %s" % (d, e))
+
+        if len(parsedDates) == 2 and parsedDates[0] > parsedDates[1]:
+            errors.append("Wrong blacklist dates: date from must be earlier than date to")
+        return errors
+
+    def _validate(self):
+        errors = ProtImportImages._validate(self)
+
+        errors += self._validateBlacklist()
+
+        return errors
         
     def setSamplingRate(self, micSet):
         """ Set the sampling rate to the given set. """
@@ -148,6 +216,83 @@ class ProtImportMicBase(ProtImportImages):
         acq['voltage'] = float(acq['voltage']) / 1000.
 
         return acq
+
+    def getItemsToBlacklistFromFile(self):
+        if not hasattr(self, '_fileItemsToBlacklist'):
+            blacklistfile = self.blacklistFile.get()
+            blacklistItems = set()
+            if blacklistfile:
+                with open(blacklistfile, 'r') as f:
+                    for blacklistedItem in f:
+                        blacklistedItem = blacklistedItem.strip()
+                        blacklistItems.add(blacklistedItem)
+            self._fileItemsToBlacklist = blacklistItems
+
+        return self._fileItemsToBlacklist
+
+    def getBlacklistedItems(self):
+        if not hasattr(self, '_blacklistedItems'):
+            self._blacklistedItems = set()
+        return self._blacklistedItems
+
+    def isBlacklisted(self, fileName):
+        # check if already blacklisted
+        blacklistedItems = self.getBlacklistedItems()
+        if fileName in blacklistedItems:
+            return True
+
+        # Blacklisted by set
+        blacklistSet = self.blacklistSet.get()
+        if blacklistSet is not None:
+            for img in blacklistSet:
+                blacklistFileName = img.getFileName()
+                if ((os.path.islink(blacklistFileName)
+                     and fileName == os.readlink(blacklistFileName))
+                        or (self._getUniqueFileName(fileName) == os.path.basename(blacklistFileName))):
+                    print("Blacklist warning: %s is blacklisted by the input set" % fileName)
+                    blacklistedItems.add(fileName)
+                    return True
+
+        # Blacklisted by date
+        blacklistDateFrom = self.blacklistDateFrom.get()
+        blacklistDateTo = self.blacklistDateTo.get()
+        doDateBlacklist = blacklistDateFrom is not None and blacklistDateTo is not None
+        if doDateBlacklist:
+            fileDate = datetime.fromtimestamp(os.path.getmtime(fileName))
+            if blacklistDateFrom:
+                parsedDateFrom = datetime.strptime(blacklistDateFrom, "%Y-%m-%d %H:%M:%S")
+                if blacklistDateTo:
+                    parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
+                    if parsedDateFrom <= fileDate <= parsedDateTo:
+                        print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        blacklistedItems.add(fileName)
+                        return True
+                else:
+                    if parsedDateFrom <= fileDate:
+                        print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        blacklistedItems.add(fileName)
+                        return True
+
+            elif blacklistDateTo:
+                parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
+                if fileDate <= parsedDateTo:
+                    print("Blacklist warning: %s is blacklisted by date" % fileName)
+                    blacklistedItems.add(fileName)
+                    return True
+
+        # Blacklisted by file
+        items2blacklist = self.getItemsToBlacklistFromFile()
+        for item2blacklist in items2blacklist:
+            if self.useRegexps.get():
+                if re.match(item2blacklist, fileName):
+                    print("Blacklist warning: %s matched blacklist regexp %s"
+                          % (fileName, item2blacklist))
+                    blacklistedItems.add(fileName)
+                    return True
+            elif fileName in item2blacklist:
+                print("Blacklist warning: %s is blacklisted " % fileName)
+                blacklistedItems.add(fileName)
+                return True
 
     
 class ProtImportMicrographs(ProtImportMicBase):

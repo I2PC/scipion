@@ -91,7 +91,7 @@ class ProtImportImages(ProtImportFiles):
         a format that is not from files.
         But movie-import also can have a wizard to read from FEI xml files. """
         return 'importFrom != %d' % self.IMPORT_FROM_FILES
-    
+
     #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
 
@@ -234,7 +234,7 @@ class ProtImportImages(ProtImportFiles):
             fileTimeout = timedelta(seconds=5)
 
         while not finished:
-            time.sleep(3)  # wait 3 seconds before check for new files
+            time.sleep(3) # wait 3 seconds before check for new files
             someNew = False
             someAdded = False
 
@@ -262,7 +262,7 @@ class ProtImportImages(ProtImportFiles):
 
                 someAdded = True
                 self.debug('Appending file to DB...')
-                if self.importedFiles:  # enable append after first append
+                if self.importedFiles: # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:
@@ -358,7 +358,7 @@ class ProtImportImages(ProtImportFiles):
             break  # validate just first image
 
         return errors
-        
+
     def _validate(self):
         errors = ProtImportFiles._validate(self)
 
@@ -368,7 +368,7 @@ class ProtImportImages(ProtImportFiles):
         if (self.importFrom == self.IMPORT_FROM_FILES and
             not self.dataStreaming):
             errors += self._validateImages()
-        
+
         return errors
         
     def _summary(self):
