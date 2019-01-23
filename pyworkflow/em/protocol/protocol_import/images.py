@@ -169,7 +169,7 @@ class ProtImportImages(ProtImportFiles):
 
             outFiles.append(dst)
             
-            sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
+            sys.stdout.write("\rImported %d/%d\n" % (i+1, self.numberOfFiles))
             sys.stdout.flush()
             
         print("\n")
