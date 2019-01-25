@@ -29,7 +29,6 @@
 import os
 import numpy
 from datetime import datetime
-from collections import OrderedDict
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam
 from pyworkflow.protocol.constants import STATUS_NEW
@@ -80,17 +79,18 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     def _insertAllSteps(self):
         self.inputSize = 0
         self.outputSize = 0
-        self.micDict = OrderedDict()
+        self.micsMap = {}
 
-        micDict, self.streamClosed = self.loadInputs()
-        stepsIds = self._insertNewSteps(micDict)
+        newMics, self.streamClosed = self.loadInputs()
+
+        stepsIds = self._insertNewSteps(newMics)
 
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=stepsIds, wait=True)
 
-    def _insertNewSteps(self, micsDict):
+    def _insertNewSteps(self, micsIds):
         deps = []
-        stepId = self._insertFunctionStep('extractCoordsStep', micsDict,
+        stepId = self._insertFunctionStep('extractCoordsStep', micsIds,
                                           prerequisites=[])
         deps.append(stepId)
         return deps
@@ -109,29 +109,31 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             return None
         self.lastCheck = now
 
-        micDict, self.streamClosed = self.loadInputs()
+        newMics, self.streamClosed = self.loadInputs()
 
-        if len(micDict) > 0:
-            fDeps = self._insertNewSteps(micDict)
+        if len(newMics) > 0:
+            fDeps = self._insertNewSteps(newMics)
             outputStep = self._getFirstJoinStep()
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
 
-    def extractCoordsStep(self, micsDict):
+    def extractCoordsStep(self, micsIds):
         inPart = self.getInputParticles()
         inMics = self.getInputMicrographs()
         scale = inPart.getSamplingRate() / inMics.getSamplingRate()
         print "Scaling coordinates by a factor *%0.2f*" % scale
         alignType = inPart.getAlignment()
 
-        tmpFn = self.getTmpOutputPath(next(iter(micsDict)))
+        tmpFn = self.getTmpOutputPath(next(iter(micsIds)))
         outputCoords = SetOfCoordinates(filename=tmpFn)
         outputCoords.setMicrographs(inMics)
 
+
         newCoord = Coordinate()
-        for partList in micsDict.values():
-            for particle in partList:
+        for micId in micsIds:
+            for partId in self.micsMap[micId]:
+                particle = inPart[partId]
                 coord = particle.getCoordinate()
                 micKey = coord.getMicId()
                 mic = inMics[micKey]
@@ -155,12 +157,8 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         outputCoords.setBoxSize(boxSize)
 
         self.outputSize += len(outputCoords)
-
         outputCoords.write()
         outputCoords.close()
-
-        # once the new processed particles have been wrote
-        self.micDict.update(micsDict)
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
@@ -248,21 +246,26 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         partsSet = SetOfParticles(filename=partsFn)
         partsSet.loadAllProperties()
 
-        newItemDict = OrderedDict()
+        newItemDict = {}
+        newMics = []
         for item in partsSet:
             micKey = item.getCoordinate().getMicId()
-            if micKey not in self.micDict and micKey in availableMics:
+            if micKey not in self.micsMap and micKey in availableMics:
                 if micKey in newItemDict.keys():
-                    newItemDict[micKey].append(item.clone())
+                    newItemDict[micKey].append(item.getObjId())
                 else:
-                    newItemDict[micKey] = [item.clone()]
+                    newMics.append(micKey)
+                    newItemDict[micKey] = [item.getObjId()]
+
+        self.micsMap.update(newItemDict)
 
         self.inputSize = partsSet.getSize()
+
         partSetClosed = partsSet.isStreamClosed()
 
         partsSet.close()
 
-        return newItemDict, micsSetClosed and partSetClosed
+        return newMics, micsSetClosed and partSetClosed
 
     def getShifts(self, transform, alignType):
         """
