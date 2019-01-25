@@ -135,7 +135,7 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
         submitDict = dict(hostConfig.getQueuesDefault())
         submitDict.update(protocol.getSubmitDict())
         submitDict['JOB_COMMAND'] = command
-        jobId = _submit(hostConfig, submitDict)
+        jobId = _submit(hostConfig, submitDict, stdout, stderr)
     else:
         jobId = _run(command, wait, stdin, stdout, stderr)
 
@@ -208,34 +208,38 @@ def _copyFiles(protocol, rpath):
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict):
+def _submit(hostConfig, submitDict, stdout=None, stderr=None, cwd=None, env=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
-    # Create forst the submission script to be launched
+    # Create first the submission script to be launched
     # formatting using the template
     template = hostConfig.getSubmitTemplate() % submitDict
-    #FIXME: CREATE THE PATH FIRST
+    # FIXME: CREATE THE PATH FIRST
     scripPath = submitDict['JOB_SCRIPT']
     f = open(scripPath, 'w')
-    #Ensure the path exists
+    # Ensure the path exists
     makeFilePath(scripPath)
     # Add some line ends because in some clusters it fails
     # to submit jobs if the submit script does not have end of line
-    f.write(template+'\n\n')
+    f.write(template +'\n\n')
     f.close()
     # This should format the command using a template like: 
     # "qsub %(JOB_SCRIPT)s"
     command = hostConfig.getSubmitCommand() % submitDict
     gcmd = greenStr(command)
-    print "** Submiting to queue: '%s'" % gcmd
-    p = Popen(command, shell=True, stdout=PIPE)
+    print("** Submiting to queue: '%s'" % gcmd)
+
+    p = Popen(command, shell=True, stdout=stdout, stderr=stderr, cwd=cwd, env=env)
     out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
+    # REview this, seems to exclusive to torque batch system
     s = re.search('(\d+)', out)
     if s:
-        return int(s.group(0))
+        job = int(s.group(0))
+        print( "launched job with id %s" % job)
+        return job
     else:
-        print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
+        print("Couldn't submit to queue for reason %s " % redStr(out))
         return UNKNOWN_JOBID
 
     

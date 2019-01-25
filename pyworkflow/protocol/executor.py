@@ -41,6 +41,8 @@ from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool, TimeoutError
 
 import pyworkflow.utils.process as process
+from pyworkflow.utils.path import getParentFolder
+from pyworkflow.utils import greenStr
 import constants as cts
 
 from launch import _submit, UNKNOWN_JOBID
@@ -273,25 +275,54 @@ class QueueStepExecutor(ThreadStepExecutor):
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
         # set to > 1 threads because one "stuck" thread caused a run to fail
-        self.pool = ThreadPool(processes=10)
+        #self.pool = ThreadPool(processes=10)
         # This is a dirty hot-fix now because we are spawning too many threads
         # even for the case when nThreads = 1
         if nThreads > 1:
             self.runJobs = ThreadStepExecutor.runSteps
         else:
             self.runJobs = StepExecutor.runSteps
+
+
+    # Maybe GPUs should be taken into account at this level since queues can manage them
     def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
         threadId = threading.current_thread().thId
         submitDict = dict(self.hostConfig.getQueuesDefault())
         submitDict.update(self.submitDict)
-        submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
+        submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env, gpuList=self.getGpuList())
         self.threadCommands[threadId] += 1
-        jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
-        submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
-        submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
-        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd, env))
-        return self._runWithTimeout(lambda: self._waitForJob(self.hostConfig, job))
-    @retry(stop_max_attempt_number=10, wait_exponential_multiplier=1000, wait_exponential_max=120000, retry_on_result=(lambda r: r is None))
+        subthreadId = '-%s-%s' % (threadId, self.threadCommands[threadId])
+        submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + subthreadId
+        submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + subthreadId)
+        submitDict['JOB_DIR'] = getParentFolder(submitDict['JOB_SCRIPT'])
+        #job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd, env))
+        jobid = _submit(self.hostConfig, submitDict, PIPE, PIPE, cwd, env)
+
+        if (jobid is None) or (jobid == UNKNOWN_JOBID):
+            print("jobId is none therefore we set it to fail")
+            raise Exception("Failed to submit to queue.")
+
+        status = cts.STATUS_RUNNING
+        check_num = 1
+
+        while status == cts.STATUS_RUNNING:
+            time.sleep(check_num * check_num)
+            status = self._checkJobStatus(self.hostConfig, jobid)
+            # If status is still running but we have checked 10 times already we set the job to failed (and cancel it)
+            if (status == cts.STATUS_RUNNING and check_num == 10):
+                print("Job still running but we have checked 10 times already, we cancel it")
+                status = cts.STATUS_FAILED
+                cancelCmd = self.hostConfig.getCancelCommand() % {'JOB_ID': jobid}
+                p = Popen(greenStr(cancelCmd), shell=True, stdout=PIPE)
+                p.wait()
+                raise Exception("Failed to submit to queue.")
+
+            check_num += 1
+
+        return status
+
+        #return self._runWithTimeout(lambda: self._waitForJob(self.hostConfig, job))
+    #@retry(stop_max_attempt_number=10, wait_exponential_multiplier=100, wait_exponential_max=12000, retry_on_result=(lambda r: r is None))
     def _runWithTimeout(self, command):
         timeout = 30
         return self.pool.apply_async(command).get(timeout)
@@ -299,6 +330,7 @@ class QueueStepExecutor(ThreadStepExecutor):
         if (jobid is None) or (jobid == UNKNOWN_JOBID):
             return 0
         command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
+        print "CheckCommand for job Id %s: %s" % (jobid, command)
         p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
         def communicate():
             return p.communicate()[0]
@@ -308,15 +340,43 @@ class QueueStepExecutor(ThreadStepExecutor):
             os.killpg(os.getpgid(p.pid), signal.SIGTERM)
             return None
         # FIXME: this is too specific to grid engine
-        s = re.search('exit_status\s+-*(\d+)', out)
-        if s:
-            status = int(s.group(1))
+        print "OUT: %s" % out
+        #s = re.search('exit_status\s+-*(\d+)', out)
+        jobDoneRegex = hostConfig.getJobDoneRegex()
+        #s = re.search(jobDoneRegex, out)
+        if out == "":
+            #status = int(s.group(1))
+            status = cts.STATUS_FINISHED
             print "job %s finished with exist status %s" % (jobid, status)
             return status
         else:
             print "job %s still running" % jobid
             return None
 
+    def _checkJobStatus(self, hostConfig, jobid):
+
+        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
+        print("CheckCommand for job Id %s: %s" % (jobid, command))
+        p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
+
+        out = p.communicate()[0]
+
+        print("OUT: %s" % out)
+
+        jobDoneRegex = hostConfig.getJobDoneRegex()
+
+        # If nothing is returned we assume job is no longer in queue and thus finished
+        if out == "":
+            return cts.STATUS_FINISHED
+        # If some string is returned we use the JOB_DONE_REGEX variable (if present) to infer the status
+        elif jobDoneRegex != '':
+            s = re.search(jobDoneRegex, out)
+            if s:
+                return cts.STATUS_FINISHED
+            else:
+                return cts.STATUS_RUNNING
+        else:
+            return cts.STATUS_RUNNING
 
 class MPIStepExecutor(ThreadStepExecutor):
     """ Run steps in parallel using threads.

@@ -110,6 +110,9 @@ class HostConfig(OrderedObject):
     
     def getQueueSystem(self):
         return self.queueSystem
+
+    def getJobDoneRegex(self):
+        return self.queueSystem.jobDoneRegex.get()
     
     def setLabel(self, label):
         self.label.set(label)
@@ -174,6 +177,7 @@ class QueueSystemConfig(OrderedObject):
         self.checkCommand = String()
         self.cancelCommand = String()
         self.submitTemplate = String()
+        self.jobDoneRegex = String()
         
     def hasName(self):
         return self.name.hasValue()
@@ -228,6 +232,9 @@ class QueueSystemConfig(OrderedObject):
     
     def setCancelCommand(self, cancelCommand):
         self.cancelCommand.set(cancelCommand)
+
+    def setJobDoneRegex(self,jobDoneRegex):
+        self.jobDoneRegex.set(jobDoneRegex)
     
     def setQueues(self, queues):
         self.queues = queues

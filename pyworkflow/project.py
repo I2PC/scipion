@@ -774,9 +774,8 @@ class Project(object):
 
         newProt.setObjLabel(newProtLabel)
         newProt.copyDefinitionAttributes(protocol)
-        newProt.copyAttributes(protocol, 'hostName', '_useQueue', '_queueParams')
-        newProt.copyAttributes(protocol, 'hostName', '_useQueueForJobs')
-        
+        newProt.copyAttributes(protocol, 'hostName', '_useQueue', '_useQueueForJobs', '_queueParams')
+
         return newProt
 
     def copyProtocol(self, protocol):
@@ -930,8 +929,7 @@ class Project(object):
 
                 prot._useQueue.set(protDict.get('_useQueue', False))
                 prot._queueParams.set(protDict.get('_queueParams', None))
-                prot._useQueueForJobs.set(
-                    protDict.get('_useQueueForJobs', False))
+                prot._useQueueForJobs.set(protDict.get('_useQueueForJobs', False))
 
                 newDict[protId] = prot
                 self.saveProtocol(prot)

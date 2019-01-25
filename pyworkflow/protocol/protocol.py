@@ -44,6 +44,7 @@ import pyworkflow as pw
 from pyworkflow.object import *
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.log import ScipionLogger
+from pyworkflow.utils.path import getParentFolder
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor, QueueStepExecutor
 from constants import *
 from params import Form
@@ -1035,6 +1036,8 @@ class Protocol(Step):
                                          self._stepFinished,
                                          self._stepsCheck,
                                          self._stepsCheckSecs)
+
+        print("*** Last status is %s " % self.lastStatus)
         self.setStatus(self.lastStatus)
         self._store(self.status)
 
@@ -1513,6 +1516,7 @@ class Protocol(Step):
 
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
+             'JOB_DIR': getParentFolder(script),
              'JOB_NODEFILE': script.replace('.job', '.nodefile'),
              'JOB_NAME': self.strId(),
              'JOB_QUEUE': queueName,
@@ -1973,6 +1977,8 @@ def runProtocolMain(projectPath, protDbPath, protId):
     # Create the steps executor
     executor = None
     nThreads = max(protocol.numberOfThreads.get(), 1)
+
+    #time.sleep(20)
 
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:

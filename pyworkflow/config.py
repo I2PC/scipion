@@ -119,6 +119,7 @@ def loadHostsConf(hostsConf):
                 host.queueSystem.submitTemplate.set(get('SUBMIT_TEMPLATE'))
                 host.queueSystem.cancelCommand.set(get('CANCEL_COMMAND'))
                 host.queueSystem.checkCommand.set(get('CHECK_COMMAND'))
+                host.queueSystem.jobDoneRegex.set(get('JOB_DONE_REGEX', ''))
     
                 host.queueSystem.queues = getDict('QUEUES')
                 host.queueSystem.queuesDefault = getDict('QUEUES_DEFAULT')
