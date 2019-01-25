@@ -212,7 +212,8 @@ class ProtImportVolumes(ProtImportImages):
 
 
 class ProtImportPdb(ProtImportFiles):
-    """ Protocol to import a set of pdb volumes to the project"""
+    """ Protocol to import a set of atomic structure  to the project.
+Format may be PDB or CIF"""
     _label = 'import atomic structure'
     IMPORT_FROM_ID = 0
     IMPORT_FROM_FILES = 1
