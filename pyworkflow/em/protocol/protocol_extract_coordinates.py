@@ -82,9 +82,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         self.micsMap = {}
 
         newMics, self.streamClosed = self.loadInputs()
-
         stepsIds = self._insertNewSteps(newMics)
-
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=stepsIds, wait=True)
 
@@ -256,13 +254,10 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                 else:
                     newMics.append(micKey)
                     newItemDict[micKey] = [item.getObjId()]
-
         self.micsMap.update(newItemDict)
 
         self.inputSize = partsSet.getSize()
-
         partSetClosed = partsSet.isStreamClosed()
-
         partsSet.close()
 
         return newMics, micsSetClosed and partSetClosed
