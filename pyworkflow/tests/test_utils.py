@@ -85,7 +85,7 @@ class TestProccess(BaseTest):
     def test_Process(self):
         prog = pw.join('apps', 'pw_sleep.py')
         p = Popen('xmipp_python %s 500' % prog, shell=True)
-        print "pid: ", p.pid
+        print("pid: %s" % p.pid)
         time.sleep(5)
         killWithChilds(p.pid)
 

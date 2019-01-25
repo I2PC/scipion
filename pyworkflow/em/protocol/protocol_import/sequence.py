@@ -208,7 +208,7 @@ class ProtImportSequence(ProtImportFiles):
                       display=params.EnumParam.DISPLAY_HLIST,
                       help='Import structure data from online server or local '
                            'file',
-                      pointerClass='PdbFile',
+                      pointerClass='AtomStruct',
                       allowsNull=True)
         form.addParam('pdbId', params.StringParam,
                       condition='(inputProteinSequence == %d or '
@@ -311,9 +311,11 @@ class ProtImportSequence(ProtImportFiles):
 
         # form has a wizard that creates label with the format
         # [model: x, chain: x, xxx residues]
-        selectedModel = chainId.split(',')[0].split(':')[1].strip()
-        selectedChain = chainId.split(',')[1].split(':')[1].strip()
+        import json
+        chainIdDict = json.loads(self.inputStructureChain.get())
 
+        selectedModel = chainIdDict['model']
+        selectedChain = chainIdDict['chain']
         self.structureHandler = AtomicStructHandler()
 
         if self.pdbId.get() is not None:

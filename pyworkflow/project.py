@@ -687,7 +687,10 @@ class Project(object):
             m = REGEX_NUMBER_ENDING.match(otherProtLabel)
             if m and m.groupdict()['prefix'].strip() == defaultLabel:
                 stringSuffix = m.groupdict()['number'].strip('(').strip(')')
-                maxSuffix = max(int(stringSuffix),maxSuffix)
+                try:
+                    maxSuffix = max(int(stringSuffix),maxSuffix)
+                except:
+                    print "stringSuffix", stringSuffix
             elif otherProtLabel == defaultLabel: # When only we have the prefix,
                 maxSuffix = max(1,maxSuffix)     # this REGEX don't match.
 
@@ -839,7 +842,7 @@ class Project(object):
 
         # If the nameOnly, we will simply return a json list with their names
         if namesOnly:
-            return json.dumps([prot.getClassName() for prot in protocols])
+            return {i: prot.getClassName() for i, prot in enumerate(protocols)}
 
 
         # Handle the copy of a list of protocols

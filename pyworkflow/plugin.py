@@ -70,8 +70,7 @@ class Domain:
             # FIXME: The following is a quick and dirty way to filter
             # when the submodule is not present
             if msg != 'No module named %s' % subname:
-                print("  failed to load: %s.%s" % (name, subname))
-                print("   error: %s" % e)
+                pwutils.pluginNotFound("%s.%s" % (name, subname), msg)
             return None
 
     @classmethod

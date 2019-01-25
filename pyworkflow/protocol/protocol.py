@@ -1322,6 +1322,27 @@ class Protocol(Step):
                 outputs.append('File "%s" does not exist' % fname)
         return outputs
 
+    def getLogsLastLines(self, lastLines=None):
+        """
+        Get the log last(lastLines) lines
+        """
+        if not lastLines:
+            lastLines = int(os.environ.get('PROT_LOGS_LAST_LINES', 20))
+
+        self.__openLogsFiles('r')
+        iterlen = lambda it: sum(1 for _ in it)
+        numLines = iterlen(self.__fOut)
+
+        lastLines = min(lastLines, numLines)
+        sk = numLines - lastLines
+        sk = max(sk, 0)
+
+        self.__fOut.seek(0, 0)
+        output = [l.strip('\n') for k, l in enumerate(self.__fOut)
+                  if k >= sk]
+        self.__closeLogsFiles()
+        return output
+
     def warning(self, message, redirectStandard=True):
         self._log.warning(message, redirectStandard)
 
@@ -1882,25 +1903,40 @@ class Protocol(Step):
 
     def getStepsGraph(self, refresh=True):
         """ Build a graph taking into account the dependencies between
-        steps. """
+        steps. In streaming we might find first the createOutputStep (e.g 24)
+        depending on 25"""
         from pyworkflow.utils.graph import Graph
         g = Graph(rootName='PROTOCOL')
         root = g.getRoot()
         root.label = 'Protocol'
-        stepsDict = {}
-        steps = self.loadSteps()
 
-        for i, s in enumerate(steps):
-            index = s._index or (i + 1)
+        steps = self.loadSteps()
+        stepsDict = {str(i+1): steps[i] for i in range(0, len(steps))}
+        stepsDone = {}
+
+        def addStep(i, step):
+
+            # Exit if already done
+            # This happens when, in streaming there is a child "before" a parent
+            if i in stepsDone:
+                return
+
+            index = step.getIndex() or i
             sid = str(index)
             n = g.createNode(sid)
-            n.label = sid
-            stepsDict[sid] = n
-            if s._prerequisites.isEmpty():
+            n.step = step
+            stepsDone[i] = n
+            if step.getPrerequisites().isEmpty():
                 root.addChild(n)
             else:
-                for p in s._prerequisites:
-                    stepsDict[p].addChild(n)
+                for p in step.getPrerequisites():
+                    # If prerequisite exists
+                    if not p in stepsDone:
+                        addStep(p, stepsDict[p])
+                    stepsDone[p].addChild(n)
+
+        for i, s in stepsDict.items():
+            addStep(i, s)
         return g
 
     def closeMappers(self):

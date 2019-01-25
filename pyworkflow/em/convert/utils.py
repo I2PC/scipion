@@ -23,7 +23,11 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import os
+import sys
 
+import os
+import sys
 
 def getSubsetByDefocus(inputCTFs, inputMics, nMics):
     """ Return a subset of inputMics that covers the whole range of defocus
@@ -55,6 +59,12 @@ def getSubsetByDefocus(inputCTFs, inputMics, nMics):
 
 # TODO: use biopython
 def downloadPdb(pdbId, pdbFile, log=None):
+    print """use AtomicStructHandler()
+
+    aSH = AtomicStructHandler()
+    pdbFileName = aSH.readFromPDBDatabase(pdbId, type='mmCif',
+                                          dir=os.getcwd())
+"""
     pdbGz = pdbFile + ".gz"
     result = (__downloadPdb(pdbId, pdbGz, log) and
               __unzipPdb(pdbGz, pdbFile, log))

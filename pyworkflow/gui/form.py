@@ -379,7 +379,7 @@ class SubclassesTreeProvider(TreeProvider):
                         # is causing a performance penalty. So for the moment
                         # we will restrict that to SetOfVolumes only
                         if isinstance(attr, em.SetOfVolumes) or \
-                                isinstance(attr, em.SetOfPDBs):
+                                isinstance(attr, em.SetOfAtomStructs):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
@@ -1231,7 +1231,7 @@ class FormWindow(Window):
          protocol: protocol from which the form will be generated.
          callback: callback function to call when Save or Execute are press.
         """
-        Window.__init__(self, title, master, icon=Icon.SCIPION_ICON,
+        Window.__init__(self, title, master, icon=Icon.SCIPION_ICON_PROT,
                         weight=False, minsize=(600, 450), **kwargs)
 
         # Some initialization

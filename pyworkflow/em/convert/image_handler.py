@@ -358,8 +358,8 @@ class ImageHandler(object):
         """ Internal workaround to launch an EMAN2 program. """
         eman2 = pwutils.importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
-        runJob(None, eman2.getEmanProgram(program), args,
-               env=eman2.getEnviron())
+        runJob(None, eman2.Plugin.getProgram(program), args,
+               env=eman2.Plugin.getEnviron())
     
     def createCircularMask(self, radius, refImage, outputFile):
         """ Create a circular mask with the given radius (pixels)

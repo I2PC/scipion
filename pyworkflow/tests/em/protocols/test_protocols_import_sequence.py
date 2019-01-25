@@ -46,9 +46,9 @@ class TestImportSequence(TestImportBase):
     DESCRIPTION = 'User description'
     NUCLEOTIDESEQ1 = 'AATGCGGTTGGGBDSW********GGCACACG'
     AMINOACIDSSEQ1 = 'LARKJLAKPABXZJUO********VAVAVALK'
-    CHAIN1 = "[model: 0, chain: B, 148 residues]" # Protein
-    CHAIN2 = "[model: 0, chain: A, 34 residues]" # RNA
-    CHAIN3 = "[model: 0, chain: I, 153 residues]" # DNA
+    CHAIN1 = '{"model": 0, "chain": "B", "residues": 148}' # Protein
+    CHAIN2 = '{"model": 0, "chain": "A", "residues": 12}' # RNA
+    CHAIN3 = '{"model": 0, "chain": "I", "residues": 146}' # DNA
     pdbID1 = "3lqd" # Protein
     pdbID2 = "205d" # RNA
     pdbID3 = "1aoi" # DNA and protein
