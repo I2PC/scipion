@@ -38,6 +38,7 @@ from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
                                            STATUS_NEW)
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         BooleanParam, FileParam)
+from pyworkflow.utils import redStr, yellowStr
 from pyworkflow.utils.path import copyTree, removeBaseExt, makePath, makeFilePath, cleanPath
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.utils import prettyTime
@@ -370,6 +371,11 @@ class ProtCTFMicrographs(ProtMicrographs):
                                 % newCount)
         else:
             self._createOutputStep()
+            if self.outputCTF.getSize() == 0:
+                raise Exception(redStr("outputCTF has size zero, all CTFs failed."
+                                       "Please review processing steps above."))
+
+
 
     # -------------------------- INFO functions -------------------------------
     def _summary(self):
@@ -646,7 +652,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 ctf = self._createCtfModel(mic)
                 outputCtf.append(ctf)
             except:
-                print("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn)
+                print(yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCtf, streamMode)

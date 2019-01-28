@@ -57,7 +57,7 @@ class TestNMA(TestWorkflow):
         
         # Import a PDB
         protImportPdb = self.newProtocol(ProtImportPdb, inputPdbData=1,
-                                      pdbFile=self.ds.getFile('pdb'))
+                                         pdbFile=self.ds.getFile('pdb'))
         self.launchProtocol(protImportPdb)
         
         # Launch NMA for PDB imported
@@ -106,7 +106,7 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportVol)
         
         # Convert the Volume to Pdb
-        NMA_MASK_THRE = importFromPlugin('xmipp3.pdb.protocol_pseudoatoms_base',
+        NMA_MASK_THRE = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
                                          'NMA_MASK_THRE')
         protConvertVol = self.newProtocol(XmippProtConvertToPseudoAtoms)
         protConvertVol.inputStructure.set(protImportVol.outputVolume)

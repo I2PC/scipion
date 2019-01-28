@@ -379,7 +379,7 @@ class SubclassesTreeProvider(TreeProvider):
                         # is causing a performance penalty. So for the moment
                         # we will restrict that to SetOfVolumes only
                         if isinstance(attr, em.SetOfVolumes) or \
-                                isinstance(attr, em.SetOfPDBs):
+                                isinstance(attr, em.SetOfAtomStructs):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
