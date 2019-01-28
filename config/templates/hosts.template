@@ -42,4 +42,5 @@ SUBMIT_TEMPLATE = #!/bin/bash
     %_(JOB_COMMAND)s
 CANCEL_COMMAND = canceljob %_(JOB_ID)s
 CHECK_COMMAND = qstat %_(JOB_ID)s
+JOB_DONE_REGEX = ""
 QUEUES = { "default": {} }
