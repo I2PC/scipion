@@ -249,7 +249,7 @@ class ProtImportMicBase(ProtImportImages):
                 if ((os.path.islink(blacklistFileName)
                      and fileName == os.readlink(blacklistFileName))
                         or (self._getUniqueFileName(fileName) == os.path.basename(blacklistFileName))):
-                    print("Blacklist warning: %s is blacklisted by the input set" % fileName)
+                    self.info("Blacklist warning: %s is blacklisted by the input set" % fileName)
                     blacklistedItems.add(fileName)
                     return True
 
@@ -264,19 +264,19 @@ class ProtImportMicBase(ProtImportImages):
                 if blacklistDateTo:
                     parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
                     if parsedDateFrom <= fileDate <= parsedDateTo:
-                        print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        self.info("Blacklist warning: %s is blacklisted by date" % fileName)
                         blacklistedItems.add(fileName)
                         return True
                 else:
                     if parsedDateFrom <= fileDate:
-                        print("Blacklist warning: %s is blacklisted by date" % fileName)
+                        self.info("Blacklist warning: %s is blacklisted by date" % fileName)
                         blacklistedItems.add(fileName)
                         return True
 
             elif blacklistDateTo:
                 parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
                 if fileDate <= parsedDateTo:
-                    print("Blacklist warning: %s is blacklisted by date" % fileName)
+                    self.info("Blacklist warning: %s is blacklisted by date" % fileName)
                     blacklistedItems.add(fileName)
                     return True
 
@@ -285,12 +285,12 @@ class ProtImportMicBase(ProtImportImages):
         for item2blacklist in items2blacklist:
             if self.useRegexps.get():
                 if re.match(item2blacklist, fileName):
-                    print("Blacklist warning: %s matched blacklist regexp %s"
+                    self.info("Blacklist warning: %s matched blacklist regexp %s"
                           % (fileName, item2blacklist))
                     blacklistedItems.add(fileName)
                     return True
             elif fileName in item2blacklist:
-                print("Blacklist warning: %s is blacklisted " % fileName)
+                self.info("Blacklist warning: %s is blacklisted " % fileName)
                 blacklistedItems.add(fileName)
                 return True
 
@@ -588,7 +588,7 @@ class ProtImportMovies(ProtImportMicBase):
             decompress('tar', 'jxf %s', '.tbz', '.mrc')
         
         dim = dimMovie.getDim()
-        print("Dim: ", dim)
+        self.info("Dim: ", dim)
         range = [1, dim[2], 1]
         movie.setFramesRange(range)
         imgSet.setDim(dim)
