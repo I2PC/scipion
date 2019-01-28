@@ -255,7 +255,7 @@ def defineBinaries(args=None):
         default=False)
     # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
-    cudaStr = 'ON'if get('CUDA')else 'OFF'
+    cudaStr = 'ON' if get('CUDA') else 'OFF'
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=' + cudaStr + '-DWITH_LIBV4L=ON-DWITH_V4L=OFF']
 
     if os.environ.get('OPENCV_VER') == '3.4.1':
@@ -329,11 +329,11 @@ def defineBinaries(args=None):
     env.addPipModule('biopython', '1.71', target='biopython-1.71*')
     env.addPipModule('mpi4py', '3.0.0')
     scipy = env.addPipModule('scipy', '0.14.0',
-                         default=not noScipy, deps=[lapack, matplotlib])
+                             default=not noScipy, deps=[lapack, matplotlib])
     env.addPipModule('bibtexparser', '0.6.2')
     env.addPipModule('django', '1.5.5')
-    env.addPipModule('Pillow', '2.5.1', target='Pillow-2.5.1*',
-        deps=[jpeg, tiff])
+    env.addPipModule('Pillow', '5.4.1', target='Pillow-5.4.1*',
+                     deps=[jpeg, tiff])
 
 
     # Optional python modules
@@ -350,11 +350,11 @@ def defineBinaries(args=None):
     env.addPipModule('tornado', '4.0.2', default=False)
     env.addPipModule('ipython', '2.1.0', target='IPython', default=False)
     cython = env.addPipModule('cython', '0.22', target='Cython-0.22*', default=False)
-    cythongsl = env.addPipModule('cythongsl','0.2.1',
-                             target='CythonGSL-0.2.1*',
-                             default=False, deps=[cython])
+    cythongsl = env.addPipModule('cythongsl', '0.2.1',
+                                 target='CythonGSL-0.2.1*',
+                                 default=False, deps=[cython])
     env.addPipModule('scikit-learn', '0.17', target='scikit_learn*',
-                 default=False, deps=[scipy, cython])
+                     default=False, deps=[scipy, cython])
 
 
     #  ************************************************************************
@@ -506,18 +506,4 @@ def defineBinaries(args=None):
     """
 
     return env
-    # Try to add binaries defined by the plugins
-    #WARNING: this requires to be using Scipion python and not any PYTHON!!
-    # try:
-    #     from pyworkflow.plugin import Domain
-    #
-    #     for (name, plugin) in Domain.getPlugins().iteritems():
-    #         try:
-    #             plugin.Plugin.defineBinaries(env)
-    #         except Exception as e:
-    #             print("Couldn't find binaries info for %s: %s" % (name, e.message))
-    # except Exception as e:
-    #     print("Couldn't reach plugins binary info. "
-    #           "Try to finish installation first.\n ERROR: %s" % e.message)
-    #     import traceback
-    #     traceback.print_stack()
+

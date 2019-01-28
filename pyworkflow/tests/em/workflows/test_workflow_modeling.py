@@ -1705,19 +1705,11 @@ class TestMolprobityValidation(TestImportData):
         self.assertAlmostEqual(protMolProbity.ramachandranOutliers.get(),
                                ramOutliers, places)
         self.assertAlmostEqual(protMolProbity.ramachandranFavored.get(),
-<<<<<<< HEAD
-                               ramFavored, places)
-        self.assertAlmostEqual(protMolProbity.rotamerOutliers.get(),
-                               rotOutliers, places)
-        self.assertAlmostEqual(protMolProbity.cbetaOutliers.get(),
-                               cbetaOutliers, places)
-=======
                                ramFavored, places=0)
         self.assertAlmostEqual(protMolProbity.rotamerOutliers.get(),
                                rotOutliers, places)
         self.assertAlmostEqual(protMolProbity.cbetaOutliers.get(),
                                cbetaOutliers, delta=2)
->>>>>>> 82b80ee98f828602efbec318738c679766ec2f01
         self.assertAlmostEqual(protMolProbity.clashscore.get(),
                                clashScore, places)
         self.assertAlmostEqual(protMolProbity.overallScore.get(),
@@ -2102,15 +2094,11 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-<<<<<<< HEAD
-                          ramFavored=83.96, ####
-=======
-                          ramFavored=82.55,  # 83.02,
->>>>>>> 82b80ee98f828602efbec318738c679766ec2f01
+                          ramFavored=83.96,
                           rotOutliers=5.68,
                           cbetaOutliers=0,
-                          clashScore=4.47, ####
-                          overallScore=2.47, ####
+                          clashScore=4.47,
+                          overallScore=2.47,
                           protMolProbity=protMolProbity)
 
     def testMolProbityValidationAfterMultipleCootAndRefmacFitNoMask(self):
