@@ -135,7 +135,7 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
         submitDict = dict(hostConfig.getQueuesDefault())
         submitDict.update(protocol.getSubmitDict())
         submitDict['JOB_COMMAND'] = command
-        jobId = _submit(hostConfig, submitDict, stdout, stderr)
+        jobId = _submit(hostConfig, submitDict)
     else:
         jobId = _run(command, wait, stdin, stdout, stderr)
 
@@ -208,7 +208,7 @@ def _copyFiles(protocol, rpath):
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict, stdout=None, stderr=None, cwd=None, env=None):
+def _submit(hostConfig, submitDict, cwd=None, env=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
     # Create first the submission script to be launched
@@ -229,7 +229,7 @@ def _submit(hostConfig, submitDict, stdout=None, stderr=None, cwd=None, env=None
     gcmd = greenStr(command)
     print("** Submiting to queue: '%s'" % gcmd)
 
-    p = Popen(command, shell=True, stdout=stdout, stderr=stderr, cwd=cwd, env=env)
+    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd, env=env)
     out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
     # REview this, seems to exclusive to torque batch system

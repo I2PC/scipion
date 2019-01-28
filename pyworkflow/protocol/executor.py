@@ -296,28 +296,21 @@ class QueueStepExecutor(ThreadStepExecutor):
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + subthreadId)
         submitDict['JOB_DIR'] = getParentFolder(submitDict['JOB_SCRIPT'])
         #job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd, env))
-        jobid = _submit(self.hostConfig, submitDict, PIPE, PIPE, cwd, env)
+        jobid = _submit(self.hostConfig, submitDict, cwd, env)
 
         if (jobid is None) or (jobid == UNKNOWN_JOBID):
             print("jobId is none therefore we set it to fail")
             raise Exception("Failed to submit to queue.")
 
         status = cts.STATUS_RUNNING
-        check_num = 1
+        wait = 3
 
+        # Check status while job running
         while status == cts.STATUS_RUNNING:
-            time.sleep(check_num * check_num)
+            time.sleep(wait)
             status = self._checkJobStatus(self.hostConfig, jobid)
-            # If status is still running but we have checked 10 times already we set the job to failed (and cancel it)
-            if (status == cts.STATUS_RUNNING and check_num == 10):
-                print("Job still running but we have checked 10 times already, we cancel it")
-                status = cts.STATUS_FAILED
-                cancelCmd = self.hostConfig.getCancelCommand() % {'JOB_ID': jobid}
-                p = Popen(greenStr(cancelCmd), shell=True, stdout=PIPE)
-                p.wait()
-                raise Exception("Failed to submit to queue.")
-
-            check_num += 1
+            if wait < 300:
+                wait += 3
 
         return status
 
@@ -375,6 +368,7 @@ class QueueStepExecutor(ThreadStepExecutor):
                 return cts.STATUS_FINISHED
             else:
                 return cts.STATUS_RUNNING
+        # If JOB_DONE_REGEX is not defined and queue has returned something we assume that job is still running
         else:
             return cts.STATUS_RUNNING
 
