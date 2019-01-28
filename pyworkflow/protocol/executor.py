@@ -306,9 +306,9 @@ class QueueStepExecutor(ThreadStepExecutor):
         wait = 3
 
         # Check status while job running
-        while status == cts.STATUS_RUNNING:
+        # REVIEW this to minimize the overhead in time put by this delay check
+        while self._checkJobStatus(self.hostConfig, jobid) == cts.STATUS_RUNNING:
             time.sleep(wait)
-            status = self._checkJobStatus(self.hostConfig, jobid)
             if wait < 300:
                 wait += 3
 
