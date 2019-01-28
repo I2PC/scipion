@@ -195,6 +195,14 @@ class ProjectWindow(ProjectBaseWindow):
             args.append(notesFile)
             subprocess.Popen(args)  #nonblocking
         else:
+            # if no program has been selected
+            # xdg-open will try to guess but
+            # if the file does not exist it
+            # will return an error so If the file does
+            # not exist I will create an empty one
+            # 'a' will avoid accidental truncation
+            if not os.path.exists(notesFile):
+                open(notesFile, 'a').close()
             openTextFileEditor(notesFile)
 
     def onRemoveTemporaryFiles(self):
