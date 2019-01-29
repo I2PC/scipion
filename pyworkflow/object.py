@@ -439,7 +439,7 @@ class Object(object):
         """
         for ptr in copyDict['internalPointers']:
             pointedId = ptr.getObjValue().getObjId()
-            if  pointedId in copyDict:
+            if pointedId in copyDict:
                 ptr.set(copyDict[pointedId])
         
     def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
@@ -581,27 +581,30 @@ class Scalar(Object):
     
     def __str__(self):
         """String representation of the scalar value"""
-        return str(self._objValue)
+        return str(self.get())
     
-    def __eq__(self, other):
+    def __eq__(self, value):
         """Comparison for scalars should be by value
-        and for other objects by reference"""
-        if isinstance(other, Object):
-            return self._objValue == other._objValue
-        return self._objValue == other
+        and for other objects by reference. """
+        if isinstance(value, Object):
+            value = value.get()
+        return self.get() == value
 
     def __ne__(self, other):
         return not self.__eq__(other)
     
-    def __cmp__(self, other):
+    def __cmp__(self, value):
         """ Comparison implementation for scalars. """
-        if isinstance(other, Object):
-            return cmp(self._objValue, other._objValue)
-        return cmp(self._objValue, other)        
+        if isinstance(value, Object):
+            value = value.get()
+        return cmp(self.get(), value)
        
     def get(self, default=None):
         """Get the value, if internal value is None
-        the default argument passed is returned"""
+        the default argument passed is returned. """
+        if self.hasPointer():
+            return self._pointer.get().get(default)
+
         if self.hasValue():
             return self._objValue
         return default
@@ -622,6 +625,13 @@ class Scalar(Object):
         
     def multiply(self, value):
         self._objValue *= value
+
+    def setPointer(self, obj, attr):
+        """ Set an internal pointer to obj and its attr attribute. """
+        self._pointer = Pointer(obj, extended=attr)
+
+    def hasPointer(self):
+        return hasattr(self, '_pointer')
         
     
 class Integer(Scalar):
@@ -1174,9 +1184,8 @@ class Set(OrderedObject):
         self._getMapper().update(item)
                 
     def __str__(self):
-
         return "%-20s (%d items%s)" % (self.getClassName(), self.getSize(),
-                                         self._appendStreamState())
+                                       self._appendStreamState())
 
     def _appendStreamState(self):
         return "" if self.isStreamClosed() else ", open set"
