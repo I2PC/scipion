@@ -46,7 +46,7 @@ from pyworkflow.utils import greenStr
 import constants as cts
 
 from launch import _submit, UNKNOWN_JOBID
-from retrying import retry
+#from retrying import retry
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
