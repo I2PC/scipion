@@ -658,6 +658,11 @@ def cifToPdb(fnCif,fnPdb):
     h.read(fnCif)
     h.writeAsPdb(fnPdb)
 
+def pdbToCif(fnPdb, fnCif):
+    h = AtomicStructHandler()
+    h.read(fnPdb)
+    h.writeAsPdb(fnCif)
+
 def toPdb(inFileName, outPDBFile):
     if inFileName.endswith(".pdb") or inFileName.endswith(".ent"):
         return inFileName
@@ -666,12 +671,13 @@ def toPdb(inFileName, outPDBFile):
         return outPDBFile
     else:
         print "ERROR (toPdb), Unknown file type for file = %s" % inFileName
-#rethink
-# def getNumberModelsChains(parsed_structure):
-#     countModels = 0
-#     for model in parsed_structure:
-#         countModels += 1
-#         countChains = 0
-#         for chain in model:
-#             countChains += 1
-#     return countModels, countChains
+
+def toCIF(inFileName, outCIFFile):
+    if inFileName.endswith(".cif") or inFileName.endswith(".mmcif"):
+        return inFileName
+    elif inFileName.endswith(".pdb") or inFileName.endswith(".ent"):
+        pdbToCif(inFileName, outCIFFile)
+        return outCIFFile
+    else:
+        print "ERROR (toCIF), Unknown file type for file = %s" % inFileName
+

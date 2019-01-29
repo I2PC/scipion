@@ -27,18 +27,17 @@
 
 
 from os.path import exists, basename, abspath
-from os import getcwd
 
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
 from images import ProtImportImages
 from pyworkflow.em import Volume, ImageHandler, AtomStruct
-from pyworkflow.em.convert import downloadPdb
 from pyworkflow.em.data import Transform
 from pyworkflow.em.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler,\
+    toCIF
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -258,17 +257,24 @@ Format may be PDB or MMCIF"""
         self.createOutputStep(pdbPath)
 #        downloadPdb(self.pdbId.get(), pdbPath, self._log)
 
-    def createOutputStep(self, pdbPath):
+    def createOutputStep(self, atomStructPath):
         """ Copy the PDB structure and register the output object.
         """
-        if not exists(pdbPath):
-            raise Exception("Atomic structure not found at *%s*" % pdbPath)
+        if not exists(atomStructPath):
+            raise Exception("Atomic structure not found at *%s*" % atomStructPath)
 
-        baseName = basename(pdbPath)
+        baseName = basename(atomStructPath)
         localPath = abspath(self._getExtraPath(baseName))
 
-        if str(pdbPath) != str(localPath):
-            copyFile(pdbPath, localPath)
+        if str(atomStructPath) != str(localPath): # from local file
+            if atomStructPath.endswith(".pdb") or \
+                    atomStructPath.endswith(".ent"):
+                localPath = localPath.replace(".pdb", ".cif").\
+                    replace(".ent", ".cif")
+            # normalize input format
+            aSH = AtomicStructHandler()
+            aSH.read(atomStructPath)
+            aSH.write(localPath)
         pdb = AtomStruct()
         volume = self.inputVolume.get()
 
