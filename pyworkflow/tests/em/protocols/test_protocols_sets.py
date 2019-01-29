@@ -71,12 +71,22 @@ class TestSets(BaseTest):
         new = cls.proj.newProtocol  # short notation
         launch = cls.proj.launchProtocol
         # Micrographs
+        # NOTE: This dataset has 3 mic with heterogeneous dimensions!! But so far
+        #  is not failing, should it?
         print magentaStr("\n==> Importing data - micrographs")
         p_imp_micros = new(ProtImportMicrographs,
                            filesPath=cls.dataset_xmipp.getFile('allMics'),
                            samplingRate=1.237, voltage=300)
         launch(p_imp_micros, wait=True)
         cls.micros = p_imp_micros.outputMicrographs
+
+        # Micrographs SMALL - This is a mic with different dimensions
+        print magentaStr("\n==> Importing data - micrographs SMALL")
+        p_imp_micros = new(ProtImportMicrographs,
+                           filesPath=cls.dataset_xmipp.getFile('mic3'),
+                           samplingRate=1.237, voltage=300)
+        launch(p_imp_micros, wait=True)
+        cls.microsSmall = p_imp_micros.outputMicrographs
 
         # Volumes
         print magentaStr("\n==> Importing data - volumes")
@@ -541,6 +551,19 @@ class TestSets(BaseTest):
 
         self.assertSetSize(TestSets.particles)
         self.assertSetSize(TestSets.particles, 76)
+
+    def testJoinValidation(self):
+
+        # Create a merge protocol
+        p_union = self.newProtocol(ProtUnionSet,
+                                   objLabel='invalid join',
+                                   ignoreExtraAttributes=True)
+        p_union.inputSets.append(self.microsSmall)
+        p_union.inputSets.append(self.micros)
+
+        with self.assertRaises(Exception):
+            self.launchProtocol(p_union)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -246,11 +246,49 @@ class ProtUnionSet(ProtSets):
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
         if issubclass(type(self.inputSets[0].get()), SetOfClasses):
-            return["Is not posible to join different sets of classes.\n"
-                   "If you want to join diferent representative, extract them "
+            return["Is not possible to join different sets of classes.\n"
+                   "If you want to join different representative, extract them "
                    "with the viewer and them run this protocol with the "
                    "resulting averages."]
-        return []  # no errors
+
+        # Validate attributes like sampling rate or dimensions
+        return self._checkSetsCompatibility()
+
+    def _checkSetsCompatibility(self):
+        """ Check if all input sets have a minimum compatible attributes """
+        # Attributes to check
+        attrs = {'sampling rates': 'getSamplingRate',
+                'dimensions': 'getDimensions'}
+        errors = []
+        # For each attribute
+        for key, attr in attrs.iteritems():
+
+            # Intentional: we need a default value not None, since some
+            # attributes could return None as a valid value.
+            refValue = '?'
+
+            # For pointer to a set
+            for setPointer in self.inputSets:
+
+                # Get the set:
+                inputSet = setPointer.get()
+
+                # If the set has the attribute
+                if not hasattr(inputSet, attr):
+                    break
+
+                # Get the attribute and "call it" --> final ().
+                setValue = getattr(inputSet, attr)()
+
+                if refValue is '?':
+                    refValue = setValue
+                else:
+                    if refValue != setValue:
+                        errors.append("There are different %s among the input"
+                                      " sets: %s and %s" % (key, refValue, setValue))
+                        break
+
+        return errors
 
     def _warnings(self):
         """ Warn about loosing info. """
