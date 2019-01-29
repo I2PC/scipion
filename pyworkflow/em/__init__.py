@@ -124,20 +124,17 @@ def loadSetFromDb(dbName, dbPrefix=''):
 
 
 def runProgram(program, params):
-    env = None
+    plugin = None
 
     if program.startswith('xmipp'):
-        xmipp3 = importFromPlugin('xmipp3', 'Plugin')
-        env = xmipp3.getEnviron()
-    if program.startswith('relion'):
-        relion = importFromPlugin('relion', 'Plugin')
-        env = relion.getEnviron()
-    elif (program.startswith('e2') or
-              program.startswith('sx')):
-        eman2 = importFromPlugin('eman2', 'Plugin')
-        env = eman2.getEnviron()
+        plugin = importFromPlugin('xmipp3', 'Plugin')
+    elif program.startswith('relion'):
+        plugin = importFromPlugin('relion', 'Plugin')
+    elif program.startswith('e2') or program.startswith('sx'):
+        plugin = importFromPlugin('eman2', 'Plugin')
     elif program.startswith('b'):
-        bsoft = importFromPlugin('bsoft', 'Plugin')
-        env = bsoft.getEnviron()
+        plugin = importFromPlugin('bsoft', 'Plugin')
+
+    env = plugin.getEnviron() if plugin is not None else None
 
     pwutils.runJob(None, program, params, env=env)
