@@ -25,17 +25,17 @@
 # *
 # **************************************************************************
 #
-# cif to pdb convertion is based on  cif2pdb.py by Spencer Bliven
+# cif to pdb conversion is based on  cif2pdb.py by Spencer Bliven
 # <spencer.bliven@gmail.com>
 #
 # see http://biopython.org/DIST/docs/tutorial/Tutorial.html for a description
 # on the object "structure" and other Bio.xxxx modules
 
+from __future__ import print_function
 import os
 import numpy
 from collections import defaultdict
 
-import Bio.PDB.Atom
 from Bio.PDB.Dice import ChainSelector
 from Bio.PDB.MMCIFParser import MMCIFParser
 from Bio.PDB.PDBParser import PDBParser
@@ -43,19 +43,16 @@ from Bio.PDB import PDBIO, MMCIFIO
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
 from Bio.PDB import PDBList
-from Bio.PDB.Polypeptide import PPBuilder
 from collections import OrderedDict
 from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
-from .transformations import rotation_from_matrix, \
-    translation_from_matrix
-from .sequence import SequenceHandler
+from .transformations import translation_from_matrix
 
 
 class OutOfChainsError(Exception):
     pass
+
 
 class scipionMMCIFIO(MMCIFIO):
     """ Class that redefines the name of the chains.
@@ -249,7 +246,7 @@ class AtomicStructHandler:
         if self._readDone:
             return True
         else:
-            print "you must read the pdb file first"
+            print("you must read the pdb file first")
             exit(0)
 
     def getModelsChains(self):
@@ -301,8 +298,8 @@ class AtomicStructHandler:
                 for chain in model:
                     if str(chain.id) == chainID:
                         if len(chain.get_unpacked_list()[0].resname) == 1:
-                            print "Your sequence is a nucleotide sequence (" \
-                                  "RNA)\n"
+                            print("Your sequence is a nucleotide sequence (" \
+                                  "RNA)\n")
                             # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
                             for residue in chain:
                                 ## Check if the residue belongs to the
@@ -314,8 +311,8 @@ class AtomicStructHandler:
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 2:
-                            print "Your sequence is a nucleotide sequence (" \
-                                  "DNA)\n"
+                            print("Your sequence is a nucleotide sequence (" \
+                                  "DNA)\n")
                             # alphabet = IUPAC.ExtendedIUPACDNA._upper()
                             for residue in chain:
                                 ## Check if the residue belongs to the
@@ -327,7 +324,7 @@ class AtomicStructHandler:
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 3:
-                            print "Your sequence is an aminoacid sequence"
+                            print("Your sequence is an aminoacid sequence")
                             #alphabet = IUPAC.ExtendedIUPACProtein._upper()
                             for residue in chain:
                                 ## The test below checks if the amino acid
@@ -670,7 +667,7 @@ def toPdb(inFileName, outPDBFile):
         cifToPdb(inFileName, outPDBFile)
         return outPDBFile
     else:
-        print "ERROR (toPdb), Unknown file type for file = %s" % inFileName
+        print("ERROR (toPdb), Unknown file type for file = %s" % inFileName)
 
 def toCIF(inFileName, outCIFFile):
     if inFileName.endswith(".cif") or inFileName.endswith(".mmcif"):
@@ -679,5 +676,5 @@ def toCIF(inFileName, outCIFFile):
         pdbToCif(inFileName, outCIFFile)
         return outCIFFile
     else:
-        print "ERROR (toCIF), Unknown file type for file = %s" % inFileName
+        print("ERROR (toCIF), Unknown file type for file = %s" % inFileName)
 
