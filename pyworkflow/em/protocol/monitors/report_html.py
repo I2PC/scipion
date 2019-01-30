@@ -299,17 +299,48 @@ class ReportHtml:
         values, binEdges = np.histogram(defocusList, bins=edges, range=(minDefocus, maxDefocus))
         belowThresh = 0
         aboveThresh = 0
-        labels = ["%0.2f-%0.2f" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
+        labels = ["%0.1f-%0.1f" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
         for v in defocusList:
             if v < minDefocus:
                 belowThresh += 1
             elif v > maxDefocus:
                 aboveThresh += 1
         zipped = zip(values, labels)
-        zipped[:0] = [(belowThresh, "0-%0.2f" % (minDefocus))]
-        zipped.append((aboveThresh, "> %0.2f" % (maxDefocus)))
+        zipped[:0] = [(belowThresh, "0-%0.1f" % (minDefocus))]
+        zipped.append((aboveThresh, "> %0.1f" % (maxDefocus)))
 
         return zipped
+    def getTimeSeries(self, data):
+        from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import \
+            PHASE_SHIFT, TIME_STAMP, DEFOCUS_U, RESOLUTION
+        # Get timeStamp
+        ts = data[TIME_STAMP]
+
+        timeSeries = dict()
+
+        # Get phaseShift
+        phaseShiftSerie = data[PHASE_SHIFT]
+        phaseShiftSerie = zip(ts, phaseShiftSerie)
+        # Add it to the series
+        timeSeries[PHASE_SHIFT]= phaseShiftSerie
+
+        # Get defocusU is comming in Å, reduce it to μm
+        defocusSerie = data[DEFOCUS_U]
+        defocusSerie = [i * 1e-4 for i in defocusSerie]
+
+        defocusSerie = zip(ts, defocusSerie)
+        # Add it to the series
+        timeSeries[DEFOCUS_U] = defocusSerie
+
+        # Get Resolution
+        resSerie = data[RESOLUTION]
+        resSerie = zip(ts, resSerie)
+        # Add it to the series
+        timeSeries[RESOLUTION] = resSerie
+
+        return timeSeries
+
+
 
     def getResolutionHistogram(self, resolutionValues):
         if len(resolutionValues) == 0:
@@ -373,6 +404,8 @@ class ReportHtml:
                 data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
 
             data['resolutionHistogram'] = self.getResolutionHistogram(data['resolution'])
+
+            data['timeSeries'] = self.getTimeSeries(data)
 
         else:
             # Thumbnails for Micrograph Table

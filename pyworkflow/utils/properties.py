@@ -359,6 +359,8 @@ class PluginStates():
     INSTALLED = 'installed'
     PRECESSING = 'processing'
     FAILURE = 'failure'
+    AVAILABLE_RELEASE = 'available_release'
+    TO_UPDATE = 'to_update'
 
 # To get font awesome icons into png use: http://fa2png.io/
 class Icon():
@@ -427,6 +429,7 @@ class Icon():
     PROCESSING = 'fa-processing.png'
     FAILURE = 'fa-failure.png'
     DELETE_OPERATION = 'fa-delete-operation.png'
+    TO_UPDATE = 'fa-update.png'
 
 
 class Color():
