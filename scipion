@@ -407,13 +407,6 @@ def main():
                 pass
         sys.exit(ret)
 
-    elif mode == 'clean':
-        #TODO: Maybe move the clean script under install/
-        # and also add logic to clean specific targets (useful for testing install)
-        #TODO: This option seems to be redundant with MODE_UNINSTALL 
-        import scripts.clean as clean
-        sys.exit(0)
-
     # elif mode == MODE_INSTALL_BINS:
     #     runScript('scipion install %s' % ' '.join(sys.argv[2:]))
 
@@ -535,10 +528,10 @@ Example: scipion install -j 4
         runApp('pw_tutorial.py', sys.argv[2:])
 
     elif mode == MODE_DEMO:
-        runScript('scripts/scipionbox_wizard_demo.py')
+        runScript('pyworkflow/project/scripts/scipionbox_wizard_demo.py')
 
     elif mode == MODE_DEPENDENCIES:
-        script = 'scripts/find_deps.py $s/bin s%/lib %s' \
+        script = 'pyworkflow/install/find_deps.py $s/bin s%/lib %s' \
                  % (SCIPION_SOFTWARE, SCIPION_SOFTWARE)
         runScript(script % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
 
