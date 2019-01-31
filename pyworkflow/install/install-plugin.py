@@ -30,7 +30,7 @@ import os
 import re
 
 from pyworkflow.plugin import Domain
-from .plugin_funcs import PluginRepository, PluginInfo
+from plugin_funcs import PluginRepository, PluginInfo
 import script
 
 #  ************************************************************************
