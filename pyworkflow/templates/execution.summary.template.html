@@ -1015,14 +1015,14 @@
             var extraInfo = ''
             // if it is a PSD image
             if (value.indexOf('imgPsdThumbs') == 0) {
-                extraInfo = ' extraInfo="<br/><strong>CC</strong>:' + rowData[6].toFixed(2) +
-                    '<br/><strong>Resolution</strong>: ' + rowData[5].toFixed(2) + '"';
+                extraInfo = '<br/><strong>CC</strong>:' + rowData[rowData.length-3].toFixed(2) +
+                    '<br/><strong>Resolution</strong>: ' + rowData[rowData.length-4].toFixed(2) ;
             }
 
 
             return '<div class="thumbnail">' +
                       '<a href ="#" class="popUp" data-target="#modal" data-toggle="modal">' +
-                        '<img width={1} src={0} alt="Micrograph {2}"' + extraInfo + '>' +
+                        '<img width={1} src={0} alt="Micrograph {2}" extraInfo="' + extraInfo + '">' +
                       '</a>' +
                     '</div>';
 
