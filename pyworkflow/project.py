@@ -419,37 +419,139 @@ class Project(object):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)
 
-    def setProtStatusStep(self, prot):
-        if prot:
-            steps = prot.getSteps()
-            for step in steps:
-                step.setStatus(pwprot.STATUS_SAVED)
+    def continueWorkflow(self, protocol, continuedProtList=[], errorsList=[]):
+        """
+        This function continue a workflow from a selected protocol.
+        The previous results are preserved.
+        Actions done here are:
+        1. if the protocol exists and has not been launched previously
+            1.1. If the protocol is in streaming (CONTINUE ACTION):
+               - 'dataStreaming' parameter if the protocol is an import protocol
+               -  check if the __stepsCheck function exist and it's not the same
+                  implementation of the base class (worksInStreaming function)
+                   1.1.1 Open the protocol sets, store and save them in the
+                         database
+                   1.1.2 Change the protocol status (SAVED)
+                   1.1.3 Schedule the protocol
+                   1.1.4 For each of the dependents protocols, repeat
+                         recursively from step 1
+                 Else Restart the workflow from that point (RESTART ACTION) if
+                    at least one protocol in streaming has been launched
+        """
+        if protocol is not None and protocol.getObjId() not in continuedProtList:
+            if hasattr(protocol, 'dataStreaming') or protocol.worksInStreaming():
+                attrSet = [attr for name, attr in
+                           protocol.iterOutputAttributes(pwprot.Set)]
+                if attrSet:
+                    try:
+                        for attr in attrSet:
+                            attr.setStreamState(attr.STREAM_OPEN)
+                            attr.write()
+                            attr.close()
+                        protocol.setStatus(pwprot.STATUS_SAVED)
+                        protocol._setStatusSteps(pwprot.STATUS_SAVED)
+                        protocol.setMapper(self.createMapper(protocol.getDbPath()))
+                        protocol._store()
+                        self._storeProtocol(protocol)
+                        continuedProtList.append(protocol.getObjId())
+                        self.scheduleProtocol(protocol)
+                        time.sleep(1)
+                    except Exception as ex:
+                        errorsList.append("Error trying to launch the protocol: "
+                                          "%s (jobId=%s)\nERROR: %s\n" %
+                                          (protocol.getObjLabel(),
+                                           protocol.getObjId(), ex))
+                    node = self.getRunsGraph().getNode(protocol.strId())
+                    if node:
+                        dependencies = [node.run for node in node.getChilds()]
+                        for dep in dependencies:
+                            self.continueWorkflow(dep, continuedProtList,
+                                                  errorsList)
+            else:
+                if continuedProtList:
+                    # we make sure that at least one protocol in streaming
+                    # has been launched
+                    self.restartWorkflow(protocol, continuedProtList,
+                                         errorsList)
+                else:
+                    errorsList.append(("Error trying to launch the protocol: "
+                                       "%s\nERROR: The protocol is not in "
+                                       "streaming" % (protocol.getObjLabel())))
 
-    def continueWorkflow(self, prot):
-        if prot:
-            attrInStreaming = prot.getAttrInStreaming()
-            if attrInStreaming is not None:
-                attrInStreaming.setStreamState(attrInStreaming.STREAM_OPEN)
-                prot.setStatus(pwprot.STATUS_SAVED)
-                self.setProtStatusStep(prot)
-                self.scheduleProtocol(prot)
-                time.sleep(1)
-                node = self.getRunsGraph().getNode(prot.strId())
-                if node:
-                    dependencies = [node.run for node in node.getChilds()]
-                    for dep in dependencies:
-                        self.restartWorkflow(dep)
-
-    def restartWorkflow(self, prot):
-        if prot:
-            prot.runMode.set(MODE_RESTART)
-            self.scheduleProtocol(prot)
+    def restartWorkflow(self, protocol, restartedProtList=[], errorsList=[]):
+        """
+        This function restart a workflow from a selected protocol.
+        All previous results will be deleted
+        Actions done here are:
+        1. Set the protocol run mode (RESTART). All previous results will be
+           deleted
+        2. Schedule the protocol
+        3. For each of the dependents protocols, repeat recursively from step 1
+        """
+        if protocol is not None and protocol.getObjId() not in restartedProtList:
+            try:
+                protocol.runMode.set(MODE_RESTART)
+                restartedProtList.append(protocol.getObjId())
+                self.scheduleProtocol(protocol)
+            except Exception as ex:
+                errorsList.append("Error trying to restart a protocol: %s"
+                                  "(jobId=%s)\nERROR: %s\n" %
+                                  (protocol.getObjLabel(), protocol.getObjId(),
+                                   ex))
             time.sleep(1)
-            node = self.getRunsGraph().getNode(prot.strId())
+            node = self.getRunsGraph().getNode(protocol.strId())
             if node:
                 dependencies = [node.run for node in node.getChilds()]
                 for dep in dependencies:
-                    self.restartWorkflow(dep)
+                    self.restartWorkflow(dep, restartedProtList, errorsList)
+
+    def fixWorkflowConfiguration(self, protocol, configuredProtList=[]):
+        """
+        This function fix the old parameters configuration in the protocols.
+        Now, dependent protocols have a pointer to the parent protocol, and the
+        extended parameter has a parent output value
+        """
+        if protocol is not None and protocol.getObjId() not in configuredProtList:
+            # Take the protocols that are configured in the old way
+            oldStylePointerList = [item for key, item in
+                                   protocol.iterInputAttributes()
+                                   if not isinstance(item.getObjValue(),
+                                                     pwprot.Protocol)]
+            if oldStylePointerList:
+                    # Fix the protocol parameters
+                    for pointer in oldStylePointerList:
+                        auxPointer = pointer.getObjValue()
+                        pointer.set(self.getProtocol(pointer.get().getObjParentId()))
+                        pointer.setExtended(auxPointer.getLastName())
+                    protocol._store()
+                    self._storeProtocol(protocol)
+                    print("The parameters configuration in the "
+                          "protocol \"%s\" has been modified \n" %
+                          protocol.getObjLabel())
+            configuredProtList.append(protocol.getObjId())
+            node = self.getRunsGraph().getNode(protocol.strId())
+            if node:
+                dependencies = [node.run for node in node.getChilds()]
+                for dep in dependencies:
+                    self.fixWorkflowConfiguration(dep, configuredProtList)
+
+    def launchWorkflow(self, protocol, mode, errorsList):
+        """
+        This function can launch a workflow from a selected protocol in two
+        modes depending on the 'mode' value (RESTART, CONTINUE)
+        Actions done here are:
+        1. Check if the workflow has active protocols.
+        2. Fix the workflow if is not properly configured
+        3. Restart or Continue a workflow starting from the protocol depending
+           of the 'mode' value
+        """
+        self._checkWorkflowErrors(protocol, [], errorsList)
+        if not errorsList:
+            self.fixWorkflowConfiguration(protocol, [])
+            if mode == MODE_RESTART:
+                self.restartWorkflow(protocol, [], errorsList)
+            else:
+                self.continueWorkflow(protocol, [], errorsList)
 
     def launchProtocol(self, protocol, wait=False, scheduled=False,
                        force=False):
@@ -666,6 +768,26 @@ class Project(object):
             raise Exception(msg + " Running in READ-ONLY mode.")
 
         self._checkProtocolsDependencies(protocols, msg)
+
+    def _checkWorkflowErrors(self, protocol, configuredProtList=[],
+                             errorsList=[]):
+        """
+        This function checks if there are active protocols.
+        If not exists, the function return None
+        """
+        if protocol and protocol.getObjId() not in configuredProtList:
+            if protocol.isActive():
+                errorsList.append("There are active protocols in the WorkFlow\n")
+                return True
+            else:
+                configuredProtList.append(protocol.getObjId())
+                node = self.getRunsGraph().getNode(protocol.strId())
+                if node:
+                    dependencies = [node.run for node in node.getChilds()]
+                    for dep in dependencies:
+                        return self._checkWorkflowErrors(dep,
+                                                         configuredProtList,
+                                                         errorsList)
 
     def deleteProtocol(self, *protocols):
         self._checkModificationAllowed(protocols, 'Cannot DELETE protocols')

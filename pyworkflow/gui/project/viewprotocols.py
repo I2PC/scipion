@@ -79,7 +79,8 @@ ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
 ACTION_LABELS = 'Labels'
-ACTION_RESTART = 'Restart WorkFlow'
+ACTION_RESTART_WORKFLOW = 'Restart WorkFlow'
+ACTION_CONTINUE_WORKFLOW = 'Continue Workflow'
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -108,7 +109,8 @@ ActionIcons = {
     ACTION_COLLAPSE: 'fa-minus-square.png',
     ACTION_EXPAND: 'fa-plus-square.png',
     ACTION_LABELS: Icon.TAGS,
-    ACTION_RESTART: Icon.ACTION_CONTINUE
+    ACTION_RESTART_WORKFLOW: Icon.ACTION_EXECUTE,
+    ACTION_CONTINUE_WORKFLOW: Icon.ACTION_CONTINUE
 }
 
 
@@ -202,7 +204,8 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                 (ACTION_EXPAND, single and status and not expanded),
                 (ACTION_LABELS, True),
                 (ACTION_SELECT_TO, True),
-                (ACTION_RESTART, True)
+                (ACTION_RESTART_WORKFLOW, single),
+                (ACTION_CONTINUE_WORKFLOW, single)
                 ]
 
     def getObjectActions(self, obj):
@@ -1818,11 +1821,34 @@ class ProtocolsView(tk.Frame):
             self.refreshRuns()
 
     def _restartWorkflow(self):
+        errorList = []
         protocols = self._getSelectedProtocols()
-        if len(protocols) == 1:
-            if pwgui.dialog.askYesNo(Message.TITLE_RESTART_WORKFLOW,
-                                     Message.LABEL_RESTART_WORKFLOW, self.root):
-                self.project.restartWorkflow(protocols[0])
+        if pwgui.dialog.askYesNo(Message.TITLE_RESTART_WORKFLOW,
+                                 Message.LABEL_RESTART_WORKFLOW, self.root):
+            self.project.launchWorkflow(protocols[0], pwprot.MODE_RESTART,
+                                        errorList)
+            msg = ''
+            if errorList:
+                for error in errorList:
+                    msg = msg + error
+                pwgui.dialog.MessageDialog(self,
+                   Message.TITLE_LAUNCHED_WORKFLOW_FAILED,
+                   Message.LABEL_LAUNCHED_WORKFLOW_FAILED,
+                                           'fa-times-circle_alert.png')
+
+    def _continueWorkflow(self):
+        errorList = []
+        protocols = self._getSelectedProtocols()
+        self.project.launchWorkflow(protocols[0], pwprot.MODE_CONTINUE,
+                                    errorList)
+        msg = ''
+        if errorList:
+            for error in errorList:
+                msg = msg + error
+            pwgui.dialog.MessageDialog(self,
+                Message.TITLE_LAUNCHED_WORKFLOW_FAILED,
+                Message.LABEL_LAUNCHED_WORKFLOW_FAILED + msg,
+                                       'fa-times-circle_alert.png')
 
     def _selectLabels(self):
         selectedNodes = self._getSelectedNodes()
@@ -2034,8 +2060,10 @@ class ProtocolsView(tk.Frame):
                     self._selectLabels()
                 elif action == ACTION_SELECT_TO:
                     self._selectAncestors()
-                elif action == ACTION_RESTART:
+                elif action == ACTION_RESTART_WORKFLOW:
                     self._restartWorkflow()
+                elif action == ACTION_CONTINUE_WORKFLOW:
+                    self._continueWorkflow()
 
             except Exception as ex:
                 self.windows.showError(str(ex))

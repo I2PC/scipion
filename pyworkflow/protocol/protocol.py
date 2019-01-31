@@ -657,19 +657,12 @@ class Protocol(Step):
         return False
 
     def worksInStreaming(self):
-
         # A protocol should work in streaming if it implements the stepCheck()
         # Get the stepCheck method from the Protocol
         baseStepCheck = Protocol._stepsCheck
         ownStepCheck = self._stepsCheck
 
         return not pwutils.isSameFunction(baseStepCheck, ownStepCheck)
-
-    def getAttrInStreaming(self):
-        for paramName, attr in self.iterOutputEM():
-            if isinstance(attr, Set):
-                return attr
-        return None
 
     def allowsGpu(self):
         """ Returns True if this protocol allows GPU computation. """
@@ -799,6 +792,15 @@ class Protocol(Step):
         step.setIndex(len(self._steps))
 
         return step.getIndex()
+
+    def _setStatusSteps(self, status):
+        """Set the status of all steps"""
+        stepsSet = StepSet(filename=self.getStepsFile())
+        for step in stepsSet:
+            step.setStatus(status)
+            stepsSet.update(step)
+        stepsSet.write()
+        stepsSet.close()  # Close the connection
 
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
