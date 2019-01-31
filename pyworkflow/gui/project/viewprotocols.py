@@ -1821,14 +1821,13 @@ class ProtocolsView(tk.Frame):
             self.refreshRuns()
 
     def _restartWorkflow(self):
-        errorList = []
         protocols = self._getSelectedProtocols()
         if pwgui.dialog.askYesNo(Message.TITLE_RESTART_WORKFLOW,
                                  Message.LABEL_RESTART_WORKFLOW, self.root):
-            self.project.launchWorkflow(protocols[0], pwprot.MODE_RESTART,
-                                        errorList)
-            msg = ''
+            errorList = self.project.launchWorkflow(protocols[0],
+                                                    pwprot.MODE_RESTART)
             if errorList:
+                msg = ''
                 for error in errorList:
                     msg = msg + error
                 pwgui.dialog.MessageDialog(self,
@@ -1837,12 +1836,11 @@ class ProtocolsView(tk.Frame):
                                            'fa-times-circle_alert.png')
 
     def _continueWorkflow(self):
-        errorList = []
         protocols = self._getSelectedProtocols()
-        self.project.launchWorkflow(protocols[0], pwprot.MODE_CONTINUE,
-                                    errorList)
-        msg = ''
+        errorList = self.project.launchWorkflow(protocols[0],
+                                                pwprot.MODE_CONTINUE)
         if errorList:
+            msg = ''
             for error in errorList:
                 msg = msg + error
             pwgui.dialog.MessageDialog(self,

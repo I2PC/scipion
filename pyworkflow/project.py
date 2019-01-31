@@ -419,7 +419,7 @@ class Project(object):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)
 
-    def continueWorkflow(self, protocol, continuedProtList=[], errorsList=[]):
+    def _continueWorkflow(self, protocol, continuedProtList, errorsList):
         """
         This function continue a workflow from a selected protocol.
         The previous results are preserved.
@@ -465,20 +465,20 @@ class Project(object):
                     if node:
                         dependencies = [node.run for node in node.getChilds()]
                         for dep in dependencies:
-                            self.continueWorkflow(dep, continuedProtList,
-                                                  errorsList)
+                            self._continueWorkflow(dep, continuedProtList,
+                                                   errorsList)
             else:
                 if continuedProtList:
                     # we make sure that at least one protocol in streaming
                     # has been launched
-                    self.restartWorkflow(protocol, continuedProtList,
-                                         errorsList)
+                    self._restartWorkflow(protocol, continuedProtList,
+                                          errorsList)
                 else:
                     errorsList.append(("Error trying to launch the protocol: "
                                        "%s\nERROR: The protocol is not in "
                                        "streaming" % (protocol.getObjLabel())))
 
-    def restartWorkflow(self, protocol, restartedProtList=[], errorsList=[]):
+    def _restartWorkflow(self, protocol, restartedProtList, errorsList):
         """
         This function restart a workflow from a selected protocol.
         All previous results will be deleted
@@ -503,9 +503,9 @@ class Project(object):
             if node:
                 dependencies = [node.run for node in node.getChilds()]
                 for dep in dependencies:
-                    self.restartWorkflow(dep, restartedProtList, errorsList)
+                    self._restartWorkflow(dep, restartedProtList, errorsList)
 
-    def fixWorkflowConfiguration(self, protocol, configuredProtList=[]):
+    def _fixWorkflowConfiguration(self, protocol, configuredProtList):
         """
         This function fix the old parameters configuration in the protocols.
         Now, dependent protocols have a pointer to the parent protocol, and the
@@ -533,9 +533,9 @@ class Project(object):
             if node:
                 dependencies = [node.run for node in node.getChilds()]
                 for dep in dependencies:
-                    self.fixWorkflowConfiguration(dep, configuredProtList)
+                    self._fixWorkflowConfiguration(dep, configuredProtList)
 
-    def launchWorkflow(self, protocol, mode, errorsList):
+    def launchWorkflow(self, protocol, mode):
         """
         This function can launch a workflow from a selected protocol in two
         modes depending on the 'mode' value (RESTART, CONTINUE)
@@ -545,13 +545,15 @@ class Project(object):
         3. Restart or Continue a workflow starting from the protocol depending
            of the 'mode' value
         """
+        errorsList = []
         self._checkWorkflowErrors(protocol, [], errorsList)
         if not errorsList:
-            self.fixWorkflowConfiguration(protocol, [])
+            self._fixWorkflowConfiguration(protocol, [])
             if mode == MODE_RESTART:
-                self.restartWorkflow(protocol, [], errorsList)
+                self._restartWorkflow(protocol, [], errorsList)
             else:
-                self.continueWorkflow(protocol, [], errorsList)
+                self._continueWorkflow(protocol, [], errorsList)
+        return errorsList
 
     def launchProtocol(self, protocol, wait=False, scheduled=False,
                        force=False):
@@ -769,8 +771,8 @@ class Project(object):
 
         self._checkProtocolsDependencies(protocols, msg)
 
-    def _checkWorkflowErrors(self, protocol, configuredProtList=[],
-                             errorsList=[]):
+    def _checkWorkflowErrors(self, protocol, configuredProtList=None,
+                             errorsList=None):
         """
         This function checks if there are active protocols.
         If not exists, the function return None
