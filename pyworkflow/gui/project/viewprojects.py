@@ -418,7 +418,7 @@ class ProjectImportWindow(Window):
         elif not os.path.isdir(projLocation):
                 errorMessage += "Project location is not a directory\n"
         # Validate that the project location is a scipion project folder
-        elif not os.path.exists(os.path.join(projLocation, Project.getName())):
+        elif not os.path.exists(os.path.join(projLocation, Project.getDbName())):
             errorMessage += "Project location doesn't look like a scipion folder\n"
 
         # Validate that there isn't already a project with the same name
