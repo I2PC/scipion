@@ -267,8 +267,6 @@ class ProtImportFiles(ProtImport):
         filePaths = self.getMatchFiles()
 
         for fileName in filePaths:
-            if self.isBlacklisted(fileName):
-                continue
             if self._idRegex:
                 # Try to match the file id from filename
                 # this is set by the user by using #### format in the pattern

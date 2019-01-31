@@ -137,6 +137,8 @@ class ProtImportImages(ProtImportFiles):
         alreadyWarned = False # Use this flag to warn only once
 
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            if self.isBlacklisted(fileName):
+                continue
             uniqueFn = self._getUniqueFileName(fileName)
             dst = self._getExtraPath(uniqueFn)
             if ' ' in dst:
@@ -194,7 +196,7 @@ class ProtImportImages(ProtImportFiles):
         if imgSet is None:
             createSetFunc = getattr(self, '_create' + self._outputClassName)
             imgSet = createSetFunc()
-        elif imgSet.getSize() > 0: # in case of continue
+        elif imgSet.getSize() > 0:  # in case of continue
             imgSet.loadAllProperties()
             self._fillImportedFiles(imgSet)
             imgSet.enableAppend()
@@ -262,7 +264,7 @@ class ProtImportImages(ProtImportFiles):
 
                 someAdded = True
                 self.debug('Appending file to DB...')
-                if self.importedFiles: # enable append after first append
+                if self.importedFiles:  # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:
@@ -481,9 +483,9 @@ class ProtImportImages(ProtImportFiles):
         This function uses the self.importedFiles dict.
         """
         for fileName, fileId in self.iterFiles():
-            # If file already imported, skip it
+            # If file already imported or blacklisted,  skip it
             uniqueFn = self._getUniqueFileName(fileName)
-            if uniqueFn not in self.importedFiles:
+            if (uniqueFn not in self.importedFiles) and (not self.isBlacklisted(fileName)):
                 yield fileName, uniqueFn, fileId
 
     def _fillImportedFiles(self, imgSet):

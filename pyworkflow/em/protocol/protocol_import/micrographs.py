@@ -124,7 +124,7 @@ class ProtImportMicBase(ProtImportImages):
         for d in dates:
             if d:
                 try:
-                    parsedDates.append(datetime.strptime(self.blacklistDateTo.get(), "%Y-%m-%d %H:%M:%S"))
+                    parsedDates.append(datetime.strptime(d, "%Y-%m-%d %H:%M:%S"))
                 except ValueError as e:
                     errors.append("Bad date formatting in blacklist date %s: %s" % (d, e))
 
@@ -256,7 +256,7 @@ class ProtImportMicBase(ProtImportImages):
         # Blacklisted by date
         blacklistDateFrom = self.blacklistDateFrom.get()
         blacklistDateTo = self.blacklistDateTo.get()
-        doDateBlacklist = blacklistDateFrom is not None and blacklistDateTo is not None
+        doDateBlacklist = blacklistDateFrom is not None or blacklistDateTo is not None
         if doDateBlacklist:
             fileDate = datetime.fromtimestamp(os.path.getmtime(fileName))
             if blacklistDateFrom:
@@ -293,6 +293,7 @@ class ProtImportMicBase(ProtImportImages):
                 self.info("Blacklist warning: %s is blacklisted " % fileName)
                 blacklistedItems.add(fileName)
                 return True
+        return False
 
     
 class ProtImportMicrographs(ProtImportMicBase):
@@ -416,7 +417,7 @@ class ProtImportMicrographs(ProtImportMicBase):
             self.importFilePath = self.emxFile.get('').strip()
             return EmxImport(self, self.importFilePath)
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            XmippImport = pwutils.importFromPlugin('xmipp3.convert','XmippImport')
+            XmippImport = pwutils.importFromPlugin('xmipp3.convert', 'XmippImport')
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
@@ -588,7 +589,7 @@ class ProtImportMovies(ProtImportMicBase):
             decompress('tar', 'jxf %s', '.tbz', '.mrc')
         
         dim = dimMovie.getDim()
-        self.info("Dim: ", dim)
+        self.info("Dim: (%s)" % ", ".join(map(str, dim)))
         range = [1, dim[2], 1]
         movie.setFramesRange(range)
         imgSet.setDim(dim)
