@@ -301,7 +301,7 @@ class PluginInfo(object):
         Environment object with the plugin's binaries."""
         if envArgs is None:
             envArgs = []
-        from install import script
+        import script
         env = script.defineBinaries(envArgs)
         env.setDefault(False)
 
@@ -314,7 +314,7 @@ class PluginInfo(object):
 
     def getBinVersions(self):
         """Get list with names of binaries of this plugin"""
-        from install import script
+        import script
         env = script.defineBinaries()
         env.setDefault(False)
         defaultTargets = [target.getName() for target in env.getTargetList()]

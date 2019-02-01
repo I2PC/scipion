@@ -318,7 +318,6 @@ MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
-MODE_DEPENDENCIES = 'deps'
 MODE_DEMO = 'demo'
 PLUGIN_MODES = [MODE_UNINSTALL_PLUGIN, MODE_INSTALL_PLUGIN,
                 MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
@@ -407,13 +406,6 @@ def main():
                 pass
         sys.exit(ret)
 
-    elif mode == 'clean':
-        #TODO: Maybe move the clean script under install/
-        # and also add logic to clean specific targets (useful for testing install)
-        #TODO: This option seems to be redundant with MODE_UNINSTALL 
-        import scripts.clean as clean
-        sys.exit(0)
-
     # elif mode == MODE_INSTALL_BINS:
     #     runScript('scipion install %s' % ' '.join(sys.argv[2:]))
 
@@ -496,12 +488,6 @@ Example: scipion install -j 4
     elif mode == MODE_CONFIG:
         runApp('pw_config.py', sys.argv[2:])
 
-    elif mode == MODE_STATS:
-        statsDir = join(SCIPION_HOME, 'data', 'stats')
-        if not exists(statsDir):
-            os.makedirs(statsDir)
-        runApp('gitstats/gitstats', args=[SCIPION_HOME, statsDir])
-
     elif mode == MODE_VERSION:
         # Just exit, Scipion version will be printed anyway
         sys.exit(0)
@@ -535,12 +521,7 @@ Example: scipion install -j 4
         runApp('pw_tutorial.py', sys.argv[2:])
 
     elif mode == MODE_DEMO:
-        runScript('scripts/scipionbox_wizard_demo.py')
-
-    elif mode == MODE_DEPENDENCIES:
-        script = 'scripts/find_deps.py $s/bin s%/lib %s' \
-                 % (SCIPION_SOFTWARE, SCIPION_SOFTWARE)
-        runScript(script % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+        runScript('pyworkflow/project/scripts/scipionbox_wizard_demo.py')
 
     # Allow to run programs from different packages
     # scipion will load the specified environment
@@ -584,8 +565,6 @@ MODE can be:
     
     python [ARG ...]       Shortcut to 'scipion run python ...'
 
-    stats                  Write git statistics to the data/stats folder.
-
     test OPTION            Run test(s). All tests are located in pyworkflow/tests .
                            OPTION can be:
                              <name>: name of the test to run
@@ -622,7 +601,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  help install installp uninstallp installb uninstallb manager project stats tests testdata viewer webserver printenv run
+  help install installp uninstallp installb uninstallb manager project tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 
