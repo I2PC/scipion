@@ -318,7 +318,6 @@ MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
-MODE_DEPENDENCIES = 'deps'
 MODE_DEMO = 'demo'
 PLUGIN_MODES = [MODE_UNINSTALL_PLUGIN, MODE_INSTALL_PLUGIN,
                 MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
@@ -523,11 +522,6 @@ Example: scipion install -j 4
 
     elif mode == MODE_DEMO:
         runScript('pyworkflow/project/scripts/scipionbox_wizard_demo.py')
-
-    elif mode == MODE_DEPENDENCIES:
-        script = 'pyworkflow/install/find_deps.py $s/bin s%/lib %s' \
-                 % (SCIPION_SOFTWARE, SCIPION_SOFTWARE)
-        runScript(script % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
 
     # Allow to run programs from different packages
     # scipion will load the specified environment
