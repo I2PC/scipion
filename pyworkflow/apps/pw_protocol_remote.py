@@ -34,6 +34,10 @@ import os
 import sys
 import subprocess
 
+import pyworkflow as pw
+from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.protocol.launch import launch, stop
+
 
 def usage(msg=''):
     print "Usage: pw_protocol_remote.py [run|stop] project protDbPath protID\n%s" % msg
@@ -50,13 +54,10 @@ if __name__ == '__main__':
     if mode not in ['run', 'stop']:
         usage("Mode should be 'run' or 'stop'. Received: '%s'" % mode)
 
-    projectPath = os.path.join(os.environ['SCIPION_USER_DATA'], 'projects', sys.argv[2])
+    projectPath = os.path.join(pw.Config.SCIPION_USER_DATA, 'projects', sys.argv[2])
     print "projectPath: ", projectPath
     protDbPath = sys.argv[3]
     protId = int(sys.argv[4])
-
-    from pyworkflow.protocol import getProtocolFromDb
-    from pyworkflow.protocol.launch import launch, stop
 
     protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=False)
     # We need to change the hostname to localhost, since it will 
