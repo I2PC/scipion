@@ -30,18 +30,18 @@ import os
 from os.path import join, exists, basename
 import time
 import optparse
-
 # We use optparse instead of argparse because we want this script to
 # be compatible with python >= 2.3
 import collections
-
-UPDATE_PARAM = '--update'
-COMPARE_PARAM = '--compare'
 
 try:
     from ConfigParser import ConfigParser, Error
 except ImportError:
     from configparser import ConfigParser, Error  # Python 3
+
+
+UPDATE_PARAM = '--update'
+COMPARE_PARAM = '--compare'
 
 
 def ansi(n):
@@ -60,16 +60,16 @@ def main():
     parser = optparse.OptionParser(description=__doc__)
     add = parser.add_option  # shortcut
     add('--overwrite', action='store_true',
-        help=("Rewrite the configuration files using the original templates."))
+        help="Rewrite the configuration files using the original templates.")
     add(UPDATE_PARAM, action='store_true',
-        help=("Updates you local config files with the values in the template, only for those missing values."))
+        help=("Updates you local config files with the values in the template, "
+              "only for those missing values."))
     add('--notify', action='store_true',
-        help=("Allow Scipion to notify usage data (skips user question)"))
+        help="Allow Scipion to notify usage data (skips user question)")
     add(COMPARE_PARAM, action='store_true',
         help="Check that the configurations seems reasonably well set up.")
 
     options, args = parser.parse_args()
-
 
     if args:  # no args which aren't options
         sys.exit(parser.format_help())
@@ -82,7 +82,9 @@ def main():
         localSections = ['DIRS_LOCAL', 'PACKAGES', 'VARIABLES']
 
     try:
-        templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')
+        #FIXME: Here we are still assuming that SCIPION_HOME is at the same place
+        # where pyworkflow is
+        templatesDir = join(os.environ['SCIPION_HOME'], 'pyworkflow', 'templates')
         # Global installation configuration files.
         for fpath, tmplt in [
             (os.environ['SCIPION_CONFIG'], 'scipion'),
@@ -124,19 +126,20 @@ def main():
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
         sys.exit(1)
 
-def checkNotify(Config, notify=False):
-    "Check if protocol statistics should be collected"
+
+def checkNotify(config, notify=False):
+    """ Check if protocol statistics should be collected. """
     if notify:
-        Config.set('VARIABLES','SCIPION_NOTIFY','True')
+        config.set('VARIABLES', 'SCIPION_NOTIFY', 'True')
         return
-    notifyOn = Config.get('VARIABLES','SCIPION_NOTIFY')
+    notifyOn = config.get('VARIABLES', 'SCIPION_NOTIFY')
     if notifyOn=='False':
         # This works for  Python 2.x. and Python 3
         if sys.version_info[0] >= 3:
             get_input = input
         else:
             get_input = raw_input
-        print("""-----------------------------------------------------------------
+        print("""--------------------------------------------------------------
 -----------------------------------------------------------------
 It would be very helpful if you allow Scipion
 to send anonymous usage data. This information will help Scipion's 
@@ -156,11 +159,15 @@ We understand, of course, that you may not wish to have any
 information collected from you and we respect your privacy.
 """)
 
-        prompt = get_input("Press <enter> if you don't mind to send USAGE data, otherwise press any key followed by <enter>: ")
+        prompt = get_input("Press <enter> if you don't mind to send USAGE data,"
+                           " otherwise press any key followed by <enter>: ")
         if prompt == '':
-            Config.set('VARIABLES','SCIPION_NOTIFY','True')
-        print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
-        print("-----------------------------------------------------------------\n-----------------------------------------------------------------")
+            config.set('VARIABLES', 'SCIPION_NOTIFY', 'True')
+        print(yellow("Statistics Collection has been set to: %s"
+                     % config.get('VARIABLES', 'SCIPION_NOTIFY')))
+        print("-------------------------------------------------------------\n"
+              "-------------------------------------------------------------")
+
 
 def createConf(fpath, ftemplate, remove=[], keep=[], notify=False):
     "Create config file in fpath following the template in ftemplate"
@@ -191,7 +198,6 @@ def createConf(fpath, ftemplate, remove=[], keep=[], notify=False):
         for section in set(cf.sections()) - set(keep):
             cf.remove_section(section)
 
-
     # Update with our guesses.
     if 'BUILD' in cf.sections():
         for options in [guessJava(), guessMPI()]:
@@ -200,7 +206,7 @@ def createConf(fpath, ftemplate, remove=[], keep=[], notify=False):
                     cf.set('BUILD', key, options[key])
     # Collecting Protocol Usage Statistics 
     elif 'VARIABLES' in cf.sections():
-        checkNotify(cf,notify)
+        checkNotify(cf, notify)
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
@@ -342,7 +348,7 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False, c
             print("Could not update the config: ", e)
 
 
-def compareConfig(cf, ct,fPath, fTemplate):
+def compareConfig(cf, ct, fPath, fTemplate):
     """ Compare configuration against template values"""
 
     print(magenta("COMPARING %s to %s" % (fPath, fTemplate)))
