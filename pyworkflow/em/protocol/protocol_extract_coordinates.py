@@ -38,7 +38,7 @@ from pyworkflow.em.data import (Coordinate, SetOfParticles, SetOfMicrographs,
 from pyworkflow.em.protocol import ProtParticlePickingAuto
 import pyworkflow.utils as pwutils
 
-
+import time
 class ProtExtractCoords(ProtParticlePickingAuto):
     """ 
     Extract the coordinates information from a set of particles.
@@ -77,21 +77,40 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        self.inputSize = 0
-        self.outputSize = 0
-        self.micsMap = {}
+        self.streamingModeOn = self.getInputParticles().isStreamOpen() or True
 
-        newMics, self.streamClosed = self.loadInputs()
-        stepsIds = self._insertNewSteps(newMics)
-        self._insertFunctionStep('createOutputStep',
-                                 prerequisites=stepsIds, wait=True)
+        if self.streamingModeOn:
+            self.inputSize = 0
+            self.outputSize = 0
+            self.micsDone = []
 
-    def _insertNewSteps(self, micsIds):
+            t0 = time.time()
+            newParts, self.streamClosed = self.loadInputs()
+            print("loadInputs() time: %fs" % (time.time()-t0))
+
+            stepsIds = self._insertNewSteps(newParts)
+            self._insertFunctionStep('createOutputStep',
+                                     prerequisites=stepsIds, wait=True)
+        else:
+            self._insertFunctionStep('createOutputStep')
+
+    def _insertNewSteps(self, partIds):
         deps = []
-        stepId = self._insertFunctionStep('extractCoordsStep', micsIds,
+        stepId = self._insertFunctionStep('extractCoordsStep', partIds,
                                           prerequisites=[])
         deps.append(stepId)
         return deps
+
+    def _stepsCheck(self):
+        # To allow streaming picking we need to detect:
+        #   1) new micrographs ready to be picked
+        #   2) new output coordinates that have been produced and add then
+        #      to the output set.
+        if self.streamingModeOn:
+            self._checkNewInput()
+            self._checkNewOutput()
+        else:
+            pass
 
     def _checkNewInput(self):
         # Check if there are new particles to process from the input set
@@ -107,56 +126,74 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             return None
         self.lastCheck = now
 
-        newMics, self.streamClosed = self.loadInputs()
+        newParts, self.streamClosed = self.loadInputs()
 
-        if len(newMics) > 0:
-            fDeps = self._insertNewSteps(newMics)
+        if len(newParts) > 0:
+            fDeps = self._insertNewSteps(newParts)
             outputStep = self._getFirstJoinStep()
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
 
-    def extractCoordsStep(self, micsIds):
+    def extractCoordsStep(self, partsIds):
+        outputCoords = self.extractCoordinates(partsIds)
+
+        self.outputSize += len(outputCoords)
+        t0 = time.time()
+        outputCoords.write()
+        outputCoords.close()
+        print("write time: %fs" % (time.time()-t0))
+
+
+    def extractCoordinates(self, partsIds=[None]):
         inPart = self.getInputParticles()
         inMics = self.getInputMicrographs()
         scale = inPart.getSamplingRate() / inMics.getSamplingRate()
         print "Scaling coordinates by a factor *%0.2f*" % scale
         alignType = inPart.getAlignment()
 
-        tmpFn = self.getTmpOutputPath(next(iter(micsIds)))
-        outputCoords = SetOfCoordinates(filename=tmpFn)
-        outputCoords.setMicrographs(inMics)
+        # tmpFn = self.getTmpOutputPath(partsIds[0])
+        # outputCoords = SetOfCoordinates(filename=tmpFn)
+        # outputCoords.setMicrographs(inMics)
 
+        outputCoords = self._createSetOfCoordinates(inMics,
+                                            suffix=self.getSuffix(partsIds[0]))
+
+        def appendCoordFromParticle(part):
+            coord = part.getCoordinate()
+            micKey = coord.getMicId()
+            mic = inMics[micKey]
+
+            if mic is None:
+                print "Skipping particle, key %s not found" % micKey
+            else:
+                newCoord.copyObjId(part)
+                x, y = coord.getPosition()
+                if self.applyShifts:
+                    shifts = self.getShifts(part.getTransform(), alignType)
+                    xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
+                    newCoord.setPosition(xCoor * scale, yCoor * scale)
+                else:
+                    newCoord.setPosition(x * scale, y * scale)
+
+                newCoord.setMicrograph(mic)
+                outputCoords.append(newCoord)
 
         newCoord = Coordinate()
-        for micId in micsIds:
-            for partId in self.micsMap[micId]:
+        if self.streamingModeOn:
+            for partId in partsIds:
                 particle = inPart[partId]
-                coord = particle.getCoordinate()
-                micKey = coord.getMicId()
-                mic = inMics[micKey]
+                appendCoordFromParticle(particle)
+        else:
+            for particle in inPart:
+                appendCoordFromParticle(particle)
 
-                if mic is None:
-                    print "Skipping particle, key %s not found" % micKey
-                else:
-                    newCoord.copyObjId(particle)
-                    x, y = coord.getPosition()
-                    if self.applyShifts:
-                        shifts = self.getShifts(particle.getTransform(), alignType)
-                        xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
-                        newCoord.setPosition(xCoor * scale, yCoor * scale)
-                    else:
-                        newCoord.setPosition(x * scale, y * scale)
-
-                    newCoord.setMicrograph(mic)
-                    outputCoords.append(newCoord)
 
         boxSize = inPart.getXDim() * scale
         outputCoords.setBoxSize(boxSize)
 
-        self.outputSize += len(outputCoords)
-        outputCoords.write()
-        outputCoords.close()
+        return outputCoords
+
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
@@ -222,11 +259,18 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         return 'createOutputStep'
 
     def createOutputStep(self):
-        pass
+        if not self.streamingModeOn:
+            outputCoords = self.extractCoordinates()
+            self._defineOutputs(outputCoordinates=outputCoords)
+            self._defineSourceRelation(self.inputParticles, outputCoords)
+            self._defineSourceRelation(self.inputMicrographs, outputCoords)
 
     # ------------- UTILS functions ----------------
+    def getSuffix(self, suffix):
+        return "_tmp%s" % suffix if self.streamingModeOn else ''
+
     def getTmpOutputPath(self, suffix):
-        return self._getExtraPath("coords%s.sqlite" % suffix)
+        return self._getPath("coordinates%s.sqlite" % self.getSuffix(suffix))
 
     def loadInputs(self):
         micsFn = self.getInputMicrographs().getFileName()
@@ -244,23 +288,20 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         partsSet = SetOfParticles(filename=partsFn)
         partsSet.loadAllProperties()
 
-        newItemDict = {}
+        newParts = []
         newMics = []
         for item in partsSet:
             micKey = item.getCoordinate().getMicId()
-            if micKey not in self.micsMap and micKey in availableMics:
-                if micKey in newItemDict.keys():
-                    newItemDict[micKey].append(item.getObjId())
-                else:
+            if micKey not in self.micsDone and micKey in availableMics:
+                newParts.append(item.getObjId())
+                if not micKey in self.micsDone:
                     newMics.append(micKey)
-                    newItemDict[micKey] = [item.getObjId()]
-        self.micsMap.update(newItemDict)
-
+        self.micsDone += newMics
         self.inputSize = partsSet.getSize()
         partSetClosed = partsSet.isStreamClosed()
         partsSet.close()
 
-        return newMics, micsSetClosed and partSetClosed
+        return newParts, micsSetClosed and partSetClosed
 
     def getShifts(self, transform, alignType):
         """
