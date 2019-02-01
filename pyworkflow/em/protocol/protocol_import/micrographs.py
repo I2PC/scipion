@@ -92,9 +92,9 @@ class ProtImportMicBase(ProtImportImages):
                            "e.g: 2019-01-14 14:18:05")
         form.addParam('useRegexps', params.BooleanParam,
                       default=True,
-                      label='Blacklist contains RegExps',
+                      label='Blacklist file has RegExps',
                       help="Choose Yes if the black list file contains regular expressions. Set to No if "
-                           "the black list file contains file names.")
+                           "the black list file contains file names. Ignore if not entering a blacklist file")
         form.addParam('blacklistFile', params.FileParam,
                       label="Blacklist File",
                       allowsNull=True,
