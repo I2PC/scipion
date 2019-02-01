@@ -31,7 +31,6 @@ import json
 import argparse
 
 from pyworkflow.em import *
-from pyworkflow.config import *
 from pyworkflow.protocol import (getProtocolFromDb,
                                  STATUS_FINISHED, STATUS_ABORTED, STATUS_FAILED)
 

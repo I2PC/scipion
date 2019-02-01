@@ -123,6 +123,9 @@ DataSet(name='relion_tutorial', folder='relion_tutorial',
         })
 
 
+DataSet(name='relion30_tutorial', folder='relion30_tutorial', files={})
+
+
 DataSet(name='ribo_movies', folder='ribo_movies',
         files={
                'movies': 'movies/1??_*.mrcs',
