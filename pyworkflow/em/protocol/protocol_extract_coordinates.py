@@ -77,7 +77,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        self.streamingModeOn = self.getInputParticles().isStreamOpen() or True
+        self.streamingModeOn = self.getInputParticles().isStreamOpen()
 
         if self.streamingModeOn:
             self.inputSize = 0
@@ -145,19 +145,15 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         print("write time: %fs" % (time.time()-t0))
 
 
-    def extractCoordinates(self, partsIds=[None]):
+    def extractCoordinates(self, partsIds=None):
         inPart = self.getInputParticles()
         inMics = self.getInputMicrographs()
         scale = inPart.getSamplingRate() / inMics.getSamplingRate()
         print "Scaling coordinates by a factor *%0.2f*" % scale
         alignType = inPart.getAlignment()
 
-        # tmpFn = self.getTmpOutputPath(partsIds[0])
-        # outputCoords = SetOfCoordinates(filename=tmpFn)
-        # outputCoords.setMicrographs(inMics)
-
-        outputCoords = self._createSetOfCoordinates(inMics,
-                                            suffix=self.getSuffix(partsIds[0]))
+        suffix = self.getSuffix(partsIds[0]) if partsIds is not None else ''
+        outputCoords = self._createSetOfCoordinates(inMics, suffix=suffix)
 
         def appendCoordFromParticle(part):
             coord = part.getCoordinate()
@@ -267,7 +263,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
     # ------------- UTILS functions ----------------
     def getSuffix(self, suffix):
-        return "_tmp%s" % suffix if self.streamingModeOn else ''
+        return "_tmp%s" % suffix
 
     def getTmpOutputPath(self, suffix):
         return self._getPath("coordinates%s.sqlite" % self.getSuffix(suffix))
