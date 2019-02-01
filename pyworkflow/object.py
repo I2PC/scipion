@@ -40,10 +40,14 @@ import datetime as dt
 RELATION_CHILDS = 0
 RELATION_PARENTS = 1
 
+# Then column name of the parent id relation
+OBJECT_PARENT_ID = 'object_parent_id'
+
 
 class Object(object):
     """ All objects in our Domain should inherit from this class
     that will contains all base properties"""
+
     def __init__(self, value=None, **kwargs):
         object.__init__(self)
         self._objIsPointer = kwargs.get('objIsPointer', False) # True if will be treated as a reference for storage
@@ -231,8 +235,9 @@ class Object(object):
         """ Return the stored creation time of the object. """
         return self._objCreation
 
-    def getObjectCreationAsDate(self):
+    def getObjCreationAsDate(self):
         """ Return the stored creation time of the object as date """
+        return String.getDatetime(self._objCreation)
 
     def strId(self):
         """String representation of id"""
@@ -641,7 +646,30 @@ class Integer(Scalar):
 class String(Scalar):
     """String object. """
     DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-    FS = ".%f" # Fento seconds
+    FS = ".%f"  # Femto seconds
+
+    @classmethod
+    def getDatetime(cls, strValue, formatStr=None, fs=True):
+        """ Get the datetime from the given string value.
+        Params:
+            strValue: string representation of the date
+            formatStr: if is None, use the default DATETIME_FORMAT.
+            fs: Use femto seconds or not, only when format=None
+        """
+        if formatStr is None:
+            try:
+                formatStr = cls.DATETIME_FORMAT
+                if fs:
+                    formatStr += cls.FS
+                datetime = dt.datetime.strptime(strValue, formatStr)
+            except Exception as ex:
+                # Maybe the %f (femtoseconds) is not working
+                # let's try to format without it
+                datetime = dt.datetime.strptime(strValue, cls.DATETIME_FORMAT)
+        else:
+            datetime = dt.datetime.strptime(strValue, formatStr)
+
+        return datetime
 
     def _convertValue(self, value):
         return str(value)
@@ -653,26 +681,8 @@ class String(Scalar):
         return len(self.get().strip()) == 0
 
     def datetime(self, formatStr=None, fs=True):
-        """ Get the datetime from the string value.
-        Params:
-            formatStr: if is None, use the default DATETIME_FORMAT.
-            fs: Use femto seconds or not, only when format=None
-        """
-        if formatStr is None:
-            try:
-                formatStr = self.DATETIME_FORMAT
-                if fs:
-                    formatStr += self.FS
-                datetime = dt.datetime.strptime(self._objValue, formatStr)
-            except Exception as ex:
-                # Maybe the %f (femtoseconds) is not working
-                # let's try to format without it
-                datetime = dt.datetime.strptime(self._objValue,
-                                                self.DATETIME_FORMAT)
-        else:
-            datetime = dt.datetime.strptime(self._objValue, formatStr)
-
-        return datetime
+        """ Get the datetime from this object string value. """
+        return String.getDatetime(self._objValue, formatStr, fs)
 
 
 class Float(Scalar):
