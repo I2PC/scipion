@@ -25,14 +25,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
 
 import os
 from os.path import join, basename
 import re
-from datetime import timedelta
-import socket
-import select
-import shlex
+from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -69,6 +67,77 @@ class ProtImportMicBase(ProtImportImages):
                        label=Message.LABEL_SCANNED,
                        help='')
         return group
+
+    def _defineBlacklistParams(self, form):
+        """ Options to blacklist certain items when launching the
+        import protocol.
+        """
+        form.addSection(label="Blacklist")
+        form.addParam("blacklistSet", params.PointerParam,
+                      pointerClass=self._getBlacklistSetClass(),
+                      allowsNull=True,
+                      label="Blacklist Set",
+                      help="Files on this set will not be imported")
+        form.addParam('blacklistDateFrom', params.StringParam,
+                      label="Blacklist from date",
+                      allowsNull=True,
+                      help="Files acquired after this date will not be imported. "
+                           "Must follow format: YYYY-mm-dd HH:MM:SS \n"
+                           "e.g: 2019-01-14 14:18:05")
+        form.addParam('blacklistDateTo', params.StringParam,
+                      label="Blacklist to date",
+                      allowsNull=True,
+                      help="Files acquired before this date will not be imported. "
+                           "Must follow format: YYYY-mm-dd HH:MM:SS \n"
+                           "e.g: 2019-01-14 14:18:05")
+        form.addParam('useRegexps', params.BooleanParam,
+                      default=True,
+                      label='Blacklist file has RegExps',
+                      help="Choose Yes if the black list file contains regular expressions. Set to No if "
+                           "the black list file contains file names. Ignore if not entering a blacklist file")
+        form.addParam('blacklistFile', params.FileParam,
+                      label="Blacklist File",
+                      allowsNull=True,
+                      help="Blacklist everything included in this file. If Use RegExps is True,"
+                           "lines will be interpreted as regular expressions. E.g: \n"
+                           "(.*)GRID_0[1-5](.*)\n"
+                           "(.*)/GRID_10/Falcon_2019_01_14-16_(.*)\n"
+                           "If Use RegExps is False, lines will be interpreted as file names. E.g.\n"
+                           "/path/to/GRID_10/Falcon_2019_01_14-16_51_20_0_movie.mrcs\n"
+                           "/path/to/GRID_10/Falcon_2019_01_14-16_55_40_0_movie.mrcs"
+                      )
+
+    def _getBlacklistSetClass(self):
+        """ Returns the class to be blacklisted by this protocol.
+        """
+        return "SetOfImages"
+
+    def _validateBlacklist(self):
+        errors = []
+        blacklistBySet = self.blacklistSet.get()
+        if blacklistBySet and blacklistBySet.isStreamOpen():
+            errors.append("Can't blacklist an open set. "
+                          "Please stop streaming or  wait until streaming is done to blacklist this set.")
+
+        dates = [self.blacklistDateFrom.get(), self.blacklistDateTo.get()]
+        parsedDates = []
+        for d in dates:
+            if d:
+                try:
+                    parsedDates.append(datetime.strptime(d, "%Y-%m-%d %H:%M:%S"))
+                except ValueError as e:
+                    errors.append("Bad date formatting in blacklist date %s: %s" % (d, e))
+
+        if len(parsedDates) == 2 and parsedDates[0] > parsedDates[1]:
+            errors.append("Wrong blacklist dates: date from must be earlier than date to")
+        return errors
+
+    def _validate(self):
+        errors = ProtImportImages._validate(self)
+
+        errors += self._validateBlacklist()
+
+        return errors
         
     def setSamplingRate(self, micSet):
         """ Set the sampling rate to the given set. """
@@ -128,7 +197,7 @@ class ProtImportMicBase(ProtImportImages):
 
             if event == 'start':
                 if 'pixelSize' in elem.tag:
-                    print "started: pixelSize"
+                    print("started: pixelSize")
                     pixelSize = True
 
             elif event == 'end':
@@ -148,6 +217,84 @@ class ProtImportMicBase(ProtImportImages):
 
         return acq
 
+    def getItemsToBlacklistFromFile(self):
+        if not hasattr(self, '_fileItemsToBlacklist'):
+            blacklistfile = self.blacklistFile.get()
+            blacklistItems = set()
+            if blacklistfile:
+                with open(blacklistfile, 'r') as f:
+                    for blacklistedItem in f:
+                        blacklistedItem = blacklistedItem.strip()
+                        blacklistItems.add(blacklistedItem)
+            self._fileItemsToBlacklist = blacklistItems
+
+        return self._fileItemsToBlacklist
+
+    def getBlacklistedItems(self):
+        if not hasattr(self, '_blacklistedItems'):
+            self._blacklistedItems = set()
+        return self._blacklistedItems
+
+    def isBlacklisted(self, fileName):
+        # check if already blacklisted
+        blacklistedItems = self.getBlacklistedItems()
+        if fileName in blacklistedItems:
+            return True
+
+        # Blacklisted by set
+        blacklistSet = self.blacklistSet.get()
+        if blacklistSet is not None:
+            for img in blacklistSet:
+                blacklistFileName = img.getFileName()
+                if ((os.path.islink(blacklistFileName)
+                     and fileName == os.readlink(blacklistFileName))
+                        or (self._getUniqueFileName(fileName) == os.path.basename(blacklistFileName))):
+                    self.info("Blacklist warning: %s is blacklisted by the input set" % fileName)
+                    blacklistedItems.add(fileName)
+                    return True
+
+        # Blacklisted by date
+        blacklistDateFrom = self.blacklistDateFrom.get()
+        blacklistDateTo = self.blacklistDateTo.get()
+        doDateBlacklist = blacklistDateFrom is not None or blacklistDateTo is not None
+        if doDateBlacklist:
+            fileDate = datetime.fromtimestamp(os.path.getmtime(fileName))
+            if blacklistDateFrom:
+                parsedDateFrom = datetime.strptime(blacklistDateFrom, "%Y-%m-%d %H:%M:%S")
+                if blacklistDateTo:
+                    parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
+                    if parsedDateFrom <= fileDate <= parsedDateTo:
+                        self.info("Blacklist warning: %s is blacklisted by date" % fileName)
+                        blacklistedItems.add(fileName)
+                        return True
+                else:
+                    if parsedDateFrom <= fileDate:
+                        self.info("Blacklist warning: %s is blacklisted by date" % fileName)
+                        blacklistedItems.add(fileName)
+                        return True
+
+            elif blacklistDateTo:
+                parsedDateTo = datetime.strptime(blacklistDateTo, "%Y-%m-%d %H:%M:%S")
+                if fileDate <= parsedDateTo:
+                    self.info("Blacklist warning: %s is blacklisted by date" % fileName)
+                    blacklistedItems.add(fileName)
+                    return True
+
+        # Blacklisted by file
+        items2blacklist = self.getItemsToBlacklistFromFile()
+        for item2blacklist in items2blacklist:
+            if self.useRegexps.get():
+                if re.match(item2blacklist, fileName):
+                    self.info("Blacklist warning: %s matched blacklist regexp %s"
+                          % (fileName, item2blacklist))
+                    blacklistedItems.add(fileName)
+                    return True
+            elif fileName in item2blacklist:
+                self.info("Blacklist warning: %s is blacklisted " % fileName)
+                blacklistedItems.add(fileName)
+                return True
+        return False
+
     
 class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
@@ -165,6 +312,11 @@ class ProtImportMicrographs(ProtImportMicBase):
         """
         choices = ProtImportImages._getImportChoices(self)
         return choices + ['emx', 'xmipp3', 'scipion']
+
+    def _getBlacklistSetClass(self):
+        """ Returns the class to be blacklisted by this protocol.
+        """
+        return "SetOfMicrographs"
     
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters
@@ -265,7 +417,7 @@ class ProtImportMicrographs(ProtImportMicBase):
             self.importFilePath = self.emxFile.get('').strip()
             return EmxImport(self, self.importFilePath)
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            XmippImport = pwutils.importFromPlugin('xmipp3.convert','XmippImport')
+            XmippImport = pwutils.importFromPlugin('xmipp3.convert', 'XmippImport')
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
@@ -288,6 +440,11 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase.__init__(self, **kwargs)
         self.serverSocket = None
         self.connectionList = None
+
+    def _getBlacklistSetClass(self):
+        """ Returns the class to be blacklisted by this protocol.
+        """
+        return "SetOfMovies"
     
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)
@@ -358,19 +515,6 @@ class ProtImportMovies(ProtImportMicBase):
                            "frame files after creating the movie stack. ")
         
         streamingSection = form.getSection('Streaming')
-        streamingSection.addParam('streamingSocket', params.BooleanParam,
-                                  default=False,
-                                  condition=streamingConditioned,
-                                  expertLevel=params.LEVEL_ADVANCED,
-                                  label="Use streaming socket",
-                                  help="Use a socket to discover new files "
-                                       "instead of polling your directory.")
-        streamingSection.addParam('socketPort', params.IntParam, default=5000,
-                                  condition=streamingConditioned +
-                                            ' and streamingSocket',
-                                  expertLevel=params.LEVEL_ADVANCED,
-                                  label="Socket port",
-                                  help="Port to use for the streaming socket.")
         streamingSection.addParam('moviesToExclude', params.PointerParam,
                                   pointerClass='SetOfMovies',
                                   condition=streamingConditioned,
@@ -389,8 +533,6 @@ class ProtImportMovies(ProtImportMicBase):
         inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
         
         if self.dataStreaming or inputIndividualFrames:
-            if self.streamingSocket:
-                self.launchSocket()
             funcName = 'importImagesStreamStep'
         else:
             funcName = 'importImagesStep'
@@ -404,14 +546,12 @@ class ProtImportMovies(ProtImportMicBase):
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
         """Overwriting to skip file validation if streaming with socket"""
-        if self.streamingSocket:
-            errors = []
-        else:
-            errors = ProtImportMicBase._validate(self)
-            if self.inputIndividualFrames and not self.stackFrames:
-                errors.append("Scipion does not support individual frames. "
-                              "You must set to Yes *Create movie stacks?* "
-                              "parameter.")
+
+        errors = ProtImportMicBase._validate(self)
+        if self.inputIndividualFrames and not self.stackFrames:
+            errors.append("Scipion does not support individual frames. "
+                          "You must set to Yes *Create movie stacks?* "
+                          "parameter.")
 
         if not self.gainFile.empty() and not os.path.exists(self.gainFile.get()):
             errors.append("Gain file not found in " + str(self.gainFile.get()))
@@ -449,82 +589,11 @@ class ProtImportMovies(ProtImportMicBase):
             decompress('tar', 'jxf %s', '.tbz', '.mrc')
         
         dim = dimMovie.getDim()
-        print "Dim: ", dim
+        self.info("Dim: (%s)" % ", ".join(map(str, dim)))
         range = [1, dim[2], 1]
         movie.setFramesRange(range)
         imgSet.setDim(dim)
         imgSet.setFramesRange(range)
-    
-    def launchSocket(self):
-        host = ''  # Where do we get this?!!
-        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        serverSocket.bind((host, self.socketPort))
-        serverSocket.listen(10)
-        serverSocket.setblocking(0)
-        self.serverSocket = serverSocket
-        self.connectionList = [serverSocket]
-        self.info("Socket started on port " + str(self.socketPort))
-        return serverSocket
-    
-    def iterFilenamesFromSocket(self):
-        recv_buffer = 4096  # Advisable to keep it as an exponent of 2
-        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
-        for sock in read_sockets:
-            if sock is self.serverSocket:
-                # New connection received through self.serverSocket
-                sockfd, addr = self.serverSocket.accept()
-                sockfd.setblocking(0)
-                self.connectionList.append(sockfd)
-                self.debug("Client (%s, %s) connected" % addr)
-                continue
-            else:
-                # Data received from a client, process it
-                try:
-                    # In Windows, sometimes when a TCP program closes abruptly,
-                    # a "Connection reset by peer" exception will be thrown
-                    data = sock.recv(recv_buffer)
-                    if data:
-                        files = shlex.split(data)
-                        self.debug("Data received in socket:")
-                        self.debug(files)
-                        for fileName in files:
-                            uniqueFn = self._getUniqueFileName(fileName, files)
-                            if uniqueFn in self.importedFiles:
-                                self._spreadMessage('WARNING: Not importing,'
-                                                    ' already imported file %s '
-                                                    '\n' % fileName, sock)
-                                continue
-                            else:
-                                if os.path.exists(fileName):
-                                    self._spreadMessage('OK: Importing file %s '
-                                                        '\n' % fileName, sock)
-                                    fileId = None
-                                    yield fileName, uniqueFn, fileId
-                                else:
-                                    self._spreadMessage('WARNING: Not '
-                                                        'importing , path does '
-                                                        'not exist %s '
-                                                        '\n' % fileName, sock)
-                                    continue
-                    else:
-                        continue
-                # client disconnected, remove from socket list
-                except Exception as e:
-                    self.debug("Exception reading socket!!")
-                    self.debug(str(e))
-                    sock.close()
-                    self.connectionList.remove(sock)
-                    continue
-        return
-    
-    def _spreadMessage(self, message, sock):
-        try:
-            if sock is not None:
-                sock.send(message)
-            self.debug(message)
-        except:
-            pass
     
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
@@ -536,24 +605,18 @@ class ProtImportMovies(ProtImportMicBase):
         
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
-            if self.streamingSocket:
-                iterInputFiles = self.iterFilenamesFromSocket()
-            else:
-                iterInputFiles = ProtImportMicBase.iterNewInputFiles(self)
+            iterInputFiles = ProtImportMicBase.iterNewInputFiles(self)
             
             for fileName, uniqueFn, fileId in iterInputFiles:
                 yield fileName, uniqueFn, fileId
             return
         
         if self.dataStreaming:
-            if self.streamingSocket:
-                filePaths = [f[0] for f in self.iterFilenamesFromSocket()]
-            else:
-                # Consider only the files that are not changed in the fileTime
-                # delta if processing data in streaming
-                fileTimeout = timedelta(seconds=self.fileTimeout.get())
-                filePaths = [f for f in self.getMatchFiles()
-                             if not self.fileModified(f, fileTimeout)]
+            # Consider only the files that are not changed in the fileTime
+            # delta if processing data in streaming
+            fileTimeout = timedelta(seconds=self.fileTimeout.get())
+            filePaths = [f for f in self.getMatchFiles()
+                         if not self.fileModified(f, fileTimeout)]
         else:
             filePaths = self.getMatchFiles()
         
@@ -639,9 +702,3 @@ class ProtImportMovies(ProtImportMicBase):
             return self.ignoreCopy
         else:
             return ProtImportMicBase.getCopyOrLink(self)
-    
-    def _cleanUp(self):
-        if self.streamingSocket:
-            self.debug('Closing socket...')
-            self.serverSocket.shutdown(socket.SHUT_RDWR)
-            self.serverSocket.close()
