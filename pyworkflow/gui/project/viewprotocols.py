@@ -1829,10 +1829,10 @@ class ProtocolsView(tk.Frame):
             if errorList:
                 msg = ''
                 for error in errorList:
-                    msg = msg + error
+                    msg = msg + str(error)
                 pwgui.dialog.MessageDialog(self,
                    Message.TITLE_LAUNCHED_WORKFLOW_FAILED,
-                   Message.LABEL_LAUNCHED_WORKFLOW_FAILED,
+                   Message.LABEL_LAUNCHED_WORKFLOW_FAILED + msg,
                                            'fa-times-circle_alert.png')
 
     def _continueWorkflow(self):
@@ -1842,7 +1842,7 @@ class ProtocolsView(tk.Frame):
         if errorList:
             msg = ''
             for error in errorList:
-                msg = msg + error
+                msg = msg + str(error)
             pwgui.dialog.MessageDialog(self,
                 Message.TITLE_LAUNCHED_WORKFLOW_FAILED,
                 Message.LABEL_LAUNCHED_WORKFLOW_FAILED + msg,
