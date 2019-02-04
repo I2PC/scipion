@@ -42,5 +42,6 @@ SUBMIT_TEMPLATE = #!/bin/bash
     %_(JOB_COMMAND)s
 CANCEL_COMMAND = canceljob %_(JOB_ID)s
 CHECK_COMMAND = qstat %_(JOB_ID)s
+# Next variable is used to provide a regex to check if a job is finished on a queue system
 JOB_DONE_REGEX = ""
 QUEUES = { "default": {} }

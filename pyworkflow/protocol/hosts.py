@@ -195,6 +195,7 @@ class HostConfig(OrderedObject):
                     hostQueue.submitTemplate.set(get('SUBMIT_TEMPLATE'))
                     hostQueue.cancelCommand.set(get('CANCEL_COMMAND'))
                     hostQueue.checkCommand.set(get('CHECK_COMMAND'))
+                    hostQueue.jobDoneRegex.set(get('JOB_DONE_REGEX'))
                     hostQueue.queues = getDict('QUEUES')
                     hostQueue.queuesDefault = getDict('QUEUES_DEFAULT')
 
