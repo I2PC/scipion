@@ -19,9 +19,9 @@ class TestWorkflow(BaseTest):
         self.assertEqual(prot.getFiles(), filesSet)
         
     def printSet(self, msg, s):
-        print "============= %s ==========" % msg
+        print("============= %s ==========" % msg)
         for i in s:
-            print i
+            print(i)
             
     def getProtocolFiles(self, key):
         fileList = self.GOLD_FILES[key]

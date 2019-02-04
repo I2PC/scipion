@@ -915,6 +915,7 @@ class GetStructureChainsWizard(Wizard):
                 # NOTE: be careful if you change this class since
                 # chimera-wizard inherits from it.
                 #(ChimeraModelFromTemplate, ['inputStructureChain'])
+                #(atomstructutils, ['inputStructureChain'])
                 ]
 
     def getModelsChainsStep(self, protocol):
