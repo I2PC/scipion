@@ -60,6 +60,23 @@ class TestObject(BaseTest):
         # Test emptiness
         self.assertIsNotEmpty(b)
 
+    def testWithPointer(self):
+
+        obj = Integer(10)
+
+        self.assertFalse(obj.hasPointer(),
+                         "Default instantiation off Integer has a pointer.")
+
+        self.assertEqual(obj.get(), 10, "Integer.get(), without pointer fails.")
+
+        pointee = Object()
+        setattr(pointee, "value", Integer(20))
+
+        # Set a pointer (not a real case though, but enough here)
+        obj.setPointer(pointee, 'value')
+
+        self.assertEqual(obj.get(), 20, "Integer.get() fails with a pointer.")
+
     def test_String(self):
         value = 'thisisanstring'
         s = String(value)
