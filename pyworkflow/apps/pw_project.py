@@ -33,7 +33,7 @@ import os
 
 import time
 
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 from pyworkflow.gui.project import ProjectWindow
 import pyworkflow.utils as pwutils
 
@@ -78,17 +78,18 @@ if __name__ == '__main__':
             projName = projects[0].projName
             
         projPath = manager.getProjectPath(projName)
-        try:
-            projWindow = ProjectWindow(projPath)
-        except Exception as e:
-            # Print any exception
-            print("ERROR: At pw_project.py loading Project %s.\n"
-                  "       Message: %s\n" % (projPath, e))
+        # try:
+        projWindow = ProjectWindow(projPath)
+        # except Exception as e:
+        #     # Print any exception
+        #     print("ERROR: At pw_project.py loading Project %s.\n"
+        #           "       Message: %s\n" % (projPath, e))
+        #
+        #     import traceback
+        #     traceback.print_exc(file=sys.stderr)
+        #
+        #     sys.exit(e)
 
-            import traceback
-            traceback.print_exc(file=sys.stderr)
-
-            sys.exit(e)
         projWindow.show()
     else:
         print "usage: pw_project.py PROJECT_NAME"

@@ -22,11 +22,11 @@
 # ***************************************************************************/
 
 import os
-from itertools import izip
+from datetime import datetime, timedelta
+import time
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportMovies
-from pyworkflow.em.data import SetOfMovies
 
 
 class TestImportBase(BaseTest):
@@ -48,7 +48,7 @@ class TestImportMovies(TestImportBase):
                 'samplingRate': 3.54
                 }
 
-    def _checkOutput(self, prot, args, moviesId=[], size=None, dim=None):
+    def _checkOutput(self, prot, args, moviesId=[], size=None, dim=None, movieNames=[]):
         movies = getattr(prot, 'outputMovies', None)
         self.assertIsNotNone(movies)
         self.assertEqual(movies.getSize(), size)
@@ -56,12 +56,15 @@ class TestImportMovies(TestImportBase):
         for i, m in enumerate(movies):
             if moviesId:
                 self.assertEqual(m.getObjId(), moviesId[i])
+
+            if movieNames:
+                self.assertEqual(os.path.basename(m.getFileName()), movieNames[i])
             self.assertAlmostEqual(m.getSamplingRate(),
                                    args['samplingRate'])
             a = m.getAcquisition()
             self.assertAlmostEqual(a.getVoltage(), args['voltage'])
 
-            if dim is not None: # Check if dimensions are the expected ones
+            if dim is not None:  # Check if dimensions are the expected ones
                 x, y, n = m.getDim()
                 self.assertEqual(dim, (x, y, n))
 
@@ -74,7 +77,7 @@ class TestImportMovies(TestImportBase):
         self.launchProtocol(protMovieImport)
         self._checkOutput(protMovieImport, args, [1, 2, 3], size=3,
                           dim=(1950, 1950, 16))
-        
+
     def test_em(self):
         args = self.getArgs('cct/cct_1.em')
         args['objLabel'] = 'movie em'
@@ -101,3 +104,56 @@ class TestImportMovies(TestImportBase):
         self.launchProtocol(protMovieImport)
 
         self._checkOutput(protMovieImport, args, size=1)
+
+    def testBlacklist(self):
+
+        # ----------- First test blacklisting a date range and a file of regexps -----------
+        movieNotToBlacklist = self.dsMovies.getFile('ribo/Falcon_2012_06_12-14_33_35_0_movie.mrcs')
+        movieToBlacklistByDate = self.dsMovies.getFile('ribo/Falcon_2012_06_12-17_26_54_0_movie.mrcs')
+
+        date = datetime.now()
+        dateTo = datetime.strftime((date - timedelta(1)), "%Y-%m-%d %H:%M:%S")
+        modTime = time.mktime(date.timetuple())
+        os.utime(movieNotToBlacklist, (modTime, modTime))
+        dateFrom = date - timedelta(2)
+        modTime2 = time.mktime(dateFrom.timetuple())
+        os.utime(movieToBlacklistByDate, (modTime2, modTime2))
+
+        dateFrom = datetime.strftime(dateFrom - timedelta(1), "%Y-%m-%d %H:%M:%S")
+
+        # create regexp file
+        regexp = '(.*)16_55(.*)\n'
+        with open(self.proj.getTmpPath('blacklist_regex.txt'), 'w') as f:
+            f.write(regexp)
+
+        args = self.getArgs('ribo/', pattern='*.mrcs')
+        args['blacklistFile'] = self.proj.getTmpPath('blacklist_regex.txt')
+        args['blacklistDateFrom'] = dateFrom
+        args['blacklistDateTo'] = dateTo
+        args['useRegexps'] = True
+
+        protBlacklistRegexDate = self.newProtocol(ProtImportMovies, **args)
+        protBlacklistRegexDate.setObjLabel('Blacklist date & regexp')
+
+        self.launchProtocol(protBlacklistRegexDate)
+
+        self._checkOutput(protBlacklistRegexDate, args, size=1,
+                          movieNames=['Falcon_2012_06_12-14_33_35_0_movie.mrcs'])
+
+        # ----------- Second test blacklisting an input set and a file with file names -----------
+        movieToBlacklistByName = movieToBlacklistByDate
+        with open(self.proj.getTmpPath('blacklist_filenames.txt'), 'w') as f:
+            f.write(movieToBlacklistByName)
+
+        args = self.getArgs('ribo/', pattern='*.mrcs')
+        args['blacklistFile'] = self.proj.getTmpPath('blacklist_filenames.txt')
+        args['useRegexps'] = False
+
+        protBlacklistSetFiles = self.newProtocol(ProtImportMovies, **args)
+        protBlacklistSetFiles.blacklistSet.set(protBlacklistRegexDate.outputMovies)
+
+        self.launchProtocol(protBlacklistSetFiles)
+
+        self._checkOutput(protBlacklistSetFiles, args, size=1,
+                          movieNames=['Falcon_2012_06_12-16_55_40_0_movie.mrcs'])
+

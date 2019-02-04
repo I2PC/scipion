@@ -42,9 +42,7 @@ import tempfile
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.manager import Manager
-from pyworkflow.config import MenuConfig, ProjectSettings
-from pyworkflow.project import Project, PROJECT_CONFIG_HOSTS
+from pyworkflow.project import MenuConfig, ProjectSettings
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.viewers import EmPlotter
@@ -151,7 +149,7 @@ class ProjectWindow(ProjectBaseWindow):
         ProjectBaseWindow._onClosing(self)
      
     def loadProject(self):
-        self.project = Project(self.projPath)
+        self.project = pw.project.Project(self.projPath)
         self.project.load()
 
         # Check if we have settings.sqlite, generate if not
@@ -373,8 +371,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         
         ProjectBaseWindow.__init__(self, title, minsize=(750, 500),
                                    icon=Icon.SCIPION_ICON_PROJS, **kwargs)
-        self.manager = Manager()
-        
+        self.manager = pw.project.Manager()
         self.switchView(VIEW_PROJECTS)
 
     #
@@ -384,7 +381,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
     def onBrowseFiles(self):
         # File -> Browse files
         FileBrowserWindow("Browse files", self,
-                          os.environ['SCIPION_USER_DATA'],
+                          pw.Config.SCIPION_USER_DATA,
                           selectButton=None).show()
 
     def onGeneral(self):
@@ -405,19 +402,18 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
     def onHosts(self):
         # Config -> Hosts
-        self._openConfigFile(PROJECT_CONFIG_HOSTS)
+        self._openConfigFile(pw.Config.SCIPION_CONFIG_HOSTS)
 
     def onProtocols(self):
-        self._openConfigFile('protocols.conf')
+        self._openConfigFile(pw.Config.SCIPION_CONFIG_PROTOCOLS)
 
     def onUser(self):
-        self._openConfigFile('scipion.conf', userOnly=True)
+        self._openConfigFile(pw.Config.SCIPION_CONFIG_MAIN, userOnly=True)
 
     def onPlugins(self):
         # Config -> Plugins
-        PluginManager("Plugin Manager", self,
-                          os.environ['SCIPION_USER_DATA'],
-                          selectButton=None).show()
+        PluginManager("Plugin Manager", self, pw.Config.SCIPION_USER_DATA,
+                      selectButton=None).show()
 
 
 class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
