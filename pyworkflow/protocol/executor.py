@@ -324,7 +324,7 @@ class QueueStepExecutor(ThreadStepExecutor):
         if out == "":
             return cts.STATUS_FINISHED
         # If some string is returned we use the JOB_DONE_REGEX variable (if present) to infer the status
-        elif jobDoneRegex != '':
+        elif jobDoneRegex != None:
             s = re.search(jobDoneRegex, out)
             if s:
                 return cts.STATUS_FINISHED
