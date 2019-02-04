@@ -372,7 +372,6 @@ class Protocol(Step):
         self.runMode = Integer(kwargs.get('runMode', MODE_RESUME))
         # Use queue system?
         self._useQueue = Boolean(False)
-        self._useQueueForJobs = Boolean(False)
         # Store a json string with queue name
         # and queue parameters (only meaningful if _useQueue=True)
         self._queueParams = String()
@@ -543,7 +542,6 @@ class Protocol(Step):
         d['object.label'] = self.getObjLabel()
         d['object.comment'] = self.getObjComment()
         d['_useQueue'] = self._useQueue.getObjValue()
-        d['_useQueueForJobs'] = self._useQueueForJobs.getObjValue()
 
         if self._queueParams:
             d['_queueParams'] = self._queueParams.get()
@@ -1538,7 +1536,7 @@ class Protocol(Step):
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
              'JOB_DIR': getParentFolder(script),
-             'JOB_NODEFILE': script.replace('.job', '.nodefile'),
+             'JOB_NODEFILE': os.path.abspath(script.replace('.job', '.nodefile')),
              'JOB_NAME': self.strId(),
              'JOB_QUEUE': queueName,
              'JOB_NODES': self.numberOfMpi.get(),
@@ -1553,10 +1551,6 @@ class Protocol(Step):
     def useQueue(self):
         """ Return True if the protocol should be launched through a queue. """
         return self._useQueue.get()
-
-    def useQueueForJobs(self):
-        """ Return True if tasks within the protocol should be launched through a queue. """
-        return self._useQueueForJobs.get()
 
     def getQueueParams(self):
         if self._queueParams.hasValue():
@@ -2015,12 +2009,12 @@ def runProtocolMain(projectPath, protDbPath, protId):
             sys.exit(retcode)
 
         elif nThreads > 1:
-            if protocol.useQueueForJobs():
+            if protocol.useQueue() and (protocol.getSubmitDict()["QUEUE_FOR_JOBS"] == "Y"):
                 executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1, gpuList = protocol.getGpuList())
             else:
                 executor = ThreadStepExecutor(hostConfig, nThreads-1, gpuList = protocol.getGpuList())
 
-    if executor is None and protocol.useQueueForJobs():
+    if executor is None and protocol.useQueue() and (protocol.getSubmitDict()["QUEUE_FOR_JOBS"] == "Y"):
         executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), 1, gpuList = protocol.getGpuList())
 
     if executor is None:

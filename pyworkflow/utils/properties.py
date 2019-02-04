@@ -198,7 +198,6 @@ runs that will be executed after each other.
     VAR_EXPERT = 'expertLevel'
     VAR_MPI = 'numberOfMpi'
     VAR_QUEUE = '_useQueue'
-    VAR_QUEUE_FOR_JOBS = '_useQueueForJobs'
     VAR_RUN_NAME = 'runName'
     VAR_COMMENT = 'comment'
     VAR_RUN_MODE = 'runMode'

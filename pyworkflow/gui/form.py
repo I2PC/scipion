@@ -1557,22 +1557,7 @@ class FormWindow(Window):
 
         btnHelp.grid(row=r, column=c + 2, padx=(5, 0), pady=5, sticky='w')
 
-        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE_FOR_JOBS, row=3, sticky='ne',
-                                column=c, padx=(15,5), pady=0)
-
-        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
-                                                  font=self.font)
-
-        self._addVarBinding(Message.VAR_QUEUE_FOR_JOBS, var)
-        frame.grid(row=3, column=c+1, pady=5, sticky='nw')
-
-        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
-                             highlightthickness = 0,
-                             command = self._createHelpCommand(Message.HELP_USEQUEUEPERJOB))
-
-        btnHelp.grid(row=3, column=c+2, padx=(5, 0), pady=2, sticky='ne')
-
-        r = 4  # ---- Wait for other protocols (SCHEDULE) ----
+        r = 3  # ---- Wait for other protocols (SCHEDULE) ----
         self._createHeaderLabel(runFrame, Message.LABEL_WAIT_FOR, row=r, sticky='e',
                                 column=c, padx=(15, 5), pady=0)
         self.waitForVar = tk.StringVar()
@@ -1810,7 +1795,8 @@ class FormWindow(Window):
         self._close(onlySave=True)
 
     def schedule(self):
-        if self.protocol.useQueue() or self.protocol.useQueueForJobs():
+        #if self.protocol.useQueue() or self.protocol.useQueueForJobs():
+        if self.protocol.useQueue():
             if not self._editQueueParams():
                 return
 
@@ -1818,7 +1804,8 @@ class FormWindow(Window):
 
     def execute(self, e=None):
         
-        if self.protocol.useQueue() or self.protocol.useQueueForJobs():
+        #if self.protocol.useQueue() or self.protocol.useQueueForJobs():
+        if self.protocol.useQueue():
             if not self._editQueueParams():
                 return
         else:  # use queue = No

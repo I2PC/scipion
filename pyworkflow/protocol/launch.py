@@ -131,7 +131,7 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
     hostConfig = protocol.getHostConfig()
     useQueue = protocol.useQueue()
     # Check if need to submit to queue    
-    if useQueue:        
+    if useQueue and (protocol.getSubmitDict()["QUEUE_FOR_JOBS"] == "N"):
         submitDict = dict(hostConfig.getQueuesDefault())
         submitDict.update(protocol.getSubmitDict())
         submitDict['JOB_COMMAND'] = command

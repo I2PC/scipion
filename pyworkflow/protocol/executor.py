@@ -274,17 +274,13 @@ class QueueStepExecutor(ThreadStepExecutor):
         self.threadCommands = {}
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
-        # set to > 1 threads because one "stuck" thread caused a run to fail
-        #self.pool = ThreadPool(processes=10)
-        # This is a dirty hot-fix now because we are spawning too many threads
-        # even for the case when nThreads = 1
+
         if nThreads > 1:
             self.runJobs = ThreadStepExecutor.runSteps
         else:
             self.runJobs = StepExecutor.runSteps
 
 
-    # Maybe GPUs should be taken into account at this level since queues can manage them
     def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
         threadId = threading.current_thread().thId
         submitDict = dict(self.hostConfig.getQueuesDefault())
@@ -295,7 +291,7 @@ class QueueStepExecutor(ThreadStepExecutor):
         submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + subthreadId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + subthreadId)
         submitDict['JOB_DIR'] = getParentFolder(submitDict['JOB_SCRIPT'])
-        #job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd, env))
+
         jobid = _submit(self.hostConfig, submitDict, cwd, env)
 
         if (jobid is None) or (jobid == UNKNOWN_JOBID):
@@ -314,47 +310,13 @@ class QueueStepExecutor(ThreadStepExecutor):
 
         return status
 
-        #return self._runWithTimeout(lambda: self._waitForJob(self.hostConfig, job))
-    #@retry(stop_max_attempt_number=10, wait_exponential_multiplier=100, wait_exponential_max=12000, retry_on_result=(lambda r: r is None))
-    def _runWithTimeout(self, command):
-        timeout = 30
-        return self.pool.apply_async(command).get(timeout)
-    def _waitForJob(self, hostConfig, jobid):
-        if (jobid is None) or (jobid == UNKNOWN_JOBID):
-            return 0
-        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
-        print "CheckCommand for job Id %s: %s" % (jobid, command)
-        p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
-        def communicate():
-            return p.communicate()[0]
-        try:
-            out = self.pool.apply_async(communicate).get(30)
-        except TimeoutError:
-            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-            return None
-        # FIXME: this is too specific to grid engine
-        print "OUT: %s" % out
-        #s = re.search('exit_status\s+-*(\d+)', out)
-        jobDoneRegex = hostConfig.getJobDoneRegex()
-        #s = re.search(jobDoneRegex, out)
-        if out == "":
-            #status = int(s.group(1))
-            status = cts.STATUS_FINISHED
-            print "job %s finished with exist status %s" % (jobid, status)
-            return status
-        else:
-            print "job %s still running" % jobid
-            return None
 
     def _checkJobStatus(self, hostConfig, jobid):
 
         command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
-        print("CheckCommand for job Id %s: %s" % (jobid, command))
         p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
 
         out = p.communicate()[0]
-
-        print("OUT: %s" % out)
 
         jobDoneRegex = hostConfig.getJobDoneRegex()
 
