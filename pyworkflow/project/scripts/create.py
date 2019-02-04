@@ -34,7 +34,7 @@ import pyworkflow.utils as pwutils
 
 
 def usage(error):
-    print """
+    print ("""
     ERROR: %s
 
     Usage: scipion python scripts/create_project.py
@@ -42,7 +42,7 @@ def usage(error):
         [workflow="file"] path to a Scipion json workflow
         [location="folder"] where to create it, defaults to scipion default location
         This script will create a project project, optionally based on a workflow file
-    """ % error
+    """ % error)
     sys.exit(1)
 
 
