@@ -387,25 +387,6 @@ def main():
     elif mode in MODE_VIEWER:
         runApp('pw_viewer.py', args=sys.argv[2:], chdir=False)
 
-    elif mode == MODE_UNINSTALL:
-        # We do not os.environ.update(VARS) here. SCons needs to use
-        # the python installed in the system by default.
-        # But we set all vars named SCIPION_*
-        for k, v in VARS.items():
-            if k.startswith('SCIPION_') or k in BUILD:
-                os.environ[k] = v
-
-        from scripts.install import build
-        args = ['-c'] + sys.argv[2:]
-        ret = build(args)
-        if ret == 0 and not ('--help' in args or '-h' in args or '-H' in args
-                             or '-c' in args):
-            try:
-                os.remove(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log'))
-            except OSError:
-                pass
-        sys.exit(ret)
-
     # elif mode == MODE_INSTALL_BINS:
     #     runScript('scipion install %s' % ' '.join(sys.argv[2:]))
 
@@ -453,8 +434,9 @@ Example: scipion install -j 4
 
         def build(args):
             # Just importing the script will launch the install actions
-            import pyworkflow.install.script as script
-            env = script.defineBinaries()
+            sys.path.insert(1, join(VARS['SCIPION_INSTALL']))
+            import script as installScript
+            env = installScript.defineBinaries()
             env.execute()
             return 0
 
