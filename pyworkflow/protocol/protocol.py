@@ -198,7 +198,7 @@ class Step(OrderedObject):
                 else:
                     status = STATUS_FINISHED
                 self.status.set(status)
-        except Exception, e:
+        except Exception as e:
             self.setFailed(str(e))
             import traceback
             traceback.print_exc()
@@ -1073,9 +1073,6 @@ class Protocol(Step):
         pass
 
     def copy(self, other, copyId=True, excludeInputs=False):
-
-        from pyworkflow.project import OBJECT_PARENT_ID
-
         # Input attributes list
         inputAttributes = []
 
@@ -1695,6 +1692,7 @@ class Protocol(Step):
         except Exception as e:
             import urllib
             exceptionStr = pwutils.formatExceptionInfo(e)
+            email = pw.Config.SCIPION_SUPPORT_EMAIL
             errors.append("Sorry, this is embarrassing: the validation is "
                           "failing due to a programming mistake. This should "
                           "not happen. Check out the message. It might help to "
@@ -1702,9 +1700,7 @@ class Protocol(Step):
                           "report this to: "
                           "[[mailto:%s?subject=%s&body=%s][%s]]" %
                           ("Scipion validation bug found",
-                           pw.SCIPION_SUPPORT_EMAIL, urllib.quote(exceptionStr),
-                           pw.SCIPION_SUPPORT_EMAIL))
-
+                           email, urllib.quote(exceptionStr), email))
             errors.append(exceptionStr)
 
         return errors

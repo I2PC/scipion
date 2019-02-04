@@ -126,7 +126,7 @@ class ProtMonitor2dStreamer(ProtMonitor):
         self._store(subset)
         subset.close()
 
-        from pyworkflow.manager import Manager
+        from pyworkflow.project import Manager
         manager = Manager()
         project = manager.loadProject(self.getProject().getName())
         input2D = self.input2dProtocol.get()

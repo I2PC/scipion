@@ -28,17 +28,15 @@
 import os
 import os.path
 import unittest
+
 from pyworkflow.mapper import *
 from pyworkflow.object import *
-from pyworkflow.config import *
+from pyworkflow.project import *
 from pyworkflow.em.data import Acquisition, SetOfImages, Image
 from pyworkflow.tests import *
-import pyworkflow.dataset as ds
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
 from pyworkflow.mapper.sqlite_db import SqliteDb
-
-
 
 
 class TestSqliteMapper(BaseTest):
@@ -176,11 +174,9 @@ class TestSqliteMapper(BaseTest):
             # Note compare the scalar objects, which have a well-defined comparison
             if isinstance(a1, Scalar):
                 self.assertEqual(a1, a2)
-
         # Test select all batch approach
         allBatch = mapper2.selectAllBatch()
 
-            
         # Test relations
         childs = mapper2.getRelationChilds(relName, i)
         parents = mapper2.getRelationParents(relName, p)
@@ -361,23 +357,6 @@ class TestSqliteFlatMapper(BaseTest):
         # Make sure that maxId() returns the proper value after loading db
         self.assertEqual(bigId+1, mapper2.maxId())
         
-    def test_downloads(self):
-        dbName = self.getOutputPath('downloads.sqlite')
-
-        print ">>> test_downloads: dbName = '%s'" % dbName
-        mapper = SqliteFlatMapper(dbName, globals())
-        mapper.enableAppend()
-        
-        n = 10
-        
-        for i in range(n):
-            download = DownloadRecord(fullName='Paco Perez', 
-                                      organization='kkkk')
-            mapper.store(download)
-            
-        mapper.commit()
-        mapper.close()
-         
     def test_emtpySet(self):
         dbName = self.getOutputPath('empty.sqlite')
         print ">>> test empty set: dbName = '%s'" % dbName
@@ -427,9 +406,10 @@ class TestDataSet(BaseTest):
         cls.modelGoldSqlite = cls.dataset.getFile( 'micsGoldSqlite')
         
     def test_Table(self):
-        table = ds.Table(ds.Column('x', int, 5),
-                         ds.Column('y', float, 0.0),
-                         ds.Column('name', str))
+        from pyworkflow.utils.dataset import Table, Column
+        table = Table(Column('x', int, 5),
+                      Column('y', float, 0.0),
+                      Column('name', str))
         
         # Add a row to the table
         table.addRow(1, x=12, y=11.0, name='jose')
@@ -437,14 +417,12 @@ class TestDataSet(BaseTest):
         table.addRow(3, x=32, y=31.0, name='pedro')
         # Expect an exception, since name is not provided and have not default
         self.assertRaises(Exception, table.addRow, 100, y=3.0)
-        
         row = table.getRow(1)
-        print row
-        
+        print(row)
         self.assertEqual(table.getSize(), 3, "Bad table size")
         
         # Update a value of a row
         table.updateRow(1, name='pepe')        
         row = table.getRow(1)
-        print row
+        print(row)
         self.assertEqual(row.name, 'pepe', "Error updating name in row")
