@@ -197,7 +197,7 @@ class Step(OrderedObject):
                 else:
                     status = STATUS_FINISHED
                 self.status.set(status)
-        except Exception, e:
+        except Exception as e:
             self.setFailed(str(e))
             import traceback
             traceback.print_exc()
