@@ -26,7 +26,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import json
 import os
 import importlib
 import pkgutil
@@ -191,6 +191,28 @@ class Domain:
     @classmethod
     def getName(cls):
         return cls._name
+
+    @classmethod
+    def loadPreferredViewers(cls):
+        if not hasattr(cls, '_preferredViewers'):
+            preferredViewers = os.environ.get('VIEWERS', {})
+            if preferredViewers:
+                cls._preferredViewers = json.loads(preferredViewers)
+        return cls._preferredViewers
+
+    @classmethod
+    def getPreferredViewer(cls, className):
+        preferredViewerStr = cls.loadPreferredViewers().get(className, "")
+        if preferredViewerStr:
+            preferredViewerStr = preferredViewerStr.rsplit('.', 1)
+            preferredViewer = getattr(importlib.import_module(preferredViewerStr[0]),
+                                      preferredViewerStr[1],
+                                      None)
+            if preferredViewer is None:
+                print("Could not load preferred viewer %s.%s" % (preferredViewerStr[0], preferredViewerStr[1]))
+        else:
+            preferredViewer = None
+        return preferredViewer
 
 
 class Plugin:

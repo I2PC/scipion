@@ -476,25 +476,6 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
         return (None, desc)
 
-    def loadPreferredViewers(self):
-        if not hasattr(self, '_preferredViewers'):
-            preferredViewers = os.environ.get('VIEWERS', {})
-            if preferredViewers:
-                self._preferredViewers = json.loads(preferredViewers)
-        return self._preferredViewers
-
-    def getPreferredViewer(self, obj):
-        preferredViewerStr = self.loadPreferredViewers().get(obj.getClassName(), "").rsplit('.', 1)
-        if preferredViewerStr:
-            preferredViewer = getattr(importlib.import_module(preferredViewerStr[0]),
-                                      preferredViewerStr[1],
-                                      None)
-            if preferredViewer is None:
-                print("Could not load preferred viewer %s.%s" % (preferredViewerStr[0], preferredViewerStr[1]))
-        else:
-            preferredViewer = None
-        return preferredViewer
-
     def getObjectActions(self, obj):
         if isinstance(obj, pwobj.Pointer):
             obj = obj.get()
@@ -502,30 +483,17 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
         else:
             isPointer = False
         actions = []
-        preferredActions = []
 
         viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
-
-        preferredViewer = self.getPreferredViewer(obj)
 
         def viewerCallback(viewer):
             return lambda: self._visualizeObject(viewer, obj)
 
         for v in viewers:
-            if v is preferredViewer:
-                preferredActions.insert(0, ('Open with %s' % v.__name__,
-                                            viewerCallback(v),
-                                            Icon.ACTION_VISUALIZE))
-            elif v is em.viewers.viewers_data.DataViewer:
-                preferredActions.append(('Open with %s' % v.__name__,
-                                           viewerCallback(v),
-                                            Icon.ACTION_VISUALIZE))
-            else:
-                actions.append(('Open with %s' % v.__name__,
-                                viewerCallback(v),
-                                Icon.ACTION_VISUALIZE))
-        actions = preferredActions + actions
-        # EDIT 
+            actions.append(('Open with %s' % v.__name__,
+                            viewerCallback(v),
+                            Icon.ACTION_VISUALIZE))
+         # EDIT
         actions.append((Message.LABEL_EDIT,
                         lambda: self._editObject(obj),
                         Icon.ACTION_EDIT))

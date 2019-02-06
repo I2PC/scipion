@@ -27,7 +27,6 @@
 This modules contains classes related with EM
 """
 
-
 from constants import *
 from data import *
 from data_tiltpairs import *
@@ -77,16 +76,24 @@ def findSubClasses(classDict, className):
 
 def findViewers(className, environment):
     """ Find the available viewers for this class. """
+    from pyworkflow.em.viewers.viewers_data import DataViewer
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
+    preferredClassViewer = Domain.getPreferredViewer(className)
+    preferredViewers = []
     for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
-                    viewers.append(viewer)
+                    if viewer is preferredClassViewer:
+                        preferredViewers.insert(0, viewer)
+                    elif viewer is DataViewer:
+                        preferredViewers.append(viewer)
+                    else:
+                        viewers.append(viewer)
                     break
-    return viewers
+    return preferredViewers + viewers
 
 
 #TODO: If we divide the way to find wizards for web
