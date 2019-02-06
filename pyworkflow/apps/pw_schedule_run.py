@@ -116,6 +116,12 @@ class RunScheduler():
                 lastChecked = lastCheckedDict.get(protId, None)
                 lastModified = pwutils.getFileLastModificationDate(protDb)
 
+                for key, attr in protocol.iterOutputAttributes(
+                        SetOfCoordinates):
+                    micsPointer = attr._micrographsPointer
+                    if isinstance(micsPointer.getObjValue(), pwprot.Protocol):
+                        _updateProtocol(micsPointer.getObjValue(), project)
+
                 if lastChecked is None or (lastModified > lastChecked):
                     project._updateProtocol(protocol,
                                             skipUpdatedProtocols=False)
@@ -157,6 +163,7 @@ class RunScheduler():
         _log("Launching the protocol >>>>")
         log.close()
         project.launchProtocol(protocol, scheduled=True, force=True)
+
 
 if __name__ == '__main__':
     scheduler = RunScheduler()

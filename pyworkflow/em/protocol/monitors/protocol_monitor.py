@@ -131,6 +131,10 @@ class ProtMonitor(EMProtocol):
 
         return email
 
+    def worksInStreaming(self):
+        # A monitor protocol always work in streaming
+        return True
+
 
 class Monitor():
     def __init__(self, **kwargs):

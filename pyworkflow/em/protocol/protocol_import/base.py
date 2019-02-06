@@ -269,6 +269,10 @@ class ProtImportFiles(ProtImport):
             else:
                 fileId = None
                 
-            yield fileName, fileId            
+            yield fileName, fileId
+
+    def worksInStreaming(self):
+        # Import protocols always work in streaming
+        return True
 
 
