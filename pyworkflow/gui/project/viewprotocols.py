@@ -36,7 +36,6 @@ import pickle
 import json
 import re
 import tempfile
-import importlib
 from collections import OrderedDict
 import Tkinter as tk
 import ttk
