@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import ast
 import os
 from .utils.path import findFile
 
@@ -62,6 +62,7 @@ class Config:
     SCIPION_CONFIG_HOSTS = os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
     SCIPION_CONFIG_PROTOCOLS = os.environ.get('SCIPION_CONFIG_PROTOCOLS', 'protocols.conf')
 
+    VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
 
 def join(*paths):
     """ join paths from HOME . """

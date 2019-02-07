@@ -192,27 +192,6 @@ class Domain:
     def getName(cls):
         return cls._name
 
-    @classmethod
-    def loadPreferredViewers(cls):
-        if not hasattr(cls, '_preferredViewers'):
-            preferredViewers = os.environ.get('VIEWERS', {})
-            if preferredViewers:
-                cls._preferredViewers = json.loads(preferredViewers)
-        return cls._preferredViewers
-
-    @classmethod
-    def getPreferredViewer(cls, className):
-        preferredViewerStr = cls.loadPreferredViewers().get(className, "")
-        if preferredViewerStr:
-            preferredViewerStr = preferredViewerStr.rsplit('.', 1)
-            preferredViewer = getattr(importlib.import_module(preferredViewerStr[0]),
-                                      preferredViewerStr[1],
-                                      None)
-            if preferredViewer is None:
-                print("Could not load preferred viewer %s.%s" % (preferredViewerStr[0], preferredViewerStr[1]))
-        else:
-            preferredViewer = None
-        return preferredViewer
 
 
 class Plugin:
@@ -340,62 +319,3 @@ class PluginInfo:
     def getKeywords(self):
         return self._metadata.get('Keywords', '')
 
-
-# FIXME: Remove the following OLD plugin class when not longer needed
-# class Plugin(object):
-#
-#     def __init__(self, name, version=None, configVars=None,
-#                  logo=None, bibtex=None):
-#         # Plugin name - only mandatory attribute
-#         self.name = name
-#         # Plugin version
-#         self.version = version
-#         # dict with default values for env vars needed
-#         self.configVars = configVars
-#         # path to the logo, relative to each plugin's plugin.py file
-#         self.logo = logo
-#         # List with the default plugin references e.g. []
-#         self.bibtex = bibtex
-#         # Set default env vars
-#         self.setDefaultEnviron()
-#         # plugin pip metadata
-#         self.metadata = self.getMetadata()
-#
-#     def setDefaultEnviron(self):
-#         for k in self.configVars:
-#             os.environ.setdefault(k, self.configVars[k])
-#         environ = pwutils.Environ(os.environ)
-#         return environ
-#
-#     def registerPluginBinaries(self, env):
-#         """Overwrite in subclass"""
-#         pass
-#
-#     def getMetadata(self):
-#         try:
-#             pipPackage = pkg_resources.get_distribution(self.name)
-#             metadataLines = [l for l in pipPackage._get_metadata(pipPackage.PKG_INFO)]
-#             metadataTuples = message_from_string('\n'.join(metadataLines))
-#
-#         except Exception as e:
-#             print("Plugin %s seems is not a pip module yet. No metadata found" % self.name)
-#             metadataTuples = message_from_string('Author: plugin in development mode?')
-#
-#         metadata = OrderedDict()
-#         for v in metadataTuples.items():
-#             if v[0] == 'Keywords':
-#                 break
-#             metadata[v[0]] = v[1]
-#         return metadata
-#
-#     def getAuthor(self):
-#         return self.metadata.get('Author', "")
-#
-#     def getAuthorEmail(self):
-#         return self.metadata.get('Author-email', '')
-#
-#     def getHomePage(self):
-#         return self.metadata.get('Home-page', '')
-#
-#     def getKeywords(self):
-#         return self.metadata.get('Keywords', '')

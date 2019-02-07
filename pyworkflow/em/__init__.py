@@ -35,6 +35,7 @@ from convert import *
 from pyworkflow.utils import importFromPlugin
 from pyworkflow.wizard import Wizard
 from pyworkflow.viewer import Viewer
+from pyworkflow import Config
 
 import pyworkflow.plugin
 
@@ -76,24 +77,23 @@ def findSubClasses(classDict, className):
 
 def findViewers(className, environment):
     """ Find the available viewers for this class. """
-    from pyworkflow.em.viewers.viewers_data import DataViewer
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
-    preferredClassViewer = Domain.getPreferredViewer(className)
-    preferredViewers = []
+    preferredClassViewers = Config.VIEWERS.get(className, [])
     for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
-                    if viewer is preferredClassViewer:
-                        preferredViewers.insert(0, viewer)
-                    elif viewer is DataViewer:
-                        preferredViewers.append(viewer)
+                    for prefViewer in preferredClassViewers:
+                        viewerClassName = ".".join((viewer.__module__, viewer.__name__))
+                        if viewerClassName == prefViewer:
+                            viewers.insert(0, viewer)
+                            break
                     else:
                         viewers.append(viewer)
-                    break
-    return preferredViewers + viewers
+                        break
+    return viewers
 
 
 #TODO: If we divide the way to find wizards for web
