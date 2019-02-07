@@ -185,10 +185,10 @@ def trace(nlevels, separator=' --> ', stream=sys.stdout):
 
     
 def prettyDict(d):
-    print "{"
+    print("{")
     for k, v in d.iteritems():
-        print "    %s: %s" % (k, v)
-    print "}"
+        print("    %s: %s" % (k, v))
+    print("}")
 
 
 def prettyXml(elem, level=0):
@@ -606,7 +606,7 @@ class Environ(dict):
         if existsVariablePaths(libraryPath):
             self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
         else:
-            print "Some paths do not exist in: % s" % libraryPath
+            print("Some paths do not exist in: % s" % libraryPath)
 
 
 def existsVariablePaths(variableValue):
@@ -644,22 +644,22 @@ def startDebugger(mode='SCIPION_DEBUG', password='a'):
     if mode != 'SCIPION_DEBUG' or envVarOn('SCIPION_DEBUG'):
         try:
             from rpdb2 import start_embedded_debugger
-            print "Starting debugger..."
+            print("Starting debugger...")
             start_embedded_debugger(password)
         except Exception:
-            print "Error importing rpdb2 debugging module, consider installing winpdb."
+            print("Error importing rpdb2 debugging module, consider installing winpdb.")
 
 
 def getFreePort(basePort=0,host=''):
         import socket
-        port=0
+        port = 0
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.bind((host, basePort))
             ipaddr, port = s.getsockname()
             s.close()
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             return 0
         return port
     
