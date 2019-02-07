@@ -27,6 +27,7 @@ from __future__ import print_function
 
 import traceback
 
+from pyworkflow.em import EMObject
 from pyworkflow.utils import printTraceBack
 
 """
@@ -320,6 +321,9 @@ class Protocol(Step):
         self.mapper = kwargs.get('mapper', None)
         self._inputs = []
         self._outputs = CsvList()
+        # This flag will be used to annotate it output are already "migrated"
+        #  and available in the _outputs list. Therefore iterating
+        self._useOutputList = Boolean(False)
         # Expert level needs to be defined before parsing params
         self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))
         self._definition = Form(self)
@@ -415,7 +419,14 @@ class Protocol(Step):
                 self._deleteChild(k, v)
             self._insertChild(k, v)
 
+        # If outputs not migrated to output list
+        self._migrateOutputs()
+
+        # Store attributes in _output (this does not persist them!)
         self._storeAttributes(self._outputs, kwargs)
+
+        # Persist outputs list
+        self._insertChild("_outputs", self._outputs)
 
     def _updateOutputSet(self, outputName, outputSet,
                          state=Set.STREAM_OPEN):
@@ -635,22 +646,83 @@ class Protocol(Step):
 
         return (linkedPointers and not emptyPointers)
 
-    def iterOutputAttributes(self, outputClass):
+    def iterOutputAttributes(self, outputClass=None):
         """ Iterate over the outputs produced by this protocol. """
-        for key, attr in self.getAttributes():
-            if isinstance(attr, outputClass):
+
+        # If used with EMObject it's an obsolete code
+        if outputClass == EMObject:
+            print("iterOutputAttributes usage deprecated, EMObject not needed")
+            outputClass = None
+
+        iterator = self._iterOutputsNew if self._useOutputList else self._iterOutputsOld
+
+        # Iterate
+        for key, attr in iterator():
+            if outputClass is None or attr is isinstance(attr, outputClass):
                 yield key, attr
 
     def iterOutputEM(self):
         """ Iterate over the outputs that are EM objects. """
-        from pyworkflow.em.data import EMObject
-        for paramName, attr in self.iterOutputAttributes(EMObject):
-            yield paramName, attr
+        # TODO uncomment after release 2.0
+        # print ("iterOutputEM deprecated, use iterOutputAttributes instead.")
+        return self.iterOutputAttributes()
+
+    def _iterOutputsNew(self):
+        """ This methods iterates through a list where outputs have been
+        annotated"""
+
+        # Loop through the output list
+        for attrName in self._outputs:
+
+            # Get it from the protocol
+            attr = getattr(self, attrName)
+
+            yield attrName, attr
+
+    def _iterOutputsOld(self):
+        """ This method iterates assuming the old model: any EMObject attribute
+        is an output."""
+        from pyworkflow.em import EMObject
+
+        # Iterate old Style:
+        for key, attr in self.getAttributes():
+
+            if isinstance(attr, EMObject):
+                yield key, attr
+
+    def _migrateOutputs(self):
+        """ This function migrates output from pre 2.0 to 2.0 model.
+        Before outputs were any protocol attribute based on EMObject. Since 2.0
+        we are holding a list to annotate any attribute that is an output.
+
+        Before _output were a CSVList. From 2.0 it will be a Outputs class.
+        This will allow us to distinguish if the protocol has the output
+        migrated.
+        Additionally, if a 2.0 project is opened by a previous version, Outputs
+        class will not be presented and a "backwards" migration will happen.
+        So if after an execution there is new output (as attributes)...
+        if the project is reopened in 2.0...it will do the migration again.
+        """
+        # Migration is not done
+        if not self._useOutputList:
+
+            # Iterate old Style:
+            for key, attr in self._iterOutputsOld():
+
+                    # Add it to the output list
+                    self._outputs.append(key)
+
+            # Annotate migration is done
+            self._useOutputList.set(True)
+
+            # Persist this
+            self._insertChild("_outputs", self._outputs)
+            self._insertChild("_useOutputList", self._useOutputList)
 
     def isInStreaming(self):
         # For the moment let's assume a protocol is in streaming
         # if at least one of the output sets is in STREAM_OPEN state
-        for paramName, attr in self.iterOutputEM():
+        for paramName, attr in self.iterOutputAttributes():
             if isinstance(attr, Set):
                 if attr.isStreamOpen():
                     return True
@@ -674,7 +746,7 @@ class Protocol(Step):
         return pwutils.getListFromRangeString(self.gpuList.get())
 
     def getOutputsSize(self):
-        return sum(1 for _ in self.iterOutputEM())
+        return sum(1 for _ in self.iterOutputAttributes())
 
     def getOutputFiles(self):
         """ Return the output files produced by this protocol.
@@ -684,7 +756,7 @@ class Protocol(Step):
         # By default return the output file of each output attribute
         s = set()
 
-        for _, attr in self.iterOutputEM():
+        for _, attr in self.iterOutputAttributes():
             s.update(attr.getFiles())
 
         return s
@@ -1040,7 +1112,7 @@ class Protocol(Step):
         """ This function should only be used from RESTART.
         It will remove output attributes from mapper and object.
         """
-        attributes = [a[0] for a in self.iterOutputEM()]
+        attributes = [a[0] for a in self.iterOutputAttributes()]
 
         for attrName in attributes:
             attr = getattr(self, attrName)
@@ -1051,7 +1123,7 @@ class Protocol(Step):
         self.mapper.store(self._outputs)
 
     def findAttributeName(self, attr):
-        for attrName, attr in self.iterOutputEM():
+        for attrName, attr in self.iterOutputAttributes():
             if attr.getObjId() == attr.getObjId():
                 return attrName
         return None
@@ -1963,7 +2035,6 @@ class LegacyProtocol(Protocol):
 
     def __str__(self):
         return self.getObjLabel()
-
 
 # ---------- Helper functions related to Protocols --------------------
 

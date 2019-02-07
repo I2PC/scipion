@@ -23,6 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em import EMObject
 from pyworkflow.em.protocol.protocol_tests import ProtOutputTest
 from tests import *
 from pyworkflow.mapper import SqliteMapper
@@ -45,10 +46,37 @@ class TestProtocolOutputs(BaseTest):
         mapper = SqliteMapper(fn, globals())
         prot = ProtOutputTest(mapper=mapper, n=2,
                               workingDir=self.getOutputPath(''))
+
+        # Add and old style output, not in the outputs dictionary
+        prot.output1 = EMObject()
+
+        self.assertFalse(prot._useOutputList.get(),
+                         "useOutputList wrongly initialized")
+
+        outputs = [output for output in prot.iterOutputAttributes()]
+        self.assertTrue(1, len(outputs))
+
+        outputs = [output for output in prot.iterOutputEM()]
+        self.assertTrue(1, len(outputs))
+
+
         prot._stepsExecutor = StepExecutor(hostConfig=None)
         prot.run()
 
         self.assertEqual(prot._steps[0].getStatus(), STATUS_FINISHED)
+
+        # Check there is an output
+        self.assertOutput(prot)
+
+        outputs = [output for output in prot.iterOutputAttributes()]
+
+        self.assertEqual(2, len(outputs),
+                         msg="Integer or OLD output not registered properly.")
+
+
+        self.assertTrue(prot._useOutputList.get(),
+                        "useOutputList not activated")
+
 
     def test_basicObjectInProject(self):
 

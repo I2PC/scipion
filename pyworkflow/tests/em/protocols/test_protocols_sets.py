@@ -143,7 +143,7 @@ class TestSets(BaseTest):
     @staticmethod
     def outputs(p):
         """Iterator over all the elements in the outputs of protocol p."""
-        for key, output in p.iterOutputEM():
+        for key, output in p.iterOutputAttributes():
             yield output
 
     #

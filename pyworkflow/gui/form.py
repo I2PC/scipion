@@ -358,7 +358,7 @@ class SubclassesTreeProvider(TreeProvider):
                     p = pwobj.Pointer(prot)
                     objects.append(p)
                 
-                for paramName, attr in prot.iterOutputEM():
+                for paramName, attr in prot.iterOutputAttributes():
                     def _checkParam(paramName, attr):
                         # If attr is a sub-classes of any desired one, add it to the list
                         # we should also check if there is a condition, the object 
