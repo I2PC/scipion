@@ -647,7 +647,7 @@ class Protocol(Step):
 
         # Iterate
         for key, attr in iterator():
-            if outputClass is None or attr is isinstance(attr, outputClass):
+            if outputClass is None or isinstance(attr, outputClass):
                 yield key, attr
 
     def _iterOutputsNew(self):

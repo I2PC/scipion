@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em import EMObject
+from pyworkflow.em import EMObject, Integer
 from pyworkflow.em.protocol.protocol_tests import ProtOutputTest
 from tests import *
 from pyworkflow.mapper import SqliteMapper
@@ -69,8 +69,20 @@ class TestProtocolOutputs(BaseTest):
         # We are intentionally ignoring a protocol with output (EMObject)
         # That is continued, We do not find a real case now.
         self.assertEqual(1, len(outputs),
-                         msg="Integer or OLD output not registered properly.")
+                         msg="Integer output not registered properly.")
 
+        outputs = [output for output in prot.iterOutputAttributes(Integer)]
+
+        # Test passing a filter
+        self.assertEqual(1, len(outputs),
+                         msg="Integer not matched when filtering outputs.")
+        # Test with non existing class
+        outputs = [output for output in prot.iterOutputAttributes(DataSet)]
+
+        # Test passing a class
+        self.assertEqual(0, len(outputs),
+                         msg="Filter by class in iterOutputAttributes does "
+                             "not work.")
 
         self.assertTrue(prot._useOutputList.get(),
                         "useOutputList not activated")
