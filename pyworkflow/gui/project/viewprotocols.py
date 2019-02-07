@@ -437,7 +437,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 inputs.append(attr)
 
             outputs = [attr for _, attr in
-                       self.protocol.iterOutputAttributes(em.EMObject)]
+                       self.protocol.iterOutputAttributes()]
             self.outputStr = pwobj.String(Message.LABEL_OUTPUT)
             objs = inputParents + inputs + [self.outputStr] + outputs
         return objs
@@ -1522,7 +1522,7 @@ class ProtocolsView(tk.Frame):
     def toggleDataSelection(self, prot, append):
 
         # Go through the data selection
-        for paramName, output in prot.iterOutputEM():
+        for paramName, output in prot.iterOutputAttributes():
             if append:
                 self.settings.dataSelection.append(output.getObjId())
             else:
@@ -1918,7 +1918,7 @@ class ProtocolsView(tk.Frame):
             else:
                 firstViewer.visualize(prot)
         else:
-            for _, output in prot.iterOutputAttributes(em.EMObject):
+            for _, output in prot.iterOutputAttributes():
                 viewers = em.findViewers(output.getClassName(), DESKTOP_TKINTER)
                 if len(viewers):
                     # Instanciate the first available viewer
