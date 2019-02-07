@@ -25,11 +25,6 @@
 # **************************************************************************
 from __future__ import print_function
 
-import traceback
-
-from pyworkflow.em import EMObject
-from pyworkflow.utils import printTraceBack
-
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
