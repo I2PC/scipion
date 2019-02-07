@@ -56,10 +56,6 @@ class TestProtocolOutputs(BaseTest):
         outputs = [output for output in prot.iterOutputAttributes()]
         self.assertTrue(1, len(outputs))
 
-        outputs = [output for output in prot.iterOutputEM()]
-        self.assertTrue(1, len(outputs))
-
-
         prot._stepsExecutor = StepExecutor(hostConfig=None)
         prot.run()
 
@@ -70,7 +66,9 @@ class TestProtocolOutputs(BaseTest):
 
         outputs = [output for output in prot.iterOutputAttributes()]
 
-        self.assertEqual(2, len(outputs),
+        # We are intentionally ignoring a protocol with output (EMObject)
+        # That is continued, We do not find a real case now.
+        self.assertEqual(1, len(outputs),
                          msg="Integer or OLD output not registered properly.")
 
 
