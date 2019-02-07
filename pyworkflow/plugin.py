@@ -26,7 +26,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import json
 import os
 import importlib
 import pkgutil
