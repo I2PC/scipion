@@ -41,7 +41,7 @@ from subprocess import Popen, PIPE
 from multiprocessing.pool import ThreadPool, TimeoutError
 
 import pyworkflow.utils.process as process
-from pyworkflow.utils.path import getParentFolder
+from pyworkflow.utils.path import getParentFolder, removeExt
 from pyworkflow.utils import greenStr
 import constants as cts
 
@@ -289,8 +289,8 @@ class QueueStepExecutor(ThreadStepExecutor):
         self.threadCommands[threadId] += 1
         subthreadId = '-%s-%s' % (threadId, self.threadCommands[threadId])
         submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + subthreadId
-        submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + subthreadId)
-        submitDict['JOB_DIR'] = getParentFolder(submitDict['JOB_SCRIPT'])
+        submitDict['JOB_SCRIPT'] = os.path.abspath(removeExt(submitDict['JOB_SCRIPT']) + subthreadId + ".job")
+        submitDict['JOB_LOGS'] = os.path.join(getParentFolder(submitDict['JOB_SCRIPT']), submitDict['JOB_NAME'])
 
         jobid = _submit(self.hostConfig, submitDict, cwd, env)
 

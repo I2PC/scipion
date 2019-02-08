@@ -44,7 +44,6 @@ import pyworkflow as pw
 from pyworkflow.object import *
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.log import ScipionLogger
-from pyworkflow.utils.path import getParentFolder
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor, QueueStepExecutor
 from constants import *
 from params import Form
@@ -1532,7 +1531,7 @@ class Protocol(Step):
 
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
-             'JOB_DIR': getParentFolder(script),
+             'JOB_LOGS': self._getLogsPath(hc.getSubmitPrefix() + self.strId()),
              'JOB_NODEFILE': os.path.abspath(script.replace('.job', '.nodefile')),
              'JOB_NAME': self.strId(),
              'JOB_QUEUE': queueName,
