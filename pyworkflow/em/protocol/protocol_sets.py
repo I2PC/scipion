@@ -515,9 +515,28 @@ class ProtSubSet(ProtSets):
             self.summaryVar.set('Output was not generated. Resulting set '
                                 'was EMPTY!!!')
 
+    # Overwrite SetOfCoordinates creation
+    def _createSetOfCoordinates(self, suffix=''):
+        coordSet = self.inputFullSet.get()
+        micSet = coordSet.getMicrographs()
+        return ProtSets._createSetOfCoordinates(self, micSet, suffix)
+
     # -------------------------- INFO functions -------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
+
+        # Do not allow failing sets:
+        notImplentedClasses = ['SetOfClasses2D', 'SetOfClasses3D',
+                               'CoordinatesTiltPair']
+
+        if not self.inputFullSet.get():
+            # Since is mandatory is will not validate
+            return []
+
+        c1 = self.inputFullSet.get().getClassName()
+        if c1 in notImplentedClasses:
+            return ["%s subset is not implemented." % c1]
+
 
         # First dispatch the easy case, where we choose elements at random.
         if self.chooseAtRandom:
@@ -526,6 +545,9 @@ class ProtSubSet(ProtSets):
             else:
                 return ["Number of elements to choose cannot be bigger than",
                         "the number of elements in the set."]
+
+        if not self.inputSubSet.get():
+            return []
 
         # Now the harder case: two sets. Check for compatible classes.
 
@@ -544,8 +566,9 @@ class ProtSubSet(ProtSets):
         #   Particles
         #   Volumes
 
-        c1 = self.inputFullSet.get().getClassName()
         c2 = self.inputSubSet.get().getClassName()
+        if c2 in notImplentedClasses:
+            return ["%s subset is not implemented." % c2]
 
         if c1 == c2:
             return []
