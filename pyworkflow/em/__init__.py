@@ -85,11 +85,18 @@ def findViewers(className, environment):
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
-                    for prefViewer in preferredClassViewers:
-                        viewerClassName = ".".join((viewer.__module__, viewer.__name__))
-                        if viewerClassName == prefViewer:
-                            viewers.insert(0, viewer)
-                            break
+                    for prefViewerStr in preferredClassViewers:
+                        try:
+                            [prefViewerModule, prefViewerClassName] = prefViewerStr.rsplit('.', 1)
+                            prefViewer = importFromPlugin(prefViewerModule, prefViewerClassName, doRaise=True)
+                            if viewer is prefViewer:
+                                viewers.insert(0, viewer)
+                                break
+                        except Exception as e:
+                            print("Couldn't load \"%s\" as preferred viewer.\n"
+                                  "There might be a typo in your VIEWERS "
+                                  "variable or an error in the viewer's plugin installation" % prefViewerStr)
+                            print(e)
                     else:
                         viewers.append(viewer)
                         break
