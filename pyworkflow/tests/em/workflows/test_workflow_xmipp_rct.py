@@ -58,8 +58,8 @@ class TestXmippRCTWorkflow(TestWorkflow):
                              "There was a problem with the import")
         #self.validateFiles('protImportRCT', protImport)
                 
-        #Then simulate a particle picking               
-        print "Running fake particle picking..."   
+        # Then simulate a particle picking
+        print("Running fake particle picking...")
         protPicking = self.newProtocol(XmippProtParticlePickingPairs,
                                        importFolder=self.allCrdsDir)
                 
@@ -72,7 +72,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
         #self.validateFiles('protPicking', protPicking)  
 
         #Extract particles    
-        print "Run extract particles with Same as picking"
+        print("Run extract particles with Same as picking")
         protExtract = self.newProtocol(XmippProtExtractParticlesPairs,
                                        downFactor=2,
                                        boxSize=60,
@@ -87,7 +87,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
                              "There was a problem with the extract particles")
 
         # Classify using Xmipp CL2D
-        print "Run CL2D"
+        print("Run CL2D")
         protCL2D = self.newProtocol(XmippProtCL2D,
                                     numberOfClasses=10,
                                     numberOfInitialClasses=1,
@@ -99,7 +99,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
         #self.validateFiles('protCL2D', protCL2D) 
         
         # Random Conical Tilt
-        print "Run Random Conical Tilt"
+        print("Run Random Conical Tilt")
         protRCT = self.newProtocol(XmippProtRCT)
         protRCT.inputParticlesTiltPair.set(protExtract.outputParticlesTiltPair)
         protRCT.inputParticles.set(protCL2D.outputClasses)

@@ -160,7 +160,7 @@ VARS = {
     'SCIPION_VERSION': getVersion(),
     'SCIPION_SHORT_VERSION': getVersion(long=False),
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
-    'SCIPION_INSTALL': join(SCIPION_HOME, 'install'),
+    'SCIPION_INSTALL': join(SCIPION_HOME, 'pyworkflow', 'install'),
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
     'SCIPION_LOCAL_CONFIG': SCIPION_LOCAL_CONFIG,
@@ -268,6 +268,7 @@ def runCmd(cmd):
         result = 1  # because if not, 256 is confused with 0 !
     sys.exit(result)
 
+
 # The following functions require a working SCIPION_PYTHON
 def runScript(scriptCmd, chdir=True):
     if chdir:
@@ -306,7 +307,6 @@ MODE_INSTALL_PLUGIN = 'installp'
 MODE_UNINSTALL_PLUGIN = 'uninstallp'
 MODE_INSTALL_BINS = 'installb'
 MODE_UNINSTALL_BINS = 'uninstallb'
-MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
@@ -317,7 +317,6 @@ MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
-MODE_DEPENDENCIES = 'deps'
 MODE_DEMO = 'demo'
 PLUGIN_MODES = [MODE_UNINSTALL_PLUGIN, MODE_INSTALL_PLUGIN,
                 MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
@@ -379,39 +378,13 @@ def main():
         runScript('%s %s' % (manage, args))
 
     elif mode == MODE_TESTS or mode == MODE_TEST:
-        runScript('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
+        runApp('pw_run_tests.py', args=sys.argv[2:])
 
     elif mode == MODE_TEST_DATA:
-        runScript('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
+        runApp('pw_sync_data.py', args=sys.argv[2:])
 
     elif mode in MODE_VIEWER:
         runApp('pw_viewer.py', args=sys.argv[2:], chdir=False)
-
-    elif mode == MODE_UNINSTALL:
-        # We do not os.environ.update(VARS) here. SCons needs to use
-        # the python installed in the system by default.
-        # But we set all vars named SCIPION_*
-        for k, v in VARS.items():
-            if k.startswith('SCIPION_') or k in BUILD:
-                os.environ[k] = v
-
-        from scripts.install import build
-        args = ['-c'] + sys.argv[2:]
-        ret = build(args)
-        if ret == 0 and not ('--help' in args or '-h' in args or '-H' in args
-                             or '-c' in args):
-            try:
-                os.remove(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log'))
-            except OSError:
-                pass
-        sys.exit(ret)
-
-    elif mode == 'clean':
-        #TODO: Maybe move the clean script under install/
-        # and also add logic to clean specific targets (useful for testing install)
-        #TODO: This option seems to be redundant with MODE_UNINSTALL 
-        import scripts.clean as clean
-        sys.exit(0)
 
     # elif mode == MODE_INSTALL_BINS:
     #     runScript('scipion install %s' % ' '.join(sys.argv[2:]))
@@ -460,8 +433,9 @@ Example: scipion install -j 4
 
         def build(args):
             # Just importing the script will launch the install actions
-            import install.script as script
-            env = script.defineBinaries()
+            sys.path.insert(1, join(VARS['SCIPION_INSTALL']))
+            import script as installScript
+            env = installScript.defineBinaries()
             env.execute()
             return 0
 
@@ -494,12 +468,6 @@ Example: scipion install -j 4
 
     elif mode == MODE_CONFIG:
         runApp('pw_config.py', sys.argv[2:])
-
-    elif mode == MODE_STATS:
-        statsDir = join(SCIPION_HOME, 'data', 'stats')
-        if not exists(statsDir):
-            os.makedirs(statsDir)
-        runApp('gitstats/gitstats', args=[SCIPION_HOME, statsDir])
 
     elif mode == MODE_VERSION:
         # Just exit, Scipion version will be printed anyway
@@ -534,12 +502,7 @@ Example: scipion install -j 4
         runApp('pw_tutorial.py', sys.argv[2:])
 
     elif mode == MODE_DEMO:
-        runScript('scripts/scipionbox_wizard_demo.py')
-
-    elif mode == MODE_DEPENDENCIES:
-        script = 'scripts/find_deps.py $s/bin s%/lib %s' \
-                 % (SCIPION_SOFTWARE, SCIPION_SOFTWARE)
-        runScript( script % ' '.join(['"%s"' % arg for arg in sys.argv[2:]]))
+        runScript('pyworkflow/project/scripts/scipionbox_wizard_demo.py')
 
     # Allow to run programs from different packages
     # scipion will load the specified environment
@@ -583,8 +546,6 @@ MODE can be:
     
     python [ARG ...]       Shortcut to 'scipion run python ...'
 
-    stats                  Write git statistics to the data/stats folder.
-
     test OPTION            Run test(s). All tests are located in pyworkflow/tests .
                            OPTION can be:
                              <name>: name of the test to run
@@ -621,7 +582,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  help install installp uninstallp installb uninstallb manager project stats tests testdata viewer webserver printenv run
+  help install installp uninstallp installb uninstallb manager project tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 

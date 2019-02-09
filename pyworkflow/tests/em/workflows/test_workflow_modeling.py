@@ -1079,7 +1079,7 @@ class TestEMRingerValidation(TestImportData):
     """ Test the protocol of EMRinger validation
     """
     def checkResults(self, optThresh, rotRatio, maxZscore, modLength,
-                     EMScore, protEMRinger, places=4):
+                     EMScore, protEMRinger, places=2):
         # method to check EMRinger statistic results of the Final Results Table
         textFileName = protEMRinger._getExtraPath(
             protEMRinger.EMRINGERTRANSFERFILENAME.replace('py', 'txt'))

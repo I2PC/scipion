@@ -81,18 +81,15 @@ def schedule(protocol, wait=False):
     """ Use this function to schedule protocols that are not ready to
     run yet. Right now it only make sense to schedule jobs locally.
     """
-    protStrId = protocol.strId()
-    python = pw.SCIPION_PYTHON
-    scipion = pw.getScipionScript()
-    cmd = '%s %s runprotocol pw_schedule_run.py' % (python, scipion)
+    cmd = '%s %s runprotocol pw_schedule_run.py' % (pw.PYTHON,
+                                                    pw.getScipionScript())
     cmd += ' "%s" "%s" %s' % (protocol.getProject().path,
                               protocol.getDbPath(),
-                              protStrId)
+                              protocol.strId())
     jobId = _run(cmd, wait)
     protocol.setJobId(jobId)
 
     return jobId
-
 
 
 # ******************************************************************
@@ -114,20 +111,16 @@ def _runsLocally(protocol):
 # ******************************************************************
 def _getAppsProgram(prog):
     """ Get a command to launch a program under the apps folder.
-    And also using a different python if configured in SCIPION_PYTHON var.
     """
-    return os.environ.get('SCIPION_PYTHON', 'python') + ' ' + pw.join('apps', prog)
+    return "%s %s" % (pw.PYTHON, pw.join('apps', prog))
 
 
 def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
     # Check first if we need to launch with MPI or not
-    protStrId = protocol.strId()
-    python = pw.SCIPION_PYTHON
-    scipion = pw.getScipionScript()
-    command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion,
-                                                                     protocol.getProject().path, 
-                                                                     protocol.getDbPath(), 
-                                                                     protStrId)
+    command = ('%s %s runprotocol pw_protocol_run.py "%s" "%s" %s'
+               % (pw.PYTHON, pw.getScipionScript(),
+                  protocol.getProject().path, protocol.getDbPath(),
+                  protocol.strId()))
     hostConfig = protocol.getHostConfig()
     useQueue = protocol.useQueue()
     # Check if need to submit to queue    
