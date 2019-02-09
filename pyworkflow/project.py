@@ -442,26 +442,24 @@ class Project(object):
                 if protocol.worksInStreaming():
                     attrSet = [attr for name, attr in
                                protocol.iterOutputAttributes(pwprot.Set)]
-                    if attrSet:
-                        try:
+                    try:
+                        if attrSet:
                             for attr in attrSet:
                                 attr.setStreamState(attr.STREAM_OPEN)
                                 attr.write()
                                 attr.close()
-                            protocol.setStatus(pwprot.STATUS_SAVED)
-                            protocol._setStatusSteps(pwprot.STATUS_SAVED)
-                            protocol.setMapper(self.createMapper(protocol.getDbPath()))
-                            protocol._store()
-                            self._storeProtocol(protocol)
-                            self.scheduleProtocol(protocol)
-                            time.sleep(2)
-                        except Exception as ex:
-                            errorsList.append("Error trying to launch the "
-                                              "protocol: %s\nERROR: %s\n" %
-                                              (protocol.getObjLabel(), ex))
-                            break
-                    else:
-                        self._restartWorkflow([protocolId], errorsList)
+                        protocol.setStatus(pwprot.STATUS_SAVED)
+                        protocol._setStatusSteps(pwprot.STATUS_SAVED)
+                        protocol.setMapper(self.createMapper(protocol.getDbPath()))
+                        protocol._store()
+                        self._storeProtocol(protocol)
+                        self.scheduleProtocol(protocol)
+                        time.sleep(1)
+                    except Exception as ex:
+                        errorsList.append("Error trying to launch the "
+                                          "protocol: %s\nERROR: %s\n" %
+                                          (protocol.getObjLabel(), ex))
+                        break
                 else:
                     if protocolId != continuedProtList[0]:
                         # we make sure that at least one protocol in streaming
@@ -491,7 +489,7 @@ class Project(object):
                 try:
                     protocol.runMode.set(MODE_RESTART)
                     self.scheduleProtocol(protocol)
-                    time.sleep(2)
+                    time.sleep(1)
                 except Exception as ex:
                     errorsList.append("Error trying to restart a protocol: %s"
                                       "\nERROR: %s\n" % (protocol.getObjLabel(),
@@ -501,28 +499,13 @@ class Project(object):
     def _fixWorkflowConfiguration(self, protocolList=None):
         """
         This function fix:
-        1. The protocol prerequisites if some protocol need to wait for
-           required protocols
-        2. The old parameters configuration in the protocols list.
+        1. The old parameters configuration in the protocols list.
            Now, dependent protocols have a pointer to the parent protocol, and
            the extended parameter has a parent output value
         """
         if protocolList is not None:
             for protocolId in protocolList:
                 protocol = self.getProtocol(protocolId)
-
-                # Modify the protocol prerequisites.
-                if not protocol.worksInStreaming():
-                    prerequisites = protocol.getPrerequisites()
-                    dependencies = [str(attr.getObjValue().getObjId())
-                                    for key, attr in protocol.iterInputAttributes()
-                                    if attr.getObjValue() and
-                                    str(attr.getObjValue().getObjId()) not in prerequisites]
-                    for dep in dependencies:
-                        protocol.addPrerequisites(dep)
-                    self._setupProtocol(protocol)
-                    self.mapper.store(protocol)
-                    self.mapper.commit()
 
                 # Take the old configuration attributes and fix the pointer
                 oldStylePointerList = [item for key, item in

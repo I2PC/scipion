@@ -35,11 +35,11 @@ from pyworkflow.config import *
 from pyworkflow.protocol import (getProtocolFromDb,
                                  STATUS_FINISHED, STATUS_ABORTED, STATUS_FAILED)
 
-
 # Add callback for remote debugging if available.
 try:
     from rpdb2 import start_embedded_debugger
     from signal import signal, SIGUSR2
+
     signal(SIGUSR2, lambda sig, frame: start_embedded_debugger('a'))
 except ImportError:
     pass
@@ -116,12 +116,6 @@ class RunScheduler():
                 lastChecked = lastCheckedDict.get(protId, None)
                 lastModified = pwutils.getFileLastModificationDate(protDb)
 
-                for key, attr in protocol.iterOutputAttributes(
-                        SetOfCoordinates):
-                    micsPointer = attr._micrographsPointer
-                    if isinstance(micsPointer.getObjValue(), pwprot.Protocol):
-                        _updateProtocol(micsPointer.getObjValue(), project)
-
                 if lastChecked is None or (lastModified > lastChecked):
                     project._updateProtocol(protocol,
                                             skipUpdatedProtocols=False)
@@ -135,11 +129,24 @@ class RunScheduler():
             missing = False
 
             _log("Checking input data...")
-            for key, attr in protocol.iterInputAttributes():
-                if attr.hasValue() and attr.get() is None:
-                    missing = True
-                    inputProt = attr.getObjValue()
-                    _updateProtocol(inputProt, project)
+            if protocol.worksInStreaming():
+                for key, attr in protocol.iterInputAttributes():
+                    if attr.hasValue() and attr.get() is None:
+                        missing = True
+                        inputProt = attr.getObjValue()
+                        _updateProtocol(inputProt, project)
+            else:
+                for key, attr in protocol.iterInputAttributes():
+                    if attr.hasValue() and attr.get() is None:
+                        inputProt = attr.getObjValue()
+                        _updateProtocol(inputProt, project)
+                        if inputProt.getStatus() not in stopStatuses:
+                            missing = True
+                            break
+                if not missing:
+                    inputProtocolDict = protocol.inputProtocolDict()
+                    for prot in inputProtocolDict.values():
+                        _updateProtocol(prot, project)
 
             _log("Checking prerequisited...")
             wait = False  # Check if we need to wait for required protocols
@@ -168,4 +175,3 @@ class RunScheduler():
 if __name__ == '__main__':
     scheduler = RunScheduler()
     scheduler.main()
-
