@@ -81,6 +81,8 @@ def findViewers(className, environment):
     cls = findClass(className)
     baseClasses = cls.mro()
     preferredClassViewers = Config.VIEWERS.get(className, [])
+    if not isinstance(preferredClassViewers, list):
+        preferredClassViewers = [preferredClassViewers]
     for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
