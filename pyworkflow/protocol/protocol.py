@@ -588,8 +588,13 @@ class Protocol(Step):
                     # PointerList, this is used in viewprotocols.py
                     # to group them inside the same tree element
                     yield key, item
-            elif attr.isPointer() and attr.hasValue():
+            if attr.isPointer() and attr.hasValue():
                 yield key, attr
+
+            # Consider here scalars with pointers inside
+            elif isinstance(attr, Scalar) and attr.hasPointer():
+                if attr.get() is not None:
+                    yield key, attr.getPointer()
 
     def iterInputPointers(self):
         """ This function is similar to iterInputAttributes, but it yields
