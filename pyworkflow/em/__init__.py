@@ -33,6 +33,7 @@ from data import *
 from data_tiltpairs import *
 from protocol import *
 from convert import *
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.wizard import Wizard
 from pyworkflow.viewer import Viewer
 
@@ -126,17 +127,17 @@ def runProgram(program, params):
     env = None
 
     if program.startswith('xmipp'):
-        xmipp3 = importFromPlugin('xmipp3')
+        xmipp3 = importFromPlugin('xmipp3', 'Plugin')
         env = xmipp3.getEnviron()
     if program.startswith('relion'):
-        relion = importFromPlugin('relion')
+        relion = importFromPlugin('relion', 'Plugin')
         env = relion.getEnviron()
     elif (program.startswith('e2') or
               program.startswith('sx')):
-        eman2 = importFromPlugin('eman2')
+        eman2 = importFromPlugin('eman2', 'Plugin')
         env = eman2.getEnviron()
     elif program.startswith('b'):
-        bsoft = importFromPlugin('bsoft')
+        bsoft = importFromPlugin('bsoft', 'Plugin')
         env = bsoft.getEnviron()
 
     pwutils.runJob(None, program, params, env=env)

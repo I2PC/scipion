@@ -108,12 +108,17 @@ class ProtAlignMovies(ProtProcessMovies):
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # validate that we have some output movies
-        failedList = self._readFailedList()
-        if len(failedList) == len(self.listOfMovies):
+        if hasattr(self, 'doSaveAveMic') and not self.doSaveAveMic:
+            output = self.outputMovies
+        else:
+            output = self.outputMicrographs
+
+        if output.getSize() == 0 and len(self.listOfMovies) != 0:
             raise Exception(redStr("All movies failed, didn't create outputMicrographs."
                                    "Please review movie processing steps above."))
-        elif 0 < len(failedList) < len(self.listOfMovies):
-            self.warning(yellowStr("WARNING - Failed to align %d movies." % len(failedList)))
+        elif output.getSize() < len(self.listOfMovies):
+            self.warning(yellowStr("WARNING - Failed to align %d movies."
+                                   % (len(self.listOfMovies) - self.outputMicrographs.getSize())))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -184,6 +189,11 @@ class ProtAlignMovies(ProtProcessMovies):
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
 
+            # If need to save the movie
+            if saveMovie:
+                movieSet.setGain(None)
+                movieSet.setDark(None)
+
             for movie in newDone:
                 newMovie = self._createOutputMovie(movie)
                 if newMovie.getAlignment().getShifts()[0]:
@@ -208,7 +218,6 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
-            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -221,14 +230,11 @@ class ProtAlignMovies(ProtProcessMovies):
                 if not os.path.exists(extraMicFn):
                     print(yellowStr("WARNING: Micrograph %s was not generated, "
                                     "can't add it to output set." % extraMicFn))
-                    doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
-            if doneFailed:
-                self._writeFailedList(doneFailed)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -256,10 +262,12 @@ class ProtAlignMovies(ProtProcessMovies):
     def _validate(self):
         errors = []
 
-        if (self.cropDimX > 0 and self.cropDimY <= 0 or
-                        self.cropDimY > 0 and self.cropDimX <= 0):
-            errors.append("If you give cropDimX, you should also give cropDimY"
-                          " and vice versa")
+        # Only validate about cropDimensions if the protocol supports them
+        if (hasattr(self, 'cropDimX') and hasattr(self, 'cropDimY')
+            and (self.cropDimX > 0 and self.cropDimY <= 0
+                 or self.cropDimY > 0 and self.cropDimX <= 0)):
+                errors.append("If you give cropDimX, you should also give "
+                              "cropDimY and vice versa")
 
         # movie = self.inputMovies.get().getFirstItem()
         # # Close movies db because the getFirstItem open it
@@ -274,9 +282,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
         if lastFrame == 0:
-            # Although getFirstItem is not remonended in general, here it is
+            # Although getFirstItem is not recommended in general, here it is
             # used olny once, for validation purposes, so performance
-            # problems not should be apprear.
+            # problems should not appear.
             frames = self.inputMovies.get().getFirstItem().getNumberOfFrames()
             lastFrame = frames
         else:
@@ -453,6 +461,12 @@ class ProtAlignMovies(ProtProcessMovies):
         to the output set of micrographs.
         """
         pass
+
+    def _doComputeMicThumbnail(self):
+        """ Should be implemented in sub-classes if want to check
+        the generation of thumbnails.
+        """
+        return False
 
     def _storeSummary(self, movie):
         """ Implement this method if you want to store the summary. """

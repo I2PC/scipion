@@ -1,0 +1,1132 @@
+<HTML>
+    <HEAD>
+        <meta charset="UTF-8">
+        <!-- jquery-->
+        <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
+        <!--highcharts-->
+        <SCRIPT src="https://code.highcharts.com/highcharts.js"></SCRIPT>
+        <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
+        <!--SCRIPT src="https://code.highcharts.com/modules/heatmap.js"></SCRIPT>
+        <!--bootstrap-->
+        <SCRIPT src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></SCRIPT>
+        <LINK rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <!--data tables-->
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css"/>
+        <script type="text/javascript" src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
+        <link rel="shortcut icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
+        <link rel="apple-touch-icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
+        <TITLE>Scipion - %(projectName)s </TITLE>
+    </HEAD>
+    <STYLE>
+        /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
+        .scrolledTable{
+            overflow-y: auto;
+            clear:both;
+        }
+
+        #refreshBtn{
+            position: fixed;
+            top: 20px;
+            left: 30px;
+        }
+
+        #modalFooter{
+            font-size: small;
+            color: grey;
+        }
+
+        .sectionTitle{
+            cursor: pointer;
+        }
+
+        .glyphExpand {
+            right: 5px;
+            font-size: 20px;
+        }
+
+        BODY {
+          text-align: center;
+          margin: 0px;
+        }
+
+        #content {
+          text-align: left;
+          width: 70%%;
+          margin: 0 auto;
+        }
+
+        H1 {
+            border-bottom: 2px solid firebrick;
+            color: #6E6E6E;
+        }
+
+        H2 {
+/*            background: grey;*/
+            color: firebrick;
+            border-bottom: 1px solid firebrick;
+            padding-left: 8px;
+        }
+
+        SECTION {
+        }
+        LABEL {
+            font-weight: bold;
+            margin: 0px;
+        }
+        .propertyline {
+            margin-top: 3px;
+            margin-bottom: 4px;
+            margin-left: 8px;
+        }
+        FOOTER {
+            text-align: center;
+            font-style: italic;
+            font-size: small;
+            margin: 20px 0px;
+
+        }
+        .icon {
+            margin-left: 6px;
+            height: 16px;
+            width: 16px;
+        }
+        .icon,
+        .valign {
+            vertical-align: middle;
+        }
+        TABLE {
+            border-collapse: collapse;
+            margin: auto;
+            width: 100%%;
+        }
+        TH {
+            background: #EAEBEC;
+            padding: 3px;
+            text-align: center;
+        }
+        TD {
+            padding: 5px;
+        }
+        th, td {
+            white-space: nowrap;
+        }
+        .protocolLine {
+            background: #F2F2F2;
+        }
+        .center {
+            text-align: center;
+        }
+        .thumbnail {
+            margin-bottom: 0px;
+        }
+        .modal-title {
+            float: left;
+        }
+        a:focus, a:hover {
+            color: firebrick;
+        }
+        /* Grid layout classes */
+        /* Taken from https://www.sitepoint.com/understanding-css-grid-systems/ */
+        .row,
+        .column {
+            box-sizing: border-box;
+        }
+
+        .row:before,
+        .row:after {
+            content: " ";
+            display: table;
+        }
+
+        .row:after {
+            clear: both;
+        }
+
+        .column {
+            position: relative;
+            float: left;
+        }
+        .column + .column {
+            margin-left: 1.6%%;
+        }
+        .column-1 {
+            width: 6.86666666667%%;
+        }
+
+        .column-2 {
+            width: 15.3333333333%%;
+        }
+
+        .column-3 {
+            width: 23.8%%;
+        }
+
+        .column-4 {
+            width: 32.2666666667%%;
+        }
+
+        .column-5 {
+            width: 40.7333333333%%;
+        }
+
+        .column-6 {
+            width: 49.2%%;
+        }
+
+        .column-7 {
+            width: 57.6666666667%%;
+        }
+
+        .column-8 {
+            width: 66.1333333333%%;
+        }
+
+        .column-9 {
+            width: 74.6%%;
+        }
+
+        .column-10 {
+            width: 83.0666666667%%;
+        }
+
+        .column-11 {
+            width: 91.5333333333%%;
+        }
+
+        .column-12 {
+            width: 100%%;
+        }
+        @media only screen and (max-width: 550px) {
+            .column-1,
+            .column-2,
+            .column-3,
+            .column-4,
+            .column-5,
+            .column-6,
+            .column-7,
+            .column-8,
+            .column-9,
+            .column-10,
+            .column-11,
+            .column-12 {
+                width: auto;
+                float: none;
+            }
+
+            .column + .column {
+                margin-left: 0;
+            }
+        }
+    </STYLE>
+        <BODY>
+        <a id='refreshBtn'
+           data-toggle="tooltip" title="Toggle auto refresh" data-placement="bottom"
+           href="#" class="btn btn-info btn-lg">
+            <span class="glyphicon glyphicon-refresh"></span>
+        </a>
+        <DIV id="content" class="clearfix container">
+            <H1><img class="valign" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo_small.png">&nbsp;&nbsp; Project %(projectName)s </H1>
+            <DIV class="row">
+                <DIV class="column column-5">
+                    <H2>Project properties</H2>
+                    <P class="propertyline"><label>Start time:</label> %(startTime)s</P>
+                    <P class="propertyline"><label>Last update:</label> %(dateStr)s</P>
+                    <P class="propertyline"><label>Duration:</label> %(projectDuration)s</P>
+                    <P class="propertyline"><label>Status:</label> %(projectStatus)s</P>
+                    <P class="propertyline"><label>Scipion version:</label> %(scipionVersion)s</P>
+
+                    <DIV id="acquisition">
+                        <H2>Acquisition</H2>
+                    </DIV>
+                </DIV>
+
+                <DIV id="runs" class="column column-7">
+                    <H2>Runs summary</H2>
+                    <TABLE id="runsTable" class='center'>
+                        <TR>
+                            <TH>Name</TH>
+                            <TH>Output</TH>
+                            <TH>Number</TH>
+                        </TR>
+                    </TABLE>
+                </DIV>
+            </DIV>
+
+            <SECTION id="ctf">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>CTF histograms</H2>
+                <div class="row sectionContent" id="ctfHistograms">
+                    <!--<DIV id="ctfChart" class="column column-7"></DIV>-->
+                    <DIV id="resolutionHistogram" class="column column-6"></DIV>
+                    <DIV id="defocusHistogram" class="column column-6"></DIV>
+                </div>
+            </SECTION>
+            <SECTION id="timeSeries">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>CTF Time Series</H2>
+                <DIV id="timeSeriesChart" class="sectionContent"></DIV>
+            </SECTION>
+            <SECTION id="movieGain">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>Movie gain monitor</H2>
+                <DIV id="movieGainChart" class="sectionContent"></DIV>
+            </SECTION>
+            <SECTION id="system">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>System monitor</H2>
+                <DIV id="systemChart" class="sectionContent"></DIV>
+            </SECTION>
+            <SECTION id="mics">
+                <H2 class="sectionTitle"><span class="glyphicon glyphicon-triangle-bottom glyphExpand" aria-hidden="true"></span>Micrographs</H2>
+                <div class="sectionContent" id="micTableContainer">
+                    <TABLE id="micTable" class="display" width="100%%"></TABLE>
+                    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title" ></h4>
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            </div>
+                            <div class="modal-body">
+                                <img src="" class="imagepreview" style="width: 100%%;" >
+                                <p id="modalFooter"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </SECTION>
+        </DIV>
+
+        <FOOTER>
+            Powered by <a href="http://scipion.i2pc.es">Scipion</a><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
+        </FOOTER>
+    </BODY>
+    <SCRIPT>
+
+        var report ={
+            date:"%(dateStr)s",
+            project:"%(projectName)s",
+            scipionVersion:"%(scipionVersion)s",
+            acquisition:[
+                %(acquisitionLines)s
+            ],
+            runs:[
+                %(runLines)s
+            ],
+            ctfData: %(ctfData)s,
+            movieGainData: %(movieGainData)s,
+            systemData: %(systemData)s
+        }
+        var micTable;
+        var refreshPaused = false;
+
+        String.prototype.format = function() {
+            var formatted = this;
+            for (var i = 0; i < arguments.length; i++) {
+                var regexp = new RegExp('\\{'+i+'\\}', 'gi');
+                formatted = formatted.replace(regexp, arguments[i]);
+            }
+            return formatted;
+        };
+
+        function addAcquisition(){
+
+            if (report.acquisition.length == 0) {
+                $('#acquisition').hide();
+            }
+
+            // Get the acquisition section
+            var acquisitionSection = $('#acquisition');
+
+            // For each acquisition property
+            $.each(report.acquisition, function(index, value){
+                var line = "<P class='propertyline'><label>" + value.propertyName + "</label> " + value.propertyValue + '</P>';
+                $(acquisitionSection).append(line);
+            });
+
+        };
+
+        function addRuns(){
+            // Get the runs table
+            var runsTable = $('#runsTable');
+
+            // For each protocol property
+            $.each(report.runs, function(index, value){
+                var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='2'></TD></TR>";
+                $(runsTable).append(line);
+
+                $.each(value.output, function(index, value){
+                    var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD></TR>";
+                    $(runsTable).append(outputLine);
+
+                });
+            });
+        };
+
+        function addMovieGainChart () {
+
+            if (report.movieGainData.length == 0 || report.movieGainData.idValues.length == 0) {
+                $('#movieGain').hide();
+                return;
+            }
+
+            $('#movieGainChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
+                xAxis: [{
+                    title: {
+                        text: 'Micrograph index'
+                    },
+                    allowDecimals: false,
+                    type:'linear',
+                    range:50,
+                    floor:1
+                }],
+                yAxis: [{  // Primary yAxis
+                    title: {
+                        text: 'Ratios between specified percentiles'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                }, {  // Secondary yAxis
+                    title: {
+                        text: 'Residual gain standard deviation'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }],
+                    opposite: true
+                }],
+                tooltip: {
+                    valueSuffix: ' A',
+                    shared: true
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: '97.5/2.5 percentile',
+                    data: report.movieGainData.ratio1,
+                    color: '#0000FF'
+                }, {
+                    name: 'max/97.5 percentile',
+                    data: report.movieGainData.ratio2,
+                    color: '#0000FF'
+                }, {
+                    name: 'Standard deviation',
+                    yAxis: 1,
+                    data: report.movieGainData.standard_deviation,
+                    color: '#FF0000'
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'
+                }
+            });
+
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var movieGainChart = $('#movieGainChart').highcharts();
+            movieGainChart.showResetZoom();
+        };
+
+        function addResolutionHistogram(){
+            if (!('resolutionHistogram' in report.ctfData)) {
+                return
+                }
+            var labels = report.ctfData.resolutionHistogram.map(function(value) { return value[1]; });
+            var values = report.ctfData.resolutionHistogram.map(function(value) { return value[0]; });
+            Highcharts.chart('resolutionHistogram', {
+                chart: {
+                    type: 'column',
+                    alignTicks: false
+                },
+                title: {
+                    text: 'Max. Resolution'
+                },
+                xAxis: {
+                    categories: labels,
+                    title: {
+                        text: 'Resolution (\u212B)'
+                    },
+                    max: 20
+                },
+                yAxis:{
+                    title:{
+                        text: 'Micrographs',
+                        align: 'high'
+                    },
+                    allowDecimals: false
+                },
+                tooltip: {
+                    valueSuffix: ' micrographs'
+                },
+                series: [{
+                                name: 'Resolution',
+                                data: values
+                            }]
+            })
+        };
+
+
+        function addCTFChart () {
+
+            if (!('defocusU' in report.ctfData)) {
+                $('#ctf').hide();
+                return;
+            }
+            addResolutionHistogram();
+            addDefocusCoverage();
+        };
+
+        function addDefocusCoverage(){
+            if (!('defocusCoverage' in report.ctfData)) {
+                return
+                }
+            function processDefocusValues(defocusCoverageList, darkRed){
+                var red = '#f45b5b';
+                if (darkRed===true){
+                    red = '#943737';
+                }
+                var defocusValues = defocusCoverageList.map(function(value) { return value[0]; });
+                var numValues = defocusValues.length;
+                var firstItem = {y:defocusValues[0], color:red}; // change color for item with defocus out of range
+                var lastItem = {y:defocusValues[numValues-1], color:red}; // same as firstItem
+                var defocusChartData = [firstItem].concat(defocusValues.slice(1,numValues-1));
+                defocusChartData.push(lastItem);
+                return defocusChartData;
+            }
+            var labels = report.ctfData.defocusCoverage.map(function(value) { return value[1]; });
+            var defocusData = processDefocusValues(report.ctfData.defocusCoverage);
+            var maxValue = Math.max.apply(Math, report.ctfData.defocusCoverage.map(function(value) {
+                                                                                        return value[0]; }));
+            var yAxis = [{
+                            title: {
+                                text: 'Micrographs',
+                                align: 'high'
+                            },
+                            max: maxValue,
+                            allowDecimals: false,
+                            gridLineWidth: 0,
+                            labels: {
+                                overflow: 'justify'
+                            }
+                        }];
+            var dataSeries = [{
+                                name: 'Defocus',
+                                data: defocusData
+                            }];
+            if('defocusCoverageLast50' in report.ctfData){
+                var defocusDataLast50 = processDefocusValues(report.ctfData.defocusCoverageLast50, true);
+                var maxValueLast50 = Math.max.apply(Math, report.ctfData.defocusCoverageLast50.map(function(value) {
+                                                                                                        return value[0];
+                                                                                                    }));
+                yAxis.push({
+                            title: {
+                                text: 'Last 50 Mic counts',
+                                align: 'high'
+                            },
+                            max: maxValueLast50,
+                            labels: {
+                                overflow: 'justify'
+                            },
+                            opposite: true
+                        });
+                dataSeries.push({
+                                name: 'Defocus (last 50 mics)',
+                                yAxis: 1,
+                                data: defocusDataLast50
+                            })
+            }
+
+            Highcharts.chart('defocusHistogram', {
+                chart: {
+                    type: 'column',
+                    alignTicks: false,
+                },
+                title: {
+                    text: 'Defocus Coverage'
+                },
+                xAxis: {
+                    categories: labels,
+                    title: {
+                        text: 'Defocus U (\u00B5m)'
+                    }
+                },
+                yAxis: yAxis,
+                tooltip: {
+                    valueSuffix: ' micrographs'
+                },
+                series: dataSeries
+            })
+
+        }
+
+        function getSystemSeries() {
+
+            colors = ["#000000", "#0000FF", "#FF0000", "#00FF00", "#FFFF00", "#00FFFF", "#FF00FF"];
+            systemSeries = [];
+            colorIndex = 0;
+            yAxes = getSystemYAxes(Object.keys(report.systemData));
+
+
+            for (var key in report.systemData) {
+                serie = report.systemData[key];
+
+                if (!Array.isArray(serie)){
+                    continue;
+                } else {
+                    if (key == "idValues"){
+                        continue;
+                    }else {
+                        enabled = isChartSerieVisible(key);
+                        color = colors[colorIndex];
+                        hchSerie = systemSerie2HighChartSerie(key, serie, color, enabled, yAxes);
+                        colorIndex = (colorIndex +1)%%colors.length;
+                        systemSeries.push(hchSerie);
+                    }
+                }
+            }
+
+            return systemSeries;
+        }
+        function getTimeSeriesYAxis(){
+            return [{ // Defocus Axis Default
+                labels: {
+                    format: '{value:.1f}'
+                },
+                title: {
+                    text: 'Defocus (\u00B5m)'}
+
+            }, { // Phase Shift Axis
+                title: {
+                    text: 'Phase Shift (deg)'
+                },
+                labels: {
+                    format: '{value}'
+                },
+                tickInterval: 45,
+                endOnTick: true,
+                ceiling: 180,
+                floor:0,
+                opposite: true
+            }, { // resolution
+                title: {
+                    text: 'Resolution (Å)'
+                },
+                labels: {
+                    format: '{value}'
+                },
+                ceiling: 20,
+                opposite: true
+            }];
+        }
+        function getTimeSeries() {
+
+            var series = [];
+
+            // define defocus serie
+            var defocusSerie = {
+                name: "Defocus U",
+                data: report.ctfData.timeSeries.defocusU,
+                tooltip: {
+                    valueDecimals: 1,
+                    valueSuffix: ' \u00B5m'
+                }
+            };
+
+            series.push(defocusSerie);
+
+            // define resolution serie
+            var resSerie = {
+                name: "Resolution",
+                yAxis: 2,
+                data: report.ctfData.timeSeries.resolution,
+                tooltip: {
+                    valueDecimals: 2,
+                    valueSuffix: ' Å'
+                }
+            };
+
+            series.push(resSerie);
+
+            // define phaseShift serie
+            if (report.ctfData.timeSeries['phaseShift'] !=undefined){
+
+                var phsSerie = {
+                    name: "Phase Shift",
+                    yAxis: 1,
+                    data: report.ctfData.timeSeries.phaseShift,
+                    tooltip: {
+                        valueDecimals: 0,
+                        valueSuffix: ' deg'
+                    }
+                };
+
+                series.push(phsSerie);
+            }
+
+
+            return series;
+        }
+
+        function getSeriesYAxis(name, yAxes){
+            var mbKeys = /send|recv|read|write|gpuMem/;
+            var tempKeys = /gpuTem/;
+            if (mbKeys.test(name)){
+                return {'yAxis' : 1,
+                        'tooltip':{
+                            'valueSuffix': ' MB'
+                            }
+                        }
+            }else if (tempKeys.test(name)){
+                if (yAxes.length==3){
+                    var axisIndex = 2
+                }else{
+                    var axisIndex = 1
+                }
+                return {'yAxis' : axisIndex,
+                        'tooltip':{
+                            'valueSuffix': ' \u00B0C'
+                            }
+                        }
+            }else{
+                return {'yAxis' : 0,
+                        'tooltip':{
+                            'valueSuffix': ' %%'
+                            }
+                        }
+            }
+        }
+
+        function systemSerie2HighChartSerie(name, serie, color, enabled, yAxes){
+
+            var yAxis =  getSeriesYAxis(name, yAxes);
+
+            hchSerie = {
+                name: name,
+                data: serie,
+                color: color,
+                visible: enabled,
+                yAxis : yAxis['yAxis'],
+                tooltip:  yAxis['tooltip']
+            };
+
+            return hchSerie;
+
+        }
+
+        function storeChartSeriesVisibility(chart){
+
+            for (var serieId in chart.series) {
+
+                var serie = chart.series[serieId];
+                sessionStorage[serie.name] = serie.visible
+            }
+        };
+
+        function isChartSerieVisible(serieName){
+
+            var visible = sessionStorage[serieName];
+            if (visible == undefined)
+                visible = String(true);
+
+            return visible == String(true);
+        }
+
+        function getSystemSeriesTimeLabels(lengthSystemSeries){
+            var labelList = [];
+            var refreshSecs = %(refresh)s;
+            if (refreshSecs < 60){
+                var computeSeconds = true;
+                var axisTitle = 'Time (hh:mm:ss)';
+            }else{
+                var computeSeconds = false;
+                var axisTitle = 'Time (hh:mm)';
+            }
+
+            for (var i=0; i<lengthSystemSeries; i++){
+                var hours = Math.floor(i*refreshSecs/3600);
+                var mins = Math.floor(i*refreshSecs/60)%%60;
+                if (hours < 10){
+                    hours = '0'+hours
+                }
+                if(mins < 10){
+                    mins = '0'+mins
+                }
+                var label = hours+':'+mins;
+                if (computeSeconds){
+                    var secs = (i*refreshSecs)%%3600%%60;
+                    if(secs<10){
+                        secs='0'+secs
+                    }
+                    label = label+':'+secs
+                }
+                labelList.push(label);
+            }
+            return {'title':axisTitle, 'labels': labelList}
+        }
+
+        function getSystemYAxes(seriesKeys){
+            var mbKeys = /send|recv|read|write|gpuMem/;
+            var tempKeys = /gpuTem/;
+            var yAxis =[{
+                    title: {
+                        text: 'Percentage (%%)'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                }];
+            var hasMbSeries = false;
+            var hasTempSeries = false;
+            for (var k in seriesKeys) {
+                if (mbKeys.test(seriesKeys[k])) {
+                    hasMbSeries = true;
+                } else if (tempKeys.test(seriesKeys[k])) {
+                    hasTempSeries = true;
+                }
+                if (hasMbSeries && hasTempSeries) {
+                    break
+                }
+            }
+            if (hasMbSeries){
+                yAxis.push({title:{
+                                text: 'I/O, Network (MB)'
+                                },
+                            opposite: true
+                            })
+            }
+
+            if (hasTempSeries){
+                yAxis.push({title:{
+                                text: 'Temperature (\u00B0C)'
+                                },
+                            opposite: true
+                            })
+            }
+            return yAxis
+        }
+
+        function addTimeSeries () {
+
+            Highcharts.chart('timeSeriesChart', {
+                chart: {
+                    type: 'spline',
+                    zoomType: 'x'
+                },
+                title: {
+                    text: 'CTF values over time'
+                },
+                subtitle: {
+                    text: document.ontouchstart === undefined ?
+                            'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+                },
+                xAxis: {
+                    type: 'datetime'
+                },
+                yAxis: getTimeSeriesYAxis(),
+                legend: {
+                    layout: 'horizontal',
+                    verticalAlign: 'bottom',
+                    horizontalAlign: 'center',
+                    borderWidth: 0
+                },
+                plotOptions: {
+                    spline: {
+                        marker: {
+                            enabled: true
+                        },
+                        lineWidth: 0
+                    }
+                },
+                series: getTimeSeries()
+            });
+
+        }
+        function addSystemChart () {
+
+            if (report.systemData.length == 0) {
+                $('#system').hide();
+                return;
+            }
+
+            // Fill the system series
+            var yAxes = getSystemYAxes();
+            systemSeries = getSystemSeries();
+            var xAxisLabels = getSystemSeriesTimeLabels(systemSeries[0]['data'].length);
+
+            // Listen to series hide/show events
+            plotOptions  = {series:
+                {events:
+                    {
+                        hide: function () {
+                            storeChartSeriesVisibility(this.chart)
+                        },
+                        show: function () {
+                            storeChartSeriesVisibility(this.chart)
+                        }
+                    }
+                }
+            };
+
+
+            $('#systemChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
+                xAxis: {
+                    title: {
+                        text: xAxisLabels['title']
+                    },
+
+                    type:'linear',
+                    categories: xAxisLabels['labels'],
+                    tickmarkPlacement:'on',
+                    range:50
+                },
+                yAxis: getSystemYAxes(Object.keys(report.systemData)),
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: systemSeries,
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'
+                },
+                plotOptions: plotOptions
+            });
+
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var systemChart = $('#systemChart').highcharts();
+            systemChart.showResetZoom();
+
+        };
+
+        function addMicTable(){
+            if (!('imgMicThumbs') in report.ctfData){
+                return
+            }
+            var dataset = [];
+            var cols = [
+                    {"title": "ID"},
+                    {"title": "Micrograph"}
+                    ];
+            if('imgShiftThumbs' in report.ctfData){
+                cols.push({"title":"ShiftPlot"})
+            }
+            if('imgPsdThumbs' in report.ctfData){
+                cols.push({"title":"PsdFile"})
+            }
+            if ('defocusU' in report.ctfData){
+                cols.push({"title": "DefocusU (µm)",
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "Astigmatism (nm)",
+                           "render": $.fn.dataTable.render.number( ',', '.', 1)},
+                          {"title": "Max. Res (Å)",
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "CC value ",
+                            "render": $.fn.dataTable.render.number( ',', '.', 2)},
+                          {"title": "Defocus ratio",
+                            "render": $.fn.dataTable.render.number( ',', '.', 3)},
+                          {"title": "Phase shift (deg)",
+                            "render": $.fn.dataTable.render.number( ',', '.', 1)});
+
+            }
+            var imgLoadingIcon = '<span class="glyphicon glyphicon-hourglass" title="Loading thumbnail..."></span>';
+            var imgPathKeys = ['imgMicThumbs', 'imgShiftThumbs', 'imgPsdThumbs'];
+
+            $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
+                var rowValues = [report.ctfData.micId[index]]
+                for (var i in imgPathKeys){
+                    if(imgPathKeys[i] in report.ctfData){
+                        imgThumbPath = report.ctfData[imgPathKeys[i]][index];
+                        if(imgThumbPath==''){
+                            rowValues.push(imgLoadingIcon)
+                        }else{
+                            rowValues.push(imgThumbPath)
+                        }
+                    }
+                }
+
+                if ('defocusU' in report.ctfData){
+                    rowValues.push(report.ctfData.defocusU[index]*1e-4,
+				                   report.ctfData.astigmatism[index]*1e-1,
+                                   report.ctfData.resolution[index],
+	                               report.ctfData.fitQuality[index],
+                                   report.ctfData.ratio[index],
+                                   report.ctfData.phaseShift[index]);
+                }
+
+                dataset.unshift(rowValues);
+            });
+            var dataTableConf = {
+                data: dataset,
+                 "order": [[ 0, "desc" ]],
+                columns: cols,
+                stateSave: true,
+                rowCallback: function( row, data ) {
+                    renderImagesOnRow(row, data);
+                }
+           };
+
+            $('#micTable').wrap("<div class='scrolledTable'></div>");
+            micTable = $('#micTable').DataTable( dataTableConf);
+
+        };
+        function renderImagesOnRow(row, data){
+
+            // loop through the data...
+            for (var index =0; index<data.length; index++){
+                cellValue=data[index];
+                if (isImage(cellValue)){
+                    var imgHtml = getImageHTML(cellValue, data);
+                    var imgWidth = Math.floor($('#content').width() * 0.2);
+                    imgHtml = imgHtml.format(cellValue, imgWidth, data[0]);
+                    $(row).find("td:nth-child(" + (index+1) + ")").html(imgHtml)
+                }
+            }
+
+        };
+        function getImageHTML(value, rowData){
+
+            var extraInfo = ''
+            // if it is a PSD image
+            if (value.indexOf('imgPsdThumbs') == 0) {
+                extraInfo = '<br/><strong>CC</strong>:' + rowData[rowData.length-3].toFixed(2) +
+                    '<br/><strong>Resolution</strong>: ' + rowData[rowData.length-4].toFixed(2) ;
+            }
+
+
+            return '<div class="thumbnail">' +
+                      '<a href ="#" class="popUp" data-target="#modal" data-toggle="modal">' +
+                        '<img width={1} src={0} alt="Micrograph {2}" extraInfo="' + extraInfo + '">' +
+                      '</a>' +
+                    '</div>';
+
+        }
+        function isImage(cellValue){
+            if (typeof (cellValue) == 'string') {
+                return cellValue.startsWith("img");
+            }
+        };
+        function populateReport(){
+            addAcquisition();
+            addRuns();
+            addCTFChart();
+            addMovieGainChart();
+            addSystemChart();
+            addTimeSeries();
+            addMicTable();
+        };
+
+        populateReport();
+
+        function registerModalEvents(){
+            $('#modal').on('hidden.bs.modal', function () {
+                if ($("#refreshBtn").hasClass('btn-info')){
+                    refreshPaused = false
+                }
+            });
+
+            $('#modal').on('show.bs.modal', function (e) {
+                var $invoker = $(e.relatedTarget);
+                $('.imagepreview').attr('src', $invoker.find('img').attr('src'));
+                var title = $invoker.find('img').attr('alt');
+                var footer = $invoker.find('img').attr('src');
+                footer = footer.slice(footer.indexOf('/')+1, footer.length);
+                var extraInfo = $invoker.find('img').attr('extraInfo');
+                footer = footer + extraInfo;
+                $('#modalFooter').html(footer);
+                $('.modal-title').text(title);
+                if ($("#refreshBtn").hasClass('btn-info')) {
+                    refreshPaused = true
+                }
+            });
+
+        }
+
+        function handleRefresh(){
+            // refresh button
+            $("#refreshBtn").click(function() {
+                $(this).toggleClass('btn-info btn-danger');
+                refreshPaused = !refreshPaused;
+                return false
+            });
+
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger : 'hover'
+            });
+
+            // refresh interval
+            var refreshSecs = %(refresh)s;
+            if('%(projectStatus)s' == 'FINISHED'){
+                $('#refreshBtn').hide();
+            }else{
+                var auto_refresh = setInterval(function () {
+                    if (refreshPaused) return false;
+                    document.location.reload(true)
+                    }, refreshSecs*1000)
+                }
+
+            // keep scroll point so we don't go to top when refreshing
+            $(window).scroll(function() {
+                sessionStorage.scrollTop = $(this).scrollTop();
+            });
+            if (sessionStorage.scrollTop != undefined) {
+              $(window).scrollTop(sessionStorage.scrollTop);
+            }
+        }
+
+        function handleSectionToggle(){
+            // toggle visibility when clicking on section title
+            $('.sectionTitle').click(function(){
+                $(this).children('.glyphicon').toggleClass('glyphicon-triangle-right glyphicon-triangle-bottom');
+                var $sectionContent = $(this).siblings('.sectionContent');
+                var divId = $sectionContent.attr('id');
+                $sectionContent.slideToggle('fast', function(){
+                   sessionStorage[divId] = $sectionContent.css('display');
+                });
+            });
+            // get stored section visibilities to keep user choice after refresh
+            $('.sectionContent').each(function(){
+                var sectionId = $(this).attr('id');
+                if (sectionId in sessionStorage){
+                    $(this).css('display', sessionStorage[sectionId])
+                    if ($(this).is(':hidden')){
+                        var $glyph = $(this).siblings().find('.glyphicon');
+                        $glyph.toggleClass('glyphicon-triangle-right glyphicon-triangle-bottom');
+                    }
+                }
+            })
+        }
+
+        $(document).ready(function() {
+            registerModalEvents();
+            handleRefresh();
+            handleSectionToggle();
+        });
+    </SCRIPT>
+<HTML>

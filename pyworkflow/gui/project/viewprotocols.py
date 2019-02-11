@@ -46,8 +46,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
-from pyworkflow.config import (isAFinalProtocol, getProtocolTag,
-                               PROTOCOL_DISABLED_TAG, PROTOCOL_TAG)
+from pyworkflow.project import ProtocolTreeConfig
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
@@ -303,10 +302,35 @@ class StepsWindow(pwgui.browser.BrowserWindow):
         g = self._protocol.getStepsGraph()
         w = pwgui.Window("Protocol steps", self, minsize=(800, 600))
         root = w.root
-        canvas = pwgui.Canvas(root, width=600, height=500)
+        canvas = pwgui.Canvas(root, width=600, height=500, tooltipCallback=self._stepTooltip,)
         canvas.grid(row=0, column=0, sticky='nsew')
         canvas.drawGraph(g, pwgui.graph.LevelTreeLayout())
         w.show()
+
+    def _stepTooltip(self, tw, item):
+        """ Create the contents of the tooltip to be displayed
+        for the given step.
+        Params:
+            tw: a tk.TopLevel instance (ToolTipWindow)
+            item: the selected step.
+        """
+
+        if not hasattr(item.node, 'step'):
+            return
+
+        step = item.node.step
+
+        tm = str(step.funcName)
+
+        if not hasattr(tw, 'tooltipText'):
+            frame = tk.Frame(tw)
+            frame.grid(row=0, column=0)
+            tw.tooltipText = pwgui.dialog.createMessageBody(frame, tm, None,
+                                                            textPad=0,
+                                                            textBg=Color.LIGHT_GREY_COLOR_2)
+            tw.tooltipText.config(bd=1, relief=tk.RAISED)
+        else:
+            pwgui.dialog.fillMessageText(tw.tooltipText, tm)
 
 
 class SearchProtocolWindow(pwgui.Window):
@@ -355,7 +379,7 @@ class SearchProtocolWindow(pwgui.Window):
         protList = []
 
         for key, prot in emProtocolsDict.iteritems():
-            if isAFinalProtocol(prot, key):
+            if ProtocolTreeConfig.isAFinalProtocol(prot, key):
                 label = prot.getClassLabel().lower()
                 if keyword in label:
                     protList.append((key,
@@ -366,7 +390,7 @@ class SearchProtocolWindow(pwgui.Window):
         protList.sort(key=lambda x: x[1])  # sort by label
 
         for key, label, installed in protList:
-            tag = getProtocolTag(installed)
+            tag = ProtocolTreeConfig.getProtocolTag(installed)
             if not installed: label += " (not installed)"
             self._resultsTree.insert('', 'end', key,
                                      text=label, tags=(tag))
@@ -947,15 +971,20 @@ class ProtocolsView(tk.Frame):
         t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
         t.column('#0', minwidth=300)
         # Protocol nodes
-        t.tag_configure(PROTOCOL_TAG, image=self.getImage('python_file.gif'))
-        t.tag_bind(PROTOCOL_TAG, '<Double-1>', self._protocolItemClick)
-        t.tag_bind(PROTOCOL_TAG, '<Return>', self._protocolItemClick)
+        t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL,
+                        image=self.getImage('python_file.gif'))
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
+                   '<Double-1>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
+                   '<Return>', self._protocolItemClick)
 
         # Disable protocols (not installed) are allowed to be added.
-        t.tag_configure(PROTOCOL_DISABLED_TAG, image=self.getImage('prot_disabled.gif'))
-        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Double-1>', self._protocolItemClick)
-        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Return>', self._protocolItemClick)
-
+        t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                        image=self.getImage('prot_disabled.gif'))
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                   '<Double-1>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                   '<Return>', self._protocolItemClick)
 
         t.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         t.tag_configure('protocol_group', image=self.getImage('class_obj.gif'))

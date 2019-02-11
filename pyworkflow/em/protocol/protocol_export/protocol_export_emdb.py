@@ -93,7 +93,7 @@ class ProtExportEMDB(EMProtocol):
             x,y = exportFSC.getData()
             fnFSC = os.path.join(dirName, "fsc_%02d.xml" % i)
             fo = open(fnFSC, "w")
-            fo.write('<fsc title="FSC(%s)" xaxis="Resolution(A-1)" '
+            fo.write('<fsc title="FSC(%s)" xaxis="Resolution (A-1)" '
                      'yaxis="Correlation Coefficient">\n' %
                      os.path.join(dirName, self.VOLUMENAME))
             for i in range(len(x)):

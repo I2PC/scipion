@@ -25,33 +25,160 @@
 # *
 # **************************************************************************
 #
-# cif to pdb convertion is based on  cif2pdb.py by Spencer Bliven
+# cif to pdb conversion is based on  cif2pdb.py by Spencer Bliven
 # <spencer.bliven@gmail.com>
 #
 # see http://biopython.org/DIST/docs/tutorial/Tutorial.html for a description
 # on the object "structure" and other Bio.xxxx modules
 
+from __future__ import print_function
 import os
 import numpy
+from collections import defaultdict
 
+from Bio.PDB.Dice import ChainSelector
 from Bio.PDB.MMCIFParser import MMCIFParser
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB import PDBIO, MMCIFIO
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
 from Bio.PDB import PDBList
-from Bio.PDB.Polypeptide import PPBuilder
 from collections import OrderedDict
 from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
-from .transformations import rotation_from_matrix, translation_from_matrix
-from .sequence import SequenceHandler
+from .transformations import translation_from_matrix
 
 
 class OutOfChainsError(Exception):
     pass
+
+
+class scipionMMCIFIO(MMCIFIO):
+    """ Class that redefines the name of the chains.
+     The current biopython mmCIF parser fills label_asym_id
+      with unique values and auth_asym_id with the chan ids
+      of the input atomic structures. I think auth_asym_id
+      should be equal to auth_asym_id if they are unique.
+      Chimera uses label_asym_id for chain id while
+      coot uses auth_asym_id. Furthermore, auth_asym_id field
+      is a direct match to the PDB chain identifier (when it exists).
+      I hope new vesion of biopython will not conflict with this change.
+
+      Modifications of original code are marked with 'ROB'"""
+    def _noRepeated(self, structure):
+        chains = [c for c in structure.get_chains()]
+        uniqueChains = set(chains)
+        len(chains)
+        len(uniqueChains)
+        if len(chains) == len(uniqueChains):
+            return True
+        else:
+            return False
+
+    def _save_structure(self, out_file, select, preserve_atom_numbering):
+        if self._noRepeated(self.structure):  # if the chain ids are unique
+            atom_dict = defaultdict(list)
+
+            for model in self.structure.get_list():
+                if not select.accept_model(model):
+                    continue
+                # mmCIF files with a single model have it specified as model 1
+                if model.serial_num == 0:
+                    model_n = "1"
+                else:
+                    model_n = str(model.serial_num)
+                # This is used to write label_entity_id and label_asym_id and
+                # increments from 1, changing with each molecule
+                entity_id = 0
+                if not preserve_atom_numbering:
+                    atom_number = 1
+                for chain in model.get_list():
+                    if not select.accept_chain(chain):
+                        continue
+                    chain_id = chain.get_id()
+                    if chain_id == " ":
+                        chain_id = "."
+                    # This is used to write label_seq_id and increments from 1,
+                    # remaining blank for hetero residues
+                    residue_number = 1
+                    prev_residue_type = ""
+                    prev_resname = ""
+                    for residue in chain.get_unpacked_list():
+                        if not select.accept_residue(residue):
+                            continue
+                        hetfield, resseq, icode = residue.get_id()
+                        if hetfield == " ":
+                            residue_type = "ATOM"
+                            label_seq_id = str(residue_number)
+                            residue_number += 1
+                        else:
+                            residue_type = "HETATM"
+                            label_seq_id = "."
+                        resseq = str(resseq)
+                        if icode == " ":
+                            icode = "?"
+                        resname = residue.get_resname()
+                        # Check if the molecule changes within the chain
+                        # This will always increment for the first residue in a
+                        # chain due to the starting values above
+                        ## ROB if residue_type != prev_residue_type or \
+                        ## ROB        (residue_type == "HETATM" and resname != prev_resname):
+                        ## ROB    entity_id += 1
+                        prev_residue_type = residue_type
+                        prev_resname = resname
+                        ## ROB label_asym_id = self._get_label_asym_id(entity_id)
+                        for atom in residue.get_unpacked_list():
+                            if select.accept_atom(atom):
+                                atom_dict["_atom_site.group_PDB"].append(residue_type)
+                                if preserve_atom_numbering:
+                                    atom_number = atom.get_serial_number()
+                                atom_dict["_atom_site.id"].append(str(atom_number))
+                                if not preserve_atom_numbering:
+                                    atom_number += 1
+                                element = atom.element.strip()
+                                if element == "":
+                                    element = "?"
+                                atom_dict["_atom_site.type_symbol"].append(element)
+                                atom_dict["_atom_site.label_atom_id"].append(atom.get_name().strip())
+                                altloc = atom.get_altloc()
+                                if altloc == " ":
+                                    altloc = "."
+                                atom_dict["_atom_site.label_alt_id"].append(altloc)
+                                atom_dict["_atom_site.label_comp_id"].append(resname.strip())
+                                # modified by ROB BEGIN
+                                atom_dict["_atom_site.label_asym_id"].append(chain_id)
+                                # modified by ROB END
+                                # The entity ID should be the same for similar chains
+                                # However this is non-trivial to calculate so we write "?"
+                                atom_dict["_atom_site.label_entity_id"].append("?")
+                                atom_dict["_atom_site.label_seq_id"].append(label_seq_id)
+                                atom_dict["_atom_site.pdbx_PDB_ins_code"].append(icode)
+                                coord = atom.get_coord()
+                                atom_dict["_atom_site.Cartn_x"].append("%.3f" % coord[0])
+                                atom_dict["_atom_site.Cartn_y"].append("%.3f" % coord[1])
+                                atom_dict["_atom_site.Cartn_z"].append("%.3f" % coord[2])
+                                atom_dict["_atom_site.occupancy"].append(str(atom.get_occupancy()))
+                                atom_dict["_atom_site.B_iso_or_equiv"].append(str(atom.get_bfactor()))
+                                atom_dict["_atom_site.auth_seq_id"].append(resseq)
+                                atom_dict["_atom_site.auth_asym_id"].append(chain_id)
+                                atom_dict["_atom_site.pdbx_PDB_model_num"].append(model_n)
+
+            # Data block name is the structure ID with special characters removed
+            structure_id = self.structure.id
+            for c in ["#", "$", "'", "\"", "[", "]", " ", "\t", "\n"]:
+                structure_id = structure_id.replace(c, "")
+            atom_dict["data_"] = structure_id
+
+            # Set the dictionary and write out using the generic dictionary method
+            self.dic = atom_dict
+            self._save_dict(out_file)
+
+        else:
+            super(scipionMMCIFIO, self)._save_structure(out_file,
+                                                        select,
+                                                        preserve_atom_numbering)
+
 
 
 class AtomicStructHandler:
@@ -78,14 +205,17 @@ class AtomicStructHandler:
         :param pdbID:
         :param dir: save structure in this directory
         :param type:  mmCif or pdb
-        :return:
+        :return: filename with pdb file
         """
         if dir is None:
             dir = os.getcwd()
         pdbl = PDBList()
         fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
         self.read(fileName)
-        return fileName
+        self.write(fileName)  # many  atom structs need to be fixed
+                              # by reading and writing it we achive this
+                              # goal
+        return os.path.abspath(fileName)
 
     def getStructure(self):
         """return strcture information, model, chain,
@@ -116,7 +246,7 @@ class AtomicStructHandler:
         if self._readDone:
             return True
         else:
-            print "you must read the pdb file first"
+            print("you must read the pdb file first")
             exit(0)
 
     def getModelsChains(self):
@@ -164,12 +294,12 @@ class AtomicStructHandler:
         self.checkRead()
         seq = list()
         for model in self.structure:
-            if str(model.id) == modelID:
+            if model.id == modelID:
                 for chain in model:
                     if str(chain.id) == chainID:
                         if len(chain.get_unpacked_list()[0].resname) == 1:
-                            print "Your sequence is a nucleotide sequence (" \
-                                  "RNA)\n"
+                            print("Your sequence is a nucleotide sequence (" \
+                                  "RNA)\n")
                             # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
                             for residue in chain:
                                 ## Check if the residue belongs to the
@@ -181,8 +311,8 @@ class AtomicStructHandler:
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 2:
-                            print "Your sequence is a nucleotide sequence (" \
-                                  "DNA)\n"
+                            print("Your sequence is a nucleotide sequence (" \
+                                  "DNA)\n")
                             # alphabet = IUPAC.ExtendedIUPACDNA._upper()
                             for residue in chain:
                                 ## Check if the residue belongs to the
@@ -194,7 +324,7 @@ class AtomicStructHandler:
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 3:
-                            print "Your sequence is an aminoacid sequence"
+                            print("Your sequence is an aminoacid sequence")
                             #alphabet = IUPAC.ExtendedIUPACProtein._upper()
                             for residue in chain:
                                 ## The test below checks if the amino acid
@@ -254,7 +384,8 @@ class AtomicStructHandler:
             io = self.ioPDB
         else:
             if self.ioCIF is None:
-                self.ioCIF = MMCIFIO()
+                self.ioCIF = scipionMMCIFIO()
+                # self.ioCIF = MMCIFIO()
             io = self.ioCIF
         io.set_structure(self.structure)
         io.save(fileName)
@@ -436,17 +567,114 @@ class AtomicStructHandler:
         translation = [x * sampling for x in translation]
         self.structure.transform(rotation_matrix, translation)
 
+    def _renameChainsIfNeed(self, struct2):
+        """Rename chain, we assume that there is a single model per structure"""
+        repeated = False
+        def RepresentsInt(s):
+            try:
+                int(s)
+                return True
+            except ValueError:
+                return False
+        import uuid
+        chainIDs1 = [chain.id for chain in self.structure.get_chains()]
+        for chain in struct2.get_chains():
+            if chain.id in chainIDs1:
+                repeated = True
+                cId = chain.id
+                l = len(cId)
+                if l==1:
+                    chain.id = "%s002" % cId
+                elif RepresentsInt(cId[1:]): # try to fit a number and increase it by one
+                    chain.id = "%s%03d" % (cId[0],int(cId[1:]) + 1)
+                else: # generate a 4 byte random string
+                    chain.id = uuid.uuid4().hex[:4]
+        if repeated:
+            self._renameChainsIfNeed(struct2)
+
+    def addStruct(self, secondPDBfileName, outPDBfileName=None, useModel=False):
+        """ Join the second structure to the first one.
+            If cheon numes are the same rename them.
+            if outPDBfileName id provided then new
+            struct is saved to a file"""
+        # read new structure
+        if outPDBfileName is not None:
+            pdbID = (os.path.splitext(os.path.basename(outPDBfileName))[0])[:4]
+        else:
+            pdbID = (os.path.splitext(os.path.basename(secondPDBfileName))[0])[:4]
+
+        if secondPDBfileName.endswith(".pdb") or secondPDBfileName.endswith(".ent"):
+            parser = PDBParser(PERMISSIVE=self.permissive)
+        else:
+            parser = MMCIFParser()
+
+        struct2 = parser.get_structure(pdbID, secondPDBfileName)
+
+        if useModel:
+            modelNumber = 0
+            modelID = 0
+            # model.id = model.serial_num = len(self.structure)?  # not sure this
+            # is valid always
+            for model in self.structure:
+                pass
+            modelNumber = model.serial_num
+            modelID = model.id
+            for model in struct2:
+                modelNumber +=1
+                modelID +=1
+                model.detach_parent()
+                model.serial_num = modelNumber
+                model.id = modelID
+                self.structure.add(model)
+        else:
+            self._renameChainsIfNeed(struct2)
+
+            for model in struct2:
+                for chain in model:
+                    chain.detach_parent()
+                    self.structure[0].add(chain)
+
+
+        # create new output file
+        if outPDBfileName is not None:
+            self.write(outPDBfileName)
+
+    def extractChain(self, chainID, start=0, end=-1,
+                     modelID='0', filename="output.mmcif"):
+        """Code for chopping  a structure.
+        This module is used internally by the Bio.PDB.extract() function.
+        """
+        sel = ChainSelector(chain_id=chainID, start=start,
+                            end=end, model_id=int(modelID))
+        io = scipionMMCIFIO()
+        io.set_structure(self.structure)
+        io.save(filename, sel)
+
 def cifToPdb(fnCif,fnPdb):
     h = AtomicStructHandler()
     h.read(fnCif)
     h.writeAsPdb(fnPdb)
 
-#rethink
-# def getNumberModelsChains(parsed_structure):
-#     countModels = 0
-#     for model in parsed_structure:
-#         countModels += 1
-#         countChains = 0
-#         for chain in model:
-#             countChains += 1
-#     return countModels, countChains
+def pdbToCif(fnPdb, fnCif):
+    h = AtomicStructHandler()
+    h.read(fnPdb)
+    h.writeAsPdb(fnCif)
+
+def toPdb(inFileName, outPDBFile):
+    if inFileName.endswith(".pdb") or inFileName.endswith(".ent"):
+        return inFileName
+    elif inFileName.endswith(".cif") or inFileName.endswith(".mmcif"):
+        cifToPdb(inFileName, outPDBFile)
+        return outPDBFile
+    else:
+        print("ERROR (toPdb), Unknown file type for file = %s" % inFileName)
+
+def toCIF(inFileName, outCIFFile):
+    if inFileName.endswith(".cif") or inFileName.endswith(".mmcif"):
+        return inFileName
+    elif inFileName.endswith(".pdb") or inFileName.endswith(".ent"):
+        pdbToCif(inFileName, outCIFFile)
+        return outCIFFile
+    else:
+        print("ERROR (toCIF), Unknown file type for file = %s" % inFileName)
+
