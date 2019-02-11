@@ -128,24 +128,21 @@ class RunScheduler():
             missing = False
 
             _log("Checking input data...")
-            if protocol.worksInStreaming():
-                for key, attr in protocol.iterInputAttributes():
-                    if attr.hasValue() and attr.get() is None:
+            isInStreaming = protocol.isInStreaming()
+            for key, attr in protocol.iterInputAttributes():
+                if attr.hasValue() and attr.get() is None:
+                    inputProt = attr.getObjValue()
+                    _updateProtocol(inputProt, project)
+                    if isInStreaming:
                         missing = True
-                        inputProt = attr.getObjValue()
-                        _updateProtocol(inputProt, project)
-            else:
-                for key, attr in protocol.iterInputAttributes():
-                    if attr.hasValue() and attr.get() is None:
-                        inputProt = attr.getObjValue()
-                        _updateProtocol(inputProt, project)
+                    else:
                         if inputProt.getStatus() not in stopStatuses:
                             missing = True
                             break
-                if not missing:
-                    inputProtocolDict = protocol.inputProtocolDict()
-                    for prot in inputProtocolDict.values():
-                        _updateProtocol(prot, project)
+            if not missing:
+                inputProtocolDict = protocol.inputProtocolDict()
+                for prot in inputProtocolDict.values():
+                    _updateProtocol(prot, project)
 
             _log("Checking prerequisited...")
             wait = False  # Check if we need to wait for required protocols
