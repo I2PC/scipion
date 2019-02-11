@@ -120,6 +120,31 @@ class RunScheduler():
                                             skipUpdatedProtocols=False)
                     _log("Updated protocol %s" % protId)
 
+        def _getProtocolFromPointer(pointer):
+            """
+            The function return a protocol from an attribute
+
+               A) When the pointer points to a protocol
+
+               B) When the pointer points to another object (INDIRECTLY).
+                  - The pointer has an _extended value (new parameters
+                    configuration in the protocol)
+
+               C) When the pointer points to another object (DIRECTLY).
+                  - The pointer has not an _extended value (old parameters
+                    configuration in the protocol)
+            """
+            output = pointer.get()
+            if isinstance(output, Protocol):  # case A
+                protocol = output
+            else:
+                if pointer.hasExtended():  # case B
+                    protocol = pointer.getObjValue()
+                else:  # case C
+                    protocol = self.getProject().getProtocol(
+                        output.getObjParentId())
+            return protocol
+
         while True:
             protocol = self._loadProtocol()
             project = protocol.getProject()
@@ -130,13 +155,13 @@ class RunScheduler():
             _log("Checking input data...")
             if protocol.worksInStreaming():
                 for key, attr in protocol.iterInputAttributes():
-                    if attr.hasValue() and attr.get() is None:
+                    if attr.get() is None:
                         missing = True
-                        inputProt = attr.getObjValue()
+                        inputProt = _getProtocolFromPointer(attr)
                         _updateProtocol(inputProt, project)
             else:
                 for key, attr in protocol.iterInputAttributes():
-                    inputProt = attr.getObjValue()
+                    inputProt = _getProtocolFromPointer(attr)
                     _updateProtocol(inputProt, project)
                     if inputProt.getStatus() not in stopStatuses:
                         missing = True
