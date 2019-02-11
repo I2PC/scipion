@@ -594,7 +594,7 @@ class Protocol(Step):
             # Consider here scalars with pointers inside
             elif isinstance(attr, Scalar) and attr.hasPointer():
                 if attr.get() is not None:
-                    yield key, attr._pointer
+                    yield key, attr.getPointer()
 
     def iterInputPointers(self):
         """ This function is similar to iterInputAttributes, but it yields
