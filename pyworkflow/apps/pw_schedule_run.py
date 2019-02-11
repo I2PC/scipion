@@ -128,17 +128,19 @@ class RunScheduler():
             missing = False
 
             _log("Checking input data...")
-            isInStreaming = protocol.isInStreaming()
-            for key, attr in protocol.iterInputAttributes():
-                if attr.hasValue() and attr.get() is None:
+            if protocol.worksInStreaming():
+                for key, attr in protocol.iterInputAttributes():
+                    if attr.hasValue() and attr.get() is None:
+                        missing = True
+                        inputProt = attr.getObjValue()
+                        _updateProtocol(inputProt, project)
+            else:
+                for key, attr in protocol.iterInputAttributes():
                     inputProt = attr.getObjValue()
                     _updateProtocol(inputProt, project)
-                    if isInStreaming:
+                    if inputProt.getStatus() not in stopStatuses:
                         missing = True
-                    else:
-                        if inputProt.getStatus() not in stopStatuses:
-                            missing = True
-                            break
+                        break
             if not missing:
                 inputProtocolDict = protocol.inputProtocolDict()
                 for prot in inputProtocolDict.values():
