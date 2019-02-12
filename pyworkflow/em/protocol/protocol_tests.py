@@ -151,9 +151,10 @@ class ProtOutputTest(ProtTests):
     def _defineParams(self, form):
 
         section = form.addSection("Input")
-        section.addParam('iBoxSize', params.IntParam,
+        section.addParam('iBoxSize', params.IntParam, allowPointers=True,
                          default=10,
-                         label='Input box size as Integer')
+                         label='Input box size as Integer',
+                         validators=[params.Positive])
 
     def _createOutputStep(self):
         # New Output would be an Integer

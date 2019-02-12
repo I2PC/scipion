@@ -626,23 +626,27 @@ class Scalar(Object):
     def multiply(self, value):
         self._objValue *= value
 
+    def setPointer(self, pointer):
+        """ Set an internal pointer from this Scalar.
+        Then, the value (retrieved with get) will be obtained
+        from the pointed object.
+        """
+        if pointer is None:
+            if self.hasPointer():
+                delattr(self, "_pointer")
+        else:
+            self._pointer = pointer
+
     def hasPointer(self):
         """ Return True if this Scalar has an internal pointer
         from where the value will be retrieved with the get() method.
         """
         return hasattr(self, '_pointer')
 
-    def setPointer(self, obj, attr):
-        """ Set an internal pointer from this Scalar.
-        Then, the value (retrieved with get) will be obtained
-        from the pointed object.
-        """
-        self._pointer = Pointer(obj, extended=attr)
-
     def getPointer(self):
         """ Return the internal pointer of this Scalar or None. """
         return getattr(self, '_pointer', None)
-        
+
     
 class Integer(Scalar):
     """Integer object"""
