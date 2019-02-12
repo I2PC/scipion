@@ -327,7 +327,8 @@ def defineBinaries(args=None):
     env.addPipModule('django', '1.5.5')
     env.addPipModule('Pillow', '5.4.1', target='Pillow-5.4.1*',
                      deps=[jpeg, tiff])
-
+    env.addPipModule('future', '0.17.1', target='future-0.17.1*',
+                     deps=[jpeg, tiff])
 
     # Optional python modules
     env.addPipModule('paramiko', '1.14.0', default=False)
