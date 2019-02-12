@@ -49,7 +49,7 @@ import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
 from widgets import Button, HotButton, IconButton
-from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo, Dialog
+from dialog import showInfo, showError, showWarning, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
 
@@ -798,6 +798,12 @@ class ParamWidget:
         
     def _showInfo(self, msg):
         showInfo("Info", msg, self.parent)
+
+    def _showError(self, msg):
+        showError("Error", msg, self.parent)
+
+    def _showWarning(self, msg):
+        showWarning("Warning", msg, self.parent)
         
     def _showWizard(self, e=None):
         wizClass = self.window.wizards[self.wizParamName]
@@ -1048,15 +1054,21 @@ class ParamWidget:
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
-        tp = RelationsTreeProvider(self._protocol, self.param,
-                                   selected=self.get())
-        dlg = ListDialog(self.parent, "Select object", tp,
-                         "Double click selects the item, right-click allows "
-                         "you to visualize it",
-                         selectmoded=self._selectmode,
-                         selectOnDoubleClick=True)
-        if dlg.values:
-            self.set(dlg.values[0])
+        try:
+            tp = RelationsTreeProvider(self._protocol, self.param,
+                                       selected=self.get())
+            dlg = ListDialog(self.parent, "Select object", tp,
+                             "Double click selects the item, right-click allows "
+                             "you to visualize it",
+                             selectmoded=self._selectmode,
+                             selectOnDoubleClick=True)
+            if dlg.values:
+                self.set(dlg.values[0])
+        except AttributeError as e:
+            self._showError("Error loading possible inputs. "
+                            "This usually happens because the parameter "
+                            "needs info from other parameters... are "
+                            "previous mandatory parameters set?")
             
     def _removeRelation(self, e=None):
         self.var.remove()
