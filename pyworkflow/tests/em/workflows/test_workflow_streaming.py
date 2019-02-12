@@ -27,9 +27,7 @@ import time
 import os
 from glob import glob
 import threading
-import socket
 
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.utils as pwutils
 from pyworkflow.utils import importFromPlugin
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
@@ -38,7 +36,6 @@ from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
                                     ProtImportMicrographs, ProtImportAverages)
 
 XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
-SparxGaussianProtPicking = importFromPlugin('eman2.protocols', 'SparxGaussianProtPicking', doRaise=True)
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
 ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', doRaise=True)
 ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
@@ -205,20 +202,22 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         protCTF.inputMicrographs.set(protImport.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
         self.proj.launchProtocol(protCTF, wait=False)
+        self._waitOutput(protCTF, 'outputCTF')
         
-        # Now pick particles on the micrographs with sparx
-        print("Performing Sparx Autopicking...")
-        protPick = self.newProtocol(SparxGaussianProtPicking,
-                                    boxSize=50,
-                                    lowerThreshold=0.9,
-                                    higherThreshold=15,
-                                    gaussWidth=1.2)
+        # Now pick particles on the micrographs with Relion
+        print("Performing Relion Autopicking (LoG)...")
+        protPick = self.newProtocol(ProtRelion2Autopick,
+                                    runType=1,
+                                    referencesType=1,
+                                    inputReferences=None,
+                                    refsHaveInvertedContrast=True,
+                                    particleDiameter=380)
         protPick.inputMicrographs.set(protImport.outputMicrographs)
+        protPick.ctfRelations.set(protCTF.outputCTF)
         protPick.setObjLabel('Streaming Auto-picking')
         self.proj.launchProtocol(protPick, wait=False)
-
         self._waitOutput(protPick, 'outputCoordinates')
-        self._waitOutput(protCTF, 'outputCTF')
+
         
         protExtract = self.newProtocol(ProtRelionExtractParticles,
                                        objLabel='extract box=64',
@@ -390,172 +389,4 @@ class TestFrameStacking(BaseTest):
                                       deleteFrames=False)
         self.launchProtocol(protImport)
         self.assertSetSize(protImport.outputMovies, MOVS, msg="Wrong output set size!!")
-        thread.join()
-
-class TestStreamingSocket(BaseTest):
-    """ Test import movies (both as movies and frames)
-        in streaming mode via socket
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('movies')
-
-    @classmethod
-    def _sendFrames(cls, delay=0, port=5000):
-        # start with a delay so the protocol has already launched the
-        # socket server when we send the first file
-        time.sleep(10)
-        # Create a test folder path
-        pattern = cls.ds.getFile('ribo/Falcon*mrcs')
-        files = glob(pattern)
-        nFiles = len(files)
-        nMovies = MOVS
-        ih = ImageHandler()
-        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host = ''
-        clientSocket.connect((host, port))
-
-        for i in range(nMovies):
-            # Loop over the number of input movies if we want more for testing
-            f = files[i % nFiles]
-            _, _, _, nFrames = ih.getDimensions(f)
-            paths = ""
-            print("Writing frame stack for movie %d..." % (i+1))
-            for j in range(1, nFrames + 1):
-                outputFramePath = cls.proj.getTmpPath('movie%06d_%03d.mrc'
-                                                      % (i + 1, j))
-                print("%d : %s" % (j, outputFramePath))
-                ih.convert((j, f), outputFramePath)
-                paths += os.path.abspath(outputFramePath)+'\n'
-                time.sleep(delay)
-            try:
-                print("Sending movie stack %d" %(i+1))
-                clientSocket.sendall(paths)
-            except socket.error as err:
-                # Send failed
-                print('Failed to send file: %s' % paths)
-                print(err)
-                print('Trying to reconnect...')
-                clientSocket.shutdown(socket.SHUT_WR)
-                clientSocket.close()
-                time.sleep(2)
-                clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                clientSocket.connect((host, port))
-        # Everything sent, lets wait until server has read all files
-        serverConnected = True
-        lastFile = paths.strip().split('\n')[-1]
-        print('Waiting for server socket to finish...')
-        print('Last file sent: %s' % lastFile)
-        while serverConnected:
-            reply = clientSocket.recv(4096)
-            if reply:
-                if lastFile in reply:
-                    serverConnected = False
-                time.sleep(delay)
-            else:
-                serverConnected = False
-        print('Finished! Closing client socket')
-        clientSocket.shutdown(socket.SHUT_WR)
-        clientSocket.close()
-
-    @classmethod
-    def _sendMovies(cls, delay=0, port=5000):
-        time.sleep(10)  # wait so the server socket is launched
-        # Create a test folder path
-        pattern = PATTERN if PATTERN else cls.ds.getFile('ribo/Falcon*mrcs')
-        files = glob(pattern)
-        nFiles = len(files)
-        nMovies = MOVS
-        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host = ''
-        print("Connecting to server socket...")
-        clientSocket.connect((host, port))
-        for i in range(nMovies):
-            # Loop over the number of input movies if we want more for testing
-            f = files[i % nFiles]
-            _, cls.ext = os.path.splitext(f)
-            moviePath = cls.proj.getTmpPath('movie%06d%s' % (i + 1, cls.ext))
-            print("Creating movie %d link..." %(i+1))
-            pwutils.createAbsLink(f, moviePath)
-            absPath = os.path.abspath(moviePath)+'\n'
-            try:
-                clientSocket.sendall(absPath)
-                time.sleep(delay)
-            except socket.error as err:
-                # Send failed
-                print('Failed to send file: %s' % absPath)
-                print(err)
-                print('Trying to reconnect...')
-                clientSocket.shutdown(socket.SHUT_WR)
-                clientSocket.close()
-                time.sleep(2)
-                clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                clientSocket.connect((host, port))
-
-        serverConnected = True
-        print('Last file sent: %s' % absPath)
-        print('Waiting for server socket to finish reading...')
-        while serverConnected:
-            reply = clientSocket.recv(4096)
-            if reply:
-                if absPath in reply:
-                    serverConnected = False
-                time.sleep(delay)  # wait a bit to check for reply
-            else:
-                serverConnected = False
-        print('Finished! Disconnecting client...')
-        clientSocket.shutdown(socket.SHUT_WR)
-        clientSocket.close()
-
-    def test_StreamMovies(self):
-        thread = threading.Thread(name="sendMovies",
-                                  target=lambda: self._sendMovies(delay=1))
-        thread.start()
-        protImport = self.newProtocol(ProtImportMovies,
-                                      objLabel='import movies',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
-                                      filesPath=os.path.abspath(self.proj.getTmpPath()),
-                                      filesPattern="movie*",
-                                      amplitudConstrast=0.1,
-                                      sphericalAberration=2.,
-                                      voltage=300,
-                                      samplingRate=3.54,
-                                      dataStreaming=True,
-                                      streamingSocket=True,
-                                      timeout=TIMEOUT)
-
-        self.proj.launchProtocol(protImport, wait=True)
-        self.assertSetSize(protImport.outputMovies, MOVS, msg="Wrong output set size")
-        thread.join()
-
-    def test_StreamStack(self):
-        # Create a separated thread to simulate real streaming with
-        # individual frames
-        thread = threading.Thread(name="sendFrames",
-                                  target=lambda: self._sendFrames(delay=1))
-        thread.start()
-        # --------------- IMPORT MOVIES -------------------
-        protImport = self.newProtocol(ProtImportMovies,
-                                      objLabel='import frame stack',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
-                                      filesPath=os.path.abspath(self.proj.getTmpPath()),
-                                      filesPattern="movie*.mrc",
-                                      expertLevel=LEVEL_ADVANCED,
-                                      amplitudConstrast=0.1,
-                                      sphericalAberration=2.,
-                                      voltage=300,
-                                      samplingRate=3.54,
-                                      dataStreaming=True,
-                                      timeout=120,
-                                      fileTimeout=10,
-                                      streamingSocket=True,
-                                      inputIndividualFrames=True,
-                                      numberOfIndividualFrames=16,
-                                      stackFrames=True,
-                                      writeMoviesInProject=True,
-                                      deleteFrames=False)
-        self.launchProtocol(protImport)
-        self.assertSetSize(protImport.outputMovies, MOVS, msg="Wrong output set size")
         thread.join()

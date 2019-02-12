@@ -629,12 +629,9 @@ class Image(EMObject):
     def __str__(self):
         """ String representation of an Image. """
         dim = self.getDim()
-        if dim:
-            dimStr = str(ImageDim(*dim))
-        else:
-            dimStr = 'No-Dim'
-        return "%s (%s, %0.2f Å/px)" %\
-               (self.getClassName(), dimStr, self.getSamplingRate() or 99999.)
+        dimStr = str(ImageDim(*dim)) if dim else 'No-Dim'
+        return ("%s (%s, %0.2f Å/px)" % (self.getClassName(), dimStr,
+                                         self.getSamplingRate() or 99999.))
 
     def getFiles(self):
         filePaths = set()
@@ -776,6 +773,7 @@ class EMFile(EMObject):
         """ Use the _objValue attribute to store filename. """
         self._filename.set(filename)
 
+
 class Sequence(EMObject):
     """Class containing a sequence of aminoacids/nucleotides
        Attribute names follow the biopython default ones
@@ -804,7 +802,6 @@ class Sequence(EMObject):
 
     def setId(self, id):
         self._id.set(id)
-
 
     # Note that the natural name for the next two functions are
     # getName and  setName but
@@ -837,6 +834,7 @@ class Sequence(EMObject):
 
     def __str__(self):
          return "Sequence (name = {})\n".format(self.getSeqName())
+
 
 class AtomStruct(EMFile):
     """Represents an PDB file. """
@@ -872,9 +870,8 @@ class AtomStruct(EMFile):
                                          'volume')
 
     def __str__(self):
-        return "%s (pseudoatoms=%s, volume=%s)" % \
-               (self.getClassName(), self.getPseudoAtoms(),
-                self.hasVolume())
+        return ("%s (pseudoatoms=%s, volume=%s)" %
+                (self.getClassName(), self.getPseudoAtoms(), self.hasVolume()))
 
     def hasOrigin(self):
         return self._origin is not None
@@ -896,8 +893,8 @@ class AtomStruct(EMFile):
 class PdbFile(AtomStruct):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         AtomStruct.__init__(self, filename, pseudoatoms, **kwargs)
-        print "This class has been renamed to AtomStruct. Please" \
-              " update your code"
+        print("This class has been renamed to AtomStruct. Please "
+              " update your code")
 
 
 class EMSet(Set, EMObject):
@@ -1326,12 +1323,13 @@ class SetOfAtomStructs(EMSet):
     """ Set containing PDB items. """
     ITEM_TYPE = AtomStruct
 
+
 class SetOfPDBs(SetOfAtomStructs):
     """ Set containing PDB items. """
     def __init__(self):
         SetOfAtomStructs.__init__(self)
-        print "SetOfPDBs class has been renamed to SetOfAtomStructs. Please" \
-              " update your code"
+        print("SetOfPDBs class has been renamed to SetOfAtomStructs. "
+              "Please update your code.")
 
 
 class SetOfSequences(EMSet):
@@ -1379,7 +1377,7 @@ class Coordinate(EMObject):
         mode: select if the position is the center of the box
         or in the top left corner.
         """
-        return (self.getX(), self.getY())
+        return self.getX(), self.getY()
 
     def setPosition(self, x, y):
         self.setX(x)
@@ -1601,6 +1599,7 @@ class Transform(EMObject):
         '''Apply a transformation matrix to the current matrix '''
         new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
+
 
 class Class2D(SetOfParticles):
     """ Represent a Class that groups Particles objects.
@@ -2110,6 +2109,13 @@ class SetOfMovies(SetOfMicrographsBase):
             dimStr = str(ImageDim(x, y, last - first + 1))
 
         return '%s %s' % (dimStr, self._firstFramesRange.rangeStr())
+
+    def copyInfo(self, other):
+        """ Copy SoM specific information plus inherited """
+        SetOfMicrographsBase.copyInfo(self, other)
+        self._gainFile.set(other.getGain())
+        self._darkFile.set(other.getDark())
+        self._firstFramesRange.set(other.getFramesRange())
 
 
 class MovieParticle(Particle):
