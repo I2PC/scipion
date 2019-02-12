@@ -110,7 +110,7 @@ class scipionMMCIFIO(MMCIFIO):
                         hetfield, resseq, icode = residue.get_id()
                         if hetfield == " ":
                             residue_type = "ATOM"
-                            label_seq_id = str(residue_number)
+                            label_seq_id = str(resseq)
                             residue_number += 1
                         else:
                             residue_type = "HETATM"
