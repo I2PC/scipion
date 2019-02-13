@@ -2326,10 +2326,10 @@ class FormWindow(Window):
 
                 # Special treatment for pointer params
                 if isinstance(param, pwobj.Pointer):
-                    param.copy(widget)
+                    param.copy(value)
                 # Special treatment for Scalars that allow pointers
                 # Combo widgets do not have .param!
-                if hasattr(widget, "param") and widget.param.allowPointers:
+                elif hasattr(widget, "param") and widget.param.allowPointers:
                     if isinstance(value, pwobj.Pointer):
                         # Copy the pointer, otherwise changes in the
                         # widget pointer will be reflected
