@@ -585,6 +585,22 @@ class FlashMessage():
         self.root.destroy()
         
 
+class FloatingMessage:
+    def __init__(self, master, msg, xPos=750, yPos=80, textWidth=250,
+                 font='Helvetica', size=12, bd=1, bg='#6E6E6E', fg='white'):
+
+        self.floatingMessage = tk.Label(master, text="   %s   " % msg,
+                                   bd=bd, bg=bg, fg=fg)
+        self.floatingMessage.place(x=xPos, y=yPos, width=textWidth)
+        self.floatingMessage.config(font=(font, size))
+
+    def show(self):
+        self.floatingMessage.update_idletasks()
+
+    def close(self):
+        self.floatingMessage.destroy()
+
+        
 class FileBrowseDialog(Dialog):
     """Dialog to select files from the filesystem."""
     def __init__(self, parent, title, provider, message=None, **args):

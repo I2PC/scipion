@@ -445,7 +445,6 @@ class Project(object):
                         protocol._store()
                         self._storeProtocol(protocol)
                         self.scheduleProtocol(protocol)
-                        time.sleep(1)
                     except Exception as ex:
                         errorsList.append("Error trying to launch the "
                                           "protocol: %s\nERROR: %s\n" %
@@ -480,7 +479,6 @@ class Project(object):
                 try:
                     protocol.runMode.set(MODE_RESTART)
                     self.scheduleProtocol(protocol)
-                    time.sleep(1)
                 except Exception as ex:
                     errorsList.append("Error trying to restart a protocol: %s"
                                       "\nERROR: %s\n" % (protocol.getObjLabel(),
