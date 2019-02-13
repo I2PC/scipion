@@ -25,6 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
 
 import os
 from datetime import datetime
@@ -142,6 +143,7 @@ class ProtExtractParticles(ProtParticles):
                       help='Select the SetOfMicrographs from which to extract.')
     
         form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
+                      condition='inputCoordinates is not None',
                       relationName=RELATION_CTF,
                       attributeName='getInputMicrographs',
                       label='CTF estimation',
@@ -424,7 +426,7 @@ class ProtExtractParticles(ProtParticles):
         for micKey, mic in micDict.iteritems():
             if counter % 50 == 0:
                 b = datetime.now()
-                print b-a, 'reading coordinates for mic number', "%06d" % counter
+                print(b-a, 'reading coordinates for mic number', "%06d" % counter)
                 sys.stdout.flush()  # force buffer to print
             counter += 1
 
@@ -633,7 +635,7 @@ class ProtExtractParticles(ProtParticles):
         return None
 
     def createOutputStep(self):
-        pass # Nothing to do now
+        pass  # Nothing to do now
         #self._createOutput(self._getExtraPath())
 
 
