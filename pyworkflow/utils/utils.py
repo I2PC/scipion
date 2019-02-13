@@ -732,17 +732,17 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
 def pluginNotFound(plugName, errorMsg='', doRaise=False):
     """ Prints or raise (depending on the doRaise) telling why it is failing
     """
-    # FIXME: give a hint to install the plugin with the GUI
-    hint = "   See 'scipion installp --help'"
-
+    hint = "   Check the plugin manager (Configuration->Plugins in Scipion manager window) \n"
     # the str casting is to work with Exceptions as errorMsg
-    if 'No module named %s'%plugName in str(errorMsg):
+    if 'No module named %s' % plugName in str(errorMsg):
         msgStr = " > %s plugin not found. %s" % (plugName, errorMsg)
-        hint += " to install it."
+        hint += "   or use 'scipion installp --help' in the command line to install it."
     else:
         msgStr = " > error when importing from %s: %s" % (plugName, errorMsg)
         if errorMsg != '':  # if empty we know nothing...
-            hint += ", it can be a versions compatibility issue"
+            hint += ("   or use 'scipion installp --help --checkUpgrades' in the "
+                     "command line to check for upgrades,\n   "
+                     "it could be a versions compatibility issue.")
 
     stackList = traceback.extract_stack()
     if len(stackList) > 3:
