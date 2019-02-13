@@ -61,8 +61,12 @@ class Config:
     SCIPION_CONFIG_MAIN = os.environ.get('SCIPION_CONFIG_MAIN', 'scipion.conf')
     SCIPION_CONFIG_HOSTS = os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
     SCIPION_CONFIG_PROTOCOLS = os.environ.get('SCIPION_CONFIG_PROTOCOLS', 'protocols.conf')
-
-    VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
+    try:
+        VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
+    except Exception as e:
+        VIEWERS = {}
+        print("ERROR loading preferred viewers, VIEWERS variable will be ignored")
+        print(e)
 
 def join(*paths):
     """ join paths from HOME . """

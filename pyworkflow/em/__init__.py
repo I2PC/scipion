@@ -75,30 +75,39 @@ def findSubClasses(classDict, className):
     return subclasses
 
 
+def getPreferredViewers(className):
+    """ Find and import the preferred viewers for this class. """
+    preferredViewerNames = Config.VIEWERS.get(className, [])
+    if not isinstance(preferredViewerNames, list):
+        preferredViewerNames = [preferredViewerNames]
+    preferredViewers = []  # we will try to import them and store here
+    for prefViewerStr in preferredViewerNames:
+        try:
+            (prefViewerModule, prefViewerClassName) = prefViewerStr.rsplit('.', 1)
+            prefViewer = importFromPlugin(prefViewerModule, prefViewerClassName, doRaise=True)
+            preferredViewers.append(prefViewer)
+        except Exception as e:
+            print("Couldn't load \"%s\" as preferred viewer.\n"
+                  "There might be a typo in your VIEWERS "
+                  "variable or an error in the viewer's plugin installation" % prefViewerStr)
+            print(e)
+    return preferredViewers
+
 def findViewers(className, environment):
     """ Find the available viewers for this class. """
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
-    preferredClassViewers = Config.VIEWERS.get(className, [])
-    if not isinstance(preferredClassViewers, list):
-        preferredClassViewers = [preferredClassViewers]
+    preferredViewers = getPreferredViewers(className)
+
     for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
-                    for prefViewerStr in preferredClassViewers:
-                        try:
-                            [prefViewerModule, prefViewerClassName] = prefViewerStr.rsplit('.', 1)
-                            prefViewer = importFromPlugin(prefViewerModule, prefViewerClassName, doRaise=True)
-                            if viewer is prefViewer:
-                                viewers.insert(0, viewer)
-                                break
-                        except Exception as e:
-                            print("Couldn't load \"%s\" as preferred viewer.\n"
-                                  "There might be a typo in your VIEWERS "
-                                  "variable or an error in the viewer's plugin installation" % prefViewerStr)
-                            print(e)
+                    for prefViewer in preferredViewers:
+                        if viewer is prefViewer:
+                            viewers.insert(0, viewer)
+                            break
                     else:
                         viewers.append(viewer)
                         break
