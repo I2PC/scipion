@@ -2117,8 +2117,8 @@ class FormWindow(Window):
         # For Scalar params that allowPointers
         elif param.allowPointers:
             if protVar.hasPointer():
-                # NOTE: to check with JM, we should avoid accessing _pointer
-                widgetValue = protVar._pointer
+                # Get the pointer
+                widgetValue = protVar.getPointer()
             else:
                 widgetValue = protVar.get()
         else:
