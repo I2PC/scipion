@@ -2111,6 +2111,13 @@ class SetOfMovies(SetOfMicrographsBase):
 
         return '%s %s' % (dimStr, self._firstFramesRange.rangeStr())
 
+    def copyInfo(self, other):
+        """ Copy SoM specific information plus inherited """
+        SetOfMicrographsBase.copyInfo(self, other)
+        self._gainFile.set(other.getGain())
+        self._darkFile.set(other.getDark())
+        self._firstFramesRange.set(other.getFramesRange())
+
 
 class MovieParticle(Particle):
     def __init__(self, **kwargs):
