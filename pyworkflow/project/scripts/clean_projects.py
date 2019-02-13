@@ -26,14 +26,13 @@
 # **************************************************************************
 
 import sys
-import os
 
 import pyworkflow as pw
 from pyworkflow.project import Manager
 
 
 def usage(error):
-    print """
+    print ("""
     ERROR: %s
     
     Usage: scipion python scripts/clean_projects.py [SCIPION_USER_DATA] [--delete]
@@ -41,8 +40,8 @@ def usage(error):
         Optional to pass SCIPION_USER_DATA folder from which to read 'projects'.
         If --delete is not passed, only a message with the projects to be deleted
         will be shown. If used --delete, the projects will be deleted from filesystem.
-    """ % error
-    sys.exit(1)    
+    """ % error)
+    sys.exit(1)
 
 n = len(sys.argv)
 
@@ -57,7 +56,7 @@ if n > 1 and arg1 != '--delete':
 else:
     customUserData = pw.Config.SCIPION_USER_DATA
 
-print "Loading projects from:\n", customUserData 
+print("Loading projects from:\n %s" % customUserData)
  
 # Create a new project
 manager = Manager(workspace=customUserData)
@@ -71,10 +70,10 @@ for projInfo in manager.listProjects():
     if (leftTime is not None and 
         leftTime.days < 0):
         if delete:
-            print "Deleting: %s (%s) " % (projName, leftTime)
+            print("Deleting: %s (%s) " % (projName, leftTime))
             manager.deleteProject(projName)
         else: 
-            print "Should delete: %s (%s)" % (projName, leftTime)
+            print("Should delete: %s (%s)" % (projName, leftTime))
     
     
 
