@@ -62,8 +62,9 @@ subparsers = parser.add_subparsers(help='mode "installp", "uninstallp" or "listb
 installParser = subparsers.add_parser("installp", formatter_class=argparse.RawTextHelpFormatter,
                                       usage="%s  [-h] [--noBin] [-p pluginName [pipVersion ...]]" %
                                             (' '.join(args[:2])),
-                                      epilog="Example: %s -p grigoriefflab 1.0.1 -p relion -p eman \n\n" %
-                                      ' '.join(args[:2]),
+                                      epilog=("Example: %s -p scipion-em-grigoriefflab 1.0.1 "
+                                              "-p scipion-em-relion -p scipion-em-eman2 \n\n" %
+                                              ' '.join(args[:2])),
                                       add_help=False)
 installParser.add_argument('-h', '--help', action='store_true', help='show help')
 installParser.add_argument('--noBin', action='store_true',
@@ -99,7 +100,7 @@ installParser.add_argument('-j',
 uninstallParser = subparsers.add_parser("uninstallp", formatter_class=argparse.RawTextHelpFormatter,
                                         usage="%s  [-h] [-p pluginName [binVersion ...]]" %
                                               (' '.join(args[:2])),
-                                        epilog="Example: %s grigoriefflab eman \n\n" %
+                                        epilog="Example: %s -p scipion-em-grigoriefflab scipion-em-eman2 \n\n" %
                                                ' '.join(args[:2]),
                                         add_help=False)
 uninstallParser.add_argument('-h', '--help', action='store_true', help='show help')
