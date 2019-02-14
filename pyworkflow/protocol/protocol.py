@@ -1549,6 +1549,11 @@ class Protocol(Step):
         """ Return True if the protocol should be launched through a queue. """
         return self._useQueue.get()
 
+    def useQueueForSteps(self):
+        """ This function will return True if the protocol has been set
+        to be launched thorugh a queue by steps """
+        return self.useQueue() and (self.getSubmitDict()["QUEUE_FOR_JOBS"] == "Y")
+
     def getQueueParams(self):
         if self._queueParams.hasValue():
             return json.loads(self._queueParams.get())
@@ -2005,12 +2010,12 @@ def runProtocolMain(projectPath, protDbPath, protId):
             sys.exit(retcode)
 
         elif nThreads > 1:
-            if protocol.useQueue() and (protocol.getSubmitDict()["QUEUE_FOR_JOBS"] == "Y"):
+            if protocol.useQueueForSteps():
                 executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1, gpuList = protocol.getGpuList())
             else:
                 executor = ThreadStepExecutor(hostConfig, nThreads-1, gpuList = protocol.getGpuList())
 
-    if executor is None and protocol.useQueue() and (protocol.getSubmitDict()["QUEUE_FOR_JOBS"] == "Y"):
+    if executor is None and protocol.useQueueForSteps():
         executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), 1, gpuList = protocol.getGpuList())
 
     if executor is None:
