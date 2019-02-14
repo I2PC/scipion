@@ -48,7 +48,7 @@ except:
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf
 QUEUE_PARAMS = (u'myslurmqueue', {u'JOB_TIME': u'1',        # in hours
-                                  u'JOB_MEMORY': u'8192',   # in Mb
+                                  u'JOB_MEMORY': u'2048',   # in Mb
                                   u'QUEUE_FOR_JOBS': u'N',})
 #  command and args to list the queued jobs (to be used in a subprocess)
 #  the command's output must contain the jobID and the protocolID
@@ -195,7 +195,7 @@ class TestQueueBase(BaseTest):
         return prot2D
 
 
-class Test_Queue_ALL(TestQueueBase):
+class TestQueueALL(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -222,11 +222,11 @@ class Test_Queue_ALL(TestQueueBase):
         self._checkAsserts(relionNoGpu41)
 
     def testNoGpuMPIandThreads(self):
-        relionNoGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionNoGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                   "Rel.2D noGPU MPI+Threads",
-                                                  MPI=4, threads=4,
+                                                  MPI=2, threads=2,
                                                   useQueue=True)
-        self._checkAsserts(relionNoGpu44)
+        self._checkAsserts(relionNoGpu22)
 
     def testGpuSerial(self):
         relionGpu11 = self._runRelionClassify2D(self.protNormalize,
@@ -235,11 +235,11 @@ class Test_Queue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu11)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4,
+                                                doGpu=True, MPI=2,
                                                 useQueue=True)
-        self._checkAsserts(relionGpu14)
+        self._checkAsserts(relionGpu12)
 
     def testGpuThreads(self):
         relionGpu41 = self._runRelionClassify2D(self.protNormalize,
@@ -249,14 +249,14 @@ class Test_Queue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu41)
 
     def testGpuMPIandThreads(self):
-        relionGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI+Threads",
                                                 doGpu=True, useQueue=True,
-                                                MPI=4, threads=4)
-        self._checkAsserts(relionGpu44)
+                                                MPI=2, threads=2)
+        self._checkAsserts(relionGpu22)
 
 
-class Test_Queue_Small(TestQueueBase):
+class TestQueueSmall(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -265,21 +265,21 @@ class Test_Queue_Small(TestQueueBase):
         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4,
+                                                doGpu=True, MPI=2,
                                                 useQueue=True)
-        self._checkAsserts(relionGpu14)
+        self._checkAsserts(relionGpu12)
 
     def testGpuMPISteps(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI Steps",
                                                 doGpu=True, MPI=4,
                                                 useQueue=True, steps=True)
 
-        self._checkAsserts(relionGpu14)
+        self._checkAsserts(relionGpu12)
 
-class Test_noQueue_ALL(TestQueueBase):
+class TestNoQueueALL(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -305,10 +305,10 @@ class Test_noQueue_ALL(TestQueueBase):
         self._checkAsserts(relionNoGpu41)
 
     def testNoGpuMPIandThreads(self):
-        relionNoGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionNoGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                   "Rel.2D noGPU MPI+Threads",
-                                                  MPI=4, threads=4)
-        self._checkAsserts(relionNoGpu44)
+                                                  MPI=2, threads=4)
+        self._checkAsserts(relionNoGpu22)
 
     def testGpuSerial(self):
         relionGpu11 = self._runRelionClassify2D(self.protNormalize,
@@ -317,10 +317,10 @@ class Test_noQueue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu11)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4)
-        self._checkAsserts(relionGpu14)
+                                                doGpu=True, MPI=2)
+        self._checkAsserts(relionGpu12)
 
     def testGpuThreads(self):
         relionGpu41 = self._runRelionClassify2D(self.protNormalize,
@@ -329,14 +329,14 @@ class Test_noQueue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu41)
 
     def testGpuMPIandThreads(self):
-        relionGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI+Threads",
                                                 doGpu=True,
-                                                MPI=4, threads=4)
-        self._checkAsserts(relionGpu44)
+                                                MPI=2, threads=4)
+        self._checkAsserts(relionGpu22)
 
 
-class Test_noQueue_Small(TestQueueBase):
+class TestNoQueueSmall(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -345,12 +345,12 @@ class Test_noQueue_Small(TestQueueBase):
         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4)
-        self._checkAsserts(relionGpu14)
+                                                doGpu=True, MPI=2)
+        self._checkAsserts(relionGpu12)
 
-class Test_Queue_Steps(TestQueueBase):
+class TestQueueSteps(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
