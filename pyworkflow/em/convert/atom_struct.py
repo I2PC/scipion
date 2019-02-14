@@ -54,6 +54,9 @@ class OutOfChainsError(Exception):
     pass
 
 
+class scipionMMCIFIOOLD(MMCIFIO):
+    pass 
+
 class scipionMMCIFIO(MMCIFIO):
     """ Class that redefines the name of the chains.
      The current biopython mmCIF parser fills label_asym_id
@@ -101,7 +104,7 @@ class scipionMMCIFIO(MMCIFIO):
                         chain_id = "."
                     # This is used to write label_seq_id and increments from 1,
                     # remaining blank for hetero residues
-                    residue_number = 1
+                    #####residue_number = 1
                     prev_residue_type = ""
                     prev_resname = ""
                     for residue in chain.get_unpacked_list():
@@ -111,10 +114,11 @@ class scipionMMCIFIO(MMCIFIO):
                         if hetfield == " ":
                             residue_type = "ATOM"
                             label_seq_id = str(resseq)
-                            residue_number += 1
+                            ####residue_number += 1
                         else:
                             residue_type = "HETATM"
-                            label_seq_id = "."
+                            label_seq_id = str(resseq)
+                            ###label_seq_id = "."
                         resseq = str(resseq)
                         if icode == " ":
                             icode = "?"
