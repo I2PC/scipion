@@ -90,7 +90,7 @@ class Param(FormElement):
         self.default = String(args.get('default', None))
 
         # Allow pointers (used for scalars)
-        self.allowPointers = args.get('allowPointers', False)
+        self.allowsPointers = args.get('allowsPointers', False)
         self.validators = args.get('validators', [])
         
     def __str__(self):

@@ -1151,7 +1151,7 @@ class ParamWidget:
             self._onlyLabel = True
         else:
 
-            if not param.allowPointers:
+            if not param.allowsPointers:
                 var = tk.StringVar()
 
                 if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
@@ -2127,7 +2127,7 @@ class FormWindow(Window):
             isinstance(param, params.RelationParam)):
             widgetValue = protVar
         # For Scalar params that allowPointers
-        elif param.allowPointers:
+        elif param.allowsPointers:
             if protVar.hasPointer():
                 # Get the pointer
                 widgetValue = protVar.getPointer()
@@ -2341,7 +2341,7 @@ class FormWindow(Window):
                     param.copy(value)
                 # Special treatment for Scalars that allow pointers
                 # Combo widgets do not have .param!
-                elif hasattr(widget, "param") and widget.param.allowPointers:
+                elif hasattr(widget, "param") and widget.param.allowsPointers:
                     if isinstance(value, pwobj.Pointer):
                         # Copy the pointer, otherwise changes in the
                         # widget pointer will be reflected
@@ -2349,13 +2349,13 @@ class FormWindow(Window):
                         pointerCopy.copy(value)
                         param.setPointer(pointerCopy)
                     else:
-                        param.set(value)
                         param.setPointer(None)
+                        param.set(value)
 
                 elif isinstance(param, pwobj.Object):
                     param.set(value)
             except ValueError:
-                if len(widget.get()):
+                if len(value):
                     print(">>> ERROR: setting param for: ", paramName,
                           "value: '%s'" % value)
                 param.set(None)
