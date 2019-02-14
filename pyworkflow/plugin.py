@@ -144,7 +144,7 @@ class Domain:
             if updateBaseClasses:
                 sub = cls.__getSubmodule(cls.getName(), submoduleName)
                 if sub is not None:
-                    for name in dir(sub):
+                    for name in cls.getModuleClasses(sub):
                         attr = getattr(sub, name)
                         if inspect.isclass(attr) and issubclass(attr, BaseClass):
                             cls._baseClasses[name] = attr
@@ -152,7 +152,7 @@ class Domain:
             for pluginName, plugin in cls.getPlugins().iteritems():
                 sub = cls.__getSubmodule(pluginName, submoduleName)
                 if sub is not None:
-                    for name in dir(sub):
+                    for name in cls.getModuleClasses(sub):
                         attr = getattr(sub, name)
                         if inspect.isclass(attr) and issubclass(attr, BaseClass):
                             # Set this special property used by Scipion
@@ -162,6 +162,22 @@ class Domain:
                 pwutils.getSubclasses(BaseClass, cls._baseClasses))
 
         return subclasses
+
+    @classmethod
+    def getModuleClasses(cls, module):
+
+        # Dir was used before but dir returns all imported elements
+        # included those imported to be BaseClasses.
+        # return dir(module)
+
+        # Get the module name
+        moduleName = module.__name__
+
+        # Get any module class
+        for name, declaredClass in inspect.getmembers(module, inspect.isclass):
+            if moduleName in declaredClass.__module__:
+                yield name
+
 
     @classmethod
     def getProtocols(cls):
