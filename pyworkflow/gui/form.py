@@ -1807,7 +1807,6 @@ class FormWindow(Window):
         self._close(onlySave=True)
 
     def schedule(self):
-        #if self.protocol.useQueue() or self.protocol.useQueueForJobs():
         if self.protocol.useQueue():
             if not self._editQueueParams():
                 return
@@ -1815,8 +1814,7 @@ class FormWindow(Window):
         self._close(doSchedule=True)
 
     def execute(self, e=None):
-        
-        #if self.protocol.useQueue() or self.protocol.useQueueForJobs():
+
         if self.protocol.useQueue():
             if not self._editQueueParams():
                 return
