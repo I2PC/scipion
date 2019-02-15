@@ -718,7 +718,7 @@ class Project(object):
                 oKey = iAttr.getExtended()
                 matches.append((oKey, iKey))
             else:
-                for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
+                for oKey, oAttr in node.run.iterOutputAttributes():
                     if oAttr.getObjId() == iAttr.get().getObjId():
                         matches.append((oKey, iKey))
 
@@ -1165,7 +1165,7 @@ class Project(object):
             n.run = r
             n.setLabel(r.getRunName())
             outputDict[r.getObjId()] = n
-            for _, attr in r.iterOutputAttributes(em.EMObject):
+            for _, attr in r.iterOutputAttributes():
                 # mark this output as produced by r
                 outputDict[attr.getObjId()] = n
 
@@ -1213,7 +1213,7 @@ class Project(object):
         runs = self.getRuns(refresh=refresh)
 
         for r in runs:
-            for paramName, attr in r.iterOutputAttributes(em.EMObject):
+            for paramName, attr in r.iterOutputAttributes():
                 p = pwobj.Pointer(r, extended=paramName)
                 node = g.createNode(p.getUniqueId(), attr.getNameId())
                 node.pointer = p
@@ -1387,7 +1387,7 @@ class Project(object):
         for prot in runs:
             broken = False
             if isinstance(prot, em.ProtImport):
-                for _, attr in prot.iterOutputEM():
+                for _, attr in prot.iterOutputAttributes():
                     fn = attr.getFiles()
                     for f in attr.getFiles():
                         if ':' in f:

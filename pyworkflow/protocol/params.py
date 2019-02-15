@@ -88,9 +88,9 @@ class Param(FormElement):
         # This should be defined in subclasses
         self.paramClass = args.get('paramClass', None)
         self.default = String(args.get('default', None))
-        #from pyworkflow.web.app.views_util import parseText
-        #self.help = parseText(String(args.get('help', None)))
 
+        # Allow pointers (used for scalars)
+        self.allowsPointers = args.get('allowsPointers', False)
         self.validators = args.get('validators', [])
         
     def __str__(self):
@@ -586,21 +586,24 @@ class NonEmptyCondition(Conditional):
         
         
 class LT(Conditional):
-    def __init__(self, thresold, error='Value should be less than the thresold'):
+    def __init__(self, threshold,
+                 error='Value should be less than the threshold'):
         Conditional.__init__(self, error)
-        self._condition = lambda value: value < thresold
+        self._condition = lambda value: value < threshold
         
         
 class LE(Conditional):
-    def __init__(self, thresold, error='Value should be less or equal than the thresold'):
+    def __init__(self, threshold,
+                 error='Value should be less or equal than the threshold'):
         Conditional.__init__(self, error)
-        self._condition = lambda value: value <= thresold        
+        self._condition = lambda value: value <= threshold
         
         
 class GT(Conditional):
-    def __init__(self, thresold, error='Value should be greater than the thresold'):
+    def __init__(self, threshold,
+                 error='Value should be greater than the threshold'):
         Conditional.__init__(self, error)
-        self._condition = lambda value: value > thresold
+        self._condition = lambda value: value > threshold
 
 
 class GE(Conditional):
@@ -636,7 +639,8 @@ class NonEmptyBoolCondition(Conditional):
         Conditional.__init__(self, error)
         self._condition = lambda value: value is not None
 
-#--------- Some constants validators ---------------------
+
+# --------- Some constants validators ---------------------
 
 Positive = GT(0.0, error='Value should be greater than zero')
 
