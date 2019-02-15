@@ -40,7 +40,7 @@ import pyworkflow as pw
 from pyworkflow.object import *
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.log import ScipionLogger
-from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
+from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor, QueueStepExecutor
 from constants import *
 from params import Form
 import scipion
@@ -1068,6 +1068,8 @@ class Protocol(Step):
                                          self._stepFinished,
                                          self._stepsCheck,
                                          self._stepsCheckSecs)
+
+        print("*** Last status is %s " % self.lastStatus)
         self.setStatus(self.lastStatus)
         self._store(self.status)
 
@@ -1564,14 +1566,16 @@ class Protocol(Step):
 
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
-             'JOB_NODEFILE': script.replace('.job', '.nodefile'),
+             'JOB_LOGS': self._getLogsPath(hc.getSubmitPrefix() + self.strId()),
+             'JOB_NODEFILE': os.path.abspath(script.replace('.job', '.nodefile')),
              'JOB_NAME': self.strId(),
              'JOB_QUEUE': queueName,
              'JOB_NODES': self.numberOfMpi.get(),
              'JOB_THREADS': self.numberOfThreads.get(),
              'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
              'JOB_HOURS': 72,
-             'GPU_COUNT': len(self.getGpuList())
+             'GPU_COUNT': len(self.getGpuList()),
+             'QUEUE_FOR_JOBS': 'N'
              }
         d.update(queueParams)
         return d
@@ -1579,6 +1583,11 @@ class Protocol(Step):
     def useQueue(self):
         """ Return True if the protocol should be launched through a queue. """
         return self._useQueue.get()
+
+    def useQueueForSteps(self):
+        """ This function will return True if the protocol has been set
+        to be launched thorugh a queue by steps """
+        return self.useQueue() and (self.getSubmitDict()["QUEUE_FOR_JOBS"] == "Y")
 
     def getQueueParams(self):
         if self._queueParams.hasValue():
@@ -2017,6 +2026,9 @@ def runProtocolMain(projectPath, protDbPath, protId):
 
     # Create the steps executor
     executor = None
+    nThreads = max(protocol.numberOfThreads.get(), 1)
+
+    #time.sleep(20)
 
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
@@ -2031,10 +2043,15 @@ def runProtocolMain(projectPath, protDbPath, protId):
                                      hostConfig=hostConfig)
             sys.exit(retcode)
 
-        elif protocol.numberOfThreads > 1:
-            executor = ThreadStepExecutor(hostConfig,
-                                          protocol.numberOfThreads.get()-1,
-                                          gpuList=protocol.getGpuList())
+        elif nThreads > 1:
+            if protocol.useQueueForSteps():
+                executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1, gpuList = protocol.getGpuList())
+            else:
+                executor = ThreadStepExecutor(hostConfig, nThreads-1, gpuList = protocol.getGpuList())
+
+    if executor is None and protocol.useQueueForSteps():
+        executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), 1, gpuList = protocol.getGpuList())
+
     if executor is None:
         executor = StepExecutor(hostConfig,
                                 gpuList=protocol.getGpuList())

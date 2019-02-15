@@ -1812,16 +1812,21 @@ class FormWindow(Window):
         self._createParallel(runFrame, r)
 
         # ---- QUEUE ----
-        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='e',
+
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r,
+                                sticky='e',
                                 column=c)
-        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
-                                                  font=self.font)
+
+        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white',
+                                              font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
-        frame.grid(row=r, column=c+1, pady=5, sticky='ew')
+        frame.grid(row=r, column=c + 1, pady=5, sticky='ew')
+
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
-                             highlightthickness=0,
-                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
-        btnHelp.grid(row=r, column=c+2, padx=(5, 0), pady=5, sticky='w')
+                         highlightthickness=0,
+                         command=self._createHelpCommand(Message.HELP_USEQUEUE))
+
+        btnHelp.grid(row=r, column=c + 2, padx=(5, 0), pady=5, sticky='w')
 
         r = 3  # ---- Wait for other protocols (SCHEDULE) ----
         self._createHeaderLabel(runFrame, Message.LABEL_WAIT_FOR, row=r, sticky='e',
@@ -2068,7 +2073,7 @@ class FormWindow(Window):
         self._close(doSchedule=True)
 
     def execute(self, e=None):
-        
+
         if self.protocol.useQueue():
             if not self._editQueueParams():
                 return
