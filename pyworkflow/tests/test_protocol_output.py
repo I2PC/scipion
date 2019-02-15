@@ -23,8 +23,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em import EMObject, Integer
+from pyworkflow.em import EMObject, Integer, Pointer
 from pyworkflow.em.protocol.protocol_tests import ProtOutputTest
+from pyworkflow.protocol import ValidationException
 from tests import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import STATUS_FINISHED
@@ -67,7 +68,7 @@ class TestProtocolOutputs(BaseTest):
         outputs = [output for output in prot.iterOutputAttributes()]
 
         # We are intentionally ignoring a protocol with output (EMObject)
-        # That is continued, We do not find a real case now.
+        # That has been continued, We do not find a real case now.
         self.assertEqual(1, len(outputs),
                          msg="Integer output not registered properly.")
 
@@ -92,7 +93,8 @@ class TestProtocolOutputs(BaseTest):
 
         prot = self.newProtocol(ProtOutputTest,
                                 objLabel='to generate basic input')
-
+        # Define a negative output for later tests
+        prot._defineOutputs(negative=Integer(-20))
         self.launchProtocol(prot)
         # Default value is 10 so output is 20
         self.assertOutput(prot)
@@ -102,9 +104,30 @@ class TestProtocolOutputs(BaseTest):
                                  objLabel='to read basic input')
 
         # Set the pointer for the integer
-        prot2.iBoxSize.setPointer(prot, "oBoxSize")
+        prot2.iBoxSize.setPointer(Pointer(prot, extended="oBoxSize"))
         self.launchProtocol(prot2)
         self.assertOutput(prot2, value=40)
+
+        # Test validation: only positive numbers are allowed
+        prot3 = self.newProtocol(ProtOutputTest,
+                                 objLabel='invalid input',
+                                 iBoxSize=-10)
+
+        # We expect this to fail
+        with self.assertRaises(Exception):
+            self.launchProtocol(prot3)
+
+
+        # Test validation: pointer value is validated
+        prot4 = self.newProtocol(ProtOutputTest,
+                                 objLabel='invalid pointer input')
+        # Now use negative pointer output
+        prot4.iBoxSize.setPointer(Pointer(prot, extended="negative"))
+
+        # We expect this to fail
+        with self.assertRaises(Exception):
+            self.launchProtocol(prot4)
+
 
     def assertOutput(self, prot, value=20):
 

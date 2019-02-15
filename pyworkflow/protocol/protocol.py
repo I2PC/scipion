@@ -193,6 +193,10 @@ class Step(OrderedObject):
                 else:
                     status = STATUS_FINISHED
                 self.status.set(status)
+
+        except ValidationException as e:
+            print(pwutils.redStr(str(e)))
+            self.setFailed(str(e))
         except Exception as e:
             self.setFailed(str(e))
             import traceback
@@ -1180,8 +1184,8 @@ class Protocol(Step):
         # Check the parameters are correct
         errors = self.validate()
         if len(errors):
-            raise Exception(
-                'Protocol.run: Validation errors:\n' + '\n'.join(errors))
+            raise ValidationException(
+                'Protocol has validation errors:\n' + '\n'.join(errors))
 
         self._insertAllSteps()  # Define steps for execute later
         # Find at which step we need to start
@@ -2115,3 +2119,6 @@ def isProtocolUpToDate(protocol):
     else:
         return protTS > dbTS
 
+
+class ValidationException(Exception):
+    pass
