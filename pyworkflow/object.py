@@ -439,7 +439,7 @@ class Object(object):
         """
         for ptr in copyDict['internalPointers']:
             pointedId = ptr.getObjValue().getObjId()
-            if  pointedId in copyDict:
+            if pointedId in copyDict:
                 ptr.set(copyDict[pointedId])
         
     def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
@@ -581,27 +581,30 @@ class Scalar(Object):
     
     def __str__(self):
         """String representation of the scalar value"""
-        return str(self._objValue)
+        return str(self.get())
     
-    def __eq__(self, other):
+    def __eq__(self, value):
         """Comparison for scalars should be by value
-        and for other objects by reference"""
-        if isinstance(other, Object):
-            return self._objValue == other._objValue
-        return self._objValue == other
+        and for other objects by reference. """
+        if isinstance(value, Object):
+            value = value.get()
+        return self.get() == value
 
     def __ne__(self, other):
         return not self.__eq__(other)
     
-    def __cmp__(self, other):
+    def __cmp__(self, value):
         """ Comparison implementation for scalars. """
-        if isinstance(other, Object):
-            return cmp(self._objValue, other._objValue)
-        return cmp(self._objValue, other)        
+        if isinstance(value, Object):
+            value = value.get()
+        return cmp(self.get(), value)
        
     def get(self, default=None):
         """Get the value, if internal value is None
-        the default argument passed is returned"""
+        the default argument passed is returned. """
+        if self.hasPointer():
+            return self._pointer.get().get(default)
+
         if self.hasValue():
             return self._objValue
         return default
@@ -622,7 +625,28 @@ class Scalar(Object):
         
     def multiply(self, value):
         self._objValue *= value
-        
+
+    def setPointer(self, pointer):
+        """ Set an internal pointer from this Scalar.
+        Then, the value (retrieved with get) will be obtained
+        from the pointed object.
+        """
+        if pointer is None:
+            if self.hasPointer():
+                delattr(self, "_pointer")
+        else:
+            self._pointer = pointer
+
+    def hasPointer(self):
+        """ Return True if this Scalar has an internal pointer
+        from where the value will be retrieved with the get() method.
+        """
+        return hasattr(self, '_pointer')
+
+    def getPointer(self):
+        """ Return the internal pointer of this Scalar or None. """
+        return getattr(self, '_pointer', None)
+
     
 class Integer(Scalar):
     """Integer object"""
@@ -1174,9 +1198,8 @@ class Set(OrderedObject):
         self._getMapper().update(item)
                 
     def __str__(self):
-
         return "%-20s (%d items%s)" % (self.getClassName(), self.getSize(),
-                                         self._appendStreamState())
+                                       self._appendStreamState())
 
     def _appendStreamState(self):
         return "" if self.isStreamClosed() else ", open set"

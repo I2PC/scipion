@@ -262,6 +262,9 @@ Format may be PDB or MMCIF"""
         if not exists(atomStructPath):
             raise Exception("Atomic structure not found at *%s*" % atomStructPath)
 
+        baseName = basename(atomStructPath)
+        localPath = abspath(self._getExtraPath(baseName))
+
         if str(atomStructPath) != str(localPath): # from local file
             if atomStructPath.endswith(".pdb") or \
                     atomStructPath.endswith(".ent"):
