@@ -486,12 +486,11 @@ class ListDialog(Dialog):
         """ Create the Frame with Filter widgets """
 
         def _onSearch(e=None):
-            import re
 
             def comparison():
-                pattern = re.compile('.*' + self._searchVar.get().lower() + '.*')
+                pattern = self._searchVar.get().lower()
                 return [w[0] for w in self.lista.items()
-                        if re.match(pattern, self.lista.get(w[0]).lower())]
+                        if pattern in self.lista.get(w[0]).lower()]
 
             self.tree.update()
             self.lista = {}
@@ -515,7 +514,7 @@ class ListDialog(Dialog):
         label.grid(row=0, column=0, sticky='nw')
         self._searchVar = tk.StringVar(value='')
         self.entry = tk.Entry(self.searchBoxframe, bg='white',
-                              textvariable=self._searchVar, width=50)
+                              textvariable=self._searchVar, width=40)
 
         self.entry.bind('<KeyRelease>', _onSearch)
         self.entry.focus_set()
