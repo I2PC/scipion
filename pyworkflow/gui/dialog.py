@@ -468,8 +468,12 @@ class ListDialog(Dialog):
     def body(self, bodyFrame):
         bodyFrame.config()
         gui.configureWeigths(bodyFrame)
-        self._createFilterBox(bodyFrame)
-        self._createTree(bodyFrame)
+        dialogFrame = tk.Frame(bodyFrame)
+        dialogFrame.grid(row=0, column=0, sticky='news', padx=5, pady=5)
+        dialogFrame.config()
+        gui.configureWeigths(dialogFrame, row=1)
+        self._createFilterBox(dialogFrame)
+        self._createTree(dialogFrame)
         if self.message:
             label = tk.Label(bodyFrame, text=self.message, compound=tk.LEFT,
                              image=self.getImage(Icon.LIGHTBULB))
@@ -497,8 +501,9 @@ class ListDialog(Dialog):
 
             for item in self.tree.get_children():
                 self.lista[item] = ((self.tree.item(item)['text'] + ' ' +
-                                     self.tree.item(item)['values'][0] + ' ' +
-                                     self.tree.item(item)['values'][1]))
+                                     self.tree.item(item)['values'][0] +
+                                     ' ' + self.tree.item(item)['values'][1] +
+                                     str(self.tree.item(item)['values'][2])))
 
             if self._searchVar.get() != '':
                 matchs = comparison()
@@ -518,8 +523,9 @@ class ListDialog(Dialog):
 
         self.entry.bind('<KeyRelease>', _onSearch)
         self.entry.focus_set()
-        self.entry.grid(row=0, column=1, sticky='nw')
-        self.searchBoxframe.grid(row=0, column=0, sticky='new', padx=5, pady=(10, 5))
+        self.entry.grid(row=0, column=1, sticky='news')
+        self.searchBoxframe.grid(row=0, column=0, sticky='news', padx=5,
+                                 pady=(10, 5))
 
     def apply(self):
         self.values = self.tree.getSelectedObjects()
