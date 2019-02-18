@@ -384,8 +384,8 @@ def getObjectLabel(pobj, mapper):
             label = '%s.%s' % (prot.getRunName(), extended)
 
     label = label.replace("\n"," ")
-    if obj is not None:
-        return label + " (%d)" % obj.getObjId()
+    # if obj is not None:
+    #     return label + " (%d)" % obj.getObjId()
     return label
 
     
@@ -394,6 +394,7 @@ class SubclassesTreeProvider(TreeProvider):
     of subclasses objects(of className) found by mapper"""
     CREATION_COLUMN = 'Creation'
     INFO_COLUMN = 'Info'
+    ID_COLUMN = 'Protocol Id'
 
     def __init__(self, protocol, pointerParam, selected=None):
         TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
@@ -507,7 +508,8 @@ class SubclassesTreeProvider(TreeProvider):
 
     def getColumns(self):
         return [('Object', 300), (SubclassesTreeProvider.INFO_COLUMN, 250),
-                (SubclassesTreeProvider.CREATION_COLUMN, 150)]
+                (SubclassesTreeProvider.CREATION_COLUMN, 150),
+                (SubclassesTreeProvider.ID_COLUMN, 100)]
     
     def isSelected(self, obj):
         """ Check if an object is selected or not. """
@@ -529,13 +531,14 @@ class SubclassesTreeProvider(TreeProvider):
             
         obj = pobj.get()
         objId = pobj.getUniqueId()
-        
+        protId = pobj.getObjValue().getObjId()
         isSelected = objId in self.selectedDict
         self.selectedDict[objId] = True
             
         return {'key': objId, 'text': label,
                 'values': (self._getObjectInfoValue(obj),
-                           self._getObjectCreation(obj)),
+                           self._getObjectCreation(obj),
+                           protId),
                 'selected': isSelected, 'parent': parent}
 
     @staticmethod

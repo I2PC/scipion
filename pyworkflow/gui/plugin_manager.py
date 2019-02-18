@@ -717,6 +717,10 @@ class PluginBrowser(tk.Frame):
             self.topPanelTree.delete(*self.topPanelTree.get_children())
             pluginName = plugin.getPipName()
             pluginVersion = plugin.latestRelease
+            if pluginVersion:
+                pluginUploadedDate = plugin.getReleaseDate(pluginVersion)
+            else:
+                pluginUploadedDate = ''
             pluginDescription = plugin.getSummary()
             pluginUrl = plugin.getHomePage()
             pluginAuthor = plugin.getAuthor()
@@ -724,7 +728,7 @@ class PluginBrowser(tk.Frame):
             self.topPanelTree.tag_configure('pluginUrl', foreground='blue')
 
             self.topPanelTree.insert('', 'end', pluginName,
-                                     text='Name:          ' + pluginName,
+                                     text='Name:              ' + pluginName,
                                      values='pluginName')
             if PluginStates.AVAILABLE_RELEASE in self.tree.item(pluginName,
                                                                 'tags'):
@@ -737,17 +741,25 @@ class PluginBrowser(tk.Frame):
                 self.topPanelTree.tag_configure('pluginVersion',
                                                 foreground='black')
             self.topPanelTree.insert('', 'end', pluginVersion,
-                                     text='Version:        ' + pluginVersion,
+                                     text='Version:            '
+                                          + pluginVersion,
                                      values='pluginVersion',
                                      tags=('pluginVersion',))
+            self.topPanelTree.insert('', 'end', pluginUploadedDate,
+                                     text='Release date:    '
+                                          + pluginUploadedDate.split('T')[0],
+                                     values='pluginUploadedDate',
+                                     tags=('pluginUploadedDate',))
             self.topPanelTree.insert('', 'end', pluginDescription,
-                                     text='Description:  ' + pluginDescription,
+                                     text='Description:      '
+                                          + pluginDescription,
                                      values='pluginDescription')
             self.topPanelTree.insert('', 'end', pluginUrl,
-                                     text='URL:             ' + pluginUrl,
+                                     text='URL:                 ' + pluginUrl,
                                      values='pluginUrl', tags=('pluginUrl',))
             self.topPanelTree.insert('', 'end', pluginAuthor,
-                                     text='Author:         ' + pluginAuthor,
+                                     text='Author:             '
+                                          + pluginAuthor,
                                      values='pluginAuthor')
 
     def reloadInstalledPlugin(self, pluginName):
