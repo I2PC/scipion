@@ -104,6 +104,7 @@ class scipionMMCIFIO(MMCIFIO):
                     #####residue_number = 1
                     # prev_residue_type = ""
                     # prev_resname = ""
+
                     for residue in chain.get_unpacked_list():
                         if not select.accept_residue(residue):
                             continue
