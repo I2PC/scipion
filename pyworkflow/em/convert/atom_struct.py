@@ -102,19 +102,18 @@ class scipionMMCIFIO(MMCIFIO):
                     # This is used to write label_seq_id and increments from 1,
                     # remaining blank for hetero residues
                     #####residue_number = 1
-                    prev_residue_type = ""
-                    prev_resname = ""
+                    # prev_residue_type = ""
+                    # prev_resname = ""
                     for residue in chain.get_unpacked_list():
                         if not select.accept_residue(residue):
                             continue
                         hetfield, resseq, icode = residue.get_id()
+                        label_seq_id = str(resseq)
                         if hetfield == " ":
                             residue_type = "ATOM"
-                            label_seq_id = str(resseq)
                             ####residue_number += 1
                         else:
                             residue_type = "HETATM"
-                            label_seq_id = str(resseq)
                             ###label_seq_id = "."
                         resseq = str(resseq)
                         if icode == " ":
@@ -126,8 +125,8 @@ class scipionMMCIFIO(MMCIFIO):
                         ## ROB if residue_type != prev_residue_type or \
                         ## ROB        (residue_type == "HETATM" and resname != prev_resname):
                         ## ROB    entity_id += 1
-                        prev_residue_type = residue_type
-                        prev_resname = resname
+                        # prev_residue_type = residue_type
+                        # prev_resname = resname
                         ## ROB label_asym_id = self._get_label_asym_id(entity_id)
                         for atom in residue.get_unpacked_list():
                             if select.accept_atom(atom):
