@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-
-
-from pyworkflow.object import *
 from pyworkflow.em.data import *
 from pyworkflow.tests import *
 
@@ -63,6 +60,23 @@ class TestObject(BaseTest):
         # Test emptiness
         self.assertIsNotEmpty(b)
 
+    def testWithPointer(self):
+
+        obj = Integer(10)
+
+        self.assertFalse(obj.hasPointer(),
+                         "Default instantiation off Integer has a pointer.")
+
+        self.assertEqual(obj.get(), 10, "Integer.get(), without pointer fails.")
+
+        pointee = Object()
+        setattr(pointee, "value", Integer(20))
+
+        # Set a pointer (not a real case though, but enough here)
+        obj.setPointer(pointee, 'value')
+
+        self.assertEqual(obj.get(), 20, "Integer.get() fails with a pointer.")
+
     def test_String(self):
         value = 'thisisanstring'
         s = String(value)
@@ -77,13 +91,13 @@ class TestObject(BaseTest):
         self.assertTrue(s2.empty(), "s2 string should be empty if only spaces")
         s2.set('something')
         # No empty after some value
-        self.assertFalse(s2.empty(), "s2 string should not be empty after value")
+        self.assertFalse(s2.empty(),
+                         "s2 string should not be empty after value")
 
         now = dt.datetime.now()
         s.set(now)
         self.assertEqual(now, s.datetime())
 
-        
     def test_Pointer(self):
         c = Complex.createComplex()
         p = Pointer()
@@ -206,7 +220,8 @@ class TestObject(BaseTest):
                                  "Wrong item in set when using limits.")
                 index += 1
 
-            self.assertEqual(index, limit, "Number of iterations wrong with limits")
+            self.assertEqual(index, limit,
+                             "Number of iterations wrong with limits")
 
         # Check iteration with limit
         checkSetIteration(2)
@@ -254,8 +269,6 @@ class TestObject(BaseTest):
     def test_aggregate(self):
         """test aggregate sql-like functions
         """
-        fnDefocusGroups=self.getOutputPath("SetOfDefocusGroups.sqlite")
-        setOfDefocus = SetOfDefocusGroup(filename=fnDefocusGroups)
         df1 = DefocusGroup()
         df1.addCTF(CTFModel(defocusU=2000, defocusV=2000))
         df1.addCTF(CTFModel(defocusU=2400, defocusV=2400))
@@ -267,16 +280,9 @@ class TestObject(BaseTest):
         df2.addCTF(CTFModel(defocusU=5000, defocusV=5000))
         self.assertAlmostEqual(df2.getDefocusAvg(), 4000.)
 
-        #TODO: create another test for aggregate
-        #operations      = ['min', 'max'] #This should be an enum -> aggregation function
-        #operationLabel  = '_defocusMin' #argument of aggregation function
-        #groupByLabels   = ['_defocusMin'] # absolute minimum
-        
-        #print setOfDefocus.aggregate(operations, operationLabel, groupByLabels)
-
     def test_formatString(self):
         """ Test that Scalar objects behave well
-        when using string formating such as: %f or %d
+        when using string formatting such as: %f or %d
         """
         i = Integer(10)
         f = Float(3.345)
@@ -303,22 +309,22 @@ class TestObject(BaseTest):
         m1.setObjId(1)
         m1.setAlignment(ma1)
         m1Dict = m1.getObjDict(includeBasic=True)
-        goldDict1 = OrderedDict([('object.id', 1),
-                                  ('object.label', 'test micrograph'),
-                                  ('object.comment', 'Testing store and retrieve from dict.'),
-                                  ('_index',  0),
-                                  ('_filename',  'my_movie.mrc'),
-                                  ('_samplingRate',  1.6),
-                                  ('_micName',  None),
-                                  ('_framesRange', '1,0,1'),
-                                  ('_alignment',  None),
-                                  ('_alignment._first',  1),
-                                  ('_alignment._last',  5),
-                                  ('_alignment._xshifts', '1.0,2.0,3.0,4.0,5.0'),
-                                  ('_alignment._yshifts', '1.0,4.0,9.0,16.0,25.0'),
-                                  ('_alignment._roi', '100,100,1000,1000'),
-                                  ])
-
+        goldDict1 = OrderedDict([
+                ('object.id', 1),
+                ('object.label', 'test micrograph'),
+                ('object.comment', 'Testing store and retrieve from dict.'),
+                ('_index',  0),
+                ('_filename',  'my_movie.mrc'),
+                ('_samplingRate',  1.6),
+                ('_micName',  None),
+                ('_framesRange', '1,0,1'),
+                ('_alignment',  None),
+                ('_alignment._first',  1),
+                ('_alignment._last',  5),
+                ('_alignment._xshifts', '1.0,2.0,3.0,4.0,5.0'),
+                ('_alignment._yshifts', '1.0,4.0,9.0,16.0,25.0'),
+                ('_alignment._roi', '100,100,1000,1000'),
+             ])
 
         self.assertEqual(goldDict1, m1Dict)
 
@@ -327,21 +333,20 @@ class TestObject(BaseTest):
         m2.setAlignment(ma2)
 
         goldDict2 = OrderedDict([('object.id', None),
-                                  ('object.label', ''),
-                                  ('object.comment', ''),
-                                  ('_index',  0),
-                                  ('_filename',  None),
-                                  ('_samplingRate',  None),
-                                  ('_micName',  None),
-                                  ('_framesRange', '1,0,1'),
-                                  ('_alignment',  None),
-                                  ('_alignment._first',  -1),
-                                  ('_alignment._last',  -1),
-                                  ('_alignment._xshifts', ''),
-                                  ('_alignment._yshifts', ''),
-                                  ('_alignment._roi', '')
-                                  ])
-
+                                 ('object.label', ''),
+                                 ('object.comment', ''),
+                                 ('_index',  0),
+                                 ('_filename',  None),
+                                 ('_samplingRate',  None),
+                                 ('_micName',  None),
+                                 ('_framesRange', '1,0,1'),
+                                 ('_alignment',  None),
+                                 ('_alignment._first',  -1),
+                                 ('_alignment._last',  -1),
+                                 ('_alignment._xshifts', ''),
+                                 ('_alignment._yshifts', ''),
+                                 ('_alignment._roi', '')
+                                 ])
 
         self.assertEqual(goldDict2, m2.getObjDict(includeBasic=True))
         m2.setAttributesFromDict(m1Dict, setBasic=True)
@@ -370,15 +375,20 @@ class TestUtils(BaseTest):
             
     def test_ListsFunctions(self):
         """ Test of some methods that retrieve lists from string. """
-        from pyworkflow.utils import getListFromValues, getFloatListFromValues, getBoolListFromValues
+        from pyworkflow.utils import getListFromValues, getFloatListFromValues,\
+            getBoolListFromValues
         
-        results = [('2x1 2x2 4 5', None, getListFromValues, ['1', '1', '2', '2', '4', '5']),
-                   ('2x1 2x2 4 5', None, getFloatListFromValues, [1., 1., 2., 2., 4., 5.]),
-                   ('1 2 3x3 0.5', 8, getFloatListFromValues, [1., 2., 3., 3., 3., 0.5, 0.5, 0.5]),
-                   ('3x1 3x0 1', 8, getBoolListFromValues, [True, True, True, False, False, False, True, True]),
+        results = [('2x1 2x2 4 5', None, getListFromValues,
+                    ['1', '1', '2', '2', '4', '5']),
+                   ('2x1 2x2 4 5', None, getFloatListFromValues,
+                    [1., 1., 2., 2., 4., 5.]),
+                   ('1 2 3x3 0.5', 8, getFloatListFromValues,
+                    [1., 2., 3., 3., 3., 0.5, 0.5, 0.5]),
+                   ('3x1 3x0 1', 8, getBoolListFromValues,
+                    [True, True, True, False, False, False, True, True]),
                    ]
         for s, n, func, goldList in results:
-            l = func(s, length=n)#)
+            l = func(s, length=n)
             self.assertAlmostEqual(l, goldList)
             if n:
                 self.assertEqual(n, len(l))
@@ -391,19 +401,20 @@ class TestUtils(BaseTest):
                        })
         env1 = Environ(env)
         env1.set('PATH', '/usr/local/xmipp')
-        self.assertEqual(env1['PATH'],'/usr/local/xmipp')
+        self.assertEqual(env1['PATH'], '/usr/local/xmipp')
         self.assertEqual(env1['LD_LIBRARY_PATH'], env['LD_LIBRARY_PATH'])
         
         env2 = Environ(env)
         env2.set('PATH', '/usr/local/xmipp', position=Environ.BEGIN)
-        self.assertEqual(env2['PATH'],'/usr/local/xmipp' + os.pathsep + env['PATH'])
+        self.assertEqual(env2['PATH'], '/usr/local/xmipp' + os.pathsep +
+                         env['PATH'])
         self.assertEqual(env2['LD_LIBRARY_PATH'], env['LD_LIBRARY_PATH'])
         
         env3 = Environ(env)
         env3.update({'PATH': '/usr/local/xmipp', 
                      'LD_LIBRARY_PATH': '/usr/local/xmipp/lib'},
                     position=Environ.END)
-        self.assertEqual(env3['PATH'],env['PATH'] + os.pathsep +  '/usr/local/xmipp')
-        self.assertEqual(env3['LD_LIBRARY_PATH'],env['LD_LIBRARY_PATH'] + os.pathsep +  '/usr/local/xmipp/lib')      
-        
-        
+        self.assertEqual(env3['PATH'], env['PATH'] + os.pathsep +
+                         '/usr/local/xmipp')
+        self.assertEqual(env3['LD_LIBRARY_PATH'], env['LD_LIBRARY_PATH'] +
+                         os.pathsep + '/usr/local/xmipp/lib')

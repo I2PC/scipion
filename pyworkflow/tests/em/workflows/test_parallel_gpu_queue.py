@@ -24,15 +24,14 @@
 # *
 # **************************************************************************
 
-import os
-import json  # to fill the queue form
-import time
+from os.path import exists
 import subprocess
 
 from pyworkflow.tests import *
 from pyworkflow.em.protocol import *
 from pyworkflow.protocol.launch import schedule
 import pyworkflow.utils as pwutils
+from pyworkflow.utils.path import *
 
 try:
     from relion.protocols import *
@@ -40,14 +39,20 @@ try:
 except:
     pwutils.pluginNotFound('relion')
 
+try:
+    from xmipp3.protocols import *
+    from xmipp3.convert import *
+except:
+    pwutils.pluginNotFound('xmipp')
 
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf
 QUEUE_PARAMS = (u'myslurmqueue', {u'JOB_TIME': u'1',        # in hours
-                                  u'JOB_MEMORY': u'8192'})  # in Mb
+                                  u'JOB_MEMORY': u'2048',   # in Mb
+                                  u'QUEUE_FOR_JOBS': u'N',})
 #  command and args to list the queued jobs (to be used in a subprocess)
 #  the command's output must contain the jobID and the protocolID
-QUEUE_COMMAND = ["gpu", "squeue"]
+QUEUE_COMMAND = ["squeue"]
 
 
 class TestQueueBase(BaseTest):
@@ -131,11 +136,20 @@ class TestQueueBase(BaseTest):
             print(pwutils.magentaStr("    ...job ended!"))
 
         if prot.useQueue():
-            # if the protocol is use queue system, we check if it's queued
-            jobId = prot.getJobId()   # is an string
-            protId = prot.getObjId()  # is an integer
-            checkQueue(jobId, protId)
-            return  # I don't know why, but we cannot retrieve the output, permissions???
+            if QUEUE_PARAMS[1]['QUEUE_FOR_JOBS'] != 'Y':
+                # if the protocol is use queue system, we check if it's queued
+                jobId = prot.getJobId()   # is an string
+                protId = prot.getObjId()  # is an integer
+                checkQueue(jobId, protId)
+                return  # I don't know why, but we cannot retrieve the output, permissions???
+            else:
+                # Check that job files have been created
+                jobFilesPath = join(getParentFolder(prot.getLogPaths()[0]),
+                            str(prot.getObjId()))
+
+                self.assertTrue(exists(jobFilesPath + "-0-1.out") and exists(
+                jobFilesPath + "-0-1.err") and exists(jobFilesPath + "-0-1.job"),
+                                "Job queue files not found in log folder, job did not make it to the queue.")
 
         self.assertIsNotNone(prot.outputClasses,
                              "There was a problem with Relion 2D classify")
@@ -149,7 +163,7 @@ class TestQueueBase(BaseTest):
 
 
     def _runRelionClassify2D(self, previousRun, label='', threads=1, MPI=1,
-                             doGpu=False, GPUs='', useQueue=False):
+                             doGpu=False, GPUs='', useQueue=False, steps=False):
         """ :param previousRun: The outputParticles of that will be the input
             :param label: For naming porposals
             :param threads: How many threads to use
@@ -169,6 +183,8 @@ class TestQueueBase(BaseTest):
 
         if useQueue:
             prot2D._useQueue.set(True)
+            if steps:
+                QUEUE_PARAMS[1]['QUEUE_FOR_JOBS'] = 'Y'
             prot2D._queueParams.set(json.dumps(QUEUE_PARAMS))
 
         prot2D.doGpu.set(doGpu)
@@ -179,7 +195,7 @@ class TestQueueBase(BaseTest):
         return prot2D
 
 
-class Test_Queue_ALL(TestQueueBase):
+class TestQueueALL(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -206,11 +222,11 @@ class Test_Queue_ALL(TestQueueBase):
         self._checkAsserts(relionNoGpu41)
 
     def testNoGpuMPIandThreads(self):
-        relionNoGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionNoGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                   "Rel.2D noGPU MPI+Threads",
-                                                  MPI=4, threads=4,
+                                                  MPI=2, threads=2,
                                                   useQueue=True)
-        self._checkAsserts(relionNoGpu44)
+        self._checkAsserts(relionNoGpu22)
 
     def testGpuSerial(self):
         relionGpu11 = self._runRelionClassify2D(self.protNormalize,
@@ -219,11 +235,11 @@ class Test_Queue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu11)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4,
+                                                doGpu=True, MPI=2,
                                                 useQueue=True)
-        self._checkAsserts(relionGpu14)
+        self._checkAsserts(relionGpu12)
 
     def testGpuThreads(self):
         relionGpu41 = self._runRelionClassify2D(self.protNormalize,
@@ -233,14 +249,14 @@ class Test_Queue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu41)
 
     def testGpuMPIandThreads(self):
-        relionGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI+Threads",
                                                 doGpu=True, useQueue=True,
-                                                MPI=4, threads=4)
-        self._checkAsserts(relionGpu44)
+                                                MPI=2, threads=2)
+        self._checkAsserts(relionGpu22)
 
 
-class Test_Queue_Small(TestQueueBase):
+class TestQueueSmall(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -249,13 +265,21 @@ class Test_Queue_Small(TestQueueBase):
         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4,
+                                                doGpu=True, MPI=2,
                                                 useQueue=True)
-        self._checkAsserts(relionGpu14)
+        self._checkAsserts(relionGpu12)
 
-class Test_noQueue_ALL(TestQueueBase):
+    def testGpuMPISteps(self):
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
+                                                "Rel.2D GPU MPI Steps",
+                                                doGpu=True, MPI=4,
+                                                useQueue=True, steps=True)
+
+        self._checkAsserts(relionGpu12)
+
+class TestNoQueueALL(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -281,10 +305,10 @@ class Test_noQueue_ALL(TestQueueBase):
         self._checkAsserts(relionNoGpu41)
 
     def testNoGpuMPIandThreads(self):
-        relionNoGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionNoGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                   "Rel.2D noGPU MPI+Threads",
-                                                  MPI=4, threads=4)
-        self._checkAsserts(relionNoGpu44)
+                                                  MPI=2, threads=4)
+        self._checkAsserts(relionNoGpu22)
 
     def testGpuSerial(self):
         relionGpu11 = self._runRelionClassify2D(self.protNormalize,
@@ -293,10 +317,10 @@ class Test_noQueue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu11)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4)
-        self._checkAsserts(relionGpu14)
+                                                doGpu=True, MPI=2)
+        self._checkAsserts(relionGpu12)
 
     def testGpuThreads(self):
         relionGpu41 = self._runRelionClassify2D(self.protNormalize,
@@ -305,14 +329,14 @@ class Test_noQueue_ALL(TestQueueBase):
         self._checkAsserts(relionGpu41)
 
     def testGpuMPIandThreads(self):
-        relionGpu44 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI+Threads",
                                                 doGpu=True,
-                                                MPI=4, threads=4)
-        self._checkAsserts(relionGpu44)
+                                                MPI=2, threads=4)
+        self._checkAsserts(relionGpu22)
 
 
-class Test_noQueue_Small(TestQueueBase):
+class TestNoQueueSmall(TestQueueBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -321,7 +345,44 @@ class Test_noQueue_Small(TestQueueBase):
         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
 
     def testGpuMPI(self):
-        relionGpu14 = self._runRelionClassify2D(self.protNormalize,
+        relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=4)
-        self._checkAsserts(relionGpu14)
+                                                doGpu=True, MPI=2)
+        self._checkAsserts(relionGpu12)
+
+class TestQueueSteps(TestQueueBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestQueueBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+
+    def testStepsNoGPU(self):
+
+        protXmippPreproc = self.newProtocol(XmippProtPreprocessParticles,
+                                    doNormalize=True, doRemoveDust=True)
+
+        protXmippPreproc.inputParticles.set(self.protImport.outputParticles)
+        protXmippPreproc.setObjLabel("Xmipp preprocess steps")
+
+        protXmippPreproc._useQueue.set(True)
+
+        QUEUE_PARAMS[1]['QUEUE_FOR_JOBS'] = 'Y'
+
+        protXmippPreproc._queueParams.set(json.dumps(QUEUE_PARAMS))
+
+        # Launch protocol but wait until it finishes
+        self.launchProtocol(protXmippPreproc, wait=True)
+
+        # Check that job files have been created
+
+        jobFilesPath = join(getParentFolder(protXmippPreproc.getLogPaths()[0]), str(protXmippPreproc.getObjId()))
+
+        self.assertTrue(exists(jobFilesPath + "-0-1.out") and exists(jobFilesPath + "-0-1.err") and exists(jobFilesPath + "-0-1.job") \
+                    and exists(jobFilesPath + "-0-2.out") and exists(jobFilesPath + "-0-2.err") and exists(jobFilesPath + "-0-2.job")
+                        , "Job queue files not found on log folder, job did not make it to the queue.")
+
+        # Check that results have been produced
+        self.assertIsNotNone(protXmippPreproc.outputParticles,
+                             "There was a problem with Xmipp preprocess particles.")
+

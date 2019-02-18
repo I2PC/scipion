@@ -54,9 +54,6 @@ class OutOfChainsError(Exception):
     pass
 
 
-class scipionMMCIFIOOLD(MMCIFIO):
-    pass 
-
 class scipionMMCIFIO(MMCIFIO):
     """ Class that redefines the name of the chains.
      The current biopython mmCIF parser fills label_asym_id
