@@ -36,7 +36,6 @@ from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
                                     ProtImportMicrographs, ProtImportAverages)
 
 XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
-SparxGaussianProtPicking = importFromPlugin('eman2.protocols', 'SparxGaussianProtPicking', doRaise=True)
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
 ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', doRaise=True)
 ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
@@ -205,20 +204,22 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         protCTF.inputMicrographs.set(protImport.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
         self.proj.launchProtocol(protCTF, wait=False)
+        self._waitOutput(protCTF, 'outputCTF')
         
-        # Now pick particles on the micrographs with sparx
-        print("Performing Sparx Autopicking...")
-        protPick = self.newProtocol(SparxGaussianProtPicking,
-                                    boxSize=50,
-                                    lowerThreshold=0.9,
-                                    higherThreshold=15,
-                                    gaussWidth=1.2)
+        # Now pick particles on the micrographs with Relion
+        print("Performing Relion Autopicking (LoG)...")
+        protPick = self.newProtocol(ProtRelion2Autopick,
+                                    runType=1,
+                                    referencesType=1,
+                                    inputReferences=None,
+                                    refsHaveInvertedContrast=True,
+                                    particleDiameter=380)
         protPick.inputMicrographs.set(protImport.outputMicrographs)
+        protPick.ctfRelations.set(protCTF.outputCTF)
         protPick.setObjLabel('Streaming Auto-picking')
         self.proj.launchProtocol(protPick, wait=False)
-
         self._waitOutput(protPick, 'outputCoordinates')
-        self._waitOutput(protCTF, 'outputCTF')
+
         
         protExtract = self.newProtocol(ProtRelionExtractParticles,
                                        objLabel='extract box=64',

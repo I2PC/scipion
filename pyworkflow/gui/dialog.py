@@ -32,6 +32,7 @@ some code was taken from tkSimpleDialog
 import Tkinter as tk
 
 import gui
+import pyworkflow.gui as pwgui
 from tree import BoundTree
 from text import Text, TaggedText
 from pyworkflow.utils.properties import Message, Icon
@@ -467,17 +468,64 @@ class ListDialog(Dialog):
     def body(self, bodyFrame):
         bodyFrame.config()
         gui.configureWeigths(bodyFrame)
-        self._createTree(bodyFrame)
+        dialogFrame = tk.Frame(bodyFrame)
+        dialogFrame.grid(row=0, column=0, sticky='news', padx=5, pady=5)
+        dialogFrame.config()
+        gui.configureWeigths(dialogFrame, row=1)
+        self._createFilterBox(dialogFrame)
+        self._createTree(dialogFrame)
         if self.message:
             label = tk.Label(bodyFrame, text=self.message, compound=tk.LEFT,
                              image=self.getImage(Icon.LIGHTBULB))
-            label.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
+            label.grid(row=2, column=0, sticky='nw', padx=5, pady=5)
         self.initial_focus = self.tree
         
     def _createTree(self, parent):
         self.tree = BoundTree(parent, self.provider, selectmode=self._selectmode)
         if self._selectOnDoubleClick:
             self.tree.itemDoubleClick = lambda obj: self._handleResult(RESULT_YES)
+        self.tree.grid(row=1, column=0)
+
+    def _createFilterBox(self, content):
+        """ Create the Frame with Filter widgets """
+
+        def _onSearch(e=None):
+
+            def comparison():
+                pattern = self._searchVar.get().lower()
+                return [w[0] for w in self.lista.items()
+                        if pattern in self.lista.get(w[0]).lower()]
+
+            self.tree.update()
+            self.lista = {}
+
+            for item in self.tree.get_children():
+                self.lista[item] = ((self.tree.item(item)['text'] + ' ' +
+                                     self.tree.item(item)['values'][0] +
+                                     ' ' + self.tree.item(item)['values'][1] +
+                                     str(self.tree.item(item)['values'][2])))
+
+            if self._searchVar.get() != '':
+                matchs = comparison()
+                if matchs:
+                    for item in self.tree.get_children():
+                        if item not in matchs:
+                            self.tree.delete(item)
+                else:
+                    self.tree.delete(*self.tree.get_children())
+
+        self.searchBoxframe = tk.Frame(content)
+        label = tk.Label(self.searchBoxframe, text="Filter")
+        label.grid(row=0, column=0, sticky='nw')
+        self._searchVar = tk.StringVar(value='')
+        self.entry = tk.Entry(self.searchBoxframe, bg='white',
+                              textvariable=self._searchVar, width=40)
+
+        self.entry.bind('<KeyRelease>', _onSearch)
+        self.entry.focus_set()
+        self.entry.grid(row=0, column=1, sticky='news')
+        self.searchBoxframe.grid(row=0, column=0, sticky='news', padx=5,
+                                 pady=(10, 5))
 
     def apply(self):
         self.values = self.tree.getSelectedObjects()

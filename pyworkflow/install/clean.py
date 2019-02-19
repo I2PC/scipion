@@ -8,7 +8,7 @@ cleanAll = 'all' in sys.argv
 python = 'python' in sys.argv
 
 def cmd(command):
-    print command
+    print(command)
     os.system(command)
 
 if cleanAll:

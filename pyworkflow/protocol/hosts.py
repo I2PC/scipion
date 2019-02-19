@@ -73,7 +73,10 @@ class HostConfig(OrderedObject):
     
     def getSubmitPrefix(self):
         return self.queueSystem.submitPrefix.get()
-    
+
+    def getCheckCommand(self):
+        return self.queueSystem.checkCommand.get()
+
     def getCancelCommand(self):
         return self.queueSystem.cancelCommand.get()
     
@@ -91,6 +94,9 @@ class HostConfig(OrderedObject):
     
     def getQueueSystem(self):
         return self.queueSystem
+
+    def getJobDoneRegex(self):
+        return self.queueSystem.jobDoneRegex.get()
     
     def setLabel(self, label):
         self.label.set(label)
@@ -189,6 +195,7 @@ class HostConfig(OrderedObject):
                     hostQueue.submitTemplate.set(get('SUBMIT_TEMPLATE'))
                     hostQueue.cancelCommand.set(get('CANCEL_COMMAND'))
                     hostQueue.checkCommand.set(get('CHECK_COMMAND'))
+                    hostQueue.jobDoneRegex.set(get('JOB_DONE_REGEX'))
                     hostQueue.queues = getDict('QUEUES')
                     hostQueue.queuesDefault = getDict('QUEUES_DEFAULT')
 
@@ -217,6 +224,7 @@ class QueueSystemConfig(OrderedObject):
         self.checkCommand = String()
         self.cancelCommand = String()
         self.submitTemplate = String()
+        self.jobDoneRegex = String()
         
     def hasName(self):
         return self.name.hasValue()
@@ -271,6 +279,9 @@ class QueueSystemConfig(OrderedObject):
     
     def setCancelCommand(self, cancelCommand):
         self.cancelCommand.set(cancelCommand)
+
+    def setJobDoneRegex(self,jobDoneRegex):
+        self.jobDoneRegex.set(jobDoneRegex)
     
     def setQueues(self, queues):
         self.queues = queues

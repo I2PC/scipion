@@ -49,7 +49,7 @@ import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
 from widgets import Button, HotButton, IconButton
-from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo, Dialog
+from dialog import showInfo, showError, showWarning, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
 
@@ -109,7 +109,79 @@ class PointerVar:
     
     def remove(self):
         self.set(None)
-    
+
+
+class ScalarWithPointerVar(tk.StringVar):
+    """ tk.StringVar to hold object pointers and scalars. """
+
+    def __init__(self, protocol, changeListener):
+
+        self._pointer = None
+        self._protocol = protocol
+        self.inInit = True
+        tk.StringVar.__init__(self)
+        self.inInit = False
+        self.insideSet = False
+        self.listeners = []
+
+        # Register inner listener
+        tk.StringVar.trace(self, 'w', self._listenDirectEntryChanges)
+        self.trace('w', changeListener)
+
+    def trace(self, mode, callback):
+
+        # let's ignore the mode for now all are "w"
+        self.listeners.append(callback)
+
+    def _listenDirectEntryChanges(self, *args):
+        """ We need to be aware of any change done in the entry.
+        When the user type anything, the set is not invoked.
+        We need to distinguish when this is invoked from the set(),
+        in this case we do nothing"""
+        if not self.insideSet:
+            self._pointer = None
+
+        # Call the listeners
+        for callback in self.listeners:
+            callback(*args)
+
+    def set(self, value):
+        # Flag we are inside the set method to avoid
+        # triggering _listenDirectEntryChanges
+        self.insideSet = True
+        if self.inInit: return
+
+        # If a scalar is being set
+        if not isinstance(value, pwobj.Pointer):
+
+            # Reset the pointer
+            self._pointer = None
+            label = value
+        # it's a pointer
+        else:
+
+            self._pointer = value
+            label, _ = getPointerLabelAndInfo(self._pointer,
+                                          self._protocol.getMapper())
+
+        tk.StringVar.set(self, label)
+
+        # Cancel the flag.
+        self.insideSet = False
+
+    def get(self):
+
+        if self.hasPointer():
+            return self._pointer
+        else:
+            return tk.StringVar.get(self)
+
+    def hasPointer(self):
+        return self._pointer is not None
+
+    def getPointer(self):
+        return self._pointer if self.hasPointer() else None
+
     
 class MultiPointerVar:
     """
@@ -312,8 +384,8 @@ def getObjectLabel(pobj, mapper):
             label = '%s.%s' % (prot.getRunName(), extended)
 
     label = label.replace("\n"," ")
-    if obj is not None:
-        return label + " (%d)" % obj.getObjId()
+    # if obj is not None:
+    #     return label + " (%d)" % obj.getObjId()
     return label
 
     
@@ -322,6 +394,7 @@ class SubclassesTreeProvider(TreeProvider):
     of subclasses objects(of className) found by mapper"""
     CREATION_COLUMN = 'Creation'
     INFO_COLUMN = 'Info'
+    ID_COLUMN = 'Protocol Id'
 
     def __init__(self, protocol, pointerParam, selected=None):
         TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
@@ -358,7 +431,7 @@ class SubclassesTreeProvider(TreeProvider):
                     p = pwobj.Pointer(prot)
                     objects.append(p)
                 
-                for paramName, attr in prot.iterOutputEM():
+                for paramName, attr in prot.iterOutputAttributes():
                     def _checkParam(paramName, attr):
                         # If attr is a sub-classes of any desired one, add it to the list
                         # we should also check if there is a condition, the object 
@@ -435,7 +508,8 @@ class SubclassesTreeProvider(TreeProvider):
 
     def getColumns(self):
         return [('Object', 300), (SubclassesTreeProvider.INFO_COLUMN, 250),
-                (SubclassesTreeProvider.CREATION_COLUMN, 150)]
+                (SubclassesTreeProvider.CREATION_COLUMN, 150),
+                (SubclassesTreeProvider.ID_COLUMN, 100)]
     
     def isSelected(self, obj):
         """ Check if an object is selected or not. """
@@ -457,13 +531,14 @@ class SubclassesTreeProvider(TreeProvider):
             
         obj = pobj.get()
         objId = pobj.getUniqueId()
-        
+        protId = pobj.getObjValue().getObjId()
         isSelected = objId in self.selectedDict
         self.selectedDict[objId] = True
             
         return {'key': objId, 'text': label,
                 'values': (self._getObjectInfoValue(obj),
-                           self._getObjectCreation(obj)),
+                           self._getObjectCreation(obj),
+                           protId),
                 'selected': isSelected, 'parent': parent}
 
     @staticmethod
@@ -526,7 +601,139 @@ class RelationsTreeProvider(SubclassesTreeProvider):
         self._sortObjects(objects)
 
         return objects
-    
+
+
+class ScalarTreeProvider(TreeProvider):
+    """Will implement the methods to provide the object info
+    of scalar outputs"""
+    CREATION_COLUMN = 'Creation'
+    INFO_COLUMN = 'Info'
+
+    def __init__(self, protocol, scalarParam, selected=None):
+        TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
+                              sortingAscending=False)
+
+        self.param = scalarParam
+        self.selected = selected
+        self.selectedDict = {}
+        self.protocol = protocol
+        self.mapper = protocol.mapper
+        self.maxNum = 200
+
+    def getObjects(self):
+        import pyworkflow.em as em
+        # Retrieve all objects of type className
+        project = self.protocol.getProject()
+        className = self.param.paramClass
+        # Get the classes that are valid as input object
+        # em.findClass is very tight to the EMObjects...Since scalars are not
+        # EM object can't be used unless we do something
+        # For now this will work with exact class.
+        classes = [className]
+        objects = []
+
+        # Do no refresh again and take the runs that are loaded
+        # already in the project. We will prefer to save time
+        # here than have the 'very last' version of the runs and objects
+        runs = project.getRuns(refresh=False)
+
+        for prot in runs:
+            # Make sure we don't include previous output of the same
+            # protocol, it will cause a recursive loop
+            if prot.getObjId() != self.protocol.getObjId():
+
+                for paramName, attr in prot.iterOutputAttributes():
+                    def _checkParam(paramName, attr):
+                        # If attr is a sub-classes of any desired one, add it to the list
+                        # we should also check if there is a condition, the object
+                        # must comply with the condition
+                        p = None
+                        if any(isinstance(attr, c) for c in classes):
+                            p = pwobj.Pointer(prot, extended=paramName)
+                            p._allowsSelection = True
+                            objects.append(p)
+
+                    _checkParam(paramName, attr)
+
+        # Sort objects before returning them
+        self._sortObjects(objects)
+
+        return objects
+
+    def _sortObjects(self, objects):
+        objects.sort(key=self.objectKey, reverse=not self.isSortingAscending())
+
+    def objectKey(self, pobj):
+
+        obj = self._getParentObject(pobj, pobj)
+
+        if self._sortingColumnName == ScalarTreeProvider.CREATION_COLUMN:
+            return self._getObjectCreation(obj.get())
+        elif self._sortingColumnName == ScalarTreeProvider.INFO_COLUMN:
+            return self._getObjectInfoValue(obj.get())
+        else:
+            return self._getPointerLabel(obj)
+
+    def getColumns(self):
+        return [('Object', 300), (ScalarTreeProvider.INFO_COLUMN, 250),
+                (ScalarTreeProvider.CREATION_COLUMN, 150)]
+
+    def isSelected(self, obj):
+        """ Check if an object is selected or not. """
+        if self.selected:
+            for s in self.selected:
+                if s and s.getObjId() == obj.getObjId():
+                    return True
+        return False
+
+    @staticmethod
+    def _getParentObject(pobj, default=None):
+        return getattr(pobj, '_parentObject', default)
+
+    def getObjectInfo(self, pobj):
+        parent = self._getParentObject(pobj)
+
+        # Get the label
+        label = self._getPointerLabel(pobj, parent)
+
+        obj = pobj.get()
+        objId = pobj.getUniqueId()
+
+        isSelected = objId in self.selectedDict
+        self.selectedDict[objId] = True
+
+        return {'key': objId, 'text': label,
+                'values': (self._getObjectInfoValue(obj),
+                           self._getObjectCreation(obj)),
+                'selected': isSelected, 'parent': parent}
+
+    @staticmethod
+    def _getObjectCreation(obj):
+
+        return obj.getObjCreation()
+
+    @staticmethod
+    def _getObjectInfoValue(obj):
+
+        return str(obj).replace(obj.getClassName(), '')
+
+    def _getPointerLabel(self, pobj, parent=None):
+
+        # If parent is not provided, try to get it, it might have none.
+        if parent is None: parent = self._getParentObject(pobj)
+
+        # If there is no parent
+        if parent is None:
+            return getObjectLabel(pobj, self.mapper)
+        else:  # This is an item coming from a set
+            # If the object has label include the label
+            if pobj.get().getObjLabel():
+                return 'item %s - %s' % (
+                pobj.get().strId(), pobj.get().getObjLabel())
+            else:
+                return 'item %s' % pobj.get().strId()
+
+
 # --------------------- Other widgets ----------------------------------------
 # http://tkinter.unpythonic.net/wiki/VerticalScrolledFrame
 
@@ -798,6 +1005,12 @@ class ParamWidget:
         
     def _showInfo(self, msg):
         showInfo("Info", msg, self.parent)
+
+    def _showError(self, msg):
+        showError("Error", msg, self.parent)
+
+    def _showWarning(self, msg):
+        showWarning("Warning", msg, self.parent)
         
     def _showWizard(self, e=None):
         wizClass = self.window.wizards[self.wizParamName]
@@ -846,6 +1059,10 @@ class ParamWidget:
         t = type(param)
         entryWidth = 30
         sticky="we"
+
+        # functions to select and remove
+        selectFunc = None
+        removeFunc = None
 
         if t is params.HiddenBooleanParam:
             var = 0
@@ -898,18 +1115,15 @@ class ParamWidget:
             entry.grid(row=0, column=0, sticky='we')
             
             if t is params.RelationParam:
-                btnFunc = self._browseRelation
+                selectFunc = self._browseRelation
                 removeFunc = self._removeRelation
             else:
-                btnFunc = self._browseObject
+                selectFunc = self._browseObject
                 removeFunc = self._removeObject
                 
                 self.visualizeCallback = self._visualizePointerParam
             self._selectmode = 'browse' # single object selection
-                
-            self._addButton("Select", Icon.ACTION_SEARCH, btnFunc)
-            self._addButton("Remove", Icon.ACTION_DELETE, removeFunc)
-        
+
         elif t is params.ProtocolClassParam:
             var = tk.StringVar()
             entry = tk.Label(content, textvariable=var, font=self.window.font,
@@ -939,19 +1153,40 @@ class ParamWidget:
             var = None
             self._onlyLabel = True
         else:
-            var = tk.StringVar()
-            if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
-                # Reduce the entry width for numbers entries
-                entryWidth = self._entryWidth
-                sticky = 'w'
+
+            if not param.allowsPointers:
+                var = tk.StringVar()
+
+                if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
+
+                    # Reduce the entry width for numbers entries
+                    entryWidth = self._entryWidth
+                    sticky = 'w'
+            else:
+                selectFunc = self._browseScalar
+                var = ScalarWithPointerVar(self._protocol,
+                                           self.window._onPointerChanged)
+                self._selectmode = 'browse'
+                sticky = 'ew'
 
             entry = tk.Entry(content, width=entryWidth, textvariable=var, 
                              font=self.window.font)
+
+            # Select all content on focus
+            entry.bind("<FocusIn>",
+                       lambda event: entry.selection_range(0, tk.END))
+
             entry.grid(row=0, column=0, sticky=sticky)
-            
+
             if issubclass(t, params.PathParam):
                 self._entryPath = entry
                 self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
+
+        if selectFunc is not None:
+            self._addButton("Select", Icon.ACTION_SEARCH, selectFunc)
+
+        if removeFunc is not None:
+            self._addButton("Remove", Icon.ACTION_DELETE, removeFunc)
 
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE,
@@ -1040,7 +1275,40 @@ class ParamWidget:
                 self.set(dlg.values[0])
             else:
                 raise Exception('Invalid param class: %s' % type(self.param))
-        
+
+    def _browseScalar(self, e=None):
+        """Select a scalar from outputs
+        This function is suppose to be used only for Scalar Params
+        It's a copy of browseObject...so there could be a refactor here."""
+        value = self.get()
+        selected = []
+        if isinstance(value, list):
+            selected = value
+        elif selected is not None:
+            selected = [value]
+        tp = ScalarTreeProvider(self._protocol, self.param,
+                                    selected=selected)
+
+        def validateSelected(selectedItems):
+            for item in selectedItems:
+                if not getattr(item, '_allowsSelection', True):
+                    return "Please select object of types: %s" % self.param.paramClass.get()
+
+        title = "Select object of types: %s" % self.param.paramClass.__name__
+
+        # Let's ignore conditions so far
+        # pointerCond = self.param.pointerCondition.get()
+        #if pointerCond:
+        #    title += " (condition: %s)" % pointerCond
+
+        dlg = ListDialog(self.parent, title, tp,
+                         "Double click selects the item",
+                         validateSelectionCallback=validateSelected,
+                         selectOnDoubleClick=True)
+
+        if dlg.values:
+            self.set(dlg.values[0])
+
     def _removeObject(self, e=None):
         """ Remove an object from a MultiPointer param. """
         self.var.remove()
@@ -1048,15 +1316,21 @@ class ParamWidget:
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
-        tp = RelationsTreeProvider(self._protocol, self.param,
-                                   selected=self.get())
-        dlg = ListDialog(self.parent, "Select object", tp,
-                         "Double click selects the item, right-click allows "
-                         "you to visualize it",
-                         selectmoded=self._selectmode,
-                         selectOnDoubleClick=True)
-        if dlg.values:
-            self.set(dlg.values[0])
+        try:
+            tp = RelationsTreeProvider(self._protocol, self.param,
+                                       selected=self.get())
+            dlg = ListDialog(self.parent, "Select object", tp,
+                             "Double click selects the item, right-click allows "
+                             "you to visualize it",
+                             selectmoded=self._selectmode,
+                             selectOnDoubleClick=True)
+            if dlg.values:
+                self.set(dlg.values[0])
+        except AttributeError as e:
+            self._showError("Error loading possible inputs. "
+                            "This usually happens because the parameter "
+                            "needs info from other parameters... are "
+                            "previous mandatory parameters set?")
             
     def _removeRelation(self, e=None):
         self.var.remove()
@@ -1112,7 +1386,7 @@ class ParamWidget:
     
     def _onVarChanged(self, *args):
         if self.callback is not None:
-            self.callback(self.paramName)        
+            self.callback(self.paramName)
         
     def show(self):
         """Grid the label and content in the specified row"""
@@ -1541,16 +1815,21 @@ class FormWindow(Window):
         self._createParallel(runFrame, r)
 
         # ---- QUEUE ----
-        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='e',
+
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r,
+                                sticky='e',
                                 column=c)
-        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
-                                                  font=self.font)
+
+        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white',
+                                              font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
-        frame.grid(row=r, column=c+1, pady=5, sticky='ew')
+        frame.grid(row=r, column=c + 1, pady=5, sticky='ew')
+
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
-                             highlightthickness=0,
-                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
-        btnHelp.grid(row=r, column=c+2, padx=(5, 0), pady=5, sticky='w')
+                         highlightthickness=0,
+                         command=self._createHelpCommand(Message.HELP_USEQUEUE))
+
+        btnHelp.grid(row=r, column=c + 2, padx=(5, 0), pady=5, sticky='w')
 
         r = 3  # ---- Wait for other protocols (SCHEDULE) ----
         self._createHeaderLabel(runFrame, Message.LABEL_WAIT_FOR, row=r, sticky='e',
@@ -1797,7 +2076,7 @@ class FormWindow(Window):
         self._close(doSchedule=True)
 
     def execute(self, e=None):
-        
+
         if self.protocol.useQueue():
             if not self._editQueueParams():
                 return
@@ -1855,6 +2134,13 @@ class FormWindow(Window):
             isinstance(param, params.MultiPointerParam) or
             isinstance(param, params.RelationParam)):
             widgetValue = protVar
+        # For Scalar params that allowPointers
+        elif param.allowsPointers:
+            if protVar.hasPointer():
+                # Get the pointer
+                widgetValue = protVar.getPointer()
+            else:
+                widgetValue = protVar.get()
         else:
             widgetValue = protVar.get(param.default.get())  
         return widgetValue
@@ -2054,16 +2340,32 @@ class FormWindow(Window):
     def setParamFromVar(self, paramName):
         param = getattr(self.protocol, paramName, None)
         if param is not None:
-            var = self.widgetDict[paramName]
+            widget = self.widgetDict[paramName]
             try:
-                # Special treatment to pointer params
+                value = widget.get()
+
+                # Special treatment for pointer params
                 if isinstance(param, pwobj.Pointer):
-                    param.copy(var.get())
+                    param.copy(value)
+                # Special treatment for Scalars that allow pointers
+                # Combo widgets do not have .param!
+                elif hasattr(widget, "param") and widget.param.allowsPointers:
+                    if isinstance(value, pwobj.Pointer):
+                        # Copy the pointer, otherwise changes in the
+                        # widget pointer will be reflected
+                        pointerCopy = pwobj.Pointer()
+                        pointerCopy.copy(value)
+                        param.setPointer(pointerCopy)
+                    else:
+                        param.setPointer(None)
+                        param.set(value)
+
                 elif isinstance(param, pwobj.Object):
-                    param.set(var.get())
+                    param.set(value)
             except ValueError:
-                if len(var.get()):
-                    print ">>> ERROR: setting param for: ", paramName, "value: '%s'" % var.get()
+                if len(value):
+                    print(">>> ERROR: setting param for: ", paramName,
+                          "value: '%s'" % value)
                 param.set(None)
                 
     def updateLabelAndCommentVars(self):
