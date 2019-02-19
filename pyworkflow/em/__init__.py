@@ -27,7 +27,6 @@
 This modules contains classes related with EM
 """
 
-
 from constants import *
 from data import *
 from data_tiltpairs import *
@@ -36,6 +35,7 @@ from convert import *
 from pyworkflow.utils import importFromPlugin
 from pyworkflow.wizard import Wizard
 from pyworkflow.viewer import Viewer
+from pyworkflow import Config
 
 import pyworkflow.plugin
 
@@ -75,17 +75,47 @@ def findSubClasses(classDict, className):
     return subclasses
 
 
+def getPreferredViewers(className):
+    """ Find and import the preferred viewers for this class. """
+    preferredViewerNames = Config.VIEWERS.get(className, [])
+    if not isinstance(preferredViewerNames, list):
+        preferredViewerNames = [preferredViewerNames]
+    preferredViewers = []  # we will try to import them and store here
+    for prefViewerStr in preferredViewerNames:
+        try:
+            (prefViewerModule, prefViewerClassName) = prefViewerStr.rsplit('.', 1)
+            prefViewer = importFromPlugin(prefViewerModule, prefViewerClassName, doRaise=True)
+            preferredViewers.append(prefViewer)
+        except Exception as e:
+            print("Couldn't load \"%s\" as preferred viewer.\n"
+                  "There might be a typo in your VIEWERS "
+                  "variable or an error in the viewer's plugin installation" % prefViewerStr)
+            print(e)
+    return preferredViewers
+
 def findViewers(className, environment):
     """ Find the available viewers for this class. """
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
+    preferredViewers = getPreferredViewers(className)
+    preferedFlag = 0
+
     for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
-                    viewers.append(viewer)
-                    break
+                    for prefViewer in preferredViewers:
+                        if viewer is prefViewer:
+                            viewers.insert(0, viewer)
+                            preferedFlag = 1
+                            break
+                    else:
+                        if t == cls:
+                            viewers.insert(preferedFlag, viewer)
+                        else:
+                            viewers.append(viewer)
+                        break
     return viewers
 
 

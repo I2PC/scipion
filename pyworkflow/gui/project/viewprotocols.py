@@ -491,15 +491,14 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
         viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
 
-        def yatevalejosemi(viewer):
+        def viewerCallback(viewer):
             return lambda: self._visualizeObject(viewer, obj)
 
         for v in viewers:
             actions.append(('Open with %s' % v.__name__,
-                            yatevalejosemi(v),
+                            viewerCallback(v),
                             Icon.ACTION_VISUALIZE))
-
-        # EDIT 
+         # EDIT
         actions.append((Message.LABEL_EDIT,
                         lambda: self._editObject(obj),
                         Icon.ACTION_EDIT))

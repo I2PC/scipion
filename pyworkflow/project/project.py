@@ -247,7 +247,8 @@ class Project(object):
                 # we are loading a project after a Project.setDbName,
                 # used when running protocols
                 settingsPath = os.path.join(self.path, self.settingsPath)
-                print("settingsPath: ", settingsPath)
+                if pwutils.envVarOn('SCIPION_DEBUG'):
+                    print("settingsPath: %s" % settingsPath)
 
                 if os.path.exists(settingsPath):
                     self.settings = config.ProjectSettings.load(settingsPath)

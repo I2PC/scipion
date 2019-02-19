@@ -26,7 +26,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 import os
 import importlib
 import pkgutil
@@ -209,6 +208,7 @@ class Domain:
         return cls._name
 
 
+
 class Plugin:
     __metaclass__ = ABCMeta
 
@@ -334,62 +334,3 @@ class PluginInfo:
     def getKeywords(self):
         return self._metadata.get('Keywords', '')
 
-
-# FIXME: Remove the following OLD plugin class when not longer needed
-# class Plugin(object):
-#
-#     def __init__(self, name, version=None, configVars=None,
-#                  logo=None, bibtex=None):
-#         # Plugin name - only mandatory attribute
-#         self.name = name
-#         # Plugin version
-#         self.version = version
-#         # dict with default values for env vars needed
-#         self.configVars = configVars
-#         # path to the logo, relative to each plugin's plugin.py file
-#         self.logo = logo
-#         # List with the default plugin references e.g. []
-#         self.bibtex = bibtex
-#         # Set default env vars
-#         self.setDefaultEnviron()
-#         # plugin pip metadata
-#         self.metadata = self.getMetadata()
-#
-#     def setDefaultEnviron(self):
-#         for k in self.configVars:
-#             os.environ.setdefault(k, self.configVars[k])
-#         environ = pwutils.Environ(os.environ)
-#         return environ
-#
-#     def registerPluginBinaries(self, env):
-#         """Overwrite in subclass"""
-#         pass
-#
-#     def getMetadata(self):
-#         try:
-#             pipPackage = pkg_resources.get_distribution(self.name)
-#             metadataLines = [l for l in pipPackage._get_metadata(pipPackage.PKG_INFO)]
-#             metadataTuples = message_from_string('\n'.join(metadataLines))
-#
-#         except Exception as e:
-#             print("Plugin %s seems is not a pip module yet. No metadata found" % self.name)
-#             metadataTuples = message_from_string('Author: plugin in development mode?')
-#
-#         metadata = OrderedDict()
-#         for v in metadataTuples.items():
-#             if v[0] == 'Keywords':
-#                 break
-#             metadata[v[0]] = v[1]
-#         return metadata
-#
-#     def getAuthor(self):
-#         return self.metadata.get('Author', "")
-#
-#     def getAuthorEmail(self):
-#         return self.metadata.get('Author-email', '')
-#
-#     def getHomePage(self):
-#         return self.metadata.get('Home-page', '')
-#
-#     def getKeywords(self):
-#         return self.metadata.get('Keywords', '')
