@@ -617,6 +617,58 @@ class Protocol(Step):
             elif attr.isPointer():
                 yield key, attr
 
+    def inputProtocolDict(self):
+        """
+        This function returns a dictionary of protocols that need to update
+        their database to launch this protocol (this method is only used
+        when a WORKFLOW is restarted or continued).
+        Actions done here are:
+        1. Iterate over the main input Pointer of this protocol
+           (here, 3 different cases are analyzed)
+
+           A) When the pointer points to a protocol
+
+           B) When the pointer points to another object (INDIRECTLY).
+              - The pointer has an _extended value (new parameters configuration
+                in the protocol)
+
+           C) When the pointer points to another object (DIRECTLY).
+              - The pointer has not an _extended value (old parameters
+                configuration in the protocol)
+
+        2. The PROTOCOL to which the pointer points is determined and saved in
+           the dictionary
+
+        3. If this pointer points to another object (case B and C):
+           - Iterate over the main attributes of this pointer
+           - if any attribute is a pointer, then we move to PROTOCOL and repeat
+             this procedure from step 1
+        """
+        protocolDict = {}
+        protocol = None
+        for key, attrInput in self.iterInputAttributes():
+            output = attrInput.get()
+            if isinstance(output, Protocol):  # case A
+                protocol = output
+                output = None
+            else:
+                if attrInput.hasExtended():  # case B
+                    protocol = attrInput.getObjValue()
+                else:  # case C
+                    protocol = self.getProject().getProtocol(output.getObjParentId())
+
+                if output is not None:
+                    for k, attr in output.getAttributes():
+                        if isinstance(attr, Pointer):
+                            auxDict = protocol.inputProtocolDict()
+                            for key in auxDict:
+                                if key not in protocolDict.keys():
+                                    protocolDict[key] = auxDict[key]
+
+            protocolDict[protocol.getObjId()] = protocol
+
+        return protocolDict
+
     def hasLinkedInputs(self):
         """ Return if True if some of the input pointers are referring to
         an output that is not ready yet.
@@ -690,6 +742,14 @@ class Protocol(Step):
                 if attr.isStreamOpen():
                     return True
         return False
+
+    def worksInStreaming(self):
+        # A protocol should work in streaming if it implements the stepCheck()
+        # Get the stepCheck method from the Protocol
+        baseStepCheck = Protocol._stepsCheck
+        ownStepCheck = self._stepsCheck
+
+        return not pwutils.isSameFunction(baseStepCheck, ownStepCheck)
 
     def allowsGpu(self):
         """ Returns True if this protocol allows GPU computation. """
@@ -819,6 +879,15 @@ class Protocol(Step):
         step.setIndex(len(self._steps))
 
         return step.getIndex()
+
+    def _setStatusSteps(self, status):
+        """Set the status of all steps"""
+        stepsSet = StepSet(filename=self.getStepsFile())
+        for step in stepsSet:
+            step.setStatus(status)
+            stepsSet.update(step)
+        stepsSet.write()
+        stepsSet.close()  # Close the connection
 
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """

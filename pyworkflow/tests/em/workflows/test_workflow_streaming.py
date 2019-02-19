@@ -110,7 +110,8 @@ class TestStreamingWorkflow(BaseTest):
                                   useAlignment=False,
                                   doApplyDoseFilter=False)
 
-        protOF.inputMovies.set(protImport.outputMovies)
+        protOF.inputMovies.set(protImport)
+        protOF.inputMovies.setExtended('outputMovies')
         self.proj.launchProtocol(protOF, wait=False)
         self._waitOutput(protOF, 'outputMicrographs')
 
@@ -118,7 +119,8 @@ class TestStreamingWorkflow(BaseTest):
 
         protCTF = self.newProtocol(ProtCTFFind,
                                    objLabel='ctffind4')
-        protCTF.inputMicrographs.set(protOF.outputMicrographs)
+        protCTF.inputMicrographs.set(protOF)
+        protCTF.inputMicrographs.setExtended('outputMicrographs')
         self.proj.launchProtocol(protCTF, wait=False)
         self._waitOutput(protCTF, 'outputCTF')
 

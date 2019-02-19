@@ -104,3 +104,12 @@ def checkPlugin(module):
     if not getattr(module, '_plugin', None):
         print('WARNING: module "%s" using old package structure, '
               '_plugin attribute missing' % module.__name__)
+
+
+def isSameFunction(function1, function2):
+    """ Check if the content of 2 functions is the same.
+    This could be used to check if a method has been overridden or not
+    From https://stackoverflow.com/questions/13620542/detecting-empty-function-definitions-in-python"""
+    return function1.__code__.co_code == function2.__code__.co_code
+
+

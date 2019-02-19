@@ -298,6 +298,11 @@ Do you really want to continue?'
     
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
+
+    TITLE_RESTART_WORKFLOW = 'Confirm RESTART'
+    LABEL_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
+    TITLE_LAUNCHED_WORKFLOW_FAILED = 'Error while launching the Workflow'
+    LABEL_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
     
     #SHOWJ_WEB
     SHOWJ_TITLE = 'Showj'
