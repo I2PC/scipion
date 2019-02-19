@@ -99,6 +99,7 @@ def findViewers(className, environment):
     cls = findClass(className)
     baseClasses = cls.mro()
     preferredViewers = getPreferredViewers(className)
+    preferedFlag = 0
 
     for viewer in Domain.getViewers().values():
         if environment in viewer._environments:
@@ -107,9 +108,13 @@ def findViewers(className, environment):
                     for prefViewer in preferredViewers:
                         if viewer is prefViewer:
                             viewers.insert(0, viewer)
+                            preferedFlag = 1
                             break
                     else:
-                        viewers.append(viewer)
+                        if t == cls:
+                            viewers.insert(preferedFlag, viewer)
+                        else:
+                            viewers.append(viewer)
                         break
     return viewers
 
