@@ -173,7 +173,8 @@ try:
     config.read([SCIPION_CONFIG, SCIPION_LOCAL_CONFIG])
 
     def getPaths(section):
-        return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
+        return dict([(key, join(SCIPION_HOME,
+                                os.path.expanduser(os.path.expandvars(path))))
                      for key, path in config.items(section)])  # works in 2.4
 
     def getValues(section):
