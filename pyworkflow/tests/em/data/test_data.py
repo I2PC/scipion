@@ -252,6 +252,21 @@ class TestImageHandler(unittest.TestCase):
         else:
             pwutils.cleanPath(outFn)
 
+    def test_truncateMask(self):
+        ih = ImageHandler()
+
+        maskFn = self.dataset.getFile('masks/mask.vol')
+        outFn = join('/tmp', 'mask.vol')
+
+        ih.truncateMask(maskFn, outFn, newDim=128)
+        EXPECTED_SIZE = (128, 128, 128, 1)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+
+        pwutils.cleanPath(outFn)
+
 
 class TestSetOfMicrographs(BaseTest):
 
