@@ -28,33 +28,36 @@
 This module implement some wizards
 """
 
-import Tkinter as tk
 import os
+import Tkinter as tk
 import ttk
 
-import xmipp
-
-import pyworkflow.gui.dialog as dialog
 from pyworkflow import findResource
+from pyworkflow.object import PointerList, Pointer
+from pyworkflow.wizard import Wizard
+from pyworkflow.utils import importFromPlugin
+from pyworkflow.em.convert import ImageHandler, Ccp4Header
 from pyworkflow.em.constants import (UNIT_PIXEL,
-                                     UNIT_PIXEL_FOURIER,
                                      UNIT_ANGSTROM,
+                                     UNIT_PIXEL_FOURIER,
                                      FILTER_LOW_PASS,
                                      FILTER_BAND_PASS,
                                      FILTER_HIGH_PASS
                                      )
-from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
-from pyworkflow.em.headers import Ccp4Header
-from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
-                                                    ProtImportCoordinates,
-                                                    ProtImportVolumes)
+from pyworkflow.em.protocol import (ProtImportImages,
+                                    ProtImportCoordinates,
+                                    ProtImportCoordinatesPairs,
+                                    ProtImportVolumes,
+                                    ProtImportSequence)
+import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow.gui.widgets import LabelSlider
-from pyworkflow.object import PointerList, Pointer
-from pyworkflow.wizard import Wizard
-
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+from pyworkflow.em.protocol.protocol_import import ProtImportSequence
+from pyworkflow.em.data import String
+import xmippLib
 
 #===============================================================================
 #    Wizard EM base class
@@ -494,7 +497,7 @@ class ImagePreviewDialog(PreviewDialog):
         if index:
             filename = "%03d@%s" % (index, filename)
         
-#        self.image = xmipp.Image()
+#        self.image = xmippLib.Image()
         self.image = ImageHandler()._img
 
 
@@ -572,10 +575,10 @@ class DownsampleDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmipp.fastEstimateEnhancedPSD(self.rightImage,
-                                      self.lastObj.getFileName(),
-                                      self.getDownsample(), self.dim, 2)
-        
+        xmippLib.fastEstimateEnhancedPSD(self.rightImage,
+                                         self.lastObj.getFileName(),
+                                         self.getDownsample(), self.dim, 2)
+
 
 class CtfDialog(DownsampleDialog):
     
@@ -709,10 +712,10 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getLowFreq(), self.getHighFreq(),
-                             self.getFreqDecay(), self.dim)
+        xmippLib.bandPassFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
+                                self.getLowFreq(), self.getHighFreq(),
+                                self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
@@ -759,9 +762,9 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getFreqSigma(), self.dim)
+        xmippLib.gaussianFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
+                                self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):
@@ -852,7 +855,8 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
 
 class ImportCoordinatesBoxSizeWizard(Wizard):
-    _targets = [(ProtImportCoordinates, ['boxSize'])]
+    _targets = [(ProtImportCoordinates, ['boxSize']),
+                (ProtImportCoordinatesPairs, ['boxSize'])]
 
     def _getBoxSize(self, protocol):
 
@@ -900,4 +904,58 @@ class ImportOriginVolumeWizard(Wizard):
         z = zdim * sampling
         return x, y, z
 
+
+class ListTreeProviderString(ListTreeProvider):
+    def getText(self, obj):
+        return obj.get()
+
+
+class GetStructureChainsWizard(Wizard):
+    _targets = [(ProtImportSequence, ['inputStructureChain'])
+                # NOTE: be careful if you change this class since
+                # chimera-wizard inherits from it.
+                #(ChimeraModelFromTemplate, ['inputStructureChain'])
+                #(atomstructutils, ['inputStructureChain'])
+                ]
+
+    def getModelsChainsStep(self, protocol):
+        self.structureHandler = AtomicStructHandler()
+        if hasattr(protocol, 'pdbId'):
+            if protocol.pdbId.get() is not None:
+                pdbID = protocol.pdbId.get()
+                fileName = self.structureHandler.readFromPDBDatabase(
+                    os.path.basename(pdbID), dir="/tmp/")
+            else:
+                fileName = protocol.pdbFile.get()
+        else:
+            if protocol.pdbFileToBeRefined.get() is not None:
+                fileName = os.path.abspath(protocol.pdbFileToBeRefined.get(
+                ).getFileName())
+
+        self.structureHandler.read(fileName)
+        self.structureHandler.getStructure()
+        models = self.structureHandler.getModelsChains()
+        return models
+
+    def editionListOfChains(self, models):
+        self.chainList = []
+        for model, chainDic in models.iteritems():
+            for chainID, lenResidues in chainDic.iteritems():
+
+                self.chainList.append(('{"model": %d, "chain": "%s", "residues": %d}' %
+                                       (model, str(chainID), lenResidues)))
+
+    def show(self, form):
+        protocol = form.protocol
+        models = self.getModelsChainsStep(protocol)
+
+        self.editionListOfChains(models)
+        finalChainList = []
+        for i in self.chainList:
+            finalChainList.append(String(i))
+        provider = ListTreeProviderString(finalChainList)
+        dlg = dialog.ListDialog(form.root,"Model chains", provider,
+                                "Select one of the chains (model, chain, "
+                                "number of chain residues)" )
+        form.setVar('inputStructureChain', dlg.values[0].get())
 

@@ -28,7 +28,7 @@ import os
 from os.path import join
 from glob import glob
 import re
-from datetime import timedelta, datetime
+from datetime import datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -57,20 +57,20 @@ class ProtImportFiles(ProtImport):
     def _defineParams(self, form):
         importChoices = self._getImportChoices()
         filesCondition = self._getFilesCondition()
-        
+
         form.addSection(label='Import')
 
         if len(importChoices) > 1: # not only from files
-            form.addParam('importFrom', params.EnumParam, 
+            form.addParam('importFrom', params.EnumParam,
                           choices=importChoices, default=self._getDefaultChoice(),
                           label='Import from',
                           help='Select the type of import.')
         else:
-            form.addHidden('importFrom', params.EnumParam, 
+            form.addHidden('importFrom', params.EnumParam,
                           choices=importChoices, default=self.IMPORT_FROM_FILES,
                           label='Import from',
                           help='Select the type of import.')
-        form.addParam('filesPath', params.PathParam, 
+        form.addParam('filesPath', params.PathParam,
                       condition=filesCondition,
                       label="Files directory",
                       help="Directory with the files you want to import.\n\n"
@@ -87,7 +87,7 @@ class ProtImportFiles(ProtImport):
                            "NOTE: wildcard characters ('*', '?', '#') "
                            "cannot appear in the actual path.)")
         form.addParam('filesPattern', params.StringParam,
-                      label='Pattern', 
+                      label='Pattern',
                       condition=filesCondition,
                       help="Pattern of the files to be imported.\n\n"
                            "The pattern can contain standard wildcards such as\n"
@@ -97,7 +97,7 @@ class ProtImportFiles(ProtImport):
                            "('*', '?', '#', ':', '%') cannot appear in the "
                            "actual path.")
         form.addParam('copyFiles', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED, 
+                      expertLevel=params.LEVEL_ADVANCED,
                       label="Copy files?",
                       help="By default the files are not copied into the "
                            "project to avoid data duplication and to save "
@@ -111,7 +111,7 @@ class ProtImportFiles(ProtImport):
         self._defineAcquisitionParams(form)
 
         form.addSection('Streaming')
-        
+
         form.addParam('dataStreaming', params.BooleanParam, default=False,
               label="Process data in streaming?",
               help="Select this option if you want import data as it is "
@@ -129,7 +129,7 @@ class ProtImportFiles(ProtImport):
                    "added to it. \n"
                     "Note 1:  The default value is  high (12 hours) to avoid "
                    "the protocol finishes during the aqcuisition of the "
-                   "microscpe. You can also stop it from right click and press "
+                   "microscope. You can also stop it from right click and press "
                    "STOP_STREAMING.\n"
                    "Note 2: If you're using individual frames when importing "
                    "movies, the timeout won't be refreshed until a whole "
@@ -140,6 +140,8 @@ class ProtImportFiles(ProtImport):
               label="File timeout (secs)",
               help="Interval of time (in seconds) after which, if a file has "
                    "not changed, we consider it as a new file. \n")
+
+        self._defineBlacklistParams(form)
 
     def _defineImportParams(self, form):
         """ Override to add options related to the different types
@@ -152,9 +154,14 @@ class ProtImportFiles(ProtImport):
         """
         pass
 
+    def _defineBlacklistParams(self, form):
+        """ Override to add options related to blacklist info.
+        """
+        pass
+
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_FILES
-    
+
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
@@ -167,9 +174,9 @@ class ProtImportFiles(ProtImport):
                 if self.numberOfFiles == 0:
                     errors.append("There are no files matching the pattern %s"
                                   % self.getPattern())
-            
+
         return errors
-    
+
     #--------------------------- BASE methods to be overriden ------------------
     def _getImportChoices(self):
         """ Return a list of possible choices
@@ -177,14 +184,14 @@ class ProtImportFiles(ProtImport):
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
         return ['files']
-    
+
     def _getFilesCondition(self):
         """ Return an string representing the condition
         when to display the files path and pattern to grab
         files.
         """
         return '(importFrom == %d)' % self.IMPORT_FROM_FILES
-    
+
     #--------------------------- UTILS functions -------------------------------
     def getPattern(self):
         """ Expand the pattern using environ vars or username
@@ -193,7 +200,7 @@ class ProtImportFiles(ProtImport):
         self._idRegex = None
         filesPath = self.filesPath.get('').strip()
         filesPattern = self.filesPattern.get('').strip()
-        
+
         if filesPattern:
             fullPattern = join(filesPath, filesPattern)
         else:
@@ -201,7 +208,7 @@ class ProtImportFiles(ProtImport):
 
         pattern = expandPattern(fullPattern.replace("$", ""))
         match = re.match('[^#]*(#+)[^#]*', pattern)
-        
+
         if match is not None:
             g = match.group(1)
             n = len(g)
@@ -211,9 +218,9 @@ class ProtImportFiles(ProtImport):
             idregex = idregex.replace('?', '.')
             self._idRegex = re.compile(idregex)
             pattern = pattern.replace(g, '[0-9]'*n)
-        
-        return pattern   
-    
+
+        return pattern
+
     def getMatchFiles(self, pattern=None):
         """ Return a sorted list with the paths of files that
         matched the pattern.
@@ -224,10 +231,10 @@ class ProtImportFiles(ProtImport):
         filePaths = glob(pattern)
         filePaths.sort()
         self.numberOfFiles = len(filePaths)
-        
+
         return filePaths
 
-    def getCopyOrLink(self):    
+    def getCopyOrLink(self):
         # Set a function to copyFile or createLink
         # depending in the user selected option 
         if self.copyFiles:
@@ -249,12 +256,16 @@ class ProtImportFiles(ProtImport):
 
         return delta < fileTimeout
 
+    def isBlacklisted(self, fileName):
+        """ Overwrite in subclasses """
+        return False
+
     def iterFiles(self):
         """ Iterate through the files matched with the pattern.
         Provide the fileName and fileId.
         """
         filePaths = self.getMatchFiles()
-        
+
         for fileName in filePaths:
             if self._idRegex:
                 # Try to match the file id from filename
@@ -268,7 +279,11 @@ class ProtImportFiles(ProtImport):
 
             else:
                 fileId = None
-                
-            yield fileName, fileId            
+
+            yield fileName, fileId
+
+    def worksInStreaming(self):
+        # Import protocols always work in streaming
+        return True
 
 

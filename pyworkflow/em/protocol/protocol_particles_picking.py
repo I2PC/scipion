@@ -75,7 +75,7 @@ class ProtParticlePicking(ProtParticles):
                               self.getInputMicrographs().getSize()))
 
         if self.getOutputsSize() >= 1:
-            for key, output in self.iterOutputAttributes(EMObject):
+            for key, output in self.iterOutputAttributes():
                 msg = self.getMethods(output)
                 methodsMsgs.append("%s: %s"%(self.getObjectTag(output), msg))
         else:
@@ -90,7 +90,7 @@ class ProtParticlePicking(ProtParticles):
                            % self.getInputMicrographs().getSize())
 
         if self.getOutputsSize() >= 1:
-            for key, output in self.iterOutputAttributes(EMObject):
+            for key, output in self.iterOutputAttributes():
                 summary.append("*%s:* \n %s " % (key, output.getObjComment()))
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
@@ -160,7 +160,8 @@ class ProtParticlePicking(ProtParticles):
         suffix = self.__getOutputSuffix()
         outputName = self.OUTPUT_PREFIX + suffix
 
-        from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
+        readSetOfCoordinates = pwutils.importFromPlugin('xmipp3.convert',
+                                                'readSetOfCoordinates')
         inputset = self.getInputMicrographs()
         # micrographs are the input set if protocol is not finished
         outputset = self._createSetOfCoordinates(inputset, suffix=suffix)
@@ -284,7 +285,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     def _pickMicrographList(self, micList, *args):
         """ This function can be implemented by subclasses if it is a more
-        effcient way to pick many micrographs at once.
+        efficient way to pick many micrographs at once.
          Default implementation will just call the _pickMicrograph
         """
         for mic in micList:

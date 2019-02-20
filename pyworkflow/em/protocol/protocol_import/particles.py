@@ -27,13 +27,13 @@
 from os.path import exists
 from os.path import abspath
 
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
 from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 from images import ProtImportImages
-
 
 
 class ProtImportParticles(ProtImportImages):
@@ -46,9 +46,10 @@ class ProtImportParticles(ProtImportImages):
     IMPORT_FROM_RELION = 3
     IMPORT_FROM_SCIPION = 4
     IMPORT_FROM_FREALIGN = 5
+    IMPORT_FROM_EMAN = 6
 
-    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign']
-    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par']
+    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign', 'eman']
+    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par', 'lst']
     alignTypeList = [ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
 
     def _getImportChoices(self):
@@ -74,31 +75,32 @@ class ProtImportParticles(ProtImportImages):
                        "*xmipp3*: images.xmd\n"
                        "*relion*: itXX_data.star\n"
                        "*scipion*: particles.sqlite\n"
+                       "*eman*: particleSet.lst\n"
                        "" % ', '.join(self.importFormats))
 
         form.addParam('emxFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       label='Input EMX file',
                       help="Select the EMX file containing particles "
                            "information.\n See more about \n"
                            "[[http://i2pc.cnb.csic.es/emx][EMX format]]")
 
         form.addParam('alignType', params.EnumParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
-                      default = 0,
-                      choices =self.alignTypeList,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      default=0,
+                      choices=self.alignTypeList,
                       label='Alignment Type',
                       help="Is this a 2D alignment, a 3D alignment or a set of projections")
 #
         form.addParam('mdFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Particles metadata file',
                       help="Select the particles Xmipp metadata file.\n"
                            "It is usually a images.xmd file result\n"
                            "from Xmipp protocols execution.")
         
         form.addParam('starFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_RELION,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Star file',
                       help="Select a *_data.star file from a\n"
                            "previous Relion execution."
@@ -117,21 +119,25 @@ class ProtImportParticles(ProtImportImages):
                            "longer unique.")
         
         form.addParam('sqliteFile', params.FileParam,
-              condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+              condition='(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
               label='Particles sqlite file',
               help="Select the particles sqlite file.\n")
 
         form.addParam('frealignLabel', params.LabelParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='For Frealign you need to import both stack and .par files.')  
         form.addParam('stackFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='Stack file',
                       help="Select an stack file with the particles.")          
         form.addParam('parFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
                       label='Param file',
-                      help="Select a Frealign .par file with the refinement information.")        
+                      help="Select a Frealign .par file with the refinement information.")
+        form.addParam('lstFile', params.FileParam,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMAN,
+                      label='Lst file',
+                      help='Select a *.lst set file from EMAN2 project.')
         
         
     def _defineAcquisitionParams(self, form):
@@ -153,16 +159,24 @@ class ProtImportParticles(ProtImportImages):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            from pyworkflow.em.packages.emxlib import EmxImport
+            EmxImport = importFromPlugin('emxlib.convert', 'EmxImport',
+                                  errorMsg='Emx is needed to import .emx files',
+                                  doRaise=True)
             self.importFilePath = abspath(self.emxFile.get('').strip())
             return EmxImport(self, self.importFilePath,
                                    self.alignTypeList[self.alignType.get()])
+
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            XmippImport = importFromPlugin('xmipp3.convert', 'XmippImport',
+                                           'Xmipp is needed to import .xmd files',
+                                           doRaise=True)
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
+
         elif self.importFrom == self.IMPORT_FROM_RELION:
-            from pyworkflow.em.packages.relion.dataimport import RelionImport
+            RelionImport = importFromPlugin('relion.convert', 'RelionImport',
+                              errorMsg='Relion is needed to import .star files',
+                              doRaise=True)
             self.importFilePath = self.starFile.get('').strip()
             return RelionImport(self, self.starFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
@@ -171,8 +185,17 @@ class ProtImportParticles(ProtImportImages):
             return ScipionImport(self, self.importFilePath)    
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
-            from pyworkflow.em.packages.grigoriefflab.dataimport import GrigorieffLabImportParticles
-            return GrigorieffLabImportParticles(self, self.parFile.get(), self.stackFile.get())
+            GrigorieffLabImportParticles = importFromPlugin(
+                     'grigoriefflab.convert', 'GrigorieffLabImportParticles',
+                     errorMsg='GrigorieffLab is needed to import .stk files',
+                     doRaise=True)
+            return GrigorieffLabImportParticles(self, self.parFile.get(),
+                                                self.stackFile.get())
+        elif self.importFrom == self.IMPORT_FROM_EMAN:
+            self.importFilePath = self.lstFile.get('').strip()
+            EmanImport = importFromPlugin('eman2.convert', 'EmanImport',
+                                          doRaise=True)
+            return EmanImport(self, self.lstFile.get())
         else:
             self.importFilePath = ''
             return None 
@@ -189,15 +212,17 @@ class ProtImportParticles(ProtImportImages):
         
         if self.hasAttribute('outputParticles'):
             particles = self.outputParticles
-            summary += ' Particles: *%d* (ctf=%s, alignment=%s, phaseFlip=%s)\n' % (particles.getSize(),
-                                                                                    particles.hasCTF(),
-                                                                                    particles.getAlignment(),
-                                                                                    particles.isPhaseFlipped())
-                                                                      
-        if self.hasAttribute('outputCoordinates'): # EMX files can contain only Coordinates information
+            summary += ' Particles: *%d* ' % particles.getSize()
+            summary += ('(ctf=%s, alignment=%s, phaseFlip=%s)\n'
+                        % (particles.hasCTF(), particles.getAlignment(),
+                           particles.isPhaseFlipped()))
+
+        # EMX files can contain only Coordinates information
+        if self.hasAttribute('outputCoordinates'):
             summary += '   Coordinates: *%d* \n' % (self.outputCoordinates.getSize())
-            
-        if self.hasAttribute('outputMicrographs'): # EMX files can contain only Coordinates information
+
+        # EMX files can contain only Coordinates information
+        if self.hasAttribute('outputMicrographs'):
             summary += '   Micrographs: *%d* \n' % (self.outputMicrographs.getSize())
         
         if self.copyFiles:
@@ -250,7 +275,6 @@ class ProtImportAverages(ProtImportParticles):
             
     def _defineAcquisitionParams(self, form):
         form.addParam('samplingRate', params.FloatParam, default=1.,
-                   label=Message.LABEL_SAMP_RATE)
+                      label=Message.LABEL_SAMP_RATE)
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.expertLevel.set(LEVEL_ADVANCED)
-        

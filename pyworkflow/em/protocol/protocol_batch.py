@@ -447,7 +447,7 @@ class ProtUserSubSet(BatchProtocol):
             if isinstance(inputObj, EMSet):
                 inputStr += ' of size %s' % inputObj.getSize()
         output = ''
-        for _, attr in self.iterOutputAttributes(EMObject):
+        for _, attr in self.iterOutputAttributes():
             output += attr.getClassName()
             if isinstance(attr, EMSet):
                 output += ' of size %s' % attr.getSize()
@@ -504,7 +504,6 @@ class ProtCreateMask(BatchProtocol):
 
     def _methods(self):
         return self._summary()
-
 
 
 class ProtCreateFSC(BatchProtocol):

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from pyworkflow.em.viewer import ChimeraClient, ChimeraProjectionClient
+from pyworkflow.em.viewers import ChimeraClient, ChimeraProjectionClient
 import os, sys
 import argparse
-import xmipp
+import xmippLib
 
 def main():
     commonParser = argparse.ArgumentParser(add_help=False, prog='Chimera Client')
@@ -29,7 +29,7 @@ def main():
     projectorParser.add_argument('--showjPort', help='Port to link projections to chimera', type=int)
 
 
-    splineDegreeDict = {'NEAREST': xmipp.NEAREST, 'LINEAR': xmipp.LINEAR, 'BSPLINE3': xmipp.BSPLINE3}
+    splineDegreeDict = {'NEAREST': xmippLib.NEAREST, 'LINEAR': xmippLib.LINEAR, 'BSPLINE3': xmippLib.BSPLINE3}
 
     args = parentParser.parse_args()
     volfile = args.input

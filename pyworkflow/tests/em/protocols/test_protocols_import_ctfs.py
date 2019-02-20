@@ -36,6 +36,7 @@ class TestImportCTFs(BaseTest):
         setupTestProject(cls)
         cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dsGrigorieff = DataSet.getDataSet('grigorieff')
+        cls.dsEman2 = DataSet.getDataSet('eman')
 
         # First, import a set of micrographs that will be used
         # from all ctf test cases
@@ -143,3 +144,15 @@ class TestImportCTFs(BaseTest):
 
         # The whole set (3 items) should find its corresponding CTF
         self.assertEqual(protCTF2.outputCTF.getSize(), 3)
+
+    def testImportEman2(self):
+        protCTF = self.newProtocol(ProtImportCTF,
+                                   importFrom=ProtImportCTF.IMPORT_FROM_EMAN2,
+                                   filesPath=self.dsEman2.getFile('ctfs'),
+                                   filesPattern='BPV*json')
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.setObjLabel('import from eman2')
+        self.launchProtocol(protCTF)
+
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem when importing ctfs.")

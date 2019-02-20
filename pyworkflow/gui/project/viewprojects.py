@@ -29,11 +29,11 @@ import Tkinter as tk
 import tkFont
 
 import pyworkflow as pw
-from pyworkflow.project import PROJECT_DBNAME
+from pyworkflow.project import Project
 from pyworkflow.utils.utils import prettyDate, prettyTime
 from pyworkflow.utils.path import getHomePath
 
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui.dialog import askString, askYesNo, showError
@@ -167,11 +167,10 @@ class ProjectsView(tk.Frame):
         self.createProjectList(self.text)
         self.openProject(projName)
 
-
     def openProject(self, projName):
         from subprocess import Popen
         script = pw.join('apps', 'pw_project.py')
-        Popen([os.environ['SCIPION_PYTHON'], script, projName])
+        Popen([pw.PYTHON, script, projName])
 
     def deleteProject(self, projName):
         if askYesNo(Message.TITLE_DELETE_PROJECT,
@@ -231,6 +230,7 @@ class ProjectCreateWindow(Window):
         self.btnBrowse.grid(row=1, column=2, sticky='e', padx=5, pady=5)
 
         self.initial_focus = entryName
+        self.initial_focus.focus()
 
         btnFrame = tk.Frame(content)
         btnFrame.columnconfigure(0, weight=1)
@@ -350,10 +350,11 @@ class ProjectImportWindow(Window):
         self.btnSearch = IconButton(content, 'Browse', Icon.ACTION_BROWSE, highlightthickness=0, command=self._browseSearchLocation)
         self.btnSearch.grid(row=3, column=2, sticky='e', padx=5, pady=5)
         btnSearchHelp = IconButton(content, Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP, highlightthickness=0,
-             command=lambda: self.showInfo('Optional: Folder where raw files, binaries (movies, migcrographs,..) can be found. Used to repair broken links.'))
+             command=lambda: self.showInfo('Optional: Folder where raw files, binaries (movies, micrographs,..) can be found. Used to repair broken links.'))
         btnSearchHelp.grid(row=3, column=3, sticky='e', padx=2, pady=2)
 
         self.initial_focus = entryName
+        self.initial_focus.focus()
         btnCheck.select()
 
         btnFrame = tk.Frame(content)
@@ -417,7 +418,7 @@ class ProjectImportWindow(Window):
         elif not os.path.isdir(projLocation):
                 errorMessage += "Project location is not a directory\n"
         # Validate that the project location is a scipion project folder
-        elif not os.path.exists(os.path.join(projLocation, PROJECT_DBNAME)):
+        elif not os.path.exists(os.path.join(projLocation, Project.getDbName())):
             errorMessage += "Project location doesn't look like a scipion folder\n"
 
         # Validate that there isn't already a project with the same name

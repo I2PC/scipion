@@ -6,10 +6,51 @@ Created on May 20, 2013
 
 from glob import iglob
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3.convert import *
-import pyworkflow.em.metadata as md
-from pyworkflow.em.convert import ImageHandler, DT_FLOAT
+import pyworkflow.utils as pwutils
+import sqlite3
+from pyworkflow.utils import Timer
+try:
+    from xmipp3.convert import *
+except:
+    pwutils.pluginNotFound('xmipp', doRaise=True)
 
+# set to true if you want to check how fast is the access to
+# the database
+SPEEDTEST = True
+
+def getIndex(fileName):
+    """ Returns list of indexes for the table 'objects'
+    in the database fileName"""
+    conn = sqlite3.connect(fileName)
+    cur = conn.cursor()
+    cur.execute("PRAGMA index_list(objects);")
+    rows = cur.fetchall()
+    conn.close()
+    return rows  # list with index names
+
+def dropIndex(fileName, indexName):
+    """ Drop index called indexName for table objects
+    in database fileName"""
+    conn = sqlite3.connect(fileName)
+    cur = conn.cursor()
+    cur.execute("DROP INDEX %s" % indexName)
+    conn.close()
+
+def createDummyProtocol(projName):
+    """create a dummy protocol, returns protocol object"""
+    proj = Manager().createProject(projName)
+    os.chdir(proj.path)
+
+    from pyworkflow.em.protocol import EMProtocol
+
+    prot = proj.newProtocol(EMProtocol)
+    prot.setObjLabel('dummy protocol')
+    try:
+        proj.launchProtocol(prot)
+    except Exception as e:
+        print (str(e))
+    return prot
+ 
 
 
 class TestFSC(unittest.TestCase):
@@ -29,17 +70,17 @@ class TestFSC(unittest.TestCase):
 
     def testMd(self):
         """test create FSC from metdata"""
-        import xmipp
+        import xmippLib
         xList=[0.00,0.05,0.10,0.15,0.2]
         yList=[1.00,0.95,0.90,0.85,0.2]
-        md1 =xmipp.MetaData()
+        md1 =xmippLib.MetaData()
         for freq,fscValue in izip(xList, yList):
             id = md1.addObject()
-            md1.setValue(xmipp.MDL_RESOLUTION_FREQ, freq, id)
-            md1.setValue(xmipp.MDL_RESOLUTION_FRC, fscValue, id)
+            md1.setValue(xmippLib.MDL_RESOLUTION_FREQ, freq, id)
+            md1.setValue(xmippLib.MDL_RESOLUTION_FRC, fscValue, id)
         fsc = FSC()
-        fsc.loadFromMd(md1,xmipp.MDL_RESOLUTION_FREQ,
-                       xmipp.MDL_RESOLUTION_FRC)
+        fsc.loadFromMd(md1,xmippLib.MDL_RESOLUTION_FREQ,
+                       xmippLib.MDL_RESOLUTION_FRC)
         x,y = fsc.getData()
         self.assertEqual(xList,x)
         self.assertEqual(yList,y)
@@ -89,7 +130,6 @@ class TestImage(unittest.TestCase):
         for i in range(4):
             for j in range(4):
                 self.assertAlmostEquals(mt[i][j],mreferenceT[i][j],delta=0.5)
-
 
 
 class TestImageHandler(unittest.TestCase):
@@ -161,7 +201,6 @@ class TestImageHandler(unittest.TestCase):
         # Clean up tmp files
         pwutils.cleanPath(outFn)
 
-
     def test_readCompressedTIF(self):
         """ Check we can read tif files
         """
@@ -212,6 +251,21 @@ class TestImageHandler(unittest.TestCase):
             print "Not cleaning output movie: ", outFn
         else:
             pwutils.cleanPath(outFn)
+
+    def test_truncateMask(self):
+        ih = ImageHandler()
+
+        maskFn = self.dataset.getFile('masks/mask.vol')
+        outFn = join('/tmp', 'mask.vol')
+
+        ih.truncateMask(maskFn, outFn, newDim=128)
+        EXPECTED_SIZE = (128, 128, 128, 1)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+
+        pwutils.cleanPath(outFn)
 
 
 class TestSetOfMicrographs(BaseTest):
@@ -303,6 +357,30 @@ class TestSetOfMicrographs(BaseTest):
             self.assertTrue(mic.equalAttributes( mic2))
             counter += 1
 
+    def test_mapper(self):
+        """ test that indexes are created when a
+        setOfParticles is created """
+        MICNUMBER = 10
+        indexesNames = ['_index']
+        prot = createDummyProtocol("dummy_protocol")
+
+        # create set of micrographs
+        micSet = prot._createSetOfMicrographs()
+        mic = Micrograph()
+        for i in range(MICNUMBER+ 1):
+            mic.setLocation(i, "stack.stk")
+            micSet.append(mic)
+            mic.cleanObjId()
+            micSet.write()
+
+        # check defined indexes
+        setOfMicrographsFileName = prot._getPath("micrographs.sqlite")
+        # print os.path.abspath(setOfPArticleFileName)
+        indexes = sorted([index[1] for index in
+                          getIndex(setOfMicrographsFileName)])
+        for index, indexName in zip(indexes, indexesNames):
+            self.assertEqual(index, 'index_' + indexName )
+
 
 class TestSetOfParticles(BaseTest):
     """ Check if the information of the images is copied to another image when
@@ -313,7 +391,7 @@ class TestSetOfParticles(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
         
     def test_orderBy(self):
         #create setofProjections sorted
@@ -451,6 +529,133 @@ class TestSetOfParticles(BaseTest):
         # It should automatically call load
         # before accessing items db        
         imgSet.getFirstItem()
+
+    def test_mapper(self):
+        """ test that indexes are created when a
+        setOfParticles is created """
+        PARTNUMBER = 10
+        indexesNames = ['_classId', '_micId']
+        prot = createDummyProtocol("dummy_protocol")
+
+        # create set of particles
+        partSet = prot._createSetOfParticles()
+        part = Particle()
+        for i in range(PARTNUMBER+ 1):
+            part.setLocation(i, "stack.vol")
+            partSet.append(part)
+            part.cleanObjId()
+        partSet.write()
+
+        # check defined indexes
+        setOfPArticleFileName = prot._getPath("particles.sqlite")
+        # print os.path.abspath(setOfPArticleFileName)
+        indexes = sorted([index[1] for index in
+                          getIndex(setOfPArticleFileName)])
+        for index, indexName in zip(indexes, indexesNames):
+            self.assertEqual(index, 'index_' + indexName )
+
+
+class TestSetOfCoordinates(BaseTest):
+    # TODO: A proper test for setOfCoordinates is missing
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+
+    def test_mapper(self):
+        """ test that indexes are created when a
+        setOfCoordinates is created """
+        PARTNUMBER = 10
+        MICNUMBER = 600
+        NUMBERCOORDINATES = PARTNUMBER * MICNUMBER
+        indexesNames = ['_micId']
+        prot = createDummyProtocol("dummy_protocol")
+
+        # create set of micrographs
+        micSet = SetOfMicrographs(filename=":memory:")
+        mic = Micrograph()
+        for i in range(NUMBERCOORDINATES):
+            mic.setLocation(i, "mic_%06d.mrc" % i)
+            micSet.append(mic)
+            mic.cleanObjId()
+        micSet.write()
+
+        # create a set of particles
+        coordSet = prot._createSetOfCoordinates(micSet)
+        coord = Coordinate()
+        for i in range(NUMBERCOORDINATES):
+            coordSet.append(coord)
+            coord.cleanObjId()
+        coordSet.write()
+
+        # check defined indexes
+        setOfCoordinatesFileName = \
+            prot._getPath("coordinates.sqlite")
+        print os.path.abspath(setOfCoordinatesFileName)
+        indexes = sorted([index[1] for index in
+                          getIndex(setOfCoordinatesFileName)])
+        for index, indexName in zip(indexes, indexesNames):
+            self.assertEqual(index, 'index_' + indexName )
+
+        # Test speed: based on loop in file protocol_extractparticles.py
+        # for 600 mic and 100 part the values for the first
+        # second and third  case where:
+        # Loop with index: 5 sec
+        # Loop no index: 8:01 min
+        # Loop optimized code: 4 sec
+        # for 6000 mic and 200 part the values for the first
+        # Loop with index: 1:47 min
+        # optimized Loop with index: 1:20 min
+        # Loop no index: after several  hours I stopped the process
+
+        SPEEDTEST = True
+        if SPEEDTEST: # code from protocol_particles. line 415
+            testTimer = Timer()
+            testTimer.tic()
+            for mic in micSet:
+                micId = mic.getObjId()
+                coordList = []
+                for coord in coordSet.iterItems(where='_micId=%s' % micId):
+                    coordList.append(coord.clone())
+            testTimer.toc("Loop with INDEX took:")
+
+            lastMicId = None
+            testTimer.tic()
+            for coord in coordSet.iterItems(orderBy='_micId',
+                                                   direction='ASC'):
+                micId = coord.getMicId()
+                if micId != lastMicId:
+                    lastMicId = micId
+                    coordList = []
+                coordList.append(coord.clone())
+            testTimer.toc("Loop with INDEX and proper code, took:")
+
+            # delete INDEX, this will not work
+            # if database is not sqlite
+            conn = sqlite3.connect(setOfCoordinatesFileName)
+            cur = conn.cursor()
+            for index in indexesNames:
+                cur.execute("DROP INDEX index_%s" % index)
+            cur.close()
+            conn.close()
+
+            testTimer.tic()
+            for mic in micSet:
+                micId = mic.getObjId()
+                coordList = []
+                for coord in coordSet.iterItems(where='_micId=%s' % micId):
+                    coordList.append(coord.clone())
+            testTimer.toc("Loop with NO INDEX took:")
+
+            lastMicId = None
+            testTimer.tic()
+            for coord in coordSet.iterItems(orderBy='_micId',
+                                                   direction='ASC'):
+                micId = coord.getMicId()
+                if micId != lastMicId:
+                    lastMicId = micId
+                    coordList = []
+                coordList.append(coord.clone())
+            testTimer.toc("Loop with NO INDEX but proper code, took:")
 
 
 class TestSetOfClasses2D(BaseTest):
@@ -636,3 +841,50 @@ class TestCopyItems(BaseTest):
         item._list.set([1.0, 2.0])
 
 
+class TestCoordinatesTiltPair(BaseTest):
+    # TODO: A proper test for CoordinatesTiltPair is missing
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+
+    def test_mapper(self):
+        """ test that indexes are created when a
+        setOfCoordinates is created """
+        MICNUMBER = 10
+        indexesNames = ['_untilted._micId',
+                        '_tilted._micId']
+        prot = createDummyProtocol("dummy_protocol")
+
+        # create set of untilted and tilted micrographs
+        uMicSet = SetOfMicrographs(filename=":memory:")
+        tMicSet = SetOfMicrographs(filename=":memory:")
+        mic = Micrograph()
+        for i in range(MICNUMBER):
+            mic.setLocation(i, "umic_%06d.mrc" % i)
+            uMicSet.append(mic)
+            mic.cleanObjId()
+            mic.setLocation(i, "tmic_%06d.mrc" % i)
+            tMicSet.append(mic)
+            mic.cleanObjId()
+        # TODO I do not see any example on how to create
+        # a set of CoordinatesTiltPair. I can image
+        # that a need to create a set of micTiltPairs
+        # and two sets of coordinates but the person who
+        # added that data type Should provide a clear test
+        # when this is done then I will finish the test_mapper
+
+
+class TestCoordinatesTiltPair(BaseTest):
+    # TODO: A proper test for SetOfMovieParticles is missing
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+
+    def test_mapper(self):
+        """ test that indexes are created when a
+        SetOfMovieParticles is created """
+        # TODO I do not see any example on how to create
+        # a set of SetOfMovieParticles. The person who
+        # added that data type should provide a clear test
+        # when this is done then I will finish the test_mapper
+        pass

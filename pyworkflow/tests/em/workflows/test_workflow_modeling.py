@@ -28,17 +28,28 @@
 # flexible fitting (coot and refmac), as well as validation programs such as
 # emringer and molprobity
 
-from pyworkflow.em.packages.chimera.protocol_fit import ChimeraProtRigidFit
+
+
+import os.path
+from pyworkflow.tests import *
+import json
+from pyworkflow.tests import *
+from pyworkflow.utils import importFromPlugin
 from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
     ProtImportVolumes
-from pyworkflow.em.packages.ccp4.protocol_coot import CootRefine
-from pyworkflow.em.packages.ccp4.protocol_refmac import CCP4ProtRunRefmac
-from pyworkflow.em.packages.phenix.protocol_emringer import PhenixProtRunEMRinger
-from pyworkflow.em.packages.phenix.protocol_molprobity import PhenixProtRunMolprobity
 from pyworkflow.tests import *
 import os.path
 import json
 
+
+ChimeraProtRigidFit = importFromPlugin('chimera.protocols',
+                                       'ChimeraProtRigidFit', doRaise=True)
+CootRefine = importFromPlugin('ccp4.protocols', 'CootRefine', doRaise=True)
+CCP4ProtRunRefmac = importFromPlugin('ccp4.protocols', 'CCP4ProtRunRefmac')
+PhenixProtRunEMRinger = importFromPlugin('phenix.protocols',
+                                         'PhenixProtRunEMRinger', doRaise=True)
+PhenixProtRunMolprobity = importFromPlugin('phenix.protocols',
+                                           'PhenixProtRunMolprobity')
 
 class TestImportBase(BaseTest):
     @classmethod
@@ -1068,7 +1079,7 @@ class TestEMRingerValidation(TestImportData):
     """ Test the protocol of EMRinger validation
     """
     def checkResults(self, optThresh, rotRatio, maxZscore, modLength,
-                     EMScore, protEMRinger, places=4):
+                     EMScore, protEMRinger, places=2):
         # method to check EMRinger statistic results of the Final Results Table
         textFileName = protEMRinger._getExtraPath(
             protEMRinger.EMRINGERTRANSFERFILENAME.replace('py', 'txt'))
@@ -1165,11 +1176,11 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protEMRinger)
 
         # check EMRinger results
-        self.checkResults(optThresh = 0.609911277932157,
-                          rotRatio = 0.8350515463917526,
-                          maxZscore = 5.799183055832969,
+        self.checkResults(optThresh = 0.606299973426968,
+                          rotRatio = 0.8181818181818182,
+                          maxZscore = 5.521788316969326,
                           modLength = 121,
-                          EMScore = 5.27198459621179,
+                          EMScore = 5.019807560881206,
                           protEMRinger = protEMRinger)
 
     def testEMRingerValidationAfterRefmacWithMask(self):
@@ -1226,11 +1237,11 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protEMRinger)
 
         # check EMRinger results
-        self.checkResults(optThresh=0.6410688730278145,
-                          rotRatio=0.8426966292134831,
-                          maxZscore=5.699646892523943,
+        self.checkResults(optThresh=0.6363458779254832,
+                          rotRatio=0.8260869565217391,
+                          maxZscore=5.475171299613324,
                           modLength=121,
-                          EMScore=5.181497175021767,
+                          EMScore=4.97742845419393,
                           protEMRinger=protEMRinger)
 
     def testEMRingerValidationAfterChimeraAndCootAndRefmacNoMask(self):
@@ -1327,11 +1338,11 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protEMRinger)
 
         # check EMRinger results
-        self.checkResults(optThresh=0.6095088692601145,
-                          rotRatio=0.826530612244898,
-                          maxZscore=5.659704361609791,
+        self.checkResults(optThresh=0.6058890610462733,
+                          rotRatio=0.8181818181818182,
+                          maxZscore=5.521788316969326,
                           modLength=121,
-                          EMScore=5.145185783281628,
+                          EMScore=5.019807560881206,
                           protEMRinger=protEMRinger)
 
     def testEMRingerValidationAfterChimeraAndCootAndRefmacWithMask(self):
@@ -1429,11 +1440,11 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protEMRinger)
 
         # check EMRinger results
-        self.checkResults(optThresh=0.638820953746166,
-                          rotRatio=0.8426966292134831,
-                          maxZscore=5.699646892523943,
+        self.checkResults(optThresh=0.6357197891869828,
+                          rotRatio=0.8260869565217391,
+                          maxZscore=5.475171299613324,
                           modLength=121,
-                          EMScore=5.181497175021767,
+                          EMScore=4.97742845419393,
                           protEMRinger=protEMRinger)
 
     def testEMRingerValidationAfterMultipleCootAndRefmacFitNoMask(self):
@@ -1537,11 +1548,11 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protEMRinger)
 
         # check EMRinger results
-        self.checkResults(optThresh=0.6134629219492418,
-                          rotRatio=0.8247422680412371,
-                          maxZscore=5.59540502751673,
+        self.checkResults(optThresh=0.6118165038763741,
+                          rotRatio=0.8181818181818182,
+                          maxZscore=5.521788316969326,
                           modLength=121,
-                          EMScore=5.086731843197027,
+                          EMScore=5.019807560881206,
                           protEMRinger=protEMRinger)
 
     def testEMRingerValidationAfterMultipleCootAndRefmacFitWithMask(self):
@@ -1646,11 +1657,11 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protEMRinger)
 
         # check EMRinger results
-        self.checkResults(optThresh=0.6428403430931879,
-                          rotRatio=0.8202247191011236,
-                          maxZscore=5.2741678087896515,
+        self.checkResults(optThresh=0.5640620255535769,
+                          rotRatio=0.780952380952381,
+                          maxZscore=4.921014490568343,
                           modLength=121,
-                          EMScore=4.7946980079905925,
+                          EMScore=4.473649536880312,
                           protEMRinger=protEMRinger)
 
     def testEMRingerValidationSeveralChains(self):
@@ -1688,20 +1699,20 @@ class TestMolprobityValidation(TestImportData):
     """ Test the protocol of MolProbity validation
     """
     def checkResults(self, ramOutliers, ramFavored, rotOutliers, cbetaOutliers,
-                     clashScore, overallScore, protMolProbity, places=2):
+                     clashScore, overallScore, protMolProbity, places=0):
         # method to check MolProbity statistic results of the Final Results
         # Table
-        self.assertAlmostEqual(protMolProbity.ramachandranOutliers,
+        self.assertAlmostEqual(protMolProbity.ramachandranOutliers.get(),
                                ramOutliers, places)
-        self.assertAlmostEqual(protMolProbity.ramachandranFavored,
-                               ramFavored, places)
-        self.assertAlmostEqual(protMolProbity.rotamerOutliers,
+        self.assertAlmostEqual(protMolProbity.ramachandranFavored.get(),
+                               ramFavored, places=0)
+        self.assertAlmostEqual(protMolProbity.rotamerOutliers.get(),
                                rotOutliers, places)
-        self.assertAlmostEqual(protMolProbity.cbetaOutliers,
-                               cbetaOutliers, places)
-        self.assertAlmostEqual(protMolProbity.clashscore,
+        self.assertAlmostEqual(protMolProbity.cbetaOutliers.get(),
+                               cbetaOutliers, delta=2)
+        self.assertAlmostEqual(protMolProbity.clashscore.get(),
                                clashScore, places)
-        self.assertAlmostEqual(protMolProbity.overallScore,
+        self.assertAlmostEqual(protMolProbity.overallScore.get(),
                                overallScore, places)
 
     def testMolProbityValidationFromPDB(self):
@@ -1727,7 +1738,7 @@ class TestMolprobityValidation(TestImportData):
         self.checkResults(ramOutliers=0.94,
                           ramFavored=81.60,
                           rotOutliers=3.98,
-                          cbetaOutliers=0,
+                          cbetaOutliers=1,  # 0
                           clashScore=4.77,
                           overallScore=2.42,
                           protMolProbity=protMolProbity)
@@ -1815,11 +1826,11 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-                          ramFavored=83.96,
-                          rotOutliers=5.68,
-                          cbetaOutliers=1,
+                          ramFavored=83.49,
+                          rotOutliers=6.25,
+                          cbetaOutliers=2,
                           clashScore=4.77,
-                          overallScore=2.50,
+                          overallScore=2.54,
                           protMolProbity=protMolProbity)
 
     def testMolprobityValidationAfterRefmacWithMask(self):
@@ -1875,11 +1886,11 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-                          ramFavored=83.49,
+                          ramFavored=83.02,  # 83.49 TestMolprobityValidation.testMolProbityValidationAfterMultipleCootAndRefmacFitWithMask
                           rotOutliers=5.68,
                           cbetaOutliers=0,
-                          clashScore=5.07,
-                          overallScore=2.53,
+                          clashScore=4.47,
+                          overallScore=2.48,
                           protMolProbity=protMolProbity)
 
     def testMolProbityValidationAfterChimeraAndCootAndRefmacNoMask(self):
@@ -1979,11 +1990,11 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-                          ramFavored=84.43,
-                          rotOutliers=6.25,
-                          cbetaOutliers=1,
+                          ramFavored=83.49,
+                          rotOutliers=5.68,
+                          cbetaOutliers=2,
                           clashScore=4.77,
-                          overallScore=2.52,
+                          overallScore=2.51,
                           protMolProbity=protMolProbity)
 
     def testMolProbityValidationAfterChimeraAndCootAndRefmacWithMask(self):
@@ -2083,11 +2094,11 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-                          ramFavored=83.02,
+                          ramFavored=83.96,
                           rotOutliers=5.68,
                           cbetaOutliers=0,
-                          clashScore=5.37,
-                          overallScore=2.55,
+                          clashScore=4.47,
+                          overallScore=2.47,
                           protMolProbity=protMolProbity)
 
     def testMolProbityValidationAfterMultipleCootAndRefmacFitNoMask(self):
@@ -2194,11 +2205,11 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-                          ramFavored=83.49,
-                          rotOutliers=5.11,
+                          ramFavored=83.96,
+                          rotOutliers=5.68,
                           cbetaOutliers=1,
                           clashScore=5.07,
-                          overallScore=2.49,
+                          overallScore=2.52,
                           protMolProbity=protMolProbity)
 
     def testMolProbityValidationAfterMultipleCootAndRefmacFitWithMask(self):
@@ -2305,11 +2316,11 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-                          ramFavored=83.02,
+                          ramFavored=83.96,
                           rotOutliers=5.68,
                           cbetaOutliers=1,
-                          clashScore=5.07,
-                          overallScore=2.53,
+                          clashScore=4.47,
+                          overallScore=2.47,
                           protMolProbity=protMolProbity)
 
     def testMolProbityValidationSeveralChains(self):

@@ -81,18 +81,15 @@ def schedule(protocol, wait=False):
     """ Use this function to schedule protocols that are not ready to
     run yet. Right now it only make sense to schedule jobs locally.
     """
-    protStrId = protocol.strId()
-    python = pw.SCIPION_PYTHON
-    scipion = pw.getScipionScript()
-    cmd = '%s %s runprotocol pw_schedule_run.py' % (python, scipion)
+    cmd = '%s %s runprotocol pw_schedule_run.py' % (pw.PYTHON,
+                                                    pw.getScipionScript())
     cmd += ' "%s" "%s" %s' % (protocol.getProject().path,
                               protocol.getDbPath(),
-                              protStrId)
+                              protocol.strId())
     jobId = _run(cmd, wait)
     protocol.setJobId(jobId)
 
     return jobId
-
 
 
 # ******************************************************************
@@ -114,24 +111,20 @@ def _runsLocally(protocol):
 # ******************************************************************
 def _getAppsProgram(prog):
     """ Get a command to launch a program under the apps folder.
-    And also using a different python if configured in SCIPION_PYTHON var.
     """
-    return os.environ.get('SCIPION_PYTHON', 'python') + ' ' + pw.join('apps', prog)
+    return "%s %s" % (pw.PYTHON, pw.join('apps', prog))
 
 
 def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
     # Check first if we need to launch with MPI or not
-    protStrId = protocol.strId()
-    python = pw.SCIPION_PYTHON
-    scipion = pw.getScipionScript()
-    command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion,
-                                                                     protocol.getProject().path, 
-                                                                     protocol.getDbPath(), 
-                                                                     protStrId)
+    command = ('%s %s runprotocol pw_protocol_run.py "%s" "%s" %s'
+               % (pw.PYTHON, pw.getScipionScript(),
+                  protocol.getProject().path, protocol.getDbPath(),
+                  protocol.strId()))
     hostConfig = protocol.getHostConfig()
     useQueue = protocol.useQueue()
     # Check if need to submit to queue    
-    if useQueue:        
+    if useQueue and (protocol.getSubmitDict()["QUEUE_FOR_JOBS"] == "N"):
         submitDict = dict(hostConfig.getQueuesDefault())
         submitDict.update(protocol.getSubmitDict())
         submitDict['JOB_COMMAND'] = command
@@ -208,34 +201,38 @@ def _copyFiles(protocol, rpath):
         rpath.putFile(f, remoteFile)
 
 
-def _submit(hostConfig, submitDict):
+def _submit(hostConfig, submitDict, cwd=None, env=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
-    # Create forst the submission script to be launched
+    # Create first the submission script to be launched
     # formatting using the template
     template = hostConfig.getSubmitTemplate() % submitDict
-    #FIXME: CREATE THE PATH FIRST
+    # FIXME: CREATE THE PATH FIRST
     scripPath = submitDict['JOB_SCRIPT']
     f = open(scripPath, 'w')
-    #Ensure the path exists
+    # Ensure the path exists
     makeFilePath(scripPath)
     # Add some line ends because in some clusters it fails
     # to submit jobs if the submit script does not have end of line
-    f.write(template+'\n\n')
+    f.write(template +'\n\n')
     f.close()
     # This should format the command using a template like: 
     # "qsub %(JOB_SCRIPT)s"
     command = hostConfig.getSubmitCommand() % submitDict
     gcmd = greenStr(command)
-    print "** Submiting to queue: '%s'" % gcmd
-    p = Popen(command, shell=True, stdout=PIPE)
+    print("** Submiting to queue: '%s'" % gcmd)
+
+    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd, env=env)
     out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
+    # REview this, seems to exclusive to torque batch system
     s = re.search('(\d+)', out)
     if s:
-        return int(s.group(0))
+        job = int(s.group(0))
+        print( "launched job with id %s" % job)
+        return job
     else:
-        print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
+        print("Couldn't submit to queue for reason %s " % redStr(out))
         return UNKNOWN_JOBID
 
     

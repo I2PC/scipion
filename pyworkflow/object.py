@@ -11,7 +11,7 @@
 # *
 # * This program is distributed in the hope that it will be useful,
 # * but WITHOUT ANY WARRANTY; without even the implied warranty of
-# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * MERCHANTABIlITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # * GNU General Public License for more details.
 # *
 # * You should have received a copy of the GNU General Public License
@@ -40,10 +40,14 @@ import datetime as dt
 RELATION_CHILDS = 0
 RELATION_PARENTS = 1
 
+# Then column name of the parent id relation
+OBJECT_PARENT_ID = 'object_parent_id'
+
 
 class Object(object):
     """ All objects in our Domain should inherit from this class
     that will contains all base properties"""
+
     def __init__(self, value=None, **kwargs):
         object.__init__(self)
         self._objIsPointer = kwargs.get('objIsPointer', False) # True if will be treated as a reference for storage
@@ -231,8 +235,9 @@ class Object(object):
         """ Return the stored creation time of the object. """
         return self._objCreation
 
-    def getObjectCreationAsDate(self):
+    def getObjCreationAsDate(self):
         """ Return the stored creation time of the object as date """
+        return String.getDatetime(self._objCreation)
 
     def strId(self):
         """String representation of id"""
@@ -434,7 +439,7 @@ class Object(object):
         """
         for ptr in copyDict['internalPointers']:
             pointedId = ptr.getObjValue().getObjId()
-            if  pointedId in copyDict:
+            if pointedId in copyDict:
                 ptr.set(copyDict[pointedId])
         
     def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
@@ -576,27 +581,30 @@ class Scalar(Object):
     
     def __str__(self):
         """String representation of the scalar value"""
-        return str(self._objValue)
+        return str(self.get())
     
-    def __eq__(self, other):
+    def __eq__(self, value):
         """Comparison for scalars should be by value
-        and for other objects by reference"""
-        if isinstance(other, Object):
-            return self._objValue == other._objValue
-        return self._objValue == other
+        and for other objects by reference. """
+        if isinstance(value, Object):
+            value = value.get()
+        return self.get() == value
 
     def __ne__(self, other):
         return not self.__eq__(other)
     
-    def __cmp__(self, other):
+    def __cmp__(self, value):
         """ Comparison implementation for scalars. """
-        if isinstance(other, Object):
-            return cmp(self._objValue, other._objValue)
-        return cmp(self._objValue, other)        
+        if isinstance(value, Object):
+            value = value.get()
+        return cmp(self.get(), value)
        
     def get(self, default=None):
         """Get the value, if internal value is None
-        the default argument passed is returned"""
+        the default argument passed is returned. """
+        if self.hasPointer():
+            return self._pointer.get().get(default)
+
         if self.hasValue():
             return self._objValue
         return default
@@ -617,7 +625,28 @@ class Scalar(Object):
         
     def multiply(self, value):
         self._objValue *= value
-        
+
+    def setPointer(self, pointer):
+        """ Set an internal pointer from this Scalar.
+        Then, the value (retrieved with get) will be obtained
+        from the pointed object.
+        """
+        if pointer is None:
+            if self.hasPointer():
+                delattr(self, "_pointer")
+        else:
+            self._pointer = pointer
+
+    def hasPointer(self):
+        """ Return True if this Scalar has an internal pointer
+        from where the value will be retrieved with the get() method.
+        """
+        return hasattr(self, '_pointer')
+
+    def getPointer(self):
+        """ Return the internal pointer of this Scalar or None. """
+        return getattr(self, '_pointer', None)
+
     
 class Integer(Scalar):
     """Integer object"""
@@ -641,7 +670,30 @@ class Integer(Scalar):
 class String(Scalar):
     """String object. """
     DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-    FS = ".%f" # Fento seconds
+    FS = ".%f"  # Femto seconds
+
+    @classmethod
+    def getDatetime(cls, strValue, formatStr=None, fs=True):
+        """ Get the datetime from the given string value.
+        Params:
+            strValue: string representation of the date
+            formatStr: if is None, use the default DATETIME_FORMAT.
+            fs: Use femto seconds or not, only when format=None
+        """
+        if formatStr is None:
+            try:
+                formatStr = cls.DATETIME_FORMAT
+                if fs:
+                    formatStr += cls.FS
+                datetime = dt.datetime.strptime(strValue, formatStr)
+            except Exception as ex:
+                # Maybe the %f (femtoseconds) is not working
+                # let's try to format without it
+                datetime = dt.datetime.strptime(strValue, cls.DATETIME_FORMAT)
+        else:
+            datetime = dt.datetime.strptime(strValue, formatStr)
+
+        return datetime
 
     def _convertValue(self, value):
         return str(value)
@@ -653,26 +705,8 @@ class String(Scalar):
         return len(self.get().strip()) == 0
 
     def datetime(self, formatStr=None, fs=True):
-        """ Get the datetime from the string value.
-        Params:
-            formatStr: if is None, use the default DATETIME_FORMAT.
-            fs: Use femto seconds or not, only when format=None
-        """
-        if formatStr is None:
-            try:
-                formatStr = self.DATETIME_FORMAT
-                if fs:
-                    formatStr += self.FS
-                datetime = dt.datetime.strptime(self._objValue, formatStr)
-            except Exception as ex:
-                # Maybe the %f (femtoseconds) is not working
-                # let's try to format without it
-                datetime = dt.datetime.strptime(self._objValue,
-                                                self.DATETIME_FORMAT)
-        else:
-            datetime = dt.datetime.strptime(self._objValue, formatStr)
-
-        return datetime
+        """ Get the datetime from this object string value. """
+        return String.getDatetime(self._objValue, formatStr, fs)
 
 
 class Float(Scalar):
@@ -1008,7 +1042,9 @@ class Set(OrderedObject):
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
         self._representative = None
-        self._classesDict = classesDict 
+        self._classesDict = classesDict
+        self._indexes = kwargs.get('indexes', [])
+
         # If filename is passed in the constructor, it means that
         # we want to create a new object, so we need to delete it if
         # the file exists
@@ -1114,7 +1150,7 @@ class Set(OrderedObject):
         if self._mapperPath.isEmpty():
             raise Exception("Set.load:  mapper path and prefix not set.")
         fn, prefix = self._mapperPath
-        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)            
+        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix, self._indexes)
         self._size.set(self._mapper.count())
         self._idCount = self._mapper.maxId()
            
@@ -1162,8 +1198,12 @@ class Set(OrderedObject):
         self._getMapper().update(item)
                 
     def __str__(self):
-        return "%-20s (%d items)" % (self.getClassName(), self.getSize())
-    
+        return "%-20s (%d items%s)" % (self.getClassName(), self.getSize(),
+                                       self._appendStreamState())
+
+    def _appendStreamState(self):
+        return "" if self.isStreamClosed() else ", open set"
+
     def getSubset(self, n):
         """ Return a subset of n element, making a clone of each. """
         subset = []

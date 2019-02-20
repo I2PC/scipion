@@ -22,7 +22,8 @@
 # ***************************************************************************/
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportCoordinates, ProtImportMicrographs
+from pyworkflow.em.protocol import (ProtImportCoordinates, ProtImportMicrographs,
+                                    ProtImportMicrographsTiltPairs, ProtImportCoordinatesPairs)
 
 
 
@@ -109,3 +110,67 @@ class TestImportCoordinates(TestImportBase):
 
         self.launchProtocol(protPickGroel)
 
+
+class TestImportCoordinatesPairs(TestImportBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsRct = DataSet.getDataSet('rct')
+        cls.micsFn = cls.dsRct.getFile('positions/input_micrographs.xmd')
+        cls.patternU1 = cls.dsRct.getFile('positions/F_rct_u_*.pos')
+        cls.patternT1 = cls.dsRct.getFile('positions/F_rct_t_*.pos')
+        cls.micsUFn1 = cls.dsRct.getFile('untilted')
+        cls.micsTFn1 = cls.dsRct.getFile('tilted')
+
+        cls.dsEman = DataSet.getDataSet('eman')
+        cls.micsUFn2 = cls.dsEman.getFile('micU')
+        cls.micsTFn2 = cls.dsEman.getFile('micT')
+        cls.patternU2 = cls.dsEman.getFile("coords/ip3r10252011-0005_0-2_info.json")
+        cls.patternT2 = cls.dsEman.getFile("coords/ip3r10252011-0005_10_info.json")
+
+    def testImportCoordinatesPairs(self):
+        # First, import a set of micrograph pairs
+        protImport1 = self.newProtocol(ProtImportMicrographsTiltPairs,
+                                       patternUntilted=self.micsUFn1,
+                                       patternTilted=self.micsTFn1,
+                                       samplingRate=2.28, voltage=100,
+                                       sphericalAberration=2.9)
+        protImport1.setObjLabel('import tilt pair micrographs from rct tutorial ')
+        self.launchProtocol(protImport1)
+        self.assertIsNotNone(protImport1.outputMicrographsTiltPair.getFileName(),
+                             "There was a problem with the import")
+
+        protImport2 = self.newProtocol(ProtImportMicrographsTiltPairs,
+                                       patternUntilted=self.micsUFn2,
+                                       patternTilted=self.micsTFn2,
+                                       samplingRate=2.8, voltage=200,
+                                       sphericalAberration=2.0)
+        protImport2.setObjLabel('import tilt pair micrographs from eman2 tutorial ')
+        self.launchProtocol(protImport2)
+        self.assertIsNotNone(protImport2.outputMicrographsTiltPair.getFileName(),
+                             "There was a problem with the import")
+
+        prot1 = self.newProtocol(ProtImportCoordinatesPairs,
+                                 importFrom=ProtImportCoordinatesPairs.IMPORT_FROM_XMIPP,
+                                 xmippMdFn=self.micsFn,
+                                 patternUntilted=self.patternU1,
+                                 patternTilted=self.patternT1,
+                                 boxSize=100)
+        prot1.inputMicrographsTiltedPair.set(protImport1.outputMicrographsTiltPair)
+        prot1.setObjLabel('import coord pairs from xmipp ')
+        self.launchProtocol(prot1)
+
+        # Make sure that all 1901 coordinates where correctly imported
+        self.assertTrue(prot1.outputCoordinatesTiltPair.getSize() == 1901)
+
+        prot2 = self.newProtocol(ProtImportCoordinatesPairs,
+                                 importFrom=ProtImportCoordinatesPairs.IMPORT_FROM_EMAN,
+                                 patternUntilted=self.patternU2,
+                                 patternTilted=self.patternT2,
+                                 boxSize=256)
+        prot2.inputMicrographsTiltedPair.set(protImport2.outputMicrographsTiltPair)
+        prot2.setObjLabel('import coord pairs from eman2 ')
+        self.launchProtocol(prot2)
+
+        # Make sure that all 104 coordinates where correctly imported
+        self.assertTrue(prot2.outputCoordinatesTiltPair.getSize() == 104)

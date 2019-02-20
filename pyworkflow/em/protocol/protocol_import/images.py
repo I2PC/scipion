@@ -72,10 +72,10 @@ class ProtImportImages(ProtImportFiles):
                        help='Depending on the import Format, the wizard\n'
                             'will try to import the acquisition values.\n'
                             'If not found, required ones should be provided.')
-        group.addParam('voltage', params.FloatParam, default=200,
+        group.addParam('voltage', params.FloatParam, default=300,
                    label=Message.LABEL_VOLTAGE, 
                    help=Message.TEXT_VOLTAGE)
-        group.addParam('sphericalAberration', params.FloatParam, default=2,
+        group.addParam('sphericalAberration', params.FloatParam, default=2.7,
                    label=Message.LABEL_SPH_ABERRATION, 
                    help=Message.TEXT_SPH_ABERRATION)
         group.addParam('amplitudeContrast', params.FloatParam, default=0.1,
@@ -91,7 +91,7 @@ class ProtImportImages(ProtImportFiles):
         a format that is not from files.
         But movie-import also can have a wizard to read from FEI xml files. """
         return 'importFrom != %d' % self.IMPORT_FROM_FILES
-    
+
     #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
 
@@ -137,6 +137,8 @@ class ProtImportImages(ProtImportFiles):
         alreadyWarned = False # Use this flag to warn only once
 
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            if self.isBlacklisted(fileName):
+                continue
             uniqueFn = self._getUniqueFileName(fileName)
             dst = self._getExtraPath(uniqueFn)
             if ' ' in dst:
@@ -169,10 +171,10 @@ class ProtImportImages(ProtImportFiles):
 
             outFiles.append(dst)
             
-            sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
+            sys.stdout.write("\rImported %d/%d\n" % (i+1, self.numberOfFiles))
             sys.stdout.flush()
             
-        print "\n"
+        print("\n")
         
         args = {}
         outputSet = self._getOutputName()
@@ -194,7 +196,7 @@ class ProtImportImages(ProtImportFiles):
         if imgSet is None:
             createSetFunc = getattr(self, '_create' + self._outputClassName)
             imgSet = createSetFunc()
-        elif imgSet.getSize() > 0: # in case of continue
+        elif imgSet.getSize() > 0:  # in case of continue
             imgSet.loadAllProperties()
             self._fillImportedFiles(imgSet)
             imgSet.enableAppend()
@@ -262,7 +264,7 @@ class ProtImportImages(ProtImportFiles):
 
                 someAdded = True
                 self.debug('Appending file to DB...')
-                if self.importedFiles: # enable append after first append
+                if self.importedFiles:  # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:
@@ -347,16 +349,18 @@ class ProtImportImages(ProtImportFiles):
                 #  - Importing in streaming, since files may be incomplete
                 #  - Bad characters in path [':' ,'%', '#']
                 if (not self.dataStreaming and
-                    not (imgFn.endswith('bz2') or 
+                    not (imgFn.endswith('bz2') or
                          imgFn.endswith('tbz') or
-			 ih.isImageFile(imgFn))):
+                         ih.isImageFile(imgFn))):
                     if not errors:  # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)
                     errors += ProtImportImages.validatePath(imgFn)
-        
+
+            break  # validate just first image
+
         return errors
-        
+
     def _validate(self):
         errors = ProtImportFiles._validate(self)
 
@@ -366,7 +370,7 @@ class ProtImportImages(ProtImportFiles):
         if (self.importFrom == self.IMPORT_FROM_FILES and
             not self.dataStreaming):
             errors += self._validateImages()
-        
+
         return errors
         
     def _summary(self):
@@ -405,8 +409,7 @@ class ProtImportImages(ProtImportFiles):
     
     #--------------------------- UTILS functions -------------------------------
     def _cleanUp(self):
-        """Empty method to override in child classes. E.g. to close socket in
-        ProtImportMovies with streamingSocket."""
+        """Empty method to override in child classes."""
         pass
 
     def getFiles(self):
@@ -480,9 +483,9 @@ class ProtImportImages(ProtImportFiles):
         This function uses the self.importedFiles dict.
         """
         for fileName, fileId in self.iterFiles():
-            # If file already imported, skip it
+            # If file already imported or blacklisted,  skip it
             uniqueFn = self._getUniqueFileName(fileName)
-            if uniqueFn not in self.importedFiles:
+            if (uniqueFn not in self.importedFiles) and (not self.isBlacklisted(fileName)):
                 yield fileName, uniqueFn, fileId
 
     def _fillImportedFiles(self, imgSet):
@@ -530,6 +533,25 @@ class ProtImportImages(ProtImportFiles):
     def _createOutputSet(self):
         """ Create the output set that will be populated as more data is
         imported. """
+
+
+    def processImportDict(self, importDict, importDir):
+        """
+        This function is used when we import a workflow from a json.
+        If we need to include source data for reproducibility purposes,
+        this function will make the necessary changes in the protocol dict
+        to include the source data.
+        Params:
+            - importDict: import dictionary coming from the json
+            - importDir: directory containing the json file
+        """
+
+        if not os.path.exists(importDict['filesPath']):  # we might have a relative path
+            absPath = os.path.join(importDir, importDict['filesPath'].split('/', 1)[1])
+            if os.path.exists(absPath):
+                importDict['filesPath'] = absPath
+
+        return importDict
 
     # --------------- Streaming special functions -----------------------
     def _getStopStreamingFilename(self):

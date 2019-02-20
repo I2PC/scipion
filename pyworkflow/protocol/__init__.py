@@ -28,8 +28,10 @@ This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
 """
 
-from protocol import *
-from executor import *
-from constants import *
+from .protocol import *
+from .executor import *
+from .constants import *
 
-from launch import *
+from .launch import *
+
+from .hosts import HostConfig

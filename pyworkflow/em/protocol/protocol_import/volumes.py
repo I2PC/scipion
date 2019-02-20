@@ -24,23 +24,19 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs,
-Particles, Volumes...
-"""
+
 
 from os.path import exists, basename, abspath
 
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
 from images import ProtImportImages
-from pyworkflow.em import Volume, ImageHandler, PdbFile
-from pyworkflow.em.convert import downloadPdb
+from pyworkflow.em import Volume, ImageHandler, AtomStruct
 from pyworkflow.em.data import Transform
-from pyworkflow.em.headers import adaptFileToCCP4, ORIGIN
+from pyworkflow.em.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
-
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -58,23 +54,23 @@ class ProtImportVolumes(ProtImportImages):
                       label=Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
                       label="Set origin of coordinates",
-                      help="Option YES: A new volume will be created with the "
+                      help="Option YES:\nA new volume will be created with "
+                           "the "
                            "given ORIGIN of coordinates. This ORIGIN will be "
-                           "set in the map file header.\n"
-                           # Option YES: The binary of the object volume will 
-                           # be saved with its header modified. 
-                           # Option NO: The binary of the object volume will 
-                           # saved without any modifications. Then, the volume
-                           # is the input volume itself with other filename.
-                           # In this case the coordinates of the origin will
-                           # be saved as SCIPION object, not in the header 
-                           # volume. 
-                           # Volumes are not copied by default. They are only
-                           # copied if the user has selected the option YES in
-                           # the advanced question form "Copy files?"
-                           "Option NO: The ORIGIN of coordinates will be " 
-                           "placed at the center of the whole volume. This "
-                           "ORIGIN will NOT be set in the map file header. \n"
+                           "set in the map file header.\nThe ORIGIN of "
+                           "coordinates will be placed at the center of the "
+                           "whole volume if you select n(x)/2, n(y)/2, "
+                           "n(z)/2 as "
+                           "x, y, z coordinates (n(x), n(y), n(z) are the "
+                           "dimensions of the whole volume). However, "
+                           "selecting "
+                           "0, 0, 0 as x, y, z coordinates, the volume will be "
+                           "placed at the upper right-hand corner.\n\n"
+                           "Option NO:\nThe ORIGIN of coordinates will be " 
+                           "placed at the center of the whole volume ("
+                           "coordinates n(x)/2, n(y)/2, n(z)/2 by default). "
+                           "This "
+                           "ORIGIN will NOT be set in the map file header.\n\n"
                            "WARNING: In case you want to process "
                            "the volume with programs requiring a specific "
                            "symmetry regarding the origin of coordinates, "
@@ -94,11 +90,14 @@ class ProtImportVolumes(ProtImportImages):
                                   "provide the map center coordinates in "
                                   "Angstroms (pixels x sampling).\n",
                             condition='setOrigCoord')
-        line.addParam('x', params.FloatParam, condition='setOrigCoord',
+        # line.addParam would produce a nicer looking form
+        # but them the wizard icon is drawn outside the visible
+        # window. Until this bug is fixed form is a better option
+        form.addParam('x', params.FloatParam, condition='setOrigCoord',
                       label="x", help="offset along x axis (Angstroms)")
-        line.addParam('y', params.FloatParam, condition='setOrigCoord',
+        form.addParam('y', params.FloatParam, condition='setOrigCoord',
                       label="y", help="offset along y axis (Angstroms)")
-        line.addParam('z', params.FloatParam, condition='setOrigCoord',
+        form.addParam('z', params.FloatParam, condition='setOrigCoord',
                       label="z", help="offset along z axis (Angstroms)")
 
     def _insertAllSteps(self):
@@ -147,9 +146,8 @@ class ProtImportVolumes(ProtImportImages):
 
             if self.copyFiles or setOrigCoord:
                 newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
-                adaptFileToCCP4(fileName, newFileName, origin.getShifts(),
-                                samplingRate,
-                                ORIGIN)
+                Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
+                                   samplingRate, Ccp4Header.ORIGIN)
             else:
                 newFileName = abspath(self._getVolumeFileName(fileName))
 
@@ -212,7 +210,8 @@ class ProtImportVolumes(ProtImportImages):
 
 
 class ProtImportPdb(ProtImportFiles):
-    """ Protocol to import a set of pdb volumes to the project"""
+    """ Protocol to import an atomic structure  to the project.
+Format may be PDB or MMCIF"""
     _label = 'import atomic structure'
     IMPORT_FROM_ID = 0
     IMPORT_FROM_FILES = 1
@@ -242,27 +241,40 @@ class ProtImportPdb(ProtImportFiles):
 
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
-            pdbPath = self._getTmpPath('%s.cif' % self.pdbId.get())
-            self._insertFunctionStep('pdbDownloadStep', pdbPath)
+            self._insertFunctionStep('pdbDownloadStep')
         else:
-            pdbPath = self.pdbFile.get()
-        self._insertFunctionStep('createOutputStep', pdbPath)
+            self._insertFunctionStep('createOutputStep', self.pdbFile.get())
 
-    def pdbDownloadStep(self, pdbPath):
-        """Download all pdb files in file_list and unzip them."""
-        downloadPdb(self.pdbId.get(), pdbPath, self._log)
+    def pdbDownloadStep(self):
+        """Download all pdb files in file_list and unzip them.
+        """
+        aSH = AtomicStructHandler()
+        print "retriving PDB file %s" % self.pdbId.get()
+        pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
+                                              type='mmCif',
+                                              dir=self._getExtraPath())
+        self.createOutputStep(pdbPath)
+#        downloadPdb(self.pdbId.get(), pdbPath, self._log)
 
-    def createOutputStep(self, pdbPath):
+    def createOutputStep(self, atomStructPath):
         """ Copy the PDB structure and register the output object.
         """
-        if not exists(pdbPath):
-            raise Exception("Atomic structure not found at *%s*" % pdbPath)
+        if not exists(atomStructPath):
+            raise Exception("Atomic structure not found at *%s*" % atomStructPath)
 
-        baseName = basename(pdbPath)
-        localPath = self._getExtraPath(baseName)
+        baseName = basename(atomStructPath)
+        localPath = abspath(self._getExtraPath(baseName))
 
-        copyFile(pdbPath, localPath)
-        pdb = PdbFile()
+        if str(atomStructPath) != str(localPath): # from local file
+            if atomStructPath.endswith(".pdb") or \
+                    atomStructPath.endswith(".ent"):
+                localPath = localPath.replace(".pdb", ".cif").\
+                    replace(".ent", ".cif")
+            # normalize input format
+            aSH = AtomicStructHandler()
+            aSH.read(atomStructPath)
+            aSH.write(localPath)
+        pdb = AtomStruct()
         volume = self.inputVolume.get()
 
         # if a volume exists assign it to the pdb object
@@ -293,6 +305,6 @@ class ProtImportPdb(ProtImportFiles):
         if (self.inputPdbData == self.IMPORT_FROM_FILES and not exists(
                 self.pdbFile.get())):
             errors.append("Atomic structure not found at *%s*" %
-                          self.pdbPath.get())
+                          self.pdbFile.get())
         # TODO: maybe also validate that if exists is a valid PDB file
         return errors

@@ -28,9 +28,9 @@ import os
 
 from protocol import Protocol
 from pyworkflow.protocol.params import IntParam, STEPS_PARALLEL
+from pyworkflow.utils import importFromPlugin
 
-        
-                
+
 class ProtTestParallel(Protocol):
     """ A parallel test protocol.
     """    
@@ -90,7 +90,7 @@ class ProtTestParallel(Protocol):
         if forceFail:
             self.runJob('echo', " 'Failing for testing purposes...'; exit 1")
         else:
-            from pyworkflow.em.packages.xmipp3 import getEnviron
+            getEnviron = importFromPlugin('xmipp3', 'getEnviron')
             self.runJob('xmipp_work_test',
                         "--time %d --tag '%s'" % (secs, tag), env=getEnviron())
             

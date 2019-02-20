@@ -46,10 +46,9 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
-from pyworkflow.config import (isAFinalProtocol, getProtocolTag,
-                               PROTOCOL_DISABLED_TAG, PROTOCOL_TAG)
+from pyworkflow.project import ProtocolTreeConfig
 from pyworkflow.em.wizard import ListTreeProvider
-from pyworkflow.gui.dialog import askColor, ListDialog
+from pyworkflow.gui.dialog import askColor, ListDialog, FloatingMessage
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
 from constants import STATUS_COLORS
@@ -79,6 +78,8 @@ ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
 ACTION_LABELS = 'Labels'
+ACTION_RESTART_WORKFLOW = 'Restart workflow'
+ACTION_CONTINUE_WORKFLOW = 'Continue workflow'
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -106,7 +107,9 @@ ActionIcons = {
     ACTION_EXPORT_UPLOAD: Icon.ACTION_EXPORT_UPLOAD,
     ACTION_COLLAPSE: 'fa-minus-square.png',
     ACTION_EXPAND: 'fa-plus-square.png',
-    ACTION_LABELS: Icon.TAGS
+    ACTION_LABELS: Icon.TAGS,
+    ACTION_RESTART_WORKFLOW: Icon.ACTION_EXECUTE,
+    ACTION_CONTINUE_WORKFLOW: Icon.ACTION_CONTINUE
 }
 
 
@@ -123,7 +126,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
             img = self.getImage(img)
 
         protClassName = value.split('.')[-1]  # Take last part
-        emProtocolsDict = em.getProtocols()
+        emProtocolsDict = em.Domain.getProtocols()
         prot = emProtocolsDict.get(protClassName, None)
 
         if tag == 'protocol' and text == 'default':
@@ -199,7 +202,9 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
                 (ACTION_LABELS, True),
-                (ACTION_SELECT_TO, True)
+                (ACTION_SELECT_TO, True),
+                (ACTION_RESTART_WORKFLOW, single),
+                (ACTION_CONTINUE_WORKFLOW, single)
                 ]
 
     def getObjectActions(self, obj):
@@ -303,10 +308,35 @@ class StepsWindow(pwgui.browser.BrowserWindow):
         g = self._protocol.getStepsGraph()
         w = pwgui.Window("Protocol steps", self, minsize=(800, 600))
         root = w.root
-        canvas = pwgui.Canvas(root, width=600, height=500)
+        canvas = pwgui.Canvas(root, width=600, height=500, tooltipCallback=self._stepTooltip,)
         canvas.grid(row=0, column=0, sticky='nsew')
         canvas.drawGraph(g, pwgui.graph.LevelTreeLayout())
         w.show()
+
+    def _stepTooltip(self, tw, item):
+        """ Create the contents of the tooltip to be displayed
+        for the given step.
+        Params:
+            tw: a tk.TopLevel instance (ToolTipWindow)
+            item: the selected step.
+        """
+
+        if not hasattr(item.node, 'step'):
+            return
+
+        step = item.node.step
+
+        tm = str(step.funcName)
+
+        if not hasattr(tw, 'tooltipText'):
+            frame = tk.Frame(tw)
+            frame.grid(row=0, column=0)
+            tw.tooltipText = pwgui.dialog.createMessageBody(frame, tm, None,
+                                                            textPad=0,
+                                                            textBg=Color.LIGHT_GREY_COLOR_2)
+            tw.tooltipText.config(bd=1, relief=tk.RAISED)
+        else:
+            pwgui.dialog.fillMessageText(tw.tooltipText, tm)
 
 
 class SearchProtocolWindow(pwgui.Window):
@@ -351,11 +381,11 @@ class SearchProtocolWindow(pwgui.Window):
     def _onSearchClick(self, e=None):
         self._resultsTree.clear()
         keyword = self._searchVar.get().lower()
-        emProtocolsDict = em.getProtocols()
+        emProtocolsDict = em.Domain.getProtocols()
         protList = []
 
         for key, prot in emProtocolsDict.iteritems():
-            if isAFinalProtocol(prot, key):
+            if ProtocolTreeConfig.isAFinalProtocol(prot, key):
                 label = prot.getClassLabel().lower()
                 if keyword in label:
                     protList.append((key,
@@ -366,7 +396,7 @@ class SearchProtocolWindow(pwgui.Window):
         protList.sort(key=lambda x: x[1])  # sort by label
 
         for key, label, installed in protList:
-            tag = getProtocolTag(installed)
+            tag = ProtocolTreeConfig.getProtocolTag(installed)
             if not installed: label += " (not installed)"
             self._resultsTree.insert('', 'end', key,
                                      text=label, tags=(tag))
@@ -413,7 +443,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 inputs.append(attr)
 
             outputs = [attr for _, attr in
-                       self.protocol.iterOutputAttributes(em.EMObject)]
+                       self.protocol.iterOutputAttributes()]
             self.outputStr = pwobj.String(Message.LABEL_OUTPUT)
             objs = inputParents + inputs + [self.outputStr] + outputs
         return objs
@@ -439,7 +469,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                                                     % objLabel):
                 prot.getProject().deleteProtocolOutput(prot, obj)
                 self.parent._fillSummary()
-                self.parent.windows.showInfo("Object *%s* successfuly deleted."
+                self.parent.windows.showInfo("Object *%s* successfully deleted."
                                              % objLabel)
         except Exception as ex:
             self.parent.windows.showError(str(ex))
@@ -461,15 +491,14 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
         viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
 
-        def yatevalejosemi(viewer):
+        def viewerCallback(viewer):
             return lambda: self._visualizeObject(viewer, obj)
 
         for v in viewers:
             actions.append(('Open with %s' % v.__name__,
-                            yatevalejosemi(v),
+                            viewerCallback(v),
                             Icon.ACTION_VISUALIZE))
-
-        # EDIT 
+         # EDIT
         actions.append((Message.LABEL_EDIT,
                         lambda: self._editObject(obj),
                         Icon.ACTION_EDIT))
@@ -580,7 +609,6 @@ class ProtocolsView(tk.Frame):
         self.root = windows.root
         self.getImage = windows.getImage
         self.protCfg = windows.protCfg
-        self.icon = windows.icon
         self.settings = windows.getSettings()
         self.runsView = self.settings.getRunsView()
         self._loadSelection()
@@ -756,6 +784,7 @@ class ProtocolsView(tk.Frame):
         self._updateSelection()
 
         # Add all tabs
+
         tab.add(dframe, text=Message.LABEL_SUMMARY)
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
@@ -792,6 +821,15 @@ class ProtocolsView(tk.Frame):
 
             if not self.project.doesProtocolExists(protId):
                 self._selection.remove(protId)
+
+    def _isMultipleSelection(self):
+        return len(self._selection) > 1
+
+    def _isSingleSelection(self):
+        return len(self._selection) == 1
+
+    def _noSelection(self):
+        return len(self._selection) == 0
 
     # noinspection PyUnusedLocal
     def refreshRuns(self, e=None, initRefreshCounter=True, checkPids=False):
@@ -939,15 +977,20 @@ class ProtocolsView(tk.Frame):
         t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
         t.column('#0', minwidth=300)
         # Protocol nodes
-        t.tag_configure(PROTOCOL_TAG, image=self.getImage('python_file.gif'))
-        t.tag_bind(PROTOCOL_TAG, '<Double-1>', self._protocolItemClick)
-        t.tag_bind(PROTOCOL_TAG, '<Return>', self._protocolItemClick)
+        t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL,
+                        image=self.getImage('python_file.gif'))
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
+                   '<Double-1>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
+                   '<Return>', self._protocolItemClick)
 
         # Disable protocols (not installed) are allowed to be added.
-        t.tag_configure(PROTOCOL_DISABLED_TAG, image=self.getImage('prot_disabled.gif'))
-        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Double-1>', self._protocolItemClick)
-        t.tag_bind(PROTOCOL_DISABLED_TAG, '<Return>', self._protocolItemClick)
-
+        t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                        image=self.getImage('prot_disabled.gif'))
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                   '<Double-1>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                   '<Return>', self._protocolItemClick)
 
         t.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         t.tag_configure('protocol_group', image=self.getImage('class_obj.gif'))
@@ -989,7 +1032,7 @@ class ProtocolsView(tk.Frame):
         self.protTree.unbind('<<TreeviewClose>>')
         self.protTreeItems = {}
         subclassedDict = {}  # Check which classes serve as base to not show them
-        emProtocolsDict = em.getProtocols()
+        emProtocolsDict = em.Domain.getProtocols()
         for _, v1 in emProtocolsDict.iteritems():
             for k2, v2 in emProtocolsDict.iteritems():
                 if v1 is not v2 and issubclass(v1, v2):
@@ -1306,7 +1349,7 @@ class ProtocolsView(tk.Frame):
         # the search protocol dialog tree
         tree = e.widget
         protClassName = tree.getFirst().split('.')[-1]
-        protClass = em.getProtocols().get(protClassName)
+        protClass = em.Domain.getProtocols().get(protClassName)
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 
@@ -1375,8 +1418,9 @@ class ProtocolsView(tk.Frame):
         self._fillMethod()
         self._fillLogs()
 
-        last = self.getSelectedProtocol()
-        self._lastSelectedProtId = last.getObjId() if last else None
+        if self._isSingleSelection():
+            last = self.getSelectedProtocol()
+            self._lastSelectedProtId = last.getObjId() if last else None
 
         self._updateActionToolbar()
 
@@ -1484,7 +1528,7 @@ class ProtocolsView(tk.Frame):
     def toggleDataSelection(self, prot, append):
 
         # Go through the data selection
-        for paramName, output in prot.iterOutputEM():
+        for paramName, output in prot.iterOutputAttributes():
             if append:
                 self.settings.dataSelection.append(output.getObjId())
             else:
@@ -1564,13 +1608,13 @@ class ProtocolsView(tk.Frame):
     def _browseSteps(self):
         """ Open a new window with the steps list. """
         window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows,
-                             self.getSelectedProtocol(), icon=self.icon)
+                             self.getSelectedProtocol())
         window.show()
 
     def _browseRunData(self):
         provider = ProtocolTreeProvider(self.getSelectedProtocol())
         window = pwgui.browser.BrowserWindow(Message.TITLE_BROWSE_DATA,
-                                             self.windows, icon=self.icon)
+                                             self.windows)
         window.setBrowser(pwgui.browser.ObjectBrowser(window.root, provider))
         window.itemConfig(self.getSelectedProtocol(), open=True)
         window.show()
@@ -1665,12 +1709,12 @@ class ProtocolsView(tk.Frame):
 
             self.methodText.setReadOnly(True)
         except Exception as e:
-            self.methodText.addLine('Could not load all methods:' + e.getMessage())
+            self.methodText.addLine('Could not load all methods:' + str(e))
 
     def _fillLogs(self):
         prot = self.getSelectedProtocol()
 
-        if len(self._selection) != 1 or not prot:
+        if not self._isSingleSelection() or not prot:
             self.outputViewer.clear()
             self._lastStatus = None
         elif prot.getObjId() != self._lastSelectedProtId:
@@ -1780,6 +1824,45 @@ class ProtocolsView(tk.Frame):
             self.project.copyProtocol(protocols)
             self.refreshRuns()
 
+    def _launchWorkFlow(self, action):
+        """
+        This function can launch a workflow from a selected protocol in two
+        modes depending on the 'action' value (RESTART, CONTINUE)
+        """
+        protocols = self._getSelectedProtocols()
+        errorList = []
+        defaultMode = pwprot.MODE_CONTINUE
+        defaultModeMessage = 'Continuing the workflow...'
+
+        if action == ACTION_RESTART_WORKFLOW:
+            if pwgui.dialog.askYesNo(Message.TITLE_RESTART_WORKFLOW,
+                                     Message.LABEL_RESTART_WORKFLOW, self.root):
+                defaultMode = pwprot.MODE_RESTART
+                defaultModeMessage = 'Restarting the workflow...'
+
+                message = FloatingMessage(self.root, defaultModeMessage)
+                message.show()
+                errorList = self.project.launchWorkflow(protocols[0],
+                                                        defaultMode)
+                self.refreshRuns()
+                message.close()
+        elif action == ACTION_CONTINUE_WORKFLOW:
+            message = FloatingMessage(self.root, defaultModeMessage)
+            message.show()
+            errorList = self.project.launchWorkflow(protocols[0],
+                                                    defaultMode)
+            self.refreshRuns()
+            message.close()
+
+        if errorList:
+            msg = ''
+            for error in errorList:
+                msg = msg + str(error)
+            pwgui.dialog.MessageDialog(self,
+                                       Message.TITLE_LAUNCHED_WORKFLOW_FAILED,
+                                       Message.LABEL_LAUNCHED_WORKFLOW_FAILED + msg,
+                                       'fa-times-circle_alert.png')
+
     def _selectLabels(self):
         selectedNodes = self._getSelectedNodes()
 
@@ -1793,15 +1876,17 @@ class ProtocolsView(tk.Frame):
                 # self.updateRunsGraph()
                 self.drawRunsGraph()
 
-    def _selectAncestors(self, run=None):
+    def _selectAncestors(self, childRun=None):
 
         children = []
-        if run is None:
+        # If parent param not passed...
+        if childRun is None:
+            #..use selection, must be first call
             for protId in self._selection:
                 run = self.runsGraph.getNode(str(protId))
                 children.append(run)
         else:
-            name = run.getName()
+            name = childRun.getName()
 
             if not name.isdigit():
                 return
@@ -1810,7 +1895,7 @@ class ProtocolsView(tk.Frame):
 
             # If already selected (may be this should be centralized)
             if name not in self._selection:
-                children = (run,)
+                children = (childRun,)
                 self._selection.append(name)
 
         # Go up .
@@ -1820,9 +1905,11 @@ class ProtocolsView(tk.Frame):
             for parent in run.getParents():
                 self._selectAncestors(parent)
 
-        self._updateSelection()
-
-        self.drawRunsGraph()
+        # Only update selection at the end, avoid recursion
+        if childRun is None:
+            self._lastSelectedProtId = None
+            self._updateSelection()
+            self.drawRunsGraph()
 
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()
@@ -1842,7 +1929,7 @@ class ProtocolsView(tk.Frame):
             master=self.windows,
             path=self.project.getPath(''),
             onSelect=_export,
-            entryLabel='File', entryValue='workflow.json')
+            entryLabel='File  ', entryValue='workflow.json')
         browser.show()
 
     def _exportUploadProtocols(self):
@@ -1876,7 +1963,7 @@ class ProtocolsView(tk.Frame):
             else:
                 firstViewer.visualize(prot)
         else:
-            for _, output in prot.iterOutputAttributes(em.EMObject):
+            for _, output in prot.iterOutputAttributes():
                 viewers = em.findViewers(output.getClassName(), DESKTOP_TKINTER)
                 if len(viewers):
                     # Instanciate the first available viewer
@@ -1986,6 +2073,10 @@ class ProtocolsView(tk.Frame):
                     self._selectLabels()
                 elif action == ACTION_SELECT_TO:
                     self._selectAncestors()
+                elif action == ACTION_RESTART_WORKFLOW:
+                    self._launchWorkFlow(action)
+                elif action == ACTION_CONTINUE_WORKFLOW:
+                    self._launchWorkFlow(action)
 
             except Exception as ex:
                 self.windows.showError(str(ex))

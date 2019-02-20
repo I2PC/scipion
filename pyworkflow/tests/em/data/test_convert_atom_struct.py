@@ -26,12 +26,13 @@
 #
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
+from collections import Counter
 
 import numpy
 
-from pyworkflow.em.convert_atom_struct import AtomicStructHandler
-from pyworkflow.em.transformations import euler_matrix, \
-    translation_matrix, concatenate_matrices
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+from pyworkflow.em.convert.transformations import (
+    euler_matrix, translation_matrix, concatenate_matrices)
 from pyworkflow.tests import *
 
 
@@ -273,13 +274,13 @@ class TestAtomicStructHandler(unittest.TestCase):
 
         def __runXmippProgram(program, args):
             """ Internal function to launch a Xmipp program. """
-            import pyworkflow.em.packages.xmipp3 as xmipp3
+            xmipp3 = pwutils.importFromPlugin('xmipp3')
             xmipp3.runXmippProgram(program, args)
 
         def __getXmippEulerAngles(matrix):
             """ Internal fuction to convert scipion to xmipp angles"""
-            from pyworkflow.em.packages.xmipp3.convert \
-                import geometryFromMatrix
+            geometryFromMatrix = importFromPlugin('xmipp3.convert',
+                                                  'geometryFromMatrix')
 
             return geometryFromMatrix(matrix, False)
 
@@ -343,17 +344,14 @@ class TestAtomicStructHandler(unittest.TestCase):
             header.writeHeader()
 
             # view the results with chimera
-            from pyworkflow.em.viewers.chimera_utils \
-                import runChimeraProgram
-            from pyworkflow.em.viewers.chimera_utils \
-                import getProgram as chimera_get_program
+            from pyworkflow.em.viewers import Chimera
             args = "%s %s %s %s" % (
                    pdbFileName,
                    "emd_%s.map" % EMDBID,
                    "%s_%s_transformed.ent" % (suffix, PDBID.lower()),
                    "%s_emd_%s_transform.map" % (suffix, EMDBID)
             )
-            runChimeraProgram(chimera_get_program(), args)
+            Chimera.runProgram(args)
 
         # shift atomic structure
         doAll = True
@@ -397,6 +395,112 @@ class TestAtomicStructHandler(unittest.TestCase):
         self.assertTrue(os.path.exists(fileName))
 
         os.unlink(fileName)
+
+    def testFunctionAddStructNoNewModel(self):
+        """ add two atomic structures with overlaping chain ids"""
+        pdbID1 = '1P30'  # A
+        pdbID2 = '1CJD'  # A, B, C
+        outFile = "/tmp/nomodel.cif"  # A, A002, B, C
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        #
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = ['A', 'A002', 'B', 'C']
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+
+        atomsNumT = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        self.assertEqual(atomsNum1 + atomsNum2, atomsNumT)
+        os.unlink(fileName1)
+        os.unlink(fileName2)
+        os.unlink(outFile)
+
+    def testFunctionAddStructNoNewModelAddTwice(self):
+        """ add two atomic structures with overlaping chain ids, last atomic
+        structure is added two times"""
+        pdbID1 = '1P30'  # A,
+        pdbID2 = '1CJD'  # A, B, C
+        outFile = "/tmp/nomodel.cif"  # A, A002, B, C, A003, B002, C002
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        #
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = ['A', 'A002', 'B', 'C', 'A003', 'B002', 'C002']
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+
+        atomsNumT = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        self.assertEqual(atomsNum1 + atomsNum2 + atomsNum2, atomsNumT)
+        os.unlink(fileName1)
+        os.unlink(fileName2)
+        os.unlink(outFile)
+
+    def testFunctionAddStructNewModel(self):
+        pdbID1 = '1P30'  # A
+        pdbID2 = '1CJD'  # A, B,C
+        outFile = "/tmp/model.cif"
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        #
+        aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=True)
+        #
+        #aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = ['A', 'A', 'B', 'C']
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+        atomsNumT = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        self.assertEqual(atomsNum1 + atomsNum2, atomsNumT)
+
+        os.unlink(fileName1)
+        os.unlink(fileName2)
+        os.unlink(outFile)
+
+    def testFunctionSelectChain(self):
+        pdbID1 = '1P30'  # A,B,C
+        outFile = "/tmp/model.cif"
+        aSH1 = AtomicStructHandler()
+        aSH2 = AtomicStructHandler()
+        #
+        fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
+        #
+        chainID = 'A'
+        outFileName = "/tmp/output.mmcif"
+        aSH1.extractChain(chainID=chainID, modelID='0', end=20,
+                          filename=outFileName)
+        chains = [chain.id for chain in aSH1.getStructure().get_chains()]
+        # compare unordered lists of chains
+        goal = chainID
+        self.assertTrue(Counter(chains) == Counter(goal),
+                        "{} != {}".format(chains, goal))
+        aSH2.read(outFileName)
+        atomsNumT = len([atom.id for atom in aSH2.getStructure().get_atoms()])
+        self.assertEqual(122, atomsNumT)
+
+        #os.unlink(fileName1)
+        #os.unlink(outFile)
 
     @classmethod
     def tearDownClass(cls):

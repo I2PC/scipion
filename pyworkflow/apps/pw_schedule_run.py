@@ -31,15 +31,14 @@ import json
 import argparse
 
 from pyworkflow.em import *
-from pyworkflow.config import *
 from pyworkflow.protocol import (getProtocolFromDb,
                                  STATUS_FINISHED, STATUS_ABORTED, STATUS_FAILED)
-
 
 # Add callback for remote debugging if available.
 try:
     from rpdb2 import start_embedded_debugger
     from signal import signal, SIGUSR2
+
     signal(SIGUSR2, lambda sig, frame: start_embedded_debugger('a'))
 except ImportError:
     pass
@@ -121,6 +120,31 @@ class RunScheduler():
                                             skipUpdatedProtocols=False)
                     _log("Updated protocol %s" % protId)
 
+        def _getProtocolFromPointer(pointer):
+            """
+            The function return a protocol from an attribute
+
+               A) When the pointer points to a protocol
+
+               B) When the pointer points to another object (INDIRECTLY).
+                  - The pointer has an _extended value (new parameters
+                    configuration in the protocol)
+
+               C) When the pointer points to another object (DIRECTLY).
+                  - The pointer has not an _extended value (old parameters
+                    configuration in the protocol)
+            """
+            output = pointer.get()
+            if isinstance(output, Protocol):  # case A
+                protocol = output
+            else:
+                if pointer.hasExtended():  # case B
+                    protocol = pointer.getObjValue()
+                else:  # case C
+                    protocol = self.getProject().getProtocol(
+                        output.getObjParentId())
+            return protocol
+
         while True:
             protocol = self._loadProtocol()
             project = protocol.getProject()
@@ -129,11 +153,23 @@ class RunScheduler():
             missing = False
 
             _log("Checking input data...")
-            for key, attr in protocol.iterInputAttributes():
-                if attr.hasValue() and attr.get() is None:
-                    missing = True
-                    inputProt = attr.getObjValue()
+            if protocol.worksInStreaming():
+                for key, attr in protocol.iterInputAttributes():
+                    if attr.get() is None:
+                        missing = True
+                        inputProt = _getProtocolFromPointer(attr)
+                        _updateProtocol(inputProt, project)
+            else:
+                for key, attr in protocol.iterInputAttributes():
+                    inputProt = _getProtocolFromPointer(attr)
                     _updateProtocol(inputProt, project)
+                    if inputProt.getStatus() not in stopStatuses:
+                        missing = True
+                        break
+            if not missing:
+                inputProtocolDict = protocol.inputProtocolDict()
+                for prot in inputProtocolDict.values():
+                    _updateProtocol(prot, project)
 
             _log("Checking prerequisited...")
             wait = False  # Check if we need to wait for required protocols
@@ -156,10 +192,9 @@ class RunScheduler():
 
         _log("Launching the protocol >>>>")
         log.close()
-        project.launchProtocol(protocol, scheduled=True)
+        project.launchProtocol(protocol, scheduled=True, force=True)
 
 
 if __name__ == '__main__':
     scheduler = RunScheduler()
     scheduler.main()
-

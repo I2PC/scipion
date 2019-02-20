@@ -31,7 +31,6 @@ from collections import OrderedDict
 import pyworkflow.protocol.params as params
 from protocol import EMProtocol
 import time
-import xmipp
 import random
 
 from pyworkflow import VERSION_1_1
@@ -39,12 +38,15 @@ from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition, Movie,
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils import importFromPlugin
+
+import xmippLib
+
 
 SET_OF_MOVIES = 0
 SET_OF_MICROGRAPHS = 1
 SET_OF_RANDOM_MICROGRAPHS = 2
 SET_OF_PARTICLES = 3
-
 
 
 class ProtCreateStreamData(EMProtocol):
@@ -321,25 +323,25 @@ class ProtCreateStreamData(EMProtocol):
 
     def createRandomMicStep(self, mic):
         time.sleep(self.creationInterval.get())
-        from pyworkflow.em.packages.xmipp3 import getEnviron
+        getEnviron = importFromPlugin('xmipp3', 'Plugin').getEnviron
 
         # create image
-        img = xmipp.Image()
-        img.setDataType(xmipp.DT_FLOAT)
+        img = xmippLib.Image()
+        img.setDataType(xmippLib.DT_FLOAT)
         img.resize(self.xDim, self.yDim)
-        img.initRandom(0., 1., xmipp.XMIPP_RND_UNIFORM)
+        img.initRandom(0., 1., xmippLib.XMIPP_RND_UNIFORM)
         baseFn = self._getExtraPath(self._singleImageFn)
         img.write(baseFn)
 
-        md1 = xmipp.MetaData()
+        md1 = xmippLib.MetaData()
         md1.setColumnFormat(False)
         idctf = md1.addObject()
 
         baseFnCtf = self._getTmpPath("ctf_%d.param" % mic)
         baseFnImageCTF = self._getExtraPath("imageCTF_%d.xmp" % mic)
 
-        md1.setValue(xmipp.MDL_CTF_SAMPLING_RATE, 1., idctf)
-        md1.setValue(xmipp.MDL_CTF_VOLTAGE, 200., idctf)
+        md1.setValue(xmippLib.MDL_CTF_SAMPLING_RATE, 1., idctf)
+        md1.setValue(xmippLib.MDL_CTF_VOLTAGE, 200., idctf)
         defocus = 20000 + 10000 * random.random()
         udefocus = defocus + 1000 * random.random()
         vdefocus = defocus + 1000 * random.random()
@@ -347,13 +349,13 @@ class ProtCreateStreamData(EMProtocol):
             aux = vdefocus
             vdefocus = udefocus
             udefocus = aux
-        md1.setValue(xmipp.MDL_CTF_DEFOCUSU, udefocus, idctf)
-        md1.setValue(xmipp.MDL_CTF_DEFOCUSV, vdefocus, idctf)
-        md1.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 180.0 * random.random(),
+        md1.setValue(xmippLib.MDL_CTF_DEFOCUSU, udefocus, idctf)
+        md1.setValue(xmippLib.MDL_CTF_DEFOCUSV, vdefocus, idctf)
+        md1.setValue(xmippLib.MDL_CTF_DEFOCUS_ANGLE, 180.0 * random.random(),
                      idctf)
-        md1.setValue(xmipp.MDL_CTF_CS, 2., idctf)
-        md1.setValue(xmipp.MDL_CTF_Q0, 0.07, idctf)
-        md1.setValue(xmipp.MDL_CTF_K, 1., idctf)
+        md1.setValue(xmippLib.MDL_CTF_CS, 2., idctf)
+        md1.setValue(xmippLib.MDL_CTF_Q0, 0.07, idctf)
+        md1.setValue(xmippLib.MDL_CTF_K, 1., idctf)
 
         md1.write(baseFnCtf)
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from pyworkflow.em.viewer import ChimeraVirusClient
+from pyworkflow.em.viewers import ChimeraVirusClient
 import os#, sys
 import argparse
-#import xmipp
+#import xmippLib
 
 def main():
     commonParser = argparse.ArgumentParser(add_help=False, prog='Chimera Virus Client')

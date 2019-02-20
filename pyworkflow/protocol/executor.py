@@ -34,10 +34,19 @@ import time
 import datetime
 import traceback
 import threading
+import os
+import signal
+import re
+from subprocess import Popen, PIPE
+from multiprocessing.pool import ThreadPool, TimeoutError
 
 import pyworkflow.utils.process as process
+from pyworkflow.utils.path import getParentFolder, removeExt
+from pyworkflow.utils import greenStr
 import constants as cts
 
+from launch import _submit, UNKNOWN_JOBID
+#from retrying import retry
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
@@ -257,6 +266,73 @@ class ThreadStepExecutor(StepExecutor):
             if t is not threading.current_thread():
                 t.join()
 
+class QueueStepExecutor(ThreadStepExecutor):
+    def __init__(self, hostConfig, submitDict, nThreads, **kwargs):
+        ThreadStepExecutor.__init__(self, hostConfig, nThreads, **kwargs)
+        self.submitDict = submitDict
+        # Command counter per thread
+        self.threadCommands = {}
+        for threadId in range(nThreads):
+            self.threadCommands[threadId] = 0
+
+        if nThreads > 1:
+            self.runJobs = ThreadStepExecutor.runSteps
+        else:
+            self.runJobs = StepExecutor.runSteps
+
+
+    def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
+        threadId = threading.current_thread().thId
+        submitDict = dict(self.hostConfig.getQueuesDefault())
+        submitDict.update(self.submitDict)
+        submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env, gpuList=self.getGpuList())
+        self.threadCommands[threadId] += 1
+        subthreadId = '-%s-%s' % (threadId, self.threadCommands[threadId])
+        submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + subthreadId
+        submitDict['JOB_SCRIPT'] = os.path.abspath(removeExt(submitDict['JOB_SCRIPT']) + subthreadId + ".job")
+        submitDict['JOB_LOGS'] = os.path.join(getParentFolder(submitDict['JOB_SCRIPT']), submitDict['JOB_NAME'])
+
+        jobid = _submit(self.hostConfig, submitDict, cwd, env)
+
+        if (jobid is None) or (jobid == UNKNOWN_JOBID):
+            print("jobId is none therefore we set it to fail")
+            raise Exception("Failed to submit to queue.")
+
+        status = cts.STATUS_RUNNING
+        wait = 3
+
+        # Check status while job running
+        # REVIEW this to minimize the overhead in time put by this delay check
+        while self._checkJobStatus(self.hostConfig, jobid) == cts.STATUS_RUNNING:
+            time.sleep(wait)
+            if wait < 300:
+                wait += 3
+
+        return status
+
+
+    def _checkJobStatus(self, hostConfig, jobid):
+
+        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
+        p = Popen(command, shell=True, stdout=PIPE, preexec_fn=os.setsid)
+
+        out = p.communicate()[0]
+
+        jobDoneRegex = hostConfig.getJobDoneRegex()
+
+        # If nothing is returned we assume job is no longer in queue and thus finished
+        if out == "":
+            return cts.STATUS_FINISHED
+        # If some string is returned we use the JOB_DONE_REGEX variable (if present) to infer the status
+        elif jobDoneRegex != None:
+            s = re.search(jobDoneRegex, out)
+            if s:
+                return cts.STATUS_FINISHED
+            else:
+                return cts.STATUS_RUNNING
+        # If JOB_DONE_REGEX is not defined and queue has returned something we assume that job is still running
+        else:
+            return cts.STATUS_RUNNING
 
 class MPIStepExecutor(ThreadStepExecutor):
     """ Run steps in parallel using threads.

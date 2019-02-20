@@ -115,11 +115,15 @@ DataSet(name='relion_tutorial', folder='relion_tutorial',
                'particles': 'gold/particles.sqlite',
                'posAllDir': 'pickingXmipp',
                'relion_it020_data': 'gold/relion_it020_data.star',
+               'relion_it020_data_newlabels': 'gold/relion_it020_data_newlabels.star',
                'volume': 'volumes/reference.mrc',
                'import1_data_star': 'import/case1/classify3d_small_it038_data.star',
                'import2_data_star': 'import/case2/relion_it015_data.star',
                'particles_binary': '006.stk'
         })
+
+
+DataSet(name='relion30_tutorial', folder='relion30_tutorial', files={})
 
 
 DataSet(name='ribo_movies', folder='ribo_movies',
@@ -262,3 +266,12 @@ DataSet(name='10010',  folder='10010',
 DataSet(name='model_building_tutorial', folder='model_building_tutorial',
         files={'vol1': 'volumes/1ake_4-5A.mrc',
                'pdb1': 'PDBs/1ake_start.pdb'})
+
+DataSet(name='eman', folder='eman',
+        files={
+               'micU': 'mics/ip3r10252011-0005_0-2.hdf',
+               'micT': 'mics/ip3r10252011-0005_10.hdf',
+               'volume': '3DmapIP3R1_clip_376apix.mrc',
+               'coords': 'coords/*.json',
+               'ctfs': 'ctfs/'
+               })

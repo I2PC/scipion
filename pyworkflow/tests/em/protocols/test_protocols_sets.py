@@ -26,18 +26,18 @@
 # *
 # **************************************************************************
 
+from __future__ import print_function
 import random
 import unittest
 from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 
-from pyworkflow.utils import redStr, greenStr, magentaStr
-from pyworkflow.em.data import EMObject
+from pyworkflow.utils import greenStr, magentaStr
 
 from pyworkflow.em.protocol.protocol_import import (
     ProtImportMicrographs, ProtImportVolumes, ProtImportMovies,
-    ProtImportParticles, ProtImportCoordinates)
+    ProtImportParticles)
 
 from pyworkflow.em.protocol.protocol_sets import (
     ProtSplitSet, ProtSubSet, ProtUnionSet, ProtSubSetByMic)
@@ -49,14 +49,13 @@ from pyworkflow.object import Float
 
 
 class TestSets(BaseTest):
-
     """Run different tests related to the set operations."""
 
     @classmethod
     def setUpClass(cls):
         """Prepare the data that we will use later on."""
 
-        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+        print("\n", greenStr(" Set Up - Collect data ".center(75, '-')))
 
         setupTestProject(cls)  # defined in BaseTest, creates cls.proj
 
@@ -71,15 +70,25 @@ class TestSets(BaseTest):
         new = cls.proj.newProtocol  # short notation
         launch = cls.proj.launchProtocol
         # Micrographs
-        print magentaStr("\n==> Importing data - micrographs")
+        # NOTE: This dataset has 3 mic with heterogeneous dimensions!! But so
+        # far is not failing, should it?
+        print(magentaStr("\n==> Importing data - micrographs"))
         p_imp_micros = new(ProtImportMicrographs,
                            filesPath=cls.dataset_xmipp.getFile('allMics'),
                            samplingRate=1.237, voltage=300)
         launch(p_imp_micros, wait=True)
         cls.micros = p_imp_micros.outputMicrographs
 
+        # Micrographs SMALL - This is a mic with different dimensions
+        print(magentaStr("\n==> Importing data - micrographs SMALL"))
+        p_imp_micros = new(ProtImportMicrographs,
+                           filesPath=cls.dataset_xmipp.getFile('mic3'),
+                           samplingRate=1.237, voltage=300)
+        launch(p_imp_micros, wait=True)
+        cls.microsSmall = p_imp_micros.outputMicrographs
+
         # Volumes
-        print magentaStr("\n==> Importing data - volumes")
+        print(magentaStr("\n==> Importing data - volumes"))
         p_imp_volumes = new(ProtImportVolumes,
                             filesPath=cls.dataset_xmipp.getFile('volumes'),
                             samplingRate=9.896)
@@ -87,16 +96,18 @@ class TestSets(BaseTest):
         cls.vols = p_imp_volumes.outputVolumes
 
         # Movies
-        print magentaStr("\n==> Importing data - movies")
+        print(magentaStr("\n==> Importing data - movies"))
         p_imp_movies = new(ProtImportMovies,
                            filesPath=cls.dataset_ribo.getFile('movies'),
                            samplingRate=2.37, magnification=59000,
-                           voltage=300, sphericalAberration=2.0)
+                           voltage=300, sphericalAberration=2.0,
+                           gainFile=cls.dataset_ribo.getFile('volume'),
+                           darkFile=cls.dataset_ribo.getFile('volume'))
         launch(p_imp_movies, wait=True)
         cls.movies = p_imp_movies.outputMovies
 
         # Particles
-        print magentaStr("\n==> Importing data - particles")
+        print(magentaStr("\n==> Importing data - particles"))
         p_imp_particles = new(ProtImportParticles,
                               filesPath=cls.dataset_mda.getFile('particles'),
                               samplingRate=3.5)
@@ -104,15 +115,15 @@ class TestSets(BaseTest):
         cls.particles = p_imp_particles.outputParticles
 
         # Particles with micId
-        print magentaStr("\n==> Importing data - particles with micId")
+        print(magentaStr("\n==> Importing data - particles with micId"))
         relionFile = 'import/case2/relion_it015_data.star'
         pImpPartMicId = new(ProtImportParticles,
-                               objLabel='from relion (auto-refine 3d)',
-                               importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                               starFile=cls.datasetRelion.getFile(relionFile),
-                               magnification=10000,
-                               samplingRate=7.08,
-                               haveDataBeenPhaseFlipped=True)
+                            objLabel='from relion (auto-refine 3d)',
+                            importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                            starFile=cls.datasetRelion.getFile(relionFile),
+                            magnification=10000,
+                            samplingRate=7.08,
+                            haveDataBeenPhaseFlipped=True)
         launch(pImpPartMicId, wait=True)
         cls.partMicId = pImpPartMicId.outputParticles
         cls.micsMicId = pImpPartMicId.outputMicrographs
@@ -131,28 +142,30 @@ class TestSets(BaseTest):
         self.proj.launchProtocol(p_split, wait=True)
         return p_split
 
-    def outputs(self, p):
+    @staticmethod
+    def outputs(p):
         """Iterator over all the elements in the outputs of protocol p."""
-        for key, output in p.iterOutputEM():
+        for key, output in p.iterOutputAttributes():
             yield output
+
     #
     # The tests themselves.
     #
     def testSplit(self):
         """Test that the split operation works as expected."""
 
-        print "\n", greenStr(" Test Split ".center(75, '-'))
+        print("\n", greenStr(" Test Split ".center(75, '-')))
 
         def check(set0, n=2, randomize=False):
-            "Simple checks on split sets from set0."
-            print magentaStr("\n==> Check split of %s" % type(set0).__name__)
+            # Simple checks on split sets from set0.
+            print(magentaStr("\n==> Check split of %s" % type(set0).__name__))
             unsplit_set = [x.strId() for x in set0]
             p_split = self.split(set0, n=n, randomize=randomize)
             # Are all output elements of the protocol in the original set?
             for em_set in self.outputs(p_split):
                 for elem in em_set:
                     self.assertTrue(elem.strId() in unsplit_set)
-            # Number of elements of all splitted sets equal to original number?
+            # Number of elements of all split sets equal to original number?
             self.assertEqual(sum(len(x) for x in self.outputs(p_split)),
                              len(set0))
 
@@ -166,17 +179,17 @@ class TestSets(BaseTest):
     def testSubset(self):
         """Test that the subset operation works as expected."""
 
-        print "\n", greenStr(" Test Subset ".center(75, '-'))
+        print("\n", greenStr(" Test Subset ".center(75, '-')))
 
         def check(set0, n1=2, n2=2):
             "Simple checks on subsets, coming from split sets of set0."
-            print magentaStr("\n==> Check subset of %s" % type(set0).__name__)
+            print(magentaStr("\n==> Check subset of %s" % type(set0).__name__))
             p_split1 = self.split(set0, n=n1, randomize=True)
             p_split2 = self.split(set0, n=n2, randomize=True)
 
             setFull = random.choice(list(self.outputs(p_split1)))
             setSub = random.choice(list(self.outputs(p_split2)))
-            
+
             label = '%s - %s,%s ' % (set0.getClassName(), n1, n2)
             # Launch intersection subset
             p_subset = self.newProtocol(ProtSubSet)
@@ -184,7 +197,7 @@ class TestSets(BaseTest):
             p_subset.inputFullSet.set(setFull)
             p_subset.inputSubSet.set(setSub)
             self.launchProtocol(p_subset)
-            
+
             # Launch difference subset
             p_subset_diff = self.proj.copyProtocol(p_subset)
             p_subset_diff.setOperation.set(p_subset_diff.SET_DIFFERENCE)
@@ -194,32 +207,46 @@ class TestSets(BaseTest):
             setFullIds = setFull.getIdSet()
             setSubIds = setSub.getIdSet()
             n = len(setFull)
-            
+
             # Check intersection
             outputs = [o for o in self.outputs(p_subset)]
             n1 = 0
             if outputs:
                 output = outputs[0]
+
+                # Check properties
+                self.assertTrue(set0.equalAttributes(output,
+                                    ignore=['_mapperPath', '_size'],
+                                    verbose=True),
+                                "Intersection subset attributes are wrong")
+
                 n1 = len(output)
                 for elem in output:
                     self.assertTrue(elem.getObjId() in setFullIds)
                     self.assertTrue(elem.getObjId() in setSubIds,
-                                    'object id %s not in set: %s' 
+                                    'object id %s not in set: %s'
                                     % (elem.getObjId(), setSubIds))
-                
+
             # Check difference
             outputs = [o for o in self.outputs(p_subset_diff)]
             n2 = 0
             if outputs:
                 output_diff = outputs[0]
+                # Check properties
+                self.assertTrue(set0.equalAttributes(output_diff,
+                                    ignore=['_mapperPath', '_size'],
+                                    verbose=True),
+                                "In subset attributes are wrong")
+
                 n2 = len(output_diff)
                 for elem in output_diff:
                     self.assertTrue(elem.getObjId() in setFullIds)
                     self.assertTrue(elem.getObjId() not in setSubIds)
-                
+
             self.assertTrue(n >= n1)
-            self.assertTrue(n >= n2)            
-            self.assertEqual(n, n1+n2)
+            self.assertTrue(n >= n2)
+            self.assertEqual(n, n1 + n2)
+
 
         # We won't do these first two, there are too few elements.
         #   check(self.micros)
@@ -230,10 +257,11 @@ class TestSets(BaseTest):
 
     def testSubsetByMic(self):
         """Test that the subset by Mic operation works as expected."""
-        print "\n", greenStr(" Test Subset by Mic".center(75, '-'))
+        print("\n", greenStr(" Test Subset by Mic".center(75, '-')))
         "Simple checks on subsets, coming from split sets of setMics."
-        print magentaStr("\n==> Check subset of %s by %s"
-               % (type(self.partMicId).__name__, type(self.micsMicId).__name__))
+        print(magentaStr("\n==> Check subset of %s by %s"
+                         % (type(self.partMicId).__name__,
+                            type(self.micsMicId).__name__)))
 
         # launch the protocol for a certain mics input
         def launchSubsetByMic(micsSubset):
@@ -248,11 +276,11 @@ class TestSets(BaseTest):
         def checkAsserts(setParts, size, partId, micId):
             self.assertIsNotNone(setParts, "Output SetOfParticles"
                                            " were not created.")
-            self.assertEqual(setParts.getSize(), size, "The number of created "
-                                                      "particles is incorrect.")
+            self.assertEqual(setParts.getSize(), size,
+                             "The number of created particles is incorrect.")
             p = setParts[partId]
             self.assertEqual(p.getMicId(), micId)
-        
+
         # Whole set of micrographs
         setMics = self.micsMicId
         # Create a subsets of Mics to apply the protocol
@@ -277,11 +305,11 @@ class TestSets(BaseTest):
     def testMerge(self):
         """Test that the union operation works as expected."""
 
-        print "\n", greenStr(" Test Merge ".center(75, '-'))
+        print("\n", greenStr(" Test Merge ".center(75, '-')))
 
         def check(set0):
-            "Simple checks on merge, coming from many split sets of set0."
-            print magentaStr("\n==> Check merge of %s" % type(set0).__name__)
+            # Simple checks on merge, coming from many split sets of set0.
+            print(magentaStr("\n==> Check merge of %s" % type(set0).__name__))
             p_union = self.proj.newProtocol(ProtUnionSet)
 
             setsIds = []
@@ -307,7 +335,7 @@ class TestSets(BaseTest):
         """Test that the union operation works as expected.
         Even if the order of the columns do not match.
         That is, M1(a,b,c) U M2(a,c,b)"""
-        #create two set of particles
+        # Create two sets of particles
         inFileNameMetadata1 = self.proj.getTmpPath('particles1.sqlite')
         inFileNameMetadata2 = self.proj.getTmpPath('particles2.sqlite')
         imgSet1 = SetOfParticles(filename=inFileNameMetadata1)
@@ -329,7 +357,7 @@ class TestSets(BaseTest):
             img1._attrb1 = Float(attrb1[counter])
             img1._attrb2 = Float(attrb2[counter])
             imgSet1.append(img1)
-            counter +=1
+            counter += 1
 
         for i in range(1, 3):
             img2.cleanObjId()
@@ -337,54 +365,52 @@ class TestSets(BaseTest):
             img2.setClassId(i % 5)
             img2.setMicId(i % 3)
             img2.setSamplingRate(2.)
-            img2._attrb1= Float(attrb1[counter])
-            img2._attrb2= Float(attrb2[counter])
+            img2._attrb1 = Float(attrb1[counter])
+            img2._attrb2 = Float(attrb2[counter])
             imgSet2.append(img2)
-            counter +=1
+            counter += 1
 
         imgSet1.write()
         imgSet2.write()
 
-        #import them
+        # import them
         protImport1 = self.newProtocol(ProtImportParticles,
-                                      objLabel='import set1',
-                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
-                                      sqliteFile=inFileNameMetadata1,
-                                      magnification=10000,
-                                      samplingRate=7.08,
-                                      haveDataBeenPhaseFlipped=True
-                                      )
+                                       objLabel='import set1',
+                                       importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                       sqliteFile=inFileNameMetadata1,
+                                       magnification=10000,
+                                       samplingRate=7.08,
+                                       haveDataBeenPhaseFlipped=True)
         self.launchProtocol(protImport1)
 
         protImport2 = self.newProtocol(ProtImportParticles,
-                                      objLabel='import set2',
-                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
-                                      sqliteFile=inFileNameMetadata2,
-                                      magnification=10000,
-                                      samplingRate=7.08,
-                                      haveDataBeenPhaseFlipped=True
-                                      )
+                                       objLabel='import set2',
+                                       importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                       sqliteFile=inFileNameMetadata2,
+                                       magnification=10000,
+                                       samplingRate=7.08,
+                                       haveDataBeenPhaseFlipped=True)
         self.launchProtocol(protImport2)
 
-        #create merge protocol
+        # create merge protocol
         p_union = self.newProtocol(ProtUnionSet,
-                       objLabel='join diff column order',
-                       ignoreExtraAttributes=True)
+                                   objLabel='join diff column order',
+                                   ignoreExtraAttributes=True)
         p_union.inputSets.append(protImport1.outputParticles)
         p_union.inputSets.append(protImport2.outputParticles)
         self.proj.launchProtocol(p_union, wait=True)
-        #assert
-        counter=0
+        # assert
+        counter = 0
         for img in p_union.outputSet:
-            self.assertAlmostEqual(attrb1[counter],img._attrb1,4)
-            self.assertAlmostEqual(attrb2[counter],img._attrb2,4)
+            self.assertAlmostEqual(attrb1[counter], img._attrb1, 4)
+            self.assertAlmostEqual(attrb2[counter], img._attrb2, 4)
             counter += 1
 
     def testMergeDifferentAttrs(self):
         """ Test merge from subsets with different attritubes.
         That is, M1(a,b,c) U M2(a,b,c,d)"""
 
-        #create two set of particles
+        # create two set of particles
         inFileNameMetadata1 = self.proj.getTmpPath('particles11.sqlite')
         inFileNameMetadata2 = self.proj.getTmpPath('particles22.sqlite')
         imgSet1 = SetOfParticles(filename=inFileNameMetadata1)
@@ -425,36 +451,36 @@ class TestSets(BaseTest):
             img2._attrb1 = Float(attrb1[counter])
             img2._attrb2 = Float(attrb2[counter])
             imgSet2.append(img2)
-            counter +=1
+            counter += 1
 
         imgSet1.write()
         imgSet2.write()
 
-        #import them
+        # import them
         protImport1 = self.newProtocol(ProtImportParticles,
-                                      objLabel='import set1',
-                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
-                                      sqliteFile=inFileNameMetadata1,
-                                      magnification=10000,
-                                      samplingRate=7.08,
-                                      haveDataBeenPhaseFlipped=True
-                                      )
+                                       objLabel='import set1',
+                                       importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                       sqliteFile=inFileNameMetadata1,
+                                       magnification=10000,
+                                       samplingRate=7.08,
+                                       haveDataBeenPhaseFlipped=True
+                                       )
         self.launchProtocol(protImport1)
 
         protImport2 = self.newProtocol(ProtImportParticles,
-                                      objLabel='import set2',
-                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
-                                      sqliteFile=inFileNameMetadata2,
-                                      magnification=10000,
-                                      samplingRate=7.08,
-                                      haveDataBeenPhaseFlipped=True
-                                      )
+                                       objLabel='import set2',
+                                       importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                       sqliteFile=inFileNameMetadata2,
+                                       magnification=10000,
+                                       samplingRate=7.08,
+                                       haveDataBeenPhaseFlipped=True
+                                       )
         self.launchProtocol(protImport2)
 
-        #create merge protocol
+        # create merge protocol
         p_union = self.newProtocol(ProtUnionSet,
-                       objLabel='join different attrs',
-                       ignoreExtraAttributes=True)
+                                   objLabel='join different attrs',
+                                   ignoreExtraAttributes=True)
         p_union.inputSets.append(protImport1.outputParticles)
         p_union.inputSets.append(protImport2.outputParticles)
         self.proj.launchProtocol(p_union, wait=True)
@@ -480,7 +506,7 @@ class TestSets(BaseTest):
         # This function was written by Roberto. It does things
         # differently, so let's keep it for reference.
 
-        #create set of particles
+        # create set of particles
 
         inFileNameMetadata = self.proj.getTmpPath('particlesOrderBy.sqlite')
         inFileNameData = self.proj.getTmpPath('particlesOrderBy.stk')
@@ -492,7 +518,7 @@ class TestSets(BaseTest):
         acq.setMagnification(10000)
         acq.setVoltage(200)
         acq.setSphericalAberration(2.0)
-        
+
         imgSet.setAcquisition(acq)
         img = Particle()
 
@@ -504,7 +530,7 @@ class TestSets(BaseTest):
             img.cleanObjId()
 
         imgSet.write()
-        #now import the dataset
+        # now import the dataset
         prot1 = self.newProtocol(ProtImportParticles,
                                  importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
                                  sqliteFile=inFileNameMetadata,
@@ -515,16 +541,18 @@ class TestSets(BaseTest):
         self.launchProtocol(prot1)
 
         if prot1.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' 
-                                                % inFileNameMetadata)
-        
-        protSplitSet   = self.newProtocol(ProtSplitSet,
-                                          inputSet=prot1.outputParticles,
-                                          numberOfSets=2,
-                                          randomize=True)
+            raise Exception(
+                'Import of images: %s, failed. outputParticles is None.'
+                % inFileNameMetadata)
+
+        protSplitSet = self.newProtocol(ProtSplitSet,
+                                        inputSet=prot1.outputParticles,
+                                        numberOfSets=2,
+                                        randomize=True)
         self.launchProtocol(protSplitSet)
 
-        inputSets = [protSplitSet.outputParticles01,protSplitSet.outputParticles02]
+        inputSets = [protSplitSet.outputParticles01,
+                     protSplitSet.outputParticles02]
         outputSet = SetOfParticles(filename=self.proj.getTmpPath('gold.sqlite'))
         for itemSet in inputSets:
             for obj in itemSet:
@@ -532,15 +560,28 @@ class TestSets(BaseTest):
 
         for item1, item2 in izip(imgSet, outputSet):
             if not item1.equalAttributes(item2):
-                print "Items differ:"
+                print("Items differ:")
                 prettyDict(item1.getObjDict())
                 prettyDict(item2.getObjDict())
-            self.assertTrue(item1.equalAttributes(item2),  )
+            self.assertTrue(item1.equalAttributes(item2), )
 
     def testEmptiness(self):
 
-        self.assertSetSize(TestSets.particles)
-        self.assertSetSize(TestSets.particles, 76)
+        self.assertSetSize(self.particles)
+        self.assertSetSize(self.particles, 76)
+
+    def testJoinValidation(self):
+
+        # Create a merge protocol
+        p_union = self.newProtocol(ProtUnionSet,
+                                   objLabel='invalid join',
+                                   ignoreExtraAttributes=True)
+        p_union.inputSets.append(self.microsSmall)
+        p_union.inputSets.append(self.micros)
+
+        with self.assertRaises(Exception):
+            self.launchProtocol(p_union)
+
 
 if __name__ == '__main__':
     unittest.main()
