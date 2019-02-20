@@ -25,13 +25,15 @@
 # **************************************************************************
 
 import os
+import sqlite3
 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.viewers.chimera_utils import \
     createCoordinateAxisFile, runChimeraProgram, \
     getProgram
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-from protocol_coot import CootRefine, cootPdbTemplateFileName
+from protocol_coot import (CootRefine, cootPdbTemplateFileName,
+                           outpuDataBaseNameWithLabels, databaseTableName)
 
 # TODO: very likely this should inherit from ProtocolViewer
 # not from XmippViewer. But then I get an empty form :-(
@@ -80,24 +82,29 @@ class CootRefineViewer(Viewer):
 
         count = 1
         for outputVol in outputsVol:
-            print "outputVol: ", outputVol
             outputVolFileName = os.path.abspath(
                     ImageHandler.removeFileType(outputVol.getFileName()))
             x, y, z = outputVol.getOrigin(force=True).getShifts()
             f.write("open %s\n" % outputVolFileName)
-            f.write("volume #%d style surface voxelSize %f\n"
-                    "volume #%d origin %0.2f,%0.2f,%0.2f\n" % (
-                    count, outputVol.getSamplingRate(), count, x, y, z))
+            f.write("volume #%d  style surface voxelSize %f\n"
+                    "volume #%d  origin %0.2f,%0.2f,%0.2f\n"
+                    % (count, outputVol.getSamplingRate(), count, x, y, z))
             count += 1
 
         counter = 1
         template = self.protocol._getExtraPath(cootPdbTemplateFileName)
-        while os.path.isfile(template % counter):
-            pdbFileName = os.path.abspath(template % counter)
-            counter += 1
-        f.write("open %s\n" % pdbFileName)
+        databasePath = self.protocol._getExtraPath(outpuDataBaseNameWithLabels)
+        conn = sqlite3.connect(databasePath)
+        c = conn.cursor()
+        sql = 'SELECT pdbFileName FROM %s where saved = 1 order by id' %\
+              databaseTableName
+        c.execute(sql)
+        for row in c:
+            pdbFileName = os.path.abspath(row[0])
+            f.write("open %s\n" % pdbFileName)
 
         f.close()
+        conn.close()
         # run in the background
         runChimeraProgram(getProgram(), fnCmd+"&")
         return []

@@ -385,14 +385,14 @@ class ProtFrealignBase(EMProtocol):
                            'There is a program default value calculated taking resolution into\n'
                            'account, but if this input value is non-zero, the program value is\n'
                            'overridden.')
-        form.addParam('numberRandomSearch', FloatParam, default='10.0',
+        form.addParam('numberRandomSearch', IntParam, default='10',
                       label='Number of randomised search/refinement trials:',
                       condition="mode==2 or mode==4",
                       help='Parameter *ITMAX* in FREALIGN\n\n'
                            'number of cycles of randomised search/refinement used in modes IFLAG=2,4\n'
                            'There is a program default value (10 cycles), but if this input value is\n'
                            'non-zero, the program value is overridden.\n')
-        form.addParam('numberPotentialMatches', FloatParam, default='20.0',
+        form.addParam('numberPotentialMatches', IntParam, default='20',
                       label='number of potential matches:',
                       help='Parameter *IPMAX* in FREALIGN\n\n'
                            'number of potential matches in a search that should be tested further in\n'

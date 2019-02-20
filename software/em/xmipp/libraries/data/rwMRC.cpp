@@ -193,9 +193,6 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         _nDim = 1;
     }
 
-    replaceNsize = _nDim;
-    setDimensions(_xDim, _yDim, _zDim, _nDim);
-
     DataType datatype;
     switch ( header->mode )
     {
@@ -217,15 +214,25 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     case 6:
         datatype = DT_UShort;
         break;
+    case 101:
+        datatype = DT_UHalfByte;
+        break;
+
     default:
         datatype = DT_Unknown;
         errCode = -1;
         break;
     }
+
+    replaceNsize = _nDim;
+    setDimensions(_xDim, _yDim, _zDim, _nDim);
+
+
     offset = MRCSIZE + header->nsymbt;
     size_t datasize_n;
     datasize_n = _xDim*_yDim*_zDim;
 
+    // If mode is any of the fourier transforms (3,4)
     if ( header->mode > 2 && header->mode < 5 )
     {
         transform = CentHerm;
@@ -236,6 +243,17 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
             _xDim += 1;     // Quick fix for odd x-size maps
         setDimensions(_xDim, _yDim, _zDim, _nDim);
     }
+
+    // 4-bits mode: If only the header is read, we pass the expanded value
+    // of columns number here, else, we keep the compressed value for reading
+    // purposes
+
+//    Header has the final dimensions!
+//    if (header->mode == 101)
+//    {
+//        _xDim *= 2;
+//        setDimensions(_xDim, _yDim, _zDim, _nDim);
+//    }
 
     MDMainHeader.setValue(MDL_MIN,(double)header->amin);
     MDMainHeader.setValue(MDL_MAX,(double)header->amax);
@@ -290,18 +308,22 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
                 MD[i].setValue(MDL_ORIGIN_Z, -header->nzStart/aux);
         }
     }
-    //#define DEBUG
-#ifdef DEBUG
-    MDMainHeader.write("/dev/stderr");
-    MD.write("/dev/stderr");
-#endif
 
     delete header;
 
     if ( dataMode < DATA )   // Don't read the individual header and the data if not necessary
         return errCode;
 
-    readData(fimg, select_img, datatype, 0);
+
+    // Lets read the data
+
+    // 4-bits mode: Here is the magic to expand the compressed images
+    if (datatype == DT_UHalfByte){
+        readData4bit(fimg, select_img, datatype, 0);
+    }
+    else{
+        readData(fimg, select_img, datatype, 0);
+    }
 
     return errCode;
 }
@@ -348,6 +370,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             wDType = DT_CFloat;
             header->mode = 4;
             break;
+        //case DT_UHalfByte:
         default:
             wDType = DT_Unknown;
             REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: Unsupported data type by MRC format.");

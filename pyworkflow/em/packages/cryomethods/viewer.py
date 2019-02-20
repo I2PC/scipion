@@ -34,7 +34,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.plotter import EmPlotter
 import pyworkflow.protocol.params as params
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
-from initial_volume_selector import ProtInitialVolumeSelector
+from protocol_volume_selector import ProtInitialVolumeSelector
 from convert import relionToLocation
 
 ITER_LAST = 0

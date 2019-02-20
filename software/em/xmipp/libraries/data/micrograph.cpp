@@ -113,6 +113,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     int result;
     switch (datatype)
     {
+        case DT_UHalfByte:
     case DT_UChar:
         IUChar = new (Image<unsigned char> );
         result = IUChar->readMapped(fn_micrograph, FIRST_IMAGE);
@@ -162,6 +163,7 @@ void Micrograph::close_micrograph()
 {
     switch (datatype)
     {
+    case DT_UHalfByte:
     case DT_UChar:
         delete (IUChar);
         IUChar = NULL;
@@ -198,6 +200,7 @@ int Micrograph::getDatatypeDetph() const
 {
     switch (datatype)
     {
+    case DT_UHalfByte:
     case DT_UChar:
         return (8 * sizeof(unsigned char));
     case DT_UShort:
@@ -320,7 +323,7 @@ int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
     if (X_window_size == -1 || Y_window_size == -1)
         REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "Micrograph::scissor: window size not set");
-    if (datatype == DT_UChar)
+    if (datatype == DT_UChar || datatype == DT_UHalfByte)
         return templateScissor(*IUChar, P, result, Dmin, Dmax, scaleX, scaleY,
                                only_check, fillBorders);
     else if (datatype == DT_UShort)
@@ -545,7 +548,7 @@ void Micrograph::resize(int Xdim, int Ydim, const FileName &filename)
     this->Ydim = Ydim;
     this->Zdim = 1;
     this->Ndim = 1;
-    if (datatype == DT_UChar)
+    if (datatype == DT_UChar || datatype == DT_UHalfByte)
     {
         if (IUChar == NULL)
             IUChar = new Image<unsigned char>(Xdim, Ydim, 1, 1, filename);
@@ -615,6 +618,11 @@ void Micrograph::write(const FileName &fileName, CastWriteMode castMode)
     {
         IUChar->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
+    else if (datatype == DT_UHalfByte)
+    {
+        REPORT_ERROR(ERR_TYPE_INCORRECT,
+                     "Micrograph::set_val::(): non supported datatype UHalfByte");
+    }
     else if (datatype == DT_UShort)
     {
         IUShort->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
@@ -635,6 +643,7 @@ void Micrograph::write(const FileName &fileName, CastWriteMode castMode)
     {
         IFloat->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
+
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT,
                      "Micrograph::set_val::(): unknown datatype");

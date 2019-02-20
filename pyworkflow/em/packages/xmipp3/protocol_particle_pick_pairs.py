@@ -53,8 +53,6 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
                       pointerClass='MicrographsTiltPair',
                       label="Micrographs tilt pair",
                       help='Select the MicrographsTiltPair ')
-        form.addParam('memory', params.FloatParam, default=2,
-                      label='Memory to use (In Gb)', expertLevel=2)
 
         #----------- INSERT steps functions ----------------------------------
     def _insertAllSteps(self):
@@ -81,7 +79,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
 
     def launchParticlePickGUIStep(self):
         process = launchTiltPairPickerGUI(self.micsFn, self._getExtraPath(),
-                                          self, memory='%dg' % self.memory.get())
+                                          self)
         process.wait()
 
     def _importFromFolderStep(self):
@@ -189,12 +187,12 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         suffix = self.__getOutputSuffix()
 
         uCoordSet, tCoordSet = self._readCoordinates(coordsDir, suffix)
-        
+
         if readFromExtra:
             micsFn = self._getExtraPath('input_micrographs.xmd')
         else:
             micsFn = self._getPath('input_micrographs.xmd')
-            
+
         anglesSet = self._readAngles(micsFn, suffix)
         # Create CoordinatesTiltPair object
         outputset = self._createCoordinatesTiltPair(micTiltPairs,

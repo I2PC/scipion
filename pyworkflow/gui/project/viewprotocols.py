@@ -531,11 +531,20 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                         suffix = '[%s]' % extendedValue
                     elif obj.hasExtended():
                         suffix = '[Item %s]' % extendedValue
-                    if obj.get() is None:
-                        labelObj = obj.getObjValue()
-                        suffix = ''
-                    else:
-                        labelObj = obj.get()
+
+                    # Tolerate loading projects:
+                    # When having only the project sqlite..an obj.get() will
+                    # the load of the set...and if it is missing this whole
+                    # "thread" fails.
+                    try:
+                        if obj.get() is None:
+                            labelObj = obj.getObjValue()
+                            suffix = ''
+                        else:
+                            labelObj = obj.get()
+                    except Exception as e:
+                        return  {'parent': parent, 'image': image,
+                                'text': name, 'values': ("Couldn't read object attributes.",)}
                 else:
                     labelObj = obj.get()
 

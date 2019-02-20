@@ -166,10 +166,13 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             # Enabled for the future has to be available
             labels = 'id _filename _samplingRate  '
-            self._views.append(ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={ORDER: labels,
-                                                      VISIBLE: labels,
-                                                      MODE: MODE_MD, RENDER: "no"}))
+            moviesView = ObjectView(self._project, obj.strId(), fn,
+                                      viewParams={ORDER: labels,
+                                                  VISIBLE: labels,
+                                                  MODE: MODE_MD, RENDER: "no"})
+            # For movies increase the JVM memory by 1 GB, just in case
+            moviesView.setMemory(showj.getJvmMaxMemory() + 1)
+            self._views.append(moviesView)
 
         elif issubclass(cls, SetOfMicrographs):
             self._views.append(MicrographsView(self._project, obj, **kwargs))
@@ -366,10 +369,11 @@ class XmippViewer(Viewer):
                 inTmpFolder = True
 
             posDir = obj._getExtraPath()
-            memory = '%dg'%obj.memory.get(),
-            launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory, inTmpFolder=inTmpFolder)
+            memory = '%d' % obj.memory.get()
+            launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review',
+                                      memory=memory, inTmpFolder=inTmpFolder)
 
-         # We need this case to happens before the ProtParticlePicking one
+        # We need this case to happens before the ProtParticlePicking one
         elif issubclass(cls, XmippProtAssignmentTiltPair):
             if obj.getOutputsSize() >= 1:
                 coordsSet = obj.getCoordsTiltPair()
@@ -385,7 +389,7 @@ class XmippViewer(Viewer):
             self._visualize(movs)
 
             gainFn = movs.getGain()
-            if os.path.exists(gainFn):
+            if gainFn != None and os.path.exists(gainFn):
                 self._views.append(DataView(gainFn))
 
         elif issubclass(cls, XmippProtValidateNonTilt):

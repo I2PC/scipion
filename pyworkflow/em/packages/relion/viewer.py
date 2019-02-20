@@ -651,7 +651,6 @@ Examples:
 #===============================================================================
     def _showFSC(self, paramName=None):
         #self._iterations = self._getListFromRangeString(self.iterSelection.get())
-        print("_showFSC_self._iterations",self._iterations)
         threshold = self.resolutionThresholdFSC.get()
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)

@@ -32,8 +32,8 @@ from pyworkflow.em.convert import ImageHandler
 # we declarate global constants to multiple usage
 LOCSCALE_HOME_VAR = 'LOCSCALE_HOME'
 EMAN2DIR_VAR = 'EMAN2DIR'
-LOCSCALE_HOME = os.environ[LOCSCALE_HOME_VAR]
-EMAN2DIR = os.environ[EMAN2DIR_VAR]
+LOCSCALE_HOME = os.environ.get(LOCSCALE_HOME_VAR, '')
+EMAN2DIR = os.environ.get(EMAN2DIR_VAR, '')
 
 def getVersion():
     version = ''
@@ -98,6 +98,7 @@ def getEmanPythonProgram(program):
 
     return python, program
 
+
 def convertBinaryVol(vol, outputDir):
     """ Convert binary volume to a mrc format.
     Params:
@@ -115,11 +116,11 @@ def convertBinaryVol(vol, outputDir):
         newFn = os.path.join(outputDir, replaceBaseExt(fn, 'mrc'))
         ih.convert(fn, newFn)
         return newFn
-        
+
     volFn = ih.removeFileType(vol.getFileName())
-    
+
     if not volFn.endswith('.mrc'):
         volFn = convertToMrc(volFn)
 
     return volFn
-    
+

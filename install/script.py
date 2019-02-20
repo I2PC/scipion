@@ -247,10 +247,8 @@ arpack = env.addLibrary(
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
-if get('CUDA'):
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
-else:
-    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
+cudaStr = 'ON' if get('CUDA') else 'OFF'
+opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=' + cudaStr + '-DWITH_LIBV4L=ON -DWITH_V4L=OFF']
 
 if os.environ.get('OPENCV_VER') == '3.4.1':
     opencvFlags.append('-DCMAKE_INSTALL_PREFIX=' + env.getSoftware())
@@ -464,6 +462,9 @@ env.addPackage('motioncor2', version='1.0.2',
 
 env.addPackage('motioncor2', version='1.0.5',
                tar='motioncor2-1.0.5.tgz')
+
+env.addPackage('motioncor2', version='1.1.0',
+               tar='motioncor2-1.1.0.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')

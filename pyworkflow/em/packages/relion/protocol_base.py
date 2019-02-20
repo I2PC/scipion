@@ -713,7 +713,7 @@ class ProtRelionBase(EMProtocol):
                            'with their accumulated results. The MPI '
                            'master will read in all these files, combine '
                            'them all, and write out a new file with the '
-                           'combined results. All MPI salves will then '
+                           'combined results. All MPI slaves will then '
                            'read in the combined results. This reduces '
                            'heavy load on the network, but increases load '
                            'on the disc I/O. This will affect the time it '
@@ -841,12 +841,12 @@ class ProtRelionBase(EMProtocol):
 
             if self.doCtfManualGroups:
                 self._splitInCTFGroups(imgStar)
+
+            if self._getRefArg():
+                self._convertRef()
         else:
             self.info("In continue mode is not necessary convert the input "
                       "particles")
-
-        if self._getRefArg():
-            self._convertRef()
         
         # if self.realignMovieFrames, self.IS_CLASSIFY must be False.
         if getattr(self, 'realignMovieFrames', False):
@@ -1329,4 +1329,3 @@ class ProtRelionBase(EMProtocol):
         if alignType == em.ALIGN_PROJ:
             mdParts.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
             mdParts.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
-        

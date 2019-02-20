@@ -103,6 +103,11 @@ PROJECT_PATH = 'projectPath'
 OBJECT_ID = 'objectId'
 
 
+def getJvmMaxMemory():
+    # Memory in GB
+    return int(os.environ.get("JAVA_MAX_MEMORY", 2))
+
+
 class ColumnsConfig():
     """ Store the configuration of the columns for a given table in a dataset.
     The order of the columns will be stored and configuration for each columns.
@@ -117,97 +122,97 @@ class ColumnsConfig():
     - renderFuncExtra
     """
     def __init__(self, table, allowRender=True, defaultColumnsLayout={}):
-        
+
         self._columnsDict = OrderedDict()
-         
-        for col in table.iterColumns():  
+
+        for col in table.iterColumns():
             colDefaultLayout = defaultColumnsLayout.get(col.getLabel(), {})
             col_properties = ColumnProperties(col, allowRender, colDefaultLayout)
             self._columnsDict[col.getName()] = col_properties
-        
+
     def getRenderableColumns(self, extra=None):
-        """ Return a list with the name of renderable columns. 
+        """ Return a list with the name of renderable columns.
             extra: parameter used to keep some rendering columns."""
         columnsName = []
         columnsLabel = []
-        
+
         for col in self._columnsDict.values():
             if col.isRenderable():
                 if extra is not None:
                     if col.getName() in extra:
                         columnsName.append(col.getName())
                         columnsLabel.append(col.getLabel())
-                        
+
                 else:
                     columnsName.append(col.getName())
                     columnsLabel.append(col.getLabel())
 #       columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
         return columnsName, columnsLabel
-    
+
     def hasEnableColumn(self):
         for columnLayout in self._columnsDict.values():
             if "enable" == columnLayout.label:
                 return True
         return False
-    
+
     def getColumnProperty(self, colName, propName):
         """ Get some property value of a given column. """
         col = self._columnsDict[colName]
         return getattr(col, propName)
-    
+
     def configColumn(self, colName, **kwargs):
         """ Configure properties of a given column. """
         col = self._columnsDict[colName]
         for k, v in kwargs.iteritems():
             setattr(col, k, v)
-            
+
     def printColumns(self):
         for col in self._columnsDict.values():
             print "column: ", col.getLabel()
             print "  values: ", col.getValues()
-        
-            
+
+
 class ColumnProperties():
     """ Store some properties to customize how each column
-    will be display in the table. 
+    will be display in the table.
     """
     def __init__(self, col, allowRender, defaultColumnLayoutProperties):
-        self._column = col        
+        self._column = col
         self.columnType = col.getRenderType()
-        
+
         if 'visible' in defaultColumnLayoutProperties:
             self.visible = defaultColumnLayoutProperties['visible']
         else:
             self.visible = not (self.columnType == COL_RENDER_ID)
-            
-        self.allowSetVisible = True 
-        
+
+        self.allowSetVisible = True
+
         self.editable = (self.columnType == COL_RENDER_TEXT)
         self.allowSetEditable = self.editable
-        
+
         self.renderable = 'renderable' in defaultColumnLayoutProperties and defaultColumnLayoutProperties['renderable'].lower() == 'true'
-            
+
         self.allowSetRenderable = ((self.columnType == COL_RENDER_IMAGE or
                                    self.columnType == COL_RENDER_VOLUME) and allowRender)
 
         self.renderFunc = "get_image"
         self.extraRenderFunc = ""
-        
+
     def getLabel(self):
         return self._column.getLabel()
-    
+
     def getName(self):
         return self._column.getName()
-    
+
     def getColumnType(self):
         return self.columnType
-    
+
     def allowsRenderable(self):
         self.renderable or self.allowSetRenderable
-        
+
     def isRenderable(self):
         return self.renderable or self.allowSetRenderable
-        
+
     def setValues(self, defaultColumnLayoutProperties):
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
@@ -225,48 +230,53 @@ class ColumnProperties():
                 'columnName': self.getName(),
                 'columnLabel': self.getLabel()
                 }
-        
+
+
 def getArchitecture():
     import platform
     arch = platform.architecture()[0]
     for a in ['32', '64']:
         if a in arch:
             return a
-    return 'NO_ARCH' 
-    
+    return 'NO_ARCH'
+
+
 def getJavaIJappArguments(memory, appName, appArgs):
-    """ Build the command line arguments to launch 
-    a Java application based on ImageJ. 
+    """ Build the command line arguments to launch
+    a Java application based on ImageJ.
     memory: the amount of memory passed to the JVM.
     appName: the qualified name of the java application.
     appArgs: the arguments specific to the application.
-    """ 
-    if len(memory) == 0:
-        memory = "1g"
-        print "No memory size provided. Using default: " + memory
-    
+    """
+    if memory is None:
+        memory = getJvmMaxMemory()
+        print "No memory size provided. Using default: %s" % memory
+
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     imagej_home = join(os.environ['XMIPP_HOME'], "external", "imagej")
     lib = join(os.environ['XMIPP_HOME'], "lib")
     javaLib = join(os.environ['XMIPP_HOME'], 'java', 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
-    args = "-Xmx%(memory)s -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+    args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
 
     return args
+
 
 def runJavaIJapp(memory, appName, args, env={}):
     from pyworkflow.em.packages import xmipp3
     env.update(xmipp3.getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
-    print 'java %s'%args
+    print 'java %s' % args
     #return subprocess.Popen('java ' + args, shell=True, env=env)
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
 
+
 def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
-                              memory='2g', pickerProps=None, inTmpFolder=False):
+                              memory=None, pickerProps=None, inTmpFolder=False):
+
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
         args = "--input %s --output %s"%(micsFn, outputDir)
 
@@ -282,17 +292,17 @@ def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
         if inTmpFolder:
             args += " --tmp true"
 
-        return runJavaIJapp("%s" % memory, app, args)
-    
+        return runJavaIJapp(memory, app, args)
 
-def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
-        port = initProtocolTCPServer(protocol)
-        app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
-        args = "--input %s --output %s  --scipion %s"%(micsFn, outputDir, port)
-        if mode:
-            args += " --mode %s"%mode    
-        return runJavaIJapp("%s" % memory, app, args)
-    
+
+def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None):
+    port = initProtocolTCPServer(protocol)
+    app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
+    args = "--input %s --output %s  --scipion %s" % (micsFn, outputDir, port)
+    if mode:
+        args += " --mode %s" % mode
+    return runJavaIJapp(None, app, args)
+
 
 class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
 
@@ -313,15 +323,16 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
         else:
             answer = 'no answer available'
             self.request.sendall(answer + '\n')
-    
+
+
 class MySocketServer (SocketServer.TCPServer):
 
     def serve_forever(self):
         self.end = False
         while not self.end:
             self.handle_request()
-    
-    
+
+
 def initProtocolTCPServer(protocol):
         address = ''
         port = getFreePort()

@@ -33,12 +33,15 @@ _logo = "cryomethods_logo.png"
 _references = []
 import os
 from convert import getSupportedVersions, getVersion, getEnviron
-from initial_volume_selector import ProtInitialVolumeSelector
-#
-# # Wizards
-# from wizard import *
-from viewer import *
-#
+from protocol_volume_selector import ProtInitialVolumeSelector
+
+# Wizards
+from wizard import (TargetFilterWizard, InitialPassFilterWizard,
+                    MaskDiameterWizard)
+
+#Viewer
+from viewer import VolumeSelectorViewer
+
 _environ = getEnviron()
 
 
