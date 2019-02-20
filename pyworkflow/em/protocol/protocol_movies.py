@@ -90,8 +90,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
-        
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
+
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
                       important=True,
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
@@ -102,13 +102,82 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # inserting each of the steps for each movie
         self.insertedDict = {}
         self.samplingRate = self.inputMovies.get().getSamplingRate()
-        
+
+        # Gain and Dark conversion step
+        self.convertCIStep = []
+        convertStepId = self._insertFunctionStep('_convertInputStep',
+                                                  prerequisites=[])
+        self.convertCIStep.append(convertStepId)
+
         # Conversion step is part of processMovieStep because of streaming.
         movieSteps = self._insertNewMoviesSteps(self.insertedDict,
                                                 self.inputMovies.get())
         finalSteps = self._insertFinalSteps(movieSteps)
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=finalSteps, wait=True)
+
+    # STEP to convert correction images if apply
+    def _convertInputStep(self):
+
+        movs = self.inputMovies.get()
+
+        # Convert gain
+        gain = movs.getGain()
+        movs.setGain(self.__convertCorrectionImage(gain))
+
+        # Convert dark
+        dark = movs.getDark()
+        movs.setDark(self.__convertCorrectionImage(dark))
+
+    def __convertCorrectionImage(self, correctionImage):
+        """ Will convert a gain or dark file to a compatible one and return
+        the final file name. Otherwise, will return same passed parameter"""
+
+        # Get final correction image file
+        finalName = self.getFinalCorrectionImagePath(correctionImage)
+
+        # If correctionImage is None, finalName will be None
+        if finalName is None:
+            return None
+
+        elif not os.path.exists(finalName):
+            # Conversion never happened...
+            print('converting %s to %s' % (correctionImage, finalName))
+            ImageHandler().convert(correctionImage, finalName)
+
+        # return final name
+        return os.path.abspath(finalName)
+
+    def getFinalCorrectionImagePath(self, correctionImage):
+        """ Returns the final path to the correction image (converted or not)
+        or and exception correctionImage does not exists"""
+
+        # Return if the correctionImage is None or the empty string
+        if not correctionImage:
+            return None
+
+        elif not os.path.exists(correctionImage):
+            raise Exception("Correction image is set but not present in the "
+                            "file system. Either clean the value in the import "
+                            "protocol or copy the file to %s."
+                            % correctionImage)
+
+        # Do we need to convert?
+        convertTo = self._getConvertExtension(correctionImage)
+
+        if convertTo is not None:
+            # Get the base name
+            fileName = basename(correctionImage)
+
+            # Replace extension
+            fileName = pwutils.replaceExt(fileName, convertTo)
+
+            # "Place" it at extra folder.
+            return self._getExtraPath(fileName)
+
+        else:
+            return correctionImage
+
 
     def _insertFinalSteps(self, deps):
         """ This should be implemented in subclasses"""
@@ -189,7 +258,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 deps.append(stepId)
                 insertedDict[movie.getObjId()] = stepId
         return deps
-        
+
     def _insertMovieStep(self, movie):
         """ Insert the processMovieStep for a given movie. """
         # Note1: At this point is safe to pass the movie, since this
@@ -201,7 +270,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieStepId = self._insertFunctionStep('processMovieStep',
                                                movieDict,
                                                movie.hasAlignment(),
-                                               prerequisites=[])
+                                               prerequisites=self.convertCIStep)
         return movieStepId
 
     #--------------------------- STEPS functions -----------------------------
@@ -305,17 +374,12 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
             self._processMovie(movie)
 
-            if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
-                self.info('Clean movie data DISABLED. '
-                          'Movie folder will remain in disk!!!')
-            else:
-                self.info("Erasing.....movieFolder: %s" % movieFolder)
-                os.system('rm -rf %s' % movieFolder)
-                # cleanPath(movieFolder)
+            if self._doMovieFolderCleanUp():
+                self._cleanMovieFolder(movieFolder)
 
         # Mark this movie as finished
         open(movieDoneFn, 'w').close()
-        
+
     #--------------------------- UTILS functions ----------------------------
     def _getOutputMovieFolder(self, movie):
         """ Create a Movie folder where to work with it. """
@@ -396,12 +460,29 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             return pwutils.removeBaseExt(pwutils.removeBaseExt(movieName)) + postFix + '.' + ext
         else:
             return pwutils.removeBaseExt(movieName) + postFix + '.' + ext
-    
+
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
 
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
+
+    def _doMovieFolderCleanUp(self):
+        """ This functions allows subclasses to change the default behaviour
+        of cleanup the movie folders after the _processMovie function.
+        In some cases it makes sense that the protocol subclass take cares
+        of when to do the clean up.
+        """
+        return True
+
+    def _cleanMovieFolder(self, movieFolder):
+        if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+            self.info('Clean movie data DISABLED. '
+                      'Movie folder will remain in disk!!!')
+        else:
+            self.info("Erasing.....movieFolder: %s" % movieFolder)
+            os.system('rm -rf %s' % movieFolder)
+            # cleanPath(movieFolder)
 
 
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
@@ -420,12 +501,12 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
 
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
-    
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
-        
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
+
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
                       important=True,
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
@@ -442,11 +523,11 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
     def createOutputStep(self):
         moviesIn = self.inputMovies.get()
         moviesOut = self._createSetOfMovies()
-        moviesOut.copyInfo(moviesIn)        
-        moviesOut.setGain(self.gainImage.get().getFileName())        
+        moviesOut.copyInfo(moviesIn)
+        moviesOut.setGain(self.gainImage.get().getFileName())
         moviesOut.copyItems(moviesIn)
-        
+
         self._defineOutputs(outputMovies=moviesOut)
         self._defineSourceRelation(self.inputMovies, moviesOut)
-        
-        
+
+

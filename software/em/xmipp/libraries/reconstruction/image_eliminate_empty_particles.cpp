@@ -26,7 +26,7 @@
 #include "image_eliminate_empty_particles.h"
 #include "classify_extract_features.h"
 #include <data/filters.h>
-
+#include <fstream>
 
 // Read arguments ==========================================================
 void ProgEliminateEmptyParticles::readParams()
@@ -35,6 +35,9 @@ void ProgEliminateEmptyParticles::readParams()
     fnOut = getParam("-o");
     fnElim = getParam("-e");
     threshold = getDoubleParam("-t");
+    addFeatures = checkParam("--addFeatures");
+    useDenoising = checkParam("--useDenoising");
+    denoise = getIntParam("-d");
 }
 
 // Show ====================================================================
@@ -43,10 +46,13 @@ void ProgEliminateEmptyParticles::show()
     if (verbose==0)
         return;
     std::cerr
-    << "Input selfile:           " << fnIn       << std::endl
-    << "Output selfile:          " << fnOut      << std::endl
-    << "Eliminated selfile:      " << fnElim     << std::endl
-    << "Threshold:               " << threshold  << std::endl
+    << "Input selfile:           " << fnIn         << std::endl
+    << "Output selfile:          " << fnOut        << std::endl
+    << "Eliminated selfile:      " << fnElim       << std::endl
+    << "Threshold:               " << threshold    << std::endl
+	<< "Add features:            " << addFeatures  << std::endl
+	<< "Turn on denoising:       " << useDenoising << std::endl
+	<< "Denosing parameter:      " << denoise      << std::endl
     ;
 }
 
@@ -57,7 +63,10 @@ void ProgEliminateEmptyParticles::defineParams()
     addParamsLine("  -i <selfile>                       : Selfile containing set of input particles");
     addParamsLine("  [-o <selfile=\"output.xmd\">]      : Output selfile");
     addParamsLine("  [-e <selfile=\"eliminated.xmd\">]  : Eliminated particles selfile");
-    addParamsLine("  -t <float>                         : Threshold used by algorithm");
+    addParamsLine("  [-t <float=-1>]                    : Threshold used by algorithm. Set to -1 for no elimination.");
+    addParamsLine("  [--addFeatures]                    : Add the emptiness features to the input particles");
+    addParamsLine("  [--useDenoising]                   : Option for turning on denoising method while computing emptiness feature");
+    addParamsLine("  [-d <int=50>]                      : Parameter for denoising, higher value means stronger denoising and slower computation");
 }
 
 void ProgEliminateEmptyParticles::run()
@@ -68,10 +77,21 @@ void ProgEliminateEmptyParticles::run()
     Image<double> I;
     CorrelationAux aux;
     MDRow row;
-    MetaData MDclass, MDclass_elim;
+    MetaData MDclass, MDclassEl, MDclassT, MDclassElT;
     ProgExtractFeatures ef;
     int countItems = 0;
     std::vector<double> fv;
+
+    init_progress_bar(SF.size());
+    std::size_t extraPath = fnOut.find_last_of("/");
+    // these files are for streaming and will be later removed in Scipion
+    FileName fnDone = fnOut.substr(0, extraPath+1) + "outTemp.xmd";
+    FileName fnElDone = fnOut.substr(0, extraPath+1) + "elimTemp.xmd";
+
+    std::ifstream ifile1(fnOut.c_str());
+    if (ifile1) MDclass.read(fnOut);
+    std::ifstream ifile2(fnElim.c_str());
+    if (ifile2) MDclassEl.read(fnElim);
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -83,21 +103,38 @@ void ProgEliminateEmptyParticles::run()
     	I().setXmippOrigin();
     	centerImageTranslationally(I(), aux);
 
-    	denoiseTVFilter(I(), 50);
+        if (useDenoising)
+    	    denoiseTVFilter(I(), denoise);
+
         ef.extractVariance(I(), fv);
 
-        if (fv.back() > threshold)
+        double ratio = fv.back();
+        row.setValue(MDL_SCORE_BY_EMPTINESS, ratio);
+        if (addFeatures)
+        	row.setValue(MDL_SCORE_BY_VARIANCE, fv);
+        if (threshold<0 || ratio > threshold)
         {
-            size_t recId = MDclass.addRow(row);
-            MDclass.setValue(MDL_SCORE_BY_VARIANCE, fv, recId);
-            MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
+            MDclass.addRow(row);
+            MDclassT.addRow(row);
         }
         else
         {
-            size_t recId = MDclass_elim.addRow(row);
-            MDclass_elim.setValue(MDL_SCORE_BY_VARIANCE, fv, recId);
-            MDclass_elim.write(formatString("@%s", fnElim.c_str()), MD_APPEND);
+            MDclassEl.addRow(row);
+            MDclassElT.addRow(row);
         }
+
         fv.clear();
+        if (countItems%100==0)
+        	progress_bar(countItems);
     }
+    progress_bar(SF.size());
+
+    if (MDclass.size()>0)
+    	MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
+    if (MDclassEl.size()>0)
+    	MDclassEl.write(formatString("@%s", fnElim.c_str()), MD_APPEND);
+    if (MDclassT.size()>0)
+    	MDclassT.write(formatString("@%s", fnDone.c_str()), MD_APPEND);
+    if (MDclassElT.size()>0)
+    	MDclassElT.write(formatString("@%s", fnElDone.c_str()), MD_APPEND);
 }

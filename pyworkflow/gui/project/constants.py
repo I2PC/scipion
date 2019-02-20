@@ -41,3 +41,5 @@ STATUS_COLORS = {
                STATUS_SCHEDULED: '#F3F5CB'
                }
 
+# For protocols with warnings
+WARNING_COLOR = '#848484'

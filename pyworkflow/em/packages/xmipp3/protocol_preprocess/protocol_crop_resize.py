@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco   (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco   (josue.gomez-blanco@mcgill.ca)
 # *              Joaquin Oton   (oton@cnb.csic.es)
 # *              Airen Zaldivar (azaldivar@cnb.csic.es)
 # *
@@ -389,8 +389,21 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         # We use the postprocess only when input is a volume
         if self._isSingleInput():
             if self.doResize:
-                volumes.setSamplingRate(self.samplingRate)            
-     
+                volumes.setSamplingRate(self.samplingRate)
+                # we have a new sampling so origin need to be adjusted
+                iSampling = self.inputVolumes.get().getSamplingRate()
+                oSampling = self.samplingRate
+                xdim_i, ydim_i, zdim_i = self.inputVolumes.get().getDim()
+                xdim_o, ydim_o, zdim_o = volumes.getDim()
+
+                xOrig, yOrig , zOrig = \
+                    self.inputVolumes.get().getShiftsFromOrigin()
+                xOrig += (xdim_i*iSampling-xdim_o*oSampling)/2.
+                yOrig += (ydim_i*iSampling-ydim_o*oSampling)/2.
+                zOrig += (zdim_i*iSampling-zdim_o*oSampling)/2.
+                volumes.setShiftsInOrigin(xOrig, yOrig, zOrig)
+                volumes.setSamplingRate(oSampling)
+
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []

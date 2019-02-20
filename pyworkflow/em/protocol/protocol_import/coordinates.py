@@ -31,7 +31,7 @@ from os.path import join, exists
 
 from pyworkflow.protocol.params import IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import removeBaseExt
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePicking
 import xmipp
         
 from base import ProtImportFiles
@@ -83,7 +83,9 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         form.addParam('invertX', BooleanParam, default=False,
                       label='Invert X')
         form.addParam('invertY', BooleanParam, default=False,
-                      label='Invert Y')
+                      label='Invert Y',
+                      help='Invert Y for EMAN coordinates taken on dm3 or'
+                           ' tif micrographs')
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):

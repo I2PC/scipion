@@ -1,6 +1,6 @@
 # *****************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # *
@@ -77,7 +77,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                       important=True,
                       label='Input coordinates')
         form.addParam('boxSize', IntParam, default=0,
-                      label='Particle box size', validators=[Positive],
+                      label='Particle box size (px)', validators=[Positive],
                       help='In pixels. The box size is the size of the boxed '
                            'particles, actual particles may be smaller than '
                            'this.')
@@ -150,7 +150,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                            'Ramp (subtract background+NewXmipp).')
         form.addParam('backRadius', IntParam, default=-1,
                       condition='doNormalize',
-                      label='Background radius',
+                      label='Background radius (px)',
                       help='Pixels outside this circle are assumed to be '
                            'noise and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
@@ -158,7 +158,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                       expertLevel=LEVEL_ADVANCED)
 
         form.addParallelSection(threads=3, mpi=1)
-    #--------------------------- INSERT steps functions ------------------------
+
+    # ------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
         self._createFilenameTemplates()
@@ -324,8 +325,11 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
 #         makePath(particleFolder)
         mData = md.MetaData()
         mdAll = md.MetaData()
-          
+
+        self._micNameDict = {}
+
         for movie in inputMovies:
+            self._micNameDict[movie.getObjId()] = movie.getMicName()
             movieName = self._getMovieName(movie)
             movieStk = movieName.replace('.mrc', '.stk')
             movieMdFile = movieName.replace('.mrc', '.xmd')
@@ -344,9 +348,13 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         self._defineOutputs(outputParticles=particleSet)
         self._defineSourceRelation(self.inputMovies, particleSet)
     
-    # --------------------------- INFO functions -------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
+        
+        if self.doNormalize and self.backRadius > self.boxSize.get() / 2:
+            errors.append("Background radius for normalization should "
+                          "be equal or less than the box size.")
         
         inputSet = self.inputMovies.get()
         
@@ -397,7 +405,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         summary = []
         return summary
     
-    #--------------------------- UTILS functions -------------------------------
+    # -------------------------- UTILS functions ------------------------------
+
     def _getFnRelated(self, keyFile, movId, frameIndex):
         return self._getFileName(keyFile, movieId=movId, frame=frameIndex)
     
@@ -439,7 +448,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     def _postprocessImageRow(self, img, imgRow):
         img.setFrameId(imgRow.getValue(md.MDL_FRAME_ID))
         img.setParticleId(imgRow.getValue(md.MDL_PARTICLE_ID))
-
+        micName = self._micNameDict[imgRow.getValue(md.MDL_MICROGRAPH_ID)]
+        img.getCoordinate().setMicName(micName)
 
     def _useAlignToSum(self):
         return self.getAttributeValue('useAlignToSum', False)

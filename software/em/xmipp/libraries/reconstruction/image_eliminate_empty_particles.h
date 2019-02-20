@@ -42,6 +42,15 @@ public:
     /// Threshold for variance of variance
     float threshold;
 
+    /// Add features
+    bool addFeatures;
+
+    /// Turning on denoising
+    bool useDenoising;
+
+    /// Param for denoising
+    int denoise;
+
 public:
     /// Read input parameters
     void readParams();

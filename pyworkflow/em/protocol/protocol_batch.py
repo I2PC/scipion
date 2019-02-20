@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import PointerParam, \
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
                                 SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
-                                SetOfNormalModes, SetOfParticles, FSC,
+                                SetOfNormalModes, SetOfParticles, SetOfPDBs, FSC,
                                 Class2D, Class3D, SetOfMicrographs, ALIGN_NONE)
 from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
                                           ParticlesTiltPair)
@@ -94,6 +94,9 @@ class ProtUserSubSet(BatchProtocol):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 output = self._createMicsSubSetFromCTF(inputObj)
+
+        elif isinstance(inputObj, SetOfPDBs):
+            output = self._createSubSetFromPDBs(inputObj)
 
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
@@ -365,6 +368,21 @@ class ProtUserSubSet(BatchProtocol):
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict)
         self._defineTransformRelation(micrographsTiltPair, output)
+        return output
+
+    def _createSubSetFromPDBs(self, setOfPDBs):
+        """ Create a subset of SetOfPDBs. """
+        output = SetOfPDBs(filename=self._getPath('pdbs.sqlite'))
+        modifiedSet = SetOfPDBs(filename=self._dbName, prefix=self._dbPrefix)
+
+        for pdb in modifiedSet:
+            if pdb.isEnabled():
+                output.append(pdb)
+
+        # Register outputs
+        outputDict = {'outputPDBs': output}
+        self._defineOutputs(**outputDict)
+        self._defineTransformRelation(setOfPDBs, output)
         return output
 
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):

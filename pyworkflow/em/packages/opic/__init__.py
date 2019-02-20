@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,6 +31,8 @@ from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "opic_logo.png"
 LOCALREC_HOME = 'LOCALREC_HOME'
+RELION_HOME = 'RELION_HOME'
+TMP_RELION_HOME = 'TMP_RELION_HOME'
 LOCALREC_RELION_HOME = 'LOCALREC_RELION_HOME'
 
 from convert import *

@@ -256,7 +256,7 @@ bool FileName::hasImageExtension() const
     return (ext=="img" || ext=="hed" || ext=="inf" || ext=="raw" || ext=="mrc" ||
             ext=="map" || ext=="spi" || ext=="xmp" || ext=="tif" || ext=="dm3" ||
             ext=="spe" || ext=="em"  || ext=="pif" || ext=="ser" || ext=="stk" ||
-            ext=="mrcs"|| ext=="jpg");
+            ext=="mrcs"|| ext=="jpg" || ext=="dm4");
 }
 
 // Has image extension .....................................................
@@ -265,7 +265,7 @@ bool FileName::hasStackExtension() const
     String ext = getFileFormat();
     return (ext=="stk" || ext=="spi" || ext=="xmp" || ext=="mrcs" || ext=="mrc" ||
             ext=="img" || ext=="hed" || ext=="pif" || ext=="tif"  || ext=="dm3" ||
-            ext=="ser" || ext=="st");
+            ext=="ser" || ext=="st"  || ext=="dm4");
 }
 
 // Has image extension .....................................................

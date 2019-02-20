@@ -54,11 +54,12 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         
     def _initialize(self):
         """ This function is mean to be called after the 
-        working dir for the protocol have been set. (maybe after recovery from mapper)
+        working dir for the protocol have been set.
+        (maybe after recovery from mapper)
         """
         ProtRelionBase._initialize(self)
     
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    # -------------------------- INSERT steps functions -----------------------
     def _setSamplingArgs(self, args):
         """ Set sampling related params. """
         if self.doImageAlignment:
@@ -70,7 +71,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         else:
             args['--skip_align'] = ''
     
-    #--------------------------- STEPS functions --------------------------------------------
+    # -------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
         partSet = self.inputParticles.get()
         classes3D = self._createSetOfClasses3D(partSet)
@@ -78,7 +79,6 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         
         self._defineOutputs(outputClasses=classes3D)
         self._defineSourceRelation(self.inputParticles, classes3D)
-
 
         # create a SetOfVolumes and define its relations
         volumes = self._createSetOfVolumes()
@@ -96,14 +96,16 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
             self._defineSourceRelation(self.referenceVolume, classes3D)
             self._defineSourceRelation(self.referenceVolume, volumes)
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    # -------------------------- INFO functions -------------------------------
     def _validateNormal(self):
         """ Should be overwritten in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
-        self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
-                          errors, 'Input particles', 'Reference volume')
+        # We we scale the input volume to have the same size as the particles...
+        # so no need to validate the following
+        # self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
+        #                   errors, 'Input particles', 'Reference volume')
         return errors
     
     def _validateContinue(self):
@@ -136,8 +138,10 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
             resol = row.getValue("rlnCurrentResolution")
             summary.append("Current resolution: *%0.2f A*" % resol)
         
-        summary.append("Input Particles: *%d*\nClassified into *%d* 3D classes\n" % (self.inputParticles.get().getSize(),
-                                                                              self.numberOfClasses.get()))
+        summary.append("Input Particles: *%d*\n"
+                       "Classified into *%d* 3D classes\n"
+                       % (self.inputParticles.get().getSize(),
+                          self.numberOfClasses.get()))
         
         return summary
     
@@ -150,20 +154,21 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         return summary
     
     def _methods(self):
-        strline=''
+        strline = ''
         if hasattr(self, 'outputClasses'):
             strline += 'We classified %d particles into %d 3D classes using Relion Classify3d. '%\
                            (self.inputParticles.get().getSize(), self.numberOfClasses.get())
         return [strline]
     
-    #--------------------------- UTILS functions --------------------------------------------
+    # -------------------------- UTILS functions ------------------------------
     def _loadClassesInfo(self, iteration):
         """ Read some information about the produced Relion 3D classes
         from the *model.star file.
         """
         self._classesInfo = {} # store classes info, indexed by class id
          
-        modelStar = md.MetaData('model_classes@' + self._getFileName('model', iter=iteration))
+        modelStar = md.MetaData('model_classes@' +
+                                self._getFileName('model', iter=iteration))
         
         for classNumber, row in enumerate(md.iterRows(modelStar)):
             index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
@@ -177,7 +182,8 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         dataStar = self._getFileName('data', iter=iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
-                             itemDataIterator=md.iterRows(dataStar, sortByLabel=md.RLN_IMAGE_ID))
+                             itemDataIterator=md.iterRows(dataStar,
+                                                          sortByLabel=md.RLN_IMAGE_ID))
     
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(md.RLN_PARTICLE_CLASS))
@@ -191,7 +197,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         classId = item.getObjId()
         if classId in self._classesInfo:
             index, fn, row = self._classesInfo[classId]
-            fn = fn + ":mrc"
+            fn += ":mrc"
             item.setAlignmentProj()
             item.getRepresentative().setLocation(index, fn)
             item._rlnclassDistribution = em.Float(row.getValue('rlnClassDistribution'))

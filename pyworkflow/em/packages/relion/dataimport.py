@@ -202,10 +202,19 @@ class RelionImport():
             else:
                 self._classesFunc = None
         else:
-            self.alignType = ALIGN_NONE
             self._classesFunc = None
             self._modelStarFile = None
             modelRow = None
+           
+            # Check if we have rot angle -> ALIGN_PROJ,
+            # if only psi angle -> ALIGN_2D
+            if row.containsLabel('rlnAngleRot') and row.getValue("rlnAngleRot") != 0.0:
+                self.alignType = ALIGN_PROJ
+            elif row.containsLabel('rlnAnglePsi') and row.getValue("rlnAnglePsi") != 0.0:
+                self.alignType = ALIGN_2D
+            else:
+                self.alignType = ALIGN_NONE
+
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
         # particles to keep track of the particle's micrograph
@@ -241,6 +250,7 @@ class RelionImport():
                 if micName is None:
                     micName = self.protocol._getExtraPath('fake_micrograph%6d' % micId)
                 mic.setFileName(micName)
+                mic.setMicName(os.path.basename(micName))
                 self.micSet.append(mic)
                 # Update dict with new Micrograph
                 self.micDict[micKey] = mic
@@ -258,7 +268,7 @@ class RelionImport():
             if img.hasCoordinate():
                 coord = img.getCoordinate()
                 coord.setMicId(micId)
-                coord.setMicName(micName)
+                coord.setMicName(os.path.basename(micName))
     
     def loadAcquisitionInfo(self):
         """ Return a dictionary with acquisition values and 

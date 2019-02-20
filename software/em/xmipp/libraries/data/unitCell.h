@@ -34,11 +34,11 @@ private:
 	double sampling;
 	//vectors defining expansion direction
 	double expanded;
-	//origin x coordinate introduced by the user with the input volume
+	//origin x coordinate introduced by the user with the input volume (in pixels)
 	double x_origin;
-	//origin y coordinate introduced by the user with the input volume
+	//origin y coordinate introduced by the user with the input volume (in pixels)
 	double y_origin;
-	//origin z coordinate introduced by the user with the input volume
+	//origin z coordinate introduced by the user with the input volume (in pixels)
 	double z_origin;
 	//new origin after expansion
 	Matrix1D<double>  newOriginAfterExpansion;

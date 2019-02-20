@@ -62,7 +62,7 @@ def send(command, comm, dest, tag):
                             "to slave." % os.getpid())
 
     # Receive the result in a non-blocking way too (with irecv())
-    req_recv = comm.irecv(dest=dest, tag=tag)
+    req_recv = comm.irecv(source=dest, tag=tag)
     while True:
         done, result = req_recv.test()
         if done:
@@ -75,10 +75,11 @@ def send(command, comm, dest, tag):
 
 def runJobMPI(programname, params, mpiComm, mpiDest,
               numberOfMpi=1, hostConfig=None,
-              env=None, cwd=None):
+              env=None, cwd=None, gpuList=None):
     """ Send the command to the MPI node in which it will be executed. """
 
-    command = buildRunCommand(programname, params, numberOfMpi, hostConfig, env)
+    command = buildRunCommand(programname, params, numberOfMpi, hostConfig,
+                              env, gpuList=gpuList)
     if cwd is not None:
         send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
     if env is not None:
@@ -104,7 +105,7 @@ def runJobMPISlave(mpiComm):
     
     while True:
         # Receive command in a non-blocking way
-        req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
+        req_recv = mpiComm.irecv(source=0, tag=TAG_RUN_JOB+rank)
         while True:
             done, command = req_recv.test()
             if done:

@@ -46,6 +46,7 @@ from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_ml2d import XmippML2DViewer
+from viewer_mltomo import XmippMLTomoViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
@@ -60,6 +61,8 @@ from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
+#ROB no file protocol_3dbionotes in devel
+#from protocol_3dbionotes import XmippProt3DBionotes
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
@@ -69,12 +72,19 @@ from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
+#AJ
+from protocol_classification_gpuCorr import XmippProtGpuCrrCL2D
+from protocol_classification_gpuCorr_semi import XmippProtStrGpuCrrSimple
+from protocol_classification_gpuCorr_full import XmippProtStrGpuCrrCL2D
+#END
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
+from protocol_compare_angles import XmippProtCompareAngles
 from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
+from protocol_consensus_classes3D import XmippProtConsensusClasses3D
 from protocol_subtract_projection import XmippProtSubtractProjection
 from protocol_denoise_particles import XmippProtDenoiseParticles
 from protocol_eliminate_empty_particles import XmippProtEliminateEmptyParticles
@@ -86,9 +96,11 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_gain import XmippProtMovieGain
+from protocol_mltomo import XmippProtMLTomo
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
+from protocol_movie_max_shift import XmippProtMovieMaxShift
 from protocol_multiple_fscs import XmippProtMultipleFSCs
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_normalize_strain import XmippProtNormalizeStrain
@@ -111,13 +123,18 @@ from protocol_rotational_symmetry import XmippProtRotationalSymmetry
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_solid_angles import XmippProtSolidAngles
 from protocol_split_volume import XmippProtSplitvolume
+from protocol_trigger_data import XmippProtTriggerData
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting
 # from protocol_validate_tilt import XmippProtValidateTilt
+from protocol_volume_local_sharpening import XmippProtLocSharp
 from protocol_volume_strain import XmippProtVolumeStrain
 from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
+from protocol_ctf_selection import XmippProtCTFSelection
+#AJ
+from protocol_realignment_classes import XmippProtReAlignClasses
 # Wizards
 from wizard import *
 

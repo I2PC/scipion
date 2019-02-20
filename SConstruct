@@ -31,24 +31,19 @@
 
 
 import os
-from os.path import join, abspath, splitext
-import sys
+from os.path import join
 from itertools import izip
-
-from subprocess import STDOUT, check_call, CalledProcessError
 from glob import glob
-import tarfile
 import fnmatch
 import platform
-import SCons.Script
 import SCons.SConf
-
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
 
 # URL where we have most of our tgz files for libraries, modules and packages.
 URL_BASE = os.environ['SCIPION_URL_SOFTWARE']
+SCIPION_SW = os.environ['SCIPION_SOFTWARE']
 
 # Define our builders
 if LINUX:
@@ -206,6 +201,14 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     """
     _libs = list(libs)
     _libpath = list(libpath)
+    if name == "XmippReconsAdaptCuda":
+        _libs.append("XmippReconsCuda")
+        _libs.append("cudart")
+        _libs.append("cuda")
+        _libs.append("cufft")
+        _libpath.append(env['CUDA_LIB'])
+    if name == "XmippParallel" and cuda==True:
+        _libs.append("XmippReconsAdaptCuda")
     _incs = list(incs)
     lastTarget = deps
     prefix = 'lib' if prefix is None else prefix
@@ -215,7 +218,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     targetName = join(basedir, target if target else prefix + name)
     sources = []
 
-    _libpath.append(Dir('#software/lib').abspath)
+    _libpath.append(Dir(SCIPION_SW + '/lib').abspath)
     
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
@@ -247,7 +250,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     
 
     _incs.append(env['CPPPATH'])
-    _incs.append('#software/include')
+    _incs.append(SCIPION_SW + '/include')
 
     library = env2.SharedLibrary(
               target=targetName,
@@ -272,12 +275,101 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     else:
         lastTarget = library
     env.Default(lastTarget)
-    
+
     for dep in deps:
         env.Depends(sources, dep)
-    
+
     env.Alias(name, lastTarget)
-    
+
+    return lastTarget
+
+def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[],
+                  libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[],
+                  mpi=False, cuda=False, default=True, target=None):
+    """Add self-made and compiled shared library to the compilation process
+
+    This pseudobuilder access given directory, compiles it
+    and installs it. It also tells SCons about it dependencies.
+
+    If default=False, the library will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final targets, the ones that Make will create.
+    """
+    _libs = list(libs)
+    _libpath = list(libpath)
+    _incs = list(incs)
+    lastTarget = deps
+    prefix = 'lib' if prefix is None else prefix
+    suffix = '.so' if suffix is None else suffix
+
+    basedir = 'lib'
+    targetName = join(basedir, target if target else prefix + name)
+    sources = []
+
+    _libpath.append(Dir('#software/lib').abspath)
+
+    for d, p in izip(dirs, patterns):
+        sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
+
+    if not sources and env.TargetInBuild(name):
+        Exit('No sources found for Library: %s. Exiting!!!' % name)
+
+    # FIXME: There must be a key in env dictionary that breaks the compilation. Please find it to make it more beautiful
+    env2 = Environment()
+    env2['ENV']['PATH'] = env['ENV']['PATH']
+
+    mpiArgs = {}
+    if mpi:
+        _libpath.append(env['MPI_LIBDIR'])
+        _libs.append(env['MPI_LIB'])
+        _incs.append(env['MPI_INCLUDE'])
+
+        mpiArgs = {'CC': env['MPI_CC'],
+                   'CXX': env['MPI_CXX'],
+                   'LINK': env['MPI_LINKERFORPROGRAMS']}
+        env2.PrependENVPath('PATH', env['MPI_BINDIR'])
+
+    # AJ
+    elif cuda:
+        _libs.append(['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt'])
+        _incs.append(env['NVCC_INCLUDE'])
+        _libpath.append(env['NVCC_LIBDIR'])
+        mpiArgs = {'CC': env['NVCC'], 'CXX': env['NVCC'], 'LINK': env['LINKERFORPROGRAMS']}
+    # FIN AJ
+
+
+    _incs.append(env['CPPPATH'])
+    _incs.append('#software/include')
+
+    library = env2.Library(
+        target=targetName,
+        # source=lastTarget,
+        source=sources,
+        CPPPATH=_incs,
+        LIBPATH=_libpath,
+        LIBS=_libs,
+        SHLIBPREFIX=prefix,
+        SHLIBSUFFIX=suffix,
+        CXXFLAGS=env['CXXFLAGS'],
+        LINKFLAGS=env['LINKFLAGS'],
+        **mpiArgs)
+    SideEffect('dummy', library)
+    env.Depends(library, sources)
+
+    if installDir:
+        install = env.Install(installDir, library)
+        SideEffect('dummy', install)
+        lastTarget = install
+    else:
+        lastTarget = library
+    env.Default(lastTarget)
+
+    for dep in deps:
+        env.Depends(sources, dep)
+
+    env.Alias(name, lastTarget)
+
     return lastTarget
 
 
@@ -455,20 +547,20 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
 
     if mpi: ccCopy = env['MPI_CC']
     elif nvcc: ccCopy = env['NVCC']
-    else: ccCopy = env['CC']  
+    else: ccCopy = env['CC']
 
     if mpi: cxxCopy = env['MPI_CXX']
     elif nvcc: cxxCopy = env['NVCC']
-    else: cxxCopy = env['CXX']  
+    else: cxxCopy = env['CXX']
 
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy += env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, 
-                                        Dir('#software/include/python2.7').abspath]
+    incsCopy += env['CPPPATH'] + ['libraries', Dir(SCIPION_SW + '/include').abspath,
+                                        Dir(SCIPION_SW + '/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
     ldLibraryPathCopy = [env['LIBPATH']]
-    appendUnique(libPathsCopy, env.get('LIBPATH', '').split(":"))
+    appendUnique(libPathsCopy, env.get('LIBPATH', '').split(os.pathsep))
     env2 = Environment()
     if mpi: 
         appendUnique(incsCopy, env['MPI_INCLUDE'])
@@ -477,7 +569,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
         appendUnique(ldLibraryPathCopy, env['MPI_LIBDIR'])
     env2['ENV']['LD_LIBRARY_PATH'] = env['ENV'].get('LD_LIBRARY_PATH', '')
     env2['ENV']['PATH'] = env['ENV']['PATH']
-    
+
     program = env2.Program(
                           File(join(installDir, name)).abspath,
                           source=sources,
@@ -542,11 +634,11 @@ def libraryTest(env, name, lang='c'):
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
-
 # Add methods so SConscript can call them.
 env.AddMethod(untar, 'Untar')
 env.AddMethod(compilerConfig, 'CompilerConfig')
 env.AddMethod(addCppLibrary, 'AddCppLibrary')
+env.AddMethod(addCppLibraryCuda, 'AddCppLibraryCuda')
 env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
 env.AddMethod(symLink, 'SymLink')
 env.AddMethod(addJavaTest, 'AddJavaTest')
@@ -576,6 +668,8 @@ if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
 else:
     if cxxFlags.find("-O")==-1:
         cxxFlags += " -O3"
+# we force standard c++11 to compile
+cxxFlags += ' -std=c++11' if not '-std=c++11' in cxxFlags else ''
 env['CXXFLAGS'] = cxxFlags.split()
 os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
 env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
@@ -598,6 +692,7 @@ env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
 env['NVCC'] = os.environ.get('NVCC')
 env['NVCC_INCLUDE'] = os.environ.get('NVCC_INCLUDE')
 env['NVCC_LIBDIR'] = os.environ.get('NVCC_LIBDIR')
+env['CUDA_LIB'] = os.environ.get('CUDA_LIB')
 
 # Java related environment variables, probably the main one
 # that need to be modified is JAVA_HOME
@@ -611,7 +706,7 @@ env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-xmippPath = Dir('#software/em/xmipp').abspath
+xmippPath = Dir(SCIPION_SW + '/em/xmipp').abspath
 env['PACKAGE'] = {'NAME': 'xmipp',
                   'SCONSCRIPT': xmippPath
                   }

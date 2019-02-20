@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -172,7 +172,9 @@ class XmippProtResolution3D(ProtAnalysis3D):
                 values = map(float, f.readline().split())
                 methodsStr+=" The corresponding Bfactor was %4.3f."%values[4]
         return [methodsStr]
-    
+
+    def _citations(self):
+        return ['Rosenthal2003']
     #--------------------------- UTILS functions ---------------------------------------------------
     def _defineStructFactorName(self):
         return self._getPath('structureFactor.xmd')

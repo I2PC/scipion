@@ -346,9 +346,9 @@ public:
         {
             gain.read(fnGain);
             applyWindow(gain());
-            gain() = 1.0/gain();
+            //Do not divide by the gain: gain() = 1.0/gain();
             double avg = gain().computeAvg();
-            if (isinf(avg) || isnan(avg))
+            if (std::isinf(avg) || std::isnan(avg))
                 REPORT_ERROR(ERR_ARG_INCORRECT,
                              "The input gain image is incorrect, its inverse produces infinite or nan");
         }

@@ -44,18 +44,17 @@ import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
-from pyworkflow.project import Project
+from pyworkflow.project import Project, PROJECT_CONFIG_HOSTS
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.gui.text import _open_cmd, openTextFileEditor
+from pyworkflow.webservices import ProjectWorkflowNotifier, WorkflowRepository
 
 from labels import LabelsDialog
-
 # Import possible Object commands to be handled
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-
 
 
 class ProjectWindow(ProjectBaseWindow):
@@ -85,7 +84,7 @@ class ProjectWindow(ProjectBaseWindow):
                             icon='fa-trash-o.png')
         projMenu.addSubMenu('Manage project labels', 'labels',
                             icon=Icon.TAGS)
-        projMenu.addSubMenu('Toogle color mode', 'color_mode',
+        projMenu.addSubMenu('Toggle color mode', 'color_mode',
                             shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
         projMenu.addSubMenu('Select all protocols', 'select all',
                             shortCut="Ctrl+a")
@@ -94,6 +93,8 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow',
                             icon='fa-download.png')
+        projMenu.addSubMenu('Search workflow', 'search_workflow',
+                            icon = 'fa-search.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
@@ -127,10 +128,7 @@ class ProjectWindow(ProjectBaseWindow):
 
         self.initProjectTCPServer()  # Socket thread to communicate with clients
 
-        from notifier import ProjectNotifier
-
-        ProjectNotifier(self.project).notifyWorkflow()
-
+        ProjectWorkflowNotifier(self.project).notifyWorkflow()
 
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
@@ -195,7 +193,7 @@ class ProjectWindow(ProjectBaseWindow):
             if os.environ.get('SCIPION_NOTES_ARGS', None):
                 args.append(os.environ['SCIPION_NOTES_ARGS'])
             args.append(notesFile)
-            subprocess.Popen(args) #nonblocking
+            subprocess.Popen(args)  #nonblocking
         else:
             openTextFileEditor(notesFile)
 
@@ -228,6 +226,9 @@ class ProjectWindow(ProjectBaseWindow):
                           selectButton='Import'
                           ).show()
 
+    def onSearchWorkflow(self):
+        WorkflowRepository().search()
+
     def onExportTreeGraph(self):
         runsGraph = self.project.getRunsGraph(refresh=True)
         useId = not pwutils.envVarOn('SCIPION_TREE_NAME')
@@ -245,7 +246,7 @@ class ProjectWindow(ProjectBaseWindow):
     def onManageProjectLabels(self):
         self.manageLabels()
 
-    def onToogleColorMode(self):
+    def onToggleColorMode(self):
         self.getViewWidget()._toggleColorScheme(None)
 
     def onSelectAllProtocols(self):
@@ -394,7 +395,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
     def onHosts(self):
         # Config -> Hosts
-        self._openConfigFile('hosts.conf')
+        self._openConfigFile(PROJECT_CONFIG_HOSTS)
 
     def onProtocols(self):
         self._openConfigFile('protocols.conf')
