@@ -137,12 +137,12 @@ class ProtAlignMovies(ProtProcessMovies):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        inputMovies = self.inputMovies.get()
-        outputSet.copyInfo(inputMovies)
+            inputMovies = self.inputMovies.get()
+            outputSet.copyInfo(inputMovies)
 
-        if fixSampling:
-            newSampling = inputMovies.getSamplingRate() * self._getBinFactor()
-            outputSet.setSamplingRate(newSampling)
+            if fixSampling:
+                newSampling = inputMovies.getSamplingRate() * self._getBinFactor()
+                outputSet.setSamplingRate(newSampling)
 
         return outputSet
 
