@@ -196,14 +196,14 @@ def defineBinaries(args=None):
          'tiff',
          tar='tiff-4.0.10.tgz',
          deps=[zlib, jpeg],
-         default=False)
+         default=True)
 
     sqlite = env.addLibrary(
         'sqlite3',
         tar='SQLite-1a584e49.tgz',
         flags=['CPPFLAGS=-w',
                'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'],
-        default=False)
+        default=True)
 
     hdf5 = env.addLibrary(
          'hdf5',
@@ -211,7 +211,7 @@ def defineBinaries(args=None):
          flags=['--enable-cxx', '--enable-shared'],
          targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
          configAlways=True,
-         default=False,
+         default=True,
          deps=[zlib])
 
     python = env.addLibrary(
