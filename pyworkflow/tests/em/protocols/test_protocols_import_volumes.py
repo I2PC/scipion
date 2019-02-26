@@ -20,7 +20,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
-
+import os
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportVolumes
@@ -85,6 +85,10 @@ class TestImportVolumes(TestImportBase):
         t = volume.getOrigin()
         x, y, z = t.getShifts()
 
+        # Assert path is relative
+        self.assertFalse(os.path.isabs(volume.getFileName()),
+                        "single volume path is not relative")
+
         # x, y, z in Angstroms
         # in Chimera we will see (x, y, z) divided by the samplingRate
         # in pixels = (8, 16, 24)
@@ -141,6 +145,9 @@ class TestImportVolumes(TestImportBase):
             self.assertEqual(-67.2, x)
             self.assertEqual(-67.2, y)
             self.assertEqual(-67.2, z)
+            # Assert path is relative
+            self.assertFalse(os.path.isabs(volume.getFileName()),
+                            "volume path is not relative")
 
         # """ 5) Import two volumes and set origin in userDefined position
         # """
