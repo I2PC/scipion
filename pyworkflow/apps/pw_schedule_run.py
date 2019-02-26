@@ -192,7 +192,6 @@ class RunScheduler():
 
         _log("Launching the protocol >>>>")
         log.close()
-        time.sleep(1)
         project.launchProtocol(protocol, scheduled=True, force=True)
 
 
