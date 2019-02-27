@@ -25,8 +25,8 @@
 # **************************************************************************
 
 ghostStr = """
->>> WARNING: Xmipp binaries not found. Ghost active.....BOOOOOO!
- > Please install Xmipp to get full functionality. 
+ >>> WARNING: Xmipp binaries not found. Ghost active.....BOOOOOO!
+  > Please install Xmipp to get full functionality. 
 (Configuration->Plugins->scipion-em-xmipp in Scipion manager window)
 """
 
