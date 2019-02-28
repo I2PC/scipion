@@ -36,6 +36,7 @@ from pyworkflow.utils import importFromPlugin
 from pyworkflow.wizard import Wizard
 from pyworkflow.viewer import Viewer
 from pyworkflow import Config
+from wizards import *
 
 import pyworkflow.plugin
 
