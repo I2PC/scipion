@@ -32,6 +32,7 @@ from data import *
 from data_tiltpairs import *
 from protocol import *
 from convert import *
+from wizards import *
 from pyworkflow.utils import importFromPlugin
 from pyworkflow.wizard import Wizard
 from pyworkflow.viewer import Viewer
