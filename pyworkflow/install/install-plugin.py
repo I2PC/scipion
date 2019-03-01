@@ -189,7 +189,7 @@ elif mode == MODE_INSTALL_PLUGIN:
             pluginSrc = p[0]
             pluginName = ""
             if os.path.exists(pluginSrc):
-                pluginName = os.path.basename(pluginSrc)
+                pluginName = os.path.basename(pluginSrc.rstrip('/'))
                 numberProcessor = parsedArgs.j
             else:  # we assume it is a git url
                 m = re.match('https://github.com/(.*)/(.*).git', pluginSrc)
