@@ -298,7 +298,8 @@ class Environment:
 
     @staticmethod
     def getEmFolder():
-        return '%s/em' % Environment.getSoftware()
+        defaultValue = '%s/em' % Environment.getSoftware()
+        return os.environ.get('EM_ROOT', defaultValue)
 
     @staticmethod
     def getEm(name):

@@ -36,6 +36,7 @@ from collections import OrderedDict
 from abc import ABCMeta, abstractmethod
 
 import pyworkflow.utils as pwutils
+from pyworkflow.install import Environment
 
 
 class Domain:
@@ -228,7 +229,7 @@ class Plugin:
         to the default value.
         """
         cls._defineVar(varName,
-                       os.path.join(os.environ['EM_ROOT'], defaultValue))
+                       os.path.join(Environment.getEm(defaultValue)))
 
     @classmethod
     @abstractmethod
