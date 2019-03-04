@@ -32,6 +32,8 @@ import time
 from glob import glob
 from subprocess import STDOUT, call
 
+from pyworkflow import Config
+
 try:
     unicode = unicode
 except NameError:  # 'unicode' is undefined, must be Python 3
@@ -299,7 +301,10 @@ class Environment:
     @staticmethod
     def getEmFolder():
         defaultValue = '%s/em' % Environment.getSoftware()
-        return os.environ.get('EM_ROOT', defaultValue)
+        if Config.EM_ROOT is None:
+            return defaultValue
+        else:
+            return Config.EM_ROOT
 
     @staticmethod
     def getEm(name):
