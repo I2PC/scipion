@@ -307,7 +307,10 @@ class PluginInfo(object):
 
         plugin = self.getPluginClass()
         if plugin is not None:
-            plugin.defineBinaries(env)
+            try:
+                plugin.defineBinaries(env)
+            except Exception as e:
+                print ("Couldn't get binaries definition of %s plugin: %s" % (self.name, e.message))
             return env
         else:
             return None
