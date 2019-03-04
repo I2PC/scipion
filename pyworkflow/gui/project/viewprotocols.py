@@ -1832,13 +1832,13 @@ class ProtocolsView(tk.Frame):
         protocols = self._getSelectedProtocols()
         errorList = []
         defaultMode = pwprot.MODE_CONTINUE
-        defaultModeMessage = 'Continuing the workflow...'
+        defaultModeMessage = 'Checking the workflow to continue......'
 
         if action == ACTION_RESTART_WORKFLOW:
             if pwgui.dialog.askYesNo(Message.TITLE_RESTART_WORKFLOW,
                                      Message.LABEL_RESTART_WORKFLOW, self.root):
                 defaultMode = pwprot.MODE_RESTART
-                defaultModeMessage = 'Restarting the workflow...'
+                defaultModeMessage = 'Checking the workflow to restart...'
 
                 message = FloatingMessage(self.root, defaultModeMessage)
                 message.show()

@@ -9,11 +9,14 @@ from pkg_resources import parse_version
 
 from pyworkflow.plugin import Domain
 from pyworkflow.utils.path import cleanPath
-from pyworkflow import LAST_VERSION, OLD_VERSIONS
+from pyworkflow import LAST_VERSION, OLD_VERSIONS, Config
 from pyworkflow.install import Environment
 
-REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
-                  os.environ['SCIPION_PLUGIN_REPO_URL'])
+REPOSITORY_URL = Config.SCIPION_PLUGIN_JSON
+
+if REPOSITORY_URL is None:
+    REPOSITORY_URL = Config.SCIPION_PLUGIN_REPO_URL
+
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
 PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
     Environment.getBin('python'),
@@ -376,6 +379,7 @@ class PluginInfo(object):
     def getReleaseDate(self, release):
         """Return the uploaded date from the release"""
         return self.compatibleReleases[release]['upload_time']
+
 
 class PluginRepository(object):
 
