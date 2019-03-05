@@ -670,6 +670,7 @@ class Protocol(Step):
                         print ("Can't get protocol info from input attribute."
                                " This could render unexpected results when "
                                "scheduling protocols.")
+                        continue
 
                 if output is not None:
                     for k, attr in output.getAttributes():
