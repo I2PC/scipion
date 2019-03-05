@@ -243,7 +243,6 @@ class ProtCreateStreamData(EMProtocol):
             self._defineTransformRelation(self.inputMics, objSet)
         elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
             self._defineOutputs(outputMicrographs=objSet)
-            self._defineTransformRelation(self.inputMics, objSet)
         elif self.setof == SET_OF_PARTICLES:
             self._defineOutputs(outputParticles=objSet)
             self._defineTransformRelation(self.inputParticles, objSet)
