@@ -28,6 +28,7 @@ import sys
 import argparse
 import os
 import re
+from future.utils import iteritems
 
 from pyworkflow.plugin import Domain
 from plugin_funcs import PluginRepository, PluginInfo
@@ -163,6 +164,7 @@ modeToParser = {MODE_INSTALL_BINS: installBinParser,
 parsedArgs = parser.parse_args(args[1:])
 mode = parsedArgs.mode
 parserUsed = modeToParser[mode]
+exitWithErrors = False
 
 if parsedArgs.help or (mode in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
                        and len(parsedArgs.binName) == 0):
@@ -173,7 +175,7 @@ if parsedArgs.help or (mode in [MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
         env = script.defineBinaries([])
         env.setDefault(False)
         installedPlugins = Domain.getPlugins()
-        for p, pobj in installedPlugins.iteritems():
+        for p, pobj in iteritems(installedPlugins):
             pobj.Plugin.defineBinaries(env)
         parserUsed.epilog += env.printHelp()
     parserUsed.print_help()
@@ -197,6 +199,7 @@ elif mode == MODE_INSTALL_PLUGIN:
                     pluginName = m.group(2)
             if not pluginName:
                 print("ERROR: Couldn't find pluginName for source %s" % pluginSrc)
+                exitWithErrors = True
             else:
                 plugin = PluginInfo(pipName=pluginName, pluginSourceUrl=pluginSrc, remote=False)
                 processors = parsedArgs.j
@@ -204,10 +207,11 @@ elif mode == MODE_INSTALL_PLUGIN:
                 if installed and not parsedArgs.noBin:
                     plugin.installBin(args=['-j', numberProcessor])
     else:
-        pluginDict = pluginRepo.getPlugins(pluginList=list(zip(*parsedArgs.plugin))[0],
+        pluginsToInstall = list(zip(*parsedArgs.plugin))[0]
+        pluginDict = pluginRepo.getPlugins(pluginList=pluginsToInstall,
                                            getPipData=True)
         if not pluginDict:
-            print('\n' + installParser.epilog)
+            exitWithErrors = True
         else:
             for cmdTarget in parsedArgs.plugin:
                 pluginName = cmdTarget[0]
@@ -220,6 +224,7 @@ elif mode == MODE_INSTALL_PLUGIN:
                         plugin.installBin(args=['-j', numberProcessor])
                 else:
                     print("WARNING: Plugin %s does not exist." % pluginName)
+                    exitWithErrors = True
 
 elif parsedArgs.mode == MODE_UNINSTALL_PLUGIN:
 
@@ -259,3 +264,8 @@ elif parsedArgs.mode == MODE_UNINSTALL_BINS:
         pmodule = Domain.getPlugin(pluginTargetName)
         pinfo = PluginInfo(name=pluginTargetName, plugin=pmodule, remote=False)
         pinfo.uninstallBins([binTarget])
+
+if exitWithErrors:
+    parserUsed.exit(1)
+else:
+    parserUsed.exit(0)

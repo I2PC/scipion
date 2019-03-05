@@ -37,7 +37,7 @@ from pyworkflow.protocol import Protocol
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 
-from .plugin_funcs import PluginInfo
+from plugin_funcs import PluginInfo
 
 
 def usage(error):
