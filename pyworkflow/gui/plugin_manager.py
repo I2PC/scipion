@@ -316,7 +316,7 @@ class PluginBrowser(tk.Frame):
         self.progressbar = ttk.Progressbar(parent)
         self.progressbar.place(x=450, y=80, width=200)
         self.progressbar.step(1)
-        self.progressbar.start(90)
+        self.progressbar.start(200)
 
     def _closeProgressBar(self):
         self.progressbar.stop()
@@ -811,7 +811,6 @@ class PluginBrowser(tk.Frame):
         countPlugin = self.progressbar['value']
         self.tree.delete(*self.tree.get_children())
         self.progressbar["maximum"] = countPlugin + len(pluginList)
-        self.progressbar.stop()
         for pluginName in pluginList:
             countPlugin = countPlugin + 1
             self.progressbar['value'] = countPlugin
