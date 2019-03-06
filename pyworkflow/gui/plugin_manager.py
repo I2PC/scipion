@@ -61,6 +61,7 @@ class PluginTree(ttk.Treeview):
         self.im_failure = gui.getImage(Icon.FAILURE)
         self.im_availableRelease = gui.getImage(Icon.CHECKED)
         self.im_to_update = gui.getImage(Icon.TO_UPDATE)
+        self.im_undo = gui.getImage(Icon.ACTION_UNDO)
 
         self.tag_configure(PluginStates.UNCHECKED, image=self.im_unchecked)
         self.tag_configure(PluginStates.CHECKED, image=self.im_checked)
@@ -431,8 +432,28 @@ class PluginBrowser(tk.Frame):
 
         # add a popup menu to update a selected plugin
         self.popup_menu = tk.Menu(self.tree, tearoff=0)
-        self.popup_menu.add_command(label="Update",
+        self.popup_menu.add_command(label="Update ", underline=0,
+                                    image=self.tree.im_to_update,
+                                    compound=tk.LEFT,
                                     command=self._updatePlugin)
+
+        self.popup_menu.add_command(label="Install", underline=1,
+                                    image=self.tree.im_checked,
+                                    compound=tk.LEFT,
+                                    command=self._treeOperation)
+
+        self.popup_menu.add_command(label="Uninstall", underline=2,
+                                    image=self.tree.im_uninstall,
+                                    compound=tk.LEFT,
+                                    command=self._treeOperation)
+
+        self.popup_menu.add_separator()
+
+        self.popup_menu.add_command(label="Undo", underline=4,
+                                    image=self.tree.im_undo,
+                                    compound=tk.LEFT,
+                                    command=self._treeOperation)
+
         self.tree.bind("<Button-3>", self._popup)  # Button-3 on Plugin
         self.tree.bind("<FocusOut>", self._popupFocusOut)
 
@@ -448,9 +469,22 @@ class PluginBrowser(tk.Frame):
             self.popup_menu.selection = self.tree.set(
                 self.tree.identify_row(event.y))
             tags = self.tree.item(self.tree.selectedItem, "tags")
+            self.popup_menu.entryconfigure(0, state=tk.DISABLED)
+            self.popup_menu.entryconfigure(1, state=tk.DISABLED)
+            self.popup_menu.entryconfigure(2, state=tk.DISABLED)
+            self.popup_menu.entryconfigure(4, state=tk.DISABLED)
             # Activate the menu if the new plugin release is available
             if tags[0] == PluginStates.AVAILABLE_RELEASE:
-                self.popup_menu.post(event.x_root, event.y_root)
+                self.popup_menu.entryconfigure(0, state=tk.NORMAL)
+            elif tags[0] == PluginStates.CHECKED:
+                self.popup_menu.entryconfigure(2, state=tk.NORMAL)
+            elif tags[0] == PluginStates.UNCHECKED:
+                self.popup_menu.entryconfigure(1, state=tk.NORMAL)
+            else:
+                self.popup_menu.entryconfigure(4, state=tk.NORMAL)
+
+
+            self.popup_menu.post(event.x_root, event.y_root)
         finally:
             self.popup_menu.grab_release()
 
@@ -466,6 +500,30 @@ class PluginBrowser(tk.Frame):
         self.tree.update_item(self.tree.selectedItem)
         self.showOperationList()
         self.executeOpsBtn.config(state='normal')
+
+    def _treeOperation(self):
+        tags = self.tree.item(self.tree.selectedItem, "tags")
+        objType = self.tree.item(self.tree.selectedItem, "value")
+        parent = self.tree.parent(self.tree.selectedItem)
+        operation = Operation(self.tree.selectedItem, objType[0],
+                              tags[0], parent)
+        self.operationList.insertOperation(operation)
+        if tags[0] == PluginStates.UNCHECKED:
+            self.tree.check_item(self.tree.selectedItem)
+        elif tags[0] == PluginStates.UNINSTALL:
+            if objType[0] == PluginStates.PLUGIN:
+                self.reloadInstalledPlugin(self.tree.selectedItem)
+            else:
+                self.tree.check_item(self.tree.selectedItem)
+        elif tags[0] == PluginStates.TO_UPDATE:
+            self.tree.check_item(self.tree.selectedItem)
+        else:
+            children = self.tree.get_children(self.tree.selectedItem)
+            for iid in children:
+                self.deleteOperation(iid)
+            self.tree.uncheck_item(self.tree.selectedItem)
+        self.showPluginInformation(self.tree.selectedItem)
+        self.showOperationList()
 
     def _createRightTopPanel(self, topPanel):
         """
@@ -545,28 +603,7 @@ class PluginBrowser(tk.Frame):
             self.tree.selectedItem = self.tree.identify_row(y)
             if "image" in elem:
                 # a box was clicked
-                tags = self.tree.item(self.tree.selectedItem, "tags")
-                objType = self.tree.item(self.tree.selectedItem, "value")
-                parent = self.tree.parent(self.tree.selectedItem)
-                operation = Operation(self.tree.selectedItem, objType[0],
-                                      tags[0], parent)
-                self.operationList.insertOperation(operation)
-                if tags[0] == PluginStates.UNCHECKED:
-                    self.tree.check_item(self.tree.selectedItem)
-                elif tags[0] == PluginStates.UNINSTALL:
-                    if objType[0] == PluginStates.PLUGIN:
-                        self.reloadInstalledPlugin(self.tree.selectedItem)
-                    else:
-                        self.tree.check_item(self.tree.selectedItem)
-                elif tags[0] == PluginStates.TO_UPDATE:
-                    self.tree.check_item(self.tree.selectedItem)
-                else:
-                    children = self.tree.get_children(self.tree.selectedItem)
-                    for iid in children:
-                        self.deleteOperation(iid)
-                    self.tree.uncheck_item(self.tree.selectedItem)
-                self.showPluginInformation(self.tree.selectedItem)
-                self.showOperationList()
+                self._treeOperation()
             else:
                 if self.tree.selectedItem is not None:
                     if self.isPlugin(self.tree.item(self.tree.selectedItem,
@@ -934,7 +971,7 @@ class PluginHelp(gui.Window):
 
         btn = Label(helpFrame, text='(Right Click)   ')
         btn.grid(row=6, column=0, sticky='sw', padx=10, pady=5)
-        btn = Label(helpFrame, text='Update a selected plugin')
+        btn = Label(helpFrame, text='Apply an operation to the selected plugin')
         btn.grid(row=6, column=1, sticky='sw', padx=0, pady=5)
 
 

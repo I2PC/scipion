@@ -445,6 +445,7 @@ class Icon:
     FAILURE = 'fa-failure.png'
     DELETE_OPERATION = 'fa-delete-operation.png'
     TO_UPDATE = 'fa-update.png'
+    ACTION_UNDO = 'fa-undo.png'
 
 
 class Color:
