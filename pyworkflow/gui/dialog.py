@@ -500,10 +500,12 @@ class ListDialog(Dialog):
             self.lista = {}
 
             for item in self.tree.get_children():
-                self.lista[item] = ((self.tree.item(item)['text'] + ' ' +
-                                     self.tree.item(item)['values'][0] +
-                                     ' ' + self.tree.item(item)['values'][1] +
-                                     str(self.tree.item(item)['values'][2])))
+
+                itemStr = self.tree.item(item)['text']
+                for value in self.tree.item(item)['values']:
+                    itemStr = itemStr + " " + str(value)
+
+                self.lista[item] = itemStr
 
             if self._searchVar.get() != '':
                 matchs = comparison()
