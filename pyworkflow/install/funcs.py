@@ -301,10 +301,7 @@ class Environment:
     @staticmethod
     def getEmFolder():
         defaultValue = '%s/em' % Environment.getSoftware()
-        if Config.EM_ROOT is None:
-            return defaultValue
-        else:
-            return Config.EM_ROOT
+        return os.environ.get('EM_ROOT', defaultValue)
 
     @staticmethod
     def getEm(name):
