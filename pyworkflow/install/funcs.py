@@ -32,8 +32,6 @@ import time
 from glob import glob
 from subprocess import STDOUT, call
 
-from pyworkflow import Config
-
 try:
     unicode = unicode
 except NameError:  # 'unicode' is undefined, must be Python 3
