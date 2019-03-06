@@ -65,7 +65,6 @@ class Config:
     SCIPION_PLUGIN_JSON = __get('SCIPION_PLUGIN_JSON', None)
     SCIPION_PLUGIN_REPO_URL = __get('SCIPION_PLUGIN_REPO_URL',
                                     'http://scipion.i2pc.es/getplugins/')
-    EM_ROOT = __get('EM_ROOT', None)
 
     try:
         VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
