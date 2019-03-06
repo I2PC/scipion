@@ -436,6 +436,8 @@ class PluginRepository(object):
                 print("WARNING - The following plugins didn't match available "
                       "plugin names:")
                 print(" ".join(wrongPluginNames))
+                print("You can see the list of available plugins with the following command:\n"
+                      "scipion installp --help")
 
         for pluginName in targetPlugins:
             pluginsJson[pluginName].update(remote=getPipData)
