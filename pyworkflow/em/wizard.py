@@ -35,7 +35,6 @@ import ttk
 from pyworkflow import findResource
 from pyworkflow.object import PointerList, Pointer
 from pyworkflow.wizard import Wizard
-from pyworkflow.utils import importFromPlugin
 from pyworkflow.em.convert import ImageHandler, Ccp4Header
 from pyworkflow.em.constants import (UNIT_PIXEL,
                                      UNIT_ANGSTROM,
@@ -49,8 +48,7 @@ from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
 from pyworkflow.em.protocol import (ProtImportImages,
                                     ProtImportCoordinates,
                                     ProtImportCoordinatesPairs,
-                                    ProtImportVolumes,
-                                    ProtImportSequence)
+                                    ProtImportVolumes)
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow.gui.widgets import LabelSlider
@@ -348,44 +346,6 @@ class GaussianParticlesWizard(GaussianWizard):
 class GaussianVolumesWizard(GaussianWizard):
     pass   
     
-    
-class ImportAcquisitionWizard(EmWizard):
-    _targets = [(ProtImportImages, ['acquisitionWizard'])]
-    
-    def show(self, form, *params):
-        acquisitionInfo = form.protocol.loadAcquisitionInfo()
-
-        if isinstance(acquisitionInfo, dict):
-            # If acquisitionInfo is None means something is wrong.
-            # Now, let's try to show a meanful error message.
-            self._setAcquisition(form, acquisitionInfo)
-        else:
-            # If not dict, it should be an error message
-            dialog.showError("Input error", acquisitionInfo, form.root)
-
-    def _setAcquisition(self, form, acquisitionInfo):
-        """ Ask whether to set the AcquisitionInfo to the protocol parameters.
-        Params:
-            acquisitionInfo: Should be a dictionary with acquisition values.
-                If None, show an error.
-        """
-        msg = ''
-        for k, v in acquisitionInfo.iteritems():
-            msg += '%s = %s\n' % (k, v)
-        msg += '\n*Do you want to use detected acquisition values?*'
-        response = dialog.askYesNo("Import acquisition",
-                                   msg, form.root)
-        if response:
-            prot = form.protocol
-            comment = ''
-
-            for k, v in acquisitionInfo.iteritems():
-                if prot.hasAttribute(k):
-                    form.setVar(k, v)
-                else:
-                    comment += "%s = %s\n" % (k, v)
-            if comment:
-                prot.setObjComment(comment)
 
 class PDBVolumeWizard(EmWizard):
     def show(self, form):
@@ -854,108 +814,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         return int(radiusSlider.get())
 
 
-class ImportCoordinatesBoxSizeWizard(Wizard):
-    _targets = [(ProtImportCoordinates, ['boxSize']),
-                (ProtImportCoordinatesPairs, ['boxSize'])]
-
-    def _getBoxSize(self, protocol):
-
-        return protocol.getDefaultBoxSize()
-
-
-    def show(self, form):
-        form.setVar('boxSize', self._getBoxSize(form.protocol))
-
-
-class ImportOriginVolumeWizard(Wizard):
-
-    _targets = [(ProtImportVolumes, ['x', 'y', 'z'])]
-
-    def show(self, form, *params):
-        protocol = form.protocol
-        filesPath = protocol.filesPath.get()
-        filesPattern = protocol.filesPattern.get()
-        if filesPattern:
-            fullPattern = os.path.join(filesPath, filesPattern)
-        else:
-            fullPattern = filesPath
-
-        sampling = protocol.samplingRate.get()
-        for fileName, fileId in protocol.iterFiles():
-            inputVol = Volume()
-            inputVol.setFileName(fileName)
-            if ((str(fullPattern)).endswith('mrc') or
-                (str(fullPattern)).endswith('map')):
-                ccp4header = Ccp4Header(fileName, readHeader=True)
-                x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
-            else:
-                x, y, z = self._halfOriginCoordinates(inputVol, sampling)
-
-            form.setVar('x', x)
-            form.setVar('y', y)
-            form.setVar('z', z)
-
-    def _halfOriginCoordinates(self, volume, sampling):
-        xdim, ydim, zdim = volume.getDim()
-        if zdim > 1:
-            zdim = zdim / 2.
-        x = xdim / 2. * sampling
-        y = ydim / 2. * sampling
-        z = zdim * sampling
-        return x, y, z
-
-
 class ListTreeProviderString(ListTreeProvider):
     def getText(self, obj):
         return obj.get()
-
-
-class GetStructureChainsWizard(Wizard):
-    _targets = [(ProtImportSequence, ['inputStructureChain'])
-                # NOTE: be careful if you change this class since
-                # chimera-wizard inherits from it.
-                #(ChimeraModelFromTemplate, ['inputStructureChain'])
-                #(atomstructutils, ['inputStructureChain'])
-                ]
-
-    def getModelsChainsStep(self, protocol):
-        self.structureHandler = AtomicStructHandler()
-        if hasattr(protocol, 'pdbId'):
-            if protocol.pdbId.get() is not None:
-                pdbID = protocol.pdbId.get()
-                fileName = self.structureHandler.readFromPDBDatabase(
-                    os.path.basename(pdbID), dir="/tmp/")
-            else:
-                fileName = protocol.pdbFile.get()
-        else:
-            if protocol.pdbFileToBeRefined.get() is not None:
-                fileName = os.path.abspath(protocol.pdbFileToBeRefined.get(
-                ).getFileName())
-
-        self.structureHandler.read(fileName)
-        self.structureHandler.getStructure()
-        models = self.structureHandler.getModelsChains()
-        return models
-
-    def editionListOfChains(self, models):
-        self.chainList = []
-        for model, chainDic in models.iteritems():
-            for chainID, lenResidues in chainDic.iteritems():
-
-                self.chainList.append(('{"model": %d, "chain": "%s", "residues": %d}' %
-                                       (model, str(chainID), lenResidues)))
-
-    def show(self, form):
-        protocol = form.protocol
-        models = self.getModelsChainsStep(protocol)
-
-        self.editionListOfChains(models)
-        finalChainList = []
-        for i in self.chainList:
-            finalChainList.append(String(i))
-        provider = ListTreeProviderString(finalChainList)
-        dlg = dialog.ListDialog(form.root,"Model chains", provider,
-                                "Select one of the chains (model, chain, "
-                                "number of chain residues)" )
-        form.setVar('inputStructureChain', dlg.values[0].get())
 
