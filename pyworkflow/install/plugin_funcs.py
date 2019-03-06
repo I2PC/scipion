@@ -417,7 +417,13 @@ class PluginRepository(object):
             with open(self.repoUrl) as f:
                 pluginsJson = json.load(f)
         else:
-            r = requests.get(self.repoUrl)
+            try:
+                r = requests.get(self.repoUrl)
+            except requests.ConnectionError as e:
+                print("\nWARNING: Error while trying to connect with a server:\n"
+                      "  > Please, check your internet connection!\n")
+                print(e)
+                return self.plugins
             if r.ok:
                 pluginsJson = r.json()
             else:
