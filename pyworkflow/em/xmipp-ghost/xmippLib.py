@@ -32,6 +32,8 @@ ghostStr = """
 
 print(ghostStr)
 
+GHOST_ACTIVATED = True  # Flag to unequivocal identify the Ghost
+
 DT_DEFAULT = None
 DT_UNKNOWN = None
 DT_UCHAR = None
