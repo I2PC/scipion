@@ -734,7 +734,8 @@ class PluginBrowser(tk.Frame):
                                                                 'tags'):
                 pluginVersion = (plugin.getPipVersion() + '  *(A new release is '
                                                  'available now: version ' +
-                                 plugin.latestRelease + ')')
+                                 plugin.latestRelease + '. Right-click on the '
+                                                        'plugin to update it)')
                 self.topPanelTree.tag_configure('pluginVersion',
                                                 foreground=Color.RED_COLOR)
             else:
