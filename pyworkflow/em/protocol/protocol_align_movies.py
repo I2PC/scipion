@@ -282,7 +282,7 @@ class ProtAlignMovies(ProtProcessMovies):
         if lastFrame == 0:
             # Although getFirstItem is not recommended in general, here it is
             # used only once, for validation purposes, so performance
-            # problems not should appear.
+            # problems should not appear.
             frames = firstItem.getNumberOfFrames()
             lastFrame = frames
         else:
