@@ -277,7 +277,9 @@ class Plugin:
         """ Return the version of the binaries that are currently active.
         In the current implementation it will be inferred from the *_HOME
         variable, so it should contain the version number in it. """
-        home = home or cls.getHome()
+        # FIXME: (JMRT) Use the basename might aleviate the issue with matching
+        # the binaries version, but we might consider to find a better solution
+        home = os.path.basename(home or cls.getHome())
         versions = versions or cls.getSupportedVersions()
 
         for v in versions:
