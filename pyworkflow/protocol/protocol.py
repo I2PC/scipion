@@ -1601,7 +1601,7 @@ class Protocol(Step):
         """
         package = cls.getClassPackage()
         packageName = cls.getClassPackageName()
-        varValue = os.environ[varName]
+        varValue = package.Plugin.getVar(varName)
         versions = ','.join(package.Plugin.getSupportedVersions())
 
         errorMsg = None
