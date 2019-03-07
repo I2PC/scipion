@@ -397,7 +397,7 @@ class PluginBrowser(tk.Frame):
                                                            padx=5)
         self._col += 1
         self.numberProcessors = tk.StringVar()
-        self.numberProcessors.set('1')
+        self.numberProcessors.set('4')
         processorsEntry = tk.Entry(frame, textvariable=self.numberProcessors)
         processorsEntry.grid(row=0, column=self._col, sticky='ew', padx=5)
 
