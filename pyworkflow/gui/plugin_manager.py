@@ -523,6 +523,7 @@ class PluginBrowser(tk.Frame):
                 self.deleteOperation(iid)
             self.tree.uncheck_item(self.tree.selectedItem)
         self.showPluginInformation(self.tree.selectedItem)
+        self.cancelOpsBtn.config(state='disable')
         self.showOperationList()
 
     def _createRightTopPanel(self, topPanel):
