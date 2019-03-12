@@ -67,7 +67,7 @@ class Config:
                                     'http://scipion.i2pc.es/getplugins/')
 
     # Get general log file path
-    LOG_FILE = os.path.join(__get('SCIPION_LOGS'), 'scipion.log')
+    LOG_FILE = os.path.join(__get('SCIPION_LOGS', "~/"), 'scipion.log')
 
     try:
         VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
