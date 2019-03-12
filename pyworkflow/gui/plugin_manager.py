@@ -498,6 +498,10 @@ class PluginBrowser(tk.Frame):
                               PluginStates.TO_UPDATE, parent)
         self.operationList.insertOperation(operation)
         self.tree.update_item(self.tree.selectedItem)
+        children = self.tree.get_children(self.tree.selectedItem)
+        for iid in children:
+            self.deleteOperation(iid)
+            self.tree.delete(iid)
         self.showOperationList()
         self.executeOpsBtn.config(state='normal')
 
@@ -517,6 +521,7 @@ class PluginBrowser(tk.Frame):
                 self.tree.check_item(self.tree.selectedItem)
         elif tags[0] == PluginStates.TO_UPDATE:
             self.tree.check_item(self.tree.selectedItem)
+            self.reloadInstalledPlugin(self.tree.selectedItem)
         else:
             children = self.tree.get_children(self.tree.selectedItem)
             for iid in children:
