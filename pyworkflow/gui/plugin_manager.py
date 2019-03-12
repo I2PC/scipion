@@ -738,11 +738,15 @@ class PluginBrowser(tk.Frame):
         :return:
         """
         self.operationTree.delete(*self.operationTree.get_children())
-        for op in self.operationList.getOperations(None):
-            self.operationTree.insert("", 'end', op.getObjName(),
-                                      text=str(op.getObjStatus().upper() +
-                                               ' --> ' + op.getObjName()),
-                                      tags=op.getObjStatus())
+        operations = self.operationList.getOperations(None)
+        if len(operations) > 0:
+            for op in operations:
+                self.operationTree.insert("", 'end', op.getObjName(),
+                                          text=str(op.getObjStatus().upper() +
+                                                   ' --> ' + op.getObjName()),
+                                          tags=op.getObjStatus())
+        else:
+            self.executeOpsBtn.config(state='disable')
         self.operationTree.update()
 
     def isPlugin(self, value):
