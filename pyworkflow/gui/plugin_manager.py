@@ -721,7 +721,8 @@ class PluginBrowser(tk.Frame):
         """Update the operationTree selected item"""
         x, y, widget = event.x, event.y, event.widget
         item = self.operationTree.selectedItem = self.operationTree.identify_row(y)
-        if len(item) and len(self.operationList.getOperations(None)):
+        if (len(item) and len(self.operationList.getOperations(None)) and
+                             self.executeOpsBtn["state"] == tk.NORMAL):
             self.cancelOpsBtn.config(state='normal')
 
     def deleteOperation(self, operationName):
