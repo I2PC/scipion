@@ -4,8 +4,9 @@ import os
 import logging
 import unittest
 
+from pyworkflow import Config
 from pyworkflow.utils.utils import getLineInFile, isInFile
-from pyworkflow.utils.log import ScipionLogger, LOG_FILE
+from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.tests import BaseTest, setupTestOutput
 
 
@@ -22,7 +23,7 @@ class TestLogs(BaseTest):
         import random
         logTestCode = random.randint(1, 100000)
 
-        genLogFn = LOG_FILE
+        genLogFn = Config.LOG_FILE
         log1 = logging.getLogger('pyworkflow.test.log.test_scipon_log')
         genInfoTest = 'Testing general info [%d]' % logTestCode
         genDebugTest = 'Testing general debug [%d]' % logTestCode

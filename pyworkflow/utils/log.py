@@ -26,15 +26,11 @@
 # **************************************************************************
 
 import sys
-import os
 import logging
 import logging.config
+
+from pyworkflow import Config
 from pyworkflow.utils.path import makeFilePath
-
-
-
-# Get general log file path
-LOG_FILE = os.path.join(os.environ['SCIPION_LOGS'], 'scipion.log')
 
 
 # Log configuration
@@ -54,7 +50,7 @@ config = {  'version': 1,
                     'level': 'NOTSET',
                     'class': 'logging.handlers.RotatingFileHandler',
                     'formatter': 'standard',
-                    'filename': LOG_FILE,
+                    'filename': Config.LOG_FILE,
                     'maxBytes': 100000,
                 },
                 'consoleHandler': {
