@@ -332,7 +332,18 @@ class Protocol(Step):
         self.__stdErr = None
         self.__fOut = None
         self.__fErr = None
-        self._log = None
+
+        class BasicLog:
+            def warning(self, message, redirectStandard=True):
+                print("WARNING", message)
+
+            def info(self, message, redirectStandard=True):
+                print("INFO", message)
+
+            def error(self, message, redirectStandard=True):
+                print("ERROR", message)
+
+        self._log = BasicLog()
         self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
         self.__project = kwargs.get('project', None)
