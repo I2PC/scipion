@@ -636,7 +636,7 @@ class FlashMessage():
         
 
 class FloatingMessage:
-    def __init__(self, master, msg, xPos=750, yPos=80, textWidth=250,
+    def __init__(self, master, msg, xPos=750, yPos=80, textWidth=260,
                  font='Helvetica', size=12, bd=1, bg='#6E6E6E', fg='white'):
 
         self.floatingMessage = tk.Label(master, text="   %s   " % msg,

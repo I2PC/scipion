@@ -332,7 +332,18 @@ class Protocol(Step):
         self.__stdErr = None
         self.__fOut = None
         self.__fErr = None
-        self._log = None
+
+        class BasicLog:
+            def warning(self, message, redirectStandard=True):
+                print("WARNING", message)
+
+            def info(self, message, redirectStandard=True):
+                print("INFO", message)
+
+            def error(self, message, redirectStandard=True):
+                print("ERROR", message)
+
+        self._log = BasicLog()
         self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
         self.__project = kwargs.get('project', None)
@@ -655,15 +666,32 @@ class Protocol(Step):
                 if attrInput.hasExtended():  # case B
                     protocol = attrInput.getObjValue()
                 else:  # case C
-                    protocol = self.getProject().getProtocol(output.getObjParentId())
+
+                    if self.getProject() is not None:
+
+                        protocol = self.getProject().getProtocol(output.getObjParentId())
+                    else:
+                        # This is a problem, since protocols coming from
+                        # Pointers do not have the __project set.
+                        # We do not have an clear way to get the protocol if
+                        # we do not have the project object associated
+                        # This case implies Direct Pointers to Sets
+                        # (whithout extended): hopefully this will only be
+                        # created from tests
+                        print ("Can't get protocol info from input attribute."
+                               " This could render unexpected results when "
+                               "scheduling protocols.")
+                        continue
 
                 if output is not None:
                     for k, attr in output.getAttributes():
                         if isinstance(attr, Pointer):
-                            auxDict = protocol.inputProtocolDict()
-                            for key in auxDict:
-                                if key not in protocolDict.keys():
-                                    protocolDict[key] = auxDict[key]
+                            if attr.get() is not None:
+                                auxDict = protocol.inputProtocolDict()
+                                for auxKey in auxDict:
+                                    if auxKey not in protocolDict.keys():
+                                        protocolDict[auxKey] = auxDict[auxKey]
+                                break
 
             protocolDict[protocol.getObjId()] = protocol
 
@@ -1584,7 +1612,7 @@ class Protocol(Step):
         """
         package = cls.getClassPackage()
         packageName = cls.getClassPackageName()
-        varValue = os.environ[varName]
+        varValue = package.Plugin.getVar(varName)
         versions = ','.join(package.Plugin.getSupportedVersions())
 
         errorMsg = None
@@ -2150,9 +2178,7 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
     """ Retrieve the Protocol object from a given .sqlite file
     and the protocol id.
     """
-    # We need this import here because from Project is imported
-    # all from protocol indirectly, so if move this to the top
-    # we get an import error
+
     if not os.path.exists(projectPath):
         raise Exception("ERROR: project path '%s' does not exist. "
                         % projectPath)
@@ -2165,6 +2191,9 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
                         % fullDbPath)
         sys.exit(1)
 
+    # We need this import here because from Project is imported
+    # all from protocol indirectly, so if move this to the top
+    # we get an import error
     from pyworkflow.project import Project
     project = Project(projectPath)
     project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir,

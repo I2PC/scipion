@@ -740,7 +740,7 @@ def pluginNotFound(plugName, errorMsg='', doRaise=False):
     else:
         msgStr = " > error when importing from %s: %s" % (plugName, errorMsg)
         if errorMsg != '':  # if empty we know nothing...
-            hint += ("   or use 'scipion installp --help --checkUpgrades' in the "
+            hint += ("   or use 'scipion installp --help --checkUpdates' in the "
                      "command line to check for upgrades,\n   "
                      "it could be a versions compatibility issue.")
 
