@@ -32,10 +32,11 @@ from pyworkflow.project import MenuConfig
 from pyworkflow.utils.log import ScipionLogger
 from pyworkflow.gui.text import TextFileViewer
 from pyworkflow.gui import *
+import pyworkflow.gui.dialog as pwgui
 from pyworkflow.install.plugin_funcs import PluginRepository, PluginInfo
 
 from pyworkflow.utils.properties import *
-from pyworkflow.utils import redStr
+from pyworkflow.utils import redStr, greenStr
 PLUGIN_LOG_NAME = 'Plugin.log'
 PLUGIN_ERRORS_LOG_NAME = 'Plugin.err'
 
@@ -62,6 +63,8 @@ class PluginTree(ttk.Treeview):
         self.im_availableRelease = gui.getImage(Icon.CHECKED)
         self.im_to_update = gui.getImage(Icon.TO_UPDATE)
         self.im_undo = gui.getImage(Icon.ACTION_UNDO)
+        self.im_success = gui.getImage(Icon.INSTALLED)
+        self.im_errors = gui.getImage(Icon.FAILURE)
 
         self.tag_configure(PluginStates.UNCHECKED, image=self.im_unchecked)
         self.tag_configure(PluginStates.CHECKED, image=self.im_checked)
@@ -72,6 +75,8 @@ class PluginTree(ttk.Treeview):
         self.tag_configure(PluginStates.PRECESSING, image=self.im_processing)
         self.tag_configure(PluginStates.FAILURE, image=self.im_failure)
         self.tag_configure(PluginStates.TO_UPDATE, image=self.im_to_update)
+        self.tag_configure(PluginStates.SUCCESS, image=self.im_success)
+        self.tag_configure(PluginStates.ERRORS, image=self.im_errors)
         helv36 = tkFont.Font(family="Helvetica", size=10, weight="bold")
         self.tag_configure(PluginStates.AVAILABLE_RELEASE,
                            image=self.im_availableRelease,
@@ -90,7 +95,10 @@ class PluginTree(ttk.Treeview):
                   PluginStates.INSTALLED in kw["tags"] or
                   PluginStates.INSTALL in kw["tags"] or
                   PluginStates.AVAILABLE_RELEASE in kw["tags"] or
-                  PluginStates.TO_UPDATE in kw["tags"]):
+                  PluginStates.TO_UPDATE in kw["tags"] or
+                  PluginStates.SUCCESS in kw["tags"] or
+                  PluginStates.FAILURE in kw["tags"] or
+                  PluginStates.ERRORS in kw["tags"]):
             kw["tags"] = (PluginStates.UNCHECKED,)
         ttk.Treeview.insert(self, parent, index, iid, **kw)
 
@@ -594,7 +602,7 @@ class PluginBrowser(tk.Frame):
                                           PLUGIN_LOG_NAME)
         self.file_errors_path = os.path.join(os.environ['SCIPION_LOGS'],
                                              PLUGIN_ERRORS_LOG_NAME)
-        
+
         self.fileLog = open(self.file_log_path, 'w', 0)
         self.fileLogErr = open(self.file_errors_path, 'w', 0)
         self.plug_log = ScipionLogger(self.file_log_path)
@@ -674,6 +682,12 @@ class PluginBrowser(tk.Frame):
         oldstderr = sys.stderr
         sys.stdout = self.fileLog
         sys.stderr = self.fileLogErr
+        strErr = None
+        defaultModeMessage = 'Executing...'
+
+        message = pwgui.FloatingMessage(self.operationTree, defaultModeMessage,
+                                        xPos=300, yPos=20)
+        message.show()
         for op in self.operationList.getOperations(operation):
             item = op.getObjName()
             try:
@@ -694,7 +708,10 @@ class PluginBrowser(tk.Frame):
                     self.tree.uncheck_item(item)
             except AssertionError as err:
                 self.operationTree.failure_item(item)
-                self.tree.uncheck_item(item)
+                if op.getObjType() == PluginStates.BINARY:
+                    self.reloadInstalledPlugin(op.getObjParent())
+                else:
+                    self.reloadInstalledPlugin(item)
                 self.operationTree.update()
                 strErr = str('Error executing the operation: ' +
                              op.getObjStatus() + ' ' +
@@ -710,6 +727,23 @@ class PluginBrowser(tk.Frame):
         sys.stderr = oldstderr
         # Enable the treeview
         self.tree.enable()
+        message.close()
+        text = 'FINISHED SUCCESSFULLY'
+        tag = PluginStates.SUCCESS
+        self.operationTree.tag_configure(PluginStates.SUCCESS,
+                                         foreground='green')
+
+        if strErr is not None:
+            text = 'FINISHED WITH ERRORS'
+            tag = PluginStates.ERRORS
+            self.operationTree.tag_configure(PluginStates.ERRORS,
+                                             foreground='red')
+
+        self.operationTree.insert("", 'end', text,
+                                  text=text,
+                                  value=text,
+                                  tags=tag)
+
 
     def linkToWebSite(self, event):
         """
@@ -780,9 +814,8 @@ class PluginBrowser(tk.Frame):
                                      values='pluginName')
             if PluginStates.AVAILABLE_RELEASE in self.tree.item(pluginName,
                                                                 'tags'):
-                pluginVersion = (plugin.getPipVersion() + '  *(A new release is '
-                                                 'available now: version ' +
-                                 plugin.latestRelease + '. Right-click on the '
+                pluginVersion = (plugin.getPipVersion() + '  *(Version ' +
+                                 plugin.latestRelease + ' available. Right-click on the '
                                                         'plugin to update it)')
                 self.topPanelTree.tag_configure('pluginVersion',
                                                 foreground=Color.RED_COLOR)
@@ -904,10 +937,15 @@ class PluginManagerWindow(gui.Window):
         if 'minsize' not in kwargs:
             kwargs['minsize'] = (900, 300)
         gui.Window.__init__(self, title, master, **kwargs)
-
+        self.parent = master
         menu = MenuConfig()
         fileMenu = menu.addSubMenu('File')
         fileMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
+
+        configMenu = menu.addSubMenu('Configuration')
+        configMenu.addSubMenu('User', 'user')
+        configMenu.addSubMenu('Variables', 'variables')
+
 
         helpMenu = menu.addSubMenu('Help')
         helpMenu.addSubMenu('Help', 'help', icon='fa-question-circle.png')
@@ -917,8 +955,18 @@ class PluginManagerWindow(gui.Window):
     def onExit(self):
         self.close()
 
-    def onBrowsePlugin(self):
-        pass
+    def onUser(self):
+        import pyworkflow as pw
+        self.parent._openConfigFile(pw.Config.SCIPION_CONFIG_MAIN,
+                                             userOnly=True)
+
+    def onVariables(self):
+        if pluginDict is not None:
+            msg = ""
+            pluginsVars = pluginDict.values()[0].getPluginClass().getVars()
+            for var in pluginsVars:
+                msg = msg + var + ': ' + pluginsVars[var] + '\n'
+            pwgui.showInfo("Plugins Variables", msg, tk.Frame())
 
     def onHelp(self):
         PluginHelp('Plugin Manager Glossary', self).show()

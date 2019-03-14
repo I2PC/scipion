@@ -261,6 +261,11 @@ class Plugin:
         return cls._vars.get(varName, defaultValue)
 
     @classmethod
+    def getVars(cls):
+        """ Return the value of a given variable. """
+        return cls._vars
+
+    @classmethod
     def getHome(cls, *paths):
         """ Return a path from the "home" of the package
          if the _homeVar is defined in the plugin. """
