@@ -25,7 +25,6 @@
 # **************************************************************************
 import ast
 import os
-from .utils.path import findFile
 
 
 # Versions

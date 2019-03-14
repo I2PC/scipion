@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-import os
 import logging
 import unittest
 
 from pyworkflow import Config
-from pyworkflow.utils.utils import getLineInFile, isInFile
-from pyworkflow.utils.log import ScipionLogger, getLogConfiguration
+from pyworkflow.utils import getLineInFile, isInFile, \
+    ScipionLogger, getLogConfiguration
 from pyworkflow.tests import BaseTest, setupTestOutput
 
 
@@ -59,7 +58,7 @@ class TestLogs(BaseTest):
         
         isFileInfoTest = isInFile(fileInfoTest, genLogFn)
         isFileWarningTest = isInFile(fileWarningTest, genLogFn)
-        isFileErrorTest = isInFile(fileErrorTest, genLogFn)     
+        isFileErrorTest = isInFile(fileErrorTest, genLogFn)
         
         genLoggerChecked = True
         if lineGenInfoTest is None:
@@ -87,7 +86,7 @@ class TestLogs(BaseTest):
         
         isGenInfoTest = isInFile(genInfoTest, logFn)
         isGenWarningTest = isInFile(genWarningTest, logFn)
-        isGenErrorTest = isInFile(genErrorTest, logFn)    
+        isGenErrorTest = isInFile(genErrorTest, logFn)
         
         fileLoggerChecked = True
         if lineFileInfoTest is None:

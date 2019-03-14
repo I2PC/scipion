@@ -30,7 +30,7 @@ import logging
 import logging.config
 
 from pyworkflow import Config
-from pyworkflow.utils.path import makeFilePath
+from pyworkflow.utils import makeFilePath
 
 
 def getLogConfiguration():
