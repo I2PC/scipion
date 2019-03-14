@@ -69,6 +69,8 @@ class Config:
     # Get general log file path
     LOG_FILE = os.path.join(__get('SCIPION_LOGS', "~/"), 'scipion.log')
 
+    SCIPION_URL_SOFTWARE = __get('SCIPION_URL_SOFTWARE')
+
     try:
         VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
     except Exception as e:
