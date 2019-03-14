@@ -375,6 +375,8 @@ class PluginStates:
     FAILURE = 'failure'
     AVAILABLE_RELEASE = 'available_release'
     TO_UPDATE = 'to_update'
+    SUCCESS = 'success'
+    ERRORS = 'errors'
 
 
 # To get font awesome icons into png use: http://fa2png.io/
@@ -445,6 +447,7 @@ class Icon:
     FAILURE = 'fa-failure.png'
     DELETE_OPERATION = 'fa-delete-operation.png'
     TO_UPDATE = 'fa-update.png'
+    ACTION_UNDO = 'fa-undo.png'
 
 
 class Color:

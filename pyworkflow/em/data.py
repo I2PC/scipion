@@ -1507,6 +1507,14 @@ class SetOfCoordinates(EMSet):
 
         return s
 
+    def copyInfo(self, other):
+        """ Copy basic information (boxsize)
+                from other set of coordinates to current one"""
+        self.copyAttributes(other, '_boxSize')
+
+        # TODO: we might what here to copy the mics too, same as done with
+        # acquisition in SetOfImages
+
 
 class Matrix(Scalar):
     def __init__(self, **kwargs):

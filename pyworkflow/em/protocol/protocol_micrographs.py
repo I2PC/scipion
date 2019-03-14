@@ -345,30 +345,34 @@ class ProtCTFMicrographs(ProtMicrographs):
         if self.recalculate:
             ctfSet = self._createSetOfCTF("_recalculated")
             prot = self.continueRun.get() or self
-            micSet = prot.outputCTF.getMicrographs()
-            # We suppose this is reading the ctf selection
-            # (with enabled/disabled) to only consider the enabled ones
-            # in the final SetOfCTF
-            #TODO: maybe we can remove the need of the extra text file
-            # with the recalculate parameters
-            newCount = 0
-            for ctfModel in self.recalculateSet:
-                if ctfModel.isEnabled() and ctfModel.getObjComment():
-                    mic = ctfModel.getMicrograph()
-                    # Update the CTF models that where recalculated and append
-                    # later to the set, we don't want to copy the id here since
-                    # it is already correct
-                    newCtf = self._createCtfModel(mic, updateSampling=False)
-                    ctfModel.copy(newCtf, copyId=False)
-                    ctfModel.setEnabled(True)
-                    newCount += 1
-                ctfSet.append(ctfModel)
-            ctfSet.setMicrographs(micSet)
-            self._defineOutputs(outputCTF=ctfSet)
-            self._defineCtfRelation(micSet, ctfSet)
-            self._computeDefocusRange(ctfSet)
-            self.summaryVar.set("CTF Re-estimation of %d micrographs"
-                                % newCount)
+            if hasattr(prot, 'outputCTF'):
+                micSet = prot.outputCTF.getMicrographs()
+                # We suppose this is reading the ctf selection
+                # (with enabled/disabled) to only consider the enabled ones
+                # in the final SetOfCTF
+                #TODO: maybe we can remove the need of the extra text file
+                # with the recalculate parameters
+                newCount = 0
+                for ctfModel in self.recalculateSet:
+                    if ctfModel.isEnabled() and ctfModel.getObjComment():
+                        mic = ctfModel.getMicrograph()
+                        # Update the CTF models that where recalculated and append
+                        # later to the set, we don't want to copy the id here since
+                        # it is already correct
+                        newCtf = self._createCtfModel(mic, updateSampling=False)
+                        ctfModel.copy(newCtf, copyId=False)
+                        ctfModel.setEnabled(True)
+                        newCount += 1
+                    ctfSet.append(ctfModel)
+                ctfSet.setMicrographs(micSet)
+                self._defineOutputs(outputCTF=ctfSet)
+                self._defineCtfRelation(micSet, ctfSet)
+                self._computeDefocusRange(ctfSet)
+                self.summaryVar.set("CTF Re-estimation of %d micrographs"
+                                    % newCount)
+            else:
+                raise Exception(
+                    redStr("The outputCTF do not exist, all CTFs failed."))
         else:
             self._createOutputStep()
             if self.outputCTF.getSize() == 0:

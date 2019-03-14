@@ -24,12 +24,15 @@
 # *
 # **************************************************************************
 
-# FIXME: Give a hint to install xmipp!!!!
-ghostStr = " >>> WARNING: Xmipp binaries not found. " \
-           "Ghost active.....BOOOOOO!\n" \
-           "  > Please install Xmipp to get full functionality."
+ghostStr = """
+ >>> WARNING: Xmipp binaries not found. Ghost active.....BOOOOOO!
+  > Please install Xmipp to get full functionality. 
+(Configuration->Plugins->scipion-em-xmipp in Scipion manager window)
+"""
 
 print(ghostStr)
+
+GHOST_ACTIVATED = True  # Flag to unequivocal identify the Ghost
 
 DT_DEFAULT = None
 DT_UNKNOWN = None
