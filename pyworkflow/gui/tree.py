@@ -153,7 +153,8 @@ class Tree(ttk.Treeview, Scrollable):
         if fromSelected:
             return self.search(initial, False)
 
-class TreeProvider():
+
+class TreeProvider:
     """ Class class will serve to separate the logic of feed data
     from the graphical Tree build. Subclasses should implement 
     the abstract methods """
@@ -462,7 +463,7 @@ class ObjectTreeProvider(TreeProvider):
             t = cls
         else:
             t = obj.getName().split('.')[-1] 
-            if  t.startswith('__item__'):
+            if t.startswith('__item__'):
                 t = "%s [%s]" % (cls, t.replace('__item__', ''))
                 
         value = obj.get()

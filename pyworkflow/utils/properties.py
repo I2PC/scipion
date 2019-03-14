@@ -375,6 +375,8 @@ class PluginStates:
     FAILURE = 'failure'
     AVAILABLE_RELEASE = 'available_release'
     TO_UPDATE = 'to_update'
+    SUCCESS = 'success'
+    ERRORS = 'errors'
 
 
 # To get font awesome icons into png use: http://fa2png.io/
