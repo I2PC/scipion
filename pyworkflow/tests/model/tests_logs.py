@@ -4,8 +4,8 @@ import logging
 import unittest
 
 from pyworkflow import Config
-from pyworkflow.utils import getLineInFile, isInFile, \
-    ScipionLogger, getLogConfiguration
+from pyworkflow.utils import (getLineInFile, isInFile, ScipionLogger,
+                              getLogConfiguration )
 from pyworkflow.tests import BaseTest, setupTestOutput
 
 
