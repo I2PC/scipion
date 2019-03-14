@@ -248,7 +248,10 @@ class Environment:
         else:
             self._libSuffix = 'dylib'
 
-        self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
+
+        # change from wget to curl to avoid empty file when download fails
+        # curl flags: L to follow redirects, s to quiet output, f to fail silently, C to continue download
+        self._downloadCmd = ('curl -Lsf -C - %(url)s -o %(tar)s.part\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
         self._pipCmd = kwargs.get('pipCmd', '{} {}/pip install %s==%s'.format(self.getBin('python'),
