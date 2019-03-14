@@ -22,9 +22,6 @@ class TestLogs(BaseTest):
         import random
         logTestCode = random.randint(1, 100000)
 
-        from time import sleep
-        sleep(10)
-
         genLogFn = Config.LOG_FILE
         getLogConfiguration()
         log1 = logging.getLogger('pyworkflow.test.log.test_scipon_log')
