@@ -966,7 +966,7 @@ class PluginManagerWindow(gui.Window):
             pluginsVars = pluginDict.values()[0].getPluginClass().getVars()
             for var in pluginsVars:
                 msg = msg + var + ': ' + pluginsVars[var] + '\n'
-            pwgui.showInfo("Plugins Variables", msg, tk.Frame())
+            pwgui.showInfo("Plugin variables", msg, tk.Frame())
 
     def onHelp(self):
         PluginHelp('Plugin Manager Glossary', self).show()

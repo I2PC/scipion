@@ -120,6 +120,15 @@ class Domain:
         return dict(cls._plugins)
 
     @classmethod
+    def refreshPlugin(cls, name):
+        """ Refresh a given plugin name. """
+        plugin = cls.getPlugin(name)
+        if plugin is not None:
+            m = reload(plugin)
+            cls._plugins[name] = m
+            return m
+
+    @classmethod
     def getPlugin(cls, name):
         """ Load a given plugin name. """
         m = importlib.import_module(name)
