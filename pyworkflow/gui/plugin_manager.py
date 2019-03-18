@@ -957,7 +957,7 @@ class PluginManagerWindow(gui.Window):
 
     def onUser(self):
         import pyworkflow as pw
-        self.parent._openConfigFile(pw.Config.SCIPION_CONFIG_MAIN,
+        self.parent._openConfigFile(pw.Config.SCIPION_LOCAL_CONFIG,
                                              userOnly=True)
 
     def onVariables(self):
