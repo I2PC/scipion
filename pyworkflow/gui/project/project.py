@@ -408,7 +408,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         self._openConfigFile(pw.Config.SCIPION_CONFIG_PROTOCOLS)
 
     def onUser(self):
-        self._openConfigFile(pw.Config.SCIPION_CONFIG_MAIN, userOnly=True)
+        self._openConfigFile(pw.Config.SCIPION_LOCAL_CONFIG, userOnly=True)
 
     def onPlugins(self):
         # Config -> Plugins
