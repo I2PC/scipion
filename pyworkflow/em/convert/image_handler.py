@@ -32,9 +32,10 @@ import PIL
 try:
   import xmippLib
 except Exception as e:
-  print("\nXmipp installation have failed or xmipp C++ binnding have some problem:")
+  print("\nXmipp installation have failed or xmipp's C++ binnding have some problem:")
   print(e)
-  print("\n  > Please, remove the installation (usually at 'software/em/xmipp')\n")
+  print("\n  > Please, remove the Xmipp installation (usually 'rm software/em/xmipp') "
+        "and re-install it\n")
   sys.exit(-1)
 
 import pyworkflow.utils as pwutils
