@@ -152,7 +152,7 @@ class PluginInfo(object):
             # so it needs a reload
             reload(pkg_resources)
             self.dirName = self.getDirName()
-            Domain._refreshPlugin(self.dirName)
+            Domain.refreshPlugin(self.dirName)
         return True
 
     def installBin(self, args=None):
