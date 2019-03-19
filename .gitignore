@@ -82,3 +82,8 @@ static/
 
 # Ignore version file
 .devel_version
+
+# Docs
+docs/_build
+docs/_static
+docs/_templates
