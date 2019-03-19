@@ -140,6 +140,7 @@ class Ccp4Header:
     #            self._header['originZ']
 
     def getOrigin(self, changeSign=False):
+        ''' Return in Angstroms'''
         x = self._header['originX']
         y = self._header['originY']
         z = self._header['originZ']
@@ -172,18 +173,18 @@ class Ccp4Header:
         self._header['NSSTART'] = originTransformShift[2]
 
     def setStartAngstrom(self,  originTransformShift, sampling):  # Angstrom
-        """input Angstrom"""
+        """input Angstroms"""
         self.setStartPixel(tuple([int(round(x/sampling)) for x in
                            originTransformShift]))
 
     def getStartPixel(self):  # PIXEL
-        """returns pixels"""
+        """Returns pixels"""
         return self._header['NCSTART'],\
                self._header['NRSTART'], \
                self._header['NSSTART']
 
     def getStartAngstrom(self, sampling):  # Angstrom
-        """returns Angstrom"""
+        """Returns Angstroms"""
         return tuple([x*sampling for x in self.getStartPixel()])
 
     def getDims(self):
@@ -207,6 +208,7 @@ class Ccp4Header:
         self._header['Zlength'] = z
 
     def getCellDimensions(self):
+        ''' Returns dimensions in Angstroms'''
         return self._header['Xlength'],\
                self._header['Ylength'],\
                self._header['Zlength']
