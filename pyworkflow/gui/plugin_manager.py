@@ -785,6 +785,7 @@ class PluginBrowser(tk.Frame):
                                           text=str(op.getObjStatus().upper() +
                                                    ' --> ' + op.getObjName()),
                                           tags=op.getObjStatus())
+            self.executeOpsBtn.config(state='normal')
         else:
             self.executeOpsBtn.config(state='disable')
         self.operationTree.update()
