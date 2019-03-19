@@ -113,7 +113,7 @@ class SequenceHandler:
                 error = "%s is a wrong sequence ID" % seqID
                 print e.code
             except urllib2.URLError, e:
-                error = "Cannot connet to %s" % dataBase
+                error = "Cannot connect to %s" % dataBase
                 print e.args
             except Exception as ex:
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"

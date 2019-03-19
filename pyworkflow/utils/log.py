@@ -26,54 +26,53 @@
 # **************************************************************************
 
 import sys
-import os
 import logging
 import logging.config
-from pyworkflow.utils.path import makeFilePath
+
+from pyworkflow import Config
+from pyworkflow.utils import makeFilePath
 
 
-
-# Get general log file path
-LOG_FILE = os.path.join(os.environ['SCIPION_LOGS'], 'scipion.log')
-
-
-# Log configuration
-config = {  'version': 1,              
-            'disable_existing_loggers': False,
-            'formatters': {
-                'standard': {
-                    'format': '%(asctime)s %(levelname)s:  %(message)s'
-                    # TODO: use formattime to show the time less verbose
+def getLogConfiguration():
+    # Log configuration
+    config = {  'version': 1,
+                'disable_existing_loggers': False,
+                'formatters': {
+                    'standard': {
+                        'format': '%(asctime)s %(levelname)s:  %(message)s'
+                        # TODO: use formattime to show the time less verbose
+                    },
+                    'fileFormat': {
+                        'format': '%(asctime)s %(levelname)s:  %(message)s'
+                    },
                 },
-                'fileFormat': {
-                    'format': '%(asctime)s %(levelname)s:  %(message)s'
+                'handlers': {
+                    'fileHandler': {
+                        'level': 'NOTSET',
+                        'class': 'logging.handlers.RotatingFileHandler',
+                        'formatter': 'standard',
+                        'filename': Config.LOG_FILE,
+                        'maxBytes': 100000,
+                    },
+                    'consoleHandler': {
+                        'level': 'NOTSET',
+                        'class': 'logging.StreamHandler',
+                        'formatter': 'standard',
+                    },
                 },
-            },
-            'handlers': {
-                'fileHandler': {
-                    'level': 'NOTSET',
-                    'class': 'logging.handlers.RotatingFileHandler',
-                    'formatter': 'standard',
-                    'filename': LOG_FILE,
-                    'maxBytes': 100000,
-                },
-                'consoleHandler': {
-                    'level': 'NOTSET',    
-                    'class': 'logging.StreamHandler',
-                    'formatter': 'standard',
-                },
-            },
-            'loggers': {
-                '': {                  
-                    'handlers': ['consoleHandler', 'fileHandler'],
-                    'level': 'INFO',  
-                    'propagate': False,
-                    'qualname': 'pyworkflow',
-                },
+                'loggers': {
+                    '': {
+                        'handlers': ['consoleHandler', 'fileHandler'],
+                        'level': 'INFO',
+                        'propagate': False,
+                        'qualname': 'pyworkflow',
+                    },
+                }
             }
-        }
 
-logging.config.dictConfig(config)
+    logging.config.dictConfig(config)
+
+    return config
 
 
 class ScipionLogger():
@@ -82,22 +81,24 @@ class ScipionLogger():
         self._filePath = filePath
         makeFilePath(self._filePath)
 
-        if self._filePath not in config['loggers']:
-            config['handlers'][self._filePath] = {
+        self.config = getLogConfiguration()
+
+        if self._filePath not in self.config['loggers']:
+            self.config['handlers'][self._filePath] = {
                 'level': 'NOTSET',
                 'class': 'logging.handlers.RotatingFileHandler',
                 'formatter': 'fileFormat',
                 'filename': self._filePath,
                 'maxBytes': 100000}
 
-            config['loggers'][self._filePath] = {
+            self.config['loggers'][self._filePath] = {
                 'handlers': [self._filePath],
                 'level': 'NOTSET',
                 'propagate': False}
             # Note: if we want to see in the console what we also have in
             # run.log, add 'consoleHandler' to the list of 'handlers'.
 
-            logging.config.dictConfig(config)
+            logging.config.dictConfig(self.config)
             
         self._log = logging.getLogger(self._filePath) 
         
@@ -126,9 +127,9 @@ class ScipionLogger():
         self._log.error(message, *args, **kwargs)    
         
     def close(self):
-        if self._filePath in config['loggers']:
-            del config['handlers'][self._filePath]
-            del config['loggers'][self._filePath]   
+        if self._filePath in self.config['loggers']:
+            del self.config['handlers'][self._filePath]
+            del self.config['loggers'][self._filePath]
 
 #def closeFileLogger(filePath):
 #    """ This method should be called to un-register a previous acquired

@@ -25,7 +25,6 @@
 # **************************************************************************
 import ast
 import os
-from .utils.path import findFile
 
 
 # Versions
@@ -67,6 +66,11 @@ class Config:
     SCIPION_PLUGIN_JSON = __get('SCIPION_PLUGIN_JSON', None)
     SCIPION_PLUGIN_REPO_URL = __get('SCIPION_PLUGIN_REPO_URL',
                                     'http://scipion.i2pc.es/getplugins/')
+
+    # Get general log file path
+    LOG_FILE = os.path.join(__get('SCIPION_LOGS', "~/"), 'scipion.log')
+
+    SCIPION_URL_SOFTWARE = __get('SCIPION_URL_SOFTWARE')
 
     try:
         VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
