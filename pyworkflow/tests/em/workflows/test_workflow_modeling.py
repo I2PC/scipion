@@ -1086,9 +1086,9 @@ class TestEMRingerValidation(TestImportData):
         with open(textFileName, "r") as f:
             self.resultsDict = json.loads(str(f.read()))
             self.assertAlmostEqual(self.resultsDict[
-                                'Optimal Threshold'], optThresh, places)
+                                'Optimal Threshold'], optThresh, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
-                                'Rotamer-Ratio'], rotRatio, places)
+                                'Rotamer-Ratio'], rotRatio, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
                                 'Max Zscore'], maxZscore, places)
             self.assertAlmostEqual(self.resultsDict[
