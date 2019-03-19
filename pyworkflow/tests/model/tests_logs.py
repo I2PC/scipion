@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-import os
 import logging
 import unittest
 
-from pyworkflow.utils.utils import getLineInFile, isInFile
-from pyworkflow.utils.log import ScipionLogger, LOG_FILE
+from pyworkflow import Config
+from pyworkflow.utils import (getLineInFile, isInFile, ScipionLogger,
+                              getLogConfiguration )
 from pyworkflow.tests import BaseTest, setupTestOutput
 
 
@@ -22,7 +22,8 @@ class TestLogs(BaseTest):
         import random
         logTestCode = random.randint(1, 100000)
 
-        genLogFn = LOG_FILE
+        genLogFn = Config.LOG_FILE
+        getLogConfiguration()
         log1 = logging.getLogger('pyworkflow.test.log.test_scipon_log')
         genInfoTest = 'Testing general info [%d]' % logTestCode
         genDebugTest = 'Testing general debug [%d]' % logTestCode
@@ -54,7 +55,7 @@ class TestLogs(BaseTest):
         
         isFileInfoTest = isInFile(fileInfoTest, genLogFn)
         isFileWarningTest = isInFile(fileWarningTest, genLogFn)
-        isFileErrorTest = isInFile(fileErrorTest, genLogFn)     
+        isFileErrorTest = isInFile(fileErrorTest, genLogFn)
         
         genLoggerChecked = True
         if lineGenInfoTest is None:
@@ -82,7 +83,7 @@ class TestLogs(BaseTest):
         
         isGenInfoTest = isInFile(genInfoTest, logFn)
         isGenWarningTest = isInFile(genWarningTest, logFn)
-        isGenErrorTest = isInFile(genErrorTest, logFn)    
+        isGenErrorTest = isInFile(genErrorTest, logFn)
         
         fileLoggerChecked = True
         if lineFileInfoTest is None:
@@ -102,7 +103,7 @@ class TestLogs(BaseTest):
         if (isGenInfoTest | isGenWarningTest | isGenErrorTest):
             print ('General logs in file log!!!')
             fileLoggerChecked = False 
-        
+
         self.assertTrue(genLoggerChecked & fileLoggerChecked)
         
         

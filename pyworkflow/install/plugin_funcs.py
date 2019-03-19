@@ -9,11 +9,14 @@ from pkg_resources import parse_version
 
 from pyworkflow.plugin import Domain
 from pyworkflow.utils.path import cleanPath
-from pyworkflow import LAST_VERSION, OLD_VERSIONS
+from pyworkflow import LAST_VERSION, OLD_VERSIONS, Config
 from pyworkflow.install import Environment
 
-REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
-                  os.environ['SCIPION_PLUGIN_REPO_URL'])
+REPOSITORY_URL = Config.SCIPION_PLUGIN_JSON
+
+if REPOSITORY_URL is None:
+    REPOSITORY_URL = Config.SCIPION_PLUGIN_REPO_URL
+
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
 PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
     Environment.getBin('python'),
@@ -307,7 +310,10 @@ class PluginInfo(object):
 
         plugin = self.getPluginClass()
         if plugin is not None:
-            plugin.defineBinaries(env)
+            try:
+                plugin.defineBinaries(env)
+            except Exception as e:
+                print ("Couldn't get binaries definition of %s plugin: %s" % (self.name, e.message))
             return env
         else:
             return None
@@ -377,6 +383,7 @@ class PluginInfo(object):
         """Return the uploaded date from the release"""
         return self.compatibleReleases[release]['upload_time']
 
+
 class PluginRepository(object):
 
     def __init__(self, repoUrl=REPOSITORY_URL):
@@ -410,7 +417,13 @@ class PluginRepository(object):
             with open(self.repoUrl) as f:
                 pluginsJson = json.load(f)
         else:
-            r = requests.get(self.repoUrl)
+            try:
+                r = requests.get(self.repoUrl)
+            except requests.ConnectionError as e:
+                print("\nWARNING: Error while trying to connect with a server:\n"
+                      "  > Please, check your internet connection!\n")
+                print(e)
+                return self.plugins
             if r.ok:
                 pluginsJson = r.json()
             else:
@@ -429,6 +442,8 @@ class PluginRepository(object):
                 print("WARNING - The following plugins didn't match available "
                       "plugin names:")
                 print(" ".join(wrongPluginNames))
+                print("You can see the list of available plugins with the following command:\n"
+                      "scipion installp --help")
 
         for pluginName in targetPlugins:
             pluginsJson[pluginName].update(remote=getPipData)

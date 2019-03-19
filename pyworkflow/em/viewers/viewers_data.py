@@ -64,7 +64,7 @@ class DataViewer(pwviewer.Viewer):
 
     def _addObjView(self, obj, fn, viewParams={}):
         objView = views.ObjectView(self._project, obj.strId(), fn,
-                             viewParams=viewParams)
+                                   viewParams=viewParams)
         self._views.append(objView)
         return objView
 
