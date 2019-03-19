@@ -147,13 +147,12 @@ class PluginInfo(object):
 
         environment.execute()
         # we already have a dir for the plugin:
-        self.dirName = self.getDirName()
         if reloadPkgRes:
             # if plugin was already installed, pkg_resources has the old one
             # so it needs a reload
             reload(pkg_resources)
             self.dirName = self.getDirName()
-            Domain.refreshPlugin(self.dirName)
+            Domain._refreshPlugin(self.dirName)
         return True
 
     def installBin(self, args=None):
