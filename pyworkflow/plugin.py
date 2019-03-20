@@ -131,7 +131,7 @@ class Domain:
         return m
 
     @classmethod
-    def _refreshPlugin(cls, name):
+    def refreshPlugin(cls, name):
         """ Refresh a given plugin name. """
         import types
 
