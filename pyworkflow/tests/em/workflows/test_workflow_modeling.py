@@ -1090,11 +1090,11 @@ class TestEMRingerValidation(TestImportData):
             self.assertAlmostEqual(self.resultsDict[
                                 'Rotamer-Ratio'], rotRatio, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
-                                'Max Zscore'], maxZscore, places)
+                                'Max Zscore'], maxZscore, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
                                 'Model Length'], modLength, places)
             self.assertAlmostEqual(self.resultsDict[
-                                'EMRinger Score'], EMScore, places)
+                                'EMRinger Score'], EMScore, delta=0.5)
 
     def testEMRingerValidationFromPDB(self):
         """ This test checks that EMRinger validation protocol runs with an
