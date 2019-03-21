@@ -151,25 +151,31 @@ class RunScheduler():
 
             # Check if there are missing inputs
             missing = False
+            # Check if there are input protocols failed or aborted
+            failedInputProtocols = False
 
             _log("Checking input data...")
             for key, attr in protocol.iterInputAttributes():
                 inputProt = _getProtocolFromPointer(attr)
                 _updateProtocol(inputProt, project)
+                if (inputProt.getStatus() == STATUS_ABORTED or
+                        inputProt.getStatus() == STATUS_FAILED):
+                    failedInputProtocols = True
 
-            if len(protocol.validate()) > 0:
-                    missing = True
-            elif not protocol.worksInStreaming():
-                for key, attr in protocol.iterInputAttributes():
-                    pointer = attr.get()
-                    if isinstance(pointer, Set) and pointer.isStreamOpen():
+            if not failedInputProtocols:
+                if len(protocol.validate()) > 0:
                         missing = True
-                        break
+                elif not protocol.worksInStreaming():
+                    for key, attr in protocol.iterInputAttributes():
+                        pointer = attr.get()
+                        if isinstance(pointer, Set) and pointer.isStreamOpen():
+                            missing = True
+                            break
 
-            if not missing:
-                inputProtocolDict = protocol.inputProtocolDict()
-                for prot in inputProtocolDict.values():
-                    _updateProtocol(prot, project)
+                if not missing:
+                    inputProtocolDict = protocol.inputProtocolDict()
+                    for prot in inputProtocolDict.values():
+                        _updateProtocol(prot, project)
 
             _log("Checking prerequisited...")
             wait = False  # Check if we need to wait for required protocols

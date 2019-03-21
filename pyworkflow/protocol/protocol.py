@@ -1346,6 +1346,8 @@ class Protocol(Step):
             self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
         Step.run(self)
+        if self.isFailed():
+            self._store()
         self._endRun()
 
     def _endRun(self):
@@ -1356,10 +1358,10 @@ class Protocol(Step):
         self._store(self.endTime)
 
         if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
-            self.warning('Not cleaning temporarly files since '
+            self.warning('Not cleaning temp folder since '
                          'SCIPION_DEBUG_NOCLEAN is set to True.')
         elif not self.isFailed():
-            self.info('Cleaning temporarly files....')
+            self.info('Cleaning temp folder....')
             self.cleanTmp()
 
         self.info(pwutils.greenStr('------------------- PROTOCOL ' +
