@@ -409,8 +409,10 @@ class ProtAlignMovies(ProtProcessMovies):
         fnRoot = pwutils.removeBaseExt(fn)
         # Check if there is a second extension
         # (Assuming is is only a dot and 3 or 4 characters after it
-        if fnRoot[-4] == '.' or fnRoot[-5] == '.':
-            fnRoot = pwutils.removeExt(fnRoot)
+        # Do not perform this check if the file name is short
+        if len(fnRoot) > 5:
+            if fnRoot[-4] == '.' or fnRoot[-5] == '.':
+                fnRoot = pwutils.removeExt(fnRoot)
 
         return fnRoot
 
