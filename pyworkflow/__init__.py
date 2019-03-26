@@ -25,7 +25,6 @@
 # **************************************************************************
 import ast
 import os
-from .utils.path import findFile
 
 
 # Versions
@@ -58,9 +57,19 @@ class Config:
     SCIPION_TESTS_OUTPUT = __get('SCIPION_TESTS_OUTPUT',
                                  os.path.join(SCIPION_USER_DATA, 'Tests'))
 
-    SCIPION_CONFIG_MAIN = os.environ.get('SCIPION_CONFIG_MAIN', 'scipion.conf')
-    SCIPION_CONFIG_HOSTS = os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
-    SCIPION_CONFIG_PROTOCOLS = os.environ.get('SCIPION_CONFIG_PROTOCOLS', 'protocols.conf')
+    SCIPION_CONFIG_MAIN = __get('SCIPION_CONFIG_MAIN', 'scipion.conf')
+    SCIPION_CONFIG_HOSTS = __get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
+    SCIPION_CONFIG_PROTOCOLS = __get('SCIPION_CONFIG_PROTOCOLS', 'protocols.conf')
+
+    SCIPION_PLUGIN_JSON = __get('SCIPION_PLUGIN_JSON', None)
+    SCIPION_PLUGIN_REPO_URL = __get('SCIPION_PLUGIN_REPO_URL',
+                                    'http://scipion.i2pc.es/getplugins/')
+
+    # Get general log file path
+    LOG_FILE = os.path.join(__get('SCIPION_LOGS', "~/"), 'scipion.log')
+
+    SCIPION_URL_SOFTWARE = __get('SCIPION_URL_SOFTWARE')
+
     try:
         VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
     except Exception as e:

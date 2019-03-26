@@ -38,10 +38,10 @@ def usage(error):
     print """
     ERROR: %s
 
-    Usage: scipion python scripts/stop_project.py project_name
+    Usage: scipion python scripts/stop.py project_name
         This script will stop all running protocols of the specified project.
         e.g.
-        scipion python scripts/refresh_project.py MyProject
+        scipion python scripts/stop.py MyProject
     """ % error
     sys.exit(1)
 

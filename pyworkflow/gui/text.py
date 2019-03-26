@@ -637,12 +637,13 @@ class TextFileViewer(tk.Frame):
     def findText(self, direction=1):
         text = self.selectedText()
         str = self.searchVar.get()
-        if str is None or str != self.lastSearch:
-            self.buildSearchList(text, str)
-            self.lastSearch = str
-        else:
-            self.nextSearchIndex(text, direction)
-        self.searchEntry.focus_set()
+        if text:
+            if str is None or str != self.lastSearch:
+                self.buildSearchList(text, str)
+                self.lastSearch = str
+            else:
+                self.nextSearchIndex(text, direction)
+            self.searchEntry.focus_set()
         
     def buildSearchList(self, text, str):
         text.tag_remove('found', '1.0', tk.END)
