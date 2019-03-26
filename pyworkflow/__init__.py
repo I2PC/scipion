@@ -57,9 +57,11 @@ class Config:
     SCIPION_TESTS_OUTPUT = __get('SCIPION_TESTS_OUTPUT',
                                  os.path.join(SCIPION_USER_DATA, 'Tests'))
 
-    SCIPION_CONFIG_MAIN = __get('SCIPION_CONFIG_MAIN', 'scipion.conf')
-    SCIPION_CONFIG_HOSTS = __get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
-    SCIPION_CONFIG_PROTOCOLS = __get('SCIPION_CONFIG_PROTOCOLS', 'protocols.conf')
+    SCIPION_CONFIG = __get('SCIPION_CONFIG', 'scipion.conf')
+    SCIPION_LOCAL_CONFIG = __get('SCIPION_LOCAL_CONFIG', 'scipion.conf')
+    SCIPION_HOSTS = __get('SCIPION_HOSTS', 'hosts.conf')
+    SCIPION_PROTOCOLS = __get('SCIPION_PROTOCOLS',
+                                     'protocols.conf')
 
     SCIPION_PLUGIN_JSON = __get('SCIPION_PLUGIN_JSON', None)
     SCIPION_PLUGIN_REPO_URL = __get('SCIPION_PLUGIN_REPO_URL',
