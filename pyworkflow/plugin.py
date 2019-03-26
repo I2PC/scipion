@@ -155,9 +155,21 @@ class Domain:
                     for name in cls.getModuleClasses(sub):
                         attr = getattr(sub, name)
                         if inspect.isclass(attr) and issubclass(attr, BaseClass):
-                            # Set this special property used by Scipion
-                            attr._package = plugin
-                            subclasses[name] = attr
+
+                            # Check if the class already exists (to prevent
+                            # naming collisions)
+                            if name in subclasses:
+                                # Get already added class plugin
+                                pluginCollision = subclasses[name]._package.__name__
+                                print("ERROR: Name collision (%s) detected "
+                                      "while discovering %s.%s.\n"
+                                      " It conflicts with %s" %
+                                      (name, pluginName, submoduleName,
+                                       pluginCollision))
+                            else:
+                                # Set this special property used by Scipion
+                                attr._package = plugin
+                                subclasses[name] = attr
             subclasses.update(
                 pwutils.getSubclasses(BaseClass, cls._baseClasses))
 
