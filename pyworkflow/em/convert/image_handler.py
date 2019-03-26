@@ -409,6 +409,9 @@ class ImageHandler(object):
         self.__runXmippProgram('xmipp_transform_threshold',
                                '-i %s --select above 1 --substitute '
                                'value 1' % outputFile)
+
+    def createEmptyImage(self,fnOut,Xdim=1,Ydim=1,Zdim=1,Ndim=1):
+        xmippLib.createEmptyFile(fnOut, Xdim, Ydim, Zdim, Ndim, xmippLib.DT_FLOAT)
     
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function
