@@ -151,7 +151,7 @@
     },
     {
         "object.className": "ProtRelion2Autopick",
-        "object.id": "3829",
+        "object.id": "200",
         "object.label": "relion - auto-picking",
         "object.comment": "",
         "_useQueue": false,
@@ -208,6 +208,6 @@
         "numberOfThreads": 4,
         "numberOfMpi": 1,
         "ctfRelations": "118.outputCTF",
-        "inputCoordinates": "284.outputCoordinates"
+        "inputCoordinates": "200.outputCoordinates"
     }
 ]
