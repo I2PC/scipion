@@ -605,7 +605,7 @@ class ProtocolTreeConfig:
         protocols = OrderedDict()
         # Read the protocols.conf from Scipion (base) and create an initial
         # tree view
-        cls.__addProtocolsFromConf(protocols, protocolsConf[0])
+        cls.__addProtocolsFromConf(protocols, protocolsConf)
 
         # Read the protocols.conf of any installed plugin
         pluginDict = pw.em.Domain.getPlugins()
