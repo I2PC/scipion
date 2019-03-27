@@ -416,10 +416,11 @@ class ImageHandler(object):
                                'value 1' % outputFile)
 
     @classmethod
-    def createEmptyImage(cls, fnOut, xDim=1, yDim=1, zDim=1, nDim=1):
-        xmippLib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim,
-                                 xmippLib.DT_FLOAT)
-    
+    def createEmptyImage(cls, fnOut, xDim=1, yDim=1, zDim=1, nDim=1,
+                         dataType=None):
+        dt = dataType or cls.DT_FLOAT
+        xmippLib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim, dataType)
+
     @classmethod
     def isImageFile(cls, imgFn):
         """ Check if imgFn has an image extension. The function
