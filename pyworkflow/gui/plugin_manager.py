@@ -446,7 +446,7 @@ class PluginBrowser(tk.Frame):
                                     command=self._updatePlugin)
 
         self.popup_menu.add_command(label="Install", underline=1,
-                                    image=self.tree.im_checked,
+                                    image=self.tree.im_install,
                                     compound=tk.LEFT,
                                     command=self._treeOperation)
 
@@ -744,7 +744,6 @@ class PluginBrowser(tk.Frame):
                                   value=text,
                                   tags=tag)
 
-
     def linkToWebSite(self, event):
         """
         Load the plugin url
@@ -903,7 +902,7 @@ class PluginBrowser(tk.Frame):
                     # Insert the plugin name in the tree
                     tag = PluginStates.CHECKED
                     latestRelease = pluginDict.get(pluginName).latestRelease
-                    if plugin.pipVersion != latestRelease:
+                    if latestRelease and plugin.pipVersion != latestRelease:
                         tag = PluginStates.AVAILABLE_RELEASE
                     self.tree.insert("", 0, pluginName, text=pluginName,
                                      tags=tag, values=PluginStates.PLUGIN)
@@ -958,8 +957,7 @@ class PluginManagerWindow(gui.Window):
 
     def onUser(self):
         import pyworkflow as pw
-        self.parent._openConfigFile(pw.Config.SCIPION_LOCAL_CONFIG,
-                                             userOnly=True)
+        self.parent._openConfigFile(pw.Config.SCIPION_LOCAL_CONFIG)
 
     def onVariables(self):
         if pluginDict is not None:

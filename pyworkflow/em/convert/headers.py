@@ -163,6 +163,9 @@ class Ccp4Header:
                 self._header['Ylength'] / self._header['NY'],\
                 self._header['Zlength'] / self._header['NZ']
 
+    def setMode(self, mode):
+        self._header['Mode'] = mode
+
     def setStartPixel(self, originTransformShift):  # PIXEL
         """input pixels"""
         self._header['originX'] = 0.  # originTransformShift[0]
@@ -191,6 +194,11 @@ class Ccp4Header:
         return self._header['NC'],\
                self._header['NR'],\
                self._header['NS']
+
+    def setDims(self, col, row, sec):
+        self._header['NC'] = col
+        self._header['NR'] = row
+        self._header['NS'] = sec
 
     def setGridSampling(self, x, y, z):
         self._header['NX'] = x

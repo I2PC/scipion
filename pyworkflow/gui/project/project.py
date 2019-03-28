@@ -386,29 +386,24 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
     def onGeneral(self):
         # Config -> General
-        _open_cmd(pw.getConfigPath('scipion.conf'))
+        self._openConfigFile(pw.Config.SCIPION_CONFIG)
 
-    def _openConfigFile(self, configFile, userOnly=False):
+    def _openConfigFile(self, configFile):
         """ Open an Scipion configuration file, if the user have one defined,
         also open that one with the defined text editor.
         """
-        if not userOnly:
-            _open_cmd(pw.getConfigPath(configFile))
+        _open_cmd(pw.getConfigPath(configFile))
 
-        userHostConf = os.path.join(pwutils.getHomePath(),
-                                    '.config', 'scipion', configFile)
-        if os.path.exists(userHostConf):
-            _open_cmd(userHostConf)
 
     def onHosts(self):
         # Config -> Hosts
-        self._openConfigFile(pw.Config.SCIPION_CONFIG_HOSTS)
+        self._openConfigFile(pw.Config.SCIPION_HOSTS)
 
     def onProtocols(self):
-        self._openConfigFile(pw.Config.SCIPION_CONFIG_PROTOCOLS)
+        self._openConfigFile(pw.Config.SCIPION_PROTOCOLS)
 
     def onUser(self):
-        self._openConfigFile(pw.Config.SCIPION_LOCAL_CONFIG, userOnly=True)
+        self._openConfigFile(pw.Config.SCIPION_LOCAL_CONFIG)
 
     def onPlugins(self):
         # Config -> Plugins
