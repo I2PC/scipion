@@ -131,6 +131,45 @@ class Domain:
         return m
 
     @classmethod
+    def refreshPlugin(cls, name):
+        """ Refresh a given plugin name. """
+        import types
+
+        plugin = cls.getPlugin(name)
+        if plugin is not None:
+            fn = plugin.__file__
+            fn_dir = os.path.dirname(fn) + os.sep
+            module_visit = {plugin}
+            module_visit_path = {fn}
+            del fn
+
+            def get_recursive_molules(module):
+                """
+                Get all plugin modules recursively
+                """
+                for module_child in vars(module).values():
+                    if isinstance(module_child, types.ModuleType):
+                        fn_child = getattr(module_child, "__file__", None)
+                        if (fn_child is not None) and fn_child.startswith(
+                                fn_dir):
+                            if fn_child not in module_visit_path:
+                                module_visit.add(module_child)
+                                module_visit_path.add(fn_child)
+                                get_recursive_molules(module_child)
+
+            get_recursive_molules(plugin)
+            # reload all plugin modules
+
+            while module_visit:
+                for module in module_visit:
+                    try:
+                        reload(module)
+                        module_visit.remove(module)
+                        break
+                    except Exception as ex:
+                        pass
+
+    @classmethod
     def __getSubclasses(cls, submoduleName, BaseClass,
                         updateBaseClasses=False):
         """ Load all detected subclasses of a given BaseClass.

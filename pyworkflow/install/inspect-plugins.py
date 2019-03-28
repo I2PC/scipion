@@ -149,7 +149,7 @@ elif n > 2:
         print("Plugin binaries: %s" % bin)
 
         # print bibtex
-        bib, error2 = getSubmodule(pluginName, 'bibtex')
+        bib, error2 = getSubmodule(plugin, pluginName, 'bibtex')
         if bib is None:
             if error2 is None:
                 msg = " missing bibtex"
@@ -165,7 +165,7 @@ elif n > 2:
                 print(text)
 
         # print protocols
-        sub, error = getSubmodule(pluginName, 'protocols')
+        sub, error = getSubmodule(plugin, pluginName, 'protocols')
         if sub is None:
             if error is None:
                 msg = " missing protocols"

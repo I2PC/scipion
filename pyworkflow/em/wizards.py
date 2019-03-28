@@ -26,7 +26,7 @@
 # **************************************************************************
 """ This module is for Actual wizards to be able to be discovered from the
 Domain. wizard.py is left for wizard models and base classes."""
-import os
+import os, sys
 
 from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 from pyworkflow.object import String
@@ -36,7 +36,7 @@ from pyworkflow.gui import dialog
 from pyworkflow.em import ProtImportImages, ProtImportCoordinates, \
     ProtImportCoordinatesPairs, ProtImportVolumes, Volume, Ccp4Header, \
     ProtImportSequence
-
+import requests
 
 class ImportAcquisitionWizard(EmWizard):
     _targets = [(ProtImportImages, ['acquisitionWizard'])]
@@ -142,9 +142,18 @@ class GetStructureChainsWizard(Wizard):
     @classmethod
     def getModelsChainsStep(cls, protocol):
         structureHandler = AtomicStructHandler()
+        fileName = ""
         if hasattr(protocol, 'pdbId'):
             if protocol.pdbId.get() is not None:
                 pdbID = protocol.pdbId.get()
+                url = "https://www.rcsb.org/structure/"
+                URL = url + ("%s" % pdbID)
+                try:
+                    response = requests.get(URL)
+                except:
+                    raise Exception("Cannot connect to PDB server")
+                if ((response.status_code >= 400) and (response.status_code < 500)):
+                    raise Exception("%s is a wrong PDB ID" % pdbID)
                 fileName = structureHandler.readFromPDBDatabase(
                     os.path.basename(pdbID), dir="/tmp/")
             else:
@@ -170,7 +179,11 @@ class GetStructureChainsWizard(Wizard):
 
     def show(self, form, *params):
         protocol = form.protocol
-        models = self.getModelsChainsStep(protocol)
+        try:
+            models = self.getModelsChainsStep(protocol)
+        except Exception as e:
+            print "ERROR: ", e.message
+            return
 
         self.editionListOfChains(models)
         finalChainList = []
