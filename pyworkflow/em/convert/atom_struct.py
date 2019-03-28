@@ -277,11 +277,15 @@ class AtomicStructHandler:
                             seq.append("X")
                 elif len(chain.get_unpacked_list()[0].resname) == 3: # Protein
                     seq = list()
-                    for residue in chain:
-                        if is_aa(residue.get_resname(), standard=True):
-                            seq.append(three_to_one(residue.get_resname()))
-                        else:
-                            seq.append("X")
+                    if is_aa(chain.get_unpacked_list()[0].resname, standard=True): # aminoacids
+                        for residue in chain:
+                            if is_aa(residue.get_resname(), standard=True):
+                                seq.append(three_to_one(residue.get_resname()))
+                            else:
+                                seq.append("X")
+                    else: # HETAM
+                        for residue in chain:
+                            seq.append(residue.get_resname())
                 while seq[-1] == "X":
                     del seq[-1]
                 while seq[0] == "X":
