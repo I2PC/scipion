@@ -25,7 +25,6 @@
 # **************************************************************************
 
 import os
-import sys
 from itertools import izip
 import PIL
 
@@ -156,7 +155,8 @@ class ImageHandler(object):
     
     @classmethod
     def getSupportedDataType(cls, inDataType, outputFilename):
-        """ Returns the most simmilar data type supported by the output format"""
+        """ Returns the most similar data type supported by the
+        output format"""
         outDataType = inDataType
 
         if outputFilename.endswith(".mrc") or outputFilename.endswith(".mrcs"):
@@ -177,7 +177,8 @@ class ImageHandler(object):
         if outputLoc[1].lower().endswith('.img'):
             # FIXME Since now we can not read dm4 format in Scipion natively
             # we are opening an Eman2 process to read the dm4 file
-            convertImage = pwutils.importFromPlugin('eman2.convert','convertImage')
+            convertImage = pwutils.importFromPlugin('eman2.convert',
+                                                    'convertImage')
             convertImage(inputLoc, outputLoc)
         else:
             # Read from input
@@ -201,14 +202,15 @@ class ImageHandler(object):
         over the whole stack. If the input format is ".dm4" or  ".img" only is
         allowed the conversion of the whole stack.
         """
-        inputLower = inputFn.lower()
+        # inputLower = inputFn.lower()
         outputLower = outputFn.lower()
         if outputLower.endswith('.img'):
             if (firstImg and lastImg) is None:
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                convertImage = pwutils.importFromPlugin('eman2.convert','convertImage')
+                convertImage = pwutils.importFromPlugin('eman2.convert',
+                                                        'convertImage')
                 convertImage(inputFn, outputFn)
             else:
                 ext = os.path.splitext(outputFn)[1]
@@ -221,14 +223,15 @@ class ImageHandler(object):
         #         self.runJob('tif2mrc', '%s %s' % (inputFn, outputFn))
         #     else:
         #         raise Exception("Conversion from tif to %s is not "
-        #                         "implemented yet. " % pwutils.getExt(outputFn))
+        #                        "implemented yet. " % pwutils.getExt(outputFn))
         else:
             # get input dim
             (x, y, z, n) = xmippLib.getImageSize(inputFn)
             
             location = self._convertToLocation(inputFn)
             self._img.read(location, xmippLib.HEADER)
-            dataType = self.getSupportedDataType(self._img.getDataType(), outputLower)
+            dataType = self.getSupportedDataType(self._img.getDataType(),
+                                                 outputLower)
 
             if (firstImg and lastImg) is None:
                 n = max(z, n)
@@ -238,7 +241,7 @@ class ImageHandler(object):
                 n = lastImg - firstImg + 1
             
             # Create empty output stack file to reserve desired space
-            xmippLib.createEmptyFile(outputFn,x,y,1,n, dataType)
+            xmippLib.createEmptyFile(outputFn, x, y, 1, n, dataType)
             for i, j in izip(range(firstImg, lastImg + 1), range(1, n+1)):
                 self.convert((i, inputFn), (j, outputFn))
     
@@ -261,8 +264,8 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                getImageDimensions = pwutils.importFromPlugin('eman2.convert',
-                                                              'getImageDimensions')
+                getImageDimensions = pwutils.importFromPlugin(
+                                        'eman2.convert', 'getImageDimensions')
                 return getImageDimensions(fn) # we are ignoring index here
             else:
                 self._img.read(location, xmippLib.HEADER)
@@ -337,10 +340,10 @@ class ImageHandler(object):
         return None
     
     def invertStack(self, inputFn, outputFn):
-        #get input dim
-        (x,y,z,n) = xmippLib.getImageSize(inputFn)
-        #Create empty output stack for efficiency
-        xmippLib.createEmptyFile(outputFn,x,y,z,n)
+        # get input dim
+        (x, y, z, n) = xmippLib.getImageSize(inputFn)
+        # Create empty output stack for efficiency
+        xmippLib.createEmptyFile(outputFn, x, y, z, n)
         # handle image formats
         for i in range(1, n+1):
             self.invert((i, inputFn), (i, outputFn))
@@ -356,12 +359,14 @@ class ImageHandler(object):
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
 
-    def __runXmippProgram(self, program, args):
+    @classmethod
+    def __runXmippProgram(cls, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         xmipp3 = pwutils.importFromPlugin('xmipp3')
         xmipp3.Plugin.runXmippProgram(program, args)
 
-    def __runEman2Program(self, program, args):
+    @classmethod
+    def __runEman2Program(cls, program, args):
         """ Internal workaround to launch an EMAN2 program. """
         eman2 = pwutils.importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
@@ -416,8 +421,15 @@ class ImageHandler(object):
         self.__runXmippProgram('xmipp_transform_threshold',
                                '-i %s --select above 1 --substitute '
                                'value 1' % outputFile)
-    
-    def isImageFile(self, imgFn):
+
+    @classmethod
+    def createEmptyImage(cls, fnOut, xDim=1, yDim=1, zDim=1, nDim=1,
+                         dataType=None):
+        dt = dataType or cls.DT_FLOAT
+        xmippLib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim, dt)
+
+    @classmethod
+    def isImageFile(cls, imgFn):
         """ Check if imgFn has an image extension. The function
         is implemented in the Xmipp binding.
         """
@@ -441,7 +453,6 @@ class ImageHandler(object):
         self.__runEman2Program('e2proc2d.py', args)
 
         return outputFn
-
 
     @staticmethod
     def getThumbnailFn(inputFn):
@@ -472,13 +483,13 @@ class ImageHandler(object):
             fileName = fileName.split(':')[0]
         return fileName
 
-    def scaleFourier(self, inputFn, outputFn, scaleFactor):
+    @classmethod
+    def scaleFourier(cls, inputFn, outputFn, scaleFactor):
         """ Scale an image by cropping in Fourier space. """
         # TODO: Avoid using xmipp program for this
-        self.__runXmippProgram("xmipp_transform_downsample",
-                               "-i %s -o %s --step %f --method fourier"
-                               % (inputFn, outputFn, scaleFactor))
+        cls.__runXmippProgram("xmipp_transform_downsample",
+                              "-i %s -o %s --step %f --method fourier"
+                              % (inputFn, outputFn, scaleFactor))
 
 
 DT_FLOAT = ImageHandler.DT_FLOAT
-
