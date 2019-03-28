@@ -28,9 +28,16 @@ import os
 from itertools import izip
 import PIL
 
-import xmippLib
-import pyworkflow.utils as pwutils
+try:
+  import xmippLib
+except Exception as e:
+  print("\nXmipp installation have failed or xmipp's C++ binnding have some problem:")
+  print(e)
+  print("\n  > Please, remove the Xmipp installation (usually 'rm software/em/xmipp') "
+        "and re-install it\n")
+  sys.exit(-1)
 
+import pyworkflow.utils as pwutils
 from pyworkflow.em.constants import *
 
 

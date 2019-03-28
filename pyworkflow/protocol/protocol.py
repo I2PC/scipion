@@ -676,7 +676,7 @@ class Protocol(Step):
                         # We do not have an clear way to get the protocol if
                         # we do not have the project object associated
                         # This case implies Direct Pointers to Sets
-                        # (whithout extended): hopefully this will only be
+                        # (without extended): hopefully this will only be
                         # created from tests
                         print ("Can't get protocol info from input attribute."
                                " This could render unexpected results when "
@@ -1069,14 +1069,8 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-            #             self.info(">>> i: %s" % i)
-            #             self.info(" oldStep.status: %s" % str(oldStep.status))
-            #             self.info(" oldStep!=newStep %s" % (oldStep != newStep))
-            #             self.info(" not post: %s" % (not oldStep._postconditions()))
-            if (not oldStep.isFinished() or
-                        newStep != oldStep or
-                    not oldStep._postconditions()):
-                #                 self.info(" returning i: %s" % i)
+            if (not oldStep.isFinished() or newStep != oldStep
+                or not oldStep._postconditions()):
                 return i
             newStep.copy(oldStep)
 
@@ -1312,11 +1306,7 @@ class Protocol(Step):
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
             kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)
         if 'env' not in kwargs:
-            # self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
-
-        # self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
-        # self._log.info("runJob: env = %s " % str(kwargs['env']))
 
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
 
@@ -1346,6 +1336,8 @@ class Protocol(Step):
             self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
         Step.run(self)
+        if self.isFailed():
+            self._store()
         self._endRun()
 
     def _endRun(self):
@@ -1356,10 +1348,10 @@ class Protocol(Step):
         self._store(self.endTime)
 
         if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
-            self.warning('Not cleaning temporarly files since '
+            self.warning('Not cleaning temp folder since '
                          'SCIPION_DEBUG_NOCLEAN is set to True.')
         elif not self.isFailed():
-            self.info('Cleaning temporarly files....')
+            self.info('Cleaning temp folder....')
             self.cleanTmp()
 
         self.info(pwutils.greenStr('------------------- PROTOCOL ' +
@@ -1779,7 +1771,6 @@ class Protocol(Step):
 
             return validateFunc() if validateFunc is not None else []
         except Exception as e:
-
             msg = "%s installation couldn't be validated. Possible cause could" \
                   " be a configuration issue. Try to run scipion config." \
                   % cls.__name__

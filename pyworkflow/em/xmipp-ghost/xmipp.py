@@ -29,8 +29,8 @@ import traceback
 # FIXME: This is a bypass until xmipp is replaced to xmippLib
 # FIXME:   in all imports related to the C++ binding
 
-print("\n >>> WARNING: 'import xmipp' is deprecated for the xmipp binding.\n"
-      "              please use 'import xmippLib'")
+print("\n >>> WARNING: 'import xmipp' is deprecated for the xmipp binding. "
+      "Please, use 'import xmippLib'")
 stackList = traceback.extract_stack()
 for stackLine in stackList:
     if 'import xmipp' in stackLine[3] or 'from xmipp import' in stackLine[3]:

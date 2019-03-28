@@ -446,7 +446,7 @@ class PluginBrowser(tk.Frame):
                                     command=self._updatePlugin)
 
         self.popup_menu.add_command(label="Install", underline=1,
-                                    image=self.tree.im_checked,
+                                    image=self.tree.im_install,
                                     compound=tk.LEFT,
                                     command=self._treeOperation)
 
@@ -744,7 +744,6 @@ class PluginBrowser(tk.Frame):
                                   value=text,
                                   tags=tag)
 
-
     def linkToWebSite(self, event):
         """
         Load the plugin url
@@ -785,6 +784,7 @@ class PluginBrowser(tk.Frame):
                                           text=str(op.getObjStatus().upper() +
                                                    ' --> ' + op.getObjName()),
                                           tags=op.getObjStatus())
+            self.executeOpsBtn.config(state='normal')
         else:
             self.executeOpsBtn.config(state='disable')
         self.operationTree.update()
@@ -902,7 +902,7 @@ class PluginBrowser(tk.Frame):
                     # Insert the plugin name in the tree
                     tag = PluginStates.CHECKED
                     latestRelease = pluginDict.get(pluginName).latestRelease
-                    if plugin.pipVersion != latestRelease:
+                    if latestRelease and plugin.pipVersion != latestRelease:
                         tag = PluginStates.AVAILABLE_RELEASE
                     self.tree.insert("", 0, pluginName, text=pluginName,
                                      tags=tag, values=PluginStates.PLUGIN)
@@ -965,7 +965,7 @@ class PluginManagerWindow(gui.Window):
             pluginsVars = pluginDict.values()[0].getPluginClass().getVars()
             for var in pluginsVars:
                 msg = msg + var + ': ' + pluginsVars[var] + '\n'
-            pwgui.showInfo("Plugins Variables", msg, tk.Frame())
+            pwgui.showInfo("Plugin variables", msg, tk.Frame())
 
     def onHelp(self):
         PluginHelp('Plugin Manager Glossary', self).show()
