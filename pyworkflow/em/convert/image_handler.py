@@ -419,7 +419,7 @@ class ImageHandler(object):
     def createEmptyImage(cls, fnOut, xDim=1, yDim=1, zDim=1, nDim=1,
                          dataType=None):
         dt = dataType or cls.DT_FLOAT
-        xmippLib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim, dataType)
+        xmippLib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim, dt)
 
     @classmethod
     def isImageFile(cls, imgFn):
