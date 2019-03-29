@@ -329,17 +329,22 @@ class AtomicStructHandler:
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 3:
-                            print("Your sequence is an aminoacid sequence")
-                            #alphabet = IUPAC.ExtendedIUPACProtein._upper()
-                            for residue in chain:
-                                ## The test below checks if the amino acid
-                                ## is one of the 20 standard amino acids
-                                ## Some proteins have "UNK" or "XXX", or other symbols
-                                ## for missing or unknown residues
-                                if is_aa(residue.get_resname(), standard=True):
-                                    seq.append(three_to_one(residue.get_resname()))
-                                else:
-                                    seq.append("X")
+                            if is_aa(chain.get_unpacked_list()[0].resname, standard=True):  # aminoacids
+                                print("Your sequence is an aminoacid sequence")
+                                #alphabet = IUPAC.ExtendedIUPACProtein._upper()
+                                for residue in chain:
+                                    ## The test below checks if the amino acid
+                                    ## is one of the 20 standard amino acids
+                                    ## Some proteins have "UNK" or "XXX", or other symbols
+                                    ## for missing or unknown residues
+                                    if is_aa(residue.get_resname(), standard=True):
+                                        seq.append(three_to_one(residue.get_resname()))
+                                    else:
+                                        seq.append("X")
+                            else:  # HETAM
+                                print("Your sequence is an HETAM sequence")
+                                for residue in chain:
+                                    seq.append(residue.get_resname())
                         while seq[-1] == "X":
                             del seq[-1]
                         while seq[0] == "X":
