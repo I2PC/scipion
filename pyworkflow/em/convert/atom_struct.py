@@ -277,13 +277,14 @@ class AtomicStructHandler:
                             seq.append("X")
                 elif len(chain.get_unpacked_list()[0].resname) == 3: # Protein
                     seq = list()
-                    if is_aa(chain.get_unpacked_list()[0].resname, standard=True): # aminoacids
-                        for residue in chain:
-                            if is_aa(residue.get_resname(), standard=True):
-                                seq.append(three_to_one(residue.get_resname()))
-                            else:
-                                seq.append("X")
-                    else: # HETAM
+                    counter = 0
+                    for residue in chain:
+                        if is_aa(residue.get_resname(), standard=True): # aminoacids
+                            seq.append(three_to_one(residue.get_resname()))
+                            counter += 1
+                        else:
+                            seq.append("X")
+                    if counter == 0: # HETAM
                         for residue in chain:
                             seq.append(residue.get_resname())
                 while seq[-1] == "X":
@@ -329,20 +330,22 @@ class AtomicStructHandler:
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 3:
-                            if is_aa(chain.get_unpacked_list()[0].resname, standard=True):  # aminoacids
-                                print("Your sequence is an aminoacid sequence")
-                                #alphabet = IUPAC.ExtendedIUPACProtein._upper()
-                                for residue in chain:
-                                    ## The test below checks if the amino acid
+                            counter = 0
+                            for residue in chain:
+                                if is_aa(residue.get_resname(), standard=True):
+                                    # alphabet = IUPAC.ExtendedIUPACProtein._upper()
+                                    ## The test checks if the amino acid
                                     ## is one of the 20 standard amino acids
                                     ## Some proteins have "UNK" or "XXX", or other symbols
                                     ## for missing or unknown residues
-                                    if is_aa(residue.get_resname(), standard=True):
-                                        seq.append(three_to_one(residue.get_resname()))
-                                    else:
-                                        seq.append("X")
-                            else:  # HETAM
-                                print("Your sequence is an HETAM sequence")
+                                    seq.append(three_to_one(residue.get_resname()))
+                                    counter += 1
+                                else:
+                                    seq.append("X")
+                            if counter != 0:  # aminoacids
+                                print("Your sequence is an aminoacid sequence")
+                            else: # HETAM
+                                print("Your sequence is a HETAM sequence")
                                 for residue in chain:
                                     seq.append(residue.get_resname())
                         while seq[-1] == "X":
