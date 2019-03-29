@@ -172,7 +172,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
         
         print "Run Relion Refine"
-        proRef = ProtRelionRefine3D(numberOfMpi=4, numberOfThreads=4)
+        proRef = ProtRelionRefine3D()
         proRef.inputParticles.set(protExtract2.outputParticles)
         proRef.referenceVolume.set(protImportVol.outputVolume)
         proRef.setObjLabel('relion Refine')
