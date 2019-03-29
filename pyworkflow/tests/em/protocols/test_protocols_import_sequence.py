@@ -30,7 +30,7 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportSequence
 from pyworkflow.em.convert.sequence import (
     SEQ_TYPE_NUCLEOTIDES, PROTEIN_ALPHABET, AMBIGOUS_RNA_ALPHABET,
-    indexToAlphabet)
+    EXTENDED_DNA_ALPHABET, indexToAlphabet)
 
 
 class TestImportBase(BaseTest):
@@ -63,10 +63,11 @@ class TestImportSequence(TestImportBase):
         args = {'inputSequenceName': self.NAME,
                 'inputSequenceDescription': self.DESCRIPTION,
                 'inputSequence': SEQ_TYPE_NUCLEOTIDES,
+                'nucleotideIUPACalphabet' : EXTENDED_DNA_ALPHABET,
                 'inputRawSequence': self.NUCLEOTIDESEQ1
                }
         prot1 = self.newProtocol(ProtImportSequence, **args)
-        prot1.setObjLabel('1_import nucleotide,\nseq from user\nExtended DNA '
+        prot1.setObjLabel('1_import DNA,\nseq from user\nExtended DNA '
                            'alphabet')
         self.launchProtocol(prot1)
         sequence = prot1.outputSequence
@@ -91,7 +92,7 @@ class TestImportSequence(TestImportBase):
                 'inputRawSequence': self.NUCLEOTIDESEQ1
                }
         prot2 = self.newProtocol(ProtImportSequence, **args)
-        prot2.setObjLabel('2_import nucleotide,\nseq from user\nAmbigous RNA '
+        prot2.setObjLabel('2_import RNA,\nseq from user\nAmbigous RNA '
                            'alphabet')
         self.launchProtocol(prot2)
         sequence = prot2.outputSequence
@@ -119,7 +120,7 @@ class TestImportSequence(TestImportBase):
                 'inputStructureChain': self.CHAIN2
                 }
         prot3 = self.newProtocol(ProtImportSequence, **args)
-        prot3.setObjLabel('3_import aminoacid seq,\n from atomic '
+        prot3.setObjLabel('3_import RNA seq,\n from atomic '
                            'structure')
         self.launchProtocol(prot3)
         sequence = prot3.outputSequence
@@ -148,7 +149,7 @@ class TestImportSequence(TestImportBase):
                 'inputStructureChain': self.CHAIN2
                 }
         prot4 = self.newProtocol(ProtImportSequence, **args)
-        prot4.setObjLabel('4_import aminoacid seq,\n from atomic '
+        prot4.setObjLabel('4_import RNA seq,\n from atomic '
                            'structure')
         self.launchProtocol(prot4)
         sequence = prot4.outputSequence
@@ -176,7 +177,7 @@ class TestImportSequence(TestImportBase):
                 'inputStructureChain': self.CHAIN3
                 }
         prot5 = self.newProtocol(ProtImportSequence, **args)
-        prot5.setObjLabel('5_import aminoacid seq,\n from atomic '
+        prot5.setObjLabel('5_import DNA seq,\n from atomic '
                            'structure')
         self.launchProtocol(prot5)
         sequence = prot5.outputSequence
@@ -205,7 +206,7 @@ class TestImportSequence(TestImportBase):
                 'inputStructureChain': self.CHAIN3
                 }
         prot6 = self.newProtocol(ProtImportSequence, **args)
-        prot6.setObjLabel('6_import aminoacid seq,\n from atomic '
+        prot6.setObjLabel('6_import DNA seq,\n from atomic '
                            'structure')
         self.launchProtocol(prot6)
         sequence = prot6.outputSequence
