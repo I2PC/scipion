@@ -303,7 +303,7 @@ class Project(object):
     def _loadHosts(self, hosts):
         """ Loads hosts configuration from hosts file. """
         # If the host file is not passed as argument...
-        configHosts = pw.Config.SCIPION_CONFIG_HOSTS
+        configHosts = pw.Config.SCIPION_HOSTS
         projHosts = self.getPath(PROJECT_CONFIG, configHosts)
 
         if hosts is None:
@@ -323,7 +323,7 @@ class Project(object):
     def _loadProtocols(self, protocolsConf):
         """ Load protocol configuration from a .conf file. """
         # If the host file is not passed as argument...
-        configProtocols = pw.Config.SCIPION_CONFIG_PROTOCOLS
+        configProtocols = pw.Config.SCIPION_PROTOCOLS
         projProtConf = self.getPath(PROJECT_CONFIG, configProtocols)
 
         if protocolsConf is None:
@@ -332,7 +332,7 @@ class Project(object):
                 protConf = projProtConf
             else:
                 localDir = os.path.dirname(os.environ['SCIPION_LOCAL_CONFIG'])
-                protConf = [os.environ['SCIPION_PROTOCOLS'],
+                protConf = [pw.Config.SCIPION_PROTOCOLS,
                             os.path.join(localDir, configProtocols)]
         else:
             pwutils.copyFile(protocolsConf, projProtConf)
