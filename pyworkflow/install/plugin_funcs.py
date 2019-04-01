@@ -9,7 +9,7 @@ from pkg_resources import parse_version
 
 from pyworkflow.plugin import Domain
 from pyworkflow.utils.path import cleanPath
-from pyworkflow import LAST_VERSION, OLD_VERSIONS, Config
+from pyworkflow import LAST_VERSION, CORE_VERSION, OLD_VERSIONS, Config
 from pyworkflow.install import Environment
 
 REPOSITORY_URL = Config.SCIPION_PLUGIN_JSON
@@ -220,14 +220,18 @@ class PluginInfo(object):
             if len(scipionVersions) == 0:
                 print("WARNING: %s's release %s did not specify a compatible "
                       "Scipion version" % (self.pipName, release))
-            elif any([v <= parse_version(SCIPION_VERSION.strip('v'))
+                latestCompRelease = release
+            elif any([v == parse_version(CORE_VERSION)
                       for v in scipionVersions]):
                 if parse_version(latestCompRelease) < parse_version(release):
                     latestCompRelease = release
-                releases[release] = releaseData
 
-        releases['latest'] = latestCompRelease
+            releases[release] = releaseData
 
+        if releases:
+            releases['latest'] = latestCompRelease
+        else:
+            releases['latest'] = ''
         return releases
 
     def setRemotePluginInfo(self):
@@ -383,6 +387,10 @@ class PluginInfo(object):
     def getReleaseDate(self, release):
         """Return the uploaded date from the release"""
         return self.compatibleReleases[release]['upload_time']
+
+    def getLatestRelease(self):
+        """Get the plugin latest release"""
+        return self.latestRelease
 
 
 class PluginRepository(object):

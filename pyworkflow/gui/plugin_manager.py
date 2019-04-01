@@ -900,8 +900,8 @@ class PluginBrowser(tk.Frame):
                 tag = PluginStates.UNCHECKED
                 if plugin._getPlugin():
                     # Insert the plugin name in the tree
+                    latestRelease = pluginDict.get(pluginName).getLatestRelease()
                     tag = PluginStates.CHECKED
-                    latestRelease = pluginDict.get(pluginName).latestRelease
                     if latestRelease and plugin.pipVersion != latestRelease:
                         tag = PluginStates.AVAILABLE_RELEASE
                     self.tree.insert("", 0, pluginName, text=pluginName,
@@ -924,8 +924,10 @@ class PluginBrowser(tk.Frame):
                                                  text=binaryName, tags=tag,
                                                  values=PluginStates.BINARY)
                 else:
-                    self.tree.insert("", 0, pluginName, text=pluginName,
-                                     tags=tag, values=PluginStates.PLUGIN)
+                    latestRelease = pluginDict.get(pluginName).getLatestRelease()
+                    if latestRelease:
+                        self.tree.insert("", 0, pluginName, text=pluginName,
+                                         tags=tag, values=PluginStates.PLUGIN)
         self._closeProgressBar()
 
 
