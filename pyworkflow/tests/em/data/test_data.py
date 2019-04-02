@@ -273,8 +273,8 @@ class TestImageHandler(unittest.TestCase):
         outFn = join('/tmp', 'empty.mrc')
         SIZE = (128, 128, 1, 1)
         ih = ImageHandler()
-        DT = ih.DT_INT
-        ih.createEmptyImage(SIZE[0], SIZE[1], dataType=DT)
+        DT = ih.DT_FLOAT
+        ih.createEmptyImage(outFn, SIZE[0], SIZE[1], dataType=DT)
 
         self.assertTrue(pwutils.getFileSize(outFn) > 0)
         self.assertEqual(ih.getDimensions(outFn), SIZE)
