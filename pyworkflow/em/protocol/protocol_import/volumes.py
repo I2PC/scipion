@@ -36,8 +36,7 @@ from pyworkflow.em.data import Transform
 from pyworkflow.em.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler,\
-    toCIF
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""

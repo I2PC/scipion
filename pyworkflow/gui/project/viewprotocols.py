@@ -48,7 +48,7 @@ import pyworkflow.gui as pwgui
 import pyworkflow.em as em
 from pyworkflow.project import ProtocolTreeConfig
 from pyworkflow.em.wizard import ListTreeProvider
-from pyworkflow.gui.dialog import askColor, ListDialog
+from pyworkflow.gui.dialog import askColor, ListDialog, FloatingMessage
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color, KEYSYM
 from constants import STATUS_COLORS
@@ -78,6 +78,8 @@ ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
 ACTION_LABELS = 'Labels'
+ACTION_RESTART_WORKFLOW = 'Restart workflow'
+ACTION_CONTINUE_WORKFLOW = 'Continue workflow'
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -105,7 +107,9 @@ ActionIcons = {
     ACTION_EXPORT_UPLOAD: Icon.ACTION_EXPORT_UPLOAD,
     ACTION_COLLAPSE: 'fa-minus-square.png',
     ACTION_EXPAND: 'fa-plus-square.png',
-    ACTION_LABELS: Icon.TAGS
+    ACTION_LABELS: Icon.TAGS,
+    ACTION_RESTART_WORKFLOW: Icon.ACTION_EXECUTE,
+    ACTION_CONTINUE_WORKFLOW: Icon.ACTION_CONTINUE
 }
 
 
@@ -198,7 +202,9 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
                 (ACTION_LABELS, True),
-                (ACTION_SELECT_TO, True)
+                (ACTION_SELECT_TO, True),
+                (ACTION_RESTART_WORKFLOW, single),
+                (ACTION_CONTINUE_WORKFLOW, single)
                 ]
 
     def getObjectActions(self, obj):
@@ -437,7 +443,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 inputs.append(attr)
 
             outputs = [attr for _, attr in
-                       self.protocol.iterOutputAttributes(em.EMObject)]
+                       self.protocol.iterOutputAttributes()]
             self.outputStr = pwobj.String(Message.LABEL_OUTPUT)
             objs = inputParents + inputs + [self.outputStr] + outputs
         return objs
@@ -485,15 +491,14 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
         viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
 
-        def yatevalejosemi(viewer):
+        def viewerCallback(viewer):
             return lambda: self._visualizeObject(viewer, obj)
 
         for v in viewers:
             actions.append(('Open with %s' % v.__name__,
-                            yatevalejosemi(v),
+                            viewerCallback(v),
                             Icon.ACTION_VISUALIZE))
-
-        # EDIT 
+         # EDIT
         actions.append((Message.LABEL_EDIT,
                         lambda: self._editObject(obj),
                         Icon.ACTION_EDIT))
@@ -779,6 +784,7 @@ class ProtocolsView(tk.Frame):
         self._updateSelection()
 
         # Add all tabs
+
         tab.add(dframe, text=Message.LABEL_SUMMARY)
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
@@ -1522,7 +1528,7 @@ class ProtocolsView(tk.Frame):
     def toggleDataSelection(self, prot, append):
 
         # Go through the data selection
-        for paramName, output in prot.iterOutputEM():
+        for paramName, output in prot.iterOutputAttributes():
             if append:
                 self.settings.dataSelection.append(output.getObjId())
             else:
@@ -1818,6 +1824,45 @@ class ProtocolsView(tk.Frame):
             self.project.copyProtocol(protocols)
             self.refreshRuns()
 
+    def _launchWorkFlow(self, action):
+        """
+        This function can launch a workflow from a selected protocol in two
+        modes depending on the 'action' value (RESTART, CONTINUE)
+        """
+        protocols = self._getSelectedProtocols()
+        errorList = []
+        defaultMode = pwprot.MODE_CONTINUE
+        defaultModeMessage = 'Continuing the workflow...'
+
+        if action == ACTION_RESTART_WORKFLOW:
+            if pwgui.dialog.askYesNo(Message.TITLE_RESTART_WORKFLOW,
+                                     Message.LABEL_RESTART_WORKFLOW, self.root):
+                defaultMode = pwprot.MODE_RESTART
+                defaultModeMessage = 'Restarting the workflow...'
+
+                message = FloatingMessage(self.root, defaultModeMessage)
+                message.show()
+                errorList = self.project.launchWorkflow(protocols[0],
+                                                        defaultMode)
+                self.refreshRuns()
+                message.close()
+        elif action == ACTION_CONTINUE_WORKFLOW:
+            message = FloatingMessage(self.root, defaultModeMessage)
+            message.show()
+            errorList = self.project.launchWorkflow(protocols[0],
+                                                    defaultMode)
+            self.refreshRuns()
+            message.close()
+
+        if errorList:
+            msg = ''
+            for error in errorList:
+                msg = msg + str(error)
+            pwgui.dialog.MessageDialog(self,
+                                       Message.TITLE_LAUNCHED_WORKFLOW_FAILED,
+                                       Message.LABEL_LAUNCHED_WORKFLOW_FAILED + msg,
+                                       'fa-times-circle_alert.png')
+
     def _selectLabels(self):
         selectedNodes = self._getSelectedNodes()
 
@@ -1918,7 +1963,7 @@ class ProtocolsView(tk.Frame):
             else:
                 firstViewer.visualize(prot)
         else:
-            for _, output in prot.iterOutputAttributes(em.EMObject):
+            for _, output in prot.iterOutputAttributes():
                 viewers = em.findViewers(output.getClassName(), DESKTOP_TKINTER)
                 if len(viewers):
                     # Instanciate the first available viewer
@@ -2028,6 +2073,10 @@ class ProtocolsView(tk.Frame):
                     self._selectLabels()
                 elif action == ACTION_SELECT_TO:
                     self._selectAncestors()
+                elif action == ACTION_RESTART_WORKFLOW:
+                    self._launchWorkFlow(action)
+                elif action == ACTION_CONTINUE_WORKFLOW:
+                    self._launchWorkFlow(action)
 
             except Exception as ex:
                 self.windows.showError(str(ex))

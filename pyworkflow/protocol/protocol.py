@@ -25,10 +25,6 @@
 # **************************************************************************
 from __future__ import print_function
 
-import traceback
-
-from pyworkflow.utils import printTraceBack
-
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -44,7 +40,7 @@ import pyworkflow as pw
 from pyworkflow.object import *
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.log import ScipionLogger
-from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
+from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor, QueueStepExecutor
 from constants import *
 from params import Form
 import scipion
@@ -197,6 +193,10 @@ class Step(OrderedObject):
                 else:
                     status = STATUS_FINISHED
                 self.status.set(status)
+
+        except ValidationException as e:
+            print(pwutils.redStr(str(e)))
+            self.setFailed(str(e))
         except Exception as e:
             self.setFailed(str(e))
             import traceback
@@ -320,6 +320,9 @@ class Protocol(Step):
         self.mapper = kwargs.get('mapper', None)
         self._inputs = []
         self._outputs = CsvList()
+        # This flag will be used to annotate it output are already "migrated"
+        #  and available in the _outputs list. Therefore iterating
+        self._useOutputList = Boolean(False)
         # Expert level needs to be defined before parsing params
         self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))
         self._definition = Form(self)
@@ -415,7 +418,13 @@ class Protocol(Step):
                 self._deleteChild(k, v)
             self._insertChild(k, v)
 
+        # Store attributes in _output (this does not persist them!)
         self._storeAttributes(self._outputs, kwargs)
+
+        # Persist outputs list
+        self._insertChild("_outputs", self._outputs)
+        self._useOutputList.set(True)
+        self._insertChild("_useOutputList", self._useOutputList)
 
     def _updateOutputSet(self, outputName, outputSet,
                          state=Set.STREAM_OPEN):
@@ -583,8 +592,13 @@ class Protocol(Step):
                     # PointerList, this is used in viewprotocols.py
                     # to group them inside the same tree element
                     yield key, item
-            elif attr.isPointer() and attr.hasValue():
+            if attr.isPointer() and attr.hasValue():
                 yield key, attr
+
+            # Consider here scalars with pointers inside
+            elif isinstance(attr, Scalar) and attr.hasPointer():
+                if attr.get() is not None:
+                    yield key, attr.getPointer()
 
     def iterInputPointers(self):
         """ This function is similar to iterInputAttributes, but it yields
@@ -602,6 +616,58 @@ class Protocol(Step):
                     yield key, item
             elif attr.isPointer():
                 yield key, attr
+
+    def inputProtocolDict(self):
+        """
+        This function returns a dictionary of protocols that need to update
+        their database to launch this protocol (this method is only used
+        when a WORKFLOW is restarted or continued).
+        Actions done here are:
+        1. Iterate over the main input Pointer of this protocol
+           (here, 3 different cases are analyzed)
+
+           A) When the pointer points to a protocol
+
+           B) When the pointer points to another object (INDIRECTLY).
+              - The pointer has an _extended value (new parameters configuration
+                in the protocol)
+
+           C) When the pointer points to another object (DIRECTLY).
+              - The pointer has not an _extended value (old parameters
+                configuration in the protocol)
+
+        2. The PROTOCOL to which the pointer points is determined and saved in
+           the dictionary
+
+        3. If this pointer points to another object (case B and C):
+           - Iterate over the main attributes of this pointer
+           - if any attribute is a pointer, then we move to PROTOCOL and repeat
+             this procedure from step 1
+        """
+        protocolDict = {}
+        protocol = None
+        for key, attrInput in self.iterInputAttributes():
+            output = attrInput.get()
+            if isinstance(output, Protocol):  # case A
+                protocol = output
+                output = None
+            else:
+                if attrInput.hasExtended():  # case B
+                    protocol = attrInput.getObjValue()
+                else:  # case C
+                    protocol = self.getProject().getProtocol(output.getObjParentId())
+
+                if output is not None:
+                    for k, attr in output.getAttributes():
+                        if isinstance(attr, Pointer):
+                            auxDict = protocol.inputProtocolDict()
+                            for key in auxDict:
+                                if key not in protocolDict.keys():
+                                    protocolDict[key] = auxDict[key]
+
+            protocolDict[protocol.getObjId()] = protocol
+
+        return protocolDict
 
     def hasLinkedInputs(self):
         """ Return if True if some of the input pointers are referring to
@@ -635,26 +701,55 @@ class Protocol(Step):
 
         return (linkedPointers and not emptyPointers)
 
-    def iterOutputAttributes(self, outputClass):
+    def iterOutputAttributes(self, outputClass=None):
         """ Iterate over the outputs produced by this protocol. """
-        for key, attr in self.getAttributes():
-            if isinstance(attr, outputClass):
+
+        iterator = self._iterOutputsNew if self._useOutputList else self._iterOutputsOld
+
+        # Iterate
+        for key, attr in iterator():
+            if outputClass is None or isinstance(attr, outputClass):
                 yield key, attr
 
-    def iterOutputEM(self):
-        """ Iterate over the outputs that are EM objects. """
-        from pyworkflow.em.data import EMObject
-        for paramName, attr in self.iterOutputAttributes(EMObject):
-            yield paramName, attr
+    def _iterOutputsNew(self):
+        """ This methods iterates through a list where outputs have been
+        annotated"""
+
+        # Loop through the output list
+        for attrName in self._outputs:
+
+            # Get it from the protocol
+            attr = getattr(self, attrName)
+
+            yield attrName, attr
+
+    def _iterOutputsOld(self):
+        """ This method iterates assuming the old model: any EMObject attribute
+        is an output."""
+        from pyworkflow.em import EMObject
+
+        # Iterate old Style:
+        for key, attr in self.getAttributes():
+
+            if isinstance(attr, EMObject):
+                yield key, attr
 
     def isInStreaming(self):
         # For the moment let's assume a protocol is in streaming
         # if at least one of the output sets is in STREAM_OPEN state
-        for paramName, attr in self.iterOutputEM():
+        for paramName, attr in self.iterOutputAttributes():
             if isinstance(attr, Set):
                 if attr.isStreamOpen():
                     return True
         return False
+
+    def worksInStreaming(self):
+        # A protocol should work in streaming if it implements the stepCheck()
+        # Get the stepCheck method from the Protocol
+        baseStepCheck = Protocol._stepsCheck
+        ownStepCheck = self._stepsCheck
+
+        return not pwutils.isSameFunction(baseStepCheck, ownStepCheck)
 
     def allowsGpu(self):
         """ Returns True if this protocol allows GPU computation. """
@@ -674,7 +769,7 @@ class Protocol(Step):
         return pwutils.getListFromRangeString(self.gpuList.get())
 
     def getOutputsSize(self):
-        return sum(1 for _ in self.iterOutputEM())
+        return sum(1 for _ in self.iterOutputAttributes())
 
     def getOutputFiles(self):
         """ Return the output files produced by this protocol.
@@ -684,7 +779,7 @@ class Protocol(Step):
         # By default return the output file of each output attribute
         s = set()
 
-        for _, attr in self.iterOutputEM():
+        for _, attr in self.iterOutputAttributes():
             s.update(attr.getFiles())
 
         return s
@@ -784,6 +879,15 @@ class Protocol(Step):
         step.setIndex(len(self._steps))
 
         return step.getIndex()
+
+    def _setStatusSteps(self, status):
+        """Set the status of all steps"""
+        stepsSet = StepSet(filename=self.getStepsFile())
+        for step in stepsSet:
+            step.setStatus(status)
+            stepsSet.update(step)
+        stepsSet.write()
+        stepsSet.close()  # Close the connection
 
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
@@ -1033,6 +1137,8 @@ class Protocol(Step):
                                          self._stepFinished,
                                          self._stepsCheck,
                                          self._stepsCheckSecs)
+
+        print("*** Last status is %s " % self.lastStatus)
         self.setStatus(self.lastStatus)
         self._store(self.status)
 
@@ -1040,7 +1146,7 @@ class Protocol(Step):
         """ This function should only be used from RESTART.
         It will remove output attributes from mapper and object.
         """
-        attributes = [a[0] for a in self.iterOutputEM()]
+        attributes = [a[0] for a in self.iterOutputAttributes()]
 
         for attrName in attributes:
             attr = getattr(self, attrName)
@@ -1051,7 +1157,7 @@ class Protocol(Step):
         self.mapper.store(self._outputs)
 
     def findAttributeName(self, attr):
-        for attrName, attr in self.iterOutputEM():
+        for attrName, attr in self.iterOutputAttributes():
             if attr.getObjId() == attr.getObjId():
                 return attrName
         return None
@@ -1149,8 +1255,8 @@ class Protocol(Step):
         # Check the parameters are correct
         errors = self.validate()
         if len(errors):
-            raise Exception(
-                'Protocol.run: Validation errors:\n' + '\n'.join(errors))
+            raise ValidationException(
+                'Protocol has validation errors:\n' + '\n'.join(errors))
 
         self._insertAllSteps()  # Define steps for execute later
         # Find at which step we need to start
@@ -1529,14 +1635,16 @@ class Protocol(Step):
 
         script = self._getLogsPath(hc.getSubmitPrefix() + self.strId() + '.job')
         d = {'JOB_SCRIPT': script,
-             'JOB_NODEFILE': script.replace('.job', '.nodefile'),
+             'JOB_LOGS': self._getLogsPath(hc.getSubmitPrefix() + self.strId()),
+             'JOB_NODEFILE': os.path.abspath(script.replace('.job', '.nodefile')),
              'JOB_NAME': self.strId(),
              'JOB_QUEUE': queueName,
              'JOB_NODES': self.numberOfMpi.get(),
              'JOB_THREADS': self.numberOfThreads.get(),
              'JOB_CORES': self.numberOfMpi.get() * self.numberOfThreads.get(),
              'JOB_HOURS': 72,
-             'GPU_COUNT': len(self.getGpuList())
+             'GPU_COUNT': len(self.getGpuList()),
+             'QUEUE_FOR_JOBS': 'N'
              }
         d.update(queueParams)
         return d
@@ -1544,6 +1652,11 @@ class Protocol(Step):
     def useQueue(self):
         """ Return True if the protocol should be launched through a queue. """
         return self._useQueue.get()
+
+    def useQueueForSteps(self):
+        """ This function will return True if the protocol has been set
+        to be launched thorugh a queue by steps """
+        return self.useQueue() and (self.getSubmitDict()["QUEUE_FOR_JOBS"] == "Y")
 
     def getQueueParams(self):
         if self._queueParams.hasValue():
@@ -1964,7 +2077,6 @@ class LegacyProtocol(Protocol):
     def __str__(self):
         return self.getObjLabel()
 
-
 # ---------- Helper functions related to Protocols --------------------
 
 def runProtocolMain(projectPath, protDbPath, protId):
@@ -1983,6 +2095,9 @@ def runProtocolMain(projectPath, protDbPath, protId):
 
     # Create the steps executor
     executor = None
+    nThreads = max(protocol.numberOfThreads.get(), 1)
+
+    #time.sleep(20)
 
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
@@ -1997,10 +2112,15 @@ def runProtocolMain(projectPath, protDbPath, protId):
                                      hostConfig=hostConfig)
             sys.exit(retcode)
 
-        elif protocol.numberOfThreads > 1:
-            executor = ThreadStepExecutor(hostConfig,
-                                          protocol.numberOfThreads.get()-1,
-                                          gpuList=protocol.getGpuList())
+        elif nThreads > 1:
+            if protocol.useQueueForSteps():
+                executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1, gpuList = protocol.getGpuList())
+            else:
+                executor = ThreadStepExecutor(hostConfig, nThreads-1, gpuList = protocol.getGpuList())
+
+    if executor is None and protocol.useQueueForSteps():
+        executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), 1, gpuList = protocol.getGpuList())
+
     if executor is None:
         executor = StepExecutor(hostConfig,
                                 gpuList=protocol.getGpuList())
@@ -2085,3 +2205,6 @@ def isProtocolUpToDate(protocol):
     else:
         return protTS > dbTS
 
+
+class ValidationException(Exception):
+    pass

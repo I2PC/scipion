@@ -128,6 +128,8 @@ class Message:
     LABEL_THREADS = 'Threads'
     LABEL_MPI = 'MPI'
     LABEL_QUEUE = 'Use queue?'
+    LABEL_QUEUE_FOR_JOBS = 'Use queue for Jobs?'
+
     LABEL_WAIT_FOR = 'Wait for'
     
     LABEL_EXPERT = 'Expert Level'
@@ -153,11 +155,17 @@ Define the number of processors to be used in the execution.
        the same computer.     
     """
 
-    HELP_USEQUEUE = """  
-Select *Yes* if you want to submit the job to a Queue system.
-The queue commands for launch and stop jobs should be configured
-for the current host in the _hosts.conf_ file.    
+    HELP_USEQUEUE = """
+    Select *Yes* if you want to submit a single job per protocol to a Queue system.
+    The queue commands for launch and stop jobs should be configured
+    for the current host in the _hosts.conf_ file.
+        """
+    HELP_USEQUEUEPERJOB = """
+    Select *Yes* if you want to submit the multiple jobs per protocol to a Queue system.
+    The queue commands for launch and stop jobs should be configured
+    for the current host in the _hosts.conf_ file.
     """
+
 
     HELP_WAIT_FOR = """
     Specify a comma separated list of protocol IDs if you want
@@ -290,6 +298,11 @@ Do you really want to continue?'
     
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
+
+    TITLE_RESTART_WORKFLOW = 'Confirm RESTART'
+    LABEL_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
+    TITLE_LAUNCHED_WORKFLOW_FAILED = 'Error while launching the Workflow'
+    LABEL_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
     
     #SHOWJ_WEB
     SHOWJ_TITLE = 'Showj'

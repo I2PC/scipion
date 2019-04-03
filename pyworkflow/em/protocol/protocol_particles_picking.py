@@ -75,7 +75,7 @@ class ProtParticlePicking(ProtParticles):
                               self.getInputMicrographs().getSize()))
 
         if self.getOutputsSize() >= 1:
-            for key, output in self.iterOutputAttributes(EMObject):
+            for key, output in self.iterOutputAttributes():
                 msg = self.getMethods(output)
                 methodsMsgs.append("%s: %s"%(self.getObjectTag(output), msg))
         else:
@@ -90,7 +90,7 @@ class ProtParticlePicking(ProtParticles):
                            % self.getInputMicrographs().getSize())
 
         if self.getOutputsSize() >= 1:
-            for key, output in self.iterOutputAttributes(EMObject):
+            for key, output in self.iterOutputAttributes():
                 summary.append("*%s:* \n %s " % (key, output.getObjComment()))
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)

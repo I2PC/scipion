@@ -384,19 +384,31 @@ class ImageHandler(object):
                                '-i %s -o %s --type gaussian %f %f'
                                % (inputFile, outputFile, std, avg))
 
-    def truncateMask(self, inputFile, outputFile):
-        """ Forces the values of a mask to be between 0 and 1
+    def truncateMask(self, inputFile, outputFile, newDim=None):
+        """ Forces the values of a mask to be between 0 and 1.
+        Additionally, the output mask can be scaled to a new dimension.
+
         Params:
             inputFile: the filename of the input either image or volume
             outputFile: the filename of the output either image or volume
+            newDim: scale the output Mask to a new dimension if not None
         """
+        if inputFile.endswith('.mrc'):
+            inputFile += ':mrc'
+
+        ioStr = '-i %s -o %s' % (inputFile, outputFile)
+
+        if newDim:
+            self.__runXmippProgram('xmipp_image_resize',
+                                   '%s --dim %d' % (ioStr, newDim))
+            ioStr = '-i %s' % outputFile
         self.__runXmippProgram('xmipp_transform_threshold',
-                               '-i %s -o %s --select below 0 --substitute '
-                               'value 0' % (inputFile, outputFile))
-        
+                               '%s --select below 0 --substitute '
+                               'value 0' % ioStr)
+
         self.__runXmippProgram('xmipp_transform_threshold',
                                '-i %s --select above 1 --substitute '
-                               'value 1' % (outputFile))
+                               'value 1' % outputFile)
     
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function

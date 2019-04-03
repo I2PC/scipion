@@ -373,6 +373,10 @@ class PluginInfo(object):
         """Return the plugin author"""
         return self.author
 
+    def getReleaseDate(self, release):
+        """Return the uploaded date from the release"""
+        return self.compatibleReleases[release]['upload_time']
+
 class PluginRepository(object):
 
     def __init__(self, repoUrl=REPOSITORY_URL):

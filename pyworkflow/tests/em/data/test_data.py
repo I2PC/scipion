@@ -132,7 +132,6 @@ class TestImage(unittest.TestCase):
                 self.assertAlmostEquals(mt[i][j],mreferenceT[i][j],delta=0.5)
 
 
-
 class TestImageHandler(unittest.TestCase):
 
     _labels = [SMALL, WEEKLY]
@@ -202,7 +201,6 @@ class TestImageHandler(unittest.TestCase):
         # Clean up tmp files
         pwutils.cleanPath(outFn)
 
-
     def test_readCompressedTIF(self):
         """ Check we can read tif files
         """
@@ -253,6 +251,21 @@ class TestImageHandler(unittest.TestCase):
             print "Not cleaning output movie: ", outFn
         else:
             pwutils.cleanPath(outFn)
+
+    def test_truncateMask(self):
+        ih = ImageHandler()
+
+        maskFn = self.dataset.getFile('masks/mask.vol')
+        outFn = join('/tmp', 'mask.vol')
+
+        ih.truncateMask(maskFn, outFn, newDim=128)
+        EXPECTED_SIZE = (128, 128, 128, 1)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+
+        pwutils.cleanPath(outFn)
 
 
 class TestSetOfMicrographs(BaseTest):
@@ -541,6 +554,7 @@ class TestSetOfParticles(BaseTest):
         for index, indexName in zip(indexes, indexesNames):
             self.assertEqual(index, 'index_' + indexName )
 
+
 class TestSetOfCoordinates(BaseTest):
     # TODO: A proper test for setOfCoordinates is missing
     @classmethod
@@ -642,6 +656,7 @@ class TestSetOfCoordinates(BaseTest):
                     coordList = []
                 coordList.append(coord.clone())
             testTimer.toc("Loop with NO INDEX but proper code, took:")
+
 
 class TestSetOfClasses2D(BaseTest):
 
@@ -857,6 +872,7 @@ class TestCoordinatesTiltPair(BaseTest):
         # and two sets of coordinates but the person who
         # added that data type Should provide a clear test
         # when this is done then I will finish the test_mapper
+
 
 class TestCoordinatesTiltPair(BaseTest):
     # TODO: A proper test for SetOfMovieParticles is missing
