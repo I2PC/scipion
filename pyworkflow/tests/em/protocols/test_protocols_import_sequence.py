@@ -63,7 +63,7 @@ class TestImportSequence(TestImportBase):
         args = {'inputSequenceName': self.NAME,
                 'inputSequenceDescription': self.DESCRIPTION,
                 'inputSequence': SEQ_TYPE_NUCLEOTIDES,
-                'nucleotideIUPACalphabet' : EXTENDED_DNA_ALPHABET,
+                'nucleotideIUPACalphabet': EXTENDED_DNA_ALPHABET,
                 'inputRawSequence': self.NUCLEOTIDESEQ1
                }
         prot1 = self.newProtocol(ProtImportSequence, **args)
