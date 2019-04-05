@@ -34,6 +34,10 @@ VERSION_1_2 = 'v1.2'
 VERSION_2_0 = 'v2.0'
 LAST_VERSION = VERSION_2_0
 OLD_VERSIONS = (VERSION_1, VERSION_1_1)
+# This variable is useful to determinate the plugins compatibility with the
+# last Scipion release
+CORE_VERSION = '2.0'
+
 
 
 HOME = os.path.abspath(os.path.dirname(__file__))
