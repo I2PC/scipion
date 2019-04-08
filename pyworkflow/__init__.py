@@ -47,8 +47,6 @@ LAST_VERSION = VERSION_2_0
 OLD_VERSIONS = (VERSION_1, VERSION_1_1)
 
 
-
-
 HOME = os.path.abspath(os.path.dirname(__file__))
 
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
@@ -92,6 +90,7 @@ class Config:
         print("ERROR loading preferred viewers, VIEWERS variable will be ignored")
         print(e)
 
+
 def join(*paths):
     """ join paths from HOME . """
     return os.path.join(HOME, *paths)
@@ -104,6 +103,7 @@ def findResource(filename):
     from utils.path import findFile
 
     return findFile(filename, *__resourcesPath)
+
 
 # Following are a set of functions to centralize the way to get
 # files from several scipion folder such as: config or apps
