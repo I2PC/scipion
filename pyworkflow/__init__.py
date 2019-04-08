@@ -23,9 +23,20 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
 import ast
 import os
 
+
+# Define pyworkflow version in a standard way, as proposed by:
+# https://www.python.org/dev/peps/pep-0396/
+__version__ = '2.0.0'
+
+# FIXME: Can the __version__ be used insted of our invention of CORE_VERSION
+# FIXME: to achieve the same with plugins compatibility???
+#  This variable is useful to determinate the plugins compatibility with the
+# last Scipion release
+CORE_VERSION = '2.0'
 
 # Versions
 VERSION_1 = 'v1.0'
@@ -34,9 +45,7 @@ VERSION_1_2 = 'v1.2'
 VERSION_2_0 = 'v2.0'
 LAST_VERSION = VERSION_2_0
 OLD_VERSIONS = (VERSION_1, VERSION_1_1)
-# This variable is useful to determinate the plugins compatibility with the
-# last Scipion release
-CORE_VERSION = '2.0'
+
 
 
 
