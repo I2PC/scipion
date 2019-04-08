@@ -27,11 +27,6 @@ PIP_UNINSTALL_CMD = '{} {}/pip uninstall -y %s'.format(
     Environment.getPythonPackagesFolder())
 
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
-if os.environ['SCIPION_SHORT_VERSION'] not in versions:
-    SCIPION_VERSION = LAST_VERSION
-else:
-    SCIPION_VERSION = os.environ['SCIPION_SHORT_VERSION']
-
 
 class PluginInfo(object):
 
@@ -112,13 +107,13 @@ class PluginInfo(object):
         elif version not in self.compatibleReleases:
             if self.compatibleReleases:
                 print('%s version %s not compatible with current Scipion '
-                      'version %s.' % (self.pipName, version, SCIPION_VERSION))
+                      'version %s.' % (self.pipName, version, LAST_VERSION))
                 print("Please choose a compatible release: %s" % " ".join(
                     self.compatibleReleases.keys()))
 
             else:
                 print("%s has no compatible versions with current Scipion "
-                      "version %s." % (self.pipName, SCIPION_VERSION))
+                      "version %s." % (self.pipName, LAST_VERSION))
             return False
 
         if self.pluginSourceUrl:
