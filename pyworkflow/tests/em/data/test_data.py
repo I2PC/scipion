@@ -18,6 +18,7 @@ except:
 # the database
 SPEEDTEST = True
 
+
 def getIndex(fileName):
     """ Returns list of indexes for the table 'objects'
     in the database fileName"""
@@ -28,6 +29,7 @@ def getIndex(fileName):
     conn.close()
     return rows  # list with index names
 
+
 def dropIndex(fileName, indexName):
     """ Drop index called indexName for table objects
     in database fileName"""
@@ -35,6 +37,7 @@ def dropIndex(fileName, indexName):
     cur = conn.cursor()
     cur.execute("DROP INDEX %s" % indexName)
     conn.close()
+
 
 def createDummyProtocol(projName):
     """create a dummy protocol, returns protocol object"""
@@ -51,7 +54,6 @@ def createDummyProtocol(projName):
         print (str(e))
     return prot
  
-
 
 class TestFSC(unittest.TestCase):
     
@@ -266,6 +268,17 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
 
         pwutils.cleanPath(outFn)
+
+    def test_createEmptyImage(self):
+        outFn = join('/tmp', 'empty.mrc')
+        SIZE = (128, 128, 1, 1)
+        ih = ImageHandler()
+        DT = ih.DT_FLOAT
+        ih.createEmptyImage(outFn, SIZE[0], SIZE[1], dataType=DT)
+
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), SIZE)
+        self.assertEqual(ih.getDataType(outFn), DT)
 
 
 class TestSetOfMicrographs(BaseTest):

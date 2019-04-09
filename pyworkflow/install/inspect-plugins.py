@@ -27,18 +27,22 @@
 from __future__ import print_function
 
 import sys
+from os.path import join, exists, dirname
 import importlib
 import inspect
 import traceback
 from collections import OrderedDict
+from future.utils import iteritems
 
 from pyworkflow.em import Domain
 from pyworkflow.protocol import Protocol
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 
-from .plugin_funcs import PluginInfo
+from plugin_funcs import PluginInfo
 
+
+exitWithErrors = False
 
 def usage(error):
     print("""
@@ -54,7 +58,7 @@ def usage(error):
     sys.exit(1)
 
 
-def getSubmodule(name, subname):
+def getSubmodule(plugin, name, subname):
     """ Return a tuple: (module, error)
     If module is None:
         1) if error is None is that the submodule does not exist
@@ -67,7 +71,9 @@ def getSubmodule(name, subname):
     except Exception as e:
         noModuleMsg = 'No module named %s' % subname
         msg = str(e)
-        r = (None, None if msg == noModuleMsg else traceback.format_exc())
+        moduleExists = (exists(join(dirname(plugin.__file__), "%s.py" % subName)) or
+                        exists(join(dirname(plugin.__file__), subName)))
+        r = (None, None if msg == noModuleMsg and not moduleExists else traceback.format_exc())
     return r
 
 
@@ -88,7 +94,7 @@ if n > 4:
 if n == 1:  # List all plugins
     plugins = Domain.getPlugins()
     print("Plugins:")
-    for k, v in plugins.iteritems():
+    for k, v in iteritems(plugins):
         print("-", k)
 
 
@@ -111,12 +117,13 @@ elif n == 2:
     print("Plugin: %s" % pluginName)
     for subName in ['constants', 'convert', 'protocols',
                     'wizards', 'viewers', 'tests']:
-        sub, error = getSubmodule(pluginName, subName)
+        sub, error = getSubmodule(plugin, pluginName, subName)
 
         if sub is None:
             if error is None:
                 msg = " missing"
             else:
+                exitWithErrors = True
                 msg = " error -> %s" % error
 
         else:
@@ -142,11 +149,12 @@ elif n > 2:
         print("Plugin binaries: %s" % bin)
 
         # print bibtex
-        bib, error2 = getSubmodule(pluginName, 'bibtex')
+        bib, error2 = getSubmodule(plugin, pluginName, 'bibtex')
         if bib is None:
             if error2 is None:
                 msg = " missing bibtex"
             else:
+                exitWithErrors = True
                 msg = " error -> %s" % error2
         else:
             print("Plugin references:")
@@ -157,11 +165,12 @@ elif n > 2:
                 print(text)
 
         # print protocols
-        sub, error = getSubmodule(pluginName, 'protocols')
+        sub, error = getSubmodule(plugin, pluginName, 'protocols')
         if sub is None:
             if error is None:
                 msg = " missing protocols"
             else:
+                exitWithErrors = True
                 msg = " error -> %s" % error
 
         else:
@@ -196,3 +205,8 @@ elif n > 2:
 
     else:
         usage("The last argument must be 'info'")
+
+if exitWithErrors:
+    sys.exit(1)
+else:
+    sys.exit(0)

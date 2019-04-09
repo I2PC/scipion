@@ -196,14 +196,14 @@ def defineBinaries(args=None):
          'tiff',
          tar='tiff-4.0.10.tgz',
          deps=[zlib, jpeg],
-         default=False)
+         default=True)
 
     sqlite = env.addLibrary(
         'sqlite3',
         tar='SQLite-1a584e49.tgz',
         flags=['CPPFLAGS=-w',
                'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'],
-        default=False)
+        default=True)
 
     hdf5 = env.addLibrary(
          'hdf5',
@@ -211,7 +211,7 @@ def defineBinaries(args=None):
          flags=['--enable-cxx', '--enable-shared'],
          targets=[env.getLib('hdf5'), env.getLib('hdf5_cpp')],
          configAlways=True,
-         default=False,
+         default=True,
          deps=[zlib])
 
     python = env.addLibrary(
@@ -313,7 +313,7 @@ def defineBinaries(args=None):
 
     # Required python modules
     env.addPipModule('setuptools', '39.0.1')
-    numpy = env.addPipModule('numpy','1.14.1')
+    numpy = env.addPipModule('numpy', '1.14.1')
     matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
 
 
@@ -327,8 +327,7 @@ def defineBinaries(args=None):
     env.addPipModule('django', '1.5.5')
     env.addPipModule('Pillow', '5.4.1', target='Pillow-5.4.1*',
                      deps=[jpeg, tiff])
-    env.addPipModule('future', '0.17.1', target='future-0.17.1*',
-                     deps=[jpeg, tiff])
+    env.addPipModule('future', '0.17.1', target='future-0.17.1*')
 
     # Optional python modules
     env.addPipModule('paramiko', '1.14.0', default=False)
