@@ -893,8 +893,6 @@ class AtomStruct(EMFile):
 class PdbFile(AtomStruct):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         AtomStruct.__init__(self, filename, pseudoatoms, **kwargs)
-        print("This class has been renamed to AtomStruct. Please "
-              " update your code")
 
 
 class EMSet(Set, EMObject):
