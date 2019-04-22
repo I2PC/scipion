@@ -1260,6 +1260,9 @@ class SetOfVolumes(SetOfImages):
     ITEM_TYPE = Volume
     REP_TYPE = Volume
 
+    # Hint to GUI components to expose internal items for direct selection
+    EXPOSE_ITEMS = True
+
     def __init__(self, **kwargs):
         SetOfImages.__init__(self, **kwargs)
 
@@ -1322,6 +1325,8 @@ class SetOfDefocusGroup(EMSet):
 class SetOfAtomStructs(EMSet):
     """ Set containing PDB items. """
     ITEM_TYPE = AtomStruct
+    # Hint to GUI components to expose internal items for direct selection
+    EXPOSE_ITEMS = True
 
 
 class SetOfPDBs(SetOfAtomStructs):
