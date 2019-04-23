@@ -213,8 +213,6 @@ class PluginInfo(object):
                                for v in re.findall(reg,
                                                    releaseData['comment_text'])]
             if len(scipionVersions) == 0:
-                print("WARNING: %s's release %s did not specify a compatible "
-                      "Scipion version" % (self.pipName, release))
                 latestCompRelease = release
             elif any([v == parse_version(CORE_VERSION)
                       for v in scipionVersions]):
@@ -225,6 +223,10 @@ class PluginInfo(object):
 
         if releases:
             releases['latest'] = latestCompRelease
+            if (latestCompRelease != "0.0.0" and
+                    releases[latestCompRelease]['comment_text'] == ''):
+              print("WARNING: %s's release %s did not specify a compatible "
+              "Scipion version" % (self.pipName, latestCompRelease))
         else:
             releases['latest'] = ''
         return releases
