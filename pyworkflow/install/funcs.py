@@ -250,7 +250,7 @@ class Environment:
         self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
-        self._pipCmd = kwargs.get('pipCmd', '{} {}/pip install %s==%s'.format(self.getBin('python'),
+        self._pipCmd = kwargs.get('pipCmd', '{0} {1}/pip install %s==%s'.format(self.getBin('python'),
                                                                               self.getPythonPackagesFolder()))
 
     def getLibSuffix(self):
@@ -401,7 +401,7 @@ class Environment:
                          targets=tarFile)
 
         if createBuildDir:
-            tarCmd = '{} -C {}'.format(self._tarCmd % tar, buildDir)
+            tarCmd = '{0} -C {1}'.format(self._tarCmd % tar, buildDir)
             t.addCommand('mkdir %s' % buildPath,
                          targets=[buildPath],
                          cwd=downloadDir)

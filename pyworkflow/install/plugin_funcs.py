@@ -18,11 +18,11 @@ if REPOSITORY_URL is None:
     REPOSITORY_URL = Config.SCIPION_PLUGIN_REPO_URL
 
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
-PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
+PIP_CMD = '{0} {1}/pip install %(installSrc)s'.format(
     Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
-PIP_UNINSTALL_CMD = '{} {}/pip uninstall -y %s'.format(
+PIP_UNINSTALL_CMD = '{0} {1}/pip uninstall -y %s'.format(
     Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
