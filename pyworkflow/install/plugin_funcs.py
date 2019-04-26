@@ -9,11 +9,14 @@ from pkg_resources import parse_version
 
 from pyworkflow.plugin import Domain
 from pyworkflow.utils.path import cleanPath
-from pyworkflow import LAST_VERSION, OLD_VERSIONS
+from pyworkflow import LAST_VERSION, CORE_VERSION, OLD_VERSIONS, Config
 from pyworkflow.install import Environment
 
-REPOSITORY_URL = (os.environ.get('SCIPION_PLUGIN_JSON', None) or
-                  os.environ['SCIPION_PLUGIN_REPO_URL'])
+REPOSITORY_URL = Config.SCIPION_PLUGIN_JSON
+
+if REPOSITORY_URL is None:
+    REPOSITORY_URL = Config.SCIPION_PLUGIN_REPO_URL
+
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
 PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
     Environment.getBin('python'),
@@ -143,12 +146,13 @@ class PluginInfo(object):
         reloadPkgRes = self.isInstalled()
 
         environment.execute()
+        # we already have a dir for the plugin:
         if reloadPkgRes:
             # if plugin was already installed, pkg_resources has the old one
             # so it needs a reload
             reload(pkg_resources)
-        # we already have a dir for the plugin:
-        self.dirName = self.getDirName()
+            self.dirName = self.getDirName()
+            Domain.refreshPlugin(self.dirName)
         return True
 
     def installBin(self, args=None):
@@ -216,14 +220,18 @@ class PluginInfo(object):
             if len(scipionVersions) == 0:
                 print("WARNING: %s's release %s did not specify a compatible "
                       "Scipion version" % (self.pipName, release))
-            elif any([v <= parse_version(SCIPION_VERSION.strip('v'))
+                latestCompRelease = release
+            elif any([v == parse_version(CORE_VERSION)
                       for v in scipionVersions]):
                 if parse_version(latestCompRelease) < parse_version(release):
                     latestCompRelease = release
-                releases[release] = releaseData
 
-        releases['latest'] = latestCompRelease
+            releases[release] = releaseData
 
+        if releases:
+            releases['latest'] = latestCompRelease
+        else:
+            releases['latest'] = ''
         return releases
 
     def setRemotePluginInfo(self):
@@ -307,7 +315,10 @@ class PluginInfo(object):
 
         plugin = self.getPluginClass()
         if plugin is not None:
-            plugin.defineBinaries(env)
+            try:
+                plugin.defineBinaries(env)
+            except Exception as e:
+                print ("Couldn't get binaries definition of %s plugin: %s" % (self.name, e.message))
             return env
         else:
             return None
@@ -377,6 +388,11 @@ class PluginInfo(object):
         """Return the uploaded date from the release"""
         return self.compatibleReleases[release]['upload_time']
 
+    def getLatestRelease(self):
+        """Get the plugin latest release"""
+        return self.latestRelease
+
+
 class PluginRepository(object):
 
     def __init__(self, repoUrl=REPOSITORY_URL):
@@ -410,7 +426,13 @@ class PluginRepository(object):
             with open(self.repoUrl) as f:
                 pluginsJson = json.load(f)
         else:
-            r = requests.get(self.repoUrl)
+            try:
+                r = requests.get(self.repoUrl)
+            except requests.ConnectionError as e:
+                print("\nWARNING: Error while trying to connect with a server:\n"
+                      "  > Please, check your internet connection!\n")
+                print(e)
+                return self.plugins
             if r.ok:
                 pluginsJson = r.json()
             else:
@@ -429,6 +451,8 @@ class PluginRepository(object):
                 print("WARNING - The following plugins didn't match available "
                       "plugin names:")
                 print(" ".join(wrongPluginNames))
+                print("You can see the list of available plugins with the following command:\n"
+                      "scipion installp --help")
 
         for pluginName in targetPlugins:
             pluginsJson[pluginName].update(remote=getPipData)

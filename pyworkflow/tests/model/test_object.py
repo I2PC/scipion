@@ -73,7 +73,7 @@ class TestObject(BaseTest):
         setattr(pointee, "value", Integer(20))
 
         # Set a pointer (not a real case though, but enough here)
-        obj.setPointer(pointee, 'value')
+        obj.setPointer(Pointer(pointee, extended='value'))
 
         self.assertEqual(obj.get(), 20, "Integer.get() fails with a pointer.")
 

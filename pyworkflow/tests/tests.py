@@ -151,7 +151,7 @@ class BaseTest(unittest.TestCase):
         counter = 1
         prot2 = _loadProt()
 
-        while not prot2.hasAttribute(outputAttributeName):
+        while not prot2.hasAttribute(outputAttributeName) and prot2.isActive():
             time.sleep(5)
             prot2 = _loadProt()
             if counter > 1000:

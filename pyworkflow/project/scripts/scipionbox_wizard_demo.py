@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 # **************************************************************************
 # *
@@ -26,6 +27,11 @@
 # **************************************************************************
 from __future__ import print_function
 
+import glob
+
+from pyworkflow.em import ListTreeProviderString
+from pyworkflow.object import String
+
 """
 Creates a scipion workflow file (json formatted) base on a template.
 The template may have some ~placeholders~ that will be overwritten with values
@@ -43,7 +49,7 @@ import datetime
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.gui import Message, Icon
+from pyworkflow.gui import Message, Icon, dialog
 from pyworkflow.project import ProjectSettings
 
 import pyworkflow.gui as pwgui
@@ -201,7 +207,7 @@ class BoxWizardView(tk.Frame):
 
     def addFieldsFromTemplate(self, labelFrame2):
 
-        self._template = getTemplateSplit()
+        self._template = getTemplateSplit(self.root)
 
         self._fields = getFields(self._template)
 
@@ -400,210 +406,51 @@ def replaceFields(fields, template):
         template[field.getIndex()] = field.getValue()
 
 
-def getTemplateSplit():
+def getTemplateSplit(root):
     # Get the fields definition from the template
-    templateStr = getTemplate()
+    templateStr = getTemplate(root)
 
     # Split the template by the field separator
     return templateStr.split(FIELD_SEP)
 
 
-def getTemplate():
+def getTemplate(root):
 
-    template = """[
-    {
-        "object.className": "ProtImportMovies",
-        "object.id": "2",
-        "object.label": "Import movies",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "importFrom": 0,
-        "filesPath": "~Movie's folder|%(SCIPION_HOME)s/data/tests/relion13_tutorial/betagal/Micrographs|2~",
-        "filesPattern": "*.mrcs",
-        "copyFiles": false,
-        "haveDataBeenPhaseFlipped": false,
-        "acquisitionWizard": null,
-        "voltage": ~Voltage|300|4~,
-        "sphericalAberration": ~Spherical aberration|2|4~,
-        "amplitudeContrast": ~Amplitude contrast|0.1|4~,
-        "magnification": 59000,
-        "samplingRateMode": 0,
-        "samplingRate": ~Sampling rate|3.54|4~,
-        "scannedPixelSize": 7.0,
-        "doseInitial": 0.0,
-        "dosePerFrame": ~Dose per frame|0.0|4~,
-        "gainFile": null,
-        "darkFile": null,
-        "dataStreaming": true,
-        "timeout": 7200,
-        "fileTimeout": 30,
-        "inputIndividualFrames": false,
-        "numberOfIndividualFrames": null,
-        "stackFrames": false,
-        "writeMoviesInProject": false,
-        "movieSuffix": "_frames.mrcs",
-        "deleteFrames": false
-    },
-    {
-        "object.className": "XmippProtMovieGain",
-        "object.id": "313",
-        "object.label": "xmipp3 - movie gain",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "frameStep": 30,
-        "movieStep": ~Gain estimation movie step|1|4~,
-        "useExistingGainImage": false,
-        "hostName": "localhost",
-        "numberOfThreads": 1,
-        "numberOfMpi": 1,
-        "inputMovies": "2.outputMovies"
-    },
-    {
-        "object.className": "ProtMotionCorr",
-        "object.id": "56",
-        "object.label": "Motioncorr",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "gpuMsg": "True",
-        "GPUIDs": "0",
-        "alignFrame0": 1,
-        "alignFrameN": 0,
-        "useAlignToSum": true,
-        "sumFrame0": 1,
-        "sumFrameN": 0,
-        "binFactor": 1.0,
-        "cropOffsetX": 0,
-        "cropOffsetY": 0,
-        "cropDimX": 0,
-        "cropDimY": 0,
-        "doSaveAveMic": true,
-        "doSaveMovie": false,
-        "doComputePSD": false,
-        "doComputeMicThumbnail": false,
-        "computeAllFramesAvg": false,
-        "extraParams": "",
-        "useMotioncor2": true,
-        "doApplyDoseFilter": false,
-        "patchX": 5,
-        "patchY": 5,
-        "group": 1,
-        "tol": 0.5,
-        "doMagCor": false,
-        "useEst": true,
-        "scaleMaj": 1.0,
-        "scaleMin": 1.0,
-        "angDist": 0.0,
-        "defectFile": null,
-        "extraParams2": "",
-        "doSaveUnweightedMic": true,
-        "hostName": "localhost",
-        "numberOfThreads": 1,
-        "numberOfMpi": 1,
-        "inputMovies": "2.outputMovies"
-    },
-    {
-        "object.className": "ProtCTFFind",
-        "object.id": "118",
-        "object.label": "Ctffind",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "recalculate": false,
-        "sqliteFile": null,
-        "ctfDownFactor": 1.0,
-        "useCtffind4": true,
-        "astigmatism": 100.0,
-        "findPhaseShift": false,
-        "minPhaseShift": 0.0,
-        "maxPhaseShift": 3.15,
-        "stepPhaseShift": 0.2,
-        "resamplePix": true,
-        "lowRes": 0.05,
-        "highRes": 0.35,
-        "minDefocus": 0.25,
-        "maxDefocus": 4.0,
-        "windowSize": 256,
-        "hostName": "localhost",
-        "numberOfThreads": 1,
-        "numberOfMpi": 1,
-        "inputMicrographs": "56.outputMicrographs"
-    },
-    {
-        "object.className": "ProtMonitorSummary",
-        "object.id": "164",
-        "object.label": "Summary Monitor",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "inputProtocols": ["2","56","118","313"],
-        "samplingInterval": 60,
-        "stddevValue": 0.04,
-        "ratio1Value": 1.15,
-        "ratio2Value": 4.5,
-        "maxDefocus": 40000.0,
-        "minDefocus": 1000.0,
-        "astigmatism": 2000.0,
-        "monitorTime": 30000.0,
-        "cpuAlert": 101.0,
-        "memAlert": 101.0,
-        "swapAlert": 101.0,
-        "doGpu": false,
-        "gpusToUse": "0",
-        "doNetwork": false,
-        "netInterfaces": 1,
-        "doDiskIO": false,
-        "doMail": true,
-        "emailFrom": "noreply-biocomp@cnb.csic.es",
-        "emailTo": "user@domain",
-        "smtp": "localhost",
-        "publishCmd": ""
-    },
-    {
-        "object.className": "SparxGaussianProtPicking",
-        "object.id": "284",
-        "object.label": "eman2 - sparx gaussian picker",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "boxSize": 64,
-        "lowerThreshold": 1.0,
-        "higherThreshold": 1.4,
-        "gaussWidth": 1.0,
-        "inputMicrographs": "56.outputMicrographs"
-    },
-    {
-        "object.className": "XmippProtExtractParticles",
-        "object.id": "323",
-        "object.label": "xmipp3 - extract particles",
-        "object.comment": "",
-        "runName": null,
-        "runMode": 0,
-        "downsampleType": 0,
-        "downFactor": 1.0,
-        "boxSize": 64,
-        "doBorders": true,
-        "doRemoveDust": true,
-        "thresholdDust": 5.0,
-        "doInvert": true,
-        "doFlip": true,
-        "doNormalize": true,
-        "normType": 2,
-        "backRadius": -1,
-        "hostName": "localhost",
-        "numberOfThreads": 4,
-        "numberOfMpi": 1,
-        "ctfRelations": "118.outputCTF",
-        "inputCoordinates": "284.outputCoordinates"
-    }
-]"""
-    # Replace environment variables
-    template = template % os.environ
 
-    return template
+    # Check if there is any .json.template in the template folder
+    # get the template folder
+    templateFolder = pw.getTemplatePath()
 
+    # Get all ".json.template" there
+    templates = []
+
+    for file in glob.glob1(templateFolder, "*.json.template"):
+        templates.append(String(file))
+
+    if len(templates):
+
+        if len(templates) == 1:
+            chosen = templates[0].get()
+        else:
+            provider = ListTreeProviderString(templates)
+            dlg = dialog.ListDialog(root, "Workflow templates", provider,
+                                "Select one of the templates.")
+
+            chosen = dlg.values[0].get()
+
+        chosen = os.path.join(templateFolder, chosen)
+
+        print ("Template to use: %s" % chosen)
+
+        with open(chosen, 'r') as myfile:
+            template = myfile.read()
+
+        # Replace environment variables
+        template = template % os.environ
+
+        return template
+    else:
+        raise Exception("There isn't any *.json.template at %s" % templates)
 
 if __name__ == "__main__":
     wizWindow = BoxWizardWindow()

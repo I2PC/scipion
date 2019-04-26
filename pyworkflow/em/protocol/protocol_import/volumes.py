@@ -26,7 +26,7 @@
 # **************************************************************************
 
 
-from os.path import exists, basename, abspath
+from os.path import exists, basename, abspath, relpath
 
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
@@ -154,6 +154,10 @@ class ProtImportVolumes(ProtImportImages):
                 if fileName.endswith(':mrc'):
                     fileName = fileName[:-4]
                 createAbsLink(fileName, newFileName)
+
+            # Make newFileName relative
+            # https://github.com/I2PC/scipion/issues/1935
+            newFileName = relpath(newFileName)
             if n == 1:
                 vol.cleanObjId()
                 vol.setFileName(newFileName)

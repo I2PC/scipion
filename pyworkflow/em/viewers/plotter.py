@@ -114,6 +114,18 @@ class EmPlotter(Plotter):
 
         self.plot(xValues, yValues, color, **kwargs)
         
+    def plotDataBar(self, xValues, yValues, width, color='blue', **kwargs):
+        """ Shortcut function to plot some values.
+        Params:
+            xValues: list of values to show in x-axis
+            yValues: list of values to show as values in y-axis
+            color: color for the plot.
+            **kwargs: keyword arguments that accepts:
+                marker, linestyle
+        """
+
+        self.bar(xValues, yValues, width=width, color=color, **kwargs)
+
     @classmethod
     def createFromFile(cls, dbName, dbPreffix, plotType, columnsStr, colorsStr, linesStr,
                  markersStr, xcolumn, ylabel, xlabel, title, bins, orderColumn,

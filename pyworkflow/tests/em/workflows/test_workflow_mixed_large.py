@@ -128,9 +128,12 @@ class TestMixedRelionTutorial(TestWorkflow):
         
         # Now estimate CTF on the micrographs with xmipp
         print "Performing Xmipp CTF..."   
-        protCTF2 = self.newProtocol(XmippProtCTFMicrographs, lowRes=0.04,
+        protCTF2 = self.newProtocol(XmippProtCTFMicrographs,
+                                    doInitialCTF=True,
+                                    lowRes=0.04,
                                     highRes=0.45, minDefocus=1.2, maxDefocus=3,
                                     runMode=1, numberOfMpi=1, numberOfThreads=16)
+        protCTF2.ctfRelations.set(protCTF.outputCTF)
         protCTF2.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF2.setObjLabel('CTF xmipp')
         self.launchProtocol(protCTF2)
@@ -169,7 +172,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
         
         print "Run Relion Refine"
-        proRef = ProtRelionRefine3D(numberOfMpi=4, numberOfThreads=4)
+        proRef = ProtRelionRefine3D()
         proRef.inputParticles.set(protExtract2.outputParticles)
         proRef.referenceVolume.set(protImportVol.outputVolume)
         proRef.setObjLabel('relion Refine')

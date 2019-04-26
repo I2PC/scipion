@@ -1,6 +1,8 @@
 # **************************************************************************
 # *
 # * Authors:     Amaya Jimenez (ajimenez@cnb.csic.es)
+# *              Marta Martinez (mmmtnez@cnb.csic.es)
+# *              Roberto Marabini (roberto@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -33,6 +35,7 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import FSC
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler, toCIF
 
 
 class ProtExportEMDB(EMProtocol):
@@ -42,6 +45,7 @@ class ProtExportEMDB(EMProtocol):
     _program = ""
     _lastUpdateVersion = VERSION_1_2
     VOLUMENAME = 'volume.mrc'
+    COORDINATEFILENAME = 'coordinates.cif'
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -56,14 +60,19 @@ class ProtExportEMDB(EMProtocol):
         form.addParam('exportFSC', params.PointerParam, label="FSC to export", important=True,
                       pointerClass='FSC, SetOfFSCs',
                       help='This FSC will be exported using XML emdb format')
+        form.addParam('exportAtomStruct', params.PointerParam,
+                      label="Atomic structure to export", allowsNull=True,
+                      pointerClass='AtomStruct',
+                      help='This atomic structure will be exported using mmCIF format')
         form.addParam('filesPath', params.PathParam, important=True,
                       label="Export to directory",
-                      help="Directory where the files will be generate.")
+                      help="Directory where the files will be generated.")
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('exportVolumeStep')
         self._insertFunctionStep('exportFSCStep')
+        self._insertFunctionStep('exportAtomStructStep')
 
     #--------------------------- STEPS functions --------------------------------------------
 
@@ -104,6 +113,19 @@ class ProtExportEMDB(EMProtocol):
 
             fo.write("</fsc>\n")
             fo.close()
+
+    def exportAtomStructStep(self):
+        exportAtomStruct = self.exportAtomStruct.get()
+        originStructPath = exportAtomStruct.getFileName()
+        dirName = self.filesPath.get()
+        destinyStructPath = os.path.join(dirName, self.COORDINATEFILENAME)
+        if originStructPath.endswith(".cif") or originStructPath.endswith(".mmcif"):
+            h = AtomicStructHandler()
+            h.read(originStructPath)
+            h.write(destinyStructPath)
+        else:
+            toCIF(originStructPath, destinyStructPath)
+
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
