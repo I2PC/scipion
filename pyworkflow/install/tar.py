@@ -5,7 +5,7 @@ import os
 from os.path import dirname, realpath, join
 
 
-SCIPION_HOME = dirname(dirname(realpath(__file__)))
+SCIPION_HOME = dirname(dirname(dirname(realpath(__file__))))
 
 
 def usage(error):

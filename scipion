@@ -43,7 +43,7 @@ except ImportError:
 
 __version__ = 'v2.0'
 __nickname__ = 'Diocletian'
-__releasedate__ = ''
+__releasedate__ = '2019-04-23'
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -422,8 +422,8 @@ Example: scipion install -j 4
             # Install external libraries and compile Xmipp
             ret = build(args[1:]) # ignore the --binary argument
             if ret == 0:
-                ret = os.system(
-                    'scripts/change_rpath.py %(ss)s/bin %(ss)s/lib %(ss)s/em'
+                ret = os.system(join(SCIPION_HOME, 'pyworkflow', 'install',
+                                     'change_rpath.py %(ss)s/bin %(ss)s/lib %(ss)s/em')
                     % {'ss': SCIPION_SOFTWARE})
         else:
             # Install external libraries and compile Xmipp
