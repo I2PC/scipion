@@ -1752,12 +1752,15 @@ class SetOfClasses(EMSet):
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
-    def appendFromClasses(self, classesSet):
+    def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the elements inside each
         class and append classes and items that are enabled.
         """
+        if filterClassFunc is None:
+            filterClassFunc = lambda cls: True
+
         for cls in classesSet:
-            if cls.isEnabled():
+            if cls.isEnabled() and filterClassFunc(cls):
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 newCls.setObjId(cls.getObjId())
