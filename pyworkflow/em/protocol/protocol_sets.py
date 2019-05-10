@@ -601,6 +601,209 @@ class ProtSubSet(ProtSets):
                     "are now in %s" % getattr(self, key).getName()]
 
 
+class ProtSubSetStreaming(ProtSets):
+    """
+    Create a set with the elements of an original set that are also
+    referenced in another set.
+
+    Usually there is a bigger set with all the elements, and a smaller
+    one obtained from classification, cleaning, etc. The desired result
+    is a set with the elements from the original set that are also present
+    somehow in the smaller set (in the smaller set they may be downsampled
+    or processed in some other way).
+
+    Both sets should be of the same kind (micrographs, particles, volumes)
+    or related (micrographs and CTFs for example).
+    """
+    _label = 'subset (streaming)'
+
+    SUB_TYPES = ['random', 'by other set', 'by attribute']
+    BY_OTHER = 0
+    BY_ATTR = 1
+    BY_RND = 2
+
+    SET_INTERSECTION = 0
+    SET_DIFFERENCE = 1
+
+    # -------------------------- DEFINE param functions -----------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputFullSet', pwprot.params.PointerParam, pointerClass='EMSet',
+            label="Full set of items", important=True,
+            help='Even if the operation can be applied to two arbitrary sets,\n'
+                 'the most common use-case is to retrieve a subset of\n'
+                 'elements from an original full set.\n'
+                 '*Note*: the elements of the resulting set will be the same\n'
+                 'ones as this input set.')
+        add('chooseAtRandom', pwprot.params.EnumParam, label='Subset type',
+            default=self.BY_OTHER, choices=self.SUB_TYPES,
+            help='Choose an option to make the subset:\n'
+                 ' - *by other set*: Makes a subset according to the _Other set_.\n'
+                 ' - *by attribute*: Makes a subset of items with _attribute_')
+        add('nElements', pwprot.params.IntParam, default=2,
+            condition='chooseAtRandom',
+            label="Number of elements",
+            help='How many elements will be taken from the full set.')
+        add('inputSubSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', condition='not chooseAtRandom',
+            label="Other set",
+            help='The elements present in this set will be used to pick \n'
+                 'elements from the input full set.     \n'
+                 'This means that the output set will contain elements with \n'
+                 'exact the same information of input full set.\n\n'
+                 'Set operation: if _intersection_ is used,\n'
+                 'elements that are both in input and other set\n'
+                 'will be included. If _difference_, elements that\n'
+                 'are in input but not in other will picked.')
+        add('setOperation', pwprot.params.EnumParam,
+            condition='not chooseAtRandom',
+            default=self.SET_INTERSECTION,
+            choices=['intersection', 'difference'],
+            display=pwprot.params.EnumParam.DISPLAY_HLIST,
+            label='Set operation',
+            help='Set operation: if _intersection_ is used,\n'
+                 'elements that are both in input and other set\n'
+                 'will be included. If _difference_, elements that\n'
+                 'are in input but not in other will picked.')
+
+    # -------------------------- INSERT steps functions -----------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+
+    # -------------------------- STEPS functions ------------------------------
+    def createOutputStep(self):
+        inputFullSet = self.inputFullSet.get()
+
+        inputClassName = inputFullSet.getClassName()
+        outputSetFunction = getattr(self, "_create%s" % inputClassName)
+
+        outputSet = outputSetFunction()
+        outputSet.copyInfo(inputFullSet)
+
+        if self.chooseAtRandom:
+            chosen = random.sample(xrange(len(inputFullSet)),
+                                   self.nElements.get())
+            for i, elem in enumerate(inputFullSet):
+                if i in chosen:
+                    outputSet.append(elem)
+        else:
+            # Iterate over the elements in the smaller set
+            # and take the info from the full set
+            inputSubSet = self.inputSubSet.get()
+            # The function to include an element or not
+            # depends on the set operation
+            # if it is 'intersection' we want that item is not None (found)
+            # if it is 'difference' we want that item is None
+            # (not found, different)
+            if self.setOperation == self.SET_INTERSECTION:
+                checkElem = lambda e: e is not None
+            else:
+                checkElem = lambda e: e is None
+
+            for origElem in inputFullSet:
+                # TODO: this can be improved if we perform
+                # intersection directly in sqlite
+                otherElem = inputSubSet[origElem.getObjId()]
+                if checkElem(otherElem):
+                    outputSet.append(origElem)
+
+        if outputSet.getSize():
+            key = 'output' + inputClassName.replace('SetOf', '')
+            self._defineOutputs(**{key: outputSet})
+            self._defineTransformRelation(inputFullSet, outputSet)
+            if not self.chooseAtRandom.get():
+                self._defineSourceRelation(self.inputSubSet, outputSet)
+        else:
+            self.summaryVar.set('Output was not generated. Resulting set '
+                                'was EMPTY!!!')
+
+    # Overwrite SetOfCoordinates creation
+    def _createSetOfCoordinates(self, suffix=''):
+        coordSet = self.inputFullSet.get()
+        micSet = coordSet.getMicrographs()
+        return ProtSets._createSetOfCoordinates(self, micSet, suffix)
+
+    # -------------------------- INFO functions -------------------------------
+    def _validate(self):
+        """Make sure the input data make sense."""
+
+        # Do not allow failing sets:
+        notImplentedClasses = ['SetOfClasses2D', 'SetOfClasses3D',
+                               'CoordinatesTiltPair']
+
+        if not self.inputFullSet.get():
+            # Since is mandatory is will not validate
+            return []
+
+        c1 = self.inputFullSet.get().getClassName()
+        if c1 in notImplentedClasses:
+            return ["%s subset is not implemented." % c1]
+
+        # First dispatch the easy case, where we choose elements at random.
+        if self.chooseAtRandom:
+            if self.nElements <= self.inputFullSet.get().getSize():
+                return []
+            else:
+                return ["Number of elements to choose cannot be bigger than",
+                        "the number of elements in the set."]
+
+        if not self.inputSubSet.get():
+            return []
+
+        # Now the harder case: two sets. Check for compatible classes.
+
+        # self.inputFullSet and self.inputSubSet .get().getClassName()
+        # can be SetOf...:
+        #   Alignment
+        #   Angles
+        #   Averages
+        #   Classes
+        #   ClassesVol
+        #   Coordinates
+        #   CTF
+        #   Micrographs
+        #   MovieParticles
+        #   Movies
+        #   Particles
+        #   Volumes
+
+        c2 = self.inputSubSet.get().getClassName()
+        if c2 in notImplentedClasses:
+            return ["%s subset is not implemented." % c2]
+
+        if c1 == c2:
+            return []
+
+        # Avoid combinations that make no sense.
+        for classA, classesIncompatible in [
+            ('SetOfParticles',
+             {'SetOfMicrographs', 'SetOfMovies', 'SetOfVolumes'}),
+            ('SetOfCoordinates',
+             {'SetOfMicrographs', 'SetOfMovies', 'SetOfVolumes'}),
+            ('SetOfVolumes',
+             {'SetOfMicrographs', 'SetOfMovies', 'SetOfParticles', 'SetOfCoordinates'})]:
+            if ((c1 == classA and c2 in classesIncompatible) or
+                    (c2 == classA and c1 in classesIncompatible)):
+                return ["The full set and the subset are of incompatible classes",
+                        "%s and %s." % (c1, c2)]
+        return []  # no errors
+
+    def _summary(self):
+        if self.summaryVar.hasValue():
+            return [self.summaryVar.get()]
+
+        key = 'output' + self.inputFullSet.get().getClassName().replace('SetOf', '')
+
+        if not hasattr(self, key):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["The elements of %s that also are referenced in %s" %
+                    (self.inputFullSet.getName(), self.inputSubSet.getName()),
+                    "are now in %s" % getattr(self, key).getName()]
+
+
 class ProtSubSetByMic(ProtSets):
     """
     Create a subset of those particles comes from a particular set of micrographs
