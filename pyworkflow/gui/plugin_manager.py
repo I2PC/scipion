@@ -667,10 +667,24 @@ class PluginBrowser(tk.Frame):
         # Create two tabs where the log and errors will appears
         self.Textlog.createWidgets([self.file_log_path, self.file_errors_path])
         if event is not None:
-            threadOp = threading.Thread(name="plugin-manager",
-                                        target=self._applyOperations,
-                                        args=(None,))
-            threadOp.start()
+            self.threadOp = threading.Thread(name="plugin-manager",
+                                             target=self._applyOperations,
+                                             args=(None,))
+            self.threadOp.start()
+
+            self.threadRefresh = threading.Thread(name="refresh_log",
+                                                  target=self._refreshLogsComponent,
+                                                  args=(3,))
+            self.threadRefresh.start()
+
+    def _refreshLogsComponent(self, wait=3):
+        """
+        Refresh the Plugin Manager log
+        """
+        import time
+        while self.threadOp.isAlive():
+            time.sleep(wait)
+            self.Textlog.refreshAll(goEnd=True)
 
     def _applyOperations(self, operation=None):
         """

@@ -43,7 +43,7 @@ except ImportError:
 
 __version__ = 'v2.0'
 __nickname__ = 'Diocletian'
-__releasedate__ = ''
+__releasedate__ = '2019-04-23'
 
 
 # This script tries to run ok with any python version. So we cannot
