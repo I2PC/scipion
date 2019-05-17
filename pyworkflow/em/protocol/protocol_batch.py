@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import PointerParam, \
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
                                 SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
-                                SetOfNormalModes, SetOfParticles, FSC,
+                                SetOfNormalModes, SetOfParticles, SetOfPDBs, FSC,
                                 Class2D, Class3D, SetOfMicrographs, ALIGN_NONE)
 from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
                                           ParticlesTiltPair)
@@ -72,7 +72,6 @@ class ProtUserSubSet(BatchProtocol):
         setObj = self.createSetObject()
         inputObj = self.inputObject.get()
         other = self.other.get()
-
         if other and ',Volume' in other:
             volId = int(other.split(',')[0])
 
@@ -95,26 +94,35 @@ class ProtUserSubSet(BatchProtocol):
             if outputClassName.startswith('SetOfMicrographs'):
                 output = self._createMicsSubSetFromCTF(inputObj)
 
+        elif isinstance(inputObj, SetOfPDBs):
+            output = self._createSubSetFromPDBs(inputObj)
+
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
 
         elif isinstance(inputObj, ParticlesTiltPair):
             output = self._createSubSetFromParticlesTiltPair(inputObj)
 
-        elif isinstance(inputObj, EMProtocol):
-            otherid = self.other.get()
-            otherObj = self.getProject().mapper.selectById(int(otherid))
+        elif isinstance(inputObj, EMProtocol) :
+            if self.other.hasValue():
+                otherid = self.other.get()
+                otherObj = self.getProject().mapper.selectById(int(otherid))
 
-            if isinstance(setObj, SetOfClasses):
-                setObj.setImages(otherObj)
-                self._createSubSetFromClasses(setObj)
+                if isinstance(setObj, SetOfClasses):
+                    setObj.setImages(otherObj)
+                    self._createSubSetFromClasses(setObj)
 
-            elif isinstance(setObj, SetOfImages):
-                setObj.copyInfo(otherObj)  # copy info from original images
-                self._createSubSetFromImages(setObj)
+                elif isinstance(setObj, SetOfImages):
+                    setObj.copyInfo(otherObj)  # copy info from original images
+                    self._createSubSetFromImages(setObj)
 
-            elif isinstance(setObj, SetOfNormalModes):
-                self._createSimpleSubset(otherObj)
+                elif isinstance(setObj, SetOfNormalModes):
+                    self._createSimpleSubset(otherObj)
+            else:
+                if isinstance(setObj, SetOfVolumes):
+                    volSet = SetOfVolumes(filename=self._dbName)
+                    volSet.loadAllProperties()
+                    self._createSimpleSubset(volSet)
 
         else:
             output = self._createSimpleSubset(inputObj)
@@ -367,6 +375,21 @@ class ProtUserSubSet(BatchProtocol):
         self._defineTransformRelation(micrographsTiltPair, output)
         return output
 
+    def _createSubSetFromPDBs(self, setOfPDBs):
+        """ Create a subset of SetOfPDBs. """
+        output = SetOfPDBs(filename=self._getPath('pdbs.sqlite'))
+        modifiedSet = SetOfPDBs(filename=self._dbName, prefix=self._dbPrefix)
+
+        for pdb in modifiedSet:
+            if pdb.isEnabled():
+                output.append(pdb)
+
+        # Register outputs
+        outputDict = {'outputPDBs': output}
+        self._defineOutputs(**outputDict)
+        self._defineTransformRelation(setOfPDBs, output)
+        return output
+
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
         """ Create a subset of Particles Tilt Pair. """
         output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
@@ -429,7 +452,7 @@ class ProtUserSubSet(BatchProtocol):
             if isinstance(inputObj, EMSet):
                 inputStr += ' of size %s' % inputObj.getSize()
         output = ''
-        for _, attr in self.iterOutputAttributes(EMObject):
+        for _, attr in self.iterOutputAttributes():
             output += attr.getClassName()
             if isinstance(attr, EMSet):
                 output += ' of size %s' % attr.getSize()
@@ -486,7 +509,6 @@ class ProtCreateMask(BatchProtocol):
 
     def _methods(self):
         return self._summary()
-
 
 
 class ProtCreateFSC(BatchProtocol):

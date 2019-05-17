@@ -24,16 +24,21 @@
 # *
 # **************************************************************************
 
-
 import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3.constants import OTHER 
-from pyworkflow.em.packages.xmipp3.protocol_projmatch import XmippProtProjMatch
+import pyworkflow.utils as pwutils
 from test_workflow import TestWorkflow
 from pyworkflow.em.protocol import ProtImportCoordinates
-   
+
+try:
+    from xmipp3 import *
+    from xmipp3.protocols import *
+except:
+    pwutils.pluginNotFound('xmipp', doRaise=True)
+
+OTHER = pwutils.importFromPlugin('xmipp3.constants', 'OTHER', doRaise=True)
+
        
 class TestXmippWorkflow(TestWorkflow):
 
@@ -48,13 +53,15 @@ class TestXmippWorkflow(TestWorkflow):
     def testXmippWorkflow(self):
         #First, import a set of micrographs
         protImport = self.newProtocol(ProtImportMicrographs,
-                                      filesPath=self.micsFn, samplingRate=1.237, voltage=300)
+                                      filesPath=self.micsFn,
+                                      samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
-        self.assertSetSize(protImport.outputMicrographs,3)
-        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
+        self.assertSetSize(protImport.outputMicrographs, 3)
+        self.assertIsNotNone(protImport.outputMicrographs.getFileName(),
+                             "There was a problem with the import")
         self.validateFiles('protImport', protImport)      
 
-        #Import a set of volumes        
+        # Import a set of volumes
         print "Import Volume"
         protImportVol = self.newProtocol(ProtImportVolumes,
                                          filesPath=self.vol1,

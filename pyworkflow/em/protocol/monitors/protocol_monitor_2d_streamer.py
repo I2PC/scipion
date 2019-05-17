@@ -96,6 +96,8 @@ class ProtMonitor2dStreamer(ProtMonitor):
         self._lastPartId = 0
         self._subset = self._createSubset()
         self._runPrerequisites = []
+        if self.input2dProtocol.get().isActive():
+            self._runPrerequisites.append(self.input2dProtocol.get().getObjId())
         self._streamClosed = False
         # list of runs that has been (or will) be scheduled/run
 
@@ -126,7 +128,7 @@ class ProtMonitor2dStreamer(ProtMonitor):
         self._store(subset)
         subset.close()
 
-        from pyworkflow.manager import Manager
+        from pyworkflow.project import Manager
         manager = Manager()
         project = manager.loadProject(self.getProject().getName())
         input2D = self.input2dProtocol.get()

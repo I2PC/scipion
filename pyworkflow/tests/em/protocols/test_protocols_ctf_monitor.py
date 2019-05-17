@@ -27,10 +27,12 @@ import os
 from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.protocol import ProtMonitorCTF
 from pyworkflow.em.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
+from pyworkflow.utils import importFromPlugin
+
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -67,42 +69,32 @@ class TestCtfStream(BaseTest):
         # put some stress on the system
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
-        self.proj.launchProtocol(protStream,wait=False)
+        self.proj.launchProtocol(protStream, wait=False)
 
-        counter=1
-        while not protStream.hasAttribute('outputMicrographs'):
-            time.sleep(10)
-            protStream = self._updateProtocol(protStream)
-            if counter > 10:
-                break
-            counter += 1
+        self._waitOutput(protStream, 'outputMicrographs')
 
         # then introduce monitor, checking all the time ctf and saving to
         # database
-        protCTF = ProtCTFFind(useCftfind4=True)
+        kwargs = {
+            'useCtffind4': True,
+            'ctfDownFactor': 2,
+            'highRes': 0.4,
+            'lowRes': 0.05,
+            'numberOfThreads': 4
+        }
+        protCTF = self.newProtocol(ProtCTFFind, **kwargs)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
-        protCTF.ctfDownFactor.set(2)
-        protCTF.highRes.set(0.4)
-        protCTF.lowRes.set(0.05)
-        protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=False)
 
-        counter = 1
-
-        while not protCTF.hasAttribute('outputCTF'):
-
-            time.sleep(10)
-            protCTF = self._updateProtocol(protCTF)
-            if counter > 10:
-                break
-            counter += 1
+        self._waitOutput(protCTF, 'outputCTF')
 
         kwargs = {'samplingInterval': 10,
                   'interval': 300,
                   'maxDefocus': 40000,
                   'minDefocus': 1000,
                   'astigmatism': 0.2,
-                }
+                  'monitorTime': 5
+                  }
 
         protMonitor = self.newProtocol(ProtMonitorCTF, **kwargs)
         protMonitor.inputProtocol.set(protCTF)

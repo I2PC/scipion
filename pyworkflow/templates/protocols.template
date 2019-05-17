@@ -1,0 +1,68 @@
+[PROTOCOLS]
+Protocols SPA = [
+	{"tag": "section", "text": "Imports", "icon": "bookmark.png", "children": [
+	{"tag": "protocol", "value": "ProtImportMovies",      "text": "import movies"},
+	{"tag": "protocol", "value": "ProtImportMicrographs", "text": "import micrographs"},
+	{"tag": "protocol", "value": "ProtImportParticles",   "text": "import particles"},
+	{"tag": "protocol", "value": "ProtImportVolumes",     "text": "import volumes"},
+	{"tag": "section", "text": "more", "openItem": "False", "children": [
+	{"tag": "protocol", "value": "ProtImportCoordinates",   "text": "import coordinates"},
+	{"tag": "protocol", "value": "ProtImportCTF",   "text": "import ctfs"},
+	{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
+	{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
+	{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
+	{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}
+	]}
+	]},
+	{"tag": "section", "text": "Movies", "openItem": "False", "children": []},
+	{"tag": "section", "text": "Micrographs", "children": [
+		{"tag": "protocol_group", "text": "CTF estimation", "openItem": "False", "children": [
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]}
+	]},
+	{"tag": "section", "text": "Particles", "children": [
+		{"tag": "protocol_group", "text": "Picking", "openItem": "False", "children": []},
+		{"tag": "protocol_group", "text": "Extract", "openItem": "False", "children": [
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]},
+		{"tag": "protocol_group", "text": "Preprocess", "openItem": "False", "children": []},
+		{"tag": "protocol_group", "text": "Filter", "openItem": "False", "children": []},
+		{"tag": "protocol_group", "text": "Mask", "openItem": "False", "children": []}
+	]},
+	{"tag": "section", "text": "2D", "children": [
+		{"tag": "protocol_group", "text": "Align", "openItem": "False", "children": [	
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]},
+		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]}
+	]},
+	{"tag": "section", "text": "3D", "children": [
+		{"tag": "protocol_group", "text": "Initial volume", "openItem": "False", "children": [
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]},
+		{"tag": "protocol_group", "text": "Preprocess", "openItem": "False", "children": [
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]},
+		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": []},
+		{"tag": "protocol_group", "text": "Refine", "openItem": "False", "children": [
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]},
+		{"tag": "protocol_group", "text": "Postprocess", "openItem": "False", "children": []},
+		{"tag": "protocol_group", "text": "Analysis", "openItem": "False", "children": [
+			{"tag": "section", "text": "Heterogeneity", "openItem": "False", "children": []},
+			{"tag": "section", "text": "Validation", "openItem": "False", "children": []},
+			{"tag": "section", "text": "Resolution", "openItem": "False", "children": []},
+			{"tag": "section", "text": "more", "openItem": "False", "children": []}
+		]},
+		{"tag": "protocol_group", "text": "Reconstruct", "openItem": "False", "children": []}
+	]},
+	{"tag": "section", "text": "Tools", "openItem": "False", "children": [
+		{"tag": "protocol_group", "text": "Sets", "openItem": "False", "children": [
+			{"tag": "protocol", "value": "ProtSubSet",   "text": "default"},
+			{"tag": "protocol", "value": "ProtUnionSet", "text": "default"},
+			{"tag": "protocol", "value": "ProtSplitSet", "text": "default"}
+			]}		
+	]},
+	{"tag": "section", "text": "Exports", "openItem": "False", "children": []
+	}]

@@ -32,7 +32,7 @@ from math import ceil
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
-from pyworkflow.utils import yellowStr, redStr
+from pyworkflow.utils import yellowStr, redStr, importFromPlugin
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
@@ -108,12 +108,17 @@ class ProtAlignMovies(ProtProcessMovies):
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # validate that we have some output movies
-        failedList = self._readFailedList()
-        if len(failedList) == len(self.listOfMovies):
+        if hasattr(self, 'doSaveAveMic') and not self.doSaveAveMic:
+            output = self.outputMovies
+        else:
+            output = self.outputMicrographs
+
+        if output.getSize() == 0 and len(self.listOfMovies) != 0:
             raise Exception(redStr("All movies failed, didn't create outputMicrographs."
                                    "Please review movie processing steps above."))
-        elif 0 < len(failedList) < len(self.listOfMovies):
-            self.warning(yellowStr("WARNING - Failed to align %d movies." % len(failedList)))
+        elif output.getSize() < len(self.listOfMovies):
+            self.warning(yellowStr("WARNING - Failed to align %d movies."
+                                   % (len(self.listOfMovies) - self.outputMicrographs.getSize())))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -132,12 +137,12 @@ class ProtAlignMovies(ProtProcessMovies):
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
-        inputMovies = self.inputMovies.get()
-        outputSet.copyInfo(inputMovies)
+            inputMovies = self.inputMovies.get()
+            outputSet.copyInfo(inputMovies)
 
-        if fixSampling:
-            newSampling = inputMovies.getSamplingRate() * self._getBinFactor()
-            outputSet.setSamplingRate(newSampling)
+            if fixSampling:
+                newSampling = inputMovies.getSamplingRate() * self._getBinFactor()
+                outputSet.setSamplingRate(newSampling)
 
         return outputSet
 
@@ -184,6 +189,11 @@ class ProtAlignMovies(ProtProcessMovies):
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
 
+            # If need to save the movie
+            if saveMovie:
+                movieSet.setGain(None)
+                movieSet.setDark(None)
+
             for movie in newDone:
                 newMovie = self._createOutputMovie(movie)
                 if newMovie.getAlignment().getShifts()[0]:
@@ -208,7 +218,6 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
-            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -221,14 +230,11 @@ class ProtAlignMovies(ProtProcessMovies):
                 if not os.path.exists(extraMicFn):
                     print(yellowStr("WARNING: Micrograph %s was not generated, "
                                     "can't add it to output set." % extraMicFn))
-                    doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
-            if doneFailed:
-                self._writeFailedList(doneFailed)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -256,28 +262,28 @@ class ProtAlignMovies(ProtProcessMovies):
     def _validate(self):
         errors = []
 
-        if (self.cropDimX > 0 and self.cropDimY <= 0 or
-                        self.cropDimY > 0 and self.cropDimX <= 0):
-            errors.append("If you give cropDimX, you should also give cropDimY"
-                          " and vice versa")
+        # Only validate about cropDimensions if the protocol supports them
+        if (hasattr(self, 'cropDimX') and hasattr(self, 'cropDimY')
+            and (self.cropDimX > 0 and self.cropDimY <= 0
+                 or self.cropDimY > 0 and self.cropDimX <= 0)):
+                errors.append("If you give cropDimX, you should also give "
+                              "cropDimY and vice versa")
 
-        # movie = self.inputMovies.get().getFirstItem()
-        # # Close movies db because the getFirstItem open it
-        # # we do not want to leave the file open
-        # self.inputMovies.get().close()
-        # frames = movie.getNumberOfFrames()
+        inputMovies = self.inputMovies.get()
 
         # Do not continue if there ar no movies. Validation message will
         # take place since attribute is a Pointer.
-        if self.inputMovies.get() is None:
+        if inputMovies is None:
             return errors
 
-        firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
+        firstItem = inputMovies.getFirstItem()
+
+        firstFrame, lastFrame, _ = inputMovies.getFramesRange()
         if lastFrame == 0:
-            # Although getFirstItem is not remonended in general, here it is
-            # used olny once, for validation purposes, so performance
-            # problems not should be apprear.
-            frames = self.inputMovies.get().getFirstItem().getNumberOfFrames()
+            # Although getFirstItem is not recommended in general, here it is
+            # used only once, for validation purposes, so performance
+            # problems should not appear.
+            frames = firstItem.getNumberOfFrames()
             lastFrame = frames
         else:
             frames = lastFrame - firstFrame + 1
@@ -307,6 +313,12 @@ class ProtAlignMovies(ProtProcessMovies):
 
             _validateRange("align")
             _validateRange("sum")
+
+        if not ImageHandler().existsLocation(firstItem.getLocation()):
+            errors.append("The input movie files do not exist!!! "
+                          "Since usually input movie files are symbolic links, "
+                          "please check that links are not broken if you "
+                          "moved the project folder. ")
 
         return errors
 
@@ -397,8 +409,10 @@ class ProtAlignMovies(ProtProcessMovies):
         fnRoot = pwutils.removeBaseExt(fn)
         # Check if there is a second extension
         # (Assuming is is only a dot and 3 or 4 characters after it
-        if fnRoot[-4] == '.' or fnRoot[-5] == '.':
-            fnRoot = pwutils.removeExt(fnRoot)
+        # Do not perform this check if the file name is short
+        if len(fnRoot) > 5:
+            if fnRoot[-4] == '.' or fnRoot[-5] == '.':
+                fnRoot = pwutils.removeExt(fnRoot)
 
         return fnRoot
 
@@ -454,6 +468,12 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         pass
 
+    def _doComputeMicThumbnail(self):
+        """ Should be implemented in sub-classes if want to check
+        the generation of thumbnails.
+        """
+        return False
+
     def _storeSummary(self, movie):
         """ Implement this method if you want to store the summary. """
         pass
@@ -472,15 +492,15 @@ class ProtAlignMovies(ProtProcessMovies):
         
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmipp3.runXmippProgram(program, args)
+        xmipp3 = importFromPlugin('xmipp3')
+        xmipp3.Plugin.runXmippProgram(program, args)
 
     def __runEman2Program(self, program, args):
         """ Internal workaround to launch an EMAN2 program. """
-        import pyworkflow.em.packages.eman2 as eman2
+        eman2 = importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
-        runJob(self._log, eman2.getEmanProgram(program), args,
-               env=eman2.getEnviron())
+        runJob(self._log, eman2.Plugin.getProgram(program), args,
+               env=eman2.Plugin.getEnviron())
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
                      dark=None, gain=None, splineOrder=None):
@@ -619,41 +639,41 @@ class ProtAlignMovies(ProtProcessMovies):
     def getThumbnailFn(self, inputFn):
         """ Returns the default name for a thumbnail image"""
         return pwutils.replaceExt(inputFn, "thumb.png")
+    
+    def _getPsdCorr(self, movie):
+        """ This should be implemented in subclasses."""
+        pass
 
 
 def createAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """
-    sumMeanX = []
-    sumMeanY = []
     figureSize = (8, 6)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
-    preX = 0.0
-    preY = 0.0
-    sumMeanX.append(0.0)
-    sumMeanY.append(0.0)
     ax = figure.add_subplot(111)
     ax.grid()
+    ax.axis('equal')
     ax.set_title('Cartesian representation')
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
-    ax.plot(0, 0, 'yo-')
-    i = 1
+    
+    # Max range of the plot of the two coordinates
+    plotRange = max(max(meanX)-min(meanX), max(meanY)-min(meanY))
+    i = 1 
     skipLabels = ceil(len(meanX) / 10.0)
     for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
-        sumMeanX.append(preX)
-        sumMeanY.append(preY)
-        #ax.plot(preX, preY, 'yo-')
         if i % skipLabels == 0:
-            ax.text(preX-0.02, preY+0.02, str(i))
+            ax.text(x-0.02*plotRange, y+0.02*plotRange, str(i))
         i += 1
 
-    ax.plot(sumMeanX, sumMeanY, color='b')
-    ax.plot(sumMeanX, sumMeanY, 'yo')
+    ax.plot(meanX, meanY, color='b')
+    ax.plot(meanX, meanY, 'yo')
 
+    # setting the plot windows to properly see the data
+    ax.axis([min(meanX)-0.1*plotRange, max(meanX)+0.1*plotRange, 
+             min(meanY)-0.1*plotRange, max(meanY)+0.1*plotRange])
+    
     plotter.tightLayout()
 
     return plotter

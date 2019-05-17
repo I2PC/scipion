@@ -34,16 +34,16 @@ from collections import OrderedDict
 
 import pyworkflow as pw
 import pyworkflow.tests as tests
-from pyworkflow.manager import Manager
+from pyworkflow.project import Manager
 import pyworkflow.utils as pwutils
 from pyworkflow.gui.project import ProjectWindow
 
 
 def getWorkflow(workflow):
     """ Return the full workflow path from
-    the Scipion folder + config/workflows/
+    the Scipion folder + templates/workflow
     """
-    return pw.getConfigPath('workflows', workflow)
+    return pw.getTemplatePath(workflow)
     
 
 class Tutorial():
@@ -83,6 +83,8 @@ class TutorialBetagal(Tutorial):
     
     def loadWorkflow(self):            
         # Update the path of imports
+        import time
+        time.sleep(10)
         self.project.loadProtocols(getWorkflow('workflow_betagal1.json'))
 
 
@@ -93,11 +95,11 @@ if __name__ == '__main__':
 
     def printUsage(msg):
         if msg:
-            print "ERROR: ", msg
+            print("ERROR: ", msg)
             
-        print "\nUSAGE: scipion tutorial [TUTORIAL_NAME]"
-        print "\nwhere TUTORIAL_NAME can be:"
-        print "\n".join([' %s' % k for k in ALL_TUTORIALS.keys()])
+        print("\nUSAGE: scipion tutorial [TUTORIAL_NAME]")
+        print("\nwhere TUTORIAL_NAME can be:")
+        print("\n".join([' %s' % k for k in ALL_TUTORIALS.keys()]))
         
     if pwutils.envVarOn('SCIPION_DEBUG'):
         # Add callback for remote debugging if available.

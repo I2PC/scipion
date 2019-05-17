@@ -30,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+import importlib
 from os.path import join
 
 
@@ -184,10 +185,10 @@ def trace(nlevels, separator=' --> ', stream=sys.stdout):
 
     
 def prettyDict(d):
-    print "{"
+    print("{")
     for k, v in d.iteritems():
-        print "    %s: %s" % (k, v)
-    print "}"
+        print("    %s: %s" % (k, v))
+    print("}")
 
 
 def prettyXml(elem, level=0):
@@ -605,7 +606,8 @@ class Environ(dict):
         if existsVariablePaths(libraryPath):
             self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
         else:
-            print "Some paths do not exist in: % s" % libraryPath
+            print("Some paths do not exist in: % s" % libraryPath)
+
 
 def existsVariablePaths(variableValue):
     """ Check if the path (or paths) in variableValue exists.
@@ -642,22 +644,22 @@ def startDebugger(mode='SCIPION_DEBUG', password='a'):
     if mode != 'SCIPION_DEBUG' or envVarOn('SCIPION_DEBUG'):
         try:
             from rpdb2 import start_embedded_debugger
-            print "Starting debugger..."
+            print("Starting debugger...")
             start_embedded_debugger(password)
         except Exception:
-            print "Error importing rpdb2 debugging module, consider installing winpdb."
+            print("Error importing rpdb2 debugging module, consider installing winpdb.")
 
 
 def getFreePort(basePort=0,host=''):
         import socket
-        port=0
+        port = 0
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.bind((host, basePort))
             ipaddr, port = s.getsockname()
             s.close()
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             return 0
         return port
     
@@ -722,6 +724,65 @@ def getEnvVariable(variableName, default=None, exceptionMsg=None):
         if default is None:
             raise Exception(exceptionMsg)
         else:
-            return  default
+            return default
     else:
         return value
+
+
+def pluginNotFound(plugName, errorMsg='', doRaise=False):
+    """ Prints or raise (depending on the doRaise) telling why it is failing
+    """
+    hint = "   Check the plugin manager (Configuration->Plugins in Scipion manager window) \n"
+    # the str casting is to work with Exceptions as errorMsg
+    if 'No module named %s' % plugName in str(errorMsg):
+        msgStr = " > %s plugin not found. %s" % (plugName, errorMsg)
+        hint += "   or use 'scipion installp --help' in the command line to install it."
+    else:
+        msgStr = " > error when importing from %s: %s" % (plugName, errorMsg)
+        if errorMsg != '':  # if empty we know nothing...
+            hint += ("   or use 'scipion installp --help --checkUpdates' in the "
+                     "command line to check for upgrades,\n   "
+                     "it could be a versions compatibility issue.")
+
+    stackList = traceback.extract_stack()
+    if len(stackList) > 3:
+        callIdx = -3  # We use the most probable index as default
+        for idx, stackLine in enumerate(stackList):
+            if stackLine[0].endswith('/unittest/loader.py'):
+                callIdx = idx + 1
+    else:
+        callIdx = 0
+
+    callBy = stackList[callIdx][0]
+    if callBy.endswith('pyworkflow/plugin.py'):
+        # This special case is to know why is failing and not where is called
+        # because we know that we call all plugins.protocols at the beginning
+        calling = traceback.format_exc().split('\n')[-4]
+    else:
+        line = stackList[callIdx][1]
+        calling = "  Called by %s, line %s" % (callBy, line)
+
+    raiseMsg = "%s\n %s\n%s\n" % (msgStr, calling, hint)
+    if doRaise:
+        raise Exception("\n\n"+raiseMsg)
+    else:
+        print(raiseMsg)
+
+
+def importFromPlugin(module, method='', errorMsg='', doRaise=False):
+    """ This method try to import either the method from the module/plugin
+        or the whole module/plugin and returns what is imported if not fails.
+        When the importation fails (due to the plugin or the method is not found),
+        it prints a common message + optional errorMsg or
+        it raise with the same message if doRaise is True.
+        """
+    try:
+        if method == '':
+            output = importlib.import_module(module)
+        else:
+            output = getattr(importlib.import_module(module), method)
+        return output
+    except Exception as e:
+        plugName = module.split('.')[0]
+        errMsg = str(e) if errorMsg=='' else "%s. %s" % (str(e), errorMsg)
+        pluginNotFound(plugName, errMsg, doRaise)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from pyworkflow.em.viewer import ChimeraVirusClient
+from pyworkflow.em.viewers import ChimeraVirusClient
 import os#, sys
 import argparse
-#import xmipp
+#import xmippLib
 
 def main():
     commonParser = argparse.ArgumentParser(add_help=False, prog='Chimera Virus Client')
@@ -11,7 +11,7 @@ def main():
     commonParser.add_argument('--samplingRate', help='Volume sampling rate (default 1)', default=1)
     commonParser.add_argument('-h', type=int, help='Capsid parameter h (default 5)', default=5)
     commonParser.add_argument('-k', type=int, help='Capsid parameter k (default 0)', default=0)
-    commonParser.add_argument('--sym', help='symmetry', default='n25')
+    commonParser.add_argument('--sym', help='symmetry', default='222r')
     commonParser.add_argument('--Rhex', type=float, help='hexagomal grid radius')
     commonParser.add_argument('--Rsph', type=float, help='sphere shell radius')
     commonParser.add_argument('--rsph', type=float, help='small sphere radius')

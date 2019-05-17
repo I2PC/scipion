@@ -100,3 +100,6 @@ class ProtInitialVolume(Prot3D):
 
 class ProtAnalysis3D(Prot3D):
     pass
+
+class ProtFitting3D(Prot3D):
+    pass

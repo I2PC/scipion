@@ -29,10 +29,11 @@ import Tkinter as tk
 import tkFont
 
 import pyworkflow as pw
-from pyworkflow.project import PROJECT_DBNAME
+from pyworkflow.project import Project
 from pyworkflow.utils.utils import prettyDate, prettyTime
 from pyworkflow.utils.path import getHomePath
-from pyworkflow.manager import Manager
+
+from pyworkflow.project import Manager
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui.dialog import askString, askYesNo, showError
@@ -43,18 +44,18 @@ from pyworkflow.gui.widgets import IconButton, HotButton, Button
 from pyworkflow.utils.properties import Icon
 
             
-class ProjectsView(tk.Frame):    
-    def __init__(self, parent, windows, **args): 
+class ProjectsView(tk.Frame):
+    def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, bg='white', **args)
         self.windows = windows
         self.manager = windows.manager
         self.root = windows.root
-        
+
         #tkFont.Font(size=12, family='verdana', weight='bold')
         bigSize = pwgui.cfgFontSize + 2
         smallSize = pwgui.cfgFontSize - 2
         fontName = pwgui.cfgFontName
-        
+
         self.projNameFont = tkFont.Font(size=bigSize, family=fontName,
                                         weight='bold')
         self.projDateFont = tkFont.Font(size=smallSize, family=fontName)
@@ -81,11 +82,11 @@ class ProjectsView(tk.Frame):
         self.rowconfigure(1, weight=1)
         text = TaggedText(self, width=40, height=15, bd=0, bg='white')
         text.grid(row=1, columnspan=2, column=0, sticky='news')
-      
+
         self.createProjectList(text)
         text.setReadOnly(True)
         self.text = text
-    
+
     def createProjectList(self, text):
         """Load the list of projects"""
         r = 0
@@ -113,7 +114,7 @@ class ProjectsView(tk.Frame):
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
         text.setReadOnly(True)
-      
+
     def createProjectLabel(self, parent, projInfo, color):
         frame = tk.Frame(parent, bg=color)
         # ROW1
@@ -144,9 +145,9 @@ class ProjectsView(tk.Frame):
             lblLink = tk.Label(frame, text=linkMsg, font=self.projDateFont, bg=color, fg='grey', justify=tk.LEFT)
             lblLink.grid(row=2, column=0, columnspan=3, sticky='w')
 
-        
+
         return frame
-    
+
     def createNewProject(self, projName, projLocation):
         self.manager.createProject(projName, location=projLocation)
         self.createProjectList(self.text)
@@ -166,14 +167,13 @@ class ProjectsView(tk.Frame):
         self.createProjectList(self.text)
         self.openProject(projName)
 
-
     def openProject(self, projName):
         from subprocess import Popen
         script = pw.join('apps', 'pw_project.py')
-        Popen([os.environ['SCIPION_PYTHON'], script, projName])
-          
+        Popen([pw.PYTHON, script, projName])
+
     def deleteProject(self, projName):
-        if askYesNo(Message.TITLE_DELETE_PROJECT, 
+        if askYesNo(Message.TITLE_DELETE_PROJECT,
                     "Project *%s*. " % projName + Message.MESSAGE_DELETE_PROJECT, self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
@@ -193,7 +193,7 @@ class ProjectsView(tk.Frame):
 class ProjectCreateWindow(Window):
     """ Windows to create a project. """
     def __init__(self, title, parent=None, weight=True, minsize=(400, 110),
-                 icon="scipion_bn.xbm", **args):
+                 icon=Icon.SCIPION_ICON, **args):
         """
          We assume the parent should be of ProjectsView
         """
@@ -230,6 +230,7 @@ class ProjectCreateWindow(Window):
         self.btnBrowse.grid(row=1, column=2, sticky='e', padx=5, pady=5)
 
         self.initial_focus = entryName
+        self.initial_focus.focus()
 
         btnFrame = tk.Frame(content)
         btnFrame.columnconfigure(0, weight=1)
@@ -285,7 +286,7 @@ class ProjectCreateWindow(Window):
 class ProjectImportWindow(Window):
     """ Windows to import a project. """
     def __init__(self, title, parent=None, weight=True, minsize=(400, 150),
-                 icon="scipion_bn.xbm", **args):
+                 icon=Icon.SCIPION_ICON, **args):
         """
          We assume the parent should be ProjectsView
         """
@@ -349,10 +350,11 @@ class ProjectImportWindow(Window):
         self.btnSearch = IconButton(content, 'Browse', Icon.ACTION_BROWSE, highlightthickness=0, command=self._browseSearchLocation)
         self.btnSearch.grid(row=3, column=2, sticky='e', padx=5, pady=5)
         btnSearchHelp = IconButton(content, Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP, highlightthickness=0,
-             command=lambda: self.showInfo('Optional: Folder where raw files, binaries (movies, migcrographs,..) can be found. Used to repair broken links.'))
+             command=lambda: self.showInfo('Optional: Folder where raw files, binaries (movies, micrographs,..) can be found. Used to repair broken links.'))
         btnSearchHelp.grid(row=3, column=3, sticky='e', padx=2, pady=2)
 
         self.initial_focus = entryName
+        self.initial_focus.focus()
         btnCheck.select()
 
         btnFrame = tk.Frame(content)
@@ -416,7 +418,7 @@ class ProjectImportWindow(Window):
         elif not os.path.isdir(projLocation):
                 errorMessage += "Project location is not a directory\n"
         # Validate that the project location is a scipion project folder
-        elif not os.path.exists(os.path.join(projLocation, PROJECT_DBNAME)):
+        elif not os.path.exists(os.path.join(projLocation, Project.getDbName())):
             errorMessage += "Project location doesn't look like a scipion folder\n"
 
         # Validate that there isn't already a project with the same name

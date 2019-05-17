@@ -1,12 +1,43 @@
+# **************************************************************************
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'scipion@cnb.csic.es'
+# *
+# **************************************************************************
+
 import unittest, sys
+
 from pyworkflow.em import ProtImportMovies, ProtImportCoordinates
 from pyworkflow.tests import DataSet, setupTestProject
-from pyworkflow.em.packages.xmipp3 import (XmippProtOFAlignment, XmippProtPreprocessMicrographs,
-                                           XmippProtCTFMicrographs, XmippProtExtractParticles,
-                                           XmippProtCL2DAlign)
-from pyworkflow.em.packages.xmipp3.constants import OTHER
-from pyworkflow.em.packages.spider import SpiderProtFilter, SpiderProtCAPCA, SpiderProtClassifyWard
 from test_workflow import TestWorkflow
+from pyworkflow.utils import importFromPlugin
+
+XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
+XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols','XmippProtPreprocessMicrographs')
+XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtCTFMicrographs')
+XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
+XmippProtCL2DAlign = importFromPlugin('xmipp3.protocols', 'XmippProtCL2DAlign')
+OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
+SpiderProtFilter = importFromPlugin('spider.protocols', 'SpiderProtFilter', doRaise=True)
+SpiderProtCAPCA = importFromPlugin('spider.protocols', 'SpiderProtCAPCA')
+SpiderProtClassifyWard = importFromPlugin('spider.protocols', 'SpiderProtClassifyWard')
 
 
 class HighThroughputTest(TestWorkflow):

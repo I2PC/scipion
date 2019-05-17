@@ -29,9 +29,10 @@ import webbrowser
 import Tkinter as tk
 import tkFont
 
-from pyworkflow import SCIPION_SUPPORT_EMAIL
+import pyworkflow as pw
 from pyworkflow.gui import Window, Message, Color
 from pyworkflow.gui.widgets import GradientFrame
+from pyworkflow.utils.properties import Icon
 
 from viewprojects import ProjectsView
 from viewprotocols import ProtocolsView
@@ -50,7 +51,7 @@ class ProjectBaseWindow(Window):
     It extends from Window and add some layout functions (header and footer)
     """
     def __init__(self, title, masterWindow=None, weight=True, minsize=(900, 500),
-                 icon="scipion_bn.xbm", **kwargs):
+                 icon=Icon.SCIPION_ICON, **kwargs):
         Window.__init__(self, title, masterWindow, weight=weight, 
                         icon=icon, minsize=minsize, enableQueue=True, **kwargs)
         
@@ -163,7 +164,7 @@ class ProjectBaseWindow(Window):
     #
     def onExit(self):
         # Project -> Exit
-        self.close()
+        self._onClosing()
 
     def onOnlineHelp(self):
         # Help -> Online help
@@ -171,13 +172,26 @@ class ProjectBaseWindow(Window):
 
     def onAbout(self):
         # Help -> About
-        self.showInfo("""
-[[http://scipion.cnb.csic.es/][Scipion]] is an image processing framework to obtain 3D models of macromolecular complexes using Electron Microscopy.
+        self.showInfo(
+            "[[http://scipion.i2pc.es/][Scipion]] is an image processing "
+            "framework to obtain 3D models of macromolecular complexes using "
+            "Electron Microscopy\n\n."
+            "It integrates several software packages with a unified interface. "
+            "This way you can combine them in a single workflow, while all the "
+            "formats and conversions are taken care of automatically.\n\n"
+            "*Scipion * is developed by a multidisciplinary group of engineers, "
+            "physicists, mathematicians, biologists and computer scientists. "
+            "It is produced mainly by people at the "
+            "[[http://biocomputingunit.es//][Biocomputing Unit]], "
+            "[[https://www.scilifelab.se/][SciLifeLab]], "
+            "[[https://www2.mrc-lmb.cam.ac.uk/][MRC]] and "
+            "[[https://www.mcgill.ca/][McGill university]],"
+            "but with many contributions accross the globe.")
 
-It integrates several software packages with a unified interface. This way you can combine them in a single workflow, while all the formats and conversions are taken care of automatically.
 
-*Scipion* is developed by a multidisciplinary group of engineers, physicists, mathematicians and computer scientists. We are part of the [[http://i2pc.cnb.csic.es/][Instruct Image Processing Center]] and are hosted by the [[http://biocomp.cnb.csic.es/][Biocomputing Unit]] at the Spanish National Center for Biotechnology [[http://www.cnb.csic.es/][CNB]]-[[http://www.csic.es/][CSIC]].
-""")
     def onContactSupport(self):
         # Help -> Contact support
-        self.showInfo("""Please, do contact us at [[mailto:%s][%s]] for any feedback, bug, idea, anything that will make Scipion better.""" % (SCIPION_SUPPORT_EMAIL, SCIPION_SUPPORT_EMAIL))
+        email = pw.Config.SCIPION_SUPPORT_EMAIL
+        self.showInfo("Please, do contact us at [[mailto:%s][%s]] for any "
+                      "feedback, bug, idea, anything that will make Scipion "
+                      "better.""" % (email, email))

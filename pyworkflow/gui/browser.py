@@ -37,7 +37,7 @@ import stat
 import Tkinter as tk
 
 import time
-import xmipp
+import xmippLib
 
 from pyworkflow.utils import ROOT, getParentFolder
 from pyworkflow.utils.properties import Icon, KEYSYM
@@ -138,7 +138,9 @@ class ObjectBrowser(tk.Frame):
         if desc is not None:
             self.text.addText(desc)
         self.text.setReadOnly(True)
-            
+        if hasattr(self, 'entryLabel') and not self._lastSelected.isDir():
+            self.entryVar.set(self._lastSelected.getFileName())
+
     def getSelected(self):
         """ Return the selected object. """
         return self._lastSelected
@@ -225,13 +227,13 @@ class SqlFileHandler(FileHandler):
     
     
 class ImageFileHandler(FileHandler):
-    _image = xmipp.Image()
+    _image = xmippLib.Image()
     _index = ''
     
     def _getImageString(self, filename):
         if isStandardImage(filename):
             return "Image file."
-        x, y, z, n = xmipp.getImageSize(filename)
+        x, y, z, n = xmippLib.getImageSize(filename)
         objType = 'Image'
         dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d" 
         expMsg = "Columns x Rows "
@@ -262,7 +264,7 @@ class ImageFileHandler(FileHandler):
         return self._getImagePreview(fn), self._getImageString(fn)
     
     def getFileActions(self, objFile):
-        from pyworkflow.em.viewer import DataView
+        from pyworkflow.em.viewers import DataView
         fn = objFile.getPath()
         return [('Open with Xmipp viewer', lambda: DataView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
@@ -288,7 +290,7 @@ class StackHandler(ImageFileHandler):
 class ChimeraHandler(FileHandler):
     
     def getFileActions(self, objFile):
-        from pyworkflow.em.viewer import ChimeraView
+        from pyworkflow.em.viewers import ChimeraView
         fn = objFile.getPath()
         return [('Open with Chimera', lambda: ChimeraView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
@@ -304,7 +306,7 @@ class MdFileHandler(ImageFileHandler):
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
         path = dirname(mdFn)
-        index, fn = xmipp.FileName(imgFn).decompose()
+        index, fn = xmippLib.FileName(imgFn).decompose()
         
         while path and path != '/':
             newFn = os.path.join(path, fn)
@@ -317,19 +319,19 @@ class MdFileHandler(ImageFileHandler):
         return None
             
     def _getMdString(self, filename, block=None):
-        md = xmipp.MetaData()
+        md = xmippLib.MetaData()
         if block:
             md.read(block + '@' + filename)
         else:
             md.read(filename, 1)
         labels = md.getActiveLabels()
         msg =  "Metadata items: *%d*\n" % md.getParsedLines()
-        msg += "Metadata labels: " + ''.join(["\n   - %s" % xmipp.label2Str(l)
+        msg += "Metadata labels: " + ''.join(["\n   - %s" % xmippLib.label2Str(l)
                                               for l in labels])
         
         imgPath = None
         for label in labels:
-            if xmipp.labelIsImage(label):
+            if xmippLib.labelIsImage(label):
                 imgPath = self._getImgPath(filename,
                                            md.getValue(label, md.firstObject()))
                 break
@@ -346,7 +348,7 @@ class MdFileHandler(ImageFileHandler):
         
         if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos' or ext == '.doc':
             msg = "*Metadata File* "
-            blocks = xmipp.getBlocksInMetaDataFile(filename)
+            blocks = xmippLib.getBlocksInMetaDataFile(filename)
             nblocks = len(blocks)
             if nblocks <= 1:
                 mdStr = self._getMdString(filename)
@@ -539,7 +541,7 @@ class FileBrowser(ObjectBrowser):
         # Register keypress event
         self.tree.itemKeyPressed = self._itemKeyPressed
 
-        treeRow = 2
+        treeRow = 3
         treeFrame.grid(row=treeRow, column=0, sticky='news')
         # Toolbar frame
         toolbarFrame = tk.Frame(frame)
@@ -548,24 +550,24 @@ class FileBrowser(ObjectBrowser):
 
         pathFrame = tk.Frame(frame)
         pathLabel = tk.Label(pathFrame, text='Path')
-        pathLabel.grid(row=0, column=0, padx=5, pady=5)
+        pathLabel.grid(row=0, column=0, padx=0, pady=3)
         pathEntry = tk.Entry(pathFrame, bg='white', width=65,
                              textvariable=self.pathVar)
-        pathEntry.grid(row=0, column=1, sticky='new', pady=5)
+        pathEntry.grid(row=0, column=1, sticky='new', pady=3)
         pathEntry.bind("<Return>", self._onEnterPath)
         self.pathEntry = pathEntry
         pathFrame.grid(row=1, column=0, sticky='new')
-        
+
         # Entry frame, could be used for filter
-        if self.entryLabel:  
+        if self.entryLabel:
             entryFrame = tk.Frame(frame)
-            entryFrame.grid(row=2, column=0, sticky='new') 
+            entryFrame.grid(row=2, column=0, sticky='new')
             tk.Label(entryFrame, text=self.entryLabel).grid(row=0, column=0,
-                                                            sticky='nw')
-            tk.Entry(entryFrame, 
-                     textvariable=self.entryVar, 
+                                                            sticky='nw', pady=3)
+            tk.Entry(entryFrame,
+                     textvariable=self.entryVar,
                      bg='white',
-                     width=50).grid(row=0, column=1, sticky='nw')
+                     width=65).grid(row=0, column=1, sticky='nw', pady=3)
         
         frame.rowconfigure(treeRow, weight=1)
 

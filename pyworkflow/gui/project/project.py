@@ -42,12 +42,11 @@ import tempfile
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.manager import Manager
-from pyworkflow.config import MenuConfig, ProjectSettings
-from pyworkflow.project import Project, PROJECT_CONFIG_HOSTS
+from pyworkflow.project import MenuConfig, ProjectSettings
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
-from pyworkflow.em.plotter import plotFile
+from pyworkflow.em.viewers import EmPlotter
+from pyworkflow.gui.plugin_manager import PluginManager
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.gui.text import _open_cmd, openTextFileEditor
 from pyworkflow.webservices import ProjectWorkflowNotifier, WorkflowRepository
@@ -84,7 +83,7 @@ class ProjectWindow(ProjectBaseWindow):
                             icon='fa-trash-o.png')
         projMenu.addSubMenu('Manage project labels', 'labels',
                             icon=Icon.TAGS)
-        projMenu.addSubMenu('Toogle color mode', 'color_mode',
+        projMenu.addSubMenu('Toggle color mode', 'color_mode',
                             shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
         projMenu.addSubMenu('Select all protocols', 'select all',
                             shortCut="Ctrl+a")
@@ -116,12 +115,11 @@ class ProjectWindow(ProjectBaseWindow):
             self.projName += "<READ ONLY>"
 
         # Notify about the workflow in this project
-        self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
         ProjectBaseWindow.__init__(self, projTitle, master,
-                                   icon=self.icon, minsize=(90,50))
+                                   minsize=(90,50), icon=Icon.SCIPION_ICON_PROJ)
         self.root.attributes("-zoomed", True)
 
         self.switchView(VIEW_PROTOCOLS)
@@ -151,7 +149,7 @@ class ProjectWindow(ProjectBaseWindow):
         ProjectBaseWindow._onClosing(self)
      
     def loadProject(self):
-        self.project = Project(self.projPath)
+        self.project = pw.project.Project(self.projPath)
         self.project.load()
 
         # Check if we have settings.sqlite, generate if not
@@ -195,6 +193,14 @@ class ProjectWindow(ProjectBaseWindow):
             args.append(notesFile)
             subprocess.Popen(args)  #nonblocking
         else:
+            # if no program has been selected
+            # xdg-open will try to guess but
+            # if the file does not exist it
+            # will return an error so If the file does
+            # not exist I will create an empty one
+            # 'a' will avoid accidental truncation
+            if not os.path.exists(notesFile):
+                open(notesFile, 'a').close()
             openTextFileEditor(notesFile)
 
     def onRemoveTemporaryFiles(self):
@@ -246,7 +252,7 @@ class ProjectWindow(ProjectBaseWindow):
     def onManageProjectLabels(self):
         self.manageLabels()
 
-    def onToogleColorMode(self):
+    def onToggleColorMode(self):
         self.getViewWidget()._toggleColorScheme(None)
 
     def onSelectAllProtocols(self):
@@ -265,13 +271,13 @@ class ProjectWindow(ProjectBaseWindow):
                                   ProjectTCPRequestHandler)
         server.project = self.project
         server.window = self
-        server_thread = threading.Thread(target=server.serve_forever)
+        server_thread = threading.Thread(name="projectTCPserver", target=server.serve_forever)
         # Exit the server thread when the main thread terminates
         server_thread.daemon = True
         server_thread.start()
 
     def schedulePlot(self, path, *args):
-        self.enqueue(lambda: plotFile(path, *args).show())    
+        self.enqueue(lambda: EmPlotter.createFromFile(path, *args).show())
 
     @classmethod
     def registerObjectCommand(cls, cmd, func):
@@ -346,6 +352,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         confMenu.addSubMenu('General', 'general')
         confMenu.addSubMenu('Hosts', 'hosts')
         confMenu.addSubMenu('Protocols', 'protocols')
+        confMenu.addSubMenu('Plugins', 'plugins')
         confMenu.addSubMenu('User', 'user')
 
         helpMenu = menu.addSubMenu('Help')
@@ -362,9 +369,9 @@ class ProjectManagerWindow(ProjectBaseWindow):
         except Exception:
             title = Message.LABEL_PROJECTS
         
-        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **kwargs)
-        self.manager = Manager()
-        
+        ProjectBaseWindow.__init__(self, title, minsize=(750, 500),
+                                   icon=Icon.SCIPION_ICON_PROJS, **kwargs)
+        self.manager = pw.project.Manager()
         self.switchView(VIEW_PROJECTS)
 
     #
@@ -374,34 +381,34 @@ class ProjectManagerWindow(ProjectBaseWindow):
     def onBrowseFiles(self):
         # File -> Browse files
         FileBrowserWindow("Browse files", self,
-                          os.environ['SCIPION_USER_DATA'],
+                          pw.Config.SCIPION_USER_DATA,
                           selectButton=None).show()
 
     def onGeneral(self):
         # Config -> General
-        _open_cmd(pw.getConfigPath('scipion.conf'))
+        self._openConfigFile(pw.Config.SCIPION_CONFIG)
 
-    def _openConfigFile(self, configFile, userOnly=False):
+    def _openConfigFile(self, configFile):
         """ Open an Scipion configuration file, if the user have one defined,
         also open that one with the defined text editor.
         """
-        if not userOnly:
-            _open_cmd(pw.getConfigPath(configFile))
+        _open_cmd(pw.getConfigPath(configFile))
 
-        userHostConf = os.path.join(pwutils.getHomePath(),
-                                    '.config', 'scipion', configFile)
-        if os.path.exists(userHostConf):
-            _open_cmd(userHostConf)
 
     def onHosts(self):
         # Config -> Hosts
-        self._openConfigFile(PROJECT_CONFIG_HOSTS)
+        self._openConfigFile(pw.Config.SCIPION_HOSTS)
 
     def onProtocols(self):
-        self._openConfigFile('protocols.conf')
+        self._openConfigFile(pw.Config.SCIPION_PROTOCOLS)
 
     def onUser(self):
-        self._openConfigFile('scipion.conf', userOnly=True)
+        self._openConfigFile(pw.Config.SCIPION_LOCAL_CONFIG)
+
+    def onPlugins(self):
+        # Config -> Plugins
+        PluginManager("Plugin Manager", self, pw.Config.SCIPION_USER_DATA,
+                      selectButton=None).show()
 
 
 class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
@@ -418,8 +425,8 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             tokens = shlex.split(msg)
             if msg.startswith('run protocol'):
                 protocolName = tokens[2]
-                from pyworkflow.em import getProtocols
-                protocolClass = getProtocols()[protocolName]
+                from pyworkflow.em import Domain
+                protocolClass = Domain.getProtocols()[protocolName]
                 # Create the new protocol instance and set the input values
                 protocol = project.newProtocol(protocolClass)
 

@@ -29,7 +29,8 @@
 This module defines the text used in the application.
 """
 
-class Message():
+
+class Message:
     # Example Usage: 
     # MyMessage = Message()
     # print MyMessage.label
@@ -127,6 +128,8 @@ class Message():
     LABEL_THREADS = 'Threads'
     LABEL_MPI = 'MPI'
     LABEL_QUEUE = 'Use queue?'
+    LABEL_QUEUE_FOR_JOBS = 'Use queue for Jobs?'
+
     LABEL_WAIT_FOR = 'Wait for'
     
     LABEL_EXPERT = 'Expert Level'
@@ -152,11 +155,17 @@ Define the number of processors to be used in the execution.
        the same computer.     
     """
 
-    HELP_USEQUEUE = """  
-Select *Yes* if you want to submit the job to a Queue system.
-The queue commands for launch and stop jobs should be configured
-for the current host in the _hosts.conf_ file.    
+    HELP_USEQUEUE = """
+    Select *Yes* if you want to submit a single job per protocol to a Queue system.
+    The queue commands for launch and stop jobs should be configured
+    for the current host in the _hosts.conf_ file.
+        """
+    HELP_USEQUEUEPERJOB = """
+    Select *Yes* if you want to submit the multiple jobs per protocol to a Queue system.
+    The queue commands for launch and stop jobs should be configured
+    for the current host in the _hosts.conf_ file.
     """
+
 
     HELP_WAIT_FOR = """
     Specify a comma separated list of protocol IDs if you want
@@ -259,7 +268,7 @@ It is used by a few programs like Ctffind or Frealign."""
     TEXT_NO_CTF_READY = 'CTF of *Input Micrographs* not ready yet.'
     TEXT_NO_OUTPUT_CO = 'Output coordinates not ready yet.'
     ERROR_NO_EST_CTF = '_estimateCTF should be implemented'
-    
+    TEXT_NO_OUTPUT_FILES = 'No output file produced'
     
     TITLE_LAUNCHED = 'Success'
     LABEL_LAUNCHED = 'The protocol was launched successfully.'
@@ -289,6 +298,11 @@ Do you really want to continue?'
     
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
+
+    TITLE_RESTART_WORKFLOW = 'Confirm RESTART'
+    LABEL_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
+    TITLE_LAUNCHED_WORKFLOW_FAILED = 'Error while launching the Workflow'
+    LABEL_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
     
     #SHOWJ_WEB
     SHOWJ_TITLE = 'Showj'
@@ -339,9 +353,34 @@ Do you really want to continue?'
     TITLE_PICK_GAUSS = 'Automatic gaussian picking'
     LABEL_PICK_GAUSS = 'Do you wish to perform an automatic gaussian picking for the remaining micrographs?'
 
+    TITLE_INSPECTOR = 'Objects inspector'
+    LABEL_INSPECTOR = 'Objects inspector will inspect the whole project. ' \
+                      'Thus, it can take a while depending on the size of the project.\n' \
+                      'Do you want to continue?'
+    EXECUTE_PLUGINS_MANAGER_OPERATION = 'Execute all selected operations'
+    CANCEL_SELECTED_OPERATION = 'Cancel a selected operation'
+
+
+# PLUGIN/BINARY STATES
+class PluginStates:
+    PLUGIN = 'plugin'
+    BINARY = 'binary'
+    UNCHECKED = 'unchecked'
+    CHECKED = 'checked'
+    INSTALL = 'install'
+    UNINSTALL = 'uninstall'
+    TO_INSTALL = 'to_install'
+    INSTALLED = 'installed'
+    PRECESSING = 'processing'
+    FAILURE = 'failure'
+    AVAILABLE_RELEASE = 'available_release'
+    TO_UPDATE = 'to_update'
+    SUCCESS = 'success'
+    ERRORS = 'errors'
+
 
 # To get font awesome icons into png use: http://fa2png.io/
-class Icon():
+class Icon:
     # Project Content Template
     RUNS_TREE = 'fa-sitemap.png'
     RUNS_LIST = 'fa-bars.png'
@@ -392,7 +431,26 @@ class Icon():
     ROOT = 'root.png'
     ROCKET = 'fa-rocket.png'
 
-class Color():
+    SCIPION_ICON = 'scipion_icon.png'
+    SCIPION_ICON_PROJ = 'scipion_icon.png'  # 'scipion_icon_proj.png'
+    SCIPION_ICON_PROJS = 'scipion_icon.png'  # 'scipion_icon_projs.png'
+    SCIPION_ICON_PROT = 'scipion_icon.png'  # 'scipion_icon_prot.png'
+
+    # PLUGIN MANAGER ICONS
+    CHECKED = 'fa-checked.png'
+    UNCHECKED = 'fa-unchecked.png'
+    INSTALL = 'fa-install.png'
+    UNINSTALL = 'fa-uninstall.png'
+    TO_INSTALL = 'fa-to_install.png'
+    INSTALLED = 'fa-installed.png'
+    PROCESSING = 'fa-processing.png'
+    FAILURE = 'fa-failure.png'
+    DELETE_OPERATION = 'fa-delete-operation.png'
+    TO_UPDATE = 'fa-update.png'
+    ACTION_UNDO = 'fa-undo.png'
+
+
+class Color:
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
     LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
     LIGHT_BLUE_COLOR = '#EAEBFF' # Very light blue for even rows
@@ -407,7 +465,7 @@ class Color():
     STATUS_FAILED = '#F5CCCB', 
     STATUS_INTERACTIVE = '#F3F5CB',
     STATUS_ABORTED = '#F5CCCB',
-    #STATUS_SAVED = '#124EB0',
+
 
 class colorText:
     """printing in colors, bold, etc,
@@ -423,6 +481,7 @@ class colorText:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
     END = '\033[0m'
+
 
 class KEYSYM:
     """ Keysym values for evaluating key pressed within events

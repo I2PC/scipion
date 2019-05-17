@@ -34,8 +34,8 @@ This module contains protocols related to Set operations such us:
 import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
-from pyworkflow.object import Boolean, Object
-
+from pyworkflow.object import Boolean
+from pyworkflow.em.data import SetOfClasses
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
@@ -101,33 +101,35 @@ class ProtUnionSet(ProtSets):
                            ' volumes, etc.) to be united. If you select 3 sets '
                            'with 100, 200, 200 elements, the final set will '
                            'contain a total of 500 elements.')
-        form.addParam('renumber', pwprot.params.BooleanParam, default=False, 
-                      expertLevel=pwprot.LEVEL_ADVANCED,
-                      label="Create new ids",
-                      help='Make an automatic renumbering of the ids, so the '
-                           'new objects\nare not associated to the old ones.')
-
         form.addParam('ignoreDuplicates', pwprot.params.BooleanParam,
                       default=False,
-                      expertLevel=pwprot.LEVEL_ADVANCED,
                       label='Ignore duplicates?',
-                      help='By default if duplicated items are found in input '
-                           'sets this will cause renumbering of the items ids '
-                           'in the output set. This is the case for example '
-                           'when doing several imports, which will cause ids '
-                           'overlapping, but we really want to insert as new '
-                           'items in the output. If, for example, the items '
-                           'belonged to the same set in a previous step, you '
-                           'should set this option to *Yes* to keep only one '
-                           'copy of the item. (the first occurrence)')
-        
+                      help='By default, if duplicated items are found (same ID) '
+                           'within the input sets, it will cause renumbering of the '
+                           'items ids in the output set. '
+                           'This is the case for example when doing several '
+                           'imports (which will cause ids overlapping) '
+                           'but we really want to insert as new items in the '
+                           'output. \n'
+                           'On the other hand, if the items come from the same '
+                           'protocol (obove in the workflow), you would like '
+                           'to ignore that items that appears in the different '
+                           'inputs since they will be identical. '
+                           'Therefore, set this option to *Yes* to keep only '
+                           'one copy of the item. (the first occurrence)')
+        form.addParam('renumber', pwprot.params.BooleanParam, default=False,
+                      expertLevel=pwprot.LEVEL_ADVANCED,
+                      label="Force new ids",
+                      help='Make an automatic renumbering of the ids, so all '
+                           'new objects will not be associated to the old ones.')
+
         # TODO: See what kind of restrictions we add,
         # like "All sets should have the same sampling rate."
 
-    # -------------------------- INSERT steps functions ------------------------
+    #-------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
-    
+
     # --------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
@@ -140,7 +142,8 @@ class ProtUnionSet(ProtSets):
 
         # Renumber from the beginning if either the renumber option is selected
         # or we find duplicated ids in the sets
-        cleanIds = self.renumber.get() or self.duplicatedIds()
+        cleanIds = ((not self.ignoreDuplicates.get() and self.duplicatedIds())
+                        or self.renumber.get())
 
         #TODO ROB remove ignoreExtraAttributes condition
         #or implement it. But this will be for Scipion 1.2
@@ -154,15 +157,22 @@ class ProtUnionSet(ProtSets):
                 if not "." in attr:
                     copyAttrs.append(attr)
 
+        idsList = []
         for itemSet in self.inputSets:
             for obj in itemSet.get():
+                objId = obj.getObjId()
+                if self.ignoreDuplicates.get():
+                    if objId in idsList:
+                        continue
+                    idsList.append(objId)
+
                 if self.ignoreExtraAttributes:
                     newObj = itemSet.get().ITEM_TYPE()
                     newObj.copyAttributes(obj, *copyAttrs)
 
                     self.cleanExtraAttributes(newObj, commonAttrs)
                     if not cleanIds:
-                        newObj.setObjId(obj.getObjId())
+                        newObj.setObjId(objId)
                 else:
                     newObj = obj
 
@@ -235,7 +245,50 @@ class ProtUnionSet(ProtSets):
         if len(classes) > 1:
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
-        return []  # no errors
+        if issubclass(type(self.inputSets[0].get()), SetOfClasses):
+            return["Is not possible to join different sets of classes.\n"
+                   "If you want to join different representative, extract them "
+                   "with the viewer and them run this protocol with the "
+                   "resulting averages."]
+
+        # Validate attributes like sampling rate or dimensions
+        return self._checkSetsCompatibility()
+
+    def _checkSetsCompatibility(self):
+        """ Check if all input sets have a minimum compatible attributes """
+        # Attributes to check
+        attrs = {'sampling rates': 'getSamplingRate',
+                'dimensions': 'getDimensions'}
+        errors = []
+        # For each attribute
+        for key, attr in attrs.iteritems():
+
+            # Intentional: we need a default value not None, since some
+            # attributes could return None as a valid value.
+            refValue = '?'
+
+            # For pointer to a set
+            for setPointer in self.inputSets:
+
+                # Get the set:
+                inputSet = setPointer.get()
+
+                # If the set has the attribute
+                if not hasattr(inputSet, attr):
+                    break
+
+                # Get the attribute and "call it" --> final ().
+                setValue = getattr(inputSet, attr)()
+
+                if refValue is '?':
+                    refValue = setValue
+                else:
+                    if refValue != setValue:
+                        errors.append("There are different %s among the input"
+                                      " sets: %s and %s" % (key, refValue, setValue))
+                        break
+
+        return errors
 
     def _warnings(self):
         """ Warn about loosing info. """
@@ -298,7 +351,7 @@ class ProtSplitSet(ProtSets):
                       label="Randomize elements",
                       help='Put the elements at random in the different '
                            'subsets.')
-    
+
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -462,9 +515,28 @@ class ProtSubSet(ProtSets):
             self.summaryVar.set('Output was not generated. Resulting set '
                                 'was EMPTY!!!')
 
+    # Overwrite SetOfCoordinates creation
+    def _createSetOfCoordinates(self, suffix=''):
+        coordSet = self.inputFullSet.get()
+        micSet = coordSet.getMicrographs()
+        return ProtSets._createSetOfCoordinates(self, micSet, suffix)
+
     # -------------------------- INFO functions -------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
+
+        # Do not allow failing sets:
+        notImplentedClasses = ['SetOfClasses2D', 'SetOfClasses3D',
+                               'CoordinatesTiltPair']
+
+        if not self.inputFullSet.get():
+            # Since is mandatory is will not validate
+            return []
+
+        c1 = self.inputFullSet.get().getClassName()
+        if c1 in notImplentedClasses:
+            return ["%s subset is not implemented." % c1]
+
 
         # First dispatch the easy case, where we choose elements at random.
         if self.chooseAtRandom:
@@ -473,6 +545,9 @@ class ProtSubSet(ProtSets):
             else:
                 return ["Number of elements to choose cannot be bigger than",
                         "the number of elements in the set."]
+
+        if not self.inputSubSet.get():
+            return []
 
         # Now the harder case: two sets. Check for compatible classes.
 
@@ -491,8 +566,9 @@ class ProtSubSet(ProtSets):
         #   Particles
         #   Volumes
 
-        c1 = self.inputFullSet.get().getClassName()
         c2 = self.inputSubSet.get().getClassName()
+        if c2 in notImplentedClasses:
+            return ["%s subset is not implemented." % c2]
 
         if c1 == c2:
             return []
@@ -523,3 +599,65 @@ class ProtSubSet(ProtSets):
             return ["The elements of %s that also are referenced in %s" %
                     (self.inputFullSet.getName(), self.inputSubSet.getName()),
                     "are now in %s" % getattr(self, key).getName()]
+
+
+class ProtSubSetByMic(ProtSets):
+    """
+    Create a subset of those particles comes from a particular set of micrographs
+    """
+    _label = 'particles subset by micrograph'
+
+    #--------------------------- DEFINE param functions ------------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputParticles', pwprot.params.PointerParam,
+            pointerClass='SetOfParticles', label="Input particles",
+            help='Set of particles from which the subset will be taken')
+        add('inputMicrographs', pwprot.params.PointerParam,
+            pointerClass='SetOfMicrographs', label="Input micrographs",
+            help='Only the particles in this set of micrographs will be output')
+
+    #--------------------------- INSERT steps functions ------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep',
+                                 self.inputParticles.getObjId(),
+                                 self.inputMicrographs.getObjId())
+
+    #--------------------------- STEPS functions -------------------------------
+    def createOutputStep(self, partsId, micsId):
+        inputParticles = self.inputParticles.get()
+        inputMicrographs = self.inputMicrographs.get()
+
+        outputSet = self._createSetOfParticles()
+        outputSet.copyInfo(inputParticles)
+
+        micIds = []
+
+        for mic in inputMicrographs:
+            micIds.append(mic.getObjId())
+
+        for particle in inputParticles:
+            if particle.getMicId() in micIds:
+                outputSet.append(particle)
+
+        self._defineOutputs(outputParticles=outputSet)
+        self._defineTransformRelation(inputParticles, outputSet)
+
+    #--------------------------- INFO functions --------------------------------
+    def _validate(self):
+        """Make sure the input data make sense, i.e. hasMicId.
+        Thus they come from some Mic"""
+        if not self.inputParticles.get().getFirstItem().hasMicId():
+            return ['The _Input Particles_ must come from some Micrographs '
+                    'of the workflow, i.e. particles must have micId.']
+
+    def _summary(self):
+        if not hasattr(self, 'outputParticles'):
+            summary = ["Protocol has not finished yet."]
+        else:
+            summary = ['A subset of *%d* particles is made from a total of *%d*'
+                       ' particles.' % (self.outputParticles.getSize(),
+                                    self.inputParticles.get().getSize())]
+        return summary

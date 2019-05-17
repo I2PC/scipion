@@ -49,14 +49,13 @@ import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
 from widgets import Button, HotButton, IconButton
-from dialog import showInfo, EditObjectDialog, ListDialog, askYesNo, Dialog
+from dialog import showInfo, showError, showWarning, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
 
 
 THREADS = 'Threads'
 MPI = 'MPI'
-
 
 # ----------------- Variables wrappers around more complex objects ------------
 
@@ -110,7 +109,79 @@ class PointerVar:
     
     def remove(self):
         self.set(None)
-    
+
+
+class ScalarWithPointerVar(tk.StringVar):
+    """ tk.StringVar to hold object pointers and scalars. """
+
+    def __init__(self, protocol, changeListener):
+
+        self._pointer = None
+        self._protocol = protocol
+        self.inInit = True
+        tk.StringVar.__init__(self)
+        self.inInit = False
+        self.insideSet = False
+        self.listeners = []
+
+        # Register inner listener
+        tk.StringVar.trace(self, 'w', self._listenDirectEntryChanges)
+        self.trace('w', changeListener)
+
+    def trace(self, mode, callback):
+
+        # let's ignore the mode for now all are "w"
+        self.listeners.append(callback)
+
+    def _listenDirectEntryChanges(self, *args):
+        """ We need to be aware of any change done in the entry.
+        When the user type anything, the set is not invoked.
+        We need to distinguish when this is invoked from the set(),
+        in this case we do nothing"""
+        if not self.insideSet:
+            self._pointer = None
+
+        # Call the listeners
+        for callback in self.listeners:
+            callback(*args)
+
+    def set(self, value):
+        # Flag we are inside the set method to avoid
+        # triggering _listenDirectEntryChanges
+        self.insideSet = True
+        if self.inInit: return
+
+        # If a scalar is being set
+        if not isinstance(value, pwobj.Pointer):
+
+            # Reset the pointer
+            self._pointer = None
+            label = value
+        # it's a pointer
+        else:
+
+            self._pointer = value
+            label, _ = getPointerLabelAndInfo(self._pointer,
+                                          self._protocol.getMapper())
+
+        tk.StringVar.set(self, label)
+
+        # Cancel the flag.
+        self.insideSet = False
+
+    def get(self):
+
+        if self.hasPointer():
+            return self._pointer
+        else:
+            return tk.StringVar.get(self)
+
+    def hasPointer(self):
+        return self._pointer is not None
+
+    def getPointer(self):
+        return self._pointer if self.hasPointer() else None
+
     
 class MultiPointerVar:
     """
@@ -262,9 +333,9 @@ class ProtocolClassTreeProvider(TreeProvider):
         self.protocolClassName = protocolClassName
      
     def getObjects(self):
-        from pyworkflow.em import findSubClasses, getProtocols
+        from pyworkflow.em import findSubClasses, Domain
         return [pwobj.String(s)
-                for s in findSubClasses(getProtocols(),
+                for s in findSubClasses(Domain.getProtocols(),
                                         self.protocolClassName).keys()]
         
     def getColumns(self):
@@ -312,6 +383,9 @@ def getObjectLabel(pobj, mapper):
         if not len(label):
             label = '%s.%s' % (prot.getRunName(), extended)
 
+    label = label.replace("\n"," ")
+    # if obj is not None:
+    #     return label + " (%d)" % obj.getObjId()
     return label
 
     
@@ -320,6 +394,7 @@ class SubclassesTreeProvider(TreeProvider):
     of subclasses objects(of className) found by mapper"""
     CREATION_COLUMN = 'Creation'
     INFO_COLUMN = 'Info'
+    ID_COLUMN = 'Protocol Id'
 
     def __init__(self, protocol, pointerParam, selected=None):
         TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
@@ -356,7 +431,7 @@ class SubclassesTreeProvider(TreeProvider):
                     p = pwobj.Pointer(prot)
                     objects.append(p)
                 
-                for paramName, attr in prot.iterOutputEM():
+                for paramName, attr in prot.iterOutputAttributes():
                     def _checkParam(paramName, attr):
                         # If attr is a sub-classes of any desired one, add it to the list
                         # we should also check if there is a condition, the object 
@@ -376,7 +451,8 @@ class SubclassesTreeProvider(TreeProvider):
                         # JMRT: The inclusion of subitems as possible inputs
                         # is causing a performance penalty. So for the moment
                         # we will restrict that to SetOfVolumes only
-                        if isinstance(attr, em.SetOfVolumes):
+                        if isinstance(attr, em.SetOfVolumes) or \
+                                isinstance(attr, em.SetOfAtomStructs):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
@@ -432,7 +508,8 @@ class SubclassesTreeProvider(TreeProvider):
 
     def getColumns(self):
         return [('Object', 300), (SubclassesTreeProvider.INFO_COLUMN, 250),
-                (SubclassesTreeProvider.CREATION_COLUMN, 150)]
+                (SubclassesTreeProvider.CREATION_COLUMN, 150),
+                (SubclassesTreeProvider.ID_COLUMN, 100)]
     
     def isSelected(self, obj):
         """ Check if an object is selected or not. """
@@ -454,13 +531,14 @@ class SubclassesTreeProvider(TreeProvider):
             
         obj = pobj.get()
         objId = pobj.getUniqueId()
-        
+        protId = pobj.getObjValue().getObjId()
         isSelected = objId in self.selectedDict
         self.selectedDict[objId] = True
             
         return {'key': objId, 'text': label,
                 'values': (self._getObjectInfoValue(obj),
-                           self._getObjectCreation(obj)),
+                           self._getObjectCreation(obj),
+                           protId),
                 'selected': isSelected, 'parent': parent}
 
     @staticmethod
@@ -523,7 +601,139 @@ class RelationsTreeProvider(SubclassesTreeProvider):
         self._sortObjects(objects)
 
         return objects
-    
+
+
+class ScalarTreeProvider(TreeProvider):
+    """Will implement the methods to provide the object info
+    of scalar outputs"""
+    CREATION_COLUMN = 'Creation'
+    INFO_COLUMN = 'Info'
+
+    def __init__(self, protocol, scalarParam, selected=None):
+        TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
+                              sortingAscending=False)
+
+        self.param = scalarParam
+        self.selected = selected
+        self.selectedDict = {}
+        self.protocol = protocol
+        self.mapper = protocol.mapper
+        self.maxNum = 200
+
+    def getObjects(self):
+        import pyworkflow.em as em
+        # Retrieve all objects of type className
+        project = self.protocol.getProject()
+        className = self.param.paramClass
+        # Get the classes that are valid as input object
+        # em.findClass is very tight to the EMObjects...Since scalars are not
+        # EM object can't be used unless we do something
+        # For now this will work with exact class.
+        classes = [className]
+        objects = []
+
+        # Do no refresh again and take the runs that are loaded
+        # already in the project. We will prefer to save time
+        # here than have the 'very last' version of the runs and objects
+        runs = project.getRuns(refresh=False)
+
+        for prot in runs:
+            # Make sure we don't include previous output of the same
+            # protocol, it will cause a recursive loop
+            if prot.getObjId() != self.protocol.getObjId():
+
+                for paramName, attr in prot.iterOutputAttributes():
+                    def _checkParam(paramName, attr):
+                        # If attr is a sub-classes of any desired one, add it to the list
+                        # we should also check if there is a condition, the object
+                        # must comply with the condition
+                        p = None
+                        if any(isinstance(attr, c) for c in classes):
+                            p = pwobj.Pointer(prot, extended=paramName)
+                            p._allowsSelection = True
+                            objects.append(p)
+
+                    _checkParam(paramName, attr)
+
+        # Sort objects before returning them
+        self._sortObjects(objects)
+
+        return objects
+
+    def _sortObjects(self, objects):
+        objects.sort(key=self.objectKey, reverse=not self.isSortingAscending())
+
+    def objectKey(self, pobj):
+
+        obj = self._getParentObject(pobj, pobj)
+
+        if self._sortingColumnName == ScalarTreeProvider.CREATION_COLUMN:
+            return self._getObjectCreation(obj.get())
+        elif self._sortingColumnName == ScalarTreeProvider.INFO_COLUMN:
+            return self._getObjectInfoValue(obj.get())
+        else:
+            return self._getPointerLabel(obj)
+
+    def getColumns(self):
+        return [('Object', 300), (ScalarTreeProvider.INFO_COLUMN, 250),
+                (ScalarTreeProvider.CREATION_COLUMN, 150)]
+
+    def isSelected(self, obj):
+        """ Check if an object is selected or not. """
+        if self.selected:
+            for s in self.selected:
+                if s and s.getObjId() == obj.getObjId():
+                    return True
+        return False
+
+    @staticmethod
+    def _getParentObject(pobj, default=None):
+        return getattr(pobj, '_parentObject', default)
+
+    def getObjectInfo(self, pobj):
+        parent = self._getParentObject(pobj)
+
+        # Get the label
+        label = self._getPointerLabel(pobj, parent)
+
+        obj = pobj.get()
+        objId = pobj.getUniqueId()
+
+        isSelected = objId in self.selectedDict
+        self.selectedDict[objId] = True
+
+        return {'key': objId, 'text': label,
+                'values': (self._getObjectInfoValue(obj),
+                           self._getObjectCreation(obj)),
+                'selected': isSelected, 'parent': parent}
+
+    @staticmethod
+    def _getObjectCreation(obj):
+
+        return obj.getObjCreation()
+
+    @staticmethod
+    def _getObjectInfoValue(obj):
+
+        return str(obj).replace(obj.getClassName(), '')
+
+    def _getPointerLabel(self, pobj, parent=None):
+
+        # If parent is not provided, try to get it, it might have none.
+        if parent is None: parent = self._getParentObject(pobj)
+
+        # If there is no parent
+        if parent is None:
+            return getObjectLabel(pobj, self.mapper)
+        else:  # This is an item coming from a set
+            # If the object has label include the label
+            if pobj.get().getObjLabel():
+                return 'item %s - %s' % (
+                pobj.get().strId(), pobj.get().getObjLabel())
+            else:
+                return 'item %s' % pobj.get().strId()
+
+
 # --------------------- Other widgets ----------------------------------------
 # http://tkinter.unpythonic.net/wiki/VerticalScrolledFrame
 
@@ -583,42 +793,45 @@ class SectionFrame(tk.Frame):
         if 'headerBgColor' in args:
             del args['headerBgColor']
         self.height = height
-        tk.Frame.__init__(self, master, bg='white', **args)
+        tk.Frame.__init__(self, master, **args)
+        configureWeigths(self, row=1)
         self._createHeader(label, headerBgColor)
         self._createContent()
+        tk.Frame.grid(self, row=0, column=0, sticky="new")
         
     def _createHeader(self, label, bgColor):
-        self.headerFrame = tk.Frame(self, bd=2, relief=tk.RAISED, bg=bgColor)
+        self.headerFrame = tk.Frame(self, bd=2, relief=tk.RAISED, bg=bgColor,
+                                    name="sectionheaderframe")
         self.headerFrame.grid(row=0, column=0, sticky='new')
         configureWeigths(self.headerFrame)
         self.headerFrame.columnconfigure(1, weight=1)
         self.headerLabel = tk.Label(self.headerFrame, text=label, fg='white',
-                                    bg=bgColor)
+                                    bg=bgColor, name="sectionheaderlabel")
         self.headerLabel.grid(row=0, column=0, sticky='nw')
         
     def _createContent(self):
-        canvasFrame = tk.Frame(self, bg='white')
-        configureWeigths(self, row=1)
+        canvasFrame = tk.Frame(self, name="sectioncontentframe")
         configureWeigths(canvasFrame)
         self.canvas = Canvas(canvasFrame, width=625, height=self.height,
-                             bg='white')
+                             name="sectioncanvas")
         self.canvas.grid(row=0, column=0, sticky='news')
         canvasFrame.grid(row=1, column=0, sticky='news')
         
         configureWeigths(self.canvas)
                 
-        self.contentFrame = tk.Frame(self.canvas, bg='white', bd=0)
+        self.contentFrame = tk.Frame(self.canvas, bg='white', bd=0,
+                                     name="sectioncanvasframe")
+        self.contentFrame.grid(row=1, column=0, sticky='news')
         self.contentId = self.canvas.create_window(0, 0, anchor=tk.NW,
                                                    window=self.contentFrame)
-        
+
         self.contentFrame.bind('<Configure>', self._configure_interior)
         self.canvas.bind('<Configure>', self._configure_canvas)
         
-        self.contentFrame.columnconfigure(0, weight=1)
+        self.contentFrame.columnconfigure(1, weight=1)
         self.columnconfigure(0, weight=1)
-        
-        
-    def _getReqSize(self, widget):
+
+    def  _getReqSize(self, widget):
         return widget.winfo_reqwidth(), widget.winfo_reqheight()
     
     def _getSize(self, widget):
@@ -626,6 +839,7 @@ class SectionFrame(tk.Frame):
     # track changes to the canvas and frame width and sync them,
     # also updating the scrollbar
     def _configure_interior(self, event=None):
+
         # update the scrollbars to match the size of the inner frame
         fsize = self._getReqSize(self.contentFrame)
         csize = self._getSize(self.canvas)
@@ -640,15 +854,15 @@ class SectionFrame(tk.Frame):
         if fsize != csize:
             # update the inner frame's width to fill the canvas
             self.canvas.itemconfigure(self.contentId, width=csize[0])
-            if csize[1] > fsize[1]:
-                self.canvas.itemconfigure(self.contentId, height=csize[1])
+            if csize[1] < fsize[1]:
+                self.canvas.itemconfigure(self.contentId, height=fsize[1])
                 self.canvas.config(scrollregion="0 0 %s %s" % csize)
                 
     def adjustContent(self):
         self._configure_interior()
         self.update_idletasks()
         self._configure_canvas()
-        
+
                     
 class SectionWidget(SectionFrame):
     """This class will be used to create a section in FormWindow"""
@@ -754,7 +968,7 @@ class ParamWidget:
             self.btnFrame = tk.Frame(self.parent, bg='white')
         else:
             self.btnFrame = None
-            self._labelSticky = 'nw'
+            self._labelSticky = 'ne'
             self._padx, self._pady = 2, 0
             self._labelFont = self.window.fontItalic
             self._entryWidth = 8
@@ -767,7 +981,7 @@ class ParamWidget:
         bgColor = 'white'
         
         if self.param.isExpert():
-            bgColor = 'grey'
+            bgColor = 'lightgrey'
         
         self.label = tk.Label(self.parent, text=self._getParamLabel(), 
                               bg=bgColor, font=self._labelFont, wraplength=500)
@@ -782,7 +996,7 @@ class ParamWidget:
         if self.btnFrame:
             btn = IconButton(self.btnFrame, text, imgPath,
                              highlightthickness=0, command=cmd)
-            btn.grid(row=0, column=self._btnCol, sticky='e', padx=2, pady=2)
+            btn.grid(row=0, column=self._btnCol, sticky='nes', padx=1, pady=4)
             self.btnFrame.columnconfigure(self._btnCol, weight=1)
             self._btnCol += 1
         
@@ -791,6 +1005,12 @@ class ParamWidget:
         
     def _showInfo(self, msg):
         showInfo("Info", msg, self.parent)
+
+    def _showError(self, msg):
+        showError("Error", msg, self.parent)
+
+    def _showWarning(self, msg):
+        showWarning("Warning", msg, self.parent)
         
     def _showWizard(self, e=None):
         wizClass = self.window.wizards[self.wizParamName]
@@ -838,6 +1058,11 @@ class ParamWidget:
         # Create widgets for each type of param
         t = type(param)
         entryWidth = 30
+        sticky="we"
+
+        # functions to select and remove
+        selectFunc = None
+        removeFunc = None
 
         if t is params.HiddenBooleanParam:
             var = 0
@@ -853,7 +1078,7 @@ class ParamWidget:
                 combo = ttk.Combobox(content, textvariable=var.tkVar, 
                                      state='readonly', font=self.window.font)
                 combo['values'] = param.choices
-                combo.grid(row=0, column=0, sticky='w')
+                combo.grid(row=0, column=0, sticky='we')
             elif param.display == params.EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
                     rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, 
@@ -876,7 +1101,7 @@ class ParamWidget:
             tp = MultiPointerTreeProvider(self._protocol.mapper)
             tree = BoundTree(content, tp, height=5)
             var = MultiPointerVar(tp, tree)
-            tree.grid(row=0, column=0, sticky='w')
+            tree.grid(row=0, column=0, sticky='we')
             self._addButton("Select", Icon.ACTION_SEARCH, self._browseObject)
             self._addButton("Remove", Icon.ACTION_DELETE, self._removeObject)
             self._selectmode = 'extended' # allows multiple object selection
@@ -885,34 +1110,31 @@ class ParamWidget:
         elif t is params.PointerParam or t is params.RelationParam:
             var = PointerVar(self._protocol)
             var.trace('w', self.window._onPointerChanged)
-            entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, 
-                             state="readonly", font=self.window.font)
-            entry.grid(row=0, column=0, sticky='w')
+            entry = tk.Label(content, textvariable=var.tkVar,
+                             font=self.window.font, anchor="w")
+            entry.grid(row=0, column=0, sticky='we')
             
             if t is params.RelationParam:
-                btnFunc = self._browseRelation
+                selectFunc = self._browseRelation
                 removeFunc = self._removeRelation
             else:
-                btnFunc = self._browseObject
+                selectFunc = self._browseObject
                 removeFunc = self._removeObject
                 
                 self.visualizeCallback = self._visualizePointerParam
             self._selectmode = 'browse' # single object selection
-                
-            self._addButton("Select", Icon.ACTION_SEARCH, btnFunc)
-            self._addButton("Remove", Icon.ACTION_DELETE, removeFunc)
-        
+
         elif t is params.ProtocolClassParam:
             var = tk.StringVar()
-            entry = tk.Entry(content, width=entryWidth, textvariable=var, 
-                             state="readonly", font=self.window.font)
-            entry.grid(row=0, column=0, sticky='w')
+            entry = tk.Label(content, textvariable=var, font=self.window.font,
+                             anchor="w")
+            entry.grid(row=0, column=0, sticky='we')
 
             protClassName = self.param.protocolClassName.get()
             
             if self.param.allowSubclasses:
-                from pyworkflow.em import findSubClasses, getProtocols
-                classes = findSubClasses(getProtocols(), protClassName).keys()
+                from pyworkflow.em import findSubClasses, Domain
+                classes = findSubClasses(Domain.getProtocols(), protClassName).keys()
             else:
                 classes = [protClassName]
             
@@ -931,17 +1153,40 @@ class ParamWidget:
             var = None
             self._onlyLabel = True
         else:
-            var = tk.StringVar()
-            if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
-                # Reduce the entry width for numbers entries
-                entryWidth = self._entryWidth
+
+            if not param.allowsPointers:
+                var = tk.StringVar()
+
+                if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
+
+                    # Reduce the entry width for numbers entries
+                    entryWidth = self._entryWidth
+                    sticky = 'w'
+            else:
+                selectFunc = self._browseScalar
+                var = ScalarWithPointerVar(self._protocol,
+                                           self.window._onPointerChanged)
+                self._selectmode = 'browse'
+                sticky = 'ew'
+
             entry = tk.Entry(content, width=entryWidth, textvariable=var, 
                              font=self.window.font)
-            entry.grid(row=0, column=0, sticky='w')
-            
+
+            # Select all content on focus
+            entry.bind("<FocusIn>",
+                       lambda event: entry.selection_range(0, tk.END))
+
+            entry.grid(row=0, column=0, sticky=sticky)
+
             if issubclass(t, params.PathParam):
                 self._entryPath = entry
                 self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
+
+        if selectFunc is not None:
+            self._addButton("Select", Icon.ACTION_SEARCH, selectFunc)
+
+        if removeFunc is not None:
+            self._addButton("Remove", Icon.ACTION_DELETE, removeFunc)
 
         if self.visualizeCallback is not None:
             self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE,
@@ -978,7 +1223,7 @@ class ParamWidget:
                                      parent=self.window)
                 viewer.visualize(obj)
             else:
-                self._showInfo("There is not viewer registered for "
+                self._showInfo("There is no viewer registered for "
                                "*%s* object class." % obj.getClassName())
     
     def _visualizePointerParam(self, paramName):
@@ -1030,7 +1275,40 @@ class ParamWidget:
                 self.set(dlg.values[0])
             else:
                 raise Exception('Invalid param class: %s' % type(self.param))
-        
+
+    def _browseScalar(self, e=None):
+        """Select a scalar from outputs
+        This function is suppose to be used only for Scalar Params
+        It's a copy of browseObject...so there could be a refactor here."""
+        value = self.get()
+        selected = []
+        if isinstance(value, list):
+            selected = value
+        elif selected is not None:
+            selected = [value]
+        tp = ScalarTreeProvider(self._protocol, self.param,
+                                    selected=selected)
+
+        def validateSelected(selectedItems):
+            for item in selectedItems:
+                if not getattr(item, '_allowsSelection', True):
+                    return "Please select object of types: %s" % self.param.paramClass.get()
+
+        title = "Select object of types: %s" % self.param.paramClass.__name__
+
+        # Let's ignore conditions so far
+        # pointerCond = self.param.pointerCondition.get()
+        #if pointerCond:
+        #    title += " (condition: %s)" % pointerCond
+
+        dlg = ListDialog(self.parent, title, tp,
+                         "Double click selects the item",
+                         validateSelectionCallback=validateSelected,
+                         selectOnDoubleClick=True)
+
+        if dlg.values:
+            self.set(dlg.values[0])
+
     def _removeObject(self, e=None):
         """ Remove an object from a MultiPointer param. """
         self.var.remove()
@@ -1038,15 +1316,21 @@ class ParamWidget:
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
-        tp = RelationsTreeProvider(self._protocol, self.param,
-                                   selected=self.get())
-        dlg = ListDialog(self.parent, "Select object", tp,
-                         "Double click selects the item, right-click allows "
-                         "you to visualize it",
-                         selectmoded=self._selectmode,
-                         selectOnDoubleClick=True)
-        if dlg.values:
-            self.set(dlg.values[0])
+        try:
+            tp = RelationsTreeProvider(self._protocol, self.param,
+                                       selected=self.get())
+            dlg = ListDialog(self.parent, "Select object", tp,
+                             "Double click selects the item, right-click allows "
+                             "you to visualize it",
+                             selectmoded=self._selectmode,
+                             selectOnDoubleClick=True)
+            if dlg.values:
+                self.set(dlg.values[0])
+        except AttributeError as e:
+            self._showError("Error loading possible inputs. "
+                            "This usually happens because the parameter "
+                            "needs info from other parameters... are "
+                            "previous mandatory parameters set?")
             
     def _removeRelation(self, e=None):
         self.var.remove()
@@ -1102,7 +1386,7 @@ class ParamWidget:
     
     def _onVarChanged(self, *args):
         if self.callback is not None:
-            self.callback(self.paramName)        
+            self.callback(self.paramName)
         
     def show(self):
         """Grid the label and content in the specified row"""
@@ -1114,11 +1398,17 @@ class ParamWidget:
         else:
             self.label.grid(row=self.row, column=c, sticky=self._labelSticky,
                             padx=self._padx, pady=self._pady)
-            self.content.grid(row=self.row, column=c+1, sticky='news', 
+
+            #Note: for params without label: 1st param in a line param, label usually
+            # but take space and pushes the content, avoid this by using it's column
+            offset = 1 if not self._getParamLabel() else 0
+
+            self.content.grid(row=self.row, column=c+1-offset,
+                              columnspan=1+offset, sticky='news',
                               padx=self._padx, pady=self._pady)
         if self.btnFrame:
-            self.btnFrame.grid(row=self.row, column=c+2, padx=self._padx,
-                               sticky='new')
+            self.btnFrame.grid(row=self.row, column=c+2, padx=self._padx, pady=self._pady,
+                               sticky='nsew')
         
     def hide(self):
         self.label.grid_remove()
@@ -1152,9 +1442,9 @@ class LineWidget(ParamWidget):
         self.show()
         
     def show(self):
-        self.label.grid(row=self.row, column=0, sticky=self._labelSticky)
-        self.content.grid(row=self.row, column=1, sticky='nw', columnspan=6,
-                          padx=5)
+        self.label.grid(row=self.row, column=0, sticky=self._labelSticky, padx=2)
+        self.content.grid(row=self.row, column=1, sticky='new', columnspan=1,
+                          padx=2)
         if self.btnFrame:
             self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='new')
        
@@ -1172,7 +1462,7 @@ class GroupWidget(ParamWidget):
     def _createContent(self):
         self.content = tk.LabelFrame(self.parent, text=self.param.getLabel(),
                                      bg='white')
-        gui.configureWeigths(self.content) 
+        gui.configureWeigths(self.content,column=1)
         
     def show(self):
         self.content.grid(row=self.row, column=0, sticky='news', columnspan=6,
@@ -1215,7 +1505,7 @@ class FormWindow(Window):
          protocol: protocol from which the form will be generated.
          callback: callback function to call when Save or Execute are press.
         """
-        Window.__init__(self, title, master, icon='scipion_bn.xbm', 
+        Window.__init__(self, title, master, icon=Icon.SCIPION_ICON_PROT,
                         weight=False, minsize=(600, 450), **kwargs)
 
         # Some initialization
@@ -1241,16 +1531,19 @@ class FormWindow(Window):
         self._createGUI()
         
     def _createGUI(self):
-        mainFrame = tk.Frame(self.root)
+        mainFrame = tk.Frame(self.root, name="main")
         configureWeigths(mainFrame, row=2)
         self.root.rowconfigure(0, weight=1)
-        
+        self.root.columnconfigure(0, weight=1)
+
+        # "Protocol: XXXXX  - Cite Help
         headerFrame = self._createHeader(mainFrame)
         headerFrame.grid(row=0, column=0, sticky='new')
         
         if self.protocol.allowHeader:
+            # Run Section with common attributes (parallel,...)
             commonFrame = self._createCommon(mainFrame)
-            commonFrame.grid(row=1, column=0, sticky='nw')
+            commonFrame.grid(row=1, column=0, sticky='new')
 
         if self._isLegacyProtocol():
             paramsFrame = self._createLegacyInfo(mainFrame)
@@ -1261,25 +1554,25 @@ class FormWindow(Window):
         buttonsFrame = self._createButtons(mainFrame)
         buttonsFrame.grid(row=3, column=0, sticky='se')
         
-        mainFrame.grid(row=0, column=0, sticky='ns')
-        
+        mainFrame.grid(row=0, column=0, sticky='news')
+
         
     def _createHeader(self, parent):
         """ Fill the header frame with the logo, title and cite-help buttons."""
-        headerFrame = tk.Frame(parent)
+        headerFrame = tk.Frame(parent, name="header")
         #headerFrame.grid(row=0, column=0, sticky='new')
         headerFrame.columnconfigure(0, weight=1)
         package = self.protocol.getClassPackage()
 
         # Consider legacy protocols
         if self._isLegacyProtocol():
-            t = '  Legacy protocol: %s' % (Mapper.getObjectPersistingClassName(self.protocol))
+            t = '  Missing protocol: %s' % (Mapper.getObjectPersistingClassName(self.protocol))
         else:
             t = '  Protocol: %s' % (self.protocol.getClassLabel())
 
-        logoPath = getattr(package, '_logo', '')
-        
-        if logoPath:
+        logoPath = self.protocol.getPluginLogoPath() or getattr(package, '_logo', '')
+
+        if logoPath and os.path.exists(logoPath):
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, 
                                    image=self.getImage(logoPath, maxheight=40),
                                    compound=tk.LEFT)
@@ -1297,13 +1590,13 @@ class FormWindow(Window):
 
         def _addButton(text, icon, command, col):
             btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
-                       compound=tk.LEFT, cursor='hand2')
+                       compound=tk.LEFT, cursor='hand2', name=text.lower())
             btn.bind('<Button-1>', command)
             btn.grid(row=0, column=col, padx=5, sticky='e')
         
         _addButton(Message.LABEL_CITE, Icon.ACTION_REFERENCES,
                    self._showReferences, 2)
-        _addButton(Message.LABEL_HELP ,Icon.ACTION_HELP, self._showHelp, 3)
+        _addButton(Message.LABEL_HELP, Icon.ACTION_HELP, self._showHelp, 3)
         
         return headerFrame
         
@@ -1312,173 +1605,184 @@ class FormWindow(Window):
         self.showInfo('\n'.join(self.protocol.citations()), "References")
         
     def _showHelp(self, e=None):
-        """ Show the list of references of the protocol. """
-        self.showInfo(self.protocol.getDoc(), "Help")
+        """ Show the protocol help. """
+        self.showInfo(self.protocol.getHelpText(), "Help")
         
     def _createParallel(self, runFrame, r):
         """ Create the section for MPI, threads and GPU. """
-        # some short notation
-        prot = self.protocol # shortcut notation
-        allowThreads = prot.allowThreads  # short notation
-        allowMpi = prot.allowMpi  # short notation
-        allowGpu = prot.allowsGpu()
-        numberOfMpi = prot.numberOfMpi.get()
-        numberOfThreads = prot.numberOfThreads.get()
-        mode = prot.stepsExecutionMode
 
-        if not (allowThreads or allowMpi or allowGpu):
-            return
+        # Legacy protocols retrieved from the DB may not have this param
+        # and legacy mode will fail. Thus the try block
+        try:
 
-        self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True,
-                                sticky='ne', row=r, pady=0)
+            # some short notation
+            prot = self.protocol  # shortcut notation
+            allowThreads = prot.allowThreads  # short notation
+            allowMpi = prot.allowMpi  # short notation
+            allowGpu = prot.allowsGpu()
+            numberOfMpi = prot.numberOfMpi.get()
+            numberOfThreads = prot.numberOfThreads.get()
+            mode = prot.stepsExecutionMode
 
-        if allowThreads or allowMpi:
-            procFrame = tk.Frame(runFrame, bg='white')
-            r2 = 0
-            c2 = 0
-            sticky = 'ne'
+            if not (allowThreads or allowMpi or allowGpu):
+                return
 
-            if mode == params.STEPS_PARALLEL:
-                self.procTypeVar = tk.StringVar()
+            self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True,
+                                    sticky='e', row=r, pady=0)
 
-                if allowThreads and allowMpi:
-                    if numberOfMpi > 1:
-                        procs = numberOfMpi
-                        self.procTypeVar.set(MPI)
-                        prot.numberOfThreads.set(1)
+            if allowThreads or allowMpi:
+                procFrame = tk.Frame(runFrame, bg='white')
+                r2 = 0
+                c2 = 0
+                sticky = 'e'
+
+                if mode == params.STEPS_PARALLEL:
+                    self.procTypeVar = tk.StringVar()
+
+                    if allowThreads and allowMpi:
+                        if numberOfMpi > 1:
+                            procs = numberOfMpi
+                            self.procTypeVar.set(MPI)
+                            prot.numberOfThreads.set(1)
+                        else:
+                            procs = numberOfThreads
+                            self.procTypeVar.set(THREADS)
+                            prot.numberOfMpi.set(1)
+
+                        self.procTypeVar.trace('w', self._setThreadsOrMpi)
+                        procCombo = tk.Frame(procFrame, bg='white')
+                        for i, opt in enumerate([THREADS, MPI]):
+                            rb = tk.Radiobutton(procCombo, text=opt,
+                                                variable=self.procTypeVar,
+                                                value=opt, bg='white',
+                                                highlightthickness=0)
+                            rb.grid(row=0, column=i, sticky='w', padx=(0, 5))
+
+                        procCombo.grid(row=r2, column=0, sticky='w', pady=15)
+                        procEntry = self._createBoundEntry(procFrame,
+                                                           Message.VAR_THREADS,
+                                                           func=self._setThreadsOrMpi,
+                                                           value=procs)
+                        procEntry.grid(row=r2, column=1, padx=(0, 5), sticky='w')
                     else:
-                        procs = numberOfThreads
-                        self.procTypeVar.set(THREADS)
-                        prot.numberOfMpi.set(1)
+                        # Show an error message
+                        self.showInfo(" If protocol execution is set to "
+                                      "STEPS_PARALLEL number of threads and mpi "
+                                      "should not be set to zero.")
 
-                    self.procTypeVar.trace('w', self._setThreadsOrMpi)
-                    procCombo = tk.Frame(procFrame, bg='white')
-                    for i, opt in enumerate([THREADS, MPI]):
-                        rb = tk.Radiobutton(procCombo, text=opt,
-                                            variable=self.procTypeVar,
-                                            value=opt, bg='white',
-                                            highlightthickness=0)
-                        rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))
-
-                    procCombo.grid(row=r2, column=0, sticky='nw', pady=5)
-                    procEntry = self._createBoundEntry(procFrame,
-                                                       Message.VAR_THREADS,
-                                                       func=self._setThreadsOrMpi,
-                                                       value=procs)
-                    procEntry.grid(row=r2, column=1, padx=(0, 5), sticky='nw')
                 else:
-                    # Show an error message
-                    self.showInfo(" If protocol execution is set to "
-                                  "STEPS_PARALLEL number of threads and mpi "
-                                  "should not be set to zero.")
+                    # ---- THREADS----
+                    if allowThreads:
+                        self._createHeaderLabel(procFrame, Message.LABEL_THREADS,
+                                                sticky=sticky, row=r2, column=c2,
+                                                pady=0)
+                        entry = self._createBoundEntry(procFrame,
+                                                       Message.VAR_THREADS)
+                        entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='w')
+                        # Modify values to be used in MPI entry
+                        c2 += 2
+                        sticky = 'w'
+                    # ---- MPI ----
+                    if allowMpi:
+                        self._createHeaderLabel(procFrame, Message.LABEL_MPI,
+                                                sticky=sticky, row=r2, column=c2,
+                                                pady=0)
+                        entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
+                        entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='w')
 
-            else:
-                # ---- THREADS----
-                if allowThreads:
-                    self._createHeaderLabel(procFrame, Message.LABEL_THREADS,
-                                            sticky=sticky, row=r2, column=c2,
-                                            pady=0)
-                    entry = self._createBoundEntry(procFrame,
-                                                   Message.VAR_THREADS)
-                    entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
-                    # Modify values to be used in MPI entry
-                    c2 += 2
-                    sticky = 'nw'
-                # ---- MPI ----
-                if allowMpi:
-                    self._createHeaderLabel(procFrame, Message.LABEL_MPI,
-                                            sticky=sticky, row=r2, column=c2,
-                                            pady=0)
-                    entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
-                    entry.grid(row=r2, column=c2 + 1, padx=(0, 5), sticky='nw')
+                btnHelp = IconButton(procFrame, Message.TITLE_COMMENT,
+                                     Icon.ACTION_HELP,
+                                     highlightthickness=0,
+                                     command=self._createHelpCommand(
+                                         Message.HELP_MPI_THREADS))
+                btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='e')
 
-            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT,
-                                 Icon.ACTION_HELP,
-                                 highlightthickness=0,
-                                 command=self._createHelpCommand(
-                                     Message.HELP_MPI_THREADS))
-            btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
+                procFrame.columnconfigure(0, minsize=60)
+                procFrame.grid(row=r, column=1, sticky='ew', columnspan=2)
 
-            procFrame.columnconfigure(0, minsize=60)
-            procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+                r += 1
 
-            r += 1
+            if allowGpu:
+                self._createHeaderLabel(runFrame, "GPU IDs", bold=True,
+                                        sticky='e', row=r, column=0, pady=0)
+                gpuFrame = tk.Frame(runFrame, bg='white')
+                gpuFrame.grid(row=r, column=1, sticky='ew', columnspan=2)
 
-        if allowGpu:
-            self._createHeaderLabel(runFrame, "GPU IDs", bold=True,
-                                    sticky='ne', row=r, column=0, pady=0)
-            gpuFrame = tk.Frame(runFrame, bg='white')
-            gpuFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+                self.useGpuVar = tk.IntVar()
 
-            self.useGpuVar = tk.IntVar()
+                # For protocols that require GPU, there is not the option to choose
+                if not prot.requiresGpu():
+                    self.useGpuVar.set(int(prot.useGpu.get()))
+                    for i, opt in enumerate(['Yes', 'No']):
+                        rb = tk.Radiobutton(gpuFrame, text=opt,
+                                            variable=self.useGpuVar,
+                                            value=1-i, bg='white',
+                                            highlightthickness=0)
+                        rb.grid(row=0, column=i, sticky='w', padx=(0, 5), pady=5)
 
-            # For protocols that require GPU, there is not the option to choose
-            if not prot.requiresGpu():
-                self.useGpuVar.set(int(prot.useGpu.get()))
-                for i, opt in enumerate(['Yes', 'No']):
-                    rb = tk.Radiobutton(gpuFrame, text=opt,
-                                        variable=self.useGpuVar,
-                                        value=1-i, bg='white',
-                                        highlightthickness=0)
-                    rb.grid(row=0, column=i, sticky='nw', padx=(0, 5), pady=5)
+                self.gpuListVar = tk.StringVar()
+                self.gpuListVar.set(prot.getAttributeValue(params.GPU_LIST, ''))
+                gpuEntry = tk.Entry(gpuFrame, width=9, font=self.font,
+                                    textvariable=self.gpuListVar)
+                gpuEntry.grid(row=0, column=2, sticky='w',
+                              padx=(0, 5), pady=(0, 5))
 
-            self.gpuListVar = tk.StringVar()
-            self.gpuListVar.set(prot.getAttributeValue(params.GPU_LIST, ''))
-            gpuEntry = tk.Entry(gpuFrame, width=9, font=self.font,
-                                textvariable=self.gpuListVar)
-            gpuEntry.grid(row=0, column=2, sticky='nw',
-                          padx=(0, 5), pady=(0, 5))
+                # Legacy protocols retrieved from the DB will not have this param
+                # and legacy mode will fail. try added at the top.
+                gpuListParam = prot.getParam(params.GPU_LIST)
+                btnHelp = IconButton(gpuFrame, Message.TITLE_COMMENT,
+                                     Icon.ACTION_HELP,
+                                     highlightthickness=0,
+                                     command=self._createHelpCommand(
+                                         gpuListParam.getHelp()))
+                btnHelp.grid(row=0, column=3, padx=(5, 0), pady=2, sticky='e')
 
-            gpuListParam = prot.getParam(params.GPU_LIST)
-            btnHelp = IconButton(gpuFrame, Message.TITLE_COMMENT,
-                                 Icon.ACTION_HELP,
-                                 highlightthickness=0,
-                                 command=self._createHelpCommand(
-                                     gpuListParam.getHelp()))
-            btnHelp.grid(row=0, column=3, padx=(5, 0), pady=2, sticky='ne')
-
-            # Trace changes in GPU related widgets to store values in protocol
-            self.useGpuVar.trace('w', self._setGpu)
-            self.gpuListVar.trace('w', self._setGpu)
+                # Trace changes in GPU related widgets to store values in protocol
+                self.useGpuVar.trace('w', self._setGpu)
+                self.gpuListVar.trace('w', self._setGpu)
+        except Exception as e:
+            print "Parallel section couldn't be created. %s" % e.message
 
     def _createCommon(self, parent):
         """ Create the second section with some common parameters. """
-        commonFrame = tk.Frame(parent)
-        
+        commonFrame = tk.Frame(parent, name="commonparams")
+        configureWeigths(commonFrame)
+
         # ---------- Run section ---------
         runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN,
-                                  height=100, headerBgColor=self.headerBgColor)
-        runFrame = tk.Frame(runSection.contentFrame, bg='white')
-        runFrame.grid(row=0, column=0, sticky='nw', padx=(0, 15))
+                                  headerBgColor=self.headerBgColor,
+                                  name="runsection")
+
+        runFrame = tk.Frame(runSection.contentFrame, bg='white', name="runframe")
+        runFrame.grid(row=0, column=0, sticky='new')
 
         r = 0  # Run name
         self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True,
                                 sticky='ne')
         self.runNameVar = tk.StringVar()
-        entry = tk.Entry(runFrame, font=self.font, width=25,
-                         textvariable=self.runNameVar,
-                         state='readonly')
-        entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')
+        entry = tk.Label(runFrame, font=self.font, width=25,
+                         textvariable=self.runNameVar, anchor="w")
+        entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='ew')
         btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT,
-                         highlightthickness=0,command=self._editObjParams)
-        btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
+                         highlightthickness=0, command=self._editObjParams)
+        btn.grid(row=r, column=2, padx=(5, 0), pady=5, sticky='w')
         
         c = 3  # Comment
-        self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne',
+        self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='e',
                                 column=c)
         self.commentVar = tk.StringVar()
-        entry = tk.Entry(runFrame, font=self.font, width=25,
-                         textvariable=self.commentVar, state='readonly')
-        entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')
+        entry = tk.Label(runFrame, font=self.font, width=25,
+                         textvariable=self.commentVar, anchor="w")
+        entry.grid(row=r, column=c+1, pady=5, sticky='ew')
         btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT,
-                         highlightthickness=0,command=self._editObjParams)
-        btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
+                         highlightthickness=0, command=self._editObjParams)
+        btn.grid(row=r, column=c+2, padx=(5,0), pady=5, sticky='w')
         
         self.updateLabelAndCommentVars()
 
         r = 1  # Execution
         self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True,
-                                sticky='ne', row=r, pady=0)
+                                sticky='e', row=r, pady=0)
         modeFrame = tk.Frame(runFrame, bg='white')
 
         runMode = self._createBoundOptions(modeFrame, Message.VAR_RUN_MODE,
@@ -1486,17 +1790,17 @@ class FormWindow(Window):
                                            self.protocol.runMode.get(),
                                            self._onRunModeChanged, 
                                            bg='white', font=self.font)   
-        runMode.grid(row=0, column=0, sticky='new', padx=(0, 5), pady=5)
+        runMode.grid(row=0, column=0, sticky='e', padx=(0, 5), pady=5)
         btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
                              highlightthickness=0,
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
-        btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
+        btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='e')
         modeFrame.columnconfigure(0, weight=1)
-        modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
+        modeFrame.grid(row=r, column=1, sticky='ew', columnspan=2)
         
         # ---- Host---- 
         self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c,
-                                pady=0, padx=(15,5), sticky='ne')
+                                sticky='e')
         # Keep track of hostname selection
         self.hostVar = tk.StringVar()
         protHost = self.protocol.getHostName()
@@ -1506,42 +1810,42 @@ class FormWindow(Window):
                                       state='readonly', width=10, font=self.font)
         self.hostCombo['values'] = self.hostList
         self.hostVar.set(hostName)
-        self.hostCombo.grid(row=r, column=c+1, pady=5, sticky='nw')
+        self.hostCombo.grid(row=r, column=c+1, pady=0, sticky='we')
         r = 2
         self._createParallel(runFrame, r)
 
         # ---- QUEUE ----
-        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
-                                column=c, padx=(15,5), pady=0)
-        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white', 
-                                                  font=self.font)
+
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r,
+                                sticky='e',
+                                column=c)
+
+        var, frame = ParamWidget.createBoolWidget(runFrame, bg='white',
+                                              font=self.font)
         self._addVarBinding(Message.VAR_QUEUE, var)
-        frame.grid(row=r, column=c+1, pady=5, sticky='nw')
-        # Commented out the button to edit queue since the queue dialog
-        #  will be shown after pressing the 'Execute' button
-        #btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
-        #                          command=self._editQueueParams)
-        #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
+        frame.grid(row=r, column=c + 1, pady=5, sticky='ew')
+
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
-                             highlightthickness=0,
-                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
-        btnHelp.grid(row=r, column=c+3, padx=(5, 0), pady=2, sticky='ne')
+                         highlightthickness=0,
+                         command=self._createHelpCommand(Message.HELP_USEQUEUE))
+
+        btnHelp.grid(row=r, column=c + 2, padx=(5, 0), pady=5, sticky='w')
 
         r = 3  # ---- Wait for other protocols (SCHEDULE) ----
-        self._createHeaderLabel(runFrame, Message.LABEL_WAIT_FOR, row=r, sticky='ne',
+        self._createHeaderLabel(runFrame, Message.LABEL_WAIT_FOR, row=r, sticky='e',
                                 column=c, padx=(15, 5), pady=0)
         self.waitForVar = tk.StringVar()
         self.waitForVar.set(', '.join(self.protocol.getPrerequisites()))
         entryWf = tk.Entry(runFrame, font=self.font, width=25,
                            textvariable=self.waitForVar)
-        entryWf.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')
+        entryWf.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='ew')
 
         self.waitForVar.trace('w', self._setWaitFor)
 
         btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
                              highlightthickness=0,
                              command=self._createHelpCommand(Message.HELP_WAIT_FOR))
-        btnHelp.grid(row=r, column=c+3, padx=(5, 0), pady=2, sticky='ne')
+        btnHelp.grid(row=r, column=c+2, padx=(5, 0), pady=2, sticky='e')
         
         # Run Name not editable
         #entry.configure(state='readonly')
@@ -1594,11 +1898,11 @@ class FormWindow(Window):
         return True
         
     def _createParams(self, parent):
-        paramsFrame = tk.Frame(parent)
+        paramsFrame = tk.Frame(parent, name="params")
         configureWeigths(paramsFrame, row=1, column=0)
         # Expert level (only if the protocol has some param with expert level)
         if self.protocol.hasExpert():
-            expFrame = tk.Frame(paramsFrame)
+            expFrame = tk.Frame(paramsFrame, name="expert")
             expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
             expLabel.grid(row=0, column=0, sticky='nw', padx=5)
             expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, params.LEVEL_CHOICES,
@@ -1616,12 +1920,14 @@ class FormWindow(Window):
         return isinstance(self.protocol, LegacyProtocol)
 
     def _createLegacyInfo(self, parent):
-        frame = tk.Frame(parent)
+        frame = tk.Frame(parent, name="legacy")
         t = tk.Label(frame,
-                     text="This is a legacy protocol, it means that its class "
-                          "is missed. \nThis could be because you are opening "
-                          "an old project and some of \nthe executed protocols "
-                          "does not exist in the current version.\n\n"
+                     text="This protocol is missing from the installation. "
+                          "\nThis could be because you are opening an old "
+                          "project and some of \nthe executed protocols does "
+                          "not exist in the current version and were deprecated"
+                          ",\n or because your scipion installation requires a "
+                          "plugin where this protocol can be found.\n\n"
                           "If you are a developer, it could be the case that "
                           "you have changed \nto another branch where the "
                           "protocol does not exist.\n\n"
@@ -1754,7 +2060,7 @@ class FormWindow(Window):
         y = self.root.winfo_y()
         self.root.geometry("%dx%d%+d%+d" % (width, height, x, y))
 
-        return (width, height)
+        return width, height
     
     def adjustSize(self):
         self.resize(self.root)        
@@ -1770,11 +2076,11 @@ class FormWindow(Window):
         self._close(doSchedule=True)
 
     def execute(self, e=None):
-        
+
         if self.protocol.useQueue():
             if not self._editQueueParams():
                 return
-        else: # use queue = No
+        else:  # use queue = No
             hostConfig = self._getHostConfig()
             cores = self.protocol.numberOfMpi.get(1) * self.protocol.numberOfThreads.get(1)
             mandatory = hostConfig.queueSystem.getMandatory()
@@ -1821,14 +2127,20 @@ class FormWindow(Window):
             if onlySave:
                 action = "SAVE"
             self.showError("Error during %s: %s\n\nTraceback:\n%s" % (action, ex, traceStr))
-    
-    
+
     def getWidgetValue(self, protVar, param):
         widgetValue = ""                
         if (isinstance(param, params.PointerParam) or 
             isinstance(param, params.MultiPointerParam) or
             isinstance(param, params.RelationParam)):
             widgetValue = protVar
+        # For Scalar params that allowPointers
+        elif param.allowsPointers:
+            if protVar.hasPointer():
+                # Get the pointer
+                widgetValue = protVar.getPointer()
+            else:
+                widgetValue = protVar.get()
         else:
             widgetValue = protVar.get(param.default.get())  
         return widgetValue
@@ -1837,15 +2149,15 @@ class FormWindow(Window):
         protVar = getattr(self.protocol, paramName)
         if protVar.hasValue():
             from pyworkflow.em import findViewers
-            obj = protVar.get() # Get the reference to the object
+            obj = protVar.get()  # Get the reference to the object
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
-                ViewerClass = viewers[0] # Use the first viewer registered
+                ViewerClass = viewers[0]  # Use the first viewer registered
                 v = ViewerClass(project=self.protocol.getProject(),
                                 protocol=self.protocol, parent=self)
-                v.visualize(obj) # Instanciate the viewer and visualize object
+                v.visualize(obj)  # Instantiate the viewer and visualize object
             else:
-                self.showInfo("There is not viewer registered for this object")
+                self.showInfo("There is no viewer registered for this object")
         else:
             self.showInfo("Select the object before visualize")
          
@@ -1916,7 +2228,7 @@ class FormWindow(Window):
  
     def _fillLine(self, groupParam, groupWidget):
         parent = groupWidget.content
-        r = 0
+        c = 0
         for paramName, param in groupParam.iterParams():
             protVar = getattr(self.protocol, paramName, None)
             
@@ -1931,10 +2243,10 @@ class FormWindow(Window):
             widget = ParamWidget(0, paramName, param, self, parent, 
                                  value=self.getWidgetValue(protVar, param),
                                  callback=self._checkChanges, visualizeCallback=visualizeCallback,
-                                 column=r, showButtons=False)
+                                 column=c, showButtons=False)
             widget.show() # Show always, conditions will be checked later
-            r += 2         
-            self.widgetDict[paramName] = widget           
+            c += 2
+            self.widgetDict[paramName] = widget
 
         
     def _checkCondition(self, paramName):
@@ -2028,16 +2340,32 @@ class FormWindow(Window):
     def setParamFromVar(self, paramName):
         param = getattr(self.protocol, paramName, None)
         if param is not None:
-            var = self.widgetDict[paramName]
+            widget = self.widgetDict[paramName]
             try:
-                # Special treatment to pointer params
+                value = widget.get()
+
+                # Special treatment for pointer params
                 if isinstance(param, pwobj.Pointer):
-                    param.copy(var.get())
+                    param.copy(value)
+                # Special treatment for Scalars that allow pointers
+                # Combo widgets do not have .param!
+                elif hasattr(widget, "param") and widget.param.allowsPointers:
+                    if isinstance(value, pwobj.Pointer):
+                        # Copy the pointer, otherwise changes in the
+                        # widget pointer will be reflected
+                        pointerCopy = pwobj.Pointer()
+                        pointerCopy.copy(value)
+                        param.setPointer(pointerCopy)
+                    else:
+                        param.setPointer(None)
+                        param.set(value)
+
                 elif isinstance(param, pwobj.Object):
-                    param.set(var.get())
+                    param.set(value)
             except ValueError:
-                if len(var.get()):
-                    print ">>> ERROR: setting param for: ", paramName, "value: '%s'" % var.get()
+                if len(value):
+                    print(">>> ERROR: setting param for: ", paramName,
+                          "value: '%s'" % value)
                 param.set(None)
                 
     def updateLabelAndCommentVars(self):

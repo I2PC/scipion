@@ -24,55 +24,96 @@
 # *
 # **************************************************************************
 
+import ast
 import os
 
+# This variable is useful to determinate the plugins compatibility with the
+# current Scipion core release.
+# This version does not need to change with future scipion releases
+# if plugins are still compatible, so future hot fixes releases or even micros
+# or minor release should not change this CORE_VERSION. Only, when a new release
+# will break existing plugins, this number needs to be incremented.
+CORE_VERSION = '2.0'
+
+# Versions
+VERSION_1 = '1.0.0'
+VERSION_1_1 = '1.1.0'
+VERSION_1_2 = '1.2.0'
+VERSION_2_0 = '2.0.0'
+
+# For a new release, define a new constant and assign it to LAST_VERSION
+# The existing one has to be added to OLD_VERSIONS list.
+LAST_VERSION = VERSION_2_0
+OLD_VERSIONS = (VERSION_1, VERSION_1_1, VERSION_1_2)
+
+# Define pyworkflow version in a standard way, as proposed by:
+# https://www.python.org/dev/peps/pep-0396/
+__version__ = LAST_VERSION
+
+
 HOME = os.path.abspath(os.path.dirname(__file__))
+
+PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
+
+
+class Config:
+    __get = os.environ.get  # shortcut
+    SCIPION_HOME = __get('SCIPION_HOME', '')
+    SCIPION_USER_DATA = __get('SCIPION_USER_DATA', '')
+    SCIPION_SUPPORT_EMAIL = __get('SCIPION_SUPPORT_EMAIL',
+                                  'scipion@cnb.csic.es')
+    SCIPION_LOGO = __get('SCIPION_LOGO',
+                         'scipion_logo.png')
+    # Where is the input data for tests...also where it will be downloaded
+    SCIPION_TESTS = __get('SCIPION_TESTS',
+                          os.path.join(SCIPION_HOME, 'data', 'tests'))
+
+    # Where the output of the tests will be stored
+    SCIPION_TESTS_OUTPUT = __get('SCIPION_TESTS_OUTPUT',
+                                 os.path.join(SCIPION_USER_DATA, 'Tests'))
+
+    SCIPION_CONFIG = __get('SCIPION_CONFIG', 'scipion.conf')
+    SCIPION_LOCAL_CONFIG = __get('SCIPION_LOCAL_CONFIG', 'scipion.conf')
+    SCIPION_HOSTS = __get('SCIPION_HOSTS', 'hosts.conf')
+    SCIPION_PROTOCOLS = __get('SCIPION_PROTOCOLS',
+                                     'protocols.conf')
+
+    SCIPION_PLUGIN_JSON = __get('SCIPION_PLUGIN_JSON', None)
+    SCIPION_PLUGIN_REPO_URL = __get('SCIPION_PLUGIN_REPO_URL',
+                                    'http://scipion.i2pc.es/getplugins/')
+
+    # Get general log file path
+    LOG_FILE = os.path.join(__get('SCIPION_LOGS', "~/"), 'scipion.log')
+
+    SCIPION_URL_SOFTWARE = __get('SCIPION_URL_SOFTWARE')
+
+    try:
+        VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
+    except Exception as e:
+        VIEWERS = {}
+        print("ERROR loading preferred viewers, VIEWERS variable will be ignored")
+        print(e)
+
 
 def join(*paths):
     """ join paths from HOME . """
     return os.path.join(HOME, *paths)
 
-RESOURCES = [join('resources')]
-WEB_RESOURCES = join('web', 'pages', 'resources')
 
-if "SCIPION_USER_DATA" not in os.environ:
-    raise Exception("SCIPION_USER_DATA is not defined as environment variable")
+__resourcesPath = [join('resources')]
 
-SCIPION_HOME = os.environ['SCIPION_HOME']
-SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
-SCIPION_SUPPORT_EMAIL = 'scipion@cnb.csic.es'
-PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
-SCIPION_PYTHON = PYTHON
-
-# Versions
-VERSION_1 = 'v1.0'
-VERSION_1_1 = 'v1.1'
-VERSION_1_2 = 'v1.2'
-OLD_VERSIONS = (VERSION_1,VERSION_1_1)
-
-
-SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
-
-
-_logo = 'scipion_logo.png'
-
-
-#----------------- Some functions to centralize path access -------------------
 
 def findResource(filename):
-    """ This function will search for a give
-    resource filename in the paths specified
-    in pyworkflow.RESOURCES path list.
-    """
     from utils.path import findFile
 
-    return findFile(filename, *RESOURCES)
+    return findFile(filename, *__resourcesPath)
+
 
 # Following are a set of functions to centralize the way to get
 # files from several scipion folder such as: config or apps
 
 def getScipionPath(*paths):
-     return os.path.join(SCIPION_HOME, *paths)
+     return os.path.join(Config.SCIPION_HOME, *paths)
 
 
 def getScipionScript():
@@ -84,4 +125,4 @@ def getConfigPath(*paths):
 
 
 def getTemplatePath(*paths):
-    return getConfigPath('templates', *paths)
+    return join('templates', *paths)

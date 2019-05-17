@@ -31,7 +31,7 @@ import os
 import Tkinter as tk
 import ttk
 
-from pyworkflow.config import Label
+from pyworkflow.project import Label
 from pyworkflow.gui import Icon, configureWeigths
 from pyworkflow.gui.tree import TreeProvider
 import pyworkflow.gui.dialog as dialog

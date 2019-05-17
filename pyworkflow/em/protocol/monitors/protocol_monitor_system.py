@@ -25,11 +25,12 @@
 # **************************************************************************
 
 import os
-from tkMessageBox import showerror
 import sys
 import time
-from matplotlib import animation
 import sqlite3 as lite
+
+from pyworkflow.utils import red
+
 try:
     import psutil
 except ImportError:
@@ -42,28 +43,16 @@ from protocol_monitor import ProtMonitor, Monitor
 import getnifs
 
 from pyworkflow import VERSION_1_1
-from pyworkflow.gui.plotter import plt
-from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
+from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
-from pyworkflow.em.plotter import EmPlotter
-from pyworkflow.viewer import (DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 
-from pynvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex,\
-    nvmlDeviceGetName, nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
+from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex,\
+    nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
     NVMLError, nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,\
     nvmlDeviceGetComputeRunningProcesses
 
 
 SYSTEM_LOG_SQLITE = 'system_log.sqlite'
-
-
-def errorWindow(tkParent, msg):
-    try:
-        showerror("Error",  # bar title
-                  msg,  # message
-                  parent=tkParent)
-    except:
-        print("Error:", msg)
 
 
 def initGPU():
@@ -282,11 +271,10 @@ class MonitorSystem(Monitor):
                                                     NVML_TEMPERATURE_GPU)
                     valuesDict["gpuTem_%d" % i] = temp
                 except NVMLError as err:
-                    handle = nvmlDeviceGetHandleByIndex(i)
-                    msg = "Device %d -> %s not suported\n" \
-                          "Remove device %d from FORM" % \
-                          (i, nvmlDeviceGetName(handle), i)
-                    errorWindow(None, msg)
+                    msg = "ERROR monitoring GPU %d: %s." \
+                          " Remove device %d from FORM" % (i, err, i)
+                    print(red(msg))
+
         if self.doNetwork:
             try:
                 # measure a sort interval
@@ -422,207 +410,3 @@ class MonitorSystem(Monitor):
         # conn.close()
         return data
 
-
-class ProtMonitorSystemViewer(Viewer):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _label = 'system monitor'
-    _targets = [ProtMonitorSystem]
-
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
-
-    def _visualize(self, obj, **kwargs):
-        return [SystemMonitorPlotter(obj.createMonitor(),
-                                     nifName=self.protocol.nifsNameList[
-                                         self.protocol.netInterfaces.get()])]
-
-
-class SystemMonitorPlotter(EmPlotter):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _label = 'System Monitor'
-    _targets = [ProtMonitorSystem]
-
-    def __init__(self, monitor, nifName=None):
-        EmPlotter.__init__(self, windowTitle="system Monitor")
-        self.monitor = monitor
-        self.y2 = 0.
-        self.y1 = 100.
-        self.win = 250  # number of samples to be ploted
-        self.step = 50  # self.win  will be modified in steps of this size
-        self.createSubPlot(self._getTitle(),
-                           "time (hours)",
-                           "percentage (or MB for IO or NetWork)")
-        self.fig = self.getFigure()
-        self.ax = self.getLastSubPlot()
-        self.ax.margins(0.05)
-        self.ax.grid(True)
-        self.oldWin = self.win
-
-        self.lines = {}
-        self.init = True
-        self.stop = False
-
-        self.nifName = nifName
-
-    def _getTitle(self):
-        return ("Use scrool wheel to change view window (win=%d)\n "
-                "S stops, C continues plotting. Toggle ON/OFF GPU_X "
-                "by pressing X\n"
-                "c/n/d toggle ON-OFF cpu/network/disk usage\n" % self.win)
-
-    def onscroll(self, event):
-
-        if event.button == 'up':
-            self.win += self.step
-        else:
-            self.win -= self.step
-            if self.win < self.step:
-                self.win = self.step
-
-        if self.oldWin != self.win:
-            self.ax.set_title(self._getTitle())
-            self.oldWin = self.win
-        self.animate()
-        EmPlotter.show(self)
-
-    def press(self, event):
-        def numericKey(key):
-            self.colorChanged = True
-            number = int(key)
-            index = 3+number*3
-            if (index + 3) > self.lenPlots:
-                return
-            if self.color['gpuMem_%d' % number] != 'w':
-                self.oldColor['gpuMem_%d' % number] = \
-                    self.color['gpuMem_%d' % number]
-                self.oldColor['gpuUse_%d' % number] = \
-                    self.color['gpuUse_%d' % number]
-                self.oldColor['gpuTem_%d' % number] = \
-                    self.color['gpuTem_%d' % number]
-                self.color['gpuMem_%d' % number] = "w"
-                self.color['gpuUse_%d' % number] = "w"
-                self.color['gpuTem_%d' % number] = "w"
-            else:
-                self.color['gpuMem_%d' % number] = \
-                    self.oldColor['gpuMem_%d' % number]
-                self.color['gpuUse_%d' % number] = \
-                    self.oldColor['gpuUse_%d' % number]
-                self.color['gpuTem_%d' % number] = \
-                    self.oldColor['gpuTem_%d' % number]
-
-        def cpuKey(key):
-            self.colorChanged = True
-            if self.color['cpu'] != 'w':
-                self.oldColor['cpu'] = self.color['cpu']
-                self.oldColor['mem'] = self.color['mem']
-                self.oldColor['swap'] = self.color['swap']
-                self.color['cpu'] = "w"
-                self.color['mem'] = "w"
-                self.color['swap'] = "w"
-            else:
-                self.color['cpu'] = self.oldColor['cpu']
-                self.color['swap'] = self.oldColor['swap']
-                self.color['mem'] = self.oldColor['mem']
-
-        def netKey(key):
-            self.colorChanged = True
-            if self.color['%s_send' % self.nifName] != 'w':
-                self.oldColor['%s_send' % self.nifName] = \
-                    self.color['%s_send' % self.nifName]
-                self.oldColor['%s_recv' % self.nifName] = \
-                    self.color['%s_recv' % self.nifName]
-                self.color['%s_send' % self.nifName] = "w"
-                self.color['%s_recv' % self.nifName] = "w"
-            else:
-                self.color['%s_send' % self.nifName] = \
-                    self.oldColor['%s_send' % self.nifName]
-                self.color['%s_recv' % self.nifName] = \
-                    self.oldColor['%s_recv' % self.nifName]
-
-        def diskKey(key):
-            self.colorChanged = True
-            if self.color['disk_read'] != 'w':
-                self.oldColor['disk_read'] = self.color['disk_read']
-                self.oldColor['disk_write'] = self.color['disk_write']
-                self.color['disk_read'] = "w"
-                self.color['disk_write'] = "w"
-            else:
-                self.color['disk_read'] = self.oldColor['disk_read']
-                self.color['disk_write'] = self.oldColor['disk_write']
-
-        sys.stdout.flush()
-        if event.key == 'S':
-            self.stop = True
-            self.ax.set_title('Plot has been Stopped. '
-                              'Press C to continue plotting')
-        elif event.key == 'C':
-            self.ax.set_title(self._getTitle())
-            self.stop = False
-            self.animate()
-        elif event.key.isdigit():
-            numericKey(event.key)
-            self.animate()
-        elif event.key == 'c':
-            cpuKey(event.key)
-            self.animate()
-        elif event.key == 'n':
-            netKey(event.key)
-            self.animate()
-        elif event.key == 'd':
-            diskKey(event.key)
-            self.animate()
-        EmPlotter.show(self)
-
-    def has_been_closed(self, ax):
-        fig = ax.figure.canvas.manager
-        active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
-        return fig not in active_fig_managers
-
-    def animate(self, i=0):  # do NOT remove i
-
-        if self.stop:
-            return
-
-        data = self.monitor.getData()
-        self.x = data['idValues']
-        for k, v in self.lines.iteritems():
-            self.y = data[k]
-
-            lenght = len(self.x)
-            imin = max(0, len(self.x) - self.win)
-            xdata = self.x[imin:lenght]
-            ydata = self.y[imin:lenght]
-            v.set_data(xdata, ydata)
-            if self.colorChanged:
-                v.set_color(self.color[k])
-        self.colorChanged = False
-        self.ax.relim()
-        self.ax.autoscale()
-        self.ax.grid(True)
-        self.ax.legend(loc=2).get_frame().set_alpha(0.5)
-
-    def paint(self, labels):
-        for label in labels:
-            self.lines[label], = self.ax.plot([], [], '-', label=label)
-
-        anim = animation.FuncAnimation(
-                self.fig, self.animate,
-                interval=self.monitor.samplingInterval * 1000)  # miliseconds
-
-        self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
-        self.fig.canvas.mpl_connect('key_press_event', self.press)
-        EmPlotter.show(self)
-
-    def show(self):
-        colortypes = ["k", "b", "r", "g", "y", "c", "m"]
-        lenColortypes = len(colortypes)
-        self.colorChanged = True
-        self.color = {}
-        self.oldColor = {}
-        counter = 0
-        for key in self.monitor.getLabels():
-            self.color[key] = colortypes[counter % lenColortypes]
-            self.oldColor[key] = colortypes[counter % lenColortypes]
-            counter += 1
-        self.lenPlots = len(self.color)
-        self.paint(self.monitor.getLabels())

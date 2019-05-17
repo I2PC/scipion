@@ -2,8 +2,9 @@
 
 
 import argparse
-from pyworkflow.em.plotter import plotFile
+from pyworkflow.em.viewers import EmPlotter
 from pyworkflow.gui.plotter import Plotter
+
 
 def main():
     parser = argparse.ArgumentParser(prog='Scipion Plot')
@@ -22,10 +23,7 @@ def main():
     parser.add_argument('--ytitle', help='Y axis title', default='')
     parser.add_argument('--xtitle', help='X axis title', default='')
 
-
-    
     args = parser.parse_args()
-    #print args
     plotfile = args.file
     block = args.block if args.block else '' 
     type = args.type
@@ -43,14 +41,12 @@ def main():
     ytitle = args.ytitle
     
     Plotter.setBackend('TkAgg')
-    plotFile(plotfile, block, type,
-               columns, colors, styles, markers,
-               xcolumn, ytitle, xtitle, title, bins, orderColumn, orderDir).show(block=True)
-#     else: 
-#         plotMetaData(plotfile, *args)
-    
-    
-    
+    plotter = EmPlotter.createFromFile(
+        plotfile, block, type, columns, colors, styles, markers, xcolumn,
+        ytitle, xtitle, title, bins, orderColumn, orderDir)
+    plotter.show(block=True)
+
+
 if __name__ == '__main__':
     main()
     

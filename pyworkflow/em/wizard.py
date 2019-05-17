@@ -29,34 +29,33 @@ This module implement some wizards
 """
 
 import os
-from os.path import basename, exists
 import Tkinter as tk
 import ttk
 
-from pyworkflow.wizard import Wizard
-import pyworkflow.gui.dialog as dialog
-from pyworkflow.gui.widgets import LabelSlider
-from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
-from pyworkflow.object import PointerList
-
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.constants import (UNIT_PIXEL, 
-                                     UNIT_PIXEL_FOURIER,
+from pyworkflow.object import PointerList, Pointer
+from pyworkflow.wizard import Wizard
+from pyworkflow.em.convert import ImageHandler, Ccp4Header
+from pyworkflow.em.constants import (UNIT_PIXEL,
                                      UNIT_ANGSTROM,
-                                     UNIT_ANGSTROM_FOURIER,
-                                     FILTER_LOW_PASS, 
-                                     FILTER_BAND_PASS, 
+                                     UNIT_PIXEL_FOURIER,
+                                     FILTER_LOW_PASS,
+                                     FILTER_BAND_PASS,
                                      FILTER_HIGH_PASS
                                      )
 from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
-from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
-                                                    ProtImportMovies,
-                                                    ProtImportCoordinates)
-
-
-import xmipp
+from pyworkflow.em.protocol import (ProtImportImages,
+                                    ProtImportCoordinates,
+                                    ProtImportCoordinatesPairs,
+                                    ProtImportVolumes)
+import pyworkflow.gui.dialog as dialog
+from pyworkflow.gui.tree import BoundTree, TreeProvider
+from pyworkflow.gui.widgets import LabelSlider
+from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+from pyworkflow.em.protocol.protocol_import import ProtImportSequence
+from pyworkflow.em.data import String
+import xmippLib
 
 #===============================================================================
 #    Wizard EM base class
@@ -188,8 +187,7 @@ class DownsampleWizard(EmWizard):
     @classmethod
     def getView(self):
         return "wiz_downsampling"
-        
-    
+
 class CtfWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
@@ -212,8 +210,8 @@ class CtfWizard(EmWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_ctf"           
-    
+        return "wiz_ctf"
+
 class MaskRadiusWizard(EmWizard):
         
     def show(self, form, value, label, units=UNIT_PIXEL):
@@ -348,44 +346,19 @@ class GaussianParticlesWizard(GaussianWizard):
 class GaussianVolumesWizard(GaussianWizard):
     pass   
     
-    
-class ImportAcquisitionWizard(EmWizard):
-    _targets = [(ProtImportImages, ['acquisitionWizard'])]
-    
-    def show(self, form, *params):
-        acquisitionInfo = form.protocol.loadAcquisitionInfo()
 
-        if isinstance(acquisitionInfo, dict):
-            # If acquisitionInfo is None means something is wrong.
-            # Now, let's try to show a meanful error message.
-            self._setAcquisition(form, acquisitionInfo)
-        else:
-            # If not dict, it should be an error message
-            dialog.showError("Input error", acquisitionInfo, form.root)
-
-    def _setAcquisition(self, form, acquisitionInfo):
-        """ Ask whether to set the AcquisitionInfo to the protocol parameters.
-        Params:
-            acquisitionInfo: Should be a dictionary with acquisition values.
-                If None, show an error.
-        """
-        msg = ''
-        for k, v in acquisitionInfo.iteritems():
-            msg += '%s = %s\n' % (k, v)
-        msg += '\n*Do you want to use detected acquisition values?*'
-        response = dialog.askYesNo("Import acquisition",
-                                   msg, form.root)
-        if response:
-            prot = form.protocol
-            comment = ''
-
-            for k, v in acquisitionInfo.iteritems():
-                if prot.hasAttribute(k):
-                    form.setVar(k, v)
-                else:
-                    comment += "%s = %s\n" % (k, v)
-            if comment:
-                prot.setObjComment(comment)
+class PDBVolumeWizard(EmWizard):
+    def show(self, form):
+        if form.protocol.inputPDB.hasValue():
+            pdb = form.protocol.inputPDB.get()
+            print("pdb ",pdb._volume, str(pdb._volume))
+            if pdb._volume:
+                print("Setting ",str(pdb.getVolume()))
+                ptr = Pointer()
+                ptr.copy(form.protocol.inputPDB)
+                ptr.setExtended(ptr.getExtended()+"._volume")
+#                 ptr.set(pdb.getVolume())
+                form.setVar('inputVol', ptr)
 
 #===============================================================================
 #  Dialogs used by wizards
@@ -484,7 +457,7 @@ class ImagePreviewDialog(PreviewDialog):
         if index:
             filename = "%03d@%s" % (index, filename)
         
-#        self.image = xmipp.Image()
+#        self.image = xmippLib.Image()
         self.image = ImageHandler()._img
 
 
@@ -562,10 +535,10 @@ class DownsampleDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmipp.fastEstimateEnhancedPSD(self.rightImage,
-                                      self.lastObj.getFileName(),
-                                      self.getDownsample(), self.dim, 2)
-        
+        xmippLib.fastEstimateEnhancedPSD(self.rightImage,
+                                         self.lastObj.getFileName(),
+                                         self.getDownsample(), self.dim, 2)
+
 
 class CtfDialog(DownsampleDialog):
     
@@ -699,10 +672,10 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getLowFreq(), self.getHighFreq(),
-                             self.getFreqDecay(), self.dim)
+        xmippLib.bandPassFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
+                                self.getLowFreq(), self.getHighFreq(),
+                                self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
@@ -749,9 +722,9 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
-                             self.getFreqSigma(), self.dim)
+        xmippLib.gaussianFilter(self.rightImage,
+                                ImageHandler.locationToXmipp(self.lastObj),
+                                self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):
@@ -841,13 +814,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         return int(radiusSlider.get())
 
 
-class ImportCoordinatesBoxSizeWizard(Wizard):
-    _targets = [(ProtImportCoordinates, ['boxSize'])]
+class ListTreeProviderString(ListTreeProvider):
+    def getText(self, obj):
+        return obj.get()
 
-    def _getBoxSize(self, protocol):
-
-        return protocol.getDefaultBoxSize()
-
-
-    def show(self, form):
-        form.setVar('boxSize', self._getBoxSize(form.protocol))

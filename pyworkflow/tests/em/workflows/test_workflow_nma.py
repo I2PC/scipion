@@ -27,10 +27,15 @@
 
 from pyworkflow.em.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
 from pyworkflow.tests import setupTestProject, DataSet
-from test_workflow import TestWorkflow  
-from pyworkflow.em.packages.xmipp3.nma import (XmippProtNMA, XmippProtAlignmentNMA, 
-                                               XmippProtDimredNMA, NMA_CUTOFF_ABS)
-from pyworkflow.em.packages.xmipp3 import XmippProtConvertToPseudoAtoms
+from pyworkflow.utils import importFromPlugin
+from test_workflow import TestWorkflow
+
+XmippProtNMA = importFromPlugin('xmipp3.protocols', 'XmippProtNMA', doRaise=True)
+XmippProtAlignmentNMA = importFromPlugin('xmipp3.protocols', 'XmippProtAlignmentNMA')
+XmippProtDimredNMA = importFromPlugin('xmipp3.protocols', 'XmippProtDimredNMA')
+NMA_CUTOFF_ABS = importFromPlugin('xmipp3.protocols', 'NMA_CUTOFF_ABS')
+XmippProtConvertToPseudoAtoms = importFromPlugin('xmipp3.protocols',
+                                                 'XmippProtConvertToPseudoAtoms')
    
    
    
@@ -52,7 +57,7 @@ class TestNMA(TestWorkflow):
         
         # Import a PDB
         protImportPdb = self.newProtocol(ProtImportPdb, inputPdbData=1,
-                                      pdbFile=self.ds.getFile('pdb'))
+                                         pdbFile=self.ds.getFile('pdb'))
         self.launchProtocol(protImportPdb)
         
         # Launch NMA for PDB imported
@@ -101,7 +106,8 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportVol)
         
         # Convert the Volume to Pdb
-        from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import NMA_MASK_THRE
+        NMA_MASK_THRE = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+                                         'NMA_MASK_THRE')
         protConvertVol = self.newProtocol(XmippProtConvertToPseudoAtoms)
         protConvertVol.inputStructure.set(protImportVol.outputVolume)
         protConvertVol.maskMode.set(NMA_MASK_THRE)

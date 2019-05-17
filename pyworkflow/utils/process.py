@@ -85,7 +85,7 @@ def buildRunCommand(programname, params, numberOfMpi, hostConfig=None,
     else:
         assert hostConfig is not None, 'hostConfig needed to launch MPI processes.'
 
-        if programname.startswith('xmipp'):
+        if programname.startswith('xmipp') and not programname.startswith('xmipp_mpi'):
             programname = programname.replace('xmipp', 'xmipp_mpi')
             
         mpiFlags = '' if env is None else env.get('SCIPION_MPI_FLAGS', '') 
@@ -94,17 +94,6 @@ def buildRunCommand(programname, params, numberOfMpi, hostConfig=None,
             'JOB_NODES': numberOfMpi,
             'COMMAND': "%s `which %s` %s" % (mpiFlags, programname, params),
         }
-
-
-def loadHostConfig(host='localhost'):
-    """ This function will load the execution host configuration.
-    In there will be information to know how to launch MPI processes
-    and how to submit jobs to the queue system if exists.
-    """
-    from pyworkflow.hosts import HostMapper
-    from pyworkflow import HOME
-    mapper = HostMapper(os.path.join(HOME, '..', 'settings'))
-    return mapper.selectByLabel(host)
 
 
 def killWithChilds(pid):
@@ -124,11 +113,12 @@ def killWithChilds(pid):
     else:
         proc.kill()
 
+
 def isProcessAlive(pid):
     import psutil
     try:
         proc = psutil.Process(pid)
         return proc.is_running()
-    except psutil.NoSuchProcess, e:
+    except psutil.NoSuchProcess:
         return False
 

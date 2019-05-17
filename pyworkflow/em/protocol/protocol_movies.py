@@ -412,26 +412,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
         return doneList
 
-    def _readFailedList(self):
-        """ Read from a text file the id's of the items that have failed. """
-        failedFile = self._getAllFailed()
-        failedList = []
-        # Check what items have been previously done
-        if os.path.exists(failedFile):
-            with open(failedFile) as f:
-                failedList += [int(line.strip()) for line in f]
-
-        return failedList
-
     def _writeDoneList(self, movieList):
         """ Write to a text file the items that have been done. """
         with open(self._getAllDone(), 'a') as f:
-            for movie in movieList:
-                f.write('%d\n' % movie.getObjId())
-
-    def _writeFailedList(self, movieList):
-        """ Write to a text file the items that have failed. """
-        with open(self._getAllFailed(), 'a') as f:
             for movie in movieList:
                 f.write('%d\n' % movie.getObjId())
 
@@ -497,7 +480,6 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
     """ Assign a gain image to a set of movies
     """
     _label = 'assign gain to movies'
-    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)

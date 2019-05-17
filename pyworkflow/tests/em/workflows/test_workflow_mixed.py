@@ -1,13 +1,43 @@
+# **************************************************************************
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'scipion@cnb.csic.es'
+# *
+# **************************************************************************
+
 from pyworkflow.tests import DataSet, setupTestProject
-from pyworkflow.em.packages.xmipp3 import (XmippProtPreprocessMicrographs,
-                                           XmippProtExtractParticles,
-                                           XmippProtCropResizeParticles, XmippProtML2D)
-from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind, ProtFrealign
-from pyworkflow.em.packages.eman2 import EmanProtInitModel
-from pyworkflow.em.packages.relion import ProtImportMicrographs, ProtImportVolumes
+from pyworkflow.utils import importFromPlugin
 from test_workflow import TestWorkflow
-from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
+from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates, \
+                                                   ProtImportMicrographs, \
+                                                   ProtImportVolumes
+
+XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs', doRaise=True)
+XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
+XmippProtCropResizeParticles = importFromPlugin('xmipp3.protocols', 'XmippProtCropResizeParticles')
+XmippProtML2D = importFromPlugin('xmipp3.protocols', 'XmippProtML2D')
+SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
+OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
+ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
+ProtFrealign = importFromPlugin('grigoriefflab.protocols', 'ProtFrealign')
+EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel', doRaise=True)
 
 
 class TestMixedBPV(TestWorkflow):

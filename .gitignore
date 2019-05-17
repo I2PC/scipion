@@ -33,6 +33,7 @@
 .pydevproject
 .classpath
 .idea
+*.iml
 
 # Scons auxiliary files
 .sconsign.dblite
@@ -49,7 +50,6 @@
 /software/man
 /software/share
 /software/em/*
-!/software/em/xmipp
 
 gmon.out
 *~

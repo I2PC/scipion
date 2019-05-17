@@ -26,22 +26,21 @@
 
 import os
 import sys
+from math import isinf
 
 import pyworkflow.protocol.params as params
-from protocol_monitor import ProtMonitor, Monitor, EmailNotifier
-from report_html import PSD_PATH
+from protocol_monitor import ProtMonitor, Monitor
 import sqlite3 as lite
-import time, sys
 
 from pyworkflow import VERSION_1_1
-from pyworkflow.gui.plotter import plt
-import tkMessageBox
+
 from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
 
-from pyworkflow.em.plotter import EmPlotter
-from math import isinf
-
+PHASE_SHIFT = 'phaseShift'
+TIME_STAMP = 'timeStamp'
+DEFOCUS_U = 'defocusU'
+RESOLUTION = 'resolution'
 CTF_LOG_SQLITE = 'ctf_log.sqlite'
 
 
@@ -50,9 +49,9 @@ class ProtMonitorCTF(ProtMonitor):
     """
     _label = 'ctf monitor'
     _lastUpdateVersion = VERSION_1_1
-    #--------------------------- DEFINE param functions ----------------------
+
+    # -------------------------- DEFINE param functions ---------------------
     def _defineParams(self, form):    
-        #ProtMonitor._defineParams(self, form)
         form.addSection(label='Input')
 
         form.addParam('inputProtocol', params.PointerParam,
@@ -80,7 +79,7 @@ class ProtMonitorCTF(ProtMonitor):
 
         ProtMonitor._sendMailParams(self, form)
 
-    #--------------------------- STEPS functions -------------------------------
+    # -------------------------- STEPS functions ------------------------------
     def monitorStep(self):
 
         self.createMonitor().loop()
@@ -101,7 +100,7 @@ class ProtMonitorCTF(ProtMonitor):
                                 astigmatism=self.astigmatism.get())
         return ctfMonitor
 
-    #--------------------------- INFO functions --------------------------------
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         #TODO if less than 20 sec complain
         return []  # no errors
@@ -155,18 +154,28 @@ class MonitorCTF(Monitor):
             ctf = setOfCTFs[ctfID]
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
+
+            # Defocus angle
             defocusAngle = ctf.getDefocusAngle()
             if defocusAngle > 360 or defocusAngle< -360:
                 defocusAngle = 0
+
+            # Astigmatism
             astig = abs(defocusU - defocusV)
+
+            # Resolution
             resolution = ctf.getResolution()
             if isinf(resolution):
-                 resolution = 0.
+                resolution = 0.
             
+            # Fit quality
             fitQuality = ctf.getFitQuality()
             if fitQuality is None or isinf(fitQuality): 
-                  fitQuality = 0.
-            
+                fitQuality = 0.
+
+            # PhaseShift
+            phaseShift = ctf.getPhaseShift() if ctf.hasPhaseShift() else 0.
+
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
             shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
@@ -184,19 +193,19 @@ class MonitorCTF(Monitor):
                 defocusAngle = 180. - defocusAngle
                 print("ERROR: defocusU should be greater than defocusV")
 
+            ctfCreationTime = ctf.getObjCreation()
+
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-#            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
-#                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
-#                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
-            sql = """INSERT INTO %s(ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, micPath,psdPath,shiftPlotPath )
-                     VALUES(%d,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfID, defocusU,
-                     defocusV, astig, defocusU / defocusV, resolution, fitQuality, micPath, psdPath, shiftPlotPath)
+            sql = """INSERT INTO %s(timestamp, ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, phaseShift, micPath,psdPath,shiftPlotPath )
+                     VALUES("%s",%d,%f,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfCreationTime, ctfID, defocusU,
+                     defocusV, astig, defocusU / defocusV, resolution, fitQuality, phaseShift,  micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
                 print("ERROR: saving one data point (CTF monitor). I continue")
-                print e
+                print(e)
+                print(sql)
 
             if abs(defocusU - defocusV) > astigmatism:
                 self.warning("Astigmatism (defocusU - defocusV)  = %f."
@@ -227,7 +236,8 @@ class MonitorCTF(Monitor):
                                 astigmatism FLOAT,
                                 ratio FLOAT,
                                 resolution FLOAT,
-				fitQuality FLOAT,
+				                fitQuality FLOAT,
+				                phaseShift FLOAT,
                                 micPath STRING,
                                 psdPath STRING,
                                 shiftPlotPath STRING)
@@ -243,132 +253,20 @@ class MonitorCTF(Monitor):
             return [r[0] for r in self.cur.fetchall()]
 
         data = {
-            'defocusU': get('defocusU'),
+            DEFOCUS_U: get('defocusU'),
             'defocusV': get('defocusV'),
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
             'idValues': get('ctfID'),
-            'resolution': get('resolution'),
+            RESOLUTION: get('resolution'),
             'fitQuality': get('fitQuality'),
+            PHASE_SHIFT: get('phaseShift'),
             'imgMicPath': get('micPath'),
             'imgPsdPath': get('psdPath'),
-            'imgShiftPath': get('shiftPlotPath')
+            'imgShiftPath': get('shiftPlotPath'),
+            TIME_STAMP: get("strftime('%s', timestamp) * 1000")
          }
         # conn.close()
         return data
 
-
-from pyworkflow.viewer import ( DESKTOP_TKINTER, Viewer)
-from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
-                                        EnumParam, FloatParam, IntParam)
-from matplotlib import animation
-
-
-class ProtMonitorCTFViewer(Viewer):
-    _environments = [DESKTOP_TKINTER]
-    _label = 'ctf monitor'
-    _targets = [ProtMonitorCTF]
-
-    def _visualize(self, obj, **kwargs):
-        return [CtfMonitorPlotter(obj.createMonitor())]
-
-
-class CtfMonitorPlotter(EmPlotter):
-    def __init__(self, monitor):
-        EmPlotter.__init__(self, windowTitle="CTF Monitor")
-        self.monitor = monitor
-        self.y2 = 0.; self.y1 = 100.
-        self.win = 250 # number of samples to be ploted
-        self.step = 50 # self.win  will be modified in steps of this size
-
-        self.createSubPlot(self._getTitle(), "Micrographs", "Defocus (A)")
-        self.fig = self.getFigure()
-        self.ax = self.getLastSubPlot()
-        self.ax.margins(0.05)
-        self.ax.grid(True)
-        self.oldWin = self.win
-
-        self.lines = {}
-        self.init = True
-        self.stop = False
-
-    def _getTitle(self):
-        return ("Use scrool wheel to change view window (win=%d)\n "
-                "S stops, C continues plotting" % self.win)
-
-    def onscroll(self, event):
-
-        if event.button == 'up':
-            self.win += self.step
-        else:
-            self.win -= self.step
-            if self.win < self.step:
-               self.win = self.step
-
-        if self.oldWin != self.win:
-            self.ax.set_title(self._getTitle())
-            self.oldWin= self.win
-        self.animate()
-        EmPlotter.show(self)
-
-    def press(self,event):
-
-        sys.stdout.flush()
-        if event.key == 'S':
-            self.stop = True
-            self.ax.set_title('Plot is Stopped. Press C to continue plotting')
-        elif event.key == 'C':
-            self.ax.set_title(self._getTitle())
-            self.stop = False
-            self.animate()
-        EmPlotter.show(self)
-
-    def has_been_closed(self,ax):
-        fig = ax.figure.canvas.manager
-        active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
-        return fig not in active_fig_managers
-
-    def animate(self, i=0): #do NOT remove i
-                           #FuncAnimation adds it as argument
-        if self.stop:
-            return
-
-        data = self.monitor.getData()
-        self.x = data['idValues']
-        for k,v in self.lines.iteritems():
-            self.y = data[k]
-
-            lenght = len(self.x)
-            imin = max(0,len(self.x) - self.win)
-            xdata = self.x[imin:lenght]
-            ydata = self.y[imin:lenght]
-            v.set_data(xdata,ydata)
-
-        self.ax.relim()
-        self.ax.autoscale()
-        self.ax.grid(True)
-        self.ax.legend(loc=2).get_frame().set_alpha(0.5)
-        self.ax.axhline(y=self.monitor.minDefocus, c="red",
-                        linewidth=0.5, linestyle='dashed', zorder=0)
-        self.ax.axhline(y=self.monitor.maxDefocus, c="red",
-                        linewidth=0.5, linestyle='dashed', zorder=0)
-
-    def show(self):
-        self.paint(['defocusU','defocusV'])
-
-    def paint(self, labels):
-        for label in labels:
-            if (label == 'defocusU'):
-                self.lines[label], = self.ax.plot([], [], '-o',
-                                                  label=label, color='b')
-            else:
-                self.lines[label], = self.ax.plot([], [], '-o',
-                                                  label=label, color='r')
-
-        anim = animation.FuncAnimation(self.fig, self.animate,
-                                       interval=self.monitor.samplingInterval*1000)#miliseconds
-
-        self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
-        self.fig.canvas.mpl_connect('key_press_event', self.press)
-        EmPlotter.show(self)
 

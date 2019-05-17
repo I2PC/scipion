@@ -87,6 +87,9 @@ class SummaryProvider(TreeProvider):
                                         (u"Pixel Size (Å/px): ",
                                          round(outSet.getSamplingRate(),2))
                                         ]
+                    if prot.dosePerFrame.get() is not None:
+                        self.acquisition.append((u"Dose per frame (e/Å²):",
+                                                 prot.dosePerFrame.get()))
 
         self._objects = objects
 
