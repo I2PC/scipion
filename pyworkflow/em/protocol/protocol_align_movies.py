@@ -549,7 +549,8 @@ class ProtAlignMovies(ProtProcessMovies):
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
-    def computePSD(self, inputMic, oroot, dim=512, overlap=0.4):
+    def computePSD(self, inputMic, oroot, dim=384, # 384 = 128 + 256, which should be fast for any Fourier Transformer
+                   overlap=0.4):
         args = '--micrograph "%s" --oroot %s ' % (inputMic, oroot)
         args += '--dont_estimate_ctf --pieceDim %d --overlap %f' % (dim, overlap)
 
