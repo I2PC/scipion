@@ -48,6 +48,7 @@ Protocols SPA = [
 		{"tag": "protocol_group", "text": "Refine", "openItem": "False", "children": [
 			{"tag": "section", "text": "more", "openItem": "False", "children": []}
 		]},
+		{"tag": "protocol_group", "text": "Postprocess", "openItem": "False", "children": []},
 		{"tag": "protocol_group", "text": "Analysis", "openItem": "False", "children": [
 			{"tag": "section", "text": "Heterogeneity", "openItem": "False", "children": []},
 			{"tag": "section", "text": "Validation", "openItem": "False", "children": []},

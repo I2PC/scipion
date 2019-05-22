@@ -671,7 +671,7 @@ def cifToPdb(fnCif,fnPdb):
 def pdbToCif(fnPdb, fnCif):
     h = AtomicStructHandler()
     h.read(fnPdb)
-    h.writeAsPdb(fnCif)
+    h.writeAsCif(fnCif)
 
 def toPdb(inFileName, outPDBFile):
     if inFileName.endswith(".pdb") or inFileName.endswith(".ent"):
