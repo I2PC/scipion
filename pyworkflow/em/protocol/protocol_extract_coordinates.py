@@ -236,7 +236,9 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             self._defineTransformRelation(self.getInputParticles(), outputSet)
             self._defineSourceRelation(self.getInputMicrographs(), outputSet)
 
-        outputSet.copyInfo(self.getInputParticles())
+        # copyInfo raise an error since particles has no _boxsize
+        #   copyInfo does not do anything else
+        # outputSet.copyInfo(self.getInputParticles())
         outputSet.setMicrographs(self.getInputMicrographs())
 
         return outputSet
