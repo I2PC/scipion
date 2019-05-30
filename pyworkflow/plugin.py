@@ -36,6 +36,7 @@ from collections import OrderedDict
 from abc import ABCMeta, abstractmethod
 
 import pyworkflow.utils as pwutils
+from pyworkflow.install import Environment
 
 
 class Domain:
@@ -130,6 +131,45 @@ class Domain:
         return m
 
     @classmethod
+    def refreshPlugin(cls, name):
+        """ Refresh a given plugin name. """
+        import types
+
+        plugin = cls.getPlugin(name)
+        if plugin is not None:
+            fn = plugin.__file__
+            fn_dir = os.path.dirname(fn) + os.sep
+            module_visit = {plugin}
+            module_visit_path = {fn}
+            del fn
+
+            def get_recursive_molules(module):
+                """
+                Get all plugin modules recursively
+                """
+                for module_child in vars(module).values():
+                    if isinstance(module_child, types.ModuleType):
+                        fn_child = getattr(module_child, "__file__", None)
+                        if (fn_child is not None) and fn_child.startswith(
+                                fn_dir):
+                            if fn_child not in module_visit_path:
+                                module_visit.add(module_child)
+                                module_visit_path.add(fn_child)
+                                get_recursive_molules(module_child)
+
+            get_recursive_molules(plugin)
+            # reload all plugin modules
+
+            while module_visit:
+                for module in module_visit:
+                    try:
+                        reload(module)
+                        module_visit.remove(module)
+                        break
+                    except Exception as ex:
+                        pass
+
+    @classmethod
     def __getSubclasses(cls, submoduleName, BaseClass,
                         updateBaseClasses=False):
         """ Load all detected subclasses of a given BaseClass.
@@ -154,9 +194,21 @@ class Domain:
                     for name in cls.getModuleClasses(sub):
                         attr = getattr(sub, name)
                         if inspect.isclass(attr) and issubclass(attr, BaseClass):
-                            # Set this special property used by Scipion
-                            attr._package = plugin
-                            subclasses[name] = attr
+
+                            # Check if the class already exists (to prevent
+                            # naming collisions)
+                            if name in subclasses:
+                                # Get already added class plugin
+                                pluginCollision = subclasses[name]._package.__name__
+                                print("ERROR: Name collision (%s) detected "
+                                      "while discovering %s.%s.\n"
+                                      " It conflicts with %s" %
+                                      (name, pluginName, submoduleName,
+                                       pluginCollision))
+                            else:
+                                # Set this special property used by Scipion
+                                attr._package = plugin
+                                subclasses[name] = attr
             subclasses.update(
                 pwutils.getSubclasses(BaseClass, cls._baseClasses))
 
@@ -228,7 +280,7 @@ class Plugin:
         to the default value.
         """
         cls._defineVar(varName,
-                       os.path.join(os.environ['EM_ROOT'], defaultValue))
+                       os.path.join(Environment.getEm(defaultValue)))
 
     @classmethod
     @abstractmethod
@@ -260,6 +312,11 @@ class Plugin:
         return cls._vars.get(varName, defaultValue)
 
     @classmethod
+    def getVars(cls):
+        """ Return the value of a given variable. """
+        return cls._vars
+
+    @classmethod
     def getHome(cls, *paths):
         """ Return a path from the "home" of the package
          if the _homeVar is defined in the plugin. """
@@ -276,7 +333,9 @@ class Plugin:
         """ Return the version of the binaries that are currently active.
         In the current implementation it will be inferred from the *_HOME
         variable, so it should contain the version number in it. """
-        home = home or cls.getHome()
+        # FIXME: (JMRT) Use the basename might aleviate the issue with matching
+        # the binaries version, but we might consider to find a better solution
+        home = os.path.basename(home or cls.getHome())
         versions = versions or cls.getSupportedVersions()
 
         for v in versions:

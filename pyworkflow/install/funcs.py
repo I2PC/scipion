@@ -32,6 +32,8 @@ import time
 from glob import glob
 from subprocess import STDOUT, call
 
+from pyworkflow import Config
+
 try:
     unicode = unicode
 except NameError:  # 'unicode' is undefined, must be Python 3
@@ -42,9 +44,6 @@ except NameError:  # 'unicode' is undefined, must be Python 3
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
-
-SCIPION_URL_SOFTWARE = os.environ['SCIPION_URL_SOFTWARE']
-
 
 def ansi(n):
     "Return function that escapes text with ANSI color n."
@@ -251,7 +250,7 @@ class Environment:
         self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
-        self._pipCmd = kwargs.get('pipCmd', '{} {}/pip install %s==%s'.format(self.getBin('python'),
+        self._pipCmd = kwargs.get('pipCmd', '{0} {1}/pip install %s==%s'.format(self.getBin('python'),
                                                                               self.getPythonPackagesFolder()))
 
     def getLibSuffix(self):
@@ -298,7 +297,8 @@ class Environment:
 
     @staticmethod
     def getEmFolder():
-        return '%s/em' % Environment.getSoftware()
+        defaultValue = '%s/em' % Environment.getSoftware()
+        return os.environ.get('EM_ROOT', defaultValue)
 
     @staticmethod
     def getEm(name):
@@ -367,7 +367,7 @@ class Environment:
         # Use reasonable defaults.
         tar = kwargs.get('tar', '%s.tgz' % name)
         urlSuffix = kwargs.get('urlSuffix', 'external')
-        url = kwargs.get('url', '%s/%s/%s' % (SCIPION_URL_SOFTWARE, urlSuffix, tar))
+        url = kwargs.get('url', '%s/%s/%s' % (Config.SCIPION_URL_SOFTWARE, urlSuffix, tar))
         downloadDir = kwargs.get('downloadDir', self.getTmpFolder())
         buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
@@ -401,7 +401,7 @@ class Environment:
                          targets=tarFile)
 
         if createBuildDir:
-            tarCmd = '{} -C {}'.format(self._tarCmd % tar, buildDir)
+            tarCmd = '{0} -C {1}'.format(self._tarCmd % tar, buildDir)
             t.addCommand('mkdir %s' % buildPath,
                          targets=[buildPath],
                          cwd=downloadDir)

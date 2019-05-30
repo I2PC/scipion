@@ -269,23 +269,21 @@ class ProtAlignMovies(ProtProcessMovies):
                 errors.append("If you give cropDimX, you should also give "
                               "cropDimY and vice versa")
 
-        # movie = self.inputMovies.get().getFirstItem()
-        # # Close movies db because the getFirstItem open it
-        # # we do not want to leave the file open
-        # self.inputMovies.get().close()
-        # frames = movie.getNumberOfFrames()
+        inputMovies = self.inputMovies.get()
 
         # Do not continue if there ar no movies. Validation message will
         # take place since attribute is a Pointer.
-        if self.inputMovies.get() is None:
+        if inputMovies is None:
             return errors
 
-        firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
+        firstItem = inputMovies.getFirstItem()
+
+        firstFrame, lastFrame, _ = inputMovies.getFramesRange()
         if lastFrame == 0:
             # Although getFirstItem is not recommended in general, here it is
-            # used olny once, for validation purposes, so performance
+            # used only once, for validation purposes, so performance
             # problems should not appear.
-            frames = self.inputMovies.get().getFirstItem().getNumberOfFrames()
+            frames = firstItem.getNumberOfFrames()
             lastFrame = frames
         else:
             frames = lastFrame - firstFrame + 1
@@ -315,6 +313,12 @@ class ProtAlignMovies(ProtProcessMovies):
 
             _validateRange("align")
             _validateRange("sum")
+
+        if not ImageHandler().existsLocation(firstItem.getLocation()):
+            errors.append("The input movie files do not exist!!! "
+                          "Since usually input movie files are symbolic links, "
+                          "please check that links are not broken if you "
+                          "moved the project folder. ")
 
         return errors
 
@@ -405,8 +409,10 @@ class ProtAlignMovies(ProtProcessMovies):
         fnRoot = pwutils.removeBaseExt(fn)
         # Check if there is a second extension
         # (Assuming is is only a dot and 3 or 4 characters after it
-        if fnRoot[-4] == '.' or fnRoot[-5] == '.':
-            fnRoot = pwutils.removeExt(fnRoot)
+        # Do not perform this check if the file name is short
+        if len(fnRoot) > 5:
+            if fnRoot[-4] == '.' or fnRoot[-5] == '.':
+                fnRoot = pwutils.removeExt(fnRoot)
 
         return fnRoot
 

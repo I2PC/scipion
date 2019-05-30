@@ -332,7 +332,18 @@ class Protocol(Step):
         self.__stdErr = None
         self.__fOut = None
         self.__fErr = None
-        self._log = None
+
+        class BasicLog:
+            def warning(self, message, redirectStandard=True):
+                print("WARNING", message)
+
+            def info(self, message, redirectStandard=True):
+                print("INFO", message)
+
+            def error(self, message, redirectStandard=True):
+                print("ERROR", message)
+
+        self._log = BasicLog()
         self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
         self.__project = kwargs.get('project', None)
@@ -655,15 +666,32 @@ class Protocol(Step):
                 if attrInput.hasExtended():  # case B
                     protocol = attrInput.getObjValue()
                 else:  # case C
-                    protocol = self.getProject().getProtocol(output.getObjParentId())
+
+                    if self.getProject() is not None:
+
+                        protocol = self.getProject().getProtocol(output.getObjParentId())
+                    else:
+                        # This is a problem, since protocols coming from
+                        # Pointers do not have the __project set.
+                        # We do not have an clear way to get the protocol if
+                        # we do not have the project object associated
+                        # This case implies Direct Pointers to Sets
+                        # (without extended): hopefully this will only be
+                        # created from tests
+                        print ("Can't get protocol info from input attribute."
+                               " This could render unexpected results when "
+                               "scheduling protocols.")
+                        continue
 
                 if output is not None:
                     for k, attr in output.getAttributes():
                         if isinstance(attr, Pointer):
-                            auxDict = protocol.inputProtocolDict()
-                            for key in auxDict:
-                                if key not in protocolDict.keys():
-                                    protocolDict[key] = auxDict[key]
+                            if attr.get() is not None:
+                                auxDict = protocol.inputProtocolDict()
+                                for auxKey in auxDict:
+                                    if auxKey not in protocolDict.keys():
+                                        protocolDict[auxKey] = auxDict[auxKey]
+                                break
 
             protocolDict[protocol.getObjId()] = protocol
 
@@ -1041,14 +1069,8 @@ class Protocol(Step):
         for i in range(n):
             newStep = self._steps[i]
             oldStep = self._prevSteps[i]
-            #             self.info(">>> i: %s" % i)
-            #             self.info(" oldStep.status: %s" % str(oldStep.status))
-            #             self.info(" oldStep!=newStep %s" % (oldStep != newStep))
-            #             self.info(" not post: %s" % (not oldStep._postconditions()))
-            if (not oldStep.isFinished() or
-                        newStep != oldStep or
-                    not oldStep._postconditions()):
-                #                 self.info(" returning i: %s" % i)
+            if (not oldStep.isFinished() or newStep != oldStep
+                or not oldStep._postconditions()):
                 return i
             newStep.copy(oldStep)
 
@@ -1284,11 +1306,7 @@ class Protocol(Step):
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
             kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)
         if 'env' not in kwargs:
-            # self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
-
-        # self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
-        # self._log.info("runJob: env = %s " % str(kwargs['env']))
 
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
 
@@ -1318,6 +1336,8 @@ class Protocol(Step):
             self.info('  * Cannot get information about MPI/threads (%s)' % e)
 
         Step.run(self)
+        if self.isFailed():
+            self._store()
         self._endRun()
 
     def _endRun(self):
@@ -1328,10 +1348,10 @@ class Protocol(Step):
         self._store(self.endTime)
 
         if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
-            self.warning('Not cleaning temporarly files since '
+            self.warning('Not cleaning temp folder since '
                          'SCIPION_DEBUG_NOCLEAN is set to True.')
         elif not self.isFailed():
-            self.info('Cleaning temporarly files....')
+            self.info('Cleaning temp folder....')
             self.cleanTmp()
 
         self.info(pwutils.greenStr('------------------- PROTOCOL ' +
@@ -1584,7 +1604,7 @@ class Protocol(Step):
         """
         package = cls.getClassPackage()
         packageName = cls.getClassPackageName()
-        varValue = os.environ[varName]
+        varValue = package.Plugin.getVar(varName)
         versions = ','.join(package.Plugin.getSupportedVersions())
 
         errorMsg = None
@@ -1751,7 +1771,6 @@ class Protocol(Step):
 
             return validateFunc() if validateFunc is not None else []
         except Exception as e:
-
             msg = "%s installation couldn't be validated. Possible cause could" \
                   " be a configuration issue. Try to run scipion config." \
                   % cls.__name__
@@ -2150,9 +2169,7 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
     """ Retrieve the Protocol object from a given .sqlite file
     and the protocol id.
     """
-    # We need this import here because from Project is imported
-    # all from protocol indirectly, so if move this to the top
-    # we get an import error
+
     if not os.path.exists(projectPath):
         raise Exception("ERROR: project path '%s' does not exist. "
                         % projectPath)
@@ -2165,6 +2182,9 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
                         % fullDbPath)
         sys.exit(1)
 
+    # We need this import here because from Project is imported
+    # all from protocol indirectly, so if move this to the top
+    # we get an import error
     from pyworkflow.project import Project
     project = Project(projectPath)
     project.load(dbPath=os.path.join(projectPath, protDbPath), chdir=chdir,

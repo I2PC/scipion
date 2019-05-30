@@ -23,18 +23,32 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
 import ast
 import os
-from .utils.path import findFile
 
+# This variable is useful to determinate the plugins compatibility with the
+# current Scipion core release.
+# This version does not need to change with future scipion releases
+# if plugins are still compatible, so future hot fixes releases or even micros
+# or minor release should not change this CORE_VERSION. Only, when a new release
+# will break existing plugins, this number needs to be incremented.
+CORE_VERSION = '2.0'
 
 # Versions
-VERSION_1 = 'v1.0'
-VERSION_1_1 = 'v1.1'
-VERSION_1_2 = 'v1.2'
-VERSION_2_0 = 'v2.0'
+VERSION_1 = '1.0.0'
+VERSION_1_1 = '1.1.0'
+VERSION_1_2 = '1.2.0'
+VERSION_2_0 = '2.0.0'
+
+# For a new release, define a new constant and assign it to LAST_VERSION
+# The existing one has to be added to OLD_VERSIONS list.
 LAST_VERSION = VERSION_2_0
-OLD_VERSIONS = (VERSION_1, VERSION_1_1)
+OLD_VERSIONS = (VERSION_1, VERSION_1_1, VERSION_1_2)
+
+# Define pyworkflow version in a standard way, as proposed by:
+# https://www.python.org/dev/peps/pep-0396/
+__version__ = LAST_VERSION
 
 
 HOME = os.path.abspath(os.path.dirname(__file__))
@@ -58,15 +72,28 @@ class Config:
     SCIPION_TESTS_OUTPUT = __get('SCIPION_TESTS_OUTPUT',
                                  os.path.join(SCIPION_USER_DATA, 'Tests'))
 
-    SCIPION_CONFIG_MAIN = os.environ.get('SCIPION_CONFIG_MAIN', 'scipion.conf')
-    SCIPION_CONFIG_HOSTS = os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf')
-    SCIPION_CONFIG_PROTOCOLS = os.environ.get('SCIPION_CONFIG_PROTOCOLS', 'protocols.conf')
+    SCIPION_CONFIG = __get('SCIPION_CONFIG', 'scipion.conf')
+    SCIPION_LOCAL_CONFIG = __get('SCIPION_LOCAL_CONFIG', 'scipion.conf')
+    SCIPION_HOSTS = __get('SCIPION_HOSTS', 'hosts.conf')
+    SCIPION_PROTOCOLS = __get('SCIPION_PROTOCOLS',
+                                     'protocols.conf')
+
+    SCIPION_PLUGIN_JSON = __get('SCIPION_PLUGIN_JSON', None)
+    SCIPION_PLUGIN_REPO_URL = __get('SCIPION_PLUGIN_REPO_URL',
+                                    'http://scipion.i2pc.es/getplugins/')
+
+    # Get general log file path
+    LOG_FILE = os.path.join(__get('SCIPION_LOGS', "~/"), 'scipion.log')
+
+    SCIPION_URL_SOFTWARE = __get('SCIPION_URL_SOFTWARE')
+
     try:
         VIEWERS = ast.literal_eval(__get('VIEWERS', "{}"))
     except Exception as e:
         VIEWERS = {}
         print("ERROR loading preferred viewers, VIEWERS variable will be ignored")
         print(e)
+
 
 def join(*paths):
     """ join paths from HOME . """
@@ -80,6 +107,7 @@ def findResource(filename):
     from utils.path import findFile
 
     return findFile(filename, *__resourcesPath)
+
 
 # Following are a set of functions to centralize the way to get
 # files from several scipion folder such as: config or apps

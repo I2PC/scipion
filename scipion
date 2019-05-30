@@ -43,7 +43,7 @@ except ImportError:
 
 __version__ = 'v2.0'
 __nickname__ = 'Diocletian'
-__releasedate__ = ''
+__releasedate__ = '2019-04-23'
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -84,8 +84,7 @@ SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
 # Allow the name of the host configuration to be changed.
 # This is useful for having the same central installation that
 # could be used from different environments (cluster vs workstations)
-SCIPION_HOSTS = join(dirname(SCIPION_CONFIG),
-                     os.environ.get('SCIPION_CONFIG_HOSTS', 'hosts.conf'))
+SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 
 
 # Check for old configuration files and tell the user to update.
@@ -158,7 +157,6 @@ VARS = {
     'SCIPION_HOME': SCIPION_HOME,
     'SCIPION_CWD': SCIPION_CWD,
     'SCIPION_VERSION': getVersion(),
-    'SCIPION_SHORT_VERSION': getVersion(long=False),
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_INSTALL': join(SCIPION_HOME, 'pyworkflow', 'install'),
     'SCIPION_PYTHON': 'python',
@@ -296,7 +294,6 @@ MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_LAST = 'last' # shortcut to 'project last'
 MODE_HERE = 'here' # shortcut to 'project here'
-MODE_WEBSERVER = 'webserver'
 MODE_COLLECTSTATIC = 'collectstatic'
 MODE_TESTS = 'tests' # keep tests for compatibility
 MODE_TEST = 'test' # also allow 'test', in singular
@@ -356,27 +353,6 @@ def main():
         
     elif mode == MODE_PROJECT:
         runApp('pw_project.py', args=sys.argv[2:])
-
-    elif mode == MODE_WEBSERVER:
-        if n > 2:
-            option = sys.argv[2]
-        else:
-            option = 'django'
-
-        manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
-
-        if option in ['django', 'gunicorn']:
-
-            if option == 'django':
-                args = 'runserver 0.0.0.0:8000'
-            elif option == 'gunicorn':
-                args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
-        else:
-            args = option
-            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n"
-                             % (args, MODE_WEBSERVER))
-
-        runScript('%s %s' % (manage, args))
 
     elif mode == MODE_TESTS or mode == MODE_TEST:
         runApp('pw_run_tests.py', args=sys.argv[2:])
@@ -446,8 +422,8 @@ Example: scipion install -j 4
             # Install external libraries and compile Xmipp
             ret = build(args[1:]) # ignore the --binary argument
             if ret == 0:
-                ret = os.system(
-                    'scripts/change_rpath.py %(ss)s/bin %(ss)s/lib %(ss)s/em'
+                ret = os.system(join(SCIPION_HOME, 'pyworkflow', 'install',
+                                     'change_rpath.py %(ss)s/bin %(ss)s/lib %(ss)s/em')
                     % {'ss': SCIPION_SOFTWARE})
         else:
             # Install external libraries and compile Xmipp
@@ -572,18 +548,13 @@ MODE can be:
 
     view | show NAME       Open a file with Scipion's showj, or a directory with Browser.
 
-    webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
-                           OPTION can be:
-                             django: open local django webserver (default)
-                             collectstatic: copy static files for django server
-                             apache_vars: show the LD_LIBRARY_PATH needed by apache server
 """)
         sys.exit(0)
 
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  help install installp uninstallp installb uninstallb manager project tests testdata viewer webserver printenv run
+  help install installp uninstallp installb uninstallb manager project tests testdata viewer printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 

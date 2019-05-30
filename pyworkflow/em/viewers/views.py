@@ -224,7 +224,7 @@ class CtfView(ObjectView):
                        for attrName, _ in obj.getAttributesToStore())
 
         if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
-            gviewer = importFromPlugin('grigoriefflab.viewers', 'gviewer')
+            gviewer = importFromPlugin('grigoriefflab.viewers', '')
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         elif _anyAttrStartsBy(first, '_gctf'):

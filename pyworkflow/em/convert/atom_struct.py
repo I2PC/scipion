@@ -277,11 +277,16 @@ class AtomicStructHandler:
                             seq.append("X")
                 elif len(chain.get_unpacked_list()[0].resname) == 3: # Protein
                     seq = list()
+                    counter = 0
                     for residue in chain:
-                        if is_aa(residue.get_resname(), standard=True):
+                        if is_aa(residue.get_resname(), standard=True): # aminoacids
                             seq.append(three_to_one(residue.get_resname()))
+                            counter += 1
                         else:
                             seq.append("X")
+                    if counter == 0: # HETAM
+                        for residue in chain:
+                            seq.append(residue.get_resname())
                 while seq[-1] == "X":
                     del seq[-1]
                 while seq[0] == "X":
@@ -325,17 +330,24 @@ class AtomicStructHandler:
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 3:
-                            print("Your sequence is an aminoacid sequence")
-                            #alphabet = IUPAC.ExtendedIUPACProtein._upper()
+                            counter = 0
                             for residue in chain:
-                                ## The test below checks if the amino acid
-                                ## is one of the 20 standard amino acids
-                                ## Some proteins have "UNK" or "XXX", or other symbols
-                                ## for missing or unknown residues
                                 if is_aa(residue.get_resname(), standard=True):
+                                    # alphabet = IUPAC.ExtendedIUPACProtein._upper()
+                                    ## The test checks if the amino acid
+                                    ## is one of the 20 standard amino acids
+                                    ## Some proteins have "UNK" or "XXX", or other symbols
+                                    ## for missing or unknown residues
                                     seq.append(three_to_one(residue.get_resname()))
+                                    counter += 1
                                 else:
                                     seq.append("X")
+                            if counter != 0:  # aminoacids
+                                print("Your sequence is an aminoacid sequence")
+                            else: # HETAM
+                                print("Your sequence is a HETAM sequence")
+                                for residue in chain:
+                                    seq.append(residue.get_resname())
                         while seq[-1] == "X":
                             del seq[-1]
                         while seq[0] == "X":
@@ -659,7 +671,7 @@ def cifToPdb(fnCif,fnPdb):
 def pdbToCif(fnPdb, fnCif):
     h = AtomicStructHandler()
     h.read(fnPdb)
-    h.writeAsPdb(fnCif)
+    h.writeAsCif(fnCif)
 
 def toPdb(inFileName, outPDBFile):
     if inFileName.endswith(".pdb") or inFileName.endswith(".ent"):

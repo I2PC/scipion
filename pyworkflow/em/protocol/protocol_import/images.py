@@ -545,11 +545,12 @@ class ProtImportImages(ProtImportFiles):
             - importDict: import dictionary coming from the json
             - importDir: directory containing the json file
         """
-
-        if not os.path.exists(importDict['filesPath']):  # we might have a relative path
-            absPath = os.path.join(importDir, importDict['filesPath'].split('/', 1)[1])
-            if os.path.exists(absPath):
-                importDict['filesPath'] = absPath
+        if importDict['filesPath']:
+            if not os.path.exists(importDict['filesPath']):  # we might have a relative path
+                absPath = os.path.join(importDir,
+                                       importDict['filesPath'].split('/', 1)[1])
+                if os.path.exists(absPath):
+                    importDict['filesPath'] = absPath
 
         return importDict
 

@@ -893,8 +893,6 @@ class AtomStruct(EMFile):
 class PdbFile(AtomStruct):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         AtomStruct.__init__(self, filename, pseudoatoms, **kwargs)
-        print("This class has been renamed to AtomStruct. Please "
-              " update your code")
 
 
 class EMSet(Set, EMObject):
@@ -1506,6 +1504,14 @@ class SetOfCoordinates(EMSet):
                                      boxStr, self._appendStreamState())
 
         return s
+
+    def copyInfo(self, other):
+        """ Copy basic information (boxsize)
+                from other set of coordinates to current one"""
+        self.copyAttributes(other, '_boxSize')
+
+        # TODO: we might what here to copy the mics too, same as done with
+        # acquisition in SetOfImages
 
 
 class Matrix(Scalar):
