@@ -26,7 +26,7 @@
 # **************************************************************************
 
 
-from os.path import exists, basename, abspath
+from os.path import exists, basename, abspath, relpath
 
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
