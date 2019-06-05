@@ -189,7 +189,10 @@ class ProtMonitorSummary(ProtMonitor):
                     reportHtml.generate(finished)
 
             except Exception as ex:
-                print("An error happened: %s" % ex)
+                print("An error happened:")
+                import traceback
+                traceback.print_exc()
+
             return finished
 
         monitor.initLoop = initAll

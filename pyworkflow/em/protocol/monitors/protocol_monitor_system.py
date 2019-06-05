@@ -29,6 +29,8 @@ import sys
 import time
 import sqlite3 as lite
 
+from pyworkflow.utils import red
+
 try:
     import psutil
 except ImportError:
@@ -41,26 +43,16 @@ from protocol_monitor import ProtMonitor, Monitor
 import getnifs
 
 from pyworkflow import VERSION_1_1
-from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
+from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
 
-from pynvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex,\
-    nvmlDeviceGetName, nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
+from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex,\
+    nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
     NVMLError, nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,\
     nvmlDeviceGetComputeRunningProcesses
 
 
 SYSTEM_LOG_SQLITE = 'system_log.sqlite'
-
-
-def errorWindow(tkParent, msg):
-    try:
-        from tkMessageBox import showerror
-        showerror("Error",  # bar title
-                  msg,  # message
-                  parent=tkParent)
-    except:
-        print("Error:", msg)
 
 
 def initGPU():
@@ -279,11 +271,10 @@ class MonitorSystem(Monitor):
                                                     NVML_TEMPERATURE_GPU)
                     valuesDict["gpuTem_%d" % i] = temp
                 except NVMLError as err:
-                    handle = nvmlDeviceGetHandleByIndex(i)
-                    msg = "Device %d -> %s not suported\n" \
-                          "Remove device %d from FORM" % \
-                          (i, nvmlDeviceGetName(handle), i)
-                    errorWindow(None, msg)
+                    msg = "ERROR monitoring GPU %d: %s." \
+                          " Remove device %d from FORM" % (i, err, i)
+                    print(red(msg))
+
         if self.doNetwork:
             try:
                 # measure a sort interval

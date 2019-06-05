@@ -18,20 +18,15 @@ if REPOSITORY_URL is None:
     REPOSITORY_URL = Config.SCIPION_PLUGIN_REPO_URL
 
 PIP_BASE_URL = 'https://pypi.python.org/pypi'
-PIP_CMD = '{} {}/pip install %(installSrc)s'.format(
+PIP_CMD = '{0} {1}/pip install %(installSrc)s'.format(
     Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
-PIP_UNINSTALL_CMD = '{} {}/pip uninstall -y %s'.format(
+PIP_UNINSTALL_CMD = '{0} {1}/pip uninstall -y %s'.format(
     Environment.getBin('python'),
     Environment.getPythonPackagesFolder())
 
 versions = list(OLD_VERSIONS) + [LAST_VERSION]
-if os.environ['SCIPION_SHORT_VERSION'] not in versions:
-    SCIPION_VERSION = LAST_VERSION
-else:
-    SCIPION_VERSION = os.environ['SCIPION_SHORT_VERSION']
-
 
 class PluginInfo(object):
 
@@ -112,13 +107,13 @@ class PluginInfo(object):
         elif version not in self.compatibleReleases:
             if self.compatibleReleases:
                 print('%s version %s not compatible with current Scipion '
-                      'version %s.' % (self.pipName, version, SCIPION_VERSION))
+                      'version %s.' % (self.pipName, version, LAST_VERSION))
                 print("Please choose a compatible release: %s" % " ".join(
                     self.compatibleReleases.keys()))
 
             else:
                 print("%s has no compatible versions with current Scipion "
-                      "version %s." % (self.pipName, SCIPION_VERSION))
+                      "version %s." % (self.pipName, LAST_VERSION))
             return False
 
         if self.pluginSourceUrl:
@@ -218,8 +213,6 @@ class PluginInfo(object):
                                for v in re.findall(reg,
                                                    releaseData['comment_text'])]
             if len(scipionVersions) == 0:
-                print("WARNING: %s's release %s did not specify a compatible "
-                      "Scipion version" % (self.pipName, release))
                 latestCompRelease = release
             elif any([v == parse_version(CORE_VERSION)
                       for v in scipionVersions]):
@@ -230,6 +223,10 @@ class PluginInfo(object):
 
         if releases:
             releases['latest'] = latestCompRelease
+            if (latestCompRelease != "0.0.0" and
+                    releases[latestCompRelease]['comment_text'] == ''):
+              print("WARNING: %s's release %s did not specify a compatible "
+              "Scipion version" % (self.pipName, latestCompRelease))
         else:
             releases['latest'] = ''
         return releases
