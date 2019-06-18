@@ -140,7 +140,10 @@ class viewerProtImportVolumes(ProtocolViewer):
             f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
             if vol.getHalfMaps():
                 for halfMap in vol.getHalfMaps().split(','):
-                    f.write("open %s\n" % os.path.abspath(halfMap))
+                    if not os.path.abspath(halfMap).endswith(".mrc"):
+                        f.write("open %s\n" % (os.path.abspath(halfMap).split(".")[0] + ".mrc"))
+                    else:
+                        f.write("open %s\n" % os.path.abspath(halfMap))
                     f.write("volume#%d style surface voxelSize %f\n" %
                             (count, sampling))
                     f.write("volume#%d origin %0.2f,%0.2f,%0.2f\n" %
