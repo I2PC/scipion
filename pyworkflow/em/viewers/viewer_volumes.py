@@ -166,7 +166,10 @@ class viewerProtImportVolumes(ProtocolViewer):
                 for halfMap in self.protocol.outputVolume.getHalfMaps().split(','):
                     volHalf = Volume()
                     volHalf.setSamplingRate(sampling)
-                    volHalf.setFileName(halfMap)
+                    if not halfMap.endswith(".mrc"):
+                        volHalf.setFileName(halfMap.split(".")[0] + ".mrc")
+                    else:
+                        volHalf.setFileName(halfMap)
                     setOfVolumes.append(volHalf)
                 setOfVolumes.write()
                 return [self.objectView(setOfVolumes)]
