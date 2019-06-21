@@ -539,6 +539,7 @@ class ProtAlignMovies(ProtProcessMovies):
             args += '--cropDRCorner %d %d ' % (dimX, dimY)
 
         args += ' --oavg %s ' % outputMicFn
+        args += ' --Bspline %d ' % (splineOrder if splineOrder else 1)
 
         if dark is not None:
             args += ' --dark ' + dark
@@ -546,12 +547,10 @@ class ProtAlignMovies(ProtProcessMovies):
         if gain is not None:
             args += ' --gain ' + gain
 
-        if splineOrder is not None:
-            args += ' --Bspline %d ' % splineOrder
-
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
-    def computePSD(self, inputMic, oroot, dim=400, overlap=0.7):
+    def computePSD(self, inputMic, oroot, dim=384, # 384 = 128 + 256, which should be fast for any Fourier Transformer
+                   overlap=0.4):
         args = '--micrograph "%s" --oroot %s ' % (inputMic, oroot)
         args += '--dont_estimate_ctf --pieceDim %d --overlap %f' % (dim, overlap)
 
