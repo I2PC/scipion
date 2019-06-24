@@ -591,26 +591,7 @@ class ProtAlignMovies(ProtProcessMovies):
          right-part from psd2 (corrected PSD)
         """
         ih = ImageHandler()
-        psdImg1 = ih.read(psd1)
-        data1 = psdImg1.getData()
-
-        if outputFnUncorrected is not None:
-            psdImg1.convertPSD()
-            psdImg1.write(outputFnUncorrected)
-
-        psdImg2 = ih.read(psd2)
-        data2 = psdImg2.getData()
-
-        if outputFnCorrected is not None:
-            psdImg2.convertPSD()
-            psdImg2.write(outputFnCorrected)
-
-        # Compute middle index
-        x, _, _, _ = psdImg1.getDimensions()
-        m = int(round(x / 2.))
-        data1[:, :m] = data2[:, :m]
-        psdImg1.setData(data1)
-        psdImg1.write(outputFn)
+        composePSDImages(self, ih.read(psd1), ih.read(psd2), outputFn, outputFnUncorrected, outputFnCorrected)
 
     def computePSDImages(self, movie, fnUncorrected, fnCorrected,
                     outputFnUncorrected=None, outputFnCorrected=None):
@@ -625,15 +606,7 @@ class ProtAlignMovies(ProtProcessMovies):
                     outputFnUncorrected=None, outputFnCorrected=None):
         import warnings
         warnings.warn("Use computePSDImages() instead", DeprecationWarning)
-        movieFolder = self._getOutputMovieFolder(movie)
-        uncorrectedPSD = os.path.join(movieFolder, "uncorrected")
-        correctedPSD = os.path.join(movieFolder, "corrected")
-        self.computePSD(fnUncorrected, uncorrectedPSD)
-        self.computePSD(fnCorrected, correctedPSD)
-        self.composePSD(uncorrectedPSD + ".psd",
-                        correctedPSD + ".psd",
-                        self._getPsdCorr(movie),
-                        outputFnUncorrected, outputFnCorrected)
+        computePSDImages(self, movie, fnUncorrected, fnCorrected, outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
         """ Generates a thumbnail of the input file"""
