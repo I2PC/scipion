@@ -4,17 +4,18 @@
 Created on Mar 25, 2014
 
 @author: airen
+@author: roberto.marabini
 '''
-import pyworkflow as pw
+
+from __future__ import print_function
 
 from subprocess import Popen
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.process import killWithChilds
 from pyworkflow.tests import *
 from pyworkflow.utils import utils, prettyDict
+from pyworkflow.utils import ProgressBar
 
-
-    
 class TestBibtex(BaseTest):
     """ Some minor tests to the bibtexparser library. """
 
@@ -101,6 +102,54 @@ class TestGetListFromRangeString(BaseTest):
             # Check that also works properly with spaces as delimiters
             s2 = s.replace(',', ' ')
             self.assertEqual(o, pwutils.getListFromRangeString(s2))
+
+class TessProgressBar(unittest.TestCase):
+
+    def caller(self, total, step, fmt, resultGold):
+        ti = time.time()
+        progressBar = ProgressBar(total=total, fmt=fmt, objectId=33)
+
+        result=''
+        for i in xrange(total):
+            if i%step==0:
+                result += progressBar(); sys.stdout.flush()
+                progressBar.current += step
+        result += progressBar.done(); sys.stdout.flush()
+        self.assertEqual(resultGold, result)
+        tf = time.time()
+        print ("%d iterations in %f sec"%(total, tf - ti))
+
+
+    def test_dot(self):
+        total = 1000000
+        step = 10000
+        ratio = int(total/step)
+        resultGold = '.' * (ratio+1)
+        self.caller(total=total, step=step,
+                    fmt=ProgressBar.DOT, resultGold=resultGold)
+
+
+    def test_default(self):
+        total = 3
+        step = 1
+        resultGold = '\rProgress: [                                        ]   0%\rProgress: [=============                           ]  33%\rProgress: [==========================              ]  66%\rProgress: [========================================] 100%'
+        self.caller(total=total, step=step,
+                    fmt=ProgressBar.DEFAULT, resultGold=resultGold)
+
+    def test_full(self):
+        total = 3
+        step = 1
+        resultGold = '\r[                                        ] 0/3 (  0%) 3 to go\r[=============                           ] 1/3 ( 33%) 2 to go\r[==========================              ] 2/3 ( 66%) 1 to go\r[========================================] 3/3 (100%) 0 to go'
+        self.caller(total=total, step=step,
+                    fmt=ProgressBar.FULL, resultGold=resultGold)
+
+    def test_objectid(self):
+        total = 3
+        step = 1
+        ratio = int(total/step)
+        resultGold = '\r[                                        ] 0/3 (  0%) (objectId=33)\r[=============                           ] 1/3 ( 33%) (objectId=33)\r[==========================              ] 2/3 ( 66%) (objectId=33)\r[========================================] 3/3 (100%) (objectId=33)'
+        self.caller(total=total, step=step,
+                    fmt=ProgressBar.OBJID, resultGold=resultGold)
 
 
 if __name__ == '__main__':
