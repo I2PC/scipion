@@ -52,7 +52,8 @@ class ProtImportVolumes(ProtImportImages):
         """
         form.addParam('setHalfMaps', params.BooleanParam,
                       label='Set Half Maps',
-                      help='Option YES:\nAssign two half maps to the imported map.')
+                      help='Option YES:\nAssign two half maps to the imported map.',
+                      default=False)
         form.addParam('half1map', params.PathParam,
                       label='Path half map1', help='Select first half map',
                       condition='setHalfMaps')
