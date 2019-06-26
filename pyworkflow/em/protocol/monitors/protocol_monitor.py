@@ -206,10 +206,10 @@ class EmailNotifier():
             s.sendmail(self._emailFrom, self._emailTo, msg.as_string())
             s.quit()
         except:
-            import traceback
+            from traceback import print_exc
             print("Some error happened while trying to send email warning.")
             print(" > Error:")
-            traceback.print_exc()
+            print_exc()
             print(" > Message:")
             print(msg.as_string())
 
