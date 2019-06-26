@@ -58,6 +58,10 @@ from pyworkflow.gui.widgets import HotButton, Button
 
 import traceback
 
+# Custom labels
+START_BUTTON = "Start demo"
+PROJECT_PREFIX = "demo"
+
 FIELD_SEP = '~'
 VIEW_WIZARD = 'wizardview'
 
@@ -126,7 +130,8 @@ class BoxWizardView(tk.Frame):
 
         # Add the create project button
         btnFrame = tk.Frame(self, bg='white')
-        btn = HotButton(btnFrame, text="Start demo",
+
+        btn = HotButton(btnFrame, text=START_BUTTON,
                         font=self.bigFontBold,
                         command=self._onAction)
         btn.grid(row=0, column=1, sticky='ne', padx=10, pady=10)
@@ -149,7 +154,7 @@ class BoxWizardView(tk.Frame):
                                    font=self.bigFontBold)
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
-        defaultProjectName = "demo_" + datetime.datetime.now().strftime("%I%M%S")
+        defaultProjectName = PROJECT_PREFIX + "_" + datetime.datetime.now().strftime("%I%M%S")
         self._addPair(PROJECT_NAME, 1, labelFrame, value=defaultProjectName)
         self._addPair(MESSAGE, 4, labelFrame, widget='label')
 
