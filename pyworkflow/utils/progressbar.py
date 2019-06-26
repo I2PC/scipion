@@ -30,7 +30,7 @@ class ProgressBar(object):
 
     def __init__(self, total, width=40, fmt=DEFAULT, symbol='=',
                  output=sys.stderr, objectId=None):
-        # total = mamimum number of character to be written per line. Usually the current terminal width
+        # total = maximum number of character to be written per line. Usually the current terminal width
         # width = progress bar width (without the percentange and number of iterations loop)
         # predefined format string, so far DEFAULT, FULL, OBJID and DOT are defined.
         # symbol: progress bar is made with this symbol
@@ -42,6 +42,7 @@ class ProgressBar(object):
         self.symbol = symbol
         self.output = output
         self.objectId = objectId
+        
         if fmt == self.DOT:
             self.directPrint = True
             self.fnt = self.DOT
