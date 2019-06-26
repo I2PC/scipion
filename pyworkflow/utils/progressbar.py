@@ -32,7 +32,7 @@ class ProgressBar(object):
                  output=sys.stderr, objectId=None):
         # total = mamimum number of character to be written per line. Usually the current terminal width
         # width = progress bar width (without the percentange and number of iterations loop)
-        # predefined format string, so far DEFAULT, FULL, objId are defined.
+        # predefined format string, so far DEFAULT, FULL, OBJID and DOT are defined.
         # symbol: progress bar is made with this symbol
 
         assert len(symbol) == 1
