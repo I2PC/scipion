@@ -79,7 +79,7 @@ class EmPlotter(Plotter):
         """ Create an histogram. """
         self.hist(yValues, nbins, facecolor=color, **kwargs)
 
-    def plotScatterPlot(self, xValues, yValues, color='blue', **kwargs):
+    def plotScatter(self, xValues, yValues, color='blue', **kwargs):
         """ Create an scatter plot. """
         self.scatterP(xValues, yValues, c=color, **kwargs)
   
