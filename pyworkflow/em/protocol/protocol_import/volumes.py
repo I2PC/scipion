@@ -50,6 +50,16 @@ class ProtImportVolumes(ProtImportImages):
         """ Define acquisition parameters, it can be overriden
         by subclasses to change what parameters to include.
         """
+        form.addParam('setHalfMaps', params.BooleanParam,
+                      label='Set Half Maps',
+                      help='Option YES:\nAssign two half maps to the imported map.',
+                      default=False)
+        form.addParam('half1map', params.PathParam,
+                      label='Path half map1', help='Select first half map',
+                      condition='setHalfMaps')
+        form.addParam('half2map', params.PathParam,
+                      label='Path half map2', help='Select second half map',
+                      condition='setHalfMaps')
         form.addParam('samplingRate', params.FloatParam,
                       label=Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
@@ -148,12 +158,25 @@ class ProtImportVolumes(ProtImportImages):
                 newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
                 Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
                                    samplingRate, Ccp4Header.ORIGIN)
+                if self.setHalfMaps.get():
+                    newFileName1 = abspath(self._getVolumeFileName(self.half1map.get(), "mrc"))
+                    Ccp4Header.fixFile(fileName, newFileName1, origin.getShifts(),
+                                       samplingRate, Ccp4Header.ORIGIN)
+                    newFileName2 = abspath(self._getVolumeFileName(self.half2map.get(), "mrc"))
+                    Ccp4Header.fixFile(fileName, newFileName2, origin.getShifts(),
+                                       samplingRate, Ccp4Header.ORIGIN)
             else:
                 newFileName = abspath(self._getVolumeFileName(fileName))
 
                 if fileName.endswith(':mrc'):
                     fileName = fileName[:-4]
+
                 createAbsLink(fileName, newFileName)
+                if self.setHalfMaps.get():
+                    createAbsLink(self.half1map.get(),
+                                  abspath(self._getVolumeFileName(self.half1map.get())))
+                    createAbsLink(self.half2map.get(),
+                                  abspath(self._getVolumeFileName(self.half2map.get())))
 
             # Make newFileName relative
             # https://github.com/I2PC/scipion/issues/1935
@@ -168,6 +191,10 @@ class ProtImportVolumes(ProtImportImages):
                     vol.setLocation(index, newFileName)
                     volSet.append(vol)
 
+        if self.setHalfMaps.get():
+            vol.setHalfMaps([relpath(self._getVolumeFileName(self.half1map.get())),
+                             relpath(self._getVolumeFileName(self.half2map.get()))
+                             ])
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
