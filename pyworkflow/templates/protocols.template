@@ -86,5 +86,8 @@ Model building = [
 	{"tag": "section", "text": "Tools-Calculators", "icon": "bookmark.png", "children": [
 	]},
 	{"tag": "section", "text": "Others", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Exports", "icon": "bookmark.png", "children": [
+	{"tag": "protocol", "value": "ProtExportEMDB", "text": "export to EMDB"}
 	]}
 	]
