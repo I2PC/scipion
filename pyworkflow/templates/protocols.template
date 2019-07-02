@@ -64,7 +64,6 @@ Protocols SPA = [
 			]}
 	]},
 	{"tag": "section", "text": "Exports", "openItem": "False", "children": [
-	  {"tag": "protocol", "value": "ProtEmxExport", "text": "export to EMX"},
 	  {"tag": "protocol", "value": "ProtExportEMDB", "text": "export to EMDB"}]
 	}]
 Model building = [
