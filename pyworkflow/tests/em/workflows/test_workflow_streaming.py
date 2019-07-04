@@ -138,6 +138,15 @@ class TestStreamingWorkflow(BaseTest):
         # Wait until the thread that is creating links finish:
         self.importThread.join()
 
+        t0 = time.time()
+        timeout = 5  # minutes
+        while protMonitor.isActive():
+            self.assertGreater(timeout*60, time.time()-t0,
+                               "Protocol monitor still running %dmin after "
+                               "acquisition finishes." % timeout)
+            self.proj._updateProtocol(protMonitor)
+            time.sleep(2)
+
 
 class TestBaseRelionStreaming(BaseTest):
     @classmethod
