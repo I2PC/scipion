@@ -34,6 +34,7 @@ for input volumes.
 import os
 from distutils.spawn import find_executable
 from tkMessageBox import showerror
+from pyworkflow.em import Volume
 
 import pyworkflow.protocol.params as params
 from pyworkflow.em.convert import ImageHandler
@@ -137,16 +138,43 @@ class viewerProtImportVolumes(ProtocolViewer):
         else:
             x, y, z = vol.getShiftsFromOrigin()
             f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
+            if vol.getHalfMaps():
+                for halfMap in vol.getHalfMaps().split(','):
+                    if not os.path.abspath(halfMap).endswith(".mrc"):
+                        f.write("open %s\n" % (os.path.abspath(halfMap).split(".")[0] + ".mrc"))
+                    else:
+                        f.write("open %s\n" % os.path.abspath(halfMap))
+                    f.write("volume#%d style surface voxelSize %f\n" %
+                            (count, sampling))
+                    f.write("volume#%d origin %0.2f,%0.2f,%0.2f\n" %
+                            (count, x, y, z))
+                    count += 1
         f.close()
         return [ChimeraView(tmpFileNameCMD)]
 
     def _showVolumesSlices(self):
         # Write an sqlite with all volumes selected for visualization.
         sampling, setOfVolumes = self._createSetOfVolumes()
-
+        # setOfVolumes.setSamplingRate(sampling)
         if len(setOfVolumes) == 1:
-            return [self.objectView(self.protocol.outputVolume)]
-
+            if self.protocol.outputVolume.getHalfMaps():
+                setOfVolumes = self.protocol._createSetOfVolumes(suffix='tmp')
+                vol = Volume()
+                vol.setFileName(self.protocol.outputVolume.getFileName())
+                vol.setSamplingRate(sampling)
+                setOfVolumes.append(vol)
+                for halfMap in self.protocol.outputVolume.getHalfMaps().split(','):
+                    volHalf = Volume()
+                    volHalf.setSamplingRate(sampling)
+                    if not halfMap.endswith(".mrc"):
+                        volHalf.setFileName(halfMap.split(".")[0] + ".mrc")
+                    else:
+                        volHalf.setFileName(halfMap)
+                    setOfVolumes.append(volHalf)
+                setOfVolumes.write()
+                return [self.objectView(setOfVolumes)]
+            else:
+                return [self.objectView(self.protocol.outputVolume)]
         return [self.objectView(setOfVolumes)]
 
 
