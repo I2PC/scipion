@@ -8,10 +8,9 @@ Protocols SPA = [
 	{"tag": "section", "text": "more", "openItem": "False", "children": [
 	{"tag": "protocol", "value": "ProtImportCoordinates",   "text": "import coordinates"},
 	{"tag": "protocol", "value": "ProtImportCTF",   "text": "import ctfs"},
-	{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
+	{"tag": "protocol", "value": "ProtImportPdb",   "text": "import atomic structure"},
 	{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
-	{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
-	{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}
+	{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"}
 	]}
 	]},
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": []},
@@ -30,7 +29,7 @@ Protocols SPA = [
 		{"tag": "protocol_group", "text": "Mask", "openItem": "False", "children": []}
 	]},
 	{"tag": "section", "text": "2D", "children": [
-		{"tag": "protocol_group", "text": "Align", "openItem": "False", "children": [	
+		{"tag": "protocol_group", "text": "Align", "openItem": "False", "children": [
 			{"tag": "section", "text": "more", "openItem": "False", "children": []}
 		]},
 		{"tag": "protocol_group", "text": "Classify", "openItem": "False", "children": [
@@ -62,7 +61,32 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "ProtSubSet",   "text": "default"},
 			{"tag": "protocol", "value": "ProtUnionSet", "text": "default"},
 			{"tag": "protocol", "value": "ProtSplitSet", "text": "default"}
-			]}		
+			]}
 	]},
-	{"tag": "section", "text": "Exports", "openItem": "False", "children": []
+	{"tag": "section", "text": "Exports", "openItem": "False", "children": [
+	  {"tag": "protocol", "value": "ProtExportEMDB", "text": "export to EMDB"}]
 	}]
+Model building = [
+	{"tag": "section", "text": "Imports", "icon": "bookmark.png", "children": [
+	{"tag": "protocol", "value": "ProtImportVolumes",     "text": "import volumes"},
+	{"tag": "protocol", "value": "ProtImportPdb",   "text": "import atomic structure"},
+	{"tag": "protocol", "value": "ProtImportSequence",   "text": "import sequence"}
+	]},
+	{"tag": "section", "text": "Preprocess map", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Initial model", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Rigid fitting", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Flexible fitting", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Validation", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Tools-Calculators", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Others", "icon": "bookmark.png", "children": [
+	]},
+	{"tag": "section", "text": "Exports", "icon": "bookmark.png", "children": [
+	{"tag": "protocol", "value": "ProtExportEMDB", "text": "export to EMDB"}
+	]}
+	]
