@@ -167,6 +167,7 @@ class Plotter(View):
         self.last_subplot = a
         self.plot = a.plot
         self.hist = a.hist
+        self.scatterP = a.scatter
         self.bar = a.bar
         return a
 
