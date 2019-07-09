@@ -106,7 +106,7 @@ class TestGetListFromRangeString(BaseTest):
             self.assertEqual(o, pwutils.getListFromRangeString(s2))
 
 
-class TessProgressBar(unittest.TestCase):
+class TestProgressBar(unittest.TestCase):
 
     def caller(self, total, step, fmt, resultGold):
         ti = time.time()
