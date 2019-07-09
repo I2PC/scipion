@@ -82,39 +82,41 @@ AX_Z = 2
 # UsersGuide/midas/sym.html
 SYM_CYCLIC = 0  # CN
 SYM_DIHEDRAL = 1  # DN
-SYM_TETRAHEDRAL = 2  # T 222
-SYM_TETRAHEDRAL_Z3 = 2  # T  EMAN convention, 3-fold on z, 3-fold in yz plane along neg y.
-SYM_OCTAHEDRAL = 3  # O
+SYM_DIHEDRAL_X = SYM_DIHEDRAL
+SYM_DIHEDRAL_Y = 2
+SYM_TETRAHEDRAL = 3  # T 222
+SYM_TETRAHEDRAL_Z3 = 4  # T  EMAN convention, 3-fold on z, 3-fold in yz plane along neg y.
+SYM_OCTAHEDRAL = 5  # O
 
 # icosahedric IXXX
 # (no crowther 222 and standard in heyman et al 2005 article).
 # 2-fold axes on x,y,z axes. With the positive z-axis pointing at the viewer,
 # the front-most 5-fold vertices are in yz plane, and the front-most 3-fold
 # axes are in the xz plane.
-SYM_I222 = 4
+SYM_I222 = 6
 # (crowther) 2-fold axes on x,y,z axes. With the positive z-axis pointing at
 # the viewer, the front-most 5-fold vertices are in xz plane,
 # and the front-most 3-fold axes are in the yz plane.
-SYM_I222r = 5
+SYM_I222r = 7
 # '2-fold symmetry along y and 5-fold along z
-SYM_In25 = 6
+SYM_In25 = 8
 # 'n25' with 180 degree rotation about x
-SYM_In25r = 7
+SYM_In25r = 9
 # Other Chimera symmetries:
-SYM_I2n3 = 8 # Two-fold symmetry along X and 3-fold along Z
-SYM_I2n3r = 9 # Idem but rotated 180 degree about Y
-SYM_I2n5 = 10 # Two-fold symmetry along Y and 5-fold along Z
-SYM_I2n5r = 11 # Idem but rotated 180 degree about X
+SYM_I2n3 = 10 # Two-fold symmetry along X and 3-fold along Z
+SYM_I2n3r = 11 # Idem but rotated 180 degree about Y
+SYM_I2n5 = 12 # Two-fold symmetry along Y and 5-fold along Z
+SYM_I2n5r = 13 # Idem but rotated 180 degree about X
 
-SYM_DIHEDRAL_X = SYM_DIHEDRAL
-SYM_DIHEDRAL_Y = 12
+
 
 # Symmetry dictionary
 SCIPION_SYM_NAME = {}
 SCIPION_SYM_NAME[SYM_CYCLIC] = 'Cn'
 SCIPION_SYM_NAME[SYM_DIHEDRAL_X] = 'Dxn'
 SCIPION_SYM_NAME[SYM_DIHEDRAL_Y] = 'Dyn'
-SCIPION_SYM_NAME[SYM_TETRAHEDRAL] = 'T'
+SCIPION_SYM_NAME[SYM_TETRAHEDRAL] = 'T222'
+SCIPION_SYM_NAME[SYM_TETRAHEDRAL_Z3] = 'Tz3'
 SCIPION_SYM_NAME[SYM_OCTAHEDRAL] = 'O'
 SCIPION_SYM_NAME[SYM_I222] = 'I222'
 SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
