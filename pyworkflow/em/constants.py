@@ -106,10 +106,14 @@ SYM_I2n3r = 9 # Idem but rotated 180 degree about Y
 SYM_I2n5 = 10 # Two-fold symmetry along Y and 5-fold along Z
 SYM_I2n5r = 11 # Idem but rotated 180 degree about X
 
+SYM_DIHEDRAL_X = SYM_DIHEDRAL
+SYM_DIHEDRAL_Y = 12
+
 # Symmetry dictionary
 SCIPION_SYM_NAME = {}
 SCIPION_SYM_NAME[SYM_CYCLIC] = 'Cn'
-SCIPION_SYM_NAME[SYM_DIHEDRAL] = 'Dn'
+SCIPION_SYM_NAME[SYM_DIHEDRAL_X] = 'Dxn'
+SCIPION_SYM_NAME[SYM_DIHEDRAL_Y] = 'Dyn'
 SCIPION_SYM_NAME[SYM_TETRAHEDRAL] = 'T'
 SCIPION_SYM_NAME[SYM_OCTAHEDRAL] = 'O'
 SCIPION_SYM_NAME[SYM_I222] = 'I222'
