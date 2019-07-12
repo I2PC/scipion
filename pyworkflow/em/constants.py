@@ -80,6 +80,15 @@ AX_Z = 2
 
 # SYMMETRY, follows chimera conventions https://www.cgl.ucsf.edu/chimera/docs/
 # UsersGuide/midas/sym.html
+# Some notes:
+# Icosahedral
+#   xmipp and relion define I1, I2, I3 and I$ that corerspond to
+#   I222, I222r, In25 and In25z
+#   cryosparc has I1 and I2 
+#   EMAN always puts the highest symmetry axis on Z. 
+#   and a 2 fold axis in X (so it uses I2n5 or I2n5r, not sure)
+# DIEDRAL: first axis Z, second X (DX) except cryospark that uses y (DY)
+# Tetraedral, most of the programs use T222, EMAN uses Tz3
 SYM_CYCLIC = 0  # CN
 SYM_DIHEDRAL = 1  # DN
 SYM_DIHEDRAL_X = SYM_DIHEDRAL
