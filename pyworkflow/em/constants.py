@@ -78,11 +78,10 @@ AX_Y = 1
 AX_Z = 2
 
 
-# SYMMETRY, follows chimera conventions https://www.cgl.ucsf.edu/chimera/docs/
-# UsersGuide/midas/sym.html
+# SYMMETRY, conventions described atr: https://scipion-em.github.io/docs/docs/developer/symmetries
 # Some notes:
 # Icosahedral
-#   xmipp and relion define I1, I2, I3 and I$ that corerspond to
+#   xmipp and relion define I1, I2, I3 and I4 that corerspond to
 #   I222, I222r, In25 and In25z
 #   cryosparc has I1 and I2 
 #   EMAN always puts the highest symmetry axis on Z. 
