@@ -10,11 +10,14 @@ Created on Mar 25, 2014
 from __future__ import print_function
 
 from subprocess import Popen
+from StringIO import StringIO
+
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.process import killWithChilds
 from pyworkflow.tests import *
 from pyworkflow.utils import utils, prettyDict
 from pyworkflow.utils import ProgressBar
+
 
 class TestBibtex(BaseTest):
     """ Some minor tests to the bibtexparser library. """
@@ -22,7 +25,6 @@ class TestBibtex(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        
         
     def test_Parsing(self):
         bibtex = """
@@ -61,7 +63,7 @@ pages = "171-193",
         prettyDict(utils.parseBibTex(bibtex))
         
 
-def wait (condition, timeout=30):
+def wait(condition, timeout=30):
     """ Wait until "condition" returns False or return after timeout (seconds) param"""
     t0 = time.time()
 
@@ -103,22 +105,25 @@ class TestGetListFromRangeString(BaseTest):
             s2 = s.replace(',', ' ')
             self.assertEqual(o, pwutils.getListFromRangeString(s2))
 
-class TessProgressBar(unittest.TestCase):
+
+class TestProgressBar(unittest.TestCase):
 
     def caller(self, total, step, fmt, resultGold):
         ti = time.time()
-        progressBar = ProgressBar(total=total, fmt=fmt, objectId=33)
+        result = StringIO()
+        pb = ProgressBar(total=total, fmt=fmt, output=result,
+                         extraArgs={'objectId': 33})
 
-        result=''
+        pb.start()
         for i in xrange(total):
-            if i%step==0:
-                result += progressBar(); sys.stdout.flush()
-                progressBar.current += step
-        result += progressBar.done(); sys.stdout.flush()
-        self.assertEqual(resultGold, result)
-        tf = time.time()
-        print ("%d iterations in %f sec"%(total, tf - ti))
+            if i % step == 0:
+                pb.update(i+1)
+        pb.finish()
 
+        self.assertEqual(resultGold, result.getvalue())
+        result.close()
+        tf = time.time()
+        print ("%d iterations in %f sec" % (total, tf - ti))
 
     def test_dot(self):
         total = 1000000
@@ -127,7 +132,6 @@ class TessProgressBar(unittest.TestCase):
         resultGold = '.' * (ratio+1)
         self.caller(total=total, step=step,
                     fmt=ProgressBar.DOT, resultGold=resultGold)
-
 
     def test_default(self):
         total = 3
