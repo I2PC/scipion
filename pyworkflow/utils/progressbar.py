@@ -48,6 +48,9 @@ class ProgressBar(object):
     """
     DEFAULT = 'Progress: %(bar)s %(percent)3d%%'
     FULL = '%(bar)s %(current)d/%(total)d (%(percent)3d%%) %(remaining)d to go'
+    # scipion uses variable fonts so the bar size changes
+    # since the space widt is different from the = width
+    NOBAR = '%(current)d/%(total)d (%(percent)3d%%) %(remaining)d to go'
     OBJID = '%(bar)s %(current)d/%(total)d (%(percent)3d%%) (objectId=%(objectId)d)'
     DOT = '.'
 
@@ -126,8 +129,11 @@ class ProgressBar(object):
         self._output.write(self.__getStr())
         self._output.flush()
 
-    def finish(self):
+    def finish(self, printNewLine=True):
         """ Finalize the progress and
         print last update with 100% complete message """
         if self._current < self._total:
             self.update(self._total)
+        # print a new line
+        if printNewLine:
+            self._output.write("\n")
