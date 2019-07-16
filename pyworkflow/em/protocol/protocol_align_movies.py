@@ -41,7 +41,6 @@ from pyworkflow.em.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
 
-
 class ProtAlignMovies(ProtProcessMovies):
     """
     Base class for movie alignment protocols such as:
@@ -539,6 +538,7 @@ class ProtAlignMovies(ProtProcessMovies):
             args += '--cropDRCorner %d %d ' % (dimX, dimY)
 
         args += ' --oavg %s ' % outputMicFn
+        args += ' --Bspline %d ' % (splineOrder if splineOrder else 1)
 
         if dark is not None:
             args += ' --dark ' + dark
@@ -546,34 +546,29 @@ class ProtAlignMovies(ProtProcessMovies):
         if gain is not None:
             args += ' --gain ' + gain
 
-        if splineOrder is not None:
-            args += ' --Bspline %d ' % splineOrder
-
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
-    def computePSD(self, inputMic, oroot, dim=400, overlap=0.7):
-        args = '--micrograph "%s" --oroot %s ' % (inputMic, oroot)
-        args += '--dont_estimate_ctf --pieceDim %d --overlap %f' % (dim, overlap)
+    def computePSD(self, inputMic, oroot, dim=384, # 384 = 128 + 256, which should be fast for any Fourier Transformer
+                   overlap=0.4):
+        warnings.warn("Use psd = image.computePSD(overlap=0.4, xdim=384, ydim=384, fftthreads=1) instead",
+                      DeprecationWarning)
+        ih = ImageHandler()
+        psdImg1 = ih.read(inputMic)
+        res = psdImg1.computePSD(overlap, dim, dim)
+        res.write(oroot+".psd")
 
-        self.__runXmippProgram('xmipp_ctf_estimate_from_micrograph', args)
-
-    def composePSD(self, psd1, psd2, outputFn,
+    def composePSDImages(self, psdImg1, psdImg2, outputFn,
                    outputFnUncorrected=None, outputFnCorrected=None):
         """ Compose a single PSD image:
          left part from psd1 (uncorrected PSD),
          right-part from psd2 (corrected PSD)
         """
-        ih = ImageHandler()
-        psdImg1 = ih.read(psd1)
-        data1 = psdImg1.getData()
-
+        data1 = psdImg1.getData() # get the data now, as conversion would change them
         if outputFnUncorrected is not None:
             psdImg1.convertPSD()
             psdImg1.write(outputFnUncorrected)
 
-        psdImg2 = ih.read(psd2)
-        data2 = psdImg2.getData()
-
+        data2 = psdImg2.getData() # get the data now, as conversion would change them
         if outputFnCorrected is not None:
             psdImg2.convertPSD()
             psdImg2.write(outputFnCorrected)
@@ -585,17 +580,31 @@ class ProtAlignMovies(ProtProcessMovies):
         psdImg1.setData(data1)
         psdImg1.write(outputFn)
 
+    def composePSD(self, psd1, psd2, outputFn,
+                   outputFnUncorrected=None, outputFnCorrected=None):
+        import warnings
+        warnings.warn("Use composePSDImages() instead", DeprecationWarning)
+        """ Compose a single PSD image:
+         left part from psd1 (uncorrected PSD),
+         right-part from psd2 (corrected PSD)
+        """
+        ih = ImageHandler()
+        composePSDImages(self, ih.read(psd1), ih.read(psd2), outputFn, outputFnUncorrected, outputFnCorrected)
+
+    def computePSDImages(self, movie, fnUncorrected, fnCorrected,
+                    outputFnUncorrected=None, outputFnCorrected=None):
+        self.composePSDImages(
+            ImageHandler().read(fnUncorrected).computePSD(),
+            ImageHandler().read(fnCorrected).computePSD(),
+            self._getPsdCorr(movie),
+            outputFnUncorrected,
+            outputFnCorrected)
+
     def computePSDs(self, movie, fnUncorrected, fnCorrected,
                     outputFnUncorrected=None, outputFnCorrected=None):
-        movieFolder = self._getOutputMovieFolder(movie)
-        uncorrectedPSD = os.path.join(movieFolder, "uncorrected")
-        correctedPSD = os.path.join(movieFolder, "corrected")
-        self.computePSD(fnUncorrected, uncorrectedPSD)
-        self.computePSD(fnCorrected, correctedPSD)
-        self.composePSD(uncorrectedPSD + ".psd",
-                        correctedPSD + ".psd",
-                        self._getPsdCorr(movie),
-                        outputFnUncorrected, outputFnCorrected)
+        import warnings
+        warnings.warn("Use computePSDImages() instead", DeprecationWarning)
+        computePSDImages(self, movie, fnUncorrected, fnCorrected, outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
         """ Generates a thumbnail of the input file"""

@@ -199,11 +199,19 @@ class EmailNotifier():
         msg['From'] = self._emailFrom
         msg['To'] = self._emailTo
 
-        # Send the message via our own SMTP server, but don't include the
-        # envelope header.
-        s = smtplib.SMTP(self._smtpServer)
-        s.sendmail(self._emailFrom, self._emailTo, msg.as_string())
-        s.quit()
+        try:
+            # Send the message via our own SMTP server, but don't include the
+            # envelope header.
+            s = smtplib.SMTP(self._smtpServer)
+            s.sendmail(self._emailFrom, self._emailTo, msg.as_string())
+            s.quit()
+        except:
+            from traceback import print_exc
+            print("Some error happened while trying to send email warning.")
+            print(" > Error:")
+            print_exc()
+            print(" > Message:")
+            print(msg.as_string())
 
 
 class PrintNotifier():

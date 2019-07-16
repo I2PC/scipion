@@ -480,7 +480,7 @@ class Image(EMObject):
          create it makes easier to create protocols for both images
          and sets of images
         """
-        self.getDim()
+        return self.getDim()
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
