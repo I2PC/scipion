@@ -142,8 +142,7 @@ class ProtUnionSet(ProtSets):
 
         # Renumber from the beginning if either the renumber option is selected
         # or we find duplicated ids in the sets
-        cleanIds = ((not self.ignoreDuplicates.get() and self.duplicatedIds())
-                        or self.renumber.get())
+        cleanIds = not self.ignoreDuplicates.get() and self.duplicatedIds()
 
         #TODO ROB remove ignoreExtraAttributes condition
         #or implement it. But this will be for Scipion 1.2
@@ -158,7 +157,9 @@ class ProtUnionSet(ProtSets):
                     copyAttrs.append(attr)
 
         idsList = []
+        setNum = 0
         for itemSet in self.inputSets:
+            setNum += 1
             for obj in itemSet.get():
                 objId = obj.getObjId()
                 if self.ignoreDuplicates.get():
@@ -171,13 +172,15 @@ class ProtUnionSet(ProtSets):
                     newObj.copyAttributes(obj, *copyAttrs)
 
                     self.cleanExtraAttributes(newObj, commonAttrs)
-                    if not cleanIds:
+                    if not cleanIds or setNum == 1:
                         newObj.setObjId(objId)
                 else:
                     newObj = obj
 
-                if cleanIds:
+                if (cleanIds and setNum > 1) or self.renumber.get():
                     newObj.cleanObjId()
+                print ("FINAL ID: %s" % newObj.getObjId())
+                print ("OBJ ID: %s" % objId)
                 outputSet.append(newObj)
 
         self._defineOutputs(outputSet=outputSet)

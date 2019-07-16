@@ -98,6 +98,7 @@ class ProjectsView(tk.Frame):
         for i, p in enumerate(self.manager.listProjects()):
             try:
                 project = self.manager.loadProject(p.getName(), chdir=False, loadAllConfig=False)
+                project.closeMapper()
                 # Add creation time to project info
                 p.cTime = project.getCreationTime()
                 # Add if it's a link
