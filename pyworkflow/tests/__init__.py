@@ -151,6 +151,13 @@ DataSet(name='groel',  folder='groel',
                'mic1': 'micrographs/groel-stain.mrc',
                'pickingDogpicker': 'pickingDogpicker'})
 
+
+# TODO: Files to be deleted after checking no plugin or old scipion
+#  installations (1.2, ...) are using them:
+#  reconstRotandShiftFlip_Gold_output.vol (moved to reconstruction/gold)
+#  reconstRotandShift_Gold_output.vol (moved to reconstruction/gold)
+#  reconstRotOnly_Gold_output.vol (moved to reconstruction/gold)
+
 DataSet(name='emx', folder='emx',
         files={
                'alignFlip': 'alignment/alignFlip.mrcs',
@@ -192,7 +199,14 @@ DataSet(name='emx', folder='emx',
                'reconstRotandShiftFlip':
                'reconstruction/reconstRotandShiftFlip.mrcs',
                'reconstRotandShiftFlipGold':
-               'reconstruction/gold/reconstRotandShiftFlip_output.vol'})
+               'reconstruction/gold/reconstRotandShiftFlip_output.vol',
+               'reconstRotOnlyGoldRln':
+                      'reconstruction/gold/reconstRotOnly_rln_output.vol',
+               'reconstRotandShiftGoldRln':
+                      'reconstruction/gold/reconstRotandShift_rln_output.vol',
+               'reconstRotandShiftFlipGoldRln':
+                      'reconstruction/gold/reconstRotandShiftFlip_rln_output.vol'
+        })
 
 
 DataSet(name='CTFDiscrepancy',  folder='CTFDiscrepancy',
