@@ -499,7 +499,7 @@ ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageInde
 
 	printf("u src\n"); fflush(stdout);
 
-	std::string srcPath = "/home/david/GIT/Scipion_KTT/software/em/xmipp/libraries/";
+	std::string srcPath = "/home/fila/prace/autotuning/Xmipp/scipion-2/software/em/xmipp/libraries/";
 
 	std::string kernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier.cu";
 	std::string referenceKernelFile = srcPath + "reconstruction_cuda/reconstruct_fourier_ref.cu";
@@ -543,12 +543,15 @@ ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageInde
 
 	printf("u parametru\n"); fflush(stdout);
 
-	tuner->addParameter(kernelId, "BLOCK_DIM_X", {16}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
-	tuner->addParameter(kernelId, "BLOCK_DIM_Y", {16}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
+	tuner->addParameter(kernelId, "BLOCK_DIM_X", {16});
+	tuner->setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_DIM_X", ktt::ModifierAction::Multiply);
+	tuner->addParameter(kernelId, "BLOCK_DIM_Y", {16});
+	tuner->setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "BLOCK_DIM_Y", ktt::ModifierAction::Multiply);
 	tuner->addParameter(kernelId, "TILE", {2});
 	tuner->addParameter(kernelId, "FAKE", {1,2,3,4,5,6});
 
-	tuner->addParameter(kernelId, "GRID_DIM_Z", {1}, ktt::ModifierType::Global, ktt::ModifierAction::Multiply, ktt::ModifierDimension::Z);
+	tuner->addParameter(kernelId, "GRID_DIM_Z", {1});
+	tuner->setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "GRID_DIM_Z", ktt::ModifierAction::Multiply);
 
 	tuner->addParameter(kernelId, "SHARED_BLOB_TABLE", {1});
 	tuner->addParameter(kernelId, "SHARED_IMG", {0});
@@ -568,28 +571,28 @@ ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageInde
 //	tuner->addParameter(kernelId, "cIDeltaSqrt", {parent->iDeltaSqrt});
 
 	auto blocksDimEqConstr = [](const std::vector<size_t> vector) {return vector.at(0)== vector.at(1);};
-	tuner->addConstraint(kernelId, blocksDimEqConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y"}, blocksDimEqConstr);
 
 	auto tileMultXConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
-	tuner->addConstraint(kernelId, tileMultXConstr, std::vector<std::string>{"BLOCK_DIM_X", "TILE"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"BLOCK_DIM_X", "TILE"}, tileMultXConstr);
 
 	auto tileMultYConstr = [](std::vector<size_t> vector) {return vector.at(1) == 1 || (vector.at(0) % vector.at(1) == 0);};
-	tuner->addConstraint(kernelId, tileMultYConstr, std::vector<std::string>{"BLOCK_DIM_Y", "TILE"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"BLOCK_DIM_Y", "TILE"}, tileMultYConstr);
 
 	auto tileSharedImgConstr = [](std::vector<size_t> vector) {return vector.at(0) == 0 || vector.at(1) == 1;};
-	tuner->addConstraint(kernelId, tileSharedImgConstr, std::vector<std::string>{"SHARED_IMG", "TILE"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"SHARED_IMG", "TILE"}, tileSharedImgConstr);
 
 	auto useAtomicsZDimConstr = [](std::vector<size_t> vector) {return !(vector.at(0) == 0 && vector.at(1) != 1);};
-	tuner->addConstraint(kernelId, useAtomicsZDimConstr, std::vector<std::string>{"USE_ATOMICS", "GRID_DIM_Z"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"USE_ATOMICS", "GRID_DIM_Z"}, useAtomicsZDimConstr);
 
 	auto tileSmallerThanBlockConstr = [](std::vector<size_t> vector) {return vector.at(0) > vector.at(2) && vector.at(1) > vector.at(2);};
-	tuner->addConstraint(kernelId, tileSmallerThanBlockConstr, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y", "TILE"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"BLOCK_DIM_X", "BLOCK_DIM_Y", "TILE"}, tileSmallerThanBlockConstr);
 
 	auto tooMuchSharedMemConstr = [](std::vector<size_t> vector) {return !(vector.at(0)==1 && vector.at(1)==1);};
-	tuner->addConstraint(kernelId, tooMuchSharedMemConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "SHARED_IMG"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"SHARED_BLOB_TABLE", "SHARED_IMG"}, tooMuchSharedMemConstr);
 
 	auto blobTableConstr = [](std::vector<size_t> vector) {return vector.at(0)==0 || (vector.at(0)==1 && vector.at(1)==1);};
-	tuner->addConstraint(kernelId, blobTableConstr, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"});
+	tuner->addConstraint(kernelId, std::vector<std::string>{"SHARED_BLOB_TABLE", "PRECOMPUTE_BLOB_VAL"}, blobTableConstr);
 
 printf("about to set manipulator\n"); fflush(stdout);
 
