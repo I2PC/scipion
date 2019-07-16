@@ -34,3 +34,4 @@ from which import *
 from graph import *
 from reflection import *
 from log import *
+from progressbar import ProgressBar
