@@ -1186,7 +1186,7 @@ class Set(OrderedObject):
             self._idCount += 1
             item.setObjId(self._idCount)
         else:
-            self._idCount = max(self._idCount, item.getObjId()) + 1
+            self._idCount = max(self._idCount, item.getObjId())
         self._insertItem(item)
         self._size.increment()
 
