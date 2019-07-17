@@ -179,8 +179,7 @@ class ProtUnionSet(ProtSets):
 
                 if (cleanIds and setNum > 1) or self.renumber.get():
                     newObj.cleanObjId()
-                print ("FINAL ID: %s" % newObj.getObjId())
-                print ("OBJ ID: %s" % objId)
+
                 outputSet.append(newObj)
 
         self._defineOutputs(outputSet=outputSet)
