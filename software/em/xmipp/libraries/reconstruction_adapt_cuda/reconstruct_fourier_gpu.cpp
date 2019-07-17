@@ -29,6 +29,8 @@
 
 #include "reconstruct_fourier_gpu.h"
 
+static clock_t programBegin;
+
 // Define params
 void ProgRecFourierGPU::defineParams()
 {
@@ -119,6 +121,7 @@ void ProgRecFourierGPU::show()
 // Main routine ------------------------------------------------------------
 void ProgRecFourierGPU::run()
 {
+    programBegin = clock();
     show();
     produceSideinfo();
     initProgress();
@@ -178,6 +181,7 @@ void* ProgRecFourierGPU::tunerRoutine(void* threadArgs) {
 	    bool tune = true;
 	    ktt::ComputationResult bestConf;
 	    int counter = 0;
+	    int images = 0;
 
 	    while(threadParams->keepWorking || !threadParams->queue.empty()) {
 //	    	clock_t begin = clock();
@@ -207,6 +211,8 @@ void* ProgRecFourierGPU::tunerRoutine(void* threadArgs) {
 //	    		printf("tunerKernelByStep time: %f\n", double(clock() - begin2) / CLOCKS_PER_SEC);
 //	    		printf("thread %d processed \n", t->gpuStream );
 //				printf("tuner about to unlock mutex\n"); fflush(stdout);
+			images += t->buffer->getNoOfElements(t->buffer->spaces);
+			printf("Performance: %f img/s (%i %f)\n", images / (double(clock() - programBegin) / CLOCKS_PER_SEC), images, double(clock() - programBegin) / CLOCKS_PER_SEC);
 	    	}
 				pthread_cond_broadcast(&threadParams->condition);
 //				printf("loop time: %f\n", double(clock() - begin) / CLOCKS_PER_SEC);
@@ -507,6 +513,7 @@ ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageInde
 	printf("u tuneru\n"); fflush(stdout);
 	// Create tuner object for specified device, platform index is ignored in case of CUDA API usage
 	ktt::Tuner* tuner = new ktt::Tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA, noOfCores);
+	tuner->setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
 	printf("za tunerem\n"); fflush(stdout);
 
 	// Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
@@ -543,21 +550,21 @@ ktt::Tuner* ProgRecFourierGPU::createTuner(int startImageIndex, int endImageInde
 
 	printf("u parametru\n"); fflush(stdout);
 
-	tuner->addParameter(kernelId, "BLOCK_DIM_X", {16});
+	tuner->addParameter(kernelId, "BLOCK_DIM_X", {8, 12, 16, 20, 24, 28, 32});
 	tuner->setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_DIM_X", ktt::ModifierAction::Multiply);
-	tuner->addParameter(kernelId, "BLOCK_DIM_Y", {16});
+	tuner->addParameter(kernelId, "BLOCK_DIM_Y", {8, 12, 16, 20, 24, 28, 32});
 	tuner->setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "BLOCK_DIM_Y", ktt::ModifierAction::Multiply);
-	tuner->addParameter(kernelId, "TILE", {2});
-	tuner->addParameter(kernelId, "FAKE", {1,2,3,4,5,6});
+	tuner->addParameter(kernelId, "TILE", {1, 2, 4, 8});
+	//tuner->addParameter(kernelId, "FAKE", {1,2,3,4,5,6});
 
-	tuner->addParameter(kernelId, "GRID_DIM_Z", {1});
+	tuner->addParameter(kernelId, "GRID_DIM_Z", {1, 4, 8, 16});
 	tuner->setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "GRID_DIM_Z", ktt::ModifierAction::Multiply);
 
-	tuner->addParameter(kernelId, "SHARED_BLOB_TABLE", {1});
-	tuner->addParameter(kernelId, "SHARED_IMG", {0});
-	tuner->addParameter(kernelId, "USE_ATOMICS", {1});
+	tuner->addParameter(kernelId, "SHARED_BLOB_TABLE", {0, 1});
+	tuner->addParameter(kernelId, "SHARED_IMG", {0, 1});
+	tuner->addParameter(kernelId, "USE_ATOMICS", {0, 1});
 	tuner->addParameter(kernelId, "BLOB_TABLE_SIZE_SQRT", {BLOB_TABLE_SIZE_SQRT});
-	tuner->addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {1});
+	tuner->addParameter(kernelId, "PRECOMPUTE_BLOB_VAL", {0, 1});
 	tuner->addParameter(kernelId, "cMaxVolumeIndexX", {maxVolumeIndexX});
 	tuner->addParameter(kernelId, "cMaxVolumeIndexYZ", {maxVolumeIndexYZ});
 	tuner->addParameter(kernelId, "blobOrder", {blob.order});
