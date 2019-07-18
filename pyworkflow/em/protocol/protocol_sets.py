@@ -186,6 +186,12 @@ class ProtUnionSet(ProtSets):
         for itemSet in self.inputSets:
             self._defineSourceRelation(itemSet, outputSet)
 
+    # Overwrite SetOfCoordinates creation
+    def _createSetOfCoordinates(self, suffix=''):
+        coordSet = self.inputSets[0].get()
+        micSet = coordSet.getMicrographs()
+        return ProtSets._createSetOfCoordinates(self, micSet, suffix)
+
     def cleanExtraAttributes(self, obj, verifyAttrs, prefix=""):
 
         for attr, value in obj.getAttributesToStore():
