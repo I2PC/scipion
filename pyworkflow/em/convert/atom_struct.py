@@ -104,12 +104,12 @@ _entity_poly_seq.hetero\n#\n""" )
                 for chain in model:
                     min_val = int(chain.get_unpacked_list()[0].id[1])
                     # max_val = min_val + len(chain.get_unpacked_list())
-                    not_are = []
-                    for i in range(min_val)[:-1]:
-                        not_are.append(i + 1)
+#                    not_are = range(1, min_val-1)
+#                    for i in range(min_val)[:-1]:
+#                        not_are.append(i + 1)
                     counter = 1
-                    if not_are != []:
-                        for counter in not_are:
+                    if min_val > 1:
+                        for counter in range(1, min_val):
                             if len(chain.get_unpacked_list()[0].resname.strip()) == 3:
                                 total_seqs.append((counter_chain, str(counter), "XAA", "n"))
                             elif len(chain.get_unpacked_list()[0].resname.strip()) == 2:
