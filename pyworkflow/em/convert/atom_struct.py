@@ -40,6 +40,7 @@ from Bio.PDB.Dice import ChainSelector
 from Bio.PDB.MMCIFParser import MMCIFParser
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB import PDBIO, MMCIFIO
+from Bio.PDB.mmcifio import mmcif_order
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
 from Bio.PDB import PDBList
@@ -48,139 +49,134 @@ from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
 from Bio.Seq import Seq
 from .transformations import translation_from_matrix
-
+import mmap
+import re
+import hashlib
 
 class OutOfChainsError(Exception):
     pass
 
 
 class scipionMMCIFIO(MMCIFIO):
-    """ Class that redefines the name of the chains.
-     The current biopython mmCIF parser fills label_asym_id
-      with unique values and auth_asym_id with the chan ids
-      of the input atomic structures. I think auth_asym_id
-      should be equal to auth_asym_id if they are unique.
-      Chimera uses label_asym_id for chain id while
-      coot uses auth_asym_id. Furthermore, auth_asym_id field
-      is a direct match to the PDB chain identifier (when it exists).
-      I hope new vesion of biopython will not conflict with this change.
 
-      Modifications of original code are marked with 'ROB'"""
-    def _noRepeated(self, structure):
-        chains = [c for c in structure.get_chains()]
-        uniqueChains = set(chains)
-        len(chains)
-        len(uniqueChains)
-        if len(chains) == len(uniqueChains):
-            return True
-        else:
-            return False
-
-    def _save_structure(self, out_file, select, preserve_atom_numbering):
-        if self._noRepeated(self.structure):  # if the chain ids are unique
-            atom_dict = defaultdict(list)
-
-            for model in self.structure.get_list():
-                if not select.accept_model(model):
-                    continue
-                # mmCIF files with a single model have it specified as model 1
-                if model.serial_num == 0:
-                    model_n = "1"
+    def _save_dict(self, out_file):
+        # Form dictionary where key is first part of mmCIF key and value is list
+        # of corresponding second parts
+        key_lists = {}
+        for key in self.dic:
+            if key == "data_":
+                data_val = self.dic[key]
+            else:
+                s = re.split(r"\.", key)
+                if len(s) == 2:
+                    if s[0] in key_lists:
+                        key_lists[s[0]].append(s[1])
+                    else:
+                        key_lists[s[0]] = [s[1]]
                 else:
-                    model_n = str(model.serial_num)
-                # This is used to write label_entity_id and label_asym_id and
-                # increments from 1, changing with each molecule
-                entity_id = 0
-                if not preserve_atom_numbering:
-                    atom_number = 1
-                for chain in model.get_list():
-                    if not select.accept_chain(chain):
-                        continue
-                    chain_id = chain.get_id()
-                    if chain_id == " ":
-                        chain_id = "."
-                    # This is used to write label_seq_id and increments from 1,
-                    # remaining blank for hetero residues
-                    #####residue_number = 1
-                    # prev_residue_type = ""
-                    # prev_resname = ""
+                    raise ValueError("Invalid key in mmCIF dictionary: " + key)
 
-                    for residue in chain.get_unpacked_list():
-                        if not select.accept_residue(residue):
-                            continue
-                        hetfield, resseq, icode = residue.get_id()
-                        label_seq_id = str(resseq)
-                        if hetfield == " ":
-                            residue_type = "ATOM"
-                            ####residue_number += 1
-                        else:
-                            residue_type = "HETATM"
-                            ###label_seq_id = "."
-                        resseq = str(resseq)
-                        if icode == " ":
-                            icode = "?"
-                        resname = residue.get_resname()
-                        # Check if the molecule changes within the chain
-                        # This will always increment for the first residue in a
-                        # chain due to the starting values above
-                        ## ROB if residue_type != prev_residue_type or \
-                        ## ROB        (residue_type == "HETATM" and resname != prev_resname):
-                        ## ROB    entity_id += 1
-                        # prev_residue_type = residue_type
-                        # prev_resname = resname
-                        ## ROB label_asym_id = self._get_label_asym_id(entity_id)
-                        for atom in residue.get_unpacked_list():
-                            if select.accept_atom(atom):
-                                atom_dict["_atom_site.group_PDB"].append(residue_type)
-                                if preserve_atom_numbering:
-                                    atom_number = atom.get_serial_number()
-                                atom_dict["_atom_site.id"].append(str(atom_number))
-                                if not preserve_atom_numbering:
-                                    atom_number += 1
-                                element = atom.element.strip()
-                                if element == "":
-                                    element = "?"
-                                atom_dict["_atom_site.type_symbol"].append(element)
-                                atom_dict["_atom_site.label_atom_id"].append(atom.get_name().strip())
-                                altloc = atom.get_altloc()
-                                if altloc == " ":
-                                    altloc = "."
-                                atom_dict["_atom_site.label_alt_id"].append(altloc)
-                                atom_dict["_atom_site.label_comp_id"].append(resname.strip())
-                                # modified by ROB BEGIN
-                                atom_dict["_atom_site.label_asym_id"].append(chain_id)
-                                # modified by ROB END
-                                # The entity ID should be the same for similar chains
-                                # However this is non-trivial to calculate so we write "?"
-                                atom_dict["_atom_site.label_entity_id"].append("?")
-                                atom_dict["_atom_site.label_seq_id"].append(label_seq_id)
-                                atom_dict["_atom_site.pdbx_PDB_ins_code"].append(icode)
-                                coord = atom.get_coord()
-                                atom_dict["_atom_site.Cartn_x"].append("%.3f" % coord[0])
-                                atom_dict["_atom_site.Cartn_y"].append("%.3f" % coord[1])
-                                atom_dict["_atom_site.Cartn_z"].append("%.3f" % coord[2])
-                                atom_dict["_atom_site.occupancy"].append(str(atom.get_occupancy()))
-                                atom_dict["_atom_site.B_iso_or_equiv"].append(str(atom.get_bfactor()))
-                                atom_dict["_atom_site.auth_seq_id"].append(resseq)
-                                atom_dict["_atom_site.auth_asym_id"].append(chain_id)
-                                atom_dict["_atom_site.pdbx_PDB_model_num"].append(model_n)
+        # Re-order lists if an order has been specified
+        # Not all elements from the specified order are necessarily present
+        for key, key_list in key_lists.items():
+            if key in mmcif_order:
+                inds = []
+                for i in key_list:
+                    try:
+                        inds.append(mmcif_order[key].index(i))
+                    # Unrecognised key - add at end
+                    except ValueError:
+                        inds.append(len(mmcif_order[key]))
+                key_lists[key] = [k for _, k in sorted(zip(inds, key_list))]
 
-            # Data block name is the structure ID with special characters removed
-            structure_id = self.structure.id
-            for c in ["#", "$", "'", "\"", "[", "]", " ", "\t", "\n"]:
-                structure_id = structure_id.replace(c, "")
-            atom_dict["data_"] = structure_id
+        # Write out top data_ line
+        if data_val:
+            out_file.write("data_" + data_val + "\n#\n")
+            # ESCRIBIR POLYSEQTABLE
+            out_file.write("""loop_
+_entity_poly_seq.entity_id 
+_entity_poly_seq.num 
+_entity_poly_seq.mon_id 
+_entity_poly_seq.hetero\n#\n""" )
+            total_seqs = []
+            counter_chain = 1
+            for model in self.structure:
+                for chain in model:
+                    min_val = int(chain.get_unpacked_list()[0].id[1])
+                    # max_val = min_val + len(chain.get_unpacked_list())
+                    not_are = []
+                    for i in range(min_val)[:-1]:
+                        not_are.append(i + 1)
+                    counter = 1
+                    if not_are != []:
+                        for counter in not_are:
+                            if len(chain.get_unpacked_list()[0].resname.strip()) == 3:
+                                total_seqs.append((counter_chain, str(counter), "XAA", "n"))
+                            elif len(chain.get_unpacked_list()[0].resname.strip()) == 2:
+                                total_seqs.append((counter_chain, str(counter), "DX", "n"))
+                            elif len(chain.get_unpacked_list()[0].resname.strip()) == 1:
+                                total_seqs.append((counter_chain, str(counter), "X", "n"))
+                            counter += 1
+                    for residue in chain:
+                        if len(chain.get_unpacked_list()[0].resname.strip()) == 3 and \
+                            is_aa(residue.get_resname(), standard=True):  # aminoacids
+                            total_seqs.append((counter_chain, residue.id[1], residue.get_resname(), "n"))
+                        elif len(chain.get_unpacked_list()[0].resname.strip()) == 2 and \
+                                residue.get_resname()[1] in ['A', 'C','G', 'T']:
+                            total_seqs.append((counter_chain, counter, residue.get_resname(), "n"))
+                        elif len(chain.get_unpacked_list()[0].resname.strip()) == 1 and \
+                                residue.get_resname() in ['A', 'C', 'G','U']:
+                            total_seqs.append((counter_chain, counter, residue.get_resname(), "n"))
+                        counter += 1
+                    counter_chain += 1
+            for item in total_seqs:
+                item = list(item)
+                out_file.write(("""%s %s %s  %s\n""") % \
+                (str(item[0]), item[1], item[2], item[3]))
 
-            # Set the dictionary and write out using the generic dictionary method
-            self.dic = atom_dict
-            self._save_dict(out_file)
+        for key, key_list in key_lists.items():
+            # Pick a sample mmCIF value, which can be a list or a single value
+            sample_val = self.dic[key + "." + key_list[0]]
+            n_vals = len(sample_val)
+            # Check the mmCIF dictionary has consistent list sizes
+            for i in key_list:
+                val = self.dic[key + "." + i]
+                if (isinstance(sample_val, list) and (isinstance(val, str) or len(val) != n_vals)) or (isinstance(sample_val, str) and isinstance(val, list)):
+                    raise ValueError("Inconsistent list sizes in mmCIF dictionary: " + key + "." + i)
+            # If the value is a single value, write as key-value pairs
+            if isinstance(sample_val, str):
+                m = 0
+                # Find the maximum key length
+                for i in key_list:
+                    if len(i) > m:
+                        m = len(i)
+                for i in key_list:
+                    out_file.write("{k: <{width}}".format(k=key + "." + i, width=len(key) + m + 4) + self._format_mmcif_col(self.dic[key + "." + i], len(self.dic[key + "." + i])) + "\n")
+            # If the value is a list, write as keys then a value table
+            elif isinstance(sample_val, list):
+                out_file.write("loop_\n")
+                col_widths = {}
+                # Write keys and find max widths for each set of values
+                for i in key_list:
+                    out_file.write(key + "." + i + "\n")
+                    col_widths[i] = 0
+                    for val in self.dic[key + "." + i]:
+                        len_val = len(val)
+                        # If the value requires quoting it will add 2 characters
+                        if self._requires_quote(val) and not self._requires_newline(val):
+                            len_val += 2
+                        if len_val > col_widths[i]:
+                            col_widths[i] = len_val
+                # Technically the max of the sum of the column widths is 2048
 
-        else:
-            super(scipionMMCIFIO, self)._save_structure(out_file,
-                                                        select,
-                                                        preserve_atom_numbering)
-
-
+                # Write the values as rows
+                for i in range(n_vals):
+                    for col in key_list:
+                        out_file.write(self._format_mmcif_col(self.dic[key + "." + col][i], col_widths[col] + 1))
+                    out_file.write("\n")
+            else:
+                raise ValueError("Invalid type in mmCIF dictionary: " + str(type(sample_val)))
+            out_file.write("#\n")
 
 class AtomicStructHandler:
     """ Class that contain utilities to handle pdb/cif files"""
@@ -212,11 +208,23 @@ class AtomicStructHandler:
             dir = os.getcwd()
         pdbl = PDBList(pdb=dir)
         fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
-        self.read(fileName)
-        self.write(fileName)  # many  atom structs need to be fixed
-                              # by reading and writing it we achive this
-                              # goal
+
+        if fileName.endswith(".cif"):
+            if self.checkLabelInFile(fileName,
+                                     "_entity_poly_seq.entity_id") == False:
+                self.read(fileName)
+                self.write(fileName)  # many  atom structs need to be fixed
+                                      # by reading and writing it we achive this
+                                      # goal
         return os.path.abspath(fileName)
+
+    def checkLabelInFile(self, fileName, label):
+        with open(fileName, "r") as f:
+            s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+            if s.find(label) != -1:
+                return True
+            else:
+                return False
 
     def getStructure(self):
         """return strcture information, model, chain,
@@ -261,21 +269,21 @@ class AtomicStructHandler:
         for model in self.structure:
             chainDic = OrderedDict()
             for chain in model:
-                if len(chain.get_unpacked_list()[0].resname) == 1: # RNA
+                if len(chain.get_unpacked_list()[0].resname.strip()) == 1: # RNA
                     seq = list()
                     for residue in chain:
                         if residue.get_resname() in ['A', 'C', 'G', 'U']:
                             seq.append(residue.get_resname())
                         else:
                             seq.append("X")
-                elif len(chain.get_unpacked_list()[0].resname) == 2: # DNA
+                elif len(chain.get_unpacked_list()[0].resname.strip()) == 2: # DNA
                     seq = list()
                     for residue in chain:
                         if residue.get_resname()[1] in ['A', 'C', 'G', 'T']:
                             seq.append(residue.get_resname()[1])
                         else:
                             seq.append("X")
-                elif len(chain.get_unpacked_list()[0].resname) == 3: # Protein
+                elif len(chain.get_unpacked_list()[0].resname.strip()) == 3: # Protein
                     seq = list()
                     counter = 0
                     for residue in chain:
@@ -303,7 +311,7 @@ class AtomicStructHandler:
             if model.id == modelID:
                 for chain in model:
                     if str(chain.id) == chainID:
-                        if len(chain.get_unpacked_list()[0].resname) == 1:
+                        if len(chain.get_unpacked_list()[0].resname.strip()) == 1:
                             print("Your sequence is a nucleotide sequence (" \
                                   "RNA)\n")
                             # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
@@ -316,7 +324,7 @@ class AtomicStructHandler:
                                     seq.append(residue.get_resname())
                                 else:
                                     seq.append("X")
-                        elif len(chain.get_unpacked_list()[0].resname) == 2:
+                        elif len(chain.get_unpacked_list()[0].resname.strip()) == 2:
                             print("Your sequence is a nucleotide sequence (" \
                                   "DNA)\n")
                             # alphabet = IUPAC.ExtendedIUPACDNA._upper()
@@ -329,7 +337,7 @@ class AtomicStructHandler:
                                     seq.append(residue.get_resname()[1])
                                 else:
                                     seq.append("X")
-                        elif len(chain.get_unpacked_list()[0].resname) == 3:
+                        elif len(chain.get_unpacked_list()[0].resname.strip()) == 3:
                             counter = 0
                             for residue in chain:
                                 if is_aa(residue.get_resname(), standard=True):
