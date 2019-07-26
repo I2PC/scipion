@@ -37,6 +37,7 @@ from pyworkflow.em.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+import mmap
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -280,7 +281,7 @@ Format may be PDB or MMCIF"""
         """Download all pdb files in file_list and unzip them.
         """
         aSH = AtomicStructHandler()
-        print "retriving PDB file %s" % self.pdbId.get()
+        print "retrieving PDB file %s" % self.pdbId.get()
         pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
                                               type='mmCif',
                                               dir=self._getExtraPath())
@@ -295,16 +296,23 @@ Format may be PDB or MMCIF"""
 
         baseName = basename(atomStructPath)
         localPath = abspath(self._getExtraPath(baseName))
+        aSH = AtomicStructHandler()
 
         if str(atomStructPath) != str(localPath): # from local file
             if atomStructPath.endswith(".pdb") or \
                     atomStructPath.endswith(".ent"):
                 localPath = localPath.replace(".pdb", ".cif").\
                     replace(".ent", ".cif")
-            # normalize input format
-            aSH = AtomicStructHandler()
-            aSH.read(atomStructPath)
-            aSH.write(localPath)
+                # normalize input format
+                aSH.read(atomStructPath)
+                aSH.write(localPath)
+            elif atomStructPath.endswith(".cif"):
+                if aSH.checkLabelInFile(atomStructPath,
+                                        "_entity_poly_seq.entity_id") == False:
+                    # normalize input format
+                    aSH.read(atomStructPath)
+                    aSH.write(localPath)
+
         pdb = AtomStruct()
         volume = self.inputVolume.get()
 
