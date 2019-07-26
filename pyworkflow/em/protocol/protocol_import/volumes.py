@@ -312,6 +312,8 @@ Format may be PDB or MMCIF"""
                     # normalize input format
                     aSH.read(atomStructPath)
                     aSH.write(localPath)
+                else:
+                    copyFile(atomStructPath, localPath)
 
         pdb = AtomStruct()
         volume = self.inputVolume.get()
