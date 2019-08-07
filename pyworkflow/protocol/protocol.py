@@ -1799,12 +1799,8 @@ class Protocol(Step):
                         paramErrors.append('cannot be EMPTY.')
                     # Consider empty pointers
                     else:
-                        for pointer in attr:
-                            obj = pointer.get()
-                            if obj is None:
-                                paramErrors.append('cannot have EMPTY items.')
-                                break
-
+                        if any(pointer.get() is None for pointer in attr):
+                            paramErrors.append('Can not have EMPTY items.')
 
             else:
                 if condition:
