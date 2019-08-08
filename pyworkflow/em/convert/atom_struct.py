@@ -210,7 +210,7 @@ class AtomicStructHandler:
         """
         if dir is None:
             dir = os.getcwd()
-        pdbl = PDBList()
+        pdbl = PDBList(pdb=dir)
         fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
         self.read(fileName)
         self.write(fileName)  # many  atom structs need to be fixed

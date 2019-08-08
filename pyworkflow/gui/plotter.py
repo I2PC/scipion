@@ -70,7 +70,9 @@ class Plotter(View):
         
         if self.backend is None:
             Plotter.setBackend('Agg')
-        
+
+        plt.style.use(kwargs.get('style','default'))
+
         if figure is None:
             self.tightLayoutOn = True
             

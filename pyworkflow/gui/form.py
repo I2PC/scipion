@@ -444,15 +444,11 @@ class SubclassesTreeProvider(TreeProvider):
                             p._allowsSelection = True
                             objects.append(p)
 
-                        # JMRT: Adding the inner items cause a significant
-                        # performance penalty, anyway, subsets can be selected
-                        # from showj GUI and used as inputs.
-                        # If attr is a set, then we should consider its elements
-                        # JMRT: The inclusion of subitems as possible inputs
-                        # is causing a performance penalty. So for the moment
-                        # we will restrict that to SetOfVolumes only
-                        if isinstance(attr, em.SetOfVolumes) or \
-                                isinstance(attr, em.SetOfAtomStructs):
+                        # JMRT: For all sets, we don't want to include the
+                        # subitems here for performance reasons (e.g SetOfParticles)
+                        # Thus, a Set class can define EXPOSE_ITEMS = True
+                        # to enable the inclusion of its items here
+                        if getattr(attr, 'EXPOSE_ITEMS', False):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
