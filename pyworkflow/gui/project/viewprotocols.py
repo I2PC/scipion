@@ -375,7 +375,7 @@ class SearchProtocolWindow(pwgui.Window):
         frame = tk.Frame(content, bg=Color.LIGHT_GREY_COLOR, padx=5, pady=5)
         pwgui.configureWeigths(frame)
         self._resultsTree = self.master.getViewWidget()._createProtocolsTree(
-            frame, show=None, columns=("streaming", "installed", "help"))
+            frame, show=None, columns=("streaming", "installed", "help", "score"))
         self._configureTreeColumns()
         self._resultsTree.grid(row=0, column=0, sticky='news')
         frame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
@@ -385,16 +385,31 @@ class SearchProtocolWindow(pwgui.Window):
         self._resultsTree.column('streaming', width=100, stretch=tk.FALSE)
         self._resultsTree.column('installed', width=110, stretch=tk.FALSE)
         self._resultsTree.column('help', minwidth=300, stretch=tk.YES)
+        self._resultsTree.column('score', width=50, stretch=tk.FALSE)
         self._resultsTree.heading('#0', text='Protocol')
         self._resultsTree.heading('streaming', text='Streamified')
         self._resultsTree.heading('installed', text='Installation')
         self._resultsTree.heading('help', text='Help')
+        self._resultsTree.heading('score', text='Score')
 
     def _onSearchClick(self, e=None):
         self._resultsTree.clear()
         keyword = self._searchVar.get().lower()
         emProtocolsDict = em.Domain.getProtocols()
         protList = []
+
+        def addSearchWeight(line2Search, searchtext):
+        # Adds a weight value for the search
+            weight = 0
+
+            # prioritize findings in label
+            if keyword in line2Search[1]:
+                weight += 3
+
+            for value in line2Search[2:]:
+                weight += 1 if searchtext in value else 0
+
+            return line2Search + (weight,)
 
         for key, prot in emProtocolsDict.iteritems():
             if ProtocolTreeConfig.isAFinalProtocol(prot, key):
@@ -404,18 +419,18 @@ class SearchProtocolWindow(pwgui.Window):
                         prot.getHelpText().strip().replace('\r', '').replace('\n', ''),
                         "streamified" if prot.worksInStreaming() else "static")
 
-                searchString = "~".join(line)
-
-                if keyword in searchString:
+                line = addSearchWeight(line, keyword)
+                # something was found: weight > 0
+                if line[5] != 0:
                     protList.append(line)
 
         # Sort by label
-        protList.sort(key=lambda x: x[1])  # sort by label
+        protList.sort(reverse=True, key=lambda x: x[5])  # sort by weight
 
-        for key, label, installed, help, streamified in protList:
+        for key, label, installed, help, streamified, weight in protList:
             tag = ProtocolTreeConfig.getProtocolTag(installed == 'installed')
             self._resultsTree.insert('', 'end', key,
-                                     text=label, values=(streamified, installed, help), tags=(tag))
+                                     text=label, values=(streamified, installed, help, weight, weight), tags=(tag))
 
 
 class RunIOTreeProvider(pwgui.tree.TreeProvider):
