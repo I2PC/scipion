@@ -341,7 +341,7 @@ class StepsWindow(pwgui.browser.BrowserWindow):
 
 class SearchProtocolWindow(pwgui.Window):
     def __init__(self, parentWindow, **kwargs):
-        pwgui.Window.__init__(self, title="Search Protocol",
+        pwgui.Window.__init__(self, title="Search for a protocol",
                               masterWindow=parentWindow)
         content = tk.Frame(self.root, bg='white')
         self._createContent(content)
@@ -374,9 +374,21 @@ class SearchProtocolWindow(pwgui.Window):
     def _createResultsBox(self, content):
         frame = tk.Frame(content, bg=Color.LIGHT_GREY_COLOR, padx=5, pady=5)
         pwgui.configureWeigths(frame)
-        self._resultsTree = self.master.getViewWidget()._createProtocolsTree(frame)
+        self._resultsTree = self.master.getViewWidget()._createProtocolsTree(
+            frame, show=None, columns=("streaming", "installed", "help"))
+        self._configureTreeColumns()
         self._resultsTree.grid(row=0, column=0, sticky='news')
         frame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+
+    def _configureTreeColumns(self):
+        self._resultsTree.column('#0', width=300, stretch=tk.FALSE)
+        self._resultsTree.column('streaming', width=100, stretch=tk.FALSE)
+        self._resultsTree.column('installed', width=110, stretch=tk.FALSE)
+        self._resultsTree.column('help', minwidth=300, stretch=tk.YES)
+        self._resultsTree.heading('#0', text='Protocol')
+        self._resultsTree.heading('streaming', text='Streamified')
+        self._resultsTree.heading('installed', text='Installation')
+        self._resultsTree.heading('help', text='Help')
 
     def _onSearchClick(self, e=None):
         self._resultsTree.clear()
@@ -387,19 +399,23 @@ class SearchProtocolWindow(pwgui.Window):
         for key, prot in emProtocolsDict.iteritems():
             if ProtocolTreeConfig.isAFinalProtocol(prot, key):
                 label = prot.getClassLabel().lower()
-                if keyword in label:
-                    protList.append((key,
-                                     label,
-                                     prot.isInstalled()))
+                line = (key, label,
+                        "installed" if prot.isInstalled() else "missing installation",
+                        prot.getHelpText().strip().replace('\r', '').replace('\n', ''),
+                        "streamified" if prot.worksInStreaming() else "static")
+
+                searchString = "~".join(line)
+
+                if keyword in searchString:
+                    protList.append(line)
 
         # Sort by label
         protList.sort(key=lambda x: x[1])  # sort by label
 
-        for key, label, installed in protList:
-            tag = ProtocolTreeConfig.getProtocolTag(installed)
-            if not installed: label += " (not installed)"
+        for key, label, installed, help, streamified in protList:
+            tag = ProtocolTreeConfig.getProtocolTag(installed == 'installed')
             self._resultsTree.insert('', 'end', key,
-                                     text=label, tags=(tag))
+                                     text=label, values=(streamified, installed, help), tags=(tag))
 
 
 class RunIOTreeProvider(pwgui.tree.TreeProvider):
@@ -971,10 +987,10 @@ class ProtocolsView(tk.Frame):
             action, cond = actionTuple
             displayAction(action, i, cond)
 
-    def _createProtocolsTree(self, parent, background=Color.LIGHT_GREY_COLOR):
+    def _createProtocolsTree(self, parent, background=Color.LIGHT_GREY_COLOR, show='tree', columns=None):
         self.style.configure("W.Treeview", background=background, borderwidth=0,
                              fieldbackground=background)
-        t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
+        t = pwgui.tree.Tree(parent, show=show, style='W.Treeview', columns=columns)
         t.column('#0', minwidth=300)
         # Protocol nodes
         t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL,

@@ -69,8 +69,9 @@ class Object(object):
     def getClass(self):
         return type(self)
     
-    def getDoc(self):
-        return self.__doc__ or ''
+    @classmethod
+    def getDoc(cls):
+        return cls.__doc__ or ''
 
     #FIXME: This function should be renamed to hasAttribute when we address that issue
     def hasAttributeExt(self, attrName):
