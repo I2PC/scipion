@@ -503,7 +503,10 @@ class ListDialog(Dialog):
 
                 itemStr = self.tree.item(item)['text']
                 for value in self.tree.item(item)['values']:
-                    itemStr = itemStr + " " + str(value)
+                    if isinstance(value, int):
+                        itemStr = itemStr + ' ' + str(value)
+                    else:
+                        itemStr = itemStr + ' ' + value
 
                 self.lista[item] = itemStr
 
