@@ -1077,7 +1077,7 @@ class Set(OrderedObject):
 
     def __contains__(self, itemId):
         """ element in Set """
-        return self._getMapper().selectById(itemId) != None
+        return self._getMapper().exists(itemId)
 
     def iterItems(self, orderBy='id', direction='ASC', where='1',
                   limit=None):
