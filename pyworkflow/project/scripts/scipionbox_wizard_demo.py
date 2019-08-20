@@ -419,48 +419,46 @@ def getTemplateSplit(root):
 
 def getTemplate(root):
     """ Get a template or templates either from arguments
-        or from the templates directories.
-        If more than one template is found or passed a dialog is raised
+        or from the templates directory.
+        If more than one template is found or passed, a dialog is raised
         to choose one.
     """
     templates = []
-    if len(sys.argv) > 1:
+    customTemplates = len(sys.argv) > 1
+    if customTemplates:
         candidates = sys.argv[1:]
         for candFile in candidates:
             if os.path.isfile(candFile):
-                templates.append(candFile)
+                templates.append(String(candFile))
             else:
                 print(" > %s file does not exist." % candFile)
     else:
         # Check if there is any .json.template in the template folder
         # get the template folder
         templateFolder = pw.getTemplatePath()
-
         for file in glob.glob1(templateFolder, "*.json.template"):
             templates.append(String(file))
 
     if len(templates):
-
         if len(templates) == 1:
             chosen = templates[0].get()
         else:
             provider = ListTreeProviderString(templates)
             dlg = dialog.ListDialog(root, "Workflow templates", provider,
                                     "Select one of the templates.")
-
+            if dlg.result == dialog.RESULT_CANCEL:
+                sys.exit()
             chosen = dlg.values[0].get()
 
-        chosen = os.path.join(templateFolder, chosen)
+        if not customTemplates:
+            chosen = os.path.join(templateFolder, chosen)
 
         print ("Template to use: %s" % chosen)
-
         with open(chosen, 'r') as myfile:
             template = myfile.read()
-
         # Replace environment variables
-        template = template % os.environ
+        return template % os.environ
 
-        return template
     else:
         raise Exception("There isn't any *.json.template at %s.\n"
                         "Please, add one or pass it as argument.\n" % templates)
