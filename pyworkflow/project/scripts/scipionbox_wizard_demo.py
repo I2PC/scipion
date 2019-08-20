@@ -25,13 +25,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from __future__ import print_function
-
-import glob
-
-from pyworkflow.em import ListTreeProviderString
-from pyworkflow.object import String
-
 """
 Creates a scipion workflow file (json formatted) base on a template.
 The template may have some ~placeholders~ that will be overwritten with values
@@ -40,27 +33,33 @@ Template may look like this, separator is "~" and within it you can define:
 Template string sits at the end of the file ready for a running streaming demo.
 """
 
+from __future__ import print_function
+import sys
 import os
 import re
+import glob
 import Tkinter as tk
 import tempfile
 import tkFont
-import datetime
+from datetime import datetime
+import traceback
+import collections
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
+from pyworkflow.em import ListTreeProviderString
+from pyworkflow.object import String
 from pyworkflow.gui import Message, Icon, dialog
 from pyworkflow.project import ProjectSettings
-
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.project.base import ProjectBaseWindow
 from pyworkflow.gui.widgets import HotButton, Button
 
-import traceback
 
 # Custom labels
 START_BUTTON = "Start demo"
-PROJECT_PREFIX = "demo"
+PROJECT_TEMPLATE = os.environ.get("SCIPION_PROJECT_NAME",
+                            "demo_" + datetime.now().strftime("%yy%m%d_%H%M%S"))
 
 FIELD_SEP = '~'
 VIEW_WIZARD = 'wizardview'
@@ -154,8 +153,7 @@ class BoxWizardView(tk.Frame):
                                    font=self.bigFontBold)
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
-        defaultProjectName = PROJECT_PREFIX + "_" + datetime.datetime.now().strftime("%I%M%S")
-        self._addPair(PROJECT_NAME, 1, labelFrame, value=defaultProjectName)
+        self._addPair(PROJECT_NAME, 1, labelFrame, value=PROJECT_TEMPLATE)
         self._addPair(MESSAGE, 4, labelFrame, widget='label')
 
         labelFrame.columnconfigure(0, weight=1)
@@ -396,7 +394,7 @@ def getFields(template):
 
         return FormField(fieldIndex, title, defaultValue, varType)
 
-    fields = {}
+    fields = collections.OrderedDict()
     # For each field found in the template
     for index in xrange(1, len(template), 2):
         field = fieldStr2Field(index, template[index])
@@ -420,17 +418,26 @@ def getTemplateSplit(root):
 
 
 def getTemplate(root):
-
-
-    # Check if there is any .json.template in the template folder
-    # get the template folder
-    templateFolder = pw.getTemplatePath()
-
-    # Get all ".json.template" there
+    """ Get a template or templates either from arguments
+        or from the templates directories.
+        If more than one template is found or passed a dialog is raised
+        to choose one.
+    """
     templates = []
+    if len(sys.argv) > 1:
+        candidates = sys.argv[1:]
+        for candFile in candidates:
+            if os.path.isfile(candFile):
+                templates.append(candFile)
+            else:
+                print(" > %s file does not exist." % candFile)
+    else:
+        # Check if there is any .json.template in the template folder
+        # get the template folder
+        templateFolder = pw.getTemplatePath()
 
-    for file in glob.glob1(templateFolder, "*.json.template"):
-        templates.append(String(file))
+        for file in glob.glob1(templateFolder, "*.json.template"):
+            templates.append(String(file))
 
     if len(templates):
 
@@ -439,7 +446,7 @@ def getTemplate(root):
         else:
             provider = ListTreeProviderString(templates)
             dlg = dialog.ListDialog(root, "Workflow templates", provider,
-                                "Select one of the templates.")
+                                    "Select one of the templates.")
 
             chosen = dlg.values[0].get()
 
@@ -455,7 +462,8 @@ def getTemplate(root):
 
         return template
     else:
-        raise Exception("There isn't any *.json.template at %s" % templates)
+        raise Exception("There isn't any *.json.template at %s.\n"
+                        "Please, add one or pass it as argument.\n" % templates)
 
 if __name__ == "__main__":
     wizWindow = BoxWizardWindow()
