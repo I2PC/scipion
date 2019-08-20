@@ -24,6 +24,9 @@ import os
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportVolumes
+from pyworkflow.em.constants import SYM_I222r, SCIPION_SYM_NAME
+from pyworkflow.em.convert.symmetry import Icosahedron
+import pyworkflow.utils as pwutils
 
 
 class TestImportBase(BaseTest):
@@ -45,6 +48,7 @@ class TestImportVolumes(TestImportBase):
         """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
+                'setHalfMaps': False,
                 'setOrigCoord': False,
                 'samplingRate': 2.1,
                 }
@@ -69,6 +73,7 @@ class TestImportVolumes(TestImportBase):
         # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
+                'setHalfMaps': False,
                 'setOrigCoord': True,
                 'samplingRate': 2.1,
                 'x': 16.8,
@@ -102,6 +107,7 @@ class TestImportVolumes(TestImportBase):
         # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
+                'setHalfMaps': False,
                 'setOrigCoord': True,
                 'samplingRate': 2.1,
                 'x': 67.2,
@@ -129,6 +135,7 @@ class TestImportVolumes(TestImportBase):
         # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
+                'setHalfMaps': False,
                 'setOrigCoord': False,
                 'samplingRate': 2.1,
                 }
@@ -153,6 +160,7 @@ class TestImportVolumes(TestImportBase):
         # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_*mrc',
+                'setHalfMaps': False,
                 'setOrigCoord': True,
                 'samplingRate': 2.1,
                 'x': 16.8,
@@ -206,6 +214,7 @@ class TestImportVolumes(TestImportBase):
         #  """ 8)To test old data where volumes have no origin at all"""
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
+                'setHalfMaps': False,
                 # 'setOrigCoord': False,
                 'samplingRate': 2.1,
                 }
@@ -251,3 +260,93 @@ class TestImportVolumes(TestImportBase):
         # self.assertEqual(-11.99, x)
         # self.assertEqual(7.88, y)
         # self.assertEqual(-10.90, z)
+
+    def test_import_volume2(self):
+        """
+        Test to import a full map (Icosahedron) and two maps (half1 and half2)
+        to compute the FSC
+        """
+        volFeatName = '/tmp/Icosahedron_map.txt'
+        volMapNamefull = '/tmp/Icosahedron_map_full.mrc'
+        volMapNamehalf1 =  '/tmp/Icosahedron_map_half1.mrc'
+        volMapNamehalf2 = '/tmp/Icosahedron_map_half2.mrc'
+        self.createFeatVolume(volFeatName, volMapNamefull, sym=SYM_I222r)
+        self.createFeatVolume(volFeatName, volMapNamehalf1, sym=SYM_I222r)
+        self.createFeatVolume(volFeatName, volMapNamehalf2, sym=SYM_I222r)
+        _samplingRate = 1.0
+        args = {'filesPath': volMapNamefull,
+                'filesPattern': '',
+                'setHalfMaps': True,
+                'half1map': volMapNamehalf1,
+                'half2map': volMapNamehalf2,
+                'samplingRate': _samplingRate
+                }
+        prot5 = self.newProtocol(ProtImportVolumes, **args)
+        prot5.setObjLabel('import phantom icosahedron,\n half1 and half2')
+        self.launchProtocol(prot5)
+        volume = prot5.outputVolume
+        volume.setOrigin(None)
+        # The volume has no origin
+        t = volume.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        # x, y, z in Angstroms
+        # Chimera will show (x, y, z) divided by the samplingRate
+        # in pixels = ()
+        self.assertEqual(-90.0, x)
+        self.assertEqual(-90.0, y)
+        self.assertEqual(-90.0, z)
+
+    def __runXmippProgram(self, program, args):
+        """ Internal shortcut function to launch a Xmipp program.
+        If xmipp not available o fails return False, else Tru"""
+        try:
+            xmipp3 = pwutils.importFromPlugin('xmipp3', doRaise=True)
+            xmipp3.Plugin.runXmippProgram(program, args)
+        except:
+            return False
+        return True
+
+
+    def createFeatVolume(self, volFeatName, volMapName, sym=SYM_I222r):
+        f = open(volFeatName, "w")
+        f.write("""# Phantom description file, (generated with phantom help)
+# General Volume Parameters:
+#      Xdim      Ydim      Zdim   Background_Density Scale
+       180 180 180 0 1.0
+# Feature Parameters:
+#Type  +/=  Density X_Center Y_Center Z_Center
+""")
+        icosahedron = Icosahedron(orientation=SCIPION_SYM_NAME[sym][1:])
+        x = 0.;
+        y = 0.;
+        z = 0.
+        f.write("# large sphere at the center\n")
+        f.write("sph  + 1. %.3f %.3f %.3f 36.\n" % (x, y, z))
+        f.write("# 5-fold\n")
+
+        for i, vertice in enumerate(icosahedron.getVertices()):
+            vertice = 55.0 * vertice
+            f.write("sph  + 3 %.3f %.3f %.3f 8.25\n" %
+                    (vertice[0], vertice[1], vertice[2]))
+            if i==0:
+                self.pentonDir =  "%.3f, %.3f, %.3f"%(vertice[0], vertice[1], vertice[2])
+
+        # print 3fold points
+        f.write("# 3-fold\n")
+
+        for _3fold in icosahedron.get3foldAxis():
+            x, y, z = _3fold
+            f.write("sph  + 0.8 %.3f %.3f %.3f 6.0\n" % (55.0 * x, 55.0 * y, 55.0 * z))
+
+        # print 2fold points
+        f.write("# 2-fold\n")
+        for _2fold in icosahedron.get2foldAxis():
+            x, y, z = _2fold
+            f.write("sph  + 0.7 %.3f %.3f %.3f 3.0\n" %
+                    (55.0 * x, 55.0 * y, 55.0 * z))
+        f.close()
+        #    map
+        program = "xmipp_phantom_create"
+        args= '-i {featFile} -o {mapFile}'.format(
+            featFile=volFeatName, mapFile=volMapName)
+        self.__runXmippProgram(program, args)

@@ -30,12 +30,12 @@ import threading
 
 import pyworkflow.utils as pwutils
 from pyworkflow.utils import importFromPlugin
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+from pyworkflow.tests import BaseTest, setupTestProject, DataSet, getProtocolFromDb
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
                                     ProtImportMicrographs, ProtImportAverages)
 
-XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
+XmippProtMovieCorr = importFromPlugin('xmipp3.protocols', 'XmippProtMovieCorr', doRaise=True)
 ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
 ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', doRaise=True)
 ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
@@ -80,8 +80,70 @@ class TestStreamingWorkflow(BaseTest):
             pwutils.createAbsLink(f, moviePath)
             time.sleep(DELAY)
 
-    def test_pattern(self):
+    def finalChecks(self, importMovies, protocols):
+        """ Checks to do:
+             - All movies are imported
+             - Last processing protocol have processed all data
+             - Summary Monitor is finished after a while
+             - All protocols are finished at the end
+        """
+        lastProt = protocols[-2]  # last processing protocol (CTF or whatever)
+        monitorProt = protocols[-1]  # last protocol usually monitor summary
 
+        def _loadProt(prot):
+            # Load the last version of the protocol from its own database
+            prot2 = getProtocolFromDb(prot.getProject().path,
+                                      prot.getDbPath(),
+                                      prot.getObjId())
+            # Close DB connections
+            prot2.getProject().closeMapper()
+            prot2.closeMappers()
+            return prot2
+
+        def importFinished():
+            importMovies.load()
+            importSize = importMovies.getSize()
+            return importSize == MOVS
+
+        def protocolsFinished():
+            lastOutput = ([getattr(lastProt, k) for k, v
+                           in lastProt.iterOutputAttributes()])[-1]
+            lastOutput.load()
+            return lastOutput.getSize() == MOVS
+
+        t0 = time.time()
+        precessingTimeout = 15  # minutes (lastProt must process all data, yet)
+        while not importFinished() or not protocolsFinished():
+            if time.time() - t0 > precessingTimeout * 60:
+                self.assertTrue(importFinished(),
+                                "Some error occurred with the acquisition. "
+                                "Not all Movies have been imported after %dmin."
+                                % precessingTimeout)
+                self.assertTrue(protocolsFinished(),
+                                "Some error occurred with some protocol. "
+                                "The outputSize of the last protocol is different "
+                                "than the imported movies after %dmin."
+                                % precessingTimeout)
+            time.sleep(5)
+
+        counter = 1
+        protMon2 = _loadProt(monitorProt)
+        waitingTimeout = 2  # minutes (summary monitor is refreshed every 60s)
+        while protMon2.isActive() and counter < waitingTimeout * 10:
+            time.sleep(6)
+            counter += 1
+            protMon2 = _loadProt(monitorProt)
+
+        for prot1 in protocols:
+            prot2 = _loadProt(prot1)
+            self.assertTrue(_loadProt(prot1).isFinished(),
+                            "%s has not finished after the processing ends "
+                            "(i.e. %dmin after %s has processed all input files)."
+                            % (prot2.getObjLabel(), waitingTimeout,
+                               lastProt.getObjLabel()))
+
+    def test_pattern(self):
+        protocols = []  # append here all protocols to make final checks
         # ----------- IMPORT MOVIES -------------------
         protImport = self.newProtocol(ProtImportMovies,
                                       objLabel='import movies',
@@ -94,49 +156,46 @@ class TestStreamingWorkflow(BaseTest):
                                       samplingRate=3.54,
                                       dataStreaming=True,
                                       timeout=TIMEOUT)
-
         self.proj.launchProtocol(protImport, wait=False)
         self._waitOutput(protImport, 'outputMovies')
+        protocols.append(protImport)
 
-        # ----------- OF ALIGNMENT --------------------------
-        protOF = self.newProtocol(XmippProtOFAlignment,
-                                  objLabel='OF alignment',
+        # ----------- ALIGNMENT --------------------------
+        protOF = self.newProtocol(XmippProtMovieCorr,
+                                  objLabel='Movie alignment',
                                   doSaveMovie=False,
+                                  doComputePSD=False,
                                   alignFrame0=3,
                                   alignFrameN=10,
                                   sumFrame0=3,
                                   sumFrameN=10,
-                                  useAlignToSum=False,
-                                  useAlignment=False,
                                   doApplyDoseFilter=False)
-
         protOF.inputMovies.set(protImport)
         protOF.inputMovies.setExtended('outputMovies')
         self.proj.launchProtocol(protOF, wait=False)
         self._waitOutput(protOF, 'outputMicrographs')
+        protocols.append(protOF)
 
         # --------- CTF ESTIMATION ---------------------------
-
         protCTF = self.newProtocol(ProtCTFFind,
                                    objLabel='ctffind4')
         protCTF.inputMicrographs.set(protOF)
         protCTF.inputMicrographs.setExtended('outputMicrographs')
         self.proj.launchProtocol(protCTF, wait=False)
         self._waitOutput(protCTF, 'outputCTF')
+        protocols.append(protCTF)
 
         # --------- SUMMARY MONITOR --------------------------
-
         protMonitor = self.newProtocol(ProtMonitorSummary,
                                        objLabel='summary')
-
         protMonitor.inputProtocols.append(protImport)
         protMonitor.inputProtocols.append(protOF)
         protMonitor.inputProtocols.append(protCTF)
-
         self.proj.launchProtocol(protMonitor, wait=False)
+        protocols.append(protMonitor)
 
-        # Wait until the thread that is creating links finish:
-        self.importThread.join()
+        # ---------- STREAMING CHECKS ------------------------
+        self.finalChecks(protImport.outputMovies, protocols)
 
 
 class TestBaseRelionStreaming(BaseTest):

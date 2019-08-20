@@ -70,7 +70,9 @@ class Plotter(View):
         
         if self.backend is None:
             Plotter.setBackend('Agg')
-        
+
+        plt.style.use(kwargs.get('style','default'))
+
         if figure is None:
             self.tightLayoutOn = True
             
@@ -167,6 +169,7 @@ class Plotter(View):
         self.last_subplot = a
         self.plot = a.plot
         self.hist = a.hist
+        self.scatterP = a.scatter
         self.bar = a.bar
         return a
 

@@ -480,7 +480,7 @@ class Image(EMObject):
          create it makes easier to create protocols for both images
          and sets of images
         """
-        self.getDim()
+        return self.getDim()
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
@@ -1258,6 +1258,9 @@ class SetOfVolumes(SetOfImages):
     ITEM_TYPE = Volume
     REP_TYPE = Volume
 
+    # Hint to GUI components to expose internal items for direct selection
+    EXPOSE_ITEMS = True
+
     def __init__(self, **kwargs):
         SetOfImages.__init__(self, **kwargs)
 
@@ -1320,6 +1323,8 @@ class SetOfDefocusGroup(EMSet):
 class SetOfAtomStructs(EMSet):
     """ Set containing PDB items. """
     ITEM_TYPE = AtomStruct
+    # Hint to GUI components to expose internal items for direct selection
+    EXPOSE_ITEMS = True
 
 
 class SetOfPDBs(SetOfAtomStructs):
@@ -1747,12 +1752,15 @@ class SetOfClasses(EMSet):
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
-    def appendFromClasses(self, classesSet):
+    def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the elements inside each
         class and append classes and items that are enabled.
         """
+        if filterClassFunc is None:
+            filterClassFunc = lambda cls: True
+
         for cls in classesSet:
-            if cls.isEnabled():
+            if cls.isEnabled() and filterClassFunc(cls):
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 newCls.setObjId(cls.getObjId())

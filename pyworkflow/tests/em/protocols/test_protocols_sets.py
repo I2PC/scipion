@@ -417,8 +417,9 @@ class TestSets(BaseTest):
         imgSet2 = SetOfParticles(filename=inFileNameMetadata2)
 
         inFileNameData = self.proj.getTmpPath('particles.stk')
-        img1 = Particle()
-        img2 = Particle()
+        # Start ids 4
+        img1 = Particle(objId=4)
+        img2 = Particle(objId=4)
         attrb1 = [11, 12, 13, 14]
         attrb2 = [21, 22, 23, 24]
         attrb3 = [31, 32]
@@ -431,7 +432,8 @@ class TestSets(BaseTest):
         img2.setCTF(ctf2)
 
         for i in range(1, 3):
-            img1.cleanObjId()
+            # Increment Id
+            img1.setObjId(img1.getObjId()+1)
             img1.setLocation(i, inFileNameData)
             img1.setMicId(i % 3)
             img1.setClassId(i % 5)
@@ -443,7 +445,8 @@ class TestSets(BaseTest):
             counter += 1
 
         for i in range(1, 3):
-            img2.cleanObjId()
+            # Increment Id
+            img2.setObjId(img2.getObjId()+1)
             img2.setLocation(i, inFileNameData)
             img2.setClassId(i % 5)
             img2.setMicId(i % 3)
@@ -498,6 +501,10 @@ class TestSets(BaseTest):
             self.assertIsNotNone(ctf, "Image should have CTF after join")
             self.assertFalse(hasattr(ctf, '_myOwnQuality'),
                              "CTF should not have non common attributes")
+
+            # Assert ids
+            self.assertEqual(counter+5, img.getObjId(),
+                             "Object id's not kept.")
             counter += 1
 
     def testOrderBy(self):
