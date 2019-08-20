@@ -59,7 +59,7 @@ from pyworkflow.gui.widgets import HotButton, Button
 # Custom labels
 START_BUTTON = "Start demo"
 PROJECT_TEMPLATE = os.environ.get("SCIPION_PROJECT_NAME",
-                            "demo_" + datetime.now().strftime("%yy%m%d_%H%M%S"))
+                            "demo_" + datetime.now().strftime("%y%m%d_%H%M%S"))
 
 FIELD_SEP = '~'
 VIEW_WIZARD = 'wizardview'
