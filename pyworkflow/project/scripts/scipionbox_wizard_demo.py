@@ -394,8 +394,8 @@ def getFields(template):
 
         return FormField(fieldIndex, title, defaultValue, varType)
 
+    # fill each field in the template in order to prevent spreading in the form
     fields = collections.OrderedDict()
-    # For each field found in the template
     for index in xrange(1, len(template), 2):
         field = fieldStr2Field(index, template[index])
         fields[field.getTitle()] = field
