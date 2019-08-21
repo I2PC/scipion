@@ -63,20 +63,9 @@ class ProjectsView(tk.Frame):
                                        weight='bold')
         self.manager = Manager()
 
-        # Add the create project button
-        btnFrame = tk.Frame(self, bg='white')
-        btn = HotButton(btnFrame, text=Message.LABEL_CREATE_PROJECT,
-                        font=self.projNameFont,
-                     command=self._onCreateProject)
-        btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
-
-        # Add the Import project button
-        btn = Button(btnFrame, text=Message.LABEL_IMPORT_PROJECT,
-                     font=self.projNameFont,
-                     command=self._onImportProject)
-        btn.grid(row=0, column=1, sticky='nw', padx=10, pady=10)
-
-        btnFrame.grid(row=0, column=0, sticky='nw')
+        self.filter = tk.StringVar()
+        self.filterBox = None
+        self.addActionsFrame()
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -86,6 +75,32 @@ class ProjectsView(tk.Frame):
         self.createProjectList(text)
         text.setReadOnly(True)
         self.text = text
+        self.filterBox.focus_set()
+
+    def addActionsFrame(self):
+        """ Add the "toolbar" for actions like create project, import
+         project or filter"""
+        # Add the create project button
+        bg = "white"
+        btnFrame = tk.Frame(self, bg = bg)
+        btn = HotButton(btnFrame, text=Message.LABEL_CREATE_PROJECT,
+                        font=self.projNameFont,
+                        command=self._onCreateProject)
+        btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
+        # Add the Import project button
+        btn = Button(btnFrame, text=Message.LABEL_IMPORT_PROJECT,
+                     font=self.projNameFont,
+                     command=self._onImportProject)
+        btn.grid(row=0, column=1, sticky='nw', padx=10, pady=10)
+        btnFrame.grid(row=0, column=0, sticky='nw')
+
+        # Add a filter box
+        # Add the Import project button
+        btn = tk.Label(btnFrame, bg=bg, text="Filter:", font=self.projNameFont)
+        btn.grid(row=0, column=2, sticky='nse', padx=10, pady=10)
+        self.filterBox = tk.Entry(btnFrame, font=self.projNameFont, textvariable=self.filter)
+        self.filterBox.grid(row=0, column=3, sticky='ne', padx=10, pady=12)
+        self.filterBox.bind('<Return>', self._onFilter)
 
     def createProjectList(self, text):
         """Load the list of projects"""
@@ -103,6 +118,11 @@ class ProjectsView(tk.Frame):
                 p.cTime = project.getCreationTime()
                 # Add if it's a link
                 p.isLink = project.isLink()
+
+                # Consider the filter
+                if not self._doesProjectMatchFilter(p):
+                    continue
+
                 # If it's a link, get the linked folder
                 if p.isLink:
                     p.linkedFolder = os.path.realpath(project.path)
@@ -162,6 +182,23 @@ class ProjectsView(tk.Frame):
         importProjWindow = ProjectImportWindow("Import project", self)
         importProjWindow.show()
 
+    def _onFilter(self, e=None):
+        self.createProjectList(self.text)
+
+    def _setFocusToList(self, e=None):
+        self.text.focus_set()
+
+    def _doesProjectMatchFilter(self, project):
+        """ Returns true if the project matches the filter"""
+        # Lets' use the name anc creation date for now:
+        searchString = "~".join([project.getName().lower(),
+                                 prettyDate(project.mTime),
+                                 prettyTime(project.cTime, time=False)])
+
+        return self.filter.get().lower() in searchString
+
+
+
     def importProject(self, projLocation, copyFiles, projName, searchLocation):
 
         self.manager.importProject(projLocation, copyFiles, projName, searchLocation)
@@ -220,7 +257,7 @@ class ProjectCreateWindow(Window):
         labelName.grid(row=0, sticky=tk.W, padx=5, pady=5)
         entryName = tk.Entry(content, bg=cfgEntryBgColor, width=20, textvariable=self.projName)
         entryName.grid(row=0, column=1, columnspan=2, sticky=tk.W, padx=5, pady=5)
-
+        entryName.bind("<Return>", self._create)
         # Project location line
         labelLocation = tk.Label(content, text=Message.LABEL_PROJECT + ' location', bg='white', bd=0)
         labelLocation.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
@@ -239,8 +276,8 @@ class ProjectCreateWindow(Window):
         btnFrame.config(bg='white')
 
         # Create buttons
-        btnSelect = HotButton(btnFrame, 'Create', Icon.BUTTON_SELECT, command=self._select)
-        btnSelect.grid(row=0, column=0, sticky='e', padx=5, pady=5)
+        btnCreate = HotButton(btnFrame, 'Create', Icon.BUTTON_SELECT, command=self._create)
+        btnCreate.grid(row=0, column=0, sticky='e', padx=5, pady=5)
         btnCancel = Button(btnFrame, 'Cancel', Icon.BUTTON_CANCEL, command=self.close)
         btnCancel.grid(row=0, column=1, sticky='e', padx=5, pady=5)
 
@@ -260,7 +297,7 @@ class ProjectCreateWindow(Window):
         browser = FileBrowserWindow("Browsing", self, path=path, onSelect=onSelect, onlyFolders=True)
         browser.show()
 
-    def _select(self):
+    def _create(self, e=None):
         projName = self.projName.get().strip()
         projLocation = self.projLocation.get().strip()
 
