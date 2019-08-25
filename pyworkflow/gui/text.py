@@ -259,7 +259,8 @@ class Text(tk.Text, Scrollable):
         if os.path.exists(path):
             import xmippLib
             fn = xmippLib.FileName(path)
-            if fn.isImage() or fn.isMetaData():
+            if fn is not None and (fn.isImage() or fn.isMetaData()):
+                # fn is None if xmippLib is the xmippLib ghost library
                 from pyworkflow.em.viewers import DataView
                 DataView(path).show()
             else:
