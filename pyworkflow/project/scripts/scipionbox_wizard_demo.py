@@ -424,6 +424,7 @@ def getTemplate(root):
         to choose one.
     """
     templates = []
+    templateFolder = pw.getTemplatePath()
     customTemplates = len(sys.argv) > 1
     if customTemplates:
         candidates = sys.argv[1:]
@@ -435,7 +436,6 @@ def getTemplate(root):
     else:
         # Check if there is any .json.template in the template folder
         # get the template folder
-        templateFolder = pw.getTemplatePath()
         for file in glob.glob1(templateFolder, "*.json.template"):
             templates.append(String(file))
 
@@ -460,8 +460,11 @@ def getTemplate(root):
         return template % os.environ
 
     else:
-        raise Exception("There isn't any *.json.template at %s.\n"
-                        "Please, add one or pass it as argument.\n" % templates)
+        raise Exception("No valid file found (*.json.template).\n"
+                        "Please, add (at least one) at %s "
+                        "or pass it/them as argument(s).\n"
+                        "\n -> Usage: scipion demo [PATH.json.template]\n"
+                        "\n see 'scipion help'\n" % templateFolder)
 
 if __name__ == "__main__":
     wizWindow = BoxWizardWindow()
