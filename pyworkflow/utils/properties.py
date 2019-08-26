@@ -89,6 +89,9 @@ class Message:
     LABEL_CONTINUE_ACTION = 'Approve continue'
     LABEL_EXPORT = 'Export'
     LABEL_EXPORT_UPLOAD = 'Export & upload'
+    LABEL_RESTART_WORKFLOW = 'Restart workflow'
+    LABEL_CONTINUE_WORKFLOW = 'Continue workflow'
+    LABEL_STOP_WORKFLOW = 'Stop from here'
 
     # -- Tabs --
     LABEL_DATA = 'Data'
@@ -299,10 +302,13 @@ Do you really want to continue?'
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
 
-    TITLE_RESTART_WORKFLOW = 'Confirm RESTART'
-    LABEL_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
-    TITLE_LAUNCHED_WORKFLOW_FAILED = 'Error while launching the Workflow'
-    LABEL_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
+    TITLE_RESTART_WORKFLOW_FORM = 'Confirm RESTART'
+    TITLE_STOP_WORKFLOW_FORM = 'Confirm STOP'
+    TITLE_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
+    TITLE_STOP_WORKFLOW = 'Do you really want to *STOP* this Workflow?'
+    TITLE_LAUNCHED_WORKFLOW_FAILED = 'Error while launching the workflow'
+    TITLE_STOPPED_WORKFLOW_FAILED = 'Error while stopping the workflow'
+    TITLE_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
     
     #SHOWJ_WEB
     SHOWJ_TITLE = 'Showj'
@@ -399,6 +405,7 @@ class Icon:
     ACTION_LIST = 'fa-bars.png'
     ACTION_STOP = 'fa-stop.png'
     ACTION_CONTINUE = 'fa-play-circle-o.png'
+    ACTION_STOP_WORKFLOW = 'fa-stop-workflow.png'
     ACTION_RESULTS = 'fa-eye.png'
     ACTION_CLOSE = 'fa-times.png'
     ACTION_SAVE = 'fa-save.png'

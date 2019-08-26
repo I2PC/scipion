@@ -39,7 +39,8 @@ import pyworkflow.object as pwobj
 import pyworkflow.protocol as pwprot
 import pyworkflow.utils as pwutils
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.protocol.constants import MODE_RESTART, MODE_CONTINUE, STATUS_INTERACTIVE
+from pyworkflow.protocol.constants import (MODE_RESTART, MODE_CONTINUE,
+                                           STATUS_INTERACTIVE, ACTIVE_STATUS)
 
 import config
 
@@ -531,6 +532,21 @@ class Project(object):
                         print("The parameters configuration in the "
                               "protocol \"%s\" has been modified \n" %
                               protocol.getObjLabel())
+
+    def stopWorkFlow(self, initialProtocol):
+        """
+        This function can stop a workflow from a selected protocol
+        :param initialProtocol: selected protocol
+        """
+        if initialProtocol:
+            errorsList, workflowProtocolList = self._checkWorkflowErrors(initialProtocol)
+            for protocolId in workflowProtocolList:
+                protocol = self.getProtocol(protocolId)
+                if protocol.getStatus() in ACTIVE_STATUS:
+                    try:
+                        self.stopProtocol(protocol)
+                    except Exception as err:
+                        print(err)
 
     def launchWorkflow(self, initialProtocol, mode=MODE_CONTINUE):
         """
