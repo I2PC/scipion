@@ -311,7 +311,7 @@ class AtomicStructHandler:
             if model.id == modelID:
                 for chain in model:
                     if str(chain.id) == chainID:
-                        if len(chain.get_unpacked_list()[0].resname.strip()) == 1:
+                        if len(chain.get_unpacked_list()[0].resname) == 1:
                             print("Your sequence is a nucleotide sequence (" \
                                   "RNA)\n")
                             # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
@@ -324,7 +324,7 @@ class AtomicStructHandler:
                                     seq.append(residue.get_resname())
                                 else:
                                     seq.append("X")
-                        elif len(chain.get_unpacked_list()[0].resname.strip()) == 2:
+                        elif len(chain.get_unpacked_list()[0].resname) == 2:
                             print("Your sequence is a nucleotide sequence (" \
                                   "DNA)\n")
                             # alphabet = IUPAC.ExtendedIUPACDNA._upper()
@@ -337,7 +337,7 @@ class AtomicStructHandler:
                                     seq.append(residue.get_resname()[1])
                                 else:
                                     seq.append("X")
-                        elif len(chain.get_unpacked_list()[0].resname.strip()) == 3:
+                        elif len(chain.get_unpacked_list()[0].resname) == 3:
                             counter = 0
                             for residue in chain:
                                 if is_aa(residue.get_resname(), standard=True):
