@@ -1883,8 +1883,8 @@ class ProtocolsView(tk.Frame):
             for error in errorList:
                 msg = msg + str(error)
             pwgui.dialog.MessageDialog(self,
-                                       Message.TITLE_LAUNCHED_WORKFLOW_FAILED,
-                                       Message.LABEL_LAUNCHED_WORKFLOW_FAILED + msg,
+                                       Message.TITLE_LAUNCHED_WORKFLOW_FAILED_FORM,
+                                       Message.TITLE_LAUNCHED_WORKFLOW_FAILED + msg,
                                        'fa-times-circle_alert.png')
 
     def _selectLabels(self):

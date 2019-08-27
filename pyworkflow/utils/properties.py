@@ -306,7 +306,7 @@ Do you really want to continue?'
     TITLE_STOP_WORKFLOW_FORM = 'Confirm STOP'
     TITLE_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
     TITLE_STOP_WORKFLOW = 'Do you really want to *STOP* this Workflow?'
-    TITLE_LAUNCHED_WORKFLOW_FAILED = 'Error while launching the workflow'
+    TITLE_LAUNCHED_WORKFLOW_FAILED_FORM = 'Error while launching the workflow'
     TITLE_STOPPED_WORKFLOW_FAILED = 'Error while stopping the workflow'
     TITLE_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
     
