@@ -1911,7 +1911,7 @@ class ProtocolsView(tk.Frame):
             self._updateSelection()
             self.drawRunsGraph()
 
-    def _exportProtocols(self, defaultPath=None):
+    def _exportProtocols(self, defaultPath=None, defaultBasename=None):
         protocols = self._getSelectedProtocols()
 
         def _export(obj):
@@ -1925,8 +1925,9 @@ class ProtocolsView(tk.Frame):
                     self.project.exportProtocols(protocols, filename)
                     self.windows.showInfo("Workflow successfully saved to '%s' "
                                           % filename)
-                else:
-                    self._exportProtocols(defaultPath=browser.getCurrentDir())
+                else:  # try again
+                    self._exportProtocols(defaultPath=browser.getCurrentDir(),
+                                          defaultBasename=browser.getEntryValue())
             except Exception as ex:
                 self.windows.showError(str(ex))
 
@@ -1935,7 +1936,7 @@ class ProtocolsView(tk.Frame):
             master=self.windows,
             path=defaultPath or self.project.getPath(''),
             onSelect=_export,
-            entryLabel='File  ', entryValue='workflow.json')
+            entryLabel='File  ', entryValue=defaultBasename or 'workflow.json')
         browser.show()
 
     def _exportUploadProtocols(self):
