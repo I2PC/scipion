@@ -364,7 +364,8 @@ class TextParam(StringParam):
     """Long string params"""
     def __init__(self, **args):
         StringParam.__init__(self, **args)
-        
+        self.height = args.get('height', 5)
+        self.width = args.get('width', 30)        
         
 class RegexParam(StringParam):
     """Regex based string param"""
