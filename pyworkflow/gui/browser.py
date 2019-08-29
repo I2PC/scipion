@@ -555,6 +555,7 @@ class FileBrowser(ObjectBrowser):
                              textvariable=self.pathVar)
         pathEntry.grid(row=0, column=1, sticky='new', pady=3)
         pathEntry.bind("<Return>", self._onEnterPath)
+        pathEntry.bind("<KP_Enter>", self._onEnterPath)
         self.pathEntry = pathEntry
         pathFrame.grid(row=1, column=0, sticky='new')
 

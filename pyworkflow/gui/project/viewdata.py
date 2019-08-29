@@ -169,6 +169,7 @@ class ProjectDataView(tk.Frame):
         # bind click events
         self.dataTree.tag_bind(DATA_TAG, '<Double-1>', self._dataItemClick)
         self.dataTree.tag_bind(DATA_TAG, '<Return>', self._dataItemClick)
+        self.dataTree.tag_bind(DATA_TAG, '<KP_Enter>', self._dataItemClick)
 
         # Program automatic refresh
         self.dataTree.after(3000, self._automaticRefreshData)

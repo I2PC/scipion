@@ -169,6 +169,7 @@ class RunScheduler():
                     failedInputProtocols = True
 
             if not failedInputProtocols:
+                _updateProtocol(protocol, project)
                 if len(protocol.validate()) > 0:
                         missing = True
                 elif not protocol.worksInStreaming():

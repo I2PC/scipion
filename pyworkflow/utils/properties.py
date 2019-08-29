@@ -89,6 +89,9 @@ class Message:
     LABEL_CONTINUE_ACTION = 'Approve continue'
     LABEL_EXPORT = 'Export'
     LABEL_EXPORT_UPLOAD = 'Export & upload'
+    LABEL_RESTART_WORKFLOW = 'Restart workflow'
+    LABEL_CONTINUE_WORKFLOW = 'Continue workflow'
+    LABEL_STOP_WORKFLOW = 'Stop from here'
 
     # -- Tabs --
     LABEL_DATA = 'Data'
@@ -299,10 +302,13 @@ Do you really want to continue?'
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
 
-    TITLE_RESTART_WORKFLOW = 'Confirm RESTART'
-    LABEL_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
-    TITLE_LAUNCHED_WORKFLOW_FAILED = 'Error while launching the Workflow'
-    LABEL_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
+    TITLE_RESTART_WORKFLOW_FORM = 'Confirm RESTART'
+    TITLE_STOP_WORKFLOW_FORM = 'Confirm STOP'
+    TITLE_RESTART_WORKFLOW = 'Do you really want to *RESTART* this Workflow? All previous results will be deleted'
+    TITLE_STOP_WORKFLOW = 'Do you really want to *STOP* this Workflow?'
+    TITLE_LAUNCHED_WORKFLOW_FAILED_FORM = 'Error while launching the workflow'
+    TITLE_STOPPED_WORKFLOW_FAILED = 'Error while stopping the workflow'
+    TITLE_LAUNCHED_WORKFLOW_FAILED = 'The workflow can not be relaunch from this protocol.\n'
     
     #SHOWJ_WEB
     SHOWJ_TITLE = 'Showj'
@@ -347,6 +353,8 @@ Do you really want to continue?'
     ERROR_WEBGL = 'Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
     
     TOOLTIP_SEARCH = 'Search a given world in the text. '
+    TOOLTIP_SEARCH_NEXT = 'Move to the next highlighted item. Also, press <Down> or <F3>'
+    TOOLTIP_SEARCH_PREVIOUS = 'Move to the previous highlighted item. Also, press <Up> or <Shift-F3>'
     TOOLTIP_REFRESH = 'Reload the content of the files in the viewer. '
     TOOLTIP_EXTERNAL = 'Open the viewer in an external window. '
 
@@ -399,6 +407,7 @@ class Icon:
     ACTION_LIST = 'fa-bars.png'
     ACTION_STOP = 'fa-stop.png'
     ACTION_CONTINUE = 'fa-play-circle-o.png'
+    ACTION_STOP_WORKFLOW = 'fa-stop-workflow.png'
     ACTION_RESULTS = 'fa-eye.png'
     ACTION_CLOSE = 'fa-times.png'
     ACTION_SAVE = 'fa-save.png'
@@ -413,6 +422,8 @@ class Icon:
     ACTION_EXECUTE = 'fa-cogs.png'
     ACTION_IN = 'fa-sign-in.png'
     ACTION_OUT = 'fa-sign-out.png'
+    ACTION_FIND_NEXT = 'fa-next.png'
+    ACTION_FIND_PREVIOUS = 'fa-previous.png'
     #Host template
     BUTTON_SELECT = 'fa-check.png'
     BUTTON_CLOSE = 'fa-times.png'
