@@ -170,3 +170,23 @@ class ProtOutputTest(ProtTests):
 
     def _insertAllSteps(self):
         self._insertFunctionStep('_createOutputStep')
+
+
+class ProtMultiPointerTest(ProtTests):
+    """ Class to test how multipointer params are exported to json"""
+    def _defineParams(self, form):
+
+        # This should cover Multipointer params that points to attributes...
+        # therefore extended attribute of pointers should be used
+        form.addParam('mpToAttr', params.MultiPointerParam,
+                      label="Multipointer to attribute",
+                      pointerClass='String',
+                      help="Should point to String inside another protocol")
+
+        # This should cover Multipointer params that points to protocols...
+        # therefore extended attribute of pointers should NOT be used
+        form.addParam('mpToProts', params.MultiPointerParam,
+                      label="Multipointer to sets",
+                      pointerClass='Protocol',
+                      help="Should point to another protocol")
+

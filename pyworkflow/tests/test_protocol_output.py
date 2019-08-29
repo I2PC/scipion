@@ -25,7 +25,6 @@
 # **************************************************************************
 from pyworkflow.em import EMObject, Integer, Pointer
 from pyworkflow.em.protocol.protocol_tests import ProtOutputTest
-from pyworkflow.protocol import ValidationException
 from tests import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.protocol.constants import STATUS_FINISHED

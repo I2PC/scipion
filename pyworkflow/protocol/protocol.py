@@ -1793,6 +1793,16 @@ class Protocol(Step):
                 obj = attr.get()
                 if condition and obj is None and not param.allowsNull:
                     paramErrors.append('cannot be EMPTY.')
+            elif isinstance(attr, PointerList):
+                # In this case allowsNull refers to not allowing empty items
+                if not param.allowsNull:
+                    if len(attr) == 0:
+                        paramErrors.append('cannot be EMPTY.')
+                    # Consider empty pointers
+                    else:
+                        if any(pointer.get() is None for pointer in attr):
+                            paramErrors.append('Can not have EMPTY items.')
+
             else:
                 if condition:
                     paramErrors = param.validate(attr.get())
