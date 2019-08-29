@@ -771,11 +771,12 @@ class Protocol(Step):
                     return True
         return False
 
-    def worksInStreaming(self):
+    @classmethod
+    def worksInStreaming(cls):
         # A protocol should work in streaming if it implements the stepCheck()
         # Get the stepCheck method from the Protocol
         baseStepCheck = Protocol._stepsCheck
-        ownStepCheck = self._stepsCheck
+        ownStepCheck = cls._stepsCheck
 
         return not pwutils.isSameFunction(baseStepCheck, ownStepCheck)
 
@@ -1972,15 +1973,17 @@ class Protocol(Step):
             return ['No references provided']
         return citations
 
-    def getHelpText(self):
+    @classmethod
+    def getHelpText(cls):
         """Get help text to show in the protocol help button"""
-        helpText = self.getDoc()
-        plugin = self.getClassPlugin()
-        if plugin:
-            pluginMetadata = plugin.metadata
-            helpText += "\n\nPlugin info:\n"
-            for key, value in pluginMetadata.iteritems():
-                helpText += "%s: \t%s\n" % (key, value)
+        helpText = cls.getDoc()
+        # NOt used since getClassPlugin is always None
+        # plugin = self.getClassPlugin()
+        # if plugin:
+        #     pluginMetadata = plugin.metadata
+        #     helpText += "\n\nPlugin info:\n"
+        #     for key, value in pluginMetadata.iteritems():
+        #         helpText += "%s: \t%s\n" % (key, value)
         return helpText
 
     def _methods(self):

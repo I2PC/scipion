@@ -282,7 +282,8 @@ class ProtImportFiles(ProtImport):
 
             yield fileName, fileId
 
-    def worksInStreaming(self):
+    @classmethod
+    def worksInStreaming(cls):
         # Import protocols always work in streaming
         return True
 
