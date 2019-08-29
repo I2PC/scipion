@@ -365,6 +365,7 @@ class SearchProtocolWindow(pwgui.Window):
         self._searchVar = tk.StringVar()
         entry = tk.Entry(frame, bg='white', textvariable=self._searchVar)
         entry.bind('<Return>', self._onSearchClick)
+        entry.bind('<KP_Enter>', self._onSearchClick)
         entry.focus_set()
         entry.grid(row=0, column=1, sticky='nw')
         btn = pwgui.widgets.IconButton(frame, "Search",
@@ -1017,6 +1018,8 @@ class ProtocolsView(tk.Frame):
                    '<Double-1>', self._protocolItemClick)
         t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
                    '<Return>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL,
+                   '<KP_Enter>', self._protocolItemClick)
 
         # Disable protocols (not installed) are allowed to be added.
         t.tag_configure(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
@@ -1025,6 +1028,8 @@ class ProtocolsView(tk.Frame):
                    '<Double-1>', self._protocolItemClick)
         t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
                    '<Return>', self._protocolItemClick)
+        t.tag_bind(ProtocolTreeConfig.TAG_PROTOCOL_DISABLED,
+                   '<KP_Enter>', self._protocolItemClick)
 
         t.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         t.tag_configure('protocol_group', image=self.getImage('class_obj.gif'))

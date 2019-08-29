@@ -101,6 +101,7 @@ class ProjectsView(tk.Frame):
         self.filterBox = tk.Entry(btnFrame, font=self.projNameFont, textvariable=self.filter)
         self.filterBox.grid(row=0, column=3, sticky='ne', padx=10, pady=12)
         self.filterBox.bind('<Return>', self._onFilter)
+        self.filterBox.bind('<KP_Enter>', self._onFilter)
 
     def createProjectList(self, text):
         """Load the list of projects"""
@@ -258,6 +259,7 @@ class ProjectCreateWindow(Window):
         entryName = tk.Entry(content, bg=cfgEntryBgColor, width=20, textvariable=self.projName)
         entryName.grid(row=0, column=1, columnspan=2, sticky=tk.W, padx=5, pady=5)
         entryName.bind("<Return>", self._create)
+        entryName.bind("<KP_Enter>", self._create)
         # Project location line
         labelLocation = tk.Label(content, text=Message.LABEL_PROJECT + ' location', bg='white', bd=0)
         labelLocation.grid(row=1, column=0, sticky='nw', padx=5, pady=5)

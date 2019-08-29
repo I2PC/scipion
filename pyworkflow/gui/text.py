@@ -551,6 +551,7 @@ class TextFileViewer(tk.Frame):
             self.searchEntry = tk.Entry(right, textvariable=self.searchVar)
             self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5)
             self.searchEntry.bind('<Return>', self.findText)
+            self.searchEntry.bind('<KP_Enter>', self.findText)
             # btn = IconButton(right, "Search", Icon.ACTION_SEARCH,
             #                  tooltip=Message.TOOLTIP_SEARCH,
             #                  command=self.findText, bg=None)
@@ -599,6 +600,7 @@ class TextFileViewer(tk.Frame):
     def addBinding(self):
 
         shortcutDefinitions = [(lambda e: self.findText(), "Trigger the search", ['<Return>']),
+                   (lambda e: self.findText(), "Trigger the search", ['<KP_Enter>']),
                    (lambda e: self.findText(matchCase=True), "Trigger a case sensitive search", ['<Shift-Return>']),
                    (lambda e: self.findText(), "Move to the next highlighted item", ["<Down>", '<F3>']),
                    (lambda e: self.findText(-1), "Move to the previous highlighted item", ["<Up>", '<Shift-F3>']),

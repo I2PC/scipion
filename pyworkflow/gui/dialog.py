@@ -156,6 +156,7 @@ class Dialog(tk.Toplevel):
                 self.initial_focus = btn
             col += 1
         self.bind("<Return>", self._handleReturn)
+        self.bind("<KP_Enter>", self._handleReturn)
         self.bind("<Escape>", lambda e: self._handleResult(RESULT_CANCEL))
 
     def _handleResult(self, resultValue):
