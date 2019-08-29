@@ -194,13 +194,20 @@ class ProtAlignMovies(ProtProcessMovies):
                 movieSet.setDark(None)
 
             for movie in newDone:
-                newMovie = self._createOutputMovie(movie)
-                if newMovie.getAlignment().getShifts()[0]:
-                    movieSet.append(newMovie)
-                else:
-                    print(yellowStr("WARNING: Movie %s has empty alignment "
-                                    "data, can't add it to output set."
-                                    % movie.getFileName()))
+                try:
+                    newMovie = self._createOutputMovie(movie)
+                    if newMovie.getAlignment().getShifts()[0]:
+                        movieSet.append(newMovie)
+                    else:
+                        print(yellowStr("WARNING: Movie %s has empty alignment "
+                                        "data, can't add it to output set."
+                                        % movie.getFileName()))
+
+                # Warn about any exception creating the movie
+                except Exception as e:
+                    print(redStr("ERROR: Movie %s couldn't be "
+                                 "added to the output set.\n%s"
+                                 % (movie.getFileName(), e)))
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
 

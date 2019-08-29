@@ -462,6 +462,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.info("Reading coordinates from mics: %s" % ','.join([mic.strId() for mic in micList]))
         self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
         self.debug(" _updateOutputCoordSet Stream Mode: %s " % streamMode)
+        outputCoords.setObjComment(self.getSummary(outputCoords))
         self._updateOutputSet(outputName, outputCoords, streamMode)
 
         if firstTime:

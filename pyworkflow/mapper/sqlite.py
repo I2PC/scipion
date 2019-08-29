@@ -790,7 +790,10 @@ class SqliteFlatMapper(Mapper):
         args = list(obj.getObjDict().values())
         args.append(obj.getObjId())
         self.db.updateObject(obj.isEnabled(), obj.getObjLabel(), obj.getObjComment(), *args)
-            
+
+    def exists(self, objId):
+        return self.db.doesRowExist(objId)
+
     def selectById(self, objId):
         """Build the object which id is objId"""
         objRow = self.db.selectObjectById(objId)
@@ -1001,6 +1004,7 @@ class SqliteFlatDb(SqliteDb):
         self.DELETE = "DELETE FROM %sObjects WHERE " % tablePrefix
         self.INSERT_CLASS = "INSERT INTO %sClasses (label_property, column_name, class_name) VALUES (?, ?, ?)" % tablePrefix
         self.SELECT_CLASS = "SELECT * FROM %sClasses;" % tablePrefix
+        self.EXISTS = "SELECT EXISTS(SELECT 1 FROM Objects WHERE %s=? LIMIT 1)"
         self.tablePrefix = tablePrefix
         self._createConnection(dbName, timeout)
         self.INSERT_OBJECT = None
@@ -1180,6 +1184,12 @@ class SqliteFlatDb(SqliteDb):
         """Select an object give its id"""
         self.executeCommand(self.selectCmd(ID + "=?"), (objId,))
         return self.cursor.fetchone()
+
+    def doesRowExist(self, objId):
+        """Return True if a row with a given id exists"""
+        self.executeCommand(self.EXISTS % ID, (objId,))
+        one = self.cursor.fetchone()
+        return one[0] == 1
 
     def selectAll(self, iterate=True, orderBy=ID, direction='ASC',
                   where='1', limit=None):

@@ -526,6 +526,8 @@ class SubclassesTreeProvider(TreeProvider):
             return self._getObjectCreation(obj.get())
         elif self._sortingColumnName == SubclassesTreeProvider.INFO_COLUMN:
             return self._getObjectInfoValue(obj.get())
+        elif self._sortingColumnName == SubclassesTreeProvider.ID_COLUMN:
+            return self._getObjectId(pobj)
         else:
             return self._getPointerLabel(obj)
 
@@ -554,15 +556,18 @@ class SubclassesTreeProvider(TreeProvider):
             
         obj = pobj.get()
         objId = pobj.getUniqueId()
-        protId = pobj.getObjValue().getObjId()
         isSelected = objId in self.selectedDict
         self.selectedDict[objId] = True
             
         return {'key': objId, 'text': label,
                 'values': (self._getObjectInfoValue(obj),
                            self._getObjectCreation(obj),
-                           protId),
+                           self._getObjectId(pobj)),
                 'selected': isSelected, 'parent': parent}
+
+    @staticmethod
+    def _getObjectId(pobj):
+        return pobj.getObjValue().getObjId()
 
     @staticmethod
     def _getObjectCreation(obj):

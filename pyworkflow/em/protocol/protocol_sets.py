@@ -502,15 +502,15 @@ class ProtSubSet(ProtSets):
             # if it is 'difference' we want that item is None
             # (not found, different)
             if self.setOperation == self.SET_INTERSECTION:
-                checkElem = lambda e: e is not None
+                checkElem = lambda e: e
             else:
-                checkElem = lambda e: e is None 
+                checkElem = lambda e: not e
             
             for origElem in inputFullSet:
                 # TODO: this can be improved if we perform
                 # intersection directly in sqlite
-                otherElem = inputSubSet[origElem.getObjId()]
-                if checkElem(otherElem):
+                exists = origElem.getObjId() in inputSubSet
+                if checkElem(exists):
                     outputSet.append(origElem)
             
         if outputSet.getSize():
@@ -604,9 +604,15 @@ class ProtSubSet(ProtSets):
         if not hasattr(self, key):
             return ["Protocol has not finished yet."]
         else:
-            return ["The elements of %s that also are referenced in %s" %
+            if self.setOperation == self.SET_INTERSECTION:
+                return ["The elements of %s that also are referenced in %s" %
                     (self.inputFullSet.getName(), self.inputSubSet.getName()),
                     "are now in %s" % getattr(self, key).getName()]
+            else:
+                return ["%s has elements only present in %s." %
+                        (getattr(self, key).getName(),
+                         self.inputFullSet.getName())
+                        ]
 
 
 class ProtSubSetByMic(ProtSets):
