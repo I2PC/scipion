@@ -52,6 +52,7 @@ from widgets import Button, HotButton, IconButton
 from dialog import showInfo, showError, showWarning, EditObjectDialog, ListDialog, askYesNo, Dialog
 from canvas import Canvas
 from tree import TreeProvider, BoundTree
+from text import Text
 
 
 THREADS = 'Threads'
@@ -321,7 +322,33 @@ class ComboVar:
                 self.value = i
             
         return self.value         
-        
+
+
+class TextVar():
+    """Wrapper around tk.StringVar to bind the value of a Text widget. """
+    def __init__(self, text, value=''):
+        """
+        Params:
+            text: Text widget associated with this variable.
+            value: initial value for the widget.
+            """
+        self.text = text
+        text.bind('<KeyRelease>', self._onTextChanged)
+        self.tkVar = tk.StringVar()
+        self.set(value)
+        self.trace = self.tkVar.trace
+
+    def set(self, value):
+        self.tkVar.set(value)
+        if value is None:
+            value = ''
+        self.text.setText(value)
+
+    def get(self):
+        return self.tkVar.get()
+
+    def _onTextChanged(self, e=None):
+        self.tkVar.set(self.text.getText().strip())        
 
 # ---------------- Some used providers for the TREES --------------------------
 
@@ -499,6 +526,8 @@ class SubclassesTreeProvider(TreeProvider):
             return self._getObjectCreation(obj.get())
         elif self._sortingColumnName == SubclassesTreeProvider.INFO_COLUMN:
             return self._getObjectInfoValue(obj.get())
+        elif self._sortingColumnName == SubclassesTreeProvider.ID_COLUMN:
+            return self._getObjectId(pobj)
         else:
             return self._getPointerLabel(obj)
 
@@ -527,15 +556,18 @@ class SubclassesTreeProvider(TreeProvider):
             
         obj = pobj.get()
         objId = pobj.getUniqueId()
-        protId = pobj.getObjValue().getObjId()
         isSelected = objId in self.selectedDict
         self.selectedDict[objId] = True
             
         return {'key': objId, 'text': label,
                 'values': (self._getObjectInfoValue(obj),
                            self._getObjectCreation(obj),
-                           protId),
+                           self._getObjectId(pobj)),
                 'selected': isSelected, 'parent': parent}
+
+    @staticmethod
+    def _getObjectId(pobj):
+        return pobj.getObjValue().getObjId()
 
     @staticmethod
     def _getObjectCreation(obj):
@@ -1148,6 +1180,14 @@ class ParamWidget:
         elif t is params.LabelParam:
             var = None
             self._onlyLabel = True
+
+        elif t is params.TextParam:
+            w = max(entryWidth, param.width)
+            text = Text(content, font=self.window.font, width=w,
+                        height=param.height)
+            var = TextVar(text)
+            text.grid(row=0, column=0, sticky='w')
+
         else:
 
             if not param.allowsPointers:

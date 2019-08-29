@@ -259,7 +259,8 @@ class Text(tk.Text, Scrollable):
         if os.path.exists(path):
             import xmippLib
             fn = xmippLib.FileName(path)
-            if fn.isImage() or fn.isMetaData():
+            if fn is not None and (fn.isImage() or fn.isMetaData()):
+                # fn is None if xmippLib is the xmippLib ghost library
                 from pyworkflow.em.viewers import DataView
                 DataView(path).show()
             else:
@@ -561,7 +562,7 @@ class TextFileViewer(tk.Frame):
                              command=self._openExternal, bg=None)
             btn.grid(row=0, column=7, padx=(0, 5), pady=2)
 
-        #Create tabs frame
+        # Create tabs frame
         tabsFrame = tk.Frame(self)
         tabsFrame.grid(column=0, row=1, padx=5, pady=(0, 5), sticky="nsew")
         tabsFrame.columnconfigure(0, weight=1)
@@ -573,20 +574,32 @@ class TextFileViewer(tk.Frame):
             self._addFileTab(f)
         self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)   
         self.notebook.bind('<<NotebookTabChanged>>', self._tabChanged)
-        
+
     def _tabChanged(self, e=None):
-        self._lastTabIndex = self.notebook.select() 
+        self._lastTabIndex = self.notebook.select()
+        # reset the search
+        self.lastSearch = None
+        self.searchEntry.focus_set()
 
     def addBinding(self):
-        self.master.bind('<Control_L><Home>', lambda e: self.changePosition(1.0))
-        self.master.bind('<Control_L><End>', lambda e: self.changePosition(tk.END))
-        #self.master.bind('<Alt_L><c>', lambda e: self.master.destroy())
-        #self.master.bind('<Return>', lambda e: self.findText())
-        self.master.bind('<Control_L><n>', lambda e: self.findText())
-        self.master.bind('<Control_L><p>', lambda e: self.findText(-1))
-        #self.master.bind('<Alt_L><plus>', self.changeFont)
-        #self.master.bind('<Alt_L><minus>', self.changeFont)
-    
+
+        shortcutDefinitions = [(lambda e: self.findText(), "Trigger the search", ['<Return>']),
+                   (lambda e: self.findText(matchCase=True), "Trigger a case sensitive search", ['<Shift-Return>']),
+                   (lambda e: self.findText(), "Move to the next highlighted item", ["<Down>", '<F3>']),
+                   (lambda e: self.findText(-1), "Move to the previous highlighted item", ["<Up>", '<Shift-F3>']),
+                   ]
+        tooltip = "Shortcuts:"
+
+        for callback, help, keys in shortcutDefinitions:
+            tooltip += "\n" + help + ": "
+            for key in keys:
+                self.searchEntry.bind(key, callback)
+                tooltip += key
+
+        # Add a tooltip
+        from tooltip import ToolTip
+        ToolTip(self.searchEntry, tooltip, 800)
+
     def getIndex(self):
         """ Return the index of the selected tab. """
         selected = self.notebook.select()
@@ -629,29 +642,29 @@ class TextFileViewer(tk.Frame):
         text = self.selectedText()
         if text:
             text.readFile()
-        #self.refreshAlarm = self.after(2000, self.refreshOutput)
         
     def changePosition(self, index):
         self.selectedText().see(index)
         
-    def findText(self, direction=1):
+    def findText(self, direction=1, matchCase=0):
         text = self.selectedText()
         str = self.searchVar.get()
         if text:
             if str is None or str != self.lastSearch:
-                self.buildSearchList(text, str)
+                self.buildSearchList(text, str, matchCase=matchCase)
                 self.lastSearch = str
+
             else:
                 self.nextSearchIndex(text, direction)
             self.searchEntry.focus_set()
         
-    def buildSearchList(self, text, str):
+    def buildSearchList(self, text, str, matchCase=0):
         text.tag_remove('found', '1.0', tk.END)
         list = []
         if str:
             idx = '1.0'
             while True:
-                idx = text.search(str, idx, nocase=1, stopindex=tk.END)
+                idx = text.search(str, idx, nocase=not matchCase, stopindex=tk.END)
                 if not idx: break
                 lastidx = '%s+%dc' % (idx, len(str))
                 text.tag_add('found', idx, lastidx)

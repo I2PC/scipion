@@ -131,7 +131,8 @@ class ProtMonitor(EMProtocol):
 
         return email
 
-    def worksInStreaming(self):
+    @classmethod
+    def worksInStreaming(cls):
         # A monitor protocol always work in streaming
         return True
 

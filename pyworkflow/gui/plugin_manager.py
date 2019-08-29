@@ -979,7 +979,8 @@ class PluginManagerWindow(gui.Window):
         if pluginDict is not None:
             msg = ""
             pluginsVars = pluginDict.values()[0].getPluginClass().getVars()
-            for var in pluginsVars:
+            sortedVars = sorted(pluginsVars)
+            for var in sortedVars:
                 msg = msg + var + ': ' + pluginsVars[var] + '\n'
             pwgui.showInfo("Plugin variables", msg, tk.Frame())
 

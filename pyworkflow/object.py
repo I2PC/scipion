@@ -69,8 +69,9 @@ class Object(object):
     def getClass(self):
         return type(self)
     
-    def getDoc(self):
-        return self.__doc__ or ''
+    @classmethod
+    def getDoc(cls):
+        return cls.__doc__ or ''
 
     #FIXME: This function should be renamed to hasAttribute when we address that issue
     def hasAttributeExt(self, attrName):
@@ -1077,7 +1078,7 @@ class Set(OrderedObject):
 
     def __contains__(self, itemId):
         """ element in Set """
-        return self._getMapper().selectById(itemId) != None
+        return self._getMapper().exists(itemId)
 
     def iterItems(self, orderBy='id', direction='ASC', where='1',
                   limit=None):

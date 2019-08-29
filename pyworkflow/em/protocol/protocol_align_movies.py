@@ -202,10 +202,12 @@ class ProtAlignMovies(ProtProcessMovies):
                         print(yellowStr("WARNING: Movie %s has empty alignment "
                                         "data, can't add it to output set."
                                         % movie.getFileName()))
+
+                # Warn about any exception creating the movie
                 except Exception as e:
-                    print(e)
-                    print(yellowStr("WARNING: Movie %s has not produced a valid file"
-                                    % movie.getFileName()))
+                    print(redStr("ERROR: Movie %s couldn't be "
+                                 "added to the output set.\n%s"
+                                 % (movie.getFileName(), e)))
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
 
