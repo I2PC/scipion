@@ -50,22 +50,23 @@ class TestCtfConsensus(BaseTest):
 
         self.assertIsNotNone(outputCTF,
                              "There was a problem with the CTF-Consensus. "
-                             "No outputCTF is created.")
+                             "No outputCTF%s is created." % label)
         self.assertIsNotNone(outputMicrographs,
                              "There was a problem with the CTF-Consensus. "
-                             "No outputMicrographs is created.")
+                             "No outputMicrographs%s is created." % label)
 
         self.assertEqual(outputCTF.getSize(), refCTFs.getSize(),
-                         "The outputCTF size is wrong.")
+                         "The outputCTF%s size is wrong." % label)
         self.assertEqual(outputMicrographs.getSize(), refCTFs.getSize(),
-                         "The outputMicrographs size is wrong.")
+                         "The outputMicrographs%s size is wrong." % label)
         self.assertTupleEqual(outputMicrographs.getDim(), refMics.getDim(),
-                              "The outputMicrographs dimension is wrong.")
+                              "The outputMicrographs%s dimension is wrong." % label)
 
         firstCTF = outputCTF.getFirstItem()
         refCTF = refCTFs.getFirstItem()
         self.assertTrue(firstCTF.equalAttributes(refCTF),
-                        "The outputCTF has different attributes than the input.")
+                        "The outputCTF%s has different attributes than the input."
+                        % label)
 
     def test1(self):
         # Import a set of micrographs

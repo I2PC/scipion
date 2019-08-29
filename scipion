@@ -315,7 +315,7 @@ MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 MODE_PYTHON = 'python'
 MODE_TUTORIAL = 'tutorial'
-MODE_DEMO = 'demo'
+MODE_DEMO = ['demo', 'template']
 PLUGIN_MODES = [MODE_UNINSTALL_PLUGIN, MODE_INSTALL_PLUGIN,
                 MODE_INSTALL_BINS, MODE_UNINSTALL_BINS]
 
@@ -478,8 +478,9 @@ Example: scipion install -j 4
     elif mode == MODE_TUTORIAL:
         runApp('pw_tutorial.py', sys.argv[2:])
 
-    elif mode == MODE_DEMO:
-        runScript('pyworkflow/project/scripts/scipionbox_wizard_demo.py')
+    elif mode in MODE_DEMO:
+        runScript('pyworkflow/project/scripts/scipionbox_wizard_demo.py %s'
+                  % (' '.join(sys.argv[2:]) if len(sys.argv) > 2 else ''))
 
     # Allow to run programs from different packages
     # scipion will load the specified environment
@@ -547,6 +548,10 @@ MODE can be:
                            If NAME is empty, the list of available tutorials are shown.
 
     view | show NAME       Open a file with Scipion's showj, or a directory with Browser.
+    
+    demo | template [PATH] Launch a form based on the *.json.template found either in the PATH
+                           or in the pyworkflow/templates directory. If more than one is found,
+                           a dialog is raised to choose one. 
 
 """)
         sys.exit(0)

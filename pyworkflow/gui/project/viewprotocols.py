@@ -1942,25 +1942,32 @@ class ProtocolsView(tk.Frame):
             self._updateSelection()
             self.drawRunsGraph()
 
-    def _exportProtocols(self):
+    def _exportProtocols(self, defaultPath=None, defaultBasename=None):
         protocols = self._getSelectedProtocols()
 
         def _export(obj):
             filename = os.path.join(browser.getCurrentDir(),
                                     browser.getEntryValue())
             try:
-                self.project.exportProtocols(protocols, filename)
-                self.windows.showInfo("Workflow successfully saved to '%s' "
-                                      % filename)
+                if (not os.path.exists(filename) or
+                    self.windows.askYesNo("File already exists",
+                                          "*%s* already exists, do you want "
+                                          "to overwrite it?" % filename)):
+                    self.project.exportProtocols(protocols, filename)
+                    self.windows.showInfo("Workflow successfully saved to '%s' "
+                                          % filename)
+                else:  # try again
+                    self._exportProtocols(defaultPath=browser.getCurrentDir(),
+                                          defaultBasename=browser.getEntryValue())
             except Exception as ex:
                 self.windows.showError(str(ex))
 
         browser = pwgui.browser.FileBrowserWindow(
             "Choose .json file to save workflow",
             master=self.windows,
-            path=self.project.getPath(''),
+            path=defaultPath or self.project.getPath(''),
             onSelect=_export,
-            entryLabel='File  ', entryValue='workflow.json')
+            entryLabel='File  ', entryValue=defaultBasename or 'workflow.json')
         browser.show()
 
     def _exportUploadProtocols(self):

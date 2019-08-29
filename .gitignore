@@ -57,6 +57,8 @@ gmon.out
 .\#*
 /pyworkflow/tests/classes/tmp
 /pyworkflow/web/scipion_web.db
+/pyworkflow/templates/*.json.template
+!/pyworkflow/templates/demo.json.template
 .directory
 
 # Static Path & Web stuff

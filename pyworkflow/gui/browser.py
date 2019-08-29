@@ -637,6 +637,8 @@ class FileBrowser(ObjectBrowser):
 
         # Focusing on a item, but nothing is selected 
         # Current dir remains in _lastSelected
+        self._lastSelected = FileInfo(os.path.dirname(newDir),
+                                      os.path.basename(newDir))
         self.tree.focus(itemKeyToFocus)
         
     def _actionUp(self, e=None):
