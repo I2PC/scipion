@@ -549,17 +549,32 @@ class TextFileViewer(tk.Frame):
             tk.Label(right, text='Search:').grid(row=0, column=3, padx=5)
             self.searchEntry = tk.Entry(right, textvariable=self.searchVar)
             self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5)
-            btn = IconButton(right, "Search", Icon.ACTION_SEARCH, tooltip=Message.TOOLTIP_SEARCH,
+            self.searchEntry.bind('<Return>', self.findText)
+            # btn = IconButton(right, "Search", Icon.ACTION_SEARCH,
+            #                  tooltip=Message.TOOLTIP_SEARCH,
+            #                  command=self.findText, bg=None)
+            # btn.grid(row=0, column=5, padx=(0, 5))
+
+            btn = IconButton(right, "Next", Icon.ACTION_FIND_NEXT,
+                             tooltip=Message.TOOLTIP_SEARCH_NEXT,
                              command=self.findText, bg=None)
             btn.grid(row=0, column=5, padx=(0, 5))
+
+            btn = IconButton(right, "Previous", Icon.ACTION_FIND_PREVIOUS,
+                             tooltip=Message.TOOLTIP_SEARCH_PREVIOUS,
+                             command=self.findPrevText, bg=None)
+            btn.grid(row=0, column=6, padx=(0, 5))
+
         if self._allowRefresh:
-            btn = IconButton(right, "Refresh", Icon.ACTION_REFRESH, tooltip=Message.TOOLTIP_REFRESH, 
+            btn = IconButton(right, "Refresh", Icon.ACTION_REFRESH,
+                             tooltip=Message.TOOLTIP_REFRESH,
                              command=self._onRefresh, bg=None)
-            btn.grid(row=0, column=6, padx=(0, 5), pady=2)
-        if self._allowOpen:
-            btn = IconButton(right, "Open external", Icon.ACTION_REFERENCES, tooltip=Message.TOOLTIP_EXTERNAL,
-                             command=self._openExternal, bg=None)
             btn.grid(row=0, column=7, padx=(0, 5), pady=2)
+        if self._allowOpen:
+            btn = IconButton(right, "Open external", Icon.ACTION_REFERENCES,
+                             tooltip=Message.TOOLTIP_EXTERNAL,
+                             command=self._openExternal, bg=None)
+            btn.grid(row=0, column=8, padx=(0, 5), pady=2)
 
         # Create tabs frame
         tabsFrame = tk.Frame(self)
@@ -644,7 +659,10 @@ class TextFileViewer(tk.Frame):
         
     def changePosition(self, index):
         self.selectedText().see(index)
-        
+
+    def findPrevText(self):
+        self.findText(-1)
+
     def findText(self, direction=1, matchCase=0):
         text = self.selectedText()
         str = self.searchVar.get()

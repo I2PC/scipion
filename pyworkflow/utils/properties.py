@@ -347,6 +347,8 @@ Do you really want to continue?'
     ERROR_WEBGL = 'Your web browser does not support or is not configured for WebGL. See [[http://get.webgl.org/][WebGL Support]] for more information.'
     
     TOOLTIP_SEARCH = 'Search a given world in the text. '
+    TOOLTIP_SEARCH_NEXT = 'Move to the next highlighted item. Also, press <Down> or <F3>'
+    TOOLTIP_SEARCH_PREVIOUS = 'Move to the previous highlighted item. Also, press <Up> or <Shift-F3>'
     TOOLTIP_REFRESH = 'Reload the content of the files in the viewer. '
     TOOLTIP_EXTERNAL = 'Open the viewer in an external window. '
 
@@ -413,6 +415,8 @@ class Icon:
     ACTION_EXECUTE = 'fa-cogs.png'
     ACTION_IN = 'fa-sign-in.png'
     ACTION_OUT = 'fa-sign-out.png'
+    ACTION_FIND_NEXT = 'fa-next.png'
+    ACTION_FIND_PREVIOUS = 'fa-previous.png'
     #Host template
     BUTTON_SELECT = 'fa-check.png'
     BUTTON_CLOSE = 'fa-times.png'
