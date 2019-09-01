@@ -28,7 +28,7 @@
 # *
 # **************************************************************************
 
-from os.path import exists, dirname, join, getmtime, exists
+from os.path import exists, dirname, join, getmtime
 from datetime import datetime
 from collections import OrderedDict
 
@@ -734,6 +734,16 @@ class ProtCTFMicrographs(ProtMicrographs):
         with open(self._getAllFailed(), 'a') as f:
             for mic in micList:
                 f.write('%d\n' % mic.getObjId())
+
+    def _readFailedList(self):
+        """ Read from a text file the id's of the items that have failed. """
+        failedFile = self._getAllFailed()
+        failedList = []
+        if exists(failedFile):
+            with open(failedFile) as f:
+                failedList += [int(line.strip()) for line in f]
+
+        return failedList
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass
