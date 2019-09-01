@@ -670,6 +670,16 @@ class ProtAlignMovies(ProtProcessMovies):
             for movie in movieList:
                 f.write('%d\n' % movie.getObjId())
 
+    def _readFailedList(self):
+        """ Read from a text file the id's of the items that have failed. """
+        failedFile = self._getAllFailed()
+        failedList = []
+        if os.path.exists(failedFile):
+            with open(failedFile) as f:
+                failedList += [int(line.strip()) for line in f]
+
+        return failedList
+
 
 def createAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """
