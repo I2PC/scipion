@@ -657,7 +657,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 outputCtf.append(ctf)
             except:
                 print(yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
-                doneFailed.append(micFn)
+                doneFailed.append(mic)
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
         self._updateOutputSet(outputName, outputCtf, streamMode)
@@ -729,11 +729,11 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ Return the file that is used as a flag of termination. """
         return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())
 
-    def _writeFailedList(self, movieList):
+    def _writeFailedList(self, micList):
         """ Write to a text file the items that have failed. """
         with open(self._getAllFailed(), 'a') as f:
-            for movie in movieList:
-                f.write('%d\n' % movie.getObjId())
+            for mic in micList:
+                f.write('%d\n' % mic.getObjId())
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass
