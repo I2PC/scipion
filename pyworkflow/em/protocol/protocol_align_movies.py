@@ -664,6 +664,12 @@ class ProtAlignMovies(ProtProcessMovies):
         """ This should be implemented in subclasses."""
         pass
 
+    def _writeFailedList(self, movieList):
+        """ Write to a text file the items that have failed. """
+        with open(self._getAllFailed(), 'a') as f:
+            for movie in movieList:
+                f.write('%d\n' % movie.getObjId())
+
 
 def createAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """
@@ -774,9 +780,3 @@ class ProtAverageFrames(ProtAlignMovies):
 
     def _createOutputWeightedMicrographs(self):
         return False
-
-    def _writeFailedList(self, movieList):
-        """ Write to a text file the items that have failed. """
-        with open(self._getAllFailed(), 'a') as f:
-            for movie in movieList:
-                f.write('%d\n' % movie.getObjId())
