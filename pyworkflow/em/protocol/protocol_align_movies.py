@@ -224,6 +224,7 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
+            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -236,11 +237,14 @@ class ProtAlignMovies(ProtProcessMovies):
                 if not os.path.exists(extraMicFn):
                     print(yellowStr("WARNING: Micrograph %s was not generated, "
                                     "can't add it to output set." % extraMicFn))
+                    doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
+            if doneFailed:
+                self._writeFailedList(doneFailed)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -659,6 +663,22 @@ class ProtAlignMovies(ProtProcessMovies):
     def _getPsdCorr(self, movie):
         """ This should be implemented in subclasses."""
         pass
+
+    def _writeFailedList(self, movieList):
+        """ Write to a text file the items that have failed. """
+        with open(self._getAllFailed(), 'a') as f:
+            for movie in movieList:
+                f.write('%d\n' % movie.getObjId())
+
+    def _readFailedList(self):
+        """ Read from a text file the id's of the items that have failed. """
+        failedFile = self._getAllFailed()
+        failedList = []
+        if os.path.exists(failedFile):
+            with open(failedFile) as f:
+                failedList += [int(line.strip()) for line in f]
+
+        return failedList
 
 
 def createAlignmentPlot(meanX, meanY):
