@@ -15,6 +15,7 @@
         <script type="text/javascript" src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
         <link rel="shortcut icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
         <link rel="apple-touch-icon" href="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo.png" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <TITLE>Scipion - %(projectName)s </TITLE>
     </HEAD>
     <STYLE>
@@ -246,7 +247,8 @@
                         <TR>
                             <TH>Name</TH>
                             <TH>Output</TH>
-                            <TH>Number</TH>
+                            <TH>Size</TH>
+                            <TH>Rate (per hour)</TH>
                         </TR>
                     </TABLE>
                 </DIV>
@@ -349,11 +351,13 @@
 
             // For each protocol property
             $.each(report.runs, function(index, value){
-                var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='2'></TD></TR>";
+                var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='3'></TD></TR>";
                 $(runsTable).append(line);
 
                 $.each(value.output, function(index, value){
-                    var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD></TR>";
+                    var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD>" +
+                        "<TD class='center'>" + value.rate +
+                        " <img class='valign' src='" + value.trend + "' style='width:25;height:16'></TD></TR>";
                     $(runsTable).append(outputLine);
 
                 });

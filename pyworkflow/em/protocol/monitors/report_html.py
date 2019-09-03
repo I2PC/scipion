@@ -376,12 +376,14 @@ class ReportHtml:
             isProtocol = True if obj.name else False
 
             if isProtocol:
-                if runLines != '': runLines += ']},'
+                if runLines != '':
+                    runLines += ']},'
                 runLines += '{protocolName: "%s", output:[' % obj.name
             else:
-                if not wasProtocol: runLines += ','
-                runLines += '{name: "%s",  size:"%s"}' % (obj.output,
-                                                          obj.outSize)
+                if not wasProtocol:
+                    runLines += ','
+                runLines += '{name: "%s",  size:"%s", rate:"%s", trend:"%s"}' \
+                            % (obj.output, obj.outSize, obj.rate, obj.trend)
 
             wasProtocol = isProtocol
 

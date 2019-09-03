@@ -139,10 +139,8 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         outputCoords = self.extractCoordinates(partsIds)
 
         self.outputSize += len(outputCoords)
-        t0 = time.time()
         outputCoords.write()
         outputCoords.close()
-        print("write time: %fs" % (time.time()-t0))
 
 
     def extractCoordinates(self, partsIds=None):

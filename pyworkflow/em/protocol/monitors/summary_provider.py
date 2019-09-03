@@ -25,6 +25,8 @@
 # *
 # **************************************************************************
 
+import datetime
+
 import pyworkflow.object as pwobj
 from pyworkflow.gui.tree import TreeProvider
 from pyworkflow.protocol import getUpdatedProtocol
@@ -48,12 +50,14 @@ class SummaryProvider(TreeProvider):
         objects = []
         objIds = []  # need to store ids too to avoid duplication in runs table
 
-        def addObj(objId, name, output='', size='', parent=None):
+        def addObj(objId, name, output='', size='', rate='', trend='', parent=None):
             if objId not in objIds:
                 obj = pwobj.Object(objId=objId)
                 obj.name = name
                 obj.output = output
                 obj.outSize = size
+                obj.rate = rate
+                obj.trend = trend
                 obj._objParent = parent
                 objIds.append(objId)
                 objects.append(obj)
@@ -71,7 +75,8 @@ class SummaryProvider(TreeProvider):
                 outSet.loadAllProperties()
                 # outSetId needs to be compound id to avoid duplicate ids
                 outSetId = '%s.%s' % (outSet.getObjId(), prot.getObjId())
-                addObj(outSetId, '', outName, outSet.getSize(), pobj)
+                rate, trend = self.getOutputStats(outSet)
+                addObj(outSetId, '', outName, outSet.getSize(), rate, trend, pobj)
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
                 from pyworkflow.em import ProtImportImages
@@ -92,6 +97,71 @@ class SummaryProvider(TreeProvider):
                                                  prot.dosePerFrame.get()))
 
         self._objects = objects
+
+    def getOutputStats(self, outSet):
+
+        TREND_ICONS_ROOT_URL = "https://raw.githubusercontent.com/I2PC/scipion/dm_ratesHTMLreport/pyworkflow/resources/"
+        MORE_INCREASING_TREND_ICON = TREND_ICONS_ROOT_URL + "Trend-MoreIncreasing.png"
+        INCREASING_TREND_ICON = TREND_ICONS_ROOT_URL + "Trend-Increasing.png"
+        STABLE_TREND_ICON = TREND_ICONS_ROOT_URL + "Trend-Stable.png"
+        DECREASING_TREND_ICON = TREND_ICONS_ROOT_URL + "Trend-Decreasing.png"
+        MORE_DECREASING_TREND_ICON = TREND_ICONS_ROOT_URL + "Trend-MoreDecreasing.png"
+        STOPPED_TREND_ICON = TREND_ICONS_ROOT_URL + "Trend-Stopped.png"
+        NODATA_TREND_ICON = TREND_ICONS_ROOT_URL + "Trend-NoData.png"
+
+        DELTA_TIME = 0.1  # in hours (it can be a fraction)
+
+        time0 = outSet.getFirstItem().getObjCreationAsDate()
+        finished = False
+        if outSet.isStreamClosed():
+            timeF = datetime.datetime.utcnow()  # just in case that is empty
+            for p in outSet.iterItems(orderBy='creation',
+                                      direction='DESC'):
+                timeF = p.getObjCreationAsDate()
+                break
+            finished = True
+        else:
+            timeF = datetime.datetime.utcnow()
+
+        time = (timeF-time0).total_seconds() / 3600.0  # in hours
+
+        rate = outSet.getSize() / time  # items/hour
+
+        if time < DELTA_TIME*2 or finished:
+            return '%.0f' % rate, NODATA_TREND_ICON
+
+        timeI = timeF - datetime.timedelta(hours=DELTA_TIME)
+        timeIstr = timeI.strftime(pwobj.String.DATETIME_FORMAT)
+        # This loop is just over the last minutes to count items
+        whereStr = 'creation>"%s"' % timeIstr
+        bunchSize = len([x for x in outSet.iterItems(orderBy='creation',
+                                                     direction='DESC',
+                                                     where=whereStr)])
+
+        timeBunch = (timeF - timeI).total_seconds() / 3600.0  # in hours
+        newRate = bunchSize/timeBunch
+
+        trendValue = newRate/rate  # maybe it could be (newRate-rate)/rate
+
+        highestThres = 2
+        highThres = 1.3
+        lowThres = 0.8
+        lowestThres = 0.3
+
+        if trendValue > highestThres:
+            trend = MORE_INCREASING_TREND_ICON
+        elif trendValue > highThres:
+            trend = INCREASING_TREND_ICON
+        elif trendValue > lowThres:
+            trend = STABLE_TREND_ICON
+        elif trendValue > lowestThres:
+            trend = DECREASING_TREND_ICON
+        elif trendValue > 0:
+            trend = MORE_DECREASING_TREND_ICON
+        else:
+            trend = STOPPED_TREND_ICON
+
+        return '%.0f' % rate, trend
 
     def getObjectInfo(self, obj):
         info = {'key': obj.strId(),
